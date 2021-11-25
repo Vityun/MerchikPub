@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/options_relative_layout"
+    android:layout_width="170dp"
+    android:layout_height="15dp"
+    android:orientation="horizontal">
+
+
+    <!--<LinearLayout-->
+    <!--android:id="@+id/option_signal_layout"-->
+    <!--android:layout_width="170dp"-->
+    <!--android:layout_height="15dp"-->
+    <!--android:orientation="horizontal">-->
+
+<!--    <ImageView
+        android:id="@+id/imageView5"
+        android:layout_width="7dp"
+        android:layout_height="14dp"
+        android:layout_margin="1px"
+        android:layout_marginTop="1dp"
+        app:srcCompat="@drawable/option_signal_null" />
+
+    <ImageView
+        android:id="@+id/imageView7"
+        android:layout_width="7dp"
+        android:layout_height="14dp"
+        android:layout_margin="1px"
+        app:srcCompat="@drawable/option_signal_alert" />
+
+    <ImageView
+        android:id="@+id/imageView6"
+        android:layout_width="7dp"
+        android:layout_height="14dp"
+        android:layout_margin="1px"
+        app:srcCompat="@drawable/option_signal_bad" />
+
+    <ImageView
+        android:id="@+id/imageView3"
+        android:layout_width="7dp"
+        android:layout_height="14dp"
+        android:layout_margin="1px"
+        app:srcCompat="@drawable/option_signal_ok" />-->
+    <!--</LinearLayout>-->
+
+</LinearLayout>

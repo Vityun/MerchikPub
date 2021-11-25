@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- This is the line -->
+    <item>
+        <shape>
+            <gradient
+                android:angle="180"
+                android:centerX="0.09"
+                android:centerY="0.1"
+                android:centerColor="@color/TabC"
+                android:endColor="@color/TabS"
+                android:startColor="@color/TabE"
+                android:type="linear" />
+
+            <corners
+                android:topLeftRadius="5dp"
+                android:topRightRadius="5dp" />
+        </shape>
+    </item>
+
+    <!-- This is the main color -->
+    <item
+        android:right="6dp">
+        <shape>
+<!--            <solid android:color="#F5F4F4" />-->
+<!--            <solid android:color="@color/colorToolbar" />-->
+            <solid android:color="#FAFAFA" />
+        </shape>
+    </item>
+</layer-list>

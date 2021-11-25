@@ -1,0 +1,368 @@
+package ua.com.merchik.merchik.Activities.TaskAndReclamations.TasksActivity;
+
+import android.content.Context;
+import android.graphics.Bitmap;
+import android.net.Uri;
+import android.os.Bundle;
+import android.text.Html;
+import android.text.SpannableStringBuilder;
+import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.ImageView;
+import android.widget.RatingBar;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import androidx.fragment.app.Fragment;
+
+import java.io.File;
+import java.util.Collections;
+
+import io.reactivex.rxjava3.observers.DisposableCompletableObserver;
+import io.reactivex.rxjava3.schedulers.Schedulers;
+import ua.com.merchik.merchik.Activities.TaskAndReclamations.TARActivity;
+import ua.com.merchik.merchik.Clock;
+import ua.com.merchik.merchik.Globals;
+import ua.com.merchik.merchik.R;
+import ua.com.merchik.merchik.ServerExchange.Exchange;
+import ua.com.merchik.merchik.ServerExchange.PhotoDownload;
+import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
+import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
+import ua.com.merchik.merchik.data.RealmModels.ThemeDB;
+import ua.com.merchik.merchik.database.realm.tables.AddressRealm;
+import ua.com.merchik.merchik.database.realm.tables.CustomerRealm;
+import ua.com.merchik.merchik.database.realm.tables.StackPhotoRealm;
+import ua.com.merchik.merchik.database.realm.tables.TasksAndReclamationsRealm;
+import ua.com.merchik.merchik.database.realm.tables.ThemeRealm;
+import ua.com.merchik.merchik.database.realm.tables.UsersRealm;
+import ua.com.merchik.merchik.dialogs.DialogPhotoTovar;
+import ua.com.merchik.merchik.toolbar_menus;
+
+import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
+import static ua.com.merchik.merchik.menu_main.decodeSampledBitmapFromResource;
+
+public class Tab1Fragment extends Fragment {
+
+    private Context mContext;
+
+    private TextView textViewData;
+    private ImageView imageView, imageView2;
+    private RatingBar ratingBar1, ratingBar2;
+
+    private TasksAndReclamationsSDB data;
+
+    public Tab1Fragment() {
+    }
+
+    public Tab1Fragment(TasksAndReclamationsSDB data) {
+        this.data = data;
+    }
+
+
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                             Bundle savedInstanceState) {
+        View v = inflater.inflate(R.layout.fragment_tab_item_first, container, false);
+
+        mContext = v.getContext();
+
+        textViewData = v.findViewById(R.id.text_data);
+        imageView = v.findViewById(R.id.TARPhoto);
+        imageView2 = v.findViewById(R.id.TARPhoto2);
+        ratingBar1 = v.findViewById(R.id.ratingBar2);
+        ratingBar2 = v.findViewById(R.id.ratingBar4);
+
+
+        setData();
+
+        if (TARActivity.TARType == 0) {
+            Log.e("SET_TAR_FAB", "TYTA");
+            toolbar_menus.textLesson = 1183;
+            toolbar_menus.videoLesson = 1184;
+        } else {
+            Log.e("SET_TAR_FAB", "ZDESA");
+            toolbar_menus.textLesson = 1185;
+            toolbar_menus.videoLesson = 1186;
+        }
+
+        toolbar_menus.setFab(v.getContext(), TARActivity.fab); // ГЛАВНАЯ
+
+        return v;
+    }
+
+
+    /**
+     * 22.03.2021
+     */
+    private void setData() {
+        SpannableStringBuilder stringData = new SpannableStringBuilder();
+
+        try {
+            CharSequence info = Html.fromHtml("<b>ID: </b>" + data.id + " / " + data.id1c + "<br>");
+            stringData.append(info);
+        } catch (Exception e) {
+        }
+
+
+        try {
+            CharSequence setTaskDate = Html.fromHtml("<b>Поставлена: </b>" + Clock.getHumanTime2(Long.valueOf(data.dtRealPost)) + "<br>");
+            stringData.append(setTaskDate);
+        } catch (Exception e) {
+        }
+
+
+        try {
+            String s = "";
+
+            ThemeDB theme = ThemeRealm.getThemeById(String.valueOf(data.themeId));
+            if (theme != null) {
+                if (theme.getNm() != null && !theme.getNm().equals("")) {
+                    s = theme.getNm();
+                } else {
+                    s = String.valueOf(data.themeId);
+                }
+            }
+
+            CharSequence customer = Html.fromHtml("<b>Тема: </b>" + s + "<br>");
+            stringData.append(customer);
+        } catch (Exception e) {
+        }
+
+
+        try {
+            CharSequence address = Html.fromHtml("<b>Адрес: </b>" + AddressRealm.getAddressById(data.addr).getNm() + "<br>");
+            stringData.append(address);
+        } catch (Exception e) {
+        }
+
+
+        try {
+            CharSequence autor = Html.fromHtml("<b>Автор: </b>" + UsersRealm.getUsersDBById(data.vinovnik).getNm() + "<br>");
+            stringData.append(autor);
+        } catch (Exception e) {
+        }
+
+
+        try {
+            CharSequence autorTel = Html.fromHtml("<b>Телефон автора: </b>" + data.telNum + "<br>");
+            stringData.append(autorTel);
+        } catch (Exception e) {
+        }
+
+
+        try {
+            CharSequence answer = Html.fromHtml("<b>Ответ: </b>" + data.lastAnswer + "<br>");
+            stringData.append(answer);
+        } catch (Exception e) {
+        }
+
+
+        try {
+            CharSequence dad2A = Html.fromHtml("<b>ДАД2 (А): </b>" + data.codeDad2 + "<br>");
+            stringData.append(dad2A);
+        } catch (Exception e) {
+        }
+
+
+        try {
+            CharSequence dad2B = Html.fromHtml("<b>ДАД2 (Б): </b>" + data.codeDad2SrcDoc + "<br>");
+            stringData.append(dad2B);
+        } catch (Exception e) {
+        }
+
+
+        try {
+            CharSequence customer = Html.fromHtml("<b>Заказчик: </b>" + CustomerRealm.getCustomerById(String.valueOf(data.client)).getNm() + "<br>");
+            stringData.append(customer);
+        } catch (Exception e) {
+        }
+
+
+        try {
+            int tp = data.tp;
+            int state = data.tp;
+
+            CharSequence status = Html.fromHtml("<b>Статус: </b>" + TasksAndReclamationsRealm.getStatusTxt(tp, state) + "<br>");
+            stringData.append(status);
+        } catch (Exception e) {
+        }
+
+
+        textViewData.setText(stringData);
+
+        Uri photo1 = getPhotoPath(String.valueOf(data.photo));
+        Uri photo2 = getPhotoPath(String.valueOf(data.photo2));
+
+        Log.e("downloadAndSetFullPhoto", "photo1: " + photo1);
+        Log.e("downloadAndSetFullPhoto", "photo2: " + photo2);
+
+
+//        imageView.setImageURI(photo1);
+        if (photo1 != null) {
+            File file = new File(photo1.toString());
+            Bitmap b = decodeSampledBitmapFromResource(file, 200, 200);
+            if (b != null) {
+                imageView.setImageBitmap(b);
+            }
+        }
+
+
+//        imageView2.setImageURI(photo2);
+        if (photo2 != null) {
+            File file2 = new File(photo2.toString());
+            Bitmap b2 = decodeSampledBitmapFromResource(file2, 200, 200);
+            if (b2 != null) {
+                imageView2.setImageBitmap(b2);
+            }
+        }
+
+
+        imageView.setOnClickListener(v -> {
+            downloadAndSetFullPhoto(String.valueOf(data.photo));
+        });
+
+        imageView2.setOnClickListener(v -> {
+            downloadAndSetFullPhoto(String.valueOf(data.photo2));
+        });
+
+        ratingBar1.setRating(data.voteScore);
+        ratingBar2.setRating(data.vinovnikScore);
+
+//        ratingBar1.setOnClickListener((view)->{
+            ratingBar1.setOnRatingBarChangeListener((ratingBar, rating, fromUser) -> {
+                int rate = (int) rating;
+                ratingBar.setRating(rate);
+
+                data.voteScore = rate;
+                SQL_DB.tarDao().insertData(Collections.singletonList(data))
+                        .subscribeOn(Schedulers.io())
+                        .subscribe(new DisposableCompletableObserver() {
+                            @Override
+                            public void onComplete() {
+                                Log.d("test", "test");
+                            }
+
+                            @Override
+                            public void onError(@io.reactivex.rxjava3.annotations.NonNull Throwable e) {
+                                Log.d("test", "test");
+                            }
+                        });
+
+                Exchange.updateTAR(data);
+
+                Toast.makeText(ratingBar.getContext(), "Оценка: " + rate + " установлена.", Toast.LENGTH_SHORT).show();
+            });
+//        });
+
+
+//        ratingBar2.setOnClickListener((view)->{
+            ratingBar2.setOnRatingBarChangeListener((ratingBar, rating, fromUser) -> {
+                int rate = (int) rating;
+                ratingBar.setRating(rate);
+
+                data.vinovnikScore = rate;
+                data.vinovnikScoreDt = System.currentTimeMillis();
+                data.vinovnikScoreUserId = Globals.userId;
+                SQL_DB.tarDao().insertData(Collections.singletonList(data))
+                        .subscribeOn(Schedulers.io())
+                        .subscribe(new DisposableCompletableObserver() {
+                            @Override
+                            public void onComplete() {
+                                Log.d("test", "test");
+                            }
+
+                            @Override
+                            public void onError(@io.reactivex.rxjava3.annotations.NonNull Throwable e) {
+                                Log.d("test", "test");
+                            }
+                        });
+
+                Exchange.updateTAR(data);
+
+                Toast.makeText(ratingBar.getContext(), "Оценка: " + rate + " установлена.", Toast.LENGTH_SHORT).show();
+            });
+//        });
+
+    }
+
+
+    /**
+     * 22.03.2021 (ты явно не тут должна быть) TODO
+     *
+     * @return
+     */
+    private Uri getPhotoPath(String photo) {
+        Log.e("getPhotoPath", "photo: " + photo);
+        try {
+            if (photo != null && !photo.equals("")) {
+                StackPhotoDB stackPhotoDB = StackPhotoRealm.stackPhotoDBGetPhotoBySiteId(photo);
+
+                if (stackPhotoDB == null) {
+                    stackPhotoDB = StackPhotoRealm.getById(Integer.parseInt(photo));
+                }
+
+                Log.e("getPhotoPath", "stackPhotoDB: " + stackPhotoDB.getPhotoServerId());
+                Log.e("getPhotoPath", "stackPhotoDB: " + stackPhotoDB.getPhotoServerURL());
+
+                return Uri.parse(stackPhotoDB.getPhoto_num());
+            } else {
+                return null;
+            }
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+
+    /**
+     * 23.03.21
+     * Скачивание и установка полноразмерной фотографии при нажатии на фото.
+     */
+    private void downloadAndSetFullPhoto(String photo) {
+        StackPhotoDB stackPhotoDB = StackPhotoRealm.stackPhotoDBGetPhotoBySiteId(photo);
+
+        if (stackPhotoDB == null) {
+            stackPhotoDB = StackPhotoRealm.getById(Integer.parseInt(photo));
+
+            DialogPhotoTovar dialogPhotoTovar = new DialogPhotoTovar(mContext);
+            dialogPhotoTovar.setPhotoTovar(Uri.parse(stackPhotoDB.getPhoto_num()));
+            dialogPhotoTovar.setClose(dialogPhotoTovar::dismiss);
+            dialogPhotoTovar.show();
+
+            return;
+        }
+
+        if (stackPhotoDB != null) {
+//            Gson gson = new Gson();
+//            String json = gson.toJson(stackPhotoDB);
+//            JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
+
+            Log.e("downloadAndSetFullPhoto", "convertedObject: " + stackPhotoDB);
+
+//        Log.e("stackPhotoDB", "stackPhotoDB.size: " + stackPhotoDB.getPhoto_size());
+
+            StackPhotoDB finalStackPhotoDB = stackPhotoDB;
+            new PhotoDownload().downloadPhoto(true, stackPhotoDB, "/TaR", new PhotoDownload.downloadPhotoInterface() {
+                @Override
+                public void onSuccess(StackPhotoDB data) {
+                    DialogPhotoTovar dialogPhotoTovar = new DialogPhotoTovar(mContext);
+                    dialogPhotoTovar.setPhotoTovar(Uri.parse(finalStackPhotoDB.getPhoto_num()));
+                    dialogPhotoTovar.setClose(dialogPhotoTovar::dismiss);
+                    dialogPhotoTovar.show();
+                }
+
+                @Override
+                public void onFailure(String s) {
+
+                }
+            });
+        } else {
+            Toast.makeText(mContext, "Фото не обнаружено", Toast.LENGTH_SHORT).show();
+        }
+
+
+    }
+
+}

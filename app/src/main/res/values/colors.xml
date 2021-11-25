@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="white">#FFFFFF</color>
+    <color name="black">#000000</color>
+
+    <color name="whiteP">#00FFFFFF</color>
+
+    <color name="colorPrimary">#3F51B5</color>
+    <color name="colorPrimaryDark">#303F9F</color>
+    <color name="colorAccent">#FF4081</color>
+    <color name="colorDescription">#555555</color>
+    <color name="colorToolbar">#D8D8D8</color>
+
+    <!--Цвета для теста инета-->
+    <color name="colorInetGreen">#16B91B</color>
+    <color name="greenCol">#66BB6A</color>
+    <color name="colorInetGreenDark">#0C630E</color>
+    <color name="colorInetYellow">#FFF200</color>
+    <color name="colorInetYellowDark">#996809</color>
+
+    <color name="colorInetRed">#FF1100</color>
+    <color name="red_error">#EF5350</color>
+    <color name="colorInetRedDark">#990600</color>
+    <color name="errorLightColor">#FFC4C4</color>
+
+    <color name="textBG">#CDF5F4F4</color>
+    <color name="colotSelectedTab">#CDF5F4F4</color>
+    <color name="colotSelectedTab2">#DDDDDD</color>
+    <color name="colorUnselectedTab">#B1B1B1</color>
+    <color name="shadow">#888888</color>
+
+    <!-- APP COLOR -->
+    <color name="centerColor">#1a49ca</color>
+    <color name="endColor">#003369</color>
+    <color name="startColor">#5c7cff</color>
+    <color name="startColor2">#A3B2FF</color>
+
+    <color name="TabC">#707070</color>
+    <color name="TabS">#000000</color>
+    <color name="TabE">#B1B1B1</color>
+
+</resources>

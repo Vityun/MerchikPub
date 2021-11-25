@@ -1,0 +1,166 @@
+<resources>
+    <string name="app_name">merchik</string>
+    <string name="ver">111800</string>
+    <string name="debug_status">0</string>
+    <string name="debug_date">2021-11-18</string>
+
+    <!--Activity titles-->
+    <string name="title_activity_menu_main">Рабочий стол</string>
+    <string name="activity_title_photo_report">Фотоотчёт</string>
+
+    <string name="login_info">Введите ваш логин и пароль: </string>
+    <string name="login">Вход</string>
+    <string name="logout">Выход</string>
+
+    <string name="edit_text_login">логин</string>
+    <string name="edit_text_password">пароль</string>
+
+    <string name="object_891">Подсказка</string>
+    <string name="object_890">Помощь</string>
+    <string name="object_893">Текущая версия приложения</string>
+    <string name="object_894">У Вас последняя версия приложения</string>
+    <string name="object_895">Рекомендуем установить новую версию приложения:</string>
+
+    <string name="gps_info_button">Нажимая на кнопку вы получаете текущее местоположение</string>
+    <string name="gps_button">get gps</string>
+    <string name="button_make_photo">Сделать фото</string>
+    <string name="button_make_new_photo">Сделать ещё фото</string>
+    <string name="button_upload_photo">Выгрузить на сервер текущее фото</string>
+    <string name="button_comment_photo">Добавить комментарий</string>
+    <string name="button_close">Сохранить/Закрыть</string>
+    <string name="text_help_photo">
+        Для Выгрузки фото на сайт - ознакомьтесь с инструкцией!\n\n
+        0. Разрешите приложению использовать геоданные. \n
+        1. Рекомендую вызывать это приложение из мобильной версии сайта. \n
+        2. Нажмите кнопку \"Сфотографировать\" расположенную ниже и выполните фотографию. \n
+        2.1. Для того что б сделать фотографию в мобильном телефоне должен быть включён GPS. \n
+        2.2. Если у Вас не открывается фотоаппарат - попробуйте включить GPS и перезагрузить приложение. \n
+        3. Добавьте коментарий.(необязательно) \n
+        4. Нажмите кнопку \"Выгрузить на сервер\".\n
+
+        Для того чтоб сделать серию фотографий - используйте кнопку \"Сделать ещё фото\". Последнюю фотку в серии следует Сохранять для отправки нажимая кнопку \"Сохранить/Закрыть\"\n\n
+
+        СОХРАНЕНИЕ ФОТО\n
+        Фото сохраняются для Выгрузки на сайт когда Вы нажимаете кнопку \"Сделать ещё фото\" или \"Сохранить/Закрыть\".\nПосле того как фото будет сохранено - можно начинать Выгрузку иначе не сохранённые фото не попадут на сайт.\n\n
+
+        КООРДИНАТЫ. Provider. GPS. NET. МП.\n
+        Для того чтоб проверить актуальность координат -  следует в меню "Светофор" посмотреть на цвет светофора \"Provider\".\n
+        Если он горит зелёным - у Вас получены всежие координаты и можно продолжать Вашу работу.\n
+        Если он горит жёлтым - у Вас проблемы с координатами GPS. Это значит что Ваше местоположение будет определено не точно изза чего могут быть проблемы с Местоположением(МП). Для решения проблемы нажмите на \"Provider\", а затем на \"GPS\"(он должен гореть красным). Если цвет изменился на зелёный и появилось сообщение о том что данные GPS актуальны - можно продолжать работу. Если цвет не изменился и перед Вами сообщение что данные устарели - надо получить актуальные данные GPS. Для этого достаточно выйти на улицу или подойти к окну и подождать минуту пока телефон не получит свежие данные.\n
+        Если он горит красным или серым - данные получить не удалось. Для начала попробуйте нажать "Перейти на главную" в меню 3х точек. Если это не помогло - следует выйти на улицу или подойти к окну и подождать минуту пока телефон не получит свежие данные.\n
+        \n
+    </string>
+
+    <!--Toolbar text-->
+    <string name="test_001">description</string>
+    <string name="test_002">description</string>
+    <string name="go_to_main">Перейти на главную</string>
+    <string name="go_to_wpdata">План работ</string>
+    <string name="info">Информация</string>
+    <string name="check_coord">ТЕСТ</string>
+
+<!--    <string name="t_check_internet">Интернет</string>-->
+    <string name="t_check_sever">Сервер</string>
+    <string name="txt_sever">Сервер</string>
+    <string name="t_check_online">Связь</string>
+    <string name="t_check_Provider">Provider</string>
+    <string name="t_check_GPS">GPS</string>
+    <string name="t_check_NET">NET</string>
+    <string name="t_check_MP">Запрос МП</string>
+    <string name="t_check_version">Версия</string>
+    <string name="autosend">Автообмен</string>
+    <string name="txt_online">Онлайн</string>
+    <string name="txt_offline">Офлайн</string>
+
+
+
+    <!--Version. Update.-->
+    <string name="merchik_linl_pm">push <a href="https://play.google.com/store/apps/details?addrId=ua.com.merchik.merchik">Play Market</a></string>
+    <string name="t_ad_update_app_old">У Вас установлена устаревшая версия приложения</string>  <!-- + versionNumber-->
+    <string name="t_ad_update_app_vold">Вы не можете продолжать работу пока не установите новую версию приложения</string>  <!-- + (versionNumber)-->
+    <string name="ad_update_app">Обновить</string>
+    <string name="ad_update_app_close">Закрыть</string>
+
+    <!--Alert Dialog. Exchange.-->
+    <string name="t_ad_exchange">Выберите обмен чего Вы хотите провести: </string>
+    <string name="b_ad_exchange_tables">Синхронизировать таблицы</string>
+    <string name="b_ad_exchange_photos">Выгрузить фотоотчёты</string>
+    <string name="b_ad_exchange_close">Закрыть</string>
+
+    <!--Detailed report-->
+    <string name="title_detailed_report">Дет. отчёт №</string>
+
+    <!--KPS-->
+    <string name="date">Дата: </string>
+    <string name="address">Адрес: </string>
+    <string name="customer">Клиент: </string>
+    <string name="performer">Исполнитель: </string>
+    <string name="options">Опции: </string>
+    <string name="t_photo_log">Журнал фото</string>
+    <string name="Search">Поиск..</string>
+
+
+    <!-- ============== PHOTO REPORT FRAGMENT ============== -->
+    <string name="title_photo_report">Фотоотчёт</string>
+
+    <!--  TEXT VIEW  -->
+    <string name="photo_report_tvDate">Дата:&#160;</string>
+    <string name="photo_report_tvAddr">Адрес:&#160;</string>
+    <string name="photo_report_tvClient">Клиент:&#160;</string>
+    <string name="photo_report_tvTovGroup">Группа товара:&#160;</string>
+    <string name="photo_report_tvPhotoType">Тип фото:&#160;</string>
+    <string name="photo_report_tvComment">Комментарий:&#160;</string>
+
+    <!--  BUTTON  -->
+    <string name="photo_report_bMakePhoto">Сделать фото</string>
+    <string name="photo_report_bSaveAndClose">Сохранить и Закрыть</string>
+    <string name="photo_report_bMakeMorePhoto">Сделать ещё фото</string>
+    <string name="photo_report_bAddComent">Добавить комментарий</string>
+
+
+    <string name="start_app_test">Внимание!
+        \nЭто тестовая версия приложения, для тестировки не обязательно находиться на Торговой Точке. За работу с ней Вы можете получить премию!
+        \n\nДля этого необходимо выполнить инструкции описанные ниже и написать отзыв в МВС (в день тестирования) в разделе \"i\" в пункте №4.
+        \nОБЯЗАТЕЛЬНО в отзыве укажите Номер версии и Дату!
+        \n\nСписок необходимых действий которые надо протестировать: \n\n
+    </string>
+    <string name="start_app_test_instructions">Программист забыл написать список.</string>
+
+
+    <!-- ===== ATCIVITY MENU MAIN ===== -->
+    <string name="menu_main_main_text">Для получения заданий перейдите в раздел План работ. Для этого в левом верхнем углу экрана нажмите кнопку меню \"&#8801;\" и выберите раздел План работ</string>
+    <string name="navigation_drawer_open">Описание при открытии</string>
+    <string name="navigation_drawer_close">Описание при закрытии</string>
+
+
+
+    <!-- ===== MENU Navigation View ===== -->
+    <string name="hamburger_menu_main">Главная</string>
+    <string name="hamburger_menu_work_plan">План работ</string>
+    <string name="hamburger_menu_detailed_report">Дет. отчёт</string>
+    <string name="hamburger_menu_photo_report">Фотоотчёт</string>
+    <string name="hamburger_menu_photo_log">Журнал фото</string>
+    <string name="hamburger_menu_exit">Выход</string>
+
+
+    <string name="activity_photo_log_title">Журнал фото</string>
+
+
+
+    <!-- ===== LOGIN ===== -->
+    <string name="menu_login_help">Помощь</string>
+    <string name="menu_login_help_text_offline">Извините, не могу получить Подсказку, проверьте связь с сервером (наличие интернета) и перезайдите в систему</string>
+    <string name="prompt">Подсказка</string>
+    <string name="close">Закрыть</string>
+    <string name="video_prompt">Видеоподсказка</string>
+    <string name="telephone_call">Телефонный звонок</string>
+    <string name="title">Заголовок</string>
+    <string name="save">Сохранить</string>
+
+
+</resources>
+
+<!--
+&#160; - пробел тип1 (for non-breakable whitespace.)
+&#032; - пробел тип2 (for regular space.)
+-->

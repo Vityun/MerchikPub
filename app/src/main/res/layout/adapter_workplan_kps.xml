@@ -1,0 +1,210 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="#00FF0000">
+
+    <!--        android:background="@drawable/shadow_test_4"-->
+
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/layout_wp"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginStart="10dp"
+        android:layout_marginLeft="10dp"
+        android:layout_marginEnd="10dp"
+        android:layout_marginRight="10dp"
+        android:layout_marginBottom="10dp"
+        android:background="@drawable/border_map"
+        android:elevation="4dp"
+        android:visibility="visible"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:visibility="visible">
+
+        <TextView
+            android:id="@+id/datelabel1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/merclabel1"
+            android:layout_marginTop="4dp"
+            android:layout_toRightOf="@+id/wp_image1"
+            android:text="  Дата: "
+            android:textStyle="bold"
+            app:layout_constraintStart_toEndOf="@+id/wp_image1"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/addrlabel1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_toRightOf="@+id/wp_image1"
+            android:text="  Адрес: "
+            android:textStyle="bold"
+            app:layout_constraintStart_toEndOf="@+id/wp_image1"
+            app:layout_constraintTop_toBottomOf="@+id/datelabel1" />
+
+        <TextView
+            android:id="@+id/merc1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/cust1"
+            android:layout_marginStart="4dp"
+            android:layout_marginLeft="4dp"
+            android:layout_marginEnd="4dp"
+            android:layout_marginRight="4dp"
+            android:layout_toRightOf="@+id/merclabel1"
+            android:maxLines="1"
+            android:singleLine="true"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toEndOf="@+id/merclabel1"
+            app:layout_constraintTop_toBottomOf="@+id/cust1" />
+
+        <TextView
+            android:id="@+id/custlabel1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/addrlabel1"
+            android:layout_toRightOf="@+id/wp_image1"
+            android:text="  Клиент: "
+            android:textStyle="bold"
+            app:layout_constraintStart_toEndOf="@+id/wp_image1"
+            app:layout_constraintTop_toBottomOf="@+id/addrlabel1" />
+
+        <TextView
+            android:id="@+id/optionlabel1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/datelabel1"
+            android:layout_toRightOf="@+id/wp_image1"
+            android:text="  Опции: "
+            android:textStyle="bold"
+            app:layout_constraintStart_toEndOf="@+id/wp_image1"
+            app:layout_constraintTop_toBottomOf="@+id/merclabel1" />
+
+        <TextView
+            android:id="@+id/date1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/merc1"
+            android:layout_marginStart="4dp"
+            android:layout_marginLeft="4dp"
+            android:layout_marginTop="4dp"
+            android:layout_marginEnd="4dp"
+            android:layout_marginRight="4dp"
+            android:layout_toRightOf="@id/datelabel1"
+            android:maxLines="1"
+            android:singleLine="true"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toEndOf="@+id/datelabel1"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/wp_adapter_price"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:layout_marginEnd="8dp"
+            android:layout_marginRight="8dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <LinearLayout
+            android:id="@+id/option_signal_layout1"
+            android:layout_width="190dp"
+            android:layout_height="15dp"
+            android:layout_below="@+id/date1"
+            android:layout_marginTop="3dp"
+            android:layout_toEndOf="@+id/optionlabel1"
+            android:layout_toRightOf="@+id/optionlabel1"
+            android:orientation="horizontal"
+
+            app:layout_constraintStart_toEndOf="@+id/optionlabel1"
+            app:layout_constraintTop_toBottomOf="@+id/merc1">
+
+        </LinearLayout>
+
+
+        <!--        android:background="@drawable/shadow_flat_object"-->
+        <!--            android:background="@drawable/shadow_test_4"-->
+
+        <ImageView
+            android:id="@+id/wp_image1"
+            android:layout_width="100dp"
+            android:layout_height="100dp"
+            android:layout_marginStart="8dp"
+            android:layout_marginLeft="8dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="8dp"
+            android:contentDescription="TODO"
+            android:background="@drawable/border_map"
+            android:padding="4dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/merclabel1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/custlabel1"
+            android:layout_toRightOf="@+id/wp_image1"
+            android:text="  Исполнитель: "
+            android:textStyle="bold"
+            app:layout_constraintStart_toEndOf="@+id/wp_image1"
+            app:layout_constraintTop_toBottomOf="@+id/custlabel1" />
+
+        <TextView
+            android:id="@+id/addr1"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="4dp"
+            android:layout_marginLeft="4dp"
+            android:layout_marginEnd="4dp"
+            android:layout_marginRight="4dp"
+            android:layout_toRightOf="@+id/addrlabel1"
+            android:maxLines="1"
+            android:singleLine="true"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toEndOf="@+id/addrlabel1"
+            app:layout_constraintTop_toBottomOf="@+id/date1" />
+
+        <TextView
+            android:id="@+id/cust1"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/addr1"
+            android:layout_marginStart="4dp"
+            android:layout_marginLeft="4dp"
+            android:layout_marginEnd="4dp"
+            android:layout_marginRight="4dp"
+            android:layout_toRightOf="@+id/custlabel1"
+            android:maxLines="1"
+            android:singleLine="true"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toEndOf="@+id/custlabel1"
+            app:layout_constraintTop_toBottomOf="@+id/addr1" />
+
+        <ImageView
+            android:id="@+id/check"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:layout_marginStart="8dp"
+            android:layout_marginLeft="8dp"
+            android:layout_marginTop="8dp"
+            android:elevation="7dp"
+            app:layout_constraintStart_toStartOf="@+id/wp_image1"
+            app:layout_constraintTop_toTopOf="@+id/wp_image1"
+            app:srcCompat="@drawable/ic_check" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

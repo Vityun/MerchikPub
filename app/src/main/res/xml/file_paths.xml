@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!--Для хуавей-->
+<!--<paths>-->
+<!--    <external-path name="images" path="/" />-->
+<!--</paths>-->
+
+<!--Для всех нормальных людей-->
+<paths>
+    <external-path name="images" path="."/>
+<!--    <external-files-path name="images" path="/" />-->
+</paths>
+
+
+<!--Алёна Шпинеева-->
+<!--Не подходит Лере Валерьевне, такая же ошибка как у Алёны, но НА ЭТОМ подходе-->
+<!--<paths>-->
+<!--    <external-path name="images" path="."/>-->
+<!--</paths>-->

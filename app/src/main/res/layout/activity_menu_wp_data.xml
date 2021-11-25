@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+
+    <LinearLayout
+        android:id="@+id/linearLayout"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:orientation="vertical"
+        tools:ignore="MissingConstraints">
+
+        <include
+            android:id="@+id/include"
+            layout="@layout/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            tools:layout_editor_absoluteX="0dp"
+            tools:layout_editor_absoluteY="16dp" />
+
+<!--        <TextView
+            android:id="@+id/title_wpdata"
+            android:layout_width="match_parent"
+            android:layout_height="36dp"
+            android:gravity="center"
+            android:text="@string/go_to_wpdata"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:visibility="gone" />-->
+
+        <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent" >
+
+            <SearchView
+                android:id="@+id/search"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:drawableLeft="@android:drawable/ic_menu_search"
+                android:hint="Поиск..">
+
+                <requestFocus />
+            </SearchView>
+
+            <ListView
+                android:id="@+id/listview"
+                android:layout_width="fill_parent"
+                android:layout_height="fill_parent"
+                android:layout_below="@+id/search" />
+
+        </RelativeLayout>
+
+
+
+
+
+<!--        <EditText
+            android:id="@+id/wpdataFiltersEditText"
+            android:layout_width="match_parent"
+            android:layout_height="90dp"
+            android:autofillHints=""
+            android:background="@null"
+            android:hint="Введите поисковый запрос \n(пока не доступно)"
+            android:inputType="text"
+            android:saveEnabled="false"
+            android:singleLine="false"
+            tools:ignore="UnusedAttribute" />
+
+
+        <ListView
+            android:id="@+id/qwerty"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@color/colorToolbar" />-->
+
+
+    </LinearLayout>
+
+
+    <TextView
+        android:id="@+id/textViewVer2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginLeft="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginRight="8dp"
+        android:text="@string/ver"
+        android:textColor="@color/colorDescription"
+        android:visibility="gone"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        tools:ignore="MissingConstraints"
+        tools:layout_editor_absoluteY="0dp" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

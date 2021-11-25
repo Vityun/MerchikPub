@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    tools:showIn="navigation_view">
+
+    <group android:checkableBehavior="single">
+        <item
+            android:id="@+id/nav_home"
+            android:icon="@drawable/ic_menu_camera"
+            android:checkable="true"
+            app:itemBackground="@drawable/hamburger_menu_selector"
+            android:title="@string/hamburger_menu_main" />
+        <item
+            android:id="@+id/nav_wp"
+            android:icon="@drawable/ic_menu_gallery"
+            android:checkable="true"
+            app:itemBackground="@drawable/hamburger_menu_selector"
+            android:title="@string/hamburger_menu_work_plan" />
+        <item
+            android:id="@+id/nav_dr"
+            android:icon="@drawable/ic_menu_slideshow"
+            android:checkable="true"
+            app:itemBackground="@drawable/hamburger_menu_selector"
+            android:title="@string/hamburger_menu_detailed_report" />
+        <item
+            android:id="@+id/nav_pr"
+            android:icon="@drawable/ic_menu_manage"
+            android:checkable="true"
+            app:itemBackground="@drawable/hamburger_menu_selector"
+            android:title="@string/hamburger_menu_photo_report" />
+    </group>
+
+    <item android:title="Дополнительно">
+        <menu>
+            <item
+                android:id="@+id/nav_photo_log"
+                android:icon="@drawable/ic_menu_share"
+                android:checkable="true"
+                app:itemBackground="@drawable/hamburger_menu_selector"
+                android:title="@string/hamburger_menu_photo_log" />
+            <item
+                android:id="@+id/nav_exit"
+                android:icon="@drawable/ic_menu_send"
+                android:checkable="true"
+                app:itemBackground="@drawable/hamburger_menu_selector"
+                android:title="@string/hamburger_menu_exit" />
+        </menu>
+    </item>
+
+</menu>

@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+<!--    <item-->
+<!--        android:id="@+id/action_settings"-->
+<!--        android:title=""-->
+<!--        app:showAsAction="never">-->
+<!--        <menu>-->
+            <item
+                android:id="@+id/lang1"
+                android:icon="@drawable/ua"
+                android:title="Украинский"/>
+
+            <item
+                android:id="@+id/lang2"
+                android:icon="@drawable/ru"
+                android:title="Русский"/>
+
+            <item
+                android:id="@+id/lang3"
+                android:icon="@drawable/gb"
+                android:title="Английский"/>
+
+            <item
+                android:id="@+id/lang4"
+                android:icon="@drawable/pl"
+                android:title="Польский"/>
+<!--        </menu>-->
+<!--    </item>-->
+
+
+
+
+
+
+
+
+
+
+
+
+<!--    <item
+        android:addrId="@+addrId/lang1"
+        android:icon="@drawable/ua"
+        android:title="Укр"/>
+
+    <item
+        android:addrId="@+addrId/lang2"
+        android:icon="@drawable/ru"
+        android:title="Рус"/>
+
+    <item
+        android:addrId="@+addrId/lang3"
+        android:icon="@drawable/gb"
+        android:title="Анг"/>-->
+
+</menu>

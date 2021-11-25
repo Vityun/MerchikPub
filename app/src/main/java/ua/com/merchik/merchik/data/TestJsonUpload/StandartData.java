@@ -1,0 +1,61 @@
+package ua.com.merchik.merchik.data.TestJsonUpload;
+
+import java.util.List;
+
+public class StandartData<T> {
+
+    public String mod;
+    public String act;
+    public String vpi;
+
+    public String dt;
+    public String id;
+
+    public String sotr_id;  // Фильтр для получения &&&&&&&&&&&&&????????????)))))))))))))))
+    public String lang_id;  // ID языка
+    public String code_dad2;     // Код ДАД2
+    public String tel_type; // Номер телефона, если не определена будут использоваться оба номера сотрудника tel1, tel2
+    public String photo_type; // Типо фото
+
+    // Период за который надо получить данные
+    public String date_from;
+    public String date_to;
+
+
+    public String dt_change_from;     // unixtime времени изменения
+    public String dt_change_to;       // unixtime времени изменения
+
+    // Эти касаются Оценок Доп. ТТребований
+    public String dt_from;              // unixtime времени, с которого записи об оценках нужно получить(опционально)
+    public String dt_to;                // unixtime времени, по которое записи об оценках нужно получить(опционально)
+
+    public String active;       // Нужно для таблички Стандартов
+    public String theme_id;     // Передача темы. Нужно для таблички Стандартов
+
+    public String test;     // Отладочный. 03.11.2021. когда в ЗИР менялись поля.
+
+    public List<T> data;
+
+
+    public static class StandartDataChat{
+        public Integer element_id;
+        public Integer msg_id;
+        public Integer chat_group;
+        public Integer chat_msg;
+        public Integer chat_person;
+    }
+
+    public static class  StandartDataTARUpload{
+        public Integer element_id;  // внутренний номер, под этим номером в ответе будут данные для каждого элемента
+        public Long code_dad2;      // код дад2 задачи (не ID, а именно дад2)
+        public Long dt_start_fact;  // фактическое время начала работ
+        public Long dt_end_fact;    // фактическое время окончания работ
+        public Integer vote_score;    // Оценка рекламации
+        public Integer vinovnik_score;      // Оценка обьективности
+        public Integer sotr_opinion_id;     // id-шник мнения о задаче/рекламации
+    }
+}
+
+
+
+

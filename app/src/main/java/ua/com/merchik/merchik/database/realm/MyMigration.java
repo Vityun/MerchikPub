@@ -1,0 +1,72 @@
+package ua.com.merchik.merchik.database.realm;
+
+import android.util.Log;
+
+import io.realm.DynamicRealm;
+import io.realm.RealmMigration;
+import io.realm.RealmSchema;
+
+// Example migration adding a new class
+public class MyMigration implements RealmMigration {
+    @Override
+    public void migrate(DynamicRealm realm, long oldVersion, long newVersion) {
+
+        // DynamicRealm exposes an editable schema
+        RealmSchema schema = realm.getSchema();
+
+        Log.e("MyMigration", "oldVersion: " + oldVersion);
+        Log.e("MyMigration", "newVersion: " + newVersion);
+
+
+        if (oldVersion == 7){
+            schema.get("StackPhotoDB")
+                    .addField("dt", Long.class)
+                    .addField("approve", Integer.class);
+            oldVersion++;
+        }
+
+        if (oldVersion == 8){
+            schema.get("WpDataDB")
+                    .addField("startUpdate", boolean.class);
+            oldVersion++;
+        }
+
+    }
+}
+
+
+// EXAMPLE
+/*
+        // Migrate to VersionApp 1: Add a new class.
+        // Example:
+        // public Person extends RealmObject {
+        //     private String name;
+        //     private int age;
+        //     // getters and setters left out for brevity
+        // }
+        if (oldVersion == 0) {
+            schema.create("Person")
+                    .addField("name", String.class)
+                    .addField("age", int.class);
+            oldVersion++;
+        }
+
+        // Migrate to VersionApp 2: Add a primary key + object references
+        // Example:
+        // public Person extends RealmObject {
+        //     private String name;
+        //     private int age;
+        //     @PrimaryKey
+        //     private int id;
+        //     private Dog favoriteDog;
+        //     private RealmList<Dog> dogs;
+        //     // getters and setters left out for brevity
+        // }
+        if (oldVersion == 1) {
+            schema.get("Person")
+                    .addField("id", long.class, FieldAttribute.PRIMARY_KEY)
+                    .addRealmObjectField("favoriteDog", schema.get("Dog"))
+                    .addRealmListField("dogs", schema.get("Dog"));
+            oldVersion++;
+        }
+*/

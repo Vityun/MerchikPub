@@ -1,0 +1,308 @@
+package ua.com.merchik.merchik.Filter;
+
+import android.content.Context;
+import android.util.Log;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import ua.com.merchik.merchik.Globals;
+import ua.com.merchik.merchik.ViewHolders.AutoTextUsersViewHolder;
+import ua.com.merchik.merchik.data.Database.Room.OpinionSDB;
+import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
+import ua.com.merchik.merchik.data.Database.Room.UsersSDB;
+import ua.com.merchik.merchik.data.Database.Room.UsersSDBDat.UserSDBJoin;
+import ua.com.merchik.merchik.data.RealmModels.AddressDB;
+import ua.com.merchik.merchik.data.RealmModels.CustomerDB;
+import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
+import ua.com.merchik.merchik.data.RealmModels.ThemeDB;
+import ua.com.merchik.merchik.data.RealmModels.TovarDB;
+import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
+import ua.com.merchik.merchik.database.realm.tables.TasksAndReclamationsRealm;
+
+public class MyFilter {
+
+    private Context mContext;
+    private Globals.SourceAct sourceAct;
+
+    private List<WpDataDB> wpList;
+    private List<StackPhotoDB> stackPhotoList;
+    private List<TovarDB> tovarList;
+
+    public MyFilter() {
+    }
+
+    public MyFilter(Context mContext) {
+        this.mContext = mContext;
+    }
+
+    public MyFilter(Context context, Globals.SourceAct source) {
+        this.mContext = context;
+        this.sourceAct = source;
+    }
+
+
+    /**
+     * Получение отфильтрованных ответов
+     * Их у меня должно быть на каждый случай что ли?
+     * Ну для говнокода - изи, а как нормально?
+     */
+    // Для ПЛАНА РАБОТ
+    public List<WpDataDB> getFilteredResultsWP(String constraint, List<WpDataDB> sorted, List<WpDataDB> orig) {
+
+        Log.e("getFilteredResultsWP", "constraint: " + constraint);
+//        Log.e("getFilteredResultsWP", "sorted: " + sorted.size());
+        Log.e("getFilteredResultsWP", "orig: " + orig.size());
+
+        List<WpDataDB> results = new ArrayList<>();
+        if (sorted == null) {
+            sorted = orig;
+        }
+
+
+        for (WpDataDB item : sorted) {
+            // Дата
+            if (item.getDt() != null && !item.getDt().equals("") && item.getDt().toLowerCase().contains(constraint)) {
+                results.add(item);
+            }
+            // Адрес
+            else if (item.getAddr_txt() != null && !item.getAddr_txt().equals("") && item.getAddr_txt().toLowerCase().contains(constraint)) {
+                results.add(item);
+            }
+            // Клиент
+            else if (item.getClient_txt() != null && !item.getClient_txt().equals("") && item.getClient_txt().toLowerCase().contains(constraint)) {
+                results.add(item);
+            }
+            // Пользователь
+            else if (item.getUser_txt() != null && !item.getUser_txt().equals("") && item.getUser_txt().toLowerCase().contains(constraint)) {
+                results.add(item);
+            }
+        }
+
+
+        return results;
+    }
+
+
+    public List<StackPhotoDB> getFilteredResultsSP(String constraint, List<StackPhotoDB> sorted, List<StackPhotoDB> orig) {
+
+        Log.e("getFilteredResultsSP", "constraint: " + constraint);
+
+        List<StackPhotoDB> results = new ArrayList<>();
+        if (sorted == null) {
+            sorted = orig;
+        }
+
+        for (StackPhotoDB item : sorted) {
+            // Дата Надо подумать
+//            if (item.getAddressTxt() != null && !item.getDt().equals("") && item.getDt().toLowerCase().contains(constraint)) {
+//                results.add(item);
+//            }
+
+
+            // Адрес
+            if (item.getAddressTxt() != null && !item.getAddressTxt().equals("") && item.getAddressTxt().toLowerCase().contains(constraint)) {
+                results.add(item);
+            }
+            // Клиент
+            else if (item.getCustomerTxt() != null && !item.getCustomerTxt().equals("") && item.getCustomerTxt().toLowerCase().contains(constraint)) {
+                results.add(item);
+            }
+            // Пользователь
+            else if (item.getUserTxt() != null && !item.getUserTxt().equals("") && item.getUserTxt().toLowerCase().contains(constraint)) {
+                results.add(item);
+            }
+        }
+
+
+        return results;
+    }
+
+
+    public List<TovarDB> getFilteredResultsTOV(String constraint, List<TovarDB> sorted, List<TovarDB> orig) {
+
+        Log.e("getFilteredResultsTOV", "constraint: " + constraint);
+        try {
+            Log.e("getFilteredResultsTOV", "sorted: " + sorted.size());
+        } catch (Exception e) {
+        }
+
+        Log.e("getFilteredResultsTOV", "orig: " + orig.size());
+
+        List<TovarDB> results = new ArrayList<>();
+        if (sorted == null) {
+            sorted = orig;
+        }
+
+        for (TovarDB item : sorted) {
+
+            //
+            if (item.getNm() != null && !item.getNm().equals("") && item.getNm().toLowerCase().contains(constraint)) {
+                results.add(item);
+            } else if (item.getWeight() != null && !item.getWeight().equals("") && item.getWeight().toLowerCase().contains(constraint)) {
+                results.add(item);
+            } else if (item.getBarcode() != null && !item.getBarcode().equals("") && item.getBarcode().toLowerCase().contains(constraint)) {
+                results.add(item);
+            }
+        }
+
+        return results;
+    }
+
+
+    public List<TasksAndReclamationsSDB> getFilteredResultsTAR(String constraint, List<TasksAndReclamationsSDB> sorted, List<TasksAndReclamationsSDB> orig) {
+        List<TasksAndReclamationsSDB> results = new ArrayList<>();
+        try {
+            if (sorted == null) {
+                sorted = orig;
+            }
+
+            for (TasksAndReclamationsSDB item : sorted) {
+
+                Log.d("test", "item: " + item);
+
+                if (item.addrNm != null && !item.addrNm.equals("") && item.addrNm.toLowerCase().contains(constraint)){
+                    results.add(item);
+                } else if (item.clientNm != null && !item.clientNm.equals("") && item.clientNm.toLowerCase().contains(constraint)){
+                    results.add(item);
+                }else if (item.sortNm != null && !item.sortNm.equals("") && item.sortNm.toLowerCase().contains(constraint)){
+                    results.add(item);
+                }
+            }
+
+            Log.e("getFilteredResultsTAR", "end: " + results.size());
+
+        }catch (Exception e){
+            Globals.writeToMLOG("ERROR", "getFilteredResultsTAR", "Exception e: " + e);
+        }
+
+        return results;
+    }
+
+
+    /***/
+    public List<AddressDB> getAddressFilterable(String constraint, List<AddressDB> sorted, List<AddressDB> orig) {
+
+        List<AddressDB> results = new ArrayList<>();
+        if (sorted == null) {
+            sorted = orig;
+        }
+
+        for (AddressDB item : sorted) {
+            if (item.getNm() != null && !item.getNm().equals("") && item.getNm().toLowerCase().contains(constraint)) {
+                results.add(item);
+            }
+        }
+
+        return results;
+    }
+
+    /***/
+    public <T> List<T> getUserSdbFilterable(AutoTextUsersViewHolder.AutoTextUserEnum type, String constraint, List<T> sorted, List<T> orig) {
+
+        List<T> results = new ArrayList<>();
+        if (sorted == null) {
+            sorted = orig;
+        }
+
+        switch (type) {
+
+            case DEPARTMENT:
+                for (UserSDBJoin item : (List<UserSDBJoin>) sorted) {
+                    if (item.fio != null && !item.fio.equals("") && item.fio.toLowerCase().contains(constraint)) {
+                        results.add((T) item);
+                    } else if (item.nm != null && !item.nm.equals("") && item.nm.toLowerCase().contains(constraint)) {
+                        results.add((T) item);
+                    }
+                }
+                break;
+
+
+            case DEFAULT:
+
+            default:
+                //1
+                for (UsersSDB item : (List<UsersSDB>) sorted) {
+                    if (item.fio != null && !item.fio.equals("") && item.fio.toLowerCase().contains(constraint)) {
+                        results.add((T) item);
+                    }
+                }
+                break;
+        }
+
+
+        return results;
+    }
+
+
+    /***/
+    public List<CustomerDB> getCustomerFilterable(String constraint, List<CustomerDB> sorted, List<CustomerDB> orig) {
+
+        List<CustomerDB> results = new ArrayList<>();
+        if (sorted == null) {
+            sorted = orig;
+        }
+
+        for (CustomerDB item : sorted) {
+            if (item.getNm() != null && !item.getNm().equals("") && item.getNm().toLowerCase().contains(constraint)) {
+                results.add(item);
+            }
+        }
+
+        return results;
+    }
+
+
+    /***/
+    public List<ThemeDB> getThemeFilterable(String constraint, List<ThemeDB> sorted, List<ThemeDB> orig) {
+
+        List<ThemeDB> results = new ArrayList<>();
+        if (sorted == null) {
+            sorted = orig;
+        }
+
+        for (ThemeDB item : sorted) {
+            if (item.getNm() != null && !item.getNm().equals("") && item.getNm().toLowerCase().contains(constraint)) {
+                results.add(item);
+            }
+        }
+
+        return results;
+    }
+
+
+    /***/
+    public List<TasksAndReclamationsRealm.TaRStatus> getStatusFilterable(String constraint, List<TasksAndReclamationsRealm.TaRStatus> sorted, List<TasksAndReclamationsRealm.TaRStatus> orig) {
+
+        List<TasksAndReclamationsRealm.TaRStatus> results = new ArrayList<>();
+        if (sorted == null) {
+            sorted = orig;
+        }
+
+        for (TasksAndReclamationsRealm.TaRStatus item : sorted) {
+            if (item.nm != null && !item.nm.equals("") && item.nm.toLowerCase().contains(constraint)) {
+                results.add(item);
+            }
+        }
+
+        return results;
+    }
+
+
+    /***/
+    public List<OpinionSDB> getOpinionsFilterable(String constraint, List<OpinionSDB> sorted, List<OpinionSDB> orig) {
+
+        List<OpinionSDB> results = new ArrayList<>();
+        if (sorted == null) {
+            sorted = orig;
+        }
+
+        for (OpinionSDB item : sorted) {
+            if (item.nm != null && !item.nm.equals("") && item.nm.toLowerCase().contains(constraint)) {
+                results.add(item);
+            }
+        }
+
+        return results;
+    }
+}
