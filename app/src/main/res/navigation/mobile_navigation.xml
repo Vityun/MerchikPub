@@ -7,7 +7,7 @@
 
     <fragment
         android:id="@+id/nav_home"
-        android:name="ua.com.merchik.merchik.WPDataActivity"
+        android:name="ua.com.merchik.merchik.Activities.WorkPlanActivity.WPDataActivity"
         android:label="ПЛАН РАОТ МОБАЙЛ НАВИГАЦИЯ"
         tools:layout="@layout/activity_menu_wp_data" />
     <activity

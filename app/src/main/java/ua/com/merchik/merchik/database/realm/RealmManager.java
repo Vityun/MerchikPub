@@ -94,9 +94,13 @@ public class RealmManager {
         INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(8, "promoList", 3600000, 0, 0, 0, 0));     // Акции
         INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(9, "errorsList", 3600000, 0, 0, 0, 0));     // Ошибки
         INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(10, "stack_photo", 36000, 0, 0, 0, 0));     // стэк фото
-
-        INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(11, "task_and_reclamations", 600, 0, 0, 0, 0));     // стэк фото
-
+        INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(11, "task_and_reclamations", 600, 0, 0, 0, 0));     // ЗИР
+        INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(12, "planogram", 36000, 0, 0, 0, 0));     // Планограммы
+        INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(13, "address_sql", 36000, 0, 0, 0, 0));
+        INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(14, "clients_sql", 36000, 0, 0, 0, 0));
+        INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(15, "users_sql", 36000, 0, 0, 0, 0));
+        INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(16, "city_sql", 36000, 0, 0, 0, 0));
+        INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(17, "oblast_sql", 36000, 0, 0, 0, 0));
         INSTANCE.commitTransaction();
     }
 
@@ -502,6 +506,13 @@ public class RealmManager {
                 .findAll();
     }
 
+    public static RealmResults<WpDataDB> getAllWorkPlanMAP() {
+        return INSTANCE.where(WpDataDB.class)
+                .sort("dt_start", Sort.ASCENDING)
+                .distinct("addr_id")
+                .findAll();
+    }
+
     public static WpDataDB getWorkPlanRowById(int id) {
         //"SELECT * FROM wp_data WHERE id = " + wpId + ";"
         return INSTANCE.where(WpDataDB.class)
@@ -668,7 +679,6 @@ public class RealmManager {
                 .equalTo("upload_to_server", 0)
                 .equalTo("get_on_server", 0)
                 .notEqualTo("photo_type", 18)
-//                .notEqualTo("object_id", 1)
                 .and()
                 .isNotNull("client_id")
                 .isNotNull("addr_id")
@@ -683,7 +693,15 @@ public class RealmManager {
                 .notEqualTo("photo_type", 18)
                 .notEqualTo("photo_type", 29)
                 .notEqualTo("photo_type", 5)
-//                .lessThanOrEqualTo("object_id", 1)
+                .findAll();
+    }
+
+    public static RealmResults<StackPhotoDB> getStackPhotoLogByDad2(long dad2) {
+        return INSTANCE.where(StackPhotoDB.class)
+                .notEqualTo("photo_type", 18)
+                .notEqualTo("photo_type", 29)
+                .notEqualTo("photo_type", 5)
+                .equalTo("code_dad2", dad2)
                 .findAll();
     }
 
@@ -957,44 +975,26 @@ public class RealmManager {
 
         if (list != null) {
             for (WpDataDB l : list) {
-                if (l.startUpdate){
-                    if (l.getVisit_start_dt() > 0 || l.getVisit_end_dt() > 0) {
-                        StartEndData item = new StartEndData();
+                if (l.startUpdate || l.getSetStatus() > 0){
+                    StartEndData item = new StartEndData();
 
-                        item.element_id = String.valueOf(l.getId());
-                        item.code_dad2 = String.valueOf(l.getCode_dad2());
-                        item.user_id = String.valueOf(l.getUser_id());
-                        item.client_id = String.valueOf(l.getClient_id());
-                        item.isp = String.valueOf(l.getIsp());
+                    item.element_id = String.valueOf(l.getId());
+                    item.code_dad2 = String.valueOf(l.getCode_dad2());
+                    item.user_id = String.valueOf(l.getUser_id());
+                    item.client_id = String.valueOf(l.getClient_id());
+                    item.isp = String.valueOf(l.getIsp());
+                    item.dt_update = l.getDt_update();
 
+                    if (l.startUpdate){
                         item.visit_start_dt = String.valueOf(l.getVisit_start_dt());
                         item.visit_end_dt = String.valueOf(l.getVisit_end_dt());
                         item.client_start_dt = String.valueOf(l.getClient_start_dt());
                         item.client_end_dt = String.valueOf(l.getClient_end_dt());
-
-                        res.add(item);
-                    }
-                }
-
-
-                try {
-                    if (l.getSetStatus() > 0){
-                        StartEndData item = new StartEndData();
-
-                        item.element_id = String.valueOf(l.getId());
-                        item.code_dad2 = String.valueOf(l.getCode_dad2());
-                        item.user_id = String.valueOf(l.getUser_id());
-                        item.client_id = String.valueOf(l.getClient_id());
-                        item.isp = String.valueOf(l.getIsp());
-
                         item.status_set = String.valueOf(l.getSetStatus());
-
-                        res.add(item);
                     }
-                }catch (Exception e){
-                    Log.e("test", "test: " + e);
-                }
 
+                    res.add(item);
+                }
             }
         }
         return res;
@@ -1098,8 +1098,13 @@ public class RealmManager {
     // REPORT_PREPARE:----------------------------START---------------------------------------------
 
     // Получение по ДАД_2 с плана работ списка id товаров
+    /*
+    * Получение ВСЕХ ReportPrepareDB по ДАД2 данного документа, создание списка ID-шников Товаров
+    * полученных из этого ReportPrepareDB. Получение по списку ID-шников Товаров ТЗН TovarDB.
+    * Добавление в ТЗН TovarDB TradeMarkDB по id-шникам из ТЗН TovarDB. Сортировка полученного
+    * компота по sort("manufacturer.nm", Sort.ASCENDING, "sortcol", Sort.ASCENDING); (ПО ВОЗРАСТАНИЮ)
+    * */
     public static RealmResults<TovarDB> getTovarListFromReportPrepareByDad2(long dad2) {
-
         Log.e("TovarListFromRPByDad2", "Start: " + dad2);
 
         RealmResults<ReportPrepareDB> realmResults = INSTANCE.where(ReportPrepareDB.class)

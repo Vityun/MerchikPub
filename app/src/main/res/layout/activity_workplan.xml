@@ -8,29 +8,12 @@
 
     <include
         android:id="@+id/include"
-        layout="@layout/toolbar"
+        layout="@layout/toolbar_light"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
-
-    <TextView
-        android:id="@+id/textViewVer3"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
-        android:layout_marginLeft="8dp"
-        android:layout_marginEnd="8dp"
-        android:layout_marginRight="8dp"
-        android:text="@string/ver"
-        android:textColor="@color/colorDescription"
-        android:visibility="gone"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.498"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        tools:ignore="MissingConstraints" />
 
     <TextView
         android:id="@+id/title_wpdata2"
@@ -56,6 +39,7 @@
         android:drawableStart="@android:drawable/ic_menu_search"
         android:drawableLeft="@android:drawable/ic_menu_search"
         android:inputType="text"
+        android:visibility="gone"
         app:actionViewClass="android.widget.SearchView"
         app:layout_constraintEnd_toStartOf="@+id/filter"
         app:layout_constraintStart_toStartOf="parent"
@@ -91,9 +75,10 @@ app:layout_constraintBottom_toTopOf="@+id/search2"
         android:layout_marginRight="16dp"
         android:layout_marginBottom="16dp"
 
-        android:scaleType="centerInside"
         android:elevation="10dp"
+        android:scaleType="centerInside"
 
+        android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="@+id/searchView"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="@+id/searchView"
@@ -103,6 +88,7 @@ app:layout_constraintBottom_toTopOf="@+id/search2"
         android:id="@+id/RecyclerViewWorkPlan"
         android:layout_width="0dp"
         android:layout_height="0dp"
+        android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
@@ -125,6 +111,37 @@ app:layout_constraintBottom_toTopOf="@+id/search2"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:srcCompat="@drawable/ic_question_1" />
+
+    <com.google.android.material.tabs.TabLayout
+        android:id="@+id/tabLayout"
+        style="@style/TabStyle"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:background="@color/colorUnselectedTab"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/include">
+
+        <com.google.android.material.tabs.TabItem
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Закладка 1" />
+
+        <com.google.android.material.tabs.TabItem
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Закладка 2" />
+
+    </com.google.android.material.tabs.TabLayout>
+
+    <androidx.viewpager.widget.ViewPager
+        android:id="@+id/viewPager"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tabLayout" />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>

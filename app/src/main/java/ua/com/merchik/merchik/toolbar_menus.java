@@ -8,6 +8,7 @@ import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
 import android.graphics.drawable.ShapeDrawable;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
@@ -28,6 +29,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.PopupMenu;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.content.ContextCompat;
+import androidx.core.content.FileProvider;
 import androidx.core.view.GravityCompat;
 import androidx.core.view.MenuItemCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
@@ -64,6 +66,7 @@ import retrofit2.Response;
 import ua.com.merchik.merchik.Activities.PhotoLogActivity.PhotoLogActivity;
 import ua.com.merchik.merchik.Activities.ReferencesActivity.ReferencesActivity;
 import ua.com.merchik.merchik.Activities.TaskAndReclamations.TARActivity;
+import ua.com.merchik.merchik.Activities.WorkPlanActivity.WPDataActivity;
 import ua.com.merchik.merchik.Activities.navigationMenu.MenuHeader;
 import ua.com.merchik.merchik.Activities.navigationMenu.MenuHeaderAdapter;
 import ua.com.merchik.merchik.ServerExchange.Exchange;
@@ -157,6 +160,12 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
 //            globals.alertDialogMsg(this, "ОшибкаToolbars: " + e);
 //        }
 
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        Log.d("test", "" + requestCode + resultCode + data);
     }
 
 
@@ -282,13 +291,13 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
         } else if (id == 143) {
 //            Intent intent = new Intent(this, TasksActivity.class);
             Intent intent = new Intent(this, TARActivity.class);
-            intent.putExtra("TAR_type", 0);
+            intent.putExtra("TAR_type", 1);
 
             startActivity(intent);
         } else if (id == 144) {
 //            Intent intent = new Intent(this, ReclamationsActivity.class);
             Intent intent = new Intent(this, TARActivity.class);
-            intent.putExtra("TAR_type", 1);
+            intent.putExtra("TAR_type", 0);
 
             startActivity(intent);
         } else if (id == 133) {
@@ -442,8 +451,7 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
 
                 // Выгрузка фото
                 if (i.getItemId() == R.id.exchange_photo_action) {
-//                    Toast.makeText(toolbar_menus.this, "Выгрузка фото", Toast.LENGTH_SHORT).show();
-//                    photoUpload();
+                    Globals.writeToMLOG("INFO", "toolbar_menus.act/click/exchange_photo_action", "Нажали на кнопку 'Выгрузка фото'");
                     new PhotoReports(this).uploadPhotoReports(PhotoReports.UploadType.MULTIPLE);
                 }
 
@@ -532,8 +540,37 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                 dialog.setClose(dialog::dismiss);
                 dialog.show();
             }
+        }
 
+        // ... Настройки
+        if (id == R.id.action_settings){
+            DialogData dialog = new DialogData(this);
+            dialog.setTitle("Настройки");
+            dialog.setText("Отправить служебный файл?");
+            dialog.setOk("Отправить", ()->{
+                Intent emailIntent = new Intent(Intent.ACTION_SEND);
+                emailIntent.setType("text/plain");
+                emailIntent.putExtra(Intent.EXTRA_EMAIL, new String[] {"support@merchik.com.ua"});
+                emailIntent.putExtra(Intent.EXTRA_SUBJECT, "Приложение. M_LOG.");
+                emailIntent.putExtra(Intent.EXTRA_TEXT, "Отправка отладочного файла");
+                File root = MyApplication.getAppContext().getExternalFilesDir(Environment.DIRECTORY_NOTIFICATIONS);
+                String fName = "M_LOG.txt";
+                File file = new File(root, fName);
+                if (!file.exists() || !file.canRead()) {
+                    return;
+                }
+                Uri contentUri;
+                try {
+                    contentUri = FileProvider.getUriForFile(this, "ua.com.merchik.merchik.provider", file);
+                } catch (Exception e) {
+                    contentUri = Uri.fromFile(file);
+                }
 
+                emailIntent.putExtra(Intent.EXTRA_STREAM, contentUri);
+                startActivity(Intent.createChooser(emailIntent, "Как отправить файл?"));
+            });
+            dialog.setClose(dialog::dismiss);
+            dialog.show();
         }
 
         // ... Автовыгрузка
@@ -722,10 +759,10 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
 
                     PhotoReports photoReports = new PhotoReports(toolbar_menus.this);
                     if (photoReports.permission) {
-                        Globals.writeToMLOG("INFO", "CRON", "Start upload photo reports. upload permission: true");
+                        Globals.writeToMLOG("INFO", "CRON/PhotoReports", "Start upload photo reports. upload permission: true");
                         photoReports.uploadPhotoReports(PhotoReports.UploadType.AUTO);
                     } else {
-                        Globals.writeToMLOG("INFO", "CRON", "Start upload photo reports. upload permission: false");
+                        Globals.writeToMLOG("INFO", "CRON/PhotoReports", "Start upload photo reports. upload permission: false");
                     }
 
                 }
@@ -902,7 +939,8 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
         int photoId = photoDB.getId();
         // Запрос
         String mod = "images_prepare";
-        String act = "upload_image";
+//        String act = "upload_image";
+        String act              = "upload_photo";
 
         String client_id = "";
         String addr_id = "";
@@ -913,6 +951,7 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
         String doc_num = "";
         String theme_id = "";
         String comment = "";
+        String dvi = "";
         String code_dad2 = "";
         String gp = "";
 
@@ -953,6 +992,10 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
             comment = photoDB.getComment();
         }
 
+        if (photoDB.getDvi() != null) {
+            dvi = String.valueOf(photoDB.getDvi());
+        }
+
         try {
             code_dad2 = String.valueOf(photoDB.getCode_dad2());
         } catch (Exception e) {
@@ -976,6 +1019,7 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
         RequestBody doc_num2 = RequestBody.create(MediaType.parse("text/plain"), doc_num);
         RequestBody theme_id2 = RequestBody.create(MediaType.parse("text/plain"), theme_id);
         RequestBody comment2 = RequestBody.create(MediaType.parse("text/plain"), comment);
+        RequestBody dvi2 = RequestBody.create(MediaType.parse("text/plain"), dvi);
         RequestBody codeDad2 = RequestBody.create(MediaType.parse("text/plain"), code_dad2);
         RequestBody gp2 = RequestBody.create(MediaType.parse("text/plain"), gp);
 
@@ -1023,7 +1067,7 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
 
         if (mode == 1) {
             retrofit2.Call<JsonObject> call = RetrofitBuilder.getRetrofitInterface()
-                    .SEND_PHOTO_2_BODY(mod2, act2, client_id2, addr_id2, date2, img_type_id2, photo_user_id2, client_tovar_group2, doc_num2, theme_id2, comment2, codeDad2, gp2, photo);
+                    .SEND_PHOTO_2_BODY(mod2, act2, client_id2, addr_id2, date2, img_type_id2, photo_user_id2, client_tovar_group2, doc_num2, theme_id2, comment2, dvi2, codeDad2, gp2, photo);
 //            call.cancel();
 
             try {

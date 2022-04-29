@@ -12,6 +12,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.RecycleViewDRAdapter;
@@ -19,6 +20,7 @@ import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.data.Database.Room.SiteObjectsSDB;
 import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
 import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
+import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.OptionsRealm;
 
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
@@ -45,18 +47,6 @@ public class Tab2Fragment extends Fragment {
 
         recyclerView = v.findViewById(R.id.recycler_view);
 
-//        if (TARActivity.TARType == 0){
-//            Log.e("SET_TAR_FAB", "TYTA");
-//            toolbar_menus.textLesson = 0;
-//            toolbar_menus.videoLesson = 0;
-//        }else {
-//            Log.e("SET_TAR_FAB", "ZDESA");
-//            toolbar_menus.textLesson = 0;
-//            toolbar_menus.videoLesson = 0;
-//        }
-
-//        toolbar_menus.setFab(v.getContext(), TARActivity.fab); // ОПЦИИ
-
         setRecycler();
 
         return v;
@@ -68,12 +58,11 @@ public class Tab2Fragment extends Fragment {
      * Установка Опций для Задач И Рекламаций (ЗИР) по коду ДАД2
      * */
     private void setRecycler(){
-        List<OptionsDB> list = OptionsRealm.getOptionsByDAD2(String.valueOf(data.codeDad2));
+        List<OptionsDB> list = RealmManager.INSTANCE.copyFromRealm(OptionsRealm.getOptionsButtonByDAD2(String.valueOf(data.codeDad2)));
 
         Log.e("Tab2Fragment_L", "list: " + list.size());
 
-
-//        Collections.sort(list, (o1, o2) -> o1.getSo().compareTo(o2.getSo()));
+        Collections.sort(list, (o1, o2) -> o1.getSo().compareTo(o2.getSo()));
 
         List<Integer> ids = new ArrayList<>();
         for (OptionsDB item : list){
@@ -83,8 +72,14 @@ public class Tab2Fragment extends Fragment {
         // Запрос к SQL БДшке. Получаем список обьектов сайта
         List<SiteObjectsSDB> listTr = SQL_DB.siteObjectsDao().getObjectsById(ids);
 
+//        Long dad2Wp = data.codeDad2SrcDoc;
+////        WpDataDB wp = RealmManager.INSTANCE.copyFromRealm(WpDataRealm.getWpDataRowByDad2Id(dad2Wp));
+//        WpDataDB wp = WpDataRealm.getWpDataRowByDad2Id(dad2Wp);
+//        if (wp!=null){
+//            wp = RealmManager.INSTANCE.copyFromRealm(wp);
+//        }
 
-        RecycleViewDRAdapter recycleViewDRAdapter = new RecycleViewDRAdapter(mContext, null, list, listTr);
+        RecycleViewDRAdapter recycleViewDRAdapter = new RecycleViewDRAdapter(mContext, data, list, listTr);
         recyclerView.setAdapter(recycleViewDRAdapter);
         recyclerView.setLayoutManager(new LinearLayoutManager(mContext, LinearLayoutManager.VERTICAL, false));
     }

@@ -10,7 +10,13 @@ public class StandartData<T> {
 
     public String dt;
     public String id;
+    public String login;
 
+    public Integer addr_id;
+    public Double x;    // Координата Х
+    public Double y;    // Координата Y
+
+    public Integer option_id;   // На данный момоент используется в ЭКЛах
     public String sotr_id;  // Фильтр для получения &&&&&&&&&&&&&????????????)))))))))))))))
     public String lang_id;  // ID языка
     public String code_dad2;     // Код ДАД2
@@ -35,7 +41,19 @@ public class StandartData<T> {
     public String test;     // Отладочный. 03.11.2021. когда в ЗИР менялись поля.
 
     public List<T> data;
+    public List<T> tovar_id;    // Тестовая хрень, надо поменять
 
+    public Filter filter;
+
+    public String nolimit;
+    public String tovar_only;   //
+    public String image_type;   // Тип фото. small/full для получения с сервера нужного размера фотку
+
+
+    public static class Filter{
+        public String date_from;
+        public String date_to;
+    }
 
     public static class StandartDataChat{
         public Integer element_id;
@@ -46,11 +64,11 @@ public class StandartData<T> {
     }
 
     public static class  StandartDataTARUpload{
-        public Integer element_id;  // внутренний номер, под этим номером в ответе будут данные для каждого элемента
-        public Long code_dad2;      // код дад2 задачи (не ID, а именно дад2)
-        public Long dt_start_fact;  // фактическое время начала работ
-        public Long dt_end_fact;    // фактическое время окончания работ
-        public Integer vote_score;    // Оценка рекламации
+        public Integer element_id;          // внутренний номер, под этим номером в ответе будут данные для каждого элемента
+        public Long code_dad2;              // код дад2 задачи (не ID, а именно дад2)
+        public Long dt_start_fact;          // фактическое время начала работ
+        public Long dt_end_fact;            // фактическое время окончания работ
+        public Integer vote_score;          // Оценка рекламации
         public Integer vinovnik_score;      // Оценка обьективности
         public Integer sotr_opinion_id;     // id-шник мнения о задаче/рекламации
     }

@@ -25,6 +25,9 @@ import ua.com.merchik.merchik.data.DataFromServer.PhotoData.PhotoData;
 import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteHints;
 import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteObjects.SiteObjects;
 import ua.com.merchik.merchik.data.PPAonResponse;
+import ua.com.merchik.merchik.data.RetrofitResponse.AdditionalMaterialsAddressResponse;
+import ua.com.merchik.merchik.data.RetrofitResponse.AdditionalMaterialsLinksResponse;
+import ua.com.merchik.merchik.data.RetrofitResponse.AdditionalMaterialsResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.AddressTableResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.ArticleTableResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.CustomerGroups;
@@ -173,6 +176,11 @@ public interface RetrofitInterface {
     Call<OptionsServer> OPTIONS_CALL(@Query("mod") String mod, @Query("act") String act, @Query("date_from") String date_from, @Query("date_to") String date_to);
 
     @POST("mobile_app.php?")
+    Call<OptionsServer> GET_OPTIONS(
+            @Header("ContentType") String content,
+            @Body JsonObject json);
+
+    @POST("mobile_app.php?")
     Call<ReportPrepareServer> REPORT_PREPARE_CALL_ALL(@Query("mod") String mod, @Query("act") String act, @Query("date_from") String date_from, @Query("date_to") String date_to);
 
     @POST("mobile_app.php?")
@@ -213,6 +221,7 @@ public interface RetrofitInterface {
                                        @Part("doc_num") RequestBody doc_num,
                                        @Part("theme_id") RequestBody theme_id,
                                        @Part("comment") RequestBody comment,
+                                       @Part("dvi") RequestBody dvi,
                                        @Part("code_dad2") RequestBody codeDad2,
                                        @Part("gp") RequestBody gp,
                                        @Part MultipartBody.Part photo);
@@ -233,6 +242,11 @@ public interface RetrofitInterface {
                                                 @Query("nolimit") String noLimit,
                                                 @Query("image_type") String imageType,
                                                 @Query("tovar_id[]") List<String> tov_id);
+
+    @POST("mobile_app.php?")
+    Call<TovarImgResponse> GET_TOVAR_PHOTO_INFO_JSON(
+            @Header("ContentType") String content,
+            @Body JsonObject json);
 
     // http:\/\/merchik.com.ua\/photos\/03693\/24937\/thumb_010520_5310592_kiyev_mashinostroitelnaya_50_of_205_ivanovskaya_sofiya_valeryevna.jpg
     // http:\/\/merchik.com.ua\/photos\/03693\/24937\/thumb_300420_1804334_kiyev_mashinostroitelnaya_50_of_205_krush_irina_leonidovna.jpg
@@ -536,6 +550,24 @@ public interface RetrofitInterface {
             @Header("ContentType") String content,
             @Body JsonObject json);
 
+    // Получение Доп. Материалов Адресов
+    @POST("mobile_app.php?")
+    Call<AdditionalMaterialsAddressResponse> GET_ADDITIONAL_MATERIAL_ADDRESS(
+            @Header("ContentType") String content,
+            @Body JsonObject json);
+
+    // Получение Доп. Материалов
+    @POST("mobile_app.php?")
+    Call<AdditionalMaterialsResponse> GET_ADDITIONAL_MATERIAL(
+            @Header("ContentType") String content,
+            @Body JsonObject json);
+
+    // Получение ссылки на доп. материал
+    @POST("mobile_app.php?")
+    Call<AdditionalMaterialsLinksResponse> GET_ADDITIONAL_MATERIAL_LINK(
+            @Header("ContentType") String content,
+            @Body JsonObject json);
+
     // Выгрузка инфы о дет отчёте (фейс, цена, количество)
     @POST("mobile_app.php?")
     Call<ReportPrepareUpdateResponse> SEND_RP_INFO(
@@ -668,6 +700,11 @@ public interface RetrofitInterface {
 
     @POST("mobile_app.php?")
     Call<WpDataUpdateResponse> SEND_WP_DATA(
+            @Header("ContentType") String content,
+            @Body JsonObject json);
+
+    @POST("mobile_app.php?")
+    Call<JsonObject> SEND_WP_DATA_JSON(
             @Header("ContentType") String content,
             @Body JsonObject json);
 

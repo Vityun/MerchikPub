@@ -19,6 +19,10 @@ public class ThemeRealm {
         INSTANCE.commitTransaction();
     }
 
+    public static List<ThemeDB> getAll(){
+        return INSTANCE.copyFromRealm(INSTANCE.where(ThemeDB.class).findAll());
+    }
+
 
     public static ThemeDB getByID(String id){
         return INSTANCE.where(ThemeDB.class)
@@ -35,7 +39,7 @@ public class ThemeRealm {
 
     public static List<ThemeDB> getTARTheme(){
         return INSTANCE.where(ThemeDB.class)
-                .equalTo("tp", "2")
+//                .equalTo("tp", "2")
                 .findAll();
     }
 

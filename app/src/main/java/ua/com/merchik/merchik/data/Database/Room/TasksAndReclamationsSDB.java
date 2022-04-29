@@ -273,6 +273,16 @@ public class TasksAndReclamationsSDB {
     @ColumnInfo(name = "sotr_opinion_id")
     public Integer sotrOpinionId;
 
+    @SerializedName("sotr_opinion_author_id")
+    @Expose
+    @ColumnInfo(name = "sotr_opinion_author_id")
+    public Integer sotrOpinionAuthorId;
+
+    @SerializedName("sotr_opinion_dt")
+    @Expose
+    @ColumnInfo(name = "sotr_opinion_dt")
+    public Long sotrOpinionDt;
+
     @SerializedName("no_need_reply")
     @Expose
     @ColumnInfo(name = "no_need_reply")
@@ -309,6 +319,15 @@ public class TasksAndReclamationsSDB {
     @ColumnInfo(name = "dt_end_fact")
     public Long dt_end_fact;//    dt_end_fact - фактическое время окончания (unixtime)
 
+    /**
+     * 0 - выгружен
+     * 1 - надо выгрузить
+     * NULL - получено с сервера
+     * */
+    @SerializedName("uploadStatus")
+    @Expose
+    @ColumnInfo(name = "uploadStatus")
+    public Integer uploadStatus;
 
     // Доп поля для JOINов
 //    @Ignore
@@ -322,4 +341,10 @@ public class TasksAndReclamationsSDB {
 //    @Ignore
     @ColumnInfo(name = "sotr_nm")
     public String sortNm;
+
+    @ColumnInfo(name = "coord_X")
+    public String coordX;
+
+    @ColumnInfo(name = "coord_Y")
+    public String coordY;
 }

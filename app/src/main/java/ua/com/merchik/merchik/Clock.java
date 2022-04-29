@@ -90,6 +90,11 @@ public class Clock {
         return new SimpleDateFormat("dd-MM-yyyy").format(df);
     }
 
+    public static String getHumanTimeYYYYMMDD(Long l) {
+        Date df = new java.util.Date(l * 1000);
+        return new SimpleDateFormat("yyyy-MM-dd").format(df);
+    }
+
     public static String getHumanTimeOpt(long l) {
         if (l == 0) {
             return "0";
@@ -128,11 +133,11 @@ public class Clock {
      * Динамическое получение нужной даты
      * Нужно дорабатывать, но уже по ходу движения
      */
-    public static String getDateString(int date) {
+    public static String getDateString(long unix_time) {
         DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-        Calendar cal = Calendar.getInstance();
-        cal.add(Calendar.DATE, date);
-        return dateFormat.format(cal.getTime());
+        Date date = new Date ();
+        date.setTime(unix_time);
+        return dateFormat.format(date);
     }
 
     public static Date getDateLong(int date) {

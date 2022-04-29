@@ -1,23 +1,39 @@
 package ua.com.merchik.merchik;
 
+import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.util.Log;
 import android.widget.Toast;
+
+import androidx.recyclerview.widget.LinearLayoutManager;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
+import java.io.Serializable;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import io.reactivex.rxjava3.observers.DisposableCompletableObserver;
+import io.reactivex.rxjava3.schedulers.Schedulers;
 import io.realm.RealmResults;
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity;
+import ua.com.merchik.merchik.Activities.TaskAndReclamations.TasksActivity.TARSecondFrag;
+import ua.com.merchik.merchik.Adapters.TextAdapter;
+import ua.com.merchik.merchik.ServerExchange.Exchange;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
+import ua.com.merchik.merchik.data.Data;
 import ua.com.merchik.merchik.data.Database.Realm.VirtualAdditionalRequirementsDB;
+import ua.com.merchik.merchik.data.Database.Room.AdditionalMaterialsSDB;
 import ua.com.merchik.merchik.data.Database.Room.EKL_SDB;
+import ua.com.merchik.merchik.data.Database.Room.OpinionSDB;
+import ua.com.merchik.merchik.data.Database.Room.OpinionThemeSDB;
+import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
 import ua.com.merchik.merchik.data.OptionMassageType;
 import ua.com.merchik.merchik.data.RealmModels.AdditionalRequirementsDB;
 import ua.com.merchik.merchik.data.RealmModels.AdditionalRequirementsMarkDB;
@@ -29,12 +45,16 @@ import ua.com.merchik.merchik.data.RealmModels.TovarDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.data.RetrofitResponse.ReportHintList;
 import ua.com.merchik.merchik.data.TovarOptions;
+import ua.com.merchik.merchik.data.WPDataObj;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsMarkRealm;
 import ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsRealm;
 import ua.com.merchik.merchik.database.realm.tables.CustomerRealm;
 import ua.com.merchik.merchik.database.realm.tables.OptionsRealm;
 import ua.com.merchik.merchik.database.realm.tables.ReportPrepareRealm;
+import ua.com.merchik.merchik.database.realm.tables.WpDataRealm;
+import ua.com.merchik.merchik.dialogs.DialogAdditionalRequirements.DialogARMark.DialogARMark;
+import ua.com.merchik.merchik.dialogs.DialogAdditionalRequirements.DialogAdditionalRequirements;
 import ua.com.merchik.merchik.dialogs.DialogData;
 
 import static ua.com.merchik.merchik.Globals.OptionControlName.AKCIYA;
@@ -70,7 +90,7 @@ public class Options {
 
     // =============================================================================================
     // КОНТРОЛЬ ОПЦИЙ
-    public void optionControl(Context context, WpDataDB wpDataDB, OptionsDB optionsDB, OptionMassageType type, NNKMode mode) {
+    public <T> void optionControl(Context context, T dataDB, OptionsDB optionsDB, OptionMassageType type, NNKMode mode) {
 
         try {
             Log.e("OPTION_CONTROL", "HERE(0): " + optionsDB.getOptionControlId());
@@ -79,82 +99,82 @@ public class Options {
 
             switch (optionControlId) {
                 case 84932: // Проверка наличия ФотоОтчётов (id мне дали из 1С) (тип 0)
-                    checkPhotoReport(context, wpDataDB, optionsDB, type, mode);
+                    checkPhotoReport(context, dataDB, optionsDB, type, mode);
                     break;
 
                 case 134583:    // ПРоверка наличия фотоотчётов с привязкой к координатам
                     // Нужно дописать
-                    checkPhotoReportWithMP(context, wpDataDB, optionsDB, type, mode);
+                    checkPhotoReportWithMP(context, dataDB, optionsDB, type, mode);
                     break;
 
                 case 1470:  // Проверка наличия Фото остатков товара (тип 4)
-                    checkPhoto(wpDataDB, optionsDB, "4");
+                    checkPhoto(dataDB, optionsDB, "4");
                     break;
 
                 case 132971:  // Проверка наличия Фото тележка с товаром (тип 10)
-                    checkPhoto(wpDataDB, optionsDB, "10");
+                    checkPhoto(dataDB, optionsDB, "10");
                     break;
 
                 case 141361:  // Проверка наличия Фото тележка с товаром (тип 31)
-                    checkPhoto(wpDataDB, optionsDB, "31");
+                    checkPhoto(dataDB, optionsDB, "31");
                     break;
 
                 case 141886:    // Проверка наличия Фото Документов (3)
-                    checkPhoto(wpDataDB, optionsDB, "3");
+                    checkPhoto(dataDB, optionsDB, "3");
                     break;
 
                 case 76815: // Проверка наличия Дет.Отчётов (id мне дали из 1С)
                     Log.e("OPTION_CONTROL", "Проверка наличия Дет.Отчётов" + optionsDB.getOptionControlId());
-                    check76815(wpDataDB, optionsDB); // Проверка Представленности
+                    check76815(dataDB, optionsDB); // Проверка Представленности
                     break;
 
                 case 138519:
                     Log.e("OPTION_CONTROL", "checkStartWork: " + optionsDB.getOptionControlId());
-//                checkStartWork(context, wpDataDB, optionsDB, type, mode);
-                    optionControlStartWork_138519(context, wpDataDB, optionsDB, type, mode);
+//                checkStartWork(context, dataDB, optionsDB, type, mode);
+                    optionControlStartWork_138519(context, dataDB, optionsDB, type, mode);
                     break;
 
                 case 138521:
                     Log.e("OPTION_CONTROL", "checkEndWork: " + optionsDB.getOptionControlId());
-//                checkEndWork(context, wpDataDB, optionsDB, type, mode);
-                    optionControlEndWork_138521(context, wpDataDB, optionsDB, type, mode);
+//                checkEndWork(context, dataDB, optionsDB, type, mode);
+                    optionControlEndWork_138521(context, dataDB, optionsDB, type, mode);
                     break;
 
                 case 8299:
                     Log.e("OPTION_CONTROL", "checkMP: " + optionsDB.getOptionControlId());
-//                checkMP(context, wpDataDB, optionsDB, type, mode);
-                    optionControlMP_8299(context, wpDataDB, optionsDB, type, mode);
+//                checkMP(context, dataDB, optionsDB, type, mode);
+                    optionControlMP_8299(context, dataDB, optionsDB, type, mode);
                     break;
 
                 case 141911:
                     // !!!!!!!
-                    checkReceivingAnOrder_141911(context, wpDataDB, optionsDB, type, mode);
+                    checkReceivingAnOrder_141911(context, dataDB, optionsDB, type, mode);
                     break;
 
                 case 141889:
                     // !!!!!!!
-                    check_RENAME_2(context, wpDataDB, optionsDB, type, mode);
+                    check_RENAME_2(context, dataDB, optionsDB, type, mode);
                     break;
 
                 case 84006:
                     // !!!!!!!
-                    checkEKL(context, wpDataDB, optionsDB, type, mode);
+                    checkEKL(context, dataDB, optionsDB, type, mode);
                     break;
 
                 case 587:
-                    optionControlReceivingAnOrder_587(context, wpDataDB, optionsDB, null, NNKMode.CHECK);
+                    optionControlReceivingAnOrder_587(context, dataDB, optionsDB, null, NNKMode.CHECK);
                     break;
 
                 case 138341:
                     try {
-                        optionControlAdditionalRequirements_138341(context, wpDataDB, optionsDB, null, mode);
+                        optionControlAdditionalRequirements_138341(context, dataDB, optionsDB, null, mode);
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
                     break;
 
                 case 139577:
-                    optionControlVersion_139577(context, wpDataDB, optionsDB, null, mode);
+                    optionControlVersion_139577(context, dataDB, optionsDB, null, mode);
                     break;
 
 
@@ -196,7 +216,7 @@ public class Options {
      * Нажатие На Кнопку (ННК) -- абстрактное название. На самом деле в принципе обработка
      * состояний опций
      * */
-    public OptionMassageType NNK(Context context, WpDataDB wp, OptionsDB option, OptionMassageType type, NNKMode mode, Clicks.clickVoid click) {
+    public <T> OptionMassageType NNK(Context context, T dataDB, OptionsDB option, OptionMassageType type, NNKMode mode, Clicks.clickVoid click) {
         OptionMassageType result = new OptionMassageType();
         int res = 0;    // Счётчик для накапливания "блокировок" у данной опции
 
@@ -206,12 +226,12 @@ public class Options {
 
         // Проход по первой опции блокировки
         if (!option.getOptionBlock1().equals("0")) {
-            res += optControl(context, wp, option, Integer.parseInt(option.getOptionBlock1()), type, mode);
+            res += optControl(context, dataDB, option, Integer.parseInt(option.getOptionBlock1()), type, mode);
         }
 
         // Проход по второй опции блокировки
         if (!option.getOptionBlock2().equals("0")) {
-            res += optControl(context, wp, option, Integer.parseInt(option.getOptionBlock2()), type, mode);
+            res += optControl(context, dataDB, option, Integer.parseInt(option.getOptionBlock2()), type, mode);
         }
 
         Log.e("NNK", "END_res: " + res);
@@ -249,20 +269,19 @@ public class Options {
                     return result;
             }
         } else {
-            result.msg = "NOT OK";
+//            result.msg = "NOT OK";
 
             switch (mode) {
                 case NULL:
                     break;
 
                 case CHECK:
-//                    Toast.makeText(context, "ЧЕК ЧЕК", Toast.LENGTH_SHORT).show();
                     break;
 
                 case MAKE:
-//                    Toast.makeText(context, "КЛИК КЛИК", Toast.LENGTH_SHORT).show();
-                    optControl(context, wp, option, Integer.parseInt(option.getOptionId()), type, mode);
+                    optControl(context, dataDB, option, Integer.parseInt(option.getOptionId()), type, mode);
                     click.click();
+                    result = type;
                     break;
             }
 
@@ -290,7 +309,7 @@ public class Options {
             if (controlResult == 0) {
                 Log.e("conduct", "Опция контроля НЕ выполнена: " + controlResult);
             } else if (controlResult == 1) {
-                Log.e("conduct", "Опция контроля ВЫПолнена: " + controlResult);
+                Log.e("conduct", "Опция контроля выполнена: " + controlResult);
                 register++;
             } else {
                 Log.e("conduct", "Что-то пошло не так: " + controlResult);
@@ -300,24 +319,32 @@ public class Options {
         Log.e("conduct", "optionNotConduct: " + optionNotConduct);
 
         if (optionNotConduct.size() > 0) {
+//        if (register > 0) {
+
+
+            // Не все опции(действия) выполнены
+            // Не выполнены:
             DialogData dialog = new DialogData(context);
             dialog.setDialogIco();
-            dialog.setTitle("Не все опции прошли проверку.");
+            dialog.setTitle("Не все опции(действия) выполнены.");
 
             StringBuffer msg = new StringBuffer();
             for (OptionsDB item : optionNotConduct) {
                 msg.append("* ").append(item.getOptionControlTxt()).append("\n");
             }
 
-            dialog.setText("Не прошли проверку: \n\n" + msg);
+            dialog.setText("Не выполнены: \n\n" + msg + "\n\nУстраните указанные ошибки и повторите попытку проведения.");
             dialog.setClose(dialog::dismiss);
             dialog.show();
+
+            // Устраните указанные ошибки и повторите попытку проведения
         } else {
             Toast.makeText(context, "Запрос на проведение создан", Toast.LENGTH_SHORT).show();
-
             RealmManager.INSTANCE.executeTransaction(realm -> {
                 if (wp != null) {
+                    wp.startUpdate = true;
                     wp.setSetStatus(1);
+                    wp.setDt_update(System.currentTimeMillis()/1000);
                     realm.insertOrUpdate(wp);
                 }
             });
@@ -328,70 +355,107 @@ public class Options {
 
 
     /*Проверка Опции*/
-    private int optControl(Context context, WpDataDB wp, OptionsDB option, int optionId, OptionMassageType type, NNKMode mode) {
+    private <T> int optControl(Context context, T dataDB, OptionsDB option, int optionId, OptionMassageType type, NNKMode mode) {
 
         try {
             Log.e("NNK", "F/optControl/optionId: " + optionId);
             switch (optionId) {
 
+                // Эти 2 в принципе разные, но для меня на данный момент они занимаются одним и тем же
+                case 135742:// Дет. Отчёт по КлиентоАдресу
+                case 137797:// Дет. Отчёт по Дад2
+                    option135742(context, dataDB, option, type, mode);
+                    break;
+
+                case 132621:   // Оценка
+                    option132621(context, dataDB, option, type, mode);
+                    break;
+
+                case 84003:     // Мнение о сотруднике
+                    option84003(context, dataDB, option, type, mode);
+                    break;
+
+                case 138339:
+                    if (dataDB instanceof WpDataDB) {
+                        // Пока что пусто
+                    } else if (dataDB instanceof TasksAndReclamationsSDB) {
+                        // Надо чем-то заполнить
+                        option138339(context, dataDB, option, type, mode);
+                    }
+                    break;
+
                 // ---
 
                 case 138773:
-                    optionMP_138773(context, wp, option, type, mode);
+                    optionMP_138773(context, dataDB, option, type, mode);
                     break;
 
-                case 8299:
-                    return optionControlMP_8299(context, wp, option, type, mode) ? 1 : 0;
+//                case 8299:
+//                    return optionControlMP_8299(context, dataDB, option, type, mode) ? 1 : 0;
 
                 // ---
 
                 case 138518:
                     Log.e("NNK", "F/optControl/138518");
-                    optionStartWork_138518(context, wp, option, type, mode);
+                    if (dataDB instanceof WpDataDB) {
+                        optionStartWork_138518(context, (WpDataDB) dataDB, option, type, mode);
+//                        sendWpData2();
+                    } else if (dataDB instanceof TasksAndReclamationsSDB) {
+                        optionStartWork_138518(context, (TasksAndReclamationsSDB) dataDB, option, type, mode);
+                    }
                     break;
 
                 case 138519:
-                    Log.e("NNK", "F/optControl/138519");
-                    return optionControlStartWork_138519(context, wp, option, type, mode) ? 0 : 1;
+                    return optionControlStartWork_138519(context, dataDB, option, type, mode) ? 0 : 1;
 
-
-                // ---
 
                 case 138520:
-                    optionEndWork_138520(context, wp, option, type, mode);
+                    if (dataDB instanceof WpDataDB) {
+                        optionEndWork_138520(context, (WpDataDB) dataDB, option, type, mode);
+//                        sendWpData2();
+                    } else if (dataDB instanceof TasksAndReclamationsSDB) {
+                        optionEndWork_138520(context, (TasksAndReclamationsSDB) dataDB, option, type, mode);
+                    }
                     break;
 
                 case 138521:
-                    return optionControlEndWork_138521(context, wp, option, type, mode) ? 1 : 0;
-
-                // ---
+                    return optionControlEndWork_138521(context, dataDB, option, type, mode) ? 0 : 1;
 
                 case 132968:
-                    optionMakePhoto0_132968(context, wp, option, type, mode);
+                    if (dataDB instanceof WpDataDB) {
+                        optionMakePhoto0_132968(context, (WpDataDB) dataDB, option, type, mode);
+                    } else if (dataDB instanceof TasksAndReclamationsSDB) {
+                        optionMakePhoto0_132968(context, dataDB, option, type, mode);
+                    }
                     break;
 
                 // --- Опция контроля на Получение заказа в ТТ
                 case 587:
-                    return optionControlReceivingAnOrder_587(context, wp, option, type, mode) ? 1 : 0;
+                    return optionControlReceivingAnOrder_587(context, dataDB, option, type, mode) ? 1 : 0;
 
 
                 // Контроль Опции Доп. Требований
                 case 138341:
                     try {
-                        optionControlAdditionalRequirements_138341(context, wp, option, type, mode);
+                        optionControlAdditionalRequirements_138341(context, dataDB, option, type, mode);
                     } catch (Exception e) {
                     }
                     break;
 
                 case 139577:
-                    optionControlVersion_139577(context, wp, option, null, NNKMode.CHECK_CLICK);
+                    optionControlVersion_139577(context, dataDB, option, null, NNKMode.CHECK_CLICK);
                     break;
 
 
-//                // Контроль фотоотчётов
-//                case 84932: // Проверка наличия ФотоОтчётов (id мне дали из 1С) (тип 0)
-//                    checkPhotoReport(context, wp, option, type, mode);
+                // Контроль фотоотчётов
+                case 84932: // Проверка наличия ФотоОтчётов (id мне дали из 1С) (тип 0)
+                    return checkPhotoReport(context, dataDB, option, type, mode) ? 1 : 0;
 //                    break;
+
+                // Доп. Материалы
+                case 138340:
+                    option138340(context, dataDB, option, type, mode);
+                    break;
 
 
                 default:
@@ -416,6 +480,163 @@ public class Options {
         return 0;
     }
 
+
+    //#когда не знаешь что такое полиморфизм
+    private <T> void option84003(Context context, T dataDB, OptionsDB option, OptionMassageType type, NNKMode mode) {
+        if (dataDB instanceof TasksAndReclamationsSDB) {
+
+            TasksAndReclamationsSDB tarDB = (TasksAndReclamationsSDB) dataDB;
+
+            DialogData dialog = new DialogData(context);
+            dialog.setTitle("Выбор мнения");
+            dialog.setText("Выберите мнение о сотруднике кликнув по нему");
+            dialog.setClose(dialog::dismiss);
+
+            List<OpinionThemeSDB> opinionThemeSDB = SQL_DB.opinionThemeDao().getByTheme(tarDB.themeId);
+            List<String> ids = new ArrayList<>();
+            for (OpinionThemeSDB item : opinionThemeSDB) {
+                ids.add(item.mnenieId);
+            }
+
+            TextAdapter adapter = new TextAdapter(SQL_DB.opinionDao().getOpinionByIds(ids), new Clicks.click() {
+                @Override
+                public <T> void click(T data) {
+                    String information = (String) data;
+                    OpinionSDB opinionSDB = SQL_DB.opinionDao().getOpinionByNm(information);
+
+                    tarDB.sotrOpinionDt = System.currentTimeMillis() / 1000;
+                    tarDB.sotrOpinionAuthorId = Globals.userId;
+                    tarDB.sotrOpinionId = opinionSDB.id;
+
+                    SQL_DB.tarDao().insertData(Collections.singletonList(tarDB));
+
+                    Exchange.updateTAR(tarDB);
+
+                    Toast.makeText(context, "Вы выбрали: " + data, Toast.LENGTH_SHORT).show();
+                    dialog.dismiss();
+                }
+            });
+            dialog.setRecycler(adapter, new LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false));
+
+            dialog.show();
+        } else if (dataDB instanceof WpDataDB) {
+            Toast.makeText(context, "Данный функционал в разработке", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    // Установка оценки для Задачи
+    private <T> void option132621(Context context, T dataDB, OptionsDB option, OptionMassageType type, NNKMode mode) {
+
+        float rating = 0;
+        if (dataDB instanceof TasksAndReclamationsSDB) {
+            rating = ((TasksAndReclamationsSDB) dataDB).voteScore;
+
+            DialogARMark dialog = new DialogARMark(context);
+            dialog.setTitle("Укажите оценку");
+            dialog.setClose(dialog::dismiss);
+            dialog.setRatingBar(rating, new Clicks.click() {
+                @Override
+                public <T> void click(T data) {
+                    ((TasksAndReclamationsSDB) dataDB).voteScore = (Integer) data;
+
+                    SQL_DB.tarDao().insertData(Collections.singletonList((TasksAndReclamationsSDB) dataDB))
+                            .subscribeOn(Schedulers.io())
+                            .subscribe(new DisposableCompletableObserver() {
+                                @Override
+                                public void onComplete() {
+                                    Log.d("test", "test");
+                                }
+
+                                @Override
+                                public void onError(@io.reactivex.rxjava3.annotations.NonNull Throwable e) {
+                                    Log.d("test", "test");
+                                }
+                            });
+                }
+            });
+            dialog.show();
+        } else if (dataDB instanceof WpDataDB) {
+            Toast.makeText(context, "Данный функционал в разработке", Toast.LENGTH_SHORT).show();
+            return;
+        }
+    }
+
+    private <T> void option138339(Context context, T dataDB, OptionsDB option, OptionMassageType type, NNKMode mode) {
+        List<AdditionalRequirementsDB> data = AdditionalRequirementsRealm.getData3(dataDB);
+
+        DialogAdditionalRequirements dialogAdditionalRequirements = new DialogAdditionalRequirements(context);
+
+        dialogAdditionalRequirements.setTitle("Доп. требования (" + data.size() + ")");
+        dialogAdditionalRequirements.setRecycler(data);
+
+        dialogAdditionalRequirements.setClose(dialogAdditionalRequirements::dismiss);
+        dialogAdditionalRequirements.setLesson(context, true, 1232);
+        dialogAdditionalRequirements.setVideoLesson(context, true, 1233, () -> {
+        });
+        dialogAdditionalRequirements.show();
+    }
+
+    private <T> void option138340(Context context, T dataDB, OptionsDB option, OptionMassageType type, NNKMode mode){
+        List<AdditionalMaterialsSDB> data = SQL_DB.additionalMaterialsDao().getAllByClientId(option.getClientId());
+
+        DialogAdditionalRequirements dialogAdditionalRequirements = new DialogAdditionalRequirements(context);
+
+        dialogAdditionalRequirements.setTitle("Доп. материалы (" + data.size() + ")");
+        dialogAdditionalRequirements.setRecyclerAM(data);
+
+        dialogAdditionalRequirements.setClose(dialogAdditionalRequirements::dismiss);
+        dialogAdditionalRequirements.show();
+    }
+
+    private <T> void option135742(Context context, T dataDB, OptionsDB option, OptionMassageType type, NNKMode mode) {
+        try {
+            WpDataDB wp;
+            if (dataDB instanceof WpDataDB) {
+                wp = ((WpDataDB) dataDB);
+
+                DialogData dialog = new DialogData(context);
+                dialog.setTitle("Представленность");
+
+                String msg = String.format("SKU (План): %s шт.\nSKU (Факт): %s шт.\nОтсутствует: %s шт.\nOOS (out of stock): %s %%\nПредставленность: %s %%\n\n\t\t\t\t\t\t\t\t\t\t\t\t\t\tОписание\n\nSKU (План) - количество товарных позиций которые должны быть в торговой точке по плану.\nSKU (Факт) - количество товарных позиций которые фактически стоят на витрине.\nOOS - процент товара, который отсутствует по сравнению с планом\nOOS = 100 - 100*(SKUФакт/SKUПлан) = %s %%\nПредставленность = 100 - OOS = %s %%", (int) Options.SKUPlan, (int) Options.SKUFact, (int) Options.SKUPlan - (int) Options.SKUFact, (int) Options.OOS, (int) Options.OFS, (int) Options.OOS, (int) Options.OFS);
+                dialog.setText(msg);
+
+                dialog.setClose(dialog::dismiss);
+                dialog.show();
+            } else if (dataDB instanceof TasksAndReclamationsSDB) {
+                Long dad2Wp = ((TasksAndReclamationsSDB) dataDB).codeDad2SrcDoc;
+                wp = RealmManager.INSTANCE.copyFromRealm(WpDataRealm.getWpDataRowByDad2Id(dad2Wp));
+
+                Data D = new Data(
+                        wp.getId(),
+                        wp.getAddr_txt(),
+                        wp.getClient_txt(),
+                        wp.getUser_txt(),
+                        wp.getDt(),
+                        0,
+                        "",
+                        R.mipmap.merchik);
+
+                WorkPlan workPlan = new WorkPlan();
+                WPDataObj wpDataObj = workPlan.getKPS(wp.getId());
+
+                Intent intent = new Intent(context, DetailedReportActivity.class);
+                intent.putExtra("dataFromWP", D);
+                intent.putExtra("rowWP", (Serializable) wp);
+                intent.putExtra("dataFromWPObj", wpDataObj);
+
+                type.msg = "Открыт проверяемый документ. \nНомер: " + wp.getDoc_num_otchet();
+
+                context.startActivity(intent);
+            } else {
+                return;
+            }
+
+
+        } catch (Exception e) {
+            type.msg = "Ошибка: " + e;
+        }
+    }
+
     //----------------------------------------------------------------------------------------------
 
     // Новый набор опций. Переписывание как в 1С (типо правильно)
@@ -424,11 +645,16 @@ public class Options {
      * Опция Контроля
      * Проверка местоположения ( 8299 )
      */
-    private boolean optionControlMP_8299(Context context, WpDataDB wpDataDB, OptionsDB optionsDB, OptionMassageType type, NNKMode mode) {
+    private <T> boolean optionControlMP_8299(Context context, T dataDB, OptionsDB optionsDB, OptionMassageType type, NNKMode mode) {
         boolean res;
 
+        int visitStartGeoDistance = 0;
+        if (dataDB instanceof WpDataDB) {
+            visitStartGeoDistance = ((WpDataDB) dataDB).getVisit_start_geo_distance();
+        }
+
         // Проверка Опции и запись в БД результата
-        if (wpDataDB.getVisit_start_geo_distance() < 500 && wpDataDB.getVisit_start_geo_distance() > 0) {
+        if (visitStartGeoDistance < 500 && visitStartGeoDistance > 0) {
             RealmManager.INSTANCE.executeTransaction(realm -> {
                 if (optionsDB != null) {
                     optionsDB.setIsSignal("2");
@@ -468,7 +694,18 @@ public class Options {
      * Опция
      * Нажатие на кнопку моего местоположения ( 138773 )
      */
-    private void optionMP_138773(Context context, WpDataDB wpDataDB, OptionsDB optionsDB, OptionMassageType type, NNKMode mode) {
+    private <T> void optionMP_138773(Context context, T dataDB, OptionsDB optionsDB, OptionMassageType type, NNKMode mode) {
+
+        WpDataDB wpDataDB;
+        if (dataDB instanceof WpDataDB) {
+            wpDataDB = ((WpDataDB) dataDB);
+        } else if (dataDB instanceof TasksAndReclamationsSDB) {
+            globals.fixMP();
+            Toast.makeText(context, "Местоположение зафиксированно", Toast.LENGTH_SHORT).show();
+            return;
+        } else {
+            return;
+        }
 
         // Запись в таблицу Местоположений
         LogMPDB log = new LogMPDB(RealmManager.logMPGetLastId() + 1, globals.POST_10());
@@ -501,16 +738,39 @@ public class Options {
 
     //--------------------- НАЧАЛО РАБОТЫ -----------------------
 
+
+    /*
+            long dad2;
+        if (dataDB instanceof WpDataDB){
+            dad2 = ((WpDataDB) dataDB).getCode_dad2();
+        }else if (dataDB instanceof TasksAndReclamationsSDB){
+            dad2 = ((TasksAndReclamationsSDB) dataDB).codeDad2;
+        }else {
+            return;
+        }
+
+        */
+
     /**
      * Опция контроля
      * Проверка на Начало работы ( 138519 )
      */
-    private boolean optionControlStartWork_138519(Context context, WpDataDB wpDataDB, OptionsDB optionsDB, OptionMassageType type, NNKMode mode) {
+    private <T> boolean optionControlStartWork_138519(Context context, T dataDB, OptionsDB optionsDB, OptionMassageType type, NNKMode mode) {
         boolean res;
 
+        long dad2, startWork, endWork;
+        if (dataDB instanceof WpDataDB) {
+            dad2 = ((WpDataDB) dataDB).getCode_dad2();
+            startWork = ((WpDataDB) dataDB).getVisit_start_dt();
+        } else if (dataDB instanceof TasksAndReclamationsSDB) {
+            dad2 = ((TasksAndReclamationsSDB) dataDB).codeDad2;
+            startWork = ((TasksAndReclamationsSDB) dataDB).dt_start_fact;
+        } else {
+            return res = false;
+        }
+
         Log.e("checkStartWork", "ENTER THIS");
-        if (wpDataDB.getVisit_start_dt() > 0) {
-            Log.e("checkStartWork", "2 wpDataDB.getVisit_start_dt(): " + wpDataDB.getVisit_start_dt());
+        if (startWork > 0) {
             RealmManager.INSTANCE.executeTransaction(realm -> {
                 if (optionsDB != null) {
                     optionsDB.setIsSignal("2");
@@ -519,7 +779,6 @@ public class Options {
             });
             res = true;
         } else {
-            Log.e("checkStartWork", "1 wpDataDB.getVisit_start_dt(): " + wpDataDB.getVisit_start_dt());
             RealmManager.INSTANCE.executeTransaction(realm -> {
                 if (optionsDB != null) {
                     optionsDB.setIsSignal("1");
@@ -533,6 +792,7 @@ public class Options {
         switch (mode) {
             case CHECK:
                 if (!res && optionsDB.getBlockPns().equals("1")) {
+//                if (!res) {
                     optionNotConduct.add(optionsDB);
                 }
                 break;
@@ -550,10 +810,12 @@ public class Options {
      * Опция
      * Нажатие на кнопку Для установки начала рабочего дня ( 138518 )
      */
-    private void optionStartWork_138518(Context context, WpDataDB wpDataDB, OptionsDB optionsDB, OptionMassageType type, NNKMode mode) {
+    private boolean optionStartWork_138518(Context context, WpDataDB wpDataDB, OptionsDB optionsDB, OptionMassageType type, NNKMode mode) {
+        boolean result;
         globals.writeToMLOG(Clock.getHumanTime() + "_INFO.DetailedReportButtons.class.pressStartWork: " + "ENTER" + "\n");
         if (wpDataDB.getVisit_start_dt() > 0) {
             Toast.makeText(context, "Работа уже начата!", Toast.LENGTH_SHORT).show();
+            result = true;
         } else {
             try {
                 long startTime = System.currentTimeMillis() / 1000;
@@ -565,8 +827,45 @@ public class Options {
                     realm.insertOrUpdate(wpDataDB);
                 });
                 Toast.makeText(context, "Вы начали работу в: " + Clock.getHumanTimeOpt(startTime * 1000), Toast.LENGTH_SHORT).show();
+                result = true;
             } catch (Exception e) {
                 // Set to log error
+                Toast.makeText(context, "Возникла ошибка: " + e, Toast.LENGTH_SHORT).show();
+                result = false;
+            }
+        }
+
+        conductOptCheck(mode, result, optionsDB);
+        return result;
+    }
+
+    private void optionStartWork_138518(Context context, TasksAndReclamationsSDB dataDB, OptionsDB optionsDB, OptionMassageType type, NNKMode mode) {
+        globals.writeToMLOG(Clock.getHumanTime() + "_INFO.DetailedReportButtons.class.pressStartWork: " + "ENTER" + "\n");
+        if (dataDB.dt_start_fact > 0) {
+            Toast.makeText(context, "Работа уже начата!", Toast.LENGTH_SHORT).show();
+        } else {
+            try {
+                long startTime = System.currentTimeMillis() / 1000;
+                dataDB.dt_start_fact = startTime;
+                dataDB.uploadStatus = 1;
+                SQL_DB.tarDao().insertData(Collections.singletonList(dataDB))
+                        .subscribeOn(Schedulers.io())
+                        .subscribe(new DisposableCompletableObserver() {
+                            @Override
+                            public void onComplete() {
+                                Log.d("test", "test");
+                            }
+
+                            @Override
+                            public void onError(@io.reactivex.rxjava3.annotations.NonNull Throwable e) {
+                                Log.d("test", "test");
+                            }
+                        });
+
+                Toast.makeText(context, "Вы начали работу в: " + Clock.getHumanTimeOpt(startTime * 1000), Toast.LENGTH_SHORT).show();
+            } catch (Exception e) {
+                // Set to log error
+                Toast.makeText(context, "Возникла ошибка: " + e, Toast.LENGTH_SHORT).show();
             }
         }
     }
@@ -577,11 +876,24 @@ public class Options {
      * Опция контроля
      * Проверка на Окончание работы( 138521 )
      */
-    private boolean optionControlEndWork_138521(Context context, WpDataDB wpDataDB, OptionsDB optionsDB, OptionMassageType type, NNKMode mode) {
+    private <T> boolean optionControlEndWork_138521(Context context, T dataDB, OptionsDB optionsDB, OptionMassageType type, NNKMode mode) {
 
         boolean res;
 
-        if (wpDataDB.getVisit_end_dt() > 0) {
+        long dad2, startWork, endWork;
+        if (dataDB instanceof WpDataDB) {
+            dad2 = ((WpDataDB) dataDB).getCode_dad2();
+            startWork = ((WpDataDB) dataDB).getVisit_start_dt();
+            endWork = ((WpDataDB) dataDB).getVisit_end_dt();
+        } else if (dataDB instanceof TasksAndReclamationsSDB) {
+            dad2 = ((TasksAndReclamationsSDB) dataDB).codeDad2;
+            startWork = ((TasksAndReclamationsSDB) dataDB).dt_start_fact;
+            endWork = ((TasksAndReclamationsSDB) dataDB).dt_end_fact;
+        } else {
+            return res = false;
+        }
+
+        if (endWork > 0) {
             RealmManager.INSTANCE.executeTransaction(realm -> {
                 if (optionsDB != null) {
                     optionsDB.setIsSignal("2");
@@ -603,6 +915,7 @@ public class Options {
         switch (mode) {
             case CHECK:
                 if (!res && optionsDB.getBlockPns().equals("1")) {
+//                if (!res) {
                     optionNotConduct.add(optionsDB);
                 }
                 break;
@@ -620,10 +933,12 @@ public class Options {
      * Опция
      * Нажатие на кнопку Для установки окончания рабочего дня ( 138520 )
      */
-    private void optionEndWork_138520(Context context, WpDataDB wpDataDB, OptionsDB optionsDB, OptionMassageType type, NNKMode mode) {
+    private boolean optionEndWork_138520(Context context, WpDataDB wpDataDB, OptionsDB optionsDB, OptionMassageType type, NNKMode mode) {
+        boolean result;
         globals.writeToMLOG(Clock.getHumanTime() + "_INFO.DetailedReportButtons.class.pressEndWork: " + "ENTER" + "\n");
         if (wpDataDB.getVisit_end_dt() > 0) {
             Toast.makeText(context, "Работа уже окончена!", Toast.LENGTH_SHORT).show();
+            result = true;
         } else {
             if (wpDataDB.getVisit_start_dt() > 0) {
                 try {
@@ -635,9 +950,51 @@ public class Options {
                         wpDataDB.startUpdate = true;
                         realm.insertOrUpdate(wpDataDB);
                     });
+                    Toast.makeText(context, "Вы окончили работу в: " + Clock.getHumanTimeOpt(endTime * 1000) + "\n\nНе забудьте нажать 'Провести', что б система проверила текущий документ и начислила Вам премиальные", Toast.LENGTH_SHORT).show();
+                    result = true;
+                } catch (Exception e) {
+                    // Set to log error
+                    Toast.makeText(context, "Возникла ошибка: " + e, Toast.LENGTH_SHORT).show();
+                    result = false;
+                }
+            } else {
+                Toast.makeText(context, "Вы не можете закончить работу не начав её", Toast.LENGTH_SHORT).show();
+                result = false;
+            }
+        }
+
+
+//        conductOptCheck(mode, result, optionsDB);
+        return result;
+    }
+
+    private void optionEndWork_138520(Context context, TasksAndReclamationsSDB dataDB, OptionsDB optionsDB, OptionMassageType type, NNKMode mode) {
+        globals.writeToMLOG(Clock.getHumanTime() + "_INFO.DetailedReportButtons.class.pressEndWork: " + "ENTER" + "\n");
+        if (dataDB.dt_end_fact > 0) {
+            Toast.makeText(context, "Работа уже окончена!", Toast.LENGTH_SHORT).show();
+        } else {
+            if (dataDB.dt_start_fact > 0) {
+                try {
+                    long endTime = System.currentTimeMillis() / 1000;
+                    dataDB.dt_end_fact = endTime;
+                    dataDB.uploadStatus = 1;
+                    SQL_DB.tarDao().insertData(Collections.singletonList(dataDB))
+                            .subscribeOn(Schedulers.io())
+                            .subscribe(new DisposableCompletableObserver() {
+                                @Override
+                                public void onComplete() {
+                                    Log.d("test", "test");
+                                }
+
+                                @Override
+                                public void onError(@io.reactivex.rxjava3.annotations.NonNull Throwable e) {
+                                    Log.d("test", "test");
+                                }
+                            });
                     Toast.makeText(context, "Вы окончили работу в: " + endTime, Toast.LENGTH_SHORT).show();
                 } catch (Exception e) {
                     // Set to log error
+                    Toast.makeText(context, "Возникла ошибка: " + e, Toast.LENGTH_SHORT).show();
                 }
             } else {
                 Toast.makeText(context, "Вы не можете закончить работу не начав её", Toast.LENGTH_SHORT).show();
@@ -651,23 +1008,40 @@ public class Options {
      * Опция
      * Выполнение фотоотчёта
      */
+    private <T> void optionMakePhoto0_132968(Context context, T dataDB, OptionsDB optionsDB, OptionMassageType type, NNKMode mode) {
+        if (dataDB instanceof TasksAndReclamationsSDB) {
+            TARSecondFrag.TaRID = ((TasksAndReclamationsSDB) dataDB).id;
+        }
 
-    private void optionMakePhoto0_132968(Context context, WpDataDB wpDataDB, OptionsDB optionsDB, OptionMassageType type, NNKMode mode) {
-//        Intent intentPhotoReport = new Intent(context, PhotoReportActivity.class);
-//        WPDataObj wpDataObj = new WorkPlan().getKPS(wpDataDB.getId());
-//
-//        intentPhotoReport.putExtra("dataFromWPObj", wpDataObj);
-//        MakePhoto.startToMakePhoto(context, wpDataObj);
+        MakePhoto makePhoto = new MakePhoto();
+//        makePhoto.openCamera((Activity) context);
+        makePhoto.pressedMakePhoto((Activity) context, dataDB);
+    }
+
+
+    private void optionMakePhoto0_132968(Context context, WpDataDB dataDB, OptionsDB optionsDB, OptionMassageType type, NNKMode mode) {
+        MakePhoto makePhoto = new MakePhoto();
+//        makePhoto.openCamera((Activity) context);
+        makePhoto.pressedMakePhoto((Activity) context, dataDB);
     }
 
 
     /**
      * Опция контроля (587)
      */
-    private boolean optionControlReceivingAnOrder_587(Context context, WpDataDB wpDataDB, OptionsDB optionsDB, OptionMassageType type, NNKMode mode) {
+    private <T> boolean optionControlReceivingAnOrder_587(Context context, T dataDB, OptionsDB optionsDB, OptionMassageType type, NNKMode mode) {
         boolean res;
 
-        List<ReportPrepareDB> rp = ReportPrepareRealm.getReportPrepareByDad2(wpDataDB.getCode_dad2());
+        long dad2, startWork, endWork;
+        if (dataDB instanceof WpDataDB) {
+            dad2 = ((WpDataDB) dataDB).getCode_dad2();
+        } else if (dataDB instanceof TasksAndReclamationsSDB) {
+            dad2 = ((TasksAndReclamationsSDB) dataDB).codeDad2;
+        } else {
+            return res = false;
+        }
+
+        List<ReportPrepareDB> rp = ReportPrepareRealm.getReportPrepareByDad2(dad2);
 
         int SKU = 0;
         int sum = 0;
@@ -738,7 +1112,7 @@ public class Options {
     /**
      * Опция контроля 138341
      */
-    private <T> boolean optionControlAdditionalRequirements_138341(Context context, WpDataDB wpDataDB, OptionsDB optionsDB, OptionMassageType type, NNKMode mode) {
+    private <T> boolean optionControlAdditionalRequirements_138341(Context context, T dataDB, OptionsDB optionsDB, OptionMassageType type, NNKMode mode) {
         boolean res = false;
         double averageRating = 0;  // Средняя Оценка
         double deviationFromTheMeanSize = 0;    // Отклонение от среднего
@@ -747,19 +1121,37 @@ public class Options {
 
         StringBuilder msg = new StringBuilder();
 
+        int userId;
+        long dad2, startWork, endWork;
+        String date, clientId, userTxt;
+        if (dataDB instanceof WpDataDB) {
+            dad2 = ((WpDataDB) dataDB).getCode_dad2();
+            startWork = ((WpDataDB) dataDB).getVisit_start_dt();
+            date = ((WpDataDB) dataDB).getDt();
+            userId = ((WpDataDB) dataDB).getUser_id();
+            clientId = ((WpDataDB) dataDB).getClient_id();
+            userTxt = ((WpDataDB) dataDB).getUser_txt();
+        } else if (dataDB instanceof TasksAndReclamationsSDB) {
+            dad2 = ((TasksAndReclamationsSDB) dataDB).codeDad2;
+            startWork = ((TasksAndReclamationsSDB) dataDB).dt_start_fact;
+            date = String.valueOf(((TasksAndReclamationsSDB) dataDB).dt);
+            userId = ((TasksAndReclamationsSDB) dataDB).vinovnikScoreUserId;
+            clientId = ((TasksAndReclamationsSDB) dataDB).client;
+            userTxt = ((TasksAndReclamationsSDB) dataDB).sortNm;
+        } else {
+            return res = false;
+        }
 
-        String date = wpDataDB.getDt();
-
-        long dt = Clock.dateConvertToLong(wpDataDB.getDt()) / 1000;       // Дата документа в Unix
+        long dt = Clock.dateConvertToLong(date) / 1000;       // Дата документа в Unix
         long dateFrom = Clock.dateConvertToLong(date) / 1000 - 60 * 60 * 24 * 30; // Дата документа -30 дней
         long dateTo = Clock.dateConvertToLong(date) / 1000 + 60 * 60 * 24 * 3;    // Дата документа +3 дня
 
         // Получаем Доп.Требования.
-        RealmResults<AdditionalRequirementsDB> realmResults = AdditionalRequirementsRealm.getData3(wpDataDB);
+        RealmResults<AdditionalRequirementsDB> realmResults = AdditionalRequirementsRealm.getData3(dataDB);
         List<AdditionalRequirementsDB> data = RealmManager.INSTANCE.copyFromRealm(realmResults);
 
         // Получаем Оценки этих Доп. требований.
-        RealmResults<AdditionalRequirementsMarkDB> marks = AdditionalRequirementsMarkRealm.getAdditionalRequirementsMarks(dateFrom, dateTo, wpDataDB.getUser_id(), data);
+        RealmResults<AdditionalRequirementsMarkDB> marks = AdditionalRequirementsMarkRealm.getAdditionalRequirementsMarks(dateFrom, dateTo, userId, data);
 
         Gson gson = new Gson();
 
@@ -819,7 +1211,7 @@ public class Options {
         if (virtualTable.size() == 0) {
 
             msg.append("У клиента ")
-                    .append(CustomerRealm.getCustomerById(wpDataDB.getClient_id()))
+                    .append(CustomerRealm.getCustomerById(clientId))
                     .append(" нет доп. требований по этому адресу");
 
             RealmManager.INSTANCE.executeTransaction(realm -> {
@@ -836,7 +1228,7 @@ public class Options {
                     .append(" по ")
                     .append(Clock.getHumanTime3(dateTo))
                     .append(" ")
-                    .append(wpDataDB.getUser_txt())
+                    .append(userTxt)
                     .append(" НЕ поставил оценку(и) по ")
                     .append(nedotochSize)
                     .append(" Доп.требованиям. ")
@@ -871,7 +1263,7 @@ public class Options {
                     .append(" по ")
                     .append(Clock.getHumanTime3(dateTo))
                     .append(" ")
-                    .append(wpDataDB.getUser_txt())
+                    .append(userTxt)
                     .append(" поставил оценку(и) по ")
                     .append(virtualTable.size())
                     .append(" Доп.требованиям. Замечаний по выполнению опции нет.")
@@ -923,7 +1315,7 @@ public class Options {
     /**
      * Опция нажатие на номер версии приложения 139577
      */
-    public void optionControlVersion_139577(Context context, WpDataDB wpDataDB, OptionsDB optionsDB, OptionMassageType type, NNKMode mode) {
+    public <T> void optionControlVersion_139577(Context context, T dataDB, OptionsDB optionsDB, OptionMassageType type, NNKMode mode) {
         Long currentVer = Long.valueOf(BuildConfig.VERSION_NAME);
         Long minimalVer = VersionApp.VERSION_APP;
 
@@ -959,13 +1351,23 @@ public class Options {
     public static double OFS = 0;   // % сколько нет товаров
     public static double OOS = 0;   // Представленность %
 
-    private void check76815(WpDataDB wpDataDB, OptionsDB optionsDB) {
-        List<TovarDB> dataTovar = RealmManager.getTovarListFromReportPrepareByDad2(wpDataDB.getCode_dad2());    // Это типа моего СКЮ План
+    private <T> void check76815(T dataDB, OptionsDB optionsDB) {
+        long dad2;
+        if (dataDB instanceof WpDataDB) {
+            dad2 = ((WpDataDB) dataDB).getCode_dad2();
+        } else if (dataDB instanceof TasksAndReclamationsSDB) {
+            dad2 = ((TasksAndReclamationsSDB) dataDB).codeDad2;
+        } else {
+            return;
+        }
+
+
+        List<TovarDB> dataTovar = RealmManager.getTovarListFromReportPrepareByDad2(dad2);    // Это типа моего СКЮ План
         SKUPlan = dataTovar.size();
 
         // Перебираем товары по плану
         for (TovarDB item : dataTovar) {
-            ReportPrepareDB reportPrepareTovar = RealmManager.getTovarReportPrepare(String.valueOf(wpDataDB.getCode_dad2()), item.getiD()); // Есть ли в РП такой товар?
+            ReportPrepareDB reportPrepareTovar = RealmManager.getTovarReportPrepare(String.valueOf(dad2), item.getiD()); // Есть ли в РП такой товар?
             if (reportPrepareTovar != null) {
                 if (reportPrepareTovar.getFace() != null && !reportPrepareTovar.getFace().equals("") && !reportPrepareTovar.getFace().equals("0")) {     // Если у этого товара Фейсы не Null и заполенны чем-то - добавляем +1 к предствленности
                     SKUFact++;
@@ -1002,9 +1404,18 @@ public class Options {
 
     // Опция контроля
     // Проверка наличия ФотоОтчётов (84932)
-    public void checkPhotoReport(Context context, WpDataDB wpDataDB, OptionsDB optionsDB, OptionMassageType type, NNKMode mode) {
+    public <T> boolean checkPhotoReport(Context context, T dataDB, OptionsDB optionsDB, OptionMassageType type, NNKMode mode) {
+        boolean res = false;
+
+        long dad2 = 0;
+        if (dataDB instanceof WpDataDB) {
+            dad2 = ((WpDataDB) dataDB).getCode_dad2();
+        } else if (dataDB instanceof TasksAndReclamationsSDB) {
+            dad2 = ((TasksAndReclamationsSDB) dataDB).codeDad2;
+        }
+
         // Получаем даннные о наличии фотоотчёта из Журнала фотоОтчётов
-        List<StackPhotoDB> list = RealmManager.getStackPhotoByDad2(wpDataDB.getCode_dad2());
+        List<StackPhotoDB> list = RealmManager.getStackPhotoByDad2(dad2);
 
         Log.e("OPTION_CONTROL", "PHOTO_LIST: " + list.size());
 
@@ -1018,6 +1429,8 @@ public class Options {
                     realm.insertOrUpdate(optionsDB);
                 }
             });
+
+            res = false;
         } else if (list.size() >= 3) {
             RealmManager.INSTANCE.executeTransaction(realm -> {
                 if (optionsDB != null) {
@@ -1025,20 +1438,35 @@ public class Options {
                     realm.insertOrUpdate(optionsDB);
                 }
             });
+
+            res = true;
         }
+
+        conductOptCheck(mode, res, optionsDB);
+
+        return res;
     }
 
     /*Опция контроля 134583
-    * Проверка наличия ФотоОтчётов с привязкой к Адресу (134583)
-    *
-    * Сначала получаю список фоток с данным типом по этому адресу, а потом проверяю - все ли
-    * сделанны на месте.
-    * */
-    public void checkPhotoReportWithMP(Context context, WpDataDB wpDataDB, OptionsDB optionsDB, OptionMassageType type, NNKMode mode){
+     * Проверка наличия ФотоОтчётов с привязкой к Адресу (134583)
+     *
+     * Сначала получаю список фоток с данным типом по этому адресу, а потом проверяю - все ли
+     * сделанны на месте.
+     * */
+    public <T> void checkPhotoReportWithMP(Context context, T dataDB, OptionsDB optionsDB, OptionMassageType type, NNKMode mode) {
+
+        long dad2;
+        if (dataDB instanceof WpDataDB) {
+            dad2 = ((WpDataDB) dataDB).getCode_dad2();
+        } else if (dataDB instanceof TasksAndReclamationsSDB) {
+            dad2 = ((TasksAndReclamationsSDB) dataDB).codeDad2;
+        } else {
+            return;
+        }
 
         String photoMinCount = optionsDB.getAmountMin();
 
-        List<StackPhotoDB> list = RealmManager.getStackPhotoByDad2(wpDataDB.getCode_dad2());
+        List<StackPhotoDB> list = RealmManager.getStackPhotoByDad2(dad2);
         if (photoMinCount != null && photoMinCount.equals(list.size()) || list.size() < 3) {
             RealmManager.INSTANCE.executeTransaction(realm -> {
                 if (optionsDB != null) {
@@ -1056,9 +1484,6 @@ public class Options {
             });
         }
 
-//        for (StackPhotoDB item : list){
-//
-//        }
     }
 
 
@@ -1066,9 +1491,18 @@ public class Options {
      * 19.04.2021
      * Опция контроля Количество фотографий
      */
-    private void checkPhoto(WpDataDB wpDataDB, OptionsDB optionsDB, String photoType) {
+    private <T> void checkPhoto(T dataDB, OptionsDB optionsDB, String photoType) {
         try {
-            RealmResults<StackPhotoDB> list = RealmManager.stackPhotoByDad2(wpDataDB.getCode_dad2());
+            long dad2;
+            if (dataDB instanceof WpDataDB) {
+                dad2 = ((WpDataDB) dataDB).getCode_dad2();
+            } else if (dataDB instanceof TasksAndReclamationsSDB) {
+                dad2 = ((TasksAndReclamationsSDB) dataDB).codeDad2;
+            } else {
+                return;
+            }
+
+            RealmResults<StackPhotoDB> list = RealmManager.stackPhotoByDad2(dad2);
             List<StackPhotoDB> res = list.where().equalTo("photo_type", Integer.parseInt(photoType)).findAll();
 
             Log.e("OPTION_CONTROL", "checkPhoto id: " + optionsDB.getID() + " |Signal: " + optionsDB.getIsSignal());
@@ -1151,7 +1585,7 @@ public class Options {
      * Опция контроля   (141911)
      * Проверка "Получение заказа в ТТ" (141910) ReceivingAnOrder
      */
-    private void checkReceivingAnOrder_141911(Context context, WpDataDB wpDataDB, OptionsDB optionsDB, OptionMassageType type, NNKMode mode) {
+    private <T> void checkReceivingAnOrder_141911(Context context, T dataDB, OptionsDB optionsDB, OptionMassageType type, NNKMode mode) {
         if (DetailedReportActivity.rpAmountSum > 0) {
             RealmManager.INSTANCE.executeTransaction(realm -> {
                 if (optionsDB != null) {
@@ -1174,7 +1608,7 @@ public class Options {
      * Опция контроля   (141888)
      * Проверка "Выкуп Товара с ТТ" (141889)
      */
-    private void check_RENAME_2(Context context, WpDataDB wpDataDB, OptionsDB optionsDB, OptionMassageType type, NNKMode mode) {
+    private <T> void check_RENAME_2(Context context, T dataDB, OptionsDB optionsDB, OptionMassageType type, NNKMode mode) {
         if (DetailedReportActivity.rpTotalSumToRedemptionOfGoods > 0) {
             RealmManager.INSTANCE.executeTransaction(realm -> {
                 if (optionsDB != null) {
@@ -1193,8 +1627,19 @@ public class Options {
     }
 
 
-    private void checkEKL(Context context, WpDataDB wp, OptionsDB optionsDB, OptionMassageType type, NNKMode mode) {
-        List<EKL_SDB> list = SQL_DB.eklDao().getByDad2(wp.getCode_dad2());
+    private <T> void checkEKL(Context context, T dataDB, OptionsDB optionsDB, OptionMassageType type, NNKMode mode) {
+
+        long dad2, startWork, endWork;
+        if (dataDB instanceof WpDataDB) {
+            dad2 = ((WpDataDB) dataDB).getCode_dad2();
+        } else if (dataDB instanceof TasksAndReclamationsSDB) {
+            dad2 = ((TasksAndReclamationsSDB) dataDB).codeDad2;
+        } else {
+            return;
+        }
+
+
+        List<EKL_SDB> list = SQL_DB.eklDao().getByDad2(dad2);
 
 //        List<EKL_SDB> list2 = ;
 
@@ -1505,6 +1950,25 @@ public class Options {
             }
         }
         return list;
+    }
+
+
+    /**
+     * 27.01.2022
+     * Установка опции как блокирующей
+     */
+    public void conductOptCheck(NNKMode mode, boolean status, OptionsDB optionsDB) {
+        switch (mode) {
+            case CHECK:
+                if (!status && optionsDB.getBlockPns().equals("1")) {
+                    optionNotConduct.add(optionsDB);
+                }
+                break;
+
+            case NULL:
+                // Ничего делать не буду
+                break;
+        }
     }
 
 

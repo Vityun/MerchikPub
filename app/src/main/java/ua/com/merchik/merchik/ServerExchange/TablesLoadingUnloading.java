@@ -32,6 +32,9 @@ import retrofit2.Callback;
 import retrofit2.Response;
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
+import ua.com.merchik.merchik.ServerExchange.TablesExchange.ReclamationPointExchange;
+import ua.com.merchik.merchik.ViewHolders.Clicks;
+import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
 import ua.com.merchik.merchik.data.Database.Room.TovarGroupSDB;
 import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteHints;
 import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteHintsDB;
@@ -108,10 +111,12 @@ import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
  */
 public class TablesLoadingUnloading {
 
+    private String timeYesterday7 = Clock.today_7;
     private String timeYesterday = Clock.yesterday;
     private String timeToday = Clock.today;
-    private String timeTomorrow = Clock.tomorrow;
-//    private String timeTomorrow = Clock.tomorrow7;
+//    private String timeTomorrow = Clock.tomorrow;
+    private String timeTomorrow = Clock.getDatePeriod(5);
+    private String timeTomorrow7 = Clock.tomorrow7;
 
 //        private String timeYesterday = "2021-09-15";
 //    private String timeTomorrow   = "2021-09-15";
@@ -187,8 +192,6 @@ public class TablesLoadingUnloading {
                     downloadReportPrepare(context, 0);
                 }
             });
-
-
             downloadTovarTable(context);
             globals.writeToMLOG(Clock.getHumanTime() + "_INFO.TablesLoadingUnloading.class.downloadAllTables.Успех.Обязательные таблици." + "\n");
         } catch (Exception e) {
@@ -267,6 +270,35 @@ public class TablesLoadingUnloading {
                 }
             }); // Загрузка таблици. ОСНОВА. Группы Товаров.
 
+            // Загрузка Задач и Рекламаций
+            try {
+                ReclamationPointExchange tarExchange = new ReclamationPointExchange();
+                tarExchange.downloadTaR(new ExchangeInterface.ExchangeResponseInterface() {
+                    @Override
+                    public <T> void onSuccess(List<T> data) {
+                        SQL_DB.tarDao().insertData((List<TasksAndReclamationsSDB>) data)
+                                .subscribeOn(Schedulers.io())
+                                .subscribe(new DisposableCompletableObserver() {
+                                    @Override
+                                    public void onComplete() {
+                                        Globals.writeToMLOG("INFO", "Exchange.ReclamationPointExchange/downloadTaR.onComplete", "Успешно сохранило Задачи и Рекламации (" + data.size() + ")шт в БД");
+                                    }
+
+                                    @Override
+                                    public void onError(@io.reactivex.rxjava3.annotations.NonNull Throwable e) {
+                                        Globals.writeToMLOG("INFO_ERR", "Exchange.ReclamationPointExchange/downloadTaR.onError", "Ошибка при сохранении в БД: " + e);
+                                    }
+                                });
+                    }
+
+                    @Override
+                    public void onFailure(String error) {
+                        Globals.writeToMLOG("INFO_ERR", "Exchange.ReclamationPointExchange/downloadTaR.onFailure", "String error: " + error);
+                    }
+                });
+            } catch (Exception e) {
+            }
+
 
             /*Загрузка подсказок, Вообще надо нормально прописать время их синхронизации*/
 //            downloadSiteHints("2");
@@ -303,10 +335,9 @@ public class TablesLoadingUnloading {
     public void downloadWPData(Context context) {
         Log.e("SERVER_REALM_DB_UPDATE", "===================================downloadWPData_START");
 
-
         String mod = "plan";
         String act = "list";
-        String date_from = timeYesterday;
+        String date_from = timeYesterday7;
         String date_to = timeTomorrow;
 
         ProgressDialog pg = ProgressDialog.show(context, "Обмен данными с сервером.", "Обновление таблицы: " + "План работ", true, true);
@@ -509,17 +540,55 @@ public class TablesLoadingUnloading {
         Log.e("SERVER_REALM_DB_UPDATE", "===================================.downloadTypeGrp.END");
     }
 
+    public void downloadOptionsByDAD2(long dad2, Clicks.click click) {
+        StandartData data = new StandartData();
+        data.mod = "plan";
+        data.act = "options_list";
+        data.code_dad2 = String.valueOf(dad2);
+
+        Gson gson = new Gson();
+        String json = gson.toJson(data);
+        JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
+
+        retrofit2.Call<OptionsServer> call = RetrofitBuilder.getRetrofitInterface().GET_OPTIONS(RetrofitBuilder.contentType, convertedObject);
+        call.enqueue(new Callback<OptionsServer>() {
+            @Override
+            public void onResponse(Call<OptionsServer> call, Response<OptionsServer> response) {
+                Log.e("TAG_TEST", "RESPONSE_3_2R");
+                try {
+                    if (response.isSuccessful() && response.body() != null) {
+                        if (response.body().getState()) {
+                            RealmManager.setOptions(response.body().getList());
+                            click.click("Данные успешно загружены и сохранены.");
+                        } else {
+                            click.click("Обновить данные не получилось. Обратитесь к своему руководителю.");
+                        }
+                    } else {
+                        click.click("Ошибка. При повторении обратитесь с ней к своему руководителю. Код запроса: " + response.code());
+                    }
+                } catch (Exception e) {
+                    click.click("Ошибка при обработке данных: " + e);
+                }
+            }
+
+            @Override
+            public void onFailure(Call<OptionsServer> call, Throwable t) {
+                Log.e("TAG_TEST", "RESPONSE_3_2F");
+                click.click("Ошибка связи. Повторите попытку позже. При повторении проблемы - обратитесь к своему руководителю. Ошибка: " + t);
+            }
+        });
+
+
+    }
 
     public void downloadOptions(Context context) {
         Log.e("SERVER_REALM_DB_UPDATE", "===================================.downloadOptions.START");
         globals.writeToMLOG(Clock.getHumanTime() + "_INFO.TablesLU.class.downloadOptions.ENTER\n");
 
-
         String mod = "plan";
         String act = "options_list";
-        String date_from = timeYesterday;
+        String date_from = timeYesterday7;
         String date_to = timeTomorrow;
-
 
         ProgressDialog pg = ProgressDialog.show(context, "Обмен данными с сервером.", "Обновление таблицы: " + "Опции", true, true);
 
@@ -601,7 +670,7 @@ public class TablesLoadingUnloading {
 
         String mod = "report_prepare";
         String act = "list_data";
-        String date_from = timeYesterday;
+        String date_from = timeYesterday7;
         String date_to = timeTomorrow;
 
         // Получение значения ВПО (время последнего обмена) для того что б с сервера отправились новые данные
@@ -1050,7 +1119,30 @@ public class TablesLoadingUnloading {
 
                         if (RealmManager.setTovar(list)) {
 
-                            getTovarImg(list, "small");
+//                            getTovarImg(list, "small");
+
+//                            DialogData dialog = new DialogData(context);
+//                            dialog.setTitle("Отчёт. Товары");
+//                            dialog.setText("Загружено: " + list.size() + " товаров. \nСинхронизация Таблици Товары прошла успешно.\n\n\nНачинаю загрузку фотографий Товаров.. \n(при первой синхронизации и большом количествее Товаров это может занять много времени)");
+//                            dialog.show();
+
+                            PhotoDownload.getPhotoURLFromServer(list, new Clicks.clickStatusMsg() {
+                                @Override
+                                public void onSuccess(String data) {
+//                                    DialogData dialog = new DialogData(context);
+//                                    dialog.setTitle("Загрузка Товаров");
+//                                    dialog.setText(data);
+//                                    dialog.show();
+                                }
+
+                                @Override
+                                public void onFailure(String error) {
+//                                    DialogData dialog = new DialogData(context);
+//                                    dialog.setTitle("Загрузка Товаров");
+//                                    dialog.setText(error);
+//                                    dialog.show();
+                                }
+                            });
 
                             if (pg != null)
                                 if (pg.isShowing())
@@ -1331,8 +1423,6 @@ public class TablesLoadingUnloading {
     public void getTovarImg(List<TovarDB> list, String imageType) {
 
         Log.e("DetailedReportA", "list: " + list.size());
-
-//        Log.e("getTovarImg", "list: " + list.get(0).getiD());
         Log.e("getTovarImg", "list.size: " + list.size());
         Log.e("getTovarImg", "imageType: " + imageType);
 
@@ -1350,15 +1440,9 @@ public class TablesLoadingUnloading {
         ArrayList<String> listId = new ArrayList<>();
         for (TovarDB tov : list) {
             try {
-                Log.e("TAG_TABLE", "PHOTO_TOVAR_ID_TO_SEND: " + tov.getiD());
                 if (!RealmManager.stackPhotoExistByObjectId(Integer.parseInt(tov.getiD()), imageType)) {
-//                if (!RealmManager.stackPhotoExistByObjectId(Integer.parseInt(tov.getiD()))) {
-                    Log.e("TAG_TABLE", "PHOTO_TOVAR_ID_TO_SEND_NOTEXIST: " + tov.getiD());
                     listId.add(tov.getiD());
-                } else {
-                    Log.e("TAG_TABLE", "PHOTO_TOVAR_ID_TO_SEND_EXIST: " + tov.getiD());
                 }
-
             } catch (Exception e) {
                 // ЛОГ ошибки
             }
@@ -2142,7 +2226,7 @@ public class TablesLoadingUnloading {
                                 if (arr != null) {
                                     for (LogMPDB list : logMp) {
                                         JsonObject geoInfo = arr.getAsJsonObject(String.valueOf(list.getId()));
-                                        if (!geoInfo.isJsonNull() && geoInfo.get("state").getAsBoolean()) {
+                                        if (geoInfo != null && geoInfo.get("state").getAsBoolean()) {
                                             try {
                                                 RealmManager.INSTANCE.executeTransaction(realm -> {
                                                     list.deleteFromRealm();
@@ -2184,7 +2268,7 @@ public class TablesLoadingUnloading {
     /**
      * 19.10.2020
      * Качаем меню сайта
-     *
+     * <p>
      * //https://merchik.net/mobile_app.php?mod=menu
      */
     public void downloadMenu() {
@@ -2721,6 +2805,8 @@ public class TablesLoadingUnloading {
         StandartData data = new StandartData();
         data.mod = "data_list";
         data.act = "oborotved_data";
+
+//        data.
 
         Gson gson = new Gson();
         String json = gson.toJson(data);

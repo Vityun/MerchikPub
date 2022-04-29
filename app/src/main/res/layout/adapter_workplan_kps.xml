@@ -47,6 +47,16 @@
             android:text="  Адрес: "
             android:textStyle="bold"
             app:layout_constraintStart_toEndOf="@+id/wp_image1"
+            app:layout_constraintTop_toBottomOf="@+id/themelabel" />
+
+        <TextView
+            android:id="@+id/themelabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_toRightOf="@+id/wp_image1"
+            android:text="  Тема: "
+            android:textStyle="bold"
+            app:layout_constraintStart_toEndOf="@+id/wp_image1"
             app:layout_constraintTop_toBottomOf="@+id/datelabel1" />
 
         <TextView
@@ -82,9 +92,11 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_below="@+id/datelabel1"
+            android:layout_marginBottom="4dp"
             android:layout_toRightOf="@+id/wp_image1"
             android:text="  Опции: "
             android:textStyle="bold"
+            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toEndOf="@+id/wp_image1"
             app:layout_constraintTop_toBottomOf="@+id/merclabel1" />
 
@@ -163,6 +175,22 @@
 
         <TextView
             android:id="@+id/addr1"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="4dp"
+            android:layout_marginLeft="4dp"
+            android:layout_marginEnd="4dp"
+            android:layout_marginRight="4dp"
+            android:layout_toRightOf="@+id/addrlabel1"
+            android:maxLines="1"
+            android:singleLine="true"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toEndOf="@+id/addrlabel1"
+            app:layout_constraintTop_toBottomOf="@+id/theme" />
+
+        <TextView
+            android:id="@+id/theme"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="4dp"

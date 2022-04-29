@@ -1,8 +1,12 @@
 package ua.com.merchik.merchik.Activities.DetailedReportActivity;
 
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Typeface;
 import android.text.Html;
+import android.text.SpannableString;
+import android.text.Spanned;
+import android.text.style.URLSpan;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -17,10 +21,12 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.List;
 
+import ua.com.merchik.merchik.Activities.PhotoLogActivity.PhotoLogActivity;
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Options;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.data.Database.Room.SiteObjectsSDB;
+import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
 import ua.com.merchik.merchik.data.OptionMassageType;
 import ua.com.merchik.merchik.data.OptionsButtons;
 import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
@@ -29,13 +35,15 @@ import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsRealm;
 import ua.com.merchik.merchik.dialogs.DialogData;
 
-public class RecycleViewDRAdapter extends RecyclerView.Adapter<RecycleViewDRAdapter.ViewHolder> {
+public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRAdapter.ViewHolder> {
 
     private List<OptionsDB> butt;
     private List<SiteObjectsSDB> translate;
     private Context mContext;
-    private static WpDataDB wpDataDB;
+    //    private static WpDataDB wpDataDB;
+    private T dataDB;
 
+    long dad2, startDt, endDt;
 
     /*Определяем ViewHolder*/
     class ViewHolder extends RecyclerView.ViewHolder {
@@ -116,15 +124,15 @@ public class RecycleViewDRAdapter extends RecyclerView.Adapter<RecycleViewDRAdap
                     || optionId == 132666   // Стандарт
                     || optionId == 139576   // Версия ПО
                     || optionId == 138767   // Планограмма
+                    || optionId == 135742   // "Дет.Отчет" (по Клиенто-Адресу)
+                    || optionId == 132621   // Оценка
+                    || optionId == 84003    // Мнение о сотруднике
+                    || optionId == 138340   // Доп. Материалы
             ) {
                 constraintLayout.setBackgroundResource(R.drawable.bg_temp);
             } else {
                 constraintLayout.setBackgroundResource(R.drawable.button_bg_inactive);
             }
-
-            // Работа с иконками
-//            Log.e("bindRPA", "В теории после обновления: " + POS);
-//            Log.e("bindRPA", "optionsButtons.getIsSignal(): " + optionsButtons.getIsSignal());
 
 
             // color log
@@ -148,15 +156,6 @@ public class RecycleViewDRAdapter extends RecyclerView.Adapter<RecycleViewDRAdap
                 setCheck.setColorFilter(mContext.getResources().getColor(R.color.shadow));
             }
 
-
-            try {
-                Log.e("RecycleViewDRAdapter", "wpDataDB.getVisit_start_dt(): " + wpDataDB.getVisit_start_dt());
-                Log.e("RecycleViewDRAdapter", "wpDataDB.getVisit_end_dt(): " + wpDataDB.getVisit_end_dt());
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-
-
             // =========== СЧЁТЧИК ===========141886
             // todo textInteger.setText(msg); -- могу ли выводить это нормально 1 раз?
             try {
@@ -164,29 +163,53 @@ public class RecycleViewDRAdapter extends RecyclerView.Adapter<RecycleViewDRAdap
                 switch (optionId) {
                     // Start Work
                     case (138518):
-                        textInteger.setText("" + Clock.getHumanTimeOpt(wpDataDB.getVisit_start_dt() * 1000));
+                        long startTime;
+                        if (dataDB instanceof WpDataDB){
+                            startTime = ((WpDataDB) dataDB).getVisit_start_dt();
+                        }else {
+                            startTime = ((TasksAndReclamationsSDB) dataDB).dt_start_fact;
+                        }
+                        textInteger.setText("" + Clock.getHumanTimeOpt(startTime * 1000));
                         break;
                     case (138520):
-                        textInteger.setText("" + Clock.getHumanTimeOpt(wpDataDB.getVisit_end_dt() * 1000));
+                        long endTime;
+                        if (dataDB instanceof WpDataDB){
+                            endTime = ((WpDataDB) dataDB).getVisit_end_dt();
+                        }else {
+                            endTime = ((TasksAndReclamationsSDB) dataDB).dt_end_fact;
+                        }
+                        textInteger.setText("" + Clock.getHumanTimeOpt(endTime * 1000));
                         break;
                     case (132968):  // Вставляем количество выполненных Фоток Витрин
                         String m = optionsButtons.getAmountMin();
                         if (m.equals("0")) {
                             m = "3";
                         }
-                        textInteger.setText("" + RealmManager.stackPhotoShowcasePhotoCount(wpDataDB.getCode_dad2(), 0) + "/" + m);
+                        textInteger.setText("" + RealmManager.stackPhotoShowcasePhotoCount(dad2, 0) + "/" + m);
+
+                        final CharSequence text = textInteger.getText();
+                        final SpannableString spannableString = new SpannableString(text);
+                        spannableString.setSpan(new URLSpan(""), 0, spannableString.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                        textInteger.setText(spannableString, TextView.BufferType.SPANNABLE);
+
+                        textInteger.setOnClickListener(view -> {
+                            Intent intent = new Intent(view.getContext(), PhotoLogActivity.class);
+                            intent.putExtra("report_prepare", true);
+                            intent.putExtra("dad2", dad2);
+                            view.getContext().startActivity(intent);
+                        });
                         break;
                     case (135809):  // Вставляем количество выполненных Фото витрины ДО начала работ
-                        textInteger.setText("" + RealmManager.stackPhotoShowcasePhotoCount(wpDataDB.getCode_dad2(), 14));
+                        textInteger.setText("" + RealmManager.stackPhotoShowcasePhotoCount(dad2, 14));
                         break;
                     case (135158):  // Вставляем количество выполненных Фото Остатков Товаров (ФОТ)
-                        textInteger.setText("" + RealmManager.stackPhotoShowcasePhotoCount(wpDataDB.getCode_dad2(), 4));
+                        textInteger.setText("" + RealmManager.stackPhotoShowcasePhotoCount(dad2, 4));
                         break;
                     case (132969):  // Вставляем количество выполненных Фото Тележка с Товаром (ФТТ)
-                        textInteger.setText("" + RealmManager.stackPhotoShowcasePhotoCount(wpDataDB.getCode_dad2(), 10));
+                        textInteger.setText("" + RealmManager.stackPhotoShowcasePhotoCount(dad2, 10));
                         break;
                     case (141360):
-                        textInteger.setText("" + RealmManager.stackPhotoShowcasePhotoCount(wpDataDB.getCode_dad2(), 31));
+                        textInteger.setText("" + RealmManager.stackPhotoShowcasePhotoCount(dad2, 31));
                         break;
 
                     case 137797:    // Остатки
@@ -205,12 +228,12 @@ public class RecycleViewDRAdapter extends RecyclerView.Adapter<RecycleViewDRAdap
                         break;
 
                     case 141885:    // Фото Документов
-                        textInteger.setText("" + RealmManager.stackPhotoShowcasePhotoCount(wpDataDB.getCode_dad2(), 3));
+                        textInteger.setText("" + RealmManager.stackPhotoShowcasePhotoCount(dad2, 3));
                         break;
 
                     case 138339:    // Доп Требования
                         // Устанавливаю в счётчик доп. требований их количество
-                        textInteger.setText("" + AdditionalRequirementsRealm.getData3(wpDataDB).size());
+                        textInteger.setText("" + AdditionalRequirementsRealm.getData3(dataDB).size());
                         break;
 
                     default:
@@ -232,9 +255,11 @@ public class RecycleViewDRAdapter extends RecyclerView.Adapter<RecycleViewDRAdap
                 Log.e("notifyItemChanged", "CLICK");
 
                 OptionMassageType msgType = new OptionMassageType();
-                msgType = options.NNK(mContext, wpDataDB, optionsButtons, msgType, Options.NNKMode.MAKE, () -> {
-                    detailedReportButtons.buttonClick(mContext, wpDataDB, butt.get(getAdapterPosition()), 0);
-                    setCheck(POS, optionsButtons);
+                msgType = options.NNK(mContext, dataDB, optionsButtons, msgType, Options.NNKMode.MAKE, () -> {
+                    if (dataDB instanceof WpDataDB) {
+                        detailedReportButtons.buttonClick(mContext, (WpDataDB) dataDB, butt.get(getAdapterPosition()), 0);
+                        setCheck(POS, optionsButtons);
+                    }
                 });
 
                 if (msgType.dialog != null) {
@@ -242,9 +267,9 @@ public class RecycleViewDRAdapter extends RecyclerView.Adapter<RecycleViewDRAdap
                     msgType.dialog.show();
                 }
 
-
-//                detailedReportButtons.buttonClick(mContext, wpDataDB, butt.get(getAdapterPosition()), 0);
-//                setCheck(POS, optionsButtons);
+                if (msgType.msg != null && !msgType.msg.equals("")){
+                    Toast.makeText(mContext, msgType.msg, Toast.LENGTH_SHORT).show();
+                }
             });
 
             OptionsDB test = optionsButtons;
@@ -258,7 +283,10 @@ public class RecycleViewDRAdapter extends RecyclerView.Adapter<RecycleViewDRAdap
                         || optId == 135158
                         || optId == 132969
                 ) {
-                    detailedReportButtons.buttonClick(mContext, wpDataDB, optionsButtons, 1);
+                    if (dataDB instanceof WpDataDB){
+                        WpDataDB wpDataDB = (WpDataDB) dataDB;
+                        detailedReportButtons.buttonClick(mContext, wpDataDB, optionsButtons, 1);
+                    }
                 }
                 return false;
             });
@@ -266,15 +294,13 @@ public class RecycleViewDRAdapter extends RecyclerView.Adapter<RecycleViewDRAdap
             setCheck.setOnClickListener(v -> {
                 setCheck(POS, optionsButtons);
             });
-
         }
-
     }
 
     /*Нажатие на проверку статуса опции. Нажатие на сигнал*/
     private void setCheck(int POS, OptionsDB optionsButtons) {
         Options options = new Options();
-        options.optionControl(mContext, wpDataDB, optionsButtons, null, Options.NNKMode.CHECK_CLICK);
+        options.optionControl(mContext, dataDB, optionsButtons, null, Options.NNKMode.CHECK_CLICK);
 
         RealmManager.INSTANCE.executeTransaction(realm -> {
             realm.insertOrUpdate(optionsButtons);
@@ -288,17 +314,33 @@ public class RecycleViewDRAdapter extends RecyclerView.Adapter<RecycleViewDRAdap
     }
 
     private void updateSignal(int position) {
-        wpDataDB = RealmManager.getWorkPlanRowById(wpDataDB.getId());
-        notifyItemChanged(position);
+        if (dataDB instanceof WpDataDB){
+            WpDataDB wpDataDB = (WpDataDB) dataDB;
+            WpDataDB wp = RealmManager.INSTANCE.copyFromRealm(RealmManager.getWorkPlanRowById(wpDataDB.getId()));
+            dataDB = (T) wp;
+            notifyItemChanged(position);
+        }
     }
 
 
     /*Определяем конструктор*/
-    public RecycleViewDRAdapter(Context context, WpDataDB wpDataDB, List<OptionsDB> dataButtons, List<SiteObjectsSDB> list) {
-        this.wpDataDB = wpDataDB;
+    public RecycleViewDRAdapter(Context context, T dataDB, List<OptionsDB> dataButtons, List<SiteObjectsSDB> list) {
+        this.dataDB = dataDB;
         this.butt = dataButtons;
         this.translate = list;
         this.mContext = context;
+
+        if (dataDB instanceof WpDataDB) {
+            WpDataDB wp = (WpDataDB) dataDB;
+            dad2 = wp.getCode_dad2();
+            startDt = wp.getVisit_start_dt();
+            endDt = wp.getVisit_end_dt();
+        }else {
+            TasksAndReclamationsSDB tar = (TasksAndReclamationsSDB) dataDB;
+            dad2 = tar.codeDad2;
+            startDt = tar.dt_start_fact;
+            endDt = tar.dt_end_fact;
+        }
     }
 
     @Override

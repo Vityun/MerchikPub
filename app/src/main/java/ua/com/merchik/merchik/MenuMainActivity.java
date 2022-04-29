@@ -1,5 +1,6 @@
 package ua.com.merchik.merchik;
 
+import android.content.Context;
 import android.os.Bundle;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -8,7 +9,10 @@ import androidx.appcompat.widget.Toolbar;
 
 import com.google.android.material.navigation.NavigationView;
 
-import ua.com.merchik.merchik.dialogs.DialogActivityMessage;
+import okhttp3.WebSocket;
+import ua.com.merchik.merchik.ViewHolders.Clicks;
+import ua.com.merchik.merchik.data.WebSocketData.WebSocketData;
+import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
 
 
 public class MenuMainActivity extends toolbar_menus {
@@ -23,10 +27,16 @@ public class MenuMainActivity extends toolbar_menus {
 
             findViewById(R.id.fab).setOnClickListener(v -> {
                 Toast.makeText(this, "Подсказка к данному разделу не готова", Toast.LENGTH_SHORT).show();
-                test();
+                test(v.getContext());
             });
 
-//            setFab(this, findViewById(R.id.fab));
+            findViewById(R.id.fab).setOnLongClickListener(v -> {
+                Toast.makeText(this, "Отладочная информация!\nДолгий клик по подсказке.", Toast.LENGTH_SHORT).show();
+                test2(v.getContext());
+                return true;
+            });
+
+
             initDrawerStuff(findViewById(R.id.drawer_layout), findViewById(R.id.my_toolbar), findViewById(R.id.nav_view));
 
             NavigationView navigationView = findViewById(R.id.nav_view);
@@ -45,20 +55,41 @@ public class MenuMainActivity extends toolbar_menus {
         getSupportActionBar().setDisplayShowTitleEnabled(false);
         activity_title.setText(getString(R.string.title_activity_menu_main));
 
-        DialogActivityMessage dialogActivityMessage = new DialogActivityMessage(this, this.getResources().getString(R.string.menu_main_main_text));
-        dialogActivityMessage.show();
-
-
-        // TODO Нужно ли это так часто обновлять? Думаю это стоит поправить.
-//        new TablesLoadingUnloading().downloadMenu();
-
-
-//        test();
-    }
-
-
-    public void test() {
+//        DialogActivityMessage dialogActivityMessage = new DialogActivityMessage(this, this.getResources().getString(R.string.menu_main_main_text));
+//        dialogActivityMessage.show();
 
     }
+
+    WebSocket ws;
+    public void test(Context context) {
+        ws = RetrofitBuilder.testWebSocket(new Clicks.click() {
+            @Override
+            public <T> void click(T data) {
+                if (data instanceof WebSocketData){
+                    WebSocketData wsData = (WebSocketData) data;
+                    switch (wsData.action){
+                        case "chat_message":
+                            Toast.makeText(context, "chat_message/\n\nНовое сообщение: " + wsData.chat.msg, Toast.LENGTH_SHORT).show();
+                            break;
+                        case "global_notice":
+                            Toast.makeText(context, "global_notice: " + wsData.text, Toast.LENGTH_SHORT).show();
+                            break;
+                        default:
+                            Toast.makeText(context, "Web Socket. Не смог определить тип сообщения. Сообщение: " + data, Toast.LENGTH_SHORT).show();
+                            break;
+                    }
+                }else {
+                    Toast.makeText(context, "Data: " + data, Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
+    }
+
+    private void test2(Context context){
+        if (ws != null){
+            ws.close(0, "Because I wanted");
+        }
+    }
+
 
 }

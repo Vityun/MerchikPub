@@ -15,6 +15,9 @@ public interface OpinionThemeDao {
     @Query("SELECT * FROM opinions_theme")
     List<OpinionThemeSDB> getAll();
 
+    @Query("SELECT * FROM opinions_theme WHERE theme_id = :id")
+    List<OpinionThemeSDB> getByTheme(int id);
+
     @Query("SELECT * FROM opinions_theme WHERE id = :id")
     LanguagesSDB getOpinionThemeById(int id);
 

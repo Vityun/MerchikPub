@@ -1,27 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
-xmlns:app="http://schemas.android.com/apk/res-auto">
+    xmlns:app="http://schemas.android.com/apk/res-auto">
 
-<!-- Светофор -->
+    <!-- Светофор -->
     <item
         android:id="@+id/action_check"
         android:actionLayout="@layout/status_light_menu_item"
         android:icon="@mipmap/light_gray"
         android:title="Карта"
-        app:showAsAction="ifRoom">
-    </item>
+        app:showAsAction="ifRoom"></item>
 
 
-<!--  Обмен  -->
+    <!--  Обмен  -->
     <item
         android:id="@+id/menu_toolbar_exchange"
         android:title="Обмен"
         app:actionLayout="@layout/exchange_layout"
-        app:showAsAction="always">
-    </item>
+        app:showAsAction="always"></item>
 
 
-<!--  ...  -->
+    <!--  ...  -->
     <item
         android:id="@+id/action_to_main"
         android:orderInCategory="1"
@@ -51,6 +49,12 @@ xmlns:app="http://schemas.android.com/apk/res-auto">
         android:checkable="true"
         android:orderInCategory="95"
         android:title="@string/autosend"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/action_settings"
+        android:orderInCategory="97"
+        android:title="@string/settings"
         app:showAsAction="never" />
 
     <item

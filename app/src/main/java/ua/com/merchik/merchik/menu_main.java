@@ -80,6 +80,7 @@ import okhttp3.RequestBody;
 import retrofit2.Call;
 import retrofit2.Response;
 import ua.com.merchik.merchik.Activities.PhotoLogActivity.PhotoLog;
+import ua.com.merchik.merchik.Activities.WorkPlanActivity.WPDataActivity;
 import ua.com.merchik.merchik.ServerExchange.TablesLoadingUnloading;
 import ua.com.merchik.merchik.data.AppData.AppData;
 import ua.com.merchik.merchik.data.AppData.Browser;
@@ -2081,7 +2082,8 @@ public class menu_main extends AppCompatActivity {
 
         int photoId = photoDB.getId();
         String mod              = "images_prepare";
-        String act              = "upload_image";
+//        String act              = "upload_image";
+        String act              = "upload_photo";
 
         String client_id            = "";
         String addr_id              = "";
@@ -2092,6 +2094,7 @@ public class menu_main extends AppCompatActivity {
         String doc_num              = "";
         String theme_id             = "";
         String comment              = "";
+        String dvi              = "";
         String code_dad2            = "";
         String gp                   = "";
 
@@ -2131,6 +2134,10 @@ public class menu_main extends AppCompatActivity {
             comment = photoDB.getComment();
         }
 
+        if (photoDB.getDvi() != null){
+            dvi = String.valueOf(photoDB.getDvi());
+        }
+
         try{
             code_dad2 = String.valueOf(photoDB.getCode_dad2());
         }catch (Exception e){
@@ -2154,6 +2161,7 @@ public class menu_main extends AppCompatActivity {
         RequestBody doc_num2             = RequestBody.create(MediaType.parse("text/plain"), doc_num);
         RequestBody theme_id2            = RequestBody.create(MediaType.parse("text/plain"), theme_id         );
         RequestBody comment2             = RequestBody.create(MediaType.parse("text/plain"), comment          );
+        RequestBody dvi2                 = RequestBody.create(MediaType.parse("text/plain"), dvi              );
         RequestBody codeDad2             = RequestBody.create(MediaType.parse("text/plain"), code_dad2        );
         RequestBody gp2                  = RequestBody.create(MediaType.parse("text/plain"), gp               );
 
@@ -2205,7 +2213,7 @@ public class menu_main extends AppCompatActivity {
         // РУЧНАЯ ВЫГРУЗКА
         if (mode==1) {
             retrofit2.Call<JsonObject> call = RetrofitBuilder.getRetrofitInterface()
-                    .SEND_PHOTO_2_BODY(mod2, act2, client_id2, addr_id2, date2, img_type_id2, photo_user_id2, client_tovar_group2, doc_num2, theme_id2, comment2, codeDad2, gp2, photo);
+                    .SEND_PHOTO_2_BODY(mod2, act2, client_id2, addr_id2, date2, img_type_id2, photo_user_id2, client_tovar_group2, doc_num2, theme_id2, comment2, dvi2, codeDad2, gp2, photo);
 
             String finalDate = date;
             String finalDate1 = date;

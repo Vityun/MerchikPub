@@ -18,12 +18,17 @@ import retrofit2.Callback;
 import retrofit2.Response;
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
+import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
 import ua.com.merchik.merchik.data.RealmModels.SynchronizationTimetableDB;
+import ua.com.merchik.merchik.data.RealmModels.TovarDB;
 import ua.com.merchik.merchik.data.RetrofitResponse.ModImagesView;
 import ua.com.merchik.merchik.data.RetrofitResponse.ModImagesViewList;
+import ua.com.merchik.merchik.data.RetrofitResponse.TovarImgList;
+import ua.com.merchik.merchik.data.RetrofitResponse.TovarImgResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.photos.ImagesViewListImageList;
 import ua.com.merchik.merchik.data.TestJsonUpload.PhotoFromSite.PhotoTableRequest;
+import ua.com.merchik.merchik.data.TestJsonUpload.StandartData;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.StackPhotoRealm;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
@@ -36,7 +41,180 @@ import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
  * в БД StackPhotoDB.
  */
 public class PhotoDownload {
-    private Globals globals = new Globals();
+    public final Globals globals = new Globals();
+
+
+    /**
+     * 12.02.2022
+     * Формирование запроса на получение ссылок для скачивания фотографий.
+     */
+    public static void getPhotoURLFromServer(List<TovarDB> tovars, Clicks.clickStatusMsg result) {
+        List<Integer> tovarIdsList = getTovarIds(tovars);
+        List<Integer> tovarsPhotoToDownload = StackPhotoRealm.findTovarIds(tovarIdsList); // Записываю сюда список ID-шников которых ещё нет на моей сторне
+
+        StandartData data = new StandartData();
+        data.mod = "images_view";
+        data.act = "list_image";
+        data.tovar_only = "1";
+        data.nolimit = "1";
+        data.image_type = "small";
+        data.tovar_id = tovarsPhotoToDownload;    // Должен сюда записать список ID-шников Товаров которые я хочу загрузить на свою сторону.
+
+        // Формирование тела запроса
+        Gson gson = new Gson();
+        String json = gson.toJson(data);
+        JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
+
+        // Отладочная инфа
+        long start = System.currentTimeMillis() / 1000;
+
+        retrofit2.Call<TovarImgResponse> call = RetrofitBuilder.getRetrofitInterface().GET_TOVAR_PHOTO_INFO_JSON(RetrofitBuilder.contentType, convertedObject);
+        call.enqueue(new Callback<TovarImgResponse>() {
+            @Override
+            public void onResponse(Call<TovarImgResponse> call, Response<TovarImgResponse> response) {
+                int photoListUrlSize;
+
+                Gson gson = new Gson();
+                String json = gson.toJson(response);
+                JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
+
+//                Globals.writeToMLOG("INFO", "getPhotoURLFromServer", "convertedObject: " + convertedObject);
+
+                if (response.isSuccessful()) {
+                    if (response.body() != null) {
+                        if (response.body().getState()) {
+                            try {
+                                photoListUrlSize = response.body().getList().size();
+                            } catch (Exception e) {
+                                photoListUrlSize = -1;
+                            }
+
+                            long end = System.currentTimeMillis() / 1000 - start;
+                            result.onSuccess("Данные о фото товаров(" + photoListUrlSize + "шт) успешно получены. Это заняло " + end + " секунд! \nНачинаю загрузку фотографий.. \n\nЭТО МОЖЕТ ЗАНЯТЬ МНОГО ВРЕМЕНИ И ТРАФИКА!");
+                            // TODO Начинаем загрузку + сохранение на телефон фоток Товаров.
+                            downloadPhoto(response.body().getList(), result);
+                        } else {
+                            result.onFailure("Не получилось загрузить фото Товаров. Обратитесь к руководителю. Ошибка:\n\n(URL)state = false");
+                        }
+                    } else {
+                        result.onFailure("Не получилось загрузить фото Товаров. Обратитесь к руководителю. Ошибка:\n\n(URL)Тело запроса вернулось пустым.");
+                    }
+                } else {
+                    result.onFailure("Не получилось загрузить фото Товаров. Обратитесь к руководителю. Ошибка:\n\n(URL)Ошибка запроса: " + response.code());
+                }
+
+                Log.d("test", "test" + convertedObject);
+            }
+
+            @Override
+            public void onFailure(Call<TovarImgResponse> call, Throwable t) {
+                result.onFailure("Возникли проблемы с сетью. Проверьте интернет соединение, повторите попытку позже. Если проблема повторяется - обратитесь к Руководителю.\n\n(URL)Ошибка: " + t);
+
+                Log.d("test", "test");
+            }
+        });
+
+    }
+
+    private static List<Integer> getTovarIds(List<TovarDB> tovars) {
+        ArrayList<Integer> result = new ArrayList<>();
+        for (TovarDB tovar : tovars) {
+            result.add(Integer.valueOf(tovar.getiD()));
+        }
+        return result;
+    }
+
+    /**
+     * 12.02.2022
+     * Загрузка фоток Товаров.
+     */
+    static int notSuccessfulResponse;
+    static int bodyIsNull;
+    static int saveNewTovarPhoto;
+    static int errorSaveTovarPhoto;
+    static int internetError;
+
+    public static void downloadPhoto(List<TovarImgList> data, Clicks.clickStatusMsg result) {
+        long start = System.currentTimeMillis() / 1000;
+        final int[] cnt = {0};
+        int count = 0;
+        notSuccessfulResponse = 0;
+        bodyIsNull = 0;
+        saveNewTovarPhoto = 0;
+        errorSaveTovarPhoto = 0;
+        internetError = 0;
+
+//        notSuccessfulResponse + "(1)/" + bodyIsNull + "(2)/" + saveNewTovarPhoto + "(3)/" + errorSaveTovarPhoto + "(4)/" + internetError + "(5)/"
+
+
+        for (TovarImgList item : data) {
+            int photoTP = Integer.parseInt(item.getPhotoTp());
+
+            if (photoTP == 18) {
+                count++;
+                retrofit2.Call<ResponseBody> call = RetrofitBuilder.getRetrofitInterface().DOWNLOAD_PHOTO_BY_URL(item.getPhotoUrl());
+                int finalCount = count;
+                call.enqueue(new Callback<ResponseBody>() {
+                    @Override
+                    public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                        if (response.isSuccessful()) {
+                            if (response.body() != null) {
+                                try {
+                                    Bitmap bmp = BitmapFactory.decodeStream(response.body().byteStream());
+                                    String path = Globals.saveImage1(bmp, "TOVAR_" + item.getTovarId());
+
+                                    int id = RealmManager.stackPhotoGetLastId();
+                                    id++;
+
+                                    StackPhotoDB stackPhotoDB = new StackPhotoDB();
+                                    stackPhotoDB.setId(id);
+                                    stackPhotoDB.setPhotoServerId(item.getID());
+                                    stackPhotoDB.setObject_id(Integer.valueOf(item.getTovarId()));
+                                    stackPhotoDB.setVpi(0);
+                                    stackPhotoDB.setCreate_time(System.currentTimeMillis());
+                                    stackPhotoDB.setUpload_to_server(0);
+                                    stackPhotoDB.setGet_on_server(0);
+                                    stackPhotoDB.setPhoto_num(path);
+                                    stackPhotoDB.setPhoto_type(Integer.valueOf(item.getPhotoTp()));
+                                    stackPhotoDB.setComment("small");
+                                    stackPhotoDB.setUpload_time(0);
+                                    stackPhotoDB.setUpload_status(0);
+                                    stackPhotoDB.setStatus(false);
+
+                                    RealmManager.stackPhotoSavePhoto(stackPhotoDB);
+                                    saveNewTovarPhoto++;
+                                } catch (Exception e) {
+                                    errorSaveTovarPhoto++;
+                                }
+                            } else {
+                                bodyIsNull++;
+                            }
+                        } else {
+                            notSuccessfulResponse++;
+                        }
+
+                        if (cnt[0] < finalCount) {
+                            cnt[0]++;
+                        } else if (cnt[0] == finalCount) {
+                            result.onSuccess("S/Закончил работу, обработал(всего/с типом 18/загружено): " + data.size() + "/" + finalCount + "/" + cnt[0] + "\n\n(Код не 200(1)/Тело пустое(2)/Сохранило новую фотку товара(3)/Ошибка при сохранении фото(4)/Ошибка интернета(5))\n\n" + notSuccessfulResponse + "(1)/" + bodyIsNull + "(2)/" + saveNewTovarPhoto + "(3)/" + errorSaveTovarPhoto + "(4)/" + internetError + "(5)/");
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(Call<ResponseBody> call, Throwable t) {
+                        internetError++;
+                        if (cnt[0] < finalCount) {
+                            cnt[0]++;
+                        } else if (cnt[0] == finalCount) {
+                            result.onSuccess("F/Закончил работу, обработал(всего/с типом 18/загружено): " + data.size() + "/" + finalCount + "/" + cnt[0]);
+                        }
+                    }
+                });
+            }
+        }
+
+        result.onSuccess("Фоток с типом 18: " + count);
+    }
 
     /**
      * 23.02.2021
@@ -382,28 +560,27 @@ public class PhotoDownload {
     }
 
 
-
     /**
      * 27.07.2021
      * Скачивание фото по ссылке.
-     *
+     * <p>
      * Отправляю на сервер ссылку, в ответ фотографию, возвращаю дальше в приложение фото
-     * */
-    public static void downloadPhoto(String photoUrl, ExchangeInterface.ExchangePhoto exchange){
+     */
+    public static void downloadPhoto(String photoUrl, ExchangeInterface.ExchangePhoto exchange) {
         retrofit2.Call<ResponseBody> call = RetrofitBuilder.getRetrofitInterface().DOWNLOAD_PHOTO_BY_URL(photoUrl.replace("thumb_", ""));
         call.enqueue(new Callback<ResponseBody>() {
             @Override
             public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
                 InputStream data = response.body().byteStream();
 
-                if (data.toString().length() > 0){
+                if (data.toString().length() > 0) {
                     Bitmap bmp = BitmapFactory.decodeStream(data);
-                    if (bmp != null){
+                    if (bmp != null) {
                         exchange.onSuccess(bmp);
-                    }else {
+                    } else {
                         exchange.onFailure("Фото нет");
                     }
-                }else {
+                } else {
                     exchange.onFailure("Фото нет");
                 }
             }
@@ -415,13 +592,13 @@ public class PhotoDownload {
         });
     }
 
-    public static void savePhotoToDB2(List<ImagesViewListImageList> data){
-        for (ImagesViewListImageList item : data){
+    public static void savePhotoToDB2(List<ImagesViewListImageList> data) {
+        for (ImagesViewListImageList item : data) {
             downloadPhoto(item.photoUrl, new ExchangeInterface.ExchangePhoto() {
                 @Override
                 public void onSuccess(Bitmap bitmap) {
                     StackPhotoDB photoDB = new StackPhotoDB();
-                    photoDB.setId(RealmManager.stackPhotoGetLastId()+1);
+                    photoDB.setId(RealmManager.stackPhotoGetLastId() + 1);
                     photoDB.setPhotoServerId(String.valueOf(item.id));
                     photoDB.setDt(item.dt);
                     photoDB.setClient_id(item.clientId);
@@ -433,7 +610,7 @@ public class PhotoDownload {
                     photoDB.setUpload_to_server(System.currentTimeMillis());// реквизиты что б фотки не выгружались обратно на сервер
                     photoDB.setGet_on_server(System.currentTimeMillis());// реквизиты что б фотки не выгружались обратно на сервер
 
-                    photoDB.setPhoto_num(Globals.savePhotoToPhoneMemory("/Planogram", ""+item.id, bitmap));
+                    photoDB.setPhoto_num(Globals.savePhotoToPhoneMemory("/Planogram", "" + item.id, bitmap));
                     photoDB.setApprove(item.approve);
 
                     photoDB.setDvi(item.dvi);
@@ -454,7 +631,6 @@ public class PhotoDownload {
         }
 
     }
-
 
 
 }

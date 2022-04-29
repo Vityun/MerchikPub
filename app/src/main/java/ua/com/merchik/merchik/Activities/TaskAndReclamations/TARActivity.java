@@ -4,18 +4,18 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
-import android.view.WindowManager;
 import android.widget.TextView;
 
 import androidx.appcompat.widget.Toolbar;
 import androidx.fragment.app.FragmentManager;
+import androidx.viewpager.widget.ViewPager;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.android.material.tabs.TabLayout;
 
 import ua.com.merchik.merchik.Activities.PhotoLogActivity.PhotoLogActivity;
 import ua.com.merchik.merchik.Activities.TaskAndReclamations.TasksActivity.TARHomeFrag;
 import ua.com.merchik.merchik.Activities.TaskAndReclamations.TasksActivity.TARSecondFrag;
-import ua.com.merchik.merchik.Activities.TaskAndReclamations.TasksActivity.Tab3Fragment;
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.MakePhoto;
@@ -30,7 +30,7 @@ import ua.com.merchik.merchik.toolbar_menus;
 
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
-public class TARActivity extends toolbar_menus {
+public class TARActivity extends toolbar_menus implements TARFragmentHome.OnFragmentInteractionListener, TARHomeFrag.OnFragmentInteractionListener{
 
     private Globals globals = new Globals();
 
@@ -38,8 +38,12 @@ public class TARActivity extends toolbar_menus {
     private TARHomeFrag homeFrag;
     private TARSecondFrag secondFrag;
 
+    private TabLayout tabLayout;
+    private ViewPager viewPager;
 
     private FragmentManager fragmentManager;
+
+//    private FragmentManager fragmentManager;
     public static TextView activity_title;
 
     public static int TARType;
@@ -63,30 +67,35 @@ public class TARActivity extends toolbar_menus {
     private void setActivityContent() {
         setContentView(R.layout.drawler_tasks);
         setSupportActionBar((Toolbar) findViewById(R.id.my_toolbar));
-
-        activity_title = (TextView) findViewById(R.id.activity_title);
-
-        TARType = getIntent().getIntExtra("TAR_type", 0);
-        if (TARType == 0) {
-            activity_title.setText("Задачи");
-        } else if (TARType == 1) {
-            activity_title.setText("Рекламации");
-        }
-
         getSupportActionBar().setDisplayShowTitleEnabled(false);
-        this.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN); //Убирает фокус с полей ввода
+
+        tabLayout = findViewById(R.id.tabLayout);
+        viewPager = findViewById(R.id.viewPager);
+
+        setTabs();
+
+//        activity_title = (TextView) findViewById(R.id.activity_title);
+
+//        TARType = getIntent().getIntExtra("TAR_type", 1);
+//        if (TARType == 1) {
+//            activity_title.setText("Задачи");
+//        } else if (TARType == 0) {
+//            activity_title.setText("Рекламации");
+//        }
+
+//        getSupportActionBar().setDisplayShowTitleEnabled(false);
+//        this.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN); //Убирает фокус с полей ввода
 
         try {
-
             fab = findViewById(R.id.fab);
 
             Log.e("SET_TAR_FAB", "CLICK");
-            if (TARType == 0) {
+            if (TARType == 1) {
                 textLesson = 1179;
                 videoLesson = 1180;
                 setFab(this, fab);
                 Log.e("SET_TAR_FAB", "task");
-            } else if (TARType == 1) {
+            } else if (TARType == 0) {
                 textLesson = 1181;
                 videoLesson = 1182;
                 setFab(this, fab);
@@ -100,6 +109,7 @@ public class TARActivity extends toolbar_menus {
 
                 dialog = new DialogCreateTAR(this);
                 dialog.setClose(dialog::dismiss);
+                dialog.setTarType(TARType);
                 dialog.setRecyclerView(new Clicks.clickVoid() {
                     @Override
                     public void click() {
@@ -118,7 +128,7 @@ public class TARActivity extends toolbar_menus {
                         startActivityForResult(intent, 100);
                     }
                 });
-                dialog.clickSave(()->{
+                dialog.clickSave(() -> {
 
                 }, 1);
                 dialog.show();
@@ -132,7 +142,7 @@ public class TARActivity extends toolbar_menus {
 
         // -----------------------------------------------------------------------------------------
 
-        setHomeFrag();
+//        setHomeFrag();
     }
 
     // =================================== --- onCreate --- ========================================
@@ -162,13 +172,13 @@ public class TARActivity extends toolbar_menus {
             fragmentManager.popBackStackImmediate();
 
 
-            if (TARType == 0) {
+            if (TARType == 1) {
                 TARActivity.activity_title.setText("Задачи");
                 textLesson = 1179;
                 videoLesson = 1180;
                 setFab(this, fab);
                 Log.e("SET_TAR_FAB", "task");
-            } else if (TARType == 1) {
+            } else if (TARType == 0) {
                 TARActivity.activity_title.setText("Рекламации");
                 textLesson = 1181;
                 videoLesson = 1182;
@@ -202,7 +212,7 @@ public class TARActivity extends toolbar_menus {
 //            Bundle extras = data.getExtras();
 //            String test = extras.getString("photo_uri");
 
-            if (resultCode == 100){
+            if (resultCode == 100) {
                 int id = data.getIntExtra("stack_photo_id", 0);
                 StackPhotoDB photoDB = StackPhotoRealm.getById(id);
                 homeFrag.dialog.setData(photoDB.getAddr_id(), photoDB.getClient_id(), photoDB.getCode_dad2(), photoDB);
@@ -210,13 +220,13 @@ public class TARActivity extends toolbar_menus {
                 homeFrag.dialog.refreshAdaper(photoDB);
             }
 
-            if (resultCode == 101){
+            if (resultCode == 101) {
                 int id = data.getIntExtra("stack_photo_id", 0);
                 secondFrag.setPhoto(id);
             }
 
-            if (requestCode == 200){
-                TasksAndReclamationsSDB tar = SQL_DB.tarDao().getById(Tab3Fragment.TaRId);
+            if (requestCode == 200) {
+                TasksAndReclamationsSDB tar = SQL_DB.tarDao().getById(TARSecondFrag.TaRID);
                 StackPhotoDB stackPhotoDB = savePhoto(MakePhoto.openCameraPhotoUri, tar);
                 MakePhoto.openCameraPhotoUri = null;
                 secondFrag.setPhoto(Integer.valueOf(stackPhotoDB.getId()));
@@ -228,21 +238,62 @@ public class TARActivity extends toolbar_menus {
         }
     }
 
+
+    private void setTabs(){
+
+        String homeTabTitle = "Задачи";
+        TARType = getIntent().getIntExtra("TAR_type", 1);
+        if (TARType == 1) {
+            homeTabTitle = "Задачи";
+        } else if (TARType == 0) {
+            homeTabTitle = "Рекламации";
+        }
+
+        tabLayout.getTabAt(0).setText(homeTabTitle);
+        tabLayout.getTabAt(1).setText("Карта");
+
+        fragmentManager = getSupportFragmentManager();
+        TARHomeTab tabAdapter = new TARHomeTab(fragmentManager, tabLayout.getTabCount());
+        viewPager.setAdapter(tabAdapter);
+        viewPager.addOnPageChangeListener(new TabLayout.TabLayoutOnPageChangeListener(tabLayout));
+        tabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
+            @Override
+            public void onTabSelected(TabLayout.Tab tab) {
+                viewPager.setCurrentItem(tab.getPosition());
+            }
+
+            @Override
+            public void onTabUnselected(TabLayout.Tab tab) {
+
+            }
+
+            @Override
+            public void onTabReselected(TabLayout.Tab tab) {
+
+            }
+        });
+    }
+
+
     private StackPhotoDB savePhoto(String str, TasksAndReclamationsSDB tar) {
         int id = RealmManager.stackPhotoGetLastId();
         id++;
         StackPhotoDB stackPhotoDB = new StackPhotoDB();
         stackPhotoDB.setId(id);
-        stackPhotoDB.setDt(System.currentTimeMillis()/1000);
-        stackPhotoDB.setTime_event(Clock.getHumanTime2(System.currentTimeMillis()/1000));
+        stackPhotoDB.setDt(System.currentTimeMillis() / 1000);
+        stackPhotoDB.setTime_event(Clock.getHumanTime2(System.currentTimeMillis() / 1000));
 
         stackPhotoDB.setAddr_id(tar.addr);
         stackPhotoDB.setClient_id(tar.client);
-        stackPhotoDB.setUser_id(Globals.userId);
+        stackPhotoDB.setUser_id(tar.author);
         stackPhotoDB.setPhoto_type(0);
         stackPhotoDB.setCode_dad2(tar.codeDad2);
 
-        stackPhotoDB.setCreate_time(System.currentTimeMillis()/1000);
+        if (tar.themeId == 1174){
+            stackPhotoDB.setDvi(1);
+        }
+
+        stackPhotoDB.setCreate_time(System.currentTimeMillis() / 1000);
 
         stackPhotoDB.setPhoto_hash(globals.getHashMD5FromFilePath(str, null));
         stackPhotoDB.setPhoto_num(str);
@@ -250,37 +301,47 @@ public class TARActivity extends toolbar_menus {
         return stackPhotoDB;
     }
 
+    @Override
+    public void messageFromParentFragment(String msg) {
+
+    }
+
+    @Override
+    public void messageFromChildFragment(String msg) {
+
+    }
+
     // =================================== --- @Override --- =======================================
 
-    private void setHomeFrag() {
-        fragmentManager = getSupportFragmentManager();
-
-        homeFrag = new TARHomeFrag().newInstance(TARType, new Globals.TARInterface() {
-            @Override
-            public void onSuccess(TasksAndReclamationsSDB data) {
-                // Открываю новый фрагмент
-                secondFrag = new TARSecondFrag(fragmentManager, data);
-                fragmentManager.beginTransaction()
-                        .addToBackStack(null)
-                        .hide(homeFrag)
-                        .add(R.id.fragment, secondFrag)
-                        .commit();
-
-                Log.e("TasksActivity_T", "3. Открыли новый фрагмент. кол-во: " + fragmentManager.getBackStackEntryCount());
-                Log.e("TasksActivity_T", "3. fragmentManager.getFragments(): " + fragmentManager.getFragments());
-            }
-
-            @Override
-            public void onFailure(String error) {
-            }
-        });
-
-        fragmentManager.beginTransaction()
-                .add(R.id.fragment, homeFrag)
-                .commit();
-
-        Log.e("TasksActivity_T", "4. Количество фрагментов: " + fragmentManager.getBackStackEntryCount());
-        Log.e("TasksActivity_T", "4. Открыли БАЗОВЫЙ фрагмент. кол-во: " + fragmentManager.getBackStackEntryCount());
-        Log.e("TasksActivity_T", "4. fragmentManager.getFragments(): " + fragmentManager.getFragments());
-    }
+//    private void setHomeFrag() {
+//        fragmentManager = getSupportFragmentManager();
+//
+//        homeFrag = new TARHomeFrag().newInstance(TARType, new Globals.TARInterface() {
+//            @Override
+//            public void onSuccess(TasksAndReclamationsSDB data) {
+//                // Открываю новый фрагмент
+//                secondFrag = new TARSecondFrag(fragmentManager, data);
+//                fragmentManager.beginTransaction()
+//                        .addToBackStack(null)
+//                        .hide(homeFrag)
+//                        .add(R.id.fragment, secondFrag)
+//                        .commit();
+//
+//                Log.e("TasksActivity_T", "3. Открыли новый фрагмент. кол-во: " + fragmentManager.getBackStackEntryCount());
+//                Log.e("TasksActivity_T", "3. fragmentManager.getFragments(): " + fragmentManager.getFragments());
+//            }
+//
+//            @Override
+//            public void onFailure(String error) {
+//            }
+//        });
+//
+//        fragmentManager.beginTransaction()
+//                .add(R.id.fragment, homeFrag)
+//                .commit();
+//
+//        Log.e("TasksActivity_T", "4. Количество фрагментов: " + fragmentManager.getBackStackEntryCount());
+//        Log.e("TasksActivity_T", "4. Открыли БАЗОВЫЙ фрагмент. кол-во: " + fragmentManager.getBackStackEntryCount());
+//        Log.e("TasksActivity_T", "4. fragmentManager.getFragments(): " + fragmentManager.getFragments());
+//    }
 }

@@ -3,6 +3,8 @@ package ua.com.merchik.merchik.data.ServerLogin;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
+import ua.com.merchik.merchik.data.WebSocketData.WebsocketParam;
+
 public class SessionCheck {
 
     @SerializedName("state")
@@ -23,6 +25,10 @@ public class SessionCheck {
     @SerializedName("session_id")
     @Expose
     private String sessionId;
+
+    @SerializedName("websocket_param")
+    @Expose
+    public WebsocketParam websocketParam;
 
     public Boolean getState() {
         return state;

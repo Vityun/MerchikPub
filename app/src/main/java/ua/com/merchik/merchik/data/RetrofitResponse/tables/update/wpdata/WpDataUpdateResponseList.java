@@ -12,6 +12,10 @@ public class WpDataUpdateResponseList {
     @Expose
     public boolean state;
 
+    @SerializedName("data")
+    @Expose
+    public WpDataUpdateResponseListData data;
+
     @SerializedName("error")
     @Expose
     public String error;

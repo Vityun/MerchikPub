@@ -2,16 +2,18 @@ package ua.com.merchik.merchik.database.realm.tables;
 
 import android.util.Log;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import io.realm.RealmResults;
+import io.realm.Sort;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
 
 import static ua.com.merchik.merchik.database.realm.RealmManager.INSTANCE;
 
 public class StackPhotoRealm {
 
-    public static void setAll(List<StackPhotoDB> data){
+    public static void setAll(List<StackPhotoDB> data) {
         INSTANCE.beginTransaction();
         INSTANCE.insertOrUpdate(data);
         INSTANCE.commitTransaction();
@@ -51,6 +53,26 @@ public class StackPhotoRealm {
                 .findFirst();
     }
 
+    public static StackPhotoDB getByPhotoNum(String photoNum) {
+        return INSTANCE.where(StackPhotoDB.class)
+                .equalTo("photo_num", photoNum)
+                .findFirst();
+    }
+
+    public static void deleteByPhotoNum(String photoNum) {
+        StackPhotoDB data = INSTANCE.where(StackPhotoDB.class)
+                .equalTo("photo_num", photoNum)
+                .findFirst();
+
+        if (data != null) {
+            if (!INSTANCE.isInTransaction()) {
+                INSTANCE.beginTransaction();
+            }
+            data.deleteFromRealm();
+            INSTANCE.commitTransaction();
+        }
+    }
+
     public static RealmResults<StackPhotoDB> getTARFilterPhoto(int addr, String customer) {
 
         Log.d("test", "" + addr + customer);
@@ -88,17 +110,21 @@ public class StackPhotoRealm {
 
 
     public static RealmResults<StackPhotoDB> getPlanogramPhoto(int addr, String customer) {
-        if (addr != 0 && !customer.equals("")){
+        if (addr != 0 && !customer.equals("")) {
             RealmResults<StackPhotoDB> query = INSTANCE.where(StackPhotoDB.class)
                     .isNotNull("photoServerId")
                     .equalTo("addr_id", addr)
                     .equalTo("client_id", customer)
                     .equalTo("photo_type", 5)
+                    .sort("dt", Sort.DESCENDING)
+                    .limit(25)
                     .findAll();
-            if (query != null && query.size() > 0){return query;}
+            if (query != null && query.size() > 0) {
+                return query;
+            }
         }
 
-        if (!customer.equals("")){
+        if (!customer.equals("")) {
             RealmResults<StackPhotoDB> query = INSTANCE.where(StackPhotoDB.class)
                     .isNotNull("photoServerId")
                     .equalTo("client_id", customer)
@@ -119,7 +145,6 @@ public class StackPhotoRealm {
 //        }
 
 
-
         return INSTANCE.where(StackPhotoDB.class)
                 .isNotNull("photoServerId")
                 .equalTo("photo_type", 5)
@@ -127,18 +152,44 @@ public class StackPhotoRealm {
     }
 
 
-
     /*Проверка есть планограмма или нет*/
-    public static boolean checkByType5(){
+    public static boolean checkByType5() {
         StackPhotoDB res = INSTANCE.where(StackPhotoDB.class)
                 .equalTo("photo_type", 5)
                 .findFirst();
 
-        if (res!=null){
+        if (res != null) {
             return true;
-        }else {
+        } else {
             return false;
         }
     }
+
+
+    /**
+     * 12.02.2022
+     *
+     *
+     * @return*/
+    public static List<Integer> findTovarIds(List<Integer> ids){
+        ArrayList<Integer> result = new ArrayList<>(); // id-шники которых нет в БД
+
+        Log.e("MY_TIME", "START TIME");
+
+        for (Integer tovarId : ids){
+            StackPhotoDB stackPhotoDB = INSTANCE.where(StackPhotoDB.class)
+                    .equalTo("object_id", tovarId)
+                    .findFirst();
+
+            if (stackPhotoDB == null || stackPhotoDB.getPhoto_num().equals("")){
+                result.add(tovarId);
+            }
+        }
+
+        Log.e("MY_TIME", "END TIME. После проверки всех Товаров");
+
+        return result;
+    }
+
 
 }

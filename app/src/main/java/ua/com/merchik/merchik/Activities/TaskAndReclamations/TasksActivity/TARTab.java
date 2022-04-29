@@ -22,8 +22,6 @@ public class TARTab extends FragmentPagerAdapter {
         myContext = context;
         this.totalTabs = totalTabs;
         this.data = dataID;
-
-
     }
 
     @NonNull

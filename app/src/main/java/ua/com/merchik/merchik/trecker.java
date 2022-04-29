@@ -15,12 +15,12 @@ import androidx.core.content.ContextCompat;
 import static android.content.Context.LOCATION_SERVICE;
 
 
-class trecker implements LocationListener {
+public class trecker implements LocationListener {
 
     //private LocationManager locationManager; // FOR VISIBILITY
     static Location imHereGPS; // GPS coordinates
     static Location imHereNET; // Network coordinates
-    static boolean enabledGPS;
+    public static boolean enabledGPS;
     static boolean enabledNET;
     static boolean isMockGPS;
     static boolean isMockNET;

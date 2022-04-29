@@ -1,8 +1,8 @@
 <resources>
     <string name="app_name">merchik</string>
-    <string name="ver">111800</string>
-    <string name="debug_status">0</string>
-    <string name="debug_date">2021-11-18</string>
+    <string name="ver">042800</string>
+    <string name="debug_status">1</string>
+    <string name="debug_date">2022-04-28</string>
 
     <!--Activity titles-->
     <string name="title_activity_menu_main">Рабочий стол</string>
@@ -14,6 +14,8 @@
 
     <string name="edit_text_login">логин</string>
     <string name="edit_text_password">пароль</string>
+
+    <string name="ok">Ok</string>
 
     <string name="object_891">Подсказка</string>
     <string name="object_890">Помощь</string>
@@ -57,9 +59,10 @@
     <string name="go_to_main">Перейти на главную</string>
     <string name="go_to_wpdata">План работ</string>
     <string name="info">Информация</string>
+    <string name="settings">Настройки</string>
     <string name="check_coord">ТЕСТ</string>
 
-<!--    <string name="t_check_internet">Интернет</string>-->
+    <!--    <string name="t_check_internet">Интернет</string>-->
     <string name="t_check_sever">Сервер</string>
     <string name="txt_sever">Сервер</string>
     <string name="t_check_online">Связь</string>
@@ -71,7 +74,6 @@
     <string name="autosend">Автообмен</string>
     <string name="txt_online">Онлайн</string>
     <string name="txt_offline">Офлайн</string>
-
 
 
     <!--Version. Update.-->
@@ -133,7 +135,6 @@
     <string name="navigation_drawer_close">Описание при закрытии</string>
 
 
-
     <!-- ===== MENU Navigation View ===== -->
     <string name="hamburger_menu_main">Главная</string>
     <string name="hamburger_menu_work_plan">План работ</string>
@@ -144,7 +145,6 @@
 
 
     <string name="activity_photo_log_title">Журнал фото</string>
-
 
 
     <!-- ===== LOGIN ===== -->
@@ -158,9 +158,21 @@
     <string name="save">Сохранить</string>
 
 
+    <!--Сообщения для ПЕРЕВОПРОСОВ-->
+    <string name="re_questioning_wpdata_first_msg">Тема данного визита: Маркетинговые исследования!\n\nПо этому посещению надо выполнять ВЫКЛАДКУ товара?</string>
+    <string name="re_questioning_wpdata_second_msg">Вы будете выкладывать товар во время этого посещения ?</string>
+    <string name="re_questioning_wpdata_err_msg">Это неправильный ответ! По этому посещению НЕЛЬЗЯ выполнять выкладку товара !!</string>
+
+
+    <!--    -->
+    <string name="executor">Исполнитель</string>
+    <string name="address2">Адрес</string>
+
+    <string name="tar_server_error_short_comment">Длина комментария должна быть не менее 20 символов (без учета знаков препинания и пробелов).</string>
+
 </resources>
 
-<!--
-&#160; - пробел тип1 (for non-breakable whitespace.)
-&#032; - пробел тип2 (for regular space.)
--->
+    <!--
+    &#160; - пробел тип1 (for non-breakable whitespace.)
+    &#032; - пробел тип2 (for regular space.)
+    -->

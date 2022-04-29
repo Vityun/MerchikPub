@@ -148,6 +148,15 @@ public class DetailedReportTovarsFrag extends Fragment {
         Log.e("DetailedReportTovarsF", "list.size(): " + list.size());
 
         RecycleViewDRAdapterTovar recycleViewDRAdapter = new RecycleViewDRAdapterTovar(mContext, list, wpDataDB);
+        recycleViewDRAdapter.setTplType(RecycleViewDRAdapterTovar.DRAdapterTovarTPLTypeView.GONE);
+
+        recycleViewDRAdapter.refreshAdapter(()->{
+            recycleViewDRAdapter.switchTPLView();
+            rvTovar.setAdapter(recycleViewDRAdapter);
+            rvTovar.setLayoutManager(new LinearLayoutManager(mContext, LinearLayoutManager.VERTICAL, false));
+            recycleViewDRAdapter.notifyDataSetChanged();
+        });
+
         rvTovar.setAdapter(recycleViewDRAdapter);
         rvTovar.setLayoutManager(new LinearLayoutManager(mContext, LinearLayoutManager.VERTICAL, false));
 

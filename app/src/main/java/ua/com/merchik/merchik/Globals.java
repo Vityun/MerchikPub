@@ -111,6 +111,7 @@ public class Globals {
 
     //----------------------------------------------------------------------------------------------
     public static int userId;
+    public static String token;
     public static Integer userEKLId;
     public static int langId = 2;
     public static boolean statusOnline = false;
@@ -144,11 +145,8 @@ public class Globals {
         WP_DATA                 // План работ
     }
 
-    public enum ViewHolderType {
-        PHOTO_AND_INFO,
-        AUTO_COMPLETE_TEXT,
-        ENTER_TEXT,
-        BUTTON
+    public enum ViewHolderDataType {
+        USER, ADDRESS, CUSTOMER, THEME, STATUS
     }
 
     public enum NewTARDataType {
@@ -167,7 +165,6 @@ public class Globals {
     }
 
     // ----- shit data ------
-
 
 
     //------------------------------------- interface ----------------------------------------------
@@ -293,7 +290,7 @@ public class Globals {
             byte[] md5Bytes = digest.digest();
             return convertHashToString(md5Bytes);
         } catch (Exception e) {
-            if (context != null){
+            if (context != null) {
                 alertDialogMsg(context, "photo: " + inputStream + "\nОшибка в подсчёте MD5: " + e);
             }
             return null;
@@ -461,7 +458,7 @@ public class Globals {
 
     // =========================
 
-    public String saveImage1(Bitmap finalBitmap, String image_name) {
+    public static String saveImage1(Bitmap finalBitmap, String image_name) {
 
         Log.e("TAG_TABLE", "PHOTO_TOVAR_URL_photo_start: " + finalBitmap.getByteCount());
 
@@ -583,14 +580,14 @@ public class Globals {
 
             String msg;
 
-            if (internetStatus == 1){
+            if (internetStatus == 1) {
                 msg = "При выполнении Синхронизации возникла ошибка связи с сервером. Проверьте интернет " +
                         "соединение или повторите попытку позже.\n\nВнимание! Если отсутствует связь с " +
                         "сервером НЕ переустанавливайте приложение потому, что при переустановке приложения " +
                         "будут удалены все внесённые вами данные (фото, дет. отчёт, доступы, справочники " +
                         "и тп..) которые, на текущий момент, не выгружены на сервер.\n\nПри необходимости " +
                         "установки НОВОЙ ВЕРСИИ приложения из Плэй Маркета, используйте кнопку 'Обновить'.";
-            }else {
+            } else {
                 msg = "Проверьте состояние Вашего интернета. Подключитесь к Wifi или выйдите с помещения," +
                         " для лучшей связи и повторите попытку";
             }
@@ -677,11 +674,11 @@ public class Globals {
     }
 
 
-
-    /** 22.10.21.
+    /**
+     * 22.10.21.
      * Запись в лог местоположений
-     * */
-    public void fixMP(){
+     */
+    public void fixMP() {
         LogMPDB log = new LogMPDB(RealmManager.logMPGetLastId() + 1, POST_10());
         RealmManager.setLogMpRow(log);
     }
@@ -816,7 +813,6 @@ public class Globals {
      */
     public static void writeToMLOG(String type, String place, String msg) {
         try {
-//            File root = new File(Environment.getExternalStorageDirectory(), "/Merchik");
             File root = MyApplication.getAppContext().getExternalFilesDir(Environment.DIRECTORY_NOTIFICATIONS);
             if (!root.exists()) {
                 root.mkdirs();
@@ -827,7 +823,6 @@ public class Globals {
 
             FileOutputStream stream = new FileOutputStream(file, true);
             try {
-
                 String time = Clock.getHumanTime();
                 String space = " ";
                 String delimiter = "\n";
@@ -838,6 +833,43 @@ public class Globals {
             } finally {
                 stream.close();
             }
+
+            // --------------------------------
+            long filesize = file.length();
+            long fileSizeInKB = filesize / 1024;
+            long fileSizeInMB = fileSizeInKB / 1024;
+
+/*            if (fileSizeInKB > 200){
+                String tempFileName = "TEMP_M_LOG.txt";
+                File tempFile = new File(root, tempFileName);
+
+                StringBuilder text = new StringBuilder();
+                try {
+                    BufferedReader br = new BufferedReader(new FileReader(file));
+                    String line;
+
+                    while ((line = br.readLine()) != null) {
+                        text.append(line);
+//                        text.append('\n');
+                    }
+                    br.close();
+                }
+                catch (IOException e) {
+                    //You'll need to add proper error handling here
+                }
+
+                FileOutputStream stream2 = new FileOutputStream(tempFile, true);
+                try {
+                    stream2.write(text.toString().getBytes());
+                } finally {
+                    stream2.close();
+                }
+
+                Log.e("writeToMLOG", "testing data: " + text);
+
+            }*/
+            // --------------------------------
+
             Log.e("writeToMLOG", "ENTER_DATA");
         } catch (IOException e) {
             e.printStackTrace();
@@ -939,8 +971,10 @@ public class Globals {
 
     // 09.11.21
     // Профайлер. Делаем записи в него что б их можно было контролировать на сервере
-    public static void setProfiler(){};
+    public static void setProfiler() {
+    }
 
+    ;
 
 
 }//--------------

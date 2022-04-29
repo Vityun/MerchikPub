@@ -13,12 +13,15 @@ import java.util.List;
 import java.util.Map;
 
 import io.realm.RealmResults;
+import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
 import ua.com.merchik.merchik.data.RealmModels.GroupTypeDB;
 import ua.com.merchik.merchik.data.OptionsButtons;
 import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
 import ua.com.merchik.merchik.data.WPDataObj;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.database.realm.RealmManager;
+
+import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
 public class WorkPlan {
 
@@ -131,6 +134,24 @@ public class WorkPlan {
         Float lon = Float.valueOf(wpRow.getAddr_location_yd());
 
         return new WPDataObj(wpId, date, customer_id, address_id, photo_type, customerTypeGrp, doc_num, theme_id, photo_user_id, dad2, customer_txt, address_txt, lat, lon);
+    }
+
+    public WPDataObj getKPS(TasksAndReclamationsSDB task){
+        WPDataObj result = new WPDataObj();
+
+        result.setDate(String.valueOf(task.dt));
+        result.setCustomerId(task.client);
+        result.setAddressId(task.addr);
+        result.setPhotoType("0");
+        result.setCustomerTypeGrp(getCustomerGroups(task.client));
+        result.setDocNum("");   // Не нужное, скорее всего
+        result.setThemeId(task.themeId);
+        result.setPhotoUserId("");  // !!!
+        result.setDad2(task.codeDad2);
+        result.setLatitude((float) SQL_DB.addressDao().getById(task.addr).locationXd);
+        result.setLongitude((float) SQL_DB.addressDao().getById(task.addr).locationYd);
+
+        return result;
     }
 
     public Map<Integer, String> getCustomerGroups(String customer_id){

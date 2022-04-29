@@ -28,6 +28,7 @@ import ua.com.merchik.merchik.data.Data;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.data.WPDataObj;
 import ua.com.merchik.merchik.database.realm.RealmManager;
+import ua.com.merchik.merchik.database.realm.tables.ThemeRealm;
 import ua.com.merchik.merchik.dialogs.DialogData;
 
 public class RecycleViewWPAdapter extends RecyclerView.Adapter<RecycleViewWPAdapter.ViewHolder> implements Filterable {
@@ -52,6 +53,7 @@ public class RecycleViewWPAdapter extends RecyclerView.Adapter<RecycleViewWPAdap
         TextView merc;
         TextView date;
         TextView price;
+        TextView theme;
         LinearLayout options = null;
         ImageView wp_image;
         ImageView check;
@@ -67,6 +69,7 @@ public class RecycleViewWPAdapter extends RecyclerView.Adapter<RecycleViewWPAdap
             merc = (TextView) view.findViewById(R.id.merc1);
             date = (TextView) view.findViewById(R.id.date1);
             price = (TextView) view.findViewById(R.id.wp_adapter_price);
+            theme = view.findViewById(R.id.theme);
             options = (LinearLayout) view.findViewById(R.id.option_signal_layout1);//setContentView
             wp_image = (ImageView) view.findViewById(R.id.wp_image1);
 
@@ -110,6 +113,19 @@ public class RecycleViewWPAdapter extends RecyclerView.Adapter<RecycleViewWPAdap
             price.setText(string);
             price.setMovementMethod(LinkMovementMethod.getInstance());
 
+            try {
+                theme.setText(ThemeRealm.getByID(String.valueOf(wpDataDB.getTheme_id())).getNm());
+                if (wpDataDB.getTheme_id() != 998){
+                    theme.setTextColor(mContext.getResources().getColor(R.color.red_error));
+                }else {
+                    theme.setTextColor(mContext.getResources().getColor(android.R.color.tab_indicator_text));
+                }
+            }catch (Exception e){
+                // Тема не успела загрузиться
+                theme.setText("Тема не обнаружена");
+            }
+
+
             options.removeAllViews();
             options.addView(workPlan.getOptionLinearLayout(mContext, otchetId));
             wp_image.setImageResource(R.mipmap.merchik);
@@ -120,13 +136,13 @@ public class RecycleViewWPAdapter extends RecyclerView.Adapter<RecycleViewWPAdap
                 setDialog(wpDataDB, otchetId);
             });
 
-            price.setOnClickListener(v->{
+            price.setOnClickListener(v -> {
                 setPriceInfo(v.getContext(), wpDataDB);
             });
 
         }
 
-        private void setPriceInfo(Context context, WpDataDB wp){
+        private void setPriceInfo(Context context, WpDataDB wp) {
             StringBuilder stringBuilder = new StringBuilder();
             stringBuilder.append("План: ").append(wp.getCash_ispolnitel()).append("\n");
             stringBuilder.append("Снижение: ").append("0").append("\n");
@@ -143,35 +159,62 @@ public class RecycleViewWPAdapter extends RecyclerView.Adapter<RecycleViewWPAdap
         private void setDialog(WpDataDB wp, long otchetId) {
             String msg = String.format("Дата: %s\nАдрес: %s\nКлиент: %s\nИсполнитель: %s\n", wp.getDt(), wp.getAddr_txt(), wp.getClient_txt(), wp.getUser_txt());
 
+            DialogData errorMsg = new DialogData(mContext);
+            errorMsg.setTitle("");
+            errorMsg.setText(mContext.getString(R.string.re_questioning_wpdata_err_msg));
+            errorMsg.setClose(errorMsg::dismiss);
+
             DialogData dialog = new DialogData(mContext);
             dialog.setTitle("Открыть посещение?");
             dialog.setText(msg);
             dialog.setOk(null, () -> {
-                try {
-                    Data D = new Data(
-                            wp.getId(),
-                            wp.getAddr_txt(),
-                            wp.getClient_txt(),
-                            wp.getUser_txt(),
-                            wp.getDt(),
-                            otchetId,
-                            "",
-                            R.mipmap.merchik);
-
-                    WPDataObj wpDataObj = workPlan.getKPS(wp.getId());
-
-                    Intent intent = new Intent(mContext, DetailedReportActivity.class);
-                    intent.putExtra("dataFromWP", D);
-                    intent.putExtra("rowWP", (Serializable) wp);
-                    intent.putExtra("dataFromWPObj", wpDataObj);
-                    mContext.startActivity(intent);
-                } catch (Exception e) {
-                    globals.alertDialogMsg(mContext, "Возникла ошибка. Сообщите о ней своему администратору. Ошибка2: " + e);
+                if (wp.getTheme_id() == 1182){
+                    DialogData dialogQuestionOne = new DialogData(mContext);
+                    dialogQuestionOne.setTitle("");
+                    dialogQuestionOne.setText(mContext.getString(R.string.re_questioning_wpdata_first_msg));
+                    dialogQuestionOne.setOk("Да", errorMsg::show);
+                    dialogQuestionOne.setCancel("Нет", ()->{
+                        DialogData dialogQuestionOTwo = new DialogData(mContext);
+                        dialogQuestionOne.dismiss();
+                        dialogQuestionOTwo.setTitle("");
+                        dialogQuestionOTwo.setText(mContext.getString(R.string.re_questioning_wpdata_second_msg));
+                        dialogQuestionOTwo.setOk("Да", errorMsg::show);
+                        dialogQuestionOTwo.setCancel("Нет", ()->{openReportPrepare(wp, otchetId);});
+                        dialogQuestionOTwo.show();
+                    });
+                    dialogQuestionOne.show();
+                }else {
+                    openReportPrepare(wp, otchetId);
                 }
             });
             dialog.show();
         }
+
+        private void openReportPrepare(WpDataDB wp, long otchetId) {
+            try {
+                Data D = new Data(
+                        wp.getId(),
+                        wp.getAddr_txt(),
+                        wp.getClient_txt(),
+                        wp.getUser_txt(),
+                        wp.getDt(),
+                        otchetId,
+                        "",
+                        R.mipmap.merchik);
+
+                WPDataObj wpDataObj = workPlan.getKPS(wp.getId());
+
+                Intent intent = new Intent(mContext, DetailedReportActivity.class);
+                intent.putExtra("dataFromWP", D);
+                intent.putExtra("rowWP", (Serializable) wp);
+                intent.putExtra("dataFromWPObj", wpDataObj);
+                mContext.startActivity(intent);
+            } catch (Exception e) {
+                globals.alertDialogMsg(mContext, "Возникла ошибка. Сообщите о ней своему администратору. Ошибка2: " + e);
+            }
+        }
     }
+
 
 
     /*Определяем конструктор*/
@@ -182,7 +225,7 @@ public class RecycleViewWPAdapter extends RecyclerView.Adapter<RecycleViewWPAdap
         this.workPlanList2 = RealmManager.INSTANCE.copyFromRealm(wp);
     }
 
-    public void updateData(List<WpDataDB> wp){
+    public void updateData(List<WpDataDB> wp) {
         this.WP = RealmManager.INSTANCE.copyFromRealm(wp);
         this.workPlanList = RealmManager.INSTANCE.copyFromRealm(wp);
         this.workPlanList2 = RealmManager.INSTANCE.copyFromRealm(wp);

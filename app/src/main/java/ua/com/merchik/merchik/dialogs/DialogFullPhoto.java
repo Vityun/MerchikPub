@@ -432,12 +432,11 @@ public class DialogFullPhoto {
         }
     }
 
-    public void setTask(int addr, String cust, long dad2, StackPhotoDB photoDB){
+    public void setTask(int user, int addr, String cust, long dad2, StackPhotoDB photoDB){
         task.setOnClickListener(v -> {
             DialogCreateTAR dialog = new DialogCreateTAR(context);
             dialog.setClose(dialog::dismiss);
-
-            dialog.setData(addr, cust, dad2, photoDB);
+            dialog.setData(user, addr, cust, dad2, photoDB);
 
             dialog.setRecyclerView(null);
 

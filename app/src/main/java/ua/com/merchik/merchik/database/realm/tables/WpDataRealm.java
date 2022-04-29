@@ -60,7 +60,7 @@ public class WpDataRealm {
                 .findFirst();
     }
 
-    public static List<WpDataDB> getWpDataRowByIds(Integer[] id){
+    public static List<WpDataDB> getWpDataRowByIds(Integer[] id) {
         return INSTANCE.where(WpDataDB.class)
                 .in("id", id)
                 .findAll();
@@ -158,4 +158,40 @@ public class WpDataRealm {
 
         return result;
     }
+
+
+    /**
+     * запрос к БД из Фильтра
+     */
+    public static RealmResults<WpDataDB> wpFiltered(Integer addressId, Integer customerId, Integer userId, Integer themeId) {
+        RealmResults<WpDataDB> result = INSTANCE.where(WpDataDB.class)
+                .findAll();
+
+        if (addressId != null && addressId != 0) {
+            result = result.where()
+                    .equalTo("addr_id", addressId)
+                    .findAll();
+        }
+
+        if (customerId != null && customerId != 0){
+            result = result.where()
+                    .equalTo("client_id", String.valueOf(customerId))
+                    .findAll();
+        }
+
+        if (userId != null && userId != 0){
+            result = result.where()
+                    .equalTo("user_id", userId)
+                    .findAll();
+        }
+
+        if (themeId != null && themeId != 0){
+            result = result.where()
+                    .equalTo("theme_id", themeId)
+                    .findAll();
+        }
+
+        return result;
+    }
+
 }

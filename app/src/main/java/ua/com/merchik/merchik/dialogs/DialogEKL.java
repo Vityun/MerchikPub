@@ -9,6 +9,7 @@ import android.os.Build;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.ArrayAdapter;
@@ -33,21 +34,24 @@ import io.reactivex.rxjava3.disposables.CompositeDisposable;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
-import ua.com.merchik.merchik.Activities.ReferencesActivity.ReferencesActivity;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.ServerExchange.ExchangeInterface;
 import ua.com.merchik.merchik.ViewHolders.AutoTextUsersViewHolder;
 import ua.com.merchik.merchik.data.Database.Room.EKL_SDB;
+import ua.com.merchik.merchik.data.Database.Room.UsersSDB;
 import ua.com.merchik.merchik.data.Database.Room.UsersSDBDat.UserSDBJoin;
 import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteHintsDB;
 import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteObjects.SiteObjectsDB;
+import ua.com.merchik.merchik.data.RealmModels.AdditionalRequirementsDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.data.TestJsonUpload.DataEKL;
 import ua.com.merchik.merchik.data.TestJsonUpload.StandartData;
 import ua.com.merchik.merchik.database.realm.RealmManager;
+import ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsRealm;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
 
+import static android.view.MotionEvent.ACTION_UP;
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 import static ua.com.merchik.merchik.toolbar_menus.internetStatus;
 
@@ -67,12 +71,13 @@ public class DialogEKL {
     private static UserSDBJoin user;
     private EKL_SDB ekl = new EKL_SDB();
 
-
     private String dad2;
 
     private Boolean enterCode = false;
+    boolean isKeyboardShowing = true;
     private Integer element_id;
     private String telType = "";
+    private int cnt = 0;
 
     //---------------------------
 
@@ -106,7 +111,7 @@ public class DialogEKL {
 
             showData();
         } catch (Exception e) {
-
+            Log.e("test", "test: " + e);
         }
     }
 
@@ -203,6 +208,7 @@ public class DialogEKL {
                         Log.e("setVideoLesson", "click2.replace.URL: " + s);
 
                         // Отображаем видео
+                        // Samsung A6 Galaxy
                         DialogVideo video = new DialogVideo(context);
 //                    video.setMerchikIco();
                         video.setTitle("" + finalData.getNm());
@@ -294,11 +300,15 @@ public class DialogEKL {
 //        List<UsersSDB> data = SQL_DB.usersDao().getPTT(id);
         List<UserSDBJoin> data = SQL_DB.usersDao().getAllUsersLJoinTovGrps(id);
 
+
+        AdditionalRequirementsDB additionalRequirementsDB = AdditionalRequirementsRealm.getADByClient(String.valueOf(wp.getAddr_id()), wp.getClient_id());
+
+
         Log.e("DialogEKL", "showData/data: " + data);
         Log.e("DialogEKL", "showData/data.size: " + data.size());
 
 //        data.get(4).tel2 = "+380ХХХХХХХХХ";
-        data.get(0).tel = "+3806674728811";
+//        data.get(0).tel = "+380667472811";
 
         AutoTextUsersViewHolder adapterUser = new AutoTextUsersViewHolder(context, android.R.layout.simple_dropdown_item_1line, data);
 
@@ -306,20 +316,27 @@ public class DialogEKL {
 
 
         sotr.setHint("Выберите ПТТ (Представителя Торговой Точки)");
-        if (Globals.userEKLId != null && Globals.userEKLId != 0){
-            for(UserSDBJoin item : data) {
-                if(item.id.equals(Globals.userEKLId)) {
-                    try {
-                        if (item.nm == null) {
-                            item.nm = "Отдел не определён";
+
+        if (additionalRequirementsDB != null){
+            UsersSDB user = SQL_DB.usersDao().getUserById(Integer.parseInt(additionalRequirementsDB.userId));
+            sotr.setText("" + user.fio);
+        }else {
+            if (Globals.userEKLId != null && Globals.userEKLId != 0){
+                for(UserSDBJoin item : data) {
+                    if(item.id.equals(Globals.userEKLId)) {
+                        try {
+                            if (item.nm == null) {
+                                item.nm = "Отдел не определён";
+                            }
+                        }catch (Exception e){
+                            e.printStackTrace();
                         }
-                    }catch (Exception e){
-                        e.printStackTrace();
+                        sotr.setText(item.fio + "(" + item.nm + ")");
                     }
-                    sotr.setText(item.fio + "(" + item.nm + ")");
                 }
             }
         }
+
         tel.setHint("Выберите телефон");
         tel.setInputType(0);    // Запрещаю изменять номер
 
@@ -348,17 +365,33 @@ public class DialogEKL {
         });
 
 
-        sotr.setOnClickListener(arg0 -> {
-            Log.e("DialogEKL", "setOnClickListener: " + sotr.getText());
-            Globals.hideKeyboard(context);
 
-            if (sotr.getText().length() > 0){
-                Log.e("DialogEKL", "setOnClickListener1: " + sotr.getText());
-                sotr.setText("");
-            }else {
-                sotr.showDropDown();
+        sotr.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View view, MotionEvent motionEvent) {
+                if (motionEvent.getAction() == ACTION_UP) {
+                    sotr.showDropDown();
+                    Globals.hideKeyboard(view.getContext());
+                }
+                return false;
             }
+        });
 
+
+        sotr.setOnClickListener(arg0 -> {
+//            Log.e("DialogEKL", "setOnClickListener: " + sotr.getText());
+//            Globals.hideKeyboard(context);
+//
+//            if (sotr.getText().length() > 0){
+//                Log.e("DialogEKL", "setOnClickListener1: " + sotr.getText());
+//                sotr.setText("");
+//            }else {
+//                sotr.showDropDown();
+//            }
+//            Toast.makeText(arg0.getContext(), "Нажал", Toast.LENGTH_SHORT).show();
+
+//            sotr.showDropDown();
+            Globals.showKeyboard(context);
         });
 
         sotr.setOnLongClickListener((v)->{
@@ -373,8 +406,14 @@ public class DialogEKL {
             Object item = parent.getItemAtPosition(position);
             Log.e("TestObj", "item: " + item);
             if (item instanceof UserSDBJoin) {
-                Log.e("TestObj", "HERE?");
+
                 UserSDBJoin res = (UserSDBJoin) item;
+
+                if (res.sendSms == 0){
+                    String msg = "У сотрудника " + res.fio + " отключена возможность отправки СМС. Если Вам это необходимо сделать, обратитесь к своему руководителю.";
+                    Toast.makeText(arg1.getContext(), msg, Toast.LENGTH_LONG).show();
+                    return;
+                }
 
                 Globals.userEKLId = res.id;
 
@@ -550,9 +589,10 @@ public class DialogEKL {
      */
     private void setAddSotr() {
         addSotr.setOnClickListener(v -> {
-            Intent intentRef = new Intent(context, ReferencesActivity.class);
-            intentRef.putExtra("ReferencesEnum", Globals.ReferencesEnum.USERS);
-            context.startActivity(intentRef);
+            Toast.makeText(context, "Добавление нового ПТТ находится в разработке!", Toast.LENGTH_LONG).show();
+//            Intent intentRef = new Intent(context, ReferencesActivity.class);
+//            intentRef.putExtra("ReferencesEnum", Globals.ReferencesEnum.USERS);
+//            context.startActivity(intentRef);
         });
     }
 
@@ -569,6 +609,7 @@ public class DialogEKL {
         data.act = "verification_send";
 
 //        data.sotr_id = "19652";
+        data.option_id = 84007;
         data.sotr_id = String.valueOf(user.id);
         data.code_dad2 = String.valueOf(wp.getCode_dad2());
         data.tel_type = telType;

@@ -41,7 +41,7 @@ import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.AddressRealm;
 import ua.com.merchik.merchik.database.realm.tables.CustomerRealm;
-import ua.com.merchik.merchik.database.realm.tables.ThemeRealm;
+import ua.com.merchik.merchik.database.realm.tables.ImagesTypeListRealm;
 import ua.com.merchik.merchik.database.realm.tables.UsersRealm;
 import ua.com.merchik.merchik.dialogs.DialogFullPhoto;
 
@@ -56,6 +56,7 @@ public class PhotoLogAdapter extends RecyclerView.Adapter<PhotoLogAdapter.ViewHo
     private int POS;
     private boolean mod;
     private Clicks.click click;
+    private PhotoLogMode photoLogMode;
 
     public PhotoLogAdapter(Context context, RealmResults<StackPhotoDB> photoLogData, boolean mod, Clicks.click click) {
         this.mContext = context;
@@ -63,6 +64,13 @@ public class PhotoLogAdapter extends RecyclerView.Adapter<PhotoLogAdapter.ViewHo
         this.photoLogDataList = RealmManager.INSTANCE.copyFromRealm(photoLogData);
         this.mod = mod;
         this.click = click;
+    }
+
+    /**
+     * Установка текущего режима для работы/отображения фотографий в журнале фото
+     */
+    public void setPhotoLogMode(PhotoLogMode mode) {
+        this.photoLogMode = mode;
     }
 
 
@@ -83,7 +91,7 @@ public class PhotoLogAdapter extends RecyclerView.Adapter<PhotoLogAdapter.ViewHo
         private TextView tv12;
         private TextView tv13;
 
-        private ImageView imageView;
+        private ImageView imageView, check;
 
         ViewHolder(View v) {
             super(v);
@@ -103,6 +111,7 @@ public class PhotoLogAdapter extends RecyclerView.Adapter<PhotoLogAdapter.ViewHo
             tv13 = (TextView) v.findViewById(R.id.textView13);
 
             imageView = (ImageView) v.findViewById(R.id.wp_image1);
+            check = v.findViewById(R.id.check);
         }
 
         @SuppressLint("SimpleDateFormat")
@@ -116,6 +125,10 @@ public class PhotoLogAdapter extends RecyclerView.Adapter<PhotoLogAdapter.ViewHo
                 } else {
                     // ВЕРНУТЬ К ИЗНАЧАЛЬНОМУ СОСТОЯНИЮ
                     ((GradientDrawable) imageView.getBackground()).setStroke(5, Color.LTGRAY);
+                }
+
+                if (photoLogDat.getUpload_to_server() > 0) {
+                    layout.setBackgroundColor(Color.WHITE);
                 }
 
                 if (photoLogDat.getUpload_to_server() > 0) {
@@ -143,28 +156,27 @@ public class PhotoLogAdapter extends RecyclerView.Adapter<PhotoLogAdapter.ViewHo
                 StringBuilder customer = new StringBuilder();
                 try {
                     customer.append("(").append(sc).append(") ");
-                    if (photoLogDat.getCustomerTxt() != null){
+                    if (photoLogDat.getCustomerTxt() != null) {
                         customer.append(photoLogDat.getCustomerTxt());
-                    }else {
+                    } else {
                         customer.append(CustomerRealm.getCustomerById(sc).getNm());
                     }
-                }catch (Exception e){
+                } catch (Exception e) {
                     Globals.writeToMLOG("ERROR", "PhotoLogAdapter.bind.Нормальное заполнение КЛИЕНТОВ", "Exception e: " + e);
                     customer.append("Не удалось определить");
                 }
-
 
 
                 // Нормальное заполенние АДРЕСОВ
                 StringBuilder address = new StringBuilder();
                 try {
                     address.append("(").append(sa).append(") ");
-                    if (photoLogDat.getAddressTxt() != null){
+                    if (photoLogDat.getAddressTxt() != null) {
                         address.append(photoLogDat.getAddressTxt());
-                    }else {
+                    } else {
                         address.append(AddressRealm.getAddressById(photoLogDat.getAddr_id()).getNm());
                     }
-                }catch (Exception e){
+                } catch (Exception e) {
                     Globals.writeToMLOG("ERROR", "PhotoLogAdapter.bind.Нормальное заполенние АДРЕСОВ", "Exception e: " + e);
                     address.append("Не удалось определить");
                 }
@@ -174,12 +186,12 @@ public class PhotoLogAdapter extends RecyclerView.Adapter<PhotoLogAdapter.ViewHo
                 StringBuilder merch = new StringBuilder();
                 try {
                     merch.append("(").append(userId).append(") ");
-                    if (photoLogDat.getUserTxt() != null){
+                    if (photoLogDat.getUserTxt() != null) {
                         merch.append(photoLogDat.getUserTxt());
-                    }else {
+                    } else {
                         merch.append(UsersRealm.getUsersDBById(Integer.parseInt(userId)).getNm());
                     }
-                }catch (Exception e){
+                } catch (Exception e) {
                     Globals.writeToMLOG("ERROR", "PhotoLogAdapter.bind.Нормальное заполенние ПОЛЬЗОВАТЕЛЕЙ", "Exception e: " + e);
                     merch.append("Не удалось определить");
                 }
@@ -189,21 +201,21 @@ public class PhotoLogAdapter extends RecyclerView.Adapter<PhotoLogAdapter.ViewHo
                 StringBuilder phototype = new StringBuilder();
                 try {
                     phototype.append("(").append(photoLogDat.getPhoto_type()).append(") ");
-                    if (photoLogDat.getPhoto_typeTxt() != null){
+                    if (photoLogDat.getPhoto_typeTxt() != null) {
                         phototype.append(photoLogDat.getPhoto_typeTxt());
-                    }else {
-                        phototype.append(ThemeRealm.getByID(photoLogDat.getPhoto_typeTxt()).getNm());
+                    } else {
+                        phototype.append(ImagesTypeListRealm.getByID(photoLogDat.getPhoto_type()).getNm());
                     }
-                }catch (Exception e){
+                } catch (Exception e) {
                     Globals.writeToMLOG("ERROR", "PhotoLogAdapter.bind.Нормальное заполенние ПОЛЬЗОВАТЕЛЕЙ", "Exception e: " + e);
                     phototype.append("Не удалось определить");
                 }
 
 
-//                String customerTxt = "(" + sc + ") " + photoLogDat.getCustomerTxt();
-//                String addressTxt = "(" + sa + ") " + photoLogDat.getAddressTxt();
-//                String userTxt = "(" + userId + ") " + photoLogDat.getUserTxt();
 
+                if (sd.equals("null")){
+                    sd = Clock.getHumanTime3(photoLogDat.getDt());
+                }
                 date.setText(sd);
                 addr.setText(address);
                 cust.setText(customer);
@@ -243,7 +255,7 @@ public class PhotoLogAdapter extends RecyclerView.Adapter<PhotoLogAdapter.ViewHo
                             Toast.makeText(mContext, "Комментарий сохранён", Toast.LENGTH_LONG).show();
                         });
 
-                        dialog.setTask(photoLogDat.getAddr_id(), photoLogDat.getClient_id(), photoLogDat.getCode_dad2(), photoLogDat);
+                        dialog.setTask(photoLogDat.getUser_id(), photoLogDat.getAddr_id(), photoLogDat.getClient_id(), photoLogDat.getCode_dad2(), photoLogDat);
 
                         dialog.setClose(dialog::dismiss);
                         dialog.setRating();
@@ -261,23 +273,49 @@ public class PhotoLogAdapter extends RecyclerView.Adapter<PhotoLogAdapter.ViewHo
                     return true;
                 });
 
+                // Работа Журнала фото в зависимости от переданного "photoLogMode"
+                if (photoLogMode != null) {
+                    switch (photoLogMode) {
+                        case PLANOGRAM:
+                            if (photoLogDat.getApprove() == 1){
+                                check.setVisibility(View.VISIBLE);
+
+                                check.setImageDrawable(mContext.getResources().getDrawable(R.drawable.ic_check));
+                                check.setColorFilter(mContext.getResources().getColor(R.color.greenCol));
+                            }else if (photoLogDat.getApprove() == 0){
+//                                check.setVisibility(View.INVISIBLE);
+                                check.setVisibility(View.VISIBLE);
+
+                                check.setImageDrawable(mContext.getResources().getDrawable(R.drawable.ic_question_circle_regular)); //"?"
+                                check.setColorFilter(mContext.getResources().getColor(R.color.red_error));
+                            }else {
+                                check.setVisibility(View.INVISIBLE);
+                            }
+                            break;
+
+
+                        default:
+                            check.setVisibility(View.GONE);
+                            break;
+                    }
+                }
+
+
                 try {
-                    if (mod){
+                    if (mod) {
                         layout.setOnClickListener(l -> {
-                            if (click!=null){
+                            if (click != null) {
                                 click.click(photoLogDat);
                             }
                         });
-                    }else {
+                    } else {
                         layout.setOnClickListener(l -> {
                             alertOnlyMassage(mContext, photoData(photoLogDat));
                         });
                     }
-                }catch (Exception e){
+                } catch (Exception e) {
                     Toast.makeText(mContext, "ERROR: " + e, Toast.LENGTH_SHORT).show();
                 }
-
-
 
 
             } catch (Exception e) {
@@ -464,7 +502,8 @@ public class PhotoLogAdapter extends RecyclerView.Adapter<PhotoLogAdapter.ViewHo
         String create = "Не обнаружено", upload = "Не обнаружено", server = "Не обнаружено";
 
         String timeMls = String.valueOf(data.getErrorTime());
-        @SuppressLint("SimpleDateFormat") String time = new SimpleDateFormat("HH:mm:ss").format(System.currentTimeMillis());
+        long l = Long.parseLong(timeMls);
+        @SuppressLint("SimpleDateFormat") String time = new SimpleDateFormat("HH:mm:ss").format(l);
         if (data.getErrorTime() == 0) {
             time = "-";
             timeMls = "-";

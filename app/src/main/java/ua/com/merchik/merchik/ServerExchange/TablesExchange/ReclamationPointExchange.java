@@ -28,24 +28,27 @@ public class ReclamationPointExchange {
             data.mod = "reclamation";
             data.act = "list";
 
-            // Нужно получить ВПИ с таблички синхронизаций
+//            // Нужно получить ВПИ с таблички синхронизаций
             SynchronizationTimetableDB synchronizationTimetableDB = RealmManager.getSynchronizationTimetableRowByTable("task_and_reclamations");
-
             String dt_change_from = String.valueOf(synchronizationTimetableDB.getVpi_app());
             if (dt_change_from.equals("0")){
-                data.dt_change_from = String.valueOf(Clock.getDateLong(-60).getTime()/1000);
+                data.dt_change_from = "0";
             }else {
-                data.dt_change_from = String.valueOf(synchronizationTimetableDB.getVpi_app());
+                data.dt_change_from = String.valueOf(synchronizationTimetableDB.getVpi_app()-120);  // минус 2 минуты для "синхрона". Это надо поменять.
             }
 
+            StandartData.Filter filter = new StandartData.Filter();
+            filter.date_from = Clock.getHumanTimeYYYYMMDD(Clock.getDateLong(-7).getTime()/1000);
+            filter.date_to = Clock.getHumanTimeYYYYMMDD(Clock.getDateLong(2).getTime()/1000);
 
-            data.test = "1";
+            data.filter = filter;
+
 
             Gson gson = new Gson();
             String json = gson.toJson(data);
             JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
 
-            retrofit2.Call<JsonObject> callTest = RetrofitBuilder.getRetrofitInterface().TEST_JSON_UPLOAD(RetrofitBuilder.contentType, convertedObject);
+/*            retrofit2.Call<JsonObject> callTest = RetrofitBuilder.getRetrofitInterface().TEST_JSON_UPLOAD(RetrofitBuilder.contentType, convertedObject);
             callTest.enqueue(new Callback<JsonObject>() {
                 @Override
                 public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
@@ -56,7 +59,9 @@ public class ReclamationPointExchange {
                 public void onFailure(Call<JsonObject> call, Throwable t) {
                     Log.e("test", "err");
                 }
-            });
+            });*/
+
+            Globals.writeToMLOG("INFO", "ReclamationPointExchange/downloadTaR", "convertedObject: " + convertedObject);
 
             retrofit2.Call<TasksAndReclamationsSDBResponce> call = RetrofitBuilder.getRetrofitInterface().GET_TABLE_TasksAndReclamationsSDB(RetrofitBuilder.contentType, convertedObject);
             call.enqueue(new Callback<TasksAndReclamationsSDBResponce>() {
@@ -64,13 +69,20 @@ public class ReclamationPointExchange {
                 public void onResponse(Call<TasksAndReclamationsSDBResponce> call, Response<TasksAndReclamationsSDBResponce> response) {
                     try {
                         if (response.isSuccessful() && response.body() != null){
+
+                            Gson gson = new Gson();
+                            String json = gson.toJson(response.body());
+                            JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
+
+                            Globals.writeToMLOG("INFO", "ReclamationPointExchange/downloadTaR/onResponse", "convertedObject: " + convertedObject);
+
                             if (response.body().list != null && response.body().list.size()>0){
                                 RealmManager.INSTANCE.executeTransaction(realm -> {
                                     synchronizationTimetableDB.setVpi_app(System.currentTimeMillis()/1000);
                                     realm.copyToRealmOrUpdate(synchronizationTimetableDB);
                                 });
 
-                                SynchronizationTimetableDB synchronizationTimetableDB = RealmManager.getSynchronizationTimetableRowByTable("task_and_reclamations");
+//                                SynchronizationTimetableDB synchronizationTimetableDB = RealmManager.getSynchronizationTimetableRowByTable("task_and_reclamations");
 
                                 exchange.onSuccess(response.body().list);
                             }else {
@@ -86,11 +98,13 @@ public class ReclamationPointExchange {
 
                 @Override
                 public void onFailure(Call<TasksAndReclamationsSDBResponce> call, Throwable t) {
+                    Globals.writeToMLOG("INFO", "ReclamationPointExchange/downloadTaR/onFailure", "t: " + t);
                     exchange.onFailure(null);
                 }
             });
 
         }catch (Exception e){
+            e.printStackTrace();
             Log.e("test", "e:" +e);
             Globals.writeToMLOG("ERROR", "ReclamationPointExchange/downloadTaR", "Exception e: " + e);
             exchange.onFailure(null);

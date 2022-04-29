@@ -26,4 +26,15 @@ public class OptionsRealm {
                 .findFirst();
     }
 
+
+    public static List<OptionsDB> getOptionsButtonByDAD2(String dad2) {
+        return INSTANCE.where(OptionsDB.class)
+                .equalTo("codeDad2", dad2)
+                .and()
+                .equalTo("optionGroup", "3161")
+                .findAll();
+    }
+
+
+
 }

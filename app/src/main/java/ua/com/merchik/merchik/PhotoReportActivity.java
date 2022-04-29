@@ -1291,8 +1291,8 @@ public class PhotoReportActivity extends toolbar_menus {
                 }
 
                 try {
-                    WpDataDB wpRow = RealmManager.getWorkPlanRowById(wpDataObj.getId());
-                    user_id = wpRow.getUser_id();
+//                    WpDataDB wpRow = RealmManager.getWorkPlanRowById(wpDataObj.getId());
+//                    user_id = wpRow.getUser_id();
 
                     int id = RealmManager.stackPhotoGetLastId();
                     id++;
@@ -1304,8 +1304,8 @@ public class PhotoReportActivity extends toolbar_menus {
                     String addressNmText = "";
 
                     try {
-                        if (RealmManager.getUsersNm(user_id) != null)
-                            userNmText = RealmManager.getUsersNm(user_id);
+                        if (RealmManager.getUsersNm(Globals.userId) != null)
+                            userNmText = RealmManager.getUsersNm(Globals.userId);
 
                         if (RealmManager.getCustomerNm(wpDataObj.getCustomerId()) != null)
                             customerNmText = RealmManager.getCustomerNm(wpDataObj.getCustomerId());
@@ -1321,7 +1321,7 @@ public class PhotoReportActivity extends toolbar_menus {
                             id,
                             "",
                             null,
-                            user_id,
+                            Globals.userId,
                             wpDataObj.getAddressId(),
                             wpDataObj.getCustomerId(),
                             wpDataObj.getThemeId(),

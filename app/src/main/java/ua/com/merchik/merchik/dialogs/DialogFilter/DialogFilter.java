@@ -16,7 +16,6 @@ import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.Spinner;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.constraintlayout.widget.ConstraintSet;
@@ -34,17 +33,24 @@ import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.ViewHolders.AutoTextStatusAdapter;
 import ua.com.merchik.merchik.ViewHolders.AutoTextThemeAdapter;
+import ua.com.merchik.merchik.ViewHolders.Clicks;
+import ua.com.merchik.merchik.data.Database.Room.AddressSDB;
+import ua.com.merchik.merchik.data.Database.Room.CustomerSDB;
+import ua.com.merchik.merchik.data.Database.Room.UsersSDB;
 import ua.com.merchik.merchik.data.RealmModels.CustomerDB;
 import ua.com.merchik.merchik.data.RealmModels.ThemeDB;
 import ua.com.merchik.merchik.data.RealmModels.TovarDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
-import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.TasksAndReclamationsRealm;
 import ua.com.merchik.merchik.database.realm.tables.ThemeRealm;
 import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.dialogs.DialogFilter.data.DFWpResult;
+import ua.com.merchik.merchik.dialogs.DialogFilter.data.DialogFilterRecyclerData;
+import ua.com.merchik.merchik.dialogs.DialogFilter.data.DialogFilterResult;
+import ua.com.merchik.merchik.dialogs.DialogFilter.data.FilterTypes;
 
 import static ua.com.merchik.merchik.database.realm.tables.CustomerRealm.getAllCustomerDB;
+import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
 public class DialogFilter<T> {
 
@@ -58,7 +64,7 @@ public class DialogFilter<T> {
     // Эти данные потом будут Обьеденяться
     private WpDataDB wpDataDB;
 
-    private TextView title;
+    private TextView title, textViewTheme, textViewStatus;
     private AutoCompleteTextView autoTextTheme, autoTextStatus;
     private EditText editText, editDate, editDate2;
     private Button apply, cancel;
@@ -77,6 +83,8 @@ public class DialogFilter<T> {
     private static String resEditText;
     public static Integer filtered;
 
+    private DialogFilterResult dialogFilterResult = new DialogFilterResult();
+
 
     private DFWpResult result = new DFWpResult();   // То что будет возвращаться в прогу
 
@@ -85,12 +93,13 @@ public class DialogFilter<T> {
         this.context = context;
         this.source = source;
         dialog = new Dialog(context);
-//        dialog.setCancelable(false);
         dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
         dialog.setContentView(R.layout.dialog_filter);
 
         linearLayout = dialog.findViewById(R.id.testLayout);
         title = dialog.findViewById(R.id.title);
+        textViewTheme = dialog.findViewById(R.id.theme);
+        textViewStatus = dialog.findViewById(R.id.status);
         editText = dialog.findViewById(R.id.editText);
         apply = dialog.findViewById(R.id.apply);
         cancel = dialog.findViewById(R.id.cancel);
@@ -137,15 +146,15 @@ public class DialogFilter<T> {
     }
 
     public void setRadioButton(DialogData.DialogClickListener clickListener) {
-        radioButton.setVisibility(View.VISIBLE);
-        radGrp.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(RadioGroup group, int checkedId) {
-                if (checkedId == radioButton.getId()) {
-                    clickListener.clicked();
-                }
-            }
-        });
+//        radioButton.setVisibility(View.VISIBLE);
+//        radGrp.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
+//            @Override
+//            public void onCheckedChanged(RadioGroup group, int checkedId) {
+//                if (checkedId == radioButton.getId()) {
+//                    clickListener.clicked();
+//                }
+//            }
+//        });
     }
 
 
@@ -237,7 +246,7 @@ public class DialogFilter<T> {
         switch (source) {
             case PHOTO_LOG:
                 title.setText("Журнал фото");
-                radGrp.setVisibility(View.GONE);
+//                radGrp.setVisibility(View.GONE);
 
                 Map<Integer, String> map = new HashMap<>();
                 List<CustomerDB> list = getAllCustomerDB();
@@ -251,63 +260,63 @@ public class DialogFilter<T> {
             case DETAILED_REPORT:
                 title.setText("Детализированный отчёт");
 
-                radGrp.setVisibility(View.GONE);
+//                radGrp.setVisibility(View.GONE);
 
-                TextView textView = new TextView(context);
-                textView.setText("Показать");// Показать\Отобразить
-                radioGroup.addView(textView);
-
-                RadioButton all = new RadioButton(context); //1
-                all.setText("Все Товары из БД");
-                all.setId(1);
-                radioGroup.addView(all);
-
-                RadioButton ppa = new RadioButton(context); //2
-                ppa.setText("Товары (план по ППА)");
-                ppa.setId(2);
-                radioGroup.addView(ppa);
-
-                RadioButton notPPA = new RadioButton(context); //3
-                notPPA.setText("Товары из отчёта");
-                notPPA.setId(3);
-                radioGroup.addView(notPPA);
+//                TextView textView = new TextView(context);
+//                textView.setText("Показать");// Показать\Отобразить
+//                radioGroup.addView(textView);
+//
+//                RadioButton all = new RadioButton(context); //1
+//                all.setText("Все Товары из БД");
+//                all.setId(1);
+//                radioGroup.addView(all);
+//
+//                RadioButton ppa = new RadioButton(context); //2
+//                ppa.setText("Товары (план по ППА)");
+//                ppa.setId(2);
+//                radioGroup.addView(ppa);
+//
+//                RadioButton notPPA = new RadioButton(context); //3
+//                notPPA.setText("Товары из отчёта");
+//                notPPA.setId(3);
+//                radioGroup.addView(notPPA);
 
 
 //                Log.e("DialogFilter_L", "all.getAddrId(): " + all.getAddrId());
 //                Log.e("DialogFilter_L", "ppa.getAddrId(): " + ppa.getAddrId());
 //                Log.e("DialogFilter_L", "notPPA.getAddrId(): " + notPPA.getAddrId());
 
-                if (tovGrpEl != 0) {
-                    radioGroup.check(tovGrpEl);
-                }
+//                if (tovGrpEl != 0) {
+////                    radioGroup.check(tovGrpEl);
+//                }
 
-
-                radioGroup.setOnCheckedChangeListener((group, checkedId) -> {
-
-                    switch (checkedId) {
-                        case 1:
-                            Log.e("DialogFilter_L", "CLICK_1");
-                            resTovGrpEl = RealmManager.getTovarListByCustomer(wpDataDB.getClient_id());
-                            tovGrpEl = checkedId;
-                            break;
-
-                        case 2:
-                            Log.e("DialogFilter_L", "CLICK_2");
-                            tovGrpEl = checkedId;
-                            break;
-
-                        case 3:
-                            Log.e("DialogFilter_L", "CLICK_3");
-                            resTovGrpEl = RealmManager.getTovarListFromReportPrepareByDad2(wpDataDB.getCode_dad2());
-                            tovGrpEl = checkedId;
-                            break;
-
-                        default:
-//                            Log.e("DialogFilter_L", "checkedId: " + checkedId);
-                            Toast.makeText(context, "Это значение обработать невозможно", Toast.LENGTH_LONG).show();
-                            break;
-                    }
-                });
+//
+//                radioGroup.setOnCheckedChangeListener((group, checkedId) -> {
+//
+//                    switch (checkedId) {
+//                        case 1:
+//                            Log.e("DialogFilter_L", "CLICK_1");
+//                            resTovGrpEl = RealmManager.getTovarListByCustomer(wpDataDB.getClient_id());
+//                            tovGrpEl = checkedId;
+//                            break;
+//
+//                        case 2:
+//                            Log.e("DialogFilter_L", "CLICK_2");
+//                            tovGrpEl = checkedId;
+//                            break;
+//
+//                        case 3:
+//                            Log.e("DialogFilter_L", "CLICK_3");
+//                            resTovGrpEl = RealmManager.getTovarListFromReportPrepareByDad2(wpDataDB.getCode_dad2());
+//                            tovGrpEl = checkedId;
+//                            break;
+//
+//                        default:
+////                            Log.e("DialogFilter_L", "checkedId: " + checkedId);
+//                            Toast.makeText(context, "Это значение обработать невозможно", Toast.LENGTH_LONG).show();
+//                            break;
+//                    }
+//                });
 
                 break;
 
@@ -412,9 +421,9 @@ public class DialogFilter<T> {
             switch (source) {
                 case WP_DATA:
                     result.editText = editRes;
-                    if (result.status != null){
+                    if (result.status != null) {
                         filtered = 1;
-                    }else {
+                    } else {
                         filtered = 0;
                     }
                     click.onSuccess(result);
@@ -460,7 +469,7 @@ public class DialogFilter<T> {
             }
         });
 
-        switch (source){
+        switch (source) {
             case WP_DATA:
                 List<WpRecycler> list = new ArrayList<>();
 
@@ -479,12 +488,11 @@ public class DialogFilter<T> {
     }
 
 
-
-
     private ResultData resultData = new ResultData();
     private Integer themeId;
     private Integer statusId;
-    public void setTaRBlock(){
+
+    public void setTaRBlock() {
         editDate.setOnClickListener(v -> {
             Calendar mcurrentDate = Calendar.getInstance();
             int mDay = mcurrentDate.get(Calendar.DAY_OF_MONTH);
@@ -497,22 +505,6 @@ public class DialogFilter<T> {
             }, mYear, mMonth, mDay);
             datePickerDialog.show();
         });
-//        editDate.addTextChangedListener(new TextWatcher() {
-//            @Override
-//            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-//
-//            }
-//
-//            @Override
-//            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-//
-//            }
-//
-//            @Override
-//            public void afterTextChanged(Editable editable) {
-//                resultData.dateFrom = editable.toString();
-//            }
-//        });
 
         editDate2.setOnClickListener(v -> {
             Calendar mcurrentDate = Calendar.getInstance();
@@ -526,22 +518,6 @@ public class DialogFilter<T> {
             }, mYear, mMonth, mDay);
             datePickerDialog.show();
         });
-//        editDate2.addTextChangedListener(new TextWatcher() {
-//            @Override
-//            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-//
-//            }
-//
-//            @Override
-//            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-//
-//            }
-//
-//            @Override
-//            public void afterTextChanged(Editable editable) {
-//                resultData.dateTo = editable.toString();
-//            }
-//        });
 
 
         List<ThemeDB> themeList = ThemeRealm.getTARTheme();
@@ -551,11 +527,6 @@ public class DialogFilter<T> {
             ThemeDB theme = adapterTheme.getItem(i);
             themeId = Integer.valueOf(theme.getID());
         });
-
-
-//        String[] str = {"Активные", "Исправленные", "Отменённые", "Истёк срок исполнения", "Выполненные", "Не выполненные"};
-//        autoTextStatus.setAdapter(new ArrayAdapter<>(context, android.R.layout.simple_dropdown_item_1line, str));
-
 
         List<TasksAndReclamationsRealm.TaRStatus> statusList = TasksAndReclamationsRealm.getTaRStatus(0);
         AutoTextStatusAdapter adapterStatus = new AutoTextStatusAdapter(context, android.R.layout.simple_dropdown_item_1line, statusList);
@@ -567,17 +538,115 @@ public class DialogFilter<T> {
     }
 
 
-    public void setApply(Click click){
-        apply.setOnClickListener(v->{
+    public void setFilterFields() {
+
+        List<DialogFilterRecyclerData> dataList = new ArrayList<>();
+
+
+        DialogFilterRecyclerData executor = new DialogFilterRecyclerData();
+        executor.filterType = FilterTypes.AUTO_TEXT;
+        executor.msg = "Исполнитель";
+        executor.dataType = Globals.ViewHolderDataType.USER;
+        executor.dataList = SQL_DB.usersDao().getAll2();
+
+
+        DialogFilterRecyclerData address = new DialogFilterRecyclerData();
+        address.filterType = FilterTypes.AUTO_TEXT;
+        address.msg = "Адрес";
+        address.dataType = Globals.ViewHolderDataType.ADDRESS;
+        address.dataList = SQL_DB.addressDao().getAll();
+
+        DialogFilterRecyclerData customer = new DialogFilterRecyclerData();
+        customer.filterType = FilterTypes.AUTO_TEXT;
+        customer.msg = "Клиент";
+        customer.dataType = Globals.ViewHolderDataType.CUSTOMER;
+        customer.dataList = SQL_DB.customerDao().getAll();
+
+        DialogFilterRecyclerData theme = new DialogFilterRecyclerData();
+        theme.filterType = FilterTypes.AUTO_TEXT;
+        theme.msg = "Тема";
+        theme.dataType = Globals.ViewHolderDataType.THEME;
+        theme.dataList = ThemeRealm.getAll();
+
+        dataList.add(executor);
+        dataList.add(address);
+        dataList.add(customer);
+        dataList.add(theme);
+
+
+        setRecycler(dataList);
+    }
+
+
+    /**
+     * Установка ресайклера с данными для фильтров
+     *
+     * @param recyclerData
+     */
+    private void setRecycler(List<DialogFilterRecyclerData> recyclerData) {
+        autoTextTheme.setVisibility(View.GONE);
+        autoTextStatus.setVisibility(View.GONE);
+        textViewTheme.setVisibility(View.GONE);
+        textViewStatus.setVisibility(View.GONE);
+
+        recycler.setVisibility(View.VISIBLE);
+
+        RecyclerViewFilterAdapter adapter = new RecyclerViewFilterAdapter(recycler.getContext(), recyclerData, new Clicks.click() {
+            @Override
+            public <T> void click(T data) {
+
+                if (data instanceof AddressSDB){
+                    dialogFilterResult.addressId = ((AddressSDB) data).id;
+                    dialogFilterResult.address = ((AddressSDB) data).nm;
+                }
+
+                if (data instanceof UsersSDB){
+                    dialogFilterResult.executorId = ((UsersSDB) data).id;
+                    dialogFilterResult.executor = ((UsersSDB) data).fio;
+                }
+
+                if (data instanceof CustomerSDB){
+                    dialogFilterResult.customerId = ((CustomerSDB) data).id;
+                    dialogFilterResult.customer = ((CustomerSDB) data).nm;
+                }
+
+                if (data instanceof ThemeDB){
+                    dialogFilterResult.themeId = Integer.valueOf(((ThemeDB) data).getID());
+                    dialogFilterResult.theme = ((ThemeDB) data).getNm();
+                }
+
+            }
+        });
+        recycler.setAdapter(adapter);
+        recycler.setLayoutManager(new LinearLayoutManager(recycler.getContext(), LinearLayoutManager.VERTICAL, false));
+    }
+
+
+    public void setApply(Click click) {
+        apply.setOnClickListener(v -> {
             resultData.editText = editText.getText().toString();
 
-            resultData.dateFrom = Clock.dateConvertToLong(editDate.getText().toString())/1000;
-            resultData.dateTo = Clock.dateConvertToLong(editDate2.getText().toString())/1000;
+            resultData.dateFrom = Clock.dateConvertToLong(editDate.getText().toString()) / 1000;
+            resultData.dateTo = Clock.dateConvertToLong(editDate2.getText().toString()) / 1000;
 
             resultData.themeId = themeId;
             resultData.statusId = statusId;
 
             click.onSuccess(resultData);
+            dismiss();
+        });
+    }
+
+
+    public void clickApply(Clicks.click click){
+        apply.setOnClickListener(v->{
+
+            dialogFilterResult.searchField = editText.getText().toString();
+            dialogFilterResult.dateFrom = Clock.dateConvertToLong(editDate.getText().toString()) / 1000;
+            dialogFilterResult.dateTo = Clock.dateConvertToLong(editDate2.getText().toString()) / 1000;
+
+
+            click.click(dialogFilterResult);
             dismiss();
         });
     }
@@ -600,7 +669,7 @@ public class DialogFilter<T> {
     }
 
 
-    public class WpRecycler{
+    public class WpRecycler {
         public Integer datatype;
     }
 

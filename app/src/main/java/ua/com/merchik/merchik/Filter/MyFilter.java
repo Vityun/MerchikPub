@@ -8,6 +8,8 @@ import java.util.List;
 
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.ViewHolders.AutoTextUsersViewHolder;
+import ua.com.merchik.merchik.data.Database.Room.AddressSDB;
+import ua.com.merchik.merchik.data.Database.Room.CustomerSDB;
 import ua.com.merchik.merchik.data.Database.Room.OpinionSDB;
 import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
 import ua.com.merchik.merchik.data.Database.Room.UsersSDB;
@@ -50,6 +52,8 @@ public class MyFilter {
     // Для ПЛАНА РАБОТ
     public List<WpDataDB> getFilteredResultsWP(String constraint, List<WpDataDB> sorted, List<WpDataDB> orig) {
 
+        constraint = constraint.toLowerCase();
+
         Log.e("getFilteredResultsWP", "constraint: " + constraint);
 //        Log.e("getFilteredResultsWP", "sorted: " + sorted.size());
         Log.e("getFilteredResultsWP", "orig: " + orig.size());
@@ -61,25 +65,38 @@ public class MyFilter {
 
 
         for (WpDataDB item : sorted) {
-            // Дата
-            if (item.getDt() != null && !item.getDt().equals("") && item.getDt().toLowerCase().contains(constraint)) {
-                results.add(item);
-            }
-            // Адрес
-            else if (item.getAddr_txt() != null && !item.getAddr_txt().equals("") && item.getAddr_txt().toLowerCase().contains(constraint)) {
-                results.add(item);
-            }
-            // Клиент
-            else if (item.getClient_txt() != null && !item.getClient_txt().equals("") && item.getClient_txt().toLowerCase().contains(constraint)) {
-                results.add(item);
-            }
-            // Пользователь
-            else if (item.getUser_txt() != null && !item.getUser_txt().equals("") && item.getUser_txt().toLowerCase().contains(constraint)) {
-                results.add(item);
+            try {
+                String themeId = String.valueOf(item.getTheme_id());
+
+//                AtomicReference<ThemeDB> theme = new AtomicReference<>();
+//                RealmManager.INSTANCE.executeTransactionAsync((realm) -> {
+//                    theme.set(realm.copyFromRealm(ThemeRealm.getThemeById(themeId)));
+//                });
+
+                // Дата
+                if (item.getDt() != null && !item.getDt().equals("") && item.getDt().toLowerCase().contains(constraint)) {
+                    results.add(item);
+                }
+                // Адрес
+                else if (item.getAddr_txt() != null && !item.getAddr_txt().equals("") && item.getAddr_txt().toLowerCase().contains(constraint)) {
+                    results.add(item);
+                }
+                // Клиент
+                else if (item.getClient_txt() != null && !item.getClient_txt().equals("") && item.getClient_txt().toLowerCase().contains(constraint)) {
+                    results.add(item);
+                }
+                // Пользователь
+                else if (item.getUser_txt() != null && !item.getUser_txt().equals("") && item.getUser_txt().toLowerCase().contains(constraint)) {
+                    results.add(item);
+                }
+                // Тема
+//                else if (theme.get() != null && theme.get().getNm() != null && !theme.get().getNm().equals("") && theme.get().getNm().toLowerCase().contains(constraint)){
+//                    results.add(item);
+//                }
+            }catch (Exception e){
+                Log.d("test", "test");
             }
         }
-
-
         return results;
     }
 
@@ -161,18 +178,18 @@ public class MyFilter {
 
                 Log.d("test", "item: " + item);
 
-                if (item.addrNm != null && !item.addrNm.equals("") && item.addrNm.toLowerCase().contains(constraint)){
+                if (item.addrNm != null && !item.addrNm.equals("") && item.addrNm.toLowerCase().contains(constraint)) {
                     results.add(item);
-                } else if (item.clientNm != null && !item.clientNm.equals("") && item.clientNm.toLowerCase().contains(constraint)){
+                } else if (item.clientNm != null && !item.clientNm.equals("") && item.clientNm.toLowerCase().contains(constraint)) {
                     results.add(item);
-                }else if (item.sortNm != null && !item.sortNm.equals("") && item.sortNm.toLowerCase().contains(constraint)){
+                } else if (item.sortNm != null && !item.sortNm.equals("") && item.sortNm.toLowerCase().contains(constraint)) {
                     results.add(item);
                 }
             }
 
             Log.e("getFilteredResultsTAR", "end: " + results.size());
 
-        }catch (Exception e){
+        } catch (Exception e) {
             Globals.writeToMLOG("ERROR", "getFilteredResultsTAR", "Exception e: " + e);
         }
 
@@ -232,6 +249,80 @@ public class MyFilter {
 
 
         return results;
+    }
+
+
+    /**
+     * Попытка сделать универсальный поиск в зависимости от генерика который я передаю
+     */
+    public <T> List<T> getFilterableDataSDB(String constraint, List<T> sorted, List<T> orig) {
+        List<T> res = new ArrayList<>();
+        if (sorted == null) {
+            sorted = orig;
+        }
+
+        if (sorted != null && sorted.size() > 0) {
+            if (sorted.get(0) instanceof AddressSDB) {
+                res = filerAddressSDB(constraint, (List<AddressSDB>) sorted);
+            } else if (sorted.get(0) instanceof UsersSDB) {
+                res = filerUserSDB(constraint, (List<UsersSDB>) sorted);
+            } else if (sorted.get(0) instanceof CustomerSDB) {
+                res = filerCustomerSDB(constraint, (List<CustomerSDB>) sorted);
+            } else if (sorted.get(0) instanceof ThemeDB) {
+                res = filerThemeDB(constraint, (List<ThemeDB>) sorted);
+            } else {
+                return sorted;
+            }
+        } else {
+            return sorted;
+        }
+
+
+        return res;
+    }
+
+    private <T> List<T> filerAddressSDB(String constraint, List<AddressSDB> sorted) {
+        List<T> res = new ArrayList<>();
+        for (AddressSDB item : sorted) {
+            if (item.nm != null && !item.nm.equals("") && item.nm.toLowerCase().contains(constraint)) {
+                res.add((T) item);
+            }
+        }
+
+        return res;
+    }
+
+    private <T> List<T> filerUserSDB(String constraint, List<UsersSDB> sorted) {
+        List<T> res = new ArrayList<>();
+        for (UsersSDB item : sorted) {
+            if (item.fio != null && !item.fio.equals("") && item.fio.toLowerCase().contains(constraint)) {
+                res.add((T) item);
+            }
+        }
+
+        return res;
+    }
+
+    private <T> List<T> filerCustomerSDB(String constraint, List<CustomerSDB> sorted) {
+        List<T> res = new ArrayList<>();
+        for (CustomerSDB item : sorted) {
+            if (item.nm != null && !item.nm.equals("") && item.nm.toLowerCase().contains(constraint)) {
+                res.add((T) item);
+            }
+        }
+
+        return res;
+    }
+
+    private <T> List<T> filerThemeDB(String constraint, List<ThemeDB> sorted) {
+        List<T> res = new ArrayList<>();
+        for (ThemeDB item : sorted) {
+            if (item.getNm() != null && !item.getNm().equals("") && item.getNm().toLowerCase().contains(constraint)) {
+                res.add((T) item);
+            }
+        }
+
+        return res;
     }
 
 

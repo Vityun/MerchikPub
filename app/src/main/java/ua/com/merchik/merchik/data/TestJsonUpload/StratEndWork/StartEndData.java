@@ -13,6 +13,7 @@ public class StartEndData {
     public String user_id;         //
     public String client_id;       //
     public String isp;             //
+    public long dt_update;
 
     public String visit_start_dt;  //
     public String visit_end_dt;    //

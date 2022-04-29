@@ -151,7 +151,7 @@ public class Tab3Fragment extends Fragment {
 
                             case 2:
                                 try {
-                                    TaRId = tarData.id;
+                                    TARSecondFrag.TaRID = tarData.id;
                                     MakePhoto makePhoto = new MakePhoto();
                                     makePhoto.openCamera(getActivity());
                                 }catch (Exception e){

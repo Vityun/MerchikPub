@@ -47,4 +47,15 @@ public class AddressSDB {
     @Expose
     @ColumnInfo(name = "dt_update")
     public Long dtUpdate;
+
+    @SerializedName("location_xd")
+    @Expose
+    @ColumnInfo(name = "location_xd")
+    public Float locationXd;
+
+    @SerializedName("location_yd")
+    @Expose
+    @ColumnInfo(name = "location_yd")
+    public Float locationYd;
+
 }

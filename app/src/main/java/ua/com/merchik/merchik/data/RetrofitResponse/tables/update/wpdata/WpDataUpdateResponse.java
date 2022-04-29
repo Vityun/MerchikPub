@@ -10,7 +10,7 @@ public class WpDataUpdateResponse {
     @Expose
     public boolean state;
 
-    @SerializedName("data")
+    @SerializedName("plan")
     @Expose
     public List<WpDataUpdateResponseList> data = null;
 

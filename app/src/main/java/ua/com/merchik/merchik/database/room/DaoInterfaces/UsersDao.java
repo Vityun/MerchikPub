@@ -17,17 +17,26 @@ public interface UsersDao {
     @Query("SELECT * FROM sotr")
     Flowable<List<UsersSDB>> getAll();
 
+    @Query("SELECT * FROM sotr")
+    List<UsersSDB> getAll2();
+
     @Query("SELECT s.fio FROM sotr s WHERE id = :id")
     String getUserName(int id);
 
     @Query("SELECT * FROM sotr WHERE work_addr_id = :addrId")
     List<UsersSDB> getPTT(int addrId);
 
+    @Query("SELECT * FROM sotr WHERE id = :id")
+    UsersSDB getUserById(int id);
+
     @Query("SELECT * FROM sotr limit 50")
     Flowable<List<UsersSDB>> getAllLim50();
 
     @Query("SELECT * FROM sotr WHERE id = :id")
-    Flowable<UsersSDB> getById(int id);
+    UsersSDB getById(int id);
+
+    @Query("SELECT * FROM sotr WHERE id = :id")
+    Flowable<UsersSDB> getByIdF(int id);
 
     @Query("SELECT s.*, t.nm FROM sotr s LEFT JOIN tovar_group t ON s.otdel_id = t.id WHERE work_addr_id = :addrId ORDER BY fio")
     List<UserSDBJoin> getAllUsersLJoinTovGrps(int addrId);

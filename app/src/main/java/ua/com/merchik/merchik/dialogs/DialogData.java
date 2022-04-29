@@ -37,6 +37,8 @@ import java.util.Map;
 
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.R;
+import ua.com.merchik.merchik.TelephoneMask;
+import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteHintsDB;
 import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteObjects.SiteObjectsDB;
 import ua.com.merchik.merchik.data.PhotoDescriptionText;
@@ -86,7 +88,7 @@ public class DialogData {
     }
 
     public enum Operations {
-        Text, Number, Date, Spinner, DoubleSpinner, EditTextAndSpinner
+        Text, Telephone, Number, Date, Spinner, DoubleSpinner, EditTextAndSpinner
     }
 
     private DialogClickListener listenerOK;
@@ -292,7 +294,7 @@ public class DialogData {
                 }
                 return true;
             });
-        }catch (Exception e){
+        } catch (Exception e) {
 
         }
 
@@ -324,7 +326,7 @@ public class DialogData {
     }
 
 
-    public void setMerchikIco(Context context){
+    public void setMerchikIco(Context context) {
         merchikIco.setVisibility(View.VISIBLE);
         Drawable drawable = merchikIco.getBackground();
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
@@ -332,7 +334,7 @@ public class DialogData {
         }
     }
 
-    public void setDialogIco(){
+    public void setDialogIco() {
         merchikIco.setVisibility(View.VISIBLE);
         merchikIco.setImageDrawable(dialog.getContext().getResources().getDrawable(R.drawable.ic_caution));
 //        Drawable drawable = merchikIco.getBackground();
@@ -429,12 +431,43 @@ public class DialogData {
     }
 
 
-
-
-    public void setEditTextHint(String hint){
-        if (editText != null){
+    public void setEditTextHint(String hint) {
+        if (editText != null) {
             editText.setHint(hint);
         }
+    }
+
+    /*27.03.2022
+     * Использование базового EditText как поля для внесения телефона
+     * */
+    public void setTelephoneEditText(String data, Clicks.clickText click) {
+        operationLayout.setVisibility(View.VISIBLE);
+        dialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
+
+        editText.setVisibility(View.VISIBLE);
+        if (data != null && !data.equals(""))
+            editText.setText(data);   // Если поле для заполениня не пустое - заполняем значением
+        editText.setSelection(editText.getText().length());
+
+        editText.setSelectAllOnFocus(true);
+        editText.selectAll();
+
+        editText.setImeOptions(EditorInfo.IME_ACTION_DONE);
+        editText.setRawInputType(InputType.TYPE_CLASS_PHONE);
+
+        editText.addTextChangedListener(new TelephoneMask());
+
+        editText.setOnEditorActionListener((v, actionId, event) -> {
+            if (actionId == EditorInfo.IME_ACTION_DONE) {
+                click.click(v.getText().toString());
+                return true;
+            }
+            return false;
+        });
+
+        ok.setVisibility(View.VISIBLE);
+        ok.setText("Зарегистрироваться");
+        ok.setOnClickListener(v -> click.click(editText.getText().toString()));
     }
 
     /**
@@ -482,6 +515,38 @@ public class DialogData {
                     listener.clicked();
                     dialog.dismiss();
                 });
+                break;
+
+
+            case Telephone:
+                editText.setVisibility(View.VISIBLE);
+                editText.setText(data);
+                editText.setSelection(editText.getText().length());
+
+                editText.setSelectAllOnFocus(true);
+                editText.selectAll();
+
+                editText.setImeOptions(EditorInfo.IME_ACTION_DONE);
+                editText.setRawInputType(InputType.TYPE_CLASS_PHONE);
+
+                editText.addTextChangedListener(new TelephoneMask());
+
+                editText.setOnEditorActionListener((v, actionId, event) -> {
+                    if (actionId == EditorInfo.IME_ACTION_DONE) {
+                        result = v.getText().toString();
+                        listener.clicked();
+                        dialog.dismiss();
+                        return true;
+                    }
+                    return false;
+                });
+
+                ok.setOnClickListener(v -> {
+                    result = editText.getText().toString();
+                    listener.clicked();
+                    dialog.dismiss();
+                });
+
                 break;
 
             case Number:
@@ -541,7 +606,7 @@ public class DialogData {
 
                 ok.setOnClickListener(v -> {
                     String date = editDate.getText().toString();
-                    if (date.equals("0000-00-00")){
+                    if (date.equals("0000-00-00")) {
                         listener.clicked();
                         dialog.dismiss();
                     }
@@ -718,7 +783,7 @@ public class DialogData {
         }
     }
 
-    public void setRecycler(RecyclerView.Adapter adapter, RecyclerView.LayoutManager layout){
+    public void setRecycler(RecyclerView.Adapter adapter, RecyclerView.LayoutManager layout) {
         if (adapter != null) {
             additionalOperationLayout.setVisibility(View.VISIBLE);
             recycler.setVisibility(View.VISIBLE);
@@ -730,7 +795,7 @@ public class DialogData {
 
     public void setOk(CharSequence setButtonText, DialogClickListener clickListener) {
         ok.setVisibility(View.VISIBLE);
-        if (setButtonText != null){
+        if (setButtonText != null) {
             ok.setText(setButtonText);
         }
         ok.setOnClickListener(v -> {
@@ -756,7 +821,7 @@ public class DialogData {
     }
 
 
-    public void setDialogErrorColor(){
+    public void setDialogErrorColor() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             drawable.setTint(context.getResources().getColor(R.color.red_error));
         }
@@ -776,8 +841,6 @@ public class DialogData {
     private boolean checkString(String s) {
         return s != null;
     }
-
-
 
 
     // --- R_E_T_U_R_N_E_D START ---

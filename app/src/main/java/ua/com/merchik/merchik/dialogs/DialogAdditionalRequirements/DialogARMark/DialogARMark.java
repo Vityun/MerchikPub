@@ -16,6 +16,7 @@ import android.widget.Toast;
 
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.R;
+import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteHintsDB;
 import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteObjects.SiteObjectsDB;
 import ua.com.merchik.merchik.data.RealmModels.AdditionalRequirementsDB;
@@ -263,5 +264,12 @@ public class DialogARMark {
         });
     }
 
+    public void setRatingBar(Float data, Clicks.click click){
+        if (data != null){
+            ratingBar.setRating(data);
+        }
+
+
+    }
 
 }

@@ -20,6 +20,7 @@ import android.widget.Toast;
 
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.gson.Gson;
@@ -42,29 +43,32 @@ import ua.com.merchik.merchik.Options;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.ServerExchange.Exchange;
 import ua.com.merchik.merchik.ServerExchange.TablesLoadingUnloading;
+import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.WorkPlan;
 import ua.com.merchik.merchik.data.Database.Room.OborotVedSDB;
-import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
-import ua.com.merchik.merchik.data.RealmModels.PPADB;
 import ua.com.merchik.merchik.data.PhotoDescriptionText;
 import ua.com.merchik.merchik.data.RealmModels.ErrorDB;
 import ua.com.merchik.merchik.data.RealmModels.LogDB;
+import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
+import ua.com.merchik.merchik.data.RealmModels.PPADB;
 import ua.com.merchik.merchik.data.RealmModels.PromoDB;
+import ua.com.merchik.merchik.data.RealmModels.ReportPrepareDB;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
 import ua.com.merchik.merchik.data.RealmModels.TovarDB;
-import ua.com.merchik.merchik.data.RealmModels.ReportPrepareDB;
+import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.data.RetrofitResponse.RecentItem;
 import ua.com.merchik.merchik.data.RetrofitResponse.ReportHint;
 import ua.com.merchik.merchik.data.RetrofitResponse.ReportHintList;
 import ua.com.merchik.merchik.data.TovarOptions;
-import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
+import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.dialogs.DialogPhotoTovar;
-import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
 
 import static ua.com.merchik.merchik.Globals.OptionControlName.AKCIYA;
 import static ua.com.merchik.merchik.Globals.OptionControlName.AKCIYA_ID;
+import static ua.com.merchik.merchik.database.realm.RealmManager.INSTANCE;
+import static ua.com.merchik.merchik.database.realm.tables.PPARealm.getPPAIZA;
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 import static ua.com.merchik.merchik.dialogs.DialogData.Operations;
 import static ua.com.merchik.merchik.dialogs.DialogData.Operations.Date;
@@ -73,8 +77,6 @@ import static ua.com.merchik.merchik.dialogs.DialogData.Operations.EditTextAndSp
 import static ua.com.merchik.merchik.dialogs.DialogData.Operations.Number;
 import static ua.com.merchik.merchik.dialogs.DialogData.Operations.Text;
 import static ua.com.merchik.merchik.menu_main.decodeSampledBitmapFromResource;
-import static ua.com.merchik.merchik.database.realm.RealmManager.INSTANCE;
-import static ua.com.merchik.merchik.database.realm.tables.PPARealm.getPPAIZA;
 
 public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewDRAdapterTovar.ViewHolder> implements Filterable {
 
@@ -82,6 +84,14 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
     private List<TovarDB> dataList;
     private List<TovarDB> dataFilterable;
     private WpDataDB wpDataDB;
+    private DRAdapterTovarTPLTypeView tplType;
+
+    private Clicks.clickVoid click;
+
+    public enum DRAdapterTovarTPLTypeView{
+        GONE, FULL
+    }
+
 
     /*Определяем конструктор*/
     public RecycleViewDRAdapterTovar(Context context, List<TovarDB> list, WpDataDB wp) {
@@ -89,6 +99,8 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
         this.dataList = list;
         this.dataFilterable = list;
         this.wpDataDB = wp;
+        tplType = DRAdapterTovarTPLTypeView.GONE;
+
         Log.e("LOG_FILTER", "FILTER(ЕУЫ)" + dataFilterable.size());
         Globals.writeToMLOG("INFO", "RecycleViewDRAdapterTovar.RecycleViewDRAdapterTovar", "list.size(): " + list.size());
     }
@@ -118,6 +130,24 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
         }
     }
 
+    public void refreshAdapter(Clicks.clickVoid click){
+        this.click = click;
+    }
+
+    public void setTplType(DRAdapterTovarTPLTypeView type){
+        this.tplType = type;
+    }
+
+    public boolean switchTPLView(){
+        if (tplType.equals(DRAdapterTovarTPLTypeView.GONE)){
+            tplType = DRAdapterTovarTPLTypeView.FULL;
+            return true;
+        }else {
+            tplType = DRAdapterTovarTPLTypeView.GONE;
+            return false;
+        }
+    }
+
 
     /*Определяем ViewHolder*/
     class ViewHolder extends RecyclerView.ViewHolder {
@@ -135,6 +165,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
         TextView tovGroup;
         TextView tradeMark;
         TextView textViewItemTovarOptLine;
+        RecyclerView recyclerView;
 
         TextView balance;
 
@@ -158,6 +189,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
             textViewItemTovarOptLine = (TextView) v.findViewById(R.id.textViewItemTovarOptLine);
             tradeMark = (TextView) v.findViewById(R.id.textViewItemTovarThirdLine);
             balance = v.findViewById(R.id.balance);
+            recyclerView = v.findViewById(R.id.recyclerView2);
 
 
             // Dialog
@@ -387,7 +419,24 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
 
             Log.e("onBindViewHolder", "s: " + s);
 
-            textViewItemTovarOptLine.setText(Html.fromHtml(s));
+
+            ReportPrepareDB finalReportPrepareTovar1 = reportPrepareTovar2;
+            RecyclerViewTPLAdapter recyclerViewTPLAdapter = new RecyclerViewTPLAdapter(options.getRequiredOptionsTPL(optionsList2), finalReportPrepareTovar1, (tpl, data) -> operetionSaveRPToDB(tpl, finalReportPrepareTovar1, data, null, list));
+            recyclerView.setAdapter(recyclerViewTPLAdapter);
+            recyclerView.setLayoutManager(new LinearLayoutManager(mContext, LinearLayoutManager.VERTICAL, false));
+
+            if (tplType.equals(DRAdapterTovarTPLTypeView.FULL)){
+                recyclerView.setVisibility(View.VISIBLE);
+            }else {
+                recyclerView.setVisibility(View.GONE);
+            }
+
+
+            textViewItemTovarOptLine.setText(Html.fromHtml("<u>" + s + "</u>"));
+            textViewItemTovarOptLine.setOnClickListener(v->{
+                click.click();
+            });
+
 
             if (reportPrepareTovar != null) {
                 ReportPrepareDB finalReportPrepareTovar = reportPrepareTovar2; // TODO Тест, надо будет убрать
@@ -445,32 +494,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
             } else {// Если такого товара НЕТ
                 constraintLayout.setOnClickListener(v -> {
 
-                    ReportPrepareDB rp = new ReportPrepareDB();
-
-                    rp.setID(RealmManager.reportPrepareGetLastId());
-                    rp.setDt(String.valueOf(System.currentTimeMillis()));
-                    rp.setDtReport(String.valueOf(System.currentTimeMillis()));
-                    rp.setKli(wpDataDB.getClient_id());
-                    rp.setTovarId(list.getiD());
-                    rp.setAddrId(String.valueOf(wpDataDB.getAddr_id()));
-                    rp.setPrice("");
-                    rp.setFace("");
-                    rp.setAmount(0);
-                    rp.setDtExpire("");
-                    rp.setExpireLeft("");
-                    rp.setNotes("");
-                    rp.setUp("");
-                    rp.setAkciya("");
-                    rp.setAkciyaId("");
-                    rp.setOborotvedNum("");
-                    rp.setErrorId("");
-                    rp.setErrorComment("");
-                    rp.setCodeDad2(String.valueOf(wpDataDB.getCode_dad2()));
-
-                    // TODO сохранение в БД новой строки что б потом работать с ней в getCurrentData()
-                    INSTANCE.beginTransaction();
-                    INSTANCE.copyToRealmOrUpdate(rp);
-                    INSTANCE.commitTransaction();
+                    ReportPrepareDB rp = createNewRPRow(list);
 
                     Log.e("DRAdapterTovar", "ClickListenerТовара нет");
 
@@ -664,7 +688,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
 
             dialog.setOperation(operationType(tpl), getCurrentData(tpl, cd2, tovarId), setMapData(tpl.getOptionControlName()), () -> {
                 if (dialog.getOperationResult() != null){
-                    operetionSaveRPToDB(tpl, reportPrepareDB, dialog.getOperationResult(), dialog.getOperationResult2());
+                    operetionSaveRPToDB(tpl, reportPrepareDB, dialog.getOperationResult(), dialog.getOperationResult2(), null);
                     Toast.makeText(mContext, "Внесено: " + dialog.getOperationResult(), Toast.LENGTH_LONG).show();
                     refreshElement(cd2, list.getiD());
                 }
@@ -686,7 +710,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                                 for (ReportHintList item : reportHint.getList()) {
                                     if (tpl.getOrderField().equals(item.getField())) {
                                         dialog.setAdditionalOperation(setAdapter(tpl, reportHint.getList(), value -> {
-                                            operetionSaveRPToDB(tpl, reportPrepareDB, value, dialog.getOperationResult2());
+                                            operetionSaveRPToDB(tpl, reportPrepareDB, value, dialog.getOperationResult2(), null);
                                             Toast.makeText(mContext, "Внесено: " + value, Toast.LENGTH_LONG).show();
                                             refreshElement(cd2, list.getiD());
                                             notifyItemChanged(adapterPosition);
@@ -856,14 +880,17 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
          * <p>
          * Функционал в зависимости от операции
          */
-        private void operetionSaveRPToDB(TovarOptions tpl, ReportPrepareDB table, String data, String data2) {
+        private void operetionSaveRPToDB(TovarOptions tpl, ReportPrepareDB rp, String data, String data2, TovarDB tovarDB) {
+            if (rp == null){
+                rp = createNewRPRow(tovarDB);
+            }
 
             if (data == null || data.equals("")) {
                 Toast.makeText(mContext, "Для сохранения - внесите данные", Toast.LENGTH_SHORT).show();
                 return;
             }
 
-
+            ReportPrepareDB table = rp;
             switch (tpl.getOptionControlName()) {
                 case PRICE:
                     Log.e("SAVE_TO_REPORT_OPT", "PRICE: " + data);
@@ -1048,6 +1075,39 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
             return new RecyclerViewOptionControlHint(finalRecentItems, listener);
         }
 
+    }
+
+    private ReportPrepareDB createNewRPRow(TovarDB list) {
+        ReportPrepareDB rp = new ReportPrepareDB();
+
+        int id = RealmManager.reportPrepareGetLastId();
+        id = id + 1;
+
+        rp.setID(id);
+        rp.setDt(String.valueOf(System.currentTimeMillis()));
+        rp.setDtReport(String.valueOf(System.currentTimeMillis()));
+        rp.setKli(wpDataDB.getClient_id());
+        rp.setTovarId(list.getiD());
+        rp.setAddrId(String.valueOf(wpDataDB.getAddr_id()));
+        rp.setPrice("");
+        rp.setFace("");
+        rp.setAmount(0);
+        rp.setDtExpire("");
+        rp.setExpireLeft("");
+        rp.setNotes("");
+        rp.setUp("");
+        rp.setAkciya("");
+        rp.setAkciyaId("");
+        rp.setOborotvedNum("");
+        rp.setErrorId("");
+        rp.setErrorComment("");
+        rp.setCodeDad2(String.valueOf(wpDataDB.getCode_dad2()));
+
+        // TODO сохранение в БД новой строки что б потом работать с ней в getCurrentData()
+        INSTANCE.beginTransaction();
+        INSTANCE.copyToRealmOrUpdate(rp);
+        INSTANCE.commitTransaction();
+        return rp;
     }
 
 

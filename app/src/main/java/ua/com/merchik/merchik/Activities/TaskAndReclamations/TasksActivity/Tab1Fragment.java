@@ -5,7 +5,10 @@ import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
 import android.text.Html;
+import android.text.SpannableString;
 import android.text.SpannableStringBuilder;
+import android.text.Spanned;
+import android.text.style.URLSpan;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -47,7 +50,7 @@ public class Tab1Fragment extends Fragment {
 
     private Context mContext;
 
-    private TextView textViewData;
+    private TextView textViewData, goToWpData;
     private ImageView imageView, imageView2;
     private RatingBar ratingBar1, ratingBar2;
 
@@ -69,20 +72,26 @@ public class Tab1Fragment extends Fragment {
         mContext = v.getContext();
 
         textViewData = v.findViewById(R.id.text_data);
+        goToWpData = v.findViewById(R.id.wpLink);
         imageView = v.findViewById(R.id.TARPhoto);
         imageView2 = v.findViewById(R.id.TARPhoto2);
         ratingBar1 = v.findViewById(R.id.ratingBar2);
         ratingBar2 = v.findViewById(R.id.ratingBar4);
 
+        SpannableString spannableString = new SpannableString("Перейти в Отчёт Исполнителя..");
+        spannableString.setSpan(new URLSpan(""), 0, spannableString.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        goToWpData.setText(spannableString);
+        goToWpData.setVisibility(View.GONE);
+        goToWpData.setOnClickListener((view) -> {
+
+        });
 
         setData();
 
-        if (TARActivity.TARType == 0) {
-            Log.e("SET_TAR_FAB", "TYTA");
+        if (TARActivity.TARType == 1) {
             toolbar_menus.textLesson = 1183;
             toolbar_menus.videoLesson = 1184;
         } else {
-            Log.e("SET_TAR_FAB", "ZDESA");
             toolbar_menus.textLesson = 1185;
             toolbar_menus.videoLesson = 1186;
         }
@@ -189,6 +198,42 @@ public class Tab1Fragment extends Fragment {
         } catch (Exception e) {
         }
 
+        try {
+//            CharSequence qwe = Html.fromHtml("<b>----------</b>" + "" + "<br>");
+//            stringData.append(qwe);
+//
+//            CompositeDisposable disposable = new CompositeDisposable();
+//            disposable.add(SQL_DB.opinionDao().getOpinionByIdF(data.sotrOpinionId)
+//                    .observeOn(AndroidSchedulers.mainThread())
+//                    .subscribe(res -> {
+//                        CharSequence opinion = Html.fromHtml("<b>Мнение: </b>" + res.nm + "<br>");
+//                        opinion = Html.fromHtml("<b>Мнение: </b>" + res.nm + "<br>");
+//                        stringData.append(opinion);
+//                        disposable.dispose();
+//                    })
+//            );
+
+            CharSequence opinion = Html.fromHtml("<b>Мнение: </b>" + SQL_DB.opinionDao().getOpinionById(data.sotrOpinionId).nm + "<br>");
+            stringData.append(opinion);
+
+//            CharSequence qwe2 = Html.fromHtml("<b>----------</b>" + "" + "<br>");
+//            stringData.append(qwe2);
+        } catch (Exception e) {
+            Log.e("test", "test");
+        }
+
+        try {
+            CharSequence opinionUser = Html.fromHtml("<b>Автор мнения: </b>" + SQL_DB.usersDao().getById(data.sotrOpinionAuthorId).fio + "<br>");
+            stringData.append(opinionUser);
+        } catch (Exception e) {
+        }
+
+        try {
+            CharSequence opinionDate = Html.fromHtml("<b>Дата мнения: </b>" + Clock.getHumanTime3(data.sotrOpinionDt) + "<br>");
+            stringData.append(opinionDate);
+        } catch (Exception e) {
+        }
+
 
         textViewData.setText(stringData);
 
@@ -227,62 +272,73 @@ public class Tab1Fragment extends Fragment {
             downloadAndSetFullPhoto(String.valueOf(data.photo2));
         });
 
-        ratingBar1.setRating(data.voteScore);
-        ratingBar2.setRating(data.vinovnikScore);
+
+        if (data.voteScore != null) {
+            ratingBar1.setRating(data.voteScore);
+        } else {
+            ratingBar1.setRating(0);
+        }
+
+        if (data.vinovnikScore != null) {
+            ratingBar2.setRating(data.vinovnikScore);
+        } else {
+            ratingBar2.setRating(0);
+        }
+
 
 //        ratingBar1.setOnClickListener((view)->{
-            ratingBar1.setOnRatingBarChangeListener((ratingBar, rating, fromUser) -> {
-                int rate = (int) rating;
-                ratingBar.setRating(rate);
+        ratingBar1.setOnRatingBarChangeListener((ratingBar, rating, fromUser) -> {
+            int rate = (int) rating;
+            ratingBar.setRating(rate);
 
-                data.voteScore = rate;
-                SQL_DB.tarDao().insertData(Collections.singletonList(data))
-                        .subscribeOn(Schedulers.io())
-                        .subscribe(new DisposableCompletableObserver() {
-                            @Override
-                            public void onComplete() {
-                                Log.d("test", "test");
-                            }
+            data.voteScore = rate;
+            SQL_DB.tarDao().insertData(Collections.singletonList(data))
+                    .subscribeOn(Schedulers.io())
+                    .subscribe(new DisposableCompletableObserver() {
+                        @Override
+                        public void onComplete() {
+                            Log.d("test", "test");
+                        }
 
-                            @Override
-                            public void onError(@io.reactivex.rxjava3.annotations.NonNull Throwable e) {
-                                Log.d("test", "test");
-                            }
-                        });
+                        @Override
+                        public void onError(@io.reactivex.rxjava3.annotations.NonNull Throwable e) {
+                            Log.d("test", "test");
+                        }
+                    });
 
-                Exchange.updateTAR(data);
+            Exchange.updateTAR(data);
 
-                Toast.makeText(ratingBar.getContext(), "Оценка: " + rate + " установлена.", Toast.LENGTH_SHORT).show();
-            });
+            Toast.makeText(ratingBar.getContext(), "Оценка: " + rate + " установлена.", Toast.LENGTH_SHORT).show();
+        });
 //        });
 
 
 //        ratingBar2.setOnClickListener((view)->{
-            ratingBar2.setOnRatingBarChangeListener((ratingBar, rating, fromUser) -> {
-                int rate = (int) rating;
-                ratingBar.setRating(rate);
+        ratingBar2.setOnRatingBarChangeListener((ratingBar, rating, fromUser) -> {
+            int rate = (int) rating;
+            ratingBar.setRating(rate);
 
-                data.vinovnikScore = rate;
-                data.vinovnikScoreDt = System.currentTimeMillis();
-                data.vinovnikScoreUserId = Globals.userId;
-                SQL_DB.tarDao().insertData(Collections.singletonList(data))
-                        .subscribeOn(Schedulers.io())
-                        .subscribe(new DisposableCompletableObserver() {
-                            @Override
-                            public void onComplete() {
-                                Log.d("test", "test");
-                            }
+            data.vinovnikScore = rate;
+            data.vinovnikScoreDt = System.currentTimeMillis();
+            data.vinovnikScoreUserId = Globals.userId;
+            SQL_DB.tarDao().insertData(Collections.singletonList(data))
+                    .subscribeOn(Schedulers.io())
+                    .subscribe(new DisposableCompletableObserver() {
+                        @Override
+                        public void onComplete() {
+                            Log.d("test", "test");
+                        }
 
-                            @Override
-                            public void onError(@io.reactivex.rxjava3.annotations.NonNull Throwable e) {
-                                Log.d("test", "test");
-                            }
-                        });
+                        @Override
+                        public void onError(@io.reactivex.rxjava3.annotations.NonNull Throwable e) {
+                            Log.d("test", "test");
+                        }
+                    });
 
-                Exchange.updateTAR(data);
+            Exchange.updateTAR(data);
 
-                Toast.makeText(ratingBar.getContext(), "Оценка: " + rate + " установлена.", Toast.LENGTH_SHORT).show();
-            });
+            Toast.makeText(ratingBar.getContext(), "Оценка: " + rate + " установлена.", Toast.LENGTH_SHORT).show();
+        });
 //        });
 
     }

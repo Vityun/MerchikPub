@@ -1,15 +1,27 @@
 package ua.com.merchik.merchik.retrofit;
 
 import android.os.Build;
+import android.util.Log;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonObject;
 
 import java.util.concurrent.TimeUnit;
 
 import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
+import okhttp3.WebSocket;
+import okhttp3.WebSocketListener;
+import okio.ByteString;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
+import ua.com.merchik.merchik.Globals;
+import ua.com.merchik.merchik.ViewHolders.Clicks;
+import ua.com.merchik.merchik.data.WebSocketData.Selector;
+import ua.com.merchik.merchik.data.WebSocketData.WebSocketData;
+import ua.com.merchik.merchik.data.WebSocketData.WebsocketParam;
 
 public class RetrofitBuilder{
 
@@ -39,8 +51,12 @@ public class RetrofitBuilder{
 //            .certificatePinner(certificatePinner)
             .cookieJar(cookie)
             .connectTimeout(10, TimeUnit.SECONDS)
-            .readTimeout(20, TimeUnit.SECONDS)
+            .readTimeout(40, TimeUnit.SECONDS)
             .writeTimeout(30, TimeUnit.SECONDS)
+
+//            .connectTimeout(5, TimeUnit.SECONDS)
+//            .readTimeout(5, TimeUnit.SECONDS)
+//            .writeTimeout(5, TimeUnit.SECONDS)
             .build();
 
 
@@ -75,6 +91,116 @@ public class RetrofitBuilder{
         interfaceAPI = retrofit.create(RetrofitInterface.class);
     }
 
+
+
+    public static WebSocket webSocket(){
+        OkHttpClient client = new OkHttpClient.Builder()
+                .build();
+
+        Request request = new Request.Builder()
+                .url("ws.merchik.com.ua")
+                .build();
+
+        WebSocket webSocket = client.newWebSocket(request, new WebSocketListener() {
+            @Override
+            public void onOpen(WebSocket webSocket, Response response) {
+                super.onOpen(webSocket, response);
+                Log.e("MYwebSocket", "onOpenresponse: " + response);
+            }
+
+            @Override
+            public void onMessage(WebSocket webSocket, String text) {
+                super.onMessage(webSocket, text);
+                Log.e("MYwebSocket", "onMessage.text: " + text);
+            }
+
+            @Override
+            public void onMessage(WebSocket webSocket, ByteString bytes) {
+                super.onMessage(webSocket, bytes);
+                Log.e("MYwebSocket", "onMessage.bytes: " + bytes);
+            }
+
+            @Override
+            public void onClosing(WebSocket webSocket, int code, String reason) {
+                super.onClosing(webSocket, code, reason);
+                Log.e("MYwebSocket", "onClosing.reason: " + reason);
+            }
+
+            @Override
+            public void onClosed(WebSocket webSocket, int code, String reason) {
+                super.onClosed(webSocket, code, reason);
+                Log.e("MYwebSocket", "onClosed.code: " + code);
+                Log.e("MYwebSocket", "onClosed.reason: " + reason);
+            }
+
+            @Override
+            public void onFailure(WebSocket webSocket, Throwable t, Response response) {
+                super.onFailure(webSocket, t, response);
+                Log.e("MYwebSocket", "onFailure.response: " + response);
+            }
+        });
+
+        return webSocket;
+    }
+
+    public static WebSocket testWebSocket(Clicks.click click){
+        WebSocket webSocket;
+        OkHttpClient client;
+
+        OkHttpClient.Builder builder = new OkHttpClient.Builder();
+        client = builder.build();
+        Request request = new Request.Builder()
+                .url("wss://ws.merchik.com.ua")
+                .build();
+        Log.i("WebSockets", "Headers: " + request.headers().toString());
+
+        webSocket = client.newWebSocket(request, new WebSocketListener() {
+            private static final int NORMAL_CLOSURE_STATUS = 1000;
+            @Override
+            public void onOpen(WebSocket webSocket, Response response) {
+                WebsocketParam websocketParam = new WebsocketParam();
+                websocketParam.act = "auth";
+                websocketParam.mod = "auth";
+                websocketParam.userId = 19653;
+                websocketParam.token = Globals.token;
+
+                Selector selector = new Selector();
+                selector.platformId = 5;
+
+                websocketParam.selector = selector;
+
+                JsonObject convertedObject = new Gson().fromJson(new Gson().toJson(websocketParam), JsonObject.class);
+
+                webSocket.send(convertedObject.toString());
+
+
+                Log.i("WebSockets", "Connection accepted!");
+            }
+            @Override
+            public void onMessage(WebSocket webSocket, String text) {
+                Log.i("WebSockets", "Receiving : " + text);
+//                WebSocketData data = new Gson().fromJson(new Gson().toJson(text), WebSocketData.class);
+                WebSocketData data = new Gson().fromJson(new Gson().toJson(text), WebSocketData.class);
+//                click.click(data);
+            }
+            @Override
+            public void onMessage(WebSocket webSocket, ByteString bytes) {
+                Log.i("WebSockets", "Receiving bytes : " + bytes.hex());
+            }
+            @Override
+            public void onClosing(WebSocket webSocket, int code, String reason) {
+                webSocket.close(NORMAL_CLOSURE_STATUS, null);
+                Log.i("WebSockets", "Closing : " + code + " / " + reason);
+            }
+            @Override
+            public void onFailure(WebSocket webSocket, Throwable t, Response response) {
+                Log.i("WebSockets", "Error : " + t.getMessage());
+            }});
+
+
+
+        return webSocket;
+    }
 
     public static RetrofitInterface getRetrofitInterface(){
         return INSTANCE.interfaceAPI;

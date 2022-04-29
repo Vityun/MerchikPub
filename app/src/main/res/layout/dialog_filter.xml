@@ -81,6 +81,7 @@
         android:background="@drawable/shape_rounded_corner"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/imageButtonClose"
         app:layout_constraintVertical_bias="0.0">
@@ -170,6 +171,23 @@
             app:layout_constraintTop_toBottomOf="@+id/period" />
 
         <TextView
+            android:id="@+id/executor"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginLeft="16dp"
+            android:layout_marginTop="16dp"
+            android:layout_marginEnd="16dp"
+            android:layout_marginRight="16dp"
+            android:text="@string/executor"
+            android:textStyle="bold"
+            android:visibility="gone"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/editTextDate2" />
+
+        <TextView
             android:id="@+id/theme"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -182,7 +200,8 @@
             android:textStyle="bold"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/editTextDate" />
+            app:layout_constraintTop_toBottomOf="@+id/editTextDate2"
+            tools:visibility="gone" />
 
         <AutoCompleteTextView
             android:id="@+id/autoCompleteTextTheme"
@@ -195,7 +214,8 @@
             android:completionHint="Выберите тему"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/theme" />
+            app:layout_constraintTop_toBottomOf="@+id/theme"
+            tools:visibility="gone" />
 
         <TextView
             android:id="@+id/status"
@@ -210,7 +230,8 @@
             android:textStyle="bold"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/autoCompleteTextTheme" />
+            app:layout_constraintTop_toBottomOf="@+id/autoCompleteTextTheme"
+            tools:visibility="gone" />
 
         <AutoCompleteTextView
             android:id="@+id/autoCompleteTextViewStatus"
@@ -223,7 +244,8 @@
             android:completionHint="Внесите статус"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/status" />
+            app:layout_constraintTop_toBottomOf="@+id/status"
+            tools:visibility="gone" />
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/recycler"
@@ -231,13 +253,13 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
             android:layout_marginLeft="16dp"
-            android:layout_marginTop="16dp"
             android:layout_marginEnd="16dp"
             android:layout_marginRight="16dp"
             android:visibility="gone"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/testLayout" />
+            app:layout_constraintTop_toBottomOf="@+id/autoCompleteTextViewStatus"
+            tools:visibility="gone" />
 
         <Button
             android:id="@+id/apply"
@@ -247,12 +269,12 @@
             android:layout_marginLeft="16dp"
             android:layout_marginEnd="16dp"
             android:layout_marginRight="16dp"
-            android:layout_marginBottom="16dp"
             android:text="Применить"
-            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintBottom_toBottomOf="@+id/cancel"
             app:layout_constraintEnd_toStartOf="@+id/cancel"
             app:layout_constraintHorizontal_bias="1.0"
             app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="@+id/cancel"
             tools:visibility="visible" />
 
         <Button
@@ -266,7 +288,7 @@
             android:text="Закрыть"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/autoCompleteTextViewStatus"
+            app:layout_constraintTop_toBottomOf="@+id/recycler"
             tools:visibility="visible" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>

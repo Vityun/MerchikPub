@@ -102,4 +102,16 @@
         app:layout_constraintStart_toEndOf="@+id/textView61"
         app:layout_constraintTop_toTopOf="@+id/textView61" />
 
+    <TextView
+        android:id="@+id/wpLink"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginLeft="16dp"
+        android:layout_marginTop="16dp"
+        android:text="TextView"
+        android:clickable="true"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textView61" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

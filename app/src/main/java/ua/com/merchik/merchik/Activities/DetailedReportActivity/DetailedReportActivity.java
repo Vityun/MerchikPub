@@ -1,5 +1,6 @@
 package ua.com.merchik.merchik.Activities.DetailedReportActivity;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Color;
@@ -16,6 +17,8 @@ import androidx.viewpager.widget.ViewPager;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.navigation.NavigationView;
 import com.google.android.material.tabs.TabLayout;
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -23,6 +26,8 @@ import java.util.Collections;
 import java.util.List;
 
 import io.realm.RealmResults;
+import retrofit2.Call;
+import retrofit2.Response;
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.MakePhoto;
@@ -34,16 +39,21 @@ import ua.com.merchik.merchik.WorkPlan;
 import ua.com.merchik.merchik.data.Data;
 import ua.com.merchik.merchik.data.Database.Room.TranslatesSDB;
 import ua.com.merchik.merchik.data.RealmModels.ReportPrepareDB;
+import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
 import ua.com.merchik.merchik.data.RealmModels.TovarDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
+import ua.com.merchik.merchik.data.TestJsonUpload.StandartData;
 import ua.com.merchik.merchik.data.WPDataObj;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.ReportPrepareRealm;
+import ua.com.merchik.merchik.database.realm.tables.StackPhotoRealm;
 import ua.com.merchik.merchik.dialogs.DialogData;
+import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
 import ua.com.merchik.merchik.toolbar_menus;
 
 import static ua.com.merchik.merchik.PhotoReportActivity.getImageOrientation;
 import static ua.com.merchik.merchik.PhotoReportActivity.resaveBitmap;
+import static ua.com.merchik.merchik.PhotoReportActivity.resizeImageFile;
 
 public class DetailedReportActivity extends toolbar_menus {
 
@@ -57,7 +67,7 @@ public class DetailedReportActivity extends toolbar_menus {
     private File image;
 
     public static FloatingActionButton fab;
-    
+
     // ----- ПЕРЕМЕННЫЕ ДЛЯ МОДУЛЯ -----
     public static int rpThemeId = 0;    // ID темы Отчёта исполнителя
     public static int rpAmountSum = 0;    // Сумма колонци КОЛИЧЕСТВО RP данного Документа
@@ -65,7 +75,7 @@ public class DetailedReportActivity extends toolbar_menus {
     public static int rpAmountSum2 = 0;   // Итоговое количество
     public static double rpTotalSumToRedemptionOfGoods = 0;   // Общая сумма для Выкупа товара
     //==================================
-    
+
 
     TabLayout tabLayout;
     ViewPager viewPager;
@@ -136,7 +146,7 @@ public class DetailedReportActivity extends toolbar_menus {
         try {
             stringBuilder.append(wpDataDB.getDt().substring(5)).append(".. ").append(wpDataDB.getAddr_txt().substring(0, 25)).append(".. ").append("\n");
             stringBuilder.append(wpDataDB.getClient_txt().substring(0, 15)).append(".. ").append(wpDataDB.getUser_txt().substring(0, 15)).append(".. ");
-        }catch (Exception e){
+        } catch (Exception e) {
             stringBuilder.append("Дет. Отчёт №: ").append(wpDataDB.getCode_dad2());
         }
 
@@ -175,23 +185,140 @@ public class DetailedReportActivity extends toolbar_menus {
             globals.writeToMLOG(Clock.getHumanTime() + "DetailedReportActivity.onCreate.fab.e: " + e + "\n");
             e.printStackTrace();
         }
-        
-        
+
         // функционал для работы модуля
         RENAME(wpDataDB);   // подсчёт данных для Выкупа и заказа товаров
         rpThemeId = wpDataDB.getTheme_id();
 
+        // Если у Магазина пустые координаты - запускаем
+        if (wpDataDB.getAddr_location_xd().isEmpty() && wpDataDB.getAddr_location_xd().equals("0")) {
+            setDialogAddCoordinate();
+        } else {
+//            Toast.makeText(this, "Ничего не должно происходить!", Toast.LENGTH_LONG).show();
+//            setDialogAddCoordinate();
+        }
+
     }//--------------------------------------------------------------------- /ON CREATE ---------------------------------------------------------------------
 
 
-/*    @Override
-    protected void onStop() {
-        finish();
-        super.onStop();
-    }*/
+    // Основное сообщение
+    private void setDialogAddCoordinate() {
+        DialogData dialog = new DialogData(this);
+        dialog.setTitle("Не определены координаты адреса");
+        dialog.setDialogIco();
+        dialog.setText("Внимание. У адреса " + wpDataDB.getAddr_txt() + " не определены гео координаты местоположения! \nДля того что бы определить эти координаты: \n 1. Приедьте по указанному адресу; \n 2. Убедитесь что приложение ПОДКЛЮЧЕНО к серверу; \n 3. Откройте текущую форму и нажмите кнопку \"Определить координаты адреса\"");
+        dialog.setOk("Определить координаты адреса", () -> {
+            setDialogAddCoordinateQuestion();
+            dialog.dismiss();
+        });
+        dialog.setClose(dialog::dismiss);
+        dialog.show();
+    }
+
+    // Вопрос
+    private void setDialogAddCoordinateQuestion() {
+        DialogData dialog = new DialogData(this);
+        dialog.setDialogIco();
+        dialog.setText("Вы сейчас НЕ находитесь по адресу " + wpDataDB.getAddr_txt() + " ?");
+        dialog.setOk("Да", () -> {
+            DialogData dialogData = new DialogData(dialog.context);
+            dialogData.setDialogIco();
+            dialogData.setText("Тогда приедьте, пожалуйста, по адресу и повторите процедуру.");
+            dialogData.setClose(dialogData::dismiss);
+            dialogData.show();
+            dialog.dismiss();
+        });
+        dialog.setCancel("Нет", () -> {
+            setDialogAddCoordinateReQuestion();
+            dialog.dismiss();
+        });
+        dialog.setClose(dialog::dismiss);
+        dialog.show();
+    }
+
+    // Перевопрос
+    private void setDialogAddCoordinateReQuestion() {
+        DialogData dialog = new DialogData(this);
+        dialog.setDialogIco();
+        dialog.setText("Вы находитесь по адресу " + wpDataDB.getAddr_txt() + " ?");
+        dialog.setOk("Да", () -> {
+            sendNewAddressCoordinate();
+            dialog.dismiss();
+        });
+        dialog.setCancel("Нет", () -> {
+            setDialogAddCoordinateQuestion();
+            dialog.dismiss();
+        });
+        dialog.setClose(dialog::dismiss);
+        dialog.show();
+    }
+
+    public void sendNewAddressCoordinate() {
+
+        if (ua.com.merchik.merchik.trecker.enabledGPS) {
+            if (wpDataDB != null) {
+                if (Globals.CoordX != 0 && Globals.CoordY != 0) {
+                    StandartData standartData = new StandartData();
+                    standartData.mod = "data_list";
+                    standartData.act = "set_addr_geo";
+
+                    standartData.addr_id = wpDataDB.getAddr_id();
+                    standartData.x = Globals.CoordX;
+                    standartData.y = Globals.CoordY;
+
+                    Gson gson = new Gson();
+                    String json = gson.toJson(standartData);
+                    JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
+
+                    retrofit2.Call<JsonObject> call = RetrofitBuilder.getRetrofitInterface().TEST_JSON_UPLOAD(RetrofitBuilder.contentType, convertedObject);
+                    call.enqueue(new retrofit2.Callback<JsonObject>() {
+                        @Override
+                        public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
+                            Log.e("test", "response: " + response);
+                            Toast.makeText(DetailedReportActivity.this, "OK", Toast.LENGTH_LONG).show();
+                        }
+
+                        @Override
+                        public void onFailure(retrofit2.Call<JsonObject> call, Throwable t) {
+                            Log.e("test", "Throwable: " + t);
+                            Toast.makeText(DetailedReportActivity.this, "ERR" + t, Toast.LENGTH_LONG).show();
+                        }
+                    });
+                } else {
+                    Toast.makeText(DetailedReportActivity.this, "Перезагрузите GPS модуль или выйдите на улицу и повторите попытку.", Toast.LENGTH_LONG).show();
+                }
+            } else {
+                Toast.makeText(DetailedReportActivity.this, "Перезадите в детализированный отчёт и повторите попытку.", Toast.LENGTH_LONG).show();
+            }
+        } else {
+            Toast.makeText(DetailedReportActivity.this, "Включите GPS и повторите попытку.", Toast.LENGTH_LONG).show();
+        }
+
+
+    }
+
+    // ТАМ ГДЕ МОЖНО ЗА МИНУТУ
+    // СУКА СИДИТ И ВТЫКАЕТ УЖЕ
+
+
+    // 0
+    // З - Не определены координаты (адреса/ТТ)
+    // Иконочка
+    // Внимание. У адреса *** не определены гео координаты местоположения! \т Для того что бы определить эти координаты: /т 1. Приедьте по указанному адресу; /т 2. Убедитесь что приложение ПОДКЛЮЧЕНО к серверу; /т 3. Откройте текущую форму и нажмите кнопку "Определить координаты адреса"
+
+    // 1
+    // Вы сейчас НЕ находитесь по адресу *** ?
+    // Да - "Тогда приедьте, пожалуйста, по адресу и повторите процедуру"
+    // Нет - Некст диалог 2
+
+    // 2
+    // Вы находитесь по адресу *** ?
+    // Да - "Некст"
+    // Нет - предыдущий диалог 1
 
 
     DetailedReportTab adapter;
+
     private void setTab() {
         List<TovarDB> dataTovar = RealmManager.getTovarListFromReportPrepareByDad2(wpDataDB.getCode_dad2());
         List<TovarDB> dataTovarDownloadList = RealmManager.getTovarListPhotoToDownload(dataTovar, "small");
@@ -207,7 +334,6 @@ public class DetailedReportActivity extends toolbar_menus {
         tabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
             @Override
             public void onTabSelected(TabLayout.Tab tab) {
-
                 Log.e("onTabSelected", "tabLayout.getTabCount(): " + tabLayout.getTabCount());
                 Log.e("onTabSelected", "tab.getPosition(): " + tab.getPosition());
 
@@ -250,18 +376,18 @@ public class DetailedReportActivity extends toolbar_menus {
     }
 
 
-    public void refreshAdapterFragmentB(){
+    public void refreshAdapterFragmentB() {
         DetailedReportTab.refreshAdapter();
     }
 
 
     // Размещение фотки по URI адрессу для пользователя, отображение фотографии загрузки
-    public void onActivityResult(int requestCode, int resultCode, Intent intent) {
-        super.onActivityResult(requestCode, resultCode, intent);
+    @SuppressLint("MissingSuperCall")
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        Log.d("test", "" + requestCode + resultCode + data);
 
-        Log.d("test", "" + requestCode + resultCode + intent);
-
-        switch (requestCode){
+        switch (requestCode) {
             case 101:
                 try {
                     globals.writeToMLOG(Clock.getHumanTime() + "DETAILED_REPORT_ACT.onActivityResult: " + "ENTER" + "\n");
@@ -290,6 +416,40 @@ public class DetailedReportActivity extends toolbar_menus {
         }
 
 
+        if (requestCode == 201 && resultCode == RESULT_OK) {
+            Toast.makeText(this, "Фото сохранено", Toast.LENGTH_SHORT).show();
+            try {
+                StackPhotoDB photo = RealmManager.INSTANCE.copyFromRealm(StackPhotoRealm.getByPhotoNum(MakePhoto.photoNum));
+                File photoFile = new File(MakePhoto.photoNum);
+
+                final int rotation = getImageOrientation(photoFile.getPath()); //Проверка на сколько градусов повёрнуто изображение
+                if (rotation > 0) {
+                    photoFile = resaveBitmap(photoFile, rotation);  // ДляСамсунгов и тп.. Разворачиваем как надо.
+                }
+
+                try {
+                    photoFile = resizeImageFile(this, photoFile);
+                } catch (Exception e) {
+                    globals.alertDialogMsg(this, "Ошибка В ужатии: " + e);
+                }
+
+                String hash;
+                hash = globals.getHashMD5FromFilePath(photoFile.getAbsolutePath(), this);
+
+                if (hash == null || hash.equals("")) {
+                    hash = globals.getHashMD5FromFile(photoFile, this);
+                }
+
+                photo.setPhoto_hash(hash);
+                photo.setPhoto_num(photoFile.getAbsolutePath());
+
+                StackPhotoRealm.setAll(Collections.singletonList(photo));
+            } catch (Exception e) {
+
+            }
+        } else if (requestCode == 201 && resultCode == RESULT_CANCELED) {
+            StackPhotoRealm.deleteByPhotoNum(MakePhoto.photoNum);
+        }
 
         try {
             // Если отменили сьемку:
@@ -318,7 +478,8 @@ public class DetailedReportActivity extends toolbar_menus {
                     } else { // Если фото получилось нулевым - файлик удаляется
                         try {
                             image.delete();
-                        } catch (Exception e) {e.printStackTrace();
+                        } catch (Exception e) {
+                            e.printStackTrace();
 
                         }
                     }
@@ -333,11 +494,10 @@ public class DetailedReportActivity extends toolbar_menus {
     }
 
 
-
     /**
      * 29.06.2021
-     * */
-    public void RENAME(WpDataDB wp){
+     */
+    public void RENAME(WpDataDB wp) {
         try {
             RealmResults<ReportPrepareDB> reportPrepareDB = ReportPrepareRealm.getReportPrepareByDad2(wp.getCode_dad2());
             List<ReportPrepareDB> rows = reportPrepareDB.where().notEqualTo("codeDad2", "0").findAll();
@@ -351,7 +511,7 @@ public class DetailedReportActivity extends toolbar_menus {
                 rpAmountSum2 += curAmount;
                 rpTotalSumToRedemptionOfGoods += curAmount * price;
             }
-        }catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
             // TODO =__=
         }
@@ -363,7 +523,7 @@ public class DetailedReportActivity extends toolbar_menus {
     }
 
 
-    public static void makeRealPhoto(){
+    public static void makeRealPhoto() {
 
     }
 }

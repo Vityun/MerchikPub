@@ -11,7 +11,6 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import java.util.List;
 
 import ua.com.merchik.merchik.Activities.PhotoLogActivity.PhotoLogActivity;
-import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.MakePhoto;
 import ua.com.merchik.merchik.Options;
@@ -35,7 +34,6 @@ import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.dialogs.DialogEKL;
 import ua.com.merchik.merchik.toolbar_menus;
 
-import static ua.com.merchik.merchik.ServerExchange.Exchange.sendWpData2;
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
 public class DetailedReportButtons {
@@ -78,9 +76,6 @@ public class DetailedReportButtons {
                 if (mod == 1) {
                     intentPhotoReport.putExtra("dataFromWPObj", wpDataObj);
                     context.startActivity(intentPhotoReport);
-                } else {
-                    intentPhotoReport.putExtra("dataFromWPObj", wpDataObj);
-                    MakePhoto.startToMakePhoto(context, wpDataObj);
                 }
                 break;
 
@@ -137,18 +132,18 @@ public class DetailedReportButtons {
                 globals.fixMP(); // Фиксация Местоположения в таблице ЛогМп
                 // Начало работы.
                 // Тут делать запись в БД начала работы
-                Log.e("OPTION_BUTTON", "Начало работы");
-                pressStartWork(context, wpDataDB);
-                sendWpData2();
+//                Log.e("OPTION_BUTTON", "Начало работы");
+//                pressStartWork(context, wpDataDB);
+//                sendWpData2();
                 break;
 
             case 138520: // Button окончания работы
                 globals.fixMP(); // Фиксация Местоположения в таблице ЛогМп
                 // окончания работы.
                 // Тут делать запись в БД окончания работы
-                Log.e("OPTION_BUTTON", "Окончания работы");
-                pressEndWork(context, wpDataDB);
-                sendWpData2();
+//                Log.e("OPTION_BUTTON", "Окончания работы");
+//                pressEndWork(context, wpDataDB);
+//                sendWpData2();
                 break;
 
             case 138773: // 18.08.2020. Button ЗАФИКСИРОВАТЬ МЕСТОПОЛОЖЕНИЕ
@@ -158,15 +153,15 @@ public class DetailedReportButtons {
                 break;
 
             case 137797:
-                // Отобразить диалог с инфой
-                DialogData dialog = new DialogData(context);
-                dialog.setTitle("Представленность");
-
-                String msg = String.format("SKU (План): %s шт.\nSKU (Факт): %s шт.\nОтсутствует: %s шт.\nOOS (out of stock): %s %%\nПредставленность: %s %%\n\n\t\t\t\t\t\t\t\t\t\t\t\t\t\tОписание\n\nSKU (План) - количество товарных позиций которые должны быть в торговой точке по плану.\nSKU (Факт) - количество товарных позиций которые фактически стоят на витрине.\nOOS - процент товара, который отсутствует по сравнению с планом\nOOS = 100 - 100*(SKUФакт/SKUПлан) = %s %%\nПредставленность = 100 - OOS = %s %%", (int) Options.SKUPlan, (int) Options.SKUFact, (int) Options.SKUPlan - (int) Options.SKUFact, (int) Options.OOS, (int) Options.OFS, (int) Options.OOS, (int) Options.OFS);
-                dialog.setText(msg);
-
-                dialog.setClose(dialog::dismiss);
-                dialog.show();
+//                // Отобразить диалог с инфой
+//                DialogData dialog = new DialogData(context);
+//                dialog.setTitle("Представленность");
+//
+//                String msg = String.format("SKU (План): %s шт.\nSKU (Факт): %s шт.\nОтсутствует: %s шт.\nOOS (out of stock): %s %%\nПредставленность: %s %%\n\n\t\t\t\t\t\t\t\t\t\t\t\t\t\tОписание\n\nSKU (План) - количество товарных позиций которые должны быть в торговой точке по плану.\nSKU (Факт) - количество товарных позиций которые фактически стоят на витрине.\nOOS - процент товара, который отсутствует по сравнению с планом\nOOS = 100 - 100*(SKUФакт/SKUПлан) = %s %%\nПредставленность = 100 - OOS = %s %%", (int) Options.SKUPlan, (int) Options.SKUFact, (int) Options.SKUPlan - (int) Options.SKUFact, (int) Options.OOS, (int) Options.OFS, (int) Options.OOS, (int) Options.OFS);
+//                dialog.setText(msg);
+//
+//                dialog.setClose(dialog::dismiss);
+//                dialog.show();
 
                 break;
 
@@ -265,6 +260,9 @@ public class DetailedReportButtons {
                 context.startActivity(intentPhotoLog);
                 break;
 
+            case 135742:
+                break;
+
 
             default:
                 Toast.makeText(context, "Данный раздел находится в разработке", Toast.LENGTH_LONG).show();
@@ -327,25 +325,25 @@ public class DetailedReportButtons {
      * Option id: 138518
      */
     private void pressStartWork(Context context, WpDataDB wp) {
-        globals.writeToMLOG(Clock.getHumanTime() + "_INFO.DetailedReportButtons.class.pressStartWork: " + "ENTER" + "\n");
-        if (wp.getVisit_start_dt() > 0) {
-            Toast.makeText(context, "Работа уже начата!", Toast.LENGTH_SHORT).show();
-        } else {
-            try {
-                long startTime = System.currentTimeMillis() / 1000;
-                RealmManager.INSTANCE.executeTransaction(realm -> {
-                    wp.setDt_update(System.currentTimeMillis() / 1000);
-                    wp.setVisit_start_dt(startTime);
-                    wp.setClient_start_dt(startTime);
-                    wp.startUpdate = true;
-                    realm.insertOrUpdate(wp);
-                });
-                Toast.makeText(context, "Вы начали работу в: " + Clock.getHumanTimeOpt(startTime * 1000), Toast.LENGTH_SHORT).show();
-            } catch (Exception e) {
-                // Set to log error
-                Log.e("test", "test: " + e);
-            }
-        }
+//        globals.writeToMLOG(Clock.getHumanTime() + "_INFO.DetailedReportButtons.class.pressStartWork: " + "ENTER" + "\n");
+//        if (wp.getVisit_start_dt() > 0) {
+//            Toast.makeText(context, "Работа уже начата!", Toast.LENGTH_SHORT).show();
+//        } else {
+//            try {
+//                long startTime = System.currentTimeMillis() / 1000;
+//                RealmManager.INSTANCE.executeTransaction(realm -> {
+//                    wp.setDt_update(System.currentTimeMillis() / 1000);
+//                    wp.setVisit_start_dt(startTime);
+//                    wp.setClient_start_dt(startTime);
+//                    wp.startUpdate = true;
+//                    realm.insertOrUpdate(wp);
+//                });
+//                Toast.makeText(context, "Вы начали работу в: " + Clock.getHumanTimeOpt(startTime * 1000), Toast.LENGTH_SHORT).show();
+//            } catch (Exception e) {
+//                // Set to log error
+//                Log.e("test", "test: " + e);
+//            }
+//        }
     }
 
 
@@ -356,28 +354,28 @@ public class DetailedReportButtons {
      * Option id: 138520
      */
     private void pressEndWork(Context context, WpDataDB wp) {
-        globals.writeToMLOG(Clock.getHumanTime() + "_INFO.DetailedReportButtons.class.pressEndWork: " + "ENTER" + "\n");
-        if (wp.getVisit_end_dt() > 0) {
-            Toast.makeText(context, "Работа уже окончена!", Toast.LENGTH_SHORT).show();
-        } else {
-            if (wp.getVisit_start_dt() > 0) {
-                try {
-                    long endTime = System.currentTimeMillis() / 1000;
-                    RealmManager.INSTANCE.executeTransaction(realm -> {
-                        wp.setDt_update(System.currentTimeMillis() / 1000);
-                        wp.setVisit_end_dt(endTime);
-                        wp.setClient_end_dt(endTime);
-                        wp.startUpdate = true;
-                        realm.insertOrUpdate(wp);
-                    });
-                    Toast.makeText(context, "Вы окончили работу в: " + endTime, Toast.LENGTH_SHORT).show();
-                } catch (Exception e) {
-                    // Set to log error
-                }
-            } else {
-                Toast.makeText(context, "Вы не можете закончить работу не начав её", Toast.LENGTH_SHORT).show();
-            }
-        }
+//        globals.writeToMLOG(Clock.getHumanTime() + "_INFO.DetailedReportButtons.class.pressEndWork: " + "ENTER" + "\n");
+//        if (wp.getVisit_end_dt() > 0) {
+//            Toast.makeText(context, "Работа уже окончена!", Toast.LENGTH_SHORT).show();
+//        } else {
+//            if (wp.getVisit_start_dt() > 0) {
+//                try {
+//                    long endTime = System.currentTimeMillis() / 1000;
+//                    RealmManager.INSTANCE.executeTransaction(realm -> {
+//                        wp.setDt_update(System.currentTimeMillis() / 1000);
+//                        wp.setVisit_end_dt(endTime);
+//                        wp.setClient_end_dt(endTime);
+//                        wp.startUpdate = true;
+//                        realm.insertOrUpdate(wp);
+//                    });
+//                    Toast.makeText(context, "Вы окончили работу в: " + Clock.getHumanTimeOpt(endTime * 1000) + "\n\nНе забудьте нажать 'Провести', что б система проверила текущий документ и начислила Вам премиальные", Toast.LENGTH_SHORT).show();
+//                } catch (Exception e) {
+//                    // Set to log error
+//                }
+//            } else {
+//                Toast.makeText(context, "Вы не можете закончить работу не начав её", Toast.LENGTH_SHORT).show();
+//            }
+//        }
 
     }
 

@@ -87,11 +87,23 @@
             android:layout_marginBottom="8dp"
             android:background="@drawable/border_img_photo_log"
             android:contentDescription="TODO"
-            android:padding="4dp"
             android:elevation="8dp"
+            android:padding="4dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
+
+        <ImageView
+            android:id="@+id/check"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:layout_marginStart="8dp"
+            android:layout_marginLeft="8dp"
+            android:layout_marginTop="8dp"
+            android:elevation="9dp"
+            app:layout_constraintStart_toStartOf="@+id/wp_image1"
+            app:layout_constraintTop_toTopOf="@+id/wp_image1"
+            app:srcCompat="@drawable/ic_check" />
 
         <TextView
             android:id="@+id/textViewPhotoLog1"

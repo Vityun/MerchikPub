@@ -20,6 +20,11 @@ public class UserInfo {
     @SerializedName("tel")
     @Expose
     private String tel;
+
+    @SerializedName("token")
+    @Expose
+    public String token;
+
     @SerializedName("report_count")
     @Expose
     private String reportCount;

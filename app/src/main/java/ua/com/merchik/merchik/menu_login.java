@@ -51,7 +51,9 @@ import java.util.List;
 import java.util.Locale;
 
 import retrofit2.Call;
+import retrofit2.Callback;
 import retrofit2.Response;
+import ua.com.merchik.merchik.Activities.WorkPlanActivity.WPDataActivity;
 import ua.com.merchik.merchik.ServerExchange.Exchange;
 import ua.com.merchik.merchik.ServerExchange.ExchangeInterface;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.SiteObjectsExchange;
@@ -63,6 +65,7 @@ import ua.com.merchik.merchik.data.RetrofitResponse.Logout;
 import ua.com.merchik.merchik.data.ServerLogin.LoginSearch;
 import ua.com.merchik.merchik.data.ServerLogin.LoginSearchList;
 import ua.com.merchik.merchik.data.ServerLogin.SessionCheck;
+import ua.com.merchik.merchik.data.TestJsonUpload.StandartData;
 import ua.com.merchik.merchik.data.Translation.LangListDB;
 import ua.com.merchik.merchik.data.Translation.SiteLanguages;
 import ua.com.merchik.merchik.data.Translation.SiteTranslations;
@@ -72,6 +75,7 @@ import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.dialogs.DialogLoginHelp;
 import ua.com.merchik.merchik.dialogs.DialogRetingOperatorSuppr;
 import ua.com.merchik.merchik.dialogs.DialogSupport;
+import ua.com.merchik.merchik.dialogs.DialogTelephoneRegistration;
 import ua.com.merchik.merchik.retrofit.MyCookieJar;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
 
@@ -86,6 +90,8 @@ public class menu_login extends AppCompatActivity {
     private static final int PERMISSION_FINE_LOCATION = 0;
     private static final int PERMISSION_CAMERA = 1;
     private static final int PERMISSION_REQUEST_CODE = 200;
+
+    private String telephoneLogin = "";
 
 
     private String obj891 = "";
@@ -504,44 +510,151 @@ public class menu_login extends AppCompatActivity {
     }
 
     // BUTTON_3 REGESTRATION
+    // TODO Заменить все текстовки на Обьекты Сайта
     public void regestration(View view) {
+        DialogTelephoneRegistration dialog = new DialogTelephoneRegistration(this);
+        dialog.setTitle("Какой-то милый заголовок");
+        dialog.setText("Тут буду делать красивый интерфейс для того что-б люди могли вносить телефоны и регистрироваться в нашем богоподобном ресурсе.");
+        dialog.setTelephone();
+        dialog.setButtonOk("Зарегестрироваться", () -> {
+            DialogData dialogReg = new DialogData(this);
+            dialogReg.setTitle("Регистрация");
+            dialogReg.setMerchikIco(this);
+            dialogReg.setText("После подтверждения регистрации Вам прийдёт сообщение с паролем для авторизации. Продолжить регистрацию?");
+            dialogReg.setClose(dialogReg::dismiss);
+            dialogReg.setCancel("Отменить", dialogReg::dismiss);
+            dialogReg.setOk("Зарегистрироваться", () -> {
+                autoText.setText(dialog.getTelephone());
+                dialog.dismiss();
 
-//        String mod = "logout";
-//        retrofit2.Call<Logout> call = RetrofitBuilder.getRetrofitInterface().logoutInfo(mod);
-//        call.enqueue(new retrofit2.Callback<Logout>() {
-//            @Override
-//            public void onResponse(retrofit2.Call<Logout> call, retrofit2.Response<Logout> response) {
-//                if (response.isSuccessful() && response.body() != null) {
-//                    if (response.body().getState()) {
-//                        Toast.makeText(menu_login.this, "Вы разлогинились.", Toast.LENGTH_SHORT).show();
-//                        Globals.session = null;
-//                    }
-//                }
-//            }
-//
-//            @Override
-//            public void onFailure(retrofit2.Call<Logout> call, Throwable t) {
-//                Toast.makeText(menu_login.this, "Разлогиниться не получилось: " + t.toString(), Toast.LENGTH_SHORT).show();
-//            }
-//        });
+                Toast.makeText(this, "Внесли телефон: " + dialog.getTelephone() , Toast.LENGTH_SHORT).show();
+
+                String telReplace;
+                telReplace = dialog.getTelephone().replaceAll("\\(", "");
+                telReplace = telReplace.replaceAll("\\)", "");
+                telReplace = telReplace.replaceAll("-", "");
+
+                StandartData standartData = new StandartData();
+                standartData.mod = "auth";
+                standartData.act = "register";
+                standartData.login = telReplace;
+
+                Gson gson = new Gson();
+                String json = gson.toJson(standartData);
+                JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
+
+                Log.e("regestration", "convertedObject: " + convertedObject);
+
+                retrofit2.Call<JsonObject> call = RetrofitBuilder.getRetrofitInterface().TEST_JSON_UPLOAD(RetrofitBuilder.contentType, convertedObject);
+                call.enqueue(new Callback<JsonObject>() {
+                    @Override
+                    public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
+                        Log.e("regestration", "response: " + response.body());
+                        if (response.isSuccessful()) {
+                            if (response.body() != null) {
+                                Toast.makeText(menu_login.this, "response.body(): " + response.body(), Toast.LENGTH_SHORT).show();
+                            } else {
+                                Toast.makeText(menu_login.this, "response.body(): NULL", Toast.LENGTH_SHORT).show();
+                            }
+                        } else {
+                            Toast.makeText(menu_login.this, "response.code: " + response.code(), Toast.LENGTH_SHORT).show();
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(Call<JsonObject> call, Throwable t) {
+                        Log.e("regestration", "response: " + t);    // java.io.EOFException: End of input at line 1 column 1 path $
+                        Toast.makeText(menu_login.this, "Проверьте связь: " + t, Toast.LENGTH_SHORT).show();
+                    }
+                });
+            });
+            dialogReg.show();
+        });
+        dialog.close(dialog::dismiss);
+        dialog.show();
+    }
+
+
+    // мусор
+    private void regestrationDialog() {
+        DialogData dialogRegistration = new DialogData(this);
+
+        dialogRegistration.setLesson(this, true, 633);
+        dialogRegistration.setVideoLesson(this, true, 630, () -> {
+        });
+
+        dialogRegistration.setTitle("Регистрация");
+        dialogRegistration.setMerchikIco(this);
+        dialogRegistration.setText("Телефон");
+        dialogRegistration.setEditTextHint("+38(___)___-____");
+
+        dialogRegistration.setTelephoneEditText("", (data) -> {
+            if (data == null || data.equals("")) {
+                data = "Внесите корректно номер телефона!";
+            } else {
+                telephoneLogin = data;
+
+                DialogData dialog = new DialogData(this);
+                dialog.setTitle("Регистрация");
+                dialog.setMerchikIco(this);
+                dialog.setText("После подтверждения регистрации Вам прийдёт сообщение с паролем для авторизации. Продолжить регистрацию?");
+                dialog.setClose(dialog::dismiss);
+                dialog.setCancel("Отменить", dialog::dismiss);
+                dialog.setOk("Зарегистрироваться", () -> {
+                    autoText.setText(telephoneLogin);
+                    dialogRegistration.dismiss();
+
+                    StandartData standartData = new StandartData();
+                    standartData.mod = "auth";
+                    standartData.act = "register";
+                    standartData.login = "+380" + telephoneLogin;
+
+                    Gson gson = new Gson();
+                    String json = gson.toJson(standartData);
+                    JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
+
+                    Log.e("regestration", "convertedObject: " + convertedObject);
+
+                    retrofit2.Call<JsonObject> call = RetrofitBuilder.getRetrofitInterface().TEST_JSON_UPLOAD(RetrofitBuilder.contentType, convertedObject);
+                    call.enqueue(new Callback<JsonObject>() {
+                        @Override
+                        public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
+                            Log.e("regestration", "response: " + response.body());
+                            if (response.isSuccessful()) {
+                                if (response.body() != null) {
+                                    Toast.makeText(menu_login.this, "response.body(): " + response.body(), Toast.LENGTH_SHORT).show();
+                                } else {
+                                    Toast.makeText(menu_login.this, "response.body(): NULL", Toast.LENGTH_SHORT).show();
+                                }
+                            } else {
+                                Toast.makeText(menu_login.this, "response.code: " + response.code(), Toast.LENGTH_SHORT).show();
+                            }
+                        }
+
+                        @Override
+                        public void onFailure(Call<JsonObject> call, Throwable t) {
+                            Log.e("regestration", "response: " + t);    // java.io.EOFException: End of input at line 1 column 1 path $
+                            Toast.makeText(menu_login.this, "Проверьте связь: " + t, Toast.LENGTH_SHORT).show();
+                        }
+                    });
+
+                    Toast.makeText(this, "Тут, в данный момент, должно сработать отправка на сервер телефона для регистрации, закрытие этого окошка и ожидание СМС-ки с паролем", Toast.LENGTH_LONG).show();
+                });
+                dialog.show();
+            }
+
+            Toast.makeText(this, data, Toast.LENGTH_SHORT).show();
+        });
+
+
+        dialogRegistration.setClose(dialogRegistration::dismiss);
+        dialogRegistration.show();
 
 
         Toast.makeText(this, "Для входа в приложение укажите свой логин и пароль в соответствующих полях и нажмите кнопку \"Вход\". Логин и пароль Вы можете получить связавшись с представителем нашей компании позвонив по телефону +380674491922 +380674061394", Toast.LENGTH_LONG).show();
 
         /*Для входа в приложение укажите свой логин и пароль в соответствующих полях и нажмите кнопку "Вход". Логин и пароль Вы можете получить связавшись с представителем нашей компании позвонив по телефону +380674491922 +380674061394*/
 
-
-//        DialogRegestration alert = new DialogRegestration();
-//        alert.showDialog(this);
-//        alert.setClose(() -> {
-//            Log.e("DialogVideo", "click X");
-//            alert.dismiss();
-//        });
-//        alert.setVideoLesson(this, true, 0, () -> {
-//            Log.e("DialogVideo", "click Video");
-//            Toast.makeText(this, "Видео пока недоступно", Toast.LENGTH_LONG).show();
-////            alert.getContext().startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(finalData.getUrl())));
-//        });
     }
 
     // TEXT_BUTTON VersionApp
@@ -607,11 +720,11 @@ public class menu_login extends AppCompatActivity {
                 @Override
                 public void onResponse(retrofit2.Call<Login> call, retrofit2.Response<Login> response) {
                     if (response.isSuccessful() && response.body() != null) {
-                        if (response.code() == 200){
+                        if (response.code() == 200) {
                             Log.e("loginOnServer", "response.body(): " + response.body().getState());
                             wil = 0;
                             appLogin();
-                        }else {
+                        } else {
                             withoutLogin();
                         }
                     }
@@ -634,7 +747,6 @@ public class menu_login extends AppCompatActivity {
      * <p>
      * Проверка данных на сервере.
      **/
-
     private void appLogin() {
         // https://merchik.net/mobile_app.php?mod=auth&app_data=435235235
 
@@ -656,6 +768,10 @@ public class menu_login extends AppCompatActivity {
                         if (response.isSuccessful() && response.body() != null) {
                             SessionCheck resp = response.body();
                             Log.e("APP_LOGIN", "AUTH: " + resp.getAuth());
+
+                            JsonObject convertedObject = new Gson().fromJson(new Gson().toJson(response.body()), JsonObject.class);
+                            Log.e("APP_LOGIN", "convertedObject: " + convertedObject);
+
 
                             // Сохраняем id сессии
                             if (resp.getSessionId() != null && resp.getSessionId().equals("")) {
@@ -693,7 +809,8 @@ public class menu_login extends AppCompatActivity {
                                         new TablesLoadingUnloading().downloadMenu();
                                         Toast.makeText(getApplicationContext(), "Вы зашли как " + resp.getUserInfo().getFio(), Toast.LENGTH_SHORT).show();
                                         Globals.userId = Integer.parseInt(resp.getUserInfo().getUserId());
-                                        startActivity(intent);
+                                        Globals.token = resp.websocketParam.token;
+                                        startActivity(intent); // ++
                                     } else {
 //                                    Toast.makeText(menu_login.this, "Внесите Логин/Пароль и повторите попытку", Toast.LENGTH_SHORT).show();
 //                                    progress.dissmiss();
@@ -762,12 +879,15 @@ public class menu_login extends AppCompatActivity {
                     public void onResponse(retrofit2.Call<Login> callLogin, retrofit2.Response<Login> response) {
                         if (response.isSuccessful() && response.body() != null) {
 
+                            JsonObject convertedObject = new Gson().fromJson(new Gson().toJson(response.body()), JsonObject.class);
+                            Log.e("APP_LOGIN", "convertedObject: " + convertedObject);
+
                             // Разбираем ответ на логин
                             Log.e("APP_LOGIN", "LOGIN_callLogin: " + response.body().getState());
                             if (response.body().getState()) {
 
                                 // =================================================
-/*                                retrofit2.Call<JsonObject> TEST_SESSION_CALL = RetrofitBuilder.getRetrofitInterface().CHECK_SESSION2(mod);
+                                retrofit2.Call<JsonObject> TEST_SESSION_CALL = RetrofitBuilder.getRetrofitInterface().CHECK_SESSION2(mod);
                                 TEST_SESSION_CALL.enqueue(new retrofit2.Callback<JsonObject>() {
 
                                     @Override
@@ -779,20 +899,20 @@ public class menu_login extends AppCompatActivity {
                                     public void onFailure(Call<JsonObject> call, Throwable t) {
                                         Log.e("APP_LOGIN", "(2)TEST_SESSION_CALL_ERROR: " + t);
                                     }
-                                });*/
+                                });
 
                                 Call<SessionCheck> callAUTH = RetrofitBuilder.getRetrofitInterface().CHECK_SESSION(mod, Globals.getAppInfoToSession(menu_login.this));
                                 callAUTH.enqueue(new retrofit2.Callback<SessionCheck>() {
                                     @Override
                                     public void onResponse(retrofit2.Call<SessionCheck> callAUTH, retrofit2.Response<SessionCheck> RESPONSE) {
-                                        Log.e("APP_LOGIN", "AUTH2: " + RESPONSE.body());
-                                        Log.e("APP_LOGIN", "AUTH2: " + RESPONSE.body().getUserInfo());
-                                        Log.e("APP_LOGIN", "AUTH2: " + RESPONSE.body().getUserInfo().getUserId());
+//                                        Log.e("APP_LOGIN", "AUTH2: " + RESPONSE.body());
+//                                        Log.e("APP_LOGIN", "AUTH2: " + RESPONSE.body().getUserInfo());
+//                                        Log.e("APP_LOGIN", "AUTH2: " + RESPONSE.body().getUserInfo().getUserId());
                                         if (RESPONSE.isSuccessful() && RESPONSE.body() != null) {
-                                            SessionCheck resp = RESPONSE.body();
-                                            Log.e("APP_LOGIN", "AUTH2: " + resp.getAuth() + "|" + resp.getUserInfo().getUserId());
+                                            JsonObject convertedObject = new Gson().fromJson(new Gson().toJson(RESPONSE.body()), JsonObject.class);
 
-                                            Log.e("APP_LOGIN", "ПОСЛЕ ЛОГИНА РУКАМИ СЕССИЯ: " + resp.getSessionId());
+                                            SessionCheck resp = RESPONSE.body();
+
                                             Globals.session = resp.getSessionId();
 
                                             if (resp.getAuth()) {
@@ -825,9 +945,10 @@ public class menu_login extends AppCompatActivity {
                                                     new TablesLoadingUnloading().downloadMenu();
                                                     Toast.makeText(getApplicationContext(), "Вы зашли как " + resp.getUserInfo().getFio(), Toast.LENGTH_SHORT).show();
                                                     Globals.userId = Integer.parseInt(resp.getUserInfo().getUserId());
+                                                    Globals.token = resp.websocketParam.token;
                                                 }
                                                 progress.dissmiss();
-                                                startActivity(intent);
+                                                startActivity(intent);  //++
                                             } else {
                                                 appLogin();
                                             }
@@ -885,7 +1006,7 @@ public class menu_login extends AppCompatActivity {
                 Globals.userId = appUsersDB.getUserId();
 
                 progress.dissmiss();
-                startActivity(intent);
+                startActivity(intent);  //++
             } else {
                 // Не получилось залогиниться БЕЗ инета или при ошибке. БД пустая.
                 progress.dissmiss();
@@ -1367,12 +1488,12 @@ public class menu_login extends AppCompatActivity {
             public void onResponse(retrofit2.Call<SiteLanguages> call, retrofit2.Response<SiteLanguages> response) {
                 Log.e("getTableTranslate", "lang_list.response: " + response.body());
                 try {
-                    if (response.body() != null){
-                       if (response.body().getList() != null){
-                           languagesResponce.onSuccess(response.body().getList(), "");
-                       }
+                    if (response.body() != null) {
+                        if (response.body().getList() != null) {
+                            languagesResponce.onSuccess(response.body().getList(), "");
+                        }
                     }
-                }catch (Exception e){
+                } catch (Exception e) {
 
                 }
             }
@@ -1396,8 +1517,8 @@ public class menu_login extends AppCompatActivity {
                     @Override
                     public void onResponse(retrofit2.Call<SiteTranslations> call, retrofit2.Response<SiteTranslations> response) {
                         try {
-                            if (response.body() != null){
-                                if (response.body().getList() != null){
+                            if (response.body() != null) {
+                                if (response.body().getList() != null) {
                                     saveTranslates(response.body().getList());
                                 }
                             }
@@ -1502,7 +1623,7 @@ public class menu_login extends AppCompatActivity {
                             Toast.makeText(menu_login.this, "Новый язык загружен.", Toast.LENGTH_SHORT).show();
                             flag.setImageDrawable(getResources().getDrawable(R.drawable.ua));
                             PreferenceManager.getDefaultSharedPreferences(menu_login.this).edit().putString("lang", "UA").apply();
-                            restartActivity(menu_login.this);
+                            restartActivity(menu_login.this);   //++
                         }
 
                         @Override
@@ -1525,7 +1646,7 @@ public class menu_login extends AppCompatActivity {
                             Toast.makeText(menu_login.this, "Новый язык загружен.", Toast.LENGTH_SHORT).show();
                             flag.setImageDrawable(getResources().getDrawable(R.drawable.ru));
                             PreferenceManager.getDefaultSharedPreferences(menu_login.this).edit().putString("lang", "RU").apply();
-                            restartActivity(menu_login.this);
+                            restartActivity(menu_login.this);   //++
                         }
 
                         @Override
@@ -1548,7 +1669,7 @@ public class menu_login extends AppCompatActivity {
                             Toast.makeText(menu_login.this, "Новый язык загружен.", Toast.LENGTH_SHORT).show();
                             flag.setImageDrawable(getResources().getDrawable(R.drawable.gb));
                             PreferenceManager.getDefaultSharedPreferences(menu_login.this).edit().putString("lang", "GB").apply();
-                            restartActivity(menu_login.this);
+                            restartActivity(menu_login.this);   //++
                         }
 
                         @Override
@@ -1571,7 +1692,7 @@ public class menu_login extends AppCompatActivity {
                             Toast.makeText(menu_login.this, "Новый язык загружен.", Toast.LENGTH_SHORT).show();
                             flag.setImageDrawable(getResources().getDrawable(R.drawable.pl));
                             PreferenceManager.getDefaultSharedPreferences(menu_login.this).edit().putString("lang", "PL").apply();
-                            restartActivity(menu_login.this);
+                            restartActivity(menu_login.this);   //++
                         }
 
                         @Override

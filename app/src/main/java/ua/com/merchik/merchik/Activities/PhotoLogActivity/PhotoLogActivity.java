@@ -8,6 +8,7 @@ import android.util.Log;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -157,9 +158,11 @@ public class PhotoLogActivity extends toolbar_menus {
         Log.e("PHOTO_LOG_ACT", "RealmManager.getStackPhoto(): " + RealmManager.getStackPhoto().size());
 
 
+        PhotoLogMode photoLogMode;
         RealmResults stackPhoto;
         try {
             if (getChoice()) {
+                photoLogMode = PhotoLogMode.CHOICE;
                 stackPhoto = StackPhotoRealm.getTARFilterPhoto(
                         this.getIntent().getIntExtra("address", 0),
                         this.getIntent().getStringExtra("customer")
@@ -167,18 +170,27 @@ public class PhotoLogActivity extends toolbar_menus {
                 Globals.writeToMLOG("INFO", "PhotoLogActivity/setRecycler/StackPhotoRealm.getTARFilterPhoto", "stackPhoto: " + stackPhoto.size());
 
             } else if (this.getIntent().getBooleanExtra("planogram", false)) {
+                photoLogMode = PhotoLogMode.PLANOGRAM;
                 stackPhoto = StackPhotoRealm.getPlanogramPhoto(
                         this.getIntent().getIntExtra("address", 0),
                         this.getIntent().getStringExtra("customer")
                 );
                 Globals.writeToMLOG("INFO", "PhotoLogActivity/setRecycler/planogram", "stackPhoto: " + stackPhoto.size());
 
+            } else if (this.getIntent().getBooleanExtra("report_prepare", false)) {
+                photoLogMode = PhotoLogMode.REPORT_PREPARE;
+                stackPhoto = RealmManager.getStackPhotoLogByDad2(this.getIntent().getLongExtra("dad2", 0));
+                if (stackPhoto == null || stackPhoto.size() == 0) {
+                    Toast.makeText(this, "По данному отчёту фото не найдено", Toast.LENGTH_SHORT).show();
+                }
             } else {
+                photoLogMode = PhotoLogMode.BASE;
                 stackPhoto = RealmManager.getStackPhoto();
                 Globals.writeToMLOG("INFO", "PhotoLogActivity/setRecycler/RealmManager.getStackPhoto()", "stackPhoto: " + stackPhoto.size());
 
             }
         } catch (Exception e) {
+            photoLogMode = PhotoLogMode.BASE;
             stackPhoto = RealmManager.getStackPhoto();
             Globals.writeToMLOG("ERROR", "PhotoLogActivity/setRecycler", "Exeption: " + e);
         }
@@ -193,8 +205,8 @@ public class PhotoLogActivity extends toolbar_menus {
                 Intent intent = new Intent();
                 intent.putExtra("stack_photo_id", PhotoAndInfoViewHolder.stackPhotoDB.getId());
 
-                if (resultCode != null && resultCode != 0){
-                    switch (resultCode){
+                if (resultCode != null && resultCode != 0) {
+                    switch (resultCode) {
                         case 100:
                             setResult(100, intent);
                             break;
@@ -212,7 +224,7 @@ public class PhotoLogActivity extends toolbar_menus {
                 finish();
             }
         });
-
+        recycleViewPLAdapter.setPhotoLogMode(photoLogMode);
 
         recyclerView.setAdapter(recycleViewPLAdapter);
         recyclerView.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false));

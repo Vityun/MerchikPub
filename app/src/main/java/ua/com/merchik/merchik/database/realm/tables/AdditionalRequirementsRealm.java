@@ -3,6 +3,7 @@ package ua.com.merchik.merchik.database.realm.tables;
 import java.util.List;
 
 import io.realm.RealmResults;
+import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
 import ua.com.merchik.merchik.data.RealmModels.AdditionalRequirementsDB;
 import ua.com.merchik.merchik.data.RealmModels.AddressDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
@@ -22,14 +23,27 @@ public class AdditionalRequirementsRealm {
     }
 
 
+    //    public static List<AdditionalRequirementsDB> getData3(String clientId, String addrId, int themeId) {
+    public static <T> RealmResults<AdditionalRequirementsDB> getData3(T data) {
+        int themeId, addressId;
+        String clientId;
+        if (data instanceof WpDataDB) {
+            addressId = ((WpDataDB) data).getAddr_id();
+            clientId = ((WpDataDB) data).getClient_id();
+            themeId = ((WpDataDB) data).getTheme_id();
+        } else if (data instanceof TasksAndReclamationsSDB) {
+            WpDataDB wp = WpDataRealm.getWpDataRowByDad2Id(((TasksAndReclamationsSDB) data).codeDad2SrcDoc);
+//            addressId = ((TasksAndReclamationsSDB) data).addr;
+//            clientId = ((TasksAndReclamationsSDB) data).client;
+//            themeId = ((TasksAndReclamationsSDB) data).themeId;
+            addressId = wp.getAddr_id();
+            clientId = wp.getClient_id();
+            themeId = wp.getTheme_id();
+        } else {
+            return null;
+        }
 
-
-//    public static List<AdditionalRequirementsDB> getData3(String clientId, String addrId, int themeId) {
-    public static RealmResults<AdditionalRequirementsDB> getData3(WpDataDB wp) {
-
-        int themeId = wp.getTheme_id();
-        String clientId = wp.getClient_id();
-        AddressDB addressDB = AddressRealm.getAddressById(wp.getAddr_id());
+        AddressDB addressDB = AddressRealm.getAddressById(addressId);
 
 
         RealmResults realmResults = INSTANCE.where(AdditionalRequirementsDB.class)
@@ -46,7 +60,7 @@ public class AdditionalRequirementsRealm {
                 .or()
                 .beginGroup()
                 .equalTo("grpId", "0")
-                .equalTo("addrId", String.valueOf(wp.getAddr_id()))
+                .equalTo("addrId", String.valueOf(addressId))
                 .endGroup()
                 .or()
                 .beginGroup()
@@ -68,9 +82,18 @@ public class AdditionalRequirementsRealm {
         }
 
 
-
-
         return realmResults;
     }
 
+
+    public static AdditionalRequirementsDB getADByClient(String addrId, String clientId){
+        AdditionalRequirementsDB res = INSTANCE.where(AdditionalRequirementsDB.class)
+                .equalTo("clientId", clientId)
+                .equalTo("addrId", addrId)
+                .equalTo("not_approve", "0")
+                .notEqualTo("userId", "0")
+                .findFirst();
+
+        return res;
+    }
 }

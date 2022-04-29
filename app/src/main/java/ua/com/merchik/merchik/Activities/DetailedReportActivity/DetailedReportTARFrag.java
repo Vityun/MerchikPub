@@ -21,6 +21,7 @@ import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.database.realm.tables.AddressRealm;
 import ua.com.merchik.merchik.database.realm.tables.CustomerRealm;
+import ua.com.merchik.merchik.database.realm.tables.UsersRealm;
 import ua.com.merchik.merchik.dialogs.DialodTAR.DialogCreateTAR;
 import ua.com.merchik.merchik.dialogs.DialogData;
 
@@ -78,8 +79,10 @@ public class DetailedReportTARFrag extends Fragment {
 
                 DialogCreateTAR dialog = new DialogCreateTAR(v.getContext());
                 dialog.setClose(dialog::dismiss);
+                dialog.users = UsersRealm.getUsersDBById(wpDataDB.getUser_id());
                 dialog.address = AddressRealm.getAddressById(wpDataDB.getAddr_id());
                 dialog.customer = CustomerRealm.getCustomerById(wpDataDB.getClient_id());
+                dialog.setTarType(1);
                 dialog.setRecyclerView(() -> {
                     intent.putExtra("choise", true);
                     if (dialog.address != null){
@@ -92,6 +95,8 @@ public class DetailedReportTARFrag extends Fragment {
 
                     startActivityForResult(intent, 100);
                 });
+                dialog.clickSave(() -> {
+                }, 1);
                 dialog.show();
             });
 

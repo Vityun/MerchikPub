@@ -1,7 +1,6 @@
 package ua.com.merchik.merchik.Activities.TaskAndReclamations.TasksActivity;
 
 import android.content.Context;
-import android.graphics.Color;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -14,7 +13,6 @@ import androidx.viewpager.widget.ViewPager;
 
 import com.google.android.material.tabs.TabLayout;
 
-import ua.com.merchik.merchik.Activities.TaskAndReclamations.TARActivity;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
 
@@ -25,6 +23,8 @@ public class TARSecondFrag extends Fragment {
 
     private TasksAndReclamationsSDB data;
     private FragmentManager fragmentManager;
+
+    public static int TaRID = 0;
 
 
     public TARSecondFrag(FragmentManager fragmentManager, TasksAndReclamationsSDB tar) {
@@ -37,18 +37,8 @@ public class TARSecondFrag extends Fragment {
                              Bundle savedInstanceState) {
         View v = inflater.inflate(R.layout.fragment_tar_tabs, container, false);
 
-
-        if (TARActivity.TARType == 0){
-            TARActivity.activity_title.setText("Задача " + data.id1c);
-        }else {
-            TARActivity.activity_title.setText("Рекламация " + data.id1c);
-        }
-
-        TARActivity.activity_title.setBackgroundColor(Color.parseColor("#B1B1B1"));
-
-
         tabLayout = v.findViewById(R.id.tabLayout);
-        viewPager = v.findViewById(R.id.viewPager);
+        viewPager = v.findViewById(R.id.viewPagerChild);
 
         setTab(v.getContext());
 

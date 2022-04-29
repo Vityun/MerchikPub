@@ -89,6 +89,11 @@ public class UsersSDB {
     @ColumnInfo(name = "img_personal_photo_path")
     public Integer img_personal_photo_stackId;
 
+    @SerializedName("send_sms")
+    @Expose
+    @ColumnInfo(name = "send_sms")
+    public Integer sendSms;
+
     @SerializedName("report_count")
     @Expose
     @ColumnInfo(name = "report_count")

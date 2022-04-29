@@ -42,6 +42,9 @@ public class UserSDBJoin {
     @ColumnInfo(name = "inn")
     public String inn;
 
+    @ColumnInfo(name = "send_sms")
+    public Integer sendSms;
+
     @ColumnInfo(name = "report_count")
     public Integer reportCount;
 

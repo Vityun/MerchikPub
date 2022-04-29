@@ -60,9 +60,6 @@ public class CreateTARAdapter extends RecyclerView.Adapter<RecyclerView.ViewHold
     @Override
     public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
 
-//        Log.e("VIEW_HOLDER_TEST", "1_position: " + position);
-//        Log.e("VIEW_HOLDER_TEST", "holder.getItemViewType(): " + holder.getItemViewType());
-
         switch (holder.getItemViewType()) {
             case 0:
                 PhotoAndInfoViewHolder viewHolder0 = (PhotoAndInfoViewHolder)holder;

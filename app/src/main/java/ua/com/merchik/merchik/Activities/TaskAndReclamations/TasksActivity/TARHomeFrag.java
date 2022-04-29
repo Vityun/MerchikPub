@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import ua.com.merchik.merchik.Activities.PhotoLogActivity.PhotoLogActivity;
+import ua.com.merchik.merchik.Activities.TaskAndReclamations.TARFragmentHome;
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.R;
@@ -35,7 +36,9 @@ import ua.com.merchik.merchik.dialogs.DialogFilter.DialogFilter;
 
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
-public class TARHomeFrag extends Fragment {
+public class TARHomeFrag extends Fragment  implements TARFragmentHome.OnFragmentInteractionListener {
+
+    private OnFragmentInteractionListener mListener;
 
     private EditText editText;
     private ImageButton filterImg;
@@ -88,6 +91,8 @@ public class TARHomeFrag extends Fragment {
 
         Log.e("TARHomeFrag_L", "Я должен ыл создаться");
 
+        Long testDate = Clock.getDateLong(-30).getTime()/1000;
+
         editText = v.findViewById(R.id.searchViewReclamations);
         filterImg = v.findViewById(R.id.filter);
         recyclerView = v.findViewById(R.id.recyclerViewReclamations);
@@ -97,11 +102,15 @@ public class TARHomeFrag extends Fragment {
         type = getArguments().getInt("type");
         Log.e("TARHomeFrag_L", "type: " + type);
 
-        if (type == 0){
-            data = SQL_DB.tarDao().getAllByTp(1, Clock.getDateLong(-30).getTime()/1000);
-        }else if (type == 1){
-            data = SQL_DB.tarDao().getAllByTp(0, Clock.getDateLong(-30).getTime()/1000);
-        }
+//        if (type == 0){
+//            data = SQL_DB.tarDao().getAllByTp(1, Clock.getDateLong(-30).getTime()/1000);
+//        }else if (type == 1){
+//            data = SQL_DB.tarDao().getAllByTp(0, Clock.getDateLong(-30).getTime()/1000);
+//        }
+
+        // 1 = задача; 0 = рекламация
+        data = SQL_DB.tarDao().getAllByTp(Globals.userId, type, Clock.getDateLong(-30).getTime()/1000);
+
 
         setFab();
         getPhoto(data);
@@ -110,12 +119,42 @@ public class TARHomeFrag extends Fragment {
         return v;
     }
 
+
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        if (context instanceof OnFragmentInteractionListener) {
+            mListener = (OnFragmentInteractionListener) context;
+        } else {
+            throw new RuntimeException(context.toString()
+                    + " must implement OnFragmentInteractionListener");
+        }
+    }
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        mListener = null;
+    }
+
+    @Override
+    public void messageFromParentFragment(String msg) {
+
+    }
+
+
+    public interface OnFragmentInteractionListener {
+        // TODO: Update argument type and name
+        void messageFromChildFragment(String msg);
+    }
+
     private void setFab() {
         fabAdd.setOnClickListener(v->{
             Intent intent = new Intent(v.getContext(), PhotoLogActivity.class);
 
             dialog = new DialogCreateTAR(v.getContext());
             dialog.setClose(dialog::dismiss);
+            dialog.setTarType(type);
             dialog.setRecyclerView(() -> {
                 intent.putExtra("choise", true);
 
@@ -132,11 +171,13 @@ public class TARHomeFrag extends Fragment {
                 startActivityForResult(intent, 100);
             });
             dialog.clickSave(()->{
-                if (type == 0){
-                    data = SQL_DB.tarDao().getAllByTp(1, Clock.getDateLong(-30).getTime()/1000);
-                }else if (type == 1){
-                    data = SQL_DB.tarDao().getAllByTp(0, Clock.getDateLong(-30).getTime()/1000);
-                }
+//                if (type == 0){
+//                    data = SQL_DB.tarDao().getAllByTp(1, Clock.getDateLong(-30).getTime()/1000);
+//                }else if (type == 1){
+//                    data = SQL_DB.tarDao().getAllByTp(0, Clock.getDateLong(-30).getTime()/1000);
+//                }
+
+                data = SQL_DB.tarDao().getAllByTp(Globals.userId, type, Clock.getDateLong(-30).getTime()/1000);
 
                 recyclerViewReclamations.updateData(data);
                 recyclerViewReclamations.notifyDataSetChanged();
@@ -159,6 +200,15 @@ public class TARHomeFrag extends Fragment {
                 @Override
                 public <T> void onSuccess(T data) {
                     DialogFilter.ResultData resultData = (DialogFilter.ResultData) data;
+
+                    if (resultData.dateFrom == 0){
+                        resultData.dateFrom = null;
+                    }
+
+                    if (resultData.dateTo == 0){
+                        resultData.dateTo = null;
+                    }
+
                     if (resultData.editText != null && resultData.editText.length()>0){
                         editText.setText(resultData.editText);
                     }
@@ -166,9 +216,9 @@ public class TARHomeFrag extends Fragment {
                     List<TasksAndReclamationsSDB> tarData = new ArrayList<>();
 
                     if (type == 0){
-                        tarData = SQL_DB.tarDao().getTaRBy(1, resultData.dateFrom, resultData.dateTo, resultData.themeId, resultData.statusId);
-                    }else if (type == 1){
                         tarData = SQL_DB.tarDao().getTaRBy(0, resultData.dateFrom, resultData.dateTo, resultData.themeId, resultData.statusId);
+                    }else if (type == 1){
+                        tarData = SQL_DB.tarDao().getTaRBy(1, resultData.dateFrom, resultData.dateTo, resultData.themeId, resultData.statusId);
                     }
 
                     recyclerViewReclamations.updateData(tarData);
@@ -182,6 +232,13 @@ public class TARHomeFrag extends Fragment {
 
                 }
             });
+
+/*            dialog.clickApply(new Clicks.click() {
+                @Override
+                public <T> void click(T data) {
+                    DialogFilterResult dialogResult = (DialogFilterResult) data;
+                }
+            });*/
 
             dialog.show();
         });

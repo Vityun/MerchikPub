@@ -6,6 +6,8 @@ import androidx.room.Database;
 import androidx.room.RoomDatabase;
 import androidx.room.TypeConverters;
 
+import ua.com.merchik.merchik.data.Database.Room.AdditionalMaterialsAddressSDB;
+import ua.com.merchik.merchik.data.Database.Room.AdditionalMaterialsSDB;
 import ua.com.merchik.merchik.data.Database.Room.AddressSDB;
 import ua.com.merchik.merchik.data.Database.Room.ChatSDB;
 import ua.com.merchik.merchik.data.Database.Room.CitySDB;
@@ -25,6 +27,8 @@ import ua.com.merchik.merchik.data.Database.Room.TovarGroupClientSDB;
 import ua.com.merchik.merchik.data.Database.Room.TovarGroupSDB;
 import ua.com.merchik.merchik.data.Database.Room.TranslatesSDB;
 import ua.com.merchik.merchik.data.Database.Room.UsersSDB;
+import ua.com.merchik.merchik.database.room.DaoInterfaces.AdditionalMaterialsAddressDao;
+import ua.com.merchik.merchik.database.room.DaoInterfaces.AdditionalMaterialsDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.AddressDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.ChatDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.CityDao;
@@ -64,10 +68,13 @@ import ua.com.merchik.merchik.database.room.DaoInterfaces.UsersDao;
                 ChatSDB.class,           // Чат
                 StandartSDB.class,       // Стандарты
                 ContentSDB.class,        // Контенты
-                TasksAndReclamationsSDB.class   // Задачи и Рекламации
+                TasksAndReclamationsSDB.class,   // Задачи и Рекламации
+                AdditionalMaterialsAddressSDB.class,
+                AdditionalMaterialsSDB.class,
         },
-        version = 12
+        version = 15
 )
+
 
 @TypeConverters(DateConverter.class)
 public abstract class AppDatabase extends RoomDatabase {
@@ -107,6 +114,10 @@ public abstract class AppDatabase extends RoomDatabase {
     public abstract ContentDao contentDao();
 
     public abstract TarDao tarDao();
+
+    public abstract AdditionalMaterialsAddressDao additionalMaterialsAddressDao();
+
+    public abstract AdditionalMaterialsDao additionalMaterialsDao();
 
     public class MyAutoMigration {
     }

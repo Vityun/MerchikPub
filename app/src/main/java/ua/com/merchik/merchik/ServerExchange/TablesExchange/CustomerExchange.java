@@ -10,8 +10,10 @@ import retrofit2.Callback;
 import retrofit2.Response;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.ServerExchange.ExchangeInterface;
+import ua.com.merchik.merchik.data.RealmModels.SynchronizationTimetableDB;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.CustomerResponse;
 import ua.com.merchik.merchik.data.TestJsonUpload.StandartData;
+import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
 
 public class  CustomerExchange <T>{
@@ -23,6 +25,13 @@ public class  CustomerExchange <T>{
             // Клиенты
             data.mod = "data_list";
             data.act = "client_list";
+            SynchronizationTimetableDB synchronizationTimetableDB = RealmManager.getSynchronizationTimetableRowByTable("clients_sql");
+            String dt_change_from = String.valueOf(synchronizationTimetableDB.getVpi_app());
+            if (dt_change_from.equals("0")){
+                data.dt_change_from = "0";
+            }else {
+                data.dt_change_from = String.valueOf(synchronizationTimetableDB.getVpi_app()-120);  // минус 2 минуты для "синхрона". Это надо поменять.
+            }
 
             Gson gson = new Gson();
             String json = gson.toJson(data);
@@ -34,13 +43,17 @@ public class  CustomerExchange <T>{
                 public void onResponse(Call<T> call, Response<T> response) {
                     try {
                         if (response.body() != null){
-
                             CustomerResponse cus = (CustomerResponse) response.body();
 
                             Log.e("downloadCustomerTable", "response.body(): " + response.body());
                             Log.e("downloadCustomerTable", "cus: " + cus.list);
 
+                            Globals.writeToMLOG("INFO", "downloadCustomerTable/call.enqueue/onResponse/response.body()", "response.body(): " + cus.list);
 
+                            RealmManager.INSTANCE.executeTransaction(realm -> {
+                                synchronizationTimetableDB.setVpi_app(System.currentTimeMillis()/1000);
+                                realm.copyToRealmOrUpdate(synchronizationTimetableDB);
+                            });
                             exchange.onSuccess(cus.list);
                         }else {
                             Globals.writeToMLOG("INFO", "downloadCustomerTable/call.enqueue/onResponse/response.body()", "response.body(): NULL");

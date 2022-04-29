@@ -23,6 +23,7 @@ import retrofit2.Call;
 import retrofit2.Response;
 import ua.com.merchik.merchik.ServerExchange.ExchangeInterface;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
+import ua.com.merchik.merchik.data.UploadPhotoData.ImagesPrepareUploadPhoto;
 import ua.com.merchik.merchik.data.UploadPhotoData.Move;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.dialogs.DialogData;
@@ -67,15 +68,19 @@ public class PhotoReports {
      * Выгрузка фотоотчётов.
      */
     public void uploadPhotoReports(UploadType type) {
+//        if (realmResults != null && realmResults.size() == 0){
+            getDataToUpload();  // Подготовка данных к выгрузке
+//        }
 
-        getDataToUpload();  // Подготовка данных к выгрузке
-
+        Globals.writeToMLOG("INFO", "PhotoReports/upload_photo/uploadPhotoReports", "START. Upload type: " + type);
         Globals.writeToMLOG("INFO", "PhotoReports/upload_photo/uploadPhotoReports", "START. size to unload: " + realmResults.size() + " /permission: " + permission);
 
         if (!realmResults.isEmpty()) {
             switch (type) {
                 case MULTIPLE:
                     if (permission) {
+                        Globals.writeToMLOG("INFO", "PhotoReports/upload_photo/uploadPhotoReports", "start MULTIPLE upload permission true. Начинаю выгружать фотки пакетом при клике на Выгрузить фото");
+
                         permission = false;
 
                         String msg = "Сейчас будет выгружено " + realmResults.size() + " фото на сервер. Дождитесь сообщения об окончании работы.";
@@ -86,8 +91,9 @@ public class PhotoReports {
                         dialog.setOk("Ок", () -> send(type));
                         dialog.setClose(dialog::dismiss);
                         dialog.show();
-
                     } else {
+                        Globals.writeToMLOG("INFO", "PhotoReports/upload_photo/uploadPhotoReports", "start MULTIPLE upload permission false. Я уже нажал на кнопку 'Выгрузить фото' и жду пока выгрузка закончится");
+
                         DialogData dialogData = new DialogData(mContext);
                         dialogData.setTitle("Выгрузка фото");
                         dialogData.setText("Вы уже начали выгрузку. Осталось выгрузить: " + realmResults.size() + " фото. \nДождитесь пока все фото выгрузятся.");
@@ -99,9 +105,11 @@ public class PhotoReports {
 
                 case AUTO:
                     if (permission) {
-                        Log.e("ВЫГРУЗКА ФОТО", "AUTO/ Выгружаю фото номер " + realmResults.get(0).getId() + "\t\t\tВсего фото: " + realmResults.size());
+                        Globals.writeToMLOG("INFO", "PhotoReports/upload_photo/uploadPhotoReports", "start AUTO upload permission false. Начинается Автовыгрузка фотографий");
                         permission = false;
                         send(type);
+                    } else {
+                        Globals.writeToMLOG("INFO", "PhotoReports/upload_photo/uploadPhotoReports", "start AUTO upload permission false. Уже начата Автовыгрузка, нужно подождать пока она завершится, прежде чем собирать новые данные");
                     }
                     break;
             }
@@ -131,12 +139,13 @@ public class PhotoReports {
                 public void onSuccess(StackPhotoDB photoDB, String s) {
                     Toast.makeText(mContext, "Фото: " + photoDB.getId() + " успешно выгружено", Toast.LENGTH_LONG).show();
                     realm.executeTransaction(realm -> {
-                        current.setError(null);
+                        photoDB.setError(null);
                         photoDB.setUpload_to_server(System.currentTimeMillis());
-                        realm.insertOrUpdate(current);
+                        realm.insertOrUpdate(photoDB);
+                        Globals.writeToMLOG("INFO", "PhotoReports/upload_photo/send/onSuccess/realm.executeTransaction", "onSuccess. Фото выгружено. Отмечено в Realm");
                     });
 
-                    realmResults.remove(current);
+                    realmResults.remove(photoDB);
 
                     Globals.writeToMLOG("INFO", "PhotoReports/upload_photo/send/onSuccess", "successfully upload photo to server photo id: " + photoDB.getId() + " left to unload: " + realmResults.size());
                     send(type);
@@ -144,15 +153,15 @@ public class PhotoReports {
 
                 @Override
                 public void onFailure(StackPhotoDB photoDB, String error) {
-//                    Toast.makeText(mContext, "При выгрузке фото: " + photoDB.getPhoto_num() + " возникла ошибка: " + error, Toast.LENGTH_LONG).show();
                     realm.executeTransaction(realm -> {
-                        current.setError(1);
-                        current.setErrorTime(System.currentTimeMillis());
-                        current.setErrorTxt(error);
-                        realm.insertOrUpdate(current);
+                        photoDB.setError(1);
+                        photoDB.setErrorTime(System.currentTimeMillis());
+                        photoDB.setErrorTxt(error);
+                        realm.insertOrUpdate(photoDB);
+                        Globals.writeToMLOG("INFO", "PhotoReports/upload_photo/send/onSuccess/realm.executeTransaction", "onFailure. Фото с ошибкой. Отмечено в Realm");
                     });
 
-                    realmResults.remove(current);
+                    realmResults.remove(photoDB);
                     Globals.writeToMLOG("INFO", "PhotoReports/upload_photo/send/onSuccess", "failure. photo id: " + photoDB.getId() + " ERROR MSG: " + error + " ///left to unload: " + realmResults.size());
                     send(type);
                 }
@@ -160,6 +169,8 @@ public class PhotoReports {
         } else {
             switch (type) {
                 case MULTIPLE:
+                    Globals.writeToMLOG("INFO", "PhotoReports/upload_photo/send/Send", "MULTIPLE/ выгрузка окончена");
+
                     // ВСЕ ФОТО БЫЛИ ВЫГРУЖЕНЫ
                     DialogData dialogData = new DialogData(mContext);
                     dialogData.setTitle("Выгрузка фото");
@@ -169,7 +180,8 @@ public class PhotoReports {
                     break;
 
                 case AUTO:
-                    Log.e("ВЫГРУЗКА ФОТО", "AUTO/ Фото закончились");
+                    Globals.writeToMLOG("INFO", "PhotoReports/upload_photo/send/Send", "AUTO/ выгрузка окончена");
+
                     permission = true;
                     break;
             }
@@ -185,7 +197,10 @@ public class PhotoReports {
     private void getDataToUpload() {
         List<StackPhotoDB> res = realm.copyFromRealm(RealmManager.getStackPhotoPhotoToUpload());
         for (StackPhotoDB photo : res) {
-            if (photo != null) realmResults.add(photo);
+            if (photo != null && !realmResults.contains(photo) && realmResults.size() < 20) {
+//            if (photo != null) {
+                realmResults.add(photo);
+            }
         }
 
         // Отладочная инфа. В перспективе нужно удалить.
@@ -204,12 +219,18 @@ public class PhotoReports {
      * @return
      */
     private void buildCall(StackPhotoDB photoDB, ExchangeInterface.UploadPhotoReports callback) {
+        int photoId = photoDB.getId();
+
+        Globals.writeToMLOG("INFO", "PhotoReports/buildCall/", "START UPLOAD. Photo upload id: " + photoId);
+
+
         final MediaType MEDIA_TYPE_JPG = MediaType.parse("image/jpg");
 
-        int photoId = photoDB.getId();
+
         // Запрос
         String mod = "images_prepare";
-        String act = "upload_image";
+//        String act = "upload_image";images_prepareupload_photo
+        String act = "upload_photo";
 
         String client_id = "";
         String addr_id = "";
@@ -220,6 +241,7 @@ public class PhotoReports {
         String doc_num = "";
         String theme_id = "";
         String comment = "";
+        String dvi = "";
         String code_dad2 = "";
         String gp = "";
 
@@ -251,6 +273,9 @@ public class PhotoReports {
         if (photoDB.getComment() != null) {
             comment = photoDB.getComment();
         }
+        if (photoDB.getDvi() != null) {
+            dvi = String.valueOf(photoDB.getDvi());
+        }
         code_dad2 = String.valueOf(photoDB.getCode_dad2()); // todo какая-то странная дичь с этой строчкой.
         if (photoDB.getGp() != null) {
             gp = photoDB.getGp();
@@ -268,6 +293,7 @@ public class PhotoReports {
         RequestBody doc_num2 = RequestBody.create(MediaType.parse("text/plain"), doc_num);
         RequestBody theme_id2 = RequestBody.create(MediaType.parse("text/plain"), theme_id);
         RequestBody comment2 = RequestBody.create(MediaType.parse("text/plain"), comment);
+        RequestBody dvi2 = RequestBody.create(MediaType.parse("text/plain"), dvi);
         RequestBody codeDad2 = RequestBody.create(MediaType.parse("text/plain"), code_dad2);
         RequestBody gp2 = RequestBody.create(MediaType.parse("text/plain"), gp);
 
@@ -284,20 +310,138 @@ public class PhotoReports {
 
         // Создание вызова
         retrofit2.Call<JsonObject> call = RetrofitBuilder.getRetrofitInterface()
-                .SEND_PHOTO_2_BODY(mod2, act2, client_id2, addr_id2, date2, img_type_id2, photo_user_id2, client_tovar_group2, doc_num2, theme_id2, comment2, codeDad2, gp2, photo);
+                .SEND_PHOTO_2_BODY(mod2, act2, client_id2, addr_id2, date2, img_type_id2, photo_user_id2, client_tovar_group2, doc_num2, theme_id2, comment2, dvi2, codeDad2, gp2, photo);
 
 
-        Globals.writeToMLOG("INFO", "PhotoReports/buildCall", "call: " + call);
+        Globals.writeToMLOG("INFO", "PhotoReports/buildCall/CALL", "call: " + call.request().body());
         call.enqueue(new retrofit2.Callback<JsonObject>() {
             @Override
             public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
-                Globals.writeToMLOG("INFO", "PhotoReports/buildCall.onResponse", "response: " + response);
-                responseTEST(response, photoDB, callback);
+
+//                callback.onSuccess(photoDB, "");
+//                callback.onFailure(photoDB, "");
+//                \каденко татьяна(214255) -- 0934647952
+//                \тишкина ольга(101959) -- 0667516029
+//                \kotuk
+
+
+                try {
+                    if (response.isSuccessful()) {
+                        if (response.body() != null) {
+                            Globals.writeToMLOG("INFO", "PhotoReports/buildCall/CALL/onResponse/responseBody", "" + response.body());
+                            ImagesPrepareUploadPhoto info = new Gson().fromJson(new Gson().toJson(response.body()), ImagesPrepareUploadPhoto.class);
+                            if (info.state) {
+                                ImagesPrepareUploadPhoto.DataList data = info.list.get(0);
+                                if (data.state) {
+                                    callback.onSuccess(photoDB, "test");
+                                } else {
+                                    if (data.errorType.equals("photo_already_exist")) {
+                                        callback.onSuccess(photoDB, "Фото уже было загружено");
+                                    }else {
+                                        callback.onFailure(photoDB, "Ошибка при обработке фото: " + data.error);
+                                    }
+                                }
+                            } else {
+                                try {
+                                    if (info.list != null && info.list.size() > 0) {
+                                        ImagesPrepareUploadPhoto.DataList data = info.list.get(0);
+                                        if (data.state) {
+                                            callback.onFailure(photoDB, "При выгрузке фото произошла ошибка1: " + data.error);
+                                        } else {
+                                            if (data.errorType.equals("photo_already_exist")) {
+                                                callback.onSuccess(photoDB, "Фото уже было загружено");
+                                            } else {
+                                                callback.onFailure(photoDB, "Ошибка при обработке фото: " + data.error);
+                                            }
+                                        }
+                                    } else {
+                                        callback.onFailure(photoDB, "Список list - пустой!");
+                                    }
+                                } catch (Exception e) {
+                                    callback.onFailure(photoDB, "Ошибка при обработке данных: " + e);
+                                }
+//                                callback.onFailure(photoDB, "Запрос прошел с ошибкой, ошибка: " + response.body());
+                            }
+                        } else {
+                            callback.onFailure(photoDB, "Запрос прошел с ошибкой, ответ с сервера - пустой. Обратитесь к Вашему руководителю.");
+                        }
+                    } else {
+                        callback.onFailure(photoDB, "Запрос прошел с ошибкой, возможно проблема на сервере, повторите попытку позже. code: " + response.code());
+                    }
+                } catch (Exception e) {
+                    callback.onFailure(photoDB, "ВНИМАНИЕ! Передайте эту ошибку Вашему руководителю: " + e);
+                }
+
+
+
+
+/*                JsonObject jsonR = response.body();
+                ImagesPrepareUploadPhoto info = new Gson().fromJson(new Gson().toJson(response.body()), ImagesPrepareUploadPhoto.class);
+
+                if (response.isSuccessful() && response.body() != null) {
+                    try {
+                        if (jsonR != null) {
+                            if (!jsonR.get("state").isJsonNull() && jsonR.get("state").getAsBoolean()) {
+                                if (!jsonR.get("move").isJsonNull()) {
+                                    try {
+                                        JSONObject j = new JSONObject(jsonR.get("move").toString());
+                                        Iterator keys = j.keys();
+                                        Move obj = new Gson().fromJson(jsonR.get("move").getAsJsonObject().get(keys.next().toString()), Move.class);
+
+                                        if (obj.getRes().equals("true") || obj.getRes().equals("1")) {
+                                            RealmManager.INSTANCE.executeTransaction(realm -> {
+                                                photoDB.setUpload_to_server(System.currentTimeMillis());
+                                                RealmManager.INSTANCE.copyToRealmOrUpdate(photoDB);
+                                            });
+                                            callback.onSuccess(photoDB, "test text");
+                                        } else {
+                                            callback.onFailure(photoDB, "(Выгрузка фото)Возникла ошибка. Ответ от сервера: " + response.body().toString());
+                                        }
+
+                                    } catch (Exception e) {
+                                        String msg = Arrays.toString(e.getStackTrace());
+                                        callback.onFailure(photoDB, "(Выгрузка фото)Возникла ошибка. Ответ от сервера: " + msg + response.body().toString());
+                                    }
+                                } else {
+                                    callback.onFailure(photoDB, "(Выгрузка фото)Возникла ошибка. Ответ от сервера: " + response.body().toString());
+                                }
+
+                            } else if (!jsonR.get("state").isJsonNull() && !jsonR.get("state").getAsBoolean()) {
+                                try {
+                                    if (!jsonR.get("error").isJsonNull() || jsonR.get("error") != null) {
+
+//                                        String error = jsonR.get("error").getAsString();
+                                        String error = info.list.get(0).error;
+                                        callback.onFailure(photoDB, "(Выгрузка фото)Возникла ошибка: " + error);
+                                    } else {
+                                        callback.onFailure(photoDB, "Фото не выгружено. Сообщите об этом руководителю. Ответ от сервера: " + "NULL");
+                                    }
+                                } catch (Exception e) {
+                                    // error с ошибкой
+                                    callback.onFailure(photoDB, "" + e);
+                                }
+                                callback.onFailure(photoDB, "При выгрузке произошла ошибка. Попробуйте перелогиниться и повторить попытку. Если ошибка будет повторяться - обратитесь к Вашему администатору");
+                            } else {
+                                callback.onFailure(photoDB, "Ошибка: " + jsonR);
+                            }
+                        } else {
+                            callback.onFailure(photoDB, "Не удалось получить ответ от сервера. Скорее всего отсутствует интернет. Проверьте связь и повторите попытку или обратитесь к Ващему руководителю.");
+                        }
+                    } catch (Exception e) {
+                        callback.onFailure(photoDB, "Ошибка при выгрузке фото - повторите попытку позже или обратитесь к Вашему руководителю. \nОшибка: " + e);
+                    }
+                } else {
+                    callback.onFailure(photoDB, "Запрос прошел НЕ УДАЧНО. Повторите попытку позже. Ошибка: " + response.body());
+                }*/
+
+
+                //OLD
+//                responseTEST(response, photoDB, callback);
             }
 
             @Override
             public void onFailure(Call<JsonObject> call, Throwable t) {
-                Globals.writeToMLOG("FAILURE", "PhotoReports.buildCall.call.onFailure", "t.toString(): " + t.toString());
+                Globals.writeToMLOG("FAILURE", "PhotoReports/buildCall/CALL/onFailure", "t.toString(): " + t.toString());
                 callback.onFailure(photoDB, t.toString());
             }
         });
