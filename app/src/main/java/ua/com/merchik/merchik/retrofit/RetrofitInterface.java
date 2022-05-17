@@ -32,6 +32,7 @@ import ua.com.merchik.merchik.data.RetrofitResponse.AddressTableResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.ArticleTableResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.CustomerGroups;
 import ua.com.merchik.merchik.data.RetrofitResponse.CustomerTableResponse;
+import ua.com.merchik.merchik.data.RetrofitResponse.EDRPOUResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.ErrorTableResponce;
 import ua.com.merchik.merchik.data.RetrofitResponse.ImageTypes;
 import ua.com.merchik.merchik.data.RetrofitResponse.Login;
@@ -65,6 +66,7 @@ import ua.com.merchik.merchik.data.RetrofitResponse.tables.OblastResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.OborotVedResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.OpinionResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.OpinionThemeResponse;
+import ua.com.merchik.merchik.data.RetrofitResponse.tables.Premial.Premial;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.StandartResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.TasksAndReclamationsSDBResponce;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.TovarGroupClientResponse;
@@ -93,6 +95,11 @@ public interface RetrofitInterface {
 
     @POST("mobile_app.php?")
     Call<SessionCheck> CHECK_SESSION(
+            @Query("mod") String mod,
+            @Query("app_data") String app_data);
+
+    @POST("mobile_app.php?")
+    Call<JsonObject> CHECK_SESSION_JSON(
             @Query("mod") String mod,
             @Query("app_data") String app_data);
 
@@ -289,6 +296,12 @@ public interface RetrofitInterface {
     @POST("mobile_app.php?")
     Call<TovarTableResponse> GET_TOVAR_T(@Query("mod") String mod,
                                          @Query("act") String act);
+
+    @POST("mobile_app.php?")
+    Call<TovarTableResponse> GET_TOVAR_T_ID(@Query("mod") String mod,
+                                            @Query("act") String act,
+                                            @Query("id[]") List<String> listId);
+            ;
 
     @POST("mobile_app.php?")
     Call<JsonObject> GET_TOVAR_T_JSON(@Query("mod") String mod,
@@ -538,6 +551,16 @@ public interface RetrofitInterface {
 
 
 //    ===================================================================================================
+
+    @POST("mobile_app.php?")
+    Call<List<EDRPOUResponse>> GET_EDRPOU(
+            @Header("ContentType") String content,
+            @Body JsonObject json);
+
+    @POST("mobile_app.php?")
+    Call<Premial> GET_PREMIAL(
+            @Header("ContentType") String content,
+            @Body JsonObject json);
 
     // String contentType = "application/json";EKLCheckData
     @POST("mobile_app.php?")

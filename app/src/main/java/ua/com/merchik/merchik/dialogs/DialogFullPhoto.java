@@ -2,6 +2,7 @@ package ua.com.merchik.merchik.dialogs;
 
 import android.app.Dialog;
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.net.Uri;
 import android.text.InputType;
 import android.text.method.ScrollingMovementMethod;
@@ -24,6 +25,7 @@ import androidx.recyclerview.widget.LinearSnapHelper;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.SnapHelper;
 
+import java.io.File;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -35,6 +37,8 @@ import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.dialogs.DialodTAR.DialogCreateTAR;
+
+import static ua.com.merchik.merchik.menu_main.decodeSampledBitmapFromResource;
 
 public class DialogFullPhoto {
 
@@ -108,7 +112,11 @@ public class DialogFullPhoto {
     // ---------------------------------------------------------------------------------------------
 
     public void setPhoto(Uri data) {
-        photo.setImageURI(data);
+        File file = new File(data.toString());
+        Bitmap b = decodeSampledBitmapFromResource(file, 200, 200);
+        if (b != null) {
+            photo.setImageBitmap(b);
+        }
     }
 
     public void setTextInfo(CharSequence data) {

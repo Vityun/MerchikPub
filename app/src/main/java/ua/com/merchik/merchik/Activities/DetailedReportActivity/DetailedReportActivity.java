@@ -191,11 +191,10 @@ public class DetailedReportActivity extends toolbar_menus {
         rpThemeId = wpDataDB.getTheme_id();
 
         // Если у Магазина пустые координаты - запускаем
-        if (wpDataDB.getAddr_location_xd().isEmpty() && wpDataDB.getAddr_location_xd().equals("0")) {
+        if (wpDataDB.getAddr_location_xd() == null || wpDataDB.getAddr_location_xd().isEmpty() || wpDataDB.getAddr_location_xd().equals("0")) {
             setDialogAddCoordinate();
         } else {
-//            Toast.makeText(this, "Ничего не должно происходить!", Toast.LENGTH_LONG).show();
-//            setDialogAddCoordinate();
+            Log.e("test", "test");
         }
 
     }//--------------------------------------------------------------------- /ON CREATE ---------------------------------------------------------------------

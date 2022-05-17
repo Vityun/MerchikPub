@@ -64,6 +64,7 @@ import okhttp3.RequestBody;
 import retrofit2.Call;
 import retrofit2.Response;
 import ua.com.merchik.merchik.Activities.PhotoLogActivity.PhotoLogActivity;
+import ua.com.merchik.merchik.Activities.PremiumActivity.PremiumActivity;
 import ua.com.merchik.merchik.Activities.ReferencesActivity.ReferencesActivity;
 import ua.com.merchik.merchik.Activities.TaskAndReclamations.TARActivity;
 import ua.com.merchik.merchik.Activities.WorkPlanActivity.WPDataActivity;
@@ -302,6 +303,8 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
             startActivity(intent);
         } else if (id == 133) {
             Toast.makeText(this, "Премиальные", Toast.LENGTH_LONG).show();
+            Intent intent = new Intent(this, PremiumActivity.class);
+            startActivity(intent);
         } else if (id == 132) {
             Toast.makeText(this, "Светофор", Toast.LENGTH_LONG).show();
         } else if (id == 131) {

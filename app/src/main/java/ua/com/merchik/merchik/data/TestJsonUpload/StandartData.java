@@ -11,6 +11,7 @@ public class StandartData<T> {
     public String dt;
     public String id;
     public String login;
+    public String term;
 
     public Integer addr_id;
     public Double x;    // Координата Х
@@ -49,13 +50,20 @@ public class StandartData<T> {
     public String tovar_only;   //
     public String image_type;   // Тип фото. small/full для получения с сервера нужного размера фотку
 
+    // ----------- registration -----------
+    public String company_id;   // едрпоу
+    public String company_name; // название компании
+    public String confirmation_code;    // код подтверждения, полученный от администратора (если регистрация происходит на компанию, у которой в прошлом шаге confirmation=true)
+    public String client_id;    // код клиента, на которого регистрируется сотрудник
+    public String company_type; // может принимать значения new / existing если у тебя осуществляется подключение сотрудника к существующей компании, которая уже зарегистрирована в системе, то ты передаёшь эту переменную со значением existing если пользователь регистрирует новую компанию, которой ещё нет в системе, тогда параметр передаёшь со значение new
+    // ------------------------------------
 
-    public static class Filter{
+    public static class Filter {
         public String date_from;
         public String date_to;
     }
 
-    public static class StandartDataChat{
+    public static class StandartDataChat {
         public Integer element_id;
         public Integer msg_id;
         public Integer chat_group;
@@ -63,7 +71,7 @@ public class StandartData<T> {
         public Integer chat_person;
     }
 
-    public static class  StandartDataTARUpload{
+    public static class StandartDataTARUpload {
         public Integer element_id;          // внутренний номер, под этим номером в ответе будут данные для каждого элемента
         public Long code_dad2;              // код дад2 задачи (не ID, а именно дад2)
         public Long dt_start_fact;          // фактическое время начала работ

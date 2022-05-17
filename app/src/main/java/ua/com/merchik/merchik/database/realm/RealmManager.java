@@ -16,34 +16,35 @@ import io.realm.RealmResults;
 import io.realm.Sort;
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
-import ua.com.merchik.merchik.data.RealmModels.GroupTypeDB;
-import ua.com.merchik.merchik.data.RealmModels.ImagesTypeListDB;
+import ua.com.merchik.merchik.ServerExchange.TablesLoadingUnloading;
 import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteHintsDB;
 import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteObjects.SiteObjectsDB;
-import ua.com.merchik.merchik.data.RealmModels.MenuItemFromWebDB;
-import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
-import ua.com.merchik.merchik.data.RealmModels.PPADB;
 import ua.com.merchik.merchik.data.RealmModels.AddressDB;
 import ua.com.merchik.merchik.data.RealmModels.AppUsersDB;
 import ua.com.merchik.merchik.data.RealmModels.ArticleDB;
 import ua.com.merchik.merchik.data.RealmModels.CustomerDB;
 import ua.com.merchik.merchik.data.RealmModels.ErrorDB;
+import ua.com.merchik.merchik.data.RealmModels.GroupTypeDB;
+import ua.com.merchik.merchik.data.RealmModels.ImagesTypeListDB;
 import ua.com.merchik.merchik.data.RealmModels.LogDB;
 import ua.com.merchik.merchik.data.RealmModels.LogMPDB;
+import ua.com.merchik.merchik.data.RealmModels.MenuItemFromWebDB;
+import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
+import ua.com.merchik.merchik.data.RealmModels.PPADB;
 import ua.com.merchik.merchik.data.RealmModels.PromoDB;
+import ua.com.merchik.merchik.data.RealmModels.ReportPrepareDB;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
 import ua.com.merchik.merchik.data.RealmModels.SynchronizationTimetableDB;
 import ua.com.merchik.merchik.data.RealmModels.TovarDB;
 import ua.com.merchik.merchik.data.RealmModels.TradeMarkDB;
 import ua.com.merchik.merchik.data.RealmModels.UsersDB;
-import ua.com.merchik.merchik.data.RealmModels.ReportPrepareDB;
+import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.data.TestJsonUpload.StratEndWork.StartEndData;
 import ua.com.merchik.merchik.data.Translation.LangListDB;
 import ua.com.merchik.merchik.data.Translation.SiteTranslationsList;
 import ua.com.merchik.merchik.data.UploadToServ.LogUploadToServ;
 import ua.com.merchik.merchik.data.UploadToServ.ReportPrepareServ;
 import ua.com.merchik.merchik.data.UploadToServ.WpDataUploadToServ;
-import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.database.realm.tables.TradeMarkRealm;
 import ua.com.merchik.merchik.database.realm.tables.WpDataRealm;
 
@@ -353,7 +354,7 @@ public class RealmManager {
         }
 
         INSTANCE.beginTransaction();
-        INSTANCE.delete(TovarDB.class);
+//        INSTANCE.delete(TovarDB.class);
         List<TovarDB> res = INSTANCE.copyToRealmOrUpdate(list);
 
 
@@ -363,12 +364,6 @@ public class RealmManager {
             globals.writeToMLOG(Clock.getHumanTime() + "_INFO.RealmManager.class.setTovar.Ошибка2: " + e + "\n");
         }
 
-//        int count = 0;
-//        for (TovarDB item : list) {
-//            JsonObject convertedObject = new Gson().fromJson(new Gson().toJson(item), JsonObject.class);
-//            Log.e("REALM_DB_UPDATE", "TovarDB: item(" + count + "): " + convertedObject);
-//            count++;
-//        }
 
         INSTANCE.commitTransaction();
 
@@ -1107,6 +1102,9 @@ public class RealmManager {
     public static RealmResults<TovarDB> getTovarListFromReportPrepareByDad2(long dad2) {
         Log.e("TovarListFromRPByDad2", "Start: " + dad2);
 
+        ArrayList<String> listRpTovId = new ArrayList<>();
+        ArrayList<String> listTovId = new ArrayList<>();
+
         RealmResults<ReportPrepareDB> realmResults = INSTANCE.where(ReportPrepareDB.class)
                 .equalTo("codeDad2", String.valueOf(dad2))
                 .findAll();
@@ -1116,6 +1114,7 @@ public class RealmManager {
         String[] list = new String[realmResults.size()];
         for (int i = 0; i < realmResults.size(); i++) {
             list[i] = realmResults.get(i).getTovarId();
+            listRpTovId.add(realmResults.get(i).getTovarId());
         }
 
         Log.e("TovarListFromRPByDad2", "list: " + list);
@@ -1123,6 +1122,22 @@ public class RealmManager {
         RealmResults<TovarDB> realmResults2 = INSTANCE.where(TovarDB.class)
                 .in("iD", list)
                 .findAll();
+
+
+        try {
+            for (TovarDB item : realmResults2){
+                listTovId.add(item.getiD());
+            }
+
+            ArrayList<String> tovarsToDownload = neededTovars(listRpTovId, listTovId);
+            if (tovarsToDownload.size() > 0){
+                TablesLoadingUnloading tablesLoadingUnloading = new TablesLoadingUnloading();
+                tablesLoadingUnloading.downloadTovarTable(null, tovarsToDownload);
+            }
+        }catch (Exception e){
+            Log.e("TovarListFromRPByDad2", "ERR: " + e);
+        }
+
 
         Log.e("TovarListFromRPByDad2", "3");
 
@@ -1149,12 +1164,14 @@ public class RealmManager {
         Log.e("TovarListFromRPByDad2", "6: " + realmResults2.size());
 
 
-//        for (TovarDB item : realmResults2){
-//            Log.e("TovarListFromRPByDad2", "item: " + item.getiD());
-//            Log.e("TovarListFromRPByDad2", "item: " + item.getManufacturer().getNm());
-//            Log.e("TovarListFromRPByDad2", "itemSORT: " + item.getSortcol());
-//        }
         return realmResults2;
+    }
+
+
+    private static ArrayList<String> neededTovars(ArrayList<String> listRpTovId, ArrayList<String> listTovId){
+        ArrayList<String> res = new ArrayList<>(listRpTovId);
+        res.removeAll(listTovId);
+        return res;
     }
 
 

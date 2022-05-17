@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
+import android.graphics.Paint;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
 import android.net.Uri;
@@ -66,7 +67,7 @@ public class DialogData {
 
     private RecyclerView rView, recycler;
 
-    private TextView title, text, textView42;
+    private TextView title, text, textView42, txtLinkOk;
     private TextView additionalText1, additionalText2, additionalText3, additionalText4, additionalText5;
     private TextView additionalTextValue1, additionalTextValue2, additionalTextValue3, additionalTextValue4, additionalTextValue5;
 
@@ -106,6 +107,7 @@ public class DialogData {
 
         title = dialog.findViewById(R.id.title);
         text = dialog.findViewById(R.id.text);
+        txtLinkOk = dialog.findViewById(R.id.txtLinkOk);
 
         layoutDialog = dialog.findViewById(R.id.layout_dialog);
         infoLayout = dialog.findViewById(R.id.layout_info);
@@ -799,6 +801,18 @@ public class DialogData {
             ok.setText(setButtonText);
         }
         ok.setOnClickListener(v -> {
+            if (clickListener != null) clickListener.clicked();
+            dismiss();
+        });
+    }
+
+    public void setTxtLinkOk(CharSequence setButtonText, DialogClickListener clickListener) {
+        txtLinkOk.setVisibility(View.VISIBLE);
+        txtLinkOk.setPaintFlags(txtLinkOk.getPaintFlags() | Paint.UNDERLINE_TEXT_FLAG);
+        if (setButtonText != null) {
+            txtLinkOk.setText(setButtonText);
+        }
+        txtLinkOk.setOnClickListener(v -> {
             if (clickListener != null) clickListener.clicked();
             dismiss();
         });

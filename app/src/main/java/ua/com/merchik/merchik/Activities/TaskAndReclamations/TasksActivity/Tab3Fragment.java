@@ -21,6 +21,7 @@ import java.util.List;
 import ua.com.merchik.merchik.Activities.PhotoLogActivity.PhotoLogActivity;
 import ua.com.merchik.merchik.MakePhoto;
 import ua.com.merchik.merchik.R;
+import ua.com.merchik.merchik.ServerExchange.Exchange;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.WorkPlan;
 import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
@@ -127,11 +128,7 @@ public class Tab3Fragment extends Fragment {
 
     private void setAddButton() {
         add.setOnClickListener(v -> {
-//            Toast.makeText(mContext, "Данный функционал находится в разработке", Toast.LENGTH_LONG).show();
-
             Intent intentOpen = new Intent(v.getContext(), PhotoLogActivity.class);
-
-
             if (tarData.vinovnikScore != null && tarData.vinovnikScore > 0) {
                 dialog = new DialogCreateTAR(v.getContext());
                 dialog.setTitle("Внесение комментария");
@@ -146,7 +143,7 @@ public class Tab3Fragment extends Fragment {
                                 intentOpen.putExtra("choise", true);
                                 intentOpen.putExtra("resultCode", 101);
                                 startActivityForResult(intentOpen, 101);
-                                Toast.makeText(mContext, "Короткий клик", Toast.LENGTH_SHORT).show();
+                                Toast.makeText(v.getContext(), "Короткий клик", Toast.LENGTH_SHORT).show();
                                 break;
 
                             case 2:
@@ -158,7 +155,7 @@ public class Tab3Fragment extends Fragment {
 
                                 }
 
-                                Toast.makeText(mContext, "Долгий клик", Toast.LENGTH_SHORT).show();
+                                Toast.makeText(v.getContext(), "Долгий клик", Toast.LENGTH_SHORT).show();
                                 break;
                         }
                     }
@@ -185,7 +182,7 @@ public class Tab3Fragment extends Fragment {
                             row.photo_hash = dialog.photo.getPhoto_hash(); // Хэш фотографии
                         }
                     }catch (Exception e){
-                        Toast.makeText(mContext, "Фото сохранить не удалось!", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(mContext, "Фото сохранить не удалось!", Toast.LENGTH_LONG).show();
                     }
 
                     row.setTp(String.valueOf(tarData.tp));
@@ -194,6 +191,10 @@ public class Tab3Fragment extends Fragment {
                     RealmManager.INSTANCE.executeTransaction((realm -> {
                         RealmManager.INSTANCE.copyToRealm(row);
                     }));
+
+                    // Моментальная попытка выгрузить комментарий
+                    Exchange exchange = new Exchange();
+                    exchange.uploadTARComments(row);
 
                     if (adapter != null && dataComments != null) {
                         dataComments.add(0, row);
@@ -255,11 +256,9 @@ public class Tab3Fragment extends Fragment {
     private List<TARCommentsDB> dataComments;
 
     private void setRecycler() {
-
         dataComments = RealmManager.INSTANCE.copyFromRealm(TARCommentsRealm.getTARCommentByTarId(String.valueOf(tarData.id)));
 
         Collections.reverse(dataComments);
-
 
         adapter = new TaRCommentsAdapter(mContext, dataComments);
         recyclerView.setAdapter(adapter);

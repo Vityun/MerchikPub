@@ -498,7 +498,7 @@ public class Exchange {
                         }
                     });     // Загрузка Задач и Рекламаций*/
                     sendTAR();              // Выгрузка на сервер ЗИР-а
-                    uploadTARComments();    // Выгрузка ЗИР переписки(коммнетариев)
+                    uploadTARComments(null);    // Выгрузка ЗИР переписки(коммнетариев)
                     globals.writeToMLOG(Clock.getHumanTime() + "_INFO.Exchange.class.startExchange.Успех.2." + "\n");
                 } catch (Exception e) {
                     globals.writeToMLOG(Clock.getHumanTime() + "_INFO.Exchange.class.startExchange.Ошибка.2." + e + "\n");
@@ -1089,11 +1089,17 @@ public class Exchange {
     }
 
 
-    private void uploadTARComments() {
+    public void uploadTARComments(TARCommentsDB tarCommentsDB) {
 
         Log.e("uploadTARComments", "enter here");
 
-        List<TARCommentsDB> list = TARCommentsRealm.getTARCommentToUpload();
+        List<TARCommentsDB> list = new ArrayList<>();
+        if (tarCommentsDB != null){
+            list.add(tarCommentsDB);
+        }else {
+            list = TARCommentsRealm.getTARCommentToUpload();
+        }
+
 
         if (list != null && list.size() > 0) {
 
@@ -1121,6 +1127,7 @@ public class Exchange {
 
 
             retrofit2.Call<TARCommentsServerData> call = RetrofitBuilder.getRetrofitInterface().UPLOAD_TAR_COMMENT(RetrofitBuilder.contentType, convertedObject);
+            List<TARCommentsDB> finalList = list;
             call.enqueue(new retrofit2.Callback<TARCommentsServerData>() {
                 @Override
                 public void onResponse(retrofit2.Call<TARCommentsServerData> call, retrofit2.Response<TARCommentsServerData> response) {
@@ -1137,11 +1144,11 @@ public class Exchange {
                                 if (res.getList() != null && res.getList().size() > 0) {
                                     for (int i = 0; i == res.getList().size(); i++) {
                                         if (res.getList().get(i).getState() != null && res.getList().get(i).getState()) {
-                                            list.get(i).setID(res.getList().get(i).getInfo().getCommentId());
+                                            finalList.get(i).setID(res.getList().get(i).getInfo().getCommentId());
                                         }
                                     }
                                     RealmManager.INSTANCE.executeTransaction((realm) -> {
-                                        INSTANCE.copyToRealmOrUpdate(list);
+                                        INSTANCE.copyToRealmOrUpdate(finalList);
                                     });
                                 }
                             }
@@ -1223,6 +1230,7 @@ public class Exchange {
 
         JsonObject convertedObject = new Gson().fromJson(new Gson().toJson(data), JsonObject.class);
         Log.e("sendWpData2", "convertedObject.json: " + convertedObject);
+        Globals.writeToMLOG("INFO", "Exchange.sendWpData2.JsonObject.convertedObject", "convertedObject" + convertedObject);
 
         if (data != null && data.data.size() > 0) {
             retrofit2.Call<WpDataUpdateResponse> call = RetrofitBuilder.getRetrofitInterface().SEND_WP_DATA(RetrofitBuilder.contentType, convertedObject);

@@ -1200,7 +1200,7 @@ public class menu_main extends AppCompatActivity {
                     tablesLoadingUnloading.downloadCustomerTable(context);              // Клиенты
                     tablesLoadingUnloading.downloadAddressTable(context);               // Адреса
                     tablesLoadingUnloading.downloadSotrTable(context);                  // Сотрудники
-                    tablesLoadingUnloading.downloadTovarTable(context);                 // Товары
+                    tablesLoadingUnloading.downloadTovarTable(context, null);                 // Товары
 
                     tablesLoadingUnloading.downloadErrorTable(context);                 // Таблица Ошибок
                     tablesLoadingUnloading.downloadAkciyTable(context);                 // Тфблица Акций

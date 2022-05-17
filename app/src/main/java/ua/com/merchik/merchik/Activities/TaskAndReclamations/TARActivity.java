@@ -7,11 +7,14 @@ import android.view.View;
 import android.widget.TextView;
 
 import androidx.appcompat.widget.Toolbar;
+import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.viewpager.widget.ViewPager;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.tabs.TabLayout;
+
+import java.util.List;
 
 import ua.com.merchik.merchik.Activities.PhotoLogActivity.PhotoLogActivity;
 import ua.com.merchik.merchik.Activities.TaskAndReclamations.TasksActivity.TARHomeFrag;
@@ -209,8 +212,6 @@ public class TARActivity extends toolbar_menus implements TARFragmentHome.OnFrag
 
         try {
             Log.d("test", "data: " + requestCode + resultCode);
-//            Bundle extras = data.getExtras();
-//            String test = extras.getString("photo_uri");
 
             if (resultCode == 100) {
                 int id = data.getIntExtra("stack_photo_id", 0);
@@ -221,8 +222,15 @@ public class TARActivity extends toolbar_menus implements TARFragmentHome.OnFrag
             }
 
             if (resultCode == 101) {
+                int id1 = TARFragmentHome.secondFragId;
+                String tag = TARFragmentHome.secondFragTAG;
+
+                List<Fragment> fragments = fragmentManager.getFragments();
+                TARFragmentHome fragmentHome = (TARFragmentHome) fragments.get(0);
+
                 int id = data.getIntExtra("stack_photo_id", 0);
-                secondFrag.setPhoto(id);
+                fragmentHome.secondFrag.setPhoto(id);
+                Log.e("test", "test" + secondFrag);
             }
 
             if (requestCode == 200) {
@@ -285,7 +293,7 @@ public class TARActivity extends toolbar_menus implements TARFragmentHome.OnFrag
 
         stackPhotoDB.setAddr_id(tar.addr);
         stackPhotoDB.setClient_id(tar.client);
-        stackPhotoDB.setUser_id(tar.author);
+        stackPhotoDB.setUser_id(tar.vinovnik);
         stackPhotoDB.setPhoto_type(0);
         stackPhotoDB.setCode_dad2(tar.codeDad2);
 

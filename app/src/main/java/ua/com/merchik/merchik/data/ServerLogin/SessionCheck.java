@@ -25,6 +25,9 @@ public class SessionCheck {
     @SerializedName("session_id")
     @Expose
     private String sessionId;
+    @SerializedName("register_company")
+    @Expose
+    public Boolean registerCompany;
 
     @SerializedName("websocket_param")
     @Expose

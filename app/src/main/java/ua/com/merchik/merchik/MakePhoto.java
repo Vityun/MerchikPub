@@ -547,6 +547,7 @@ public class MakePhoto {
                         }
                     }else {
                         Toast.makeText(activity, "Координаты магазина не обнаружены. Выполнение фото невозможно, обратитесь к Вашему руководителю.", Toast.LENGTH_SHORT).show();
+                        makePhoto(activity, data); // Метод который запускает камеру и создаёт файл фото.
                     }
                 } else {
                     Toast.makeText(activity.getBaseContext(), "Не обнаружены данные посещения, обратитесь к Вашему руководителю.", Toast.LENGTH_SHORT).show();

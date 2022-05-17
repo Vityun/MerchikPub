@@ -192,7 +192,7 @@ public class TablesLoadingUnloading {
                     downloadReportPrepare(context, 0);
                 }
             });
-            downloadTovarTable(context);
+            downloadTovarTable(context, null);
             globals.writeToMLOG(Clock.getHumanTime() + "_INFO.TablesLoadingUnloading.class.downloadAllTables.Успех.Обязательные таблици." + "\n");
         } catch (Exception e) {
             globals.writeToMLOG(Clock.getHumanTime() + "_INFO.TablesLoadingUnloading.class.downloadAllTables.Ошибка.Обязательные таблици: " + e + "\n");
@@ -1080,15 +1080,25 @@ public class TablesLoadingUnloading {
     /**
      * Обновление таблицы: Товаров
      */
-    public void downloadTovarTable(Context context) {
+    public void downloadTovarTable(Context context, ArrayList<String> listId) {
         Log.e("SERVER_REALM_DB_UPDATE", "===================================.downloadTovarTable.START");
 
         String mod = "data_list";
         String act = "tovar_list";
 
-        ProgressDialog pg = ProgressDialog.show(context, "Обмен данными с сервером.", "Обновление таблицы: " + "Товаров", true, true);
+        ProgressDialog pg = null;
+        if (context != null){
+            pg = ProgressDialog.show(context, "Обмен данными с сервером.", "Обновление таблицы: " + "Товаров", true, true);
+        }
 
-        retrofit2.Call<TovarTableResponse> call = RetrofitBuilder.getRetrofitInterface().GET_TOVAR_T(mod, act);
+        retrofit2.Call<TovarTableResponse> call;
+        if (listId != null){
+            call = RetrofitBuilder.getRetrofitInterface().GET_TOVAR_T_ID(mod, act, listId);
+        }else {
+            call = RetrofitBuilder.getRetrofitInterface().GET_TOVAR_T(mod, act);
+        }
+
+        ProgressDialog finalPg = pg;
         call.enqueue(new retrofit2.Callback<TovarTableResponse>() {
             @Override
             public void onResponse(retrofit2.Call<TovarTableResponse> call, retrofit2.Response<TovarTableResponse> response) {
@@ -1120,7 +1130,7 @@ public class TablesLoadingUnloading {
                         if (RealmManager.setTovar(list)) {
 
 //                            getTovarImg(list, "small");
-
+//
 //                            DialogData dialog = new DialogData(context);
 //                            dialog.setTitle("Отчёт. Товары");
 //                            dialog.setText("Загружено: " + list.size() + " товаров. \nСинхронизация Таблици Товары прошла успешно.\n\n\nНачинаю загрузку фотографий Товаров.. \n(при первой синхронизации и большом количествее Товаров это может занять много времени)");
@@ -1129,6 +1139,7 @@ public class TablesLoadingUnloading {
                             PhotoDownload.getPhotoURLFromServer(list, new Clicks.clickStatusMsg() {
                                 @Override
                                 public void onSuccess(String data) {
+                                    Log.e("test", "String data: " + data);
 //                                    DialogData dialog = new DialogData(context);
 //                                    dialog.setTitle("Загрузка Товаров");
 //                                    dialog.setText(data);
@@ -1137,6 +1148,7 @@ public class TablesLoadingUnloading {
 
                                 @Override
                                 public void onFailure(String error) {
+                                    Log.e("test", "String error: " + error);
 //                                    DialogData dialog = new DialogData(context);
 //                                    dialog.setTitle("Загрузка Товаров");
 //                                    dialog.setText(error);
@@ -1144,20 +1156,20 @@ public class TablesLoadingUnloading {
                                 }
                             });
 
-                            if (pg != null)
-                                if (pg.isShowing())
-                                    pg.dismiss();
+                            if (finalPg != null)
+                                if (finalPg.isShowing())
+                                    finalPg.dismiss();
                         } else {
-                            if (pg != null)
-                                if (pg.isShowing())
-                                    pg.dismiss();
+                            if (finalPg != null)
+                                if (finalPg.isShowing())
+                                    finalPg.dismiss();
 
                         }
                     }
                 } else {
-                    if (pg != null)
-                        if (pg.isShowing())
-                            pg.dismiss();
+                    if (finalPg != null)
+                        if (finalPg.isShowing())
+                            finalPg.dismiss();
 
                 }
                 readyTovarTable = true;
@@ -1165,9 +1177,9 @@ public class TablesLoadingUnloading {
 
             @Override
             public void onFailure(retrofit2.Call<TovarTableResponse> call, Throwable t) {
-                if (pg != null)
-                    if (pg.isShowing())
-                        pg.dismiss();
+                if (finalPg != null)
+                    if (finalPg.isShowing())
+                        finalPg.dismiss();
                 readyTovarTable = false;
                 syncInternetError = true;
                 Log.e("TAG_TABLE", "FAILURETovarTable: " + t);

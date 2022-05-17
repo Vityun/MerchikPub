@@ -1,10 +1,11 @@
 <resources>
     <string name="app_name">merchik</string>
-    <string name="ver">042800</string>
-    <string name="debug_status">1</string>
-    <string name="debug_date">2022-04-28</string>
+    <string name="ver">051200</string>
+    <string name="debug_status">0</string>
+    <string name="debug_date">2022-05-12</string>
 
     <!--Activity titles-->
+    <string name="title_activity_premium">Премиальные</string>
     <string name="title_activity_menu_main">Рабочий стол</string>
     <string name="activity_title_photo_report">Фотоотчёт</string>
 
@@ -170,6 +171,11 @@
 
     <string name="tar_server_error_short_comment">Длина комментария должна быть не менее 20 символов (без учета знаков препинания и пробелов).</string>
 
+
+
+    <!--INTERNET CONNECTION-->
+    <string name="internet_connection_error_code_not_200">Не удалось получить данные, сервер не отвечает. Проверьте связь с интернетом и повторите попытку позже.</string>
+    <string name="internet_connection_error_body_is_null">Запрашиваемые данные не обнаружены. Повторите попытку или обратитесь к Руководителю.</string>
 </resources>
 
     <!--

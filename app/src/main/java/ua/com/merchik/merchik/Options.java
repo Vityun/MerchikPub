@@ -815,6 +815,7 @@ public class Options {
         globals.writeToMLOG(Clock.getHumanTime() + "_INFO.DetailedReportButtons.class.pressStartWork: " + "ENTER" + "\n");
         if (wpDataDB.getVisit_start_dt() > 0) {
             Toast.makeText(context, "Работа уже начата!", Toast.LENGTH_SHORT).show();
+            globals.writeToMLOG(Clock.getHumanTime() + "_INFO.DetailedReportButtons.class.pressStartWork: " + "Работа уже начата!" + "\n");
             result = true;
         } else {
             try {
@@ -826,6 +827,9 @@ public class Options {
                     wpDataDB.startUpdate = true;
                     realm.insertOrUpdate(wpDataDB);
                 });
+//                globals.writeToMLOG(Clock.getHumanTime() + "_INFO.DetailedReportButtons.class.pressStartWork: " + "Вы начали работу в: " + startTime + " / отчёт: " + wpDataDB.getDoc_num_otchet() + "\n");
+                Globals.writeToMLOG("INFO", "DetailedReportButtons.class.pressStartWork", "Вы начали работу в: " + startTime + " / отчёт: " + wpDataDB.getDoc_num_otchet());
+
                 Toast.makeText(context, "Вы начали работу в: " + Clock.getHumanTimeOpt(startTime * 1000), Toast.LENGTH_SHORT).show();
                 result = true;
             } catch (Exception e) {
@@ -950,6 +954,8 @@ public class Options {
                         wpDataDB.startUpdate = true;
                         realm.insertOrUpdate(wpDataDB);
                     });
+//                    globals.writeToMLOG(Clock.getHumanTime() + "_INFO.DetailedReportButtons.class.pressEndWork: " + "Вы закончили работу в: " + endTime + " / отчёт: " + wpDataDB.getDoc_num_otchet() + "\n");
+                    Globals.writeToMLOG("INFO", "_INFO.DetailedReportButtons.class.pressEndWork", "Вы закончили работу в: " + endTime + " / отчёт: " + wpDataDB.getDoc_num_otchet());
                     Toast.makeText(context, "Вы окончили работу в: " + Clock.getHumanTimeOpt(endTime * 1000) + "\n\nНе забудьте нажать 'Провести', что б система проверила текущий документ и начислила Вам премиальные", Toast.LENGTH_SHORT).show();
                     result = true;
                 } catch (Exception e) {

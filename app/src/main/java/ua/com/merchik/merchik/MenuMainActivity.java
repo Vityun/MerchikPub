@@ -1,17 +1,21 @@
 package ua.com.merchik.merchik;
 
-import android.content.Context;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.widget.Toolbar;
 
 import com.google.android.material.navigation.NavigationView;
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 
-import okhttp3.WebSocket;
-import ua.com.merchik.merchik.ViewHolders.Clicks;
-import ua.com.merchik.merchik.data.WebSocketData.WebSocketData;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+import ua.com.merchik.merchik.data.RetrofitResponse.tables.Premial.Premial;
+import ua.com.merchik.merchik.data.TestJsonUpload.StandartData;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
 
 
@@ -27,12 +31,12 @@ public class MenuMainActivity extends toolbar_menus {
 
             findViewById(R.id.fab).setOnClickListener(v -> {
                 Toast.makeText(this, "Подсказка к данному разделу не готова", Toast.LENGTH_SHORT).show();
-                test(v.getContext());
+                test();
             });
 
             findViewById(R.id.fab).setOnLongClickListener(v -> {
                 Toast.makeText(this, "Отладочная информация!\nДолгий клик по подсказке.", Toast.LENGTH_SHORT).show();
-                test2(v.getContext());
+//                test2(v.getContext());
                 return true;
             });
 
@@ -54,13 +58,52 @@ public class MenuMainActivity extends toolbar_menus {
         TextView activity_title = (TextView) findViewById(R.id.activity_title);
         getSupportActionBar().setDisplayShowTitleEnabled(false);
         activity_title.setText(getString(R.string.title_activity_menu_main));
-
-//        DialogActivityMessage dialogActivityMessage = new DialogActivityMessage(this, this.getResources().getString(R.string.menu_main_main_text));
-//        dialogActivityMessage.show();
-
     }
 
-    WebSocket ws;
+    private void test(){
+        StandartData data = new StandartData();
+        data.mod = "data_list";
+        data.act = "short_stats";
+
+        Gson gson = new Gson();
+        String json = gson.toJson(data);
+        JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
+
+/*        retrofit2.Call<JsonObject> call = RetrofitBuilder.getRetrofitInterface().TEST_JSON_UPLOAD(RetrofitBuilder.contentType, convertedObject);
+        call.enqueue(new Callback<JsonObject>() {
+            @Override
+            public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
+                Log.e("test", "onResponse: " + response);
+            }
+
+            @Override
+            public void onFailure(Call<JsonObject> call, Throwable t) {
+                Log.e("test", "onFailure: " + t);
+            }
+        });*/
+
+        retrofit2.Call<Premial> call2 = RetrofitBuilder.getRetrofitInterface().GET_PREMIAL(RetrofitBuilder.contentType, convertedObject);
+        call2.enqueue(new Callback<Premial>() {
+            @Override
+            public void onResponse(Call<Premial> call, Response<Premial> response) {
+                Log.e("test", "onResponse: " + response);
+            }
+
+            @Override
+            public void onFailure(Call<Premial> call, Throwable t) {
+                Log.e("test", "onFailure: " + t);
+            }
+        });
+    }
+
+
+
+
+
+
+
+    /*
+        WebSocket ws;
     public void test(Context context) {
         ws = RetrofitBuilder.testWebSocket(new Clicks.click() {
             @Override
@@ -90,6 +133,5 @@ public class MenuMainActivity extends toolbar_menus {
             ws.close(0, "Because I wanted");
         }
     }
-
-
+    * */
 }

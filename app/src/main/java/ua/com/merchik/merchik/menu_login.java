@@ -34,6 +34,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.PopupMenu;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.recyclerview.widget.LinearLayoutManager;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.gson.Gson;
@@ -58,8 +59,10 @@ import ua.com.merchik.merchik.ServerExchange.Exchange;
 import ua.com.merchik.merchik.ServerExchange.ExchangeInterface;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.SiteObjectsExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesLoadingUnloading;
+import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.RealmModels.AppUsersDB;
 import ua.com.merchik.merchik.data.RealmModels.LogDB;
+import ua.com.merchik.merchik.data.RetrofitResponse.EDRPOUResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.Login;
 import ua.com.merchik.merchik.data.RetrofitResponse.Logout;
 import ua.com.merchik.merchik.data.ServerLogin.LoginSearch;
@@ -76,6 +79,8 @@ import ua.com.merchik.merchik.dialogs.DialogLoginHelp;
 import ua.com.merchik.merchik.dialogs.DialogRetingOperatorSuppr;
 import ua.com.merchik.merchik.dialogs.DialogSupport;
 import ua.com.merchik.merchik.dialogs.DialogTelephoneRegistration;
+import ua.com.merchik.merchik.dialogs.DialogsRecyclerViewAdapter.DialogAdapter;
+import ua.com.merchik.merchik.dialogs.DialogsRecyclerViewAdapter.ViewHolderTypeList;
 import ua.com.merchik.merchik.retrofit.MyCookieJar;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
 
@@ -511,10 +516,10 @@ public class menu_login extends AppCompatActivity {
 
     // BUTTON_3 REGESTRATION
     // TODO Заменить все текстовки на Обьекты Сайта
-    public void regestration(View view) {
+    public void registration(View view) {
         DialogTelephoneRegistration dialog = new DialogTelephoneRegistration(this);
-        dialog.setTitle("Какой-то милый заголовок");
-        dialog.setText("Тут буду делать красивый интерфейс для того что-б люди могли вносить телефоны и регистрироваться в нашем богоподобном ресурсе.");
+        dialog.setTitle("Регестрация в системе");
+        dialog.setText("Внесите свой мобильный телефон (он будет использоваться как логин). На него прийдёт сообщение с паролем для входа в систему.");
         dialog.setTelephone();
         dialog.setButtonOk("Зарегестрироваться", () -> {
             DialogData dialogReg = new DialogData(this);
@@ -527,7 +532,7 @@ public class menu_login extends AppCompatActivity {
                 autoText.setText(dialog.getTelephone());
                 dialog.dismiss();
 
-                Toast.makeText(this, "Внесли телефон: " + dialog.getTelephone() , Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Внесли телефон: " + dialog.getTelephone(), Toast.LENGTH_SHORT).show();
 
                 String telReplace;
                 telReplace = dialog.getTelephone().replaceAll("\\(", "");
@@ -574,9 +579,579 @@ public class menu_login extends AppCompatActivity {
         dialog.show();
     }
 
+    private void regCompany(Clicks.clickVoid click) {
+//        but2.setOnLongClickListener(view -> {
+        DialogData dialog = new DialogData(this);
+        dialog.setTitle("Компания - место работы");
+        dialog.setMerchikIco(this);
+        dialog.setText("Укажите (выберите из списка) компанию на которой работаете. Для этого начните вносить её название или код ЕДРПОУ. Если в нашей базе данных она отсутствует - зарегестрируйте новую.");
+        dialog.setRecycler(createDialogAdapter(click), new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false));
+        dialog.setTxtLinkOk("Зарег. новую компанию", () -> {
+            createDialogCreateCompany(click);
+        });
+        dialog.setClose(dialog::dismiss);
+        dialog.show();
+//            return false;
+//        });
+    }
+
+    /**
+     * 06.05.2022
+     * Создание адаптера для DialogData recyclerView.
+     * В данном адаптере содерится:
+     * 1. Поле для выбора ЕДРПОУ компании, если сотрудник не устроен ни на одну из компаний.
+     * 2. Кнопка регистрации человека на определённой компании.
+     *
+     * @param click
+     */
+    private DialogAdapter createDialogAdapter(Clicks.clickVoid click) {
+        List<ViewHolderTypeList> data = new ArrayList<>();
+
+        data.add(autoTextEDRPOU());
+        data.add(buttonRegistration(data.get(0), click));
+
+        return new DialogAdapter(data);
+    }
+
+    private ViewHolderTypeList autoTextEDRPOU() {
+        ViewHolderTypeList res = new ViewHolderTypeList();
+
+        ViewHolderTypeList.AutoTextLayoutData autoTextLayoutData = new ViewHolderTypeList.AutoTextLayoutData();
+        autoTextLayoutData.dataTextAutoTextHint = "ЕДРПОУ или Название компании";
+        autoTextLayoutData.result = "";
+        autoTextLayoutData.click = new ViewHolderTypeList.AutoTextLayoutData.Click() {
+            @Override
+            public <T> void onSuccess(T data) {
+                EDRPOUResponse item = (EDRPOUResponse) data;
+                autoTextLayoutData.result = item.label;
+                autoTextLayoutData.resultData = item;
+                Toast.makeText(menu_login.this, "Выбран клиент с ID: " + item.clientId, Toast.LENGTH_LONG).show();
+            }
+
+            @Override
+            public void onFailure(String error) {
+                Toast.makeText(menu_login.this, "onFailure", Toast.LENGTH_LONG).show();
+            }
+        };
+
+        res.type = 3;
+        res.autoTextBlock = autoTextLayoutData;
+
+        return res;
+    }
+
+    private ViewHolderTypeList buttonRegistration(ViewHolderTypeList viewHolderTypeList1, Clicks.clickVoid click) {
+        Context context = this;
+        ViewHolderTypeList res = new ViewHolderTypeList();
+
+        ViewHolderTypeList.ButtonLayoutData buttonLayoutData = new ViewHolderTypeList.ButtonLayoutData();
+        buttonLayoutData.data = "Зарегистрировать";
+        buttonLayoutData.click = new ViewHolderTypeList.ButtonLayoutData.Click() {
+            @Override
+            public <T> void onSuccess(T data) {
+                String item1 = viewHolderTypeList1.autoTextBlock.result;
+                EDRPOUResponse item = (EDRPOUResponse) viewHolderTypeList1.autoTextBlock.resultData;
+                Toast.makeText(menu_login.this, "Вы зарегистрировались на компанию: " + item1, Toast.LENGTH_LONG).show();
+
+                if (item.confirmation) {
+                    getAdminCodeForRegisterUserCompanyRequest(context, item);
+                } else {
+                    registerUserCompanyRequest(item, "", "existing");
+                }
+            }
+
+            @Override
+            public void onFailure(String error) {
+                Toast.makeText(menu_login.this, "onFailure", Toast.LENGTH_LONG).show();
+            }
+        };
+
+        res.type = 2;
+        res.buttonBlock = buttonLayoutData;
+
+        return res;
+    }
+
+    //----------------------------------------------------------
+
+    private void createDialogCreateCompany(Clicks.clickVoid click) {
+        DialogData dialog = new DialogData(this);
+        dialog.setTitle("Регистрация компании");
+        dialog.setText("Код ЕДРПОУ вашей компании необходим для обеспечения безопасности данных. " +
+                "Вы можете узнать его в вашей бухгалтерии или ввести часть названия вашей компании " +
+                "(в поле \"Название компании\") и выбрать её из предложенного списка.");
+        dialog.setMerchikIco(this);
+        dialog.setRecycler(createDialogCreateCompanyAdapter(click), new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false));
+        dialog.setClose(dialog::dismiss);
+        dialog.show();
+    }
+
+    private DialogAdapter createDialogCreateCompanyAdapter(Clicks.clickVoid click) {
+        List<ViewHolderTypeList> data = new ArrayList<>();
+
+        data.add(editTextCompanyNameEDRPOU());
+        data.add(autoTextCompanyName());
+        data.add(buttonCompanyName(data.get(0), data.get(1)));
+
+        return new DialogAdapter(data);
+    }
+
+    private ViewHolderTypeList editTextCompanyNameEDRPOU() {
+        ViewHolderTypeList res = new ViewHolderTypeList();
+
+        ViewHolderTypeList.EditTextLayoutData editTextLayoutData = new ViewHolderTypeList.EditTextLayoutData();
+        editTextLayoutData.dataTitle = "ЕДРПОУ вашей компании";
+        editTextLayoutData.dataEditTextHint = "ЕДРПОУ вашей компании";
+        editTextLayoutData.editTextType = ViewHolderTypeList.EditTextLayoutData.EditTextType.NUMBER;
+        editTextLayoutData.result = "";
+        editTextLayoutData.click = new ViewHolderTypeList.EditTextLayoutData.Click() {
+            @Override
+            public <T> void onSuccess(T data) {
+                Toast.makeText(menu_login.this, "onSuccess: " + data, Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void onFailure(String error) {
+                Toast.makeText(menu_login.this, "onFailure", Toast.LENGTH_SHORT).show();
+            }
+        };
+
+        res.type = 1;
+        res.editTextBlock = editTextLayoutData;
+
+        return res;
+    }
+
+    private ViewHolderTypeList autoTextCompanyName() {
+        ViewHolderTypeList res = new ViewHolderTypeList();
+
+        ViewHolderTypeList.AutoTextLayoutData autoTextLayoutData = new ViewHolderTypeList.AutoTextLayoutData();
+        autoTextLayoutData.dataTextTitle = "Название компании";
+//        autoTextLayoutData.dataTextAutoTextHint = "ЕДРПОУ вашей компании";
+        autoTextLayoutData.result = "";
+        autoTextLayoutData.click = new ViewHolderTypeList.AutoTextLayoutData.Click() {
+            @Override
+            public <T> void onSuccess(T data) {
+                EDRPOUResponse item = (EDRPOUResponse) data;
+                autoTextLayoutData.result = item.label;
+                Toast.makeText(menu_login.this, "Выбран клиент с ID: " + item.clientId, Toast.LENGTH_LONG).show();
+            }
+
+            @Override
+            public void onFailure(String error) {
+                Toast.makeText(menu_login.this, "onFailure", Toast.LENGTH_LONG).show();
+            }
+        };
+
+        res.type = 3;
+        res.autoTextBlock = autoTextLayoutData;
+
+        return res;
+    }
+
+    private ViewHolderTypeList editTextCompanyName() {
+        ViewHolderTypeList res = new ViewHolderTypeList();
+
+        ViewHolderTypeList.EditTextLayoutData editTextLayoutData = new ViewHolderTypeList.EditTextLayoutData();
+        editTextLayoutData.dataTitle = "Название компании";
+        editTextLayoutData.result = "";
+        editTextLayoutData.click = new ViewHolderTypeList.EditTextLayoutData.Click() {
+            @Override
+            public <T> void onSuccess(T data) {
+                Toast.makeText(menu_login.this, "onSuccess: " + data, Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void onFailure(String error) {
+                Toast.makeText(menu_login.this, "onFailure", Toast.LENGTH_SHORT).show();
+            }
+        };
+
+        res.type = 1;
+        res.editTextBlock = editTextLayoutData;
+
+        return res;
+    }
+
+    private ViewHolderTypeList buttonCompanyName(ViewHolderTypeList viewHolderTypeList1, ViewHolderTypeList viewHolderTypeList2) {
+        ViewHolderTypeList res = new ViewHolderTypeList();
+
+        ViewHolderTypeList.ButtonLayoutData buttonLayoutData = new ViewHolderTypeList.ButtonLayoutData();
+        buttonLayoutData.data = "Зарегистрировать";
+        buttonLayoutData.click = new ViewHolderTypeList.ButtonLayoutData.Click() {
+            @Override
+            public <T> void onSuccess(T data) {
+                String item1 = viewHolderTypeList1.editTextBlock.result;
+                String item2 = viewHolderTypeList2.autoTextBlock.result;
+                Toast.makeText(menu_login.this, "Внесённый ЕДРПОУ компании: " + item1 + "\nНазвание компании: " + item2, Toast.LENGTH_LONG).show();
+
+                EDRPOUResponse item = new EDRPOUResponse();
+                item.companyId = item1;
+                item.companyName = item2;
+                registerUserCompanyRequest(item, "", "new");
+            }
+
+            @Override
+            public void onFailure(String error) {
+                Toast.makeText(menu_login.this, "onFailure", Toast.LENGTH_LONG).show();
+            }
+        };
+
+        res.type = 2;
+        res.buttonBlock = buttonLayoutData;
+
+        return res;
+    }
+
+    // регистрация учетки в какой-либо компании
+    private void registerUserCompanyRequest(EDRPOUResponse item, String confirmationCode, String companyType) {
+        StandartData data = new StandartData();
+        data.mod = "auth";
+        data.act = "register_company";
+
+        data.company_id = item.companyId;               // едрпоу
+        data.company_name = item.companyName;           // название компании
+        if (!confirmationCode.equals("")) {
+            data.confirmation_code = confirmationCode;  // код подтверждения, полученный от администратора (если регистрация происходит на компанию, у которой в прошлом шаге confirmation=true)
+        }
+        if (companyType.equals("new")) {
+            data.client_id = item.clientId;             // код клиента, на которого регистрируется сотрудник
+        }
+        data.company_type = companyType;                // может принимать значения new / existing если у тебя осуществляется подключение сотрудника к существующей компании, которая уже зарегистрирована в системе, то ты передаёшь эту переменную со значением existing если пользователь регистрирует новую компанию, которой ещё нет в системе, тогда параметр передаёшь со значение new
+
+        Gson gson = new Gson();
+        String json = gson.toJson(data);
+        JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
+
+        retrofit2.Call<JsonObject> call = RetrofitBuilder.getRetrofitInterface().TEST_JSON_UPLOAD(RetrofitBuilder.contentType, convertedObject);
+        call.enqueue(new Callback<JsonObject>() {
+            @Override
+            public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
+                Log.e("test", "onResponse: " + response);
+            }
+
+            @Override
+            public void onFailure(Call<JsonObject> call, Throwable t) {
+                Log.e("test", "onFailure: " + t);
+            }
+        });
+    }
+
+    /*получение проверочного кода от администратора
+    компании для регистрации учетки в существующую
+    компанию у которой в поиске confirmation=true*/
+
+    // ДОлжен быть текст про телефон Админа и телефон человека с нашей конторы
+    private void getAdminCodeForRegisterUserCompanyRequest(Context context, EDRPOUResponse item) {
+        StandartData data = new StandartData();
+        data.mod = "auth";
+        data.act = "request_admin_code";
+
+        data.company_id = item.companyId;          // едрпоу
+        data.company_name = item.companyName;      // название компании
+        data.client_id = item.clientId;            // код клиента, на которого регистрируется сотрудник
+
+        Gson gson = new Gson();
+        String json = gson.toJson(data);
+        JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
+
+        retrofit2.Call<JsonObject> call = RetrofitBuilder.getRetrofitInterface().TEST_JSON_UPLOAD(RetrofitBuilder.contentType, convertedObject);
+        call.enqueue(new Callback<JsonObject>() {
+            @Override
+            public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
+                Log.e("test", "onResponse: " + response);
+                if (response.body() != null) {
+                    if (response.body().get("state").getAsBoolean()) {
+
+                        String msg = response.body().get("notice").getAsString();
+
+                        DialogData dialog = new DialogData(context);
+                        dialog.setTitle("Внесите проверочный код");
+                        dialog.setText(msg);
+                        dialog.setMerchikIco(context);
+                        dialog.setRecycler(specialCodeAdapter(item), new LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false));
+                        dialog.setClose(dialog::dismiss);
+                        dialog.show();
+                    }
+                }
+            }
+
+            @Override
+            public void onFailure(Call<JsonObject> call, Throwable t) {
+                Log.e("test", "onFailure: " + t);
+            }
+        });
+    }
+
+    private DialogAdapter specialCodeAdapter(EDRPOUResponse item){
+        List<ViewHolderTypeList> data = new ArrayList<>();
+
+        data.add(specialCodeEditText());
+        data.add(specialCodeButton(data.get(0), item));
+
+        return new DialogAdapter(data);
+    }
+
+    private ViewHolderTypeList specialCodeEditText(){
+        ViewHolderTypeList res = new ViewHolderTypeList();
+
+        ViewHolderTypeList.EditTextLayoutData editTextLayoutData = new ViewHolderTypeList.EditTextLayoutData();
+        editTextLayoutData.dataTitle = "Код администратора";
+        editTextLayoutData.dataEditTextHint = "Внесите сюда код администратора";
+        editTextLayoutData.result = "";
+        editTextLayoutData.click = new ViewHolderTypeList.EditTextLayoutData.Click() {
+            @Override
+            public <T> void onSuccess(T data) {
+                Toast.makeText(menu_login.this, "onSuccess: " + data, Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void onFailure(String error) {
+                Toast.makeText(menu_login.this, "onFailure", Toast.LENGTH_SHORT).show();
+            }
+        };
+
+        res.type = 1;
+        res.editTextBlock = editTextLayoutData;
+
+        return res;
+    }
+
+    private ViewHolderTypeList specialCodeButton(ViewHolderTypeList viewHolderTypeList, EDRPOUResponse item){
+        ViewHolderTypeList res = new ViewHolderTypeList();
+
+        ViewHolderTypeList.ButtonLayoutData buttonLayoutData = new ViewHolderTypeList.ButtonLayoutData();
+        buttonLayoutData.data = "Зарегистрировать";
+        buttonLayoutData.click = new ViewHolderTypeList.ButtonLayoutData.Click() {
+            @Override
+            public <T> void onSuccess(T data) {
+                String res = viewHolderTypeList.editTextBlock.result;
+                Toast.makeText(menu_login.this, "Код '" + res + "' внесён.", Toast.LENGTH_LONG).show();
+                registerUserCompanyRequest(item, res, "existing");
+            }
+
+            @Override
+            public void onFailure(String error) {
+                Toast.makeText(menu_login.this, "onFailure", Toast.LENGTH_LONG).show();
+            }
+        };
+
+        res.type = 2;
+        res.buttonBlock = buttonLayoutData;
+
+        return res;
+    }
+    //----------------------------------------------------------
+
+    private DialogAdapter createDialogRegistrationAdapter() {
+
+        List<ViewHolderTypeList> data = new ArrayList<>();
+
+        ViewHolderTypeList layout0 = new ViewHolderTypeList();
+        ViewHolderTypeList.TextLayoutData testTextBlock0 = new ViewHolderTypeList.TextLayoutData();
+        testTextBlock0.data = "Пробный блок 0";
+        testTextBlock0.click = new ViewHolderTypeList.TextLayoutData.Click() {
+            @Override
+            public <T> void onSuccess(T data) {
+                Toast.makeText(menu_login.this, "onSuccess: " + data, Toast.LENGTH_LONG).show();
+            }
+
+            @Override
+            public void onFailure(String error) {
+                Toast.makeText(menu_login.this, "Что-то пошло не так.", Toast.LENGTH_LONG).show();
+            }
+        };
+        layout0.type = 0;
+        layout0.textBlock = testTextBlock0;
+
+        ViewHolderTypeList layout1 = new ViewHolderTypeList();
+        ViewHolderTypeList.TextLayoutData testTextBlock1 = new ViewHolderTypeList.TextLayoutData();
+        testTextBlock1.data = "Пробный блок 1";
+        testTextBlock1.click = new ViewHolderTypeList.TextLayoutData.Click() {
+            @Override
+            public <T> void onSuccess(T data) {
+                Toast.makeText(menu_login.this, "onSuccess: " + data, Toast.LENGTH_LONG).show();
+            }
+
+            @Override
+            public void onFailure(String error) {
+                Toast.makeText(menu_login.this, "Что-то пошло не так.", Toast.LENGTH_LONG).show();
+            }
+        };
+        layout1.type = 0;
+        layout1.textBlock = testTextBlock1;
+
+        ViewHolderTypeList layout2 = new ViewHolderTypeList();
+        ViewHolderTypeList.TextLayoutData testTextBlock2 = new ViewHolderTypeList.TextLayoutData();
+        testTextBlock2.data = "Пробный блок 2";
+        testTextBlock2.click = new ViewHolderTypeList.TextLayoutData.Click() {
+            @Override
+            public <T> void onSuccess(T data) {
+                Toast.makeText(menu_login.this, "onSuccess: " + data, Toast.LENGTH_LONG).show();
+            }
+
+            @Override
+            public void onFailure(String error) {
+                Toast.makeText(menu_login.this, "Что-то пошло не так.", Toast.LENGTH_LONG).show();
+            }
+        };
+        layout2.type = 0;
+        layout2.textBlock = testTextBlock2;
+
+        ViewHolderTypeList layout3 = new ViewHolderTypeList();
+        ViewHolderTypeList.TextLayoutData testTextBlock3 = new ViewHolderTypeList.TextLayoutData();
+        testTextBlock3.data = "Пробный блок 3";
+        testTextBlock3.click = new ViewHolderTypeList.TextLayoutData.Click() {
+            @Override
+            public <T> void onSuccess(T data) {
+                Toast.makeText(menu_login.this, "onSuccess: " + data, Toast.LENGTH_LONG).show();
+            }
+
+            @Override
+            public void onFailure(String error) {
+                Toast.makeText(menu_login.this, "Что-то пошло не так.", Toast.LENGTH_LONG).show();
+            }
+        };
+        layout3.type = 0;
+        layout3.textBlock = testTextBlock3;
+
+        ViewHolderTypeList layout4 = new ViewHolderTypeList();
+        ViewHolderTypeList.TextLayoutData testTextBlock4 = new ViewHolderTypeList.TextLayoutData();
+        testTextBlock4.data = "Пробный блок 4";
+        testTextBlock4.click = new ViewHolderTypeList.TextLayoutData.Click() {
+            @Override
+            public <T> void onSuccess(T data) {
+                Toast.makeText(menu_login.this, "onSuccess: " + data, Toast.LENGTH_LONG).show();
+            }
+
+            @Override
+            public void onFailure(String error) {
+                Toast.makeText(menu_login.this, "Что-то пошло не так.", Toast.LENGTH_LONG).show();
+            }
+        };
+        layout4.type = 0;
+        layout4.textBlock = testTextBlock4;
+
+        ViewHolderTypeList layout5 = new ViewHolderTypeList();
+        ViewHolderTypeList.TextLayoutData testTextBlock5 = new ViewHolderTypeList.TextLayoutData();
+        testTextBlock5.data = "Пробный блок 5";
+        testTextBlock5.click = new ViewHolderTypeList.TextLayoutData.Click() {
+            @Override
+            public <T> void onSuccess(T data) {
+                Toast.makeText(menu_login.this, "onSuccess: " + data, Toast.LENGTH_LONG).show();
+            }
+
+            @Override
+            public void onFailure(String error) {
+                Toast.makeText(menu_login.this, "Что-то пошло не так.", Toast.LENGTH_LONG).show();
+            }
+        };
+        layout5.type = 0;
+        layout5.textBlock = testTextBlock5;
+
+        ViewHolderTypeList layout6 = new ViewHolderTypeList();
+        ViewHolderTypeList.TextLayoutData testTextBlock6 = new ViewHolderTypeList.TextLayoutData();
+        testTextBlock6.data = "Пробный блок 6";
+        testTextBlock6.click = new ViewHolderTypeList.TextLayoutData.Click() {
+            @Override
+            public <T> void onSuccess(T data) {
+                Toast.makeText(menu_login.this, "onSuccess: " + data, Toast.LENGTH_LONG).show();
+            }
+
+            @Override
+            public void onFailure(String error) {
+                Toast.makeText(menu_login.this, "Что-то пошло не так.", Toast.LENGTH_LONG).show();
+            }
+        };
+        layout6.type = 0;
+        layout6.textBlock = testTextBlock6;
+
+        ViewHolderTypeList layout7 = new ViewHolderTypeList();
+        ViewHolderTypeList.TextLayoutData testTextBlock7 = new ViewHolderTypeList.TextLayoutData();
+        testTextBlock7.data = "Пробный блок 7";
+        testTextBlock7.click = new ViewHolderTypeList.TextLayoutData.Click() {
+            @Override
+            public <T> void onSuccess(T data) {
+                Toast.makeText(menu_login.this, "onSuccess: " + data, Toast.LENGTH_LONG).show();
+            }
+
+            @Override
+            public void onFailure(String error) {
+                Toast.makeText(menu_login.this, "Что-то пошло не так.", Toast.LENGTH_LONG).show();
+            }
+        };
+        layout7.type = 0;
+        layout7.textBlock = testTextBlock7;
+
+        ViewHolderTypeList layout8 = new ViewHolderTypeList();
+        ViewHolderTypeList.TextLayoutData testTextBlock8 = new ViewHolderTypeList.TextLayoutData();
+        testTextBlock8.data = "Пробный блок 8";
+        testTextBlock8.click = new ViewHolderTypeList.TextLayoutData.Click() {
+            @Override
+            public <T> void onSuccess(T data) {
+                Toast.makeText(menu_login.this, "onSuccess: " + data, Toast.LENGTH_LONG).show();
+            }
+
+            @Override
+            public void onFailure(String error) {
+                Toast.makeText(menu_login.this, "Что-то пошло не так.", Toast.LENGTH_LONG).show();
+            }
+        };
+        layout8.type = 0;
+        layout8.textBlock = testTextBlock8;
+
+        ViewHolderTypeList layout8_1 = new ViewHolderTypeList();
+        ViewHolderTypeList.AutoTextLayoutData autoTextLayoutData = new ViewHolderTypeList.AutoTextLayoutData();
+        autoTextLayoutData.dataTextTitle = "ЕДРПОУ вашей компании";
+        autoTextLayoutData.click = new ViewHolderTypeList.AutoTextLayoutData.Click() {
+            @Override
+            public <T> void onSuccess(T data) {
+                EDRPOUResponse item = (EDRPOUResponse) data;
+                Toast.makeText(menu_login.this, "onSuccess: " + item.clientId, Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void onFailure(String error) {
+                Toast.makeText(menu_login.this, "onFailure", Toast.LENGTH_SHORT).show();
+            }
+        };
+        layout8_1.type = 3;
+        layout8_1.autoTextBlock = autoTextLayoutData;
+
+        ViewHolderTypeList layout9 = new ViewHolderTypeList();
+        ViewHolderTypeList.TextLayoutData testTextBlock9 = new ViewHolderTypeList.TextLayoutData();
+        testTextBlock9.data = "Пробный блок 9";
+        testTextBlock9.click = new ViewHolderTypeList.TextLayoutData.Click() {
+            @Override
+            public <T> void onSuccess(T data) {
+
+            }
+
+            @Override
+            public void onFailure(String error) {
+                Toast.makeText(menu_login.this, "Что-то пошло не так.", Toast.LENGTH_LONG).show();
+            }
+        };
+        layout9.type = 0;
+        layout9.textBlock = testTextBlock9;
+
+        data.add(layout0);
+        data.add(layout1);
+        data.add(layout2);
+        data.add(layout3);
+        data.add(layout4);
+        data.add(layout5);
+        data.add(layout6);
+        data.add(layout7);
+        data.add(layout8);
+        data.add(layout8_1);
+        data.add(layout9);
+
+        return new DialogAdapter(data);
+    }
 
     // мусор
-    private void regestrationDialog() {
+    private void registrationDialog() {
         DialogData dialogRegistration = new DialogData(this);
 
         dialogRegistration.setLesson(this, true, 633);
@@ -805,15 +1380,15 @@ public class menu_login extends AppCompatActivity {
                                         } catch (Exception e) {
                                         }
 
+                                        // ------------
                                         progress.dissmiss();
                                         new TablesLoadingUnloading().downloadMenu();
                                         Toast.makeText(getApplicationContext(), "Вы зашли как " + resp.getUserInfo().getFio(), Toast.LENGTH_SHORT).show();
                                         Globals.userId = Integer.parseInt(resp.getUserInfo().getUserId());
                                         Globals.token = resp.websocketParam.token;
                                         startActivity(intent); // ++
+                                        // ------------
                                     } else {
-//                                    Toast.makeText(menu_login.this, "Внесите Логин/Пароль и повторите попытку", Toast.LENGTH_SHORT).show();
-//                                    progress.dissmiss();
                                         AUTH();
                                     }
                                 } else if (!resp.getAuth()) {
@@ -847,8 +1422,8 @@ public class menu_login extends AppCompatActivity {
         try {
             String sEditTextLogin = autoText.getText().toString();
             String sEditTextPassword = editText_password.getText().toString();
-            String login = "";
-            String password = "";
+            String login;
+            String password;
 
             AppUsersDB appUsersDB = RealmManager.getAppUser();
 
@@ -885,81 +1460,13 @@ public class menu_login extends AppCompatActivity {
                             // Разбираем ответ на логин
                             Log.e("APP_LOGIN", "LOGIN_callLogin: " + response.body().getState());
                             if (response.body().getState()) {
-
-                                // =================================================
-                                retrofit2.Call<JsonObject> TEST_SESSION_CALL = RetrofitBuilder.getRetrofitInterface().CHECK_SESSION2(mod);
-                                TEST_SESSION_CALL.enqueue(new retrofit2.Callback<JsonObject>() {
-
-                                    @Override
-                                    public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
-                                        Log.e("APP_LOGIN", "(2)TEST_SESSION_CALL: " + response.body());
-                                    }
-
-                                    @Override
-                                    public void onFailure(Call<JsonObject> call, Throwable t) {
-                                        Log.e("APP_LOGIN", "(2)TEST_SESSION_CALL_ERROR: " + t);
-                                    }
-                                });
-
-                                Call<SessionCheck> callAUTH = RetrofitBuilder.getRetrofitInterface().CHECK_SESSION(mod, Globals.getAppInfoToSession(menu_login.this));
-                                callAUTH.enqueue(new retrofit2.Callback<SessionCheck>() {
-                                    @Override
-                                    public void onResponse(retrofit2.Call<SessionCheck> callAUTH, retrofit2.Response<SessionCheck> RESPONSE) {
-//                                        Log.e("APP_LOGIN", "AUTH2: " + RESPONSE.body());
-//                                        Log.e("APP_LOGIN", "AUTH2: " + RESPONSE.body().getUserInfo());
-//                                        Log.e("APP_LOGIN", "AUTH2: " + RESPONSE.body().getUserInfo().getUserId());
-                                        if (RESPONSE.isSuccessful() && RESPONSE.body() != null) {
-                                            JsonObject convertedObject = new Gson().fromJson(new Gson().toJson(RESPONSE.body()), JsonObject.class);
-
-                                            SessionCheck resp = RESPONSE.body();
-
-                                            Globals.session = resp.getSessionId();
-
-                                            if (resp.getAuth()) {
-                                                // Если залогинились - запись в БД
-                                                RealmManager.setAppUser(new AppUsersDB(Integer.parseInt(resp.getUserInfo().getUserId()), resp.getUserInfo().getFio(), finalLogin, finalPassword));
-
-                                                AppUsersDB appUsersDB = RealmManager.getAppUserById(resp.getUserInfo().getUserId());
-
-                                                Log.e("PreferenceManager", "BLOC_2");
-                                                PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).edit()
-                                                        .putString("user_id", String.valueOf(appUsersDB.getUserId())).apply();
-
-                                                PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).edit()
-                                                        .putString("login", appUsersDB.getLogin()).apply();
-
-                                                PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).edit()
-                                                        .putString("password", appUsersDB.getPassword()).apply();
-                                                Log.e("PreferenceManager", "BLOC_2" + PreferenceManager.getDefaultSharedPreferences(menu_login.this)
-                                                        .getString("login", ""));
-
-                                                // Запись в лог инфы
-                                                try {
-                                                    RealmManager.setRowToLog(Collections.singletonList(new LogDB(RealmManager.getLastIdLogDB() + 1, System.currentTimeMillis() / 1000, "Вход в приложение. (" + wil + ")", 1084, null, null, null, null, null, null, null)));
-                                                } catch (Exception e) {
-                                                }
-
-
-                                                {
-                                                    tablesLoadingUnloading.downloadAllTables(menu_login.this);
-                                                    new TablesLoadingUnloading().downloadMenu();
-                                                    Toast.makeText(getApplicationContext(), "Вы зашли как " + resp.getUserInfo().getFio(), Toast.LENGTH_SHORT).show();
-                                                    Globals.userId = Integer.parseInt(resp.getUserInfo().getUserId());
-                                                    Globals.token = resp.websocketParam.token;
-                                                }
-                                                progress.dissmiss();
-                                                startActivity(intent);  //++
-                                            } else {
-                                                appLogin();
-                                            }
-                                        }
-                                    }
-
-                                    @Override
-                                    public void onFailure(retrofit2.Call<SessionCheck> callAUTH, Throwable t) {
-                                        withoutLogin();
-                                    }
-                                });
+                                if (response.body().registerCompany != null && response.body().registerCompany) {
+                                    checkUserForCompany(() -> {
+                                        sessionCheck(mod, finalLogin, finalPassword);
+                                    });
+                                } else {
+                                    sessionCheck(mod, finalLogin, finalPassword);
+                                }
                             } else {
                                 globals.alertDialogMsg(menu_login.this, response.body().getError());
                                 progress.dissmiss();
@@ -982,7 +1489,81 @@ public class menu_login extends AppCompatActivity {
         } catch (Exception e) {
             globals.alertDialogMsg(this, "Ошибка_3: " + e);
         }
+    }
 
+    private void sessionCheck(String mod, String finalLogin, String finalPassword) {
+        // =================================================
+        retrofit2.Call<JsonObject> TEST_SESSION_CALL = RetrofitBuilder.getRetrofitInterface().CHECK_SESSION2(mod);
+        TEST_SESSION_CALL.enqueue(new retrofit2.Callback<JsonObject>() {
+            @Override
+            public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
+                Log.e("APP_LOGIN", "(2)TEST_SESSION_CALL: " + response.body());
+            }
+
+            @Override
+            public void onFailure(Call<JsonObject> call, Throwable t) {
+                Log.e("APP_LOGIN", "(2)TEST_SESSION_CALL_ERROR: " + t);
+            }
+        });
+
+        Call<SessionCheck> callAUTH = RetrofitBuilder.getRetrofitInterface().CHECK_SESSION(mod, Globals.getAppInfoToSession(menu_login.this));
+        callAUTH.enqueue(new retrofit2.Callback<SessionCheck>() {
+            @Override
+            public void onResponse(retrofit2.Call<SessionCheck> callAUTH, retrofit2.Response<SessionCheck> RESPONSE) {
+                if (RESPONSE.isSuccessful() && RESPONSE.body() != null) {
+                    JsonObject convertedObject = new Gson().fromJson(new Gson().toJson(RESPONSE.body()), JsonObject.class);
+
+                    SessionCheck resp = RESPONSE.body();
+
+                    Globals.session = resp.getSessionId();
+
+                    if (resp.getAuth()) {
+                        // Если залогинились - запись в БД
+                        RealmManager.setAppUser(new AppUsersDB(Integer.parseInt(resp.getUserInfo().getUserId()), resp.getUserInfo().getFio(), finalLogin, finalPassword));
+
+                        AppUsersDB appUsersDB = RealmManager.getAppUserById(resp.getUserInfo().getUserId());
+
+                        Log.e("PreferenceManager", "BLOC_2");
+                        PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).edit()
+                                .putString("user_id", String.valueOf(appUsersDB.getUserId())).apply();
+
+                        PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).edit()
+                                .putString("login", appUsersDB.getLogin()).apply();
+
+                        PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).edit()
+                                .putString("password", appUsersDB.getPassword()).apply();
+                        Log.e("PreferenceManager", "BLOC_2" + PreferenceManager.getDefaultSharedPreferences(menu_login.this)
+                                .getString("login", ""));
+
+                        // Запись в лог инфы
+                        try {
+                            RealmManager.setRowToLog(Collections.singletonList(new LogDB(RealmManager.getLastIdLogDB() + 1, System.currentTimeMillis() / 1000, "Вход в приложение. (" + wil + ")", 1084, null, null, null, null, null, null, null)));
+                        } catch (Exception e) {
+                        }
+
+                        // Сообщение и блок для регистрации пользователя в системе должен быть ТУТ
+
+                        // ------------
+                        tablesLoadingUnloading.downloadAllTables(menu_login.this);
+                        new TablesLoadingUnloading().downloadMenu();
+                        Toast.makeText(getApplicationContext(), "Вы зашли как " + resp.getUserInfo().getFio(), Toast.LENGTH_SHORT).show();
+                        Globals.userId = Integer.parseInt(resp.getUserInfo().getUserId());
+                        Globals.token = resp.websocketParam.token;
+                        // ------------
+
+                        progress.dissmiss();
+                        startActivity(intent);  //++
+                    } else {
+                        appLogin();
+                    }
+                }
+            }
+
+            @Override
+            public void onFailure(retrofit2.Call<SessionCheck> callAUTH, Throwable t) {
+                withoutLogin();
+            }
+        });
     }
 
     private void withoutLogin() {
@@ -1743,4 +2324,9 @@ public class menu_login extends AppCompatActivity {
     }
 
 
-}// END CLASS..
+    private void checkUserForCompany(Clicks.clickVoid click) {
+        regCompany(click);
+    }
+
+
+}// END CLASS..380677777777/777718353
