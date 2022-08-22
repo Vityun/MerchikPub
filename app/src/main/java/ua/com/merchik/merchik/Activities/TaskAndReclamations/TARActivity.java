@@ -1,5 +1,7 @@
 package ua.com.merchik.merchik.Activities.TaskAndReclamations;
 
+import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
+
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
@@ -31,8 +33,6 @@ import ua.com.merchik.merchik.database.realm.tables.StackPhotoRealm;
 import ua.com.merchik.merchik.dialogs.DialodTAR.DialogCreateTAR;
 import ua.com.merchik.merchik.toolbar_menus;
 
-import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
-
 public class TARActivity extends toolbar_menus implements TARFragmentHome.OnFragmentInteractionListener, TARHomeFrag.OnFragmentInteractionListener{
 
     private Globals globals = new Globals();
@@ -62,6 +62,10 @@ public class TARActivity extends toolbar_menus implements TARFragmentHome.OnFrag
         setActivityContent();
     }
 
+    public TasksAndReclamationsSDB setActivityTAR(){
+        return (TasksAndReclamationsSDB) getIntent().getParcelableExtra("TARActivityStart");
+    }
+
 
     /**
      * 07.06.2021
@@ -75,19 +79,8 @@ public class TARActivity extends toolbar_menus implements TARFragmentHome.OnFrag
         tabLayout = findViewById(R.id.tabLayout);
         viewPager = findViewById(R.id.viewPager);
 
+
         setTabs();
-
-//        activity_title = (TextView) findViewById(R.id.activity_title);
-
-//        TARType = getIntent().getIntExtra("TAR_type", 1);
-//        if (TARType == 1) {
-//            activity_title.setText("Задачи");
-//        } else if (TARType == 0) {
-//            activity_title.setText("Рекламации");
-//        }
-
-//        getSupportActionBar().setDisplayShowTitleEnabled(false);
-//        this.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN); //Убирает фокус с полей ввода
 
         try {
             fab = findViewById(R.id.fab);
@@ -212,6 +205,8 @@ public class TARActivity extends toolbar_menus implements TARFragmentHome.OnFrag
 
         try {
             Log.d("test", "data: " + requestCode + resultCode);
+            Globals.writeToMLOG("INFO", "TARActivity.onActivityResult", "resultCode: " + resultCode);
+            Globals.writeToMLOG("INFO", "TARActivity.onActivityResult", "requestCode: " + requestCode);
 
             if (resultCode == 100) {
                 int id = data.getIntExtra("stack_photo_id", 0);
@@ -222,8 +217,8 @@ public class TARActivity extends toolbar_menus implements TARFragmentHome.OnFrag
             }
 
             if (resultCode == 101) {
-                int id1 = TARFragmentHome.secondFragId;
-                String tag = TARFragmentHome.secondFragTAG;
+//                int id1 = TARFragmentHome.secondFragId;
+//                String tag = TARFragmentHome.secondFragTAG;
 
                 List<Fragment> fragments = fragmentManager.getFragments();
                 TARFragmentHome fragmentHome = (TARFragmentHome) fragments.get(0);
@@ -234,10 +229,23 @@ public class TARActivity extends toolbar_menus implements TARFragmentHome.OnFrag
             }
 
             if (requestCode == 200) {
+
+                Globals.writeToMLOG("INFO", "TARActivity.onActivityResult.requestCode200", "MakePhoto.openCameraPhotoUri: " + MakePhoto.openCameraPhotoUri);
+
                 TasksAndReclamationsSDB tar = SQL_DB.tarDao().getById(TARSecondFrag.TaRID);
+
+                Globals.writeToMLOG("INFO", "TARActivity.onActivityResult.requestCode200", "tar: " + tar);
+
                 StackPhotoDB stackPhotoDB = savePhoto(MakePhoto.openCameraPhotoUri, tar);
+
+                Globals.writeToMLOG("INFO", "TARActivity.onActivityResult.requestCode200", "stackPhotoDB: " + stackPhotoDB);
+
                 MakePhoto.openCameraPhotoUri = null;
-                secondFrag.setPhoto(Integer.valueOf(stackPhotoDB.getId()));
+
+                List<Fragment> fragments = fragmentManager.getFragments();
+                TARFragmentHome fragmentHome = (TARFragmentHome) fragments.get(0);
+
+                fragmentHome.secondFrag.setPhoto(stackPhotoDB.getId());
             }
 
 
@@ -284,29 +292,34 @@ public class TARActivity extends toolbar_menus implements TARFragmentHome.OnFrag
 
 
     private StackPhotoDB savePhoto(String str, TasksAndReclamationsSDB tar) {
-        int id = RealmManager.stackPhotoGetLastId();
-        id++;
-        StackPhotoDB stackPhotoDB = new StackPhotoDB();
-        stackPhotoDB.setId(id);
-        stackPhotoDB.setDt(System.currentTimeMillis() / 1000);
-        stackPhotoDB.setTime_event(Clock.getHumanTime2(System.currentTimeMillis() / 1000));
+        try {
+            int id = RealmManager.stackPhotoGetLastId();
+            id++;
+            StackPhotoDB stackPhotoDB = new StackPhotoDB();
+            stackPhotoDB.setId(id);
+            stackPhotoDB.setDt(System.currentTimeMillis() / 1000);
+            stackPhotoDB.setTime_event(Clock.getHumanTime2(System.currentTimeMillis() / 1000));
 
-        stackPhotoDB.setAddr_id(tar.addr);
-        stackPhotoDB.setClient_id(tar.client);
-        stackPhotoDB.setUser_id(tar.vinovnik);
-        stackPhotoDB.setPhoto_type(0);
-        stackPhotoDB.setCode_dad2(tar.codeDad2);
+            stackPhotoDB.setAddr_id(tar.addr);
+            stackPhotoDB.setClient_id(tar.client);
+            stackPhotoDB.setUser_id(tar.vinovnik);
+            stackPhotoDB.setPhoto_type(0);
+            stackPhotoDB.setCode_dad2(tar.codeDad2);
 
-        if (tar.themeId == 1174){
-            stackPhotoDB.setDvi(1);
+            if (tar.themeId == 1174){
+                stackPhotoDB.setDvi(1);
+            }
+
+            stackPhotoDB.setCreate_time(System.currentTimeMillis() / 1000);
+
+            stackPhotoDB.setPhoto_hash(globals.getHashMD5FromFilePath(str, null));
+            stackPhotoDB.setPhoto_num(str);
+            RealmManager.stackPhotoSavePhoto(stackPhotoDB);
+            return stackPhotoDB;
+        }catch (Exception e){
+            Globals.writeToMLOG("ERROR", "TARActivity.onActivityResult.savePhoto", "Exception e: " + e);
+            return null;
         }
-
-        stackPhotoDB.setCreate_time(System.currentTimeMillis() / 1000);
-
-        stackPhotoDB.setPhoto_hash(globals.getHashMD5FromFilePath(str, null));
-        stackPhotoDB.setPhoto_num(str);
-        RealmManager.stackPhotoSavePhoto(stackPhotoDB);
-        return stackPhotoDB;
     }
 
     @Override

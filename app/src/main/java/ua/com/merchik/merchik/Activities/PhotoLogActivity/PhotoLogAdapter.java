@@ -6,6 +6,7 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.drawable.GradientDrawable;
+import android.net.Uri;
 import android.text.Html;
 import android.text.Spanned;
 import android.util.Log;
@@ -28,7 +29,6 @@ import androidx.recyclerview.widget.RecyclerView;
 import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import io.realm.RealmResults;
@@ -64,6 +64,11 @@ public class PhotoLogAdapter extends RecyclerView.Adapter<PhotoLogAdapter.ViewHo
         this.photoLogDataList = RealmManager.INSTANCE.copyFromRealm(photoLogData);
         this.mod = mod;
         this.click = click;
+    }
+
+    public void updateData(RealmResults<StackPhotoDB> photoLogData) {
+        this.photoLogData = RealmManager.INSTANCE.copyFromRealm(photoLogData);
+        this.photoLogDataList = RealmManager.INSTANCE.copyFromRealm(photoLogData);
     }
 
     /**
@@ -116,7 +121,7 @@ public class PhotoLogAdapter extends RecyclerView.Adapter<PhotoLogAdapter.ViewHo
 
         @SuppressLint("SimpleDateFormat")
         public void bind(StackPhotoDB photoLogDat) {
-            try {
+//            try {
                 POS = getAdapterPosition();
 
                 if (photoLogDat.getError() != null) {
@@ -214,7 +219,14 @@ public class PhotoLogAdapter extends RecyclerView.Adapter<PhotoLogAdapter.ViewHo
 
 
                 if (sd.equals("null")){
-                    sd = Clock.getHumanTime3(photoLogDat.getDt());
+                    if (photoLogDat.getDt() != null){
+                        sd = Clock.getHumanTime3(photoLogDat.getDt());
+                    }else {
+                        sd = "Не могу определить";
+                    }
+                }
+                if (sd == null){
+                    sd = "Не могу определить";
                 }
                 date.setText(sd);
                 addr.setText(address);
@@ -229,10 +241,16 @@ public class PhotoLogAdapter extends RecyclerView.Adapter<PhotoLogAdapter.ViewHo
                     Bitmap b = decodeSampledBitmapFromResource(file, 200, 200);
                     if (b != null) {
                         imageView.setImageBitmap(b);
+                    }else {
+                        imageView.setImageURI(Uri.parse(photoLogDat.getPhoto_num()));
                     }
                 } catch (Exception e) {
-//                    // TODO Нет фотки.
-////                    test(photoLogDat, imageView);
+                    try {
+                        imageView.setImageURI(Uri.parse(photoLogDat.getPhoto_num()));
+                    }catch (Exception exception){
+                        // TODO cant visualise photo exception
+                        Log.e("test", "test");
+                    }
                 }
 
 
@@ -277,13 +295,12 @@ public class PhotoLogAdapter extends RecyclerView.Adapter<PhotoLogAdapter.ViewHo
                 if (photoLogMode != null) {
                     switch (photoLogMode) {
                         case PLANOGRAM:
-                            if (photoLogDat.getApprove() == 1){
+                            if (photoLogDat.getApprove() != null && photoLogDat.getApprove() == 1){
                                 check.setVisibility(View.VISIBLE);
 
                                 check.setImageDrawable(mContext.getResources().getDrawable(R.drawable.ic_check));
                                 check.setColorFilter(mContext.getResources().getColor(R.color.greenCol));
-                            }else if (photoLogDat.getApprove() == 0){
-//                                check.setVisibility(View.INVISIBLE);
+                            }else if (photoLogDat.getApprove() != null && photoLogDat.getApprove() == 0){
                                 check.setVisibility(View.VISIBLE);
 
                                 check.setImageDrawable(mContext.getResources().getDrawable(R.drawable.ic_question_circle_regular)); //"?"
@@ -318,9 +335,9 @@ public class PhotoLogAdapter extends RecyclerView.Adapter<PhotoLogAdapter.ViewHo
                 }
 
 
-            } catch (Exception e) {
-                globals.writeToMLOG(Clock.getHumanTime() + "PhotoLogAdapter.bind.Error: " + Arrays.toString(e.getStackTrace()) + "\n");
-            }
+//            } catch (Exception e) {
+//                globals.writeToMLOG(Clock.getHumanTime() + "PhotoLogAdapter.bind.Error: " + Arrays.toString(e.getStackTrace()) + "\n");
+//            }
         }
 
     }

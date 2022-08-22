@@ -1,5 +1,6 @@
 package ua.com.merchik.merchik.Activities.DetailedReportActivity;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.preference.PreferenceManager;
@@ -13,7 +14,7 @@ import java.util.List;
 import ua.com.merchik.merchik.Activities.PhotoLogActivity.PhotoLogActivity;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.MakePhoto;
-import ua.com.merchik.merchik.Options;
+import ua.com.merchik.merchik.Options.Options;
 import ua.com.merchik.merchik.PhotoReportActivity;
 import ua.com.merchik.merchik.Utils.UniversalAdapter.UniversalAdapter;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
@@ -51,25 +52,28 @@ public class DetailedReportButtons {
 
         PreferenceManager.getDefaultSharedPreferences(context).edit()
 
-                .putInt("wp_data_id", wpDataDB.getId()).apply();
+                .putLong("wp_data_id", wpDataDB.getId()).apply();
         PreferenceManager.getDefaultSharedPreferences(context).edit()
                 .putString("UriToParseFromSite", "").apply();
 
         Options options = new Options();
 
         switch (optionId) {
-            case 135809: // Фото витрины До начала работ
+/*            case 135809: // Фото витрины До начала работ
                 globals.fixMP(); // Фиксация Местоположения в таблице ЛогМп
                 wpDataObj.setPhotoType("14");
                 if (mod == 1) {
                     intentPhotoReport.putExtra("dataFromWPObj", wpDataObj);
                     context.startActivity(intentPhotoReport);
                 } else {
-                    Log.e("getPhotoType", "wpDataObj.getPhotoType(): " + wpDataObj.getPhotoType());
-                    intentPhotoReport.putExtra("dataFromWPObj", wpDataObj);
-                    MakePhoto.startToMakePhoto(context, wpDataObj);
+//                    Log.e("getPhotoType", "wpDataObj.getPhotoType(): " + wpDataObj.getPhotoType());
+//                    intentPhotoReport.putExtra("dataFromWPObj", wpDataObj);
+//                    MakePhoto.startToMakePhoto(context, wpDataObj);
+
+                    MakePhoto makePhoto = new MakePhoto();
+                    makePhoto.pressedMakePhotoOldStyle((Activity) context, wpDataObj, wpDataDB);
                 }
-                break;
+                break;*/
 
             case 132968: // Фото витрины
                 globals.fixMP(); // Фиксация Местоположения в таблице ЛогМп
@@ -86,8 +90,10 @@ public class DetailedReportButtons {
                     intentPhotoReport.putExtra("dataFromWPObj", wpDataObj);
                     context.startActivity(intentPhotoReport);
                 } else {
-                    intentPhotoReport.putExtra("dataFromWPObj", wpDataObj);
-                    MakePhoto.startToMakePhoto(context, wpDataObj);
+//                    intentPhotoReport.putExtra("dataFromWPObj", wpDataObj);
+//                    MakePhoto.startToMakePhoto(context, wpDataObj);
+                    MakePhoto makePhoto = new MakePhoto();
+                    makePhoto.pressedMakePhotoOldStyle((Activity) context, wpDataObj, wpDataDB);
                 }
                 break;
 
@@ -98,8 +104,10 @@ public class DetailedReportButtons {
                     intentPhotoReport.putExtra("dataFromWPObj", wpDataObj);
                     context.startActivity(intentPhotoReport);
                 } else {
-                    intentPhotoReport.putExtra("dataFromWPObj", wpDataObj);
-                    MakePhoto.startToMakePhoto(context, wpDataObj);
+//                    intentPhotoReport.putExtra("dataFromWPObj", wpDataObj);
+//                    MakePhoto.startToMakePhoto(context, wpDataObj);
+                    MakePhoto makePhoto = new MakePhoto();
+                    makePhoto.pressedMakePhotoOldStyle((Activity) context, wpDataObj, wpDataDB);
                 }
                 break;
 
@@ -111,8 +119,10 @@ public class DetailedReportButtons {
                     intentPhotoReport.putExtra("dataFromWPObj", wpDataObj);
                     context.startActivity(intentPhotoReport);
                 } else {
-                    intentPhotoReport.putExtra("dataFromWPObj", wpDataObj);
-                    MakePhoto.startToMakePhoto(context, wpDataObj);
+//                    intentPhotoReport.putExtra("dataFromWPObj", wpDataObj);
+//                    MakePhoto.startToMakePhoto(context, wpDataObj);
+                    MakePhoto makePhoto = new MakePhoto();
+                    makePhoto.pressedMakePhotoOldStyle((Activity) context, wpDataObj, wpDataDB);
                 }
                 break;
 
@@ -123,8 +133,10 @@ public class DetailedReportButtons {
                     intentPhotoReport.putExtra("dataFromWPObj", wpDataObj);
                     context.startActivity(intentPhotoReport);
                 } else {
-                    intentPhotoReport.putExtra("dataFromWPObj", wpDataObj);
-                    MakePhoto.startToMakePhoto(context, wpDataObj);
+//                    intentPhotoReport.putExtra("dataFromWPObj", wpDataObj);
+//                    MakePhoto.startToMakePhoto(context, wpDataObj);
+                    MakePhoto makePhoto = new MakePhoto();
+                    makePhoto.pressedMakePhotoOldStyle((Activity) context, wpDataObj, wpDataDB);
                 }
                 break;
 
@@ -265,7 +277,7 @@ public class DetailedReportButtons {
 
 
             default:
-                Toast.makeText(context, "Данный раздел находится в разработке", Toast.LENGTH_LONG).show();
+//                Toast.makeText(context, "Данный раздел находится в разработке", Toast.LENGTH_LONG).show();
                 break;
         }
 

@@ -20,6 +20,11 @@ public class StartEndData {
     public String client_start_dt; //
     public String client_end_dt;   //
 
+//    public Integer user_opinion_id;
+
+    public String user_comment;
+    public Long user_comment_dt_update;
+
     public String status_set;   //  Команда на проведение документа
 
 }

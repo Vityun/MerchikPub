@@ -3,7 +3,6 @@ package ua.com.merchik.merchik;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import androidx.appcompat.app.AlertDialog;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -11,6 +10,8 @@ import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+
+import androidx.appcompat.app.AlertDialog;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -88,7 +89,7 @@ public class ListViewAdapter extends BaseAdapter {
         holder.addr.setText(workplan.get(position).getAddr());
         holder.cust.setText(workplan.get(position).getCust());
         holder.merc.setText(workplan.get(position).getMerc());
-        holder.date.setText(workplan.get(position).getDate());
+        holder.date.setText(Clock.getHumanTimeYYYYMMDD(workplan.get(position).getDate().getTime()/1000));
 
         holder.wp_image.setImageResource(workplan.get(position)
                 .getImages());
@@ -160,7 +161,7 @@ public class ListViewAdapter extends BaseAdapter {
                     workplan.add(wp);
                 }
 
-                if (wp.getDate().toLowerCase(Locale.getDefault())
+                if (Clock.getHumanTimeYYYYMMDD(wp.getDate().getTime()/1000).toLowerCase(Locale.getDefault())
                         .contains(charText)) {
                     workplan.add(wp);
                 }

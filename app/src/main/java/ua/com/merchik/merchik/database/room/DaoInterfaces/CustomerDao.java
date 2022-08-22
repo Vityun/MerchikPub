@@ -15,8 +15,14 @@ public interface CustomerDao {
     @Query("SELECT * FROM client")
     List<CustomerSDB> getAll();
 
+    @Query("SELECT * FROM client ORDER BY nm DESC")
+    List<CustomerSDB> getAllSortedByNm();
+
     @Query("SELECT * FROM client WHERE id = :id")
     CustomerSDB getById(int id);
+
+    @Query("SELECT * FROM client WHERE nm = :nm")
+    CustomerSDB getByNm(int nm);
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     void insertAll(List<CustomerSDB> data);

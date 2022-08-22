@@ -1,10 +1,16 @@
 package ua.com.merchik.merchik.Activities.DetailedReportActivity;
 
+import static ua.com.merchik.merchik.PhotoReportActivity.getImageOrientation;
+import static ua.com.merchik.merchik.PhotoReportActivity.resaveBitmap;
+import static ua.com.merchik.merchik.PhotoReportActivity.resizeImageFile;
+import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
+
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.text.Html;
 import android.util.Log;
 import android.view.WindowManager;
 import android.widget.Button;
@@ -37,6 +43,7 @@ import ua.com.merchik.merchik.ServerExchange.TablesLoadingUnloading;
 import ua.com.merchik.merchik.Translate;
 import ua.com.merchik.merchik.WorkPlan;
 import ua.com.merchik.merchik.data.Data;
+import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
 import ua.com.merchik.merchik.data.Database.Room.TranslatesSDB;
 import ua.com.merchik.merchik.data.RealmModels.ReportPrepareDB;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
@@ -51,10 +58,6 @@ import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
 import ua.com.merchik.merchik.toolbar_menus;
 
-import static ua.com.merchik.merchik.PhotoReportActivity.getImageOrientation;
-import static ua.com.merchik.merchik.PhotoReportActivity.resaveBitmap;
-import static ua.com.merchik.merchik.PhotoReportActivity.resizeImageFile;
-
 public class DetailedReportActivity extends toolbar_menus {
 
     private Translate translate = new Translate();
@@ -67,6 +70,8 @@ public class DetailedReportActivity extends toolbar_menus {
     private File image;
 
     public static FloatingActionButton fab;
+    public static List<TasksAndReclamationsSDB> tarList;
+
 
     // ----- ПЕРЕМЕННЫЕ ДЛЯ МОДУЛЯ -----
     public static int rpThemeId = 0;    // ID темы Отчёта исполнителя
@@ -74,6 +79,13 @@ public class DetailedReportActivity extends toolbar_menus {
     public static int rpCount = 0;    // Количество записей в ReportPrepare(дад2 не 0) для данного Документа
     public static int rpAmountSum2 = 0;   // Итоговое количество
     public static double rpTotalSumToRedemptionOfGoods = 0;   // Общая сумма для Выкупа товара
+    // ----- ПЛАН ПО АСОРТИМЕНТУ -----
+    public static double SKUPlan = 0;
+    public static double SKUFact = 0;
+    public static double OFS = 0;   // % сколько нет товаров
+    public static double OOS = 0;   // Представленность %
+    public static RealmResults<TovarDB> detailedReportTovList = null;
+    public static RealmResults<ReportPrepareDB> detailedReportRPList = null;
     //==================================
 
 
@@ -93,9 +105,21 @@ public class DetailedReportActivity extends toolbar_menus {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        setActivityData();
+
+        SKUPlan = 0;
+        SKUFact = 0;
+        OFS = 0;   // % сколько нет товаров
+        OOS = 0;   // Представленность %
+
+        detailedReportTovList = null;   // Обнуляю переменные для свеже открытого отчёта.
+        detailedReportRPList = null;    // Обнуляю переменные для свеже открытого отчёта.
+
+        // Задачи для Закладочки "ЗИР"
+        tarList = SQL_DB.tarDao().getAllByInfo(1, wpDataDB.getClient_id(), wpDataDB.getAddr_id(), (System.currentTimeMillis() / 1000 - 5184000), 0);
 
         globals.writeToMLOG(Clock.getHumanTime() + "DetailedReportActivity.onCreate: " + "ENTER" + "\n");
-//        try {
+
         setContentView(R.layout.drawler_dr);
 
         setSupportActionBar(findViewById(R.id.my_toolbar));
@@ -123,34 +147,23 @@ public class DetailedReportActivity extends toolbar_menus {
             tabLayout.getTabAt(2).setText(tovars.nm);
         }
 
-        tabLayout.getTabAt(3).setText("ЗиР");
+        // Установка Заголовка в закладочку "ЗИР". В скобочках нужно написать кол-во самих задач
+        StringBuffer tarTabTitle = new StringBuffer();
+        tarTabTitle.append("ЗИР");
+        if (tarList != null && tarList.size() > 0) {
+            tarTabTitle.append("(").append("<font color='red'>").append(tarList.size()).append("</font>").append(")");
+        }
+        tabLayout.getTabAt(3).setText(Html.fromHtml(String.valueOf(tarTabTitle)));
 
-
-        Intent i = getIntent();
-        rowWP = (WpDataDB) i.getSerializableExtra("rowWP");
-        Data wp = (Data) i.getSerializableExtra("dataFromWP");
-
-//        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
-
-//            try {
-        list.addAll(Collections.singleton(wp));
-        Log.e("DetailedReportA", "list: " + list);
-
-        wpDataDB = RealmManager.getWorkPlanRowById(list.get(0).getId());
-        Log.e("DetailedReportA", "wpDataDB: " + wpDataDB.getId());
-
-//        String s = getResources().getString(R.string.title_detailed_report);
-//        String titleDr = String.format("%s%s", s, wpDataDB.getCode_dad2());
 
         StringBuilder stringBuilder = new StringBuilder();
         try {
-            stringBuilder.append(wpDataDB.getDt().substring(5)).append(".. ").append(wpDataDB.getAddr_txt().substring(0, 25)).append(".. ").append("\n");
-            stringBuilder.append(wpDataDB.getClient_txt().substring(0, 15)).append(".. ").append(wpDataDB.getUser_txt().substring(0, 15)).append(".. ");
+            stringBuilder.append(Clock.getHumanTimeYYYYMMDD(wpDataDB.getDt().getTime() / 1000).substring(5)).append(".. ").append(wpDataDB.getAddr_txt().substring(0, 25)).append(".. ").append("\n");    //+TODO CHANGE DATE
+            stringBuilder.append(wpDataDB.getClient_txt().substring(0, 12)).append(".. ").append(wpDataDB.getUser_txt().substring(0, 12)).append(".. ");
         } catch (Exception e) {
             stringBuilder.append("Дет. Отчёт №: ").append(wpDataDB.getCode_dad2());
         }
 
-//        activity_title.setTextSize(10);
 
         activity_title.setText(stringBuilder);
         activity_title.setBackgroundColor(Color.parseColor("#B1B1B1"));
@@ -158,13 +171,6 @@ public class DetailedReportActivity extends toolbar_menus {
         setTab();
 
         this.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN); //Убирает фокус с полей ввода
-
-//            }catch (Exception e){
-//                Log.e("ERROR", "WRITE_TO_LOG_TABLE: " + e);
-//            }
-//        }catch (Exception e){
-//            globals.alertDialogMsg(this, "Ошибка в детализированном отчёте: " + e);
-//        }
 
 
         try {
@@ -199,6 +205,16 @@ public class DetailedReportActivity extends toolbar_menus {
 
     }//--------------------------------------------------------------------- /ON CREATE ---------------------------------------------------------------------
 
+    /*Получаю строчку с Пална работ и храню её для Отчёта*/
+    private void setActivityData() {
+        Intent i = getIntent();
+        rowWP = (WpDataDB) i.getSerializableExtra("rowWP");
+        Data wp = (Data) i.getSerializableExtra("dataFromWP");
+
+        list.addAll(Collections.singleton(wp));
+
+        wpDataDB = RealmManager.getWorkPlanRowById(list.get(0).getId());
+    }
 
     // Основное сообщение
     private void setDialogAddCoordinate() {
@@ -274,7 +290,7 @@ public class DetailedReportActivity extends toolbar_menus {
                         @Override
                         public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
                             Log.e("test", "response: " + response);
-                            Toast.makeText(DetailedReportActivity.this, "OK", Toast.LENGTH_LONG).show();
+//                            Toast.makeText(DetailedReportActivity.this, "OK", Toast.LENGTH_LONG).show();
                         }
 
                         @Override
@@ -386,12 +402,16 @@ public class DetailedReportActivity extends toolbar_menus {
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         Log.d("test", "" + requestCode + resultCode + data);
 
+        Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult", "requestCode / resultCode / data: " + requestCode + "/" + resultCode + "/" + data);
+
         switch (requestCode) {
             case 101:
                 try {
                     globals.writeToMLOG(Clock.getHumanTime() + "DETAILED_REPORT_ACT.onActivityResult: " + "ENTER" + "\n");
                     image = MakePhoto.image;
                     globals.writeToMLOG(Clock.getHumanTime() + "DETAILED_REPORT_ACT.onActivityResult.image: " + image + "\n");
+
+                    Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/101", "Image: " + image);
 
                     Log.e("dispatchTakePicture", "image: " + image);
                     Log.e("dispatchTakePicture", "imagelength: " + image.length());
@@ -441,6 +461,7 @@ public class DetailedReportActivity extends toolbar_menus {
 
                 photo.setPhoto_hash(hash);
                 photo.setPhoto_num(photoFile.getAbsolutePath());
+                photo.setPhoto_type(Integer.valueOf(MakePhoto.photoType));
 
                 StackPhotoRealm.setAll(Collections.singletonList(photo));
             } catch (Exception e) {

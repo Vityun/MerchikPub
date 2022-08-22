@@ -24,6 +24,12 @@
             app:itemBackground="@drawable/hamburger_menu_selector"
             android:title="@string/hamburger_menu_detailed_report" />
         <item
+            android:id="@+id/nav_premial"
+            android:icon="@drawable/ic_menu_slideshow"
+            android:checkable="true"
+            app:itemBackground="@drawable/hamburger_menu_selector"
+            android:title="@string/hamburger_menu_detailed_report" />
+        <item
             android:id="@+id/nav_pr"
             android:icon="@drawable/ic_menu_manage"
             android:checkable="true"

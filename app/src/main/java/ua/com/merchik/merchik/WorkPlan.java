@@ -95,7 +95,7 @@ public class WorkPlan {
     }
 
     //
-    public List<OptionsDB> getOptionButtons2(long otchetId, int wpId){
+    public List<OptionsDB> getOptionButtons2(long otchetId, long wpId){
         RealmResults<OptionsDB> options = RealmManager.getOptionsButton(otchetId);
         List<OptionsDB> arraylist;
         arraylist = RealmManager.INSTANCE.copyFromRealm(options);
@@ -115,11 +115,11 @@ public class WorkPlan {
 
 
     /**Получить данные о КПСе*/
-    public WPDataObj getKPS(int wpId){
+    public WPDataObj getKPS(long wpId){
         WpDataDB wpRow = RealmManager.getWorkPlanRowById(wpId);
 
-        int id = wpRow.getId();
-        String date = wpRow.getDt();
+        long id = wpRow.getId();
+        String date = Clock.getHumanTimeYYYYMMDD(wpRow.getDt().getTime()/1000);
         String customer_id = wpRow.getClient_id();
         int address_id = wpRow.getAddr_id();
         String photo_type = "0";

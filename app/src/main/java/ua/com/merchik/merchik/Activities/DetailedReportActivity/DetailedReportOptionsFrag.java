@@ -21,7 +21,7 @@ import java.util.Collections;
 import java.util.List;
 
 import ua.com.merchik.merchik.Clock;
-import ua.com.merchik.merchik.Options;
+import ua.com.merchik.merchik.Options.Options;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.ServerExchange.Exchange;
 import ua.com.merchik.merchik.ServerExchange.TablesLoadingUnloading;
@@ -29,8 +29,10 @@ import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.WorkPlan;
 import ua.com.merchik.merchik.data.Data;
 import ua.com.merchik.merchik.data.Database.Room.SiteObjectsSDB;
+import ua.com.merchik.merchik.data.OptionMassageType;
 import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
+import ua.com.merchik.merchik.database.realm.tables.WpDataRealm;
 import ua.com.merchik.merchik.dialogs.DialogFilter.Click;
 
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
@@ -59,6 +61,18 @@ public class DetailedReportOptionsFrag extends Fragment {
     }
 
     @Override
+    public void onResume() {
+        try {
+            recycleViewDRAdapter.notifyDataSetChanged();
+        }catch (Exception e){
+            Log.e("test", "test: " + e);
+            /*    java.lang.NullPointerException: Attempt to invoke virtual method 'void ua.com.merchik.merchik.Activities.DetailedReportActivity.RecycleViewDRAdapter.notifyDataSetChanged()' on a null object reference
+        at ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportOptionsFrag.onResume(DetailedReportOptionsFrag.java:64)*/
+        }
+        super.onResume();
+    }
+
+    @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View v = inflater.inflate(R.layout.fragment_dr_option, container, false);
         try {
@@ -77,7 +91,7 @@ public class DetailedReportOptionsFrag extends Fragment {
                     check.setImageDrawable(mContext.getResources().getDrawable(R.drawable.ic_check));
                     check.setColorFilter(mContext.getResources().getColor(R.color.greenCol));
                 }else {
-                    if (Clock.dateConvertToLong(wpDataDB.getDt()) < System.currentTimeMillis()){
+                    if (Clock.dateConvertToLong(Clock.getHumanTimeYYYYMMDD(wpDataDB.getDt().getTime()/1000)) < System.currentTimeMillis()){ //+TODO CHANGE DATE
                         check.setImageDrawable(mContext.getResources().getDrawable(R.drawable.ic_exclamation_mark_in_a_circle));
                         check.setColorFilter(mContext.getResources().getColor(R.color.red_error));
                     }else {
@@ -101,7 +115,25 @@ public class DetailedReportOptionsFrag extends Fragment {
                 Toast.makeText(mContext, "Данный раздел находится в разработке", Toast.LENGTH_LONG).show();
             });
             buttonMakeAReport.setOnClickListener(b -> {
-                new Options().conduct(getContext(), wpDataDB, optionsButtons, 3);
+
+                List<OptionsDB> opt = workPlan.getOptionButtons2(workPlan.getWpOpchetId(wpDataDB), wpDataDB.getId());
+                WpDataDB wp = WpDataRealm.getWpDataRowByDad2Id(wpDataDB.getCode_dad2());
+
+                new Options().conduct(getContext(), wp, opt, 3, new Clicks.click() {
+                    @Override
+                    public <T> void click(T data) {
+                        OptionsDB optionsDB = (OptionsDB) data;
+                        int scrollPosition = recycleViewDRAdapter.getItemPosition(optionsDB);
+
+//                        if (optionsDB.getOptionControlId().equals("76815")){
+                            OptionMassageType msgType = new OptionMassageType();
+                            msgType.type = OptionMassageType.Type.DIALOG;
+                            new Options().optControl(getContext(), wp, optionsDB, Integer.parseInt(optionsDB.getOptionControlId()), msgType, Options.NNKMode.CHECK);
+//                        }
+
+                        rvContacts.smoothScrollToPosition(scrollPosition);
+                    }
+                });
 
                 if (wpDataDB.getSetStatus() == 1){
                     check.setImageDrawable(mContext.getResources().getDrawable(R.drawable.ic_question_circle_regular));

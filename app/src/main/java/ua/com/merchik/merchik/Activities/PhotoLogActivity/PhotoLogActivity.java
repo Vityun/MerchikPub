@@ -15,6 +15,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import io.realm.RealmResults;
+import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
@@ -23,17 +24,15 @@ import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.StackPhotoRealm;
 import ua.com.merchik.merchik.dialogs.DialogData;
-import ua.com.merchik.merchik.dialogs.DialogFilter.Click;
-import ua.com.merchik.merchik.dialogs.DialogFilter.DialogFilterPhotoLog;
+import ua.com.merchik.merchik.dialogs.DialogFilter.DialogFilter;
 import ua.com.merchik.merchik.toolbar_menus;
 
 public class PhotoLogActivity extends toolbar_menus {
 
+    private EditText editText;
     private TextView activity_title;
     private ImageButton filter;
-
-//    private boolean choice = false;
-
+    private RecyclerView recyclerView;
 
     //----------------------------------------------------------------------------------------------
     @Override
@@ -53,9 +52,6 @@ public class PhotoLogActivity extends toolbar_menus {
 
         try {
             initDrawerStuff(findViewById(R.id.drawer_layout), findViewById(R.id.my_toolbar), findViewById(R.id.nav_view));
-//            NavigationView navigationView;
-//            navigationView = findViewById(R.id.nav_view);
-//            navigationView.setCheckedItem(R.id.nav_dr);
         } catch (Exception e) {
             DialogData dialog = new DialogData(this);
             dialog.setTitle("Ошибка");
@@ -65,14 +61,6 @@ public class PhotoLogActivity extends toolbar_menus {
         }
 
     }//------------------------------------ /ON CREATE ---------------------------------------------
-
-    public static void checkClick(Clicks.click click) {
-        click.click(PhotoAndInfoViewHolder.stackPhotoDB);
-    }
-
-    public void setChoice() {
-//        choice = true;
-    }
 
     public boolean getChoice() {
         return this.getIntent().getBooleanExtra("choise", false);
@@ -109,57 +97,25 @@ public class PhotoLogActivity extends toolbar_menus {
         activity_title = (TextView) findViewById(R.id.activity_title);
         activity_title.setText(getResources().getString(R.string.activity_photo_log_title));
 
+        editText = (EditText) findViewById(R.id.searchViewPhotoLog);
         filter = findViewById(R.id.filter);
+
+        setFilter();
     }
 
 
-    /**
-     * 16.02.2021
-     */
-    RecyclerView recyclerView;
-    PhotoLogAdapter recycleViewPLAdapter;
-
+    private PhotoLogAdapter recycleViewPLAdapter;
+    private RealmResults<StackPhotoDB> stackPhoto;
     private void setRecycler() {
-        EditText editText = (EditText) findViewById(R.id.searchViewPhotoLog);
+
         editText.setHint("Введите текст для поиска по любым реквизитам");
         editText.clearFocus();
-
-        filter = findViewById(R.id.filter);
-        filter.setOnClickListener(v -> {
-/*            DialogFilter dialog = new DialogFilter(this, Globals.SourceAct.PHOTO_LOG);
-            dialog.setClose(dialog::dismiss);
-
-            dialog.serEditFilter(editText.getHint(), editText.getText());
-            dialog.setFilters();
-
-            dialog.show();*/
-
-            DialogFilterPhotoLog dialog = new DialogFilterPhotoLog(this, editText.getText().toString());
-            dialog.setApply(new Click() {
-                @Override
-                public <T> void onSuccess(T data) {
-
-                }
-
-                @Override
-                public void onFailure(String error) {
-
-                }
-            });
-            dialog.show();
-
-            Log.e("test error", "dafgadfgadgadgadfgadga");
-        });
-
-
         recyclerView = (RecyclerView) findViewById(R.id.recyclerViewPhotoLog);
-
 
         Log.e("PHOTO_LOG_ACT", "RealmManager.getStackPhoto(): " + RealmManager.getStackPhoto().size());
 
-
         PhotoLogMode photoLogMode;
-        RealmResults stackPhoto;
+
         try {
             if (getChoice()) {
                 photoLogMode = PhotoLogMode.CHOICE;
@@ -171,10 +127,9 @@ public class PhotoLogActivity extends toolbar_menus {
 
             } else if (this.getIntent().getBooleanExtra("planogram", false)) {
                 photoLogMode = PhotoLogMode.PLANOGRAM;
-                stackPhoto = StackPhotoRealm.getPlanogramPhoto(
-                        this.getIntent().getIntExtra("address", 0),
-                        this.getIntent().getStringExtra("customer")
-                );
+                int addr = this.getIntent().getIntExtra("address", 0);
+                String cust = this.getIntent().getStringExtra("customer");
+                stackPhoto = StackPhotoRealm.getPlanogramPhoto(addr, cust);
                 Globals.writeToMLOG("INFO", "PhotoLogActivity/setRecycler/planogram", "stackPhoto: " + stackPhoto.size());
 
             } else if (this.getIntent().getBooleanExtra("report_prepare", false)) {
@@ -194,7 +149,6 @@ public class PhotoLogActivity extends toolbar_menus {
             stackPhoto = RealmManager.getStackPhoto();
             Globals.writeToMLOG("ERROR", "PhotoLogActivity/setRecycler", "Exeption: " + e);
         }
-
 
         Integer resultCode = this.getIntent().getIntExtra("resultCode", 0);
         recycleViewPLAdapter = new PhotoLogAdapter(this, stackPhoto, getChoice(), new Clicks.click() {
@@ -248,6 +202,64 @@ public class PhotoLogActivity extends toolbar_menus {
             }
         });
 
+    }
+
+    private void setFilter() {
+        DialogFilter dialog = new DialogFilter(this, Globals.SourceAct.WP_DATA);
+        dialog.setTextFilter(editText.getText().toString());
+        dialog.setClose(dialog::dismiss);
+        dialog.setCancel(() -> {
+            editText.setText("");
+            setFilterIco(dialog);
+            recycleViewPLAdapter.updateData(stackPhoto);
+            recyclerView.scheduleLayoutAnimation();
+            recycleViewPLAdapter.notifyDataSetChanged();
+        });
+        dialog.setApply(() -> {
+            RealmResults<StackPhotoDB> data = StackPhotoRealm.getAllRealm();
+            if (dialog.clientId != null) {
+                data = data.where().equalTo("client_id", dialog.clientId).findAll();
+            }
+
+            if (dialog.addressId != null) {
+                data = data.where().equalTo("addr_id", dialog.addressId).findAll();
+            }
+
+            if (dialog.dateFrom != null && dialog.dateTo != null) {
+
+                Long dt1 = Clock.dateConvertToLong(dialog.dateFrom);
+                Long dt2 = Clock.dateConvertToLong(dialog.dateTo);
+
+                if (dt1 != null && dt2 != null) {
+                    data = data.where().between("dt", dt1, dt2).findAll();
+                }
+            }
+
+
+            recycleViewPLAdapter.updateData(data);
+            if (dialog.textFilter != null && !dialog.textFilter.equals("")) {
+                editText.setText(dialog.textFilter);
+            }
+            recycleViewPLAdapter.notifyDataSetChanged();
+            setFilterIco(dialog);
+        });
+
+        setFilterIco(dialog);
+
+        filter.setOnClickListener((v) -> {
+            dialog.show();
+        });
+    }
+
+    /**
+     * Set that
+     * */
+    private void setFilterIco(DialogFilter dialog){
+        if (dialog.isFiltered()) {
+            filter.setImageDrawable(getResources().getDrawable(R.drawable.ic_filterbold));
+        } else {
+            filter.setImageDrawable(getResources().getDrawable(R.drawable.ic_filter));
+        }
     }
 
 }

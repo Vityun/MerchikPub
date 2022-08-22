@@ -349,51 +349,55 @@ public class AdapterUtil extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             msg.append("Сообщение: ").append(data.msg).append("\n");
 
             layout.setOnClickListener((v)->{
-                DialogData dialog = new DialogData(mContext);
-                dialog.setTitle("Сообщение " + data.id);
-                dialog.setText(msg);
-                dialog.setClose(dialog::dismiss);
-                dialog.show();
+                try {
+                    DialogData dialog = new DialogData(mContext);
+                    dialog.setTitle("Сообщение " + data.id);
+                    dialog.setText(msg);
+                    dialog.setClose(dialog::dismiss);
+                    dialog.show();
 
-                data.dtRead = System.currentTimeMillis()/1000;
-                SQL_DB.chatDao().insertData(Collections.singletonList(data))
-                        .subscribeOn(Schedulers.io())
-                        .subscribe(new DisposableCompletableObserver() {
+                    data.dtRead = System.currentTimeMillis()/1000;
+                    SQL_DB.chatDao().insertData(Collections.singletonList(data))
+                            .subscribeOn(Schedulers.io())
+                            .subscribe(new DisposableCompletableObserver() {
+                                @Override
+                                public void onComplete() {
+                                    image.setImageDrawable(mContext.getResources().getDrawable(R.drawable.ic_email_open));
+                                }
+
+                                @Override
+                                public void onError(@io.reactivex.rxjava3.annotations.NonNull Throwable e) {
+                                    image.setImageDrawable(mContext.getResources().getDrawable(R.drawable.ic_email));
+                                }
+                            });
+
+
+                    StandartData.StandartDataChat dataChat = new StandartData.StandartDataChat();
+                    dataChat.element_id = data.id;
+                    dataChat.msg_id = data.id;
+
+                    if (internetStatus != 1){
+
+                    }else {
+                        Exchange.chatMarkRead(dataChat, new ExchangeInterface.ExchangeResponseInterfaceSingle() {
                             @Override
-                            public void onComplete() {
-                                image.setImageDrawable(mContext.getResources().getDrawable(R.drawable.ic_email_open));
+                            public <T> void onSuccess(T data) {
+                                Toast.makeText(mContext, "Сообщение прочитано", Toast.LENGTH_SHORT).show();
                             }
 
                             @Override
-                            public void onError(@io.reactivex.rxjava3.annotations.NonNull Throwable e) {
-                                image.setImageDrawable(mContext.getResources().getDrawable(R.drawable.ic_email));
+                            public void onFailure(String error) {
+
                             }
                         });
+                    }
 
-
-                StandartData.StandartDataChat dataChat = new StandartData.StandartDataChat();
-                dataChat.element_id = data.id;
-                dataChat.msg_id = data.id;
-
-                if (internetStatus != 1){
-
-                }else {
-                    Exchange.chatMarkRead(dataChat, new ExchangeInterface.ExchangeResponseInterfaceSingle() {
-                        @Override
-                        public <T> void onSuccess(T data) {
-                            Toast.makeText(mContext, "Сообщение прочитано", Toast.LENGTH_SHORT).show();
-                        }
-
-                        @Override
-                        public void onFailure(String error) {
-
-                        }
-                    });
+                    notifyDataSetChanged();
+                }catch (Exception e){
+                    Toast.makeText(layout.getContext(), "При чтении сообщения произошла ошибка. Обратитесь к своему руководителю за помощью.", Toast.LENGTH_LONG).show();
+                    Globals.writeToMLOG("ERROR", "AdapterUtil/bindChats", "Exception e: " + e);
                 }
 
-
-
-                notifyDataSetChanged();
             });
         }
     }

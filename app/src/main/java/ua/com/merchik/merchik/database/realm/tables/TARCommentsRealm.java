@@ -2,6 +2,7 @@ package ua.com.merchik.merchik.database.realm.tables;
 
 import java.util.List;
 
+import io.realm.RealmResults;
 import ua.com.merchik.merchik.data.RealmModels.TARCommentsDB;
 
 import static ua.com.merchik.merchik.database.realm.RealmManager.INSTANCE;
@@ -15,7 +16,7 @@ public class TARCommentsRealm {
         try {
             if (data != null){
                 INSTANCE.beginTransaction();
-                INSTANCE.delete(TARCommentsDB.class);
+//                INSTANCE.delete(TARCommentsDB.class);
                 INSTANCE.copyToRealmOrUpdate(data);
                 INSTANCE.commitTransaction();
             }else {
@@ -24,6 +25,18 @@ public class TARCommentsRealm {
         }catch (Exception e){
             // TODO Set to LOG info about error
         }
+    }
+
+    public static TARCommentsDB getTARCommentById(String id){
+        return INSTANCE.where(TARCommentsDB.class)
+                .equalTo("id", id)
+                .findFirst();
+    }
+
+    public static RealmResults<TARCommentsDB> getTARCommentByIds(String[] ids){
+        return INSTANCE.where(TARCommentsDB.class)
+                .in("id", ids)
+                .findAll();
     }
 
 
@@ -40,6 +53,25 @@ public class TARCommentsRealm {
 
 
     /**
+     * Для опции контроля 135329
+     *
+     * @param id
+     * @param userId*/
+    public static List<TARCommentsDB> getTARCommentsToOptionControl(Integer id, Integer userId){
+        return INSTANCE.where(TARCommentsDB.class)
+                .equalTo("rId", String.valueOf(id))
+                .equalTo("who", String.valueOf(userId))
+                .and()
+                .notEqualTo("photo", "0")
+                .notEqualTo("photo", "")
+                .or()
+                .notEqualTo("photo_hash", "0")
+                .notEqualTo("photo_hash", "")
+                .findAll();
+    }
+
+
+    /**
      * 26.03.2021
      * Получение комментов созданных на моей стороне для выгрузки на сервер.
      *
@@ -48,7 +80,8 @@ public class TARCommentsRealm {
      * */
     public static List<TARCommentsDB> getTARCommentToUpload(){
          return INSTANCE.where(TARCommentsDB.class)
-                 .isNull("id")
+//                 .isNull("id")
+                 .equalTo("startUpdate", true)
                  .findAll();
     }
 

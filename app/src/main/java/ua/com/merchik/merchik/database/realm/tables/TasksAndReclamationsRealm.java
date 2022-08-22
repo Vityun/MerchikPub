@@ -92,7 +92,7 @@ public class TasksAndReclamationsRealm {
                 }
             }
 
-            if (tp == 1){
+            if (tp == 1){   // ЗАДАЧА
                 switch (status){
                     case 0:
                         return "Активные";

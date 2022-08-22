@@ -3,14 +3,15 @@ package ua.com.merchik.merchik.data;
 import android.view.View;
 
 import java.io.Serializable;
+import java.util.Date;
 
 public class Data implements Serializable{
 
-    private int id;
+    private long id;
     private String addr;
     private String cust;
     private String merc;
-    private String date;
+    private Date date;
 
     private long otchetId;
 
@@ -20,8 +21,8 @@ public class Data implements Serializable{
     private int images;
 
 
-    public Data(int id, String addr, String cust, String merc,
-                String date, long otchetId, View options, int images) {
+    public Data(long id, String addr, String cust, String merc,
+                Date date, long otchetId, View options, int images) {
         this.id = id;
         this.addr = addr;
         this.cust = cust;
@@ -32,7 +33,7 @@ public class Data implements Serializable{
         this.images = images;
     }
 
-    public Data(int id, String addr, String cust, String merc, String date, long otchetId, String s, int images) {
+    public Data(long id, String addr, String cust, String merc, Date date, long otchetId, String s, int images) {
         this.id = id;
         this.addr = addr;
         this.cust = cust;
@@ -43,7 +44,7 @@ public class Data implements Serializable{
         this.images = images;
     }
 
-    public Integer getId() {
+    public Long getId() {
         return this.id;
     }
 
@@ -59,7 +60,7 @@ public class Data implements Serializable{
         return this.merc;
     }
 
-    public String getDate() {
+    public Date getDate() {
         return this.date;
     }
 

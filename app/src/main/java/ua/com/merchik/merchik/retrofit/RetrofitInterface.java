@@ -67,6 +67,7 @@ import ua.com.merchik.merchik.data.RetrofitResponse.tables.OborotVedResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.OpinionResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.OpinionThemeResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.Premial.Premial;
+import ua.com.merchik.merchik.data.RetrofitResponse.tables.Premial.PremiumPremium.PremiumPremium;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.StandartResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.TasksAndReclamationsSDBResponce;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.TovarGroupClientResponse;
@@ -160,6 +161,9 @@ public interface RetrofitInterface {
     Call<WpDataServer> wpData(@Query("mod") String mod, @Query("act") String act, @Query("date_from") String date_from, @Query("date_to") String date_to);
 
     @POST("mobile_app.php?")
+    Call<JsonObject> wpDataJson(@Query("mod") String mod, @Query("act") String act, @Query("date_from") String date_from, @Query("date_to") String date_to);
+
+    @POST("mobile_app.php?")
     Call<WpDataServer> GET_WPDATA_VPI(@Query("mod") String mod,
                                       @Query("act") String act,
                                       @Query("date_from") String date_from,
@@ -240,6 +244,11 @@ public interface RetrofitInterface {
                                     @Query("date_from") String client_id,
                                     @Query("date_to") String addr_id,
                                     @Query("hash_list[]") List<String> hash);
+
+    @POST("mobile_app.php?")
+    Call<PhotoHash> SEND_PHOTO_HASH_NEW(
+            @Header("ContentType") String content,
+            @Body JsonObject json);
 
 
     @POST("mobile_app.php?")
@@ -559,6 +568,11 @@ public interface RetrofitInterface {
 
     @POST("mobile_app.php?")
     Call<Premial> GET_PREMIAL(
+            @Header("ContentType") String content,
+            @Body JsonObject json);
+
+    @POST("mobile_app.php?")
+    Call<PremiumPremium> GET_PREMIUM_PREMIUM(
             @Header("ContentType") String content,
             @Body JsonObject json);
 

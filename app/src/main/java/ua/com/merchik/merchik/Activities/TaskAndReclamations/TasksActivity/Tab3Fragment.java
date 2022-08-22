@@ -1,9 +1,12 @@
 package ua.com.merchik.merchik.Activities.TaskAndReclamations.TasksActivity;
 
+import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
+
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.Html;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -18,10 +21,12 @@ import androidx.recyclerview.widget.RecyclerView;
 import java.util.Collections;
 import java.util.List;
 
+import io.reactivex.rxjava3.observers.DisposableCompletableObserver;
+import io.reactivex.rxjava3.schedulers.Schedulers;
 import ua.com.merchik.merchik.Activities.PhotoLogActivity.PhotoLogActivity;
+import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.MakePhoto;
 import ua.com.merchik.merchik.R;
-import ua.com.merchik.merchik.ServerExchange.Exchange;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.WorkPlan;
 import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
@@ -152,7 +157,7 @@ public class Tab3Fragment extends Fragment {
                                     MakePhoto makePhoto = new MakePhoto();
                                     makePhoto.openCamera(getActivity());
                                 }catch (Exception e){
-
+                                    Globals.writeToMLOG("ERROR", "Tab3Fragment.setAddButton.case2", "Exception e: " + e);
                                 }
 
                                 Toast.makeText(v.getContext(), "Долгий клик", Toast.LENGTH_SHORT).show();
@@ -173,9 +178,11 @@ public class Tab3Fragment extends Fragment {
                     Toast.makeText(mContext, "Сохраняем в БД: " + res, Toast.LENGTH_SHORT).show();
 
                     TARCommentsDB row = new TARCommentsDB();
+                    row.setID(String.valueOf(System.currentTimeMillis()));
                     row.setComment(res);
                     row.setDt(String.valueOf(System.currentTimeMillis() / 1000));
                     row.setRId(String.valueOf(tarData.id));
+                    row.startUpdate = true;
                     try {
                         if (dialog.photo != null){
                             row.setPhoto(dialog.photo.getPhotoServerId()); // должно быть ID с сайта
@@ -188,13 +195,32 @@ public class Tab3Fragment extends Fragment {
                     row.setTp(String.valueOf(tarData.tp));
                     row.setWho(String.valueOf(tarData.vinovnik));
 
+
+
+                    tarData.lastAnswer = res;
+                    tarData.lastAnswerUserId = Globals.userId;
+                    SQL_DB.tarDao().insertData(Collections.singletonList(tarData))
+                            .subscribeOn(Schedulers.io())
+                            .subscribe(new DisposableCompletableObserver() {
+                                @Override
+                                public void onComplete() {
+                                    Log.d("test", "test");
+                                }
+
+                                @Override
+                                public void onError(@io.reactivex.rxjava3.annotations.NonNull Throwable e) {
+                                    Log.d("test", "test");
+                                }
+                            });
+
+
                     RealmManager.INSTANCE.executeTransaction((realm -> {
                         RealmManager.INSTANCE.copyToRealm(row);
                     }));
 
                     // Моментальная попытка выгрузить комментарий
-                    Exchange exchange = new Exchange();
-                    exchange.uploadTARComments(row);
+//                    Exchange exchange = new Exchange();
+//                    exchange.uploadTARComments(row);
 
                     if (adapter != null && dataComments != null) {
                         dataComments.add(0, row);

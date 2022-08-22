@@ -12,7 +12,7 @@
         tools:layout="@layout/activity_menu_wp_data" />
     <activity
         android:id="@+id/menuMainActivity"
-        android:name="ua.com.merchik.merchik.MenuMainActivity"
+        android:name="ua.com.merchik.merchik.Activities.MenuMainActivity"
         android:label="activity_menumain"
         tools:layout="@layout/activity_menumain" />
 

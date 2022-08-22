@@ -11,7 +11,7 @@ public class ReportPrepareDB extends RealmObject {
     @SerializedName("ID")
     @Expose
     @PrimaryKey
-    private Integer iD;
+    private Long iD;
     @SerializedName("dt")
     @Expose
     private String dt;
@@ -128,11 +128,11 @@ public class ReportPrepareDB extends RealmObject {
     }
 
 
-    public Integer getID() {
+    public Long getID() {
         return iD;
     }
 
-    public void setID(Integer iD) {
+    public void setID(Long iD) {
         this.iD = iD;
     }
 

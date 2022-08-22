@@ -19,18 +19,12 @@ import androidx.viewpager.widget.ViewPager;
 import com.google.android.material.navigation.NavigationView;
 import com.google.android.material.tabs.TabLayout;
 
-import java.util.List;
-
 import io.realm.RealmResults;
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.RecycleViewWPAdapter;
-import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
-import ua.com.merchik.merchik.database.realm.tables.WpDataRealm;
-import ua.com.merchik.merchik.dialogs.DialogFilter.DialogFilter;
-import ua.com.merchik.merchik.dialogs.DialogFilter.data.DialogFilterResult;
 import ua.com.merchik.merchik.toolbar_menus;
 
 public class WPDataActivity extends toolbar_menus {
@@ -172,33 +166,8 @@ public class WPDataActivity extends toolbar_menus {
 
     // 998
     private void setFilter(){
-        if (DialogFilter.filtered != null && DialogFilter.filtered == 1){
-            filter.setImageDrawable(getResources().getDrawable(R.drawable.ic_filterbold));
-        }
-
         filter.setOnClickListener((v)->{
-            DialogFilter dialog = new DialogFilter(v.getContext(), Globals.SourceAct.WP_DATA);
-
-            dialog.setEditText(searchView.getText().toString());
-            dialog.setFilterFields();
-
-            dialog.clickApply(new Clicks.click() {
-                @Override
-                public <T> void click(T data) {
-                    DialogFilterResult dialogResult = (DialogFilterResult) data;
-
-                    searchView.setText(dialogResult.searchField);
-
-                    List<WpDataDB> wp = WpDataRealm.wpFiltered(dialogResult.addressId, dialogResult.customerId, dialogResult.executorId, dialogResult.themeId);
-                    adapter.updateData(wp);
-                    adapter.notifyDataSetChanged();
-
-                    adapter.getFilter().filter(searchView.getText());
-                }
-            });
-
-            dialog.setClose(dialog::dismiss);
-            dialog.show();
+            // TODO ВСТАВИТЬ ДИАЛОГ С ФИЛЬТРОМ
         });
     }
 

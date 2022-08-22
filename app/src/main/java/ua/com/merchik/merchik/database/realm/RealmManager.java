@@ -1,10 +1,13 @@
 package ua.com.merchik.merchik.database.realm;
 
+import static ua.com.merchik.merchik.Globals.APP_PREFERENCES;
+
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.util.Log;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -48,8 +51,6 @@ import ua.com.merchik.merchik.data.UploadToServ.WpDataUploadToServ;
 import ua.com.merchik.merchik.database.realm.tables.TradeMarkRealm;
 import ua.com.merchik.merchik.database.realm.tables.WpDataRealm;
 
-import static ua.com.merchik.merchik.Globals.APP_PREFERENCES;
-
 public class RealmManager {
 
     public static Realm INSTANCE;
@@ -62,8 +63,8 @@ public class RealmManager {
 
         RealmConfiguration config = new RealmConfiguration.Builder()
                 .name("myrealm.realm")
-//                .deleteRealmIfMigrationNeeded()
-                .schemaVersion(9)
+                .deleteRealmIfMigrationNeeded()
+//                .schemaVersion(11)
                 .allowWritesOnUiThread(true)
                 .allowQueriesOnUiThread(true)
                 .migration(new MyMigration())
@@ -74,9 +75,11 @@ public class RealmManager {
 
         sharedPreferences = context.getSharedPreferences(APP_PREFERENCES, Context.MODE_PRIVATE);
         if (sharedPreferences.getBoolean("realm", false)){
-            Log.d("test", "1.");
+            List<SynchronizationTimetableDB> synchronizationTimetableDBList = RealmManager.getSynchronizationTimetable();
+            if (synchronizationTimetableDBList == null){
+                addSynchronizationTimetable();
+            }
         }else {
-            Log.d("test", "2.");
             sharedPreferences.edit().putBoolean("realm", true).apply();
             addSynchronizationTimetable();
         }
@@ -320,6 +323,12 @@ public class RealmManager {
         return true;
     }
 
+    public static void saveDownloadedOptions(List<OptionsDB> optionsDBS) {
+        INSTANCE.beginTransaction();
+        List<OptionsDB> res = INSTANCE.copyToRealmOrUpdate(optionsDBS);
+        INSTANCE.commitTransaction();
+    }
+
     /**
      * Запись в Реалм РепортПр
      */
@@ -508,7 +517,7 @@ public class RealmManager {
                 .findAll();
     }
 
-    public static WpDataDB getWorkPlanRowById(int id) {
+    public static WpDataDB getWorkPlanRowById(long id) {
         //"SELECT * FROM wp_data WHERE id = " + wpId + ";"
         return INSTANCE.where(WpDataDB.class)
                 .equalTo("ID", id)
@@ -517,8 +526,9 @@ public class RealmManager {
 
 
     public static int getWpDataDate(String dt) {
+        Date date = Clock.stringDateConvertToDate(dt);
         return INSTANCE.where(WpDataDB.class)
-                .equalTo("dt", dt)
+                .equalTo("dt", date)
                 .findAll().size();
     }
 
@@ -526,10 +536,13 @@ public class RealmManager {
      * 29.12.2020
      * Попытка создать "универсальный" запрос к БД
      */
-    public static int getWpData(int status, String dt) {
+    public static int getWpData(int status, String dt) {    //TODO query CHANGE DATE
+
+        Date date = Clock.stringDateConvertToDate(dt);
+
         return INSTANCE.where(WpDataDB.class)
                 .equalTo("status", status)
-                .equalTo("dt", dt)
+                .equalTo("dt", date)
                 .findAll().size();
     }
 
@@ -986,6 +999,42 @@ public class RealmManager {
                         item.client_start_dt = String.valueOf(l.getClient_start_dt());
                         item.client_end_dt = String.valueOf(l.getClient_end_dt());
                         item.status_set = String.valueOf(l.getSetStatus());
+
+                        item.user_comment = l.user_comment;
+                        item.user_comment_dt_update = l.user_comment_dt_update;
+                    }
+
+                    res.add(item);
+                }
+            }
+        }
+        return res;
+    }
+
+    public enum WpDataUpload {COMMENT}
+
+    public static List<StartEndData> getUploadWpData(WpDataUpload uploadMode) {
+        List<WpDataDB> list = WpDataRealm.getWpData();
+        List<StartEndData> res = new ArrayList<>();
+
+        if (list != null) {
+            for (WpDataDB l : list) {
+                if (l.startUpdate){
+                    StartEndData item = new StartEndData();
+
+                    item.element_id = String.valueOf(l.getId());
+                    item.code_dad2 = String.valueOf(l.getCode_dad2());
+                    item.user_id = String.valueOf(l.getUser_id());
+                    item.client_id = String.valueOf(l.getClient_id());
+                    item.isp = String.valueOf(l.getIsp());
+                    item.dt_update = System.currentTimeMillis()/1000; // TODO DELETE THIS, ONLY DEBUG
+
+                    switch (uploadMode){
+                        case COMMENT:
+                            item.user_comment = l.user_comment;
+                            item.user_comment_dt_update = l.user_comment_dt_update;
+                            break;
+
                     }
 
                     res.add(item);
@@ -1299,7 +1348,7 @@ public class RealmManager {
     }
 
 
-    public static int reportPrepareGetLastId() {
+    public static long reportPrepareGetLastId() {
         RealmResults<ReportPrepareDB> realmResults = INSTANCE.where(ReportPrepareDB.class)
                 .findAll();
         try {

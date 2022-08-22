@@ -5,7 +5,7 @@ import java.util.Map;
 
 public class WPDataObj implements Serializable {
 
-    private Integer id;
+    private Long id;
     private String date;
     private String customerId;
     private Integer addressId;
@@ -24,7 +24,7 @@ public class WPDataObj implements Serializable {
     public WPDataObj() {
     }
 
-    public WPDataObj(Integer id, String date, String customerId, Integer addressId,
+    public WPDataObj(Long id, String date, String customerId, Integer addressId,
                      String photoType, Map<Integer, String> customerTypeGrp, String docNum,
                      Integer themeId, String photoUserId, Long dad2, String customerIdTxt,
                      String addressIdTxt, Float latitude, Float longitude){
@@ -46,7 +46,7 @@ public class WPDataObj implements Serializable {
     }
 
 
-    public Integer getId() {
+    public Long getId() {
         return id;
     }
 
@@ -107,7 +107,7 @@ public class WPDataObj implements Serializable {
         this.dad2 = dad2;
     }
 
-    public void setId(Integer id) {
+    public void setId(Long id) {
         this.id = id;
     }
 

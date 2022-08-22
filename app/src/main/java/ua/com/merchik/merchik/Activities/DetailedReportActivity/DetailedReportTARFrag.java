@@ -1,5 +1,8 @@
 package ua.com.merchik.merchik.Activities.DetailedReportActivity;
 
+import static ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity.tarList;
+import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
+
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
@@ -8,12 +11,17 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
+import java.util.List;
+
 import ua.com.merchik.merchik.Activities.PhotoLogActivity.PhotoLogActivity;
+import ua.com.merchik.merchik.Activities.TaskAndReclamations.TARActivity;
+import ua.com.merchik.merchik.Activities.TaskAndReclamations.TasksActivity.TARSecondFrag;
 import ua.com.merchik.merchik.Activities.TaskAndReclamations.TasksActivity.UniversalAdapter;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.R;
@@ -25,12 +33,14 @@ import ua.com.merchik.merchik.database.realm.tables.UsersRealm;
 import ua.com.merchik.merchik.dialogs.DialodTAR.DialogCreateTAR;
 import ua.com.merchik.merchik.dialogs.DialogData;
 
-import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
-
 public class DetailedReportTARFrag extends Fragment {
 
     private Context mContext;
     private WpDataDB wpDataDB;
+    private List<TasksAndReclamationsSDB> tasksAndReclamationsSDBList;
+
+    private FragmentManager fragmentManager;
+    private TARSecondFrag secondFrag;
 
     public DetailedReportTARFrag(Context mContext, WpDataDB wpDataDB) {
         this.mContext = mContext;
@@ -38,8 +48,12 @@ public class DetailedReportTARFrag extends Fragment {
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState){
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+
         View v = inflater.inflate(R.layout.fragment_dr_tar, container, false);
+
+        fragmentManager = getParentFragmentManager();
+        tasksAndReclamationsSDBList = SQL_DB.tarDao().getAllByInfo(1, wpDataDB.getClient_id(), wpDataDB.getAddr_id(), (System.currentTimeMillis() / 1000 - 5184000));
 
         try {
             FloatingActionButton fabAdd = v.findViewById(R.id.fabAdd);
@@ -47,14 +61,12 @@ public class DetailedReportTARFrag extends Fragment {
 
             try {
                 // Установка Ресайклера
-                UniversalAdapter recyclerViewReclamations = new UniversalAdapter(mContext, SQL_DB.tarDao().getAllByInfo(1, wpDataDB.getClient_id(), wpDataDB.getAddr_id(), (System.currentTimeMillis() / 1000 - 5184000)), new Globals.TARInterface() {
+                UniversalAdapter recyclerViewReclamations = new UniversalAdapter(mContext, tasksAndReclamationsSDBList, false, new Globals.TARInterface() {
                     @Override
                     public void onSuccess(TasksAndReclamationsSDB data) {
-                        DialogData dialog = new DialogData(v.getContext());
-                        dialog.setTitle("Раздел находится в разработке");
-                        dialog.setText("Отображение Задачи/Рекламации в данном контексте ещё не реализовано. \n\nПопробуйте открыть этот ЗиР из соответствующего раздела в Меню.");
-                        dialog.setClose(dialog::dismiss);
-                        dialog.show();
+                        Intent intent = new Intent(v.getContext(), TARActivity.class);
+                        intent.putExtra("TAR_ID", data.id);
+                        v.getContext().startActivity(intent);
                     }
 
                     @Override
@@ -69,7 +81,7 @@ public class DetailedReportTARFrag extends Fragment {
 
                 recycler.setAdapter(recyclerViewReclamations);
                 recycler.setLayoutManager(new LinearLayoutManager(mContext, LinearLayoutManager.VERTICAL, false));
-            }catch (Exception e){
+            } catch (Exception e) {
                 Globals.writeToMLOG("ERROR", "DetailedReportTARFrag/onCreateView/UniversalAdapter", "Exception e: " + e);
             }
 
@@ -85,11 +97,11 @@ public class DetailedReportTARFrag extends Fragment {
                 dialog.setTarType(1);
                 dialog.setRecyclerView(() -> {
                     intent.putExtra("choise", true);
-                    if (dialog.address != null){
+                    if (dialog.address != null) {
                         intent.putExtra("address", dialog.address.getAddrId());
                     }
 
-                    if (dialog.customer != null){
+                    if (dialog.customer != null) {
                         intent.putExtra("customer", dialog.customer.getId());
                     }
 
@@ -100,7 +112,7 @@ public class DetailedReportTARFrag extends Fragment {
                 dialog.show();
             });
 
-        }catch (Exception e){
+        } catch (Exception e) {
             Globals.writeToMLOG("ERROR", "DetailedReportTARFrag/onCreateView", "Exception e: " + e);
         }
 

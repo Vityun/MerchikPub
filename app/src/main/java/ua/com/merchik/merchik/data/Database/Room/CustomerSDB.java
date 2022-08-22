@@ -15,7 +15,7 @@ public class CustomerSDB {
     @PrimaryKey
     @ColumnInfo(name = "id")
     @NonNull
-    public Integer id;
+    public String id;
 
     @SerializedName("nm")
     @Expose
@@ -31,7 +31,6 @@ public class CustomerSDB {
     @Expose
     @ColumnInfo(name = "main_tov_grp")
     public Integer mainTovGrp;
-
 
     @SerializedName("dt_update")
     @Expose

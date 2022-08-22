@@ -22,6 +22,15 @@ public class ThemeDB extends RealmObject {
     @SerializedName("tp")
     @Expose
     private String tp;
+
+    @SerializedName("need_photo")
+    @Expose
+    public Integer need_photo;
+
+    @SerializedName("need_report")
+    @Expose
+    public Integer need_report;
+
     @SerializedName("dt_update")
     @Expose
     private String dtUpdate;

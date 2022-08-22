@@ -66,6 +66,12 @@ public class Clock {
         return dateFormat.format(cal.getTime());
     }
 
+    public static long getDatePeriodLong(int day) {
+        Calendar cal = Calendar.getInstance();
+        cal.add(Calendar.DATE, day);
+        return cal.getTime().getTime();
+    }
+
 
     // Сегодня - 7 дней
     public static String lastWeek() {
@@ -127,6 +133,28 @@ public class Clock {
         return 0;
     }
 
+    public static Date stringDateConvertToDate(String str) {
+        DateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
+        try {
+            Date date = formatter.parse(str);
+            return date;
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public static Date stringDateConvertToDate2(String str) {
+        DateFormat formatter = new SimpleDateFormat("dd-MM-yyyy");
+        try {
+            Date date = formatter.parse(str);
+            return date;
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
 
     /**
      * 04.05.2021
@@ -146,5 +174,35 @@ public class Clock {
         cal.add(Calendar.DATE, date);
         return cal.getTime();
     }
+
+
+    /*Получение прошлого Понедельника*/
+    public static Calendar getLastMonday(){
+        Calendar cal = Calendar.getInstance();
+        cal.setFirstDayOfWeek(Calendar.MONDAY);
+
+        cal.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY);
+        cal.add(Calendar.DAY_OF_WEEK, -7);
+
+        return cal;
+    }
+
+    public static Calendar getLastSunday(){
+        Calendar cal = Calendar.getInstance();
+        cal.setFirstDayOfWeek(Calendar.SUNDAY);
+
+        cal.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY);
+        cal.add(Calendar.DAY_OF_WEEK, -1);
+
+        return cal;
+    }
+
+    /*Получение текущего понедельника*/
+    public static Calendar getCurrentMonday(){
+        Calendar cal = Calendar.getInstance();
+        cal.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY);
+        return cal;
+    }
+
 
 }

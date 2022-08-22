@@ -30,15 +30,21 @@ public class ReclamationPointExchange {
 
 //            // Нужно получить ВПИ с таблички синхронизаций
             SynchronizationTimetableDB synchronizationTimetableDB = RealmManager.getSynchronizationTimetableRowByTable("task_and_reclamations");
-            String dt_change_from = String.valueOf(synchronizationTimetableDB.getVpi_app());
-            if (dt_change_from.equals("0")){
-                data.dt_change_from = "0";
+            if (synchronizationTimetableDB != null){
+                String dt_change_from = String.valueOf(synchronizationTimetableDB.getVpi_app());
+                if (dt_change_from.equals("0")){
+                    data.dt_change_from = "0";
+                }else {
+                    data.dt_change_from = String.valueOf(synchronizationTimetableDB.getVpi_app()-120);  // минус 2 минуты для "синхрона". Это надо поменять.
+                }
+                Globals.writeToMLOG("INFO", "ReclamationPointExchange/downloadTaR", "synchronizationTimetableDB != null && data.dt_change_from: " + data.dt_change_from);
             }else {
-                data.dt_change_from = String.valueOf(synchronizationTimetableDB.getVpi_app()-120);  // минус 2 минуты для "синхрона". Это надо поменять.
+                data.dt_change_from = "0";
+                Globals.writeToMLOG("INFO", "ReclamationPointExchange/downloadTaR", "synchronizationTimetableDB == null");
             }
 
             StandartData.Filter filter = new StandartData.Filter();
-            filter.date_from = Clock.getHumanTimeYYYYMMDD(Clock.getDateLong(-7).getTime()/1000);
+            filter.date_from = Clock.getHumanTimeYYYYMMDD(Clock.getDateLong(-20).getTime()/1000);
             filter.date_to = Clock.getHumanTimeYYYYMMDD(Clock.getDateLong(2).getTime()/1000);
 
             data.filter = filter;
@@ -47,19 +53,6 @@ public class ReclamationPointExchange {
             Gson gson = new Gson();
             String json = gson.toJson(data);
             JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
-
-/*            retrofit2.Call<JsonObject> callTest = RetrofitBuilder.getRetrofitInterface().TEST_JSON_UPLOAD(RetrofitBuilder.contentType, convertedObject);
-            callTest.enqueue(new Callback<JsonObject>() {
-                @Override
-                public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
-                    Log.e("test", "response");
-                }
-
-                @Override
-                public void onFailure(Call<JsonObject> call, Throwable t) {
-                    Log.e("test", "err");
-                }
-            });*/
 
             Globals.writeToMLOG("INFO", "ReclamationPointExchange/downloadTaR", "convertedObject: " + convertedObject);
 
@@ -78,28 +71,28 @@ public class ReclamationPointExchange {
 
                             if (response.body().list != null && response.body().list.size()>0){
                                 RealmManager.INSTANCE.executeTransaction(realm -> {
-                                    synchronizationTimetableDB.setVpi_app(System.currentTimeMillis()/1000);
-                                    realm.copyToRealmOrUpdate(synchronizationTimetableDB);
+                                    if (synchronizationTimetableDB != null) {
+                                        synchronizationTimetableDB.setVpi_app(System.currentTimeMillis()/1000);
+                                        realm.copyToRealmOrUpdate(synchronizationTimetableDB);
+                                    }
                                 });
-
-//                                SynchronizationTimetableDB synchronizationTimetableDB = RealmManager.getSynchronizationTimetableRowByTable("task_and_reclamations");
 
                                 exchange.onSuccess(response.body().list);
                             }else {
-                                exchange.onFailure(null); // данных нет
+                                exchange.onFailure("Dанных нет"); // данных нет
                             }
                         }else {
-                            exchange.onFailure(null);   //Запрос вернулся пустым.
+                            exchange.onFailure("Запрос вернулся пустым.");   //Запрос вернулся пустым.
                         }
                     }catch (Exception e){
-                        exchange.onFailure(null);   //Запрос завершён с ошибкой
+                        exchange.onFailure("Запрос завершён с ошибкой: " + e);   //Запрос завершён с ошибкой
                     }
                 }
 
                 @Override
                 public void onFailure(Call<TasksAndReclamationsSDBResponce> call, Throwable t) {
                     Globals.writeToMLOG("INFO", "ReclamationPointExchange/downloadTaR/onFailure", "t: " + t);
-                    exchange.onFailure(null);
+                    exchange.onFailure("onFailure: " + t);
                 }
             });
 

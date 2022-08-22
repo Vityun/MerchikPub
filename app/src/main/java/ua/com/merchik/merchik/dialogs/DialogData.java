@@ -12,8 +12,11 @@ import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
 import android.net.Uri;
 import android.os.Build;
+import android.text.Editable;
 import android.text.InputType;
 import android.text.SpannableStringBuilder;
+import android.text.TextWatcher;
+import android.text.method.LinkMovementMethod;
 import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
@@ -22,8 +25,11 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ExpandableListView;
+import android.widget.ExpandableListView.OnChildClickListener;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.SimpleExpandableListAdapter;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -32,6 +38,7 @@ import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.io.File;
+import java.lang.reflect.Field;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
@@ -44,6 +51,7 @@ import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteHintsDB;
 import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteObjects.SiteObjectsDB;
 import ua.com.merchik.merchik.data.PhotoDescriptionText;
 import ua.com.merchik.merchik.database.realm.RealmManager;
+import ua.com.merchik.merchik.database.realm.tables.ErrorRealm;
 
 public class DialogData {
 
@@ -75,6 +83,7 @@ public class DialogData {
 
     private EditText editText, editDate, editText2;
     private Spinner spinner, spinner2;
+    private ExpandableListView expListView;
 
     public ImageButton imgBtnClose;
     public ImageButton imgBtnLesson;
@@ -89,7 +98,7 @@ public class DialogData {
     }
 
     public enum Operations {
-        Text, Telephone, Number, Date, Spinner, DoubleSpinner, EditTextAndSpinner
+        Text, TEXT, Telephone, Number, Date, Spinner, DoubleSpinner, EditTextAndSpinner
     }
 
     private DialogClickListener listenerOK;
@@ -128,6 +137,7 @@ public class DialogData {
         editDate = dialog.findViewById(R.id.editDate);
         spinner = dialog.findViewById(R.id.spinner);
         spinner2 = dialog.findViewById(R.id.spinner2);
+        expListView = dialog.findViewById(R.id.expListView);
         editText2 = dialog.findViewById(R.id.editText2);
 
         // ---------- buttons ----------
@@ -172,10 +182,15 @@ public class DialogData {
         }
     }
 
-    public void setText(SpannableStringBuilder text) {
+    //
+    public void setText(SpannableStringBuilder text, DialogClickListener clickListener) {
         this.text.setVisibility(View.VISIBLE);
+        this.text.setMovementMethod(LinkMovementMethod.getInstance());
         if (text != null && !text.equals("")) {
             this.text.setText(text);
+            this.text.setOnClickListener(v -> clickListener.clicked());
+            // Делаю возможность скролить текст
+            this.text.setMovementMethod(LinkMovementMethod.getInstance());
         } else {
             this.text.setVisibility(View.GONE);
         }
@@ -490,6 +505,27 @@ public class DialogData {
         dialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
 
         switch (operation) {
+            case TEXT:
+                ok.setVisibility(View.GONE);
+                editText.setVisibility(View.VISIBLE);
+                editText.setHint(data);
+                editText.addTextChangedListener(new TextWatcher() {
+                    @Override
+                    public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+                    }
+
+                    @Override
+                    public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+                    }
+
+                    @Override
+                    public void afterTextChanged(Editable editable) {
+                        result = editable.toString();
+                    }
+                });
+                break;
             case Text:
                 editText.setVisibility(View.VISIBLE);
                 editText.setText(data);
@@ -622,6 +658,7 @@ public class DialogData {
 
             case Spinner:
                 spinner.setVisibility(View.VISIBLE);
+
                 Log.e("setOperation", "map: " + map);
 
                 if (map != null) {
@@ -695,6 +732,21 @@ public class DialogData {
                 spinner.setVisibility(View.VISIBLE);
                 editText2.setVisibility(View.VISIBLE);
 
+
+                try {
+                    Field popup = Spinner.class.getDeclaredField("mPopup");
+                    popup.setAccessible(true);
+
+                    // Get private mPopup member variable and try cast to ListPopupWindow
+                    android.widget.ListPopupWindow popupWindow = (android.widget.ListPopupWindow) popup.get(spinner);
+
+                    // Set popupWindow height to 500px
+                    popupWindow.setHeight(200);
+                } catch (NoClassDefFoundError | ClassCastException | NoSuchFieldException | IllegalAccessException e) {
+                    e.printStackTrace();
+                }
+
+
                 if (mapSpinner != null && mapSpinner.size() > 0) {
                     String[] res = mapSpinner.values().toArray(new String[0]);
                     ArrayAdapter<String> adapter = new ArrayAdapter<>(dialog.getContext(), android.R.layout.simple_spinner_item, res);
@@ -734,6 +786,39 @@ public class DialogData {
         }
 
         Log.e("setOperation", "All.result: " + result);
+    }
+
+    public void setExpandableListView(SimpleExpandableListAdapter adapter, DialogClickListener listener) {
+        operationLayout.setVisibility(View.VISIBLE);
+        ok.setVisibility(View.VISIBLE);
+        ok.setText("Сохранить");
+
+        expListView.setVisibility(View.VISIBLE);
+        editText2.setVisibility(View.VISIBLE);
+
+        expListView.setAdapter(adapter);
+        expListView.setOnChildClickListener(getErrorExpandableListView());
+
+        ok.setOnClickListener(v -> {
+            result2 = editText2.getText().toString();
+            listener.clicked();
+            dialog.dismiss();
+        });
+    }
+
+    private OnChildClickListener getErrorExpandableListView() {
+        return (expandableListView, view, groupPos, childPos, l) -> {
+            Map<String, String> map;
+            map = (Map<String, String>) expandableListView.getExpandableListAdapter().getChild(groupPos, childPos);
+
+            String str = map.get("monthName");
+            String res = str.replace("* ", "");
+
+            Toast.makeText(context, "Выбрали ошибку: " + res, Toast.LENGTH_SHORT).show();
+
+            result = ErrorRealm.getErrorDbByNm(res).getID();
+            return false;
+        };
     }
 
 

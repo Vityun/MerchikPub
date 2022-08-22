@@ -82,7 +82,7 @@ public class RecycleViewWPAdapter extends RecyclerView.Adapter<RecycleViewWPAdap
                 check.setImageDrawable(mContext.getResources().getDrawable(R.drawable.ic_check));
                 check.setColorFilter(mContext.getResources().getColor(R.color.greenCol));
             } else {
-                if (Clock.dateConvertToLong(wpDataDB.getDt()) < System.currentTimeMillis()) {
+                if (Clock.dateConvertToLong(Clock.getHumanTimeYYYYMMDD(wpDataDB.getDt().getTime()/1000)) < System.currentTimeMillis()) {    //+TODO CHANGE DATE
                     check.setImageDrawable(mContext.getResources().getDrawable(R.drawable.ic_exclamation_mark_in_a_circle));
                     check.setColorFilter(mContext.getResources().getColor(R.color.red_error));
                 } else {
@@ -109,7 +109,7 @@ public class RecycleViewWPAdapter extends RecyclerView.Adapter<RecycleViewWPAdap
             addr.setText(wpDataDB.getAddr_txt());
             cust.setText(wpDataDB.getClient_txt());
             merc.setText(wpDataDB.getUser_txt());
-            date.setText(wpDataDB.getDt() + " " + Clock.getHumanTimeOpt(wpDataDB.getDt_start() * 1000));
+            date.setText(Clock.getHumanTimeYYYYMMDD(wpDataDB.getDt().getTime()/1000) + " " + Clock.getHumanTimeOpt(wpDataDB.getDt_start() * 1000));
             price.setText(string);
             price.setMovementMethod(LinkMovementMethod.getInstance());
 
@@ -157,7 +157,7 @@ public class RecycleViewWPAdapter extends RecyclerView.Adapter<RecycleViewWPAdap
 
 
         private void setDialog(WpDataDB wp, long otchetId) {
-            String msg = String.format("Дата: %s\nАдрес: %s\nКлиент: %s\nИсполнитель: %s\n", wp.getDt(), wp.getAddr_txt(), wp.getClient_txt(), wp.getUser_txt());
+            String msg = String.format("Дата: %s\nАдрес: %s\nКлиент: %s\nИсполнитель: %s\n", Clock.getHumanTimeYYYYMMDD(wp.getDt().getTime()/1000), wp.getAddr_txt(), wp.getClient_txt(), wp.getUser_txt());
 
             DialogData errorMsg = new DialogData(mContext);
             errorMsg.setTitle("");
@@ -197,7 +197,7 @@ public class RecycleViewWPAdapter extends RecyclerView.Adapter<RecycleViewWPAdap
                         wp.getAddr_txt(),
                         wp.getClient_txt(),
                         wp.getUser_txt(),
-                        wp.getDt(),
+                        wp.getDt(),  //+TODO CHANGE DATE
                         otchetId,
                         "",
                         R.mipmap.merchik);
@@ -292,8 +292,8 @@ public class RecycleViewWPAdapter extends RecyclerView.Adapter<RecycleViewWPAdap
 //                Toast toast = Toast.makeText(mContext, "Отобрано: " + WP.size() + " КПС", Toast.LENGTH_SHORT);
 //                toast.setGravity(Gravity.CENTER, 0, 0);
 //                toast.show();
-
                 notifyDataSetChanged();
+
             }
         };
     }

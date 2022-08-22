@@ -38,7 +38,8 @@ public interface UsersDao {
     @Query("SELECT * FROM sotr WHERE id = :id")
     Flowable<UsersSDB> getByIdF(int id);
 
-    @Query("SELECT s.*, t.nm FROM sotr s LEFT JOIN tovar_group t ON s.otdel_id = t.id WHERE work_addr_id = :addrId ORDER BY fio")
+//    @Query("SELECT s.*, t.nm FROM sotr s LEFT JOIN tovar_group t ON s.otdel_id = t.id WHERE work_addr_id = :addrId ORDER BY fio")
+    @Query("SELECT s.* FROM sotr s WHERE work_addr_id = :addrId ORDER BY fio")
     List<UserSDBJoin> getAllUsersLJoinTovGrps(int addrId);
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)

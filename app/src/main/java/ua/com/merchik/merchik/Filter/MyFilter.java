@@ -6,6 +6,7 @@ import android.util.Log;
 import java.util.ArrayList;
 import java.util.List;
 
+import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.ViewHolders.AutoTextUsersViewHolder;
 import ua.com.merchik.merchik.data.Database.Room.AddressSDB;
@@ -74,7 +75,7 @@ public class MyFilter {
 //                });
 
                 // Дата
-                if (item.getDt() != null && !item.getDt().equals("") && item.getDt().toLowerCase().contains(constraint)) {
+                if (item.getDt() != null && !item.getDt().equals("") && Clock.getHumanTimeYYYYMMDD(item.getDt().getTime()/1000).toLowerCase().contains(constraint)) {   //+TODO CHANGE DATE
                     results.add(item);
                 }
                 // Адрес

@@ -18,11 +18,13 @@ public class StandartData<T> {
     public Double y;    // Координата Y
 
     public Integer option_id;   // На данный момоент используется в ЭКЛах
-    public String sotr_id;  // Фильтр для получения &&&&&&&&&&&&&????????????)))))))))))))))
-    public String lang_id;  // ID языка
+    public String sotr_id;      // Фильтр для получения &&&&&&&&&&&&&????????????)))))))))))))))
+    public String user_id;
+    public String lang_id;      // ID языка
     public String code_dad2;     // Код ДАД2
-    public String tel_type; // Номер телефона, если не определена будут использоваться оба номера сотрудника tel1, tel2
-    public String photo_type; // Типо фото
+    public String tel_type;     // Номер телефона, если не определена будут использоваться оба номера сотрудника tel1, tel2
+    public String photo_type;   // Типо фото
+//    public String hash_list;    // - по хэшу фоток
 
     // Период за который надо получить данные
     public String date_from;
@@ -43,6 +45,9 @@ public class StandartData<T> {
 
     public List<T> data;
     public List<T> tovar_id;    // Тестовая хрень, надо поменять
+    public List<String> hash_list;
+
+    public String list_type;
 
     public Filter filter;
 
@@ -78,6 +83,7 @@ public class StandartData<T> {
         public Long dt_end_fact;            // фактическое время окончания работ
         public Integer vote_score;          // Оценка рекламации
         public Integer vinovnik_score;      // Оценка обьективности
+        public String vinovnik_score_comment;
         public Integer sotr_opinion_id;     // id-шник мнения о задаче/рекламации
     }
 }

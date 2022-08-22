@@ -449,4 +449,21 @@ public class OptionsDB extends RealmObject {
         this.optionGroupTxt = optionGroupTxt;
     }
 
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+
+        if (o == null || getClass() != o.getClass()) return false;
+
+        OptionsDB optionsDB = (OptionsDB) o;
+
+        return iD.equals(optionsDB.iD);
+    }
+
+    @Override
+    public int hashCode() {
+        return iD.hashCode();
+    }
+
 }

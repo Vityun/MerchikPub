@@ -3,6 +3,10 @@ package ua.com.merchik.merchik.Activities.DetailedReportActivity;
 import android.app.Dialog;
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.drawable.ColorDrawable;
+import android.graphics.drawable.Drawable;
+import android.graphics.drawable.GradientDrawable;
+import android.graphics.drawable.ShapeDrawable;
 import android.net.Uri;
 import android.text.Html;
 import android.text.SpannableStringBuilder;
@@ -15,10 +19,12 @@ import android.widget.Button;
 import android.widget.Filter;
 import android.widget.Filterable;
 import android.widget.ImageView;
+import android.widget.SimpleExpandableListAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.constraintlayout.widget.ConstraintLayout;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -39,7 +45,7 @@ import retrofit2.Call;
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Filter.MyFilter;
 import ua.com.merchik.merchik.Globals;
-import ua.com.merchik.merchik.Options;
+import ua.com.merchik.merchik.Options.Options;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.ServerExchange.Exchange;
 import ua.com.merchik.merchik.ServerExchange.TablesLoadingUnloading;
@@ -67,6 +73,7 @@ import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
 
 import static ua.com.merchik.merchik.Globals.OptionControlName.AKCIYA;
 import static ua.com.merchik.merchik.Globals.OptionControlName.AKCIYA_ID;
+import static ua.com.merchik.merchik.Globals.OptionControlName.ERROR_ID;
 import static ua.com.merchik.merchik.database.realm.RealmManager.INSTANCE;
 import static ua.com.merchik.merchik.database.realm.tables.PPARealm.getPPAIZA;
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
@@ -86,9 +93,11 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
     private WpDataDB wpDataDB;
     private DRAdapterTovarTPLTypeView tplType;
 
+    private List<Integer> tovIdList;
+
     private Clicks.clickVoid click;
 
-    public enum DRAdapterTovarTPLTypeView{
+    public enum DRAdapterTovarTPLTypeView {
         GONE, FULL
     }
 
@@ -103,6 +112,11 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
 
         Log.e("LOG_FILTER", "FILTER(ЕУЫ)" + dataFilterable.size());
         Globals.writeToMLOG("INFO", "RecycleViewDRAdapterTovar.RecycleViewDRAdapterTovar", "list.size(): " + list.size());
+    }
+
+    public void setAkciyaTovList(List<Integer> tovIdList) {
+        this.tovIdList = tovIdList;
+        Log.e("АКЦИЯ_ТОВАРА", "tovIdList: " + tovIdList);
     }
 
     @Override
@@ -130,19 +144,19 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
         }
     }
 
-    public void refreshAdapter(Clicks.clickVoid click){
+    public void refreshAdapter(Clicks.clickVoid click) {
         this.click = click;
     }
 
-    public void setTplType(DRAdapterTovarTPLTypeView type){
+    public void setTplType(DRAdapterTovarTPLTypeView type) {
         this.tplType = type;
     }
 
-    public boolean switchTPLView(){
-        if (tplType.equals(DRAdapterTovarTPLTypeView.GONE)){
+    public boolean switchTPLView() {
+        if (tplType.equals(DRAdapterTovarTPLTypeView.GONE)) {
             tplType = DRAdapterTovarTPLTypeView.FULL;
             return true;
-        }else {
+        } else {
             tplType = DRAdapterTovarTPLTypeView.GONE;
             return false;
         }
@@ -206,6 +220,8 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
 
         public void bind(TovarDB list) {
 
+            boolean deletePromoOption = false;
+
             String balanceData = "?";
             String balanceDate = "?";
 
@@ -221,6 +237,42 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
             name.setTextSize(16);
             weight.setText(weightString);
             weight.setTextSize(16);
+
+            try {
+                Drawable background = constraintLayout.getBackground();
+
+                Log.e("АКЦИЯ_ТОВАРА", "TEST1: " + tovIdList);
+                Log.e("АКЦИЯ_ТОВАРА", "TEST2: " + list.getiD());
+
+                int id = Integer.parseInt(list.getiD());
+                Log.e("АКЦИЯ_ТОВАРА", "TEST3: " + tovIdList.contains(id));
+
+
+
+                if (tovIdList.contains(id)) {
+                    Log.e("АКЦИЯ_ТОВАРА", "YELLOW " + list.getiD());
+                    if (background instanceof ShapeDrawable) {
+                        ((ShapeDrawable) background).getPaint().setColor(ContextCompat.getColor(mContext, R.color.yellow));
+                    } else if (background instanceof GradientDrawable) {
+                        ((GradientDrawable) background).setColor(ContextCompat.getColor(mContext, R.color.yellow));
+                    } else if (background instanceof ColorDrawable) {
+                        ((ColorDrawable) background).setColor(ContextCompat.getColor(mContext, R.color.yellow));
+                    }
+                    deletePromoOption = false;
+                }else {
+                    Log.e("АКЦИЯ_ТОВАРА", "WHITE " + list.getiD());
+                    if (background instanceof ShapeDrawable) {
+                        ((ShapeDrawable) background).getPaint().setColor(ContextCompat.getColor(mContext, R.color.white));
+                    } else if (background instanceof GradientDrawable) {
+                        ((GradientDrawable) background).setColor(ContextCompat.getColor(mContext, R.color.white));
+                    } else if (background instanceof ColorDrawable) {
+                        ((ColorDrawable) background).setColor(ContextCompat.getColor(mContext, R.color.white));
+                    }
+                    deletePromoOption = true;
+                }
+            } catch (Exception e) {
+                Log.e("АКЦИЯ_ТОВАРА", "Exception e: " + e);
+            }
 
 
 //            if ()
@@ -415,7 +467,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
             }
 
 
-            String s = options.getOptionString(optionsList2, reportPrepareTovar2);
+            String s = options.getOptionString(optionsList2, reportPrepareTovar2, deletePromoOption);
 
             Log.e("onBindViewHolder", "s: " + s);
 
@@ -425,15 +477,15 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
             recyclerView.setAdapter(recyclerViewTPLAdapter);
             recyclerView.setLayoutManager(new LinearLayoutManager(mContext, LinearLayoutManager.VERTICAL, false));
 
-            if (tplType.equals(DRAdapterTovarTPLTypeView.FULL)){
+            if (tplType.equals(DRAdapterTovarTPLTypeView.FULL)) {
                 recyclerView.setVisibility(View.VISIBLE);
-            }else {
+            } else {
                 recyclerView.setVisibility(View.GONE);
             }
 
 
             textViewItemTovarOptLine.setText(Html.fromHtml("<u>" + s + "</u>"));
-            textViewItemTovarOptLine.setOnClickListener(v->{
+            textViewItemTovarOptLine.setOnClickListener(v -> {
                 click.click();
             });
 
@@ -443,6 +495,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
 
                 String finalBalanceData1 = balanceData;
                 String finalBalanceDate1 = balanceDate;
+                boolean finalDeletePromoOption = deletePromoOption;
                 constraintLayout.setOnClickListener(v -> {
                     Log.e("DRAdapterTovar", "ClickListener");
                     try {
@@ -453,9 +506,13 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
 
                         if (tovOptTplList.size() > 0) {
                             // В Цикле открываем Н количество инфы
-                            for (int i=tovOptTplList.size()-1; i>=0; i--){
+                            for (int i = tovOptTplList.size() - 1; i >= 0; i--) {
                                 if (tovOptTplList.get(i).getOptionControlName() != Globals.OptionControlName.AKCIYA) {
-                                    showDialog(list, tovOptTplList.get(i), finalReportPrepareTovar, tovarId, cd2, clientId, finalBalanceData1, finalBalanceDate1);
+                                    if (tovOptTplList.get(i).getOptionControlName().equals(AKCIYA_ID) && finalDeletePromoOption) {
+                                        // втыкаю
+                                    }else {
+                                        showDialog(list, tovOptTplList.get(i), finalReportPrepareTovar, tovarId, cd2, clientId, finalBalanceData1, finalBalanceDate1);
+                                    }
                                 }
                             }
 
@@ -479,12 +536,12 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                         // Получаем инфу о всех опциях
                         List<TovarOptions> tovOptTplList = options.getAllOptionsTPL();
                         // В Цикле открываем Н количество инфы
-                        for (int i=tovOptTplList.size()-1; i>=0; i--){
+                        for (int i = tovOptTplList.size() - 1; i >= 0; i--) {
                             if (tovOptTplList.get(i).getOptionControlName() != Globals.OptionControlName.AKCIYA) {
                                 showDialog(list, tovOptTplList.get(i), finalReportPrepareTovar, tovarId, cd2, clientId, finalBalanceData1, finalBalanceDate1);
                             }
                         }
-                    }catch (Exception e){
+                    } catch (Exception e) {
                         Globals.writeToMLOG("ERROR", "RecycleViewDRAdapterTovar.bind_7.1", "Exception e: " + e);
                     }
 
@@ -669,12 +726,12 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
 
             // Устанавливаем дату для операций (в данной реализации только для DoubleSpinner & EditTextAndSpinner)
             switch (tpl.getOptionControlName()) {
-                case ERROR_ID:
-                    dialog.setOperationSpinnerData(setMapData(tpl.getOptionControlName()));
-
-                    dialog.setOperationTextData(reportPrepareDB.getErrorId());
-                    dialog.setOperationTextData2(reportPrepareDB.getErrorComment());
-                    break;
+//                case ERROR_ID:
+//                    dialog.setOperationSpinnerData(setMapData(tpl.getOptionControlName()));
+//
+//                    dialog.setOperationTextData(reportPrepareDB.getErrorId());
+//                    dialog.setOperationTextData2(reportPrepareDB.getErrorComment());
+//                    break;
 
                 case AKCIYA_ID:
                     dialog.setOperationSpinnerData(setMapData(tpl.getOptionControlName()));
@@ -686,18 +743,30 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
 
             }
 
-            dialog.setOperation(operationType(tpl), getCurrentData(tpl, cd2, tovarId), setMapData(tpl.getOptionControlName()), () -> {
-                if (dialog.getOperationResult() != null){
-                    operetionSaveRPToDB(tpl, reportPrepareDB, dialog.getOperationResult(), dialog.getOperationResult2(), null);
-                    Toast.makeText(mContext, "Внесено: " + dialog.getOperationResult(), Toast.LENGTH_LONG).show();
-                    refreshElement(cd2, list.getiD());
-                }
+            if (tpl.getOptionControlName() != null && tpl.getOptionControlName().equals(ERROR_ID)){
+                dialog.setExpandableListView(createExpandableAdapter(dialog.context), () -> {
+                    if (dialog.getOperationResult() != null) {
+                        operetionSaveRPToDB(tpl, reportPrepareDB, dialog.getOperationResult(), dialog.getOperationResult2(), null);
+                        refreshElement(cd2, list.getiD());
+                    }
 
-                notifyItemChanged(adapterPosition);
-            });
+                    notifyItemChanged(adapterPosition);
+                });
+            }else {
+                dialog.setOperation(operationType(tpl), getCurrentData(tpl, cd2, tovarId), setMapData(tpl.getOptionControlName()), () -> {
+                    if (dialog.getOperationResult() != null) {
+                        operetionSaveRPToDB(tpl, reportPrepareDB, dialog.getOperationResult(), dialog.getOperationResult2(), null);
+                        Toast.makeText(mContext, "Внесено: " + dialog.getOperationResult(), Toast.LENGTH_LONG).show();
+                        refreshElement(cd2, list.getiD());
+                    }
+
+                    notifyItemChanged(adapterPosition);
+                });
+            }
+
             dialog.setCancel("Пропустить", dialog::dismiss);
 
-            if (!tpl.getOptionControlName().equals(AKCIYA_ID) && !tpl.getOptionControlName().equals(AKCIYA)){
+            if (!tpl.getOptionControlName().equals(AKCIYA_ID) && !tpl.getOptionControlName().equals(AKCIYA)) {
                 String mod = "report_prepare";
                 String act = "get_param_stats";
                 retrofit2.Call<ReportHint> call = RetrofitBuilder.getRetrofitInterface().GET_REPORT_HINT(mod, act, tovarId, cd2, clientId);
@@ -734,6 +803,63 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
             dialog.show();
 
             dialogList.add(dialog);
+        }
+
+        private SimpleExpandableListAdapter createExpandableAdapter(Context context) {
+
+            Map<String, String> map;
+            ArrayList<Map<String, String>> groupDataList = new ArrayList<>();
+
+            // список атрибутов групп для чтения
+            String[] groupFrom = new String[] { "groupName" };
+            // список ID view-элементов, в которые будет помещены атрибуты групп
+            int groupTo[] = new int[] { android.R.id.text1 };
+
+            // список атрибутов элементов для чтения
+            String childFrom[] = new String[] { "monthName" };
+            // список ID view-элементов, в которые будет помещены атрибуты
+            // элементов
+            int childTo[] = new int[] { android.R.id.text1 };
+
+            // создаем общую коллекцию для коллекций элементов
+            ArrayList<ArrayList<Map<String, String>>> сhildDataList = new ArrayList<>();
+            // создаем коллекцию элементов для первой группы
+            ArrayList<Map<String, String>> сhildDataItemList = new ArrayList<>();
+
+            // Получение данных с БД
+            RealmResults<ErrorDB> errorDbList = RealmManager.getAllErrorDb();
+            RealmResults<ErrorDB> errorGroupsDB = errorDbList.where().equalTo("parentId", "0").findAll();
+
+            for (ErrorDB group : errorGroupsDB) {
+                map = new HashMap<>();
+                map.put("groupName", group.getNm());
+                groupDataList.add(map);
+
+                RealmResults<ErrorDB> errorItemsDB = errorDbList.where().equalTo("parentId", group.getID()).findAll();
+                if (errorItemsDB != null && errorItemsDB.size() > 0){
+                    сhildDataItemList = new ArrayList<>();
+                    for (ErrorDB item : errorItemsDB){
+                        map = new HashMap<>();
+                        map.put("monthName", "* " + item.getNm());
+                        сhildDataItemList.add(map);
+                    }
+                    сhildDataList.add(сhildDataItemList);
+                }else {
+                    сhildDataItemList = new ArrayList<>();
+                    map = new HashMap<>();
+                    map.put("monthName", "* " + group.getNm());
+                    сhildDataItemList.add(map);
+                    сhildDataList.add(сhildDataItemList);
+                }
+            }
+
+            SimpleExpandableListAdapter adapter = new SimpleExpandableListAdapter(
+                    context, groupDataList,
+                    android.R.layout.simple_expandable_list_item_1, groupFrom,
+                    groupTo, сhildDataList, android.R.layout.simple_list_item_1,
+                    childFrom, childTo);
+
+            return adapter;
         }
 
         private Map<String, String> setMapData(Globals.OptionControlName optionControlName) {
@@ -828,12 +954,16 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
          * @param id
          */
         private void refreshElement(String cd2, String id) {
+            boolean deletePromoOption;
+            int tovId = Integer.parseInt(id);
             ReportPrepareDB reportPrepareTovar = RealmManager.getTovarReportPrepare(cd2, id);
             ReportPrepareDB reportPrepareTovar2 = INSTANCE.copyFromRealm(reportPrepareTovar);
 
+            deletePromoOption = tovIdList.contains(tovId);
+
             List<OptionsDB> optionsList2 = RealmManager.getTovarOptionInReportPrepare(cd2, id);
             Options options = new Options();
-            String s = options.getOptionString(optionsList2, reportPrepareTovar2);
+            String s = options.getOptionString(optionsList2, reportPrepareTovar2, deletePromoOption);
 
             Log.e("refreshElement", "s: " + s);
 
@@ -881,7 +1011,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
          * Функционал в зависимости от операции
          */
         private void operetionSaveRPToDB(TovarOptions tpl, ReportPrepareDB rp, String data, String data2, TovarDB tovarDB) {
-            if (rp == null){
+            if (rp == null) {
                 rp = createNewRPRow(tovarDB);
             }
 
@@ -1080,7 +1210,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
     private ReportPrepareDB createNewRPRow(TovarDB list) {
         ReportPrepareDB rp = new ReportPrepareDB();
 
-        int id = RealmManager.reportPrepareGetLastId();
+        long id = RealmManager.reportPrepareGetLastId();
         id = id + 1;
 
         rp.setID(id);

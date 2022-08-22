@@ -155,9 +155,7 @@ public class DialogFullPhoto {
     }
 
     public void setPhotos(int pos, List<StackPhotoDB> data) {
-//        List<StackPhotoDB> list = RealmManager.INSTANCE.copyFromRealm(data);
         List<StackPhotoDB> list = data;
-//        Collections.reverse(list);
 
         photoLogData = list;
         position = pos;
@@ -279,13 +277,37 @@ public class DialogFullPhoto {
                             int rate = (int) rating;
                             indicatorRatingBar.setRating(rate);
                             Toast.makeText(context, "Оценка: " + rate + " установлена.", Toast.LENGTH_LONG).show();
-
                             StackPhotoDB row = photoLogData.get(POSITION_ADAPTER);
-                            RealmManager.INSTANCE.executeTransaction((realm) -> {
-                                row.setMark(String.valueOf(rate));
-                                row.setMarkUpload(true);
-                            });
-                            RealmManager.stackPhotoSavePhoto(row);
+
+                            if (rate > 5){
+                                savePhotoData(row, rate, null);
+                            }else {
+                                DialogData dialog = new DialogData(context);
+                                dialog.setTitle("Низкая оценка");
+                                dialog.setText("Прокомментируйте причину низкой оценки.");
+                                dialog.setOperation(DialogData.Operations.TEXT, "Ваш Комментарий", null, ()->{});
+                                dialog.setCancel("Сохранить", ()->{
+                                    String comment = dialog.getOperationResult();
+
+                                    if (comment != null && comment.length() > 1){
+                                        // Сохранение коммента
+                                        Toast.makeText(ratingBar.getContext(), "Комментарий: " + comment + " сохранён.", Toast.LENGTH_SHORT).show();
+
+                                        savePhotoData(row, rate, comment);
+                                        dialog.dismiss();
+                                    }else {
+                                        Toast.makeText(dialog.context, "Комментарий НЕ сохранён. Заполните корректно поле для комментария!", Toast.LENGTH_LONG).show();
+                                    }
+                                });
+                                dialog.setClose(()->{
+                                    Toast.makeText(context, "Комментарий НЕ сохранён", Toast.LENGTH_SHORT).show();
+                                    dialog.dismiss();
+                                });
+                            }
+
+
+
+
                         });
                     }catch (Exception e){
                         Globals.writeToMLOG("ERROR", "DialogFullPhoto.Установка рейтинга фото", "Exception e: " + e);
@@ -306,8 +328,18 @@ public class DialogFullPhoto {
                 startSlideShow(POSITION_ADAPTER, adapter);
             }
         });
+    }
 
-
+    private void savePhotoData(StackPhotoDB row, int rate, String comment){
+        RealmManager.INSTANCE.executeTransaction((realm) -> {
+            row.setMark(String.valueOf(rate));
+            row.setMarkUpload(true);
+            if (comment != null && !comment.equals("") && comment.length() > 1){
+                row.setComment(comment);
+                row.setCommentUpload(true);
+            }
+        });
+        RealmManager.stackPhotoSavePhoto(row);
     }
 
 

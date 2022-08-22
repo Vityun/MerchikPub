@@ -19,11 +19,14 @@ import android.widget.Toast;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.recyclerview.widget.RecyclerView;
 
+import java.util.Calendar;
 import java.util.List;
 
 import ua.com.merchik.merchik.Activities.PhotoLogActivity.PhotoLogActivity;
 import ua.com.merchik.merchik.Clock;
-import ua.com.merchik.merchik.Options;
+import ua.com.merchik.merchik.Options.Controls.OptionControlReclamationAnswer;
+import ua.com.merchik.merchik.Options.Controls.OptionControlTaskAnswer;
+import ua.com.merchik.merchik.Options.Options;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.data.Database.Room.SiteObjectsSDB;
 import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
@@ -45,6 +48,31 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
 
     long dad2, startDt, endDt;
 
+
+//    public void blinkItem() {
+//        Timer timer = new Timer();
+//        timer.schedule(new BlinkTask(), 1000, 1000);
+//    }
+
+//    private class BlinkTask extends TimerTask {
+//        private boolean blink = true;
+//
+//        public BlinkTask() {
+//        }
+//
+//        public void run() {
+//            if (blink){
+//
+//                constraintLayout.setBackgroundResource(R.color.greenCol);
+//                blink = false;
+//            }else {
+//                constraintLayout.setBackgroundResource(R.drawable.bg_temp);
+//                blink = true;
+//            }
+//        }
+//    }
+
+
     /*Определяем ViewHolder*/
     class ViewHolder extends RecyclerView.ViewHolder {
         ConstraintLayout constraintLayout;
@@ -63,13 +91,11 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
             setCheck.setClickable(true);
         }
 
-
-        //        OptionsDB optionsButtons2 = null;
         public void bind(OptionsDB optionsButtons, SiteObjectsSDB siteObjectsSDB) {
             final int POS = getAdapterPosition();
+            boolean describedOption = true;
 
             Log.e("RViewDRAdapterBind", "optionsButtons: " + optionsButtons);
-
 
             String buttText = optionsButtons.getOptionTxt();
             buttText = buttText.replace("&quot;", "\"");
@@ -87,6 +113,8 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
             Log.e("bindRPA", "optionsButtons.getOptionControlId(): " + optionsButtons.getOptionControlId());
             Log.e("bindRPA", "optionsButtons.getIsSignal(): " + optionsButtons.getIsSignal());
             Log.e("bindRPA", "optionsButtons.getBlockPns(): " + optionsButtons.getBlockPns());
+
+            // Подсвечивает Кнопки Опций с блоком ПНС() КРАСНЫМ цветом
             if (optionsButtons.getIsSignal().equals("1") && optionsButtons.getBlockPns().equals("1")) {
                 Log.e("bindRPA", "RED");
                 textTitle.setText("" + Html.fromHtml("<font color='#FF0000'>" + buttText + "</font>")); // Должно гореть красным
@@ -95,9 +123,9 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                 textTitle.setText("" + buttText);
             }
 
-
             int optionId = Integer.parseInt(butt.get(getAdapterPosition()).getOptionId());
 
+            // Выделяет жирным ОСОБЕННЫЕ Кнопки Опций
             if (optionId == 132968) { // Фото витрины)
                 textTitle.setTypeface(null, Typeface.BOLD);
             } else {
@@ -106,6 +134,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
 
             // 06.08.2020
             // На данный момент опции делаем "нажимными" по id-шникам.
+            // ОПИСАННЫЕ Кнопки Опций
             // TODO заменить на ENUM
             if (optionId == 135809   // Фото витрины ДО начала работ
                     || optionId == 132968   // Фото витрины
@@ -128,9 +157,15 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                     || optionId == 132621   // Оценка
                     || optionId == 84003    // Мнение о сотруднике
                     || optionId == 138340   // Доп. Материалы
+                    || optionId == 135327   // Задача
+                    || optionId == 135328   // Рекламация
+                    || optionId == 156882   // Акции
+                    || optionId == 151139   // Фото планограммы
+                    || optionId == 132623   // Комментарий
             ) {
                 constraintLayout.setBackgroundResource(R.drawable.bg_temp);
             } else {
+                describedOption = false;
                 constraintLayout.setBackgroundResource(R.drawable.button_bg_inactive);
             }
 
@@ -142,21 +177,35 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
             Log.e("ColorLog", "Color.Opt.getIsSignal: " + optionsButtons.getIsSignal());
 
 
+            // Определения цвета которым будет гореть СИГНАЛ
             setCheck.setColorFilter(mContext.getResources().getColor(R.color.shadow));
-            if (optionsButtons.getIsSignal().equals("1")) {
+            if (describedOption){
+                setCheck.setVisibility(View.VISIBLE);
+                if (optionsButtons.getIsSignal().equals("1")) {
 //                setCheck.setImageResource(R.drawable.red_checkbox);
-                setCheck.setImageResource(R.drawable.ic_exclamation_mark_in_a_circle);
-                setCheck.setColorFilter(mContext.getResources().getColor(R.color.red_error));
-            } else if (optionsButtons.getIsSignal().equals("2")) {
+                    setCheck.setImageResource(R.drawable.ic_exclamation_mark_in_a_circle);
+                    setCheck.setColorFilter(mContext.getResources().getColor(R.color.red_error));
+                } else if (optionsButtons.getIsSignal().equals("2")) {
 //                setCheck.setImageResource(R.drawable.greeen_checkbox);
-                setCheck.setImageResource(R.drawable.ic_check);
-                setCheck.setColorFilter(mContext.getResources().getColor(R.color.greenCol));
-            } else {
+                    setCheck.setImageResource(R.drawable.ic_check);
+                    setCheck.setColorFilter(mContext.getResources().getColor(R.color.greenCol));
+                } else {
+                    if (optionsButtons.getOptionControlId().equals("0")){
+                        setCheck.setVisibility(View.INVISIBLE);
+                    }else {
+                        setCheck.setImageResource(R.drawable.ic_round);
+                        setCheck.setColorFilter(mContext.getResources().getColor(R.color.shadow));
+                    }
+                }
+            }else {
+                setCheck.setVisibility(View.INVISIBLE);
                 setCheck.setImageResource(R.drawable.ic_round);
-                setCheck.setColorFilter(mContext.getResources().getColor(R.color.shadow));
+                setCheck.setColorFilter(mContext.getResources().getColor(R.color.colorUnselectedTab));
             }
 
-            // =========== СЧЁТЧИК ===========141886
+
+            // =========== СЧЁТЧИК ===========
+            // У Каждой кнопки есть какое-то значение, тут я его считаю и вставляю
             // todo textInteger.setText(msg); -- могу ли выводить это нормально 1 раз?
             try {
                 // Вчтавляем "счётчкик"
@@ -164,18 +213,18 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                     // Start Work
                     case (138518):
                         long startTime;
-                        if (dataDB instanceof WpDataDB){
+                        if (dataDB instanceof WpDataDB) {
                             startTime = ((WpDataDB) dataDB).getVisit_start_dt();
-                        }else {
+                        } else {
                             startTime = ((TasksAndReclamationsSDB) dataDB).dt_start_fact;
                         }
                         textInteger.setText("" + Clock.getHumanTimeOpt(startTime * 1000));
                         break;
                     case (138520):
                         long endTime;
-                        if (dataDB instanceof WpDataDB){
+                        if (dataDB instanceof WpDataDB) {
                             endTime = ((WpDataDB) dataDB).getVisit_end_dt();
-                        }else {
+                        } else {
                             endTime = ((TasksAndReclamationsSDB) dataDB).dt_end_fact;
                         }
                         textInteger.setText("" + Clock.getHumanTimeOpt(endTime * 1000));
@@ -213,7 +262,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                         break;
 
                     case 137797:    // Остатки
-                        String msg = String.format("%s/%s/%s", (int) Options.SKUPlan, (int) Options.SKUFact, (int) Options.OFS);
+                        String msg = String.format("%s/%s/%s", (int) DetailedReportActivity.SKUPlan, (int) DetailedReportActivity.SKUFact, (int) DetailedReportActivity.OFS);
                         textInteger.setText(msg);
                         break;
 
@@ -236,6 +285,22 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                         textInteger.setText("" + AdditionalRequirementsRealm.getData3(dataDB).size());
                         break;
 
+                    case 135328:    // Рекламация
+                        OptionMassageType type = new OptionMassageType();
+                        type.type = OptionMassageType.Type.STRING;
+                        OptionControlReclamationAnswer<?> optionControlReclamationAnswer = new OptionControlReclamationAnswer<>(itemView.getContext(), dataDB, optionsButtons, type, Options.NNKMode.NULL);
+
+                        textInteger.setText("" + optionControlReclamationAnswer.problemReclamationCount());
+                        break;
+
+                    case 135327:    // Задачи
+                        type = new OptionMassageType();
+                        type.type = OptionMassageType.Type.STRING;
+                        OptionControlTaskAnswer<?> optionControlTask = new OptionControlTaskAnswer<>(itemView.getContext(), dataDB, optionsButtons, type, Options.NNKMode.NULL);
+
+                        textInteger.setText("" + optionControlTask.problemTaskCount());
+                        break;
+
                     default:
                         textInteger.setText(optionsButtons.getPrice());
                 }
@@ -251,70 +316,123 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
             // Функционал Опций (контроль, NNK..)
             final Options options = new Options();
 
+
+            // Кликаем по кнопке Опции
+            boolean finalDescribedOption = describedOption;
             constraintLayout.setOnClickListener(view -> {
                 Log.e("notifyItemChanged", "CLICK");
 
-                OptionMassageType msgType = new OptionMassageType();
-                msgType = options.NNK(mContext, dataDB, optionsButtons, msgType, Options.NNKMode.MAKE, () -> {
-                    if (dataDB instanceof WpDataDB) {
-                        detailedReportButtons.buttonClick(mContext, (WpDataDB) dataDB, butt.get(getAdapterPosition()), 0);
-                        setCheck(POS, optionsButtons);
+                // Если эта кнопка НЕ активная - значит она находится в разработке
+                if (finalDescribedOption) {
+
+                    // Обработка нажатия на кнопку
+                    OptionMassageType msgType = new OptionMassageType();
+                    msgType.type = OptionMassageType.Type.DIALOG;
+                    msgType = options.NNK(mContext, dataDB, optionsButtons, msgType, Options.NNKMode.MAKE, () -> {
+                        if (dataDB instanceof WpDataDB) {
+                            detailedReportButtons.buttonClick(mContext, (WpDataDB) dataDB, butt.get(getAdapterPosition()), 0);
+                            setCheck(POS, optionsButtons, Options.NNKMode.NULL);
+                        }
+                        notifyDataSetChanged();
+                    });
+
+                    // todo Определить нафиг это сделано
+                    // Это нужно для старого отображения ошибки контроля опции
+                    if (msgType != null && msgType.dialog != null) {
+                        msgType.dialog.setDialogIco();
+                        msgType.dialog.show();
                     }
-                });
 
-                if (msgType.dialog != null) {
-                    msgType.dialog.setDialogIco();
-                    msgType.dialog.show();
+                    // todo Определить нафиг это сделано
+                    // Это нужно для старого отображения ошибки контроля опции
+                    if (msgType != null && msgType.msg != null && !msgType.msg.equals("")) {
+                        Toast.makeText(mContext, msgType.msg, Toast.LENGTH_SHORT).show();
+                    }
+                } else {
+                    Toast.makeText(view.getContext(), "Данная Опция находится в РАЗРАБОТКЕ", Toast.LENGTH_SHORT).show();
                 }
 
-                if (msgType.msg != null && !msgType.msg.equals("")){
-                    Toast.makeText(mContext, msgType.msg, Toast.LENGTH_SHORT).show();
-                }
             });
 
+
+            // ДОЛГИЙ клик по Кнопке Опции
             OptionsDB test = optionsButtons;
             constraintLayout.setOnLongClickListener(view -> {
+                if (optionId == 132968) {
+                    DialogData dialog = new DialogData(itemView.getContext());
+                    dialog.setTitle("Внесите пароль!");
+                    dialog.setText("Для продолжения внесите пароль: ");
+                    dialog.setClose(dialog::dismiss);
+                    dialog.setOperation(DialogData.Operations.TEXT, "", null, () -> {
+                    });
+                    dialog.setOk("Ok", () -> {
+                        Toast.makeText(dialog.context, "Внесли: " + dialog.getOperationResult(), Toast.LENGTH_SHORT).show();
 
-                optionDetail(test);
+                        int res = Integer.parseInt(dialog.getOperationResult());
 
-                int optId = Integer.parseInt(butt.get(getAdapterPosition()).getOptionId());
-                if (optId == 135809
-                        || optId == 132968
-                        || optId == 135158
-                        || optId == 132969
-                ) {
-                    if (dataDB instanceof WpDataDB){
-                        WpDataDB wpDataDB = (WpDataDB) dataDB;
-                        detailedReportButtons.buttonClick(mContext, wpDataDB, optionsButtons, 1);
-                    }
+                        Calendar calendar = Calendar.getInstance();
+                        int day = calendar.get(Calendar.DAY_OF_WEEK);
+                        int dat2 = calendar.get(Calendar.DAY_OF_MONTH);
+
+                        int pass = day + dat2;
+
+                        if (res == pass) {
+                            int optId = Integer.parseInt(butt.get(getAdapterPosition()).getOptionId());
+                            longClickButton(test, optId, detailedReportButtons, optionsButtons);
+                        } else {
+                            Toast.makeText(dialog.context, "Внесите корректный пароль", Toast.LENGTH_SHORT).show();
+                        }
+                    });
+                    dialog.show();
+                } else {
+                    int optId = Integer.parseInt(butt.get(getAdapterPosition()).getOptionId());
+                    longClickButton(test, optId, detailedReportButtons, optionsButtons);
                 }
                 return false;
             });
 
+
+            // Нажатие на СИГНАЛ Кнопки Опции.
             setCheck.setOnClickListener(v -> {
-                setCheck(POS, optionsButtons);
+                Toast.makeText(v.getContext(), "Проверка статуса данной опции", Toast.LENGTH_SHORT).show();
+                setCheck(POS, optionsButtons, Options.NNKMode.CHECK_CLICK);
             });
+        }
+
+
+
+
+    }
+
+    private void longClickButton(OptionsDB test, int optId, DetailedReportButtons detailedReportButtons, OptionsDB optionsButtons) {
+        optionDetail(test);
+
+        if (optId == 132968) {
+            if (dataDB instanceof WpDataDB) {
+                WpDataDB wpDataDB = (WpDataDB) dataDB;
+                detailedReportButtons.buttonClick(mContext, wpDataDB, optionsButtons, 1);
+            }
         }
     }
 
     /*Нажатие на проверку статуса опции. Нажатие на сигнал*/
-    private void setCheck(int POS, OptionsDB optionsButtons) {
+    private void setCheck(int POS, OptionsDB optionsButtons, Options.NNKMode mode) {
         Options options = new Options();
-        options.optionControl(mContext, dataDB, optionsButtons, null, Options.NNKMode.CHECK_CLICK);
+        options.optionControl(mContext, dataDB, optionsButtons, null, mode);
 
         RealmManager.INSTANCE.executeTransaction(realm -> {
             realm.insertOrUpdate(optionsButtons);
         });
 
-        if (!optionsButtons.getOptionControlId().equals("587")) {
-            Toast.makeText(mContext, "Проверка статуса данной опции", Toast.LENGTH_LONG).show();
-        }
+//        if (!optionsButtons.getOptionControlId().equals("587")) {
+//            Toast.makeText(mContext, "Проверка статуса данной опции", Toast.LENGTH_LONG).show();
+//        }
 
         updateSignal(POS);
     }
 
     private void updateSignal(int position) {
-        if (dataDB instanceof WpDataDB){
+        if (dataDB instanceof WpDataDB) {
             WpDataDB wpDataDB = (WpDataDB) dataDB;
             WpDataDB wp = RealmManager.INSTANCE.copyFromRealm(RealmManager.getWorkPlanRowById(wpDataDB.getId()));
             dataDB = (T) wp;
@@ -335,7 +453,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
             dad2 = wp.getCode_dad2();
             startDt = wp.getVisit_start_dt();
             endDt = wp.getVisit_end_dt();
-        }else {
+        } else {
             TasksAndReclamationsSDB tar = (TasksAndReclamationsSDB) dataDB;
             dad2 = tar.codeDad2;
             startDt = tar.dt_start_fact;
@@ -382,6 +500,10 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
     @Override
     public int getItemCount() {
         return butt.size();
+    }
+
+    public int getItemPosition(OptionsDB item){
+        return butt.indexOf(item);
     }
 
 

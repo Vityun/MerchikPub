@@ -15,10 +15,11 @@ public class RoomManager {
     public static void init(Context context) {
         SQL_DB = Room.databaseBuilder(context,
                 AppDatabase.class, "merchik.db")
+                .fallbackToDestructiveMigration()
                 .enableMultiInstanceInvalidation()
                 .allowMainThreadQueries()
 //                .addMigrations(MIGRATION_12_13)
-                .fallbackToDestructiveMigration()
+
                 .build();
     }
 

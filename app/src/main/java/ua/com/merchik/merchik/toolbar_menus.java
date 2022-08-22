@@ -63,6 +63,8 @@ import okhttp3.MultipartBody;
 import okhttp3.RequestBody;
 import retrofit2.Call;
 import retrofit2.Response;
+import ua.com.merchik.merchik.Activities.MenuMainActivity;
+import ua.com.merchik.merchik.Activities.MyApplication;
 import ua.com.merchik.merchik.Activities.PhotoLogActivity.PhotoLogActivity;
 import ua.com.merchik.merchik.Activities.PremiumActivity.PremiumActivity;
 import ua.com.merchik.merchik.Activities.ReferencesActivity.ReferencesActivity;
@@ -469,6 +471,18 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                     } else {
                         globals.alertDialogMsg(toolbar_menus.this, "Синхронизация уже запущена! Подождите сообщения об окончании.");
                     }
+
+                    try {
+                        // Новый обмен. Нужно ещё донастроить для нормальной работы.
+                        Exchange exchange = new Exchange();
+                        exchange.context = toolbar_menus.this;
+                        exchange.startExchange();
+
+                        exchange.uploadTARComments(null);
+                    }catch (Exception e){
+
+                    }
+
                 }
                 return true;
             });
@@ -727,12 +741,14 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                         tablesLoadingUnloading.uploadLodMp(new ExchangeInterface.ExchangeRes() {
                             @Override
                             public void onSuccess(String ok) {
-                                Toast.makeText(toolbar_menus.this, ok, Toast.LENGTH_SHORT).show();
+                                // todo log
+//                                Toast.makeText(toolbar_menus.this, ok, Toast.LENGTH_SHORT).show();
                             }
 
                             @Override
                             public void onFailure(String error) {
-                                Toast.makeText(toolbar_menus.this, error, Toast.LENGTH_SHORT).show();
+                                // todo log
+//                                Toast.makeText(toolbar_menus.this, error, Toast.LENGTH_SHORT).show();
                             }
                         });
                     } catch (Exception e) {
@@ -1230,16 +1246,43 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
             if (!realmResults.isEmpty()) {
                 Toast.makeText(toolbar_menus.this, "Сервер не обработал: " + realmResults.size() + 1 + " фоток.", Toast.LENGTH_SHORT);
 
+                ArrayList<String> listHash = new ArrayList<>();
+                for (int i = 0; i < realmResults.size(); i++) {
+                    listHash.add(i, realmResults.get(i).getPhoto_hash());
+                }
+
+                // TODO нормально оформить этот запрос
+/*                StandartData standartData = new StandartData();
+                standartData.mod = "images_view";
+                standartData.act = "list_image";
+                standartData.nolimit = "no_limit";
+                standartData.date_from = Clock.lastWeek();
+                standartData.date_to = Clock.tomorrow;
+                standartData.hash_list = listHash;
+
+                JsonObject convertedObject = new Gson().fromJson(new Gson().toJson(standartData), JsonObject.class);
+
+                retrofit2.Call<JsonObject> callJS = RetrofitBuilder.getRetrofitInterface().TEST_JSON_UPLOAD(RetrofitBuilder.contentType, convertedObject);
+//                retrofit2.Call<PhotoHash> callPH = RetrofitBuilder.getRetrofitInterface().SEND_PHOTO_HASH_NEW(RetrofitBuilder.contentType, convertedObject);
+
+                callJS.enqueue(new Callback<JsonObject>() {
+                    @Override
+                    public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
+                        Log.e("test", "test: " + response);
+                    }
+
+                    @Override
+                    public void onFailure(Call<JsonObject> call, Throwable t) {
+                        Log.e("test", "test t: " + t);
+                    }
+                });*/
+
                 String mod = "images_view";
                 String act = "list_image";
                 String noLimit = "no_limit";
                 String date_from = Clock.lastWeek();
                 String date_to = Clock.tomorrow;
-                ArrayList<String> listHash = new ArrayList<>();
 
-                for (int i = 0; i < realmResults.size(); i++) {
-                    listHash.add(i, realmResults.get(i).getPhoto_hash());
-                }
 
                 retrofit2.Call<PhotoHash> call = RetrofitBuilder.getRetrofitInterface()
                         .SEND_PHOTO_HASH(mod, act, noLimit, date_from, date_to, listHash);
@@ -1271,13 +1314,13 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
 
                             if (response.isSuccessful() && response.body() != null) {
                                 if (response.body().getState()) {
-                                    if (response.body().getList().size() > 0) {
+                                    if (response.body().getList() != null && response.body().getList().size() > 0) {
                                         List<PhotoHashList> list = response.body().getList();
 
                                         for (PhotoHashList itemSite : list) {
                                             for (StackPhotoDB itemApp : realmResults) {
 
-                                                String hashSite = itemSite.getHash();
+                                                String hashSite = itemSite.imgHash;
                                                 String hashApp = itemApp.getPhoto_hash();
 
                                                 if (hashSite.equals(hashApp)) {
@@ -1307,7 +1350,7 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                                 }
                             }
                         } catch (Exception e) {
-                            Toast.makeText(toolbar_menus.this, "Ошибка при проверке фото с сервера: " + e, Toast.LENGTH_SHORT).show();
+//                            Toast.makeText(toolbar_menus.this, "Ошибка при проверке фото с сервера: " + e, Toast.LENGTH_SHORT).show();
                         }
 
                     }

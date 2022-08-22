@@ -24,10 +24,11 @@ import java.util.List;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.data.Data;
+import ua.com.merchik.merchik.data.RealmModels.AdditionalRequirementsDB;
 import ua.com.merchik.merchik.data.RealmModels.TovarDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.database.realm.RealmManager;
-import ua.com.merchik.merchik.dialogs.DialogFilter.DialogFilter;
+import ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsRealm;
 
 @SuppressLint("ValidFragment")
 public class DetailedReportTovarsFrag extends Fragment {
@@ -85,25 +86,7 @@ public class DetailedReportTovarsFrag extends Fragment {
      * */
     private void setTextLikeLink(){
         filter.setOnClickListener(v->{
-            DialogFilter dialog = new DialogFilter(mContext, Globals.SourceAct.DETAILED_REPORT);
-            dialog.setData(wpDataDB);
-            dialog.setClose(dialog::dismiss);
-            dialog.serEditFilter(editText.getHint(), editText.getText());
-            dialog.setFilters();
-            dialog.pressApply(result->{
-                if (result.dataChange){
-                    filter.setImageDrawable(getResources().getDrawable(R.drawable.ic_filterbold));
-                }
-
-                if (result.tovarDBS != null){
-                    addRecycleView(result.tovarDBS);
-                }
-
-                Toast.makeText(mContext, result.massage, Toast.LENGTH_LONG).show();
-
-            });
-
-            dialog.show();
+            // TODO ВСТАВИТЬ ДИАЛОГ С ФИЛЬТРОМ
         });
         Log.e("setTextLikeLink", "Here");
 
@@ -147,7 +130,26 @@ public class DetailedReportTovarsFrag extends Fragment {
 
         Log.e("DetailedReportTovarsF", "list.size(): " + list.size());
 
+
+        Log.e("АКЦИЯ_ТОВАРА", "START");
+        List<Integer> promotionalTov = new ArrayList<>();
+        try {
+            List<AdditionalRequirementsDB> data = AdditionalRequirementsRealm.getData3(wpDataDB);
+            Log.e("АКЦИЯ_ТОВАРА", "data: " + data);
+            for (AdditionalRequirementsDB item : data){
+                if (item.getTovarId() != null && !item.getTovarId().equals("0") && !item.getTovarId().equals("")){
+                    promotionalTov.add(Integer.valueOf(item.getTovarId()));
+                }
+            }
+            Log.e("АКЦИЯ_ТОВАРА", "promotionalTov: " + promotionalTov);
+        }catch (Exception e){
+            Log.e("АКЦИЯ_ТОВАРА", "List Exception e: " + e);
+        }
+
+
         RecycleViewDRAdapterTovar recycleViewDRAdapter = new RecycleViewDRAdapterTovar(mContext, list, wpDataDB);
+        recycleViewDRAdapter.setAkciyaTovList(promotionalTov);
+
         recycleViewDRAdapter.setTplType(RecycleViewDRAdapterTovar.DRAdapterTovarTPLTypeView.GONE);
 
         recycleViewDRAdapter.refreshAdapter(()->{

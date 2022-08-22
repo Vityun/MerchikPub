@@ -20,7 +20,7 @@ public class DetailedReportTab extends FragmentPagerAdapter {
     public static DetailedReportOptionsFrag detailedReportOptionsFrag;
 
     public DetailedReportTab(AppCompatActivity context, FragmentManager fm, int totalTabs, ArrayList<Data> dataArrayList, WpDataDB wpDataDBList) {
-        super(fm);
+        super(fm, BEHAVIOR_RESUME_ONLY_CURRENT_FRAGMENT);
         myContext = context;
         this.totalTabs = totalTabs;
         this.list = dataArrayList;

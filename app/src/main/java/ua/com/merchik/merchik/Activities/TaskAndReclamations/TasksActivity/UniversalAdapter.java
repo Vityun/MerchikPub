@@ -1,6 +1,10 @@
 package ua.com.merchik.merchik.Activities.TaskAndReclamations.TasksActivity;
 
 import android.content.Context;
+import android.graphics.drawable.ColorDrawable;
+import android.graphics.drawable.Drawable;
+import android.graphics.drawable.GradientDrawable;
+import android.graphics.drawable.ShapeDrawable;
 import android.net.Uri;
 import android.text.Html;
 import android.text.SpannableStringBuilder;
@@ -15,6 +19,7 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.constraintlayout.widget.ConstraintLayout;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.text.SimpleDateFormat;
@@ -52,14 +57,20 @@ public class UniversalAdapter extends RecyclerView.Adapter<UniversalAdapter.View
 
     PhotoDownload photoDownloader = new PhotoDownload();
 
-    public UniversalAdapter(Context context, List<TasksAndReclamationsSDB> data, Globals.TARInterface onClickListener) {
+    public UniversalAdapter(Context context, List<TasksAndReclamationsSDB> data, boolean instantOpen, Globals.TARInterface onClickListener) {
         this.mContext = context;
         Log.e("UniversalAdapter", "data: " + data.size());
-//        this.data = RealmManager.INSTANCE.copyFromRealm(data);
-//        this.dataFilterable = RealmManager.INSTANCE.copyFromRealm(data);
         this.data = data;
         this.dataFilterable = data;
         this.onClickListener = onClickListener;
+
+        try {
+            if (data.size() == 1 && instantOpen) {
+                onClickListener.onSuccess(data.get(0));
+            }
+        } catch (Exception e) {
+            Log.e("UniversalAdapter", "Exception e: " + e);
+        }
     }
 
     public void updateData(List<TasksAndReclamationsSDB> data) {
@@ -70,7 +81,7 @@ public class UniversalAdapter extends RecyclerView.Adapter<UniversalAdapter.View
     /*Определяем ViewHolder*/
     class ViewHolder extends RecyclerView.ViewHolder {
 
-        private ConstraintLayout layout;
+        private ConstraintLayout layout, layoutWp;
         private ImageView photo, status;
         private TextView textLine1, textLine2, textLine3, textLine4, textLine5;
 
@@ -78,6 +89,7 @@ public class UniversalAdapter extends RecyclerView.Adapter<UniversalAdapter.View
         ViewHolder(View v) {
             super(v);
             layout = v.findViewById(R.id.universalItem);
+            layoutWp = v.findViewById(R.id.layout_wp);
             photo = v.findViewById(R.id.photo);
             status = v.findViewById(R.id.status);
             textLine1 = v.findViewById(R.id.text_line_1);
@@ -93,6 +105,37 @@ public class UniversalAdapter extends RecyclerView.Adapter<UniversalAdapter.View
             try {
                 int TARType = data.tp;
                 int state = data.state;
+
+                try {
+                    Drawable background = layoutWp.getBackground();
+                    Drawable photoBG = photo.getBackground();
+                    if (state == 0) {
+                        if (background instanceof ShapeDrawable) {
+                            ((ShapeDrawable) background).getPaint().setColor(ContextCompat.getColor(mContext, R.color.yellow));
+                        } else if (background instanceof GradientDrawable) {
+                            ((GradientDrawable) background).setColor(ContextCompat.getColor(mContext, R.color.yellow));
+                        } else if (background instanceof ColorDrawable) {
+                            ((ColorDrawable) background).setColor(ContextCompat.getColor(mContext, R.color.yellow));
+                        }
+                    }else {
+                        if (background instanceof ShapeDrawable) {
+                            ((ShapeDrawable) background).getPaint().setColor(ContextCompat.getColor(mContext, R.color.white));
+                        } else if (background instanceof GradientDrawable) {
+                            ((GradientDrawable) background).setColor(ContextCompat.getColor(mContext, R.color.white));
+                        } else if (background instanceof ColorDrawable) {
+                            ((ColorDrawable) background).setColor(ContextCompat.getColor(mContext, R.color.white));
+                        }
+                    }
+                    if (photoBG instanceof ShapeDrawable) {
+                        ((ShapeDrawable) photoBG).getPaint().setColor(ContextCompat.getColor(mContext, R.color.white));
+                    } else if (photoBG instanceof GradientDrawable) {
+                        ((GradientDrawable) photoBG).setColor(ContextCompat.getColor(mContext, R.color.white));
+                    } else if (photoBG instanceof ColorDrawable) {
+                        ((ColorDrawable) photoBG).setColor(ContextCompat.getColor(mContext, R.color.white));
+                    }
+                } catch (Exception e) {
+                    Globals.writeToMLOG("ERROR", "UniversalAdapter.bind.Drawable", "Exception e: " + e);
+                }
 
                 if (TARType == 0) {
 
@@ -142,12 +185,12 @@ public class UniversalAdapter extends RecyclerView.Adapter<UniversalAdapter.View
                         Log.e("BUG_TAR", "E addr: " + addr);
                     } catch (Exception e) {
                         // TODO data is empty
-                        line2.append(""+data.addr);
+                        line2.append("" + data.addr);
                         Log.e("BUG_TAR", "Exception e: " + data.addr);
                     }
                 } else {
                     Log.e("BUG_TAR", "data.getAddr(): " + data.addr);
-                    line2.append(""+data.addr);
+                    line2.append("" + data.addr);
                 }
                 Log.e("BUG_TAR", "line2: " + line2);
                 textLine2.setText(line2);
@@ -163,11 +206,11 @@ public class UniversalAdapter extends RecyclerView.Adapter<UniversalAdapter.View
                         line3.append(str);
                     } catch (Exception e) {
                         // TODO data is empty
-                        line3.append(""+data.client);
+                        line3.append("" + data.client);
                     }
 
                 } else {
-                    line3.append(""+data.client);
+                    line3.append("" + data.client);
                 }
 
                 textLine3.setText(line3);
@@ -183,11 +226,11 @@ public class UniversalAdapter extends RecyclerView.Adapter<UniversalAdapter.View
                         line4.append(str);
                     } catch (Exception e) {
                         // TODO data is empty
-                        line4.append(""+data.vinovnik);
+                        line4.append("" + data.vinovnik);
                     }
 
                 } else {
-                    line4.append(""+data.vinovnik);
+                    line4.append("" + data.vinovnik);
                 }
 
                 textLine4.setText(line4);
@@ -210,7 +253,6 @@ public class UniversalAdapter extends RecyclerView.Adapter<UniversalAdapter.View
                 layout.setOnClickListener(v -> {
                     onClickListener.onSuccess(data);
                 });
-
 
                 try {
                     StackPhotoDB stackPhotoDB = StackPhotoRealm.stackPhotoDBGetPhotoBySiteId(String.valueOf(data.photo));
@@ -245,7 +287,6 @@ public class UniversalAdapter extends RecyclerView.Adapter<UniversalAdapter.View
                     }
                 } catch (Exception e) {
                     Log.e("UniversalAdapter", "Exception e: " + e);
-//                    Toast.makeText(mContext, "Не удалось отобразить фото", Toast.LENGTH_SHORT).show();
                     photo.setImageResource(R.mipmap.merchik);
                 }
 

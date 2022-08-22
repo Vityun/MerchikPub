@@ -218,6 +218,11 @@ public class TasksAndReclamationsSDB {
     @ColumnInfo(name = "vinovnik_score_user_id")
     public Integer vinovnikScoreUserId;
 
+    @SerializedName("vinovnik_score_comment")
+    @Expose
+    @ColumnInfo(name = "vinovnik_score_comment")
+    public String vinovnikScoreComment;
+
     @SerializedName("vinovnik_score_dt")
     @Expose
     @ColumnInfo(name = "vinovnik_score_dt")

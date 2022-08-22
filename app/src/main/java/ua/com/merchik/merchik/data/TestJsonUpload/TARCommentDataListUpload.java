@@ -6,6 +6,7 @@ public class TARCommentDataListUpload {
     public String id;
     public String comment;
     public String photo_id;
+    public String photo_hash;
     public String report_id;
 
 //    id - код задачи или рекламации в бд сайта

@@ -37,7 +37,7 @@ public class UsersSDB {
     @SerializedName("client_id")
     @Expose
     @ColumnInfo(name = "client_id")
-    public Integer clientId;
+    public String clientId;
 
     @SerializedName("department")
     @Expose

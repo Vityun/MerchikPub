@@ -4,6 +4,7 @@ import android.app.ProgressDialog;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.os.Build;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -21,6 +22,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 
 import io.reactivex.rxjava3.observers.DisposableCompletableObserver;
 import io.reactivex.rxjava3.schedulers.Schedulers;
@@ -163,26 +165,30 @@ public class TablesLoadingUnloading {
                         if (data != null) {
                             List<ReportPrepareUpdateResponseList> list = (List<ReportPrepareUpdateResponseList>) data;
 
-                            Integer[] ids = new Integer[list.size()];
+                            Long[] ids = new Long[list.size()];
                             int count = 0;
                             for (ReportPrepareUpdateResponseList item : list) {
                                 ids[count++] = item.elementId;
                             }
 
-                            List<ReportPrepareDB> rp = RealmManager.INSTANCE.copyFromRealm(ReportPrepareRealm.getByIds(ids));
+                            List<ReportPrepareDB> rp = INSTANCE.copyFromRealm(ReportPrepareRealm.getByIds(ids));
 
                             for (ReportPrepareDB item : rp) {
                                 for (ReportPrepareUpdateResponseList listItem : list) {
-                                    if (listItem.elementId.equals(item.getID())) {
-                                        if (listItem.state) {
-                                            item.setUploadStatus(0);
-                                            ReportPrepareRealm.setAll(Collections.singletonList(item));
+                                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                                        if (Objects.equals(listItem.elementId, item.getID())) {
+                                            if (listItem.state) {
+                                                item.setUploadStatus(0);
+                                                ReportPrepareRealm.setAll(Collections.singletonList(item));
+                                            }
                                         }
                                     }
                                 }
                             }
                         }
 
+                    }else {
+                        downloadReportPrepare(context, 0);
                     }
                 }
 
@@ -220,7 +226,7 @@ public class TablesLoadingUnloading {
             downloadPPA(); // Загрузка ППА по нажатию на синхронизацию
 //            downloadTAR(); // Загрузка Затач и Рекламаций
 
-            downloadReclamationComments();  // Загрузка таблици Переписки (Комментарии к Рекламациям)
+            downloadTARComments();  // Загрузка таблици Переписки (Комментарии к Рекламациям)
             downloadTheme();    // Загрузка таблички Тем
 
             downloadAdditionalRequirements();   // Загрузка таблички Доп Требований
@@ -558,7 +564,7 @@ public class TablesLoadingUnloading {
                 try {
                     if (response.isSuccessful() && response.body() != null) {
                         if (response.body().getState()) {
-                            RealmManager.setOptions(response.body().getList());
+                            RealmManager.saveDownloadedOptions(response.body().getList());
                             click.click("Данные успешно загружены и сохранены.");
                         } else {
                             click.click("Обновить данные не получилось. Обратитесь к своему руководителю.");
@@ -694,11 +700,17 @@ public class TablesLoadingUnloading {
             public void onResponse(@NonNull retrofit2.Call<ReportPrepareServer> call, @NonNull retrofit2.Response<ReportPrepareServer> response) {
                 Log.e("TAG_TEST", "RESPONSE_4");
                 Log.e("downloadReportPrepare", "downloadReportPrepare.response: " + response);
+
+                Globals.writeToMLOG("INFO", "downloadReportPrepare/onResponse", "response.isSuccessful(): " + response.isSuccessful());
+
                 if (response.isSuccessful() && response.body() != null) {
                     if (response.body().getState()) {
 
+                        Globals.writeToMLOG("INFO", "downloadReportPrepare/onResponse", "response.body().getState(): " + response.body().getState());
+
                         if (response.body().getList() != null) {
                             Log.e("SERVER_REALM_DB_UPDATE", "===================================.ReportPrepare.SIZE: " + response.body().getList().size());
+                            Globals.writeToMLOG("INFO", "downloadReportPrepare/onResponse", "response.body().getList().size(): " + response.body().getList().size());
                         } else {
                             Log.e("SERVER_REALM_DB_UPDATE", "===================================.ReportPrepare.SIZE: NuLL");
                         }
@@ -731,6 +743,7 @@ public class TablesLoadingUnloading {
                 readyReportPrepare = false;
                 syncInternetError = true;
                 Log.e("TAG_TEST", "FAILURE_4 E: " + t);
+                Globals.writeToMLOG("ERR", "downloadReportPrepare/onFailure", "Throwable t: " + t);
             }
         });
         Log.e("SERVER_REALM_DB_UPDATE", "===================================.downloadReportPrepare.END");
@@ -1352,6 +1365,27 @@ public class TablesLoadingUnloading {
 
         ProgressDialog pg = ProgressDialog.show(context, "Обмен данными с сервером.", "Обновление таблицы: " + "Ошибки", true, true);
 
+        StandartData data = new StandartData();
+        data.mod = "data_list";
+        data.act = "report_error_list";
+
+        Gson gson = new Gson();
+        String json = gson.toJson(data);
+        JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
+
+        retrofit2.Call<JsonObject> callTest = RetrofitBuilder.getRetrofitInterface().TEST_JSON_UPLOAD(RetrofitBuilder.contentType, convertedObject);
+        callTest.enqueue(new Callback<JsonObject>() {
+            @Override
+            public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
+                Log.e("test", "test" + response);
+            }
+
+            @Override
+            public void onFailure(Call<JsonObject> call, Throwable t) {
+                Log.e("test", "test");
+            }
+        });
+
         retrofit2.Call<ErrorTableResponce> call = RetrofitBuilder.getRetrofitInterface().GET_ERROR_LIST(mod, act);
         call.enqueue(new retrofit2.Callback<ErrorTableResponce>() {
             @Override
@@ -1951,7 +1985,7 @@ public class TablesLoadingUnloading {
                         if (data != null) {
                             List<ReportPrepareUpdateResponseList> list = (List<ReportPrepareUpdateResponseList>) data;
 
-                            Integer[] ids = new Integer[list.size()];
+                            Long[] ids = new Long[list.size()];
                             int count = 0;
                             for (ReportPrepareUpdateResponseList item : list) {
                                 ids[count++] = item.elementId;
@@ -2045,7 +2079,7 @@ public class TablesLoadingUnloading {
                                 if (data != null) {
                                     List<ReportPrepareUpdateResponseList> list = (List<ReportPrepareUpdateResponseList>) data;
 
-                                    Integer[] ids = new Integer[list.size()];
+                                    Long[] ids = new Long[list.size()];
                                     int count = 0;
                                     for (ReportPrepareUpdateResponseList item : list) {
                                         ids[count++] = item.elementId;
@@ -2113,7 +2147,13 @@ public class TablesLoadingUnloading {
             call.enqueue(new Callback<ReportPrepareUpdateResponse>() {
                 @Override
                 public void onResponse(Call<ReportPrepareUpdateResponse> call, Response<ReportPrepareUpdateResponse> response) {
-                    Log.e("uploadRP", "response: " + response.body());
+
+                    Gson gson = new Gson();
+                    String json = gson.toJson(response);
+                    JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
+
+                    Log.e("uploadRP", "response: " + convertedObject);
+
                     if (response.isSuccessful() && response.body() != null) {
                         if (response.body().data != null && response.body().data.size() > 0) {
                             exchange.onSuccess(response.body().data);
@@ -2220,7 +2260,7 @@ public class TablesLoadingUnloading {
             }
 
             Globals.writeToMLOG("INFO", "uploadLodMp", "Количество ЛОГ МП на выгрузку: " + logMp.size());
-            Globals.writeToMLOG("INFO", "uploadLodMp", "Данные на выгрузку: " + map);
+//            Globals.writeToMLOG("INFO", "uploadLodMp", "Данные на выгрузку: " + map);
 
             retrofit2.Call<JsonObject> call = RetrofitBuilder.getRetrofitInterface().UPLOAD_LOG_MP(mod, act, map);
             call.enqueue(new retrofit2.Callback<JsonObject>() {
@@ -2597,11 +2637,14 @@ public class TablesLoadingUnloading {
     }
 
 
-    private void downloadReclamationComments() {
+    private void downloadTARComments() {
         try {
             TasksAndReclamationsRequest data = new TasksAndReclamationsRequest();
             data.mod = "reclamation";
             data.act = "list_comment";
+
+            data.date_from = Clock.getHumanTimeYYYYMMDD(Clock.getDateLong(-20).getTime()/1000);
+            data.date_to = Clock.getHumanTimeYYYYMMDD(Clock.getDateLong(2).getTime()/1000);
 
             Gson gson = new Gson();
             String json = gson.toJson(data);
@@ -2863,7 +2906,7 @@ public class TablesLoadingUnloading {
     private void downloadtovar_grp_client() {
         StandartData data = new StandartData();
         data.mod = "data_list";
-        data.act = "tovar_grp_client";
+        data.act = "client_tovar_group_list";
 
         Gson gson = new Gson();
         String json = gson.toJson(data);

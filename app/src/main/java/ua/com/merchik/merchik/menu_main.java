@@ -527,7 +527,7 @@ public class menu_main extends AppCompatActivity {
                 WPDataObj wp = (WPDataObj)intent.getSerializableExtra("dataFromWPObj");
 
                 if (wp != null) {
-                    int wpId = wp.getId();
+                    long wpId = wp.getId();
                     date = wp.getDate();
                     customer_id = wp.getCustomerId();
                     address_id = String.valueOf(wp.getAddressId());

@@ -3,6 +3,8 @@ package ua.com.merchik.merchik.database.realm.tables;
 import java.util.List;
 
 import io.realm.RealmResults;
+import ua.com.merchik.merchik.Globals;
+import ua.com.merchik.merchik.data.BaseBusinessData;
 import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
 import ua.com.merchik.merchik.data.RealmModels.AdditionalRequirementsDB;
 import ua.com.merchik.merchik.data.RealmModels.AddressDB;
@@ -22,20 +24,99 @@ public class AdditionalRequirementsRealm {
         INSTANCE.commitTransaction();
     }
 
+    private static <T> BaseBusinessData getAdditionalRequirementsDocumentData(T document) {
+        BaseBusinessData res = new BaseBusinessData();
+        if (document instanceof WpDataDB) {
+            WpDataDB wp = (WpDataDB) document;
 
-    //    public static List<AdditionalRequirementsDB> getData3(String clientId, String addrId, int themeId) {
+            res.clientId = wp.getClient_id();
+            res.addressId = wp.getAddr_id();
+            res.themeId = wp.getTheme_id();
+
+        } else if (document instanceof TasksAndReclamationsSDB) {
+            WpDataDB wp = WpDataRealm.getWpDataRowByDad2Id(((TasksAndReclamationsSDB) document).codeDad2SrcDoc);
+
+            res.clientId = wp.getClient_id();
+            res.addressId = wp.getAddr_id();
+            res.themeId = wp.getTheme_id();
+        }
+
+        return res;
+    }
+
+    public static <T> List<AdditionalRequirementsDB> getDocumentAdditionalRequirements(Object document, boolean tovExist, Integer optionId, String dateFrom, String dateTo, Object dt) {
+        BaseBusinessData data = getAdditionalRequirementsDocumentData(document);
+        AddressDB addressDB = AddressRealm.getAddressById(data.addressId);
+
+        // --------------------
+        RealmResults res = INSTANCE.where(AdditionalRequirementsDB.class)
+                .equalTo("clientId", data.clientId)
+                .equalTo("not_approve", "0")
+                .findAll();
+
+        try {
+            // --------------------
+            res = res.where()
+                    .beginGroup()
+                    .equalTo("grpId", "0")
+                    .equalTo("addrId", "0")
+                    .endGroup()
+                    .or()
+                    .beginGroup()
+                    .equalTo("grpId", "0")
+                    .equalTo("addrId", String.valueOf(data.addressId))
+                    .endGroup()
+                    .or()
+                    .beginGroup()
+                    .equalTo("grpId", "0")
+                    .equalTo("addrId", String.valueOf(addressDB.getTpId()))
+                    .endGroup()
+                    .or()
+                    .beginGroup()
+                    .equalTo("grpId", String.valueOf(addressDB.getTpId()))
+                    .equalTo("addrId", "0")
+                    .endGroup()
+
+                    .findAll();
+
+            // --------------------
+            if (data.themeId != 998) {
+                res = res.where()
+                        .equalTo("themeId", String.valueOf(data.themeId))
+                        .findAll();
+            }
+
+            // --------------------
+            if (tovExist) {
+                res = res.where()
+                        .isNotEmpty("tovarId")
+                        .notEqualTo("tovarId", "0")
+                        .findAll();
+            }
+            // --------------------
+            if (optionId != null && optionId != 0) {
+                res = res.where()
+                        .equalTo("optionId", String.valueOf(optionId))
+                        .findAll();
+            }
+        }catch (Exception e){
+            Globals.writeToMLOG("ERR", "getDocumentAdditionalRequirements", "Exception e: " + e);
+        }
+
+        return res;
+    }
+
+
     public static <T> RealmResults<AdditionalRequirementsDB> getData3(T data) {
         int themeId, addressId;
         String clientId;
+
         if (data instanceof WpDataDB) {
             addressId = ((WpDataDB) data).getAddr_id();
             clientId = ((WpDataDB) data).getClient_id();
             themeId = ((WpDataDB) data).getTheme_id();
         } else if (data instanceof TasksAndReclamationsSDB) {
             WpDataDB wp = WpDataRealm.getWpDataRowByDad2Id(((TasksAndReclamationsSDB) data).codeDad2SrcDoc);
-//            addressId = ((TasksAndReclamationsSDB) data).addr;
-//            clientId = ((TasksAndReclamationsSDB) data).client;
-//            themeId = ((TasksAndReclamationsSDB) data).themeId;
             addressId = wp.getAddr_id();
             clientId = wp.getClient_id();
             themeId = wp.getTheme_id();
@@ -86,7 +167,7 @@ public class AdditionalRequirementsRealm {
     }
 
 
-    public static AdditionalRequirementsDB getADByClient(String addrId, String clientId){
+    public static AdditionalRequirementsDB getADByClient(String addrId, String clientId) {
         AdditionalRequirementsDB res = INSTANCE.where(AdditionalRequirementsDB.class)
                 .equalTo("clientId", clientId)
                 .equalTo("addrId", addrId)

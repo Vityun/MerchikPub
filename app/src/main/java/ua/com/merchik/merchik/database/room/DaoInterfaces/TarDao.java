@@ -28,7 +28,7 @@ public interface TarDao {
             "LEFT JOIN address addr ON tar.addr = addr.id\n" +
             "LEFT JOIN client cl ON tar.client = cl.id\n" +
             "LEFT JOIN sotr sot ON tar.vinovnik = sot.id\n" +
-            "WHERE tp = :tp AND dt >:dt AND vinovnik = :userId\n" +
+            "WHERE tp = :tp AND dt >:dt AND (vinovnik = :userId OR vinovnik2 = :userId OR zamena_user_id = :userId)\n" +
             "ORDER BY dt DESC;")
     List<TasksAndReclamationsSDB> getAllByTp(int userId, int tp, long dt);
 
@@ -50,6 +50,14 @@ public interface TarDao {
             "ORDER BY dt DESC;")
     List<TasksAndReclamationsSDB> getAllByInfo(int tp, String client, int address, long dt);
 
+    @Query("SELECT tar.*, addr.nm AS addr_nm, cl.nm AS client_nm, sot.fio AS sotr_nm FROM tasks_and_reclamations tar \n" +
+            "LEFT JOIN address addr ON tar.addr = addr.id\n" +
+            "LEFT JOIN client cl ON tar.client = cl.id\n" +
+            "LEFT JOIN sotr sot ON tar.vinovnik = sot.id\n" +
+            "WHERE tp = :tp AND state = :state AND addr = :address AND client = :client AND dt >= :dt\n" +
+            "ORDER BY dt DESC;")
+    List<TasksAndReclamationsSDB> getAllByInfo(int tp, String client, int address, long dt, int state);
+
     /**
      * 0 - выгружен
      * 1 - надо выгрузить
@@ -67,6 +75,15 @@ public interface TarDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     Completable insertData(List<TasksAndReclamationsSDB> data);
 
+    /**
+     * Для опции контроля Задач 135329(
+     * */
+    @Query("SELECT * FROM tasks_and_reclamations WHERE tp = :tarType AND addr = :addressId AND (vinovnik = :userId OR vinovnik2 = :userId OR zamena_user_id = :userId) AND state = :state AND dt BETWEEN :dtFrom AND :dtTo")
+    List<TasksAndReclamationsSDB> getTARForOptionControl(Integer tarType, int addressId, int userId, int state, Long dtFrom, Long dtTo);
+
+    @Query("SELECT * FROM tasks_and_reclamations WHERE (vinovnik = :userId OR vinovnik2 = :userId OR zamena_user_id = :userId) AND tp = :tarType AND addr = :addressId AND client = :clientId  AND state = :state AND dt BETWEEN :dtFrom AND :dtTo")
+//    @Query("SELECT * FROM tasks_and_reclamations WHERE tp = :tarType AND addr = :addressId AND client = :clientId AND (vinovnik = :userId OR vinovnik2 = :userId OR zamena_user_id = :userId) AND state = :state AND dt BETWEEN :dtFrom AND :dtTo")
+    List<TasksAndReclamationsSDB> getTARForOptionControl150822(Integer tarType, int addressId, String clientId, int userId, int state, Long dtFrom, Long dtTo);
 }
 
 /*SELECT tar.*, addr.nm FROM tasks_and_reclamations tar

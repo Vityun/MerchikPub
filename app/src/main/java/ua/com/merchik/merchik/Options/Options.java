@@ -1,9 +1,15 @@
-package ua.com.merchik.merchik;
+package ua.com.merchik.merchik.Options;
 
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.text.SpannableString;
+import android.text.SpannableStringBuilder;
+import android.text.Spanned;
+import android.text.TextPaint;
+import android.text.style.ClickableSpan;
 import android.util.Log;
+import android.view.View;
 import android.widget.Toast;
 
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -25,10 +31,33 @@ import io.realm.RealmResults;
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity;
 import ua.com.merchik.merchik.Activities.TaskAndReclamations.TasksActivity.TARSecondFrag;
 import ua.com.merchik.merchik.Adapters.TextAdapter;
+import ua.com.merchik.merchik.BuildConfig;
+import ua.com.merchik.merchik.Clock;
+import ua.com.merchik.merchik.Globals;
+import ua.com.merchik.merchik.MakePhoto;
+import ua.com.merchik.merchik.Options.Buttons.OptionButPhotoPlanogramm;
+import ua.com.merchik.merchik.Options.Buttons.OptionButtonAddComment;
+import ua.com.merchik.merchik.Options.Buttons.OptionButtonAvailabilityDetailedReport;
+import ua.com.merchik.merchik.Options.Buttons.OptionButtonPhotoBeforeStartWork;
+import ua.com.merchik.merchik.Options.Buttons.OptionButtonReclamationAnswer;
+import ua.com.merchik.merchik.Options.Buttons.OptionButtonTaskAnswer;
+import ua.com.merchik.merchik.Options.Controls.OptionControlAddComment;
+import ua.com.merchik.merchik.Options.Controls.OptionControlAvailabilityDetailedReport;
+import ua.com.merchik.merchik.Options.Controls.OptionControlCheckingReasonOutOfStock;
+import ua.com.merchik.merchik.Options.Controls.OptionControlCheckingReasonOutOfStockOSV;
+import ua.com.merchik.merchik.Options.Controls.OptionControlEndAnotherWork;
+import ua.com.merchik.merchik.Options.Controls.OptionControlPhotoBeforeStartWork;
+import ua.com.merchik.merchik.Options.Controls.OptionControlPromotion;
+import ua.com.merchik.merchik.Options.Controls.OptionControlReclamationAnswer;
+import ua.com.merchik.merchik.Options.Controls.OptionControlTaskAnswer;
+import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.ServerExchange.Exchange;
+import ua.com.merchik.merchik.VersionApp;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
+import ua.com.merchik.merchik.WorkPlan;
 import ua.com.merchik.merchik.data.Data;
 import ua.com.merchik.merchik.data.Database.Realm.VirtualAdditionalRequirementsDB;
+import ua.com.merchik.merchik.data.Database.Room.AdditionalMaterialsJOIN.AdditionalMaterialsJOINAdditionalMaterialsAddressSDB;
 import ua.com.merchik.merchik.data.Database.Room.AdditionalMaterialsSDB;
 import ua.com.merchik.merchik.data.Database.Room.EKL_SDB;
 import ua.com.merchik.merchik.data.Database.Room.OpinionSDB;
@@ -50,13 +79,17 @@ import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsMarkRealm;
 import ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsRealm;
 import ua.com.merchik.merchik.database.realm.tables.CustomerRealm;
-import ua.com.merchik.merchik.database.realm.tables.OptionsRealm;
 import ua.com.merchik.merchik.database.realm.tables.ReportPrepareRealm;
 import ua.com.merchik.merchik.database.realm.tables.WpDataRealm;
 import ua.com.merchik.merchik.dialogs.DialogAdditionalRequirements.DialogARMark.DialogARMark;
 import ua.com.merchik.merchik.dialogs.DialogAdditionalRequirements.DialogAdditionalRequirements;
 import ua.com.merchik.merchik.dialogs.DialogData;
+import ua.com.merchik.merchik.toolbar_menus;
 
+import static ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity.OFS;
+import static ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity.OOS;
+import static ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity.SKUFact;
+import static ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity.SKUPlan;
 import static ua.com.merchik.merchik.Globals.OptionControlName.AKCIYA;
 import static ua.com.merchik.merchik.Globals.OptionControlName.AKCIYA_ID;
 import static ua.com.merchik.merchik.Globals.OptionControlName.AMOUNT;
@@ -68,6 +101,8 @@ import static ua.com.merchik.merchik.Globals.OptionControlName.NOTES;
 import static ua.com.merchik.merchik.Globals.OptionControlName.OBOROTVED_NUM;
 import static ua.com.merchik.merchik.Globals.OptionControlName.PRICE;
 import static ua.com.merchik.merchik.Globals.OptionControlName.UP;
+import static ua.com.merchik.merchik.data.OptionMassageType.Type.DIALOG;
+import static ua.com.merchik.merchik.data.OptionMassageType.Type.STRING;
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
 public class Options {
@@ -97,7 +132,43 @@ public class Options {
 
             int optionControlId = Integer.parseInt(optionsDB.getOptionControlId());
 
+            OptionMassageType newOptionType = new OptionMassageType();
+            switch (mode) {
+                case NULL:
+                    break;
+
+                case CHECK_CLICK:
+                    newOptionType.type = DIALOG;
+                    break;
+            }
+
             switch (optionControlId) {
+
+                case 151594:
+                    OptionControlPhotoBeforeStartWork<?> optionControlPhotoBeforeStartWork = new OptionControlPhotoBeforeStartWork<>(context, dataDB, optionsDB, newOptionType, mode);
+                    optionControlPhotoBeforeStartWork.showOptionMassage();
+                    break;
+
+                case 132624:
+                    OptionControlAddComment<?> optionControlAddComment = new OptionControlAddComment<>(context, dataDB, optionsDB, newOptionType, mode);
+                    optionControlAddComment.showOptionMassage();
+                    break;
+
+                case 80977:
+                    OptionMassageType type1 = new OptionMassageType();
+                    switch (mode) {
+                        case NULL:
+                            break;
+
+                        case CHECK_CLICK:
+                            type1.type = DIALOG;
+                            break;
+                    }
+
+                    OptionControlPromotion optionControlPromotion = new OptionControlPromotion(context, dataDB, optionsDB, type1, mode);
+                    optionControlPromotion.showOptionMassage();
+                    break;
+
                 case 84932: // Проверка наличия ФотоОтчётов (id мне дали из 1С) (тип 0)
                     checkPhotoReport(context, dataDB, optionsDB, type, mode);
                     break;
@@ -125,7 +196,17 @@ public class Options {
 
                 case 76815: // Проверка наличия Дет.Отчётов (id мне дали из 1С)
                     Log.e("OPTION_CONTROL", "Проверка наличия Дет.Отчётов" + optionsDB.getOptionControlId());
-                    check76815(dataDB, optionsDB); // Проверка Представленности
+//                    check76815(dataDB, optionsDB); // Проверка Представленности
+                    OptionMassageType type2 = new OptionMassageType();
+                    switch (mode) {
+                        case NULL:
+                            break;
+
+                        case CHECK_CLICK:
+                            type2.type = DIALOG;
+                            break;
+                    }
+                    OptionControlAvailabilityDetailedReport optionControlAvailabilityDetailedReport = new OptionControlAvailabilityDetailedReport(context, dataDB, optionsDB, type2, mode);
                     break;
 
                 case 138519:
@@ -211,6 +292,54 @@ public class Options {
         NULL    // Ничего не делаем
     }
 
+    /**
+     * 07.06.2022
+     * Решил переписать Нажатие На Кнопку(ННК), потому что предыдущая реализация работала не совсем
+     * правильно.
+     */
+    public <T> void optionNNK(Context context, T document, OptionsDB option, OptionMassageType massageType, NNKMode nnkMode, Clicks.clickVoid click) {
+        Log.e("optionNNK", "--------------------------------");
+        Log.e("optionNNK", "option: " + option);
+        Log.e("optionNNK", "option id: " + option.getOptionId());
+
+        // Сброс сигнала Опции
+        option.setIsSignal("0");
+
+        // Проход по первой опции блокировки
+        if (!option.getOptionBlock1().equals("0")) {
+            executeOption(context, document, option, Integer.parseInt(option.getOptionBlock1()), massageType, nnkMode);
+        }
+
+        // Проход по второй опции блокировки
+        if (!option.getOptionBlock2().equals("0")) {
+            executeOption(context, document, option, Integer.parseInt(option.getOptionBlock2()), massageType, nnkMode);
+        }
+
+    }
+
+    /**
+     * 07.06.2022
+     * Контроль опций.
+     */
+    private <T> void executeOption(Context context, T document, OptionsDB option, int optionId, OptionMassageType massageType, NNKMode nnkMode) {
+        String msg = "";
+        switch (optionId) {
+            case 135329:
+                new OptionControlTaskAnswer(context, document, option, massageType, nnkMode);
+                break;
+
+            case 80977:
+                new OptionControlPromotion(context, document, option, massageType, nnkMode);
+                break;
+
+            default:
+                msg = "Данная опция находится в разработке.";
+                break;
+        }
+
+    }
+
+
     /*
      * Обработка опций
      * Нажатие На Кнопку (ННК) -- абстрактное название. На самом деле в принципе обработка
@@ -220,9 +349,16 @@ public class Options {
         OptionMassageType result = new OptionMassageType();
         int res = 0;    // Счётчик для накапливания "блокировок" у данной опции
 
+        //
+        option.setIsSignal("0");
+
         Log.e("NNK", "--------------------------------");
         Log.e("NNK", "option.option_id: " + option.getOptionId());
         Log.e("NNK", "START_res: " + res);
+
+        Log.e("NNK", "option.getOptionBlock1(): " + option.getOptionBlock1());
+        Log.e("NNK", "option.getOptionBlock2(): " + option.getOptionBlock2());
+
 
         // Проход по первой опции блокировки
         if (!option.getOptionBlock1().equals("0")) {
@@ -241,21 +377,11 @@ public class Options {
             switch (mode) {
                 case NULL:
 
-                    result.msg = "OK";
-
-                    return result;
+                    break;
 
                 case MAKE:
-                    DialogData dialogData = new DialogData(context);
-                    dialogData.setTitle("Ошибка");
-                    dialogData.setText("Прежде чем выполнять данную опцию (действие) вы должны выполнить опцию: " + OptionsRealm.getOptionByOptionId(option.getOptionBlock1()).getOptionControlTxt());
-                    dialogData.setClose(dialogData::dismiss);
 
-                    // Прежде чем выполнять данную опцию(действие) вы должны выполнить опцию: *формула название опции*
-
-                    result.dialog = dialogData;
-
-                    return result;
+                    break;
 
                 case CHECK:
                     DialogData dialogData2 = new DialogData(context);
@@ -263,13 +389,12 @@ public class Options {
                     dialogData2.setText("Данная Опция заблокированна ОПЦИЕЙ: " + option.getOptionBlock1() + "/" + option.getOptionBlock2());
                     dialogData2.setClose(dialogData2::dismiss);
 
-
                     result.dialog = dialogData2;
 
                     return result;
+
             }
         } else {
-//            result.msg = "NOT OK";
 
             switch (mode) {
                 case NULL:
@@ -298,19 +423,24 @@ public class Options {
      * 23.07.21
      * "Нажатие" на "Провести"
      */
-    public void conduct(Context context, WpDataDB wp, List<OptionsDB> options, int optCount) {
+    public void conduct(Context context, WpDataDB wp, List<OptionsDB> options, int optCount, Clicks.click click) {
         int register = 0;
+
+        OptionMassageType type = new OptionMassageType();
+        type.type = STRING;
+
         for (OptionsDB item : options) {
             Log.e("conduct", "----------------------------------------------------------------");
             Log.e("conduct", "OptionsDB item.getOptionControlId(): " + item.getOptionControlId());
 
-            int controlResult = optControl(context, wp, item, Integer.parseInt(item.getOptionControlId()), new OptionMassageType(), NNKMode.CHECK);
+            int controlResult = optControl(context, wp, item, Integer.parseInt(item.getOptionControlId()), type, NNKMode.CHECK);
 
             if (controlResult == 0) {
-                Log.e("conduct", "Опция контроля НЕ выполнена: " + controlResult);
-            } else if (controlResult == 1) {
                 Log.e("conduct", "Опция контроля выполнена: " + controlResult);
-                register++;
+            } else if (controlResult == 1) {
+                Log.e("conduct", "Опция контроля НЕ выполнена: " + controlResult);
+//                register++;
+                optionNotConduct.add(item);
             } else {
                 Log.e("conduct", "Что-то пошло не так: " + controlResult);
             }
@@ -328,12 +458,16 @@ public class Options {
             dialog.setDialogIco();
             dialog.setTitle("Не все опции(действия) выполнены.");
 
-            StringBuffer msg = new StringBuffer();
-            for (OptionsDB item : optionNotConduct) {
-                msg.append("* ").append(item.getOptionControlTxt()).append("\n");
-            }
 
-            dialog.setText("Не выполнены: \n\n" + msg + "\n\nУстраните указанные ошибки и повторите попытку проведения.");
+            SpannableStringBuilder resStr = new SpannableStringBuilder();
+            resStr.append("Не выполнены: \n\n");
+            for (OptionsDB item : optionNotConduct) {
+                StringBuffer msg = new StringBuffer();
+                resStr.append(createLinkedString(dialog, msg.append("* ").append(item.getOptionControlTxt()).append("\n"), item, click));
+            }
+            resStr.append("\n\nУстраните указанные ошибки и повторите попытку проведения.");
+
+            dialog.setText(resStr, ()->{});
             dialog.setClose(dialog::dismiss);
             dialog.show();
 
@@ -344,138 +478,236 @@ public class Options {
                 if (wp != null) {
                     wp.startUpdate = true;
                     wp.setSetStatus(1);
-                    wp.setDt_update(System.currentTimeMillis()/1000);
+                    wp.setDt_update(System.currentTimeMillis() / 1000);
                     realm.insertOrUpdate(wp);
                 }
             });
         }
+    }
 
+    private SpannableString createLinkedString(DialogData dialogData, StringBuffer msg, OptionsDB item, Clicks.click click) {
+        SpannableString res = new SpannableString(msg);
+        ClickableSpan clickableSpan = new ClickableSpan() {
+            @Override
+            public void onClick(View textView) {
+                click.click(item);
+//                Toast.makeText(textView.getContext(), "Боооожечки, Ви не виконали опцію: " + item.getOptionControlTxt(), Toast.LENGTH_LONG).show();
+                dialogData.dismiss();
+            }
 
+            @Override
+            public void updateDrawState(TextPaint ds) {
+                super.updateDrawState(ds);
+                ds.setUnderlineText(false);
+            }
+        };
+        res.setSpan(clickableSpan, 0, msg.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        return res;
     }
 
 
     /*Проверка Опции*/
-    private <T> int optControl(Context context, T dataDB, OptionsDB option, int optionId, OptionMassageType type, NNKMode mode) {
+    public <T> int optControl(Context context, T dataDB, OptionsDB option, int optionId, OptionMassageType type, NNKMode mode) {
 
-        try {
-            Log.e("NNK", "F/optControl/optionId: " + optionId);
-            switch (optionId) {
+//        try {
+        Log.e("NNK", "F/optControl/optionId: " + optionId);
+        switch (optionId) {
 
-                // Эти 2 в принципе разные, но для меня на данный момент они занимаются одним и тем же
-                case 135742:// Дет. Отчёт по КлиентоАдресу
-                case 137797:// Дет. Отчёт по Дад2
-                    option135742(context, dataDB, option, type, mode);
-                    break;
+            case 157243:
+                OptionControlCheckingReasonOutOfStockOSV<?> optionControlCheckingReasonOutOfStockOSV = new OptionControlCheckingReasonOutOfStockOSV<>(context, dataDB, option, type, mode);
+                if (optionControlCheckingReasonOutOfStockOSV.isBlockOption()){
+                    optionControlCheckingReasonOutOfStockOSV.showOptionMassage();
+                }
+                return optionControlCheckingReasonOutOfStockOSV.isBlockOption() ? 1 : 0;
 
-                case 132621:   // Оценка
-                    option132621(context, dataDB, option, type, mode);
-                    break;
+            case 157241:
+                OptionControlCheckingReasonOutOfStock<?> optionControlCheckingReasonOutOfStock = new OptionControlCheckingReasonOutOfStock<>(context, dataDB, option, type, mode);
+//                if (optionControlCheckingReasonOutOfStock.isBlockOption()){
+                    optionControlCheckingReasonOutOfStock.showOptionMassage();
+//                }
+                return optionControlCheckingReasonOutOfStock.isBlockOption() ? 1 : 0;
 
-                case 84003:     // Мнение о сотруднике
-                    option84003(context, dataDB, option, type, mode);
-                    break;
+            case 135809:
+                new OptionButtonPhotoBeforeStartWork<>(context, dataDB, option, type, mode);
+                break;
 
-                case 138339:
-                    if (dataDB instanceof WpDataDB) {
-                        // Пока что пусто
-                    } else if (dataDB instanceof TasksAndReclamationsSDB) {
-                        // Надо чем-то заполнить
-                        option138339(context, dataDB, option, type, mode);
-                    }
-                    break;
+            case 151594:
+                OptionControlPhotoBeforeStartWork<?> optionControlPhotoBeforeStartWork = new OptionControlPhotoBeforeStartWork<>(context, dataDB, option, type, mode);
+                if (optionControlPhotoBeforeStartWork.isBlockOption()){
+                    optionControlPhotoBeforeStartWork.showOptionMassage();
+                }
+                return optionControlPhotoBeforeStartWork.isBlockOption() ? 1 : 0;
 
-                // ---
+            case 135328:
+                OptionButtonReclamationAnswer<?> optionButtonReclamationAnswer = new OptionButtonReclamationAnswer<>(context, dataDB, option, type, mode);
+                break;
 
-                case 138773:
-                    optionMP_138773(context, dataDB, option, type, mode);
-                    break;
+            case 135330:
+                OptionControlReclamationAnswer<?> optionControlReclamationAnswer = new OptionControlReclamationAnswer<>(context, dataDB, option, type, mode);
+                optionControlReclamationAnswer.showOptionMassage();
+                return optionControlReclamationAnswer.isBlockOption() ? 1 : 0;
+
+            case 132624:
+                OptionControlAddComment<?> optionControlAddComment = new OptionControlAddComment<>(context, dataDB, option, type, mode);
+                optionControlAddComment.showOptionMassage();
+                return optionControlAddComment.isBlockOption() ? 1 : 0;
+
+            case 132623:
+                OptionButtonAddComment<?> optionButtonAddComment = new OptionButtonAddComment<>(context, dataDB, option, type, mode);
+                break;
+
+            case 76815:
+                OptionControlAvailabilityDetailedReport optionControlAvailabilityDetailedReport = new OptionControlAvailabilityDetailedReport(context, dataDB, option, type, mode);
+                if (optionControlAvailabilityDetailedReport.isBlockOption()){
+                    optionControlAvailabilityDetailedReport.showOptionMassage();
+                }
+//                if (mode.equals(NNKMode.CHECK)){
+//                    optionControlAvailabilityDetailedReport.showOptionMassage();
+//                }
+//                optionControlAvailabilityDetailedReport.showOptionMassage();
+                return optionControlAvailabilityDetailedReport.isBlockOption() ? 1 : 0;
+
+            case 151139:
+                new OptionButPhotoPlanogramm<>(context, dataDB, option, type, mode);
+                break;
+
+            case 80977:
+                Log.e("test","test");
+//                    OptionControlPromotion optionControlPromotion = new OptionControlPromotion(context, dataDB, option, type, mode);
+//                    optionControlPromotion.showOptionMassage();
+                break;
+
+            case 156928:
+                OptionControlEndAnotherWork optionControlEndAnotherWork = new OptionControlEndAnotherWork(context, dataDB, option, type, mode);
+                optionControlEndAnotherWork.showOptionMassage();
+                return optionControlEndAnotherWork.isBlockOption() ? 1 : 0;
+
+            case 135327: // Задача
+                OptionButtonTaskAnswer<?> optionButtonTaskAnswer = new OptionButtonTaskAnswer<>(context, dataDB, option, type, mode);
+                break;
+
+            case 135329:
+                OptionControlTaskAnswer optionControlTask = new OptionControlTaskAnswer(context, dataDB, option, type, mode);
+                optionControlTask.showOptionMassage();
+                return optionControlTask.isBlockOption() ? 1 : 0;
+
+            // Эти 2 в принципе разные, но для меня на данный момент они занимаются одним и тем же
+            case 135742:// Дет. Отчёт по КлиентоАдресу
+            case 137797:// Дет. Отчёт по Дад2
+//                option135742(context, dataDB, option, type, mode);
+                new OptionButtonAvailabilityDetailedReport(context, dataDB, option, type, mode);
+                break;
+
+            case 132621:   // Оценка
+                option132621(context, dataDB, option, type, mode);
+                break;
+
+            case 84003:     // Мнение о сотруднике
+                option84003(context, dataDB, option, type, mode);
+                break;
+
+            case 138339:
+                if (dataDB instanceof WpDataDB) {
+                    // Пока что пусто
+                } else if (dataDB instanceof TasksAndReclamationsSDB) {
+                    // Надо чем-то заполнить
+                    option138339(context, dataDB, option, type, mode);
+                }
+                break;
+
+            // ---
+
+            case 138773:
+                optionMP_138773(context, dataDB, option, type, mode);
+                break;
 
 //                case 8299:
 //                    return optionControlMP_8299(context, dataDB, option, type, mode) ? 1 : 0;
 
-                // ---
+            // ---
 
-                case 138518:
-                    Log.e("NNK", "F/optControl/138518");
-                    if (dataDB instanceof WpDataDB) {
-                        optionStartWork_138518(context, (WpDataDB) dataDB, option, type, mode);
+            case 138518:
+                Log.e("NNK", "F/optControl/138518");
+                if (dataDB instanceof WpDataDB) {
+                    optionStartWork_138518(context, (WpDataDB) dataDB, option, type, mode);
 //                        sendWpData2();
-                    } else if (dataDB instanceof TasksAndReclamationsSDB) {
-                        optionStartWork_138518(context, (TasksAndReclamationsSDB) dataDB, option, type, mode);
-                    }
-                    break;
+                } else if (dataDB instanceof TasksAndReclamationsSDB) {
+                    optionStartWork_138518(context, (TasksAndReclamationsSDB) dataDB, option, type, mode);
+                }
+                break;
 
-                case 138519:
-                    return optionControlStartWork_138519(context, dataDB, option, type, mode) ? 0 : 1;
+            case 138519:
+                return optionControlStartWork_138519(context, dataDB, option, type, mode) ? 0 : 1;
 
 
-                case 138520:
-                    if (dataDB instanceof WpDataDB) {
-                        optionEndWork_138520(context, (WpDataDB) dataDB, option, type, mode);
+            case 138520:
+                if (dataDB instanceof WpDataDB) {
+                    optionEndWork_138520(context, (WpDataDB) dataDB, option, type, mode);
 //                        sendWpData2();
-                    } else if (dataDB instanceof TasksAndReclamationsSDB) {
-                        optionEndWork_138520(context, (TasksAndReclamationsSDB) dataDB, option, type, mode);
-                    }
-                    break;
+                } else if (dataDB instanceof TasksAndReclamationsSDB) {
+                    optionEndWork_138520(context, (TasksAndReclamationsSDB) dataDB, option, type, mode);
+                }
+                break;
 
-                case 138521:
-                    return optionControlEndWork_138521(context, dataDB, option, type, mode) ? 0 : 1;
+            case 138521:
+                return optionControlEndWork_138521(context, dataDB, option, type, mode) ? 0 : 1;
 
-                case 132968:
-                    if (dataDB instanceof WpDataDB) {
-                        optionMakePhoto0_132968(context, (WpDataDB) dataDB, option, type, mode);
-                    } else if (dataDB instanceof TasksAndReclamationsSDB) {
-                        optionMakePhoto0_132968(context, dataDB, option, type, mode);
-                    }
-                    break;
+            case 132968:
+                if (dataDB instanceof WpDataDB) {
+                    optionMakePhoto0_132968(context, (WpDataDB) dataDB, option, type, mode);
+                } else if (dataDB instanceof TasksAndReclamationsSDB) {
+                    optionMakePhoto0_132968(context, dataDB, option, type, mode);
+                }
+                break;
 
-                // --- Опция контроля на Получение заказа в ТТ
-                case 587:
-                    return optionControlReceivingAnOrder_587(context, dataDB, option, type, mode) ? 1 : 0;
-
-
-                // Контроль Опции Доп. Требований
-                case 138341:
-                    try {
-                        optionControlAdditionalRequirements_138341(context, dataDB, option, type, mode);
-                    } catch (Exception e) {
-                    }
-                    break;
-
-                case 139577:
-                    optionControlVersion_139577(context, dataDB, option, null, NNKMode.CHECK_CLICK);
-                    break;
+            // --- Опция контроля на Получение заказа в ТТ
+            case 587:
+                return optionControlReceivingAnOrder_587(context, dataDB, option, type, mode) ? 1 : 0;
 
 
-                // Контроль фотоотчётов
-                case 84932: // Проверка наличия ФотоОтчётов (id мне дали из 1С) (тип 0)
-                    return checkPhotoReport(context, dataDB, option, type, mode) ? 1 : 0;
+            // Контроль Опции Доп. Требований
+            case 138341:
+                try {
+                    optionControlAdditionalRequirements_138341(context, dataDB, option, type, mode);
+                } catch (Exception e) {
+                }
+                break;
+
+            case 139577:
+                optionControlVersion_139577(context, dataDB, option, null, NNKMode.CHECK_CLICK);
+                break;
+
+
+            // Контроль фотоотчётов
+            case 84932: // Проверка наличия ФотоОтчётов (id мне дали из 1С) (тип 0)
+                return checkPhotoReport(context, dataDB, option, type, mode) ? 1 : 0;
 //                    break;
 
-                // Доп. Материалы
-                case 138340:
-                    option138340(context, dataDB, option, type, mode);
-                    break;
+            // Доп. Материалы
+            case 138340:
+                option138340(context, dataDB, option, type, mode);
+                break;
 
 
-                default:
+            default:
 
-                    switch (mode) {
-                        case NULL:
-                            return 0;
+                switch (mode) {
+                    case NULL:
+                        return 0;
 
-                        case CHECK:
+                    case CHECK:
 //                        Toast.makeText(context, "Данная Опция находится в РАЗРАБОТКЕ!", Toast.LENGTH_SHORT).show();
-                            return 0;
+                        return 0;
 
-                        case MAKE:
-                            Toast.makeText(context, "Данная Опция находится в РАЗРАБОТКЕ", Toast.LENGTH_SHORT).show();
-                            return 0;
-                    }
-            }
-        } catch (Exception e) {
-            Globals.writeToMLOG("ERROR", "optControl2", "Exception: " + e);
+                    case MAKE:
+//                            Toast.makeText(context, "Данная Опция находится в РАЗРАБОТКЕ", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(context, "" + option.getNotes() + "\n\n" + option.getOptionControlTxt(), Toast.LENGTH_LONG).show();
+                        return 0;
+                }
         }
+//        } catch (Exception e) {
+//            Globals.writeToMLOG("ERROR", "optControl2", "Exception: " + e);
+//        }
 
         return 0;
     }
@@ -576,13 +808,16 @@ public class Options {
         dialogAdditionalRequirements.show();
     }
 
-    private <T> void option138340(Context context, T dataDB, OptionsDB option, OptionMassageType type, NNKMode mode){
-        List<AdditionalMaterialsSDB> data = SQL_DB.additionalMaterialsDao().getAllByClientId(option.getClientId());
+    private <T> void option138340(Context context, T dataDB, OptionsDB option, OptionMassageType type, NNKMode mode) {
+        List<AdditionalMaterialsSDB> dataTest = SQL_DB.additionalMaterialsDao().getAllByClientId(option.getClientId());
+        String expire = Clock.getHumanTimeYYYYMMDD(System.currentTimeMillis()/1000);
+        List<AdditionalMaterialsSDB> data1 = SQL_DB.additionalMaterialsDao().getAllForOption(option.getClientId(), "1", "0", expire);
+        List<AdditionalMaterialsJOINAdditionalMaterialsAddressSDB> data = SQL_DB.additionalMaterialsDao().getAllForOptionTEST(option.getClientId(), "1", "0");
 
         DialogAdditionalRequirements dialogAdditionalRequirements = new DialogAdditionalRequirements(context);
 
         dialogAdditionalRequirements.setTitle("Доп. материалы (" + data.size() + ")");
-        dialogAdditionalRequirements.setRecyclerAM(data);
+        dialogAdditionalRequirements.setRecyclerAM(data1);
 
         dialogAdditionalRequirements.setClose(dialogAdditionalRequirements::dismiss);
         dialogAdditionalRequirements.show();
@@ -597,7 +832,7 @@ public class Options {
                 DialogData dialog = new DialogData(context);
                 dialog.setTitle("Представленность");
 
-                String msg = String.format("SKU (План): %s шт.\nSKU (Факт): %s шт.\nОтсутствует: %s шт.\nOOS (out of stock): %s %%\nПредставленность: %s %%\n\n\t\t\t\t\t\t\t\t\t\t\t\t\t\tОписание\n\nSKU (План) - количество товарных позиций которые должны быть в торговой точке по плану.\nSKU (Факт) - количество товарных позиций которые фактически стоят на витрине.\nOOS - процент товара, который отсутствует по сравнению с планом\nOOS = 100 - 100*(SKUФакт/SKUПлан) = %s %%\nПредставленность = 100 - OOS = %s %%", (int) Options.SKUPlan, (int) Options.SKUFact, (int) Options.SKUPlan - (int) Options.SKUFact, (int) Options.OOS, (int) Options.OFS, (int) Options.OOS, (int) Options.OFS);
+                String msg = String.format("SKU (План): %s шт.\nSKU (Факт): %s шт.\nОтсутствует: %s шт.\nOOS (out of stock): %s %%\nПредставленность: %s %%\n\n\t\t\t\t\t\t\t\t\t\t\t\t\t\tОписание\n\nSKU (План) - количество товарных позиций которые должны быть в торговой точке по плану.\nSKU (Факт) - количество товарных позиций которые фактически стоят на витрине.\nOOS - процент товара, который отсутствует по сравнению с планом\nOOS = 100 - 100*(SKUФакт/SKUПлан) = %s %%\nПредставленность = 100 - OOS = %s %%", (int) SKUPlan, (int) SKUFact, (int) SKUPlan - (int) SKUFact, (int) DetailedReportActivity.OOS, (int) DetailedReportActivity.OFS, (int) DetailedReportActivity.OOS, (int) DetailedReportActivity.OFS);
                 dialog.setText(msg);
 
                 dialog.setClose(dialog::dismiss);
@@ -611,7 +846,7 @@ public class Options {
                         wp.getAddr_txt(),
                         wp.getClient_txt(),
                         wp.getUser_txt(),
-                        wp.getDt(),
+                        wp.getDt(),  //+TODO CHANGE DATE
                         0,
                         "",
                         R.mipmap.merchik);
@@ -790,6 +1025,19 @@ public class Options {
 
         // Обработка режима который вернулся
         switch (mode) {
+            case MAKE:
+                if (res) {
+                    // Всё хорошо с опцией контроля
+                } else {
+                    // Нужно отобразить сообщение что всё плохо
+                    DialogData dialog = new DialogData(context);
+                    dialog.setTitle("Ошибка");
+                    dialog.setDialogIco();
+                    dialog.setText("Прежде чем выполнять данную опцию (действие) вы должны выполнить опцию: " + "Контроль наличия времени начала работ (ВРН)");
+                    dialog.setClose(dialog::dismiss);
+                    dialog.show();
+                }
+                break;
             case CHECK:
                 if (!res && optionsDB.getBlockPns().equals("1")) {
 //                if (!res) {
@@ -1133,7 +1381,7 @@ public class Options {
         if (dataDB instanceof WpDataDB) {
             dad2 = ((WpDataDB) dataDB).getCode_dad2();
             startWork = ((WpDataDB) dataDB).getVisit_start_dt();
-            date = ((WpDataDB) dataDB).getDt();
+            date = ((WpDataDB) dataDB).getDt().toString();  //TODO CHANGE DATE
             userId = ((WpDataDB) dataDB).getUser_id();
             clientId = ((WpDataDB) dataDB).getClient_id();
             userTxt = ((WpDataDB) dataDB).getUser_txt();
@@ -1352,11 +1600,6 @@ public class Options {
      * 06.04.2021
      * Опция контроля. Проверка представленности
      */
-    public static double SKUPlan = 0;
-    public static double SKUFact = 0;
-    public static double OFS = 0;   // % сколько нет товаров
-    public static double OOS = 0;   // Представленность %
-
     private <T> void check76815(T dataDB, OptionsDB optionsDB) {
         long dad2;
         if (dataDB instanceof WpDataDB) {
@@ -1701,14 +1944,13 @@ public class Options {
      * 26.01.2021
      */
     // 1. Допустим Опции у нас уже отсортированы пришли так как надо
-    public String getOptionString(List<OptionsDB> optionsDB, ReportPrepareDB reportPrepareTovar) {
+    public String getOptionString(List<OptionsDB> optionsDB, ReportPrepareDB reportPrepareTovar, boolean promotion) {
         String res = ""; // Итоговая строка всех ТПЛ-ов
         StringBuilder tplRequired = new StringBuilder(); // Обязательные ТПЛ-ы
         StringBuilder tplOptional = new StringBuilder(); // Опциональные ТПЛ-ы
 
         // Получаем список Опций (Ф,Ц,П...) сам список захардкожен.
         List<TovarOptions> listTovOpt = getTovarOptins();
-//        Collections.reverse(listTovOpt);
 
         // Создаём временный список Опций ТПЛ-ов
         List<TovarOptions> temps = new ArrayList<>();
@@ -1733,18 +1975,26 @@ public class Options {
                 // Должен добавить в 'temps' элемент + записывать в опцию её символ
                 // todo должен написать функцию.
                 if (!containsName(temps, temp.getOrderField())) {
-                    Globals.Triple uploaded = checkUploadedTPL(reportPrepareTovar, getTPLData(temp, reportPrepareTovar));
-                    tplRequired.append(setOptionTPLColor(temp.getOptionShort(), true, uploaded));
-                    temps.add(temp);
+                    if (temp.getOptionControlName().equals(AKCIYA_ID) && promotion) {
+                        // ничего не делаю
+                    } else {
+                        Globals.Triple uploaded = checkUploadedTPL(reportPrepareTovar, getTPLData(temp, reportPrepareTovar));
+                        tplRequired.append(setOptionTPLColor(temp.getOptionShort(), true, uploaded));
+                        temps.add(temp);
+                    }
                 }
             }
 
             if (ids.contains(optionControlId)) {
                 TovarOptions temp = listTovOpt.get(listTovOpt.indexOf(new TovarOptions(optionControlId)));
                 if (!containsName(temps, temp.getOrderField())) {
-                    Globals.Triple uploaded = checkUploadedTPL(reportPrepareTovar, getTPLData(temp, reportPrepareTovar));
-                    tplRequired.append(setOptionTPLColor(temp.getOptionShort(), true, uploaded));
-                    temps.add(temp);
+                    if (temp.getOptionControlName().equals(AKCIYA_ID) && promotion) {
+                        // ничего не делаю
+                    } else {
+                        Globals.Triple uploaded = checkUploadedTPL(reportPrepareTovar, getTPLData(temp, reportPrepareTovar));
+                        tplRequired.append(setOptionTPLColor(temp.getOptionShort(), true, uploaded));
+                        temps.add(temp);
+                    }
                 }
             }
         }
@@ -1934,7 +2184,7 @@ public class Options {
             list.add(new TovarOptions(UP, "П", "Поднято товара", "up", "main", 138644));
             list.add(new TovarOptions(DT_EXPIRE, "Д", "Дата ок. ср. год", "dt_expire", "main", 84005, 84967));
             list.add(new TovarOptions(OBOROTVED_NUM, "О", "Остаток по учёту", "oborotved_num", "main", 2243, 135448));
-            list.add(new TovarOptions(ERROR_ID, "Ш", "Ошибка товара", "error_id", "main", 135592));
+            list.add(new TovarOptions(ERROR_ID, "Ш", "Ошибка товара", "error_id", "main", 135592, 157242));
             list.add(new TovarOptions(AKCIYA_ID, "А", "Вид акции", "akciya_id", "main", 80977));
             list.add(new TovarOptions(AKCIYA, "Н", "Наличие акции", "akciya", "main", 80977));
             list.add(new TovarOptions(NOTES, "П", "Примечание", "notes", "main", 135590));

@@ -34,6 +34,11 @@ public class StackPhotoRealm {
                 .findAll();
     }
 
+    public static RealmResults<StackPhotoDB> getAllRealm() {
+        return INSTANCE.where(StackPhotoDB.class)
+                .findAll();
+    }
+
 
     public static StackPhotoDB getById(int id) {
         return INSTANCE.where(StackPhotoDB.class)
@@ -135,16 +140,6 @@ public class StackPhotoRealm {
             }
         }
 
-//        if (addr != 0){
-//            RealmResults<StackPhotoDB> query = INSTANCE.where(StackPhotoDB.class)
-//                    .isNotNull("photoServerId")
-//                    .equalTo("addr_id", addr)
-//                    .equalTo("photo_type", 5)
-//                    .findAll();
-//            if (query != null && query.size() > 0){return query;}
-//        }
-
-
         return INSTANCE.where(StackPhotoDB.class)
                 .isNotNull("photoServerId")
                 .equalTo("photo_type", 5)
@@ -189,6 +184,15 @@ public class StackPhotoRealm {
         Log.e("MY_TIME", "END TIME. После проверки всех Товаров");
 
         return result;
+    }
+
+    public static RealmResults<StackPhotoDB> getPhoto(long dtFrom, long dtTo, String clientId, int addrId, int photoType){
+         return INSTANCE.where(StackPhotoDB.class)
+                 .between("create_time", dtFrom, dtTo)
+                 .equalTo("client_id", clientId)
+                 .equalTo("addr_id", addrId)
+                 .equalTo("photo_type", photoType)
+                 .findAll();
     }
 
 

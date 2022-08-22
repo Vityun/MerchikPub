@@ -47,6 +47,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import ua.com.merchik.merchik.Activities.MyApplication;
 import ua.com.merchik.merchik.ServerExchange.TablesLoadingUnloading;
 import ua.com.merchik.merchik.data.AppData.AppData;
 import ua.com.merchik.merchik.data.AppData.Browser;
@@ -57,7 +58,6 @@ import ua.com.merchik.merchik.data.Database.Room.TranslatesSDB;
 import ua.com.merchik.merchik.data.RealmModels.LogMPDB;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.dialogs.DialogData;
-import ua.com.merchik.merchik.dialogs.DialogFilter.DialogFilter;
 
 import static ua.com.merchik.merchik.toolbar_menus.internetStatus;
 
@@ -169,9 +169,6 @@ public class Globals {
 
     //------------------------------------- interface ----------------------------------------------
 
-    public interface JustClick {
-        void clicked(DialogFilter.ResultData msg);
-    }
 
     public interface OperationResult {
         void onSuccess();

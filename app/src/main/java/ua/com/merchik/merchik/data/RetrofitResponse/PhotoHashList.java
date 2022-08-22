@@ -40,6 +40,11 @@ public class PhotoHashList {
     @SerializedName("hash")
     @Expose
     private String hash;
+
+    @SerializedName("img_hash")
+    @Expose
+    public String imgHash;
+
     @SerializedName("have_prem")
     @Expose
     private String havePrem;

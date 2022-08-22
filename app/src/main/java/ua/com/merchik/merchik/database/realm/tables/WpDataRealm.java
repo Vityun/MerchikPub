@@ -60,7 +60,7 @@ public class WpDataRealm {
                 .findFirst();
     }
 
-    public static List<WpDataDB> getWpDataRowByIds(Integer[] id) {
+    public static List<WpDataDB> getWpDataRowByIds(Long[] id) {
         return INSTANCE.where(WpDataDB.class)
                 .in("id", id)
                 .findAll();

@@ -8,4 +8,11 @@ public class OptionMassageType {
     public DialogData dialog;
     public Toast toast;
     public String msg;
+    public Type type;
+
+    public enum Type{
+        STRING,
+        TOAST,
+        DIALOG
+    }
 }

@@ -6,7 +6,7 @@ import com.google.gson.annotations.SerializedName;
 public class ReportPrepareUpdateResponseList {
     @SerializedName("element_id")
     @Expose
-    public Integer elementId;
+    public Long elementId;
 
     @SerializedName("state")
     @Expose

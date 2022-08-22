@@ -338,7 +338,7 @@ public class PhotoReportActivity extends toolbar_menus {
         getTxtInfoAboutAddress(mvsData);
 
         try {
-            wpDataObj.setId(0);
+            wpDataObj.setId(0L);
             wpDataObj.setDate(mvsData.getParams().getDate());
             wpDataObj.setCustomerId(mvsData.getParams().getClientId());
             wpDataObj.setAddressId(Integer.parseInt(mvsData.getParams().getAddrId()));

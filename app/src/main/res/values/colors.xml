@@ -16,6 +16,7 @@
     <color name="greenCol">#66BB6A</color>
     <color name="colorInetGreenDark">#0C630E</color>
     <color name="colorInetYellow">#FFF200</color>
+    <color name="yellow">#FAF7BB</color>
     <color name="colorInetYellowDark">#996809</color>
 
     <color name="colorInetRed">#FF1100</color>

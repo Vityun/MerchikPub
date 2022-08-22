@@ -8,6 +8,7 @@ import android.text.Html;
 import android.text.SpannableString;
 import android.text.SpannableStringBuilder;
 import android.text.Spanned;
+import android.text.method.LinkMovementMethod;
 import android.text.style.URLSpan;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -34,12 +35,15 @@ import ua.com.merchik.merchik.ServerExchange.PhotoDownload;
 import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
 import ua.com.merchik.merchik.data.RealmModels.ThemeDB;
+import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.database.realm.tables.AddressRealm;
 import ua.com.merchik.merchik.database.realm.tables.CustomerRealm;
 import ua.com.merchik.merchik.database.realm.tables.StackPhotoRealm;
 import ua.com.merchik.merchik.database.realm.tables.TasksAndReclamationsRealm;
 import ua.com.merchik.merchik.database.realm.tables.ThemeRealm;
 import ua.com.merchik.merchik.database.realm.tables.UsersRealm;
+import ua.com.merchik.merchik.database.realm.tables.WpDataRealm;
+import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.dialogs.DialogPhotoTovar;
 import ua.com.merchik.merchik.toolbar_menus;
 
@@ -72,6 +76,7 @@ public class Tab1Fragment extends Fragment {
         mContext = v.getContext();
 
         textViewData = v.findViewById(R.id.text_data);
+        textViewData.setMovementMethod(LinkMovementMethod.getInstance());
         goToWpData = v.findViewById(R.id.wpLink);
         imageView = v.findViewById(R.id.TARPhoto);
         imageView2 = v.findViewById(R.id.TARPhoto2);
@@ -120,6 +125,15 @@ public class Tab1Fragment extends Fragment {
             stringData.append(setTaskDate);
         } catch (Exception e) {
         }
+
+
+        // ---
+        try {
+            WpDataDB wpDataDB = WpDataRealm.getWpDataRowByDad2Id(data.codeDad2SrcDoc);
+            Spanned setDateSrcDock = Html.fromHtml("<b>Дата посещения: </b>" + wpDataDB.getDt() + "<br>");
+            stringData.append(setDateSrcDock);
+        } catch (Exception e) {}
+        // ---
 
 
         try {
@@ -191,7 +205,7 @@ public class Tab1Fragment extends Fragment {
 
         try {
             int tp = data.tp;
-            int state = data.tp;
+            int state = data.state;
 
             CharSequence status = Html.fromHtml("<b>Статус: </b>" + TasksAndReclamationsRealm.getStatusTxt(tp, state) + "<br>");
             stringData.append(status);
@@ -269,7 +283,11 @@ public class Tab1Fragment extends Fragment {
         });
 
         imageView2.setOnClickListener(v -> {
-            downloadAndSetFullPhoto(String.valueOf(data.photo2));
+            try {
+                downloadAndSetFullPhoto(String.valueOf(data.photo2));
+            }catch (Exception e){
+                Toast.makeText(imageView.getContext(), "НЕ УДАЛОСЬ СКАЧАТЬ ФОТО! \n\nОбратитесь к Вашему руководителю. \n\nОшибка: " + e, Toast.LENGTH_LONG).show();
+            }
         });
 
 
@@ -286,61 +304,118 @@ public class Tab1Fragment extends Fragment {
         }
 
 
-//        ratingBar1.setOnClickListener((view)->{
         ratingBar1.setOnRatingBarChangeListener((ratingBar, rating, fromUser) -> {
             int rate = (int) rating;
             ratingBar.setRating(rate);
+            saveRatingTAR(rate);
 
-            data.voteScore = rate;
-            SQL_DB.tarDao().insertData(Collections.singletonList(data))
-                    .subscribeOn(Schedulers.io())
-                    .subscribe(new DisposableCompletableObserver() {
-                        @Override
-                        public void onComplete() {
-                            Log.d("test", "test");
-                        }
+/*            if (rate > 5){
+                saveRatingTAR(rate);
+                Toast.makeText(ratingBar.getContext(), "Оценка: " + rate + " установлена.", Toast.LENGTH_SHORT).show();
+            }else {
+                DialogData dialog = new DialogData(getContext());
+                dialog.setTitle("Низкая оценка");
+                dialog.setText("Прокомментируйте причину низкой оценки.");
+                dialog.setOperation(DialogData.Operations.TEXT, "Ваш Комментарий", null, ()->{});
+                dialog.setCancel("Сохранить", ()->{
+                    String comment = dialog.getOperationResult();
 
-                        @Override
-                        public void onError(@io.reactivex.rxjava3.annotations.NonNull Throwable e) {
-                            Log.d("test", "test");
-                        }
-                    });
+                    if (comment != null && comment.length() > 1){
+                        // Сохранение коммента
+                        Toast.makeText(ratingBar.getContext(), "Комментарий: " + comment + " сохранён.", Toast.LENGTH_SHORT).show();
 
-            Exchange.updateTAR(data);
-
-            Toast.makeText(ratingBar.getContext(), "Оценка: " + rate + " установлена.", Toast.LENGTH_SHORT).show();
+                        saveRatingTAR(rate);
+                        dialog.dismiss();
+                    }else {
+                        Toast.makeText(dialog.context, "Комментарий НЕ сохранён. Заполните корректно поле для комментария!", Toast.LENGTH_LONG).show();
+                    }
+                });
+                dialog.setClose(()->{
+                    Toast.makeText(getContext(), "Комментарий НЕ сохранён", Toast.LENGTH_SHORT).show();
+                    dialog.dismiss();
+                });
+            }*/
         });
-//        });
 
-
-//        ratingBar2.setOnClickListener((view)->{
         ratingBar2.setOnRatingBarChangeListener((ratingBar, rating, fromUser) -> {
             int rate = (int) rating;
             ratingBar.setRating(rate);
 
-            data.vinovnikScore = rate;
-            data.vinovnikScoreDt = System.currentTimeMillis();
-            data.vinovnikScoreUserId = Globals.userId;
-            SQL_DB.tarDao().insertData(Collections.singletonList(data))
-                    .subscribeOn(Schedulers.io())
-                    .subscribe(new DisposableCompletableObserver() {
-                        @Override
-                        public void onComplete() {
-                            Log.d("test", "test");
-                        }
+            if (rate > 5){
+                saveRatingTARVote(rate, null);
+                Toast.makeText(ratingBar.getContext(), "Оценка: " + rate + " установлена.", Toast.LENGTH_SHORT).show();
+            }else {
+                DialogData dialog = new DialogData(getContext());
+                dialog.setTitle("Низкая оценка");
+                dialog.setText("Прокомментируйте причину низкой оценки.");
+                dialog.setOperation(DialogData.Operations.TEXT, "Ваш Комментарий", null, ()->{});
+                dialog.setCancel("Сохранить", ()->{
+                    String comment = dialog.getOperationResult();
 
-                        @Override
-                        public void onError(@io.reactivex.rxjava3.annotations.NonNull Throwable e) {
-                            Log.d("test", "test");
-                        }
-                    });
+                    if (comment != null && comment.length() > 1){
+                        // Сохранение коммента
+                        Toast.makeText(ratingBar.getContext(), "Комментарий: " + comment + " сохранён.", Toast.LENGTH_SHORT).show();
 
-            Exchange.updateTAR(data);
-
-            Toast.makeText(ratingBar.getContext(), "Оценка: " + rate + " установлена.", Toast.LENGTH_SHORT).show();
+                        saveRatingTARVote(rate, comment);
+                        dialog.dismiss();
+                    }else {
+                        Toast.makeText(dialog.context, "Комментарий НЕ сохранён. Заполните корректно поле для комментария!", Toast.LENGTH_LONG).show();
+                    }
+                });
+                dialog.setClose(()->{
+                    Toast.makeText(getContext(), "Комментарий НЕ сохранён", Toast.LENGTH_SHORT).show();
+                    dialog.dismiss();
+                });
+            }
         });
-//        });
+    }
 
+    /**
+     * Сохранение рейтинга ЗАДАЧИ
+     * */
+    private void saveRatingTAR(int rate){
+        data.voteScore = rate;
+        SQL_DB.tarDao().insertData(Collections.singletonList(data))
+                .subscribeOn(Schedulers.io())
+                .subscribe(new DisposableCompletableObserver() {
+                    @Override
+                    public void onComplete() {
+                        Log.d("test", "test");
+                    }
+
+                    @Override
+                    public void onError(@io.reactivex.rxjava3.annotations.NonNull Throwable e) {
+                        Log.d("test", "test");
+                    }
+                });
+        Exchange.updateTAR(data);
+    }
+
+    /**
+     * Сохранение Оценки Обьективности
+     * */
+    private void saveRatingTARVote(int rate, String comment){
+        data.vinovnikScore = rate;
+        data.vinovnikScoreDt = System.currentTimeMillis();
+        data.vinovnikScoreUserId = Globals.userId;
+        if (comment != null && !comment.equals("")){
+            data.vinovnikScoreComment = comment;
+        }
+        SQL_DB.tarDao().insertData(Collections.singletonList(data))
+                .subscribeOn(Schedulers.io())
+                .subscribe(new DisposableCompletableObserver() {
+                    @Override
+                    public void onComplete() {
+                        Log.d("test", "test");
+                    }
+
+                    @Override
+                    public void onError(@io.reactivex.rxjava3.annotations.NonNull Throwable e) {
+                        Log.d("test", "test");
+                    }
+                });
+
+        Exchange.updateTAR(data);
     }
 
 

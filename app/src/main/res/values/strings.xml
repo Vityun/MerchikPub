@@ -1,8 +1,8 @@
 <resources>
     <string name="app_name">merchik</string>
-    <string name="ver">051200</string>
+    <string name="ver">082000</string>
     <string name="debug_status">0</string>
-    <string name="debug_date">2022-05-12</string>
+    <string name="debug_date">2022-08-20</string>
 
     <!--Activity titles-->
     <string name="title_activity_premium">Премиальные</string>
@@ -172,10 +172,30 @@
     <string name="tar_server_error_short_comment">Длина комментария должна быть не менее 20 символов (без учета знаков препинания и пробелов).</string>
 
 
-
     <!--INTERNET CONNECTION-->
     <string name="internet_connection_error_code_not_200">Не удалось получить данные, сервер не отвечает. Проверьте связь с интернетом и повторите попытку позже.</string>
     <string name="internet_connection_error_body_is_null">Запрашиваемые данные не обнаружены. Повторите попытку или обратитесь к Руководителю.</string>
+
+
+    <!-- OPTIONS -->
+    <!-- OPTION CONTROL -->
+    <!-- OPTION CONTROL 135329 -->
+    <string name="option_control_135329_no_need_reply">Ответ на эту задачу давать НЕ нужно.</string>
+    <string name="option_control_135329_not_write_tar_comment">Вы не написали ответ по активной задаче </string>
+    <string name="option_control_135329_so_short_tar_comment"> написал слишком короткий ответ по активной задаче </string>
+    <string name="option_control_135329_no_photo">Кроме ответа по данной теме Вы должны разместить ФотоОтчет </string>
+    <string name="option_control_135329_no_detailed_report">Кроме ответа по данной теме Вы должны внести изменения в Дет.Отчет </string>
+    <string name="option_control_135329_msg_what_must_do">Вы должны ознакомиться с указанными задачами, Выполнить и Отписать их.</string>
+
+    <!-- OPTION CONTROL 135330 -->
+    <string name="option_control_135330_no_need_reply">Ответ на эту рекламацию давать НЕ нужно.</string>
+    <string name="option_control_135330_not_write_tar_comment">Вы не написали ответ по активной рекламации </string>
+    <string name="option_control_135330_so_short_tar_comment"> написал слишком короткий ответ по активной рекламации </string>
+    <string name="option_control_135330_no_photo">Кроме ответа по данной теме Вы должны разместить ФотоОтчет </string>
+    <string name="option_control_135330_no_detailed_report">Кроме ответа по данной теме Вы должны внести изменения в Дет.Отчет </string>
+    <string name="option_control_135330_msg_what_must_do">Вы должны ознакомиться с указанными рекламациями, Выполнить и Отписать их.</string>
+
+
 </resources>
 
     <!--

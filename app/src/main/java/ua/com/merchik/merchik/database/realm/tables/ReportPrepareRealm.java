@@ -20,7 +20,7 @@ public class ReportPrepareRealm {
                 .findAll();
     }
 
-    public static RealmResults<ReportPrepareDB> getByIds(Integer[] id){
+    public static RealmResults<ReportPrepareDB> getByIds(Long[] id){
         return INSTANCE.where(ReportPrepareDB.class)
                 .in("iD", id)
                 .findAll();
@@ -29,6 +29,14 @@ public class ReportPrepareRealm {
     public static RealmResults<ReportPrepareDB> getReportPrepareByDad2(long dad2){
         return INSTANCE.where(ReportPrepareDB.class)
                 .equalTo("codeDad2", String.valueOf(dad2))
+                .findAll();
+    }
+
+    public static RealmResults<ReportPrepareDB> getRPLastChange(String clientId, int addrId, long dtChange){
+        return INSTANCE.where(ReportPrepareDB.class)
+                .equalTo("kli", clientId)
+                .equalTo("addrId", addrId)
+                .greaterThan("dtChange", dtChange)
                 .findAll();
     }
 

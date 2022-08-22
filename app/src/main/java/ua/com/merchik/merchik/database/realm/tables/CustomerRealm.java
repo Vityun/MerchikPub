@@ -39,6 +39,12 @@ public class CustomerRealm {
                 .findFirst();
     }
 
+    public static CustomerDB getCustomerByNm(String nm){
+        return INSTANCE.where(CustomerDB.class)
+                .equalTo("nm", nm)
+                .findFirst();
+    }
+
     public static List<CustomerDB> getAll(){
         return INSTANCE.where(CustomerDB.class)
                 .findAll();

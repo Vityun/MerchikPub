@@ -802,12 +802,14 @@ public class Exchange {
                     @Override
                     public void onFailure(retrofit2.Call<PhotoInfoResponse> call, Throwable t) {
                         Log.e("sendPhotoInformation", "t:" + t);
+                        Globals.writeToMLOG("INFO", "sendPhotoInformation.onFailure", "Throwable t: " + t);
                     }
                 });
             }
         } else {
             // Данных на выгрузку ДВИ/Комментариев ... НЕТ
             Log.e("sendPhotoInformation", "data: " + "Данных нет");
+            Globals.writeToMLOG("INFO", "sendPhotoInformation.onResponse", "Данных нет");
         }
     }
 
@@ -826,16 +828,19 @@ public class Exchange {
             case DVI:
                 stackPhotoDB = RealmManager.stackPhotoDBListGetDVIToUpload();
                 Log.e("getPhotoInfoToUpload", "DVI DB size: " + stackPhotoDB.size());
+                Globals.writeToMLOG("INFO", "getPhotoInfoToUpload.DVI", "stackPhotoDB.size(): " + stackPhotoDB.size());
                 break;
 
             case COMMENT:
                 stackPhotoDB = RealmManager.stackPhotoDBListGetCommentToUpload();
                 Log.e("getPhotoInfoToUpload", "COMMENT DB size: " + stackPhotoDB.size());
+                Globals.writeToMLOG("INFO", "getPhotoInfoToUpload.COMMENT", "stackPhotoDB.size(): " + stackPhotoDB.size());
                 break;
 
             case RATING:
                 stackPhotoDB = RealmManager.stackPhotoDBListGetRatingToUpload();
                 Log.e("getPhotoInfoToUpload", "RATING DB size: " + stackPhotoDB.size());
+                Globals.writeToMLOG("INFO", "getPhotoInfoToUpload.RATING", "stackPhotoDB.size(): " + stackPhotoDB.size());
                 break;
         }
 
@@ -892,6 +897,7 @@ public class Exchange {
                 res.data = data;
         }
 
+        Globals.writeToMLOG("INFO", "getPhotoInfoToUpload.RES", "res: " + res);
 
         return res;
     }
@@ -1094,9 +1100,9 @@ public class Exchange {
         Log.e("uploadTARComments", "enter here");
 
         List<TARCommentsDB> list = new ArrayList<>();
-        if (tarCommentsDB != null){
+        if (tarCommentsDB != null) {
             list.add(tarCommentsDB);
-        }else {
+        } else {
             list = TARCommentsRealm.getTARCommentToUpload();
         }
 
@@ -1114,7 +1120,13 @@ public class Exchange {
                 TARCommentDataListUpload dataItem = new TARCommentDataListUpload();
                 dataItem.id = item.getRId();
                 dataItem.comment = item.getComment();
-                dataItem.photo_id = item.getPhoto();
+
+                if (item.getPhoto() != null && !item.getPhoto().equals("")) {
+                    dataItem.photo_id = item.getPhoto();
+                }
+                if (item.photo_hash != null && !item.photo_hash.equals("")) {
+                    dataItem.photo_hash = item.photo_hash;
+                }
 
                 dataList.add(dataItem);
             }
@@ -1138,23 +1150,61 @@ public class Exchange {
                     Log.e("uploadTARComments", "response.body().json: " + convertedObject);
 
                     try {
+                        List<TARCommentsDB> saveToDb = new ArrayList<>();
+                        List<TARCommentsDB> deleteFromDb = new ArrayList<>();
+
                         TARCommentsServerData res = response.body();
                         if (res != null) {
                             if (res.getState() != null && res.getState()) {
                                 if (res.getList() != null && res.getList().size() > 0) {
-                                    for (int i = 0; i == res.getList().size(); i++) {
+                                    Log.d("test", "test");
+                                    int size = res.getList().size();
+                                    for (int i = 0; i < size; i++) {
+                                        Log.d("test", "test0");
                                         if (res.getList().get(i).getState() != null && res.getList().get(i).getState()) {
-                                            finalList.get(i).setID(res.getList().get(i).getInfo().getCommentId());
+                                            TARCommentsDB recreateComment = new TARCommentsDB();  // Для того что б "обновлять" по первичному ключу данные/ copy
+                                            recreateComment.setID(res.getList().get(i).getInfo().getCommentId());
+                                            recreateComment.setTp(finalList.get(i).getTp());
+                                            recreateComment.setDt(finalList.get(i).getDt());
+                                            recreateComment.setWho(finalList.get(i).getWho());
+                                            recreateComment.setComment(finalList.get(i).getComment());
+                                            recreateComment.setPhoto(finalList.get(i).getPhoto());
+                                            recreateComment.photo_hash = finalList.get(i).photo_hash;
+                                            recreateComment.setRId(finalList.get(i).getRId());
+                                            recreateComment.setDvi(finalList.get(i).getDvi());
+                                            recreateComment.setFrom1c(finalList.get(i).getFrom1c());
+                                            recreateComment.setReportId(finalList.get(i).getReportId());
+                                            recreateComment.setResponceId(finalList.get(i).getResponceId());
+                                            recreateComment.startUpdate = false;
+
+                                            saveToDb.add(recreateComment);
+                                            deleteFromDb.add(finalList.get(i));
+                                        } else {
+                                            Log.d("test", "test1");
                                         }
                                     }
+//                                    RealmManager.INSTANCE.executeTransaction((realm) -> {
+//                                        realm.copyToRealmOrUpdate(finalList);
+//                                    });
+
                                     RealmManager.INSTANCE.executeTransaction((realm) -> {
-                                        INSTANCE.copyToRealmOrUpdate(finalList);
+                                        // Удаление Старых ID
+                                        String[] ids = new String[deleteFromDb.size()];
+                                        int i = 0;
+                                        for (TARCommentsDB item : deleteFromDb) {
+                                            ids[i++] = item.getID();
+                                        }
+                                        boolean dell = TARCommentsRealm.getTARCommentByIds(ids).deleteAllFromRealm();
+
+
+                                        // Сохранение новых
+                                        List<TARCommentsDB> result = realm.copyToRealmOrUpdate(saveToDb);
                                     });
                                 }
                             }
                         }
                     } catch (Exception e) {
-
+                        Log.e("uploadTARComments", "Exception e: " + e);
                     }
 
 
@@ -1192,6 +1242,7 @@ public class Exchange {
         data.code_dad2 = uploadData.codeDad2;
         data.vote_score = uploadData.voteScore;
         data.vinovnik_score = uploadData.vinovnikScore;
+        data.vinovnik_score_comment = uploadData.vinovnikScoreComment;
         data.sotr_opinion_id = uploadData.sotrOpinionId;
 
         data.dt_start_fact = uploadData.dt_start_fact;
@@ -1246,7 +1297,7 @@ public class Exchange {
                             if (response.body().state) {
                                 if (response.body().data != null && response.body().data.size() > 0) {
                                     // TODO Вынести это в нормальную функцию и отдельный вызов.
-                                    Integer[] ids = new Integer[response.body().data.size()];
+                                    Long[] ids = new Long[response.body().data.size()];
                                     int count = 0;
                                     for (WpDataUpdateResponseList item : response.body().data) {
                                         ids[count++] = item.elementId;
@@ -1356,7 +1407,7 @@ public class Exchange {
     public void saveWpDataResult(List<WpDataUpdateResponseList> data) {
         try {
             Globals.writeToMLOG("INFO", "Exchange.saveWpDataResult.data", "data: " + data.size());
-            Integer[] ids = new Integer[data.size()];
+            Long[] ids = new Long[data.size()];
             int count = 0;
             for (WpDataUpdateResponseList item : data) {
                 ids[count++] = item.elementId;
@@ -1379,6 +1430,7 @@ public class Exchange {
             }
             WpDataRealm.setWpData(saveWp);
         } catch (Exception e) {
+            // Exchange.saveWpDataResult.ERROR Exception e: java.lang.IllegalArgumentException: Invalid query: field 'id' not found in class 'WpDataDB'.
             Globals.writeToMLOG("ERROR", "Exchange.saveWpDataResult.ERROR", "Exception e: " + e);
         }
     }
@@ -1710,7 +1762,7 @@ public class Exchange {
     }
 
 
-    public void downloadAdditionalMaterials(){
+    public void downloadAdditionalMaterials() {
         getAdditionalMaterialsAddress();
         getAdditionalMaterials();
         getAdditionalMaterialsGroups();
@@ -1781,6 +1833,14 @@ public class Exchange {
             @Override
             public void onResponse(Call<AdditionalMaterialsAddressResponse> call, Response<AdditionalMaterialsAddressResponse> response) {
                 Log.e("test", "test" + response);
+                if (response.isSuccessful()) {
+                    if (response.body() != null) {
+                        try {
+                            SQL_DB.additionalMaterialsAddressDao().insertAll(response.body().list);
+                        } catch (Exception e) {
+                        }
+                    }
+                }
             }
 
             @Override
@@ -1792,55 +1852,8 @@ public class Exchange {
 
     /**
      * 22.02.2022
-     * Получения списка доп материалов
-     */
-    public void getAdditionalMaterials() {
-        /*mod=additional_materials
-        act=list
-
-        фильтры
-
-        dt_change_from - впи с
-        dt_change_to - впи по*/
-
-        StandartData data = new StandartData();
-        data.mod = "additional_materials";
-        data.act = "list";
-        data.dt_change_from = "";
-        data.dt_change_to = "";
-
-        Gson gson = new Gson();
-        String json = gson.toJson(data);
-        JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
-
-        retrofit2.Call<AdditionalMaterialsResponse> call = RetrofitBuilder.getRetrofitInterface().GET_ADDITIONAL_MATERIAL(RetrofitBuilder.contentType, convertedObject);
-        call.enqueue(new Callback<AdditionalMaterialsResponse>() {
-            @Override
-            public void onResponse(Call<AdditionalMaterialsResponse> call, Response<AdditionalMaterialsResponse> response) {
-                Log.e("test", "test" + response);
-
-                if (response.isSuccessful()){
-                    if (response.body() != null){
-                        if (response.body().state){
-                            SQL_DB.additionalMaterialsDao().insertAll(response.body().list);
-                        }
-                    }
-                }else {
-                    //
-                }
-            }
-
-            @Override
-            public void onFailure(Call<AdditionalMaterialsResponse> call, Throwable t) {
-                Log.e("test", "test" + t);
-            }
-        });
-    }
-
-    /**
-     * 22.02.2022
      * Получения списка групп для доп материалов
-     * */
+     */
     public void getAdditionalMaterialsGroups() {
         /*mod=additional_materials
         act=group_list
@@ -1876,8 +1889,55 @@ public class Exchange {
 
     /**
      * 22.02.2022
+     * Получения списка доп материалов
+     */
+    public void getAdditionalMaterials() {
+        /*mod=additional_materials
+        act=list
+
+        фильтры
+
+        dt_change_from - впи с
+        dt_change_to - впи по*/
+
+        StandartData data = new StandartData();
+        data.mod = "additional_materials";
+        data.act = "list";
+        data.dt_change_from = "";
+        data.dt_change_to = "";
+
+        Gson gson = new Gson();
+        String json = gson.toJson(data);
+        JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
+
+        retrofit2.Call<AdditionalMaterialsResponse> call = RetrofitBuilder.getRetrofitInterface().GET_ADDITIONAL_MATERIAL(RetrofitBuilder.contentType, convertedObject);
+        call.enqueue(new Callback<AdditionalMaterialsResponse>() {
+            @Override
+            public void onResponse(Call<AdditionalMaterialsResponse> call, Response<AdditionalMaterialsResponse> response) {
+                Log.e("test", "test" + response);
+
+                if (response.isSuccessful()) {
+                    if (response.body() != null) {
+                        if (response.body().state) {
+                            SQL_DB.additionalMaterialsDao().insertAll(response.body().list);
+                        }
+                    }
+                } else {
+                    //
+                }
+            }
+
+            @Override
+            public void onFailure(Call<AdditionalMaterialsResponse> call, Throwable t) {
+                Log.e("test", "test" + t);
+            }
+        });
+    }
+
+    /**
+     * 22.02.2022
      * Получения списка ссылки на скачивание доп материала
-     * */
+     */
     public void getAdditionalMaterialsLinks(Integer id, Click result) {
         /*mod=additional_materials
         act=download_url
@@ -1901,17 +1961,17 @@ public class Exchange {
             public void onResponse(Call<AdditionalMaterialsLinksResponse> call, Response<AdditionalMaterialsLinksResponse> response) {
                 Log.e("test", "test" + response);
 
-                if (response.isSuccessful()){
-                    if (response.body() != null){
-                        if (response.body().state){
+                if (response.isSuccessful()) {
+                    if (response.body() != null) {
+                        if (response.body().state) {
                             result.onSuccess(response.body().url);
-                        }else {
+                        } else {
                             result.onFailure("Ошибка: Запрос прошел не успешно.");
                         }
-                    }else {
+                    } else {
                         result.onFailure("Ошибка: Пустое тело запроса.");
                     }
-                }else {
+                } else {
                     result.onFailure("Ошибка: " + response.code());
                 }
             }
@@ -1924,5 +1984,64 @@ public class Exchange {
         });
     }
 
+
+    //групп товаров по клиентам:
+
+    /**
+     * 08.03.2022
+     * TV для получения групп товаров по клиентам
+     */
+    public void getGroupTovByClient() {
+        StandartData data = new StandartData();
+        data.mod = "data_list";
+        data.act = "client_tovar_group_list";
+
+        data.dt_change_from = "";
+        data.dt_change_to = "";
+
+        Gson gson = new Gson();
+        String json = gson.toJson(data);
+        JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
+
+        retrofit2.Call<JsonObject> call = RetrofitBuilder.getRetrofitInterface().TEST_JSON_UPLOAD(RetrofitBuilder.contentType, convertedObject);
+        call.enqueue(new Callback<JsonObject>() {
+            @Override
+            public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
+                Log.e("test", "test" + response);
+            }
+
+            @Override
+            public void onFailure(Call<JsonObject> call, Throwable t) {
+                Log.e("test", "test" + t);
+            }
+        });
+    }
+
+
+    /**
+     * 08.03.2022
+     * Добавление нового ПТТ-шника
+     */
+    public void changeOrAddNewPTT() {
+
+        StandartData data = new StandartData();
+
+        Gson gson = new Gson();
+        String json = gson.toJson(data);
+        JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
+
+        retrofit2.Call<JsonObject> call = RetrofitBuilder.getRetrofitInterface().TEST_JSON_UPLOAD(RetrofitBuilder.contentType, convertedObject);
+        call.enqueue(new Callback<JsonObject>() {
+            @Override
+            public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
+                Log.e("test", "test" + response);
+            }
+
+            @Override
+            public void onFailure(Call<JsonObject> call, Throwable t) {
+                Log.e("test", "test" + t);
+            }
+        });
+    }
 
 }

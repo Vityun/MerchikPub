@@ -11,7 +11,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.ImageButton;
-import android.widget.Toast;
 
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -20,6 +19,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import ua.com.merchik.merchik.Activities.PhotoLogActivity.PhotoLogActivity;
@@ -31,12 +31,10 @@ import ua.com.merchik.merchik.ServerExchange.PhotoDownload;
 import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
 import ua.com.merchik.merchik.data.TestJsonUpload.PhotoFromSite.PhotoTableRequest;
 import ua.com.merchik.merchik.dialogs.DialodTAR.DialogCreateTAR;
-import ua.com.merchik.merchik.dialogs.DialogFilter.Click;
-import ua.com.merchik.merchik.dialogs.DialogFilter.DialogFilter;
 
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
-public class TARHomeFrag extends Fragment  implements TARFragmentHome.OnFragmentInteractionListener {
+public class TARHomeFrag extends Fragment implements TARFragmentHome.OnFragmentInteractionListener {
 
     private OnFragmentInteractionListener mListener;
 
@@ -91,7 +89,7 @@ public class TARHomeFrag extends Fragment  implements TARFragmentHome.OnFragment
 
         Log.e("TARHomeFrag_L", "Я должен ыл создаться");
 
-        Long testDate = Clock.getDateLong(-30).getTime()/1000;
+        Long testDate = Clock.getDateLong(-30).getTime() / 1000;
 
         editText = v.findViewById(R.id.searchViewReclamations);
         filterImg = v.findViewById(R.id.filter);
@@ -108,8 +106,15 @@ public class TARHomeFrag extends Fragment  implements TARFragmentHome.OnFragment
 //            data = SQL_DB.tarDao().getAllByTp(0, Clock.getDateLong(-30).getTime()/1000);
 //        }
 
+
         // 1 = задача; 0 = рекламация
-        data = SQL_DB.tarDao().getAllByTp(Globals.userId, type, Clock.getDateLong(-30).getTime()/1000);
+        int tarId = getActivity().getIntent().getIntExtra("TAR_ID", 0);
+        if (tarId != 0) {
+            data = Collections.singletonList(SQL_DB.tarDao().getById(tarId));
+        } else {
+            long time = Clock.getDateLong(-30).getTime() / 1000;
+            data = SQL_DB.tarDao().getAllByTp(Globals.userId, type, time);
+        }
 
 
         setFab();
@@ -149,7 +154,7 @@ public class TARHomeFrag extends Fragment  implements TARFragmentHome.OnFragment
     }
 
     private void setFab() {
-        fabAdd.setOnClickListener(v->{
+        fabAdd.setOnClickListener(v -> {
             Intent intent = new Intent(v.getContext(), PhotoLogActivity.class);
 
             dialog = new DialogCreateTAR(v.getContext());
@@ -170,14 +175,14 @@ public class TARHomeFrag extends Fragment  implements TARFragmentHome.OnFragment
 
                 startActivityForResult(intent, 100);
             });
-            dialog.clickSave(()->{
+            dialog.clickSave(() -> {
 //                if (type == 0){
 //                    data = SQL_DB.tarDao().getAllByTp(1, Clock.getDateLong(-30).getTime()/1000);
 //                }else if (type == 1){
 //                    data = SQL_DB.tarDao().getAllByTp(0, Clock.getDateLong(-30).getTime()/1000);
 //                }
 
-                data = SQL_DB.tarDao().getAllByTp(Globals.userId, type, Clock.getDateLong(-30).getTime()/1000);
+                data = SQL_DB.tarDao().getAllByTp(Globals.userId, type, Clock.getDateLong(-30).getTime() / 1000);
 
                 recyclerViewReclamations.updateData(data);
                 recyclerViewReclamations.notifyDataSetChanged();
@@ -190,60 +195,10 @@ public class TARHomeFrag extends Fragment  implements TARFragmentHome.OnFragment
     private void setRecycler(Context context) {
         // FILTER
         filterImg.setOnClickListener(v -> {
-            DialogFilter dialog = new DialogFilter(context, Globals.SourceAct.TASK_AND_RECLAMATION);
-            dialog.setClose(dialog::dismiss);
-
-            dialog.serEditFilter(editText.getHint(), editText.getText());
-            dialog.setTaRBlock();
-
-            dialog.setApply(new Click() {
-                @Override
-                public <T> void onSuccess(T data) {
-                    DialogFilter.ResultData resultData = (DialogFilter.ResultData) data;
-
-                    if (resultData.dateFrom == 0){
-                        resultData.dateFrom = null;
-                    }
-
-                    if (resultData.dateTo == 0){
-                        resultData.dateTo = null;
-                    }
-
-                    if (resultData.editText != null && resultData.editText.length()>0){
-                        editText.setText(resultData.editText);
-                    }
-
-                    List<TasksAndReclamationsSDB> tarData = new ArrayList<>();
-
-                    if (type == 0){
-                        tarData = SQL_DB.tarDao().getTaRBy(0, resultData.dateFrom, resultData.dateTo, resultData.themeId, resultData.statusId);
-                    }else if (type == 1){
-                        tarData = SQL_DB.tarDao().getTaRBy(1, resultData.dateFrom, resultData.dateTo, resultData.themeId, resultData.statusId);
-                    }
-
-                    recyclerViewReclamations.updateData(tarData);
-                    recyclerViewReclamations.notifyDataSetChanged();
-
-                    Toast.makeText(context, "Отобрано: " + tarData.size(), Toast.LENGTH_SHORT).show();
-                }
-
-                @Override
-                public void onFailure(String error) {
-
-                }
-            });
-
-/*            dialog.clickApply(new Clicks.click() {
-                @Override
-                public <T> void click(T data) {
-                    DialogFilterResult dialogResult = (DialogFilterResult) data;
-                }
-            });*/
-
-            dialog.show();
+            // TODO ВСТАВИТЬ ДИАЛОГ С ФИЛЬТРОМ
         });
 
-        recyclerViewReclamations = new UniversalAdapter(context, data, onClickListener);
+        recyclerViewReclamations = new UniversalAdapter(context, data, true, onClickListener);
         recyclerView.setAdapter(recyclerViewReclamations);
         recyclerView.setLayoutManager(new LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false));
 
@@ -275,11 +230,6 @@ public class TARHomeFrag extends Fragment  implements TARFragmentHome.OnFragment
         request.nolimit = "1";
 
         String ids = "";
-//        for (TasksAndReclamationsDB item : data){
-//            if (item.getPhoto() != null && !item.getPhoto().equals("") && !item.getPhoto().equals("0")){
-//                ids += item.getPhoto() + ", ";
-//            }
-//        }
 
         for (TasksAndReclamationsSDB item : data) {
             if (item.photo != null && !item.photo.equals("") && !item.photo.equals("0")) {

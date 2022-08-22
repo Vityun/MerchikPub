@@ -27,6 +27,7 @@ import com.google.android.gms.maps.model.MarkerOptions;
 
 import java.util.ArrayList;
 
+import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.WorkPlan;
@@ -87,7 +88,7 @@ public class DetailedReportHomeFrag extends Fragment {
             textDRMercV = v.findViewById(R.id.textDRMercVal);
             option_signal_layout2 = v.findViewById(R.id.option_signal_layout2);
 
-            textDRDateV.setText(list.get(0).getDate());
+            textDRDateV.setText(Clock.getHumanTimeYYYYMMDD(list.get(0).getDate().getTime()/1000));
             textDRAddrV.setText(list.get(0).getAddr());
             textDRCustV.setText(list.get(0).getCust());
             textDRMercV.setText(list.get(0).getMerc());
