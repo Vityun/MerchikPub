@@ -78,7 +78,7 @@ public class PhotoDownload {
                 String json = gson.toJson(response);
                 JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
 
-//                Globals.writeToMLOG("INFO", "getPhotoURLFromServer", "convertedObject: " + convertedObject);
+                Globals.writeToMLOG("INFO", "getPhotoURLFromServer", "convertedObject: " + convertedObject);
 
                 if (response.isSuccessful()) {
                     if (response.body() != null) {
@@ -571,7 +571,7 @@ public class PhotoDownload {
         call.enqueue(new Callback<ResponseBody>() {
             @Override
             public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
-                InputStream data = response.body().byteStream();
+                InputStream data = response.body().byteStream(); // <--- TODO BUG    java.lang.NullPointerException: Attempt to invoke virtual method 'java.io.InputStream okhttp3.ResponseBody.byteStream()' on a null object reference at ua.com.merchik.merchik.ServerExchange.PhotoDownload$8.onResponse(PhotoDownload.java:574)
 
                 if (data.toString().length() > 0) {
                     Bitmap bmp = BitmapFactory.decodeStream(data);
