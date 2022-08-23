@@ -130,6 +130,11 @@ public class PhotoLogActivity extends toolbar_menus {
                 int addr = this.getIntent().getIntExtra("address", 0);
                 String cust = this.getIntent().getStringExtra("customer");
                 stackPhoto = StackPhotoRealm.getPlanogramPhoto(addr, cust);
+
+                if (stackPhoto == null){
+                    Toast.makeText(this, "Фото Планограмм НЕ найдено. \n\nОбратитесь к Вашему руководителю.", Toast.LENGTH_LONG).show();
+                }
+
                 Globals.writeToMLOG("INFO", "PhotoLogActivity/setRecycler/planogram", "stackPhoto: " + stackPhoto.size());
 
             } else if (this.getIntent().getBooleanExtra("report_prepare", false)) {

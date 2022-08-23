@@ -676,7 +676,7 @@ public class TablesLoadingUnloading {
 
         String mod = "report_prepare";
         String act = "list_data";
-        String date_from = timeYesterday7;
+        String date_from = "2022-08-01";
         String date_to = timeTomorrow;
 
         // Получение значения ВПО (время последнего обмена) для того что б с сервера отправились новые данные

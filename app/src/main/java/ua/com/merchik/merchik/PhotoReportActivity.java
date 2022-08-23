@@ -1349,23 +1349,20 @@ public class PhotoReportActivity extends toolbar_menus {
 
                     // Проверка - есть ли что-то NULL для сохранения в БД
                     RealmManager.stackPhotoSavePhoto(stackPhotoDB);
-                    try {
-                        Log.e("TAG_REALM_LOG", "ЗАПИСЬ 3");
-                        RealmManager.setRowToLog(Collections.singletonList(new LogDB(RealmManager.getLastIdLogDB() + 1, System.currentTimeMillis() / 1000, "Успешное сохранение фото в БД", 1087, null, null, null, user_id, null, Globals.session, null)));
-                    } catch (Exception e) {
-                        Log.e("TAG_REALM_LOG", "Ошибка(3): " + e);
-                    }
                     return true;
                 } catch (Exception e) {
+                    Globals.writeToMLOG("INFO", "savePhoto", "Ошибка сохранения в БД: " + e);
                     globals.alertDialogMsg(context, "Ошибка сохранения в БД: " + e);
                 }
 
             } else {
+                Globals.writeToMLOG("INFO", "savePhoto", "Такое фото уже существует. Если ошибка повторяется - обратитесь к Вашему руководителю");
                 globals.alertDialogMsg(context, "Такое фото уже существует. Если ошибка повторяется - обратитесь к Вашему руководителю");
                 return false;
             }
 
         } catch (Exception e) {
+            Globals.writeToMLOG("INFO", "savePhoto", "Exception e: " + e);
             globals.alertDialogMsg(context, "Ошибка при сохранении фото. При возникновении этой ошибки - обратитесь к руководителю. Код ошибки: " + e);
         }
         return false;

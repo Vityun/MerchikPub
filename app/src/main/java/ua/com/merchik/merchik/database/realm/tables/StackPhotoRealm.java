@@ -140,10 +140,12 @@ public class StackPhotoRealm {
             }
         }
 
-        return INSTANCE.where(StackPhotoDB.class)
-                .isNotNull("photoServerId")
-                .equalTo("photo_type", 5)
-                .findAll();
+//        return INSTANCE.where(StackPhotoDB.class)
+//                .isNotNull("photoServerId")
+//                .equalTo("photo_type", 5)
+//                .findAll();
+
+        return null;
     }
 
 

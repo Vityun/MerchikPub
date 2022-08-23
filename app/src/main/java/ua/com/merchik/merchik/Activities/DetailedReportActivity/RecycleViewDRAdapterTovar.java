@@ -48,6 +48,7 @@ import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.Options.Options;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.ServerExchange.Exchange;
+import ua.com.merchik.merchik.ServerExchange.PhotoDownload;
 import ua.com.merchik.merchik.ServerExchange.TablesLoadingUnloading;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.WorkPlan;
@@ -67,6 +68,7 @@ import ua.com.merchik.merchik.data.RetrofitResponse.ReportHint;
 import ua.com.merchik.merchik.data.RetrofitResponse.ReportHintList;
 import ua.com.merchik.merchik.data.TovarOptions;
 import ua.com.merchik.merchik.database.realm.RealmManager;
+import ua.com.merchik.merchik.database.realm.tables.ReportPrepareRealm;
 import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.dialogs.DialogPhotoTovar;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
@@ -248,7 +250,6 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                 Log.e("АКЦИЯ_ТОВАРА", "TEST3: " + tovIdList.contains(id));
 
 
-
                 if (tovIdList.contains(id)) {
                     Log.e("АКЦИЯ_ТОВАРА", "YELLOW " + list.getiD());
                     if (background instanceof ShapeDrawable) {
@@ -259,7 +260,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                         ((ColorDrawable) background).setColor(ContextCompat.getColor(mContext, R.color.yellow));
                     }
                     deletePromoOption = false;
-                }else {
+                } else {
                     Log.e("АКЦИЯ_ТОВАРА", "WHITE " + list.getiD());
                     if (background instanceof ShapeDrawable) {
                         ((ShapeDrawable) background).getPaint().setColor(ContextCompat.getColor(mContext, R.color.white));
@@ -293,8 +294,14 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                 // --------------------------
 
 
-                String ostatok = ppadbList.getOstatok();
-                Long ostatokDate = Long.parseLong(ppadbList.getDtUpdate());
+//                String ostatok = ppadbList.getOstatok();
+//                Long ostatokDate = Long.parseLong(ppadbList.getDtUpdate());
+
+
+                // Получение RP
+                ReportPrepareDB rp = ReportPrepareRealm.getReportPrepareByTov(cd2, list.getiD());
+                String ostatok = rp.getOborotvedNum();
+                Long ostatokDate = Long.parseLong(rp.getDt());
 
 
                 // 30 дней в миллисекундах == 2592000000
@@ -510,7 +517,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                                 if (tovOptTplList.get(i).getOptionControlName() != Globals.OptionControlName.AKCIYA) {
                                     if (tovOptTplList.get(i).getOptionControlName().equals(AKCIYA_ID) && finalDeletePromoOption) {
                                         // втыкаю
-                                    }else {
+                                    } else {
                                         showDialog(list, tovOptTplList.get(i), finalReportPrepareTovar, tovarId, cd2, clientId, finalBalanceData1, finalBalanceDate1);
                                     }
                                 }
@@ -598,6 +605,22 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
             } else {
                 imageView.setOnClickListener(v -> {
                     Toast.makeText(mContext, "Фото товара не обнаружено", Toast.LENGTH_LONG).show();
+                });
+
+                imageView.setOnLongClickListener(view -> {
+                    PhotoDownload.getPhotoURLFromServer(Collections.singletonList(list), new Clicks.clickStatusMsg() {
+                        @Override
+                        public void onSuccess(String data) {
+                            Log.d("t", "t:" + data);
+                        }
+
+                        @Override
+                        public void onFailure(String error) {
+                            Log.d("t", "te:" + error);
+                        }
+                    });
+
+                    return false;
                 });
             }
         }
@@ -743,7 +766,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
 
             }
 
-            if (tpl.getOptionControlName() != null && tpl.getOptionControlName().equals(ERROR_ID)){
+            if (tpl.getOptionControlName() != null && tpl.getOptionControlName().equals(ERROR_ID)) {
                 dialog.setExpandableListView(createExpandableAdapter(dialog.context), () -> {
                     if (dialog.getOperationResult() != null) {
                         operetionSaveRPToDB(tpl, reportPrepareDB, dialog.getOperationResult(), dialog.getOperationResult2(), null);
@@ -752,7 +775,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
 
                     notifyItemChanged(adapterPosition);
                 });
-            }else {
+            } else {
                 dialog.setOperation(operationType(tpl), getCurrentData(tpl, cd2, tovarId), setMapData(tpl.getOptionControlName()), () -> {
                     if (dialog.getOperationResult() != null) {
                         operetionSaveRPToDB(tpl, reportPrepareDB, dialog.getOperationResult(), dialog.getOperationResult2(), null);
@@ -811,15 +834,15 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
             ArrayList<Map<String, String>> groupDataList = new ArrayList<>();
 
             // список атрибутов групп для чтения
-            String[] groupFrom = new String[] { "groupName" };
+            String[] groupFrom = new String[]{"groupName"};
             // список ID view-элементов, в которые будет помещены атрибуты групп
-            int groupTo[] = new int[] { android.R.id.text1 };
+            int groupTo[] = new int[]{android.R.id.text1};
 
             // список атрибутов элементов для чтения
-            String childFrom[] = new String[] { "monthName" };
+            String childFrom[] = new String[]{"monthName"};
             // список ID view-элементов, в которые будет помещены атрибуты
             // элементов
-            int childTo[] = new int[] { android.R.id.text1 };
+            int childTo[] = new int[]{android.R.id.text1};
 
             // создаем общую коллекцию для коллекций элементов
             ArrayList<ArrayList<Map<String, String>>> сhildDataList = new ArrayList<>();
@@ -836,15 +859,15 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                 groupDataList.add(map);
 
                 RealmResults<ErrorDB> errorItemsDB = errorDbList.where().equalTo("parentId", group.getID()).findAll();
-                if (errorItemsDB != null && errorItemsDB.size() > 0){
+                if (errorItemsDB != null && errorItemsDB.size() > 0) {
                     сhildDataItemList = new ArrayList<>();
-                    for (ErrorDB item : errorItemsDB){
+                    for (ErrorDB item : errorItemsDB) {
                         map = new HashMap<>();
                         map.put("monthName", "* " + item.getNm());
                         сhildDataItemList.add(map);
                     }
                     сhildDataList.add(сhildDataItemList);
-                }else {
+                } else {
                     сhildDataItemList = new ArrayList<>();
                     map = new HashMap<>();
                     map.put("monthName", "* " + group.getNm());

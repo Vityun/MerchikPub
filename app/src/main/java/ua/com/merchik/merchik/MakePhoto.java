@@ -65,12 +65,12 @@ public class MakePhoto {
                         .setItems(result, (dialog, which) -> {
                             Toast t = Toast.makeText(mContext, "Выбрана группа товара: " + result[which], Toast.LENGTH_LONG);
                             t.show();
-                            wp.setCustomerTypeGrpS(globals.getKeyForValue(result[which], wp.getCustomerTypeGrp()));
+                            wp.setCustomerTypeGrpS(Globals.getKeyForValue(result[which], wp.getCustomerTypeGrp()));
                             takePhoto();
                         })
                         .show();
             } else if (wp.getCustomerTypeGrp().size() == 1 && !wp.getPhotoType().equals("5")) {
-                wp.setCustomerTypeGrpS(globals.getKeyForValue(result[0], wp.getCustomerTypeGrp()));
+                wp.setCustomerTypeGrpS(Globals.getKeyForValue(result[0], wp.getCustomerTypeGrp()));
                 Toast.makeText(mContext, "Выбрана группа товара: " + result[0], Toast.LENGTH_LONG).show();
                 takePhoto();
             } else {
@@ -397,7 +397,7 @@ public class MakePhoto {
      * Эксперемент с выполнением фото и моментальным его сохранением в БД
      */
     public static String photoNum; // URI фотографии
-    public static String photoType;
+    public static String photoType = "0";
     public <T> void makePhoto(Activity activity, T data) {
         try {
             final WorkPlan workPlan = new WorkPlan();
@@ -421,6 +421,7 @@ public class MakePhoto {
             PhotoReportActivity.savePhoto(activity, wpDataObj, photoFile);
 
             if (intent.resolveActivity(activity.getPackageManager()) != null) {
+                Globals.writeToMLOG("INFO", "makePhoto", "resolveActivity != null: " + activity.getPackageManager());
                 activity.startActivityForResult(intent, CAMERA_REQUEST_TAKE_PHOTO_TEST);
             }else {
                 Globals.writeToMLOG("INFO", "makePhoto", "resolveActivity = null: " + activity.getPackageManager());
@@ -450,7 +451,7 @@ public class MakePhoto {
     }
 
 
-    public <T> void pressedMakePhoto(Activity activity, T data) {
+    public <T> void pressedMakePhoto(Activity activity, T data, String photoType) {
         try {
             final WorkPlan workPlan = new WorkPlan();
             WPDataObj wpDataObj;
@@ -460,10 +461,8 @@ public class MakePhoto {
                 WpDataDB wpDataDB = (WpDataDB) data;
                 wpDataObj = workPlan.getKPS(wpDataDB.getId());
             }
-            photoType = "0";
+            MakePhoto.photoType = photoType;
             choiceCustomerGroupAndPhoto2(activity, wpDataObj, data);
-
-
         } catch (Exception e) {
             Toast.makeText(activity, "Ошибка при проверке состояния GPS. Повторите попытку или обратитесь к Вашему руководителю. Ошибка: " + e, Toast.LENGTH_LONG).show();
         }
@@ -483,12 +482,12 @@ public class MakePhoto {
                         .setItems(result, (dialog, which) -> {
                             Toast t = Toast.makeText(activity, "Выбрана группа товара: " + result[which], Toast.LENGTH_LONG);
                             t.show();
-                            wp.setCustomerTypeGrpS(globals.getKeyForValue(result[which], wp.getCustomerTypeGrp()));
+                            wp.setCustomerTypeGrpS(Globals.getKeyForValue(result[which], wp.getCustomerTypeGrp()));
                             photoDialogs(activity, wp, data);
                         })
                         .show();
             } else if (wp.getCustomerTypeGrp().size() == 1 && !wp.getPhotoType().equals("5")) {
-                wp.setCustomerTypeGrpS(globals.getKeyForValue(result[0], wp.getCustomerTypeGrp()));
+                wp.setCustomerTypeGrpS(Globals.getKeyForValue(result[0], wp.getCustomerTypeGrp()));
                 Toast.makeText(activity, "Выбрана группа товара: " + result[0], Toast.LENGTH_LONG).show();
                 photoDialogs(activity, wp, data);
             } else {

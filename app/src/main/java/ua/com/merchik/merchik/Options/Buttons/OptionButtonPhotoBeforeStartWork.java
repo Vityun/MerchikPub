@@ -11,7 +11,6 @@ import ua.com.merchik.merchik.WorkPlan;
 import ua.com.merchik.merchik.data.OptionMassageType;
 import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
-import ua.com.merchik.merchik.data.WPDataObj;
 
 public class OptionButtonPhotoBeforeStartWork<T> extends OptionControl {
     public int OPTION_BUTTON_PHOTO_BEFORE_START_WORK_ID = 135809;
@@ -38,11 +37,21 @@ public class OptionButtonPhotoBeforeStartWork<T> extends OptionControl {
     private void executeOption() {
         new Globals().fixMP();// Фиксация Местоположения в таблице ЛогМп
         try {
-            WPDataObj wpDataObj = workPlan.getKPS(wpDataDB.getId());
+/*            WPDataObj wpDataObj = workPlan.getKPS(wpDataDB.getId());
             wpDataObj.setPhotoType("14");
 
             MakePhoto makePhoto = new MakePhoto();
-            makePhoto.pressedMakePhotoOldStyle((Activity) context, wpDataObj, wpDataDB);
+            makePhoto.pressedMakePhotoOldStyle((Activity) context, wpDataObj, wpDataDB);*/
+
+/*            WorkPlan workPlan = new WorkPlan();
+            WPDataObj wpDataObj = workPlan.getKPS(wpDataDB.getId());
+            Intent intentPhotoReport = new Intent(context, PhotoReportActivity.class);
+            intentPhotoReport.putExtra("dataFromWPObj", wpDataObj);
+            context.startActivity(intentPhotoReport);*/
+
+            MakePhoto makePhoto = new MakePhoto();
+            makePhoto.pressedMakePhoto((Activity) context, wpDataDB, "14"); // Фото До начала Работ
+
         }catch (Exception e){
             Globals.writeToMLOG("ERROR", "OptionButtonPhotoBeforeStartWork/executeOption/Exception", "Exception e: " + e);
         }

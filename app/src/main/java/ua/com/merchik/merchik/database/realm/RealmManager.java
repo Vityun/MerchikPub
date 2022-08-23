@@ -1,7 +1,5 @@
 package ua.com.merchik.merchik.database.realm;
 
-import static ua.com.merchik.merchik.Globals.APP_PREFERENCES;
-
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.util.Log;
@@ -15,6 +13,7 @@ import java.util.Objects;
 
 import io.realm.Realm;
 import io.realm.RealmConfiguration;
+import io.realm.RealmQuery;
 import io.realm.RealmResults;
 import io.realm.Sort;
 import ua.com.merchik.merchik.Clock;
@@ -50,6 +49,8 @@ import ua.com.merchik.merchik.data.UploadToServ.ReportPrepareServ;
 import ua.com.merchik.merchik.data.UploadToServ.WpDataUploadToServ;
 import ua.com.merchik.merchik.database.realm.tables.TradeMarkRealm;
 import ua.com.merchik.merchik.database.realm.tables.WpDataRealm;
+
+import static ua.com.merchik.merchik.Globals.APP_PREFERENCES;
 
 public class RealmManager {
 
@@ -755,13 +756,23 @@ public class RealmManager {
         if (size) photoSize = "full";
 
         Log.e("GET_TOV_PHOTO", "Data: " + id + "/" + type + "/" + size);
+//        StackPhotoDB res = INSTANCE.where(StackPhotoDB.class)
+//                .equalTo("object_id", id)
+//                .equalTo("photoServerId", photoServerId)
+//                .equalTo("photo_type", type)
+//                .equalTo("comment", photoSize)
+//                .findFirst();
 
-        return INSTANCE.where(StackPhotoDB.class)
+        RealmQuery<StackPhotoDB> query = INSTANCE.where(StackPhotoDB.class)
                 .equalTo("object_id", id)
-                .equalTo("photoServerId", photoServerId)
                 .equalTo("photo_type", type)
-                .equalTo("comment", photoSize)
-                .findFirst();
+                .equalTo("comment", photoSize);
+
+        if (photoServerId != null && !photoServerId.equals("0")){
+            query.equalTo("photoServerId", photoServerId);
+        }
+
+        return query.findFirst();
     }
 
 

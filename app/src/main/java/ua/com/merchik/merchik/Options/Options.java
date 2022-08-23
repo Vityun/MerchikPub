@@ -1269,14 +1269,22 @@ public class Options {
 
         MakePhoto makePhoto = new MakePhoto();
 //        makePhoto.openCamera((Activity) context);
-        makePhoto.pressedMakePhoto((Activity) context, dataDB);
+        makePhoto.pressedMakePhoto((Activity) context, dataDB, "0");    // Фото Витрины
     }
 
 
     private void optionMakePhoto0_132968(Context context, WpDataDB dataDB, OptionsDB optionsDB, OptionMassageType type, NNKMode mode) {
         MakePhoto makePhoto = new MakePhoto();
-//        makePhoto.openCamera((Activity) context);
-        makePhoto.pressedMakePhoto((Activity) context, dataDB);
+        makePhoto.pressedMakePhoto((Activity) context, dataDB, "0");
+
+        // Обычный способ выполенния фото по старинке, через активность
+/*        WorkPlan workPlan = new WorkPlan();
+        WpDataDB wpDataDB = (WpDataDB) dataDB;
+        WPDataObj wpDataObj = workPlan.getKPS(wpDataDB.getId());
+        Intent intentPhotoReport = new Intent(context, PhotoReportActivity.class);
+        intentPhotoReport.putExtra("dataFromWPObj", wpDataObj);
+        context.startActivity(intentPhotoReport);*/
+
     }
 
 

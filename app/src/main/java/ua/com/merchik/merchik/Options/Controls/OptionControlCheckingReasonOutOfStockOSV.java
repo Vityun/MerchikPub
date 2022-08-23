@@ -105,9 +105,9 @@ public class OptionControlCheckingReasonOutOfStockOSV<T> extends OptionControl {
 
                 resultMsg.append(createLinkedString(msg, item));
             }
-        }else if (find == 0){
-            signal = true;
-            resultMsg.append("Ни у одного ОТСУТСТВУЮЩЕГО товара не указана ПРИЧИНА отсутствия.").append("\n\n");
+//        }else if (find == 0){
+//            signal = true;
+//            resultMsg.append("Ни у одного ОТСУТСТВУЮЩЕГО товара не указана ПРИЧИНА отсутствия.").append("\n\n");
         }else {
             signal = false;
             resultMsg.append("Замечаний по предоставлению информации о ПРИЧИНАХ отсутствия товаров (в т.ч. с ОСВ (Особым Вниманием)) нет.").append("\n\n");

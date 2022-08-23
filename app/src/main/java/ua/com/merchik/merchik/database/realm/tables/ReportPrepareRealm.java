@@ -40,6 +40,14 @@ public class ReportPrepareRealm {
                 .findAll();
     }
 
+    public static ReportPrepareDB getReportPrepareByTov(String dad2, String tovarId) {
+        return INSTANCE.where(ReportPrepareDB.class)
+                .equalTo("tovarId", tovarId)
+                .and()
+                .equalTo("codeDad2", dad2)
+                .findFirst();
+    }
+
 
 
 }
