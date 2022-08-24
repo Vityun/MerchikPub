@@ -1196,6 +1196,7 @@ public class RealmManager {
             }
         }catch (Exception e){
             Log.e("TovarListFromRPByDad2", "ERR: " + e);
+            return null;
         }
 
 

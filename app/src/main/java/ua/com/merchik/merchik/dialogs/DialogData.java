@@ -688,6 +688,12 @@ public class DialogData {
 
                 if (mapSpinner != null && mapSpinner.size() > 0) {
                     String[] res = mapSpinner.values().toArray(new String[0]);
+
+//                    ArrayList<String> res = new ArrayList<>();
+//                    for (Map.Entry<String, String> entry : mapSpinner.entrySet()){
+//                        res.add(Integer.parseInt(entry.getKey()), entry.getValue());
+//                    }
+
                     ArrayAdapter<String> adapter = new ArrayAdapter<>(dialog.getContext(), android.R.layout.simple_spinner_item, res);
                     adapter.setDropDownViewResource(android.R.layout.simple_spinner_item);
                     spinner.setAdapter(adapter);
@@ -703,6 +709,12 @@ public class DialogData {
 
                 if (mapSpinner2 != null && mapSpinner2.size() > 0) {
                     String[] res = mapSpinner2.values().toArray(new String[0]);
+
+//                    ArrayList<String> res = new ArrayList<>();
+//                    for (Map.Entry<String, String> entry : mapSpinner2.entrySet()){
+//                        res.add(Integer.parseInt(entry.getKey()), entry.getValue());
+//                    }
+
                     ArrayAdapter<String> adapter = new ArrayAdapter<>(dialog.getContext(), android.R.layout.simple_spinner_item, res);
                     adapter.setDropDownViewResource(android.R.layout.simple_spinner_item);
                     spinner2.setAdapter(adapter);

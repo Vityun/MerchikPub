@@ -467,7 +467,8 @@ public class Options {
             }
             resStr.append("\n\nУстраните указанные ошибки и повторите попытку проведения.");
 
-            dialog.setText(resStr, ()->{});
+            dialog.setText(resStr, () -> {
+            });
             dialog.setClose(dialog::dismiss);
             dialog.show();
 
@@ -513,9 +514,10 @@ public class Options {
         Log.e("NNK", "F/optControl/optionId: " + optionId);
         switch (optionId) {
 
+
             case 157243:
                 OptionControlCheckingReasonOutOfStockOSV<?> optionControlCheckingReasonOutOfStockOSV = new OptionControlCheckingReasonOutOfStockOSV<>(context, dataDB, option, type, mode);
-                if (optionControlCheckingReasonOutOfStockOSV.isBlockOption()){
+                if (optionControlCheckingReasonOutOfStockOSV.isBlockOption()) {
                     optionControlCheckingReasonOutOfStockOSV.showOptionMassage();
                 }
                 return optionControlCheckingReasonOutOfStockOSV.isBlockOption() ? 1 : 0;
@@ -523,7 +525,7 @@ public class Options {
             case 157241:
                 OptionControlCheckingReasonOutOfStock<?> optionControlCheckingReasonOutOfStock = new OptionControlCheckingReasonOutOfStock<>(context, dataDB, option, type, mode);
 //                if (optionControlCheckingReasonOutOfStock.isBlockOption()){
-                    optionControlCheckingReasonOutOfStock.showOptionMassage();
+                optionControlCheckingReasonOutOfStock.showOptionMassage();
 //                }
                 return optionControlCheckingReasonOutOfStock.isBlockOption() ? 1 : 0;
 
@@ -533,7 +535,7 @@ public class Options {
 
             case 151594:
                 OptionControlPhotoBeforeStartWork<?> optionControlPhotoBeforeStartWork = new OptionControlPhotoBeforeStartWork<>(context, dataDB, option, type, mode);
-                if (optionControlPhotoBeforeStartWork.isBlockOption()){
+                if (optionControlPhotoBeforeStartWork.isBlockOption()) {
                     optionControlPhotoBeforeStartWork.showOptionMassage();
                 }
                 return optionControlPhotoBeforeStartWork.isBlockOption() ? 1 : 0;
@@ -558,7 +560,7 @@ public class Options {
 
             case 76815:
                 OptionControlAvailabilityDetailedReport optionControlAvailabilityDetailedReport = new OptionControlAvailabilityDetailedReport(context, dataDB, option, type, mode);
-                if (optionControlAvailabilityDetailedReport.isBlockOption()){
+                if (optionControlAvailabilityDetailedReport.isBlockOption()) {
                     optionControlAvailabilityDetailedReport.showOptionMassage();
                 }
 //                if (mode.equals(NNKMode.CHECK)){
@@ -572,10 +574,11 @@ public class Options {
                 break;
 
             case 80977:
-                Log.e("test","test");
-//                    OptionControlPromotion optionControlPromotion = new OptionControlPromotion(context, dataDB, option, type, mode);
-//                    optionControlPromotion.showOptionMassage();
-                break;
+                OptionControlPromotion<?> optionControlPromotion = new OptionControlPromotion<>(context, dataDB, option, type, mode);
+                if (optionControlPromotion.isBlockOption()){
+                    optionControlPromotion.showOptionMassage();
+                }
+                return optionControlPromotion.isBlockOption() ? 1 : 0;
 
             case 156928:
                 OptionControlEndAnotherWork optionControlEndAnotherWork = new OptionControlEndAnotherWork(context, dataDB, option, type, mode);
@@ -810,7 +813,7 @@ public class Options {
 
     private <T> void option138340(Context context, T dataDB, OptionsDB option, OptionMassageType type, NNKMode mode) {
         List<AdditionalMaterialsSDB> dataTest = SQL_DB.additionalMaterialsDao().getAllByClientId(option.getClientId());
-        String expire = Clock.getHumanTimeYYYYMMDD(System.currentTimeMillis()/1000);
+        String expire = Clock.getHumanTimeYYYYMMDD(System.currentTimeMillis() / 1000);
         List<AdditionalMaterialsSDB> data1 = SQL_DB.additionalMaterialsDao().getAllForOption(option.getClientId(), "1", "0", expire);
         List<AdditionalMaterialsJOINAdditionalMaterialsAddressSDB> data = SQL_DB.additionalMaterialsDao().getAllForOptionTEST(option.getClientId(), "1", "0");
 

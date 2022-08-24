@@ -126,16 +126,16 @@ public class OptionControlPromotion<T> extends OptionControl {
             TovarDB tov = TovarRealm.getById(item.getTovarId());
             String msg = String.format("(%s) %s (%s)", item.getTovarId(), tov.getNm(), tov.getWeight());
 
-            if (OSV == 1 && (item.getAkciya().equals("") || item.getAkciya().equals("0"))) {
+            if (OSV == 1 && (item.getAkciyaId().equals("") || item.getAkciyaId().equals("0"))) {
                 // Для товара с ОСВ (Особым Вниманием) Вы должны обязательно указать ТИП Акции.
+                err++;
+                errType2Cnt++;
+                errMsgType2.append(createLinkedString(msg, item, tov)).append("\n");
+            } else if (OSV == 1 && (item.getAkciya().equals("") || item.getAkciya().equals("0"))) {
+                // Для товара с ОСВ (Особым Вниманием) Вы должны обязательно указать наличие (или отсутствие) Акции.
                 err++;
                 errType1Cnt++;
                 errMsgType1.append(createLinkedString(msg, item, tov)).append("\n");
-            } else if (OSV == 1 && (item.getAkciyaId().equals("") || item.getAkciyaId().equals("0"))) {
-                // Для товара с ОСВ (Особым Вниманием) Вы должны обязательно указать наличие (или отсутствие) Акции.
-                err++;
-                errType2Cnt++;
-                errMsgType2.append(createLinkedString(msg, item, tov));
             } else if (!item.getAkciyaId().equals("") || !item.getAkciyaId().equals("0")) {
                 find = 1;
             }
@@ -260,7 +260,7 @@ public class OptionControlPromotion<T> extends OptionControl {
                 return map;
 
             case AKCIYA:
-                map.put("0", "Акция отсутствует");
+                map.put("2", "Акция отсутствует");
                 map.put("1", "Есть акция");
 
                 return map;
@@ -394,59 +394,20 @@ public class OptionControlPromotion<T> extends OptionControl {
     }
 
     private void operetionSaveRPToDB(TovarOptions tpl, ReportPrepareDB rp, String data, String data2, TovarDB tovarDB, Context context) {
-        if (rp == null) {
-            rp = createNewRPRow(rp, tovarDB);
-        }
-
         if (data == null || data.equals("")) {
             Toast.makeText(context, "Для сохранения - внесите данные", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        ReportPrepareDB table = rp;
-        switch (tpl.getOptionControlName()) {
-            case AKCIYA_ID:
-                INSTANCE.executeTransaction(realm -> {
-                    table.setAkciyaId(data);
-                    table.setAkciya(data2);
-                    table.setUploadStatus(1);
-                    table.setDtChange(String.valueOf(System.currentTimeMillis() / 1000));
-                    RealmManager.setReportPrepareRow(table);
-                });
-                break;
+        if (tpl.getOptionControlName() == AKCIYA_ID) {
+            INSTANCE.executeTransaction(realm -> {
+                rp.setAkciyaId(data);
+                rp.setAkciya(data2);
+                rp.setUploadStatus(1);
+                rp.setDtChange(String.valueOf(System.currentTimeMillis() / 1000));
+                RealmManager.setReportPrepareRow(rp);
+            });
         }
     }
 
-    private ReportPrepareDB createNewRPRow(ReportPrepareDB reportPrepareDB, TovarDB list) {
-        ReportPrepareDB rp = new ReportPrepareDB();
-
-        long id = RealmManager.reportPrepareGetLastId();
-        id = id + 1;
-
-        rp.setID(id);
-        rp.setDt(String.valueOf(System.currentTimeMillis()));
-        rp.setDtReport(String.valueOf(System.currentTimeMillis()));
-        rp.setKli(reportPrepareDB.getKli());
-        rp.setTovarId(list.getiD());
-        rp.setAddrId(reportPrepareDB.getAddrId());
-        rp.setPrice("");
-        rp.setFace("");
-        rp.setAmount(0);
-        rp.setDtExpire("");
-        rp.setExpireLeft("");
-        rp.setNotes("");
-        rp.setUp("");
-        rp.setAkciya("");
-        rp.setAkciyaId("");
-        rp.setOborotvedNum("");
-        rp.setErrorId("");
-        rp.setErrorComment("");
-        rp.setCodeDad2(reportPrepareDB.getCodeDad2());
-
-        // TODO сохранение в БД новой строки что б потом работать с ней в getCurrentData()
-        INSTANCE.beginTransaction();
-        INSTANCE.copyToRealmOrUpdate(rp);
-        INSTANCE.commitTransaction();
-        return rp;
-    }
 }

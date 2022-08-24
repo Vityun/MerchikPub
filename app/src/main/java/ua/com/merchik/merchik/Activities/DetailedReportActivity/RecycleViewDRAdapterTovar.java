@@ -923,7 +923,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                     return map;
 
                 case AKCIYA:
-                    map.put("0", "Акция отсутствует");
+                    map.put("2", "Акция отсутствует");
                     map.put("1", "Есть акция");
 
                     return map;

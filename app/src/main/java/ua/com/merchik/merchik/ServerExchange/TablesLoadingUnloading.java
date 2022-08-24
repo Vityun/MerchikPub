@@ -676,7 +676,7 @@ public class TablesLoadingUnloading {
 
         String mod = "report_prepare";
         String act = "list_data";
-        String date_from = "2022-08-01";
+        String date_from = timeYesterday7;
         String date_to = timeTomorrow;
 
         // Получение значения ВПО (время последнего обмена) для того что б с сервера отправились новые данные
@@ -685,7 +685,7 @@ public class TablesLoadingUnloading {
         if (realmResults != null) lastUpdate = realmResults.getVpo_export();
 
 
-        retrofit2.Call<ReportPrepareServer> call = null;
+        retrofit2.Call<ReportPrepareServer> call;
         if (lastUpdate == 0) {
             call = RetrofitBuilder.getRetrofitInterface().REPORT_PREPARE_CALL_ALL(mod, act, date_from, date_to);
         } else {
