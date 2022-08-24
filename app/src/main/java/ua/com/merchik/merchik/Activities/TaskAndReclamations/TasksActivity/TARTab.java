@@ -7,6 +7,7 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentPagerAdapter;
 
+import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportTovarsFrag;
 import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
 
 public class TARTab extends FragmentPagerAdapter {
@@ -32,8 +33,10 @@ public class TARTab extends FragmentPagerAdapter {
                 return new Tab1Fragment(data);
             case 1:
                 return new Tab2Fragment(data);
-            case 2:
+            case 3:
                 return tab3Fragment = new Tab3Fragment(data);
+            case 2:
+                return new DetailedReportTovarsFrag(myContext, data);
             default:
                 return null;
         }

@@ -53,11 +53,11 @@ import ua.com.merchik.merchik.ServerExchange.TablesLoadingUnloading;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.WorkPlan;
 import ua.com.merchik.merchik.data.Database.Room.OborotVedSDB;
+import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
 import ua.com.merchik.merchik.data.PhotoDescriptionText;
 import ua.com.merchik.merchik.data.RealmModels.ErrorDB;
 import ua.com.merchik.merchik.data.RealmModels.LogDB;
 import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
-import ua.com.merchik.merchik.data.RealmModels.PPADB;
 import ua.com.merchik.merchik.data.RealmModels.PromoDB;
 import ua.com.merchik.merchik.data.RealmModels.ReportPrepareDB;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
@@ -77,7 +77,6 @@ import static ua.com.merchik.merchik.Globals.OptionControlName.AKCIYA;
 import static ua.com.merchik.merchik.Globals.OptionControlName.AKCIYA_ID;
 import static ua.com.merchik.merchik.Globals.OptionControlName.ERROR_ID;
 import static ua.com.merchik.merchik.database.realm.RealmManager.INSTANCE;
-import static ua.com.merchik.merchik.database.realm.tables.PPARealm.getPPAIZA;
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 import static ua.com.merchik.merchik.dialogs.DialogData.Operations;
 import static ua.com.merchik.merchik.dialogs.DialogData.Operations.Date;
@@ -92,12 +91,17 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
     private Context mContext;
     private List<TovarDB> dataList;
     private List<TovarDB> dataFilterable;
-    private WpDataDB wpDataDB;
+//    private WpDataDB wpDataDB;
     private DRAdapterTovarTPLTypeView tplType;
 
     private List<Integer> tovIdList;
 
     private Clicks.clickVoid click;
+
+
+    private long codeDad2;
+    private String clientId;
+    private int addressId;
 
     public enum DRAdapterTovarTPLTypeView {
         GONE, FULL
@@ -109,10 +113,27 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
         this.mContext = context;
         this.dataList = list;
         this.dataFilterable = list;
-        this.wpDataDB = wp;
-        tplType = DRAdapterTovarTPLTypeView.GONE;
 
-        Log.e("LOG_FILTER", "FILTER(ЕУЫ)" + dataFilterable.size());
+//        this.wpDataDB = wp;
+        codeDad2 = wp.getCode_dad2();
+        clientId = wp.getClient_id();
+        addressId = wp.getAddr_id();
+
+
+        tplType = DRAdapterTovarTPLTypeView.GONE;
+        Globals.writeToMLOG("INFO", "RecycleViewDRAdapterTovar.RecycleViewDRAdapterTovar", "list.size(): " + list.size());
+    }
+
+    public RecycleViewDRAdapterTovar(Context context, List<TovarDB> list, TasksAndReclamationsSDB tasksAndReclamationsSDB) {
+        this.mContext = context;
+        this.dataList = list;
+        this.dataFilterable = list;
+
+        codeDad2 = tasksAndReclamationsSDB.codeDad2SrcDoc;
+        clientId = tasksAndReclamationsSDB.client;
+        addressId = tasksAndReclamationsSDB.addr;
+
+        tplType = DRAdapterTovarTPLTypeView.GONE;
         Globals.writeToMLOG("INFO", "RecycleViewDRAdapterTovar.RecycleViewDRAdapterTovar", "list.size(): " + list.size());
     }
 
@@ -228,8 +249,6 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
             String balanceDate = "?";
 
             String tovarId = list.getiD();
-            String cd2 = String.valueOf(wpDataDB.getCode_dad2()); // КОД ДАД2 данного документа (выносить в глобальный?)
-            String clientId = wpDataDB.getClient_id();  // id клиента данного документа (выносить в глобальный?)
 
 
             imageView.setImageResource(R.mipmap.merchik);
@@ -289,17 +308,15 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
 
             //================================================
             try {
-                PPADB ppadbList = getPPAIZA(wpDataDB.getCode_iza(), wpDataDB.getClient_id(), String.valueOf(wpDataDB.getAddr_id()), list.getiD());
-//                Log.e("ПОЛУЧАЮ_ОСТАТКИ", "ppadbList: " + ppadbList.size());
-                // --------------------------
-
+                // Когда сюда вернусь - обратить внимание что в ЗИР нет код ИЗА
+//                PPADB ppadbList = getPPAIZA(wpDataDB.getCode_iza(), wpDataDB.getClient_id(), String.valueOf(wpDataDB.getAddr_id()), list.getiD());
 
 //                String ostatok = ppadbList.getOstatok();
 //                Long ostatokDate = Long.parseLong(ppadbList.getDtUpdate());
 
 
                 // Получение RP
-                ReportPrepareDB rp = ReportPrepareRealm.getReportPrepareByTov(cd2, list.getiD());
+                ReportPrepareDB rp = ReportPrepareRealm.getReportPrepareByTov(String.valueOf(codeDad2), list.getiD());
                 String ostatok = rp.getOborotvedNum();
                 Long ostatokDate = Long.parseLong(rp.getDt());
 
@@ -351,7 +368,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                     SpannableStringBuilder oborotVed = new SpannableStringBuilder();
 
                     try {
-                        List<OborotVedSDB> data = SQL_DB.oborotVedDao().getOborotData(Clock.today, Clock.today_7, Integer.parseInt(list.getiD()), wpDataDB.getAddr_id());
+                        List<OborotVedSDB> data = SQL_DB.oborotVedDao().getOborotData(Clock.today, Clock.today_7, Integer.parseInt(list.getiD()), addressId);
 
                         Log.e("OBOROT_VED", "data: " + data);
 
@@ -416,8 +433,8 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                     SpannableStringBuilder stringBuilder = new SpannableStringBuilder();
 
                     CharSequence date = Html.fromHtml("<strong>Дата остатков: </strong>" + finalBalanceDate + "<br>");
-                    CharSequence addres = Html.fromHtml("<b>Адрес: </b>" + wpDataDB.getAddr_txt() + "<br>");
-                    CharSequence client = Html.fromHtml("<b>Клиент: </b>" + wpDataDB.getClient_txt() + "<br>");
+                    CharSequence addres = Html.fromHtml("<b>Адрес: </b>" + SQL_DB.addressDao().getById(addressId).nm + "<br>");
+                    CharSequence client = Html.fromHtml("<b>Клиент: </b>" + SQL_DB.customerDao().getById(clientId).nm + "<br>");
 
                     CharSequence tovarCode = Html.fromHtml("<b>Код товара: </b>" + list.getiD() + "<br>");
                     CharSequence tovar = Html.fromHtml("<b>Товар: </b>" + list.getNm() + "<br>");
@@ -458,7 +475,6 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
 
 
             WorkPlan workPlan = new WorkPlan();
-            List<OptionsDB> optionsList = workPlan.getAllOtchetOptions(workPlan.getWpOpchetId(wpDataDB), cd2);
 
             Log.e("OPTIONS_TPL", "TOV_ID: " + list.getiD());
 
@@ -466,9 +482,9 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
             dWeight.setText(weightString);
             closeDialog.setOnClickListener(v -> dialog.cancel());
 
-            ReportPrepareDB reportPrepareTovar = RealmManager.getTovarReportPrepare(cd2, list.getiD());
+            ReportPrepareDB reportPrepareTovar = RealmManager.getTovarReportPrepare(String.valueOf(codeDad2), list.getiD());
             ReportPrepareDB reportPrepareTovar2 = null;
-            List<OptionsDB> optionsList2 = RealmManager.getTovarOptionInReportPrepare(cd2, list.getiD());
+            List<OptionsDB> optionsList2 = RealmManager.getTovarOptionInReportPrepare(String.valueOf(codeDad2), list.getiD());
             if (reportPrepareTovar != null) {
                 reportPrepareTovar2 = INSTANCE.copyFromRealm(reportPrepareTovar);
             }
@@ -518,7 +534,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                                     if (tovOptTplList.get(i).getOptionControlName().equals(AKCIYA_ID) && finalDeletePromoOption) {
                                         // втыкаю
                                     } else {
-                                        showDialog(list, tovOptTplList.get(i), finalReportPrepareTovar, tovarId, cd2, clientId, finalBalanceData1, finalBalanceDate1);
+                                        showDialog(list, tovOptTplList.get(i), finalReportPrepareTovar, tovarId, String.valueOf(codeDad2), clientId, finalBalanceData1, finalBalanceDate1);
                                     }
                                 }
                             }
@@ -545,7 +561,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                         // В Цикле открываем Н количество инфы
                         for (int i = tovOptTplList.size() - 1; i >= 0; i--) {
                             if (tovOptTplList.get(i).getOptionControlName() != Globals.OptionControlName.AKCIYA) {
-                                showDialog(list, tovOptTplList.get(i), finalReportPrepareTovar, tovarId, cd2, clientId, finalBalanceData1, finalBalanceDate1);
+                                showDialog(list, tovOptTplList.get(i), finalReportPrepareTovar, tovarId, String.valueOf(codeDad2), clientId, finalBalanceData1, finalBalanceDate1);
                             }
                         }
                     } catch (Exception e) {
@@ -570,7 +586,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                         Collections.reverse(tovOptTplList); // Реверснул что б отображалось более менее адекватно пользователю (в естественном порядке)
                         for (TovarOptions tpl : tovOptTplList) {
                             if (tpl.getOptionControlName() != Globals.OptionControlName.AKCIYA) {
-                                showDialog(list, tpl, rp, tovarId, cd2, clientId, "", "");
+                                showDialog(list, tpl, rp, tovarId, String.valueOf(codeDad2), clientId, "", "");
                             }
                         }
                     } catch (Exception e) {
@@ -1239,9 +1255,9 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
         rp.setID(id);
         rp.setDt(String.valueOf(System.currentTimeMillis()));
         rp.setDtReport(String.valueOf(System.currentTimeMillis()));
-        rp.setKli(wpDataDB.getClient_id());
+        rp.setKli(clientId);
         rp.setTovarId(list.getiD());
-        rp.setAddrId(String.valueOf(wpDataDB.getAddr_id()));
+        rp.setAddrId(String.valueOf(addressId));
         rp.setPrice("");
         rp.setFace("");
         rp.setAmount(0);
@@ -1254,7 +1270,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
         rp.setOborotvedNum("");
         rp.setErrorId("");
         rp.setErrorComment("");
-        rp.setCodeDad2(String.valueOf(wpDataDB.getCode_dad2()));
+        rp.setCodeDad2(String.valueOf(codeDad2));
 
         // TODO сохранение в БД новой строки что б потом работать с ней в getCurrentData()
         INSTANCE.beginTransaction();

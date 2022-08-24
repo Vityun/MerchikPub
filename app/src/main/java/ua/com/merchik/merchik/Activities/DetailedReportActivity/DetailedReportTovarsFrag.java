@@ -24,6 +24,7 @@ import java.util.List;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.data.Data;
+import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
 import ua.com.merchik.merchik.data.RealmModels.AdditionalRequirementsDB;
 import ua.com.merchik.merchik.data.RealmModels.TovarDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
@@ -36,6 +37,10 @@ public class DetailedReportTovarsFrag extends Fragment {
     private Context mContext;
     private ArrayList<Data> list;
     private WpDataDB wpDataDB;
+    private TasksAndReclamationsSDB tasksAndReclamationsSDB;
+
+    private long codeDad2;
+    private String clientId;
 
     private EditText editText;
     private TextView allTov;
@@ -52,6 +57,16 @@ public class DetailedReportTovarsFrag extends Fragment {
         this.mContext = context;
         this.list = list;
         this.wpDataDB = wpDataDB;
+
+        this.codeDad2 = wpDataDB.getCode_dad2();
+        this.clientId = wpDataDB.getClient_id();
+    }
+
+    public DetailedReportTovarsFrag(Context context, TasksAndReclamationsSDB tasksAndReclamationsSDB) {
+        this.mContext = context;
+        this.tasksAndReclamationsSDB = tasksAndReclamationsSDB;
+        this.codeDad2 = tasksAndReclamationsSDB.codeDad2SrcDoc;
+        this.clientId = tasksAndReclamationsSDB.client;
     }
 
     @Override
@@ -69,14 +84,10 @@ public class DetailedReportTovarsFrag extends Fragment {
             allTov = v.findViewById(R.id.textLikeLink);
 
             setTextLikeLink();
-
-
             addRecycleView(getTovList());
         }catch (Exception e){
-
+            Globals.writeToMLOG("ERROR", "DetailedReportTovarsFrag/onCreateView", "Exception e: " + e);
         }
-
-
         return v;
     }
 
@@ -101,16 +112,6 @@ public class DetailedReportTovarsFrag extends Fragment {
                     Log.e("setTextLikeLink", "flag");
                     fullTovList.setRotation(0);
                     fullTovList.setImageDrawable(this.mContext.getResources().getDrawable(R.drawable.ic_minus));
-
-/*                String msg = "Внимание! Данные, которые вы сейчас добавите, при " +
-                        "следущей синхронизации затрут данные хранящиеся на сервере.";
-
-                DialogData dialog = new DialogData(getContext());
-                dialog.setTitle("Внимание!");
-                dialog.setText(msg);
-                dialog.setDialogIco();
-                dialog.setClose(dialog::dismiss);
-                dialog.show();*/
                 }
                 flag = !flag;
                 addRecycleView(getTovList());
@@ -134,7 +135,14 @@ public class DetailedReportTovarsFrag extends Fragment {
         Log.e("АКЦИЯ_ТОВАРА", "START");
         List<Integer> promotionalTov = new ArrayList<>();
         try {
-            List<AdditionalRequirementsDB> data = AdditionalRequirementsRealm.getData3(wpDataDB);
+            // TODO OH SHIT
+            List<AdditionalRequirementsDB> data;
+            if (wpDataDB != null){
+                data = AdditionalRequirementsRealm.getData3(wpDataDB);
+            }else {
+                data = AdditionalRequirementsRealm.getData3(tasksAndReclamationsSDB);
+            }
+
             Log.e("АКЦИЯ_ТОВАРА", "data: " + data);
             for (AdditionalRequirementsDB item : data){
                 if (item.getTovarId() != null && !item.getTovarId().equals("0") && !item.getTovarId().equals("")){
@@ -147,16 +155,23 @@ public class DetailedReportTovarsFrag extends Fragment {
         }
 
 
-        RecycleViewDRAdapterTovar recycleViewDRAdapter = new RecycleViewDRAdapterTovar(mContext, list, wpDataDB);
+        // TODO OH SHIT
+        RecycleViewDRAdapterTovar recycleViewDRAdapter;
+        if (wpDataDB != null){
+            recycleViewDRAdapter = new RecycleViewDRAdapterTovar(mContext, list, wpDataDB);
+        }else {
+            recycleViewDRAdapter = new RecycleViewDRAdapterTovar(mContext, list, tasksAndReclamationsSDB);
+        }
         recycleViewDRAdapter.setAkciyaTovList(promotionalTov);
 
         recycleViewDRAdapter.setTplType(RecycleViewDRAdapterTovar.DRAdapterTovarTPLTypeView.GONE);
 
+        RecycleViewDRAdapterTovar finalRecycleViewDRAdapter = recycleViewDRAdapter;
         recycleViewDRAdapter.refreshAdapter(()->{
-            recycleViewDRAdapter.switchTPLView();
-            rvTovar.setAdapter(recycleViewDRAdapter);
+            finalRecycleViewDRAdapter.switchTPLView();
+            rvTovar.setAdapter(finalRecycleViewDRAdapter);
             rvTovar.setLayoutManager(new LinearLayoutManager(mContext, LinearLayoutManager.VERTICAL, false));
-            recycleViewDRAdapter.notifyDataSetChanged();
+            finalRecycleViewDRAdapter.notifyDataSetChanged();
         });
 
         rvTovar.setAdapter(recycleViewDRAdapter);
@@ -190,15 +205,12 @@ public class DetailedReportTovarsFrag extends Fragment {
     private ArrayList<TovarDB> getTovList(){
         ArrayList<TovarDB> list;
         if (flag){
-            List<TovarDB> dataTovar = RealmManager.getTovarListFromReportPrepareByDad2(wpDataDB.getCode_dad2());
+            List<TovarDB> dataTovar = RealmManager.getTovarListFromReportPrepareByDad2(codeDad2);
             list = (ArrayList<TovarDB>) RealmManager.INSTANCE.copyFromRealm(dataTovar);
-            Log.e("TOVAR_TEST_SIZE", "TOV_SIZE: " + list.size());
             Toast.makeText(mContext, "Отображен список только тех товаров, которые установлены в матрице ППА", Toast.LENGTH_SHORT).show();
         }else {
-            Log.e("TOVAR_TEST_SIZE", "wpDataDB.getClient_id(): " + wpDataDB.getClient_id());
-            List<TovarDB> dataTovar = RealmManager.getTovarListByCustomer(wpDataDB.getClient_id());
+            List<TovarDB> dataTovar = RealmManager.getTovarListByCustomer(clientId);
             list = (ArrayList<TovarDB>) RealmManager.INSTANCE.copyFromRealm(dataTovar);
-            Log.e("TOVAR_TEST_SIZE", "ALL_TOV_SIZE: " + list.size());
             Toast.makeText(mContext, "Отображен список всех товаров", Toast.LENGTH_SHORT).show();
         }
         return list;

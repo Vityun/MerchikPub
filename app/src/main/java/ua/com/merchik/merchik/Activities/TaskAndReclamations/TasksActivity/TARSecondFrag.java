@@ -53,7 +53,8 @@ public class TARSecondFrag extends Fragment {
     private void setTab(Context context) {
         tabLayout.getTabAt(0).setText("Главная");
         tabLayout.getTabAt(1).setText("Опции");
-        tabLayout.getTabAt(2).setText("Переписка");
+        tabLayout.getTabAt(3).setText("Переписка");
+        tabLayout.getTabAt(2).setText("Товары");
 
 
         adapter = new TARTab(context, fragmentManager, tabLayout.getTabCount(), data);

@@ -19,10 +19,10 @@ public interface CustomerDao {
     List<CustomerSDB> getAllSortedByNm();
 
     @Query("SELECT * FROM client WHERE id = :id")
-    CustomerSDB getById(int id);
+    CustomerSDB getById(String id);
 
     @Query("SELECT * FROM client WHERE nm = :nm")
-    CustomerSDB getByNm(int nm);
+    CustomerSDB getByNm(String nm);
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     void insertAll(List<CustomerSDB> data);
