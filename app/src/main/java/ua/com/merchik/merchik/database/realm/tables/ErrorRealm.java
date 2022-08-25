@@ -17,4 +17,10 @@ public class ErrorRealm {
                 .equalTo("nm", nm)
                 .findFirst();
     }
+
+    public static ErrorDB getErrorDbById(String id) {
+        return INSTANCE.where(ErrorDB.class)
+                .equalTo("ID", id)
+                .findFirst();
+    }
 }

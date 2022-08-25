@@ -117,10 +117,12 @@ public class OptionControlPromotion<T> extends OptionControl {
         // 5.0
         // Тут должена формироваться более подроная информация о том с какими Товарами есть пролема
         int find = 0;
+        int totalOSV = 0;
         for (ReportPrepareDB item : reportPrepare) {
             int OSV = 0;
             if (Arrays.asList(tovIds).contains(item.getTovarId())) {
                 OSV = 1;
+                totalOSV++;
             }
 
             TovarDB tov = TovarRealm.getById(item.getTovarId());
@@ -136,7 +138,7 @@ public class OptionControlPromotion<T> extends OptionControl {
                 err++;
                 errType1Cnt++;
                 errMsgType1.append(createLinkedString(msg, item, tov)).append("\n");
-            } else if (!item.getAkciyaId().equals("") || !item.getAkciyaId().equals("0")) {
+            } else if (!item.getAkciyaId().equals("") && !item.getAkciyaId().equals("0")) {
                 find = 1;
             }
         }
@@ -158,12 +160,15 @@ public class OptionControlPromotion<T> extends OptionControl {
         if (reportPrepare.size() == 0) {
             massageToUser = "Товаров, по которым надо проверять факт наличия Акции, не обнаружено.";
             signal = 1;
+        }else if (totalOSV == 0){
+            massageToUser = "Для данной ТТ, на текущий момент, нет товаров с ОСВ (Особым Вниманием). Контролировать нечего. Замечаний нет.";
+            signal = 1;
         } else if (err > 0) {
             massageToUser = "Не предоставлена информация о типе и наличии Акции по товару (" + err + " шт.) (в т.ч. с ОСВ (Особым Вниманием)). См. таблицу.";
             signal = 1;
-        } else if (find == 0) {
-            massageToUser = "Ни у одного товара не указано тип, наличие (или отсутствие) Акции.";
-            signal = 1;
+//        } else if (find == 0) {
+//            massageToUser = "Ни у одного товара не указано тип, наличие (или отсутствие) Акции.";
+//            signal = 1;
         } else {
             massageToUser = "Замечаний по предоставлению информации о наличии Акций по товарам (в т.ч. с ОСВ (Особым Вниманием)) нет.";
             signal = 2;

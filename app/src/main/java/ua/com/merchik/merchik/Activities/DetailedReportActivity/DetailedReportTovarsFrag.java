@@ -28,6 +28,7 @@ import java.util.List;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
+import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
@@ -36,6 +37,8 @@ import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
 import ua.com.merchik.merchik.data.RealmModels.AdditionalRequirementsDB;
 import ua.com.merchik.merchik.data.RealmModels.TovarDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
+import ua.com.merchik.merchik.data.RetrofitResponse.OptionsServer;
+import ua.com.merchik.merchik.data.RetrofitResponse.ReportPrepareServer;
 import ua.com.merchik.merchik.data.TestJsonUpload.StandartData;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsRealm;
@@ -227,6 +230,7 @@ public class DetailedReportTovarsFrag extends Fragment {
                     @Override
                     public void onSuccess(String data) {
                         Toast.makeText(mContext, data, Toast.LENGTH_SHORT).show();
+                        addRecycleView(getTovList());
                     }
 
                     @Override
@@ -254,35 +258,51 @@ public class DetailedReportTovarsFrag extends Fragment {
         StandartData standartData = new StandartData();
         standartData.mod = "report_prepare";
         standartData.act = "list_data";
-        standartData.date_from = "2022-08-01";
-        standartData.date_to = "2022-08-11";
+        standartData.date_from = Clock.getDatePeriod(-30);
+        standartData.date_to = Clock.getDatePeriod(1);
         standartData.code_dad2 = String.valueOf(codeDad2);
 
         Gson gson = new Gson();
         String json = gson.toJson(standartData);
         JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
 
-        retrofit2.Call<JsonObject> call = RetrofitBuilder.getRetrofitInterface().TEST_JSON_UPLOAD(RetrofitBuilder.contentType, convertedObject);
-        call.enqueue(new Callback<JsonObject>() {
+        retrofit2.Call<ReportPrepareServer> call = RetrofitBuilder.getRetrofitInterface().DOWNLOAD_REPORT_PREPARE(RetrofitBuilder.contentType, convertedObject);
+        call.enqueue(new Callback<ReportPrepareServer>() {
             @Override
-            public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
-                if (response.isSuccessful()){
-                    if (response.body() != null){
-                        Globals.writeToMLOG("INFO", "DetailedReportTovarsFrag/downloadReportPrepareByDad2/onResponse", "response.body(): " + response.body());
-                        click.onSuccess("Товары успешно обновлены!");
+            public void onResponse(Call<ReportPrepareServer> call, Response<ReportPrepareServer> response) {
+                try {
+                    if (response.isSuccessful()){
+                        if (response.body() != null){
+                            if (response.body().getState()){
+                                if (response.body().getList() != null && response.body().getList().size() > 0){
+                                    RealmManager.setReportPrepare(response.body().getList());
+                                    click.onSuccess("Товары успешно обновлены!");
+                                }else {
+                                    click.onFailure("Список Товаров пуст. Обратитесь к своему руководителю.");
+                                }
+                            }else {
+                                if (response.body().getError() != null){
+                                    click.onFailure("Данные обновить не получилось. Это связанно с: " + response.body().getError());
+                                }else {
+                                    click.onFailure("Данные обновить не получилось. Ошибку обнаружить не получилось. Обратитесь к руководителю.");
+                                }
+                            }
+                        }else {
+                            click.onFailure("Запрашиваемых данных не обнаружено.");
+                        }
                     }else {
-                        click.onFailure("Запрашиваемых данных не обнаружено.");
+                        click.onFailure("Произошла ошибка при обновлении списка товаров. Ошибка: " + response.code());
                     }
-                }else {
-                    click.onFailure("Произошла ошибка при обновлении списка товаров. Ошибка: " + response.code());
+
+                    if (pg != null && pg.isShowing()) pg.dismiss();
+                }catch (Exception e){
+                    Globals.writeToMLOG("ERROR", "DetailedReportTovarsFrag/downloadReportPrepareByDad2/onResponse", "Exception e: " + e);
+                    click.onFailure("Произошла ошибка. Передайте её руководителю: " + e);
                 }
-
-
-                if (pg != null && pg.isShowing()) pg.dismiss();
             }
 
             @Override
-            public void onFailure(Call<JsonObject> call, Throwable t) {
+            public void onFailure(Call<ReportPrepareServer> call, Throwable t) {
                 if (pg != null && pg.isShowing()) pg.dismiss();
                 Globals.writeToMLOG("ERROR", "DetailedReportTovarsFrag/downloadReportPrepareByDad2/onFailure", "Throwable t: " + t);
                 click.onFailure(t.toString());
@@ -300,27 +320,43 @@ public class DetailedReportTovarsFrag extends Fragment {
         String json = gson.toJson(standartData);
         JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
 
-        retrofit2.Call<JsonObject> call = RetrofitBuilder.getRetrofitInterface().TEST_JSON_UPLOAD(RetrofitBuilder.contentType, convertedObject);
-        call.enqueue(new Callback<JsonObject>() {
+        retrofit2.Call<OptionsServer> call = RetrofitBuilder.getRetrofitInterface().GET_OPTIONS(RetrofitBuilder.contentType, convertedObject);
+        call.enqueue(new Callback<OptionsServer>() {
             @Override
-            public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
-                if (response.isSuccessful()){
-                    if (response.body() != null){
-                        Globals.writeToMLOG("INFO", "DetailedReportTovarsFrag/downloadOptionByDad2/onResponse", "response.body(): " + response.body());
-                        click.onSuccess("Опции товаров успешно обновлены!");
+            public void onResponse(Call<OptionsServer> call, Response<OptionsServer> response) {
+                try {
+                    if (response.isSuccessful()){
+                        if (response.body() != null){
+                            if (response.body().getState()){
+                                if (response.body().getList() != null && response.body().getList().size() > 0){
+                                    RealmManager.saveDownloadedOptions(response.body().getList());
+                                    click.onSuccess("Опции успешно обновлены!");
+                                }else {
+                                    click.onFailure("Список Опций пуст. Обратитесь к своему руководителю.");
+                                }
+                            }else {
+                                if (response.body().getError() != null){
+                                    click.onFailure("Данные обновить не получилось. Это связанно с: " + response.body().getError());
+                                }else {
+                                    click.onFailure("Данные обновить не получилось. Ошибку обнаружить не получилось. Обратитесь к руководителю.");
+                                }
+                            }
+                        }else {
+                            click.onFailure("Запрашиваемых данных не обнаружено.");
+                        }
                     }else {
-                        click.onFailure("Запрашиваемых данных не обнаружено.");
+                        click.onFailure("Произошла ошибка при обновлении списка опций. Ошибка: " + response.code());
                     }
-                }else {
-                    click.onFailure("Произошла ошибка при обновлении опций товаров. Ошибка: " + response.code());
+
+                    if (pg != null && pg.isShowing()) pg.dismiss();
+                }catch (Exception e){
+                    Globals.writeToMLOG("ERROR", "DetailedReportTovarsFrag/downloadOptionByDad2/onResponse", "Exception e: " + e);
+                    click.onFailure("Произошла ошибка. Передайте её руководителю: " + e);
                 }
-
-
-                if (pg != null && pg.isShowing()) pg.dismiss();
             }
 
             @Override
-            public void onFailure(Call<JsonObject> call, Throwable t) {
+            public void onFailure(Call<OptionsServer> call, Throwable t) {
                 if (pg != null && pg.isShowing()) pg.dismiss();
                 Globals.writeToMLOG("ERROR", "DetailedReportTovarsFrag/downloadOptionByDad2/onFailure", "Throwable t: " + t);
                 click.onFailure(t.toString());

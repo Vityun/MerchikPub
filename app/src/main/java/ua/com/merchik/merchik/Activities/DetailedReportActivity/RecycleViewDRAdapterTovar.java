@@ -68,6 +68,7 @@ import ua.com.merchik.merchik.data.RetrofitResponse.ReportHint;
 import ua.com.merchik.merchik.data.RetrofitResponse.ReportHintList;
 import ua.com.merchik.merchik.data.TovarOptions;
 import ua.com.merchik.merchik.database.realm.RealmManager;
+import ua.com.merchik.merchik.database.realm.tables.PromoRealm;
 import ua.com.merchik.merchik.database.realm.tables.ReportPrepareRealm;
 import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.dialogs.DialogPhotoTovar;
@@ -776,8 +777,15 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                     dialog.setOperationSpinnerData(setMapData(tpl.getOptionControlName()));
                     dialog.setOperationSpinner2Data(setMapData(Globals.OptionControlName.AKCIYA));
 
-                    dialog.setOperationTextData(reportPrepareDB.getAkciyaId());
-                    dialog.setOperationTextData2(reportPrepareDB.getAkciya());
+                    dialog.setOperationTextData(PromoRealm.getPromoDBById(reportPrepareDB.getAkciyaId()).getNm());
+
+                    Map<String, String> map = new HashMap<>();
+                    map.put("2", "Акция отсутствует");
+                    map.put("1", "Есть акция");
+
+                    String akciya = map.get(reportPrepareDB.getAkciya());
+
+                    dialog.setOperationTextData2(akciya);
                     break;
 
             }

@@ -814,6 +814,12 @@ public interface RetrofitInterface {
             @Body JsonObject json);
 
 
+    @POST("mobile_app.php?")
+    Call<ReportPrepareServer> DOWNLOAD_REPORT_PREPARE(
+            @Header("ContentType") String content,
+            @Body JsonObject json);
+
+
 }//------ E N D ------
 
 
