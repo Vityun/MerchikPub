@@ -217,6 +217,7 @@ public class DetailedReportTovarsFrag extends Fragment {
      * <p>
      * Отображает список товаров по ППА или весь список товаров по данному клиенту
      */
+    private boolean updateTov = true;
     private ArrayList<TovarDB> getTovList() {
         ArrayList<TovarDB> list = null;
         if (flag) {
@@ -226,18 +227,24 @@ public class DetailedReportTovarsFrag extends Fragment {
                 Toast.makeText(mContext, "Отображен список только тех товаров, которые установлены в матрице ППА", Toast.LENGTH_SHORT).show();
             } else {
                 Toast.makeText(mContext, "Список товаров по ППА пуст.", Toast.LENGTH_SHORT).show();
-                downloadDetailedReportTovarsData(codeDad2, new Clicks.clickStatusMsg() {
-                    @Override
-                    public void onSuccess(String data) {
-                        Toast.makeText(mContext, data, Toast.LENGTH_SHORT).show();
-                        addRecycleView(getTovList());
-                    }
 
-                    @Override
-                    public void onFailure(String error) {
-                        Toast.makeText(mContext, error, Toast.LENGTH_SHORT).show();
-                    }
-                });
+                if (updateTov && codeDad2 != 0){
+                    downloadDetailedReportTovarsData(new Clicks.clickStatusMsg() {
+                        @Override
+                        public void onSuccess(String data) {
+                            Toast.makeText(mContext, data, Toast.LENGTH_SHORT).show();
+                            addRecycleView(getTovList());
+                            updateTov = false;
+                        }
+
+                        @Override
+                        public void onFailure(String error) {
+                            Toast.makeText(mContext, error, Toast.LENGTH_SHORT).show();
+                            updateTov = false;
+                        }
+                    });
+                }
+
             }
         } else {
             List<TovarDB> dataTovar = RealmManager.getTovarListByCustomer(clientId);
@@ -247,11 +254,12 @@ public class DetailedReportTovarsFrag extends Fragment {
         return list;
     }
 
-    private void downloadDetailedReportTovarsData(long codeDad2, Clicks.clickStatusMsg click) {
+    private void downloadDetailedReportTovarsData(Clicks.clickStatusMsg click) {
         ProgressDialog pg = ProgressDialog.show(mContext, "Загрузка списка товаров", "Подождите окончания загрузки. Это может занять время.", true, true);
-
         downloadReportPrepareByDad2(pg, click);
-        downloadOptionByDad2(pg, click);
+
+        ProgressDialog pg2 = ProgressDialog.show(mContext, "Загрузка списка опций", "Подождите окончания загрузки. Это может занять время.", true, true);
+        downloadOptionByDad2(pg2, click);
     }
 
     private void downloadReportPrepareByDad2(ProgressDialog pg, Clicks.clickStatusMsg click){
@@ -293,12 +301,12 @@ public class DetailedReportTovarsFrag extends Fragment {
                     }else {
                         click.onFailure("Произошла ошибка при обновлении списка товаров. Ошибка: " + response.code());
                     }
-
-                    if (pg != null && pg.isShowing()) pg.dismiss();
                 }catch (Exception e){
                     Globals.writeToMLOG("ERROR", "DetailedReportTovarsFrag/downloadReportPrepareByDad2/onResponse", "Exception e: " + e);
                     click.onFailure("Произошла ошибка. Передайте её руководителю: " + e);
                 }
+
+                if (pg != null && pg.isShowing()) pg.dismiss();
             }
 
             @Override
@@ -347,12 +355,11 @@ public class DetailedReportTovarsFrag extends Fragment {
                     }else {
                         click.onFailure("Произошла ошибка при обновлении списка опций. Ошибка: " + response.code());
                     }
-
-                    if (pg != null && pg.isShowing()) pg.dismiss();
                 }catch (Exception e){
                     Globals.writeToMLOG("ERROR", "DetailedReportTovarsFrag/downloadOptionByDad2/onResponse", "Exception e: " + e);
                     click.onFailure("Произошла ошибка. Передайте её руководителю: " + e);
                 }
+                if (pg != null && pg.isShowing()) pg.dismiss();
             }
 
             @Override
