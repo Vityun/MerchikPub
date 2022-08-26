@@ -1252,7 +1252,7 @@ public class PhotoReportActivity extends toolbar_menus {
         try {
             // mod 1 = "Устаревший" вариант для сбора информации об устройстве и координатах
             String GP = POST_10(context, 1);// Запись пост данных в переменную для БД для последущей отправки на сервер
-//            String GP = POST_10_JSON(context);// Запись пост данных в переменную для БД для последущей отправки на сервер
+
 
             if (RealmManager.chechPhotoExist(image.getAbsolutePath())) {
                 File file = null;
@@ -1291,11 +1291,10 @@ public class PhotoReportActivity extends toolbar_menus {
                 }
 
                 try {
-//                    WpDataDB wpRow = RealmManager.getWorkPlanRowById(wpDataObj.getId());
-//                    user_id = wpRow.getUser_id();
-
                     int id = RealmManager.stackPhotoGetLastId();
                     id++;
+
+                    Globals.writeToMLOG("INFO", "savePhoto", "new photo id: " + id);
 
                     Integer photoType = Integer.valueOf(wpDataObj.getPhotoType());
 
@@ -1314,7 +1313,7 @@ public class PhotoReportActivity extends toolbar_menus {
                             addressNmText = RealmManager.getAddressNm(wpDataObj.getAddressId());
                     } catch (Exception e) {
                         // Ошибка NPE при получении имени пользователя с БД
-//                        globals.alertDialogMsg("Фото сохранено, но возникли некоторые проблемы: " + e, context);
+                        Globals.writeToMLOG("ERROR", "savePhoto", "Ошибка NPE при получении имени пользователя с БД Exception e: " + e);
                     }
 
                     StackPhotoDB stackPhotoDB = new StackPhotoDB(
@@ -1347,22 +1346,26 @@ public class PhotoReportActivity extends toolbar_menus {
                             addressNmText
                     );
 
+                    Globals.writeToMLOG("INFO", "savePhoto", "stackPhotoDB_1: " + stackPhotoDB);
+
                     // Проверка - есть ли что-то NULL для сохранения в БД
-                    RealmManager.stackPhotoSavePhoto(stackPhotoDB);
+                    RealmManager.stackPhotoSavePhoto(stackPhotoDB); // Сохранение фотографии в БД
+
+                    Globals.writeToMLOG("INFO", "savePhoto", "stackPhotoDB_2: " + stackPhotoDB);
                     return true;
                 } catch (Exception e) {
-                    Globals.writeToMLOG("INFO", "savePhoto", "Ошибка сохранения в БД: " + e);
+                    Globals.writeToMLOG("ERROR", "savePhoto", "Ошибка сохранения в БД: " + e);
                     globals.alertDialogMsg(context, "Ошибка сохранения в БД: " + e);
                 }
 
             } else {
-                Globals.writeToMLOG("INFO", "savePhoto", "Такое фото уже существует. Если ошибка повторяется - обратитесь к Вашему руководителю");
+                Globals.writeToMLOG("ERROR", "savePhoto", "Такое фото уже существует. Если ошибка повторяется - обратитесь к Вашему руководителю");
                 globals.alertDialogMsg(context, "Такое фото уже существует. Если ошибка повторяется - обратитесь к Вашему руководителю");
                 return false;
             }
 
         } catch (Exception e) {
-            Globals.writeToMLOG("INFO", "savePhoto", "Exception e: " + e);
+            Globals.writeToMLOG("ERROR", "savePhoto", "Exception e: " + e);
             globals.alertDialogMsg(context, "Ошибка при сохранении фото. При возникновении этой ошибки - обратитесь к руководителю. Код ошибки: " + e);
         }
         return false;

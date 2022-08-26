@@ -438,8 +438,13 @@ public class DetailedReportActivity extends toolbar_menus {
         if (requestCode == 201 && resultCode == RESULT_OK) {
             Toast.makeText(this, "Фото сохранено", Toast.LENGTH_SHORT).show();
             try {
+                Globals.writeToMLOG("INFO", "requestCode == 201 && resultCode == RESULT_OK/MakePhoto_photoNum", "MakePhoto.photoNum: " + MakePhoto.photoNum);
+
                 StackPhotoDB photo = RealmManager.INSTANCE.copyFromRealm(StackPhotoRealm.getByPhotoNum(MakePhoto.photoNum));
                 File photoFile = new File(MakePhoto.photoNum);
+
+                Globals.writeToMLOG("INFO", "requestCode == 201 && resultCode == RESULT_OK/photo", "photo: " + photo);
+                Globals.writeToMLOG("INFO", "requestCode == 201 && resultCode == RESULT_OK/photoFile", "photoFile: " + photoFile);
 
                 final int rotation = getImageOrientation(photoFile.getPath()); //Проверка на сколько градусов повёрнуто изображение
                 if (rotation > 0) {
@@ -462,6 +467,8 @@ public class DetailedReportActivity extends toolbar_menus {
                 photo.setPhoto_hash(hash);
                 photo.setPhoto_num(photoFile.getAbsolutePath());
                 photo.setPhoto_type(Integer.valueOf(MakePhoto.photoType));
+
+                Globals.writeToMLOG("INFO", "requestCode == 201 && resultCode == RESULT_OK/photo_save", "photoSave: " + photo);
 
                 StackPhotoRealm.setAll(Collections.singletonList(photo));
             } catch (Exception e) {

@@ -418,7 +418,11 @@ public class MakePhoto {
             intent.putExtra(MediaStore.EXTRA_OUTPUT, uri);
 
             photoNum = photoFile.getAbsolutePath();
-            PhotoReportActivity.savePhoto(activity, wpDataObj, photoFile);
+            boolean isSavePhoto = PhotoReportActivity.savePhoto(activity, wpDataObj, photoFile);
+
+            Globals.writeToMLOG("INFO", "makePhoto", "photoType: " + photoType);
+            Globals.writeToMLOG("INFO", "makePhoto", "photoNum: " + photoNum);
+            Globals.writeToMLOG("INFO", "makePhoto", "isSavePhoto: " + isSavePhoto);
 
             if (intent.resolveActivity(activity.getPackageManager()) != null) {
                 Globals.writeToMLOG("INFO", "makePhoto", "resolveActivity != null: " + activity.getPackageManager());
@@ -462,9 +466,10 @@ public class MakePhoto {
                 wpDataObj = workPlan.getKPS(wpDataDB.getId());
             }
             MakePhoto.photoType = photoType;
+            Globals.writeToMLOG("INFO", "pressedMakePhoto", "photoType: " + photoType);
             choiceCustomerGroupAndPhoto2(activity, wpDataObj, data);
         } catch (Exception e) {
-            Toast.makeText(activity, "Ошибка при проверке состояния GPS. Повторите попытку или обратитесь к Вашему руководителю. Ошибка: " + e, Toast.LENGTH_LONG).show();
+            Globals.writeToMLOG("ERROR", "pressedMakePhoto", "Exception e: " + e);
         }
     }
 
