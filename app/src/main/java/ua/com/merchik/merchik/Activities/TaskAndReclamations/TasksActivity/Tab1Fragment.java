@@ -130,7 +130,7 @@ public class Tab1Fragment extends Fragment {
         // ---
         try {
             WpDataDB wpDataDB = WpDataRealm.getWpDataRowByDad2Id(data.codeDad2SrcDoc);
-            Spanned setDateSrcDock = Html.fromHtml("<b>Дата посещения: </b>" + wpDataDB.getDt() + "<br>");
+            Spanned setDateSrcDock = Html.fromHtml("<b>Дата посещения: </b>" + Clock.getHumanTime3(wpDataDB.getDt().getTime()/1000) + "<br>");
             stringData.append(setDateSrcDock);
         } catch (Exception e) {}
         // ---
@@ -243,7 +243,7 @@ public class Tab1Fragment extends Fragment {
         }
 
         try {
-            CharSequence opinionDate = Html.fromHtml("<b>Дата мнения: </b>" + Clock.getHumanTime3(data.sotrOpinionDt) + "<br>");
+            CharSequence opinionDate = Html.fromHtml("<b>Дата мнения: </b>" + (data.sotrOpinionDt > 0 ? Clock.getHumanTime3(data.sotrOpinionDt) : "Не указано") + "<br>");
             stringData.append(opinionDate);
         } catch (Exception e) {
         }
