@@ -777,7 +777,8 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                     dialog.setOperationSpinnerData(setMapData(tpl.getOptionControlName()));
                     dialog.setOperationSpinner2Data(setMapData(Globals.OptionControlName.AKCIYA));
 
-                    dialog.setOperationTextData(PromoRealm.getPromoDBById(reportPrepareDB.getAkciyaId()).getNm());
+                    PromoDB promoDB = PromoRealm.getPromoDBById(reportPrepareDB.getAkciyaId());
+                    dialog.setOperationTextData(promoDB != null ? promoDB.getNm() : reportPrepareDB.getAkciyaId());
 
                     Map<String, String> map = new HashMap<>();
                     map.put("2", "Акция отсутствует");

@@ -9,8 +9,10 @@ import android.text.style.ClickableSpan;
 import android.util.Log;
 import android.view.View;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import io.realm.RealmResults;
@@ -94,7 +96,7 @@ public class OptionControlTaskAnswer<T> extends OptionControl {
             }else {
                 tarList = SQL_DB.tarDao().getTARForOptionControl150822(1, addressId, clientId, userId, 0, date1, date2);
             }
-            Globals.writeToMLOG("INFO", "OptionControlTaskAnswer/executeOption/List<TasksAndReclamationsSDB>", "tarList: " + Arrays.toString(tarList.toArray()));
+            Globals.writeToMLOG("INFO", "OptionControlTaskAnswer/executeOption/List<TasksAndReclamationsSDB>", "tarList(" + (tarList != null ? tarList.size() : "null") + "): " + new Gson().fromJson(new Gson().toJson(tarList), JsonObject.class));
 
             // todo Как лучше это оформить?
             if (tarList == null) {
@@ -107,6 +109,9 @@ public class OptionControlTaskAnswer<T> extends OptionControl {
                 if (item.dtRealPost > Clock.dateConvertToLong(documentDate)) tarList.remove(item);
 
                 ThemeDB theme = ThemeRealm.getThemeById(String.valueOf(item.themeId));
+
+                Globals.writeToMLOG("INFO", "OptionControlTaskAnswer/executeOption/for/data", "item: " + new Gson().fromJson(new Gson().toJson(item), JsonObject.class));
+                Globals.writeToMLOG("INFO", "OptionControlTaskAnswer/executeOption/for/data", "theme: " + new Gson().fromJson(new Gson().toJson(theme), JsonObject.class));
 
                 if (theme.getTp().equals("2")) {
                     if (item.noNeedReply == 1) {
@@ -146,6 +151,9 @@ public class OptionControlTaskAnswer<T> extends OptionControl {
                     } else if (theme.need_photo == 1) {
                         String msg = context.getString(R.string.option_control_135329_no_photo);
                         List<TARCommentsDB> commentsRealm = TARCommentsRealm.getTARCommentsToOptionControl(item.id, item.vinovnik);
+
+                        Globals.writeToMLOG("INFO", "OptionControlTaskAnswer/executeOption/for/data", "commentsRealm: " + new Gson().fromJson(new Gson().toJson(commentsRealm), JsonObject.class));
+
                         if (commentsRealm != null && commentsRealm.size() == 0) {
                             massageToUser = msg;
                             spannableStringBuilder.append(msg).append(": ").append(createLinkedString(item.id1c, item.id)).append("\n");
@@ -157,6 +165,8 @@ public class OptionControlTaskAnswer<T> extends OptionControl {
 
                         long timeCreateTAR = item.dtRealPost;
                         RealmResults<ReportPrepareDB> rp = ReportPrepareRealm.getRPLastChange(item.client, item.addr, timeCreateTAR);
+
+                        Globals.writeToMLOG("INFO", "OptionControlTaskAnswer/executeOption/for/data", "rp: " + new Gson().fromJson(new Gson().toJson(rp), JsonObject.class));
 
                         if (rp == null || rp.size() == 0){
                             String msg = context.getString(R.string.option_control_135329_no_detailed_report);
@@ -173,7 +183,7 @@ public class OptionControlTaskAnswer<T> extends OptionControl {
                 }
             }
 
-            Globals.writeToMLOG("INFO", "OptionControlTaskAnswer/executeOption/List<TasksAndReclamationsSDB>", "result: " + Arrays.toString(result.toArray()));
+            Globals.writeToMLOG("INFO", "OptionControlTaskAnswer/executeOption/List<TasksAndReclamationsSDB>", "result: " + new Gson().fromJson(new Gson().toJson(result), JsonObject.class));
 
             taskCount = result.size(); // Число задач по которым возникли проблемы.
             if (taskCount > 0) {

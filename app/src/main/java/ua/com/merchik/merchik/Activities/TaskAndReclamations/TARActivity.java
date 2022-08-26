@@ -1,7 +1,5 @@
 package ua.com.merchik.merchik.Activities.TaskAndReclamations;
 
-import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
-
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
@@ -32,6 +30,8 @@ import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.StackPhotoRealm;
 import ua.com.merchik.merchik.dialogs.DialodTAR.DialogCreateTAR;
 import ua.com.merchik.merchik.toolbar_menus;
+
+import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
 public class TARActivity extends toolbar_menus implements TARFragmentHome.OnFragmentInteractionListener, TARHomeFrag.OnFragmentInteractionListener{
 
