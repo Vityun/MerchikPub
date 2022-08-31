@@ -25,7 +25,7 @@ public class OptionControl <T>{
     public OptionMassageType msgType;
     public Options.NNKMode nnkMode;
 
-    public String massageToUser;    // Для быстрого сообщения
+    public String massageToUser;    // Для быстрого сообщения   // НЕ ЮЗАЙ БОЛЬШЕ ЕГО
     public StringBuilder stringBuilderMsg = new StringBuilder();
     public SpannableStringBuilder spannableStringBuilder = new SpannableStringBuilder();
     public boolean notCloseSpannableStringBuilderDialog = false;    // Делает так что при клике на текст диалог не будет закрываться
@@ -68,6 +68,15 @@ public class OptionControl <T>{
                                 dialog.setText(spannableStringBuilder, ()->{});
                             }else {
                                 dialog.setText(spannableStringBuilder, dialog::dismiss);
+                            }
+                            dialog.setClose(dialog::dismiss);
+                            dialog.show();
+                        }else if (massageToUser.length() > 1){  // НЕ ЮЗАЙ ЭТО
+                            DialogData dialog = new DialogData(context);
+                            dialog.setTitle(optionTitle);
+                            dialog.setText(massageToUser);
+                            if (isBlockOption()){
+                                dialog.setDialogIco();
                             }
                             dialog.setClose(dialog::dismiss);
                             dialog.show();

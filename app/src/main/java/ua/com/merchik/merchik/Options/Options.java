@@ -573,11 +573,12 @@ public class Options {
                 new OptionButPhotoPlanogramm<>(context, dataDB, option, type, mode);
                 break;
 
-            case 80977:
+            case 80977:     // Контроль Акций
+
+            case 156882:    // Кнопка Акций
                 OptionControlPromotion<?> optionControlPromotion = new OptionControlPromotion<>(context, dataDB, option, type, mode);
-                if (optionControlPromotion.isBlockOption()){
-                    optionControlPromotion.showOptionMassage();
-                }
+                optionControlPromotion.showOptionMassage();
+
                 return optionControlPromotion.isBlockOption() ? 1 : 0;
 
             case 156928:
@@ -1203,6 +1204,7 @@ public class Options {
                         wpDataDB.setVisit_end_dt(endTime);
                         wpDataDB.setClient_end_dt(endTime);
                         wpDataDB.startUpdate = true;
+                        wpDataDB.client_work_duration = (endTime - wpDataDB.getClient_start_dt());
                         realm.insertOrUpdate(wpDataDB);
                     });
 //                    globals.writeToMLOG(Clock.getHumanTime() + "_INFO.DetailedReportButtons.class.pressEndWork: " + "Вы закончили работу в: " + endTime + " / отчёт: " + wpDataDB.getDoc_num_otchet() + "\n");

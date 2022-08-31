@@ -947,7 +947,10 @@ public class PhotoReportActivity extends toolbar_menus {
         }
 
         if (exif != null) {
-            exif.setAttribute(ExifInterface.TAG_DATETIME, new SimpleDateFormat("yyyy:MM:dd HH:mm:ss").format(new Date()));
+            exif.setAttribute(ExifInterface.TAG_DATETIME, new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()));
+
+
+//            exif.setAttribute(ExifInterface.TAG_DATETIME, new SimpleDateFormat("yyyy:MM:dd HH:mm:ss").format(new Date()));
         }
 
         try {
@@ -963,7 +966,7 @@ public class PhotoReportActivity extends toolbar_menus {
 
     // ПЕРЕПИСАТЬ
     // Получение даты создания фото
-    private static int getExifCreateData(File file) {
+    public static String getExifCreateData(File file) {
         ExifInterface exif = null;
         try {
             exif = new ExifInterface(file.getAbsolutePath());
@@ -972,9 +975,9 @@ public class PhotoReportActivity extends toolbar_menus {
         }
 
         if (exif != null) {
-            return exif.getAttributeInt(ExifInterface.TAG_DATETIME_ORIGINAL, 0);
+            return exif.getAttribute(ExifInterface.TAG_DATETIME);
         } else {
-            return 0;
+            return "null";
         }
     }
 
@@ -1269,10 +1272,10 @@ public class PhotoReportActivity extends toolbar_menus {
                 }
 
                 /*Сохранение даты фотки*/
-                file = exifPhotoData(file);
+//                file = exifPhotoData(file);
 
-                System.out.println("PHOTOCHKA: " + getExifCreateData(file));
-
+//                System.out.println("PHOTOCHKA: " + getExifCreateData(file));
+//
                 String hash = "";
                 String path = file.getAbsolutePath();
 

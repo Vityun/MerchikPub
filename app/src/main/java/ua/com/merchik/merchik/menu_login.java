@@ -543,6 +543,7 @@ public class menu_login extends AppCompatActivity {
                 standartData.mod = "auth";
                 standartData.act = "register";
                 standartData.login = telReplace;
+                standartData.type = "registration";
 
                 Gson gson = new Gson();
                 String json = gson.toJson(standartData);
@@ -1183,6 +1184,7 @@ public class menu_login extends AppCompatActivity {
                     standartData.mod = "auth";
                     standartData.act = "register";
                     standartData.login = "+380" + telephoneLogin;
+                    standartData.type = "registration";
 
                     Gson gson = new Gson();
                     String json = gson.toJson(standartData);

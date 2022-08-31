@@ -64,8 +64,8 @@ public class RealmManager {
 
         RealmConfiguration config = new RealmConfiguration.Builder()
                 .name("myrealm.realm")
-                .deleteRealmIfMigrationNeeded()
-//                .schemaVersion(11)
+//                .deleteRealmIfMigrationNeeded()
+                .schemaVersion(12)
                 .allowWritesOnUiThread(true)
                 .allowQueriesOnUiThread(true)
                 .migration(new MyMigration())
@@ -1009,6 +1009,7 @@ public class RealmManager {
                         item.visit_end_dt = String.valueOf(l.getVisit_end_dt());
                         item.client_start_dt = String.valueOf(l.getClient_start_dt());
                         item.client_end_dt = String.valueOf(l.getClient_end_dt());
+                        item.client_work_duration = String.valueOf(l.client_work_duration);
                         item.status_set = String.valueOf(l.getSetStatus());
 
                         item.user_comment = l.user_comment;

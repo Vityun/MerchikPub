@@ -66,22 +66,15 @@ public class MyMigration implements RealmMigration {
             oldVersion++;
         }
 
-//        if(oldVersion == 11){
-//            RealmObjectSchema wpDataSchema = schema.get("WpDataDB");
-//            wpDataSchema.addField("wp_id", long.class)
-//                    .transform(obj -> obj.setLong("wp_id", obj.getInt("ID")))
-//                    .removeField("ID")
-//                    .renameField("wp_id", "ID")
-//                    .addPrimaryKey("ID");
-//
-//            RealmObjectSchema reportSchema = schema.get("ReportPrepareDB");
-//            reportSchema.addField("rp_id", long.class)
-//                    .transform(obj -> obj.setLong("rp_id", obj.getInt("iD")))
-//                    .removeField("iD")
-//                    .renameField("rp_id", "iD")
-//                    .addPrimaryKey("iD");
-//            oldVersion++;
-//        }
+        if(oldVersion == 11){
+            RealmObjectSchema wpDataSchema = schema.get("WpDataDB");
+            wpDataSchema.addField("wp_duration", long.class)
+                    .transform(obj -> obj.setLong("wp_duration", obj.getInt("duration")))
+                    .removeField("duration")
+                    .renameField("wp_duration", "duration");
+
+            oldVersion++;
+        }
 
     }
 }

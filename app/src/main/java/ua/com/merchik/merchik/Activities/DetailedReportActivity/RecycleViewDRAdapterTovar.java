@@ -358,7 +358,10 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                     text = Html.fromHtml("<u><font color='#00FF00'>" + balanceTxt + "</font></u>");
                 }
 
-                balance.setText(text);
+                if (ostatok != null && !ostatok.equals("0")){
+                    balance.setText(text);
+                }
+
 
 
                 // Возможность кликать по тексту. Вызывает описание того что это.

@@ -162,7 +162,7 @@ public class OptionControlPromotion<T> extends OptionControl {
             signal = 1;
         }else if (totalOSV == 0){
             massageToUser = "Для данной ТТ, на текущий момент, нет товаров с ОСВ (Особым Вниманием). Контролировать нечего. Замечаний нет.";
-            signal = 1;
+            signal = 2;
         } else if (err > 0) {
             massageToUser = "Не предоставлена информация о типе и наличии Акции по товару (" + err + " шт.) (в т.ч. с ОСВ (Особым Вниманием)). См. таблицу.";
             signal = 1;

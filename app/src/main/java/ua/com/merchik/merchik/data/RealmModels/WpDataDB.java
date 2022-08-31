@@ -77,7 +77,7 @@ public class WpDataDB extends RealmObject implements Serializable {
     private int client_end_geo_id;
     private int client_end_anybody;
     private int client_report_starsh;
-    private Long client_work_duration;  // продолжительность работ по клиенту
+    public Long client_work_duration;  // продолжительность работ по клиенту
     private int priority;
     private int import_type;
     private long dt_update;
@@ -91,7 +91,7 @@ public class WpDataDB extends RealmObject implements Serializable {
     private double cash_ispolnitel;
     private int visit_per_week;
     private int sku;
-    private int duration;
+    private long duration;
     private int mon;
     private int tue;
     private int wed;
@@ -855,11 +855,11 @@ public class WpDataDB extends RealmObject implements Serializable {
         this.sku = sku;
     }
 
-    public int getDuration() {
+    public long getDuration() {
         return duration;
     }
 
-    public void setDuration(int duration) {
+    public void setDuration(long duration) {
         this.duration = duration;
     }
 

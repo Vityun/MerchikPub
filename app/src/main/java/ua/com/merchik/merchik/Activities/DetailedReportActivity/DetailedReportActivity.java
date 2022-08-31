@@ -53,6 +53,7 @@ import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
 import ua.com.merchik.merchik.toolbar_menus;
 
+import static ua.com.merchik.merchik.PhotoReportActivity.exifPhotoData;
 import static ua.com.merchik.merchik.PhotoReportActivity.getImageOrientation;
 import static ua.com.merchik.merchik.PhotoReportActivity.resaveBitmap;
 import static ua.com.merchik.merchik.PhotoReportActivity.resizeImageFile;
@@ -457,8 +458,10 @@ public class DetailedReportActivity extends toolbar_menus {
                     globals.alertDialogMsg(this, "Ошибка В ужатии: " + e);
                 }
 
+                exifPhotoData(photoFile);
+
                 String hash;
-                hash = globals.getHashMD5FromFilePath(photoFile.getAbsolutePath(), this);
+                hash = globals.getHashMD5FromFile2(photoFile, this);
 
                 if (hash == null || hash.equals("")) {
                     hash = globals.getHashMD5FromFile(photoFile, this);

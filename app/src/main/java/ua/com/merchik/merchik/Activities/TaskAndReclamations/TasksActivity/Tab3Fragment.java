@@ -1,7 +1,5 @@
 package ua.com.merchik.merchik.Activities.TaskAndReclamations.TasksActivity;
 
-import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
-
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
@@ -36,6 +34,8 @@ import ua.com.merchik.merchik.database.realm.tables.StackPhotoRealm;
 import ua.com.merchik.merchik.database.realm.tables.TARCommentsRealm;
 import ua.com.merchik.merchik.dialogs.DialodTAR.DialogCreateTAR;
 import ua.com.merchik.merchik.dialogs.DialogData;
+
+import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
 public class Tab3Fragment extends Fragment {
 
@@ -169,7 +169,14 @@ public class Tab3Fragment extends Fragment {
                     String res = dialog.comment;
 
                     if(res.length() < 20){
-                        Toast.makeText(mContext, "Коментарий должен быть больше 20 символов", Toast.LENGTH_SHORT).show();
+                        DialogData dialogShortComment = new DialogData(mContext);
+                        dialogShortComment.setTitle("Ошибка комментария");
+                        dialogShortComment.setText("Коментарий должен быть больше 20 символов");
+                        dialogShortComment.setDialogIco();
+                        dialogShortComment.setClose(dialog::dismiss);
+                        dialogShortComment.show();
+
+//                        Toast.makeText(mContext, "Коментарий должен быть больше 20 символов", Toast.LENGTH_SHORT).show();
                         dialog.dismiss();
                         return;
                     }

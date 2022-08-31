@@ -20,6 +20,8 @@ public class StartEndData {
     public String client_start_dt; //
     public String client_end_dt;   //
 
+    public String client_work_duration;
+
 //    public Integer user_opinion_id;
 
     public String user_comment;

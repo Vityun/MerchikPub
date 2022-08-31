@@ -1290,18 +1290,18 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                     @Override
                     public void onResponse(Call<PhotoHash> call, Response<PhotoHash> response) {
 
-                        Log.e("CHECK_HASH", "Response: " + response.body());
-
-
                         try {
                             Gson gson = new Gson();
                             String json = gson.toJson(response.body());
                             JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
 
+                            Log.e("CHECK_HASH", "Response convertedObject: " + convertedObject);
+
                             Globals.writeToMLOG("INFO", "cronCheckUploadsPhotoOnServer", "size: " + response.body().getList().size());
                             Globals.writeToMLOG("INFO", "cronCheckUploadsPhotoOnServer", "convertedObject: " + convertedObject);
                         } catch (Exception e) {
                             Globals.writeToMLOG("ERROR", "cronCheckUploadsPhotoOnServer", "Exception e: " + e);
+                            Log.e("CHECK_HASH", "Exception e: " + e);
                         }
 
 

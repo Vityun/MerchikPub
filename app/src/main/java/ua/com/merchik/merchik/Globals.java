@@ -304,6 +304,38 @@ public class Globals {
         }
     }
 
+    public String getHashMD5FromFile2(File file, Context context) {
+        InputStream inputStream = null;
+        try {
+            inputStream = new FileInputStream(file);
+            byte[] buffer = new byte[1024];
+            MessageDigest digest = MessageDigest.getInstance("MD5");
+            int numRead = 0;
+            while (numRead != -1) {
+                numRead = inputStream.read(buffer);
+                if (numRead > 0)
+                    digest.update(buffer, 0, numRead);
+            }
+            byte[] md5Bytes = digest.digest();
+            return convertHashToString(md5Bytes);
+        } catch (Exception e) {
+            if (context != null) {
+                alertDialogMsg(context, "photo: " + inputStream + "\nОшибка в подсчёте MD5: " + e);
+            }
+            return null;
+        } finally {
+            if (inputStream != null) {
+                try {
+                    inputStream.close();
+                } catch (Exception e) {
+                    if (context != null) {
+                        alertDialogMsg(context, "Не вышло изза фото: " + e);
+                    }
+                }
+            }
+        }
+    }
+
     private static String convertHashToString(byte[] md5Bytes) {
         String returnVal = "";
         for (int i = 0; i < md5Bytes.length; i++) {

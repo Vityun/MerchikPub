@@ -130,9 +130,10 @@ public class Tab1Fragment extends Fragment {
         // ---
         try {
             WpDataDB wpDataDB = WpDataRealm.getWpDataRowByDad2Id(data.codeDad2SrcDoc);
-            Spanned setDateSrcDock = Html.fromHtml("<b>Дата посещения: </b>" + Clock.getHumanTime3(wpDataDB.getDt().getTime()/1000) + "<br>");
+            Spanned setDateSrcDock = Html.fromHtml("<b>Дата посещения: </b>" + Clock.getHumanTime3(wpDataDB.getDt().getTime() / 1000) + "<br>");
             stringData.append(setDateSrcDock);
-        } catch (Exception e) {}
+        } catch (Exception e) {
+        }
         // ---
 
 
@@ -162,7 +163,26 @@ public class Tab1Fragment extends Fragment {
 
 
         try {
-            CharSequence autor = Html.fromHtml("<b>Автор: </b>" + UsersRealm.getUsersDBById(data.vinovnik).getNm() + "<br>");
+            CharSequence autor = Html.fromHtml("<b>Автор: </b>" + UsersRealm.getUsersDBById(data.author).getNm() + "<br>");
+            stringData.append(autor);
+        } catch (Exception e) {
+        }
+
+        try {
+            CharSequence autor = Html.fromHtml("<b>Виновник: </b>" + UsersRealm.getUsersDBById(data.vinovnik).getNm() + "<br>");
+            stringData.append(autor);
+        } catch (Exception e) {
+        }
+
+        try {
+            String zamena = "";
+            if (data.zamenaUserId != null && data.zamenaUserId != 0){
+                zamena = UsersRealm.getUsersDBById(data.zamenaUserId).getNm();
+            }else {
+                zamena = "Не установлена";
+            }
+
+            CharSequence autor = Html.fromHtml("<b>Замена: </b>" + zamena + "<br>");
             stringData.append(autor);
         } catch (Exception e) {
         }
@@ -174,6 +194,11 @@ public class Tab1Fragment extends Fragment {
         } catch (Exception e) {
         }
 
+        try {
+            CharSequence answer = Html.fromHtml("<b>Текст задачи: </b>" + data.comment + "<br>");
+            stringData.append(answer);
+        } catch (Exception e) {
+        }
 
         try {
             CharSequence answer = Html.fromHtml("<b>Ответ: </b>" + data.lastAnswer + "<br>");
@@ -210,6 +235,28 @@ public class Tab1Fragment extends Fragment {
             CharSequence status = Html.fromHtml("<b>Статус: </b>" + TasksAndReclamationsRealm.getStatusTxt(tp, state) + "<br>");
             stringData.append(status);
         } catch (Exception e) {
+        }
+
+
+        try {
+            String money;
+            String title;
+
+            title = "<b>Сумма штрафа: </b>";
+            money = "<font color='red'> -" + data.sumPenalty + " (виновнику)</font>";
+
+            CharSequence penalty = Html.fromHtml(title + money + "<br>");
+            stringData.append(penalty);
+
+            if (data.zamenaUserId != null && data.zamenaUserId != 0) {
+                String titlePr = "<b>Сумма премии: </b>";
+                String moneyPr = "+" + data.sumPenalty + " (замене)";
+
+                CharSequence premiya = Html.fromHtml(titlePr + moneyPr + "<br>");
+                stringData.append(premiya);
+            }
+        } catch (Exception e) {
+            Log.d("test", "test" + e);
         }
 
         try {
@@ -285,7 +332,7 @@ public class Tab1Fragment extends Fragment {
         imageView2.setOnClickListener(v -> {
             try {
                 downloadAndSetFullPhoto(String.valueOf(data.photo2));
-            }catch (Exception e){
+            } catch (Exception e) {
                 Toast.makeText(imageView.getContext(), "НЕ УДАЛОСЬ СКАЧАТЬ ФОТО! \n\nОбратитесь к Вашему руководителю. \n\nОшибка: " + e, Toast.LENGTH_LONG).show();
             }
         });
@@ -341,28 +388,29 @@ public class Tab1Fragment extends Fragment {
             int rate = (int) rating;
             ratingBar.setRating(rate);
 
-            if (rate > 5){
+            if (rate > 5) {
                 saveRatingTARVote(rate, null);
                 Toast.makeText(ratingBar.getContext(), "Оценка: " + rate + " установлена.", Toast.LENGTH_SHORT).show();
-            }else {
+            } else {
                 DialogData dialog = new DialogData(getContext());
                 dialog.setTitle("Низкая оценка");
                 dialog.setText("Прокомментируйте причину низкой оценки.");
-                dialog.setOperation(DialogData.Operations.TEXT, "Ваш Комментарий", null, ()->{});
-                dialog.setCancel("Сохранить", ()->{
+                dialog.setOperation(DialogData.Operations.TEXT, "Ваш Комментарий", null, () -> {
+                });
+                dialog.setCancel("Сохранить", () -> {
                     String comment = dialog.getOperationResult();
 
-                    if (comment != null && comment.length() > 1){
+                    if (comment != null && comment.length() > 1) {
                         // Сохранение коммента
                         Toast.makeText(ratingBar.getContext(), "Комментарий: " + comment + " сохранён.", Toast.LENGTH_SHORT).show();
 
                         saveRatingTARVote(rate, comment);
                         dialog.dismiss();
-                    }else {
+                    } else {
                         Toast.makeText(dialog.context, "Комментарий НЕ сохранён. Заполните корректно поле для комментария!", Toast.LENGTH_LONG).show();
                     }
                 });
-                dialog.setClose(()->{
+                dialog.setClose(() -> {
                     Toast.makeText(getContext(), "Комментарий НЕ сохранён", Toast.LENGTH_SHORT).show();
                     dialog.dismiss();
                 });
@@ -372,8 +420,8 @@ public class Tab1Fragment extends Fragment {
 
     /**
      * Сохранение рейтинга ЗАДАЧИ
-     * */
-    private void saveRatingTAR(int rate){
+     */
+    private void saveRatingTAR(int rate) {
         data.voteScore = rate;
         SQL_DB.tarDao().insertData(Collections.singletonList(data))
                 .subscribeOn(Schedulers.io())
@@ -393,12 +441,12 @@ public class Tab1Fragment extends Fragment {
 
     /**
      * Сохранение Оценки Обьективности
-     * */
-    private void saveRatingTARVote(int rate, String comment){
+     */
+    private void saveRatingTARVote(int rate, String comment) {
         data.vinovnikScore = rate;
         data.vinovnikScoreDt = System.currentTimeMillis();
         data.vinovnikScoreUserId = Globals.userId;
-        if (comment != null && !comment.equals("")){
+        if (comment != null && !comment.equals("")) {
             data.vinovnikScoreComment = comment;
         }
         SQL_DB.tarDao().insertData(Collections.singletonList(data))
