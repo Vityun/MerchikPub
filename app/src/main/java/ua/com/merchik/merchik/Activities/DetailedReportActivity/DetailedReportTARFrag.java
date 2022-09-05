@@ -1,8 +1,5 @@
 package ua.com.merchik.merchik.Activities.DetailedReportActivity;
 
-import static ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity.tarList;
-import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
-
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
@@ -24,7 +21,9 @@ import ua.com.merchik.merchik.Activities.TaskAndReclamations.TARActivity;
 import ua.com.merchik.merchik.Activities.TaskAndReclamations.TasksActivity.TARSecondFrag;
 import ua.com.merchik.merchik.Activities.TaskAndReclamations.TasksActivity.UniversalAdapter;
 import ua.com.merchik.merchik.Globals;
+import ua.com.merchik.merchik.MakePhoto;
 import ua.com.merchik.merchik.R;
+import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.database.realm.tables.AddressRealm;
@@ -32,6 +31,8 @@ import ua.com.merchik.merchik.database.realm.tables.CustomerRealm;
 import ua.com.merchik.merchik.database.realm.tables.UsersRealm;
 import ua.com.merchik.merchik.dialogs.DialodTAR.DialogCreateTAR;
 import ua.com.merchik.merchik.dialogs.DialogData;
+
+import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
 public class DetailedReportTARFrag extends Fragment {
 
@@ -95,17 +96,42 @@ public class DetailedReportTARFrag extends Fragment {
                 dialog.address = AddressRealm.getAddressById(wpDataDB.getAddr_id());
                 dialog.customer = CustomerRealm.getCustomerById(wpDataDB.getClient_id());
                 dialog.setTarType(1);
-                dialog.setRecyclerView(() -> {
-                    intent.putExtra("choise", true);
-                    if (dialog.address != null) {
-                        intent.putExtra("address", dialog.address.getAddrId());
-                    }
+                dialog.setRecyclerView(new Clicks.click() {
+                    @Override
+                    public <T> void click(T data) {
 
-                    if (dialog.customer != null) {
-                        intent.putExtra("customer", dialog.customer.getId());
-                    }
+                        switch ((Integer) data){
+                            case 1:
+                                intent.putExtra("choise", true);
+                                intent.putExtra("resultCode", 100);
+                                if (dialog.address != null) {
+                                    intent.putExtra("address", dialog.address.getAddrId());
+                                }
 
-                    startActivityForResult(intent, 100);
+                                if (dialog.customer != null) {
+                                    intent.putExtra("customer", dialog.customer.getId());
+                                } else {
+                                    intent.putExtra("customer", "");
+                                }
+
+                                startActivityForResult(intent, 100);
+                                break;
+
+                            case 2:
+                                try {
+                                    MakePhoto makePhoto = new MakePhoto();
+                                    makePhoto.openCamera(getActivity(), 202);
+                                }catch (Exception e){
+                                    Globals.writeToMLOG("ERROR", "Tab3Fragment.setAddButton.case2", "Exception e: " + e);
+                                }
+                                break;
+
+                            default:
+                                return;
+                        }
+
+
+                    }
                 });
                 dialog.clickSave(() -> {
                 }, 1);

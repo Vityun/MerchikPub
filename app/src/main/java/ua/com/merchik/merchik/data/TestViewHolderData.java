@@ -21,6 +21,8 @@ public class TestViewHolderData <T>{
     * */
     public int typeNumber;
     public Globals.NewTARDataType type;
+
+    public String title;
     public String msg;
 
     public StackPhotoDB photo;

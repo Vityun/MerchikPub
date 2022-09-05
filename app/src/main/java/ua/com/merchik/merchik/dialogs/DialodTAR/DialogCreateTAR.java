@@ -62,6 +62,7 @@ public class DialogCreateTAR extends DialogData {
     private ThemeDB theme;
     private OpinionSDB opinion;
     public String comment;
+    public String premiya;
     private long dad2;
 
     private int tarType;
@@ -133,12 +134,22 @@ public class DialogCreateTAR extends DialogData {
 
     public CreateTARAdapter adapter;
 
-    public void setRecyclerView(Clicks.clickVoid click) {
+    public void setRecyclerView(Clicks.click click) {
         adapter = new CreateTARAdapter(context, setViewHoldersData(), data -> {
 
             try {
                 if (data.type == 1) {
-                    click.click();
+                    click.click(1);
+                }else if (data.type == 2){
+                    if (address != null) {
+                        if (customer != null) {
+                            click.click(2);
+                        }else {
+                            Toast.makeText(context, "Не внесли Клиента. Укажите, пожалуйста, Клиента", Toast.LENGTH_SHORT).show();
+                        }
+                    }else {
+                        Toast.makeText(context, "Не внесли Адрес. Укажите, пожалуйста, Адрес", Toast.LENGTH_SHORT).show();
+                    }
                 }
             } catch (Exception e) {
                 // todo ПОПРАВИТЬ, ТАК НЕ ДОЛЖНО БЫТЬ
@@ -170,6 +181,10 @@ public class DialogCreateTAR extends DialogData {
                 comment = data.comment;
             }
 
+            if (data.premiya != null) {
+                premiya = data.premiya;
+            }
+
 
             Log.e("TEST_CLICK", "photo: " + photo);
             Log.e("TEST_CLICK", "address: " + address);
@@ -177,6 +192,7 @@ public class DialogCreateTAR extends DialogData {
             Log.e("TEST_CLICK", "theme: " + theme);
             Log.e("TEST_CLICK", "opinion: " + opinion);
             Log.e("TEST_CLICK", "comment: " + comment);
+            Log.e("TEST_CLICK", "premiya: " + premiya);
 
             Log.e("TEST_CLICK", "Test_1: " + data.testSpinner1);
             Log.e("TEST_CLICK", "Test_2: " + data.testSpinner2);
@@ -221,6 +237,10 @@ public class DialogCreateTAR extends DialogData {
 
             if (data.comment != null) {
                 comment = data.comment;
+            }
+
+            if (data.premiya != null) {
+                premiya = data.premiya;
             }
 
             try {
@@ -277,7 +297,8 @@ public class DialogCreateTAR extends DialogData {
         res.add(getAutoText(Globals.NewTARDataType.THEME));
         res.add(getAutoText(Globals.NewTARDataType.OPINION));
 
-        res.add(getEditText());
+        res.add(getEditText(Globals.NewTARDataType.PREMIYA));
+        res.add(getEditText(Globals.NewTARDataType.COMMENT));
 
         res.add(getButton());
 
@@ -296,8 +317,7 @@ public class DialogCreateTAR extends DialogData {
         TestViewHolderData res = new TestViewHolderData();
 
         res.typeNumber = 0;
-//        res.msg = "Какой-то текст к фотке\nЭто вторая строка текста\nЕщё одна строка, последняя\nЧетвёртая строчечка";
-        res.msg = MASSAGE;
+        res.msg = "Короткий клик - открывает Журнал фото для выбора фото\n\n" + (MASSAGE != null ? MASSAGE : "");
 
         return res;
     }
@@ -315,6 +335,7 @@ public class DialogCreateTAR extends DialogData {
 
         switch (type) {
             case ADDRESS:
+                res.title = "Адрес";
                 res.msg = "Начните вносить адресс";
                 if (address != null) {
                     res.addressList = Collections.singletonList(address);
@@ -324,6 +345,7 @@ public class DialogCreateTAR extends DialogData {
                 return res;
 
             case CUSTOMER:
+                res.title = "Клиент";
                 res.msg = "Начните вносить клиента";
                 if (customer != null) {
                     res.customerList = Collections.singletonList(customer);
@@ -334,11 +356,13 @@ public class DialogCreateTAR extends DialogData {
                 return res;
 
             case THEME:
+                res.title = "Тема";
                 res.msg = "Начните вносить тему";
                 res.themeList = ThemeRealm.getTARTheme();
                 return res;
 
             case OPINION:
+                res.title = "Мнение";
                 res.msg = "Начните вносить мнение";
                 List<OpinionSDB> test = SQL_DB.opinionDao().getAll();
 
@@ -354,11 +378,23 @@ public class DialogCreateTAR extends DialogData {
 
 
     /*Тип 2 это: ПОЛЕ ДЛЯ ВНОСА ТЕКСТА*/
-    private TestViewHolderData getEditText() {
+    private TestViewHolderData getEditText(Globals.NewTARDataType type) {
         TestViewHolderData res = new TestViewHolderData();
 
         res.typeNumber = 2;
-        res.msg = "Внесите комментарий";
+        res.type = type;
+
+        switch (type){
+            case COMMENT:
+                res.title = "Комментарий";
+                res.msg = "Внесите комментарий";
+                break;
+
+            case PREMIYA:
+                res.title = "Премиальные";
+                res.msg = "Внесите сумму премиальных";
+                break;
+        }
 
         return res;
     }
@@ -434,8 +470,13 @@ public class DialogCreateTAR extends DialogData {
                     task.vinovnik = users.getId();
                 }
                 task.codeDad2SrcDoc = this.dad2;
+
                 if (photo != null) {
-                    task.photo = photo.getId();
+                    if (photo.getPhotoServerId() != null && !photo.getPhotoServerId().equals("")){
+                        task.photo = photo.getId();
+                    }else {
+                        task.photoHash = photo.getPhoto_hash();
+                    }
                 }
                 if (address != null)
                     task.addr = address.getAddrId();
@@ -447,6 +488,9 @@ public class DialogCreateTAR extends DialogData {
                     task.sotrOpinionId = opinion.id;
                 }
                 task.comment = comment;
+                if (premiya != null && !premiya.equals("")){
+                    task.sumPremiya = premiya;
+                }
                 task.uploadStatus = 1;
 
                 SQL_DB.tarDao().insertData(Collections.singletonList(task))
@@ -493,6 +537,10 @@ public class DialogCreateTAR extends DialogData {
         customer = CustomerRealm.getCustomerById(cust);
         this.dad2 = dad2;
         MASSAGE = "Код ДАД2: " + dad2;
+        this.photo = photoDB;
+    }
+
+    public void setData(StackPhotoDB photoDB) {
         this.photo = photoDB;
     }
 

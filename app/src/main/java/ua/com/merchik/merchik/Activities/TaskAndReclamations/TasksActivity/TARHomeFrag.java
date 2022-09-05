@@ -26,8 +26,10 @@ import ua.com.merchik.merchik.Activities.PhotoLogActivity.PhotoLogActivity;
 import ua.com.merchik.merchik.Activities.TaskAndReclamations.TARFragmentHome;
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
+import ua.com.merchik.merchik.MakePhoto;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.ServerExchange.PhotoDownload;
+import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
 import ua.com.merchik.merchik.data.TestJsonUpload.PhotoFromSite.PhotoTableRequest;
 import ua.com.merchik.merchik.dialogs.DialodTAR.DialogCreateTAR;
@@ -160,27 +162,42 @@ public class TARHomeFrag extends Fragment implements TARFragmentHome.OnFragmentI
             dialog = new DialogCreateTAR(v.getContext());
             dialog.setClose(dialog::dismiss);
             dialog.setTarType(type);
-            dialog.setRecyclerView(() -> {
-                intent.putExtra("choise", true);
+            dialog.setRecyclerView(new Clicks.click() {
+                @Override
+                public <T> void click(T data) {
 
-                if (dialog.address != null) {
-                    intent.putExtra("address", dialog.address.getAddrId());
+                    switch ((Integer) data) {
+                        case 1:
+                            intent.putExtra("choise", true);
+                            intent.putExtra("resultCode", 100);
+                            if (dialog.address != null) {
+                                intent.putExtra("address", dialog.address.getAddrId());
+                            }
+
+                            if (dialog.customer != null) {
+                                intent.putExtra("customer", dialog.customer.getId());
+                            } else {
+                                intent.putExtra("customer", "");
+                            }
+
+                            startActivityForResult(intent, 100);
+                            break;
+
+                        case 2:
+                            try {
+                                MakePhoto makePhoto = new MakePhoto();
+                                makePhoto.openCamera(getActivity(), 202);
+                            } catch (Exception e) {
+                                Globals.writeToMLOG("ERROR", "Tab3Fragment.setAddButton.case2", "Exception e: " + e);
+                            }
+                            break;
+
+                        default:
+                            return;
+                    }
                 }
-
-                if (dialog.customer != null) {
-                    intent.putExtra("customer", dialog.customer.getId());
-                } else {
-                    intent.putExtra("customer", "");
-                }
-
-                startActivityForResult(intent, 100);
             });
             dialog.clickSave(() -> {
-//                if (type == 0){
-//                    data = SQL_DB.tarDao().getAllByTp(1, Clock.getDateLong(-30).getTime()/1000);
-//                }else if (type == 1){
-//                    data = SQL_DB.tarDao().getAllByTp(0, Clock.getDateLong(-30).getTime()/1000);
-//                }
 
                 data = SQL_DB.tarDao().getAllByTp(Globals.userId, type, Clock.getDateLong(-30).getTime() / 1000);
 

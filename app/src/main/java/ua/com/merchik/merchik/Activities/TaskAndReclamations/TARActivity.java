@@ -14,6 +14,7 @@ import androidx.viewpager.widget.ViewPager;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.tabs.TabLayout;
 
+import java.io.File;
 import java.util.List;
 
 import ua.com.merchik.merchik.Activities.PhotoLogActivity.PhotoLogActivity;
@@ -25,6 +26,8 @@ import ua.com.merchik.merchik.MakePhoto;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
+import ua.com.merchik.merchik.data.RealmModels.AddressDB;
+import ua.com.merchik.merchik.data.RealmModels.CustomerDB;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.StackPhotoRealm;
@@ -33,7 +36,7 @@ import ua.com.merchik.merchik.toolbar_menus;
 
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
-public class TARActivity extends toolbar_menus implements TARFragmentHome.OnFragmentInteractionListener, TARHomeFrag.OnFragmentInteractionListener{
+public class TARActivity extends toolbar_menus implements TARFragmentHome.OnFragmentInteractionListener, TARHomeFrag.OnFragmentInteractionListener {
 
     private Globals globals = new Globals();
 
@@ -46,7 +49,7 @@ public class TARActivity extends toolbar_menus implements TARFragmentHome.OnFrag
 
     private FragmentManager fragmentManager;
 
-//    private FragmentManager fragmentManager;
+    //    private FragmentManager fragmentManager;
     public static TextView activity_title;
 
     public static int TARType;
@@ -62,7 +65,7 @@ public class TARActivity extends toolbar_menus implements TARFragmentHome.OnFrag
         setActivityContent();
     }
 
-    public TasksAndReclamationsSDB setActivityTAR(){
+    public TasksAndReclamationsSDB setActivityTAR() {
         return (TasksAndReclamationsSDB) getIntent().getParcelableExtra("TARActivityStart");
     }
 
@@ -106,22 +109,41 @@ public class TARActivity extends toolbar_menus implements TARFragmentHome.OnFrag
                 dialog = new DialogCreateTAR(this);
                 dialog.setClose(dialog::dismiss);
                 dialog.setTarType(TARType);
-                dialog.setRecyclerView(new Clicks.clickVoid() {
+                dialog.setRecyclerView(new Clicks.click() {
                     @Override
-                    public void click() {
-                        intent.putExtra("choise", true);
-                        intent.putExtra("resultCode", 100);
-                        if (dialog.address != null) {
-                            intent.putExtra("address", dialog.address.getAddrId());
+                    public <T> void click(T data) {
+
+                        switch ((Integer) data){
+                            case 1:
+                                intent.putExtra("choise", true);
+                                intent.putExtra("resultCode", 100);
+                                if (dialog.address != null) {
+                                    intent.putExtra("address", dialog.address.getAddrId());
+                                }
+
+                                if (dialog.customer != null) {
+                                    intent.putExtra("customer", dialog.customer.getId());
+                                } else {
+                                    intent.putExtra("customer", "");
+                                }
+
+                                startActivityForResult(intent, 100);
+                                break;
+
+                            case 2:
+                                try {
+                                    MakePhoto makePhoto = new MakePhoto();
+                                    makePhoto.openCamera(TARActivity.this, 202);
+                                }catch (Exception e){
+                                    Globals.writeToMLOG("ERROR", "Tab3Fragment.setAddButton.case2", "Exception e: " + e);
+                                }
+                                break;
+
+                            default:
+                                return;
                         }
 
-                        if (dialog.customer != null) {
-                            intent.putExtra("customer", dialog.customer.getId());
-                        } else {
-                            intent.putExtra("customer", "");
-                        }
 
-                        startActivityForResult(intent, 100);
                     }
                 });
                 dialog.clickSave(() -> {
@@ -211,15 +233,16 @@ public class TARActivity extends toolbar_menus implements TARFragmentHome.OnFrag
             if (resultCode == 100) {
                 int id = data.getIntExtra("stack_photo_id", 0);
                 StackPhotoDB photoDB = StackPhotoRealm.getById(id);
-                homeFrag.dialog.setData(photoDB.getAddr_id(), photoDB.getClient_id(), photoDB.getCode_dad2(), photoDB);
-                homeFrag.dialog.setDataUpdate();
-                homeFrag.dialog.refreshAdaper(photoDB);
+
+                List<Fragment> fragments = fragmentManager.getFragments();
+                TARFragmentHome fragmentHome = (TARFragmentHome) fragments.get(0);
+
+                fragmentHome.homeFrag.dialog.setData(photoDB.getAddr_id(), photoDB.getClient_id(), photoDB.getCode_dad2(), photoDB);
+                fragmentHome.homeFrag.dialog.setDataUpdate();
+                fragmentHome.homeFrag.dialog.refreshAdaper(photoDB);
             }
 
             if (resultCode == 101) {
-//                int id1 = TARFragmentHome.secondFragId;
-//                String tag = TARFragmentHome.secondFragTAG;
-
                 List<Fragment> fragments = fragmentManager.getFragments();
                 TARFragmentHome fragmentHome = (TARFragmentHome) fragments.get(0);
 
@@ -248,6 +271,20 @@ public class TARActivity extends toolbar_menus implements TARFragmentHome.OnFrag
                 fragmentHome.secondFrag.setPhoto(stackPhotoDB.getId());
             }
 
+            if (requestCode == 202) {
+                List<Fragment> fragments = fragmentManager.getFragments();
+                TARFragmentHome fragmentHome = (TARFragmentHome) fragments.get(0);
+
+                AddressDB addr = fragmentHome.homeFrag.dialog.address;
+                CustomerDB client = fragmentHome.homeFrag.dialog.customer;
+
+                StackPhotoDB stackPhotoDB = saveTestPhoto(new File(MakePhoto.openCameraPhotoUri), addr, client);
+
+                fragmentHome.homeFrag.dialog.setData(stackPhotoDB);
+                fragmentHome.homeFrag.dialog.setDataUpdate();
+                fragmentHome.homeFrag.dialog.refreshAdaper(stackPhotoDB);
+            }
+
 
         } catch (Exception e) {
             Globals.writeToMLOG("ERROR", "TARActivity.onActivityResult", "Exception e: " + e);
@@ -255,7 +292,7 @@ public class TARActivity extends toolbar_menus implements TARFragmentHome.OnFrag
     }
 
 
-    private void setTabs(){
+    private void setTabs() {
 
         String homeTabTitle = "Задачи";
         TARType = getIntent().getIntExtra("TAR_type", 1);
@@ -306,7 +343,7 @@ public class TARActivity extends toolbar_menus implements TARFragmentHome.OnFrag
             stackPhotoDB.setPhoto_type(0);
             stackPhotoDB.setCode_dad2(tar.codeDad2);
 
-            if (tar.themeId == 1174){
+            if (tar.themeId == 1174) {
                 stackPhotoDB.setDvi(1);
             }
 
@@ -316,7 +353,41 @@ public class TARActivity extends toolbar_menus implements TARFragmentHome.OnFrag
             stackPhotoDB.setPhoto_num(str);
             RealmManager.stackPhotoSavePhoto(stackPhotoDB);
             return stackPhotoDB;
-        }catch (Exception e){
+        } catch (Exception e) {
+            Globals.writeToMLOG("ERROR", "TARActivity.onActivityResult.savePhoto", "Exception e: " + e);
+            return null;
+        }
+    }
+
+    private StackPhotoDB saveTestPhoto(File photoFile, AddressDB addr, CustomerDB client) {
+        try {
+            int id = RealmManager.stackPhotoGetLastId();
+            id++;
+            StackPhotoDB stackPhotoDB = new StackPhotoDB();
+            stackPhotoDB.setId(id);
+            stackPhotoDB.setDt(System.currentTimeMillis() / 1000);
+            stackPhotoDB.setTime_event(Clock.getHumanTime2(System.currentTimeMillis() / 1000));
+
+            stackPhotoDB.setAddr_id(addr.getAddrId());
+            stackPhotoDB.setAddressTxt(addr.getNm());
+
+            stackPhotoDB.setClient_id(client.getId());
+            stackPhotoDB.setCustomerTxt(client.getNm());
+
+            stackPhotoDB.setUser_id(Globals.userId);
+            stackPhotoDB.setPhoto_type(0);
+
+            stackPhotoDB.setDvi(1);
+
+            stackPhotoDB.setCreate_time(System.currentTimeMillis() / 1000);
+
+            stackPhotoDB.setPhoto_hash(globals.getHashMD5FromFile2(photoFile, null));
+            stackPhotoDB.setPhoto_num(photoFile.getAbsolutePath());
+
+
+            RealmManager.stackPhotoSavePhoto(stackPhotoDB);
+            return stackPhotoDB;
+        } catch (Exception e) {
             Globals.writeToMLOG("ERROR", "TARActivity.onActivityResult.savePhoto", "Exception e: " + e);
             return null;
         }

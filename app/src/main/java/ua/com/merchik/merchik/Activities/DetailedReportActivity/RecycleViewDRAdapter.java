@@ -162,6 +162,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                     || optionId == 156882   // Акции
                     || optionId == 151139   // Фото планограммы
                     || optionId == 132623   // Комментарий
+                    || optionId == 133382   // Потенциальный клиент
             ) {
                 constraintLayout.setBackgroundResource(R.drawable.bg_temp);
             } else {

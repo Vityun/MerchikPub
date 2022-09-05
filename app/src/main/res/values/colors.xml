@@ -40,4 +40,6 @@
     <color name="TabS">#000000</color>
     <color name="TabE">#B1B1B1</color>
 
+    <color name="hintColorDefault">#808080</color>
+
 </resources>

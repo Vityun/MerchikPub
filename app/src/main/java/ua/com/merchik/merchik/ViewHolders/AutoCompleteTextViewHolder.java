@@ -1,15 +1,18 @@
 package ua.com.merchik.merchik.ViewHolders;
 
 import android.content.Context;
+import android.os.Build;
 import android.util.Log;
 import android.view.View;
 import android.widget.AutoCompleteTextView;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.List;
+import java.util.Optional;
 
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.data.Database.Room.OpinionSDB;
@@ -25,6 +28,7 @@ public class AutoCompleteTextViewHolder extends RecyclerView.ViewHolder {
     private Context context;
     private ConstraintLayout layout;
     private AutoCompleteTextView autoCompleteTextView;
+    private TextView textView;
 
     public AutoCompleteTextViewHolder(@NonNull View itemView) {
         super(itemView);
@@ -32,9 +36,11 @@ public class AutoCompleteTextViewHolder extends RecyclerView.ViewHolder {
 
         layout = itemView.findViewById(R.id.layout);
         autoCompleteTextView = itemView.findViewById(R.id.autoCompleteTextView);
+        textView = itemView.findViewById(R.id.textView);
     }
 
     public void bind(TestViewHolderData data, Clicks.clickListener click) {
+        textView.setText(data.title);
         autoCompleteTextView.setHint(data.msg);
 
         switch (data.type) {
@@ -133,6 +139,13 @@ public class AutoCompleteTextViewHolder extends RecyclerView.ViewHolder {
                 Log.e("TEST_AUTO_HOLDER", "data.themeList.size(): " + themeDBS.size());
                 if (themeDBS != null && themeDBS.size()==1){
                     autoCompleteTextView.setText(themeDBS.get(0).getNm());
+                }
+
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                    Optional<ThemeDB> theme = themeDBS.stream().filter(db -> db.getID().equals("1232")).findFirst();
+                    ThemeDB themeDB = theme.get();
+                    Log.e("TEST_AUTO_HOLDER", "themeDB: " + themeDB);
+                    autoCompleteTextView.setText(themeDB.getNm());
                 }
 
                 autoCompleteTextView.setAdapter(adapter3);

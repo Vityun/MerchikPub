@@ -68,6 +68,9 @@ public class TasksAndReclamationsSDB {
     @ColumnInfo(name = "photo_2")
     public Integer photo2;
 
+    @ColumnInfo(name = "photoHash")
+    public String photoHash;
+
     @SerializedName("comment")
     @Expose
     @ColumnInfo(name = "comment")

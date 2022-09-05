@@ -35,6 +35,7 @@ public class PhotoAndInfoViewHolder extends RecyclerView.ViewHolder {
 
     public void bind(TestViewHolderData data, Clicks.clickListener click) {
         testText.setText(data.msg);
+        testText.setTextColor(context.getResources().getColor(R.color.hintColorDefault));
 
         try{
             if (data.photo!=null){

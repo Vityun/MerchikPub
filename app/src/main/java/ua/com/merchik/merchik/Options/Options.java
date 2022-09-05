@@ -37,6 +37,7 @@ import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.MakePhoto;
 import ua.com.merchik.merchik.Options.Buttons.OptionButPhotoPlanogramm;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonAddComment;
+import ua.com.merchik.merchik.Options.Buttons.OptionButtonAddNewClient;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonAvailabilityDetailedReport;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonPhotoBeforeStartWork;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonReclamationAnswer;
@@ -513,6 +514,11 @@ public class Options {
 //        try {
         Log.e("NNK", "F/optControl/optionId: " + optionId);
         switch (optionId) {
+
+            // Потенциальный клиент
+            case 133382:
+                OptionButtonAddNewClient<?> optionButtonAddNewClient = new OptionButtonAddNewClient<>(context, dataDB, option, type, mode);
+                break;
 
 
             case 157243:

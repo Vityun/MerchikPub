@@ -155,7 +155,7 @@ public class Tab3Fragment extends Fragment {
                                 try {
                                     TARSecondFrag.TaRID = tarData.id;
                                     MakePhoto makePhoto = new MakePhoto();
-                                    makePhoto.openCamera(getActivity());
+                                    makePhoto.openCamera(getActivity(), MakePhoto.CAMERA_REQUEST_TAKE_PHOTO);
                                 }catch (Exception e){
                                     Globals.writeToMLOG("ERROR", "Tab3Fragment.setAddButton.case2", "Exception e: " + e);
                                 }

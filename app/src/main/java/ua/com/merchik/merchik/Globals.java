@@ -154,7 +154,9 @@ public class Globals {
         CUSTOMER,
         THEME,
         OPINION,
-        USERS
+        USERS,
+        COMMENT,
+        PREMIYA
     }
 
     public enum ReferencesEnum {
@@ -977,7 +979,6 @@ public class Globals {
             return null;
         }
     }
-
 
     public static void hideKeyboardFrom(Context context, View view) {
         InputMethodManager imm = (InputMethodManager) context.getSystemService(Activity.INPUT_METHOD_SERVICE);

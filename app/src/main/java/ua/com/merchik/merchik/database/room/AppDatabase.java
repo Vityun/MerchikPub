@@ -72,7 +72,7 @@ import ua.com.merchik.merchik.database.room.DaoInterfaces.UsersDao;
                 AdditionalMaterialsAddressSDB.class,
                 AdditionalMaterialsSDB.class,
         },
-        version = 18
+        version = 19
 )
 
 

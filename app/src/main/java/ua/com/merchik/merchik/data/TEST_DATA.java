@@ -20,6 +20,7 @@ public class TEST_DATA <T>{
     public OpinionSDB opinion;
     public UsersSDB users;
     public String comment;
+    public String premiya;
 
     public String testSpinner1;
     public String testSpinner2;

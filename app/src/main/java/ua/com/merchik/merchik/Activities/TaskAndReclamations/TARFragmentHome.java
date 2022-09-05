@@ -28,7 +28,7 @@ public class TARFragmentHome extends Fragment {
     public static String secondFragTAG;
 
     private FragmentManager fragmentManager;
-    private TARHomeFrag homeFrag;
+    public TARHomeFrag homeFrag;
     public TARSecondFrag secondFrag;
 
     public TARFragmentHome(FragmentManager fragmentManager) {

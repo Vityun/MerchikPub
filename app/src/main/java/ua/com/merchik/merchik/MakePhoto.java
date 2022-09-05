@@ -31,9 +31,9 @@ public class MakePhoto {
 
     static Globals globals = new Globals();
     private static final int CAMERA_REQUEST = 1;
-    private static final int REQUEST_TAKE_PHOTO = 101;
-    private static final int CAMERA_REQUEST_TAKE_PHOTO = 200;   // Для нового интента выполнения фото
-    private static final int CAMERA_REQUEST_TAKE_PHOTO_TEST = 201;   // Тестовый реквест для фото
+    public static final int REQUEST_TAKE_PHOTO = 101;          // Получение фотки с Журнала Фото
+    public static final int CAMERA_REQUEST_TAKE_PHOTO = 200;   // Для нового интента выполнения фото
+    public static final int CAMERA_REQUEST_TAKE_PHOTO_TEST = 201;   // Тестовый реквест для фото
     public static File image;
     private static Context mContext;
     public static WPDataObj wp;
@@ -346,7 +346,7 @@ public class MakePhoto {
      */
     public static String openCameraPhotoUri;
 
-    public void openCamera(Activity activity) {
+    public void openCamera(Activity activity, int requestCode) {
         globals.writeToMLOG(Clock.getHumanTime() + "MakePhoto.openCamera: " + "ENTER" + "\n");
         try {
             File photo = null;
@@ -383,7 +383,7 @@ public class MakePhoto {
                 intent.putExtra(MediaStore.EXTRA_OUTPUT, contentUri);
                 intent.putExtra("photo_uri", contentUri);
                 globals.writeToMLOG(Clock.getHumanTime() + "MakePhoto.startActivityForResult: " + "ENTER" + "\n");
-                activity.startActivityForResult(intent, CAMERA_REQUEST_TAKE_PHOTO);
+                activity.startActivityForResult(intent, requestCode);
             }
 
         } catch (Exception e) {

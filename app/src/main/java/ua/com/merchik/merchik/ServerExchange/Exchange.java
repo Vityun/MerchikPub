@@ -497,7 +497,7 @@ public class Exchange {
                             Globals.writeToMLOG("INFO_ERR", "Exchange.ReclamationPointExchange/downloadTaR.onFailure", "String error: " + error);
                         }
                     });     // Загрузка Задач и Рекламаций*/
-                    sendTAR();              // Выгрузка на сервер ЗИР-а
+//                    sendTAR();              // Выгрузка на сервер ЗИР-а
                     uploadTARComments(null);    // Выгрузка ЗИР переписки(коммнетариев)
                     globals.writeToMLOG(Clock.getHumanTime() + "_INFO.Exchange.class.startExchange.Успех.2." + "\n");
                 } catch (Exception e) {
@@ -549,9 +549,11 @@ public class Exchange {
             el.element_id = item.id;
             el.addr_id = item.addr;
             el.user_id = item.author;
+            el.client_id = item.client;
             el.vinovnik_id = item.vinovnik;
             el.date = Clock.getDateString(item.dt);
             el.photo_id = item.photo;
+            el.photo_hash = item.photoHash;
             el.theme_id = item.themeId;
             el.comment = item.comment;
 
