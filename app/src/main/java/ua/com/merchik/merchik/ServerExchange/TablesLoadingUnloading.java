@@ -116,7 +116,7 @@ public class TablesLoadingUnloading {
     private String timeYesterday7 = Clock.today_7;
     private String timeYesterday = Clock.yesterday;
     private String timeToday = Clock.today;
-//    private String timeTomorrow = Clock.tomorrow;
+    //    private String timeTomorrow = Clock.tomorrow;
     private String timeTomorrow = Clock.getDatePeriod(5);
     private String timeTomorrow7 = Clock.tomorrow7;
 
@@ -160,7 +160,6 @@ public class TablesLoadingUnloading {
                     Log.e("uploadRP", "onSuccess data: " + data);
                     if (data != null) {
                         Log.e("uploadRP", "onSuccess: " + data.size());
-//                        downloadReportPrepare(context, 0);
 
                         if (data != null) {
                             List<ReportPrepareUpdateResponseList> list = (List<ReportPrepareUpdateResponseList>) data;
@@ -185,9 +184,12 @@ public class TablesLoadingUnloading {
                                     }
                                 }
                             }
+
+                            //  TODO Вернул загрузку RP
+                            downloadReportPrepare(context, 0);
                         }
 
-                    }else {
+                    } else {
                         downloadReportPrepare(context, 0);
                     }
                 }
@@ -711,6 +713,18 @@ public class TablesLoadingUnloading {
                         if (response.body().getList() != null) {
                             Log.e("SERVER_REALM_DB_UPDATE", "===================================.ReportPrepare.SIZE: " + response.body().getList().size());
                             Globals.writeToMLOG("INFO", "downloadReportPrepare/onResponse", "response.body().getList().size(): " + response.body().getList().size());
+
+                            // TODO only for debug
+                            try {
+                                String dates = "";
+                                for (ReportPrepareDB rp : response.body().getList()) {
+                                    dates += rp.getDtReport() + "/";
+                                }
+                                Globals.writeToMLOG("INFO", "downloadReportPrepare/onResponse", "response.body().getList().dates: " + dates);
+                            } catch (Exception e) {
+                                Globals.writeToMLOG("ERROR", "downloadReportPrepare/onResponse", "response.body().getList().dates.Exception e: " + e);
+                            }
+
                         } else {
                             Log.e("SERVER_REALM_DB_UPDATE", "===================================.ReportPrepare.SIZE: NuLL");
                         }
@@ -1100,14 +1114,14 @@ public class TablesLoadingUnloading {
         String act = "tovar_list";
 
         ProgressDialog pg = null;
-        if (context != null){
+        if (context != null) {
             pg = ProgressDialog.show(context, "Обмен данными с сервером.", "Обновление таблицы: " + "Товаров", true, true);
         }
 
         retrofit2.Call<TovarTableResponse> call;
-        if (listId != null){
+        if (listId != null) {
             call = RetrofitBuilder.getRetrofitInterface().GET_TOVAR_T_ID(mod, act, listId);
-        }else {
+        } else {
             call = RetrofitBuilder.getRetrofitInterface().GET_TOVAR_T(mod, act);
         }
 
@@ -2131,43 +2145,50 @@ public class TablesLoadingUnloading {
     // =============== U_P_L_O_A_D TABLE TO SERVER ===============
 
     public void uploadRP(ExchangeInterface.ExchangeResponseInterface exchange) {
-        StandartData data = new StandartData();
-        data.mod = "report_prepare";
-        data.act = "set_report_data";
-        data.data = RealmManager.getReportPrepareToUpload();
+        try {
+            StandartData data = new StandartData();
+            data.mod = "report_prepare";
+            data.act = "set_report_data";
+            data.data = RealmManager.getReportPrepareToUpload();
 
-        Gson gson = new Gson();
-        String json = gson.toJson(data);
-        JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
+            Gson gson = new Gson();
+            String json = gson.toJson(data);
+            JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
 
-        Log.e("uploadRP", "convertedObject: " + convertedObject);
+            Log.e("uploadRP", "convertedObject: " + convertedObject);
 
-        if (data.data.size() > 0) {
-            retrofit2.Call<ReportPrepareUpdateResponse> call = RetrofitBuilder.getRetrofitInterface().SEND_RP_INFO(RetrofitBuilder.contentType, convertedObject);
-            call.enqueue(new Callback<ReportPrepareUpdateResponse>() {
-                @Override
-                public void onResponse(Call<ReportPrepareUpdateResponse> call, Response<ReportPrepareUpdateResponse> response) {
+            Globals.writeToMLOG("INFO", "uploadRP().Start", "Size: " + data.data.size());
 
-                    Gson gson = new Gson();
-                    String json = gson.toJson(response);
-                    JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
+            if (data.data.size() > 0) {
+                retrofit2.Call<ReportPrepareUpdateResponse> call = RetrofitBuilder.getRetrofitInterface().SEND_RP_INFO(RetrofitBuilder.contentType, convertedObject);
+                call.enqueue(new Callback<ReportPrepareUpdateResponse>() {
+                    @Override
+                    public void onResponse(Call<ReportPrepareUpdateResponse> call, Response<ReportPrepareUpdateResponse> response) {
 
-                    Log.e("uploadRP", "response: " + convertedObject);
+                        Gson gson = new Gson();
+                        String json = gson.toJson(response);
+                        JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
 
-                    if (response.isSuccessful() && response.body() != null) {
-                        if (response.body().data != null && response.body().data.size() > 0) {
-                            exchange.onSuccess(response.body().data);
+                        Log.e("uploadRP", "response: " + convertedObject);
+
+                        if (response.isSuccessful() && response.body() != null) {
+                            if (response.body().data != null && response.body().data.size() > 0) {
+                                exchange.onSuccess(response.body().data);
+                            }
                         }
                     }
-                }
 
-                @Override
-                public void onFailure(Call<ReportPrepareUpdateResponse> call, Throwable t) {
-                    exchange.onFailure("uploadRP: " + t);
-                }
-            });
-        } else {
-            exchange.onFailure("uploadRP: Данных на выгрузку нет");
+                    @Override
+                    public void onFailure(Call<ReportPrepareUpdateResponse> call, Throwable t) {
+                        exchange.onFailure("uploadRP: " + t);
+                    }
+                });
+            } else {
+                exchange.onFailure("uploadRP: Данных на выгрузку нет");
+            }
+        } catch (Exception e) {
+            exchange.onFailure("uploadRP: Exception e: " + e);
+            Globals.writeToMLOG("INFO", "uploadRP()", "Exception e: " + e);
         }
     }
 
@@ -2643,8 +2664,8 @@ public class TablesLoadingUnloading {
             data.mod = "reclamation";
             data.act = "list_comment";
 
-            data.date_from = Clock.getHumanTimeYYYYMMDD(Clock.getDateLong(-20).getTime()/1000);
-            data.date_to = Clock.getHumanTimeYYYYMMDD(Clock.getDateLong(2).getTime()/1000);
+            data.date_from = Clock.getHumanTimeYYYYMMDD(Clock.getDateLong(-20).getTime() / 1000);
+            data.date_to = Clock.getHumanTimeYYYYMMDD(Clock.getDateLong(2).getTime() / 1000);
 
             Gson gson = new Gson();
             String json = gson.toJson(data);

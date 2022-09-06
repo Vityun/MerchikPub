@@ -497,7 +497,7 @@ public class Exchange {
                             Globals.writeToMLOG("INFO_ERR", "Exchange.ReclamationPointExchange/downloadTaR.onFailure", "String error: " + error);
                         }
                     });     // Загрузка Задач и Рекламаций*/
-//                    sendTAR();              // Выгрузка на сервер ЗИР-а
+                    sendTAR();              // Выгрузка на сервер ЗИР-а
                     uploadTARComments(null);    // Выгрузка ЗИР переписки(коммнетариев)
                     globals.writeToMLOG(Clock.getHumanTime() + "_INFO.Exchange.class.startExchange.Успех.2." + "\n");
                 } catch (Exception e) {
