@@ -77,7 +77,15 @@ public class OptionControlReclamationAnswer<T> extends OptionControl {
                 date2 = wpDataDB.getVisit_start_dt();
             }
             List<TasksAndReclamationsSDB> result = new ArrayList<>();
-            List<TasksAndReclamationsSDB> tarList = SQL_DB.tarDao().getTARForOptionControl(0, addressId, userId, 0, date1, date2);  // 0 - рекламация
+//            List<TasksAndReclamationsSDB> tarList = SQL_DB.tarDao().getTARForOptionControl(0, addressId, userId, 0, date1, date2);  // 0 - рекламация
+
+            List<TasksAndReclamationsSDB> tarList;
+            // костыляки для конторки любимой
+            if (System.currentTimeMillis() > 1664928000000L){
+                tarList = SQL_DB.tarDao().getTARForOptionControl(0, addressId, userId, 0, date1, date2);
+            }else {
+                tarList = SQL_DB.tarDao().getTARForOptionControl150822(0, addressId, clientId, userId, 0, date1, date2);
+            }
 
             Globals.writeToMLOG("INFO", "OptionControlTaskAnswer/executeOption/List<TasksAndReclamationsSDB>", "tarList: " + tarList);
 

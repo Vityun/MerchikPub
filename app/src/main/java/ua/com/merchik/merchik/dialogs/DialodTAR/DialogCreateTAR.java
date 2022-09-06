@@ -445,7 +445,10 @@ public class DialogCreateTAR extends DialogData {
 //                return;
 //            }
 
-            if (mode == 1 && comment.length() < 19){
+            if (mode == 1 && comment != null &&  comment.length() < 19){
+                Toast.makeText(v.getContext(), context.getText(R.string.tar_server_error_short_comment), Toast.LENGTH_SHORT).show();
+                return;
+            }else if (mode == 1 && comment == null){
                 Toast.makeText(v.getContext(), context.getText(R.string.tar_server_error_short_comment), Toast.LENGTH_SHORT).show();
                 return;
             }

@@ -88,7 +88,7 @@ public class OptionControlTaskAnswer<T> extends OptionControl {
 
             List<TasksAndReclamationsSDB> tarList;
             // костыляки для конторки любимой
-            if (System.currentTimeMillis() > 1662367222000L){
+            if (System.currentTimeMillis() > 1664928000000L){
                 tarList = SQL_DB.tarDao().getTARForOptionControl(1, addressId, userId, 0, date1, date2);
             }else {
                 tarList = SQL_DB.tarDao().getTARForOptionControl150822(1, addressId, clientId, userId, 0, date1, date2);

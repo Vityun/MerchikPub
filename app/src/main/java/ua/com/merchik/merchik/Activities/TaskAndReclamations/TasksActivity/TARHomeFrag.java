@@ -203,6 +203,8 @@ public class TARHomeFrag extends Fragment implements TARFragmentHome.OnFragmentI
 
                 recyclerViewReclamations.updateData(data);
                 recyclerViewReclamations.notifyDataSetChanged();
+
+                dialog.dismiss();
             }, 1);
             dialog.show();
         });

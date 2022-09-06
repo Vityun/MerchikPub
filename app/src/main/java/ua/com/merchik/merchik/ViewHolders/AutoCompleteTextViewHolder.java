@@ -52,15 +52,14 @@ public class AutoCompleteTextViewHolder extends RecyclerView.ViewHolder {
 
                 Log.e("TEST_AUTO_HOLDER", "data.addressList.size(): " + data.addressList.size());
 
-                if (addressDBList != null && addressDBList.size()==1){
+                if (addressDBList != null && addressDBList.size() == 1) {
 //                    autoCompleteTextView.setHint(data.addressList.get(0).getNm());
                     autoCompleteTextView.setText(addressDBList.get(0).getNm());
-                    if (addressDBList instanceof AddressDB) {
-                        AddressDB res = (AddressDB) addressDBList;
-                        TEST_DATA test = new TEST_DATA();
-                        test.address = res;
-                        click.click(test);
-                    }
+                    AddressDB res = addressDBList.get(0);
+                    TEST_DATA test = new TEST_DATA();
+                    test.address = res;
+                    click.click(test);
+
                 }
 
 
@@ -88,15 +87,14 @@ public class AutoCompleteTextViewHolder extends RecyclerView.ViewHolder {
 
                 Log.e("TEST_AUTO_HOLDER", "data.addressList.size(): " + data.addressList.size());
 
-                if (usersSDBList != null && usersSDBList.size()==1){
+                if (usersSDBList != null && usersSDBList.size() == 1) {
 //                    autoCompleteTextView.setHint(data.addressList.get(0).getNm());
                     autoCompleteTextView.setText(usersSDBList.get(0).fio);
-                    if (usersSDBList instanceof UsersSDB) {
-                        UsersSDB res = (UsersSDB) usersSDBList;
-                        TEST_DATA test = new TEST_DATA();
-                        test.users = res;
-                        click.click(test);
-                    }
+                    UsersSDB res = usersSDBList.get(0);
+                    TEST_DATA test = new TEST_DATA();
+                    test.users = res;
+                    click.click(test);
+
                 }
 
 
@@ -123,14 +121,13 @@ public class AutoCompleteTextViewHolder extends RecyclerView.ViewHolder {
                 AutoTextCustomerAdapter adapter2 = new AutoTextCustomerAdapter(context, android.R.layout.simple_dropdown_item_1line, customerDBS);
 
                 Log.e("TEST_AUTO_HOLDER", "data.customerList.size(): " + data.customerList.size());
-                if (customerDBS != null && customerDBS.size()==1){
+                if (customerDBS != null && customerDBS.size() == 1) {
                     autoCompleteTextView.setText(customerDBS.get(0).getNm());
-                    if (customerDBS instanceof CustomerDB) {
-                        CustomerDB res = (CustomerDB) customerDBS;
-                        TEST_DATA test = new TEST_DATA();
-                        test.customer = res;
-                        click.click(test);
-                    }
+                    CustomerDB res = customerDBS.get(0);
+                    TEST_DATA test = new TEST_DATA();
+                    test.customer = res;
+                    click.click(test);
+
                 }
 
                 autoCompleteTextView.setAdapter(adapter2);
@@ -155,14 +152,12 @@ public class AutoCompleteTextViewHolder extends RecyclerView.ViewHolder {
                 AutoTextThemeAdapter adapter3 = new AutoTextThemeAdapter(context, android.R.layout.simple_dropdown_item_1line, themeDBS);
 
                 Log.e("TEST_AUTO_HOLDER", "data.themeList.size(): " + themeDBS.size());
-                if (themeDBS != null && themeDBS.size()==1){
+                if (themeDBS != null && themeDBS.size() == 1) {
                     autoCompleteTextView.setText(themeDBS.get(0).getNm());
-                    if (themeDBS instanceof ThemeDB) {
-                        ThemeDB res = (ThemeDB) themeDBS;
-                        TEST_DATA test = new TEST_DATA();
-                        test.theme = res;
-                        click.click(test);
-                    }
+                    ThemeDB res = themeDBS.get(0);
+                    TEST_DATA test = new TEST_DATA();
+                    test.theme = res;
+                    click.click(test);
                 }
 
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
@@ -170,6 +165,10 @@ public class AutoCompleteTextViewHolder extends RecyclerView.ViewHolder {
                     ThemeDB themeDB = theme.get();
                     Log.e("TEST_AUTO_HOLDER", "themeDB: " + themeDB);
                     autoCompleteTextView.setText(themeDB.getNm());
+                    ThemeDB res = themeDB;
+                    TEST_DATA test = new TEST_DATA();
+                    test.theme = res;
+                    click.click(test);
                 }
 
                 autoCompleteTextView.setAdapter(adapter3);
@@ -191,14 +190,14 @@ public class AutoCompleteTextViewHolder extends RecyclerView.ViewHolder {
                 AutoTextOpinionAdapter adapter4 = new AutoTextOpinionAdapter(context, android.R.layout.simple_dropdown_item_1line, opinionSDBS);
 
                 Log.e("TEST_AUTO_HOLDER", "data.themeList.size(): " + data.opinionList.size());
-                if (opinionSDBS != null && opinionSDBS.size()==1){
+                if (opinionSDBS != null && opinionSDBS.size() == 1) {
                     autoCompleteTextView.setText(opinionSDBS.get(0).nm);
-                    if (opinionSDBS instanceof OpinionSDB) {
-                        OpinionSDB res = (OpinionSDB) opinionSDBS;
-                        TEST_DATA test = new TEST_DATA();
-                        test.opinion = res;
-                        click.click(test);
-                    }
+
+                    OpinionSDB res = opinionSDBS.get(0);
+                    TEST_DATA test = new TEST_DATA();
+                    test.opinion = res;
+                    click.click(test);
+
                 }
 
                 autoCompleteTextView.setAdapter(adapter4);
