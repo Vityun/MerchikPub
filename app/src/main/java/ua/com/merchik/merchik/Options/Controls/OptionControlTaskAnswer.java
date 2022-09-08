@@ -9,6 +9,9 @@ import android.text.style.ClickableSpan;
 import android.util.Log;
 import android.view.View;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -63,7 +66,7 @@ public class OptionControlTaskAnswer<T> extends OptionControl {
         if (document instanceof WpDataDB) {
             wpDataDB = (WpDataDB) document;
 
-            Globals.writeToMLOG("INFO", "OptionControlTaskAnswer/getDocumentVar/WpDataDB", "WpDataDB: " + wpDataDB);
+            Globals.writeToMLOG("INFO", "OptionControlTaskAnswer/getDocumentVar/WpDataDB", "WpDataDB: " + wpDataDB.getId());
 
             documentDate = Clock.getHumanTimeYYYYMMDD(wpDataDB.getDt().getTime()/1000);     //+TODO CHANGE DATE
 
@@ -109,6 +112,11 @@ public class OptionControlTaskAnswer<T> extends OptionControl {
 
                 Globals.writeToMLOG("INFO", "OptionControlTaskAnswer/executeOption/for/data", "item: " + item.id);
                 Globals.writeToMLOG("INFO", "OptionControlTaskAnswer/executeOption/for/data", "theme: " + theme.getID());
+                try {
+                    Globals.writeToMLOG("INFO", "OptionControlTaskAnswer/executeOption/for/TasksAndReclamationsSDB", "TasksAndReclamationsSDB: " + new Gson().fromJson(new Gson().toJson(item), JsonObject.class));
+                }catch (Exception e){
+                    Globals.writeToMLOG("ERROR", "OptionControlTaskAnswer/executeOption/for/TasksAndReclamationsSDB", "Exception e: " + e);
+                }
 
                 if (theme.getTp().equals("2")) {
                     if (item.noNeedReply == 1) {
