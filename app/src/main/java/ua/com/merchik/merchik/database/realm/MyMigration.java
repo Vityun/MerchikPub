@@ -76,6 +76,14 @@ public class MyMigration implements RealmMigration {
             oldVersion++;
         }
 
+        if (oldVersion == 12){
+            RealmObjectSchema schemaRP = schema.get("ReportPrepareDB");
+
+            schemaRP.addField("facesPlan", Integer.class);
+
+            oldVersion++;
+        }
+
     }
 }
 

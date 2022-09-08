@@ -119,6 +119,10 @@ public class ReportPrepareDB extends RealmObject {
     @Expose
     public Integer buyerOrderId;
 
+    @SerializedName("faces_plan")
+    @Expose
+    public Integer facesPlan;
+
 
     private int uploadStatus;       // Необходимость выгрузки записи
     private String serverResponce;      // Ответ от сервера (в основном тут будет ответ почему запись не принята сервером)
