@@ -281,6 +281,7 @@ public class DialogCreateTAR extends DialogData {
         TestViewHolderData res = new TestViewHolderData();
         res.typeNumber = 2;
         res.msg = msg;
+        res.type = Globals.NewTARDataType.COMMENT;
         viewHolderData.add(res);
     }
 
