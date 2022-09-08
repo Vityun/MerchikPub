@@ -287,13 +287,6 @@ public class DialogEKL {
 
     private void showData() {
 
-//        String code = "65176ylnRzl8P6RL7O3jD2v4GxezsBXRJOFaPW0PlAOSqt4VKOnC3FYasUWIMXWlX";
-//        Log.e("DialogEKL", "HASH_CODE: " + Globals.getSha1Hex(code));
-
-
-        Log.e("DialogEKL", "showData/wp.data: " + wp);
-
-
         setAddSotr();   // Установка иконочки добавления/редактирования сотрудника
 
         int id = wp.getAddr_id();

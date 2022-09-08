@@ -50,6 +50,7 @@ import ua.com.merchik.merchik.Options.Controls.OptionControlEndAnotherWork;
 import ua.com.merchik.merchik.Options.Controls.OptionControlPhotoBeforeStartWork;
 import ua.com.merchik.merchik.Options.Controls.OptionControlPromotion;
 import ua.com.merchik.merchik.Options.Controls.OptionControlReclamationAnswer;
+import ua.com.merchik.merchik.Options.Controls.OptionControlRegistrationPotentialClient;
 import ua.com.merchik.merchik.Options.Controls.OptionControlTaskAnswer;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.ServerExchange.Exchange;
@@ -144,6 +145,11 @@ public class Options {
             }
 
             switch (optionControlId) {
+
+                case 133381:
+                    OptionControlRegistrationPotentialClient<?> optionControlRegistrationPotentialClient = new OptionControlRegistrationPotentialClient<>(context, dataDB, optionsDB, newOptionType, mode);
+                    optionControlRegistrationPotentialClient.showOptionMassage();
+                    break;
 
                 case 151594:
                     OptionControlPhotoBeforeStartWork<?> optionControlPhotoBeforeStartWork = new OptionControlPhotoBeforeStartWork<>(context, dataDB, optionsDB, newOptionType, mode);
@@ -514,6 +520,14 @@ public class Options {
 //        try {
         Log.e("NNK", "F/optControl/optionId: " + optionId);
         switch (optionId) {
+
+            case 133381:
+                OptionControlRegistrationPotentialClient<?> optionControlRegistrationPotentialClient = new OptionControlRegistrationPotentialClient<>(context, dataDB, option, type, mode);
+//                if (optionControlRegistrationPotentialClient.isBlockOption()) {
+                    optionControlRegistrationPotentialClient.showOptionMassage();
+//                }
+                return optionControlRegistrationPotentialClient.isBlockOption() ? 1 : 0;
+
 
             // Потенциальный клиент
             case 133382:

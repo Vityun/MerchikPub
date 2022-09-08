@@ -20,4 +20,9 @@ public interface PotentialClientDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     Completable insertAll(List<PotentialClientSDB> data);
+
+    // ----------------------------------------------------
+
+    @Query("SELECT * FROM potential_client WHERE userId = :userId AND  themeId = :themeId AND dt BETWEEN :dtFrom AND :dtTo")
+    List<PotentialClientSDB> getByUserThemeDt(int userId, int themeId, long dtFrom, long dtTo);
 }

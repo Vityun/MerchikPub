@@ -1,7 +1,5 @@
 package ua.com.merchik.merchik.ServerExchange.TablesExchange;
 
-import android.util.Log;
-
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 
@@ -42,8 +40,6 @@ public class OblastExchange {
                 public void onResponse(Call<OblastResponse> call, Response<OblastResponse> response) {
                     try {
                         if (response.body() != null){
-                            Globals.writeToMLOG("INFO", "downloadOblastTable/call.enqueue/onResponse/response.body()", "response.body(): " + response.body().list);
-                            Log.e("downloadOblastTable", "response.body(): " + response.body());
                             RealmManager.INSTANCE.executeTransaction(realm -> {
                                 synchronizationTimetableDB.setVpi_app(System.currentTimeMillis()/1000);
                                 realm.copyToRealmOrUpdate(synchronizationTimetableDB);

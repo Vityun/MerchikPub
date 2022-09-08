@@ -43,8 +43,6 @@ public class CityExchange {
                 public void onResponse(Call<CityResponse> call, Response<CityResponse> response) {
                     try {
                         if (response.body() != null){
-                            Globals.writeToMLOG("INFO", "downloadCityTable/call.enqueue/onResponse/response.body()", "response.body(): " + response.body().list);
-                            Log.e("downloadCityTable", "response.body(): " + response.body());
                             RealmManager.INSTANCE.executeTransaction(realm -> {
                                 synchronizationTimetableDB.setVpi_app(System.currentTimeMillis()/1000);
                                 realm.copyToRealmOrUpdate(synchronizationTimetableDB);
