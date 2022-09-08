@@ -7,6 +7,7 @@ import androidx.room.Query;
 
 import java.util.List;
 
+import io.reactivex.rxjava3.core.Completable;
 import ua.com.merchik.merchik.data.Database.Room.PotentialClientSDB;
 
 @Dao
@@ -18,5 +19,5 @@ public interface PotentialClientDao {
     PotentialClientSDB getById(int id);
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    void insertAll(List<PotentialClientSDB> data);
+    Completable insertAll(List<PotentialClientSDB> data);
 }

@@ -28,10 +28,12 @@ import ua.com.merchik.merchik.ServerExchange.TablesExchange.CityExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.CustomerExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.LanguagesExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.OblastExchange;
+import ua.com.merchik.merchik.ServerExchange.TablesExchange.PotentialClientTableExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.SiteObjectsExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.StandartExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.TranslationsExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.UsersExchange;
+import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.Database.Room.AddressSDB;
 import ua.com.merchik.merchik.data.Database.Room.CitySDB;
 import ua.com.merchik.merchik.data.Database.Room.ContentSDB;
@@ -518,6 +520,21 @@ public class Exchange {
 //                updateLanguages();  // Обновление языков
 //                updateSiteObj();    // Обновление Обьектов Сайта
 //                updateTranslates();  // Обновление Переводов
+
+
+                new PotentialClientTableExchange().downloadPotentialClientTable(new Clicks.clickStatusMsg() {
+                    @Override
+                    public void onSuccess(String data) {
+                        Globals.writeToMLOG("INFO", "Exchange/downloadPotentialClientTable/onSuccess", "data: " + data);
+                    }
+
+                    @Override
+                    public void onFailure(String error) {
+                        Globals.writeToMLOG("INFO", "Exchange/downloadPotentialClientTable/onFailure", "error: " + error);
+                    }
+                });
+
+
             } else {
                 long time = (System.currentTimeMillis() - exchange) / 1000;
                 Log.e("startExchange", "start/Время обновлять НЕ наступило. После обновления прошло: " + time + "секунд.");
