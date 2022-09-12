@@ -4,7 +4,7 @@ import java.util.List;
 
 import ua.com.merchik.merchik.data.TEST_DATA;
 
-public interface Clicks {
+public interface Clicks<T> {
 
     void click();
 
@@ -31,6 +31,14 @@ public interface Clicks {
     interface clickStatusMsg{
         // Отработка успешного результата
          void onSuccess(String data);
+
+        // Отработка ошибки
+        void onFailure(String error);
+    }
+
+    interface clickStatus<T>{
+        // Отработка успешного результата
+        void onSuccess(T data);
 
         // Отработка ошибки
         void onFailure(String error);

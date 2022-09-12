@@ -29,6 +29,7 @@ import ua.com.merchik.merchik.ServerExchange.TablesExchange.CustomerExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.LanguagesExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.OblastExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.PotentialClientTableExchange;
+import ua.com.merchik.merchik.ServerExchange.TablesExchange.SamplePhotoExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.SiteObjectsExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.StandartExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.TranslationsExchange;
@@ -40,6 +41,7 @@ import ua.com.merchik.merchik.data.Database.Room.ContentSDB;
 import ua.com.merchik.merchik.data.Database.Room.CustomerSDB;
 import ua.com.merchik.merchik.data.Database.Room.LanguagesSDB;
 import ua.com.merchik.merchik.data.Database.Room.OblastSDB;
+import ua.com.merchik.merchik.data.Database.Room.SamplePhotoSDB;
 import ua.com.merchik.merchik.data.Database.Room.SiteObjectsSDB;
 import ua.com.merchik.merchik.data.Database.Room.StandartSDB;
 import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
@@ -533,7 +535,45 @@ public class Exchange {
                         Globals.writeToMLOG("INFO", "Exchange/downloadPotentialClientTable/onFailure", "error: " + error);
                     }
                 });
+                SamplePhotoExchange samplePhotoExchange = new SamplePhotoExchange();
+                samplePhotoExchange.downloadSamplePhotoTable(new Clicks.clickStatus() {
+                    @Override
+                    public void onSuccess(Object data) {
+                        Globals.writeToMLOG("INFO", "Exchange/SamplePhotoExchange()/onSuccess", "data: " + data);
 
+                        List<SamplePhotoSDB> res = (List<SamplePhotoSDB>) data;
+
+                        try {
+                            RealmManager.INSTANCE.executeTransaction(realm -> {
+                                if (samplePhotoExchange.synchronizationTimetableDB != null) {
+                                    samplePhotoExchange.synchronizationTimetableDB.setVpi_app(System.currentTimeMillis() / 1000);
+                                    realm.copyToRealmOrUpdate(samplePhotoExchange.synchronizationTimetableDB);
+                                }
+                            });
+
+
+                            samplePhotoExchange.downloadSamplePhotos(res, new Clicks.clickStatusMsg() {
+                                @Override
+                                public void onSuccess(String data) {
+                                    Globals.writeToMLOG("INFO", "2Exchange/SamplePhotoExchange()/onSuccess", "data: " + data);
+                                }
+
+                                @Override
+                                public void onFailure(String error) {
+                                    Globals.writeToMLOG("ERROR", "2Exchange/SamplePhotoExchange()/onFailure", "error: " + error);
+                                }
+                            });
+
+                        } catch (Exception e) {
+                            Globals.writeToMLOG("ERROR", "SamplePhotoExchange/downloadSamplePhotoTable/onResponse/onComplete/synchronizationTimetableDB", "Exception e: " + e);
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(String error) {
+                        Globals.writeToMLOG("ERROR", "Exchange/SamplePhotoExchange()/onFailure", "error: " + error);
+                    }
+                });
 
             } else {
                 long time = (System.currentTimeMillis() - exchange) / 1000;

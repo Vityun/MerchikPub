@@ -45,6 +45,7 @@ import ua.com.merchik.merchik.data.RetrofitResponse.PotentialClientResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.PromoTableResponce;
 import ua.com.merchik.merchik.data.RetrofitResponse.ReportHint;
 import ua.com.merchik.merchik.data.RetrofitResponse.ReportPrepareServer;
+import ua.com.merchik.merchik.data.RetrofitResponse.SamplePhotoResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.ServerConnection;
 import ua.com.merchik.merchik.data.RetrofitResponse.SiteObjectsResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.SotrTable;
@@ -585,6 +586,12 @@ public interface RetrofitInterface {
 
     @POST("mobile_app.php?")
     Call<String> TEST_STRING_UPLOAD(
+            @Header("ContentType") String content,
+            @Body JsonObject json);
+
+    // Образец Фото
+    @POST("mobile_app.php?")
+    Call<SamplePhotoResponse> GET_SAMPLE_PHOTO(
             @Header("ContentType") String content,
             @Body JsonObject json);
 

@@ -5,7 +5,10 @@ import android.content.Intent;
 import android.graphics.Typeface;
 import android.text.Html;
 import android.text.SpannableString;
+import android.text.SpannableStringBuilder;
 import android.text.Spanned;
+import android.text.TextPaint;
+import android.text.style.ClickableSpan;
 import android.text.style.URLSpan;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -521,16 +524,46 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
 
 
     private void optionDetail(OptionsDB option) {
-
         String buttText = option.getOptionTxt();
         buttText = buttText.replace("&quot;", "");
         buttText = buttText.replace("Кнопка ", "");
 
+        SpannableStringBuilder ss = new SpannableStringBuilder();
+        ss.append(option.getOptionControlDescr());
+        ss.append("\n\n");
+        ss.append(createLinkedString(mContext, "Показать образец фото"));
+
         DialogData dialog = new DialogData(mContext);
         dialog.setTitle(buttText);
-        dialog.setText(option.getOptionControlDescr());
+//        dialog.setTextTest(option.getOptionControlDescr() + "\n\n" + createLinkedString(mContext, "Показать образец фото"));
+//        dialog.setTextTest(ss);
+        dialog.setText(ss, ()->{});
         dialog.setMerchikIco(mContext);
         dialog.show();
+    }
+
+    private SpannableString createLinkedString(Context context, String msg) {
+        SpannableString res = new SpannableString(msg);
+        ClickableSpan clickableSpan = new ClickableSpan() {
+            @Override
+            public void onClick(View textView) {
+                try {
+                    Toast.makeText(context, "Показать образец фото", Toast.LENGTH_SHORT).show();
+                    Intent intent = new Intent(context, PhotoLogActivity.class);
+                    context.startActivity(intent);
+                }catch (Exception e){
+                    Toast.makeText(context, "Показать образец фото Exception e: " + e, Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void updateDrawState(TextPaint ds) {
+                super.updateDrawState(ds);
+                ds.setUnderlineText(false);
+            }
+        };
+        res.setSpan(clickableSpan, 0, msg.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        return res;
     }
 
 }

@@ -52,6 +52,17 @@ public class StackPhotoRealm {
                 .findAll();
     }
 
+    public static RealmResults<StackPhotoDB> getByServerIds(List<Integer> ids) {
+        String[] id = new String[ids.size()];
+        for (int i = 0; i < ids.size(); i++) {
+            id[i] = String.valueOf(ids.get(i));
+        }
+
+        return INSTANCE.where(StackPhotoDB.class)
+                .in("photoServerId", id)
+                .findAll();
+    }
+
     public static StackPhotoDB getByHash(String hash) {
         return INSTANCE.where(StackPhotoDB.class)
                 .equalTo("photo_hash", hash)
@@ -166,19 +177,19 @@ public class StackPhotoRealm {
     /**
      * 12.02.2022
      *
-     *
-     * @return*/
-    public static List<Integer> findTovarIds(List<Integer> ids){
+     * @return
+     */
+    public static List<Integer> findTovarIds(List<Integer> ids) {
         ArrayList<Integer> result = new ArrayList<>(); // id-шники которых нет в БД
 
         Log.e("MY_TIME", "START TIME");
 
-        for (Integer tovarId : ids){
+        for (Integer tovarId : ids) {
             StackPhotoDB stackPhotoDB = INSTANCE.where(StackPhotoDB.class)
                     .equalTo("object_id", tovarId)
                     .findFirst();
 
-            if (stackPhotoDB == null || stackPhotoDB.getPhoto_num().equals("")){
+            if (stackPhotoDB == null || stackPhotoDB.getPhoto_num().equals("")) {
                 result.add(tovarId);
             }
         }
@@ -188,13 +199,13 @@ public class StackPhotoRealm {
         return result;
     }
 
-    public static RealmResults<StackPhotoDB> getPhoto(long dtFrom, long dtTo, String clientId, int addrId, int photoType){
-         return INSTANCE.where(StackPhotoDB.class)
-                 .between("create_time", dtFrom, dtTo)
-                 .equalTo("client_id", clientId)
-                 .equalTo("addr_id", addrId)
-                 .equalTo("photo_type", photoType)
-                 .findAll();
+    public static RealmResults<StackPhotoDB> getPhoto(long dtFrom, long dtTo, String clientId, int addrId, int photoType) {
+        return INSTANCE.where(StackPhotoDB.class)
+                .between("create_time", dtFrom, dtTo)
+                .equalTo("client_id", clientId)
+                .equalTo("addr_id", addrId)
+                .equalTo("photo_type", photoType)
+                .findAll();
     }
 
 

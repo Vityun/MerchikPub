@@ -21,6 +21,7 @@ import ua.com.merchik.merchik.data.Database.Room.OborotVedSDB;
 import ua.com.merchik.merchik.data.Database.Room.OpinionSDB;
 import ua.com.merchik.merchik.data.Database.Room.OpinionThemeSDB;
 import ua.com.merchik.merchik.data.Database.Room.PotentialClientSDB;
+import ua.com.merchik.merchik.data.Database.Room.SamplePhotoSDB;
 import ua.com.merchik.merchik.data.Database.Room.SiteObjectsSDB;
 import ua.com.merchik.merchik.data.Database.Room.StandartSDB;
 import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
@@ -42,6 +43,7 @@ import ua.com.merchik.merchik.database.room.DaoInterfaces.OborotVedDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.OpinionDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.OpinionThemeDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.PotentialClientDao;
+import ua.com.merchik.merchik.database.room.DaoInterfaces.SamplePhotoDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.SiteObjectsDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.StandartDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.TarDao;
@@ -73,9 +75,10 @@ import ua.com.merchik.merchik.database.room.DaoInterfaces.UsersDao;
                 TasksAndReclamationsSDB.class,   // Задачи и Рекламации
                 AdditionalMaterialsAddressSDB.class,
                 AdditionalMaterialsSDB.class,
-                PotentialClientSDB.class    // Потенциальный клиент
+                PotentialClientSDB.class,       // Потенциальный клиент
+                SamplePhotoSDB.class            // Образцы Фото
         },
-        version = 20
+        version = 21
 )
 
 
@@ -123,6 +126,8 @@ public abstract class AppDatabase extends RoomDatabase {
     public abstract AdditionalMaterialsDao additionalMaterialsDao();
 
     public abstract PotentialClientDao potentialClientDao();
+
+    public abstract SamplePhotoDao samplePhotoDao();
 
     public class MyAutoMigration {
     }

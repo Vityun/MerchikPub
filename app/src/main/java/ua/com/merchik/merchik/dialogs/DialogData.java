@@ -182,6 +182,15 @@ public class DialogData {
         }
     }
 
+    public void setTextTest(SpannableStringBuilder text) {
+        this.text.setVisibility(View.VISIBLE);
+        if (text != null && !text.equals("")) {
+            this.text.setText(text);
+        } else {
+            this.text.setVisibility(View.GONE);
+        }
+    }
+
     //
     public void setText(SpannableStringBuilder text, DialogClickListener clickListener) {
         this.text.setVisibility(View.VISIBLE);

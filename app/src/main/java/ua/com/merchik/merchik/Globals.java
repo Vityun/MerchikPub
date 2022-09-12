@@ -489,6 +489,36 @@ public class Globals {
 
     // =========================
 
+    /**
+     * 09.09.2022
+     * Сохранение фото в память телефона.
+     *
+     * imageDir - "/Tovar" (например)
+     * */
+    public static String saveImageHD(Bitmap finalBitmap, String imageDir, String image_name) {
+        File myDir = MyApplication.getAppContext().getExternalFilesDir(Environment.DIRECTORY_PICTURES + imageDir);
+        myDir.mkdirs();
+
+        String fname = image_name + ".jpg";
+        File file = new File(myDir, fname);
+
+        if (file.exists()) file.delete();
+        try {
+            FileOutputStream out = new FileOutputStream(file);
+            finalBitmap.compress(Bitmap.CompressFormat.JPEG, 100, out);
+            out.flush();
+            out.close();
+            return file.getAbsolutePath();
+        } catch (Exception e) {
+            e.printStackTrace();
+
+        }
+
+        return file.getAbsolutePath();
+    }
+
+
+
     public static String saveImage1(Bitmap finalBitmap, String image_name) {
 
         Log.e("TAG_TABLE", "PHOTO_TOVAR_URL_photo_start: " + finalBitmap.getByteCount());

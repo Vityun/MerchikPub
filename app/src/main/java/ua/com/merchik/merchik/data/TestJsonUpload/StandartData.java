@@ -10,6 +10,7 @@ public class StandartData<T> {
 
     public String dt;
     public String id;
+    public String id_list;      // Фильтр. список idшников фоток
     public String login;
     public String term;
 

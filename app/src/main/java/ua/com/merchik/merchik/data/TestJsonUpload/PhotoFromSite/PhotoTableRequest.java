@@ -9,7 +9,7 @@ public class PhotoTableRequest {
     public String image_type;    // Тип фото(размер фото) - small или full
 
 //    public List<String> id_list; // Фильтр. список idшников фоток
-    public String id_list; // Фильтр. список idшников фоток
+    public String id_list;      // Фильтр. список idшников фоток
 
     public String sotr_id;       // Фильтр. ID сотрудника по которому надо отобрать фото
     public String dt_upload;    // Время последнего изменения (для того что б не качать себе каждый раз фулл обьем)
