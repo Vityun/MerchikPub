@@ -163,12 +163,12 @@ public class PhotoLogActivity extends toolbar_menus {
                 }
 
                 // Формируем ID шники для Стэк Фото
-                Integer[] photoIds = new Integer[samplePhotoSDBList.size()];
-                for (int i = 0; i <= samplePhotoSDBList.size(); i++) {
-                    photoIds[i] = samplePhotoSDBList.get(i).photoId;
+                String[] photoIds = new String[samplePhotoSDBList.size()];
+                for (int i = 0; i < samplePhotoSDBList.size(); i++) {
+                    photoIds[i] = String.valueOf(samplePhotoSDBList.get(i).photoId);
                 }
 
-                stackPhoto = StackPhotoRealm.getByIds(photoIds);
+                stackPhoto = StackPhotoRealm.getByIds2(photoIds);
 
             } else {
                 photoLogMode = PhotoLogMode.BASE;

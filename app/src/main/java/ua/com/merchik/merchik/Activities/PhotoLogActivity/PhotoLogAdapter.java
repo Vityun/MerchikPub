@@ -273,7 +273,11 @@ public class PhotoLogAdapter extends RecyclerView.Adapter<PhotoLogAdapter.ViewHo
                             Toast.makeText(mContext, "Комментарий сохранён", Toast.LENGTH_LONG).show();
                         });
 
-                        dialog.setTask(photoLogDat.getUser_id(), photoLogDat.getAddr_id(), photoLogDat.getClient_id(), photoLogDat.getCode_dad2(), photoLogDat);
+                        try {
+                            dialog.setTask(photoLogDat.getUser_id(), photoLogDat.getAddr_id(), photoLogDat.getClient_id(), photoLogDat.getCode_dad2(), photoLogDat);
+                        }catch (Exception e){
+
+                        }
 
                         dialog.setClose(dialog::dismiss);
                         dialog.setRating();

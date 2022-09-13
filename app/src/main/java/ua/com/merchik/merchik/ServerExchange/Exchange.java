@@ -533,6 +533,7 @@ public class Exchange {
                         Globals.writeToMLOG("INFO", "Exchange/downloadPotentialClientTable/onFailure", "error: " + error);
                     }
                 });
+
 /*                SamplePhotoExchange samplePhotoExchange = new SamplePhotoExchange();
                 samplePhotoExchange.downloadSamplePhotoTable(new Clicks.clickStatus() {
                     @Override

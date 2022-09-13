@@ -528,10 +528,49 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
         buttText = buttText.replace("&quot;", "");
         buttText = buttText.replace("Кнопка ", "");
 
+        /*
+        * 132968 - 0  - фото витрины
+        * 135809 - 14 - Фото витрины До начала работ
+        * 135158 - 4  - Фото остатков товаров
+        * 132969 - 10 - Фото тележка с товаром
+        * 141360 - 31 - Фото товара на складе
+        * 141885 - 3  - Фото Документов
+        * */
+        int photoType = 0;
+        boolean showPhotoLink = false;
+        switch (option.getOptionId()){
+            case "132968":  // - 0  - фото витрины
+                photoType = 0;
+                showPhotoLink = true;
+                break;
+            case "135809":  // - 14 - Фото витрины До начала работ
+                photoType = 14;
+                showPhotoLink = true;
+                break;
+            case "135158":  // - 4  - Фото остатков товаров
+                photoType = 4;
+                showPhotoLink = true;
+                break;
+            case "132969":  // - 10 - Фото тележка с товаром
+                photoType = 10;
+                showPhotoLink = true;
+                break;
+            case "141360":  // - 31 - Фото товара на складе
+                photoType = 31;
+                showPhotoLink = true;
+                break;
+            case "141885":  // - 3  - Фото Документов
+                photoType = 3;
+                showPhotoLink = true;
+                break;
+        }
+
         SpannableStringBuilder ss = new SpannableStringBuilder();
         ss.append(option.getOptionControlDescr());
-        ss.append("\n\n");
-        ss.append(createLinkedString(mContext, "Показать образец фото"));
+        if (showPhotoLink){
+            ss.append("\n\n");
+            ss.append(createLinkedString(mContext, "Показать образец фото", photoType));
+        }
 
         DialogData dialog = new DialogData(mContext);
         dialog.setTitle(buttText);
@@ -542,7 +581,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
         dialog.show();
     }
 
-    private SpannableString createLinkedString(Context context, String msg) {
+    private SpannableString createLinkedString(Context context, String msg, int photoType) {
         SpannableString res = new SpannableString(msg);
         ClickableSpan clickableSpan = new ClickableSpan() {
             @Override
@@ -550,6 +589,8 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                 try {
                     Toast.makeText(context, "Показать образец фото", Toast.LENGTH_SHORT).show();
                     Intent intent = new Intent(context, PhotoLogActivity.class);
+                    intent.putExtra("SamplePhoto", true);
+                    intent.putExtra("photoTp", photoType);
                     context.startActivity(intent);
                 }catch (Exception e){
                     Toast.makeText(context, "Показать образец фото error: " + e, Toast.LENGTH_SHORT).show();

@@ -9,7 +9,14 @@ import androidx.appcompat.widget.Toolbar;
 
 import com.google.android.material.navigation.NavigationView;
 
+import java.util.List;
+
+import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.R;
+import ua.com.merchik.merchik.ServerExchange.TablesExchange.SamplePhotoExchange;
+import ua.com.merchik.merchik.ViewHolders.Clicks;
+import ua.com.merchik.merchik.data.Database.Room.SamplePhotoSDB;
+import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.dialogs.DialogFilter.Click;
 import ua.com.merchik.merchik.toolbar_menus;
 
@@ -66,6 +73,46 @@ public class MenuMainActivity extends toolbar_menus {
     }
 
     private void test(Click result) {
+
+        SamplePhotoExchange samplePhotoExchange = new SamplePhotoExchange();
+        samplePhotoExchange.downloadSamplePhotoTable(new Clicks.clickStatus() {
+            @Override
+            public void onSuccess(Object data) {
+                Globals.writeToMLOG("INFO", "Exchange/SamplePhotoExchange()/onSuccess", "data: " + data);
+
+                List<SamplePhotoSDB> res = (List<SamplePhotoSDB>) data;
+
+                try {
+                    RealmManager.INSTANCE.executeTransaction(realm -> {
+                        if (samplePhotoExchange.synchronizationTimetableDB != null) {
+                            samplePhotoExchange.synchronizationTimetableDB.setVpi_app(System.currentTimeMillis() / 1000);
+                            realm.copyToRealmOrUpdate(samplePhotoExchange.synchronizationTimetableDB);
+                        }
+                    });
+
+
+                    samplePhotoExchange.downloadSamplePhotos(res, new Clicks.clickStatusMsg() {
+                        @Override
+                        public void onSuccess(String data) {
+                            Globals.writeToMLOG("INFO", "2Exchange/SamplePhotoExchange()/onSuccess", "data: " + data);
+                        }
+
+                        @Override
+                        public void onFailure(String error) {
+                            Globals.writeToMLOG("ERROR", "2Exchange/SamplePhotoExchange()/onFailure", "error: " + error);
+                        }
+                    });
+
+                } catch (Exception e) {
+                    Globals.writeToMLOG("ERROR", "SamplePhotoExchange/downloadSamplePhotoTable/onResponse/onComplete/synchronizationTimetableDB", "Exception e: " + e);
+                }
+            }
+
+            @Override
+            public void onFailure(String error) {
+                Globals.writeToMLOG("ERROR", "Exchange/SamplePhotoExchange()/onFailure", "error: " + error);
+            }
+        });
 
 //        new Exchange().sendTAR();
 
