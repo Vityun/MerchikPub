@@ -2,7 +2,8 @@ package ua.com.merchik.merchik.Activities.PhotoLogActivity;
 
 public enum PhotoLogMode {
     BASE,
+    CHOICE,
     PLANOGRAM,
     REPORT_PREPARE,
-    CHOICE
+    SAMPLE_PHOTO
 }

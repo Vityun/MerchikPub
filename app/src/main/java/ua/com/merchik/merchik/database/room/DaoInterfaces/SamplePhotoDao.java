@@ -15,6 +15,12 @@ public interface SamplePhotoDao {
     @Query("SELECT * FROM sample_photo")
     List<SamplePhotoSDB> getAll();
 
+    @Query("SELECT * FROM sample_photo WHERE active = :active")
+    List<SamplePhotoSDB> getPhotoLogActive(Integer active);
+
+    @Query("SELECT * FROM sample_photo WHERE active = :active AND photoTp = :photoTp")
+    List<SamplePhotoSDB> getPhotoLogActiveAndTp(Integer active, Integer photoTp);
+
     @Query("SELECT * FROM sample_photo WHERE id = :id")
     SamplePhotoSDB getById(int id);
 

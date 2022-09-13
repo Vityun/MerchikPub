@@ -287,6 +287,7 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
             case 162:
                 Toast.makeText(this, "Образцы ФотоОтчетов", Toast.LENGTH_SHORT).show();
                 Intent intent = new Intent(this, PhotoLogActivity.class);
+                intent.putExtra("SamplePhoto", true);
                 startActivity(intent);
                 break;
         }

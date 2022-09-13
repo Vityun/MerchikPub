@@ -29,7 +29,6 @@ import ua.com.merchik.merchik.ServerExchange.TablesExchange.CustomerExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.LanguagesExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.OblastExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.PotentialClientTableExchange;
-import ua.com.merchik.merchik.ServerExchange.TablesExchange.SamplePhotoExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.SiteObjectsExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.StandartExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.TranslationsExchange;
@@ -41,7 +40,6 @@ import ua.com.merchik.merchik.data.Database.Room.ContentSDB;
 import ua.com.merchik.merchik.data.Database.Room.CustomerSDB;
 import ua.com.merchik.merchik.data.Database.Room.LanguagesSDB;
 import ua.com.merchik.merchik.data.Database.Room.OblastSDB;
-import ua.com.merchik.merchik.data.Database.Room.SamplePhotoSDB;
 import ua.com.merchik.merchik.data.Database.Room.SiteObjectsSDB;
 import ua.com.merchik.merchik.data.Database.Room.StandartSDB;
 import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
@@ -535,7 +533,7 @@ public class Exchange {
                         Globals.writeToMLOG("INFO", "Exchange/downloadPotentialClientTable/onFailure", "error: " + error);
                     }
                 });
-                SamplePhotoExchange samplePhotoExchange = new SamplePhotoExchange();
+/*                SamplePhotoExchange samplePhotoExchange = new SamplePhotoExchange();
                 samplePhotoExchange.downloadSamplePhotoTable(new Clicks.clickStatus() {
                     @Override
                     public void onSuccess(Object data) {
@@ -573,7 +571,7 @@ public class Exchange {
                     public void onFailure(String error) {
                         Globals.writeToMLOG("ERROR", "Exchange/SamplePhotoExchange()/onFailure", "error: " + error);
                     }
-                });
+                });*/
 
             } else {
                 long time = (System.currentTimeMillis() - exchange) / 1000;
@@ -587,7 +585,7 @@ public class Exchange {
 
     // ====================================^=^=^=^=^================================================
 
-    private void sendTAR() {
+    public void sendTAR() {
         TARUpload data = new TARUpload();
         data.mod = "reclamation";
         data.act = "create";
@@ -607,7 +605,8 @@ public class Exchange {
             el.addr_id = item.addr;
             el.user_id = item.author;
             el.client_id = item.client;
-            el.vinovnik_id = item.vinovnik;
+//            el.vinovnik_id = item.vinovnik;
+            el.vinovnik_id = 14041;     // TODO КРИТИЧНО, ТОЛЬКО ТЕСТЫ !!!
             el.date = Clock.getDateString(item.dt);
             el.photo_id = item.photo;
             el.photo_hash = item.photoHash;

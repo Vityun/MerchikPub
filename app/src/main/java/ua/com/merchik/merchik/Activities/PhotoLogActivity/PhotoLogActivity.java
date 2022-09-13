@@ -14,18 +14,23 @@ import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import java.util.List;
+
 import io.realm.RealmResults;
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.ViewHolders.PhotoAndInfoViewHolder;
+import ua.com.merchik.merchik.data.Database.Room.SamplePhotoSDB;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.StackPhotoRealm;
 import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.dialogs.DialogFilter.DialogFilter;
 import ua.com.merchik.merchik.toolbar_menus;
+
+import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
 public class PhotoLogActivity extends toolbar_menus {
 
@@ -106,6 +111,7 @@ public class PhotoLogActivity extends toolbar_menus {
 
     private PhotoLogAdapter recycleViewPLAdapter;
     private RealmResults<StackPhotoDB> stackPhoto;
+
     private void setRecycler() {
 
         editText.setHint("Введите текст для поиска по любым реквизитам");
@@ -131,7 +137,7 @@ public class PhotoLogActivity extends toolbar_menus {
                 String cust = this.getIntent().getStringExtra("customer");
                 stackPhoto = StackPhotoRealm.getPlanogramPhoto(addr, cust);
 
-                if (stackPhoto == null){
+                if (stackPhoto == null) {
                     Toast.makeText(this, "Фото Планограмм НЕ найдено. \n\nОбратитесь к Вашему руководителю.", Toast.LENGTH_LONG).show();
                 }
 
@@ -143,6 +149,27 @@ public class PhotoLogActivity extends toolbar_menus {
                 if (stackPhoto == null || stackPhoto.size() == 0) {
                     Toast.makeText(this, "По данному отчёту фото не найдено", Toast.LENGTH_SHORT).show();
                 }
+            } else if (this.getIntent().getBooleanExtra("SamplePhoto", false)) {
+                photoLogMode = PhotoLogMode.SAMPLE_PHOTO;   // Тип откуда открыли Журнал Фото
+
+                int photoTp = this.getIntent().getIntExtra("photoTp", 999);     // Если открыли Журнал фото с каким-то типом = он тут
+
+                // Получаем список Образцов Фото для фрмирования запроса к БД Стэк Фото
+                List<SamplePhotoSDB> samplePhotoSDBList;
+                if (photoTp == 999) {
+                    samplePhotoSDBList = SQL_DB.samplePhotoDao().getPhotoLogActive(1);
+                } else {
+                    samplePhotoSDBList = SQL_DB.samplePhotoDao().getPhotoLogActiveAndTp(1, photoTp);
+                }
+
+                // Формируем ID шники для Стэк Фото
+                Integer[] photoIds = new Integer[samplePhotoSDBList.size()];
+                for (int i = 0; i <= samplePhotoSDBList.size(); i++) {
+                    photoIds[i] = samplePhotoSDBList.get(i).photoId;
+                }
+
+                stackPhoto = StackPhotoRealm.getByIds(photoIds);
+
             } else {
                 photoLogMode = PhotoLogMode.BASE;
                 stackPhoto = RealmManager.getStackPhoto();
@@ -258,8 +285,8 @@ public class PhotoLogActivity extends toolbar_menus {
 
     /**
      * Set that
-     * */
-    private void setFilterIco(DialogFilter dialog){
+     */
+    private void setFilterIco(DialogFilter dialog) {
         if (dialog.isFiltered()) {
             filter.setImageDrawable(getResources().getDrawable(R.drawable.ic_filterbold));
         } else {

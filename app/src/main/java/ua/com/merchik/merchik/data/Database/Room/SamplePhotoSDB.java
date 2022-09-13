@@ -42,6 +42,11 @@ public class SamplePhotoSDB {
     @ColumnInfo(name = "active")
     public Integer active;
 
+    @SerializedName("grp_id")
+    @Expose
+    @ColumnInfo(name = "grpId")
+    public Integer grpId;
+
     @SerializedName("nm")
     @Expose
     @ColumnInfo(name = "nm")
