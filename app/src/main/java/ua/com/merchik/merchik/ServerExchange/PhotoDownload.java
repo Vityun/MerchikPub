@@ -124,7 +124,8 @@ public class PhotoDownload {
      * @param result*/
     public void downloadPhoto(String photoDir, String photoTypeDir, List<TovarImgList> list, Clicks.clickStatusMsg result){
         for (TovarImgList item : list) {
-            retrofit2.Call<ResponseBody> call = RetrofitBuilder.getRetrofitInterface().DOWNLOAD_PHOTO_BY_URL(item.getPhotoUrl());
+            String url = item.getPhotoUrl().replace("thumb_", "");
+            retrofit2.Call<ResponseBody> call = RetrofitBuilder.getRetrofitInterface().DOWNLOAD_PHOTO_BY_URL(url);
             call.enqueue(new Callback<ResponseBody>() {
                 @Override
                 public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
