@@ -28,10 +28,12 @@ import ua.com.merchik.merchik.data.RealmModels.CustomerDB;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
 import ua.com.merchik.merchik.data.RealmModels.ThemeDB;
 import ua.com.merchik.merchik.data.RealmModels.UsersDB;
+import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.data.TestViewHolderData;
 import ua.com.merchik.merchik.database.realm.tables.AddressRealm;
 import ua.com.merchik.merchik.database.realm.tables.CustomerRealm;
 import ua.com.merchik.merchik.database.realm.tables.ThemeRealm;
+import ua.com.merchik.merchik.database.realm.tables.WpDataRealm;
 import ua.com.merchik.merchik.dialogs.DialogData;
 
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
@@ -140,14 +142,14 @@ public class DialogCreateTAR extends DialogData {
             try {
                 if (data.type == 1) {
                     click.click(1);
-                }else if (data.type == 2){
+                } else if (data.type == 2) {
                     if (address != null) {
                         if (customer != null) {
                             click.click(2);
-                        }else {
+                        } else {
                             Toast.makeText(context, "Не внесли Клиента. Укажите, пожалуйста, Клиента", Toast.LENGTH_SHORT).show();
                         }
-                    }else {
+                    } else {
                         Toast.makeText(context, "Не внесли Адрес. Укажите, пожалуйста, Адрес", Toast.LENGTH_SHORT).show();
                     }
                 }
@@ -385,7 +387,7 @@ public class DialogCreateTAR extends DialogData {
         res.typeNumber = 2;
         res.type = type;
 
-        switch (type){
+        switch (type) {
             case COMMENT:
                 res.title = "Комментарий";
                 res.msg = "Внесите комментарий";
@@ -446,10 +448,10 @@ public class DialogCreateTAR extends DialogData {
 //                return;
 //            }
 
-            if (mode == 1 && comment != null &&  comment.length() < 19){
+            if (mode == 1 && comment != null && comment.length() < 19) {
                 Toast.makeText(v.getContext(), context.getText(R.string.tar_server_error_short_comment), Toast.LENGTH_SHORT).show();
                 return;
-            }else if (mode == 1 && comment == null){
+            } else if (mode == 1 && comment == null) {
                 Toast.makeText(v.getContext(), context.getText(R.string.tar_server_error_short_comment), Toast.LENGTH_SHORT).show();
                 return;
             }
@@ -470,15 +472,31 @@ public class DialogCreateTAR extends DialogData {
                 task.state = 0;
                 task.dt = System.currentTimeMillis();
                 task.author = Globals.userId;
-                if (users != null) {
-                    task.vinovnik = users.getId();
+
+                try {
+                    if (address != null && customer != null){
+                        WpDataDB wpDataDB = WpDataRealm.getWpData().where()
+                                .equalTo("addr_id", address.getAddrId())
+                                .equalTo("client_id", customer.getId())
+                                .findFirst();
+                        if (wpDataDB != null) {
+                            task.vinovnik = wpDataDB.getUser_id();
+                        }else {
+                            task.vinovnik = 14041;
+                        }
+                    }else {
+                        task.vinovnik = 14041;
+                    }
+                }catch (Exception e){
+                    task.vinovnik = 14041;
                 }
+
                 task.codeDad2SrcDoc = this.dad2;
 
                 if (photo != null) {
-                    if (photo.getPhotoServerId() != null && !photo.getPhotoServerId().equals("")){
+                    if (photo.getPhotoServerId() != null && !photo.getPhotoServerId().equals("")) {
                         task.photo = photo.getId();
-                    }else {
+                    } else {
                         task.photoHash = photo.getPhoto_hash();
                     }
                 }
@@ -492,7 +510,7 @@ public class DialogCreateTAR extends DialogData {
                     task.sotrOpinionId = opinion.id;
                 }
                 task.comment = comment;
-                if (premiya != null && !premiya.equals("")){
+                if (premiya != null && !premiya.equals("")) {
                     task.sumPremiya = premiya;
                 }
                 task.uploadStatus = 1;
