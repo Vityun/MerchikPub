@@ -794,7 +794,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
 
             }
 
-            if (tpl.getOptionControlName() != null && tpl.getOptionControlName().equals(ERROR_ID)) {
+            if (tpl.getOptionControlName() != null && tpl.getOptionControlName().equals(ERROR_ID)) {    // Работа с ошибками
                 dialog.setExpandableListView(createExpandableAdapter(dialog.context), () -> {
                     if (dialog.getOperationResult() != null) {
                         operetionSaveRPToDB(tpl, reportPrepareDB, dialog.getOperationResult(), dialog.getOperationResult2(), null);

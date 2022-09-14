@@ -816,9 +816,20 @@ public class DialogData {
         expListView.setOnChildClickListener(getErrorExpandableListView());
 
         ok.setOnClickListener(v -> {
-            result2 = editText2.getText().toString();
-            listener.clicked();
-            dialog.dismiss();
+            String res2 = editText2.getText().toString();
+            String res = result;
+
+            if (res != null && res.length() > 0){
+                if (res2.length() <= 15){
+                    Toast.makeText(context, "Внесите корректно Комментарий!\nОн должен быть не короче 15 символов", Toast.LENGTH_SHORT).show();
+                }else {
+                    result2 = res2;
+                    listener.clicked();
+                    dialog.dismiss();
+                }
+            }else {
+                Toast.makeText(context, "Вы не выбрали Ошибку!\nВыберите ошибку из списка выше", Toast.LENGTH_SHORT).show();
+            }
         });
     }
 
