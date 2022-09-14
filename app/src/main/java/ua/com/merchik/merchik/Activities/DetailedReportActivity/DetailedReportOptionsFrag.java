@@ -46,7 +46,7 @@ public class DetailedReportOptionsFrag extends Fragment {
 
     RecycleViewDRAdapter recycleViewDRAdapter;
 
-    interface RefreshInterface{
+    interface RefreshInterface {
         public void refreshAdapterFragmentB();
     }
 
@@ -64,7 +64,7 @@ public class DetailedReportOptionsFrag extends Fragment {
     public void onResume() {
         try {
             recycleViewDRAdapter.notifyDataSetChanged();
-        }catch (Exception e){
+        } catch (Exception e) {
             Log.e("test", "test: " + e);
             /*    java.lang.NullPointerException: Attempt to invoke virtual method 'void ua.com.merchik.merchik.Activities.DetailedReportActivity.RecycleViewDRAdapter.notifyDataSetChanged()' on a null object reference
         at ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportOptionsFrag.onResume(DetailedReportOptionsFrag.java:64)*/
@@ -77,24 +77,24 @@ public class DetailedReportOptionsFrag extends Fragment {
         View v = inflater.inflate(R.layout.fragment_dr_option, container, false);
         try {
             Button buttonSave = (Button) v.findViewById(R.id.button);
-            Button buttonMakeAReport  = (Button) v.findViewById(R.id.button3);
+            Button buttonMakeAReport = (Button) v.findViewById(R.id.button3);
 
             Button download = v.findViewById(R.id.download);
             TextView information = v.findViewById(R.id.info_msg);
 
             ImageView check = v.findViewById(R.id.check);
-            if (wpDataDB.getSetStatus() == 1){
+            if (wpDataDB.getSetStatus() == 1) {
                 check.setImageDrawable(mContext.getResources().getDrawable(R.drawable.ic_question_circle_regular));
                 check.setColorFilter(mContext.getResources().getColor(R.color.colorInetYellow));
-            }else {
-                if (wpDataDB.getStatus() == 1){
+            } else {
+                if (wpDataDB.getStatus() == 1) {
                     check.setImageDrawable(mContext.getResources().getDrawable(R.drawable.ic_check));
                     check.setColorFilter(mContext.getResources().getColor(R.color.greenCol));
-                }else {
-                    if (Clock.dateConvertToLong(Clock.getHumanTimeYYYYMMDD(wpDataDB.getDt().getTime()/1000)) < System.currentTimeMillis()){ //+TODO CHANGE DATE
+                } else {
+                    if (Clock.dateConvertToLong(Clock.getHumanTimeYYYYMMDD(wpDataDB.getDt().getTime() / 1000)) < System.currentTimeMillis()) { //+TODO CHANGE DATE
                         check.setImageDrawable(mContext.getResources().getDrawable(R.drawable.ic_exclamation_mark_in_a_circle));
                         check.setColorFilter(mContext.getResources().getColor(R.color.red_error));
-                    }else {
+                    } else {
                         check.setImageDrawable(mContext.getResources().getDrawable(R.drawable.ic_check));
                         check.setColorFilter(mContext.getResources().getColor(R.color.shadow));
                     }
@@ -124,18 +124,14 @@ public class DetailedReportOptionsFrag extends Fragment {
                     public <T> void click(T data) {
                         OptionsDB optionsDB = (OptionsDB) data;
                         int scrollPosition = recycleViewDRAdapter.getItemPosition(optionsDB);
-
-//                        if (optionsDB.getOptionControlId().equals("76815")){
-                            OptionMassageType msgType = new OptionMassageType();
-                            msgType.type = OptionMassageType.Type.DIALOG;
-                            new Options().optControl(getContext(), wp, optionsDB, Integer.parseInt(optionsDB.getOptionControlId()), msgType, Options.NNKMode.CHECK);
-//                        }
-
+                        OptionMassageType msgType = new OptionMassageType();
+                        msgType.type = OptionMassageType.Type.DIALOG;
+                        new Options().optControl(getContext(), wp, optionsDB, Integer.parseInt(optionsDB.getOptionControlId()), msgType, Options.NNKMode.CHECK);
                         rvContacts.smoothScrollToPosition(scrollPosition);
                     }
                 });
 
-                if (wpDataDB.getSetStatus() == 1){
+                if (wpDataDB.getSetStatus() == 1) {
                     check.setImageDrawable(mContext.getResources().getDrawable(R.drawable.ic_question_circle_regular));
                     check.setColorFilter(mContext.getResources().getColor(R.color.colorInetYellow));
 
@@ -159,13 +155,13 @@ public class DetailedReportOptionsFrag extends Fragment {
             Log.e("R_TRANSLATES", "convertedObject: START");
 
             List<Integer> ids = new ArrayList<>();
-            for (OptionsDB item : optionsButtons){
+            for (OptionsDB item : optionsButtons) {
                 ids.add(Integer.parseInt(item.getOptionId()));
             }
 
             Log.e("R_TRANSLATES", "item: " + ids.size());
 
-            for (Integer item : ids){
+            for (Integer item : ids) {
                 Log.e("R_TRANSLATES", "Integeritem: " + item);
             }
 
@@ -174,20 +170,20 @@ public class DetailedReportOptionsFrag extends Fragment {
 
             Log.e("R_TRANSLATES", "item: " + list.size());
 
-            for (SiteObjectsSDB item : list){
+            for (SiteObjectsSDB item : list) {
                 Log.e("R_TRANSLATES", "SiteObjectsSDBitem: " + item.id);
             }
 
             Log.e("TEST_OPTIONS", "optionsButtons SIZE: " + optionsButtons.size());
-            for (OptionsDB item : optionsButtons){
+            for (OptionsDB item : optionsButtons) {
                 options.optionControl(mContext, wpDataDB, item, null, Options.NNKMode.NULL);
             }
 
-            if (optionsButtons != null && optionsButtons.size() > 0){
+            if (optionsButtons != null && optionsButtons.size() > 0) {
                 recycleViewDRAdapter = new RecycleViewDRAdapter(mContext, wpDataDB, optionsButtons, list);
                 rvContacts.setAdapter(recycleViewDRAdapter);
                 rvContacts.setLayoutManager(new LinearLayoutManager(mContext, LinearLayoutManager.VERTICAL, false));
-            }else {
+            } else {
                 // TODO Написать текст или в Обьект или в Ресурсы
                 String msg = "По данному посещению не обнаружено ни одной опции. Попробуйте перезайти в отчёт или нажать на кнопку 'Загрузить'. При этом у Вас должен быть включён интернет и обеспеченна связь с сервером.";
                 rvContacts.setVisibility(View.GONE);
@@ -198,7 +194,7 @@ public class DetailedReportOptionsFrag extends Fragment {
                 download.setOnClickListener(this::clickDownload);
             }
 
-        }catch (Exception e){
+        } catch (Exception e) {
             Log.e("R_TRANSLATES", "convertedObjectERROR: " + e);
             e.printStackTrace();
         }
@@ -207,7 +203,7 @@ public class DetailedReportOptionsFrag extends Fragment {
     }
 
 
-    private void clickDownload(View view){
+    private void clickDownload(View view) {
         Toast.makeText(view.getContext(), "Начинаю загрузку Опций", Toast.LENGTH_SHORT).show();
 
         TablesLoadingUnloading tlu = new TablesLoadingUnloading();
@@ -225,12 +221,12 @@ public class DetailedReportOptionsFrag extends Fragment {
 
 
 /*
-* Вова, Дай список стандартов
-*
-* Ограничить по коддад 2
-*
-* Вова, дай код которым показываешь мне стандарты
-*
-*
-*
-* */
+ * Вова, Дай список стандартов
+ *
+ * Ограничить по коддад 2
+ *
+ * Вова, дай код которым показываешь мне стандарты
+ *
+ *
+ *
+ * */

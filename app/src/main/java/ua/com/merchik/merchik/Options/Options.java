@@ -3,6 +3,7 @@ package ua.com.merchik.merchik.Options;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.text.Html;
 import android.text.SpannableString;
 import android.text.SpannableStringBuilder;
 import android.text.Spanned;
@@ -433,6 +434,11 @@ public class Options {
     public void conduct(Context context, WpDataDB wp, List<OptionsDB> options, int optCount, Clicks.click click) {
         int register = 0;
 
+        DialogData dialog = new DialogData(context);
+
+        SpannableStringBuilder optionsSum = new SpannableStringBuilder();
+        double optionSumRes = 0;
+
         OptionMassageType type = new OptionMassageType();
         type.type = STRING;
 
@@ -451,6 +457,14 @@ public class Options {
             } else {
                 Log.e("conduct", "Что-то пошло не так: " + controlResult);
             }
+
+            if (item.getIsSignal().equals("1")) {
+                StringBuffer msg = new StringBuffer();
+                optionsSum.append(createLinkedString(dialog,
+                        msg.append("* ").append(item.getOptionControlTxt()).append(" (").append(counter2Text(wp)).append(")").append("\n"), item, click));
+
+                optionSumRes =+ wp.getCash_zakaz() * 0.08;
+            }
         }
 
         Log.e("conduct", "optionNotConduct: " + optionNotConduct);
@@ -461,7 +475,7 @@ public class Options {
 
             // Не все опции(действия) выполнены
             // Не выполнены:
-            DialogData dialog = new DialogData(context);
+
             dialog.setDialogIco();
             dialog.setTitle("Не все опции(действия) выполнены.");
 
@@ -470,9 +484,11 @@ public class Options {
             resStr.append("Не выполнены: \n\n");
             for (OptionsDB item : optionNotConduct) {
                 StringBuffer msg = new StringBuffer();
-                resStr.append(createLinkedString(dialog, msg.append("* ").append(item.getOptionControlTxt()).append("\n"), item, click));
+                resStr.append(createLinkedString(dialog, msg.append("* ").append(item.getOptionControlTxt()).append(" (блок)").append("\n"), item, click));
             }
-            resStr.append("\n\nУстраните указанные ошибки и повторите попытку проведения.");
+            resStr.append(optionsSum);
+            resStr.append("\n\nУстраните указанные ошибки и повторите попытку проведения." + "\n\nВы можете ещё получить: " + "~")
+                    .append(String.format("%.2f", optionSumRes)).append(", если выполните опции выше.");
 
             dialog.setText(resStr, () -> {
             });
@@ -513,6 +529,12 @@ public class Options {
         return res;
     }
 
+    private CharSequence counter2Text(WpDataDB wpDataDB) {
+        CharSequence res = "";
+        res = "~" + String.format("%.2f", wpDataDB.getCash_zakaz() * 0.08);
+        res = Html.fromHtml("<font color=red>" + res + "</font>");
+        return res;
+    }
 
     /*Проверка Опции*/
     public <T> int optControl(Context context, T dataDB, OptionsDB option, int optionId, OptionMassageType type, NNKMode mode) {
@@ -524,7 +546,7 @@ public class Options {
             case 133381:
                 OptionControlRegistrationPotentialClient<?> optionControlRegistrationPotentialClient = new OptionControlRegistrationPotentialClient<>(context, dataDB, option, type, mode);
 //                if (optionControlRegistrationPotentialClient.isBlockOption()) {
-                    optionControlRegistrationPotentialClient.showOptionMassage();
+                optionControlRegistrationPotentialClient.showOptionMassage();
 //                }
                 return optionControlRegistrationPotentialClient.isBlockOption() ? 1 : 0;
 
