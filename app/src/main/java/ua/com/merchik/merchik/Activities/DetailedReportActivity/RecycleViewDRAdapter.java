@@ -81,7 +81,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
         ConstraintLayout constraintLayout;
         TextView textDescription;
         TextView textTitle;
-        TextView textInteger;
+        TextView textInteger, textInteger2;
         ImageView setCheck;
 
         ViewHolder(View v) {
@@ -90,6 +90,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
             textDescription = v.findViewById(R.id.textViewDescription);
             textTitle = v.findViewById(R.id.textViewTitle);
             textInteger = v.findViewById(R.id.textViewInteger);
+            textInteger2 = v.findViewById(R.id.textViewInteger2);
             setCheck = v.findViewById(R.id.imageViewCheck);
             setCheck.setClickable(true);
         }
@@ -168,8 +169,15 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                     || optionId == 133382   // Потенциальный клиент
             ) {
                 constraintLayout.setBackgroundResource(R.drawable.bg_temp);
+                textInteger2.setVisibility(View.VISIBLE);
+                if (optionsButtons.getIsSignal().equals("1")) {
+                    textInteger2.setText(counter2Text());
+                }else {
+                    textInteger2.setVisibility(View.GONE);
+                }
             } else {
                 describedOption = false;
+                textInteger2.setVisibility(View.GONE);
                 constraintLayout.setBackgroundResource(R.drawable.button_bg_inactive);
             }
 
@@ -183,7 +191,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
 
             // Определения цвета которым будет гореть СИГНАЛ
             setCheck.setColorFilter(mContext.getResources().getColor(R.color.shadow));
-            if (describedOption){
+            if (describedOption) {
                 setCheck.setVisibility(View.VISIBLE);
                 if (optionsButtons.getIsSignal().equals("1")) {
 //                setCheck.setImageResource(R.drawable.red_checkbox);
@@ -194,14 +202,14 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                     setCheck.setImageResource(R.drawable.ic_check);
                     setCheck.setColorFilter(mContext.getResources().getColor(R.color.greenCol));
                 } else {
-                    if (optionsButtons.getOptionControlId().equals("0")){
+                    if (optionsButtons.getOptionControlId().equals("0")) {
                         setCheck.setVisibility(View.INVISIBLE);
-                    }else {
+                    } else {
                         setCheck.setImageResource(R.drawable.ic_round);
                         setCheck.setColorFilter(mContext.getResources().getColor(R.color.shadow));
                     }
                 }
-            }else {
+            } else {
                 setCheck.setVisibility(View.INVISIBLE);
                 setCheck.setImageResource(R.drawable.ic_round);
                 setCheck.setColorFilter(mContext.getResources().getColor(R.color.colorUnselectedTab));
@@ -306,7 +314,8 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                         break;
 
                     default:
-                        textInteger.setText(optionsButtons.getPrice());
+                        textInteger.setVisibility(View.GONE);
+//                        textInteger.setText(optionsButtons.getPrice());
                 }
             } catch (Exception e) {
                 // TODO Вставить обработчик
@@ -402,10 +411,16 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                 setCheck(POS, optionsButtons, Options.NNKMode.CHECK_CLICK);
             });
         }
+    }
 
-
-
-
+    private CharSequence counter2Text() {
+        CharSequence res = "";
+        if (dataDB instanceof WpDataDB) {
+            WpDataDB wpDataDB = (WpDataDB) dataDB;
+            res = "~" + String.format("%.2f", wpDataDB.getCash_zakaz() * 0.08);
+            res = Html.fromHtml("<font color=red>" + res + "</font>");
+        }
+        return res;
     }
 
     private void longClickButton(OptionsDB test, int optId, DetailedReportButtons detailedReportButtons, OptionsDB optionsButtons) {
@@ -506,7 +521,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
         return butt.size();
     }
 
-    public int getItemPosition(OptionsDB item){
+    public int getItemPosition(OptionsDB item) {
         return butt.indexOf(item);
     }
 
@@ -529,16 +544,16 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
         buttText = buttText.replace("Кнопка ", "");
 
         /*
-        * 132968 - 0  - фото витрины
-        * 135809 - 14 - Фото витрины До начала работ
-        * 135158 - 4  - Фото остатков товаров
-        * 132969 - 10 - Фото тележка с товаром
-        * 141360 - 31 - Фото товара на складе
-        * 141885 - 3  - Фото Документов
-        * */
+         * 132968 - 0  - фото витрины
+         * 135809 - 14 - Фото витрины До начала работ
+         * 135158 - 4  - Фото остатков товаров
+         * 132969 - 10 - Фото тележка с товаром
+         * 141360 - 31 - Фото товара на складе
+         * 141885 - 3  - Фото Документов
+         * */
         int photoType = 0;
         boolean showPhotoLink = false;
-        switch (option.getOptionId()){
+        switch (option.getOptionId()) {
             case "132968":  // - 0  - фото витрины
                 photoType = 0;
                 showPhotoLink = true;
@@ -567,7 +582,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
 
         SpannableStringBuilder ss = new SpannableStringBuilder();
         ss.append(option.getOptionControlDescr());
-        if (showPhotoLink){
+        if (showPhotoLink) {
             ss.append("\n\n");
             ss.append(createLinkedString(mContext, "Показать образец фото", photoType));
         }
@@ -576,7 +591,8 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
         dialog.setTitle(buttText);
 //        dialog.setTextTest(option.getOptionControlDescr() + "\n\n" + createLinkedString(mContext, "Показать образец фото"));
 //        dialog.setTextTest(ss);
-        dialog.setText(ss, ()->{});
+        dialog.setText(ss, () -> {
+        });
         dialog.setMerchikIco(mContext);
         dialog.show();
     }
@@ -592,7 +608,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                     intent.putExtra("SamplePhoto", true);
                     intent.putExtra("photoTp", photoType);
                     context.startActivity(intent);
-                }catch (Exception e){
+                } catch (Exception e) {
                     Toast.makeText(context, "Показать образец фото error: " + e, Toast.LENGTH_SHORT).show();
                 }
             }
