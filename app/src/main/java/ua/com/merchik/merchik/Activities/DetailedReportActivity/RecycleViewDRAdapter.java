@@ -418,7 +418,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
         if (dataDB instanceof WpDataDB) {
             WpDataDB wpDataDB = (WpDataDB) dataDB;
             res = "~" + String.format("%.2f", wpDataDB.getCash_zakaz() * 0.08);
-            res = Html.fromHtml("<font color=red>" + res + "</font>");
+            res = Html.fromHtml("<font color=red>" + res + "грн" + "</font>");
         }
         return res;
     }

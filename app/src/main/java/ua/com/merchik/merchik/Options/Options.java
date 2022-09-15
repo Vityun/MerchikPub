@@ -488,7 +488,7 @@ public class Options {
             }
             resStr.append(optionsSum);
             resStr.append("\n\nУстраните указанные ошибки и повторите попытку проведения." + "\n\nВы можете ещё получить: " + "~")
-                    .append(String.format("%.2f", optionSumRes)).append(", если выполните опции выше.");
+                    .append(String.format("%.2f", optionSumRes)).append("грн, если выполните опции выше.");
 
             dialog.setText(resStr, () -> {
             });
