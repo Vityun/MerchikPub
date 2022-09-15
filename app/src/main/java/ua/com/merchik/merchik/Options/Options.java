@@ -461,9 +461,9 @@ public class Options {
             if (item.getIsSignal().equals("1")) {
                 StringBuffer msg = new StringBuffer();
                 optionsSum.append(createLinkedString(dialog,
-                        msg.append("* ").append(item.getOptionControlTxt()).append(" (").append(counter2Text(wp)).append(")").append("\n"), item, click));
+                        msg.append("* ").append(item.getOptionControlTxt())/*.append(" (").append(counter2Text(wp)).append(")").append("\n")*/, item, click)).append(" ").append(Html.fromHtml("<font color=red>(" + counter2Text(wp) + "грн.)</font>")).append("\n");;
 
-                optionSumRes =+ wp.getCash_zakaz() * 0.08;
+                optionSumRes += wp.getCash_zakaz() * 0.08;
             }
         }
 
@@ -484,14 +484,13 @@ public class Options {
             resStr.append("Не выполнены: \n\n");
             for (OptionsDB item : optionNotConduct) {
                 StringBuffer msg = new StringBuffer();
-                resStr.append(createLinkedString(dialog, msg.append("* ").append(item.getOptionControlTxt()).append(" (блок)").append("\n"), item, click));
+                resStr.append(createLinkedString(dialog, msg.append("* ").append(item.getOptionControlTxt()), item, click)).append(" ").append(Html.fromHtml("<font color=red>(блок)</font>")).append("\n");
             }
             resStr.append(optionsSum);
             resStr.append("\n\nУстраните указанные ошибки и повторите попытку проведения." + "\n\nВы можете ещё получить: " + "~")
                     .append(String.format("%.2f", optionSumRes)).append("грн, если выполните опции выше.");
 
-            dialog.setText(resStr, () -> {
-            });
+            dialog.setText(resStr, () -> {});
             dialog.setClose(dialog::dismiss);
             dialog.show();
 
@@ -515,7 +514,7 @@ public class Options {
             @Override
             public void onClick(View textView) {
                 click.click(item);
-//                Toast.makeText(textView.getContext(), "Боооожечки, Ви не виконали опцію: " + item.getOptionControlTxt(), Toast.LENGTH_LONG).show();
+                Toast.makeText(textView.getContext(), "Боооожечки, Ви не виконали опцію: " + item.getOptionControlTxt(), Toast.LENGTH_LONG).show();
                 dialogData.dismiss();
             }
 

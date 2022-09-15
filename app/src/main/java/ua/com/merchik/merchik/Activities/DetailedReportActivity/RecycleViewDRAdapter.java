@@ -101,6 +101,8 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
 
             Log.e("RViewDRAdapterBind", "optionsButtons: " + optionsButtons);
 
+            textInteger.setVisibility(View.VISIBLE);
+
             String buttText = optionsButtons.getOptionTxt();
             buttText = buttText.replace("&quot;", "\"");
             buttText = buttText.replace("Кнопка ", "");

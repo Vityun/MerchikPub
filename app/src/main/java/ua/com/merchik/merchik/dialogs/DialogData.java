@@ -16,7 +16,6 @@ import android.text.Editable;
 import android.text.InputType;
 import android.text.SpannableStringBuilder;
 import android.text.TextWatcher;
-import android.text.method.LinkMovementMethod;
 import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
@@ -46,6 +45,7 @@ import java.util.Map;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.TelephoneMask;
+import ua.com.merchik.merchik.Utils.Test.ClickableMovementMethod;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteHintsDB;
 import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteObjects.SiteObjectsDB;
@@ -194,12 +194,20 @@ public class DialogData {
     //
     public void setText(SpannableStringBuilder text, DialogClickListener clickListener) {
         this.text.setVisibility(View.VISIBLE);
-        this.text.setMovementMethod(LinkMovementMethod.getInstance());
+//        this.text.setMovementMethod(LinkMovementMethod.getInstance());
+
+
+
+        this.text.setMovementMethod(ClickableMovementMethod.getInstance());
+//        this.text.setMovementMethod(ClickableMovementMethod.getInstance());
+        this.text.setClickable(false);
+        this.text.setLongClickable(false);
+
         if (text != null && !text.equals("")) {
             this.text.setText(text);
             this.text.setOnClickListener(v -> clickListener.clicked());
             // Делаю возможность скролить текст
-            this.text.setMovementMethod(LinkMovementMethod.getInstance());
+//            this.text.setMovementMethod(LinkMovementMethod.getInstance());
         } else {
             this.text.setVisibility(View.GONE);
         }
