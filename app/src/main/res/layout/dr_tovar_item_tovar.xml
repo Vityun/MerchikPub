@@ -114,7 +114,21 @@
             app:layout_constraintBottom_toBottomOf="@+id/textViewItemTovarOptLine"
             app:layout_constraintEnd_toStartOf="@+id/imageViewItemTovar"
             app:layout_constraintHorizontal_bias="1.0"
-            app:layout_constraintStart_toEndOf="@+id/textViewItemTovarOptLine" />
+            app:layout_constraintStart_toEndOf="@+id/textViewItemTovarOptLine"
+            tools:text="test text"
+            tools:visibility="visible" />
+
+        <TextView
+            android:id="@+id/facePlan"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="4dp"
+            android:layout_marginRight="4dp"
+            android:visibility="gone"
+            app:layout_constraintBottom_toTopOf="@+id/balance"
+            app:layout_constraintEnd_toStartOf="@+id/imageViewItemTovar"
+            tools:text="test text"
+            tools:visibility="visible" />
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/recyclerView2"

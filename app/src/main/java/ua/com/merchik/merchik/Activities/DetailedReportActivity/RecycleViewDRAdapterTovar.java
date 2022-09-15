@@ -205,7 +205,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
         TextView textViewItemTovarOptLine;
         RecyclerView recyclerView;
 
-        TextView balance;
+        TextView balance, facePlan;
 
         TextView allTov;
 
@@ -227,6 +227,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
             textViewItemTovarOptLine = (TextView) v.findViewById(R.id.textViewItemTovarOptLine);
             tradeMark = (TextView) v.findViewById(R.id.textViewItemTovarThirdLine);
             balance = v.findViewById(R.id.balance);
+            facePlan = v.findViewById(R.id.facePlan);
             recyclerView = v.findViewById(R.id.recyclerView2);
 
 
@@ -471,6 +472,8 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                     dialog.show();
                 });
 
+                showFacePlan(rp);
+
             } catch (Exception err) {
                 Globals.writeToMLOG("ERROR", "RecycleViewDRAdapterTovar.bind_6", "Exception e: " + err);
             }
@@ -642,6 +645,25 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
 
                     return false;
                 });
+            }
+        }
+
+
+        /*
+        * 15.09.2022.
+        * Отображение плана по фейсам.
+        *
+        * Если Плана по фейсам нет - поле вообще не нужно отображать.
+        * */
+        private void showFacePlan(ReportPrepareDB reportPrepareDB) {
+            if (reportPrepareDB != null && reportPrepareDB.facesPlan != null && reportPrepareDB.facesPlan > 0){
+                facePlan.setVisibility(View.VISIBLE);
+                facePlan.setText("п.ф.: " + reportPrepareDB.facesPlan);
+                facePlan.setOnClickListener(view -> {
+                    Toast.makeText(mContext, "План по фейсам равен: " + reportPrepareDB.facesPlan, Toast.LENGTH_SHORT).show();
+                });
+            }else {
+                facePlan.setVisibility(View.GONE);
             }
         }
 
