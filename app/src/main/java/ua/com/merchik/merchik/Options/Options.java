@@ -15,6 +15,7 @@ import android.widget.Toast;
 
 import androidx.recyclerview.widget.LinearLayoutManager;
 
+import com.google.android.gms.common.util.ArrayUtils;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
@@ -111,6 +112,9 @@ import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 public class Options {
 
     private Globals globals = new Globals();
+
+    private Integer[] describedOptions = new Integer[]{132624, 76815, 157241, 157243, 84006, 156928,
+            151594, 80977, 135330, 133381, 135329, 138518, 151139, 132623, 133382, 137797, 135809, 135328, 135327};
 
     /*Сюда записываются Опции которые не прошли проверку, при особенном переданном MOD-e. Сделано
     для того что б потом можно было посмотреть название опций которые не прошли проверку и, возможно,
@@ -446,24 +450,28 @@ public class Options {
             Log.e("conduct", "----------------------------------------------------------------");
             Log.e("conduct", "OptionsDB item.getOptionControlId(): " + item.getOptionControlId());
 
+            // Блокирует опция или нет
             int controlResult = optControl(context, wp, item, Integer.parseInt(item.getOptionControlId()), type, NNKMode.CHECK);
 
+            // Создаю список опций который блокирует
             if (controlResult == 0) {
                 Log.e("conduct", "Опция контроля выполнена: " + controlResult);
             } else if (controlResult == 1) {
                 Log.e("conduct", "Опция контроля НЕ выполнена: " + controlResult);
-//                register++;
                 optionNotConduct.add(item);
             } else {
                 Log.e("conduct", "Что-то пошло не так: " + controlResult);
             }
 
-            if (item.getIsSignal().equals("1")) {
-                StringBuffer msg = new StringBuffer();
-                optionsSum.append(createLinkedString(dialog,
-                        msg.append("* ").append(item.getOptionControlTxt())/*.append(" (").append(counter2Text(wp)).append(")").append("\n")*/, item, click)).append(" ").append(Html.fromHtml("<font color=red>(" + counter2Text(wp) + "грн.)</font>")).append("\n");;
+            // Если опция описана - добавляю ещё и ДЕНЬГИ в скобочку и считаю итоговую сумму
+            if (ArrayUtils.contains(describedOptions, Integer.parseInt(item.getOptionControlId())) && controlResult != 1){
+                if (item.getIsSignal().equals("1")) {
+                    StringBuffer msg = new StringBuffer();
+                    optionsSum.append(createLinkedString(dialog,
+                            msg.append("* ").append(item.getOptionControlTxt())/*.append(" (").append(counter2Text(wp)).append(")").append("\n")*/, item, click)).append(" ").append(Html.fromHtml("<font color=red>(" + counter2Text(wp) + "грн.)</font>")).append("\n");;
 
-                optionSumRes += wp.getCash_zakaz() * 0.08;
+                    optionSumRes += wp.getCash_zakaz() * 0.08;
+                }
             }
         }
 
