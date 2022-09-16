@@ -59,7 +59,7 @@ public class OptionControlRegistrationPotentialClient<T> extends OptionControl {
 
 
     private void executeOption() {
-        List<PotentialClientSDB> potentialClients = SQL_DB.potentialClientDao().getByUserThemeDt(wpDataDB.getUser_id(), wpDataDB.getTheme_id(), dtFrom, dtTo);
+        List<PotentialClientSDB> potentialClients = SQL_DB.potentialClientDao().getByUserThemeDt(wpDataDB.getUser_id(), 834, dtFrom, dtTo);
 
         if (potentialClients == null || potentialClients.size() == 0) {
             err++;
@@ -102,7 +102,7 @@ public class OptionControlRegistrationPotentialClient<T> extends OptionControl {
     }
 
     private void formatMsg(List<PotentialClientSDB> potentialClients) {
-        if (potentialClients != null && potentialClients.size() > 0) {
+        if (potentialClients != null && potentialClients.size() == 0) {
             stringBuilderMsg.append("Не могу определить параметры расчета.");
             signal = true;
         } else if (err > 0) {
