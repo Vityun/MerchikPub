@@ -703,6 +703,7 @@ public class RealmManager {
                 .notEqualTo("photo_type", 18)
                 .notEqualTo("photo_type", 29)
                 .notEqualTo("photo_type", 5)
+                .notEqualTo("photo_type", 35)
                 .findAll();
     }
 
@@ -711,6 +712,7 @@ public class RealmManager {
                 .notEqualTo("photo_type", 18)
                 .notEqualTo("photo_type", 29)
                 .notEqualTo("photo_type", 5)
+                .notEqualTo("photo_type", 35)
                 .equalTo("code_dad2", dad2)
                 .findAll();
     }

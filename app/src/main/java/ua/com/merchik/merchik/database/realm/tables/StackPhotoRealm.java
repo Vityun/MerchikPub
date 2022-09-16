@@ -106,6 +106,7 @@ public class StackPhotoRealm {
                     .equalTo("client_id", customer)
                     .notEqualTo("photo_type", 18)
                     .notEqualTo("photo_type", 29)
+                    .notEqualTo("photo_type", 35)
                     .findAll();
         } else if (addr != 0 && customer.equals("")) {
             return INSTANCE.where(StackPhotoDB.class)
@@ -113,6 +114,7 @@ public class StackPhotoRealm {
                     .equalTo("addr_id", addr)
                     .notEqualTo("photo_type", 18)
                     .notEqualTo("photo_type", 29)
+                    .notEqualTo("photo_type", 35)
                     .findAll();
         } else if (addr == 0 && !customer.equals("")) {
             return INSTANCE.where(StackPhotoDB.class)
@@ -120,12 +122,14 @@ public class StackPhotoRealm {
                     .equalTo("client_id", customer)
                     .notEqualTo("photo_type", 18)
                     .notEqualTo("photo_type", 29)
+                    .notEqualTo("photo_type", 35)
                     .findAll();
         } else {
             return INSTANCE.where(StackPhotoDB.class)
                     .isNotNull("photoServerId")
                     .notEqualTo("photo_type", 18)
                     .notEqualTo("photo_type", 29)
+                    .notEqualTo("photo_type", 35)
                     .findAll();
         }
     }
