@@ -65,7 +65,7 @@ public class RealmManager {
         RealmConfiguration config = new RealmConfiguration.Builder()
                 .name("myrealm.realm")
 //                .deleteRealmIfMigrationNeeded()
-                .schemaVersion(13)
+                .schemaVersion(14)
                 .allowWritesOnUiThread(true)
                 .allowQueriesOnUiThread(true)
                 .migration(new MyMigration())

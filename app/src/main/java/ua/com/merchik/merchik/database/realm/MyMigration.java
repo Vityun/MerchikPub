@@ -84,6 +84,14 @@ public class MyMigration implements RealmMigration {
             oldVersion++;
         }
 
+        if (oldVersion == 13){
+            RealmObjectSchema schemaWp = schema.get("WpDataDB");
+
+            schemaWp.addField("ptt_user_id", Integer.class);
+
+            oldVersion++;
+        }
+
     }
 }
 
