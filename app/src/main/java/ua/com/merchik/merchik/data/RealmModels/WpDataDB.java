@@ -117,7 +117,11 @@ public class WpDataDB extends RealmObject implements Serializable {
     public int user_comment_author_id;
     public long user_comment_dt_update;
 
-    public int ptt_user_id; // 19.09.22 Поле ПТТ-шника
+    // 19.09.22
+    public int ptt_user_id; // Поле ПТТ-шника
+    public double sku_plan;
+    public double sku_fact;
+    public double oos;
 
     public boolean kp;  // КП Команда на Проведение
     public boolean startUpdate;

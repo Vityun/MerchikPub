@@ -88,6 +88,9 @@ public class MyMigration implements RealmMigration {
             RealmObjectSchema schemaWp = schema.get("WpDataDB");
 
             schemaWp.addField("ptt_user_id", Integer.class);
+            schemaWp.addField("sku_plan", Double.class);
+            schemaWp.addField("sku_fact", Double.class);
+            schemaWp.addField("oos", Double.class);
 
             oldVersion++;
         }
