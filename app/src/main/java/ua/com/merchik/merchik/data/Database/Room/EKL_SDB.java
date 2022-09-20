@@ -17,7 +17,7 @@ public class EKL_SDB {
     public Integer sotrId;
 
     @ColumnInfo(name = "client_id")
-    public Integer clientId;
+    public String clientId;
 
     @ColumnInfo(name = "address_id")
     public Integer addressId;

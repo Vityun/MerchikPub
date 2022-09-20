@@ -72,6 +72,18 @@ public class Clock {
         return cal.getTime().getTime();
     }
 
+    /**
+     * 20.09.2022
+     * Передаю дату в формате long и добавляю дни указанные вторым числом.
+     * Второе число может быть отрицательным
+     * 86400000 - 1 день в миллисекундах
+     * */
+    public static long getDatePeriodLong(long date, int day) {
+        long res;
+        res = date + (day * 86400000);
+        return res;
+    }
+
 
     // Сегодня - 7 дней
     public static String lastWeek() {

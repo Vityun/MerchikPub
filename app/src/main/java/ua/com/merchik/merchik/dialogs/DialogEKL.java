@@ -449,7 +449,7 @@ public class DialogEKL {
                                 EKL_SDB ekl_sdb = new EKL_SDB();
                                 ekl_sdb.id = resp.requestId;
                                 ekl_sdb.userId = user.id;
-                                ekl_sdb.clientId = Integer.valueOf(wp.getClient_id());
+                                ekl_sdb.clientId = wp.getClient_id();
                                 ekl_sdb.addressId = wp.getAddr_id();
                                 ekl_sdb.dad2 = wp.getCode_dad2();
                                 ekl_sdb.state = true;

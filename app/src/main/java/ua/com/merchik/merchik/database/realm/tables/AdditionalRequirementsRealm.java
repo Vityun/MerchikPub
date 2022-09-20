@@ -99,7 +99,7 @@ public class AdditionalRequirementsRealm {
                         .equalTo("optionId", String.valueOf(optionId))
                         .findAll();
             }
-        }catch (Exception e){
+        } catch (Exception e) {
             Globals.writeToMLOG("ERR", "getDocumentAdditionalRequirements", "Exception e: " + e);
         }
 
@@ -174,6 +174,30 @@ public class AdditionalRequirementsRealm {
                 .equalTo("not_approve", "0")
                 .notEqualTo("userId", "0")
                 .findFirst();
+
+        return res;
+    }
+
+
+    /**
+     * 20.09.2022
+     * <p>
+     * Тут мы попробуем сделать запрос к Доп. Требованиям, что б получить ПТТ-шника
+     */
+    public static RealmResults<AdditionalRequirementsDB> getAdditionalRequirementsDBTest(String clientId, String addrId, String optionId) {
+        RealmResults<AdditionalRequirementsDB> res = INSTANCE.where(AdditionalRequirementsDB.class).findAll();
+
+        if (clientId != null && !clientId.equals("0")) {
+            res = res.where().equalTo("clientId", clientId).findAll();
+        }
+
+        if (addrId != null && !addrId.equals("0")) {
+            res = res.where().equalTo("addrId", addrId).findAll();
+        }
+
+        if (optionId != null && !optionId.equals("0")){
+            res = res.where().equalTo("optionId", optionId).findAll();
+        }
 
         return res;
     }

@@ -18,6 +18,9 @@ public interface TovarGroupDao {
     @Query("SELECT * FROM tovar_group WHERE id = :id")
     TovarGroupSDB getById(int id);
 
+    @Query("SELECT * FROM tovar_group WHERE id IN (:listIds)")
+    List<TovarGroupSDB> getAllByIds(List<Integer> listIds);
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     void insertAll(List<TovarGroupSDB> data);
 
