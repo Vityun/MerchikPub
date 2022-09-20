@@ -22,6 +22,10 @@ public class OptionButtonAddNewClient<T> extends OptionControl {
 
     private WpDataDB wpDataDB;
 
+    public OptionButtonAddNewClient(){
+
+    }
+
     public OptionButtonAddNewClient(Context context, T document, OptionsDB optionDB, OptionMassageType msgType, Options.NNKMode nnkMode) {
         this.context = context;
         this.document = document;
@@ -41,7 +45,7 @@ public class OptionButtonAddNewClient<T> extends OptionControl {
     private void executeOption() {
         DialogData dialog = new DialogData(context);
         dialog.setTitle("Добавление потенциального клиента");
-        dialog.setText("Вы хотите добавить потенциального клиента? \n\nЗа регистрацию потенциального клиента вы можете получить премию, инструкция находится внизу формы добавления нового клиента.");
+        dialog.setText("Вы хотите добавить потенциального клиента? \n\n" + additionalText());
         dialog.setOk("Да", () -> {
 //            Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://merchik.com.ua/mobile.php?mod=potential_clients"));
             Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(createAddNewClientLink()));
@@ -75,7 +79,7 @@ public class OptionButtonAddNewClient<T> extends OptionControl {
     *
     * */
 
-    private String createAddNewClientLink() {
+    public String createAddNewClientLink() {
         String link = "https://merchik.com.ua/mobile.php?mod=potential_clients";
         AppUsersDB appUser = AppUserRealm.getAppUserById(userId);
         if (appUser != null){
@@ -87,5 +91,25 @@ public class OptionButtonAddNewClient<T> extends OptionControl {
         }else {
             return link;
         }
+    }
+
+    /*Дополнительная подсказка: Потенциальный клиент*/
+    public String additionalText() {
+        int test = 11000;   // TODO будут мне норм значение передавать "ЗП мерчика"
+        String res;
+
+        double requestSend = test * 0.0005;
+        double requestRegistered = test * 0.005;
+        double presentation = test * 0.01;
+        double clientStart = test * 0.1;
+
+
+        res = String.format("- За регистрацию потенциального клиента (ПК) начисляются следующие премии:\n" +
+                "1. При подаче заявки: %s грн.\n" +
+                "2. Если и менеджер (после проверки реквизитов) регистрирует этого ПК в нашей базе данных: %s грн.\n" +
+                "3. Если для этого ПК проводится презентация: %s грн.\n" +
+                "4. Основная премия, при \"запуске\" клиента в работу: %s грн.", requestSend, requestRegistered, presentation, clientStart);
+
+        return res;
     }
 }

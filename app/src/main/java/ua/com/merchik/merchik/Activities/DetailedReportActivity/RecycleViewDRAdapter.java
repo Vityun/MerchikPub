@@ -172,10 +172,15 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
             ) {
                 constraintLayout.setBackgroundResource(R.drawable.bg_temp);
                 textInteger2.setVisibility(View.VISIBLE);
-                if (optionsButtons.getIsSignal().equals("1")) {
+                if (optionsButtons.getIsSignal().equals("1") && !optionsButtons.getBlockPns().equals("1")) {
                     textInteger2.setText(counter2Text());
-                }else {
-                    textInteger2.setVisibility(View.GONE);
+                } else {
+                    if (optionId == 133382) {
+                        textInteger2.setVisibility(View.VISIBLE);
+                        textInteger2.setText("+1100 грн.");
+                    }else {
+                        textInteger2.setVisibility(View.GONE);
+                    }
                 }
             } else {
                 describedOption = false;
@@ -426,7 +431,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
     }
 
     private void longClickButton(OptionsDB test, int optId, DetailedReportButtons detailedReportButtons, OptionsDB optionsButtons) {
-        optionDetail(test);
+        optionDetailPhotos(test);
 
         if (optId == 132968) {
             if (dataDB instanceof WpDataDB) {
@@ -444,11 +449,6 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
         RealmManager.INSTANCE.executeTransaction(realm -> {
             realm.insertOrUpdate(optionsButtons);
         });
-
-//        if (!optionsButtons.getOptionControlId().equals("587")) {
-//            Toast.makeText(mContext, "Проверка статуса данной опции", Toast.LENGTH_LONG).show();
-//        }
-
         updateSignal(POS);
     }
 
@@ -514,7 +514,6 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
         }
 
 
-//        OptionsDB opt = RealmManager.getOptionById(optionsButtons.getID());   // Внезапно. Не знаю зачем я это делал, пусть пока меня будет ужасать в будущем
         viewHolder.bind(optionsButtons, siteObjectsSDB);
     }
 
@@ -540,7 +539,9 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
     }
 
 
-    private void optionDetail(OptionsDB option) {
+    private void optionDetailPhotos(OptionsDB option) {
+        String additionalText = "\n\n";
+
         String buttText = option.getOptionTxt();
         buttText = buttText.replace("&quot;", "");
         buttText = buttText.replace("Кнопка ", "");
@@ -582,8 +583,15 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                 break;
         }
 
+/*        switch (option.getOptionId()) {
+            case "133382":  // Потенциальный клиент
+                additionalText += additionalText133382();
+                break;
+        }*/
+
         SpannableStringBuilder ss = new SpannableStringBuilder();
-        ss.append(option.getOptionControlDescr());
+        ss.append(option.getOptionDescr());
+        ss.append(additionalText);
         if (showPhotoLink) {
             ss.append("\n\n");
             ss.append(createLinkedString(mContext, "Показать образец фото", photoType));
@@ -591,12 +599,30 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
 
         DialogData dialog = new DialogData(mContext);
         dialog.setTitle(buttText);
-//        dialog.setTextTest(option.getOptionControlDescr() + "\n\n" + createLinkedString(mContext, "Показать образец фото"));
-//        dialog.setTextTest(ss);
         dialog.setText(ss, () -> {
         });
         dialog.setMerchikIco(mContext);
         dialog.show();
+    }
+
+    /*Дополнительная подсказка: Потенциальный клиент*/
+    private String additionalText133382() {
+        int test = 11000;   // TODO будут мне норм значение передавать "ЗП мерчика"
+        String res;
+
+        double requestSend = test * 0.0005;
+        double requestRegistered = test * 0.005;
+        double presentation = test * 0.01;
+        double clientStart = test * 0.1;
+
+
+        res = String.format("- За регистрацию потенциального клиента (ПК) начисляются следующие премии:\n" +
+                "1. При подаче заявки: %s грн.\n" +
+                "2. Если и менеджер (после проверки реквизитов) регистрирует этого ПК в нашей базе данных: %s грн.\n" +
+                "3. Если для этого ПК проводится презентация: %s грн.\n" +
+                "4. Основная премия, при \"запуске\" клиента в работу: %s грн.", requestSend, requestRegistered, presentation, clientStart);
+
+        return res;
     }
 
     private SpannableString createLinkedString(Context context, String msg, int photoType) {
