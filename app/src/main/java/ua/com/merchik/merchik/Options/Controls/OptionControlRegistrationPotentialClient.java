@@ -70,7 +70,7 @@ public class OptionControlRegistrationPotentialClient<T> extends OptionControl {
         }
 
         UsersSDB user = SQL_DB.usersDao().getUserById(wpDataDB.getUser_id());
-        if (err > 0 && user.reportCount < 200) {
+        if (err > 0 && user != null && user.reportCount < 200) {
             count = 0;
             potentialClientMsg.append(", но он еще не провел своего 200-го отчета.");
         }
@@ -104,7 +104,7 @@ public class OptionControlRegistrationPotentialClient<T> extends OptionControl {
     private void formatMsg(List<PotentialClientSDB> potentialClients) {
         if (potentialClients != null && potentialClients.size() == 0) {
             stringBuilderMsg.append("Не могу определить параметры расчета.");
-            signal = true;
+            signal = false;
         } else if (err > 0) {
             stringBuilderMsg.append(dateDiapason).append(" ").append(type).append(" не зарегистрировали. Подробности см. ниже.").append("\n\n").append(potentialClientMsg);
             signal = true;

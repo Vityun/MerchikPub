@@ -150,7 +150,6 @@ public class Options {
             }
 
             switch (optionControlId) {
-
                 case 133381:
                     OptionControlRegistrationPotentialClient<?> optionControlRegistrationPotentialClient = new OptionControlRegistrationPotentialClient<>(context, dataDB, optionsDB, newOptionType, mode);
                     optionControlRegistrationPotentialClient.showOptionMassage();
