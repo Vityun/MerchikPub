@@ -76,8 +76,8 @@ public class DialogData {
     private RecyclerView rView, recycler;
 
     private TextView title, text, textView42, txtLinkOk;
-    private TextView additionalText1, additionalText2, additionalText3, additionalText4, additionalText5;
-    private TextView additionalTextValue1, additionalTextValue2, additionalTextValue3, additionalTextValue4, additionalTextValue5;
+    private TextView additionalText1, additionalText2, additionalText3, additionalText4, additionalText5, additionalText6;
+    private TextView additionalTextValue1, additionalTextValue2, additionalTextValue3, additionalTextValue4, additionalTextValue5, additionalTextValue6;
 
     public ImageView photo, merchikIco;
 
@@ -395,11 +395,15 @@ public class DialogData {
         additionalText3 = dialog.findViewById(R.id.additionalText3);
         additionalText4 = dialog.findViewById(R.id.additionalText4);
         additionalText5 = dialog.findViewById(R.id.additionalText5);
+        additionalText6 = dialog.findViewById(R.id.additionalText6);
+
         additionalTextValue1 = dialog.findViewById(R.id.additionalTextValue1);
         additionalTextValue2 = dialog.findViewById(R.id.additionalTextValue2);
         additionalTextValue3 = dialog.findViewById(R.id.additionalTextValue3);
         additionalTextValue4 = dialog.findViewById(R.id.additionalTextValue4);
         additionalTextValue5 = dialog.findViewById(R.id.additionalTextValue5);
+        additionalTextValue6 = dialog.findViewById(R.id.additionalTextValue6);
+
 
 //        Map<String, String> map = new HashMap<>();
 //
@@ -461,6 +465,17 @@ public class DialogData {
         if (checkString(data.row5TextValue)) {
             additionalTextValue5.setVisibility(View.VISIBLE);
             additionalTextValue5.setText(data.row5TextValue);
+        }
+
+        // 6
+        if (checkString(data.row6Text)) {
+            additionalText6.setVisibility(View.VISIBLE);
+            additionalText6.setText(data.row6Text);
+        }
+
+        if (checkString(data.row6TextValue)) {
+            additionalTextValue6.setVisibility(View.VISIBLE);
+            additionalTextValue6.setText(data.row6TextValue);
         }
     }
 

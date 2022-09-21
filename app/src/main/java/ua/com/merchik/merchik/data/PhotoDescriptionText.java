@@ -7,11 +7,13 @@ public class PhotoDescriptionText {
     public String row3Text;
     public String row4Text;
     public String row5Text;
+    public String row6Text;
 
     public String row1TextValue;
     public String row2TextValue;
     public String row3TextValue;
     public String row4TextValue;
     public String row5TextValue;
+    public String row6TextValue;
 
 }

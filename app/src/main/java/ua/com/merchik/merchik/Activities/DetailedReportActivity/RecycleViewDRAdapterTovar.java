@@ -472,7 +472,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                     dialog.show();
                 });
 
-                showFacePlan(rp);
+//                showFacePlan(rp);
 
             } catch (Exception err) {
                 Globals.writeToMLOG("ERROR", "RecycleViewDRAdapterTovar.bind_6", "Exception e: " + err);
@@ -787,7 +787,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
             dialog.setLesson(mContext, true, 802);
             dialog.setVideoLesson(mContext, true, 803, null);
             dialog.setImage(true, getPhotoFromDB(list));
-            dialog.setAdditionalText(setPhotoInfo(tpl, list, finalBalanceData1, finalBalanceDate1));
+            dialog.setAdditionalText(setPhotoInfo(reportPrepareDB, tpl, list, finalBalanceData1, finalBalanceDate1));
 
             // Устанавливаем дату для операций (в данной реализации только для DoubleSpinner & EditTextAndSpinner)
             switch (tpl.getOptionControlName()) {
@@ -977,7 +977,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
          * @param finalBalanceData1
          * @param finalBalanceDate1
          */
-        private PhotoDescriptionText setPhotoInfo(TovarOptions tpl, TovarDB tovar, String finalBalanceData1, String finalBalanceDate1) {
+        private PhotoDescriptionText setPhotoInfo(ReportPrepareDB reportPrepareDB, TovarOptions tpl, TovarDB tovar, String finalBalanceData1, String finalBalanceDate1) {
             PhotoDescriptionText res = new PhotoDescriptionText();
 
             try {
@@ -1012,6 +1012,11 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
 
                 res.row5Text = "Ост.:";
                 res.row5TextValue = finalBalanceData1 + " шт на " + finalBalanceDate1;
+
+                if (reportPrepareDB.facesPlan != null && reportPrepareDB.facesPlan>0){
+                    res.row6Text = "План фейс.:";
+                    res.row6TextValue = "" + reportPrepareDB.facesPlan;
+                }
             } catch (Exception e) {
                 Globals.writeToMLOG("ERROR", "RecycleViewDRAdapterTovar.setPhotoInfo", "Exception e: " + e);
             }

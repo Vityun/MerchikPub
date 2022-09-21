@@ -218,7 +218,7 @@
             app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/text"
-            tools:visibility="gone">
+            tools:visibility="visible">
 
             <ImageView
                 android:id="@+id/img"
@@ -235,7 +235,8 @@
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
-                app:srcCompat="@mipmap/merchik_m" />
+                app:srcCompat="@mipmap/merchik_m"
+                tools:visibility="visible" />
             <!--            android:background="@drawable/shadow_flat_object"-->
 
             <TextView
@@ -248,7 +249,8 @@
                 android:textStyle="bold"
                 android:visibility="gone"
                 app:layout_constraintStart_toEndOf="@+id/img"
-                app:layout_constraintTop_toTopOf="parent" />
+                app:layout_constraintTop_toTopOf="parent"
+                tools:visibility="visible" />
 
             <TextView
                 android:id="@+id/additionalText2"
@@ -260,7 +262,8 @@
                 android:textStyle="bold"
                 android:visibility="gone"
                 app:layout_constraintStart_toEndOf="@+id/img"
-                app:layout_constraintTop_toBottomOf="@+id/additionalTextValue1" />
+                app:layout_constraintTop_toBottomOf="@+id/additionalTextValue1"
+                tools:visibility="visible" />
 
             <TextView
                 android:id="@+id/additionalText3"
@@ -272,7 +275,8 @@
                 android:textStyle="bold"
                 android:visibility="gone"
                 app:layout_constraintStart_toEndOf="@+id/img"
-                app:layout_constraintTop_toBottomOf="@+id/additionalTextValue2" />
+                app:layout_constraintTop_toBottomOf="@+id/additionalTextValue2"
+                tools:visibility="visible" />
 
             <TextView
                 android:id="@+id/additionalText4"
@@ -284,7 +288,8 @@
                 android:textStyle="bold"
                 android:visibility="gone"
                 app:layout_constraintStart_toEndOf="@+id/img"
-                app:layout_constraintTop_toBottomOf="@+id/additionalTextValue3" />
+                app:layout_constraintTop_toBottomOf="@+id/additionalTextValue3"
+                tools:visibility="visible" />
 
             <TextView
                 android:id="@+id/additionalText5"
@@ -295,10 +300,22 @@
                 android:text="Доп. текст 5"
                 android:textStyle="bold"
                 android:visibility="gone"
-                app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintStart_toEndOf="@+id/img"
                 app:layout_constraintTop_toBottomOf="@+id/additionalTextValue4"
-                app:layout_constraintVertical_bias="0.0" />
+                tools:visibility="visible" />
+
+            <TextView
+                android:id="@+id/additionalText6"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:layout_marginLeft="8dp"
+                android:text="Доп. текст 6"
+                android:textStyle="bold"
+                android:visibility="gone"
+                app:layout_constraintStart_toEndOf="@+id/img"
+                app:layout_constraintTop_toBottomOf="@+id/additionalTextValue5"
+                tools:visibility="visible" />
 
             <TextView
                 android:id="@+id/additionalTextValue1"
@@ -313,7 +330,8 @@
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintHorizontal_bias="0.0"
                 app:layout_constraintStart_toEndOf="@+id/additionalText1"
-                app:layout_constraintTop_toTopOf="parent" />
+                app:layout_constraintTop_toTopOf="parent"
+                tools:visibility="visible" />
 
             <TextView
                 android:id="@+id/additionalTextValue2"
@@ -329,7 +347,8 @@
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintHorizontal_bias="0.0"
                 app:layout_constraintStart_toEndOf="@+id/additionalText2"
-                app:layout_constraintTop_toBottomOf="@+id/additionalTextValue1" />
+                app:layout_constraintTop_toBottomOf="@+id/additionalTextValue1"
+                tools:visibility="visible" />
 
             <TextView
                 android:id="@+id/additionalTextValue3"
@@ -345,7 +364,8 @@
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintHorizontal_bias="0.0"
                 app:layout_constraintStart_toEndOf="@+id/additionalText3"
-                app:layout_constraintTop_toBottomOf="@+id/additionalTextValue2" />
+                app:layout_constraintTop_toBottomOf="@+id/additionalTextValue2"
+                tools:visibility="visible" />
 
             <TextView
                 android:id="@+id/additionalTextValue4"
@@ -361,7 +381,8 @@
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintHorizontal_bias="0.0"
                 app:layout_constraintStart_toEndOf="@+id/additionalText4"
-                app:layout_constraintTop_toBottomOf="@+id/additionalTextValue3" />
+                app:layout_constraintTop_toBottomOf="@+id/additionalTextValue3"
+                tools:visibility="visible" />
 
             <TextView
                 android:id="@+id/additionalTextValue5"
@@ -379,7 +400,27 @@
                 app:layout_constraintHorizontal_bias="0.0"
                 app:layout_constraintStart_toEndOf="@+id/additionalText5"
                 app:layout_constraintTop_toBottomOf="@+id/additionalTextValue4"
-                app:layout_constraintVertical_bias="0.01999998" />
+                app:layout_constraintVertical_bias="0.01999998"
+                tools:visibility="visible" />
+
+            <TextView
+                android:id="@+id/additionalTextValue6"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:layout_marginLeft="8dp"
+                android:layout_marginEnd="8dp"
+                android:layout_marginRight="8dp"
+                android:singleLine="false"
+                android:text="Значение текста 6 Значение текста 6"
+                android:visibility="gone"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.0"
+                app:layout_constraintStart_toEndOf="@+id/additionalText6"
+                app:layout_constraintTop_toBottomOf="@+id/additionalTextValue5"
+                app:layout_constraintVertical_bias="0.01999998"
+                tools:visibility="visible" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
 
