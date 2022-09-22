@@ -1,6 +1,7 @@
 package ua.com.merchik.merchik.Options.Controls;
 
 import android.content.Context;
+import android.os.Build;
 import android.util.Log;
 
 import java.util.ArrayList;
@@ -20,6 +21,7 @@ import ua.com.merchik.merchik.data.Database.Room.UsersSDB;
 import ua.com.merchik.merchik.data.OptionMassageType;
 import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
+import ua.com.merchik.merchik.database.realm.RealmManager;
 
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
@@ -28,8 +30,10 @@ public class OptionControlEKL<T> extends OptionControl {
 
     private WpDataDB wpDataDB;
     private AddressSDB addressSDB;
-    private UsersSDB usersSDBPTT;
+    private UsersSDB usersSDBPTT, documentUser;
     private CustomerSDB customerSDB;
+
+    private TovarGroupSDB TG = new TovarGroupSDB();
 
     private List<TovarGroupClientSDB> tovarGroupClientSDB;
     private List<TovarGroupSDB> tovarGroupSDB;
@@ -63,6 +67,7 @@ public class OptionControlEKL<T> extends OptionControl {
             addressSDB = SQL_DB.addressDao().getById(wpDataDB.getAddr_id());
             customerSDB = SQL_DB.customerDao().getById(wpDataDB.getClient_id());
             usersSDBPTT = SQL_DB.usersDao().getById(wpDataDB.ptt_user_id);
+            documentUser = SQL_DB.usersDao().getUserById(wpDataDB.getUser_id());
         }
     }
 
@@ -138,7 +143,7 @@ public class OptionControlEKL<T> extends OptionControl {
         } else if (optionDB.getOptionId().equals("151140")) {
             controllerType = "между сотрудником: (" + wpDataDB.getUser_txt() + ") и ПТТ " + ptt + " (Индивидуальный ЭКЛ)";
         } else {
-            controllerType = "между сотрудником: (" + wpDataDB.getUser_txt() + ") и любым ПТТ по отделу(ам): " + new TovarGroupSDB().getNmFromList(tovarGroupSDB);
+            controllerType = "между сотрудником: (" + wpDataDB.getUser_txt() + ") и любым ПТТ по отделу(ам): " + TG.getNmFromList(tovarGroupSDB);
         }
 
 
@@ -178,13 +183,85 @@ public class OptionControlEKL<T> extends OptionControl {
                     .append(" (").append(usersSDBPTT.department).append(") тел: ").append(usersSDBPTT.tel)
                     .append(", ").append(usersSDBPTT.tel2);
 
-            if (false) { //Если (ПТТ.Уволен=1) и (Опц=глОпция132629) и (ПустоеЗначение(ПТТ.ДатаУвол)=0) и (ПТТ.ДатаУвол<Дат) и (Тем<>Тема421) Тогда //для случая когда Контролер берет ЭКЛ у проверяеМОГО но это НЕ разбор з/п (в т.ч. с уволенным)
+
+            //Если (ПТТ.Уволен=1) и (Опц=глОпция132629) и (ПустоеЗначение(ПТТ.ДатаУвол)=0) и (ПТТ.ДатаУвол<Дат) и (Тем<>Тема421) Тогда //для случая когда Контролер берет ЭКЛ у проверяеМОГО но это НЕ разбор з/п (в т.ч. с уволенным)
+            if (usersSDBPTT.fired == 1 && optionDB.getOptionId().equals("132629") && wpDataDB.getTheme_id() != 421) {
                 Log.d("test", "nosing to show");
-            } else if (false) {   //
-                Log.d("test", "nosing to show");
+                /*  Тзн.Наруш=1;
+					Причина="ПТТ уволен! ("+СокрЛП(ПТТ.ПричинаУвольнения)+")";
+					Тзн.Прим=Прим+", но "+Причина;
+					Если Спис.НайтиЗначение(Причина)=0 Тогда
+						Спис.ДобавитьЗначение(Причина); //для передачи в чат
+					КонецЕсли;
+					*/
+            } else if (usersSDBPTT.fired == 1 && optionDB.getOptionId().equals("133317") && optionDB.getOptionId().equals("84006")) {   //для случая, когда берем ЭКЛ у ПТТ
+                signal = true;
+                // TODO add reason
+                stringBuilderMsg.append(", но").append("ПТТ уволен! (").append("--причина увольнения--").append(")");
+            } else if (usersSDBPTT.workAddrId != wpDataDB.getAddr_id() && optionDB.getOptionId().equals("133317") && optionDB.getOptionId().equals("84006")) {    //для случая, когда берем ЭКЛ у ПТТ
+                signal = true;
+                stringBuilderMsg.append(", но").append("ПТТ не работает по адресу: ").append(addressSDB.nm);
+            } else if (usersSDBPTT.otdelId == null || usersSDBPTT.otdelId == 0) {
+                signal = true;
+                stringBuilderMsg.append(", но").append("у ПТТ ").append(usersSDBPTT.fio).append(" не указан отдел в котором он работает!");
+            } else if (usersSDBPTT.otdelId != null && usersSDBPTT.otdelId != 0) {
+                signal = true;
+                // TODO otdel lvl
+                stringBuilderMsg.append(", но").append("у ПТТ указан отдел ").append(usersSDBPTT.otdelId)
+                        .append(" (").append("-- otdel lvl --").append(" из уровня  вложенности!)");
+            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                // TODO у меня нет количества Касс у адресов
+                if (tovarGroupSDB.stream().filter(item -> item.id.equals(usersSDBPTT.otdelId)).findFirst().orElse(null) != null
+                        && optionDB.getOptionId().equals("132629")) {
+                    if (documentUser.reportDate05 != null && documentUser.reportDate05.getTime() >= wpDataDB.getDt().getTime()) {
+                        signal = false;
+                        stringBuilderMsg.append(", но").append("ПТТ работает в отделе ").append(usersSDBPTT.otdelId).append(" и не может подписывать ЭКЛ для: ")
+                                .append(TG.getNmFromList(tovarGroupSDB)).append(" (но исполнитель не провел свой 5-й отчет и эту блокировку пропускаем)");
+                    } else {
+                        signal = true;
+                        stringBuilderMsg.append(", но").append("ПТТ работает в отделе ").append(usersSDBPTT.otdelId).append(" и не может подписывать ЭКЛ для: ")
+                                .append(TG.getNmFromList(tovarGroupSDB)).append(" (для магазина в котором более 5 касс и исполнитель провел 5-й отчет)");
+                    }
+                } else if (tovarGroupSDB.stream().filter(item -> item.id.equals(usersSDBPTT.otdelId)).findFirst().orElse(null) != null
+                        && optionDB.getOptionId().equals("132629")) {
+                    if (documentUser.reportDate05 != null && documentUser.reportDate05.getTime() >= wpDataDB.getDt().getTime()) {
+                        signal = false;
+                        stringBuilderMsg.append(", но").append("ПТТ работает в отделе ").append(usersSDBPTT.otdelId).append(" и не может подписывать ЭКЛ для: ")
+                                .append(TG.getNmFromList(tovarGroupSDB)).append(" (но исполнитель не провел свой 5-й отчет и эту блокировку пропускаем)");
+                    } else {
+                        signal = false;
+                        stringBuilderMsg.append(", но").append("ПТТ работает в отделе ").append(usersSDBPTT.otdelId).append(" и не может подписывать ЭКЛ для: ")
+                                .append(TG.getNmFromList(tovarGroupSDB)).append(" (но в данном магазине ").append("-- kass size --").append(" касс и это допустимо)");
+                    }
+                }
+            } else {
+                signal = false;
             }
         }
 
+
+        // Установка блокирует ли опция работу приложения или нет
+        if (signal){
+            if (optionDB.getBlockPns().equals("1")){
+                setIsBlockOption(signal);
+                stringBuilderMsg.append("\n\n").append("Документ проведен не будет!");
+            }else {
+                stringBuilderMsg.append("\n\n").append("Вы можете получить Премиальные БОЛЬШЕ, если будете получать ЭКЛ у ПТТ.");
+            }
+        }
+
+
+        // сохраняем сигнал
+        RealmManager.INSTANCE.executeTransaction(realm -> {
+            if (optionDB != null) {
+                if (signal){
+                    optionDB.setIsSignal("1");
+                }else {
+                    optionDB.setIsSignal("2");
+                }
+                realm.insertOrUpdate(optionDB);
+            }
+        });
     }
 
 
