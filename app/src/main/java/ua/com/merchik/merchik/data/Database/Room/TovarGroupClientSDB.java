@@ -32,6 +32,11 @@ public class TovarGroupClientSDB {
     @ColumnInfo(name = "author_id")
     public Integer authorId;
 
+    @SerializedName("addr_tp_id")
+    @Expose
+    @ColumnInfo(name = "addr_tp_id")
+    public Integer addrTpId;
+
     @SerializedName("dt_change")
     @Expose
     @ColumnInfo(name = "dt_change")

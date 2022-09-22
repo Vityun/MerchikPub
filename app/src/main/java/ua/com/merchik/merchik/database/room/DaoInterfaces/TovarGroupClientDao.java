@@ -24,6 +24,6 @@ public interface TovarGroupClientDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     public Completable insertData(List<TovarGroupClientSDB> data);
 
-    @Query("SELECT * FROM tovar_grp_client WHERE client_id = :clientId")
-    List<TovarGroupClientSDB> getAllBy(String clientId);
+    @Query("SELECT * FROM tovar_grp_client WHERE client_id = :clientId AND addr_tp_id = :addrTpId")
+    List<TovarGroupClientSDB> getAllBy(String clientId, Integer addrTpId);
 }

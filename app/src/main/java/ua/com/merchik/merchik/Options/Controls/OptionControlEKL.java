@@ -115,9 +115,7 @@ public class OptionControlEKL<T> extends OptionControl {
             //для 151140-Контроль ЭКЛ между исполнителем и КОНКРЕТНЫМ ПТТ (ИНДИВИДУАЛЬНЫЙ электронный контрольный лист) НЕ имеет значения в каком отделе ПТТ. Отдел НЕ важен, если ПТТ для подписания ИЭКЛ определен, а если НЕТ то все-таки нужно определить отдел
             //ГрупТов.ДобавитьЗначение(ПТТ.Отдел); //если мы уже определились с ПТТ в этом режиме то и отдел получим из ПТТ ... клиент сам решил использовать ЭТОГО ПТТ независимо от отдела
         } else if (optionDB.getOptionId().equals("84006")) {
-            // TODO !!! --- У меня нет СЕТИ в ГруппахТоваровКлиентов. По этому просто рассматриваю ТОЛЬКО второй вариант.
-            // ГрупТов=ТзнГруппТоваровКлиента(Тзн.Зак,,,0,,,,,,Сеть,2,1); //получаем список групп товаров по которым работает данный клиент в ДАННОЙ СЕТИ !!!
-            tovarGroupClientSDB = SQL_DB.tovarGroupClientDao().getAllBy(wpDataDB.getClient_id());
+            tovarGroupClientSDB = SQL_DB.tovarGroupClientDao().getAllBy(wpDataDB.getClient_id(), addressSDB.tpId);  // Получаю ГруппыТоваров по Адресу и Сети!
             if (tovarGroupClientSDB != null && tovarGroupClientSDB.size() > 0) {
                 List<Integer> ids = new ArrayList<>();
                 for (TovarGroupClientSDB item : tovarGroupClientSDB) {
