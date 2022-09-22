@@ -4,6 +4,7 @@ import android.content.Context;
 import android.util.Log;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import ua.com.merchik.merchik.Clock;
@@ -11,6 +12,7 @@ import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.Options.OptionControl;
 import ua.com.merchik.merchik.Options.Options;
 import ua.com.merchik.merchik.data.Database.Room.AddressSDB;
+import ua.com.merchik.merchik.data.Database.Room.CustomerSDB;
 import ua.com.merchik.merchik.data.Database.Room.EKL_SDB;
 import ua.com.merchik.merchik.data.Database.Room.TovarGroupClientSDB;
 import ua.com.merchik.merchik.data.Database.Room.TovarGroupSDB;
@@ -26,10 +28,12 @@ public class OptionControlEKL<T> extends OptionControl {
 
     private WpDataDB wpDataDB;
     private AddressSDB addressSDB;
+    private UsersSDB usersSDBPTT;
+    private CustomerSDB customerSDB;
+
     private List<TovarGroupClientSDB> tovarGroupClientSDB;
     private List<TovarGroupSDB> tovarGroupSDB;
     private List<EKL_SDB> eklSDB;
-    private UsersSDB usersSDBPTT;
 
     private long documentDt;
 
@@ -57,6 +61,7 @@ public class OptionControlEKL<T> extends OptionControl {
             documentDt = wpDataDB.getDt().getTime() / 1000;
 
             addressSDB = SQL_DB.addressDao().getById(wpDataDB.getAddr_id());
+            customerSDB = SQL_DB.customerDao().getById(wpDataDB.getClient_id());
             usersSDBPTT = SQL_DB.usersDao().getById(wpDataDB.ptt_user_id);
         }
     }
@@ -123,9 +128,7 @@ public class OptionControlEKL<T> extends OptionControl {
                 }
                 tovarGroupSDB = SQL_DB.tovarGroupDao().getAllByIds(ids);
             } else { //добавим группы товаров КЛИЕНТА (пока без учета подчиненности) Дело в том, что ЭКЛ регистрируется по группе товара полученной из карточки клиента! ... был случай с Блуми, когда один их элементов помечен на удаление и не попадает в выборку ... короче костыль. 02.08.2019
-                // TODO !!! --- У меня нет в таблице Клиентов(заказчик) - Групп Товаров
-                // ГрупТов.ДобавитьЗначение(Тзн.Зак.ГруппыТоваров);
-                Log.d("test", "nosing to show");
+                tovarGroupSDB = SQL_DB.tovarGroupDao().getAllByIds(Collections.singletonList(customerSDB.mainTovGrp));
             }
         }
 
@@ -138,16 +141,16 @@ public class OptionControlEKL<T> extends OptionControl {
             controllerType = "между сотрудником: (" + wpDataDB.getUser_txt() + ") и любым ПТТ по отделу(ам): " + new TovarGroupSDB().getNmFromList(tovarGroupSDB);
         }
 
-        // лезем в таблицу ЭКЛ и проверяем, еслть ли ПОДПИСАННЫЙ ЭКЛ по данным условиям
-        //ТзнЭКЛ=ТзнЭКЛ(ДатС,ДатПо,,,Тзн.Зак,Адр,Исп,ПТТ,,,,1,,БезПТТ,,,1); //ПоказатьТЗ(ТзнЭКЛ,"ТзнЭКЛ4"); //проверяем наличие ЭКЛ по данному клиенту,
-        // TODO !!! --- Я не могу сделать такой запрос. Только Теоретически.
-        //eklSDB = SQL_DB.eklDao().getBy(dateFrom/1000, dateTo/1000, wpDataDB.getClient_id(), wpDataDB.getAddr_id(), wpDataDB.getUser_id(), wpDataDB.ptt_user_id);
-        eklSDB = SQL_DB.eklDao().getByClientId(wpDataDB.getClient_id());
 
-        // TODO !!! --- У меня нет в табл. ЭКЛ ГруппТоваров.
-        //Если ТзнЭКЛ.КоличествоСтрок()=0 Тогда //если исполнитель не получил ЭКЛ по данному клиенту, проверим, может он получил ЭКЛ по данной товарной группе? Это допустимо, если исполнитель обслуживает в одном отделе сразу несколько клиентов
-        //        ТзнЭКЛ=ТзнЭКЛ(ДатС,ДатПо,,,,Адр,Исп,ПТТ,,,,1,ГрупТов,БезПТТ,,,1); //ПоказатьТЗ(ТзнЭКЛ,"ТзнЭКЛ4"); //проверяем наличие кода не по данному клиенту, а по всей группе товаров к которой он относится
-        //КонецЕсли;
+        // лезем в таблицу ЭКЛ и проверяем, еслть ли ПОДПИСАННЫЙ ЭКЛ по данным условиям
+        eklSDB = SQL_DB.eklDao().getBy(dateFrom / 1000, dateTo / 1000, wpDataDB.getClient_id(), wpDataDB.getAddr_id(), wpDataDB.getUser_id(), wpDataDB.ptt_user_id);
+        if (eklSDB == null || eklSDB.size() == 0) {
+            List<Integer> ids = new ArrayList<>();
+            for (TovarGroupSDB item : tovarGroupSDB) {
+                ids.add(item.id);
+            }
+            eklSDB = SQL_DB.eklDao().getBy(dateFrom / 1000, dateTo / 1000, ids, wpDataDB.getAddr_id(), wpDataDB.getUser_id(), wpDataDB.ptt_user_id);
+        }
 
 
         // Проверка ЭКЛов
@@ -168,17 +171,16 @@ public class OptionControlEKL<T> extends OptionControl {
 					КонецЕсли;
 				КонецЕсли;*/
         } else {
-            // TODO !!! --- НашТелефон(ПТТ,3) -- откуда єто взять
-            //Прим="За период с "+ДатС+" по "+ДатПо+" получено "+ТзнЭКЛ.КоличествоСтрок()+" ЭКЛ у "+ФИОИнициалами(ПТТ,)+" ("+ПТТ.Отдел+") тел: "+НашТелефон(ПТТ,3);
             stringBuilderMsg.append("За период с ")
                     .append(Clock.getHumanTime3(dateFrom / 1000)).append(" по ")
                     .append(Clock.getHumanTime3(dateTo / 1000))
                     .append(" получено ").append(eklSDB.size()).append(" ЭКЛ у ").append(usersSDBPTT.fio)
-                    .append(" (").append(usersSDBPTT.department).append(") тел: ").append("");
+                    .append(" (").append(usersSDBPTT.department).append(") тел: ").append(usersSDBPTT.tel)
+                    .append(", ").append(usersSDBPTT.tel2);
 
-            if (false){ //Если (ПТТ.Уволен=1) и (Опц=глОпция132629) и (ПустоеЗначение(ПТТ.ДатаУвол)=0) и (ПТТ.ДатаУвол<Дат) и (Тем<>Тема421) Тогда //для случая когда Контролер берет ЭКЛ у проверяеМОГО но это НЕ разбор з/п (в т.ч. с уволенным)
+            if (false) { //Если (ПТТ.Уволен=1) и (Опц=глОпция132629) и (ПустоеЗначение(ПТТ.ДатаУвол)=0) и (ПТТ.ДатаУвол<Дат) и (Тем<>Тема421) Тогда //для случая когда Контролер берет ЭКЛ у проверяеМОГО но это НЕ разбор з/п (в т.ч. с уволенным)
                 Log.d("test", "nosing to show");
-            }else if (false){   //
+            } else if (false) {   //
                 Log.d("test", "nosing to show");
             }
         }

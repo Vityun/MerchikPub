@@ -22,6 +22,9 @@ public class EKL_SDB {
     @ColumnInfo(name = "address_id")
     public Integer addressId;
 
+    @ColumnInfo(name = "department")
+    public Integer department;  //ГруппуТоваров у ЭКЛ
+
     @ColumnInfo(name = "dad2")
     public Long dad2;   //
 
