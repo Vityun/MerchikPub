@@ -94,6 +94,11 @@ public class UsersSDB {
     @ColumnInfo(name = "send_sms")
     public Integer sendSms;
 
+    @SerializedName("fired")
+    @Expose
+    @ColumnInfo(name = "fired")
+    public Integer fired;
+
     @SerializedName("report_count")
     @Expose
     @ColumnInfo(name = "report_count")
