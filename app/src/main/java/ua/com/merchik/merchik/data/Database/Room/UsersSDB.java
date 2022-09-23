@@ -99,6 +99,16 @@ public class UsersSDB {
     @ColumnInfo(name = "fired")
     public Integer fired;
 
+    @SerializedName("fired_reason")
+    @Expose
+    @ColumnInfo(name = "fired_reason")
+    public String firedReason;
+
+    @SerializedName("fired_dt")
+    @Expose
+    @ColumnInfo(name = "fired_dt")
+    public Long firedDt;
+
     @SerializedName("report_count")
     @Expose
     @ColumnInfo(name = "report_count")

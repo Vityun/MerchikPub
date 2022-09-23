@@ -13,7 +13,10 @@ import ua.com.merchik.merchik.data.Database.Room.EKL_SDB;
 @Dao
 public interface EKLDao {
     @Query("SELECT * FROM ekl")
-    Flowable<List<EKL_SDB>> getAll();
+    Flowable<List<EKL_SDB>> getAllF();
+
+    @Query("SELECT * FROM ekl")
+    List<EKL_SDB> getAll();
 
     @Query("SELECT * FROM ekl WHERE id = :id")
     Flowable<EKL_SDB> getById(int id);

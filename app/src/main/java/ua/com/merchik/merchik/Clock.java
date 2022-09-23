@@ -76,11 +76,11 @@ public class Clock {
      * 20.09.2022
      * Передаю дату в формате long и добавляю дни указанные вторым числом.
      * Второе число может быть отрицательным
-     * 86400000 - 1 день в миллисекундах
+     * 86400000 - 1 день в секундах
      * */
     public static long getDatePeriodLong(long date, int day) {
         long res;
-        res = date + (day * 86400000);
+        res = date + (day * 86400);
         return res;
     }
 

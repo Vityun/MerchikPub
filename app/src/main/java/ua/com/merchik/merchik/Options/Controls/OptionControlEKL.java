@@ -4,6 +4,9 @@ import android.content.Context;
 import android.os.Build;
 import android.util.Log;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -87,10 +90,17 @@ public class OptionControlEKL<T> extends OptionControl {
     private void createTZN() {
         PTT = "";   // Сбрасываем ПТТшника в режим "любой"
 
+        // DEBUG DATA-------------
+        List<EKL_SDB> fullEkl = SQL_DB.eklDao().getAll();
+        JsonArray str = new Gson().fromJson(new Gson().toJson(fullEkl), JsonArray.class);
+        Globals.writeToMLOG("INFO", "OptionControlEKL/createTZN", "fullEkl.size: " + fullEkl.size());
+        Globals.writeToMLOG("INFO", "OptionControlEKL/createTZN", "JsonObject str: " + str);
+        // -----------------------
+
         // TODO Это на будущее. Пока это не надо. Можно закоментить.
         // Индивидуальный-ЭКЛ (это заглушка, пока на стороне 1С нормально эт не реализовано)
-        /*if (optionDB.getOptionId().equals("151140")) {
-            Globals.writeToMLOG("INFO", "OptionControlEKL.executeOption.optionDB.getOptionId().equals(\"151140\")", "Вы попали в Заглушку");
+        /*if (optionDB.getOptionControlId().equals("151140")) {
+            Globals.writeToMLOG("INFO", "OptionControlEKL.executeOption.optionDB.getOptionControlId().equals(\"151140\")", "Вы попали в Заглушку");
 
             if (wpDataDB.ptt_user_id != 0) {    //если в ОИ явно указан интересующий нас ПТТ (для данной опции заполняется в момент создания ОИ ... и у ДАННОГО ПТТ и надо брать ИЭКЛ)
                 // TODO !!! --- Не понимаю откуда брать признак уволенности сотрудника.
@@ -104,7 +114,7 @@ public class OptionControlEKL<T> extends OptionControl {
 
             if (PTT.equals("") || PTT.equals("0")) {    //если ПТТ не определен то заглянем в ДТ ... там должен храниться "свежий" ПТТ для данного адреса
                 //ПТТ=ТзнДопТребований(,,ДокИст.Заказ,,Адр,,,,,глОпция151140,,3); //=3-вернуть Сотрудника (ПТТ для ИЭКЛ)
-                RealmResults<AdditionalRequirementsDB> additionalRequirementsDB = AdditionalRequirementsRealm.getAdditionalRequirementsDBTest(wpDataDB.getClient_id(), String.valueOf(wpDataDB.getAddr_id()), optionDB.getOptionId());
+                RealmResults<AdditionalRequirementsDB> additionalRequirementsDB = AdditionalRequirementsRealm.getAdditionalRequirementsDBTest(wpDataDB.getClient_id(), String.valueOf(wpDataDB.getAddr_id()), optionDB.getOptionControlId());
                 PTT = Objects.requireNonNull(additionalRequirementsDB.where().findFirst()).userId;
             }
         }*/
@@ -117,14 +127,14 @@ public class OptionControlEKL<T> extends OptionControl {
 
 
         // Определем Группу Товаров
-        if (optionDB.getOptionId().equals("132629")) {
+        if (optionDB.getOptionControlId().equals("132629")) {
             //для 132629-Контроль ЭКЛ между ПРОВЕРЯЮЩИМ и ПРОВЕРЯЕМЫМ (электронный контрольный лист) НЕ имеет значения в каком он отделе
-        } else if (optionDB.getOptionId().equals("143968")) {
+        } else if (optionDB.getOptionControlId().equals("143968")) {
             //для 143968-Контроль ЭКЛ между исполнителем и сотрудником КЛИЕНТА (электронный контрольный лист) НЕ имеет значения в каком он отделе
-        } else if (optionDB.getOptionId().equals("151140") && (ptt.equals("") || ptt.equals("0"))) {
+        } else if (optionDB.getOptionControlId().equals("151140") && (ptt.equals("") || ptt.equals("0"))) {
             //для 151140-Контроль ЭКЛ между исполнителем и КОНКРЕТНЫМ ПТТ (ИНДИВИДУАЛЬНЫЙ электронный контрольный лист) НЕ имеет значения в каком отделе ПТТ. Отдел НЕ важен, если ПТТ для подписания ИЭКЛ определен, а если НЕТ то все-таки нужно определить отдел
             //ГрупТов.ДобавитьЗначение(ПТТ.Отдел); //если мы уже определились с ПТТ в этом режиме то и отдел получим из ПТТ ... клиент сам решил использовать ЭТОГО ПТТ независимо от отдела
-        } else if (optionDB.getOptionId().equals("84006")) {
+        } else if (optionDB.getOptionControlId().equals("84006")) {
             tovarGroupClientSDB = SQL_DB.tovarGroupClientDao().getAllBy(wpDataDB.getClient_id(), addressSDB.tpId);  // Получаю ГруппыТоваров по Адресу и Сети!
             if (tovarGroupClientSDB != null && tovarGroupClientSDB.size() > 0) {
                 List<Integer> ids = new ArrayList<>();
@@ -138,9 +148,9 @@ public class OptionControlEKL<T> extends OptionControl {
         }
 
         // Готовим часть Сообщения.
-        if (optionDB.getOptionId().equals("143968")) {
+        if (optionDB.getOptionControlId().equals("143968")) {
             controllerType = "между сотрудником: (" + wpDataDB.getUser_txt() + ") и любым сотрудником КЛИЕНТА";
-        } else if (optionDB.getOptionId().equals("151140")) {
+        } else if (optionDB.getOptionControlId().equals("151140")) {
             controllerType = "между сотрудником: (" + wpDataDB.getUser_txt() + ") и ПТТ " + ptt + " (Индивидуальный ЭКЛ)";
         } else {
             controllerType = "между сотрудником: (" + wpDataDB.getUser_txt() + ") и любым ПТТ по отделу(ам): " + TG.getNmFromList(tovarGroupSDB);
@@ -148,13 +158,13 @@ public class OptionControlEKL<T> extends OptionControl {
 
 
         // лезем в таблицу ЭКЛ и проверяем, еслть ли ПОДПИСАННЫЙ ЭКЛ по данным условиям
-        eklSDB = SQL_DB.eklDao().getBy(dateFrom / 1000, dateTo / 1000, wpDataDB.getClient_id(), wpDataDB.getAddr_id(), wpDataDB.getUser_id(), wpDataDB.ptt_user_id);
+        eklSDB = SQL_DB.eklDao().getBy(dateFrom, dateTo, wpDataDB.getClient_id(), wpDataDB.getAddr_id(), wpDataDB.getUser_id(), wpDataDB.ptt_user_id);
         if (eklSDB == null || eklSDB.size() == 0) {
             List<Integer> ids = new ArrayList<>();
             for (TovarGroupSDB item : tovarGroupSDB) {
                 ids.add(item.id);
             }
-            eklSDB = SQL_DB.eklDao().getBy(dateFrom / 1000, dateTo / 1000, ids, wpDataDB.getAddr_id(), wpDataDB.getUser_id(), wpDataDB.ptt_user_id);
+            eklSDB = SQL_DB.eklDao().getBy(dateFrom, dateTo, ids, wpDataDB.getAddr_id(), wpDataDB.getUser_id(), wpDataDB.ptt_user_id);
         }
 
 
@@ -162,9 +172,9 @@ public class OptionControlEKL<T> extends OptionControl {
         if (eklSDB == null || eklSDB.size() == 0) {
             signal = false;
             stringBuilderMsg.append("За период с ")
-                    .append(Clock.getHumanTime3(dateFrom / 1000))
+                    .append(Clock.getHumanTime3(dateFrom))
                     .append(" по ")
-                    .append(Clock.getHumanTime3(dateTo / 1000))
+                    .append(Clock.getHumanTime3(dateTo))
                     .append(" НЕ получено ни одного ЭКЛ ")
                     .append(controllerType);
             /*  //добавим исключение
@@ -177,15 +187,15 @@ public class OptionControlEKL<T> extends OptionControl {
 				КонецЕсли;*/
         } else {
             stringBuilderMsg.append("За период с ")
-                    .append(Clock.getHumanTime3(dateFrom / 1000)).append(" по ")
-                    .append(Clock.getHumanTime3(dateTo / 1000))
+                    .append(Clock.getHumanTime3(dateFrom)).append(" по ")
+                    .append(Clock.getHumanTime3(dateTo))
                     .append(" получено ").append(eklSDB.size()).append(" ЭКЛ у ").append(usersSDBPTT.fio)
                     .append(" (").append(usersSDBPTT.department).append(") тел: ").append(usersSDBPTT.tel)
                     .append(", ").append(usersSDBPTT.tel2);
 
 
             //Если (ПТТ.Уволен=1) и (Опц=глОпция132629) и (ПустоеЗначение(ПТТ.ДатаУвол)=0) и (ПТТ.ДатаУвол<Дат) и (Тем<>Тема421) Тогда //для случая когда Контролер берет ЭКЛ у проверяеМОГО но это НЕ разбор з/п (в т.ч. с уволенным)
-            if (usersSDBPTT.fired == 1 && optionDB.getOptionId().equals("132629") && wpDataDB.getTheme_id() != 421) {
+            if (usersSDBPTT.fired == 1 && optionDB.getOptionControlId().equals("132629") && (usersSDBPTT.firedDt != null && usersSDBPTT.firedDt != 0) && wpDataDB.getTheme_id() != 421) {
                 Log.d("test", "nosing to show");
                 /*  Тзн.Наруш=1;
 					Причина="ПТТ уволен! ("+СокрЛП(ПТТ.ПричинаУвольнения)+")";
@@ -194,11 +204,10 @@ public class OptionControlEKL<T> extends OptionControl {
 						Спис.ДобавитьЗначение(Причина); //для передачи в чат
 					КонецЕсли;
 					*/
-            } else if (usersSDBPTT.fired == 1 && optionDB.getOptionId().equals("133317") && optionDB.getOptionId().equals("84006")) {   //для случая, когда берем ЭКЛ у ПТТ
+            } else if (usersSDBPTT.fired == 1 && optionDB.getOptionControlId().equals("133317") && optionDB.getOptionControlId().equals("84006")) {   //для случая, когда берем ЭКЛ у ПТТ
                 signal = true;
-                // TODO add reason
-                stringBuilderMsg.append(", но").append("ПТТ уволен! (").append("--причина увольнения--").append(")");
-            } else if (usersSDBPTT.workAddrId != wpDataDB.getAddr_id() && optionDB.getOptionId().equals("133317") && optionDB.getOptionId().equals("84006")) {    //для случая, когда берем ЭКЛ у ПТТ
+                stringBuilderMsg.append(", но").append("ПТТ уволен! (").append(usersSDBPTT.firedReason).append(")");
+            } else if (usersSDBPTT.workAddrId != wpDataDB.getAddr_id() && optionDB.getOptionControlId().equals("133317") && optionDB.getOptionControlId().equals("84006")) {    //для случая, когда берем ЭКЛ у ПТТ
                 signal = true;
                 stringBuilderMsg.append(", но").append("ПТТ не работает по адресу: ").append(addressSDB.nm);
             } else if (usersSDBPTT.otdelId == null || usersSDBPTT.otdelId == 0) {
@@ -210,9 +219,8 @@ public class OptionControlEKL<T> extends OptionControl {
                 stringBuilderMsg.append(", но").append("у ПТТ указан отдел ").append(usersSDBPTT.otdelId)
                         .append(" (").append("-- otdel lvl --").append(" из уровня  вложенности!)");
             } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                // TODO у меня нет количества Касс у адресов
                 if (tovarGroupSDB.stream().filter(item -> item.id.equals(usersSDBPTT.otdelId)).findFirst().orElse(null) != null
-                        && optionDB.getOptionId().equals("132629")) {
+                        && optionDB.getOptionControlId().equals("132629") && (addressSDB.kolKass > 5 || addressSDB.kolKass == 0)) {
                     if (documentUser.reportDate05 != null && documentUser.reportDate05.getTime() >= wpDataDB.getDt().getTime()) {
                         signal = false;
                         stringBuilderMsg.append(", но").append("ПТТ работает в отделе ").append(usersSDBPTT.otdelId).append(" и не может подписывать ЭКЛ для: ")
@@ -223,7 +231,7 @@ public class OptionControlEKL<T> extends OptionControl {
                                 .append(TG.getNmFromList(tovarGroupSDB)).append(" (для магазина в котором более 5 касс и исполнитель провел 5-й отчет)");
                     }
                 } else if (tovarGroupSDB.stream().filter(item -> item.id.equals(usersSDBPTT.otdelId)).findFirst().orElse(null) != null
-                        && optionDB.getOptionId().equals("132629")) {
+                        && optionDB.getOptionControlId().equals("132629") && (addressSDB.kolKass > 0 || addressSDB.kolKass <= 5)) {
                     if (documentUser.reportDate05 != null && documentUser.reportDate05.getTime() >= wpDataDB.getDt().getTime()) {
                         signal = false;
                         stringBuilderMsg.append(", но").append("ПТТ работает в отделе ").append(usersSDBPTT.otdelId).append(" и не может подписывать ЭКЛ для: ")
@@ -231,7 +239,7 @@ public class OptionControlEKL<T> extends OptionControl {
                     } else {
                         signal = false;
                         stringBuilderMsg.append(", но").append("ПТТ работает в отделе ").append(usersSDBPTT.otdelId).append(" и не может подписывать ЭКЛ для: ")
-                                .append(TG.getNmFromList(tovarGroupSDB)).append(" (но в данном магазине ").append("-- kass size --").append(" касс и это допустимо)");
+                                .append(TG.getNmFromList(tovarGroupSDB)).append(" (но в данном магазине ").append(addressSDB.kolKass).append(" касс и это допустимо)");
                     }
                 }
             } else {
@@ -241,11 +249,11 @@ public class OptionControlEKL<T> extends OptionControl {
 
 
         // Установка блокирует ли опция работу приложения или нет
-        if (signal){
-            if (optionDB.getBlockPns().equals("1")){
+        if (signal) {
+            if (optionDB.getBlockPns().equals("1")) {
                 setIsBlockOption(signal);
                 stringBuilderMsg.append("\n\n").append("Документ проведен не будет!");
-            }else {
+            } else {
                 stringBuilderMsg.append("\n\n").append("Вы можете получить Премиальные БОЛЬШЕ, если будете получать ЭКЛ у ПТТ.");
             }
         }
@@ -254,9 +262,9 @@ public class OptionControlEKL<T> extends OptionControl {
         // сохраняем сигнал
         RealmManager.INSTANCE.executeTransaction(realm -> {
             if (optionDB != null) {
-                if (signal){
+                if (signal) {
                     optionDB.setIsSignal("1");
-                }else {
+                } else {
                     optionDB.setIsSignal("2");
                 }
                 realm.insertOrUpdate(optionDB);

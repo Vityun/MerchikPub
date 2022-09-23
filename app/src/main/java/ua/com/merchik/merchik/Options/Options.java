@@ -48,6 +48,7 @@ import ua.com.merchik.merchik.Options.Controls.OptionControlAddComment;
 import ua.com.merchik.merchik.Options.Controls.OptionControlAvailabilityDetailedReport;
 import ua.com.merchik.merchik.Options.Controls.OptionControlCheckingReasonOutOfStock;
 import ua.com.merchik.merchik.Options.Controls.OptionControlCheckingReasonOutOfStockOSV;
+import ua.com.merchik.merchik.Options.Controls.OptionControlEKL;
 import ua.com.merchik.merchik.Options.Controls.OptionControlEndAnotherWork;
 import ua.com.merchik.merchik.Options.Controls.OptionControlPhotoBeforeStartWork;
 import ua.com.merchik.merchik.Options.Controls.OptionControlPromotion;
@@ -150,6 +151,11 @@ public class Options {
             }
 
             switch (optionControlId) {
+                case 84006:
+                    OptionControlEKL<?> optionControlEKL = new OptionControlEKL<>(context, dataDB, optionsDB, newOptionType, mode);
+                    optionControlEKL.showOptionMassage();
+                    break;
+
                 case 133381:
                     OptionControlRegistrationPotentialClient<?> optionControlRegistrationPotentialClient = new OptionControlRegistrationPotentialClient<>(context, dataDB, optionsDB, newOptionType, mode);
                     optionControlRegistrationPotentialClient.showOptionMassage();
@@ -248,10 +254,10 @@ public class Options {
                     check_RENAME_2(context, dataDB, optionsDB, type, mode);
                     break;
 
-                case 84006:
-                    // !!!!!!!
-                    checkEKL(context, dataDB, optionsDB, type, mode);
-                    break;
+//                case 84006:
+//                    // !!!!!!!
+//                    checkEKL(context, dataDB, optionsDB, type, mode);
+//                    break;
 
                 case 587:
                     optionControlReceivingAnOrder_587(context, dataDB, optionsDB, null, NNKMode.CHECK);
@@ -548,6 +554,10 @@ public class Options {
 //        try {
         Log.e("NNK", "F/optControl/optionId: " + optionId);
         switch (optionId) {
+            case 84006:
+                OptionControlEKL<?> optionControlEKL = new OptionControlEKL<>(context, dataDB, option, type, mode);
+                optionControlEKL.showOptionMassage();
+                return optionControlEKL.isBlockOption() ? 1 : 0;
 
             case 133381:
                 OptionControlRegistrationPotentialClient<?> optionControlRegistrationPotentialClient = new OptionControlRegistrationPotentialClient<>(context, dataDB, option, type, mode);
