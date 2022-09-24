@@ -63,6 +63,7 @@ import ua.com.merchik.merchik.data.RetrofitResponse.tables.ChatResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.CityResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.ContentResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.CustomerResponse;
+import ua.com.merchik.merchik.data.RetrofitResponse.tables.EKL.EKLResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.LanguagesResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.OblastResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.OborotVedResponse;
@@ -586,6 +587,11 @@ public interface RetrofitInterface {
 
     @POST("mobile_app.php?")
     Call<String> TEST_STRING_UPLOAD(
+            @Header("ContentType") String content,
+            @Body JsonObject json);
+
+    @POST("mobile_app.php?")
+    Call<EKLResponse> GET_EKL(
             @Header("ContentType") String content,
             @Body JsonObject json);
 

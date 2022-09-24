@@ -317,14 +317,22 @@ public class DialogEKL {
             if (Globals.userEKLId != null && Globals.userEKLId != 0){
                 for(UserSDBJoin item : data) {
                     if(item.id.equals(Globals.userEKLId)) {
+
+                        Globals.writeToMLOG("INFO", "DialogEKL/showData/UserSDBJoin", "item.fio: " + item.fio);
+                        Globals.writeToMLOG("INFO", "DialogEKL/showData/UserSDBJoin", "item.nm: " + item.nm);
+
                         try {
                             if (item.nm == null) {
                                 item.nm = "Отдел не определён";
                             }
+
+                            sotr.setText(item.fio + "(" + item.nm + ")");
                         }catch (Exception e){
                             e.printStackTrace();
+                            Globals.writeToMLOG("INFO", "DialogEKL/showData/UserSDBJoin", "Exception e: " + e);
+                            sotr.setText(item.fio);
                         }
-                        sotr.setText(item.fio + "(" + item.nm + ")");
+//                        sotr.setText(item.fio + "(" + item.nm + ")");
                     }
                 }
             }

@@ -4,9 +4,6 @@ import android.content.Context;
 import android.os.Build;
 import android.util.Log;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonArray;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -91,10 +88,46 @@ public class OptionControlEKL<T> extends OptionControl {
         PTT = "";   // Сбрасываем ПТТшника в режим "любой"
 
         // DEBUG DATA-------------
-        List<EKL_SDB> fullEkl = SQL_DB.eklDao().getAll();
-        JsonArray str = new Gson().fromJson(new Gson().toJson(fullEkl), JsonArray.class);
-        Globals.writeToMLOG("INFO", "OptionControlEKL/createTZN", "fullEkl.size: " + fullEkl.size());
-        Globals.writeToMLOG("INFO", "OptionControlEKL/createTZN", "JsonObject str: " + str);
+/*        try {
+            List<EKL_SDB> fullEkl = SQL_DB.eklDao().getAll();
+            JsonArray str = new Gson().fromJson(new Gson().toJson(fullEkl), JsonArray.class);
+            Globals.writeToMLOG("INFO", "OptionControlEKL/createTZN", "fullEkl.size: " + fullEkl.size());
+            Globals.writeToMLOG("INFO", "OptionControlEKL/createTZN", "JsonObject str: " + str);
+        }catch (Exception e){
+
+        }*/
+
+/*        try {
+            JsonObject strWp = new Gson().fromJson(new Gson().toJson(wpDataDB), JsonObject.class);
+            Globals.writeToMLOG("INFO", "OptionControlEKL/createTZN", "strWp.size: " + strWp.size());
+            Globals.writeToMLOG("INFO", "OptionControlEKL/createTZN", "JsonObject strWp: " + strWp);
+        }catch (Exception e){
+
+        }
+
+        try {
+            JsonObject strAdr = new Gson().fromJson(new Gson().toJson(addressSDB), JsonObject.class);
+            Globals.writeToMLOG("INFO", "OptionControlEKL/createTZN", "strAdr.size: " + strAdr.size());
+            Globals.writeToMLOG("INFO", "OptionControlEKL/createTZN", "JsonObject strAdr: " + strAdr);
+        }catch (Exception e){
+
+        }
+
+        try {
+            JsonObject strUser = new Gson().fromJson(new Gson().toJson(documentUser), JsonObject.class);
+            Globals.writeToMLOG("INFO", "OptionControlEKL/createTZN", "strUser.size: " + strUser.size());
+            Globals.writeToMLOG("INFO", "OptionControlEKL/createTZN", "JsonObject strUser: " + strUser);
+        }catch (Exception e){
+
+        }
+
+        try {
+            JsonObject strPTT = new Gson().fromJson(new Gson().toJson(documentUser), JsonObject.class);
+            Globals.writeToMLOG("INFO", "OptionControlEKL/createTZN", "strPTT.size: " + strPTT.size());
+            Globals.writeToMLOG("INFO", "OptionControlEKL/createTZN", "JsonObject strPTT: " + strPTT);
+        }catch (Exception e){
+
+        }*/
         // -----------------------
 
         // TODO Это на будущее. Пока это не надо. Можно закоментить.
@@ -164,13 +197,25 @@ public class OptionControlEKL<T> extends OptionControl {
             for (TovarGroupSDB item : tovarGroupSDB) {
                 ids.add(item.id);
             }
+
+            String msgDebug = String.format("dateFrom: %s/dateTo: %s/ids: %s/addr: %s/user: %s/ptt: %s", dateFrom, dateTo, ids, wpDataDB.getAddr_id(), wpDataDB.getUser_id(), wpDataDB.ptt_user_id);
+            Globals.writeToMLOG("INFO", "OptionControlEKL/createTZN", msgDebug);
+
             eklSDB = SQL_DB.eklDao().getBy(dateFrom, dateTo, ids, wpDataDB.getAddr_id(), wpDataDB.getUser_id(), wpDataDB.ptt_user_id);
+
+            if (eklSDB != null){
+                Globals.writeToMLOG("INFO", "OptionControlEKL/createTZN", "eklSDB1: " + eklSDB.size());
+            }else {
+                Globals.writeToMLOG("INFO", "OptionControlEKL/createTZN", "eklSDB1: EMPTY");
+            }
+        }else {
+            Globals.writeToMLOG("INFO", "OptionControlEKL/createTZN", "eklSDB2: " + eklSDB.size());
         }
 
 
         // Проверка ЭКЛов
         if (eklSDB == null || eklSDB.size() == 0) {
-            signal = false;
+            signal = true;
             stringBuilderMsg.append("За период с ")
                     .append(Clock.getHumanTime3(dateFrom))
                     .append(" по ")
@@ -205,45 +250,45 @@ public class OptionControlEKL<T> extends OptionControl {
 					КонецЕсли;
 					*/
             } else if (usersSDBPTT.fired == 1 && optionDB.getOptionControlId().equals("133317") && optionDB.getOptionControlId().equals("84006")) {   //для случая, когда берем ЭКЛ у ПТТ
-                signal = true;
-                stringBuilderMsg.append(", но").append("ПТТ уволен! (").append(usersSDBPTT.firedReason).append(")");
+                signal = false;
+                stringBuilderMsg.append(", но ").append("ПТТ уволен! (").append(usersSDBPTT.firedReason).append(")");
             } else if (usersSDBPTT.workAddrId != wpDataDB.getAddr_id() && optionDB.getOptionControlId().equals("133317") && optionDB.getOptionControlId().equals("84006")) {    //для случая, когда берем ЭКЛ у ПТТ
-                signal = true;
-                stringBuilderMsg.append(", но").append("ПТТ не работает по адресу: ").append(addressSDB.nm);
+                signal = false;
+                stringBuilderMsg.append(", но ").append("ПТТ не работает по адресу: ").append(addressSDB.nm);
             } else if (usersSDBPTT.otdelId == null || usersSDBPTT.otdelId == 0) {
-                signal = true;
-                stringBuilderMsg.append(", но").append("у ПТТ ").append(usersSDBPTT.fio).append(" не указан отдел в котором он работает!");
-            } else if (usersSDBPTT.otdelId != null && usersSDBPTT.otdelId != 0) {
-                signal = true;
+                signal = false;
+                stringBuilderMsg.append(", но ").append("у ПТТ ").append(usersSDBPTT.fio).append(" не указан отдел в котором он работает!");
+            } else if (usersSDBPTT.otdelId != null && SQL_DB.tovarGroupDao().getById(usersSDBPTT.otdelId).parent != 0) {    // нет у меня понятия УРОВЕНЬ
+                signal = false;
                 // TODO otdel lvl
-                stringBuilderMsg.append(", но").append("у ПТТ указан отдел ").append(usersSDBPTT.otdelId)
-                        .append(" (").append("-- otdel lvl --").append(" из уровня  вложенности!)");
+                stringBuilderMsg.append(", но ").append("у ПТТ указан отдел ").append(SQL_DB.tovarGroupDao().getById(usersSDBPTT.otdelId).nm)
+                /*.append(" (").append("-- otdel lvl --").append(" из уровня  вложенности!)")*/;
             } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                 if (tovarGroupSDB.stream().filter(item -> item.id.equals(usersSDBPTT.otdelId)).findFirst().orElse(null) != null
                         && optionDB.getOptionControlId().equals("132629") && (addressSDB.kolKass > 5 || addressSDB.kolKass == 0)) {
                     if (documentUser.reportDate05 != null && documentUser.reportDate05.getTime() >= wpDataDB.getDt().getTime()) {
-                        signal = false;
-                        stringBuilderMsg.append(", но").append("ПТТ работает в отделе ").append(usersSDBPTT.otdelId).append(" и не может подписывать ЭКЛ для: ")
+                        signal = true;
+                        stringBuilderMsg.append(", но ").append("ПТТ работает в отделе ").append(SQL_DB.tovarGroupDao().getById(usersSDBPTT.otdelId).nm).append(" и не может подписывать ЭКЛ для: ")
                                 .append(TG.getNmFromList(tovarGroupSDB)).append(" (но исполнитель не провел свой 5-й отчет и эту блокировку пропускаем)");
                     } else {
-                        signal = true;
-                        stringBuilderMsg.append(", но").append("ПТТ работает в отделе ").append(usersSDBPTT.otdelId).append(" и не может подписывать ЭКЛ для: ")
+                        signal = false;
+                        stringBuilderMsg.append(", но ").append("ПТТ работает в отделе ").append(SQL_DB.tovarGroupDao().getById(usersSDBPTT.otdelId).nm).append(" и не может подписывать ЭКЛ для: ")
                                 .append(TG.getNmFromList(tovarGroupSDB)).append(" (для магазина в котором более 5 касс и исполнитель провел 5-й отчет)");
                     }
                 } else if (tovarGroupSDB.stream().filter(item -> item.id.equals(usersSDBPTT.otdelId)).findFirst().orElse(null) != null
                         && optionDB.getOptionControlId().equals("132629") && (addressSDB.kolKass > 0 || addressSDB.kolKass <= 5)) {
                     if (documentUser.reportDate05 != null && documentUser.reportDate05.getTime() >= wpDataDB.getDt().getTime()) {
-                        signal = false;
-                        stringBuilderMsg.append(", но").append("ПТТ работает в отделе ").append(usersSDBPTT.otdelId).append(" и не может подписывать ЭКЛ для: ")
+                        signal = true;
+                        stringBuilderMsg.append(", но ").append("ПТТ работает в отделе ").append(SQL_DB.tovarGroupDao().getById(usersSDBPTT.otdelId).nm).append(" и не может подписывать ЭКЛ для: ")
                                 .append(TG.getNmFromList(tovarGroupSDB)).append(" (но исполнитель не провел свой 5-й отчет и эту блокировку пропускаем)");
                     } else {
-                        signal = false;
-                        stringBuilderMsg.append(", но").append("ПТТ работает в отделе ").append(usersSDBPTT.otdelId).append(" и не может подписывать ЭКЛ для: ")
+                        signal = true;
+                        stringBuilderMsg.append(", но ").append("ПТТ работает в отделе ").append(SQL_DB.tovarGroupDao().getById(usersSDBPTT.otdelId).nm).append(" и не может подписывать ЭКЛ для: ")
                                 .append(TG.getNmFromList(tovarGroupSDB)).append(" (но в данном магазине ").append(addressSDB.kolKass).append(" касс и это допустимо)");
                     }
                 }
             } else {
-                signal = false;
+                signal = true;
             }
         }
 

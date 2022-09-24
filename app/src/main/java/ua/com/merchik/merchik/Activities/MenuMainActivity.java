@@ -8,17 +8,17 @@ import android.widget.Toast;
 import androidx.appcompat.widget.Toolbar;
 
 import com.google.android.material.navigation.NavigationView;
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 
-import java.util.List;
-
-import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.R;
-import ua.com.merchik.merchik.ServerExchange.TablesExchange.SamplePhotoExchange;
-import ua.com.merchik.merchik.ViewHolders.Clicks;
-import ua.com.merchik.merchik.data.Database.Room.SamplePhotoSDB;
-import ua.com.merchik.merchik.database.realm.RealmManager;
+import ua.com.merchik.merchik.data.RetrofitResponse.tables.EKL.EKLResponse;
+import ua.com.merchik.merchik.data.TestJsonUpload.StandartData;
 import ua.com.merchik.merchik.dialogs.DialogFilter.Click;
+import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
 import ua.com.merchik.merchik.toolbar_menus;
+
+import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
 
 public class MenuMainActivity extends toolbar_menus {
@@ -74,71 +74,31 @@ public class MenuMainActivity extends toolbar_menus {
 
     private void test(Click result) {
 
-        SamplePhotoExchange samplePhotoExchange = new SamplePhotoExchange();
-        samplePhotoExchange.downloadSamplePhotoTable(new Clicks.clickStatus() {
+        StandartData data = new StandartData();
+        data.mod = "sms_verification";
+        data.act = "list";
+//        data.dt_change_from = Clock.today_7;
+//        data.dt_change_to = Clock.tomorrow;
+
+        JsonObject convertedObject = new Gson().fromJson(new Gson().toJson(data), JsonObject.class);
+
+        retrofit2.Call<EKLResponse> call = RetrofitBuilder.getRetrofitInterface().GET_EKL(RetrofitBuilder.contentType, convertedObject);
+        call.enqueue(new retrofit2.Callback<EKLResponse>() {
             @Override
-            public void onSuccess(Object data) {
-                Globals.writeToMLOG("INFO", "Exchange/SamplePhotoExchange()/onSuccess", "data: " + data);
-
-                List<SamplePhotoSDB> res = (List<SamplePhotoSDB>) data;
-
+            public void onResponse(retrofit2.Call<EKLResponse> call, retrofit2.Response<EKLResponse> response) {
+                Log.e("test", "test: " + response.body());
                 try {
-                    RealmManager.INSTANCE.executeTransaction(realm -> {
-                        if (samplePhotoExchange.synchronizationTimetableDB != null) {
-                            samplePhotoExchange.synchronizationTimetableDB.setVpi_app(System.currentTimeMillis() / 1000);
-                            realm.copyToRealmOrUpdate(samplePhotoExchange.synchronizationTimetableDB);
-                        }
-                    });
-
-
-                    samplePhotoExchange.downloadSamplePhotos(res, new Clicks.clickStatusMsg() {
-                        @Override
-                        public void onSuccess(String data) {
-                            Globals.writeToMLOG("INFO", "2Exchange/SamplePhotoExchange()/onSuccess", "data: " + data);
-                        }
-
-                        @Override
-                        public void onFailure(String error) {
-                            Globals.writeToMLOG("ERROR", "2Exchange/SamplePhotoExchange()/onFailure", "error: " + error);
-                        }
-                    });
-
+                    SQL_DB.eklDao().insertAll(response.body().list);
                 } catch (Exception e) {
-                    Globals.writeToMLOG("ERROR", "SamplePhotoExchange/downloadSamplePhotoTable/onResponse/onComplete/synchronizationTimetableDB", "Exception e: " + e);
+                    Log.e("test", "Exception e: " + e);
                 }
             }
 
             @Override
-            public void onFailure(String error) {
-                Globals.writeToMLOG("ERROR", "Exchange/SamplePhotoExchange()/onFailure", "error: " + error);
+            public void onFailure(retrofit2.Call<EKLResponse> call, Throwable t) {
+                Log.e("test", "test: " + t);
             }
         });
-
-//        new Exchange().sendTAR();
-
-//        new Exchange().getGroupTovByClient();
-
-
-//        StandartData data = new StandartData();
-//        data.mod = "potential_clients";
-//        data.act = "list";
-//
-//        Gson gson = new Gson();
-//        String json = gson.toJson(data);
-//        JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
-//
-//        retrofit2.Call<JsonObject> call = RetrofitBuilder.getRetrofitInterface().TEST_JSON_UPLOAD(RetrofitBuilder.contentType, convertedObject);
-//        call.enqueue(new Callback<JsonObject>() {
-//            @Override
-//            public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
-//                Log.e("test", "test" + response);
-//            }
-//
-//            @Override
-//            public void onFailure(Call<JsonObject> call, Throwable t) {
-//                Log.e("test", "test" + t);
-//            }
-//        });
     }
 
 
