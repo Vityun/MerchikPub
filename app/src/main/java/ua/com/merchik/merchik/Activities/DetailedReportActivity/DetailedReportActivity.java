@@ -72,6 +72,7 @@ public class DetailedReportActivity extends toolbar_menus {
 
     public static FloatingActionButton fab;
     public static List<TasksAndReclamationsSDB> tarList;
+    public static boolean additionalRequirementsFilter = true;  // true - по наличию в RP. false - отображаем ВСЁ
 
 
     // ----- ПЕРЕМЕННЫЕ ДЛЯ МОДУЛЯ -----

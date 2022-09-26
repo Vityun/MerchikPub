@@ -121,10 +121,12 @@ public class DetailedReportTovarsFrag extends Fragment {
                     Log.e("setTextLikeLink", "!flag");
                     fullTovList.setRotation(45);
                     fullTovList.setImageDrawable(this.mContext.getResources().getDrawable(R.drawable.ic_letter_x));
+                    DetailedReportActivity.additionalRequirementsFilter = true;
                 } else {
                     Log.e("setTextLikeLink", "flag");
                     fullTovList.setRotation(0);
                     fullTovList.setImageDrawable(this.mContext.getResources().getDrawable(R.drawable.ic_minus));
+                    DetailedReportActivity.additionalRequirementsFilter = false;
                 }
                 flag = !flag;
                 addRecycleView(getTovList());

@@ -1,13 +1,16 @@
 package ua.com.merchik.merchik.database.realm.tables;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import io.realm.RealmResults;
+import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.data.BaseBusinessData;
 import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
 import ua.com.merchik.merchik.data.RealmModels.AdditionalRequirementsDB;
 import ua.com.merchik.merchik.data.RealmModels.AddressDB;
+import ua.com.merchik.merchik.data.RealmModels.ReportPrepareDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 
 import static ua.com.merchik.merchik.database.realm.RealmManager.INSTANCE;
@@ -110,16 +113,19 @@ public class AdditionalRequirementsRealm {
     public static <T> RealmResults<AdditionalRequirementsDB> getData3(T data) {
         int themeId, addressId;
         String clientId;
+        long dad2;
 
         if (data instanceof WpDataDB) {
             addressId = ((WpDataDB) data).getAddr_id();
             clientId = ((WpDataDB) data).getClient_id();
             themeId = ((WpDataDB) data).getTheme_id();
+            dad2 = ((WpDataDB) data).getCode_dad2();
         } else if (data instanceof TasksAndReclamationsSDB) {
             WpDataDB wp = WpDataRealm.getWpDataRowByDad2Id(((TasksAndReclamationsSDB) data).codeDad2SrcDoc);
             addressId = wp.getAddr_id();
             clientId = wp.getClient_id();
             themeId = wp.getTheme_id();
+            dad2 = wp.getCode_dad2();
         } else {
             return null;
         }
@@ -162,6 +168,40 @@ public class AdditionalRequirementsRealm {
                     .findAll();
         }
 
+        try {
+            if (DetailedReportActivity.additionalRequirementsFilter) {
+                List<Integer> listIds = new ArrayList<>();
+                List<ReportPrepareDB> listRP = ReportPrepareRealm.getReportPrepareByDad2(dad2);
+                List<AdditionalRequirementsDB> listAR = realmResults;
+                for (AdditionalRequirementsDB item : listAR) {
+                    boolean exist = false;
+                    for (ReportPrepareDB itemRP : listRP) {
+                        if (item.getTovarId().equals(itemRP.getTovarId())) {
+                            exist = true;
+                            break;
+                        }
+                    }
+                    if (exist) {
+                        listIds.add(item.getId());
+                    }
+                }
+
+                Integer[] ids = new Integer[listIds.size()];
+                for (int i = 0; i < listIds.size(); i++) {
+                    ids[i] = listIds.get(i);
+                }
+                realmResults = realmResults.where()
+                        .in("id", ids)
+                        .findAll();
+                Globals.writeToMLOG("INFO", "AdditionalRequirementsDB/getData3", "Отображаем RP список: " + realmResults.size());
+            } else {
+                // ничего не делаем
+                Globals.writeToMLOG("INFO", "AdditionalRequirementsDB/getData3", "Отображаем весь список: " + realmResults.size());
+            }
+        } catch (Exception e) {
+            Globals.writeToMLOG("ERROR", "AdditionalRequirementsDB/getData3", "Exception e: " + e);
+        }
+
 
         return realmResults;
     }
@@ -195,7 +235,7 @@ public class AdditionalRequirementsRealm {
             res = res.where().equalTo("addrId", addrId).findAll();
         }
 
-        if (optionId != null && !optionId.equals("0")){
+        if (optionId != null && !optionId.equals("0")) {
             res = res.where().equalTo("optionId", optionId).findAll();
         }
 
