@@ -18,6 +18,10 @@ import java.util.List;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.data.RealmModels.AdditionalRequirementsDB;
 import ua.com.merchik.merchik.data.RealmModels.AdditionalRequirementsMarkDB;
+import ua.com.merchik.merchik.data.RealmModels.TovarDB;
+import ua.com.merchik.merchik.data.RealmModels.TradeMarkDB;
+import ua.com.merchik.merchik.database.realm.tables.TovarRealm;
+import ua.com.merchik.merchik.database.realm.tables.TradeMarkRealm;
 import ua.com.merchik.merchik.dialogs.DialogAdditionalRequirements.DialogARMark.DialogARMark;
 import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsMarkRealm;
@@ -210,6 +214,16 @@ public class AdditionalRequirementsAdapter extends RecyclerView.Adapter<Addition
             try {
                 String text2 = String.format("%s", data.getNotes());
                 bText.append(text2);
+
+                TovarDB tovarDB = TovarRealm.getById(data.getTovarId());
+                TradeMarkDB tradeMarkDB = TradeMarkRealm.getTradeMarkRowById(tovarDB.getManufacturerId());
+
+                bText.append("\n").append("<b>Товар: </b>");
+                bText.append(tovarDB.getNm())
+                        .append(", ").append(tovarDB.getWeight())
+                        .append(", ").append(tradeMarkDB.getNm())
+                        .append(", ").append(tovarDB.getBarcode());
+
             } catch (Exception e) {
             }
             CharSequence endbText = Html.fromHtml(bText.toString());
