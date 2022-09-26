@@ -19,17 +19,22 @@ import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.io.Serializable;
+import java.util.Collections;
 import java.util.List;
 
 import io.realm.RealmResults;
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity;
 import ua.com.merchik.merchik.Filter.MyFilter;
 import ua.com.merchik.merchik.data.Data;
+import ua.com.merchik.merchik.data.Database.Room.AddressSDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.data.WPDataObj;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.ThemeRealm;
+import ua.com.merchik.merchik.database.realm.tables.WpDataRealm;
 import ua.com.merchik.merchik.dialogs.DialogData;
+
+import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
 public class RecycleViewWPAdapter extends RecyclerView.Adapter<RecycleViewWPAdapter.ViewHolder> implements Filterable {
 
@@ -157,7 +162,24 @@ public class RecycleViewWPAdapter extends RecyclerView.Adapter<RecycleViewWPAdap
 
 
         private void setDialog(WpDataDB wp, long otchetId) {
-            String msg = String.format("Дата: %s\nАдрес: %s\nКлиент: %s\nИсполнитель: %s\n", Clock.getHumanTimeYYYYMMDD(wp.getDt().getTime()/1000), wp.getAddr_txt(), wp.getClient_txt(), wp.getUser_txt());
+
+            String addrTxt;
+            if (wp.getAddr_txt() != null && !wp.getAddr_txt().equals("")){
+                addrTxt = wp.getAddr_txt();
+            }else {
+                AddressSDB addressSDB = SQL_DB.addressDao().getById(wp.getAddr_id());
+                if (addressSDB != null){
+                    addrTxt = addressSDB.nm;
+                    wp.setAddr_location_xd(String.valueOf(addressSDB.locationXd));
+                    wp.setAddr_location_yd(String.valueOf(addressSDB.locationYd));
+                }else {
+                    addrTxt = "Адресс не определён";
+                }
+                wp.setAddr_txt(addrTxt);
+                WpDataRealm.setWpData(Collections.singletonList(wp));
+            }
+
+            String msg = String.format("Дата: %s\nАдрес: %s\nКлиент: %s\nИсполнитель: %s\n", Clock.getHumanTimeYYYYMMDD(wp.getDt().getTime()/1000), addrTxt, wp.getClient_txt(), wp.getUser_txt());
 
             DialogData errorMsg = new DialogData(mContext);
             errorMsg.setTitle("");
@@ -288,103 +310,9 @@ public class RecycleViewWPAdapter extends RecyclerView.Adapter<RecycleViewWPAdap
             @Override
             protected void publishResults(CharSequence constraint, FilterResults results) {
                 WP = (List<WpDataDB>) results.values;
-
-//                Toast toast = Toast.makeText(mContext, "Отобрано: " + WP.size() + " КПС", Toast.LENGTH_SHORT);
-//                toast.setGravity(Gravity.CENTER, 0, 0);
-//                toast.show();
                 notifyDataSetChanged();
-
             }
         };
     }
-
-
-//    @Override
-//    public Filter getFilter() {
-//        return new Filter() {
-//            @SuppressWarnings("unchecked")
-//            @Override
-//            protected void publishResults(CharSequence constraint, FilterResults results) {
-//                WP = (List<WpDataDB>) results.values;
-//                notifyDataSetChanged();
-//            }
-//
-//            @Override
-//            protected FilterResults performFiltering(CharSequence constraint) {
-//                List<WpDataDB> filteredResults = null;
-////                if (constraint.length() == 0) {
-////                    filteredResults = workPlanList;
-////                } else {
-////                    filteredResults = getFilteredResults(constraint.toString().toLowerCase());
-////                }
-//
-//
-//                if (constraint.length() == 0) {
-//                    Log.e("getFilteredResults", "Я должен быть тут");
-//                    filteredResults = workPlanList;
-//                } else {
-//                    String[] splited = constraint.toString().split("\\s+");
-//                    int count = 0;
-//                    for (String item : splited) {
-//                        Log.e("getFilteredResults", "item(" + count + "): " + item);
-//                        if (item != null && !item.equals("")) {
-//                            Log.e("getFilteredResults", "Отбор в фильтре будет происходит по строке: '" + item + "' ");
-//                            filteredResults = getFilteredResults(item, filteredResults);
-//                        }
-//                        count++;
-//                    }
-//                }
-//
-//
-//                FilterResults results = new FilterResults();
-//                results.values = filteredResults;
-//                return results;
-//            }
-//        };
-//    }
-//
-//
-//    private List<WpDataDB> getFilteredResults(String constraint, List<WpDataDB> list) {
-//        List<WpDataDB> results = new ArrayList<>();
-//
-//        if (list == null) {
-//            list = workPlanList;
-//        }
-//
-//
-//        for (WpDataDB item : list) {
-//
-//            // Дата
-//            if (item.getDt() != null && !item.getDt().equals("") && item.getDt().toLowerCase().contains(constraint)) {
-//                results.add(item);
-//            }
-//
-//            // Адрес
-//            else if (item.getAddr_txt() != null && !item.getAddr_txt().equals("") && item.getAddr_txt().toLowerCase().contains(constraint)) {
-//                results.add(item);
-//            }
-//
-//            // Клиент
-//            else if (item.getClient_txt() != null && !item.getClient_txt().equals("") && item.getClient_txt().toLowerCase().contains(constraint)) {
-//                results.add(item);
-//            }
-//
-//            // Пользователь
-//            else if (item.getUser_txt() != null && !item.getUser_txt().equals("") && item.getUser_txt().toLowerCase().contains(constraint)) {
-//                results.add(item);
-//            }
-//        }
-//
-//
-////        workPlanList = results;
-//        Log.e("getFilteredResults", "return results: " + results.size());
-//
-//        Toast toast = Toast.makeText(mContext, "Отобрано: " + results.size() + " КПС", Toast.LENGTH_SHORT);
-//        toast.setGravity(Gravity.CENTER, 0, 0);
-//        toast.show();
-//
-//        return results;
-//    }
-
 
 }

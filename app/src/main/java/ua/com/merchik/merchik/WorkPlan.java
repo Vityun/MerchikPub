@@ -130,9 +130,12 @@ public class WorkPlan {
         long dad2 = wpRow.getCode_dad2();
         String customer_txt = wpRow.getClient_txt();
         String address_txt = wpRow.getAddr_txt();
-        Float lat = Float.valueOf(wpRow.getAddr_location_xd());
-        Float lon = Float.valueOf(wpRow.getAddr_location_yd());
 
+        Float lat = null, lon = null;
+        if (wpRow.getAddr_location_xd() != null && !wpRow.getAddr_location_xd().equals("")){
+            lat = Float.valueOf(wpRow.getAddr_location_xd());
+            lon = Float.valueOf(wpRow.getAddr_location_yd());
+        }
         return new WPDataObj(wpId, date, customer_id, address_id, photo_type, customerTypeGrp, doc_num, theme_id, photo_user_id, dad2, customer_txt, address_txt, lat, lon);
     }
 
