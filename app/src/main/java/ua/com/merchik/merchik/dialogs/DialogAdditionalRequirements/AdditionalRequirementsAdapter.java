@@ -58,7 +58,22 @@ public class AdditionalRequirementsAdapter extends RecyclerView.Adapter<Addition
         public void bind(AdditionalRequirementsDB elementDB) {
             try {
                 Log.e("AdditionalRequirements", "elementDB: " + elementDB.getId());
-                text.setText(elementDB.getNotes());
+
+                TradeMarkDB tradeMarkDB = null;
+                TovarDB tovarDB = TovarRealm.getById(elementDB.getTovarId());
+
+                StringBuilder additionalText = new StringBuilder();
+                additionalText.append(elementDB.getNotes());
+
+                if (tovarDB != null){
+                    tradeMarkDB = TradeMarkRealm.getTradeMarkRowById(tovarDB.getManufacturerId());
+                    if (tradeMarkDB != null){
+                        additionalText.append("\n");
+                        additionalText.append(createTovarText(tovarDB, tradeMarkDB));
+                    }
+                }
+
+                text.setText(additionalText);
 
                 AdditionalRequirementsMarkDB additionalRequirementsMarkDB = AdditionalRequirementsMarkRealm.getMark(elementDB.getId());
 
@@ -74,8 +89,9 @@ public class AdditionalRequirementsAdapter extends RecyclerView.Adapter<Addition
                 number.setText(score);
 
 
+                TradeMarkDB finalTradeMarkDB = tradeMarkDB;
                 layout.setOnClickListener(v -> {
-                    click(v.getContext(), elementDB);
+                    click(v.getContext(), elementDB, tovarDB, finalTradeMarkDB);
                 });
 
             } catch (Exception e) {
@@ -84,7 +100,7 @@ public class AdditionalRequirementsAdapter extends RecyclerView.Adapter<Addition
         }
 
 
-        private void click(Context context, AdditionalRequirementsDB data) {
+        private void click(Context context, AdditionalRequirementsDB data, TovarDB tovarDB, TradeMarkDB tradeMarkDB) {
             DialogARMark dialog = new DialogARMark(context);
 
             dialog.setTitle("Доп. Требование (" + data.getId() + "/" + data.getSiteId() + ")");
@@ -117,9 +133,9 @@ public class AdditionalRequirementsAdapter extends RecyclerView.Adapter<Addition
             bGrp.append(grp);
             try {
                 Log.e("AdditionalRequirements", "Сеть: " + data.getGrpId());
-                if (data.getGrpId().equals("0")){
+                if (data.getGrpId().equals("0")) {
                     bGrp.append("Для всех сетей");
-                }else {
+                } else {
                     String grp2 = String.format("%s", data.getGrpId());
                     bGrp.append(grp2);
                 }
@@ -145,9 +161,9 @@ public class AdditionalRequirementsAdapter extends RecyclerView.Adapter<Addition
             bStart.append(dStart);
             try {
                 Log.e("AdditionalRequirements", "Дата начала: " + data.getDtStart());
-                if (data.getDtStart().equals("0000-00-00")){
+                if (data.getDtStart().equals("0000-00-00")) {
                     bStart.append("Не определена");
-                }else {
+                } else {
                     String dStart2 = String.format("%s", data.getDtStart());
                     bStart.append(dStart2);
                 }
@@ -162,9 +178,9 @@ public class AdditionalRequirementsAdapter extends RecyclerView.Adapter<Addition
             bEnd.append(dEnd);
             try {
                 Log.e("AdditionalRequirements", "Дата окончания: " + data.getDtEnd());
-                if (data.getDtEnd().equals("0000-00-00")){
+                if (data.getDtEnd().equals("0000-00-00")) {
                     bEnd.append("Не определена");
-                }else {
+                } else {
                     String dEnd2 = String.format("%s", data.getDtEnd());
                     bEnd.append(dEnd2);
                 }
@@ -215,17 +231,18 @@ public class AdditionalRequirementsAdapter extends RecyclerView.Adapter<Addition
                 String text2 = String.format("%s", data.getNotes());
                 bText.append(text2);
 
-                TovarDB tovarDB = TovarRealm.getById(data.getTovarId());
-                TradeMarkDB tradeMarkDB = TradeMarkRealm.getTradeMarkRowById(tovarDB.getManufacturerId());
-
-                bText.append("\n").append("<b>Товар: </b>");
-                bText.append(tovarDB.getNm())
-                        .append(", ").append(tovarDB.getWeight())
-                        .append(", ").append(tradeMarkDB.getNm())
-                        .append(", ").append(tovarDB.getBarcode());
 
             } catch (Exception e) {
             }
+
+            /*Добавляю Товары*/
+            try {
+                bText.append("\n").append("<b>Товар: </b>");
+                bText.append(createTovarText(tovarDB, tradeMarkDB));
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
             CharSequence endbText = Html.fromHtml(bText.toString());
 
 
@@ -238,9 +255,17 @@ public class AdditionalRequirementsAdapter extends RecyclerView.Adapter<Addition
 
             dialog.setClose(dialog::dismiss);
             dialog.setLesson(context, true, 1234);
-            dialog.setVideoLesson(context, true, 1235, ()->{});
+            dialog.setVideoLesson(context, true, 1235, () -> {
+            });
 
             dialog.show();
+        }
+
+        private StringBuilder createTovarText(TovarDB tovarDB, TradeMarkDB tradeMarkDB){
+            return new StringBuilder().append(tovarDB.getNm())
+                    .append(", ").append(tovarDB.getWeight())
+                    .append(", ").append(tradeMarkDB.getNm())
+                    .append(", ").append(tovarDB.getBarcode());
         }
 
 
