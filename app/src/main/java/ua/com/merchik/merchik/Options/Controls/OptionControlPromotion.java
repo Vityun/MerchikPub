@@ -133,7 +133,7 @@ public class OptionControlPromotion<T> extends OptionControl {
                 err++;
                 errType2Cnt++;
                 errMsgType2.append(createLinkedString(msg, item, tov)).append("\n");
-            } else if (OSV == 1 && (item.getAkciya().equals("") || item.getAkciya().equals("0"))) {
+            } else if (OSV == 1 && (item.getAkciya() != null  && (item.getAkciya().equals("") || item.getAkciya().equals("0")))) {
                 // Для товара с ОСВ (Особым Вниманием) Вы должны обязательно указать наличие (или отсутствие) Акции.
                 err++;
                 errType1Cnt++;
