@@ -472,7 +472,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                     dialog.show();
                 });
 
-//                showFacePlan(rp);
+                showFacePlan(rp);
 
             } catch (Exception err) {
                 Globals.writeToMLOG("ERROR", "RecycleViewDRAdapterTovar.bind_6", "Exception e: " + err);
