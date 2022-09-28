@@ -413,6 +413,7 @@ public class DialogEKL {
                 if (res.sendSms == 0){
                     String msg = "У сотрудника " + res.fio + " отключена возможность отправки СМС. Если Вам это необходимо сделать, обратитесь к своему руководителю.";
                     Toast.makeText(arg1.getContext(), msg, Toast.LENGTH_LONG).show();
+                    sotr.setText("");
                     return;
                 }
 
