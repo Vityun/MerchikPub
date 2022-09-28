@@ -610,9 +610,9 @@ public class DialogEKL {
         data.mod = "sms_verification";
         data.act = "verification_send";
 
-        data.sotr_id = "19652";
+//        data.sotr_id = "19652";
         data.option_id = 84007;
-//        data.sotr_id = String.valueOf(user.id);
+        data.sotr_id = String.valueOf(user.id);
         data.code_dad2 = String.valueOf(wp.getCode_dad2());
         data.tel_type = telType;
 
