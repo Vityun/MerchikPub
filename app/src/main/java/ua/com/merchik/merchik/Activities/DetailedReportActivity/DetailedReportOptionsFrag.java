@@ -46,13 +46,6 @@ public class DetailedReportOptionsFrag extends Fragment {
 
     RecycleViewDRAdapter recycleViewDRAdapter;
 
-    interface RefreshInterface {
-        public void refreshAdapterFragmentB();
-    }
-
-    public DetailedReportOptionsFrag() {
-    }
-
     public DetailedReportOptionsFrag(Context context, ArrayList<Data> list, WpDataDB wpDataDB) {
         // Required empty public constructor
         this.mContext = context;

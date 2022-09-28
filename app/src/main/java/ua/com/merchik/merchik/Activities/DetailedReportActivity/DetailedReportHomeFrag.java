@@ -55,11 +55,6 @@ public class DetailedReportHomeFrag extends Fragment {
 
     private ImageView merchikImg;
 
-    public DetailedReportHomeFrag() {
-        Log.e("ЧТО_ПРОИСХОДИТ", "DetailedReportHomeFrag");
-    }
-
-
     public DetailedReportHomeFrag(AppCompatActivity context, ArrayList<Data> list, WpDataDB wpDataDB) {
         // Required empty public constructor
         this.mContext = context;

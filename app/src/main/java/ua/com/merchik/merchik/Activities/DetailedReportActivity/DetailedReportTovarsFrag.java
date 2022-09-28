@@ -62,9 +62,6 @@ public class DetailedReportTovarsFrag extends Fragment {
 
     private boolean flag = true;
 
-    public DetailedReportTovarsFrag() {
-    }
-
     public DetailedReportTovarsFrag(Context context, ArrayList<Data> list, WpDataDB wpDataDB) {
         // Required empty public constructor
         this.mContext = context;
