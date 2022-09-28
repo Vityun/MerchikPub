@@ -176,6 +176,10 @@ public class AdditionalRequirementsRealm {
                 for (AdditionalRequirementsDB item : listAR) {
                     boolean exist = false;
                     for (ReportPrepareDB itemRP : listRP) {
+                        if (item.getTovarId().equals("0")){
+                            exist = true;
+                            break;
+                        }
                         if (item.getTovarId().equals(itemRP.getTovarId())) {
                             exist = true;
                             break;
