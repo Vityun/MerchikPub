@@ -2141,7 +2141,7 @@ public class Options {
 
         if (tableRow == null) return Globals.Triple.NO_DATA;
 
-        if (data.equals("")) return Globals.Triple.NO_DATA;
+        if (data == null || data.equals("")) return Globals.Triple.NO_DATA;
 
         if (tableRow.getUploadStatus() == 0 && !data.equals("0") && !data.equals("0000-00-00")) {
             return Globals.Triple.TRUE;
