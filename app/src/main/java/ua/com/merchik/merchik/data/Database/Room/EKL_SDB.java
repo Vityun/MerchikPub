@@ -28,12 +28,12 @@ public class EKL_SDB {
     @SerializedName("user_id")
     @Expose
     @ColumnInfo(name = "user_id")
-    public Integer userId;
+    public Integer userId;  // Кто отправляет ЭКЛ
 
     @SerializedName("user_id_verify")
     @Expose
     @ColumnInfo(name = "sotr_id")
-    public Integer sotrId;
+    public Integer sotrId;  // ПТТ
 
     @SerializedName("client_id")
     @Expose

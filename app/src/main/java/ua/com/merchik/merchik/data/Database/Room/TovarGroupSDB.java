@@ -34,12 +34,17 @@ public class TovarGroupSDB {
     @ColumnInfo(name = "dt_update")
     public Long dtUpdate;
 
-    public String getNmFromList(List<TovarGroupSDB> list){
+    public String getNmFromList(List<TovarGroupSDB> list) {
         StringBuilder res = new StringBuilder();
-        for(TovarGroupSDB item : list){
-            res.append(item.nm).append(", ");
+        if (list != null && list.size() > 0) {
+            for (TovarGroupSDB item : list) {
+                res.append(item.nm).append(", ");
+            }
+            res = new StringBuilder(res.substring(0, res.length() - 2));
+        } else {
+            return "";
         }
-        res = new StringBuilder(res.substring(0, res.length() - 2));
+
         return res.toString();
     }
 }

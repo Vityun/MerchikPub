@@ -38,7 +38,6 @@ public class DetailedReportTab extends FragmentPagerAdapter {
             case 0:
                 return new DetailedReportHomeFrag(myContext, list, wpDataDB);
             case 1:
-
                 detailedReportOptionsFrag = new DetailedReportOptionsFrag(myContext, list, wpDataDB);
                 return detailedReportOptionsFrag;
             case 2:

@@ -191,7 +191,8 @@ public class OptionControlEKL<T> extends OptionControl {
 
 
         // лезем в таблицу ЭКЛ и проверяем, еслть ли ПОДПИСАННЫЙ ЭКЛ по данным условиям
-        eklSDB = SQL_DB.eklDao().getBy(dateFrom, dateTo, wpDataDB.getClient_id(), wpDataDB.getAddr_id(), wpDataDB.getUser_id(), wpDataDB.ptt_user_id);
+        eklSDB = SQL_DB.eklDao().getBy(dateFrom*1000, dateTo*1000, wpDataDB.getClient_id(), wpDataDB.getAddr_id(), wpDataDB.getUser_id());
+//        eklSDB = SQL_DB.eklDao().getBy(dateFrom, dateTo, wpDataDB.getClient_id(), wpDataDB.getAddr_id(), wpDataDB.getUser_id(), wpDataDB.ptt_user_id);
         if (eklSDB == null || eklSDB.size() == 0) {
             List<Integer> ids = new ArrayList<>();
             for (TovarGroupSDB item : tovarGroupSDB) {
@@ -201,7 +202,7 @@ public class OptionControlEKL<T> extends OptionControl {
             String msgDebug = String.format("dateFrom: %s/dateTo: %s/ids: %s/addr: %s/user: %s/ptt: %s", dateFrom, dateTo, ids, wpDataDB.getAddr_id(), wpDataDB.getUser_id(), wpDataDB.ptt_user_id);
             Globals.writeToMLOG("INFO", "OptionControlEKL/createTZN", msgDebug);
 
-            eklSDB = SQL_DB.eklDao().getBy(dateFrom, dateTo, ids, wpDataDB.getAddr_id(), wpDataDB.getUser_id(), wpDataDB.ptt_user_id);
+            eklSDB = SQL_DB.eklDao().getBy(dateFrom*1000, dateTo*1000, ids, wpDataDB.getAddr_id(), wpDataDB.getUser_id(), wpDataDB.ptt_user_id);
 
             if (eklSDB != null){
                 Globals.writeToMLOG("INFO", "OptionControlEKL/createTZN", "eklSDB1: " + eklSDB.size());
@@ -231,6 +232,9 @@ public class OptionControlEKL<T> extends OptionControl {
 					КонецЕсли;
 				КонецЕсли;*/
         } else {
+            if (usersSDBPTT == null){
+                usersSDBPTT = SQL_DB.usersDao().getById(eklSDB.get(0).sotrId);
+            }
             stringBuilderMsg.append("За период с ")
                     .append(Clock.getHumanTime3(dateFrom)).append(" по ")
                     .append(Clock.getHumanTime3(dateTo))

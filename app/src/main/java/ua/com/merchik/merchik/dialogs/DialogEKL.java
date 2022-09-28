@@ -456,7 +456,8 @@ public class DialogEKL {
                                 // Создание в БД нового ЭКЛ-а
                                 EKL_SDB ekl_sdb = new EKL_SDB();
                                 ekl_sdb.id = resp.requestId;
-                                ekl_sdb.userId = user.id;
+                                ekl_sdb.userId = Globals.userId;    // App User
+                                ekl_sdb.sotrId = user.id;   // PTT
                                 ekl_sdb.clientId = wp.getClient_id();
                                 ekl_sdb.addressId = wp.getAddr_id();
                                 ekl_sdb.dad2 = wp.getCode_dad2();
@@ -609,9 +610,9 @@ public class DialogEKL {
         data.mod = "sms_verification";
         data.act = "verification_send";
 
-//        data.sotr_id = "19652";
+        data.sotr_id = "19652";
         data.option_id = 84007;
-        data.sotr_id = String.valueOf(user.id);
+//        data.sotr_id = String.valueOf(user.id);
         data.code_dad2 = String.valueOf(wp.getCode_dad2());
         data.tel_type = telType;
 
