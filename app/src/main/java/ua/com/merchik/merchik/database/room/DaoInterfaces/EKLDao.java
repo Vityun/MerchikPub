@@ -24,6 +24,9 @@ public interface EKLDao {
     @Query("SELECT * FROM ekl WHERE user_id = :id")
     EKL_SDB getByUserId(int id);
 
+    @Query("SELECT * FROM ekl WHERE sotr_id = :id")
+    EKL_SDB getByPTTId(int id);
+
     @Query("SELECT * FROM ekl WHERE dad2 = :dad2")
     List<EKL_SDB> getByDad2(long dad2);
 

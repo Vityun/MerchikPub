@@ -546,7 +546,7 @@ public class DialogEKL {
             }
 
             // Проверка наличия ЭКЛ у этого сотрудника
-            if (SQL_DB.eklDao().getByUserId(user.id) == null) {
+            if (SQL_DB.eklDao().getByPTTId(user.id) == null) {
                 Log.e("DialogEKL", "Check 2");
                 Toast.makeText(context, "Такой код у ПТТ " + user.fio + " не зафиксирован", Toast.LENGTH_SHORT).show();
                 return;
