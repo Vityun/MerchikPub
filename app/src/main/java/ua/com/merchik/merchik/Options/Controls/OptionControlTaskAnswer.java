@@ -158,12 +158,15 @@ public class OptionControlTaskAnswer<T> extends OptionControl {
                         List<TARCommentsDB> commentsRealm = TARCommentsRealm.getTARCommentsToOptionControl(item.id, item.vinovnik);
 
                         if (commentsRealm != null && commentsRealm.size() == 0) {
-                            Globals.writeToMLOG("INFO", "OptionControlTaskAnswer/executeOption/for/data", "commentsRealm: " + commentsRealm.size());
+                            Globals.writeToMLOG("INFO", "OptionControlTaskAnswer/executeOption/for/data/need_photo", "commentsRealm: " + commentsRealm.size());
 
                             massageToUser = msg;
                             spannableStringBuilder.append(msg).append(": ").append(createLinkedString(item.id1c, item.id)).append("\n");
 
                             result.add(item);
+                        }else {
+                            Globals.writeToMLOG("INFO", "OptionControlTaskAnswer/executeOption/for/data/need_photo",
+                                    "Не смог найти комменты в БД комментов по item.id: " + item.id + ", item.vinovnik: " + item.vinovnik);
                         }
 
                     } else if (theme.need_report == 1) {

@@ -4,6 +4,9 @@ import android.content.Context;
 import android.os.Build;
 import android.util.Log;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -88,6 +91,18 @@ public class OptionControlEKL<T> extends OptionControl {
         PTT = "";   // Сбрасываем ПТТшника в режим "любой"
 
         // DEBUG DATA-------------
+        try {
+            List<EKL_SDB> fullEkl = SQL_DB.eklDao().getAll();
+            StringBuilder stringBuilderDEBUG = new StringBuilder();
+            for (EKL_SDB item : fullEkl){
+                JsonObject object = new Gson().fromJson(new Gson().toJson(item), JsonObject.class);
+                stringBuilderDEBUG.append(object);
+            }
+            Globals.writeToMLOG("INFO", "OptionControlEKL/createTZN", "fullEkl.size: " + fullEkl.size());
+            Globals.writeToMLOG("INFO", "OptionControlEKL/createTZN", "stringBuilderDEBUG: " + stringBuilderDEBUG);
+        }catch (Exception e){
+            Globals.writeToMLOG("INFO", "OptionControlEKL/createTZN", "stringBuilderDEBUG/Exception e: " + e);
+        }
 /*        try {
             List<EKL_SDB> fullEkl = SQL_DB.eklDao().getAll();
             JsonArray str = new Gson().fromJson(new Gson().toJson(fullEkl), JsonArray.class);
@@ -202,7 +217,19 @@ public class OptionControlEKL<T> extends OptionControl {
             String msgDebug = String.format("dateFrom: %s/dateTo: %s/ids: %s/addr: %s/user: %s/ptt: %s", dateFrom, dateTo, ids, wpDataDB.getAddr_id(), wpDataDB.getUser_id(), wpDataDB.ptt_user_id);
             Globals.writeToMLOG("INFO", "OptionControlEKL/createTZN", msgDebug);
 
-            eklSDB = SQL_DB.eklDao().getBy(dateFrom*1000, dateTo*1000, ids, wpDataDB.getAddr_id(), wpDataDB.getUser_id(), wpDataDB.ptt_user_id);
+            /*{"addr_id":28847,"client_id":"88939","code":"43670","code_dad2":1280922028847052381,
+            "eklCode":"2e4be49c47542a9bf345850b6b9894ee8a86beb6","code_check":"2e4be49c47542a9bf345850b6b9894ee8a86beb6",
+            "ID":621403,"user_id_verify":220292,"state":true,"upload":true,"user_id":176053,"vpi":1664371175481}
+
+            {"addr_id":27710,"client_id":"9382","code":"36316","code_dad2":1280922027710052435,
+            "eklCode":"6baa05f6e5f5ebc87336ddf47088b2302fea42e7","code_check":"6baa05f6e5f5ebc87336ddf47088b2302fea42e7",
+            "ID":621406,"user_id_verify":196689,"state":true,"upload":true,"user_id":0,"vpi":1664370370346}
+
+            dateFrom: 1664226000/dateTo: 1664398800/ids: [6]/addr: 27710/user: 176053/ptt: 196689
+
+            */
+
+            eklSDB = SQL_DB.eklDao().getBy(dateFrom*1000, dateTo*1000, ids, wpDataDB.getAddr_id(), wpDataDB.getUser_id());
 
             if (eklSDB != null){
                 Globals.writeToMLOG("INFO", "OptionControlEKL/createTZN", "eklSDB1: " + eklSDB.size());

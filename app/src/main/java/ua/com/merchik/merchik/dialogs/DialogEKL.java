@@ -457,7 +457,7 @@ public class DialogEKL {
                                 // Создание в БД нового ЭКЛ-а
                                 EKL_SDB ekl_sdb = new EKL_SDB();
                                 ekl_sdb.id = resp.requestId;
-                                ekl_sdb.userId = Globals.userId;    // App User
+                                ekl_sdb.userId = wp.getUser_id();    // App User
                                 ekl_sdb.sotrId = user.id;   // PTT
                                 ekl_sdb.clientId = wp.getClient_id();
                                 ekl_sdb.addressId = wp.getAddr_id();

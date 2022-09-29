@@ -62,11 +62,15 @@ public class TARCommentsRealm {
                 .equalTo("rId", String.valueOf(id))
                 .equalTo("who", String.valueOf(userId))
                 .and()
+                .beginGroup()
                 .notEqualTo("photo", "0")
                 .notEqualTo("photo", "")
+                .endGroup()
                 .or()
+                .beginGroup()
                 .notEqualTo("photo_hash", "0")
                 .notEqualTo("photo_hash", "")
+                .endGroup()
                 .findAll();
     }
 

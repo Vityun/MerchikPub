@@ -103,8 +103,8 @@ public class OptionControlRegistrationPotentialClient<T> extends OptionControl {
 
     private void formatMsg(List<PotentialClientSDB> potentialClients) {
         if (potentialClients != null && potentialClients.size() == 0) {
-            stringBuilderMsg.append("Не могу определить параметры расчета.");
-            signal = false;
+            stringBuilderMsg.append("Не могу определить параметры расчета.").append("\n\n").append(potentialClientMsg);
+            signal = true;
         } else if (err > 0) {
             stringBuilderMsg.append(dateDiapason).append(" ").append(type).append(" не зарегистрировали. Подробности см. ниже.").append("\n\n").append(potentialClientMsg);
             signal = true;

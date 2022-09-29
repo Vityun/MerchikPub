@@ -50,6 +50,7 @@ import ua.com.merchik.merchik.Options.Controls.OptionControlCheckingReasonOutOfS
 import ua.com.merchik.merchik.Options.Controls.OptionControlCheckingReasonOutOfStockOSV;
 import ua.com.merchik.merchik.Options.Controls.OptionControlEKL;
 import ua.com.merchik.merchik.Options.Controls.OptionControlEndAnotherWork;
+import ua.com.merchik.merchik.Options.Controls.OptionControlFacePlan;
 import ua.com.merchik.merchik.Options.Controls.OptionControlPhotoBeforeStartWork;
 import ua.com.merchik.merchik.Options.Controls.OptionControlPromotion;
 import ua.com.merchik.merchik.Options.Controls.OptionControlReclamationAnswer;
@@ -115,7 +116,8 @@ public class Options {
     private Globals globals = new Globals();
 
     private Integer[] describedOptions = new Integer[]{132624, 76815, 157241, 157243, 84006, 156928,
-            151594, 80977, 135330, 133381, 135329, 138518, 151139, 132623, 133382, 137797, 135809, 135328, 135327};
+            151594, 80977, 135330, 133381, 135329, 138518, 151139, 132623, 133382, 137797, 135809,
+            135328, 135327, 157275};
 
     /*Сюда записываются Опции которые не прошли проверку, при особенном переданном MOD-e. Сделано
     для того что б потом можно было посмотреть название опций которые не прошли проверку и, возможно,
@@ -151,6 +153,11 @@ public class Options {
             }
 
             switch (optionControlId) {
+                case 157275:
+                    OptionControlFacePlan<?> optionControlFacePlan = new OptionControlFacePlan<>(context, dataDB, optionsDB, newOptionType, mode);
+                    optionControlFacePlan.showOptionMassage();
+                    break;
+
                 case 84006:
                     OptionControlEKL<?> optionControlEKL = new OptionControlEKL<>(context, dataDB, optionsDB, newOptionType, mode);
                     optionControlEKL.showOptionMassage();
@@ -554,6 +561,11 @@ public class Options {
 //        try {
         Log.e("NNK", "F/optControl/optionId: " + optionId);
         switch (optionId) {
+            case 157275:
+                OptionControlFacePlan<?> optionControlFacePlan = new OptionControlFacePlan<>(context, dataDB, option, type, mode);
+                optionControlFacePlan.showOptionMassage();
+                return optionControlFacePlan.isBlockOption() ? 1 : 0;
+
             case 84006:
                 OptionControlEKL<?> optionControlEKL = new OptionControlEKL<>(context, dataDB, option, type, mode);
                 optionControlEKL.showOptionMassage();
