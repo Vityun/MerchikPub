@@ -1,6 +1,7 @@
 package ua.com.merchik.merchik.Options.Controls;
 
 import android.content.Context;
+import android.os.Build;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -8,27 +9,27 @@ import java.util.List;
 import ua.com.merchik.merchik.Options.OptionControl;
 import ua.com.merchik.merchik.Options.Options;
 import ua.com.merchik.merchik.data.OptionMassageType;
+import ua.com.merchik.merchik.data.RealmModels.AdditionalRequirementsDB;
 import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
 import ua.com.merchik.merchik.data.RealmModels.ReportPrepareDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.database.realm.RealmManager;
+import ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsRealm;
 import ua.com.merchik.merchik.database.realm.tables.ReportPrepareRealm;
 
 import static ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity.detailedReportRPList;
 import static ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity.detailedReportTovList;
 
-public class OptionControlFacePlan<T> extends OptionControl {
+class OptionControlFacePlanOSV<T> extends OptionControl {
 
-    public int OPTION_CONTROL_FACE_PLAN_ID = 157275;
+    public int OPTION_CONTROL_FACE_PLAN_ID = 157276;
     private boolean signal = true;
     private StringBuilder optionResultStr = new StringBuilder();
 
     private WpDataDB wpDataDB;
     private long dad2;
 
-    private int facePlanCount = 0;
-
-    public OptionControlFacePlan(Context context, T document, OptionsDB optionDB, OptionMassageType msgType, Options.NNKMode nnkMode) {
+    public OptionControlFacePlanOSV(Context context, T document, OptionsDB optionDB, OptionMassageType msgType, Options.NNKMode nnkMode) {
         this.context = context;
         this.document = document;
         this.optionDB = optionDB;
@@ -49,7 +50,7 @@ public class OptionControlFacePlan<T> extends OptionControl {
 
     private void executeOption() {
         List<ReportPrepareDB> resultErrorList = new ArrayList<>();
-        List<ReportPrepareDB> resultSKUList = new ArrayList<>();
+        List<ReportPrepareDB> resultOSVList = new ArrayList<>();
         int percentageCompletedPlan = 0;
         int minPercentage, maxPercentage;
 
@@ -66,29 +67,38 @@ public class OptionControlFacePlan<T> extends OptionControl {
             detailedReportRPList = ReportPrepareRealm.getReportPrepareByDad2(dad2);
         }
 
+        //3.0. получим список товаров с особым вниманием (хранится в Доп.Требованиях)
+        //3.1. выделим сперва список товаров
+        List<AdditionalRequirementsDB> additionalRequirementsDBS = AdditionalRequirementsRealm.getData3(document);
+
+
         //4.0. проверим, по каким из товаров с ОСВ отсутствуют на витрине?
         //5.0. заполним ее данными ОСВ
         for (ReportPrepareDB item : detailedReportRPList) {
-            facePlanCount += item.facesPlan;
-
+            boolean osv = false;    // Признак ОСВ на Товаре
             //КолСКЮ-заполняется еще на этапе формирования ТзнТов (КолСКЮ=1 если колФейс>0)
             int countSKU = 0;
-            if (Integer.parseInt(item.getFace()) > 0) {
-                countSKU = 1;
-                resultSKUList.add(item);
-            }
+            if (Integer.parseInt(item.getFace()) > 0) countSKU = 1;
 
             if (countSKU == 0) continue;  //если товара на полке нет, то и проверять нечего
 
-            if (Integer.parseInt(item.getFace()) < item.facesPlan){
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                if (additionalRequirementsDBS.stream().filter(obj -> obj.getTovarId().equals(item.getTovarId())).findFirst().orElse(null) != null ){
+                    osv = true;
+                    resultOSVList.add(item);
+                }
+            }
+
+            if (osv && Integer.parseInt(item.getFace()) < item.facesPlan){
                 resultErrorList.add(item);   //Тзн.Наруш=1;
-                optionResultStr.append("не виконан ПЛАН по ФЕЙСАМ. (план=").append(item.facesPlan).append("шт. факт=").append(item.getFace()).append("шт.)");
+                optionResultStr.append("Для товара(").append(item.getTovarId()).append(") з ОСУ (Особовою Увагою) вы не виконали ПЛАН по ФЕЙСАМ. (план=")
+                        .append(item.facesPlan.toString()).append("шт. факт=").append(item.getFace()).append("шт.)").append("\n");
             }
         }
 
         //6.0. готовим сообщение и сигнал
         try {
-            percentageCompletedPlan = 100*(resultSKUList.size()-resultErrorList.size())/resultSKUList.size();
+            percentageCompletedPlan = 100*(resultOSVList.size()-resultErrorList.size())/resultOSVList.size();
         }catch (Exception e){
             percentageCompletedPlan = 0;
         }
@@ -96,16 +106,13 @@ public class OptionControlFacePlan<T> extends OptionControl {
         if (detailedReportRPList == null || detailedReportRPList.size() == 0){
             signal = true;
             stringBuilderMsg.append("Товарів, по котрим треба виконувати ПЛАН по ФЕЙСАМ, не знайдено.");
-        }else if (resultSKUList.size() == 0){
+        }else if (resultOSVList.size() == 0){
             signal = true;
-            stringBuilderMsg.append("Товарів, по котрим треба виконувати ПЛАН по ФЕЙСАМ не знайдено.");
-        }else if (facePlanCount == 0){
-            signal = true;
-            stringBuilderMsg.append("Товарів по котрим встановлений ПЛАН по ФЕЙСАМ не знайдено.");
+            stringBuilderMsg.append("Товарів з ОСУ, по котрим треба виконувати ПЛАН по ФЕЙСАМ не знайдено.");
         }else if (minPercentage > 0 && percentageCompletedPlan < minPercentage){
             signal = true;
             stringBuilderMsg.append("План по фейсам виконан на ").append(percentageCompletedPlan).append("%, що нижче мінімального ")
-                    .append(minPercentage).append("% це погано.");
+                    .append(minPercentage).append("%.");
         }else if (maxPercentage > 0 && percentageCompletedPlan > maxPercentage){
             signal = false;
             stringBuilderMsg.append("План по фейсам виконан на ").append(percentageCompletedPlan).append("%, що вишчече максимального ")
@@ -143,5 +150,6 @@ public class OptionControlFacePlan<T> extends OptionControl {
             }
         }
     }
+
 
 }
