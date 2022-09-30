@@ -561,6 +561,7 @@ public class Options {
 //        try {
         Log.e("NNK", "F/optControl/optionId: " + optionId);
         switch (optionId) {
+            case 157274:
             case 157275:
                 OptionControlFacePlan<?> optionControlFacePlan = new OptionControlFacePlan<>(context, dataDB, option, type, mode);
                 optionControlFacePlan.showOptionMassage();

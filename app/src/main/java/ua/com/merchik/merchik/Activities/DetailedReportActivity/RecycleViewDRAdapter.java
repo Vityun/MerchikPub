@@ -171,6 +171,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                     || optionId == 133382   // Потенциальный клиент
                     || optionId == 157275   // 1.
                     || optionId == 157276   // 2. Две опции контроля тут на всяк случай. Тестим.
+                    || optionId == 157274   // 3. ..три
             ) {
                 constraintLayout.setBackgroundResource(R.drawable.bg_temp);
                 textInteger2.setVisibility(View.VISIBLE);
