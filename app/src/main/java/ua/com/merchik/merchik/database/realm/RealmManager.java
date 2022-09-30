@@ -1277,6 +1277,8 @@ public class RealmManager {
     public static RealmResults<TovarDB> getTovarListByCustomer(String id) {
         RealmResults<TovarDB> res = INSTANCE.where(TovarDB.class)
                 .equalTo("clientId", id)
+                .or()
+                .equalTo("clientId2", id)
                 .sort("manufacturerId", Sort.ASCENDING, "weight", Sort.DESCENDING)
                 .findAll();
 
