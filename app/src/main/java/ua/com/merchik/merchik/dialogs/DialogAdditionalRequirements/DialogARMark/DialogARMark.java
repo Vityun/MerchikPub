@@ -264,6 +264,7 @@ public class DialogARMark {
         });
     }
 
+
     public void setRatingBar(Float data, Clicks.click click){
         if (data != null){
             ratingBar.setRating(data);
