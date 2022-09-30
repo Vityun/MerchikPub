@@ -20,6 +20,7 @@ public class OptionControlRegistrationPotentialClient<T> extends OptionControl {
     public int OPTION_CONTROL_REGISTRATION_POTENTIAL_CLIENT_ID = 133381;
 
     private boolean signal = false;
+    private boolean report200 = false;
     private int err = 0;
     private String type = "потенциальных клиентов (ПК)";
     private String dateDiapason = "";
@@ -73,6 +74,7 @@ public class OptionControlRegistrationPotentialClient<T> extends OptionControl {
         if (err > 0 && user != null && user.reportCount < 200) {
             count = 0;
             potentialClientMsg.append(", но он еще не провел своего 200-го отчета.");
+            report200 = true;
         }
 
         formatMsg(potentialClients);
@@ -104,7 +106,7 @@ public class OptionControlRegistrationPotentialClient<T> extends OptionControl {
     private void formatMsg(List<PotentialClientSDB> potentialClients) {
         if (potentialClients != null && potentialClients.size() == 0) {
             stringBuilderMsg.append("Не могу определить параметры расчета.").append("\n\n").append(potentialClientMsg);
-            signal = true;
+            signal = !report200;
         } else if (err > 0) {
             stringBuilderMsg.append(dateDiapason).append(" ").append(type).append(" не зарегистрировали. Подробности см. ниже.").append("\n\n").append(potentialClientMsg);
             signal = true;

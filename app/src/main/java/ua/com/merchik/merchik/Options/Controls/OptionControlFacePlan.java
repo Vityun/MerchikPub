@@ -80,7 +80,7 @@ public class OptionControlFacePlan<T> extends OptionControl {
             int countSKU = 0;
             if (Integer.parseInt(item.getFace()) > 0) countSKU = 1;
 
-            if (countSKU == 0) break;  //если товара на полке нет, то и проверять нечего
+            if (countSKU == 0) continue;  //если товара на полке нет, то и проверять нечего
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                 if (additionalRequirementsDBS.stream().filter(obj -> obj.getTovarId().equals(item.getTovarId())).findFirst().orElse(null) != null ){
