@@ -658,7 +658,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
         private void showFacePlan(ReportPrepareDB reportPrepareDB) {
             if (reportPrepareDB != null && reportPrepareDB.facesPlan != null && reportPrepareDB.facesPlan > 0){
                 facePlan.setVisibility(View.VISIBLE);
-                facePlan.setText("п.ф.: " + reportPrepareDB.facesPlan);
+                facePlan.setText("План: " + reportPrepareDB.facesPlan + " фейси");
                 facePlan.setOnClickListener(view -> {
                     Toast.makeText(mContext, "План по фейсам равен: " + reportPrepareDB.facesPlan, Toast.LENGTH_SHORT).show();
                 });
