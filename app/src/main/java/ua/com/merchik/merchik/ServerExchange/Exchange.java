@@ -89,7 +89,6 @@ import ua.com.merchik.merchik.dialogs.DialogEKL;
 import ua.com.merchik.merchik.dialogs.DialogFilter.Click;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
 
-import static ua.com.merchik.merchik.database.realm.RealmManager.INSTANCE;
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
 /**
@@ -549,11 +548,11 @@ public class Exchange {
                         try {
                             RealmManager.INSTANCE.executeTransaction(realm -> {
                                 if (samplePhotoExchange.synchronizationTimetableDB != null) {
-                                    samplePhotoExchange.synchronizationTimetableDB.setVpi_app(System.currentTimeMillis()/1000);
+                                    samplePhotoExchange.synchronizationTimetableDB.setVpi_app(System.currentTimeMillis() / 1000);
                                     realm.copyToRealmOrUpdate(samplePhotoExchange.synchronizationTimetableDB);
                                 }
                             });
-                        }catch (Exception e){
+                        } catch (Exception e) {
                             Globals.writeToMLOG("ERROR", "SamplePhotoExchange/downloadSamplePhotoTable/onResponse/onComplete/synchronizationTimetableDB", "Exception e: " + e);
                         }
 
@@ -1508,25 +1507,26 @@ public class Exchange {
         data.act = "set_score";
 
         List<AdditionalRequirementsMarkDB> list = AdditionalRequirementsMarkRealm.getToUpload();
-
+        AdditionalRequirementsMarkDB markDB = list.get(0);  // Костыли
         List<MarkData> markLIST = new ArrayList<>();
 
-        Log.e("sendARMark", "list.size(): " + list.size());
-        globals.writeToMLOG(Clock.getHumanTime() + "_INFO.Exchange.class.sendARMark.list: " + list.size() + "\n");
+        if (list == null) {
+            Globals.writeToMLOG("INFO", "sendARMark", "list to download: NULL");
+            return;
+        }
+        Globals.writeToMLOG("INFO", "sendARMark", "list: " + list.size());
 
-        for (AdditionalRequirementsMarkDB item : list) {
+
+
+//        for (AdditionalRequirementsMarkDB item : list) {
             MarkData mark = new MarkData();
-            Log.e("sendARMark", "?");
 
-            mark.id = String.valueOf(item.getItemId());
-            mark.score = item.getScore();
-            mark.tp_id = item.getTp();
+            mark.id = String.valueOf(markDB.getItemId());
+            mark.score = markDB.getScore();
+            mark.tp_id = markDB.getTp();
 
             markLIST.add(mark);
-
-            Log.e("sendARMark", "??");
-            Log.e("sendARMark", "???");
-        }
+//        }
 
         data.data = markLIST;
 
@@ -1535,64 +1535,76 @@ public class Exchange {
         JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
 
         Log.e("sendARMark", "convertedObject: " + convertedObject);
+        Globals.writeToMLOG("INFO", "sendARMark", "convertedObject: " + convertedObject);
 
+/*        retrofit2.Call<JsonObject> testCall = RetrofitBuilder.getRetrofitInterface().TEST_JSON_UPLOAD(RetrofitBuilder.contentType, convertedObject);
+        testCall.enqueue(new Callback<JsonObject>() {
+            @Override
+            public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
+                Log.e("sendARMarktestCall", "response: " + response);
+            }
 
-        if (list.size() > 0) {
-            retrofit2.Call<AdditionalRequirementsSendMarksServerData> call = RetrofitBuilder.getRetrofitInterface().SEND_ADDREP_MARKS(RetrofitBuilder.contentType, convertedObject);
-            call.enqueue(new retrofit2.Callback<AdditionalRequirementsSendMarksServerData>() {
-                @Override
-                public void onResponse(retrofit2.Call<AdditionalRequirementsSendMarksServerData> call, retrofit2.Response<AdditionalRequirementsSendMarksServerData> response) {
+            @Override
+            public void onFailure(Call<JsonObject> call, Throwable t) {
+                Log.e("sendARMarktestCall", "Throwable: " + t);
+            }
+        });*/
+
+        retrofit2.Call<AdditionalRequirementsSendMarksServerData> call = RetrofitBuilder.getRetrofitInterface().SEND_ADDREP_MARKS(RetrofitBuilder.contentType, convertedObject);
+        call.enqueue(new retrofit2.Callback<AdditionalRequirementsSendMarksServerData>() {
+            @Override
+            public void onResponse(retrofit2.Call<AdditionalRequirementsSendMarksServerData> call, retrofit2.Response<AdditionalRequirementsSendMarksServerData> response) {
+                try {
+                    Gson gson = new Gson();
+                    String json = gson.toJson(response.body());
+                    JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
+
+                    Globals.writeToMLOG("INFO", "Exchange.class.sendARMark.onResponse", "response: " + convertedObject);
+
+//                    List<AdditionalRequirementsMarksListServerData> info = response.body().getList();
                     try {
-                        Gson gson = new Gson();
-                        String json = gson.toJson(response.body());
-                        JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
 
-                        globals.writeToMLOG(Clock.getHumanTime() + "_INFO.Exchange.class.sendARMark.onResponse.response: " + convertedObject + "\n");
-
-                        Log.e("sendARMark", "convertedObject: " + convertedObject);
-
-                        List<AdditionalRequirementsMarksListServerData> info = response.body().getList();
-
-                        try {
-                            if (info != null && info.size() > 0) {
-                                for (int i = 0; i < info.size() - 1; i++) {
-                                    if (info.get(i).getState()) {
-                                        Log.e("sendARMark", "HERE_1");
-                                        int finalI = i;
-                                        INSTANCE.executeTransaction(realm -> {
-                                            list.get(finalI).setUploadStatus(String.valueOf(System.currentTimeMillis()));
-                                        });
-                                        AdditionalRequirementsMarkRealm.setDataToDB(Collections.singletonList(list.get(finalI)));
-                                    } else {
-                                        Log.e("sendARMark", "HERE_2");
-                                        globals.writeToMLOG(Clock.getHumanTime() + "_INFO.Exchange.class.sendARMark.onResponse.response.body().getError(): " + response.body().getError() + "\n");
-                                        // Нужно логировать ошибки
-                                    }
-                                }
+                        if (response.body().getList() != null && response.body().getList().size() > 0) {
+                            List<AdditionalRequirementsMarksListServerData> info = response.body().getList();
+                            if (info.get(0).state){
+                                markDB.setUploadStatus(String.valueOf(System.currentTimeMillis()));
+                                AdditionalRequirementsMarkRealm.setNewMark(markDB);
+                                sendARMark();
                             }
-
-                        } catch (Exception e) {
-                            Log.e("sendARMark", "HERE_3");
-                            globals.writeToMLOG(Clock.getHumanTime() + "_INFO.Exchange.class.sendARMark.onResponse.ERROR.HERE_3: " + e + "\n");
                         }
 
+                        // Для одного элемента
+/*                        if (info != null && info.size() > 0) {
+                            for (int i = 0; i < info.size() - 1; i++) {
+                                if (info.get(i).getState()) {
+                                    Log.e("sendARMark", "HERE_1");
+                                    int finalI = i;
+                                    INSTANCE.executeTransaction(realm -> {
+                                        list.get(finalI).setUploadStatus(String.valueOf(System.currentTimeMillis()));
+                                    });
+                                    AdditionalRequirementsMarkRealm.setDataToDB(Collections.singletonList(list.get(finalI)));
+                                } else {
+                                    Log.e("sendARMark", "HERE_2");
+                                    globals.writeToMLOG(Clock.getHumanTime() + "_INFO.Exchange.class.sendARMark.onResponse.response.body().getError(): " + response.body().getError() + "\n");
+                                    // Нужно логировать ошибки
+                                }
+                            }
+                        }*/
+
                     } catch (Exception e) {
-                        Log.e("sendARMark", "e: " + e);
-                        globals.writeToMLOG(Clock.getHumanTime() + "_INFO.Exchange.class.sendARMark.onResponse.ERROR.HERE_4: " + e + "\n");
+                        Globals.writeToMLOG("ERROR", "Exchange.class.sendARMark.onResponse", "Exception(set to DB) e: " + e);
                     }
+
+                } catch (Exception e) {
+                    Globals.writeToMLOG("ERROR", "Exchange.class.sendARMark.onResponse", "Exception(response) e: " + e);
                 }
+            }
 
-                @Override
-                public void onFailure(retrofit2.Call<AdditionalRequirementsSendMarksServerData> call, Throwable t) {
-                    Log.e("sendARMark", "t: " + t);
-                    globals.writeToMLOG(Clock.getHumanTime() + "_INFO.Exchange.class.sendARMark.onFailure.ERR: " + t + "\n");
-                }
-            });
-        } else {
-
-        }
-
-
+            @Override
+            public void onFailure(retrofit2.Call<AdditionalRequirementsSendMarksServerData> call, Throwable t) {
+                Globals.writeToMLOG("ERROR", "Exchange.class.sendARMark.onFailure", "Throwable t: " + t);
+            }
+        });
     }
 
 

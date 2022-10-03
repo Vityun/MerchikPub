@@ -14,7 +14,7 @@ public class AdditionalRequirementsMarkRealm {
 
     public static void setDataToDB(List<AdditionalRequirementsMarkDB> data) {
         INSTANCE.beginTransaction();
-        INSTANCE.delete(AdditionalRequirementsMarkDB.class);
+//        INSTANCE.delete(AdditionalRequirementsMarkDB.class);
         INSTANCE.copyToRealmOrUpdate(data);
         INSTANCE.commitTransaction();
     }

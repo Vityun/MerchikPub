@@ -6,7 +6,19 @@ import com.google.gson.annotations.SerializedName;
 public class AdditionalRequirementsMarksListServerData {
     @SerializedName("state")
     @Expose
-    private Boolean state;
+    public Boolean state;
+
+    @SerializedName("notice")
+    @Expose
+    public String notice;
+
+    @SerializedName("total_scores_text")
+    @Expose
+    public String totalScoresText;
+
+    @SerializedName("log_title")
+    @Expose
+    public String logTitle;
 
     public Boolean getState() {
         return state;
