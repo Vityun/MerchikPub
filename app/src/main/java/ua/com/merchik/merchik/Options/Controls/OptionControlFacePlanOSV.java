@@ -51,8 +51,11 @@ class OptionControlFacePlanOSV<T> extends OptionControl {
     private void executeOption() {
         List<ReportPrepareDB> resultErrorList = new ArrayList<>();
         List<ReportPrepareDB> resultOSVList = new ArrayList<>();
+        List<ReportPrepareDB> resultSKUList = new ArrayList<>();
+
         int percentageCompletedPlan = 0;
         int minPercentage, maxPercentage;
+        int planSKU = 0;
 
         minPercentage = (optionDB.getAmountMin() != null && Integer.parseInt(optionDB.getAmountMin()) > 0) ? Integer.parseInt(optionDB.getAmountMin()) : 50;
         maxPercentage = Integer.parseInt(optionDB.getAmountMax());
@@ -77,10 +80,14 @@ class OptionControlFacePlanOSV<T> extends OptionControl {
         for (ReportPrepareDB item : detailedReportRPList) {
             boolean osv = false;    // Признак ОСВ на Товаре
             //КолСКЮ-заполняется еще на этапе формирования ТзнТов (КолСКЮ=1 если колФейс>0)
-            int countSKU = 0;
-            if (Integer.parseInt(item.getFace()) > 0) countSKU = 1;
+//            int countSKU = 0;
+//            if (Integer.parseInt(item.getFace()) > 0) countSKU = 1;
+//
+//            if (countSKU == 0) continue;  //если товара на полке нет, то и проверять нечего
 
-            if (countSKU == 0) continue;  //если товара на полке нет, то и проверять нечего
+            if (Integer.parseInt(item.getFace()) > 0) {
+                resultSKUList.add(item);
+            }
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                 if (additionalRequirementsDBS.stream().filter(obj -> obj.getTovarId().equals(item.getTovarId())).findFirst().orElse(null) != null ){
@@ -106,8 +113,11 @@ class OptionControlFacePlanOSV<T> extends OptionControl {
         if (detailedReportRPList == null || detailedReportRPList.size() == 0){
             signal = true;
             stringBuilderMsg.append("Товарів, по котрим треба виконувати ПЛАН по ФЕЙСАМ, не знайдено.");
-        }else if (resultOSVList.size() == 0){
+        }else if (resultSKUList.size() == 0){
             signal = true;
+            stringBuilderMsg.append("Товарів, по котрим треба виконувати ПЛАН по ФЕЙСАМ не знайдено.");
+        }else if (resultOSVList.size() == 0){
+            signal = false;
             stringBuilderMsg.append("Товарів з ОСУ, по котрим треба виконувати ПЛАН по ФЕЙСАМ не знайдено.");
         }else if (minPercentage > 0 && percentageCompletedPlan < minPercentage){
             signal = true;
@@ -115,12 +125,12 @@ class OptionControlFacePlanOSV<T> extends OptionControl {
                     .append(minPercentage).append("%.");
         }else if (maxPercentage > 0 && percentageCompletedPlan > maxPercentage){
             signal = false;
-            stringBuilderMsg.append("План по фейсам виконан на ").append(percentageCompletedPlan).append("%, що вишчече максимального ")
-                    .append(minPercentage).append("%. За це можна отримати премію. Зверніться до керівника.");
+            stringBuilderMsg.append("План по фейсам виконан на ").append(percentageCompletedPlan).append("%, що вишче планового ")
+                    .append(maxPercentage).append("% це дуже добре. За це можна отримати премію. Зверніться до керівника.");
         }else {
             signal = false;
             stringBuilderMsg.append("План по фейсам виконан на ").append(percentageCompletedPlan).append("% зауважень немає.")
-                    .append((maxPercentage > 0) ? "Але, якщо ви виконаєте його на " + maxPercentage + "% за це можна буде отримати премію. Зверніться до керівника.": "");
+                    .append((maxPercentage > 0) ? "Але, якщо ви виконаєте його на " + maxPercentage + "% за це можна буде отримати додаткову премію. Зверніться до керівника.": "");
         }
 
         // Типо показываю с какими именно Товарами была проблема

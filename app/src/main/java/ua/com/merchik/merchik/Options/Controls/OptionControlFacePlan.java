@@ -52,6 +52,7 @@ public class OptionControlFacePlan<T> extends OptionControl {
         List<ReportPrepareDB> resultSKUList = new ArrayList<>();
         int percentageCompletedPlan = 0;
         int minPercentage, maxPercentage;
+        int planSKU = 0;
 
         minPercentage = (optionDB.getAmountMin() != null && Integer.parseInt(optionDB.getAmountMin()) > 0) ? Integer.parseInt(optionDB.getAmountMin()) : 50;
         maxPercentage = Integer.parseInt(optionDB.getAmountMax());
@@ -72,13 +73,15 @@ public class OptionControlFacePlan<T> extends OptionControl {
             facePlanCount += item.facesPlan;
 
             //КолСКЮ-заполняется еще на этапе формирования ТзнТов (КолСКЮ=1 если колФейс>0)
-            int countSKU = 0;
             if (Integer.parseInt(item.getFace()) > 0) {
-                countSKU = 1;
                 resultSKUList.add(item);
             }
+//
+//            if (countSKU == 0) continue;  //если товара на полке нет, то и проверять нечего
 
-            if (countSKU == 0) continue;  //если товара на полке нет, то и проверять нечего
+            if (item.facesPlan > 0){
+                planSKU++;
+            }
 
             if (Integer.parseInt(item.getFace()) < item.facesPlan){
                 resultErrorList.add(item);   //Тзн.Наруш=1;
@@ -88,7 +91,8 @@ public class OptionControlFacePlan<T> extends OptionControl {
 
         //6.0. готовим сообщение и сигнал
         try {
-            percentageCompletedPlan = 100*(resultSKUList.size()-resultErrorList.size())/resultSKUList.size();
+//            percentageCompletedPlan = 100*(resultSKUList.size()-resultErrorList.size())/resultSKUList.size();
+            percentageCompletedPlan = 100*(planSKU-resultErrorList.size())/planSKU;
         }catch (Exception e){
             percentageCompletedPlan = 0;
         }
@@ -100,7 +104,7 @@ public class OptionControlFacePlan<T> extends OptionControl {
             signal = true;
             stringBuilderMsg.append("Товарів, по котрим треба виконувати ПЛАН по ФЕЙСАМ не знайдено.");
         }else if (facePlanCount == 0){
-            signal = true;
+            signal = false;
             stringBuilderMsg.append("Товарів по котрим встановлений ПЛАН по ФЕЙСАМ не знайдено.");
         }else if (minPercentage > 0 && percentageCompletedPlan < minPercentage){
             signal = true;
@@ -108,12 +112,12 @@ public class OptionControlFacePlan<T> extends OptionControl {
                     .append(minPercentage).append("% це погано.");
         }else if (maxPercentage > 0 && percentageCompletedPlan > maxPercentage){
             signal = false;
-            stringBuilderMsg.append("План по фейсам виконан на ").append(percentageCompletedPlan).append("%, що вишчече максимального ")
-                    .append(minPercentage).append("%. За це можна отримати премію. Зверніться до керівника.");
+            stringBuilderMsg.append("План по фейсам виконан на ").append(percentageCompletedPlan).append("%, що вишчече планового ")
+                    .append(maxPercentage).append("% це дуже добре. За це можна отримати премію. Зверніться до керівника.");
         }else {
             signal = false;
             stringBuilderMsg.append("План по фейсам виконан на ").append(percentageCompletedPlan).append("% зауважень немає.")
-                    .append((maxPercentage > 0) ? "Але, якщо ви виконаєте його на " + maxPercentage + "% за це можна буде отримати премію. Зверніться до керівника.": "");
+                    .append((maxPercentage > 0) ? "Але, якщо ви виконаєте його на " + maxPercentage + "% за це можна буде отримати додаткову премію. Зверніться до керівника.": "");
         }
 
         // Типо показываю с какими именно Товарами была проблема
