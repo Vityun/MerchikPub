@@ -20,6 +20,10 @@ public class AdditionalRequirementsMarksListServerData {
     @Expose
     public String logTitle;
 
+    @SerializedName("element_id")
+    @Expose
+    public Integer elementId;
+
     public Boolean getState() {
         return state;
     }

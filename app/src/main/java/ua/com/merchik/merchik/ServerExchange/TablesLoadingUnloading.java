@@ -2777,8 +2777,8 @@ public class TablesLoadingUnloading {
 
             data.sotr_id = String.valueOf(Globals.userId);
 
-            data.date_from = String.valueOf(Clock.getDateLong(-60).getTime());
-            data.date_to = String.valueOf(Clock.getDateLong(0).getTime());
+            data.date_from = String.valueOf(Clock.getDateLong(-60).getTime()/1000);
+            data.date_to = String.valueOf(Clock.getDateLong(0).getTime()/1000);
 
             Gson gson = new Gson();
             String json = gson.toJson(data);

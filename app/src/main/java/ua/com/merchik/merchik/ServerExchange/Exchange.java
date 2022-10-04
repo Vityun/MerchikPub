@@ -1522,6 +1522,7 @@ public class Exchange {
             MarkData mark = new MarkData();
 
             mark.id = String.valueOf(markDB.getItemId());
+            mark.element_id = 9999;
             mark.score = markDB.getScore();
             mark.tp_id = markDB.getTp();
 
@@ -1537,7 +1538,7 @@ public class Exchange {
         Log.e("sendARMark", "convertedObject: " + convertedObject);
         Globals.writeToMLOG("INFO", "sendARMark", "convertedObject: " + convertedObject);
 
-/*        retrofit2.Call<JsonObject> testCall = RetrofitBuilder.getRetrofitInterface().TEST_JSON_UPLOAD(RetrofitBuilder.contentType, convertedObject);
+        retrofit2.Call<JsonObject> testCall = RetrofitBuilder.getRetrofitInterface().TEST_JSON_UPLOAD(RetrofitBuilder.contentType, convertedObject);
         testCall.enqueue(new Callback<JsonObject>() {
             @Override
             public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
@@ -1548,7 +1549,7 @@ public class Exchange {
             public void onFailure(Call<JsonObject> call, Throwable t) {
                 Log.e("sendARMarktestCall", "Throwable: " + t);
             }
-        });*/
+        });
 
         retrofit2.Call<AdditionalRequirementsSendMarksServerData> call = RetrofitBuilder.getRetrofitInterface().SEND_ADDREP_MARKS(RetrofitBuilder.contentType, convertedObject);
         call.enqueue(new retrofit2.Callback<AdditionalRequirementsSendMarksServerData>() {

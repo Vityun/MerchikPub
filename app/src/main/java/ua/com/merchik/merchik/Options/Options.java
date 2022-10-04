@@ -15,9 +15,10 @@ import android.widget.Toast;
 
 import androidx.recyclerview.widget.LinearLayoutManager;
 
-import com.google.android.gms.common.util.ArrayUtils;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+
+import org.apache.commons.lang3.ArrayUtils;
 
 import java.io.Serializable;
 import java.lang.reflect.Type;
@@ -459,7 +460,9 @@ public class Options {
         type.type = STRING;
 
         for (OptionsDB item : options) {
-            Log.e("conduct", "----------------------------------------------------------------");
+            Log.e("conduct", "------------------------------START----------------------------------");
+            Log.e("conduct", "OptionsDB item.getOptionTxt(): " + item.getOptionTxt());
+            Log.e("conduct", "OptionsDB item.getOptionId(): " + item.getOptionId());
             Log.e("conduct", "OptionsDB item.getOptionControlId(): " + item.getOptionControlId());
 
             // Блокирует опция или нет
@@ -470,6 +473,7 @@ public class Options {
                 Log.e("conduct", "Опция контроля выполнена: " + controlResult);
             } else if (controlResult == 1) {
                 Log.e("conduct", "Опция контроля НЕ выполнена: " + controlResult);
+                Log.e("conduct", "Я добавил опцию: " + item.getOptionTxt());
                 optionNotConduct.add(item);
             } else {
                 Log.e("conduct", "Что-то пошло не так: " + controlResult);
@@ -485,6 +489,8 @@ public class Options {
                     optionSumRes += wp.getCash_zakaz() * 0.08;
                 }
             }
+
+            Log.e("conduct", "-----------------------------END-----------------------------------");
         }
 
         Log.e("conduct", "optionNotConduct: " + optionNotConduct);
@@ -503,8 +509,13 @@ public class Options {
             SpannableStringBuilder resStr = new SpannableStringBuilder();
             resStr.append("Не выполнены: \n\n");
             for (OptionsDB item : optionNotConduct) {
+                Log.e("optionNotConduct", "------------------------------START----------------------------------");
+                Log.e("optionNotConduct", "OptionsDB item.getOptionTxt(): " + item.getOptionTxt());
+                Log.e("optionNotConduct", "OptionsDB item.getOptionId(): " + item.getOptionId());
+                Log.e("optionNotConduct", "OptionsDB item.getOptionControlId(): " + item.getOptionControlId());
                 StringBuffer msg = new StringBuffer();
                 resStr.append(createLinkedString(dialog, msg.append("* ").append(item.getOptionControlTxt()), item, click)).append(" ").append(Html.fromHtml("<font color=red>(блок)</font>")).append("\n");
+                Log.e("optionNotConduct", "------------------------------END----------------------------------");
             }
             resStr.append(optionsSum);
             resStr.append("\n\nУстраните указанные ошибки и повторите попытку проведения." + "\n\nВы можете ещё получить: " + "~")
@@ -986,7 +997,7 @@ public class Options {
         switch (mode) {
             case CHECK:
                 if (!res && optionsDB.getBlockPns().equals("1")) {
-                    optionNotConduct.add(optionsDB);
+//                    optionNotConduct.add(optionsDB);
                 }
                 break;
 
@@ -1114,10 +1125,10 @@ public class Options {
                 }
                 break;
             case CHECK:
-                if (!res && optionsDB.getBlockPns().equals("1")) {
+//                if (!res && optionsDB.getBlockPns().equals("1")) {
 //                if (!res) {
-                    optionNotConduct.add(optionsDB);
-                }
+//                    optionNotConduct.add(optionsDB);
+//                }
                 break;
 
             case NULL:
@@ -1243,7 +1254,7 @@ public class Options {
             case CHECK:
                 if (!res && optionsDB.getBlockPns().equals("1")) {
 //                if (!res) {
-                    optionNotConduct.add(optionsDB);
+//                    optionNotConduct.add(optionsDB);
                 }
                 break;
 
@@ -1417,9 +1428,9 @@ public class Options {
         // Обработка режима который вернулся
         switch (mode) {
             case CHECK:
-                if (!res && optionsDB.getBlockPns().equals("1")) {
-                    optionNotConduct.add(optionsDB);
-                }
+//                if (!res && optionsDB.getBlockPns().equals("1")) {
+//                    optionNotConduct.add(optionsDB);
+//                }
 
                 if (rp.size() == 0) {
                     Toast.makeText(context, "Товаров, по которым надо проверять заказ, не обнаружено.", Toast.LENGTH_LONG).show();
@@ -2300,9 +2311,9 @@ public class Options {
     public void conductOptCheck(NNKMode mode, boolean status, OptionsDB optionsDB) {
         switch (mode) {
             case CHECK:
-                if (!status && optionsDB.getBlockPns().equals("1")) {
-                    optionNotConduct.add(optionsDB);
-                }
+//                if (!status && optionsDB.getBlockPns().equals("1")) {
+//                    optionNotConduct.add(optionsDB);
+//                }
                 break;
 
             case NULL:

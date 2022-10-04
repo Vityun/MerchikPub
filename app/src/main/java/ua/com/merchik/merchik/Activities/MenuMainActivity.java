@@ -8,17 +8,11 @@ import android.widget.Toast;
 import androidx.appcompat.widget.Toolbar;
 
 import com.google.android.material.navigation.NavigationView;
-import com.google.gson.Gson;
-import com.google.gson.JsonObject;
 
 import ua.com.merchik.merchik.R;
-import ua.com.merchik.merchik.data.RetrofitResponse.tables.EKL.EKLResponse;
-import ua.com.merchik.merchik.data.TestJsonUpload.StandartData;
+import ua.com.merchik.merchik.ServerExchange.Exchange;
 import ua.com.merchik.merchik.dialogs.DialogFilter.Click;
-import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
 import ua.com.merchik.merchik.toolbar_menus;
-
-import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
 
 public class MenuMainActivity extends toolbar_menus {
@@ -73,8 +67,11 @@ public class MenuMainActivity extends toolbar_menus {
     }
 
     private void test(Click result) {
+        Exchange exchange = new Exchange();
+        exchange.sendARMark();
+    }
 
-        StandartData data = new StandartData();
+/*        StandartData data = new StandartData();
         data.mod = "sms_verification";
         data.act = "list";
 //        data.dt_change_from = Clock.today_7;
@@ -99,7 +96,7 @@ public class MenuMainActivity extends toolbar_menus {
                 Log.e("test", "test: " + t);
             }
         });
-    }
+    }*/
 
 
     /*        UploadDataSEWork data = new UploadDataSEWork();
