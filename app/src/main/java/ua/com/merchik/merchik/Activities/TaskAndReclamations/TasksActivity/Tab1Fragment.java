@@ -243,7 +243,12 @@ public class Tab1Fragment extends Fragment {
             String title;
 
             title = "<b>Сумма штрафа: </b>";
-            money = "<font color='red'> -" + data.sumPenalty + " (виновнику)</font>";
+            if (data.state == 1 || data.state == 3){
+                money = "0";
+            }else{
+                money = "<font color='red'> -" + data.sumPenalty + " (виновнику)</font>";
+            }
+
 
             CharSequence penalty = Html.fromHtml(title + money + "<br>");
             stringData.append(penalty);
