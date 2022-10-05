@@ -503,7 +503,11 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
 
 
             ReportPrepareDB finalReportPrepareTovar1 = reportPrepareTovar2;
-            RecyclerViewTPLAdapter recyclerViewTPLAdapter = new RecyclerViewTPLAdapter(options.getRequiredOptionsTPL(optionsList2), finalReportPrepareTovar1, (tpl, data) -> operetionSaveRPToDB(tpl, finalReportPrepareTovar1, data, null, list));
+            RecyclerViewTPLAdapter recyclerViewTPLAdapter = new RecyclerViewTPLAdapter(
+                    options.getRequiredOptionsTPL(optionsList2),
+                    finalReportPrepareTovar1,
+                    (tpl, data) -> operetionSaveRPToDB(tpl, finalReportPrepareTovar1, data, null, list)
+            );
             recyclerView.setAdapter(recyclerViewTPLAdapter);
             recyclerView.setLayoutManager(new LinearLayoutManager(mContext, LinearLayoutManager.VERTICAL, false));
 

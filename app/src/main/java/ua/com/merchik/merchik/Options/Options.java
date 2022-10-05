@@ -2241,7 +2241,11 @@ public class Options {
                 // Это нужно что б 2 раза не появлялись Диалоги
                 // Проверяем "есть ли уже такая опция" ?
                 if (!temps.contains(temp)) {
-                    temps.add(temp);
+                    if (temp.getOptionControlName().equals(AKCIYA_ID) || temp.getOptionControlName().equals(AKCIYA)) {
+                        // ничего не делаю
+                    }else {
+                        temps.add(temp);
+                    }
                 } else {
                     Log.e("dublicateTPL", "ПОВТОРЯЕТСЯ");
                 }
@@ -2252,7 +2256,11 @@ public class Options {
                 // Это нужно что б 2 раза не появлялись Диалоги
                 // Проверяем "есть ли уже такая опция" ?
                 if (!temps.contains(temp)) {
-                    temps.add(temp);
+                    if (temp.getOptionControlName().equals(AKCIYA_ID) || temp.getOptionControlName().equals(AKCIYA)) {
+                        // ничего не делаю
+                    }else {
+                        temps.add(temp);
+                    }
                 }
             }
         }
