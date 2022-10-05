@@ -400,8 +400,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                         int pass = day + dat2;
 
                         if (res == pass) {
-                            int optId = Integer.parseInt(butt.get(getAdapterPosition()).getOptionId());
-                            longClickButton(test, optId, detailedReportButtons, optionsButtons);
+                            longClickButton(test, 132968, detailedReportButtons, optionsButtons);
                         } else {
                             Toast.makeText(dialog.context, "Внесите корректный пароль", Toast.LENGTH_SHORT).show();
                         }
