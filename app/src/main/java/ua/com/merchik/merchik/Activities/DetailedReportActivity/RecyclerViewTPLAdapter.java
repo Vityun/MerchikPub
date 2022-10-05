@@ -1,5 +1,7 @@
 package ua.com.merchik.merchik.Activities.DetailedReportActivity;
 
+import android.graphics.PorterDuff;
+import android.graphics.PorterDuffColorFilter;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.LayoutInflater;
@@ -75,6 +77,7 @@ public class RecyclerViewTPLAdapter extends RecyclerView.Adapter<RecyclerViewTPL
         public void bind(TovarOptions item) {
             textView.setText(item.getOptionLong() + ": ");
             editText.setText(getDataFromReportPrepare(item.getOptionControlName(), dataRp));
+
             editText.addTextChangedListener(new TextWatcher() {
                 @Override
                 public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
@@ -89,12 +92,26 @@ public class RecyclerViewTPLAdapter extends RecyclerView.Adapter<RecyclerViewTPL
                 @Override
                 public void afterTextChanged(Editable editable) {
                     click.getData(item, editable.toString());
+                    if (Integer.parseInt(editText.getText().toString()) > 0){
+                        subtraction.getBackground().mutate().setColorFilter(new PorterDuffColorFilter(subtraction.getContext().getResources().getColor(R.color.active), PorterDuff.Mode.SRC));
+                        subtraction.setClickable(true);
+                    }else {
+                        subtraction.getBackground().mutate().setColorFilter(new PorterDuffColorFilter(subtraction.getContext().getResources().getColor(R.color.inActive), PorterDuff.Mode.SRC));
+                        subtraction.setClickable(false);
+                    }
                 }
             });
 
             if (item.getOptionControlName().equals(Globals.OptionControlName.FACE)) {
-                subtraction.setVisibility(View.VISIBLE);
                 additions.setVisibility(View.VISIBLE);
+                additions.getBackground().mutate().setColorFilter(new PorterDuffColorFilter(subtraction.getContext().getResources().getColor(R.color.active), PorterDuff.Mode.SRC));
+
+                subtraction.setVisibility(View.VISIBLE);
+
+                if (Integer.parseInt(editText.getText().toString()) > 0){
+                    subtraction.getBackground().mutate().setColorFilter(new PorterDuffColorFilter(subtraction.getContext().getResources().getColor(R.color.active), PorterDuff.Mode.SRC));
+                    subtraction.setClickable(true);
+                }
 
                 subtraction.setOnClickListener(view -> {
                     try {
