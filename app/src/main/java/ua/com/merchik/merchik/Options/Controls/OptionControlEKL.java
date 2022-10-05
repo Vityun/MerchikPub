@@ -170,8 +170,8 @@ public class OptionControlEKL<T> extends OptionControl {
 
         int userId = wpDataDB.getUser_id();
         String ptt = PTT;
-        long dateFrom = Clock.getDatePeriodLong(documentDt, -1);
-        long dateTo = Clock.getDatePeriodLong(documentDt, 1);
+        long dateFrom = Clock.getDatePeriodLong(documentDt*1000, -1);
+        long dateTo = Clock.getDatePeriodLong(documentDt*1000, 1);
 
 
         // Определем Группу Товаров

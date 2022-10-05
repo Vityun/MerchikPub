@@ -480,11 +480,12 @@ public class Options {
             }
 
             // Если опция описана - добавляю ещё и ДЕНЬГИ в скобочку и считаю итоговую сумму
-            if (ArrayUtils.contains(describedOptions, Integer.parseInt(item.getOptionControlId())) && controlResult != 1){
+            if (ArrayUtils.contains(describedOptions, Integer.parseInt(item.getOptionControlId())) && controlResult != 1) {
                 if (item.getIsSignal().equals("1")) {
                     StringBuffer msg = new StringBuffer();
                     optionsSum.append(createLinkedString(dialog,
-                            msg.append("* ").append(item.getOptionControlTxt())/*.append(" (").append(counter2Text(wp)).append(")").append("\n")*/, item, click)).append(" ").append(Html.fromHtml("<font color=red>(" + counter2Text(wp) + "грн.)</font>")).append("\n");;
+                            msg.append("* ").append(item.getOptionControlTxt())/*.append(" (").append(counter2Text(wp)).append(")").append("\n")*/, item, click)).append(" ").append(Html.fromHtml("<font color=red>(" + counter2Text(wp) + "грн.)</font>")).append("\n");
+                    ;
 
                     optionSumRes += wp.getCash_zakaz() * 0.08;
                 }
@@ -521,7 +522,8 @@ public class Options {
             resStr.append("\n\nУстраните указанные ошибки и повторите попытку проведения." + "\n\nВы можете ещё получить: " + "~")
                     .append(String.format("%.2f", optionSumRes)).append("грн, если выполните опции выше.");
 
-            dialog.setText(resStr, () -> {});
+            dialog.setText(resStr, () -> {
+            });
             dialog.setClose(dialog::dismiss);
             dialog.show();
 
@@ -1463,176 +1465,202 @@ public class Options {
      */
     private <T> boolean optionControlAdditionalRequirements_138341(Context context, T dataDB, OptionsDB optionsDB, OptionMassageType type, NNKMode mode) {
         boolean res = false;
-        double averageRating = 0;  // Средняя Оценка
-        double deviationFromTheMeanSize = 0;    // Отклонение от среднего
-        int markSum = 0;
-        int nedotochSize = 0;
-
-        StringBuilder msg = new StringBuilder();
-
-        int userId;
-        long dad2, startWork, endWork;
-        String date, clientId, userTxt;
-        if (dataDB instanceof WpDataDB) {
-            dad2 = ((WpDataDB) dataDB).getCode_dad2();
-            startWork = ((WpDataDB) dataDB).getVisit_start_dt();
-            date = ((WpDataDB) dataDB).getDt().toString();  //TODO CHANGE DATE
-            userId = ((WpDataDB) dataDB).getUser_id();
-            clientId = ((WpDataDB) dataDB).getClient_id();
-            userTxt = ((WpDataDB) dataDB).getUser_txt();
-        } else if (dataDB instanceof TasksAndReclamationsSDB) {
-            dad2 = ((TasksAndReclamationsSDB) dataDB).codeDad2;
-            startWork = ((TasksAndReclamationsSDB) dataDB).dt_start_fact;
-            date = String.valueOf(((TasksAndReclamationsSDB) dataDB).dt);
-            userId = ((TasksAndReclamationsSDB) dataDB).vinovnikScoreUserId;
-            clientId = ((TasksAndReclamationsSDB) dataDB).client;
-            userTxt = ((TasksAndReclamationsSDB) dataDB).sortNm;
-        } else {
-            return res = false;
-        }
-
-        long dt = Clock.dateConvertToLong(date) / 1000;       // Дата документа в Unix
-        long dateFrom = Clock.dateConvertToLong(date) / 1000 - 60 * 60 * 24 * 30; // Дата документа -30 дней
-        long dateTo = Clock.dateConvertToLong(date) / 1000 + 60 * 60 * 24 * 3;    // Дата документа +3 дня
-
-        // Получаем Доп.Требования.
-        RealmResults<AdditionalRequirementsDB> realmResults = AdditionalRequirementsRealm.getData3(dataDB);
-        List<AdditionalRequirementsDB> data = RealmManager.INSTANCE.copyFromRealm(realmResults);
-
-        // Получаем Оценки этих Доп. требований.
-        RealmResults<AdditionalRequirementsMarkDB> marks = AdditionalRequirementsMarkRealm.getAdditionalRequirementsMarks(dateFrom, dateTo, userId, data);
-
-        Gson gson = new Gson();
-
-        String json = gson.toJson(data);
-
-        Type listType = new TypeToken<ArrayList<VirtualAdditionalRequirementsDB>>() {
-        }.getType();
-        List<T> test = new Gson().fromJson(json, listType);
-        List<VirtualAdditionalRequirementsDB> virtualTable = (List<VirtualAdditionalRequirementsDB>) test;
-
-        Log.e("testprint", "data: " + data);
-        Log.e("testprint", "marks: " + marks);
-        Log.e("testprint", "test: " + test);
-        Log.e("testprint", "virtualTable: " + virtualTable);
-
-        for (VirtualAdditionalRequirementsDB item : virtualTable) {
-            if (marks.get(0).getScore() != null && !marks.get(0).getScore().equals("") && !marks.get(0).getScore().equals("0")) {
-                item.mark = Integer.valueOf(marks.get(0).getScore());
-                item.dtChange = String.valueOf(marks.get(0).getDt());
-            }
-
-            if (Long.parseLong(item.dtChange) >= dt) {
-                item.nedotoch = 0;
-                item.notes = "ДТ измененно ПОСЛЕ проведения работ и проверке не подлежит";
-            } else if (Clock.dateConvertToLong(item.dtEnd) == dt) {
-                item.nedotoch = 0;
-                item.notes = "у ДТ заканчивается срок действия и голосование по нему проверке не подлежит";
-            } else if (item.mark == 0) {
-                item.nedotoch = 1;
-                item.notes = "";
-            } else {
-                item.nedotoch = 0;
-                item.notes = "";
-            }
-
-
-            nedotochSize = +item.nedotoch;
-            markSum = +item.mark;
-        }
-
-
         try {
-            averageRating = markSum / (virtualTable.size() - nedotochSize);
+            double averageRating = 0;  // Средняя Оценка
+            double deviationFromTheMeanSize = 0;    // Отклонение от среднего
+            int markSum = 0;
+            int nedotochSize = 0;
+
+            StringBuilder msg = new StringBuilder();
+
+            int userId;
+            long dad2, startWork, endWork;
+            long date;
+            String clientId, userTxt;
+            if (dataDB instanceof WpDataDB) {
+                WpDataDB wp = (WpDataDB) dataDB;
+
+                dad2 = ((WpDataDB) dataDB).getCode_dad2();
+                startWork = ((WpDataDB) dataDB).getVisit_start_dt();
+                date = Clock.dateConvertToLong(Clock.getHumanTimeYYYYMMDD(wp.getDt().getTime() / 1000));
+                userId = ((WpDataDB) dataDB).getUser_id();
+                clientId = ((WpDataDB) dataDB).getClient_id();
+                userTxt = ((WpDataDB) dataDB).getUser_txt();
+            } else if (dataDB instanceof TasksAndReclamationsSDB) {
+                TasksAndReclamationsSDB tar = (TasksAndReclamationsSDB) dataDB;
+
+                dad2 = ((TasksAndReclamationsSDB) dataDB).codeDad2;
+                startWork = ((TasksAndReclamationsSDB) dataDB).dt_start_fact;
+                date = tar.dt;
+                userId = ((TasksAndReclamationsSDB) dataDB).vinovnikScoreUserId;
+                clientId = ((TasksAndReclamationsSDB) dataDB).client;
+                userTxt = ((TasksAndReclamationsSDB) dataDB).sortNm;
+            } else {
+                return res = false;
+            }
+
+            long dt = date;       // Дата документа в Unix
+            long dateFrom = Clock.getDatePeriodLong(date, -30) / 1000; // Дата документа -30 дней
+            long dateTo = Clock.getDatePeriodLong(date, +3) / 1000;     // Дата документа +3 дня
+
+            // Получаем Доп.Требования.
+            RealmResults<AdditionalRequirementsDB> realmResults = AdditionalRequirementsRealm.getData3(dataDB);
+            List<AdditionalRequirementsDB> data = RealmManager.INSTANCE.copyFromRealm(realmResults);
+
+            // Получаем Оценки этих Доп. требований.
+            RealmResults<AdditionalRequirementsMarkDB> marks = AdditionalRequirementsMarkRealm.getAdditionalRequirementsMarks(dateFrom, dateTo, userId, data);
+
+            Gson gson = new Gson();
+
+            String json = gson.toJson(data);
+
+            Type listType = new TypeToken<ArrayList<VirtualAdditionalRequirementsDB>>() {
+            }.getType();
+            List<T> test = new Gson().fromJson(json, listType);
+            List<VirtualAdditionalRequirementsDB> virtualTable = (List<VirtualAdditionalRequirementsDB>) test;
+
+            Log.e("testprint", "data: " + data);
+            Log.e("testprint", "marks: " + marks);
+            Log.e("testprint", "test: " + test);
+            Log.e("testprint", "virtualTable: " + virtualTable);
+
+            for (VirtualAdditionalRequirementsDB item : virtualTable) {
+                if (marks.get(0).getScore() != null && !marks.get(0).getScore().equals("") && !marks.get(0).getScore().equals("0")) {
+                    item.mark = Integer.valueOf(marks.get(0).getScore());
+                    item.dtChange = String.valueOf(marks.get(0).getDt());
+                }
+
+                if (Long.parseLong(item.dtChange) >= dt) {
+                    item.nedotoch = 0;
+                    item.notes = "ДТ измененно ПОСЛЕ проведения работ и проверке не подлежит";
+                } else if (Clock.dateConvertToLong(item.dtEnd) == dt) {
+                    item.nedotoch = 0;
+                    item.notes = "у ДТ заканчивается срок действия и голосование по нему проверке не подлежит";
+                } else if (item.mark == 0) {
+                    item.nedotoch = 1;
+                    item.notes = "";
+                } else {
+                    item.nedotoch = 0;
+                    item.notes = "";
+                }
+
+
+                nedotochSize = +item.nedotoch;
+                markSum = +item.mark;
+            }
+
+
+            try {
+                averageRating = markSum / (virtualTable.size() - nedotochSize);
+            } catch (Exception e) {
+                averageRating = 0;
+            }
+
+            for (VirtualAdditionalRequirementsDB item : virtualTable) {
+                item.deviationFromTheMean = Math.abs(averageRating - item.mark);
+                deviationFromTheMeanSize = +item.deviationFromTheMean;
+            }
+            // Математика закончена
+
+
+            // Установка сигналов.
+            // У меня 2 это 0 в 1С, а 1 это 1 в 1С
+            if (virtualTable.size() == 0) {
+
+                msg.append("У клиента ")
+                        .append(CustomerRealm.getCustomerById(clientId))
+                        .append(" нет доп. требований по этому адресу");
+
+                RealmManager.INSTANCE.executeTransaction(realm -> {
+                    if (optionsDB != null) {
+                        optionsDB.setIsSignal("2");
+                        realm.insertOrUpdate(optionsDB);
+                    }
+                });
+                res = true;
+            } else if (nedotochSize > 0) {
+
+                msg.append("За период с ")
+                        .append(Clock.getHumanTime3(dateFrom))
+                        .append(" по ")
+                        .append(Clock.getHumanTime3(dateTo))
+                        .append(" ")
+                        .append(userTxt)
+                        .append(" НЕ поставил оценку(и) по ")
+                        .append(nedotochSize)
+                        .append(" Доп.требованиям. ")
+                ;
+
+                RealmManager.INSTANCE.executeTransaction(realm -> {
+                    if (optionsDB != null) {
+                        optionsDB.setIsSignal("1");
+                        realm.insertOrUpdate(optionsDB);
+                    }
+                });
+                res = false;
+            } else if (virtualTable.size() > 1 && deviationFromTheMeanSize < 0.5) {
+
+                msg.append("Вы оценили Все (")
+                        .append(virtualTable.size())
+                        .append(") Доп.требований ОДНОЙ и той-же оценкой (")
+                        .append(averageRating)
+                        .append(")! Это НЕ даёт возможность улучшить их качество! " +
+                                "Оценивайте эти требования ОБЬЕКТИВНО!");
+
+                RealmManager.INSTANCE.executeTransaction(realm -> {
+                    if (optionsDB != null) {
+                        optionsDB.setIsSignal("1");
+                        realm.insertOrUpdate(optionsDB);
+                    }
+                });
+                res = false;
+            } else {
+                msg.append("За период с ")
+                        .append(Clock.getHumanTime3(dateFrom))
+                        .append(" по ")
+                        .append(Clock.getHumanTime3(dateTo))
+                        .append(" ")
+                        .append(userTxt)
+                        .append(" поставил оценку(и) по ")
+                        .append(virtualTable.size())
+                        .append(" Доп.требованиям. Замечаний по выполнению опции нет.")
+                ;
+
+                RealmManager.INSTANCE.executeTransaction(realm -> {
+                    if (optionsDB != null) {
+                        optionsDB.setIsSignal("2");
+                        realm.insertOrUpdate(optionsDB);
+                    }
+                });
+                res = true;
+            }
+
+            DialogData dialogData = new DialogData(context);
+            dialogData.setTitle("");
+            dialogData.setText(msg);
+            dialogData.setClose(dialogData::dismiss);
+
+
+            // Начат вывод сообщений
+            switch (mode) {
+                case MAKE:
+
+                    break;
+
+                case CHECK:
+                    dialogData.show();
+                    break;
+
+                case CHECK_CLICK:
+                    dialogData.show();
+//                    Toast.makeText(context, msg, Toast.LENGTH_LONG).show();
+                    break;
+            }
+
+
+
         } catch (Exception e) {
-            averageRating = 0;
-        }
-
-        for (VirtualAdditionalRequirementsDB item : virtualTable) {
-            item.deviationFromTheMean = Math.abs(averageRating - item.mark);
-            deviationFromTheMeanSize = +item.deviationFromTheMean;
-        }
-        // Математика закончена
-
-
-        // Установка сигналов.
-        // У меня 2 это 0 в 1С, а 1 это 1 в 1С
-        if (virtualTable.size() == 0) {
-
-            msg.append("У клиента ")
-                    .append(CustomerRealm.getCustomerById(clientId))
-                    .append(" нет доп. требований по этому адресу");
-
-            RealmManager.INSTANCE.executeTransaction(realm -> {
-                if (optionsDB != null) {
-                    optionsDB.setIsSignal("2");
-                    realm.insertOrUpdate(optionsDB);
-                }
-            });
-            res = true;
-        } else if (nedotochSize > 0) {
-
-            msg.append("За период с ")
-                    .append(Clock.getHumanTime3(dateFrom))
-                    .append(" по ")
-                    .append(Clock.getHumanTime3(dateTo))
-                    .append(" ")
-                    .append(userTxt)
-                    .append(" НЕ поставил оценку(и) по ")
-                    .append(nedotochSize)
-                    .append(" Доп.требованиям. ")
-            ;
-
-            RealmManager.INSTANCE.executeTransaction(realm -> {
-                if (optionsDB != null) {
-                    optionsDB.setIsSignal("1");
-                    realm.insertOrUpdate(optionsDB);
-                }
-            });
-            res = false;
-        } else if (virtualTable.size() > 1 && deviationFromTheMeanSize < 0.5) {
-
-            msg.append("Вы оценили Все (")
-                    .append(virtualTable.size())
-                    .append(") Доп.требований ОДНОЙ и той-же оценкой (")
-                    .append(averageRating)
-                    .append(")! Это НЕ даёт возможность улучшить их качество! " +
-                            "Оценивайте эти требования ОБЬЕКТИВНО!");
-
-            RealmManager.INSTANCE.executeTransaction(realm -> {
-                if (optionsDB != null) {
-                    optionsDB.setIsSignal("1");
-                    realm.insertOrUpdate(optionsDB);
-                }
-            });
-            res = false;
-        } else {
-            msg.append("За период с ")
-                    .append(Clock.getHumanTime3(dateFrom))
-                    .append(" по ")
-                    .append(Clock.getHumanTime3(dateTo))
-                    .append(" ")
-                    .append(userTxt)
-                    .append(" поставил оценку(и) по ")
-                    .append(virtualTable.size())
-                    .append(" Доп.требованиям. Замечаний по выполнению опции нет.")
-            ;
-
-            RealmManager.INSTANCE.executeTransaction(realm -> {
-                if (optionsDB != null) {
-                    optionsDB.setIsSignal("2");
-                    realm.insertOrUpdate(optionsDB);
-                }
-            });
-            res = true;
-        }
-
-
-        // Начат вывод сообщений
-        switch (mode) {
-            case CHECK_CLICK:
-                Toast.makeText(context, msg, Toast.LENGTH_LONG).show();
-                break;
+            Log.e("testprint", "Exception e: " + e);
         }
 
 
@@ -2243,7 +2271,7 @@ public class Options {
                 if (!temps.contains(temp)) {
                     if (temp.getOptionControlName().equals(AKCIYA_ID) || temp.getOptionControlName().equals(AKCIYA)) {
                         // ничего не делаю
-                    }else {
+                    } else {
                         temps.add(temp);
                     }
                 } else {
@@ -2258,7 +2286,7 @@ public class Options {
                 if (!temps.contains(temp)) {
                     if (temp.getOptionControlName().equals(AKCIYA_ID) || temp.getOptionControlName().equals(AKCIYA)) {
                         // ничего не делаю
-                    }else {
+                    } else {
                         temps.add(temp);
                     }
                 }
