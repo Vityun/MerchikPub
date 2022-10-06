@@ -593,10 +593,26 @@ public class DialogEKL {
     private void setAddSotr() {
         addSotr.setOnClickListener(v -> {
             Toast.makeText(context, "Добавление нового ПТТ находится в разработке!", Toast.LENGTH_LONG).show();
-//            Intent intentRef = new Intent(context, ReferencesActivity.class);
-//            intentRef.putExtra("ReferencesEnum", Globals.ReferencesEnum.USERS);
-//            context.startActivity(intentRef);
+
+            Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(createAddNewPTTLink()));
+            context.startActivity(browserIntent);
         });
+    }
+
+    private String createAddNewPTTLink() {
+        String link = String.format("https://merchik.com.ua/mobile.php?mod=sotr_list&act=add_sotr&addr_id=%s&theme_id=%s&menu_close_only", wp.getAddr_id(), wp.getTheme_id());
+/*        String link = String.format("/mobile.php?mod=sotr_list&act=add_sotr&addr_id=%s&theme_id=%s&menu_close_only", wp.getAddr_id(), wp.getTheme_id());
+        AppUsersDB appUser = AppUserRealm.getAppUserById(userId);
+        if (appUser != null){
+            String hash = String.format("%s%s%s", appUser.getUserId(), appUser.getPassword(), "AvgrgsYihSHp6Ok9yQXfSHp6Ok9nXdXr3OSHp6Ok9UPBTzTjrF20Nsz3");
+            hash = Globals.getSha1Hex(hash);
+
+            String format = String.format("https://merchik.com.ua/sa.php?&u=%s&s=%s&l=%s", userId, hash, link);
+            return format;
+        }else {
+//            return link;
+        }*/
+        return link;
     }
 
 
