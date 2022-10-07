@@ -107,6 +107,8 @@ public class DetailedReportActivity extends toolbar_menus {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        Globals.writeToMLOG("INFO", "DetailedReportActivity/onCreate", "Открыли по новой активность. Смотри Выше лог - после чего именно.");
+
         setActivityData();
 
         SKUPlan = 0;
@@ -382,7 +384,7 @@ public class DetailedReportActivity extends toolbar_menus {
     @SuppressLint("MissingSuperCall")
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        Log.d("test", "" + requestCode + resultCode + data);
+        super.onActivityResult(requestCode,resultCode,data);
 
         Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult", "requestCode / resultCode / data: " + requestCode + "/" + resultCode + "/" + data);
 
@@ -425,7 +427,9 @@ public class DetailedReportActivity extends toolbar_menus {
                 StackPhotoDB photo = RealmManager.INSTANCE.copyFromRealm(StackPhotoRealm.getByPhotoNum(MakePhoto.photoNum));
                 File photoFile = new File(MakePhoto.photoNum);
 
-                Globals.writeToMLOG("INFO", "requestCode == 201 && resultCode == RESULT_OK/photo", "photo: " + photo);
+                JsonObject jsonObject = new Gson().fromJson(new Gson().toJson(photo), JsonObject.class);
+
+                Globals.writeToMLOG("INFO", "requestCode == 201 && resultCode == RESULT_OK/photo", "photo: " + jsonObject);
                 Globals.writeToMLOG("INFO", "requestCode == 201 && resultCode == RESULT_OK/photoFile", "photoFile: " + photoFile);
 
                 final int rotation = getImageOrientation(photoFile.getPath()); //Проверка на сколько градусов повёрнуто изображение
@@ -452,7 +456,11 @@ public class DetailedReportActivity extends toolbar_menus {
                 photo.setPhoto_num(photoFile.getAbsolutePath());
                 photo.setPhoto_type(Integer.valueOf(MakePhoto.photoType));
 
-                Globals.writeToMLOG("INFO", "requestCode == 201 && resultCode == RESULT_OK/photo_save", "photoSave: " + photo);
+                JsonObject jsonObject2 = new Gson().fromJson(new Gson().toJson(photo), JsonObject.class);
+
+                Globals.writeToMLOG("INFO", "requestCode == 201 && resultCode == RESULT_OK/photo_save", "photoSave: " + jsonObject2);
+
+//                Globals.writeToMLOG("INFO", "requestCode == 201 && resultCode == RESULT_OK/photo_save", "photoSave: " + photo);
 
                 StackPhotoRealm.setAll(Collections.singletonList(photo));
             } catch (Exception e) {

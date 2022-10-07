@@ -44,14 +44,17 @@ import ua.com.merchik.merchik.data.Database.Room.UsersSDBDat.UserSDBJoin;
 import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteHintsDB;
 import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteObjects.SiteObjectsDB;
 import ua.com.merchik.merchik.data.RealmModels.AdditionalRequirementsDB;
+import ua.com.merchik.merchik.data.RealmModels.AppUsersDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.data.TestJsonUpload.DataEKL;
 import ua.com.merchik.merchik.data.TestJsonUpload.StandartData;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsRealm;
+import ua.com.merchik.merchik.database.realm.tables.AppUserRealm;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
 
 import static android.view.MotionEvent.ACTION_UP;
+import static ua.com.merchik.merchik.Globals.userId;
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 import static ua.com.merchik.merchik.toolbar_menus.internetStatus;
 
@@ -310,13 +313,13 @@ public class DialogEKL {
 
         sotr.setHint("Выберите ПТТ (Представителя Торговой Точки)");
 
-        if (additionalRequirementsDB != null){
+        if (additionalRequirementsDB != null) {
             UsersSDB user = SQL_DB.usersDao().getUserById(Integer.parseInt(additionalRequirementsDB.userId));
             sotr.setText("" + user.fio);
-        }else {
-            if (Globals.userEKLId != null && Globals.userEKLId != 0){
-                for(UserSDBJoin item : data) {
-                    if(item.id.equals(Globals.userEKLId)) {
+        } else {
+            if (Globals.userEKLId != null && Globals.userEKLId != 0) {
+                for (UserSDBJoin item : data) {
+                    if (item.id.equals(Globals.userEKLId)) {
 
                         Globals.writeToMLOG("INFO", "DialogEKL/showData/UserSDBJoin", "item.fio: " + item.fio);
                         Globals.writeToMLOG("INFO", "DialogEKL/showData/UserSDBJoin", "item.nm: " + item.nm);
@@ -327,7 +330,7 @@ public class DialogEKL {
                             }
 
                             sotr.setText(item.fio + "(" + item.nm + ")");
-                        }catch (Exception e){
+                        } catch (Exception e) {
                             e.printStackTrace();
                             Globals.writeToMLOG("INFO", "DialogEKL/showData/UserSDBJoin", "Exception e: " + e);
                             sotr.setText(item.fio);
@@ -366,7 +369,6 @@ public class DialogEKL {
         });
 
 
-
         sotr.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View view, MotionEvent motionEvent) {
@@ -395,7 +397,7 @@ public class DialogEKL {
             Globals.showKeyboard(context);
         });
 
-        sotr.setOnLongClickListener((v)->{
+        sotr.setOnLongClickListener((v) -> {
             Log.e("DialogEKL", "setOnLongClickListener");
             sotr.showDropDown();
             Globals.showKeyboard(context);
@@ -410,7 +412,7 @@ public class DialogEKL {
 
                 UserSDBJoin res = (UserSDBJoin) item;
 
-                if (res.sendSms == 0){
+                if (res.sendSms == 0) {
                     String msg = "У сотрудника " + res.fio + " отключена возможность отправки СМС. Если Вам это необходимо сделать, обратитесь к своему руководителю.";
                     Toast.makeText(arg1.getContext(), msg, Toast.LENGTH_LONG).show();
                     sotr.setText("");
@@ -423,7 +425,7 @@ public class DialogEKL {
                     if (res.nm == null) {
                         res.nm = "Отдел не определён";
                     }
-                }catch (Exception e){
+                } catch (Exception e) {
                     e.printStackTrace();
                 }
                 sotr.setText(res.fio + " (" + res.nm + ") ");
@@ -464,7 +466,7 @@ public class DialogEKL {
                                 ekl_sdb.dad2 = wp.getCode_dad2();
                                 ekl_sdb.state = true;
                                 ekl_sdb.eklHashCode = resp.codeHash;
-                                ekl_sdb.vpi = System.currentTimeMillis()/1000;
+                                ekl_sdb.vpi = System.currentTimeMillis() / 1000;
 
                                 // Запись ЭКЛ-а для текущего окна
                                 ekl = ekl_sdb;
@@ -533,7 +535,7 @@ public class DialogEKL {
             // Проверка на наличие кода и правильное его
             if (editTextCode.length() >= 4 && editTextCode.length() < 6) {
                 // Ничего не делаем, продолжаем работу
-            }else {
+            } else {
                 Toast.makeText(context, "Внесите правильно код в соответствующее поле", Toast.LENGTH_SHORT).show();
                 return;
             }
@@ -600,19 +602,22 @@ public class DialogEKL {
     }
 
     private String createAddNewPTTLink() {
-        String link = String.format("https://merchik.com.ua/mobile.php?mod=sotr_list&act=add_sotr&addr_id=%s&theme_id=%s&menu_close_only", wp.getAddr_id(), wp.getTheme_id());
-/*        String link = String.format("/mobile.php?mod=sotr_list&act=add_sotr&addr_id=%s&theme_id=%s&menu_close_only", wp.getAddr_id(), wp.getTheme_id());
+/*        String link = String.format("https://merchik.com.ua/mobile.php?mod=sotr_list&act=add_sotr&addr_id=%s&theme_id=%s&menu_close_only", wp.getAddr_id(), wp.getTheme_id());
+        return link;*/
+
+
+        String link = String.format("/mobile.php?mod=sotr_list**act=add_sotr**addr_id=%s**theme_id=%s**menu_close_only", wp.getAddr_id(), wp.getTheme_id());
         AppUsersDB appUser = AppUserRealm.getAppUserById(userId);
-        if (appUser != null){
+        if (appUser != null) {
             String hash = String.format("%s%s%s", appUser.getUserId(), appUser.getPassword(), "AvgrgsYihSHp6Ok9yQXfSHp6Ok9nXdXr3OSHp6Ok9UPBTzTjrF20Nsz3");
             hash = Globals.getSha1Hex(hash);
 
             String format = String.format("https://merchik.com.ua/sa.php?&u=%s&s=%s&l=%s", userId, hash, link);
             return format;
-        }else {
-//            return link;
-        }*/
-        return link;
+        } else {
+            return link;
+        }
+
     }
 
 
