@@ -44,7 +44,7 @@ public class OptionControlAdditionalRequirementsMark<T> extends OptionControl {
         getDocumentVar();
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             executeOption();
-        }else {
+        } else {
             stringBuilderMsg.append("Произошла ошибка. VERSION_CODES. Обратитесь к руководителю.");
         }
     }
@@ -65,6 +65,7 @@ public class OptionControlAdditionalRequirementsMark<T> extends OptionControl {
         try {
             Integer markSum = 0;            // Подсчёт суммы оценок
             Integer nedotochSum = 0;        // Подсчёт суммы nedotoch
+            Integer offsetSum = 0;        // Подсчёт суммы Зачет
             double averageRating = 0.0d;    // Средняя оценка
             double deviationFromTheMeanSum = 0.0d;     // Отклонение от среднего
 
@@ -75,7 +76,7 @@ public class OptionControlAdditionalRequirementsMark<T> extends OptionControl {
             List<VirtualAdditionalRequirementsDB> virtualTable = null;
 
             long dateFrom = Clock.getDatePeriodLong(dateDocumentLong, -30) / 1000; // Дата документа -30 дней
-            long dateTo = Clock.getDatePeriodLong(dateDocumentLong, +3) / 1000;     // Дата документа +3 дня
+            long dateTo = Clock.getDatePeriodLong(dateDocumentLong, +4) / 1000;     // Дата документа +3 дня
 
             // Получаем Доп.Требования.
             RealmResults<AdditionalRequirementsDB> realmResults = AdditionalRequirementsRealm.getData3(document);
@@ -98,18 +99,18 @@ public class OptionControlAdditionalRequirementsMark<T> extends OptionControl {
 
                 for (VirtualAdditionalRequirementsDB item : virtualTable) {
 
-                    item.nedotoch = 1;
+                    item.nedotoch = 1; //по умолчанию оценки НЕТ
                     item.note = "Нет ни одной оценки по этому Доп.требованию поставленной " + wpDataDB.getUser_txt();
 
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                         if (marks.stream().filter(m -> m.getItemId().equals(item.id)).findFirst().orElse(null) != null) {
-                            AdditionalRequirementsMarkDB currentMark = marks.where().equalTo("item_id", item.id).findFirst();
+                            AdditionalRequirementsMarkDB currentMark = marks.where().equalTo("itemId", item.id).findFirst();
                             if (currentMark != null) {
                                 item.mark = Integer.valueOf(currentMark.getScore());
                                 // Эту оценку никто нигде не использует, по этому я не буду лишний раз парсить тудой сюдой
                                 // Тзн.ДатаОценки=ПолучитьДатуИзUnix(СокрЛП(ТзнОцен.ДатаЮ));
                             } else {
-                                msg.append("Оценка по ").append(item.id).append(" не была обнаружена.").append("\n");
+                                item.mark = 0;
                             }
 
                             if (Long.parseLong(item.dtChange) >= dateDocumentLong) {
@@ -121,13 +122,13 @@ public class OptionControlAdditionalRequirementsMark<T> extends OptionControl {
                                 item.notes = "у ДТ заканчивается срок действия и голосование по нему проверке не подлежит";
                                 continue;
                             } else if (item.mark == 0) {
-                                item.nedotoch = 1;
-                                item.notes = "";
                                 continue;
                             }
 
                             item.nedotoch = 0;
                             item.note = "";
+                        } else {
+                            item.mark = 0;
                         }
                     }
                 }
@@ -136,6 +137,7 @@ public class OptionControlAdditionalRequirementsMark<T> extends OptionControl {
                 try {
                     markSum = virtualTable.stream().map(table -> table.mark).reduce(0, Integer::sum);
                     nedotochSum = virtualTable.stream().map(table -> table.nedotoch).reduce(0, Integer::sum);
+                    offsetSum = virtualTable.stream().map(table -> table.offset).reduce(0, Integer::sum);
 
                     averageRating = markSum / (virtualTable.size() - nedotochSum);
                 } catch (Exception e) {
@@ -153,13 +155,20 @@ public class OptionControlAdditionalRequirementsMark<T> extends OptionControl {
 
 
             // Установка сигналов.
-            if (virtualTable != null && virtualTable.size() == 0) {
+            // TODO ИначеЕсли ((ПустоеЗначение(Исп.ДатаОМ05)=1) или (Дат<=Исп.ДатаОМ05)) и (ДокИст.Вид()="ОтчетИсполнителя") Тогда
+            //		глТекстЧата="Не проверяю оценку Доп.требований до 5-й отчетности.";
+            //		СигнКон=0;
+            if (virtualTable == null || virtualTable.size() == 0) {
 
                 msg.append("У клиента ")
                         .append(CustomerRealm.getCustomerById(wpDataDB.getClient_id()).getNm())
                         .append(" нет доп. требований по этому адресу");
                 signal = false;
 
+            } else if (offsetSum == virtualTable.size()) {
+                msg.append("Все доп.требования были изменены после текущего посещения, проверка не выполняется.");
+
+                signal = true;
             } else if (nedotochSum > 0) {
 
                 msg.append("За период с ")
@@ -194,7 +203,7 @@ public class OptionControlAdditionalRequirementsMark<T> extends OptionControl {
                         .append(virtualTable.size())
                         .append(" Доп.требованиям. Замечаний по выполнению опции нет.");
 
-                signal = true;
+                signal = false;
             }
 
 
