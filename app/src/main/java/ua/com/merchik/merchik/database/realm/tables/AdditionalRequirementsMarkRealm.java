@@ -4,7 +4,6 @@ import java.util.List;
 
 import io.realm.RealmResults;
 import io.realm.Sort;
-import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.data.RealmModels.AdditionalRequirementsDB;
 import ua.com.merchik.merchik.data.RealmModels.AdditionalRequirementsMarkDB;
 
@@ -27,10 +26,10 @@ public class AdditionalRequirementsMarkRealm {
 
 
 
-    public static AdditionalRequirementsMarkDB getMark(int id){
+    public static AdditionalRequirementsMarkDB getMark(int id, String userId){
         AdditionalRequirementsMarkDB data = INSTANCE.where(AdditionalRequirementsMarkDB.class)
                 .equalTo("itemId", id)
-                .equalTo("userId", String.valueOf(Globals.userId))
+                .equalTo("userId", userId)
                 .sort("dt", Sort.DESCENDING)
                 .findFirst();
         return  data;
@@ -47,8 +46,10 @@ public class AdditionalRequirementsMarkRealm {
     /**
      * 09.08.2021
      * Получение оценок по данному списку доп. требований
+     *
+     * tp = 1 - Доп. Требования / tp = 0 - Доп. Материалы
      * */
-    public static RealmResults<AdditionalRequirementsMarkDB> getAdditionalRequirementsMarks(long dateFrom, long dateTo, int userId, List<AdditionalRequirementsDB> data){
+    public static RealmResults<AdditionalRequirementsMarkDB> getAdditionalRequirementsMarks(long dateFrom, long dateTo, int userId, String tp, List<AdditionalRequirementsDB> data){
 
         Integer[] ids = new Integer[data.size()];
         int i = 0;
@@ -61,6 +62,7 @@ public class AdditionalRequirementsMarkRealm {
                 .between("dt", dateFrom, dateTo)
                 .equalTo("userId", String.valueOf(userId))
                 .in("itemId", ids)
+                .equalTo("tp", tp)
                 .sort("dt", Sort.DESCENDING)
                 .findAll();
     }

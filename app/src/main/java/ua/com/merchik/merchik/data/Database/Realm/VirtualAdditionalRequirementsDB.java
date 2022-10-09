@@ -3,6 +3,8 @@ package ua.com.merchik.merchik.data.Database.Realm;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
+import java.util.Date;
+
 public class VirtualAdditionalRequirementsDB{
     @SerializedName("ID")
     @Expose
@@ -78,19 +80,20 @@ public class VirtualAdditionalRequirementsDB{
 
     // -----
 
-    @SerializedName("nedotoch")
-    @Expose
-    public Integer nedotoch = 1;
+    // Тзн.НоваяКолонка("Оценка","Число",7,0);
+	// Тзн.НоваяКолонка("ОтклОтСред","Число",7,1); //отклонение данной оценки от СРЕДНЕЙ (для того, чтобы ребята не ставили ОДНУ и ту-же оценку по всем ДТ)
+	// Тзн.НоваяКолонка("ДатаОценки","Дата");
+	// Тзн.НоваяКолонка("Недоч","Число",5,0);
+	// Тзн.НоваяКолонка("Зачет","Число",5,0);
+	// Тзн.НоваяКолонка("Примечание","Строка",300);
 
-    @SerializedName("mark")
-    @Expose
-    public Integer mark;
 
-    @SerializedName("deviationFromTheMean")
-    @Expose
-    public Double deviationFromTheMean; // отклонение от среднего
 
-    @SerializedName("test3")
-    @Expose
-    public Integer test3;
+    public Integer mark;                // Оценка
+    public Double deviationFromTheMean; // ОтклОтСред
+    public Date markDate;               // ДатаОценки
+    public Integer nedotoch;            // Недоч
+    public Integer offset;              // Зачет
+    public String note;                 // Примечание
+
 }

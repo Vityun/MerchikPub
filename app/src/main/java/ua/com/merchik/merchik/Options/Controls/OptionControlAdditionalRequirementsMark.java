@@ -1,6 +1,9 @@
 package ua.com.merchik.merchik.Options.Controls;
 
 import android.content.Context;
+import android.os.Build;
+
+import androidx.annotation.RequiresApi;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -30,7 +33,7 @@ public class OptionControlAdditionalRequirementsMark<T> extends OptionControl {
     private boolean signal = true;
 
     private WpDataDB wpDataDB;
-    private long date;
+    private long dateDocumentLong;
 
     public OptionControlAdditionalRequirementsMark(Context context, T document, OptionsDB optionDB, OptionMassageType msgType, Options.NNKMode nnkMode) {
         this.context = context;
@@ -39,99 +42,125 @@ public class OptionControlAdditionalRequirementsMark<T> extends OptionControl {
         this.msgType = msgType;
         this.nnkMode = nnkMode;
         getDocumentVar();
-        executeOption();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            executeOption();
+        }else {
+            stringBuilderMsg.append("Произошла ошибка. VERSION_CODES. Обратитесь к руководителю.");
+        }
     }
 
     private void getDocumentVar() {
         try {
             if (document instanceof WpDataDB) {
                 this.wpDataDB = (WpDataDB) document;
-                date = Clock.dateConvertToLong(Clock.getHumanTimeYYYYMMDD(wpDataDB.getDt().getTime() / 1000));
+                dateDocumentLong = Clock.dateConvertToLong(Clock.getHumanTimeYYYYMMDD(wpDataDB.getDt().getTime() / 1000));
             }
         } catch (Exception e) {
             Globals.writeToMLOG("ERROR", "OptionControlAdditionalRequirementsMark/getDocumentVar", "Exception e: " + e);
         }
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.N)
     private void executeOption() {
         try {
-            double averageRating = 0;  // Средняя Оценка
-            double deviationFromTheMeanSize = 0;    // Отклонение от среднего
-            int markSum = 0;
-            int nedotochSize = 0;
+            Integer markSum = 0;            // Подсчёт суммы оценок
+            Integer nedotochSum = 0;        // Подсчёт суммы nedotoch
+            double averageRating = 0.0d;    // Средняя оценка
+            double deviationFromTheMeanSum = 0.0d;     // Отклонение от среднего
 
+            // Для формирования итогового сообщения
             StringBuilder msg = new StringBuilder();
 
+            // Создание виртуальной таблички.
+            List<VirtualAdditionalRequirementsDB> virtualTable = null;
 
-            long dt = date;       // Дата документа в Unix
-            long dateFrom = Clock.getDatePeriodLong(date, -30) / 1000; // Дата документа -30 дней
-            long dateTo = Clock.getDatePeriodLong(date, +3) / 1000;     // Дата документа +3 дня
+            long dateFrom = Clock.getDatePeriodLong(dateDocumentLong, -30) / 1000; // Дата документа -30 дней
+            long dateTo = Clock.getDatePeriodLong(dateDocumentLong, +3) / 1000;     // Дата документа +3 дня
 
             // Получаем Доп.Требования.
             RealmResults<AdditionalRequirementsDB> realmResults = AdditionalRequirementsRealm.getData3(document);
             List<AdditionalRequirementsDB> data = RealmManager.INSTANCE.copyFromRealm(realmResults);
 
-            // Получаем Оценки этих Доп. требований.
-            RealmResults<AdditionalRequirementsMarkDB> marks = AdditionalRequirementsMarkRealm.getAdditionalRequirementsMarks(dateFrom, dateTo, wpDataDB.getUser_id(), data);
+            // Проверяем, есть ли вообще данные
+            if (data != null && data.size() > 0) {
 
-            Gson gson = new Gson();
+                // Получаем Оценки этих Доп. требований.
+                RealmResults<AdditionalRequirementsMarkDB> marks = AdditionalRequirementsMarkRealm.getAdditionalRequirementsMarks(dateFrom, dateTo, wpDataDB.getUser_id(), "1", data);
 
-            String json = gson.toJson(data);
+                // Херачим "Виртуальную" таблицу, как в 1С
+                Gson gson = new Gson();
+                String json = gson.toJson(data);
+                Type listType = new TypeToken<ArrayList<VirtualAdditionalRequirementsDB>>() {
+                }.getType();
 
-            Type listType = new TypeToken<ArrayList<VirtualAdditionalRequirementsDB>>() {
-            }.getType();
-            List<T> test = new Gson().fromJson(json, listType);
-            List<VirtualAdditionalRequirementsDB> virtualTable = (List<VirtualAdditionalRequirementsDB>) test;
+                // Запись того что выше накопировани в виртуальную табличку
+                virtualTable = new Gson().fromJson(json, listType);
 
-            for (VirtualAdditionalRequirementsDB item : virtualTable) {
-                if (marks.get(0).getScore() != null && !marks.get(0).getScore().equals("") && !marks.get(0).getScore().equals("0")) {
-                    item.mark = Integer.valueOf(marks.get(0).getScore());
-                    item.dtChange = String.valueOf(marks.get(0).getDt());
-                }
+                for (VirtualAdditionalRequirementsDB item : virtualTable) {
 
-                if (Long.parseLong(item.dtChange) >= dt) {
-                    item.nedotoch = 0;
-                    item.notes = "ДТ измененно ПОСЛЕ проведения работ и проверке не подлежит";
-                } else if (Clock.dateConvertToLong(item.dtEnd) == dt) {
-                    item.nedotoch = 0;
-                    item.notes = "у ДТ заканчивается срок действия и голосование по нему проверке не подлежит";
-                } else if (item.mark == 0) {
                     item.nedotoch = 1;
-                    item.notes = "";
-                } else {
-                    item.nedotoch = 0;
-                    item.notes = "";
+                    item.note = "Нет ни одной оценки по этому Доп.требованию поставленной " + wpDataDB.getUser_txt();
+
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                        if (marks.stream().filter(m -> m.getItemId().equals(item.id)).findFirst().orElse(null) != null) {
+                            AdditionalRequirementsMarkDB currentMark = marks.where().equalTo("item_id", item.id).findFirst();
+                            if (currentMark != null) {
+                                item.mark = Integer.valueOf(currentMark.getScore());
+                                // Эту оценку никто нигде не использует, по этому я не буду лишний раз парсить тудой сюдой
+                                // Тзн.ДатаОценки=ПолучитьДатуИзUnix(СокрЛП(ТзнОцен.ДатаЮ));
+                            } else {
+                                msg.append("Оценка по ").append(item.id).append(" не была обнаружена.").append("\n");
+                            }
+
+                            if (Long.parseLong(item.dtChange) >= dateDocumentLong) {
+                                item.nedotoch = 0;
+                                item.notes = "ДТ измененно ПОСЛЕ проведения работ и проверке не подлежит";
+                                continue;
+                            } else if (Clock.dateConvertToLong(item.dtEnd) == dateDocumentLong) {
+                                item.nedotoch = 0;
+                                item.notes = "у ДТ заканчивается срок действия и голосование по нему проверке не подлежит";
+                                continue;
+                            } else if (item.mark == 0) {
+                                item.nedotoch = 1;
+                                item.notes = "";
+                                continue;
+                            }
+
+                            item.nedotoch = 0;
+                            item.note = "";
+                        }
+                    }
                 }
 
+                //подсчитаем отклонение от средней оценки (для того, чтобы ребята не ставили ОДНУ и ту-же оценку по всем ДТ)
+                try {
+                    markSum = virtualTable.stream().map(table -> table.mark).reduce(0, Integer::sum);
+                    nedotochSum = virtualTable.stream().map(table -> table.nedotoch).reduce(0, Integer::sum);
 
-                nedotochSize = +item.nedotoch;
-                markSum = +item.mark;
+                    averageRating = markSum / (virtualTable.size() - nedotochSum);
+                } catch (Exception e) {
+                    averageRating = 0;
+                }
+
+                // Считаем отклонение от среднего, для каждого элемента
+                for (VirtualAdditionalRequirementsDB item : virtualTable) {
+                    item.deviationFromTheMean = Math.abs(averageRating - item.mark);
+                }
+
+                // Подсчёт суммы отклонения от среднего
+                deviationFromTheMeanSum = virtualTable.stream().map(table -> table.deviationFromTheMean).reduce(0.0d, Double::sum);
             }
-
-
-            try {
-                averageRating = markSum / (virtualTable.size() - nedotochSize);
-            } catch (Exception e) {
-                averageRating = 0;
-            }
-
-            for (VirtualAdditionalRequirementsDB item : virtualTable) {
-                item.deviationFromTheMean = Math.abs(averageRating - item.mark);
-                deviationFromTheMeanSize = +item.deviationFromTheMean;
-            }
-            // Математика закончена
 
 
             // Установка сигналов.
-            // У меня 2 это 0 в 1С, а 1 это 1 в 1С
-            if (virtualTable.size() == 0) {
+            if (virtualTable != null && virtualTable.size() == 0) {
 
                 msg.append("У клиента ")
                         .append(CustomerRealm.getCustomerById(wpDataDB.getClient_id()).getNm())
                         .append(" нет доп. требований по этому адресу");
                 signal = false;
 
-            } else if (nedotochSize > 0) {
+            } else if (nedotochSum > 0) {
 
                 msg.append("За период с ")
                         .append(Clock.getHumanTime3(dateFrom))
@@ -140,11 +169,11 @@ public class OptionControlAdditionalRequirementsMark<T> extends OptionControl {
                         .append(" ")
                         .append(wpDataDB.getUser_txt())
                         .append(" НЕ поставил оценку(и) по ")
-                        .append(nedotochSize)
+                        .append(nedotochSum)
                         .append(" Доп.требованиям. ");
 
                 signal = true;
-            } else if (virtualTable.size() > 1 && deviationFromTheMeanSize < 0.5) {
+            } else if (virtualTable.size() > 1 && deviationFromTheMeanSum < 0.5) {
 
                 msg.append("Вы оценили Все (")
                         .append(virtualTable.size())
@@ -171,9 +200,9 @@ public class OptionControlAdditionalRequirementsMark<T> extends OptionControl {
 
             RealmManager.INSTANCE.executeTransaction(realm -> {
                 if (optionDB != null) {
-                    if (signal){
+                    if (signal) {
                         optionDB.setIsSignal("1");
-                    }else {
+                    } else {
                         optionDB.setIsSignal("2");
                     }
                     realm.insertOrUpdate(optionDB);
@@ -182,6 +211,8 @@ public class OptionControlAdditionalRequirementsMark<T> extends OptionControl {
 
             // 6.0
             setIsBlockOption(signal);
+
+            stringBuilderMsg = msg;
 
         } catch (Exception e) {
             Globals.writeToMLOG("ERROR", "OptionControlAdditionalRequirementsMark/executeOption", "Exception e: " + e);

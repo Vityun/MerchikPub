@@ -23,6 +23,7 @@ import org.apache.commons.lang3.ArrayUtils;
 import java.io.Serializable;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -46,6 +47,7 @@ import ua.com.merchik.merchik.Options.Buttons.OptionButtonPhotoBeforeStartWork;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonReclamationAnswer;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonTaskAnswer;
 import ua.com.merchik.merchik.Options.Controls.OptionControlAddComment;
+import ua.com.merchik.merchik.Options.Controls.OptionControlAdditionalRequirementsMark;
 import ua.com.merchik.merchik.Options.Controls.OptionControlAvailabilityDetailedReport;
 import ua.com.merchik.merchik.Options.Controls.OptionControlCheckingReasonOutOfStock;
 import ua.com.merchik.merchik.Options.Controls.OptionControlCheckingReasonOutOfStockOSV;
@@ -118,7 +120,7 @@ public class Options {
 
     private Integer[] describedOptions = new Integer[]{132624, 76815, 157241, 157243, 84006, 156928,
             151594, 80977, 135330, 133381, 135329, 138518, 151139, 132623, 133382, 137797, 135809,
-            135328, 135327, 157275};
+            135328, 135327, 157275, 138341};
 
     /*Сюда записываются Опции которые не прошли проверку, при особенном переданном MOD-e. Сделано
     для того что б потом можно было посмотреть название опций которые не прошли проверку и, возможно,
@@ -273,9 +275,11 @@ public class Options {
 
                 case 138341:
                     try {
-                        optionControlAdditionalRequirements_138341(context, dataDB, optionsDB, null, mode);
+                        OptionControlAdditionalRequirementsMark<?> optionControlAdditionalRequirementsMark = new OptionControlAdditionalRequirementsMark<>(context, dataDB, optionsDB, newOptionType, mode);
+                        optionControlAdditionalRequirementsMark.showOptionMassage();
                     } catch (Exception e) {
-                        e.printStackTrace();
+                        Globals.writeToMLOG("ERROR", "OptionControlAdditionalRequirementsMark", "Exception e: " + e);
+                        Globals.writeToMLOG("ERROR", "OptionControlAdditionalRequirementsMark", "e.printStackTrace(): " + Arrays.toString(e.getStackTrace()));
                     }
                     break;
 
@@ -756,7 +760,12 @@ public class Options {
             // Контроль Опции Доп. Требований
             case 138341:
                 try {
-                    optionControlAdditionalRequirements_138341(context, dataDB, option, type, mode);
+//                    optionControlAdditionalRequirements_138341(context, dataDB, option, type, mode);
+
+                    OptionControlAdditionalRequirementsMark<?> optionControlAdditionalRequirementsMark = new OptionControlAdditionalRequirementsMark<>(context, dataDB, option, type, mode);
+                    optionControlAdditionalRequirementsMark.showOptionMassage();
+
+                    return optionControlAdditionalRequirementsMark.isBlockOption() ? 1 : 0;
                 } catch (Exception e) {
                 }
                 break;
@@ -1508,7 +1517,7 @@ public class Options {
             List<AdditionalRequirementsDB> data = RealmManager.INSTANCE.copyFromRealm(realmResults);
 
             // Получаем Оценки этих Доп. требований.
-            RealmResults<AdditionalRequirementsMarkDB> marks = AdditionalRequirementsMarkRealm.getAdditionalRequirementsMarks(dateFrom, dateTo, userId, data);
+            RealmResults<AdditionalRequirementsMarkDB> marks = AdditionalRequirementsMarkRealm.getAdditionalRequirementsMarks(dateFrom, dateTo, userId, "1", data);
 
             Gson gson = new Gson();
 
@@ -1545,8 +1554,8 @@ public class Options {
                 }
 
 
-                nedotochSize = +item.nedotoch;
-                markSum = +item.mark;
+                nedotochSize = nedotochSize + item.nedotoch;
+                markSum = markSum + item.mark;
             }
 
 
@@ -1558,7 +1567,7 @@ public class Options {
 
             for (VirtualAdditionalRequirementsDB item : virtualTable) {
                 item.deviationFromTheMean = Math.abs(averageRating - item.mark);
-                deviationFromTheMeanSize = +item.deviationFromTheMean;
+                deviationFromTheMeanSize = deviationFromTheMeanSize + item.deviationFromTheMean;
             }
             // Математика закончена
 

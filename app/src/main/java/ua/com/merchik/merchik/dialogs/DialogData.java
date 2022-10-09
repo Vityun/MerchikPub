@@ -844,7 +844,7 @@ public class DialogData {
 
             if (res != null && res.length() > 0){
                 if (res2.length() <= 15){
-                    Toast.makeText(context, "Внесите корректно Комментарий!\nОн должен быть не короче 15 символов", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(context, "Внесите корректно Примечание!\nОно должено быть не короче 15 символов", Toast.LENGTH_SHORT).show();
                 }else {
                     result2 = res2;
                     listener.clicked();
