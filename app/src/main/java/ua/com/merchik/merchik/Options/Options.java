@@ -93,6 +93,7 @@ import ua.com.merchik.merchik.database.realm.tables.WpDataRealm;
 import ua.com.merchik.merchik.dialogs.DialogAdditionalRequirements.DialogARMark.DialogARMark;
 import ua.com.merchik.merchik.dialogs.DialogAdditionalRequirements.DialogAdditionalRequirements;
 import ua.com.merchik.merchik.dialogs.DialogData;
+import ua.com.merchik.merchik.dialogs.DialogFilter.Click;
 import ua.com.merchik.merchik.toolbar_menus;
 
 import static ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity.OFS;
@@ -1172,6 +1173,21 @@ public class Options {
                     wpDataDB.startUpdate = true;
                     realm.insertOrUpdate(wpDataDB);
                 });
+
+                Exchange exchange = new Exchange();
+                exchange.sendWpDataToServer(new Click() {
+                    @Override
+                    public <T> void onSuccess(T data) {
+                        String msg = (String) data;
+                        Globals.writeToMLOG("INFO", "DetailedReportButtons.class.pressStartWork.onSuccess", "msg: " + msg);
+                    }
+
+                    @Override
+                    public void onFailure(String error) {
+                        Globals.writeToMLOG("INFO", "DetailedReportButtons.class.pressStartWork.onFailure", "error: " + error);
+                    }
+                });
+
 //                globals.writeToMLOG(Clock.getHumanTime() + "_INFO.DetailedReportButtons.class.pressStartWork: " + "Вы начали работу в: " + startTime + " / отчёт: " + wpDataDB.getDoc_num_otchet() + "\n");
                 Globals.writeToMLOG("INFO", "DetailedReportButtons.class.pressStartWork", "Вы начали работу в: " + startTime + " / отчёт: " + wpDataDB.getDoc_num_otchet());
 
