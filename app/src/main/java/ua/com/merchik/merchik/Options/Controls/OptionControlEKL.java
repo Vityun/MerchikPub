@@ -206,7 +206,7 @@ public class OptionControlEKL<T> extends OptionControl {
 
 
         // лезем в таблицу ЭКЛ и проверяем, еслть ли ПОДПИСАННЫЙ ЭКЛ по данным условиям
-        eklSDB = SQL_DB.eklDao().getBy(dateFrom*1000, dateTo*1000, wpDataDB.getClient_id(), wpDataDB.getAddr_id(), wpDataDB.getUser_id());
+        eklSDB = SQL_DB.eklDao().getBy(dateFrom, dateTo, wpDataDB.getClient_id(), wpDataDB.getAddr_id(), wpDataDB.getUser_id());
 //        eklSDB = SQL_DB.eklDao().getBy(dateFrom, dateTo, wpDataDB.getClient_id(), wpDataDB.getAddr_id(), wpDataDB.getUser_id(), wpDataDB.ptt_user_id);
         if (eklSDB == null || eklSDB.size() == 0) {
             List<Integer> ids = new ArrayList<>();
@@ -229,7 +229,7 @@ public class OptionControlEKL<T> extends OptionControl {
 
             */
 
-            eklSDB = SQL_DB.eklDao().getBy(dateFrom*1000, dateTo*1000, ids, wpDataDB.getAddr_id(), wpDataDB.getUser_id());
+            eklSDB = SQL_DB.eklDao().getBy(dateFrom, dateTo, ids, wpDataDB.getAddr_id(), wpDataDB.getUser_id());
 
             if (eklSDB != null){
                 Globals.writeToMLOG("INFO", "OptionControlEKL/createTZN", "eklSDB1: " + eklSDB.size());
@@ -245,9 +245,9 @@ public class OptionControlEKL<T> extends OptionControl {
         if (eklSDB == null || eklSDB.size() == 0) {
             signal = true;
             stringBuilderMsg.append("За период с ")
-                    .append(Clock.getHumanTime3(dateFrom))
+                    .append(Clock.getHumanTime3(dateFrom/1000))
                     .append(" по ")
-                    .append(Clock.getHumanTime3(dateTo))
+                    .append(Clock.getHumanTime3(dateTo/1000))
                     .append(" НЕ получено ни одного ЭКЛ ")
                     .append(controllerType);
             /*  //добавим исключение
@@ -263,8 +263,8 @@ public class OptionControlEKL<T> extends OptionControl {
                 usersSDBPTT = SQL_DB.usersDao().getById(eklSDB.get(0).sotrId);
             }
             stringBuilderMsg.append("За период с ")
-                    .append(Clock.getHumanTime3(dateFrom)).append(" по ")
-                    .append(Clock.getHumanTime3(dateTo))
+                    .append(Clock.getHumanTime3(dateFrom/1000)).append(" по ")
+                    .append(Clock.getHumanTime3(dateTo/1000))
                     .append(" получено ").append(eklSDB.size()).append(" ЭКЛ у ").append(usersSDBPTT.fio)
                     .append(" (").append(usersSDBPTT.department).append(") тел: ").append(usersSDBPTT.tel)
                     .append(", ").append(usersSDBPTT.tel2);
