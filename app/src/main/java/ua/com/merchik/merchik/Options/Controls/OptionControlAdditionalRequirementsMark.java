@@ -99,6 +99,7 @@ public class OptionControlAdditionalRequirementsMark<T> extends OptionControl {
 
                 for (VirtualAdditionalRequirementsDB item : virtualTable) {
 
+                    item.offset = 0;
                     item.nedotoch = 1; //по умолчанию оценки НЕТ
                     item.note = "Нет ни одной оценки по этому Доп.требованию поставленной " + wpDataDB.getUser_txt();
 
@@ -115,6 +116,7 @@ public class OptionControlAdditionalRequirementsMark<T> extends OptionControl {
 
                             if (Long.parseLong(item.dtChange) >= dateDocumentLong) {
                                 item.nedotoch = 0;
+                                item.offset = 1;
                                 item.notes = "ДТ измененно ПОСЛЕ проведения работ и проверке не подлежит";
                                 continue;
                             } else if (Clock.dateConvertToLong(item.dtEnd) == dateDocumentLong) {
