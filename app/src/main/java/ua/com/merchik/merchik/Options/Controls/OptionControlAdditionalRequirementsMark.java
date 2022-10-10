@@ -206,6 +206,8 @@ public class OptionControlAdditionalRequirementsMark<T> extends OptionControl {
                 signal = false;
             }
 
+            // Установка сообщения
+            stringBuilderMsg = msg;
 
             RealmManager.INSTANCE.executeTransaction(realm -> {
                 if (optionDB != null) {
@@ -219,9 +221,18 @@ public class OptionControlAdditionalRequirementsMark<T> extends OptionControl {
             });
 
             // 6.0
-            setIsBlockOption(signal);
+            // Установка блокирует ли опция работу приложения или нет
+            if (signal) {
+                if (optionDB.getBlockPns().equals("1")) {
+                    setIsBlockOption(signal);
+                    stringBuilderMsg.append("\n\n").append("Документ проведен не будет!");
+                } else {
+                    stringBuilderMsg.append("\n\n").append("Вы можете получить Премиальные БОЛЬШЕ, если будете получать ЭКЛ у ПТТ.");
+                }
+            }
+//            setIsBlockOption(signal);
 
-            stringBuilderMsg = msg;
+
 
         } catch (Exception e) {
             Globals.writeToMLOG("ERROR", "OptionControlAdditionalRequirementsMark/executeOption", "Exception e: " + e);
