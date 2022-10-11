@@ -229,7 +229,7 @@ public class OptionControlAdditionalRequirementsMark<T> extends OptionControl {
                     setIsBlockOption(signal);
                     stringBuilderMsg.append("\n\n").append("Документ проведен не будет!");
                 } else {
-                    stringBuilderMsg.append("\n\n").append("Вы можете получить Премиальные БОЛЬШЕ, если будете получать ЭКЛ у ПТТ.");
+                    stringBuilderMsg.append("\n\n").append("Вы можете получить Премиальные БОЛЬШЕ, если будете ставить оценки Доп.требованиям.");
                 }
             }
 //            setIsBlockOption(signal);
