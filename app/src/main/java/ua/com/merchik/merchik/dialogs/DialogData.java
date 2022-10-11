@@ -834,6 +834,7 @@ public class DialogData {
 
         expListView.setVisibility(View.VISIBLE);
         editText2.setVisibility(View.VISIBLE);
+        editText2.setHint("Примечание");
 
         expListView.setAdapter(adapter);
         expListView.setOnChildClickListener(getErrorExpandableListView());
@@ -843,7 +844,7 @@ public class DialogData {
             String res = result;
 
             if (res != null && res.length() > 0){
-                if (res2.length() <= 15){
+                if (res.equals("9") && res2.length() <= 15){
                     Toast.makeText(context, "Внесите корректно Примечание!\nОно должено быть не короче 15 символов", Toast.LENGTH_SHORT).show();
                 }else {
                     result2 = res2;

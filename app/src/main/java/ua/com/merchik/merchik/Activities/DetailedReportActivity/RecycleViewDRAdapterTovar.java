@@ -1180,6 +1180,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                     INSTANCE.executeTransaction(realm -> {
                         table.setErrorId(data);
                         table.setErrorComment(data2);
+                        table.setNotes(data2);
                         table.setUploadStatus(1);
                         table.setDtChange(String.valueOf(System.currentTimeMillis() / 1000));
                         RealmManager.setReportPrepareRow(table);
