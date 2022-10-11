@@ -36,4 +36,9 @@ public class CustomerSDB {
     @Expose
     @ColumnInfo(name = "dt_update")
     public Long dtUpdate;
+
+    @SerializedName("recl_reply_mode")
+    @Expose
+    @ColumnInfo(name = "recl_reply_mode")
+    public Integer reclReplyMode;   // РежОтветаНаЗиР
 }

@@ -78,7 +78,7 @@ import ua.com.merchik.merchik.database.room.DaoInterfaces.UsersDao;
                 PotentialClientSDB.class,       // Потенциальный клиент
                 SamplePhotoSDB.class            // Образцы Фото
         },
-        version = 22
+        version = 23
 )
 
 

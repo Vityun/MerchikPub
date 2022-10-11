@@ -18,7 +18,7 @@ public class RoomManager {
                 .fallbackToDestructiveMigration()
                 .enableMultiInstanceInvalidation()
                 .allowMainThreadQueries()
-//                .addMigrations(MIGRATION_21_22)
+                .addMigrations(MIGRATION_22_23)
 
                 .build();
     }
@@ -42,6 +42,13 @@ public class RoomManager {
         @Override
         public void migrate(@NonNull SupportSQLiteDatabase database) {
             database.execSQL("ALTER TABLE sample_photo ADD COLUMN grpId INTEGER DEFAULT 0");
+        }
+    };
+
+    static final Migration MIGRATION_22_23 = new Migration(22, 23) {
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase database) {
+            database.execSQL("ALTER TABLE client ADD COLUMN recl_reply_mode INTEGER DEFAULT 0");
         }
     };
 
