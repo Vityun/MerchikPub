@@ -81,7 +81,9 @@ public class RecyclerViewTPLAdapter extends RecyclerView.Adapter<RecyclerViewTPL
             editText.addTextChangedListener(new TextWatcher() {
                 @Override
                 public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-
+                    if (editText.getText().toString().equals("")) {
+                        editText.setText("0");
+                    }
                 }
 
                 @Override
@@ -92,23 +94,24 @@ public class RecyclerViewTPLAdapter extends RecyclerView.Adapter<RecyclerViewTPL
                 @Override
                 public void afterTextChanged(Editable editable) {
                     click.getData(item, editable.toString());
-                    if (Integer.parseInt(editText.getText().toString()) > 0){
+                    if (Integer.parseInt(editText.getText().toString()) > 0) {
                         subtraction.getBackground().mutate().setColorFilter(new PorterDuffColorFilter(subtraction.getContext().getResources().getColor(R.color.active), PorterDuff.Mode.SRC));
                         subtraction.setClickable(true);
-                    }else {
+                    } else {
                         subtraction.getBackground().mutate().setColorFilter(new PorterDuffColorFilter(subtraction.getContext().getResources().getColor(R.color.inActive), PorterDuff.Mode.SRC));
                         subtraction.setClickable(false);
                     }
                 }
             });
 
-            if (item.getOptionControlName().equals(Globals.OptionControlName.FACE)) {
+            if (item.getOptionControlName().equals(Globals.OptionControlName.FACE) ||
+                    item.getOptionControlName().equals(Globals.OptionControlName.UP)) {
                 additions.setVisibility(View.VISIBLE);
                 additions.getBackground().mutate().setColorFilter(new PorterDuffColorFilter(subtraction.getContext().getResources().getColor(R.color.active), PorterDuff.Mode.SRC));
 
                 subtraction.setVisibility(View.VISIBLE);
 
-                if (Integer.parseInt(editText.getText().toString()) > 0){
+                if (editText.getText().toString().equals("") || Integer.parseInt(editText.getText().toString()) > 0) {
                     subtraction.getBackground().mutate().setColorFilter(new PorterDuffColorFilter(subtraction.getContext().getResources().getColor(R.color.active), PorterDuff.Mode.SRC));
                     subtraction.setClickable(true);
                 }
@@ -175,10 +178,10 @@ public class RecyclerViewTPLAdapter extends RecyclerView.Adapter<RecyclerViewTPL
                         return reportPrepare.getOborotvedNum();
 
                     default:
-                        return "-";
+                        return "0";
                 }
             } catch (Exception e) {
-                return "-";
+                return "0";
             }
         }
 
