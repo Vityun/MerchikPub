@@ -21,6 +21,9 @@ public interface CustomerDao {
     @Query("SELECT * FROM client WHERE id = :id")
     CustomerSDB getById(String id);
 
+    @Query("SELECT * FROM client WHERE id IN (:listIds)")
+    List<CustomerSDB> getByIds(List<String> listIds);
+
     @Query("SELECT * FROM client WHERE nm = :nm")
     CustomerSDB getByNm(String nm);
 

@@ -2,12 +2,15 @@ package ua.com.merchik.merchik.Options.Controls;
 
 import android.content.Context;
 import android.content.Intent;
+import android.os.Build;
 import android.text.SpannableString;
 import android.text.Spanned;
 import android.text.TextPaint;
 import android.text.style.ClickableSpan;
 import android.util.Log;
 import android.view.View;
+
+import androidx.annotation.RequiresApi;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,6 +22,7 @@ import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.Options.OptionControl;
 import ua.com.merchik.merchik.Options.Options;
 import ua.com.merchik.merchik.R;
+import ua.com.merchik.merchik.data.Database.Room.CustomerSDB;
 import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
 import ua.com.merchik.merchik.data.OptionMassageType;
 import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
@@ -38,6 +42,7 @@ public class OptionControlReclamationAnswer<T> extends OptionControl {
     public int OPTION_CONTROL_RECLAMATION_ANSWER_ID = 135330;
 
     private WpDataDB wpDataDB;
+    private CustomerSDB customerSDB;
 
     private String clientId, documentDate;
     private int userId, addressId, reclamationCount;
@@ -52,7 +57,9 @@ public class OptionControlReclamationAnswer<T> extends OptionControl {
         this.nnkMode = nnkMode;
 
         getDocumentVar();
-        executeOption();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            executeOption();
+        }
     }
 
     private void getDocumentVar() {
@@ -62,9 +69,12 @@ public class OptionControlReclamationAnswer<T> extends OptionControl {
             clientId = wpDataDB.getClient_id();
             addressId = wpDataDB.getAddr_id();
             userId = wpDataDB.getUser_id();
+
+            customerSDB = SQL_DB.customerDao().getById(clientId);
         }
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.N)
     private void executeOption() {
         Log.e("OptionControlTask", "here");
         try {
@@ -94,10 +104,26 @@ public class OptionControlReclamationAnswer<T> extends OptionControl {
                 return;
             }
 
+            // Получаю список клиентов изза изменения за 11.10.22. Новая строчка ниже
+            List<String> customerIds = new ArrayList<>();
+            for (TasksAndReclamationsSDB item : tarList) {
+                customerIds.add(item.client);
+            }
+            List<CustomerSDB> customerSDBList = SQL_DB.customerDao().getByIds(customerIds);
+
             // Убираю мусор с данных
             for (TasksAndReclamationsSDB item : tarList) {
                 if (item.client == null || item.client.equals("0")) tarList.remove(item);
                 if (item.dtRealPost > Clock.dateConvertToLong(documentDate)) tarList.remove(item);
+
+                // изменения за 11.10.22
+                // Гемор изза того что я не умею джойнить разные таблички между собой. Или мне впадлу джойнить как я умею.
+                CustomerSDB currentCustomer = null;
+                if (customerSDBList.stream().filter(listItem -> listItem.id.equals(item.client)).findFirst().orElse(null) != null) {
+                    currentCustomer = customerSDBList.stream().filter(listItem -> listItem.id.equals(item.client)).findFirst().get();
+                }
+                if (currentCustomer != null && currentCustomer.reclReplyMode == 1 && !customerSDB.equals(currentCustomer)) tarList.remove(item);    // То самое изменение
+                // конец изменений за 11.10.22
 
                 ThemeDB theme = ThemeRealm.getThemeById(String.valueOf(item.themeId));
 
