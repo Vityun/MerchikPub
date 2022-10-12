@@ -47,6 +47,7 @@ import ua.com.merchik.merchik.Options.Buttons.OptionButtonPhotoBeforeStartWork;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonReclamationAnswer;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonTaskAnswer;
 import ua.com.merchik.merchik.Options.Controls.OptionControlAddComment;
+import ua.com.merchik.merchik.Options.Controls.OptionControlAdditionalMaterialsMark;
 import ua.com.merchik.merchik.Options.Controls.OptionControlAdditionalRequirementsMark;
 import ua.com.merchik.merchik.Options.Controls.OptionControlAvailabilityDetailedReport;
 import ua.com.merchik.merchik.Options.Controls.OptionControlCheckingReasonOutOfStock;
@@ -281,6 +282,16 @@ public class Options {
                     } catch (Exception e) {
                         Globals.writeToMLOG("ERROR", "OptionControlAdditionalRequirementsMark", "Exception e: " + e);
                         Globals.writeToMLOG("ERROR", "OptionControlAdditionalRequirementsMark", "e.printStackTrace(): " + Arrays.toString(e.getStackTrace()));
+                    }
+                    break;
+
+                case 138342:
+                    try {
+                        OptionControlAdditionalMaterialsMark<?> optionControlAdditionalMaterialsMark = new OptionControlAdditionalMaterialsMark<>(context, dataDB, optionsDB, newOptionType, mode);
+                        optionControlAdditionalMaterialsMark.showOptionMassage();
+                    } catch (Exception e) {
+                        Globals.writeToMLOG("ERROR", "OptionControlAdditionalMaterialsMark", "Exception e: " + e);
+                        Globals.writeToMLOG("ERROR", "OptionControlAdditionalMaterialsMark", "e.printStackTrace(): " + Arrays.toString(e.getStackTrace()));
                     }
                     break;
 
@@ -767,6 +778,16 @@ public class Options {
                     optionControlAdditionalRequirementsMark.showOptionMassage();
 
                     return optionControlAdditionalRequirementsMark.isBlockOption() ? 1 : 0;
+                } catch (Exception e) {
+                }
+                break;
+
+            case 138342:
+                try {
+                    OptionControlAdditionalMaterialsMark<?> optionControlAdditionalMaterialsMark = new OptionControlAdditionalMaterialsMark<>(context, dataDB, option, type, mode);
+                    optionControlAdditionalMaterialsMark.showOptionMassage();
+
+                    return optionControlAdditionalMaterialsMark.isBlockOption() ? 1 : 0;
                 } catch (Exception e) {
                 }
                 break;
@@ -1682,7 +1703,6 @@ public class Options {
 //                    Toast.makeText(context, msg, Toast.LENGTH_LONG).show();
                     break;
             }
-
 
 
         } catch (Exception e) {

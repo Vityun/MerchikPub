@@ -4,6 +4,7 @@ import java.util.List;
 
 import io.realm.RealmResults;
 import io.realm.Sort;
+import ua.com.merchik.merchik.data.Database.Room.AdditionalMaterialsJOIN.AdditionalMaterialsJOINAdditionalMaterialsAddressSDB;
 import ua.com.merchik.merchik.data.RealmModels.AdditionalRequirementsDB;
 import ua.com.merchik.merchik.data.RealmModels.AdditionalRequirementsMarkDB;
 
@@ -50,13 +51,27 @@ public class AdditionalRequirementsMarkRealm {
      * tp = 1 - Доп. Требования / tp = 0 - Доп. Материалы
      * */
     public static RealmResults<AdditionalRequirementsMarkDB> getAdditionalRequirementsMarks(long dateFrom, long dateTo, int userId, String tp, List<AdditionalRequirementsDB> data){
-
         Integer[] ids = new Integer[data.size()];
         int i = 0;
         for (AdditionalRequirementsDB item : data){
             ids[i++] = item.getId();
         }
 
+        return INSTANCE.where(AdditionalRequirementsMarkDB.class)
+                .between("dt", dateFrom, dateTo)
+                .equalTo("userId", String.valueOf(userId))
+                .in("itemId", ids)
+                .equalTo("tp", tp)
+                .sort("dt", Sort.DESCENDING)
+                .findAll();
+    }
+
+    public static RealmResults<AdditionalRequirementsMarkDB> getAdditionalRequirementsMarksAM(long dateFrom, long dateTo, int userId, String tp, List<AdditionalMaterialsJOINAdditionalMaterialsAddressSDB> data){
+        Integer[] ids = new Integer[data.size()];
+        int i = 0;
+        for (AdditionalMaterialsJOINAdditionalMaterialsAddressSDB item : data){
+            ids[i++] = item.id;
+        }
 
         return INSTANCE.where(AdditionalRequirementsMarkDB.class)
                 .between("dt", dateFrom, dateTo)
