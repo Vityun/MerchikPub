@@ -89,6 +89,7 @@ public class OptionControlEKL<T> extends OptionControl {
     меня не вижу кроме как указать что ПТТшник может быть пустым настарте и мы его ПОТОМ переопределим*/
     private void createTZN() {
         PTT = "";   // Сбрасываем ПТТшника в режим "любой"
+        StringBuilder optionMsg = new StringBuilder(); //
 
         // DEBUG DATA-------------
         try {
@@ -135,7 +136,7 @@ public class OptionControlEKL<T> extends OptionControl {
 
 
         if (addressSDB.tpId == 464 && !optionDB.getOptionControlId().equals("132629") && documentDt < 1682899200) { // 1682899200 == 01.05.2023 / 464 = АТБ
-            stringBuilderMsg.append("Не проверяем для АТБ до 01.05.2023");
+            optionMsg.append("Не проверяем для АТБ до 01.05.2023");
             signal = true;
         } else {
             // Определем Группу Товаров
@@ -208,7 +209,7 @@ public class OptionControlEKL<T> extends OptionControl {
             // Проверка ЭКЛов
             if (eklSDB == null || eklSDB.size() == 0) {
                 signal = true;
-                stringBuilderMsg.append("За период с ")
+                optionMsg.append("За период с ")
                         .append(Clock.getHumanTime3(dateFrom / 1000))
                         .append(" по ")
                         .append(Clock.getHumanTime3(dateTo / 1000))
@@ -226,7 +227,7 @@ public class OptionControlEKL<T> extends OptionControl {
                 if (usersSDBPTT == null) {
                     usersSDBPTT = SQL_DB.usersDao().getById(eklSDB.get(0).sotrId);
                 }
-                stringBuilderMsg.append("За период с ")
+                optionMsg.append("За период с ")
                         .append(Clock.getHumanTime3(dateFrom / 1000)).append(" по ")
                         .append(Clock.getHumanTime3(dateTo / 1000))
                         .append(" получено ").append(eklSDB.size()).append(" ЭКЛ у ").append(usersSDBPTT.fio)
@@ -246,39 +247,39 @@ public class OptionControlEKL<T> extends OptionControl {
 					*/
                 } else if (usersSDBPTT.fired == 1 && optionDB.getOptionControlId().equals("133317") && optionDB.getOptionControlId().equals("84006")) {   //для случая, когда берем ЭКЛ у ПТТ
                     signal = false;
-                    stringBuilderMsg.append(", но ").append("ПТТ уволен! (").append(usersSDBPTT.firedReason).append(")");
+                    optionMsg.append(", но ").append("ПТТ уволен! (").append(usersSDBPTT.firedReason).append(")");
                 } else if (usersSDBPTT.workAddrId != wpDataDB.getAddr_id() && optionDB.getOptionControlId().equals("133317") && optionDB.getOptionControlId().equals("84006")) {    //для случая, когда берем ЭКЛ у ПТТ
                     signal = false;
-                    stringBuilderMsg.append(", но ").append("ПТТ не работает по адресу: ").append(addressSDB.nm);
+                    optionMsg.append(", но ").append("ПТТ не работает по адресу: ").append(addressSDB.nm);
                 } else if (usersSDBPTT.otdelId == null || usersSDBPTT.otdelId == 0) {
                     signal = false;
-                    stringBuilderMsg.append(", но ").append("у ПТТ ").append(usersSDBPTT.fio).append(" не указан отдел в котором он работает!");
+                    optionMsg.append(", но ").append("у ПТТ ").append(usersSDBPTT.fio).append(" не указан отдел в котором он работает!");
                 } else if (usersSDBPTT.otdelId != null && SQL_DB.tovarGroupDao().getById(usersSDBPTT.otdelId).parent != 0) {    // нет у меня понятия УРОВЕНЬ
                     signal = false;
                     // TODO otdel lvl
-                    stringBuilderMsg.append(", но ").append("у ПТТ указан отдел ").append(SQL_DB.tovarGroupDao().getById(usersSDBPTT.otdelId).nm)
+                    optionMsg.append(", но ").append("у ПТТ указан отдел ").append(SQL_DB.tovarGroupDao().getById(usersSDBPTT.otdelId).nm)
                     /*.append(" (").append("-- otdel lvl --").append(" из уровня  вложенности!)")*/;
                 } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                     if (tovarGroupSDB.stream().filter(item -> item.id.equals(usersSDBPTT.otdelId)).findFirst().orElse(null) != null
                             && optionDB.getOptionControlId().equals("132629") && (addressSDB.kolKass > 5 || addressSDB.kolKass == 0)) {
                         if (documentUser.reportDate05 != null && documentUser.reportDate05.getTime() >= wpDataDB.getDt().getTime()) {
                             signal = true;
-                            stringBuilderMsg.append(", но ").append("ПТТ работает в отделе ").append(SQL_DB.tovarGroupDao().getById(usersSDBPTT.otdelId).nm).append(" и не может подписывать ЭКЛ для: ")
+                            optionMsg.append(", но ").append("ПТТ работает в отделе ").append(SQL_DB.tovarGroupDao().getById(usersSDBPTT.otdelId).nm).append(" и не может подписывать ЭКЛ для: ")
                                     .append(TG.getNmFromList(tovarGroupSDB)).append(" (но исполнитель не провел свой 5-й отчет и эту блокировку пропускаем)");
                         } else {
                             signal = false;
-                            stringBuilderMsg.append(", но ").append("ПТТ работает в отделе ").append(SQL_DB.tovarGroupDao().getById(usersSDBPTT.otdelId).nm).append(" и не может подписывать ЭКЛ для: ")
+                            optionMsg.append(", но ").append("ПТТ работает в отделе ").append(SQL_DB.tovarGroupDao().getById(usersSDBPTT.otdelId).nm).append(" и не может подписывать ЭКЛ для: ")
                                     .append(TG.getNmFromList(tovarGroupSDB)).append(" (для магазина в котором более 5 касс и исполнитель провел 5-й отчет)");
                         }
                     } else if (tovarGroupSDB.stream().filter(item -> item.id.equals(usersSDBPTT.otdelId)).findFirst().orElse(null) != null
                             && optionDB.getOptionControlId().equals("132629") && (addressSDB.kolKass > 0 || addressSDB.kolKass <= 5)) {
                         if (documentUser.reportDate05 != null && documentUser.reportDate05.getTime() >= wpDataDB.getDt().getTime()) {
                             signal = true;
-                            stringBuilderMsg.append(", но ").append("ПТТ работает в отделе ").append(SQL_DB.tovarGroupDao().getById(usersSDBPTT.otdelId).nm).append(" и не может подписывать ЭКЛ для: ")
+                            optionMsg.append(", но ").append("ПТТ работает в отделе ").append(SQL_DB.tovarGroupDao().getById(usersSDBPTT.otdelId).nm).append(" и не может подписывать ЭКЛ для: ")
                                     .append(TG.getNmFromList(tovarGroupSDB)).append(" (но исполнитель не провел свой 5-й отчет и эту блокировку пропускаем)");
                         } else {
                             signal = true;
-                            stringBuilderMsg.append(", но ").append("ПТТ работает в отделе ").append(SQL_DB.tovarGroupDao().getById(usersSDBPTT.otdelId).nm).append(" и не может подписывать ЭКЛ для: ")
+                            optionMsg.append(", но ").append("ПТТ работает в отделе ").append(SQL_DB.tovarGroupDao().getById(usersSDBPTT.otdelId).nm).append(" и не может подписывать ЭКЛ для: ")
                                     .append(TG.getNmFromList(tovarGroupSDB)).append(" (но в данном магазине ").append(addressSDB.kolKass).append(" касс и это допустимо)");
                         }
                     }
@@ -288,8 +289,15 @@ public class OptionControlEKL<T> extends OptionControl {
             }
         }
 
+        // "подводим итог"
+        // Изначально ЭТО не надо было вообще писать, НО для парней с < 5 отчётами надо сделать исключение
+        if (signal && (documentUser.reportDate05 == null || documentUser.reportDate05.getTime() > wpDataDB.getDt().getTime())){
+            signal = false;
+            stringBuilderMsg.append("Исполнитель еще не провел свою пятую отчетность! ЭКЛ не подписан!").append("\n\n");
+        }
 
 
+        stringBuilderMsg.append(optionMsg);
 
         // Установка блокирует ли опция работу приложения или нет
         if (signal) {
