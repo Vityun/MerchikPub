@@ -18,18 +18,21 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.List;
 
+import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.ServerExchange.Exchange;
-import ua.com.merchik.merchik.data.Database.Room.AdditionalMaterialsSDB;
-import ua.com.merchik.merchik.dialogs.DialogData;
+import ua.com.merchik.merchik.data.Database.Room.AdditionalMaterialsJOIN.AdditionalMaterialsJOINAdditionalMaterialsAddressSDB;
+import ua.com.merchik.merchik.data.RealmModels.AdditionalRequirementsMarkDB;
+import ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsMarkRealm;
+import ua.com.merchik.merchik.dialogs.DialogAdditionalRequirements.DialogARMark.DialogARMark;
 import ua.com.merchik.merchik.dialogs.DialogFilter.Click;
 
 public class AdditionalMaterialsAdapter extends RecyclerView.Adapter<AdditionalMaterialsAdapter.ViewHolder> {
 
     private Context context;
-    private List<AdditionalMaterialsSDB> data;
+    private List<AdditionalMaterialsJOINAdditionalMaterialsAddressSDB> data;
 
-    public AdditionalMaterialsAdapter(Context context, List<AdditionalMaterialsSDB> data) {
+    public AdditionalMaterialsAdapter(Context context, List<AdditionalMaterialsJOINAdditionalMaterialsAddressSDB> data) {
         this.context = context;
         this.data = data;
     }
@@ -50,14 +53,16 @@ public class AdditionalMaterialsAdapter extends RecyclerView.Adapter<AdditionalM
             layout = v.findViewById(R.id.layout);
         }
 
-        public void bind(AdditionalMaterialsSDB item) {
+        public void bind(AdditionalMaterialsJOINAdditionalMaterialsAddressSDB item) {
             try {
                 text.setText(item.txt);
 
+                AdditionalRequirementsMarkDB additionalRequirementsMarkDB = AdditionalRequirementsMarkRealm.getMark(item.id, String.valueOf(Globals.userId));
+
                 signal.setColorFilter(context.getResources().getColor(R.color.shadow));
 
-                if (item.score != null) {
-                    score = item.score;
+                if (additionalRequirementsMarkDB != null) {
+                    score = additionalRequirementsMarkDB.getScore();
                 } else {
                     score = Html.fromHtml("<font color='#EF5350'>0</font>");
                     signal.setColorFilter(context.getResources().getColor(R.color.red_error));
@@ -76,7 +81,7 @@ public class AdditionalMaterialsAdapter extends RecyclerView.Adapter<AdditionalM
         }
 
 
-        private void click(Context context, AdditionalMaterialsSDB item) {
+        private void click(Context context, AdditionalMaterialsJOINAdditionalMaterialsAddressSDB item) {
 
             Toast.makeText(context, "Получаю доп. материал. Это может занять некоторое время.", Toast.LENGTH_LONG).show();
 
@@ -84,14 +89,36 @@ public class AdditionalMaterialsAdapter extends RecyclerView.Adapter<AdditionalM
             exchange.getAdditionalMaterialsLinks(item.id, new Click() {
                 @Override
                 public <T> void onSuccess(T data) {
-                    DialogData dialogData = new DialogData(context);
-                    dialogData.setTitle("Посмотреть Доп. Материал: " + item.id);
-                    dialogData.setText("Вы перейдёте по ссылке: " + data);
-                    dialogData.setOk("Перейти", ()->{
+
+                    DialogARMark dialog = new DialogARMark(context);
+
+                    dialog.setClose(dialog::dismiss);
+                    dialog.setLesson(context, true, 1234);
+                    dialog.setVideoLesson(context, true, 1235, () -> {});
+
+                    dialog.setTitle("Посмотреть Доп. Материал: " + item.id);
+                    dialog.setTxtText("Вы перейдёте по ссылке: " + data);
+
+                    dialog.setRatingBarAM(item, Float.parseFloat(String.valueOf(score)), () -> {
+                        notifyItemChanged(getAdapterPosition());
+                    });
+
+                    dialog.setOk("Перейти", ()->{
                         Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(data.toString()));
                         context.startActivity(browserIntent);
                     });
-                    dialogData.show();
+
+                    dialog.show();
+
+
+//                    DialogData dialogData = new DialogData(context);
+//                    dialogData.setTitle("Посмотреть Доп. Материал: " + item.id);
+//                    dialogData.setText("Вы перейдёте по ссылке: " + data);
+//                    dialogData.setOk("Перейти", ()->{
+//                        Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(data.toString()));
+//                        context.startActivity(browserIntent);
+//                    });
+//                    dialogData.show();
                 }
 
                 @Override

@@ -41,6 +41,8 @@ import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsRealm;
 import ua.com.merchik.merchik.dialogs.DialogData;
 
+import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
+
 public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRAdapter.ViewHolder> {
 
     private List<OptionsDB> butt;
@@ -305,6 +307,12 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                     case 138339:    // Доп Требования
                         // Устанавливаю в счётчик доп. требований их количество
                         textInteger.setText("" + AdditionalRequirementsRealm.getData3(dataDB).size());
+                        break;
+
+                    case 138340:    // Доп Требования
+                        // Устанавливаю в счётчик доп. требований их количество
+//                        String expire = Clock.getHumanTimeYYYYMMDD(System.currentTimeMillis() / 1000);
+                        textInteger.setText("" + SQL_DB.additionalMaterialsDao().getAllForOptionTEST(optionsButtons.getClientId(), "1", "0").size());
                         break;
 
                     case 135328:    // Рекламация

@@ -10,11 +10,17 @@ public class AdditionalMaterialsJOINAdditionalMaterialsAddressSDB {
     @NonNull
     public Integer id;
 
-    @ColumnInfo(name = "approve")
-    public String approve;
-
     @ColumnInfo(name = "client")
     public String client;
+
+    @ColumnInfo(name = "expire")
+    public String expire;
+
+    @ColumnInfo(name = "state")
+    public String state;
+
+    @ColumnInfo(name = "approve")
+    public String approve;
 
     @ColumnInfo(name = "user_id")
     public Integer user_id;
@@ -22,20 +28,17 @@ public class AdditionalMaterialsJOINAdditionalMaterialsAddressSDB {
     @ColumnInfo(name = "dt")
     public String dt;
 
-    @ColumnInfo(name = "expire")
-    public String expire;
-
     @ColumnInfo(name = "file_archive")
     public String fileArchive;
-
-    @ColumnInfo(name = "txt")
-    public String txt;
 
     @ColumnInfo(name = "file_ext")
     public String fileExt;
 
     @ColumnInfo(name = "file_size")
     public String fileSize;
+
+    @ColumnInfo(name = "txt")
+    public String txt;
 
     @ColumnInfo(name = "score")
     public String score;
@@ -46,21 +49,21 @@ public class AdditionalMaterialsJOINAdditionalMaterialsAddressSDB {
     @ColumnInfo(name = "score_sum")
     public String scoreSum;
 
-    @ColumnInfo(name = "state")
-    public String state;
+    // ama
+    @ColumnInfo(name = "amaId")
+    @NonNull
+    public Integer amaId;
 
-    @ColumnInfo(name = "idAMAddr")
-    public Integer idAMAddr;
+    @ColumnInfo(name = "amaFileId")
+    public Integer amaFileId;
 
-    @ColumnInfo(name = "file_id")
-    public Integer fileId;
+    @ColumnInfo(name = "amaAddrId")
+    public Integer amaAddrId;
 
-    @ColumnInfo(name = "addr_id")
-    public Integer addrId;
+    @ColumnInfo(name = "amaAuthorId")
+    public Integer amaAuthorId;
 
-    @ColumnInfo(name = "author_id")
-    public Integer authorId;
+    @ColumnInfo(name = "amaDtUpdate")
+    public Long amaDtUpdate;
 
-    @ColumnInfo(name = "dt_update")
-    public Long dtUpdate;
 }

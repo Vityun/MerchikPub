@@ -20,7 +20,7 @@ import java.util.List;
 
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.R;
-import ua.com.merchik.merchik.data.Database.Room.AdditionalMaterialsSDB;
+import ua.com.merchik.merchik.data.Database.Room.AdditionalMaterialsJOIN.AdditionalMaterialsJOINAdditionalMaterialsAddressSDB;
 import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteHintsDB;
 import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteObjects.SiteObjectsDB;
 import ua.com.merchik.merchik.data.RealmModels.AdditionalRequirementsDB;
@@ -234,7 +234,7 @@ public class DialogAdditionalRequirements {
         recyclerView.setLayoutManager(new LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false));
     }
 
-    public void setRecyclerAM(List<AdditionalMaterialsSDB> data){
+    public void setRecyclerAM(List<AdditionalMaterialsJOINAdditionalMaterialsAddressSDB> data){
         AdditionalMaterialsAdapter adapter = new AdditionalMaterialsAdapter(context, data);
         recyclerView.setAdapter(adapter);
         recyclerView.setLayoutManager(new LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false));

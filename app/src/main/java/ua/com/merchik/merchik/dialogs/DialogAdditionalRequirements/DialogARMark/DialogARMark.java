@@ -9,6 +9,7 @@ import android.os.Build;
 import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
+import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.RatingBar;
 import android.widget.TextView;
@@ -17,13 +18,14 @@ import android.widget.Toast;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
+import ua.com.merchik.merchik.data.Database.Room.AdditionalMaterialsJOIN.AdditionalMaterialsJOINAdditionalMaterialsAddressSDB;
 import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteHintsDB;
 import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteObjects.SiteObjectsDB;
 import ua.com.merchik.merchik.data.RealmModels.AdditionalRequirementsDB;
 import ua.com.merchik.merchik.data.RealmModels.AdditionalRequirementsMarkDB;
 import ua.com.merchik.merchik.database.realm.RealmManager;
-import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsMarkRealm;
+import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.dialogs.DialogVideo;
 
 public class DialogARMark {
@@ -34,6 +36,7 @@ public class DialogARMark {
     private ImageButton close, help, videoHelp, call;
 
     private TextView title, txtId, txtAddr, txtGrp, txtNumber, txtDateStart, txtDateEnd, txtAuthor, txtCustomer, txtMark, txtText;
+    private Button ok;
     private RatingBar ratingBar;
 
     public DialogARMark(Context context) {
@@ -55,6 +58,9 @@ public class DialogARMark {
         txtCustomer = dialog.findViewById(R.id.txtCustomer);
         txtMark = dialog.findViewById(R.id.txtMark);
         txtText = dialog.findViewById(R.id.txtText);
+
+        ok = dialog.findViewById(R.id.ok);
+        ok.setVisibility(View.GONE);
 
         ratingBar = dialog.findViewById(R.id.ratingBar);
 
@@ -225,6 +231,21 @@ public class DialogARMark {
         title.setText(msg);
     }
 
+    public void setTxtText(CharSequence msg){
+        txtText.setText(msg);
+    }
+
+    public void setOk(CharSequence setButtonText, DialogData.DialogClickListener clickListener) {
+        ok.setVisibility(View.VISIBLE);
+        if (setButtonText != null) {
+            ok.setText(setButtonText);
+        }
+        ok.setOnClickListener(v -> {
+            if (clickListener != null) clickListener.clicked();
+            dismiss();
+        });
+    }
+
     public void setData(CharSequence id, CharSequence addr, CharSequence grp, CharSequence number, CharSequence dateStart, CharSequence dateEnd, CharSequence author, CharSequence customer, CharSequence mark, CharSequence text){
         txtId.setText(id);
         txtAddr.setText(addr);
@@ -238,7 +259,7 @@ public class DialogARMark {
         txtText.setText(text);
     }
 
-    public void setRatingBar(AdditionalRequirementsDB db, Float data, DialogData.DialogClickListener clickListener){
+    public void setRatingBarAR(AdditionalRequirementsDB db, Float data, DialogData.DialogClickListener clickListener){
         if (data != null){
             ratingBar.setRating(data);
         }
@@ -255,7 +276,7 @@ public class DialogARMark {
             markDB.setDt(System.currentTimeMillis()/1000);
             markDB.setUserId(String.valueOf(Globals.userId));
             markDB.setScore(String.valueOf(rate));
-            markDB.setTp("1");
+            markDB.setTp("1");  // Для Доп. Требований
             markDB.setUploadStatus("0");
 
             AdditionalRequirementsMarkRealm.setNewMark(markDB);
@@ -265,12 +286,46 @@ public class DialogARMark {
     }
 
 
-    public void setRatingBar(Float data, Clicks.click click){
+    public void setRatingBarAR(Float data, Clicks.click click){
+        if (data != null){
+            ratingBar.setRating(data);
+        }
+    }
+
+
+    // Для Доп. Материалов
+
+    public void setRatingBarAM(AdditionalMaterialsJOINAdditionalMaterialsAddressSDB db, Float data, DialogData.DialogClickListener clickListener){
         if (data != null){
             ratingBar.setRating(data);
         }
 
+        ratingBar.setOnRatingBarChangeListener((ratingBar, rating, fromUser) -> {
+            int rate = (int) rating;
+            ratingBar.setRating(rate);
+            Toast.makeText(context, "Оценка: " + rate + " установлена.", Toast.LENGTH_LONG).show();
 
+
+            AdditionalRequirementsMarkDB markDB = new AdditionalRequirementsMarkDB();
+            markDB.setId(String.valueOf(System.currentTimeMillis()));
+            markDB.setItemId(db.id);
+            markDB.setDt(System.currentTimeMillis()/1000);
+            markDB.setUserId(String.valueOf(Globals.userId));
+            markDB.setScore(String.valueOf(rate));
+            markDB.setTp("0");  // Доп. Материалы
+            markDB.setUploadStatus("0");
+
+            AdditionalRequirementsMarkRealm.setNewMark(markDB);
+
+            clickListener.clicked();
+        });
+    }
+
+
+    public void setRatingBarAM(Float data, Clicks.click click){
+        if (data != null){
+            ratingBar.setRating(data);
+        }
     }
 
 }

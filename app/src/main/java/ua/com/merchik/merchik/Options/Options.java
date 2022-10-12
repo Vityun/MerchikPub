@@ -864,7 +864,7 @@ public class Options {
             DialogARMark dialog = new DialogARMark(context);
             dialog.setTitle("Укажите оценку");
             dialog.setClose(dialog::dismiss);
-            dialog.setRatingBar(rating, new Clicks.click() {
+            dialog.setRatingBarAR(rating, new Clicks.click() {
                 @Override
                 public <T> void click(T data) {
                     ((TasksAndReclamationsSDB) dataDB).voteScore = (Integer) data;
@@ -907,7 +907,6 @@ public class Options {
     }
 
     private <T> void option138340(Context context, T dataDB, OptionsDB option, OptionMassageType type, NNKMode mode) {
-        List<AdditionalMaterialsSDB> dataTest = SQL_DB.additionalMaterialsDao().getAllByClientId(option.getClientId());
         String expire = Clock.getHumanTimeYYYYMMDD(System.currentTimeMillis() / 1000);
         List<AdditionalMaterialsSDB> data1 = SQL_DB.additionalMaterialsDao().getAllForOption(option.getClientId(), "1", "0", expire);
         List<AdditionalMaterialsJOINAdditionalMaterialsAddressSDB> data = SQL_DB.additionalMaterialsDao().getAllForOptionTEST(option.getClientId(), "1", "0");
@@ -915,7 +914,9 @@ public class Options {
         DialogAdditionalRequirements dialogAdditionalRequirements = new DialogAdditionalRequirements(context);
 
         dialogAdditionalRequirements.setTitle("Доп. материалы (" + data.size() + ")");
-        dialogAdditionalRequirements.setRecyclerAM(data1);
+        dialogAdditionalRequirements.setRecyclerAM(data);
+//        dialogAdditionalRequirements.setTitle("Доп. материалы (" + data1.size() + ")");
+//        dialogAdditionalRequirements.setRecyclerAM(data1);
 
         dialogAdditionalRequirements.setClose(dialogAdditionalRequirements::dismiss);
         dialogAdditionalRequirements.show();

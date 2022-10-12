@@ -250,7 +250,7 @@ public class AdditionalRequirementsAdapter extends RecyclerView.Adapter<Addition
             dialog.setData(endbId, endbAddr, endbGrp, endbNum, endbStart, endbEnd, endbAuthor, endbCust, endbMark, endbText);
 
 
-            dialog.setRatingBar(data, Float.parseFloat(String.valueOf(score)), () -> {
+            dialog.setRatingBarAR(data, Float.parseFloat(String.valueOf(score)), () -> {
                 notifyItemChanged(getAdapterPosition());
             });
 
