@@ -1,5 +1,7 @@
 package ua.com.merchik.merchik.Activities;
 
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.TextView;
@@ -9,10 +11,14 @@ import androidx.appcompat.widget.Toolbar;
 
 import com.google.android.material.navigation.NavigationView;
 
+import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.R;
-import ua.com.merchik.merchik.ServerExchange.Exchange;
+import ua.com.merchik.merchik.data.RealmModels.AppUsersDB;
+import ua.com.merchik.merchik.database.realm.tables.AppUserRealm;
 import ua.com.merchik.merchik.dialogs.DialogFilter.Click;
 import ua.com.merchik.merchik.toolbar_menus;
+
+import static ua.com.merchik.merchik.Globals.userId;
 
 
 public class MenuMainActivity extends toolbar_menus {
@@ -67,8 +73,19 @@ public class MenuMainActivity extends toolbar_menus {
     }
 
     private void test(Click result) {
-        Exchange exchange = new Exchange();
-        exchange.sendARMark();
+        //2270114102 // cl 8804 // adr 27956
+
+        String link = String.format("/mobile.php?mod=images_achieve**act=new_achieve**client_id=%s**addr_id=%s", 8804, 27956);
+        AppUsersDB appUser = AppUserRealm.getAppUserById(userId);
+
+        String hash = String.format("%s%s%s", appUser.getUserId(), appUser.getPassword(), "AvgrgsYihSHp6Ok9yQXfSHp6Ok9nXdXr3OSHp6Ok9UPBTzTjrF20Nsz3");
+        hash = Globals.getSha1Hex(hash);
+
+        String format = String.format("https://merchik.com.ua/sa.php?&u=%s&s=%s&l=%s", userId, hash, link);
+
+
+        Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(format));
+        this.startActivity(browserIntent);
     }
 
 /*        StandartData data = new StandartData();
