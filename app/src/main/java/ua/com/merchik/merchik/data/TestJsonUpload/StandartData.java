@@ -68,6 +68,8 @@ public class StandartData<T> {
     public static class Filter {
         public String date_from;
         public String date_to;
+        public String confirm;
+        public String is_view;
     }
 
     public static class StandartDataChat {

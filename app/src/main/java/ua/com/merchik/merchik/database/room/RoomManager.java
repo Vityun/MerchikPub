@@ -18,7 +18,7 @@ public class RoomManager {
                 .fallbackToDestructiveMigration()
                 .enableMultiInstanceInvalidation()
                 .allowMainThreadQueries()
-                .addMigrations(MIGRATION_22_23)
+                .addMigrations(MIGRATION_23_24)
 
                 .build();
     }
@@ -52,5 +52,18 @@ public class RoomManager {
         }
     };
 
+    static final Migration MIGRATION_23_24 = new Migration(23, 24) {
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase database) {
+            database.execSQL("CREATE TABLE IF NOT EXISTS `achievements` (`id` INTEGER NOT NULL, " +
+                    "`serverId` INTEGER, `dt` TEXT, `img_before_id` INTEGER, `img_before` TEXT, `img_before_big` TEXT, " +
+                    "`img_after_id` INTEGER, `img_after` TEXT, `img_after_big` TEXT, `score` TEXT, " +
+                    "`score_who_nm` TEXT, `score_dt` TEXT, `adresa_nm` TEXT, `adresa_addr` TEXT, " +
+                    "`adresa_tp` TEXT, `addr_id` INTEGER, `spiskli_nm` TEXT, `client_id` TEXT, " +
+                    "`code_dad2` INTEGER, `user_id` INTEGER, `sotr_fio` TEXT, `comment_dt` TEXT, `comment_txt` TEXT, " +
+                    "`comment_user` TEXT, `prem_reason` TEXT, `prem_amount` TEXT, `prem_amount_dt` TEXT, " +
+                    "`prem_sotr` TEXT, `dvi` INTEGER, `confirm_state` INTEGER, PRIMARY KEY(`id`))");
+        }
+    };
 
 }

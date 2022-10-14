@@ -63,6 +63,7 @@ import ua.com.merchik.merchik.data.RetrofitResponse.photos.ImagesViewListImageLi
 import ua.com.merchik.merchik.data.RetrofitResponse.photos.ImagesViewListImageResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.photos.PhotoInfoResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.photos.PhotoInfoResponseList;
+import ua.com.merchik.merchik.data.RetrofitResponse.tables.AchievementsResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.ChatResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.update.wpdata.WpDataUpdateResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.update.wpdata.WpDataUpdateResponseList;
@@ -1570,7 +1571,7 @@ public class Exchange {
                             for (AdditionalRequirementsMarksListServerData item : info) {
                                 if (item.state) {
                                     for (AdditionalRequirementsMarkDB ARMark : list) {
-                                        if (item.elementId.equals(ARMark.getItemId())){
+                                        if (item.elementId.equals(ARMark.getItemId())) {
                                             ARMark.setUploadStatus(String.valueOf(System.currentTimeMillis()));
                                         }
                                     }
@@ -2110,4 +2111,49 @@ public class Exchange {
         });
     }
 
+
+    public void downloadAchievements() {
+        StandartData data = new StandartData();
+        data.mod = "images_achieve";
+        data.act = "list";
+
+//        StandartData.Filter filter = new StandartData.Filter();
+//        filter.date_from = "";
+//        filter.date_to = "";
+//        filter.confirm = "";
+//        filter.is_view = "";
+//        data.filter = filter;
+
+        Gson gson = new Gson();
+        String json = gson.toJson(data);
+        JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
+
+        retrofit2.Call<AchievementsResponse> call = RetrofitBuilder.getRetrofitInterface().ACHIEVEMENTS_DOWNLOAD(RetrofitBuilder.contentType, convertedObject);
+        call.enqueue(new Callback<AchievementsResponse>() {
+            @Override
+            public void onResponse(Call<AchievementsResponse> call, Response<AchievementsResponse> response) {
+                Log.e("test", "test" + response);
+
+                SQL_DB.achievementsDao().insertAllCompletable(response.body().list)
+                        .subscribeOn(Schedulers.io())
+                        .subscribe(new DisposableCompletableObserver() {
+                            @Override
+                            public void onComplete() {
+                                Log.d("test", "test");
+                            }
+
+                            @Override
+                            public void onError(@io.reactivex.rxjava3.annotations.NonNull Throwable e) {
+                                Log.d("test", "test");
+                            }
+                        });
+
+            }
+
+            @Override
+            public void onFailure(Call<AchievementsResponse> call, Throwable t) {
+                Log.e("test", "test" + t);
+            }
+        });
+    }
 }

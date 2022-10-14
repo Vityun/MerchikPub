@@ -29,12 +29,24 @@ public class DateConverter {
         df.setTimeZone(TimeZone.getTimeZone("GMT"));
     }
 
+    static DateFormat dfH = new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault());
+    static {
+        dfH.setTimeZone(TimeZone.getTimeZone("GMT"));
+    }
+
+
+
     @TypeConverter
     public static Date timeToDate(String value) {
         if (value != null) {
             try {
                 return new Date(df.parse(value).getTime());
             } catch (ParseException e) {
+                try {
+                    return new Date(dfH.parse(value).getTime());
+                } catch (ParseException parseException) {
+                    parseException.printStackTrace();
+                }
             }
             return null;
         } else {

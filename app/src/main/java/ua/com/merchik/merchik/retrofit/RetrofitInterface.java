@@ -58,6 +58,7 @@ import ua.com.merchik.merchik.data.RetrofitResponse.TradeMarkResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.WpDataServer;
 import ua.com.merchik.merchik.data.RetrofitResponse.photos.ImagesViewListImageResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.photos.PhotoInfoResponse;
+import ua.com.merchik.merchik.data.RetrofitResponse.tables.AchievementsResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.AddressResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.ChatResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.CityResponse;
@@ -579,6 +580,8 @@ public interface RetrofitInterface {
             @Header("ContentType") String content,
             @Body JsonObject json);
 
+    // ------------------------------------------------------
+
     // String contentType = "application/json";EKLCheckData
     @POST("mobile_app.php?")
     Call<JsonObject> TEST_JSON_UPLOAD(
@@ -587,6 +590,14 @@ public interface RetrofitInterface {
 
     @POST("mobile_app.php?")
     Call<String> TEST_STRING_UPLOAD(
+            @Header("ContentType") String content,
+            @Body JsonObject json);
+
+    // -------------------------------------------------------
+
+    // Загрузка таблички достижений
+    @POST("mobile_app.php?")
+    Call<AchievementsResponse> ACHIEVEMENTS_DOWNLOAD(
             @Header("ContentType") String content,
             @Body JsonObject json);
 

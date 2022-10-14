@@ -6,6 +6,7 @@ import androidx.room.Database;
 import androidx.room.RoomDatabase;
 import androidx.room.TypeConverters;
 
+import ua.com.merchik.merchik.data.Database.Room.AchievementsSDB;
 import ua.com.merchik.merchik.data.Database.Room.AdditionalMaterialsAddressSDB;
 import ua.com.merchik.merchik.data.Database.Room.AdditionalMaterialsSDB;
 import ua.com.merchik.merchik.data.Database.Room.AddressSDB;
@@ -29,6 +30,7 @@ import ua.com.merchik.merchik.data.Database.Room.TovarGroupClientSDB;
 import ua.com.merchik.merchik.data.Database.Room.TovarGroupSDB;
 import ua.com.merchik.merchik.data.Database.Room.TranslatesSDB;
 import ua.com.merchik.merchik.data.Database.Room.UsersSDB;
+import ua.com.merchik.merchik.database.room.DaoInterfaces.AchievementsDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.AdditionalMaterialsAddressDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.AdditionalMaterialsDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.AddressDao;
@@ -76,9 +78,10 @@ import ua.com.merchik.merchik.database.room.DaoInterfaces.UsersDao;
                 AdditionalMaterialsAddressSDB.class,
                 AdditionalMaterialsSDB.class,
                 PotentialClientSDB.class,       // Потенциальный клиент
-                SamplePhotoSDB.class            // Образцы Фото
+                SamplePhotoSDB.class,            // Образцы Фото
+                AchievementsSDB.class   // Достижения
         },
-        version = 23
+        version = 24
 )
 
 
@@ -128,6 +131,8 @@ public abstract class AppDatabase extends RoomDatabase {
     public abstract PotentialClientDao potentialClientDao();
 
     public abstract SamplePhotoDao samplePhotoDao();
+
+    public abstract AchievementsDao achievementsDao();
 
     public class MyAutoMigration {
     }
