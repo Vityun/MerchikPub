@@ -75,7 +75,7 @@ public class OptionControlAdditionalRequirementsMark<T> extends OptionControl {
             // Создание виртуальной таблички.
             List<VirtualAdditionalRequirementsDB> virtualTable = null;
 
-            long dateFrom = Clock.getDatePeriodLong(dateDocumentLong, -30) / 1000; // Дата документа -30 дней
+            long dateFrom = Clock.getDatePeriodLong(dateDocumentLong, -15) / 1000; // Дата документа -15 дней
             long dateTo = Clock.getDatePeriodLong(dateDocumentLong, +4) / 1000;     // Дата документа +3 дня
 
             // Получаем Доп.Требования.
