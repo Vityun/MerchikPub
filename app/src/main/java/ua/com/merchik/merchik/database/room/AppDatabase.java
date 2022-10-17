@@ -30,6 +30,7 @@ import ua.com.merchik.merchik.data.Database.Room.TovarGroupClientSDB;
 import ua.com.merchik.merchik.data.Database.Room.TovarGroupSDB;
 import ua.com.merchik.merchik.data.Database.Room.TranslatesSDB;
 import ua.com.merchik.merchik.data.Database.Room.UsersSDB;
+import ua.com.merchik.merchik.data.Database.Room.VoteSDB;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.AchievementsDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.AdditionalMaterialsAddressDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.AdditionalMaterialsDao;
@@ -53,6 +54,7 @@ import ua.com.merchik.merchik.database.room.DaoInterfaces.TovarGroupClientDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.TovarGroupDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.TranslatesDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.UsersDao;
+import ua.com.merchik.merchik.database.room.DaoInterfaces.VotesDao;
 
 @SuppressLint("RestrictedApi")
 @Database(
@@ -79,9 +81,10 @@ import ua.com.merchik.merchik.database.room.DaoInterfaces.UsersDao;
                 AdditionalMaterialsSDB.class,
                 PotentialClientSDB.class,       // Потенциальный клиент
                 SamplePhotoSDB.class,            // Образцы Фото
-                AchievementsSDB.class   // Достижения
+                AchievementsSDB.class,   // Достижения
+                VoteSDB.class               // Оценки
         },
-        version = 24
+        version = 25
 )
 
 
@@ -133,6 +136,8 @@ public abstract class AppDatabase extends RoomDatabase {
     public abstract SamplePhotoDao samplePhotoDao();
 
     public abstract AchievementsDao achievementsDao();
+
+    public abstract VotesDao votesDao();
 
     public class MyAutoMigration {
     }

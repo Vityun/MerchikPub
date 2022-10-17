@@ -68,6 +68,7 @@ public class MenuMainActivity extends toolbar_menus {
 
     private void test(Click result) {
         new Exchange().downloadAchievements();
+        new Exchange().downloadVoteTable();
     }
 
 /*        StandartData data = new StandartData();

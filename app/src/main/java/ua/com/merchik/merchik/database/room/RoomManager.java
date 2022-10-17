@@ -18,7 +18,7 @@ public class RoomManager {
                 .fallbackToDestructiveMigration()
                 .enableMultiInstanceInvalidation()
                 .allowMainThreadQueries()
-                .addMigrations(MIGRATION_23_24)
+                .addMigrations(MIGRATION_24_25)
 
                 .build();
     }
@@ -63,6 +63,18 @@ public class RoomManager {
                     "`code_dad2` INTEGER, `user_id` INTEGER, `sotr_fio` TEXT, `comment_dt` TEXT, `comment_txt` TEXT, " +
                     "`comment_user` TEXT, `prem_reason` TEXT, `prem_amount` TEXT, `prem_amount_dt` TEXT, " +
                     "`prem_sotr` TEXT, `dvi` INTEGER, `confirm_state` INTEGER, PRIMARY KEY(`id`))");
+        }
+    };
+
+    static final Migration MIGRATION_24_25 = new Migration(24, 25) {
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase database) {
+            database.execSQL("CREATE TABLE IF NOT EXISTS `votes` (`id` INTEGER NOT NULL, `serverId` INTEGER," +
+                    "`isp` TEXT, `kli` TEXT, `addr_id` INTEGER, `dt` INTEGER, `df` INTEGER, `photo_id` INTEGER, " +
+                    "`code_dad2` INTEGER, `code_iza` INTEGER, `voter_id` INTEGER, `score` INTEGER, `merchik` INTEGER, " +
+                    "`ip` TEXT, `vote_type` INTEGER, `vote_class` INTEGER, `theme_id` INTEGER, `dt_day` INTEGER, " +
+                    "`dt_month` INTEGER, `dt_year` INTEGER, `cntrl_doc` INTEGER, `flag` INTEGER, `comments` TEXT" +
+                    ", PRIMARY KEY(`id`))");
         }
     };
 

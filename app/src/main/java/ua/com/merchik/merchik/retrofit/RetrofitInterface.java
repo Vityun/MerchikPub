@@ -78,6 +78,7 @@ import ua.com.merchik.merchik.data.RetrofitResponse.tables.TovarGroupClientRespo
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.TovarGroupResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.TranslatesResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.UsersResponse;
+import ua.com.merchik.merchik.data.RetrofitResponse.tables.VoteResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.update.reportprepare.ReportPrepareUpdateResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.update.wpdata.WpDataUpdateResponse;
 import ua.com.merchik.merchik.data.ServerData.TARCommentsData.AdditionalRequirements.AdditionalRequirementsServerData;
@@ -594,6 +595,12 @@ public interface RetrofitInterface {
             @Body JsonObject json);
 
     // -------------------------------------------------------
+
+    // Загрузка таблички оценок
+    @POST("mobile_app.php?")
+    Call<VoteResponse> VOTES_DOWNLOAD(
+            @Header("ContentType") String content,
+            @Body JsonObject json);
 
     // Загрузка таблички достижений
     @POST("mobile_app.php?")
