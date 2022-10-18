@@ -3,6 +3,7 @@ package ua.com.merchik.merchik.data.Database.Room;
 import androidx.annotation.NonNull;
 import androidx.room.ColumnInfo;
 import androidx.room.Entity;
+import androidx.room.Ignore;
 import androidx.room.PrimaryKey;
 
 import com.google.gson.annotations.Expose;
@@ -165,4 +166,17 @@ public class AchievementsSDB {
     @Expose
     @ColumnInfo(name = "confirm_state")
     public Integer confirmState;
+
+    // ---------- ДЛЯ ОПЦИИ КОНТРОЛЯ НАЧАЛО---------------
+
+    @Ignore
+    public Integer error;
+
+    @Ignore
+    public StringBuilder note;
+
+    @Ignore
+    public Integer currentVisit;
+
+    // ---------- ДЛЯ ОПЦИИ КОНТРОЛЯ КОНЕЦ---------------
 }

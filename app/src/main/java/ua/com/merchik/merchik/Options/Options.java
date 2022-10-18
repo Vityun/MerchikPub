@@ -47,6 +47,7 @@ import ua.com.merchik.merchik.Options.Buttons.OptionButtonAvailabilityDetailedRe
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonPhotoBeforeStartWork;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonReclamationAnswer;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonTaskAnswer;
+import ua.com.merchik.merchik.Options.Controls.OptionControlAchievements;
 import ua.com.merchik.merchik.Options.Controls.OptionControlAddComment;
 import ua.com.merchik.merchik.Options.Controls.OptionControlAdditionalMaterialsMark;
 import ua.com.merchik.merchik.Options.Controls.OptionControlAdditionalRequirementsMark;
@@ -123,7 +124,7 @@ public class Options {
 
     private Integer[] describedOptions = new Integer[]{132624, 76815, 157241, 157243, 84006, 156928,
             151594, 80977, 135330, 133381, 135329, 138518, 151139, 132623, 133382, 137797, 135809,
-            135328, 135327, 157275, 138341};
+            135328, 135327, 157275, 138341, 590};
 
     /*Сюда записываются Опции которые не прошли проверку, при особенном переданном MOD-e. Сделано
     для того что б потом можно было посмотреть название опций которые не прошли проверку и, возможно,
@@ -159,6 +160,11 @@ public class Options {
             }
 
             switch (optionControlId) {
+                case 590:
+                    OptionControlAchievements<?> optionControlAchievements = new OptionControlAchievements<>(context, dataDB, optionsDB, newOptionType, mode);
+                    optionControlAchievements.showOptionMassage();
+                    break;
+
                 case 157275:
                     OptionControlFacePlan<?> optionControlFacePlan = new OptionControlFacePlan<>(context, dataDB, optionsDB, newOptionType, mode);
                     optionControlFacePlan.showOptionMassage();
@@ -591,6 +597,11 @@ public class Options {
 //        try {
         Log.e("NNK", "F/optControl/optionId: " + optionId);
         switch (optionId) {
+            case 590:
+                OptionControlAchievements<?> optionControlAchievements = new OptionControlAchievements<>(context, dataDB, option, type, mode);
+                optionControlAchievements.showOptionMassage();
+                return optionControlAchievements.isBlockOption() ? 1 : 0;
+
             case 135159:
                 OptionButtAchievements<?> optionButtAchievements = new OptionButtAchievements<>(context, dataDB, option, type, mode);
                 break;
