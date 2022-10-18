@@ -24,7 +24,12 @@ public class AchievementsSDB {
     @SerializedName("dt")
     @Expose
     @ColumnInfo(name = "dt")
-    public String dt;
+    public String dt;       // Формат YYYY-MM-dd HH:mm
+
+    @SerializedName("dt_ut")
+    @Expose
+    @ColumnInfo(name = "dt_ut")
+    public Long dt_ut;      // Дата dt, но в формате юникст тайма
 
     @SerializedName("img_before_id")
     @Expose

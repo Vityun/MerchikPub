@@ -84,7 +84,7 @@ import ua.com.merchik.merchik.database.room.DaoInterfaces.VotesDao;
                 AchievementsSDB.class,   // Достижения
                 VoteSDB.class               // Оценки
         },
-        version = 25
+        version = 26
 )
 
 

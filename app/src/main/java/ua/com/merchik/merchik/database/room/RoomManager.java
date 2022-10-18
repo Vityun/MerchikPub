@@ -18,7 +18,7 @@ public class RoomManager {
                 .fallbackToDestructiveMigration()
                 .enableMultiInstanceInvalidation()
                 .allowMainThreadQueries()
-                .addMigrations(MIGRATION_24_25)
+                .addMigrations(MIGRATION_25_26)
 
                 .build();
     }
@@ -75,6 +75,13 @@ public class RoomManager {
                     "`ip` TEXT, `vote_type` INTEGER, `vote_class` INTEGER, `theme_id` INTEGER, `dt_day` INTEGER, " +
                     "`dt_month` INTEGER, `dt_year` INTEGER, `cntrl_doc` INTEGER, `flag` INTEGER, `comments` TEXT" +
                     ", PRIMARY KEY(`id`))");
+        }
+    };
+
+    static final Migration MIGRATION_25_26 = new Migration(25, 26) {
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase database) {
+            database.execSQL("ALTER TABLE achievements ADD COLUMN dt_ut INTEGER DEFAULT 0");
         }
     };
 
