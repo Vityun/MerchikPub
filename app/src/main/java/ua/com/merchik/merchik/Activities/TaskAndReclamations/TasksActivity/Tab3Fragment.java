@@ -137,7 +137,7 @@ public class Tab3Fragment extends Fragment {
             if (tarData.vinovnikScore != null && tarData.vinovnikScore > 0) {
                 dialog = new DialogCreateTAR(v.getContext());
                 dialog.setTitle("Внесение комментария");
-                dialog.addPhoto("Короткий клик - открывает Журнал фото для выбора фото\nДолгий клик - фотоаппарат для выполнения");
+                dialog.addPhoto("Короткий клик - открывает фотоаппарат для выполнения фото\nДолгий клик - открывает Журнал фото для выбора.");
                 dialog.addEditText("Добавьте комментарий");
                 dialog.serCustomRecyclerView(new Clicks.click() {
                     @Override

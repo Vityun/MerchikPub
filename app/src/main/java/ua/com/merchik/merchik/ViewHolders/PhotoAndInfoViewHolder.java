@@ -47,13 +47,13 @@ public class PhotoAndInfoViewHolder extends RecyclerView.ViewHolder {
 
         photo.setOnClickListener(v -> {
             TEST_DATA test = new TEST_DATA();
-            test.type = 1;
+            test.type = 2;
             click.click(test);
         });
 
         photo.setOnLongClickListener(view -> {
             TEST_DATA test = new TEST_DATA();
-            test.type = 2;
+            test.type = 1;
             click.click(test);
             return false;
         });
