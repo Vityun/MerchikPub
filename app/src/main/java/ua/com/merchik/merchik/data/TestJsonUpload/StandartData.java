@@ -72,6 +72,14 @@ public class StandartData<T> {
         public String is_view;
     }
 
+    /*Тут формируем оценки Достижений для передачи их на сторону сервера*/
+    public static class ImagesAchieve {
+        public Integer id;           // - ID достижения
+        public Integer score;        // - оценка
+        public String comment;       // - коммент к оценке
+        public Integer element_id;   // - код элемента, по которому приложение будет отличать ответы
+    }
+
     public static class StandartDataChat {
         public Integer element_id;
         public Integer msg_id;

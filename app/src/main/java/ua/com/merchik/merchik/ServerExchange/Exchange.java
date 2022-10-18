@@ -47,6 +47,7 @@ import ua.com.merchik.merchik.data.Database.Room.StandartSDB;
 import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
 import ua.com.merchik.merchik.data.Database.Room.TranslatesSDB;
 import ua.com.merchik.merchik.data.Database.Room.UsersSDB;
+import ua.com.merchik.merchik.data.Database.Room.VoteSDB;
 import ua.com.merchik.merchik.data.RealmModels.AdditionalRequirementsMarkDB;
 import ua.com.merchik.merchik.data.RealmModels.LogMPDB;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
@@ -2159,11 +2160,11 @@ public class Exchange {
     }
 
 
-
-    /** 17.10.2022
-     *  Получение Таблички Оценок
-     * */
-    public void downloadVoteTable(){
+    /**
+     * 17.10.2022
+     * Получение Таблички Оценок
+     */
+    public void downloadVoteTable() {
         StandartData data = new StandartData();
         data.mod = "data_list";
         data.act = "images_vote";
@@ -2198,5 +2199,56 @@ public class Exchange {
                 Log.e("test", "test" + t);
             }
         });
+    }
+
+
+    /**
+     * 18.10.2022
+     *
+     * Выгрузка Оценок на сторону сервера.
+     * - На этапе 18.10.22. используется (всё ещё нет ибо я на своей стороне оценки не ставлю) для выгрузки оценок Достижений
+     * */
+    public void sendVote(List<VoteSDB> votes) {
+
+        if (votes != null && votes.size() > 0) {
+            Globals.writeToMLOG("INFO", "sendVote", "have " + votes.size() + " votes to send");
+
+            StandartData data = new StandartData();
+            data.mod = "images_achieve";
+            data.act = "set_score";
+
+            List<StandartData.ImagesAchieve> votesToSend = new ArrayList<>();
+
+            for (VoteSDB item : votes) {
+                StandartData.ImagesAchieve vote = new StandartData.ImagesAchieve();
+                vote.id = item.serverId;
+                vote.score = item.score;
+                vote.comment = item.comments;
+                vote.element_id = item.id;
+            }
+
+            data.data = votesToSend;
+
+            Gson gson = new Gson();
+            String json = gson.toJson(data);
+            JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
+
+            retrofit2.Call<JsonObject> call = RetrofitBuilder.getRetrofitInterface().TEST_JSON_UPLOAD(RetrofitBuilder.contentType, convertedObject);
+            call.enqueue(new Callback<JsonObject>() {
+                @Override
+                public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
+                    Log.e("test", "test" + response);
+                }
+
+                @Override
+                public void onFailure(Call<JsonObject> call, Throwable t) {
+                    Log.e("test", "test" + t);
+                }
+            });
+
+        } else {
+            // Мне нечего выгружать
+            Globals.writeToMLOG("INFO", "sendVote", "have not votes to send");
+        }
     }
 }

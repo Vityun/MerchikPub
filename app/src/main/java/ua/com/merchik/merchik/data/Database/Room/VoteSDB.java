@@ -13,12 +13,12 @@ public class VoteSDB {
     @PrimaryKey
     @NonNull
     @ColumnInfo(name = "id")
-    public Integer id;
+    public Integer id;      // ВНИМАНИЕ. Это мой внутренний идентификатор
 
     @SerializedName("ID")
     @Expose
     @ColumnInfo(name = "serverId")
-    public Integer serverId;
+    public Integer serverId;        // Это идентификатор сервера
 
     @SerializedName("isp")
     @Expose
