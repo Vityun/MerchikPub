@@ -142,7 +142,7 @@ public class OptionControlAchievements<T> extends OptionControl {
                     }
 
                     if (item.error == 0) {
-                        for (VoteSDB voteItem : voteSDBList) {  // TODO что-то мне подсказывает что по ID я не свяжу єти таблички.
+                        for (VoteSDB voteItem : voteSDBList) {
                             if (!item.serverId.equals(voteItem.serverId)) continue;
 
                             item.score = String.valueOf(voteItem.score);

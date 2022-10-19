@@ -577,6 +577,10 @@ public class Exchange {
                         Globals.writeToMLOG("ERROR", "Exchange/SamplePhotoExchange()/onFailure", "error: " + error);
                     }
                 });
+
+                downloadAchievements();
+                downloadVoteTable();
+
             } else {
                 long time = (System.currentTimeMillis() - exchange) / 1000;
                 Log.e("startExchange", "start/Время обновлять НЕ наступило. После обновления прошло: " + time + "секунд.");
@@ -2135,26 +2139,31 @@ public class Exchange {
             @Override
             public void onResponse(Call<AchievementsResponse> call, Response<AchievementsResponse> response) {
                 Log.e("test", "test" + response);
+                try {
+                    Globals.writeToMLOG("INFO", "downloadAchievements/onResponse", "response: " + response.body().list.size());
 
-                SQL_DB.achievementsDao().insertAllCompletable(response.body().list)
-                        .subscribeOn(Schedulers.io())
-                        .subscribe(new DisposableCompletableObserver() {
-                            @Override
-                            public void onComplete() {
-                                Log.d("test", "test");
-                            }
+                    SQL_DB.achievementsDao().insertAllCompletable(response.body().list)
+                            .subscribeOn(Schedulers.io())
+                            .subscribe(new DisposableCompletableObserver() {
+                                @Override
+                                public void onComplete() {
+                                    Globals.writeToMLOG("OK", "downloadAchievements/onResponse/onComplete", "OK");
+                                }
 
-                            @Override
-                            public void onError(@io.reactivex.rxjava3.annotations.NonNull Throwable e) {
-                                Log.d("test", "test");
-                            }
-                        });
-
+                                @Override
+                                public void onError(@io.reactivex.rxjava3.annotations.NonNull Throwable e) {
+                                    Globals.writeToMLOG("ERROR", "downloadAchievements/onResponse/onError", "Throwable e: " + e);
+                                }
+                            });
+                }catch (Exception e){
+                    Globals.writeToMLOG("ERROR", "downloadAchievements/onResponse", "Exception e: " + e);
+                }
             }
 
             @Override
             public void onFailure(Call<AchievementsResponse> call, Throwable t) {
                 Log.e("test", "test" + t);
+                Globals.writeToMLOG("ERROR", "downloadAchievements/onFailure", "Throwable t: " + t);
             }
         });
     }
@@ -2179,24 +2188,31 @@ public class Exchange {
             public void onResponse(Call<VoteResponse> call, Response<VoteResponse> response) {
                 Log.e("test", "test" + response);
 
-                SQL_DB.votesDao().insertAllCompletable(response.body().list)
-                        .subscribeOn(Schedulers.io())
-                        .subscribe(new DisposableCompletableObserver() {
-                            @Override
-                            public void onComplete() {
-                                Log.d("test", "test");
-                            }
+                try {
+                    Globals.writeToMLOG("INFO", "downloadVoteTable/onResponse", "response: " + response.body().list.size());
 
-                            @Override
-                            public void onError(@io.reactivex.rxjava3.annotations.NonNull Throwable e) {
-                                Log.d("test", "test");
-                            }
-                        });
+                    SQL_DB.votesDao().insertAllCompletable(response.body().list)
+                            .subscribeOn(Schedulers.io())
+                            .subscribe(new DisposableCompletableObserver() {
+                                @Override
+                                public void onComplete() {
+                                    Globals.writeToMLOG("OK", "downloadVoteTable/onResponse/onComplete", "OK");
+                                }
+
+                                @Override
+                                public void onError(@io.reactivex.rxjava3.annotations.NonNull Throwable e) {
+                                    Globals.writeToMLOG("ERROR", "downloadVoteTable/onResponse/onError", "Throwable e: " + e);
+                                }
+                            });
+                }catch (Exception e){
+                    Globals.writeToMLOG("ERROR", "downloadVoteTable/onResponse", "Exception e: " + e);
+                }
             }
 
             @Override
             public void onFailure(Call<VoteResponse> call, Throwable t) {
                 Log.e("test", "test" + t);
+                Globals.writeToMLOG("ERROR", "downloadVoteTable/onFailure", "Throwable t: " + t);
             }
         });
     }
@@ -2204,10 +2220,10 @@ public class Exchange {
 
     /**
      * 18.10.2022
-     *
+     * <p>
      * Выгрузка Оценок на сторону сервера.
      * - На этапе 18.10.22. используется (всё ещё нет ибо я на своей стороне оценки не ставлю) для выгрузки оценок Достижений
-     * */
+     */
     public void sendVote(List<VoteSDB> votes) {
 
         if (votes != null && votes.size() > 0) {
