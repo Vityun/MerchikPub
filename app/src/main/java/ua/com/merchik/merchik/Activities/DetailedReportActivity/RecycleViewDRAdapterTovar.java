@@ -52,6 +52,7 @@ import ua.com.merchik.merchik.ServerExchange.PhotoDownload;
 import ua.com.merchik.merchik.ServerExchange.TablesLoadingUnloading;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.WorkPlan;
+import ua.com.merchik.merchik.data.Database.Room.ArticleSDB;
 import ua.com.merchik.merchik.data.Database.Room.OborotVedSDB;
 import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
 import ua.com.merchik.merchik.data.PhotoDescriptionText;
@@ -92,7 +93,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
     private Context mContext;
     private List<TovarDB> dataList;
     private List<TovarDB> dataFilterable;
-//    private WpDataDB wpDataDB;
+    //    private WpDataDB wpDataDB;
     private DRAdapterTovarTPLTypeView tplType;
 
     private List<Integer> tovIdList;
@@ -202,7 +203,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
         TextView weight;
         TextView tovGroup;
         TextView tradeMark;
-        TextView textViewItemTovarOptLine;
+        TextView textViewItemTovarOptLine, article;
         RecyclerView recyclerView;
 
         TextView balance, facePlan;
@@ -227,6 +228,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
             textViewItemTovarOptLine = (TextView) v.findViewById(R.id.textViewItemTovarOptLine);
             tradeMark = (TextView) v.findViewById(R.id.textViewItemTovarThirdLine);
             balance = v.findViewById(R.id.balance);
+            article = v.findViewById(R.id.article);
             facePlan = v.findViewById(R.id.facePlan);
             recyclerView = v.findViewById(R.id.recyclerView2);
 
@@ -241,6 +243,21 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
             closeDialog = (Button) dialog.findViewById(R.id.buttonDialogFullPhoto);
             Log.e("GET_PHOTO_PATH", "IMG1: " + imgFullSize);
 
+        }
+
+        private String getArticle(TovarDB tovar) {
+            try {
+                StringBuilder res = new StringBuilder();
+                ArticleSDB articleSDB = SQL_DB.articleDao().getByTovId(Integer.parseInt(tovar.getiD()));
+                if (articleSDB != null) {
+                    res.append("Арт: ").append(articleSDB.vendorCode);
+                    return res.toString();
+                } else {
+                    return "";
+                }
+            } catch (Exception e) {
+                return "";
+            }
         }
 
         public void bind(TovarDB list) {
@@ -260,6 +277,8 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
             name.setTextSize(16);
             weight.setText(weightString);
             weight.setTextSize(16);
+
+            article.setText(getArticle(list));
 
             try {
                 Drawable background = constraintLayout.getBackground();
@@ -359,10 +378,9 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                     text = Html.fromHtml("<u><font color='#00FF00'>" + balanceTxt + "</font></u>");
                 }
 
-                if (ostatok != null && !ostatok.equals("0")){
+                if (ostatok != null && !ostatok.equals("0")) {
                     balance.setText(text);
                 }
-
 
 
                 // Возможность кликать по тексту. Вызывает описание того что это.
@@ -654,19 +672,19 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
 
 
         /*
-        * 15.09.2022.
-        * Отображение плана по фейсам.
-        *
-        * Если Плана по фейсам нет - поле вообще не нужно отображать.
-        * */
+         * 15.09.2022.
+         * Отображение плана по фейсам.
+         *
+         * Если Плана по фейсам нет - поле вообще не нужно отображать.
+         * */
         private void showFacePlan(ReportPrepareDB reportPrepareDB) {
-            if (reportPrepareDB != null && reportPrepareDB.facesPlan != null && reportPrepareDB.facesPlan > 0){
+            if (reportPrepareDB != null && reportPrepareDB.facesPlan != null && reportPrepareDB.facesPlan > 0) {
                 facePlan.setVisibility(View.VISIBLE);
                 facePlan.setText("План: " + reportPrepareDB.facesPlan + " фейси");
                 facePlan.setOnClickListener(view -> {
                     Toast.makeText(mContext, "План по фейсам равен: " + reportPrepareDB.facesPlan, Toast.LENGTH_SHORT).show();
                 });
-            }else {
+            } else {
                 facePlan.setVisibility(View.GONE);
             }
         }
@@ -1017,7 +1035,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                 res.row5Text = "Ост.:";
                 res.row5TextValue = finalBalanceData1 + " шт на " + finalBalanceDate1;
 
-                if (reportPrepareDB.facesPlan != null && reportPrepareDB.facesPlan>0){
+                if (reportPrepareDB.facesPlan != null && reportPrepareDB.facesPlan > 0) {
                     res.row6Text = "План фейс.:";
                     res.row6TextValue = "" + reportPrepareDB.facesPlan;
                 }

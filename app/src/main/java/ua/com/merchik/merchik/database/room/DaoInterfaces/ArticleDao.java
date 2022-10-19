@@ -26,5 +26,6 @@ public interface ArticleDao {
 
     // ---------------------------------------------------------
 
-
+    @Query("SELECT * FROM article WHERE tovar_id = :id")
+    ArticleSDB getByTovId(int id);
 }
