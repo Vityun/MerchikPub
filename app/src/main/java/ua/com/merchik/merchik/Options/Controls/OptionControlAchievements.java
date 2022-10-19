@@ -20,6 +20,7 @@ import ua.com.merchik.merchik.data.Database.Room.VoteSDB;
 import ua.com.merchik.merchik.data.OptionMassageType;
 import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
+import ua.com.merchik.merchik.database.realm.RealmManager;
 
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
@@ -76,7 +77,7 @@ public class OptionControlAchievements<T> extends OptionControl {
                 dateDocument = wpDataDB.getDt().getTime() / 1000;
 
                 // dateDocument*1000 -- Делаем такую херь, потому что функция работает в миллисекундах. / 1000 - для перевода в секунды.
-                dateFrom = Clock.getDatePeriodLong(dateDocument * 1000, -30) / 1000;
+                dateFrom = Clock.getDatePeriodLong(dateDocument * 1000, -35) / 1000;
                 dateTo = Clock.getDatePeriodLong(dateDocument * 1000, 0) / 1000;
             }
 
@@ -176,18 +177,30 @@ public class OptionControlAchievements<T> extends OptionControl {
 
             //4.0. готовим сообщение и сигнал
             if (sumOptionError == 0 && traineeSignal == 0){
-                stringBuilderMsg.append("За период с ").append(dateFrom).append(" по ").append(dateTo).append(" ЕСТЬ утвержденные достижения (с оценкой ")
+                stringBuilderMsg.append("За период с ").append(Clock.getHumanTimeYYYYMMDD(dateFrom)).append(" по ").append(Clock.getHumanTimeYYYYMMDD(dateTo)).append(" ЕСТЬ утвержденные достижения (с оценкой ")
                         .append(minScore).append(" и более) ").append("???"/*TODO Тут указано ТекПос, откуда я его беру?*/).append(" по ").append(customerSDBDocument.nm)
                         .append(". И переданы клиенту для начисления премии.").append(SPIS);
                 signal = false;
             }else if (traineeSignal > 0){
-                stringBuilderMsg.append(trainee).append("За период с ").append(dateFrom).append(" по ").append(dateTo).append(" НЕТ утвержденных достижений (с оценкой ")
+                stringBuilderMsg.append(trainee).append("За период с ").append(Clock.getHumanTimeYYYYMMDD(dateFrom)).append(" по ").append(Clock.getHumanTimeYYYYMMDD(dateTo)).append(" НЕТ утвержденных достижений (с оценкой ")
                         .append(minScore).append(" и более) по ").append(SPIS);
                 signal = false;
             }else {
-                stringBuilderMsg.append(trainee).append("За период с ").append(dateFrom).append(" по ").append(dateTo).append(" НЕТ утвержденных достижений (с оценкой ")
+                stringBuilderMsg.append(trainee).append("За период с ").append(Clock.getHumanTimeYYYYMMDD(dateFrom)).append(" по ").append(Clock.getHumanTimeYYYYMMDD(dateTo)).append(" НЕТ утвержденных достижений (с оценкой ")
                         .append(minScore).append(" и более) по ").append(SPIS).append(".");
             }
+
+            // Сохранение
+            RealmManager.INSTANCE.executeTransaction(realm -> {
+                if (optionDB != null) {
+                    if (signal) {
+                        optionDB.setIsSignal("1");
+                    } else {
+                        optionDB.setIsSignal("2");
+                    }
+                    realm.insertOrUpdate(optionDB);
+                }
+            });
 
             if (signal) {
                 if (optionDB.getBlockPns().equals("1")) {

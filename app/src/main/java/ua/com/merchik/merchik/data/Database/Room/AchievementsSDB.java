@@ -4,15 +4,17 @@ import androidx.annotation.NonNull;
 import androidx.room.ColumnInfo;
 import androidx.room.Entity;
 import androidx.room.Ignore;
+import androidx.room.Index;
 import androidx.room.PrimaryKey;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
-@Entity(tableName = "achievements")
+//@PrimaryKey(autoGenerate = true)
+@Entity(tableName = "achievements", indices = {@Index(value = {"serverId"}, unique = true)})
 public class AchievementsSDB {
 
-    @PrimaryKey
+    @PrimaryKey(autoGenerate = true)
     @ColumnInfo(name = "id")
     @NonNull
     public Integer id;
@@ -20,6 +22,7 @@ public class AchievementsSDB {
     @SerializedName("ID")
     @Expose
     @ColumnInfo(name = "serverId")
+    @NonNull
     public Integer serverId;
 
     @SerializedName("dt")

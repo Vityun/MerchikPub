@@ -3,20 +3,23 @@ package ua.com.merchik.merchik.data.Database.Room;
 import androidx.annotation.NonNull;
 import androidx.room.ColumnInfo;
 import androidx.room.Entity;
+import androidx.room.Index;
 import androidx.room.PrimaryKey;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
-@Entity(tableName = "votes")
+@Entity(tableName = "votes", indices = {@Index(value = {"serverId"}, unique = true)})
 public class VoteSDB {
-    @PrimaryKey
+
+    @PrimaryKey(autoGenerate = true)
     @NonNull
     @ColumnInfo(name = "id")
     public Integer id;      // ВНИМАНИЕ. Это мой внутренний идентификатор
 
     @SerializedName("ID")
     @Expose
+    @NonNull
     @ColumnInfo(name = "serverId")
     public Integer serverId;        // Это идентификатор сервера
 
