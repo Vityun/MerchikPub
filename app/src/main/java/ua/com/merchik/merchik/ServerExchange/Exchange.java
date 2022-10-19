@@ -65,6 +65,7 @@ import ua.com.merchik.merchik.data.RetrofitResponse.photos.ImagesViewListImageRe
 import ua.com.merchik.merchik.data.RetrofitResponse.photos.PhotoInfoResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.photos.PhotoInfoResponseList;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.AchievementsResponse;
+import ua.com.merchik.merchik.data.RetrofitResponse.tables.ArticleResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.ChatResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.VoteResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.update.wpdata.WpDataUpdateResponse;
@@ -2266,5 +2267,50 @@ public class Exchange {
             // Мне нечего выгружать
             Globals.writeToMLOG("INFO", "sendVote", "have not votes to send");
         }
+    }
+
+
+
+    public void downloadArticleTable() {
+        StandartData data = new StandartData();
+        data.mod = "data_list";
+        data.act = "tovar_vendor_code_list";
+
+        Gson gson = new Gson();
+        String json = gson.toJson(data);
+        JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
+
+        retrofit2.Call<ArticleResponse> call = RetrofitBuilder.getRetrofitInterface().ARTICLE_DOWNLOAD(RetrofitBuilder.contentType, convertedObject);
+        call.enqueue(new Callback<ArticleResponse>() {
+            @Override
+            public void onResponse(Call<ArticleResponse> call, Response<ArticleResponse> response) {
+                Log.e("test", "test" + response);
+                try {
+                    Globals.writeToMLOG("INFO", "downloadArticleTable/onResponse", "response: " + response.body().list.size());
+                    SQL_DB.articleDao().insertAllCompletable(response.body().list)
+                            .subscribeOn(Schedulers.io())
+                            .subscribe(new DisposableCompletableObserver() {
+                                @Override
+                                public void onComplete() {
+                                    Globals.writeToMLOG("OK", "downloadArticleTable/onResponse/onComplete", "OK");
+                                }
+
+                                @Override
+                                public void onError(@io.reactivex.rxjava3.annotations.NonNull Throwable e) {
+                                    Globals.writeToMLOG("ERROR", "downloadArticleTable/onResponse/onError", "Throwable e: " + e);
+                                }
+                            });
+
+                }catch (Exception e){
+                    Globals.writeToMLOG("ERROR", "downloadArticleTable/onResponse", "Exception e: " + e);
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ArticleResponse> call, Throwable t) {
+                Log.e("test", "test" + t);
+                Globals.writeToMLOG("ERROR", "downloadArticleTable/onFailure", "Throwable t: " + t);
+            }
+        });
     }
 }

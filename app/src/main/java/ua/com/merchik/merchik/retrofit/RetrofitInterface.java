@@ -60,6 +60,7 @@ import ua.com.merchik.merchik.data.RetrofitResponse.photos.ImagesViewListImageRe
 import ua.com.merchik.merchik.data.RetrofitResponse.photos.PhotoInfoResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.AchievementsResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.AddressResponse;
+import ua.com.merchik.merchik.data.RetrofitResponse.tables.ArticleResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.ChatResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.CityResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.ContentResponse;
@@ -595,6 +596,12 @@ public interface RetrofitInterface {
             @Body JsonObject json);
 
     // -------------------------------------------------------
+
+    // Загрузка таблички оценок
+    @POST("mobile_app.php?")
+    Call<ArticleResponse> ARTICLE_DOWNLOAD(
+            @Header("ContentType") String content,
+            @Body JsonObject json);
 
     // Загрузка таблички оценок
     @POST("mobile_app.php?")
