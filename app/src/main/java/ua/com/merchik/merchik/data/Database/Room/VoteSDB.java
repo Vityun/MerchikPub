@@ -12,7 +12,7 @@ import com.google.gson.annotations.SerializedName;
 @Entity(tableName = "votes", indices = {@Index(value = {"serverId"}, unique = true)})
 public class VoteSDB {
 
-    @PrimaryKey(autoGenerate = true)
+    @PrimaryKey
     @NonNull
     @ColumnInfo(name = "id")
     public Integer id;      // ВНИМАНИЕ. Это мой внутренний идентификатор
