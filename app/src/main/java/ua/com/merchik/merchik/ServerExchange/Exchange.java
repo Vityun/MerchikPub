@@ -581,6 +581,7 @@ public class Exchange {
 
                 downloadAchievements();
                 downloadVoteTable();
+                downloadArticleTable();
 
             } else {
                 long time = (System.currentTimeMillis() - exchange) / 1000;
