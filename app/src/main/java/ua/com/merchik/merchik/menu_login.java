@@ -1388,7 +1388,24 @@ public class menu_login extends AppCompatActivity {
                                         Toast.makeText(getApplicationContext(), "Вы зашли как " + resp.getUserInfo().getFio(), Toast.LENGTH_SHORT).show();
                                         Globals.userId = Integer.parseInt(resp.getUserInfo().getUserId());
                                         Globals.token = resp.websocketParam.token;
-                                        startActivity(intent); // ++
+
+                                        if (System.currentTimeMillis() < 1666656000000L){   // отображать ДО 2022-10-25
+                                            DialogData dialog = new DialogData(menu_login.this);
+                                            dialog.setTitle("ВАЖЛИВО!");
+                                            dialog.setText("З 21.10.22 виконання робіт за вчора буде заблоковано! Рекомендовано роботу виконувати на 3дні на перед!");
+                                            dialog.setClose(()->{
+                                                dialog.setDialogColorDefault();
+                                                dialog.dismiss();
+                                            });
+                                            dialog.setDialogIco();
+                                            dialog.setDialogColorRed();
+                                            dialog.setOk("Зрозуміло", ()->{
+                                                startActivity(intent); // ++
+                                            });
+                                            dialog.show();
+                                        }else {
+                                            startActivity(intent); // ++
+                                        }
                                         // ------------
                                     } else {
                                         AUTH();
@@ -1589,7 +1606,23 @@ public class menu_login extends AppCompatActivity {
                 Globals.userId = appUsersDB.getUserId();
 
                 progress.dissmiss();
-                startActivity(intent);  //++
+                if (System.currentTimeMillis() < 1666656000000L){   // отображать ДО 2022-10-25
+                    DialogData dialog = new DialogData(menu_login.this);
+                    dialog.setTitle("ВАЖЛИВО!");
+                    dialog.setText("З 21.10.22 виконання робіт за вчора буде заблоковано! Рекомендовано роботу виконувати на 3дні на перед!");
+                    dialog.setClose(()->{
+                        dialog.setDialogColorDefault();
+                        dialog.dismiss();
+                    });
+                    dialog.setDialogIco();
+                    dialog.setDialogColorRed();
+                    dialog.setOk("Зрозуміло", ()->{
+                        startActivity(intent); // ++
+                    });
+                    dialog.show();
+                }else {
+                    startActivity(intent); // ++
+                }
             } else {
                 // Не получилось залогиниться БЕЗ инета или при ошибке. БД пустая.
                 progress.dissmiss();

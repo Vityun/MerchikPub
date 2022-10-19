@@ -197,7 +197,6 @@ public class DialogData {
 //        this.text.setMovementMethod(LinkMovementMethod.getInstance());
 
 
-
         this.text.setMovementMethod(ClickableMovementMethod.getInstance());
 //        this.text.setMovementMethod(ClickableMovementMethod.getInstance());
         this.text.setClickable(false);
@@ -843,15 +842,15 @@ public class DialogData {
             String res2 = editText2.getText().toString();
             String res = result;
 
-            if (res != null && res.length() > 0){
-                if (res.equals("9") && res2.length() <= 15){
+            if (res != null && res.length() > 0) {
+                if (res.equals("9") && res2.length() <= 15) {
                     Toast.makeText(context, "Внесите корректно Примечание!\nОно должено быть не короче 15 символов", Toast.LENGTH_SHORT).show();
-                }else {
+                } else {
                     result2 = res2;
                     listener.clicked();
                     dialog.dismiss();
                 }
-            }else {
+            } else {
                 Toast.makeText(context, "Вы не выбрали Ошибку!\nВыберите ошибку из списка выше", Toast.LENGTH_SHORT).show();
             }
         });
@@ -976,6 +975,18 @@ public class DialogData {
             drawable.setTint(context.getResources().getColor(R.color.red_error));
         }
     }
+
+    public void setDialogColorRed() {
+        drawable = context.getResources().getDrawable(R.drawable.shape_rounded_corner_red);
+        layoutDialog.setBackground(drawable);
+    }
+
+    public void setDialogColorDefault() {
+        drawable = context.getResources().getDrawable(R.drawable.shape_rounded_corner);
+        layoutDialog.setBackground(drawable);
+    }
+
+
 
 //    public void setDialogColorBack(){
 //        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {

@@ -132,7 +132,7 @@ public class OptionControlEKL<T> extends OptionControl {
         int userId = wpDataDB.getUser_id();
         String ptt = PTT;
         long dateFrom = Clock.getDatePeriodLong(documentDt * 1000, -1);
-        long dateTo = Clock.getDatePeriodLong(documentDt * 1000, 1);
+        long dateTo = Clock.getDatePeriodLong(documentDt * 1000, 3);
 
 
         if (addressSDB.tpId == 464 && !optionDB.getOptionControlId().equals("132629") && documentDt < 1682899200) { // 1682899200 == 01.05.2023 / 464 = АТБ
