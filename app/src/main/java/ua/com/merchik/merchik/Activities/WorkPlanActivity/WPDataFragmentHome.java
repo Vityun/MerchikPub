@@ -15,6 +15,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Date;
 
 import io.realm.RealmResults;
@@ -38,6 +39,9 @@ public class WPDataFragmentHome extends Fragment {
     private EditText searchView;
     private ImageButton filter;
 
+    private Date dateFrom;
+    private Date dateTo;
+
     public WPDataFragmentHome() {
         Log.d("test", "test");
     }
@@ -51,14 +55,20 @@ public class WPDataFragmentHome extends Fragment {
         searchView = v.findViewById(R.id.searchView);
         filter = v.findViewById(R.id.filter);
 
+        // Данные для фильтра даты
+        Calendar cal = Calendar.getInstance();
+        cal.setTimeInMillis(System.currentTimeMillis());
+        cal.set(Calendar.HOUR_OF_DAY, 0);
+        cal.set(Calendar.MINUTE, 0);
+        cal.set(Calendar.SECOND, 0);
+        cal.set(Calendar.MILLISECOND, 0);
+
+        dateFrom = cal.getTime();
+        dateTo = Clock.timeLongToDAte(Clock.getDatePeriodLong(cal.getTime().getTime(), +3) / 1000);
+
         workPlan = RealmManager.getAllWorkPlan();
-//
-//        Date dt1 = Clock.stringDateConvertToDate(Clock.today);
-//        Date dt2 = Clock.stringDateConvertToDate(Clock.today);
-//
-//        if (dt1 != null && dt2 != null) {
-//            workPlan = workPlan.where().between("dt", dt1, dt2).findAll();
-//        }
+//        workPlan = workPlan.where().between("dt", dateFrom, dateTo).sort("dt_start", Sort.ASCENDING, "addr_id", Sort.ASCENDING).findAll();
+
 
         if (workPlan == null || workPlan.size() == 0) {
             DialogData dialogData = new DialogData(v.getContext());
@@ -119,6 +129,10 @@ public class WPDataFragmentHome extends Fragment {
             try {
                 dialog.setTextFilter(searchView.getText().toString());
                 dialog.setClose(dialog::dismiss);
+
+//                dialog.dateFrom = Clock.getHumanTimeYYYYMMDD(dateFrom.getTime());
+//                dialog.dateTo = Clock.getHumanTimeYYYYMMDD(dateTo.getTime());
+
                 dialog.setCancel(() -> {
                     searchView.setText("");
                     setFilterIco(dialog);

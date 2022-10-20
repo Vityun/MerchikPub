@@ -508,7 +508,7 @@ public class RealmManager {
      */
     public static RealmResults<WpDataDB> getAllWorkPlan() {
         return INSTANCE.where(WpDataDB.class)
-                .sort("dt_start", Sort.ASCENDING)
+                .sort("dt_start", Sort.ASCENDING, "addr_id", Sort.ASCENDING)
                 .findAll();
     }
 
