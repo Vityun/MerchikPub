@@ -36,14 +36,14 @@ public class OptionControlPhotoBeforeStartWork<T> extends OptionControl {
     private void getDocumentVar() {
         if (document instanceof WpDataDB) {
             wpDataDB = (WpDataDB) document;
-            dateFrom = wpDataDB.getDt().getTime() - 86400000;
-            dateTo = wpDataDB.getDt().getTime() + 172800000;
+            dateFrom = wpDataDB.getDt().getTime() - 172800000;  // -2
+            dateTo = wpDataDB.getDt().getTime() + 259200000;    // +3
         }
     }
 
     private void executeOption() {
         try {
-            RealmResults<StackPhotoDB> stackPhotoDB = StackPhotoRealm.getPhoto(dateFrom, dateTo, wpDataDB.getClient_id(), wpDataDB.getAddr_id(), 14);
+            RealmResults<StackPhotoDB> stackPhotoDB = StackPhotoRealm.getPhoto(dateFrom, dateTo, wpDataDB.getCode_dad2(), 14);
             DVI = stackPhotoDB.where().sum("dvi");
 
             int min = 0;

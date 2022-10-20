@@ -29,8 +29,8 @@ public class OptionControlAchievements<T> extends OptionControl {
 
     private boolean signal = true;
 
-    private Integer sumOptionError;
-    private Integer minScore = 6;
+    private int sumOptionError;
+    private int minScore = 6;
     private int traineeSignal = 0;
 
     private StringBuilder optionMsg = new StringBuilder();
@@ -142,7 +142,7 @@ public class OptionControlAchievements<T> extends OptionControl {
                         item.note = new StringBuilder().append("есть утвержденное достижение ");
                     }
 
-                    if (item.error == 0) {
+                    if (item.error == null || item.error == 0) {
                         for (VoteSDB voteItem : voteSDBList) {
                             if (!item.serverId.equals(voteItem.serverId)) continue;
 
@@ -163,12 +163,15 @@ public class OptionControlAchievements<T> extends OptionControl {
                 }// end for
 
 
-                Integer sumError = achievementsSDBList.stream().map(table -> table.error).reduce(0, Integer::sum);
+                int sumError = 0;
+                try {
+                    sumError = achievementsSDBList.stream().map(table -> table.error).reduce(0, Integer::sum);
+                }catch (Exception ignored){}
                 if (sumError == achievementsSDBList.size()) {
                     sumOptionError = 1;
                 } else {
                     for (AchievementsSDB item : achievementsSDBList){
-                        if (item.error == 0){
+                        if (item.error == null || item.error == 0){
                             resultAchievements.add(item);
                         }
                     }

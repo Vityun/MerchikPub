@@ -209,11 +209,10 @@ public class StackPhotoRealm {
         return result;
     }
 
-    public static RealmResults<StackPhotoDB> getPhoto(long dtFrom, long dtTo, String clientId, int addrId, int photoType) {
+    public static RealmResults<StackPhotoDB> getPhoto(long dtFrom, long dtTo, long dad2, int photoType) {
         return INSTANCE.where(StackPhotoDB.class)
                 .between("create_time", dtFrom, dtTo)
-                .equalTo("client_id", clientId)
-                .equalTo("addr_id", addrId)
+                .equalTo("code_dad2", dad2)
                 .equalTo("photo_type", photoType)
                 .findAll();
     }

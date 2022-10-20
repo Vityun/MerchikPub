@@ -2125,12 +2125,12 @@ public class Exchange {
         data.mod = "images_achieve";
         data.act = "list";
 
-        StandartData.Filter filter = new StandartData.Filter();
-        filter.date_from = "2022-09-01";
-        filter.date_to = "2022-10-19";
+//        StandartData.Filter filter = new StandartData.Filter();
+//        filter.date_from = "2022-09-01";
+//        filter.date_to = "2022-10-19";
 //        filter.confirm = "";
 //        filter.is_view = "";
-        data.filter = filter;
+//        data.filter = filter;
 
         Gson gson = new Gson();
         String json = gson.toJson(data);
