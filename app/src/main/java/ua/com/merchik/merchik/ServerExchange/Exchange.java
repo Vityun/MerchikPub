@@ -1165,7 +1165,7 @@ public class Exchange {
 
     public void uploadTARComments(TARCommentsDB tarCommentsDB) {
 
-        Log.e("uploadTARComments", "enter here");
+        Globals.writeToMLOG("INFO", "uploadTARComments", "Start uploadTARComments");
 
         List<TARCommentsDB> list = new ArrayList<>();
         if (tarCommentsDB != null) {
@@ -1174,6 +1174,7 @@ public class Exchange {
             list = TARCommentsRealm.getTARCommentToUpload();
         }
 
+        Globals.writeToMLOG("INFO", "uploadTARComments", "list comments to upload(" + (list != null ? list.size() + "): " : "null"));
 
         if (list != null && list.size() > 0) {
 
@@ -1205,6 +1206,8 @@ public class Exchange {
             JsonObject convertedObject = new Gson().fromJson(new Gson().toJson(data), JsonObject.class);
             Log.e("uploadTARComments", "convertedObject: " + convertedObject);
 
+            Globals.writeToMLOG("INFO", "uploadTARComments", "convertedObject: " + convertedObject);
+
 
             retrofit2.Call<TARCommentsServerData> call = RetrofitBuilder.getRetrofitInterface().UPLOAD_TAR_COMMENT(RetrofitBuilder.contentType, convertedObject);
             List<TARCommentsDB> finalList = list;
@@ -1216,6 +1219,8 @@ public class Exchange {
 
                     JsonObject convertedObject = new Gson().fromJson(new Gson().toJson(response.body()), JsonObject.class);
                     Log.e("uploadTARComments", "response.body().json: " + convertedObject);
+
+                    Globals.writeToMLOG("INFO", "uploadTARComments/onResponse", "convertedObject: " + convertedObject);
 
                     try {
                         List<TARCommentsDB> saveToDb = new ArrayList<>();
@@ -1267,20 +1272,24 @@ public class Exchange {
 
                                         // Сохранение новых
                                         List<TARCommentsDB> result = realm.copyToRealmOrUpdate(saveToDb);
+                                        Globals.writeToMLOG("INFO", "uploadTARComments/onResponse", "result list comments to seve(" + (result != null ? result.size() + "): " : "null"));
                                     });
                                 }
                             }
                         }
                     } catch (Exception e) {
                         Log.e("uploadTARComments", "Exception e: " + e);
+                        Globals.writeToMLOG("ERROR", "uploadTARComments/onResponse", "Exception e: " + e);
                     }
 
-
+                    Globals.writeToMLOG("INFO", "uploadTARComments/onResponse", "End uploadTARComments");
                 }
 
                 @Override
                 public void onFailure(retrofit2.Call<TARCommentsServerData> call, Throwable t) {
                     Log.e("uploadTARComments", "t:" + t);
+                    Globals.writeToMLOG("ERROR", "uploadTARComments/onFailure", "Throwable t: " + t);
+                    Globals.writeToMLOG("INFO", "uploadTARComments/onFailure", "End uploadTARComments");
                 }
             });
 
