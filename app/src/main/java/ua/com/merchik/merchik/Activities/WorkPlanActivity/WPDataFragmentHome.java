@@ -93,7 +93,8 @@ public class WPDataFragmentHome extends Fragment {
         recyclerView.setAdapter(adapter);
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext(), LinearLayoutManager.VERTICAL, false));
 
-        searchView.setText(Clock.today);
+//        searchView.setText(Clock.today);
+        searchView.setText("");
         searchView.clearFocus();
 
         adapter.getFilter().filter(searchView.getText());
@@ -119,6 +120,7 @@ public class WPDataFragmentHome extends Fragment {
         });
 
         setFilter();
+        adapter.notifyDataSetChanged();
     }
 
 
@@ -127,11 +129,11 @@ public class WPDataFragmentHome extends Fragment {
             DialogFilter dialog = new DialogFilter(getContext(), Globals.SourceAct.WP_DATA);
 
             try {
+                dialog.setDates(dateFrom, dateTo);
+                dialog.setRecycler();
+
                 dialog.setTextFilter(searchView.getText().toString());
                 dialog.setClose(dialog::dismiss);
-
-//                dialog.dateFrom = Clock.getHumanTimeYYYYMMDD(dateFrom.getTime());
-//                dialog.dateTo = Clock.getHumanTimeYYYYMMDD(dateTo.getTime());
 
                 dialog.setCancel(() -> {
                     searchView.setText("");
@@ -141,32 +143,7 @@ public class WPDataFragmentHome extends Fragment {
                     adapter.notifyDataSetChanged();
                 });
                 dialog.setApply(() -> {
-                    RealmResults<WpDataDB> wp = RealmManager.getAllWorkPlan();
-                    if (dialog.clientId != null) {
-                        wp = wp.where().equalTo("client_id", dialog.clientId).findAll();
-                    }
-
-                    if (dialog.addressId != null) {
-                        wp = wp.where().equalTo("addr_id", dialog.addressId).findAll();
-                    }
-
-                    if (dialog.dateFrom != null && dialog.dateTo != null) {
-
-                        Date dt1 = Clock.stringDateConvertToDate(dialog.dateFrom);
-                        Date dt2 = Clock.stringDateConvertToDate(dialog.dateTo);
-
-                        if (dt1 != null && dt2 != null) {
-                            wp = wp.where().between("dt", dt1, dt2).findAll();
-                        }
-                    }
-
-
-                    adapter.updateData(wp);
-                    if (dialog.textFilter != null && !dialog.textFilter.equals("")) {
-                        searchView.setText(dialog.textFilter);
-                    }
-                    adapter.notifyDataSetChanged();
-                    setFilterIco(dialog);
+                    applyFilter(dialog);
                 });
             } catch (Exception e) {
                 Globals.writeToMLOG("ERROR", "WPDataFragmentHome/setFilter/createDialog", "Exception e: " + e + "\n\n" + Arrays.toString(e.getStackTrace()));
@@ -184,9 +161,42 @@ public class WPDataFragmentHome extends Fragment {
             } catch (Exception e) {
                 Globals.writeToMLOG("ERROR", "WPDataFragmentHome/setFilter/setOnClickListener", "Exception e: " + e + "\n\n" + Arrays.toString(e.getStackTrace()));
             }
+
+
+            applyFilter(dialog);
         } catch (Exception e) {
             Globals.writeToMLOG("ERROR", "WPDataFragmentHome/setFilter", "Exception e: " + e + "\n\n" + Arrays.toString(e.getStackTrace()));
         }
+    }
+
+    private void applyFilter(DialogFilter dialog){
+        RealmResults<WpDataDB> wp = RealmManager.getAllWorkPlan();
+        if (dialog.clientId != null) {
+            wp = wp.where().equalTo("client_id", dialog.clientId).findAll();
+        }
+
+        if (dialog.addressId != null) {
+            wp = wp.where().equalTo("addr_id", dialog.addressId).findAll();
+        }
+
+        if (dialog.dateFrom != null && dialog.dateTo != null) {
+
+            Date dt1 = Clock.stringDateConvertToDate(dialog.dateFrom);
+            Date dt2 = Clock.stringDateConvertToDate(dialog.dateTo);
+
+            if (dt1 != null && dt2 != null) {
+                wp = wp.where().between("dt", dt1, dt2).findAll();
+            }
+        }
+
+
+        adapter.updateData(wp);
+        if (dialog.textFilter != null && !dialog.textFilter.equals("")) {
+            searchView.setText(dialog.textFilter);
+        }
+        adapter.notifyDataSetChanged();
+        recyclerView.scheduleLayoutAnimation();
+        setFilterIco(dialog);
     }
 
     /**

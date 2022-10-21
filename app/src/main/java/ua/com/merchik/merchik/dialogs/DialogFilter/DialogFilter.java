@@ -17,6 +17,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
@@ -40,6 +41,9 @@ public class DialogFilter {
     public Integer  addressId = null;
     public String   dateFrom = null;
     public String   dateTo = null;
+
+    private Date dateFromF = null;
+    private Date dateToF = null;
     //----------------------------------
 
     private final TextView title;
@@ -65,7 +69,7 @@ public class DialogFilter {
 
         close = dialog.findViewById(R.id.imageButtonClose);
 
-        setRecycler();
+//        setRecycler();
     }
 
     public void show() {
@@ -152,23 +156,48 @@ public class DialogFilter {
         recycler.setLayoutManager(new LinearLayoutManager(dialog.getContext(), LinearLayoutManager.VERTICAL, false));
     }
 
+    public void setDates(Date dtF, Date dtTo){
+        this.dateFromF = dtF;
+        this.dateToF = dtTo;
+
+        SimpleDateFormat simpleDateFormatDateFrom = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+        this.dateFrom = simpleDateFormatDateFrom.format(dtF);
+
+        SimpleDateFormat simpleDateFormatDateTo = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+        this.dateTo = simpleDateFormatDateTo.format(dtTo);
+    }
 
     private DialogAdapter setAdapter() {
         List<ViewHolderTypeList> data = new ArrayList<>();
-        data.add(createChoiceDateBlockRV()); // Блок с выбором дат.
+        data.add(createChoiceDateBlockRV(dateFromF, dateToF)); // Блок с выбором дат.
         data.add(createChoiceCustomerBlockRV()); // Блок с выбором Клиента.
         data.add(createChoiceAddressBlockRV()); // Блок с выбором Адреса.
         return new DialogAdapter(data);
     }
 
-    private ViewHolderTypeList createChoiceDateBlockRV() {
+    private ViewHolderTypeList createChoiceDateBlockRV(Date dateFromF, Date dateToF) {
         ViewHolderTypeList res = new ViewHolderTypeList();
 
         ViewHolderTypeList.ChoiceDateLayoutData block = new ViewHolderTypeList.ChoiceDateLayoutData();
         block.dataTextTitle = "Дата с: ";
         block.dataTextTitle2 = "Дата по: ";
-        block.dateFrom = Calendar.getInstance().getTime();
-        block.dateTo = Calendar.getInstance().getTime();
+        if (dateFromF != null){
+            block.dateFrom = dateFromF;
+            block.state = true;
+        }else {
+            block.dateFrom = Calendar.getInstance().getTime();
+            block.state = false;
+        }
+
+        if (dateToF != null){
+            block.dateTo = dateToF;
+            block.state = true;
+        }else {
+            block.dateTo = Calendar.getInstance().getTime();
+            block.state = false;
+        }
+
+
 
         SimpleDateFormat simpleDateFormatDateFrom = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
         dateFrom = simpleDateFormatDateFrom.format(block.dateFrom);

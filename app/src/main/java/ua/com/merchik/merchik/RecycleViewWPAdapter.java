@@ -248,10 +248,14 @@ public class RecycleViewWPAdapter extends RecyclerView.Adapter<RecycleViewWPAdap
     }
 
     public void updateData(List<WpDataDB> wp) {
+
+        this.WP.clear();
+        this.workPlanList.clear();
+        this.workPlanList2.clear();
+
         this.WP = RealmManager.INSTANCE.copyFromRealm(wp);
         this.workPlanList = RealmManager.INSTANCE.copyFromRealm(wp);
         this.workPlanList2 = RealmManager.INSTANCE.copyFromRealm(wp);
-//        notifyDataSetChanged();
     }
 
 
@@ -309,7 +313,9 @@ public class RecycleViewWPAdapter extends RecyclerView.Adapter<RecycleViewWPAdap
 
             @Override
             protected void publishResults(CharSequence constraint, FilterResults results) {
-                WP = (List<WpDataDB>) results.values;
+                if (constraint.length() != 0){
+                    WP = (List<WpDataDB>) results.values;
+                }
                 notifyDataSetChanged();
             }
         };

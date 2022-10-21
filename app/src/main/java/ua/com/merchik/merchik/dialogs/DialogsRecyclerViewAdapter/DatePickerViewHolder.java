@@ -52,9 +52,6 @@ public class DatePickerViewHolder extends RecyclerView.ViewHolder {
             block.click.onSuccess("" + text2.getText());
         });
 
-//        dateFrom.setHint(block.dateFrom.toString());
-//        dateTo.setHint(block.dateTo.toString());
-
         SimpleDateFormat simpleDateFormatDateFrom = new SimpleDateFormat("dd-MM-yyyy", Locale.getDefault());
         String formattedDateFrom = simpleDateFormatDateFrom.format(block.dateFrom);
 
@@ -63,6 +60,15 @@ public class DatePickerViewHolder extends RecyclerView.ViewHolder {
 
         dateFromEditText.setHint(formattedDateFrom);
         dateToEditText.setHint(formattedDateTo);
+
+        if (block.dateFrom != null && block.state){
+            dateFromEditText.setText(formattedDateFrom);
+        }
+
+        if (block.dateTo != null && block.state){
+            dateToEditText.setText(formattedDateTo);
+        }
+
 
         dateFromEditText.setOnClickListener(view -> setDatePicker(dateFromEditText, new Clicks.click() {
             @Override

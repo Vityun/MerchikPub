@@ -139,6 +139,7 @@ public class ViewHolderTypeList {
         public String resultDateTo;
         public T resultData;
         public ClickData click;
+        public boolean state;
     }
 
     public static class TablePremiumLayoutData<T> {
