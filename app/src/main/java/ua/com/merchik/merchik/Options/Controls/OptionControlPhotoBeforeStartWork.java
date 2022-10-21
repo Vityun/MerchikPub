@@ -37,7 +37,7 @@ public class OptionControlPhotoBeforeStartWork<T> extends OptionControl {
         if (document instanceof WpDataDB) {
             wpDataDB = (WpDataDB) document;
             dateFrom = wpDataDB.getDt().getTime() - 172800000;  // -2
-            dateTo = wpDataDB.getDt().getTime() + 259200000;    // +3
+            dateTo = wpDataDB.getDt().getTime() + 345600000;    // +4
         }
     }
 
