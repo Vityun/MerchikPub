@@ -57,6 +57,7 @@ import ua.com.merchik.merchik.Options.Controls.OptionControlCheckingReasonOutOfS
 import ua.com.merchik.merchik.Options.Controls.OptionControlEKL;
 import ua.com.merchik.merchik.Options.Controls.OptionControlEndAnotherWork;
 import ua.com.merchik.merchik.Options.Controls.OptionControlFacePlan;
+import ua.com.merchik.merchik.Options.Controls.OptionControlPhoto;
 import ua.com.merchik.merchik.Options.Controls.OptionControlPhotoBeforeStartWork;
 import ua.com.merchik.merchik.Options.Controls.OptionControlPromotion;
 import ua.com.merchik.merchik.Options.Controls.OptionControlReclamationAnswer;
@@ -124,7 +125,7 @@ public class Options {
 
     private Integer[] describedOptions = new Integer[]{132624, 76815, 157241, 157243, 84006, 156928,
             151594, 80977, 135330, 133381, 135329, 138518, 151139, 132623, 133382, 137797, 135809,
-            135328, 135327, 157275, 138341, 590};
+            135328, 135327, 157275, 138341, 590, 84932, 134583};
 
     /*Сюда записываются Опции которые не прошли проверку, при особенном переданном MOD-e. Сделано
     для того что б потом можно было посмотреть название опций которые не прошли проверку и, возможно,
@@ -205,14 +206,17 @@ public class Options {
                     optionControlPromotion.showOptionMassage();
                     break;
 
+                case 134583:
                 case 84932: // Проверка наличия ФотоОтчётов (id мне дали из 1С) (тип 0)
-                    checkPhotoReport(context, dataDB, optionsDB, type, mode);
+//                    checkPhotoReport(context, dataDB, optionsDB, type, mode);
+                    OptionControlPhoto<?> optionControlPhoto = new OptionControlPhoto<>(context, dataDB, optionsDB, newOptionType, mode);
+                    optionControlPhoto.showOptionMassage();
                     break;
-
-                case 134583:    // ПРоверка наличия фотоотчётов с привязкой к координатам
-                    // Нужно дописать
-                    checkPhotoReportWithMP(context, dataDB, optionsDB, type, mode);
-                    break;
+//
+//                case 134583:    // ПРоверка наличия фотоотчётов с привязкой к координатам
+//                    // Нужно дописать
+//                    checkPhotoReportWithMP(context, dataDB, optionsDB, type, mode);
+//                    break;
 
                 case 1470:  // Проверка наличия Фото остатков товара (тип 4)
                     checkPhoto(dataDB, optionsDB, "4");
@@ -597,6 +601,13 @@ public class Options {
 //        try {
         Log.e("NNK", "F/optControl/optionId: " + optionId);
         switch (optionId) {
+            // Контроль фотоотчётов
+            case 134583:
+            case 84932: // Проверка наличия ФотоОтчётов (id мне дали из 1С) (тип 0)
+                OptionControlPhoto<?> optionControlPhoto = new OptionControlPhoto<>(context, dataDB, option, type, mode);
+                optionControlPhoto.showOptionMassage();
+                return optionControlPhoto.isBlockOption() ? 1 : 0;
+
             case 590:
                 OptionControlAchievements<?> optionControlAchievements = new OptionControlAchievements<>(context, dataDB, option, type, mode);
                 optionControlAchievements.showOptionMassage();
@@ -813,10 +824,7 @@ public class Options {
                 break;
 
 
-            // Контроль фотоотчётов
-            case 84932: // Проверка наличия ФотоОтчётов (id мне дали из 1С) (тип 0)
-                return checkPhotoReport(context, dataDB, option, type, mode) ? 1 : 0;
-//                    break;
+
 
             // Доп. Материалы
             case 138340:
