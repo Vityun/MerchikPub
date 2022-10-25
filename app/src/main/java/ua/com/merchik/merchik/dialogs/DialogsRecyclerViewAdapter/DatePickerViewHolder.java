@@ -63,10 +63,18 @@ public class DatePickerViewHolder extends RecyclerView.ViewHolder {
 
         if (block.dateFrom != null && block.state){
             dateFromEditText.setText(formattedDateFrom);
+
+            SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+            String yyyy = simpleDateFormat.format(block.dateFrom);
+            block.resultDateFrom = yyyy;
         }
 
         if (block.dateTo != null && block.state){
             dateToEditText.setText(formattedDateTo);
+
+            SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+            String yyyy = simpleDateFormat.format(block.dateTo);
+            block.resultDateTo = yyyy;
         }
 
 
