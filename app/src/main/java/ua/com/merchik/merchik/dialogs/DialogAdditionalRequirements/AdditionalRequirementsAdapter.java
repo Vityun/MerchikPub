@@ -15,6 +15,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.List;
 
+import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.data.RealmModels.AdditionalRequirementsDB;
@@ -76,7 +77,8 @@ public class AdditionalRequirementsAdapter extends RecyclerView.Adapter<Addition
 
                 text.setText(additionalText);
 
-                AdditionalRequirementsMarkDB additionalRequirementsMarkDB = AdditionalRequirementsMarkRealm.getMark(elementDB.getId(), String.valueOf(Globals.userId));
+                long dateFrom = Clock.getDatePeriodLong(System.currentTimeMillis(), -15) / 1000;
+                AdditionalRequirementsMarkDB additionalRequirementsMarkDB = AdditionalRequirementsMarkRealm.getMark(dateFrom, elementDB.getId(), String.valueOf(Globals.userId));
 
                 signal.setColorFilter(context.getResources().getColor(R.color.shadow));
 

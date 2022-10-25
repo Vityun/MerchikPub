@@ -18,6 +18,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.List;
 
+import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.ServerExchange.Exchange;
@@ -57,7 +58,8 @@ public class AdditionalMaterialsAdapter extends RecyclerView.Adapter<AdditionalM
             try {
                 text.setText(item.txt);
 
-                AdditionalRequirementsMarkDB additionalRequirementsMarkDB = AdditionalRequirementsMarkRealm.getMark(item.id, String.valueOf(Globals.userId));
+                long dateFrom = Clock.getDatePeriodLong(System.currentTimeMillis(), -15) / 1000;
+                AdditionalRequirementsMarkDB additionalRequirementsMarkDB = AdditionalRequirementsMarkRealm.getMark(dateFrom, item.id, String.valueOf(Globals.userId));
 
                 signal.setColorFilter(context.getResources().getColor(R.color.shadow));
 

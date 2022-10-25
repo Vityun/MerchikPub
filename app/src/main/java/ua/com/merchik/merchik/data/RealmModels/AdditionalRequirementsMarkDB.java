@@ -13,7 +13,7 @@ public class AdditionalRequirementsMarkDB extends RealmObject {
     private String id;
     @SerializedName("dt")
     @Expose
-    private Long dt;
+    private Long dt;    // секунды
     @SerializedName("item_id")
     @Expose
     private Integer itemId;
