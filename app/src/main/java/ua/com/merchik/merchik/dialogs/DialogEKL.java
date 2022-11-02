@@ -291,16 +291,13 @@ public class DialogEKL {
     }
 
     private void showData() {
-
         setAddSotr();   // Установка иконочки добавления/редактирования сотрудника
 
         int id = wp.getAddr_id();
 //        List<UsersSDB> data = SQL_DB.usersDao().getPTT(id);
         List<UserSDBJoin> data = SQL_DB.usersDao().getAllUsersLJoinTovGrps(id);
 
-
         AdditionalRequirementsDB additionalRequirementsDB = AdditionalRequirementsRealm.getADByClient(String.valueOf(wp.getAddr_id()), wp.getClient_id());
-
 
         Log.e("DialogEKL", "showData/data: " + data);
         Log.e("DialogEKL", "showData/data.size: " + data.size());

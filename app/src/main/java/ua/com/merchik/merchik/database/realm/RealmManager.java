@@ -1459,6 +1459,12 @@ public class RealmManager {
                 .findAll();
     }
 
+    public static MenuItemFromWebDB getSiteMenuItem(Integer id) {
+        return INSTANCE.where(MenuItemFromWebDB.class)
+                .equalTo("id", id)
+                .findFirst();
+    }
+
 
     public static SiteObjectsDB getLesson(int id) {
         return INSTANCE.where(SiteObjectsDB.class)

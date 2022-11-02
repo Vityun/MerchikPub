@@ -23,10 +23,13 @@ import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.RecycleViewWPAdapter;
+import ua.com.merchik.merchik.data.Database.Room.UsersSDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.dialogs.DialogFilter.DialogFilter;
+
+import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
 public class WPDataFragmentHome extends Fragment {
 
@@ -70,6 +73,16 @@ public class WPDataFragmentHome extends Fragment {
 //        workPlan = workPlan.where().between("dt", dateFrom, dateTo).sort("dt_start", Sort.ASCENDING, "addr_id", Sort.ASCENDING).findAll();
 
 
+        UsersSDB usersSDB = SQL_DB.usersDao().getById(Globals.userId);
+        if (System.currentTimeMillis()/1000 < 1668124799){
+            showAlertMsg();
+        }else if (usersSDB != null && usersSDB.reportCount <= 10){
+            showAlertMsg();
+        }else {
+            // nothing to do
+        }
+
+
         if (workPlan == null || workPlan.size() == 0) {
             DialogData dialogData = new DialogData(v.getContext());
             dialogData.setTitle("План работ пуст.");
@@ -87,6 +100,13 @@ public class WPDataFragmentHome extends Fragment {
         return v;
     }//------------------------------- /ON CREATE --------------------------------------------------
 
+    private void showAlertMsg(){
+        DialogData dialogData = new DialogData(getContext());
+        dialogData.setTitle("УВАГА!");
+        dialogData.setText("Крім поточних робіт, РЕКОМЕНДУЄМО сьогодні виконати роботи, які заплановані НА ЗАВТРА та післязавтра.");
+        dialogData.setClose(dialogData::dismiss);
+        dialogData.show();
+    }
 
     private void visualizeWpData() {
         adapter = new RecycleViewWPAdapter(getContext(), workPlan);

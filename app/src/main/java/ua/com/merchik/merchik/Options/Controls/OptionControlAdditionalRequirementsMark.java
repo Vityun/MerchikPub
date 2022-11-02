@@ -6,6 +6,7 @@ import android.os.Build;
 import androidx.annotation.RequiresApi;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
 
 import java.lang.reflect.Type;
@@ -27,6 +28,8 @@ import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsMarkRealm;
 import ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsRealm;
 import ua.com.merchik.merchik.database.realm.tables.CustomerRealm;
+
+import static ua.com.merchik.merchik.database.realm.RealmManager.INSTANCE;
 
 public class OptionControlAdditionalRequirementsMark<T> extends OptionControl {
     public int OPTION_CONTROL_ADD_COMMENT_ID = 138341;
@@ -82,11 +85,36 @@ public class OptionControlAdditionalRequirementsMark<T> extends OptionControl {
             RealmResults<AdditionalRequirementsDB> realmResults = AdditionalRequirementsRealm.getData3(document);
             List<AdditionalRequirementsDB> data = RealmManager.INSTANCE.copyFromRealm(realmResults);
 
+//            // DEBUG DATA-------------
+            try {
+                for (AdditionalRequirementsDB item : data) {
+                    JsonObject object = new Gson().fromJson(new Gson().toJson(item), JsonObject.class);
+                    Globals.writeToMLOG("INFO", "OptionControlAdditionalRequirementsMark/createTZN", "stringBuilderDEBUG: " + object);
+                }
+                Globals.writeToMLOG("INFO", "OptionControlAdditionalRequirementsMark/createTZN", "data.size: " + data.size());
+            } catch (Exception e) {
+                Globals.writeToMLOG("INFO", "OptionControlAdditionalRequirementsMark/createTZN", "stringBuilderDEBUG/Exception e: " + e);
+            }
+//            // -----------------------
+
             // Проверяем, есть ли вообще данные
             if (data != null && data.size() > 0) {
 
                 // Получаем Оценки этих Доп. требований.
                 RealmResults<AdditionalRequirementsMarkDB> marks = AdditionalRequirementsMarkRealm.getAdditionalRequirementsMarks(dateFrom, dateTo, wpDataDB.getUser_id(), "1", data);
+                List<AdditionalRequirementsMarkDB> testMark = INSTANCE.copyFromRealm(marks);
+
+//                // DEBUG DATA-------------
+                try {
+                    Globals.writeToMLOG("INFO", "OptionControlAdditionalRequirementsMark/createTZN.AdditionalRequirementsMarkDB", "marks.size: " + testMark.size());
+                    for (AdditionalRequirementsMarkDB item : testMark) {
+                        JsonObject object = new Gson().fromJson(new Gson().toJson(item), JsonObject.class);
+                        Globals.writeToMLOG("INFO", "OptionControlAdditionalRequirementsMark/createTZN.AdditionalRequirementsMarkDB", "stringBuilderDEBUG: " + object);
+                    }
+                } catch (Exception e) {
+                    Globals.writeToMLOG("INFO", "OptionControlAdditionalRequirementsMark/createTZN.AdditionalRequirementsMarkDB", "stringBuilderDEBUG/Exception e: " + e);
+                }
+//                // -----------------------
 
                 // Херачим "Виртуальную" таблицу, как в 1С
                 Gson gson = new Gson();
@@ -154,6 +182,18 @@ public class OptionControlAdditionalRequirementsMark<T> extends OptionControl {
                 // Подсчёт суммы отклонения от среднего
                 deviationFromTheMeanSum = virtualTable.stream().map(table -> table.deviationFromTheMean).reduce(0.0d, Double::sum);
             }
+
+//            // DEBUG DATA-------------
+            try {
+                Globals.writeToMLOG("INFO", "OptionControlAdditionalRequirementsMark/createTZN.virtualTable", "virtualTable.size: " + virtualTable.size());
+                for (VirtualAdditionalRequirementsDB item : virtualTable) {
+                    JsonObject object = new Gson().fromJson(new Gson().toJson(item), JsonObject.class);
+                    Globals.writeToMLOG("INFO", "OptionControlAdditionalRequirementsMark/createTZN.virtualTable", "stringBuilderDEBUG: " + object);
+                }
+            } catch (Exception e) {
+                Globals.writeToMLOG("INFO", "OptionControlAdditionalRequirementsMark/createTZN.virtualTable", "stringBuilderDEBUG/Exception e: " + e);
+            }
+//            // -----------------------
 
 
             // Установка сигналов.
@@ -233,7 +273,6 @@ public class OptionControlAdditionalRequirementsMark<T> extends OptionControl {
                 }
             }
 //            setIsBlockOption(signal);
-
 
 
         } catch (Exception e) {

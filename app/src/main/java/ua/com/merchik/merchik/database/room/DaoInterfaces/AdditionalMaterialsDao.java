@@ -32,8 +32,8 @@ public interface AdditionalMaterialsDao {
             "ad.score_sum AS score_sum, ad.txt AS txt, ama.id AS amaId, ama.file_id AS amaFileId, " +
             "ama.addr_id AS amaAddrId, ama.author_id AS amaAuthorId, ama.dt_update AS amaDtUpdate FROM additional_materials AS ad " +
             "INNER JOIN additional_materials_address AS ama ON ad.id = ama.file_id " +
-            "WHERE client = :clientId AND approve = :approve AND state = :state")
-    List<AdditionalMaterialsJOINAdditionalMaterialsAddressSDB> getAllForOptionTEST(String clientId, String approve, String state);
+            "WHERE client = :clientId AND amaAddrId = :addrId AND approve = :approve AND state = :state")
+    List<AdditionalMaterialsJOINAdditionalMaterialsAddressSDB> getAllForOptionTEST(String clientId, int addrId, String approve, String state);
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     void insertAll(List<AdditionalMaterialsSDB> data);

@@ -320,10 +320,11 @@ public class DetailedReportActivity extends toolbar_menus {
 
     private void setTab() {
         List<TovarDB> dataTovar = RealmManager.getTovarListFromReportPrepareByDad2(wpDataDB.getCode_dad2());
-        List<TovarDB> dataTovarDownloadList = RealmManager.getTovarListPhotoToDownload(dataTovar, "small");
-
-        TablesLoadingUnloading tablesLoadingUnloading = new TablesLoadingUnloading();
-        tablesLoadingUnloading.getTovarImg(dataTovar, "small");
+        if (dataTovar != null){
+            List<TovarDB> dataTovarDownloadList = RealmManager.getTovarListPhotoToDownload(dataTovar, "small");
+            TablesLoadingUnloading tablesLoadingUnloading = new TablesLoadingUnloading();
+            tablesLoadingUnloading.getTovarImg(dataTovar, "small");
+        }
 
         adapter = new DetailedReportTab(this, getSupportFragmentManager(), tabLayout.getTabCount(), list, rowWP);
         viewPager.setAdapter(adapter);

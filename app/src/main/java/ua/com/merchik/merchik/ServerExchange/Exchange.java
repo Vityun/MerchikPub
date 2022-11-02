@@ -1524,8 +1524,8 @@ public class Exchange {
         data.mod = "additional_requirements";
         data.act = "set_score";
 
-        List<AdditionalRequirementsMarkDB> list = AdditionalRequirementsMarkRealm.getToUpload();
-//        AdditionalRequirementsMarkDB markDB = list.get(0);  // Костыли
+        List<AdditionalRequirementsMarkDB> realmList = AdditionalRequirementsMarkRealm.getToUpload();
+        List<AdditionalRequirementsMarkDB> list = RealmManager.INSTANCE.copyFromRealm(realmList);
         List<MarkData> markLIST = new ArrayList<>();
 
         if (list == null) {
@@ -1950,8 +1950,8 @@ public class Exchange {
         StandartData data = new StandartData();
         data.mod = "additional_materials";
         data.act = "group_list";
-        data.dt_change_from = "";
-        data.dt_change_to = "";
+//        data.dt_change_from = "";
+//        data.dt_change_to = "";
 
         Gson gson = new Gson();
         String json = gson.toJson(data);
@@ -1962,6 +1962,10 @@ public class Exchange {
             @Override
             public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
                 Log.e("test", "test" + response);
+
+
+                /*{"state":true,"list":[{"ID":"5","file_id":"9393","group_id":"346","author_id":"19653","dt_update":null},
+                    {"ID":"6","file_id":"9393","group_id":"857","author_id":"19653","dt_update":null}]}*/
             }
 
             @Override

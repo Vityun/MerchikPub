@@ -287,6 +287,21 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                 intent.putExtra("SamplePhoto", true);
                 startActivity(intent);
                 break;
+
+            case 164:
+                MenuItemFromWebDB menuItem164 = RealmManager.getSiteMenuItem(164);
+                String menuItem164format = menuItem164.getUrl();
+                Intent menuItem164browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(menuItem164format));
+                this.startActivity(menuItem164browserIntent);
+                break;
+
+            case 165:
+                MenuItemFromWebDB menuItem165 = RealmManager.getSiteMenuItem(165);
+                String menuItem165format = menuItem165.getUrl();
+                Intent menuItem165browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(menuItem165format));
+                this.startActivity(menuItem165browserIntent);
+                break;
+
         }
 
 
@@ -486,7 +501,7 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                         exchange.startExchange();
 
                         exchange.uploadTARComments(null);
-                    }catch (Exception e){
+                    } catch (Exception e) {
                         Log.d("test", "test" + e);
                     }
 
@@ -567,14 +582,14 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
         }
 
         // ... Настройки
-        if (id == R.id.action_settings){
+        if (id == R.id.action_settings) {
             DialogData dialog = new DialogData(this);
             dialog.setTitle("Настройки");
             dialog.setText("Отправить служебный файл?");
-            dialog.setOk("Отправить", ()->{
+            dialog.setOk("Отправить", () -> {
                 Intent emailIntent = new Intent(Intent.ACTION_SEND);
                 emailIntent.setType("text/plain");
-                emailIntent.putExtra(Intent.EXTRA_EMAIL, new String[] {"support@merchik.com.ua"});
+                emailIntent.putExtra(Intent.EXTRA_EMAIL, new String[]{"support@merchik.com.ua"});
                 emailIntent.putExtra(Intent.EXTRA_SUBJECT, "Приложение. M_LOG.");
                 emailIntent.putExtra(Intent.EXTRA_TEXT, "Отправка отладочного файла");
                 File root = MyApplication.getAppContext().getExternalFilesDir(Environment.DIRECTORY_NOTIFICATIONS);
@@ -720,7 +735,7 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                 Log.e("КРОНЧИК", "login: " + login);
                 Log.e("КРОНЧИК", "password: " + password);
 
-            server.sessionCheckAndLogin(toolbar_menus.this, login, password);   // Проверка активности сессии и логин, если сессия протухла
+                server.sessionCheckAndLogin(toolbar_menus.this, login, password);   // Проверка активности сессии и логин, если сессия протухла
                 internetStatus = server.internetStatus();       // Обновление статуса интеренета
 //            pingServer(1);                            // ОБМЕН ЦВЕТ
                 RealmManager.stackPhotoDeletePhoto();           // Удаление фото < 2 дня
@@ -966,7 +981,7 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
         // Запрос
         String mod = "images_prepare";
 //        String act = "upload_image";
-        String act              = "upload_photo";
+        String act = "upload_photo";
 
         String client_id = "";
         String addr_id = "";

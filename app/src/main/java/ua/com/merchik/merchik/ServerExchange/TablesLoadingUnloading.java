@@ -1113,6 +1113,8 @@ public class TablesLoadingUnloading {
         String mod = "data_list";
         String act = "tovar_list";
 
+        ProgressDialog tovarProgressDialog = ProgressDialog.show(context, "Обмен данными с сервером.", "Загрузка фотографий Товаров.", true, true);
+
         ProgressDialog pg = null;
         if (context != null) {
             pg = ProgressDialog.show(context, "Обмен данными с сервером.", "Обновление таблицы: " + "Товаров", true, true);
@@ -1167,6 +1169,11 @@ public class TablesLoadingUnloading {
                                 @Override
                                 public void onSuccess(String data) {
                                     Log.e("test", "String data: " + data);
+
+                                    if (tovarProgressDialog != null && tovarProgressDialog.isShowing()){
+                                        tovarProgressDialog.setMessage(data);
+                                    }
+
 //                                    DialogData dialog = new DialogData(context);
 //                                    dialog.setTitle("Загрузка Товаров");
 //                                    dialog.setText(data);
@@ -1176,6 +1183,11 @@ public class TablesLoadingUnloading {
                                 @Override
                                 public void onFailure(String error) {
                                     Log.e("test", "String error: " + error);
+
+                                    if (tovarProgressDialog != null && tovarProgressDialog.isShowing()){
+                                        tovarProgressDialog.setMessage(error);
+                                    }
+
 //                                    DialogData dialog = new DialogData(context);
 //                                    dialog.setTitle("Загрузка Товаров");
 //                                    dialog.setText(error);

@@ -61,6 +61,13 @@ public class AdditionalMaterialsAdapter extends RecyclerView.Adapter<AdditionalM
                 long dateFrom = Clock.getDatePeriodLong(System.currentTimeMillis(), -15) / 1000;
                 AdditionalRequirementsMarkDB additionalRequirementsMarkDB = AdditionalRequirementsMarkRealm.getMark(dateFrom, item.id, String.valueOf(Globals.userId));
 
+//                Gson gson = new Gson();
+//                String json = gson.toJson(additionalRequirementsMarkDB);
+//                JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
+//
+//                Log.e("AdRequirementsMark", "convertedObject: " + convertedObject);
+
+
                 signal.setColorFilter(context.getResources().getColor(R.color.shadow));
 
                 if (additionalRequirementsMarkDB != null) {

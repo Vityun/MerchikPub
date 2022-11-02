@@ -80,7 +80,7 @@ public class OptionControlAdditionalMaterialsMark<T> extends OptionControl {
             long dateTo = Clock.getDatePeriodLong(dateDocumentLong, +4) / 1000;     // Дата документа +3 дня
 
             // Получаем Доп.материалы.
-            List<AdditionalMaterialsJOINAdditionalMaterialsAddressSDB> data = SQL_DB.additionalMaterialsDao().getAllForOptionTEST(optionDB.getClientId(), "1", "0");
+            List<AdditionalMaterialsJOINAdditionalMaterialsAddressSDB> data = SQL_DB.additionalMaterialsDao().getAllForOptionTEST(optionDB.getClientId(), Integer.parseInt(optionDB.getAddrId()), "1", "0");
 
             // Проверяем, есть ли вообще данные
             if (data != null && data.size() > 0) {
