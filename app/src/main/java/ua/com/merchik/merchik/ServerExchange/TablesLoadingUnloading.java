@@ -151,7 +151,8 @@ public class TablesLoadingUnloading {
 
         try {
             Exchange.sendWpData2();
-            downloadWPData(context);
+            updateWpData();
+//            downloadWPData(context);
             downloadOptions(context);
             Log.e("uploadRP", "start");
             uploadRP(new ExchangeInterface.ExchangeResponseInterface() {

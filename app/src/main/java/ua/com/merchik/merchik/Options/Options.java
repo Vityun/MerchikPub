@@ -1220,6 +1220,7 @@ public class Options {
                     realm.insertOrUpdate(wpDataDB);
                 });
 
+                // Это жосткие костыли
                 Exchange exchange = new Exchange();
                 exchange.sendWpDataToServer(new Click() {
                     @Override
@@ -1362,6 +1363,22 @@ public class Options {
                         wpDataDB.client_work_duration = (endTime - wpDataDB.getClient_start_dt());
                         realm.insertOrUpdate(wpDataDB);
                     });
+
+                    // Это жосткие костыли
+                    Exchange exchange = new Exchange();
+                    exchange.sendWpDataToServer(new Click() {
+                        @Override
+                        public <T> void onSuccess(T data) {
+                            String msg = (String) data;
+                            Globals.writeToMLOG("INFO", "DetailedReportButtons.class.pressStartWork.onSuccess", "msg: " + msg);
+                        }
+
+                        @Override
+                        public void onFailure(String error) {
+                            Globals.writeToMLOG("INFO", "DetailedReportButtons.class.pressStartWork.onFailure", "error: " + error);
+                        }
+                    });
+
 //                    globals.writeToMLOG(Clock.getHumanTime() + "_INFO.DetailedReportButtons.class.pressEndWork: " + "Вы закончили работу в: " + endTime + " / отчёт: " + wpDataDB.getDoc_num_otchet() + "\n");
                     Globals.writeToMLOG("INFO", "_INFO.DetailedReportButtons.class.pressEndWork", "Вы закончили работу в: " + endTime + " / отчёт: " + wpDataDB.getDoc_num_otchet());
                     Toast.makeText(context, "Вы окончили работу в: " + Clock.getHumanTimeOpt(endTime * 1000) + "\n\nНе забудьте нажать 'Провести', что б система проверила текущий документ и начислила Вам премиальные", Toast.LENGTH_SHORT).show();

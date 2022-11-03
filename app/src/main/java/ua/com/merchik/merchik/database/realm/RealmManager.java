@@ -180,6 +180,9 @@ public class RealmManager {
             Log.e("WP_DATA_UPDATE", "Количество данных что пришло с сервера: " + serverData.size());
             Log.e("WP_DATA_UPDATE", "Количество данных в приложении ДО Ц1: " + wpDataDBList1.size());
 
+            Globals.writeToMLOG("INFO", "setWpDataAuto", "Количество данных что пришло с сервера: " + serverData.size());
+            Globals.writeToMLOG("INFO", "setWpDataAuto", "Количество данных в приложении ДО Ц1: " + wpDataDBList1.size());
+
             // 1 цикл. Прогоняем данные которые пришли с сервераи надо обновить или добавить по ВПИ
             // По скольку с ID не одноначная ситуация (это не надёжный параметр который может внезапно меняться)
             // мне стоит для однозначного сравнения использовать 4 поля: 'code_dad2', 'user_id', 'client_id', 'isp'
@@ -194,11 +197,26 @@ public class RealmManager {
                 if (row != null) {   // Если запись в бд есть
                     if (wp.getDt_update() >= row.getDt_update()) {    // Если на сервере данные более новые - обновляю(перезаписываю)
                         Log.e("setWpDataAuto", "Данные с сервера с большим VPI");
-                        Log.e("WP_DATA_UPDATE", "MUST UPDATE (" + wp.getDt_update() + "/" + row.getDt_update() + ")");
+                        Log.e("WP_DATA_UPDATE", "MUST UPDATE (" + wp.getDt_update() + "/" + row.getDt_update() + ")" + wp.getCode_dad2());
+
+                        Globals.writeToMLOG("INFO", "setWpDataAuto", "Данные с сервера с большим VPI");
+                        Globals.writeToMLOG("INFO", "setWpDataAuto", "MUST UPDATE (" + wp.getDt_update() + "/" + row.getDt_update() + ")");
+
+                        if (wp.getVisit_start_dt() == 0 && wp.getClient_start_dt() == 0 && row.getVisit_start_dt() > 0 && row.getClient_start_dt() > 0){
+                            wp.setVisit_start_dt(row.getVisit_start_dt());
+                            wp.setClient_start_dt(row.getClient_start_dt());
+                        }else if (wp.getVisit_end_dt() == 0 && wp.getClient_end_dt() == 0 && row.getVisit_end_dt() > 0 && row.getClient_end_dt() > 0){
+                            wp.setVisit_end_dt(row.getVisit_end_dt());
+                            wp.setClient_end_dt(row.getClient_end_dt());
+                        }
+
                         INSTANCE.copyToRealmOrUpdate(wp);
                     } else {
                         // ТУТ ДЕЛАЮ ВЫГРУЗКУ НОВЫХ ДАННЫХ. ИЛИ СОБИРАЮ ДАННЫЕ ДЛЯ ТОГО ЧТО Б ПОТОМ ВЫГРУЗИТЬ.
                         Log.e("setWpDataAuto", "Эти данные на моей стороне более новые. Надо выгружать");
+
+                        Globals.writeToMLOG("INFO", "setWpDataAuto", "Данные у пользователя новее. (" + wp.getDt_update() + "/" + row.getDt_update() + ")" + wp.getCode_dad2());
+
                         sendOnServer.add(row);
                         Log.e("WP_DATA_UPDATE", "Данные у пользователя новее. (" + wp.getDt_update() + "/" + row.getDt_update() + ")"); // Не нужно ли тут начать выгрузку этих самых данных?
                     }
@@ -206,6 +224,8 @@ public class RealmManager {
                     Log.e("WP_DATA_UPDATE", "Новые данные. Запись в БД.");
                     // Если записи в БД нет - просто записываем её туда.
                     Log.e("setWpDataAuto", "Такой записи в БД не было. Записываю к себе");
+                    Globals.writeToMLOG("INFO", "setWpDataAuto", "Такой записи в БД не было. Записываю к себе" + wp.getCode_dad2());
+
                     INSTANCE.copyToRealmOrUpdate(wp);
                 }
             }
@@ -243,7 +263,6 @@ public class RealmManager {
         }
         return sendOnServer;
     }
-
 
     /**
      * Запись в Реалм Типов Фото
