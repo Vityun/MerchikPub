@@ -54,38 +54,14 @@ public class WPDataActivity extends toolbar_menus {
         setContentView(R.layout.drawler_wp);
         setSupportActionBar((Toolbar) findViewById(R.id.my_toolbar));
         getSupportActionBar().setDisplayShowTitleEnabled(false);
-//        activity_title = (TextView) findViewById(R.id.activity_title);
-//        activity_title.setText("План работ");
 
         filter = findViewById(R.id.filter);
         tabLayout = findViewById(R.id.tabLayout);
         viewPager = findViewById(R.id.viewPager);
-
-//        activity_title.setBackgroundColor(Color.parseColor("#B1B1B1"));
         this.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN); //Убирает фокус с полей ввода
-
-/*        workPlan = RealmManager.getAllWorkPlan();
-        if (workPlan == null || workPlan.size() == 0){
-//            globals.alertDialogMsg(this, "План работ пуст.\nВыполните Синхронизацию таблиц для получения Плана работ.");
-
-            DialogData dialogData = new DialogData(this);
-            dialogData.setTitle("План работ пуст.");
-            dialogData.setText("Выполните Синхронизацию таблиц для получения Плана работ.");
-            dialogData.setClose(dialogData::dismiss);
-            dialogData.show();
-        }else {
-            try {
-                visualizeWpData();
-            }catch (Exception e) {
-                globals.alertDialogMsg(this, "Возникла ошибка. Сообщите о ней своему администратору. Ошибка1: " + e);
-            }
-        }*/
-
-
 
         // Установка закладок
         setTabs();
-
 
         textLesson = 816;
         videoLesson = 817;
@@ -132,9 +108,6 @@ public class WPDataActivity extends toolbar_menus {
             public void onTextChanged(CharSequence s, int start, int before, int count) {
             }
         });
-
-
-        setFilter();
     }
 
 
@@ -163,16 +136,4 @@ public class WPDataActivity extends toolbar_menus {
             }
         });
     }
-
-    // 998
-    private void setFilter(){
-        filter.setOnClickListener((v)->{
-            // TODO ВСТАВИТЬ ДИАЛОГ С ФИЛЬТРОМ
-        });
-    }
-
-
-
-
-
 }
