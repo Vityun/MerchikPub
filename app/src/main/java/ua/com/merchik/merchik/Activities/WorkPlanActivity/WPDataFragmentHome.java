@@ -9,6 +9,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.TextView;
 
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -40,7 +41,10 @@ public class WPDataFragmentHome extends Fragment {
     private RecycleViewWPAdapter adapter;
 
     private EditText searchView;
+    private TextView title;
     private ImageButton filter;
+
+    private StringBuilder titleMsg;
 
     private Date dateFrom;
     private Date dateTo;
@@ -57,6 +61,8 @@ public class WPDataFragmentHome extends Fragment {
         recyclerView = v.findViewById(R.id.RecyclerViewWorkPlan);
         searchView = v.findViewById(R.id.searchView);
         filter = v.findViewById(R.id.filter);
+        title = v.findViewById(R.id.title);
+        title.setOnClickListener(view -> title.setVisibility(View.GONE));
 
         // Данные для фильтра даты
         Calendar cal = Calendar.getInstance();
@@ -72,6 +78,7 @@ public class WPDataFragmentHome extends Fragment {
         workPlan = RealmManager.getAllWorkPlan();
 //        workPlan = workPlan.where().between("dt", dateFrom, dateTo).sort("dt_start", Sort.ASCENDING, "addr_id", Sort.ASCENDING).findAll();
 
+//        title.setText(createTitleMsg());
 
         UsersSDB usersSDB = SQL_DB.usersDao().getById(Globals.userId);
         if (System.currentTimeMillis()/1000 < 1668124799){
@@ -100,6 +107,26 @@ public class WPDataFragmentHome extends Fragment {
         return v;
     }//------------------------------- /ON CREATE --------------------------------------------------
 
+    private StringBuilder createTitleMsg(RealmResults<WpDataDB> wp){
+        StringBuilder res = new StringBuilder();
+
+        if (wp != null && wp.size() > 0){
+            int wpStatus1 = wp.where().equalTo("status", 1).findAll().size();
+            int last = wp.size() - wpStatus1;
+
+            int sum = wp.sum("cash_ispolnitel").intValue();
+
+            res.append("Відображено ").append(wp.size()).append(" робіт. ")
+                    .append(" Сума робіт: ~").append(sum).append("грн").append("\n")
+                    .append("Проведених: ").append(wpStatus1).append(" робіт, інших: ").append(last).append(" робіт. ");
+
+        }else {
+            res.append("План робіт пустий.");
+        }
+
+        return res;
+    }
+
     private void showAlertMsg(){
         DialogData dialogData = new DialogData(getContext());
         dialogData.setTitle("УВАГА!");
@@ -110,6 +137,7 @@ public class WPDataFragmentHome extends Fragment {
 
     private void visualizeWpData() {
         adapter = new RecycleViewWPAdapter(getContext(), workPlan);
+        title.setText(createTitleMsg(workPlan));
         recyclerView.setAdapter(adapter);
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext(), LinearLayoutManager.VERTICAL, false));
 
@@ -159,6 +187,7 @@ public class WPDataFragmentHome extends Fragment {
                     searchView.setText("");
                     setFilterIco(dialog);
                     adapter.updateData(workPlan);
+                    title.setText(createTitleMsg(workPlan));
                     recyclerView.scheduleLayoutAnimation();
                     adapter.notifyDataSetChanged();
                 });
@@ -211,6 +240,7 @@ public class WPDataFragmentHome extends Fragment {
 
 
         adapter.updateData(wp);
+        title.setText(createTitleMsg(wp));
         if (dialog.textFilter != null && !dialog.textFilter.equals("")) {
             searchView.setText(dialog.textFilter);
         }

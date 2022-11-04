@@ -237,8 +237,6 @@ public class RecycleViewWPAdapter extends RecyclerView.Adapter<RecycleViewWPAdap
         }
     }
 
-
-
     /*Определяем конструктор*/
     public RecycleViewWPAdapter(Context context, RealmResults<WpDataDB> wp) {
         this.mContext = context;
