@@ -69,6 +69,7 @@ public class PremiumActivity extends toolbar_menus {
         setRecycler();
     }
 
+    /*Судя по всему это "низ" */
     private void setTextHintVisualise() {
         text.setOnClickListener(view -> Toast.makeText(view.getContext(), text.getText(), Toast.LENGTH_LONG).show());
     }

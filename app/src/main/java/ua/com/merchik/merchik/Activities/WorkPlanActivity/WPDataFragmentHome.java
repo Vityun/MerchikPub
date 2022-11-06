@@ -2,6 +2,8 @@ package ua.com.merchik.merchik.Activities.WorkPlanActivity;
 
 import android.os.Bundle;
 import android.text.Editable;
+import android.text.Html;
+import android.text.SpannableStringBuilder;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -9,6 +11,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.fragment.app.Fragment;
@@ -36,6 +39,7 @@ public class WPDataFragmentHome extends Fragment {
 
     private Globals globals = new Globals();
     private RealmResults<WpDataDB> workPlan;
+    private enum TitleMode {SHORT, FULL}
 
     private RecyclerView recyclerView;
     private RecycleViewWPAdapter adapter;
@@ -43,6 +47,7 @@ public class WPDataFragmentHome extends Fragment {
     private EditText searchView;
     private TextView title;
     private ImageButton filter;
+    private ImageView titleClose;
 
     private StringBuilder titleMsg;
 
@@ -62,7 +67,14 @@ public class WPDataFragmentHome extends Fragment {
         searchView = v.findViewById(R.id.searchView);
         filter = v.findViewById(R.id.filter);
         title = v.findViewById(R.id.title);
+        title.setTextColor(-10987432);  // Как у закладки "План работ"
+//        title.setTextColor(getResources().getColor(R.color.colorDescription));
         title.setOnClickListener(view -> title.setVisibility(View.GONE));
+        titleClose = v.findViewById(R.id.titleClose);
+        titleClose.setOnClickListener(view -> {
+            title.setVisibility(View.GONE);
+            titleClose.setVisibility(View.GONE);
+        });
 
         // Данные для фильтра даты
         Calendar cal = Calendar.getInstance();
@@ -77,8 +89,6 @@ public class WPDataFragmentHome extends Fragment {
 
         workPlan = RealmManager.getAllWorkPlan();
 //        workPlan = workPlan.where().between("dt", dateFrom, dateTo).sort("dt_start", Sort.ASCENDING, "addr_id", Sort.ASCENDING).findAll();
-
-//        title.setText(createTitleMsg());
 
         UsersSDB usersSDB = SQL_DB.usersDao().getById(Globals.userId);
         if (System.currentTimeMillis()/1000 < 1668124799){
@@ -107,19 +117,33 @@ public class WPDataFragmentHome extends Fragment {
         return v;
     }//------------------------------- /ON CREATE --------------------------------------------------
 
-    private StringBuilder createTitleMsg(RealmResults<WpDataDB> wp){
-        StringBuilder res = new StringBuilder();
+    private SpannableStringBuilder createTitleMsg(RealmResults<WpDataDB> wp, TitleMode mode){
+        SpannableStringBuilder res = new SpannableStringBuilder();
 
         if (wp != null && wp.size() > 0){
-            int wpStatus1 = wp.where().equalTo("status", 1).findAll().size();
-            int last = wp.size() - wpStatus1;
+            // Запланированные работы
+            int wpSum = wp.sum("cash_ispolnitel").intValue();
 
-            int sum = wp.sum("cash_ispolnitel").intValue();
+            // Выполненные работы
+            RealmResults<WpDataDB> wpStatus = wp.where().equalTo("status", 1).findAll();
+            int wpStatus1Size = wpStatus.size();    // Количество проведённых отчётов
+            int wpStatus1Sum = wpStatus.sum("cash_ispolnitel").intValue();  // Сумма полученная за проведенные отчёты
+            int percentWpStatus1 = (wpStatus1Size * 100) / wp.size(); // Процент выполненных работ
 
-            res.append("Відображено ").append(wp.size()).append(" робіт. ")
-                    .append(" Сума робіт: ~").append(sum).append("грн").append("\n")
-                    .append("Проведених: ").append(wpStatus1).append(" робіт, інших: ").append(last).append(" робіт. ");
+            // Не Віполненные
+            RealmResults<WpDataDB> wpStatus0 = wp.where().equalTo("status", 0).findAll();
+            int wpStatus0Size = wpStatus0.size();
+            int wpStatus0Sum = wpStatus0.sum("cash_ispolnitel").intValue();
+            int percentWpStatus0 = (wpStatus0Size * 100) / wp.size();
 
+            if (mode.equals(TitleMode.FULL)){
+                res.append(Html.fromHtml("<b>За період: </b> з ")).append(Clock.getHumanTimeYYYYMMDD(wp.get(0).getDt().getTime()/1000)).append(" по ").append(Clock.getHumanTimeYYYYMMDD(wp.get(wp.size()-1).getDt().getTime()/1000)).append("\n\n");
+                res.append(Html.fromHtml("<b>Заплановано робіт (Пр): </b>")).append(""+wp.size()).append(" (100%),").append(" на суму ").append(""+wpSum).append(" грн.").append("\n\n");
+                res.append(Html.fromHtml("<b>Виконано робіт (Вр): </b>")).append(""+wpStatus1Size).append(" (").append(""+percentWpStatus1).append("%), на суму ").append(""+wpStatus1Sum).append(" грн.").append("\n\n");
+                res.append(Html.fromHtml("<b>Не виконано робіт (Нр): </b>")).append(""+wpStatus0Size).append(" (").append(""+percentWpStatus0).append("%), на суму ").append(""+wpStatus0Sum).append(" грн.");
+            }else if (mode.equals(TitleMode.SHORT)){
+                res.append("Пр: ").append(""+wp.size()).append(" (").append(""+wpSum).append("гр) / ").append("Вр: ").append(""+wpStatus1Size).append(" (").append(""+wpStatus1Sum).append("гр) / ").append("Нр: ").append(""+wpStatus0Size).append(" (").append(""+wpStatus0Sum).append("гр)");
+            }
         }else {
             res.append("План робіт пустий.");
         }
@@ -137,7 +161,14 @@ public class WPDataFragmentHome extends Fragment {
 
     private void visualizeWpData() {
         adapter = new RecycleViewWPAdapter(getContext(), workPlan);
-        title.setText(createTitleMsg(workPlan));
+        title.setText(createTitleMsg(workPlan, TitleMode.SHORT));
+        title.setOnClickListener(view -> {
+            DialogData dialogData = new DialogData(getContext());
+            dialogData.setTitle("ІНФО");
+            dialogData.setText(createTitleMsg(workPlan, TitleMode.FULL));
+            dialogData.setClose(dialogData::dismiss);
+            dialogData.show();
+        });
         recyclerView.setAdapter(adapter);
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext(), LinearLayoutManager.VERTICAL, false));
 
@@ -187,7 +218,14 @@ public class WPDataFragmentHome extends Fragment {
                     searchView.setText("");
                     setFilterIco(dialog);
                     adapter.updateData(workPlan);
-                    title.setText(createTitleMsg(workPlan));
+                    title.setText(createTitleMsg(workPlan, TitleMode.SHORT));
+                    title.setOnClickListener(view -> {
+                        DialogData dialogData = new DialogData(getContext());
+                        dialogData.setTitle("ІНФО");
+                        dialogData.setText(createTitleMsg(workPlan, TitleMode.FULL));
+                        dialogData.setClose(dialogData::dismiss);
+                        dialogData.show();
+                    });
                     recyclerView.scheduleLayoutAnimation();
                     adapter.notifyDataSetChanged();
                 });
@@ -240,7 +278,16 @@ public class WPDataFragmentHome extends Fragment {
 
 
         adapter.updateData(wp);
-        title.setText(createTitleMsg(wp));
+
+        title.setText(createTitleMsg(wp, TitleMode.SHORT));
+        RealmResults<WpDataDB> finalWp = wp;
+        title.setOnClickListener(view -> {
+            DialogData dialogData = new DialogData(getContext());
+            dialogData.setTitle("ІНФО");
+            dialogData.setText(createTitleMsg(finalWp, TitleMode.FULL));
+            dialogData.setClose(dialogData::dismiss);
+            dialogData.show();
+        });
         if (dialog.textFilter != null && !dialog.textFilter.equals("")) {
             searchView.setText(dialog.textFilter);
         }
