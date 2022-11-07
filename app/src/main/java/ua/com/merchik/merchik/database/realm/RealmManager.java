@@ -358,14 +358,6 @@ public class RealmManager {
         INSTANCE.beginTransaction();
         INSTANCE.delete(ReportPrepareDB.class);
         INSTANCE.copyToRealmOrUpdate(reportPrepare);
-
-//        int count = 0;
-//        for (ReportPrepareDB item : reportPrepare){
-//            JsonObject convertedObject = new Gson().fromJson(new Gson().toJson(item), JsonObject.class);
-//            Log.e("REALM_DB_UPDATE", "ReportPrepareDB: item("+count+"): " + convertedObject);
-//            count++;
-//        }
-
         INSTANCE.commitTransaction();
         Log.e("REALM_DB_UPDATE", "REPORT_E");
         return true;

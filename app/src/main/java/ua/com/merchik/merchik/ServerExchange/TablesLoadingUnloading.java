@@ -1116,10 +1116,10 @@ public class TablesLoadingUnloading {
         String mod = "data_list";
         String act = "tovar_list";
 
-        ProgressDialog tovarProgressDialog = ProgressDialog.show(context, "Обмен данными с сервером.", "Загрузка фотографий Товаров.", true, true);
-
+        ProgressDialog tovarProgressDialog = null;
         ProgressDialog pg = null;
         if (context != null) {
+            tovarProgressDialog = ProgressDialog.show(context, "Обмен данными с сервером.", "Загрузка фотографий Товаров.", true, true);
             pg = ProgressDialog.show(context, "Обмен данными с сервером.", "Обновление таблицы: " + "Товаров", true, true);
         }
 
@@ -1131,90 +1131,78 @@ public class TablesLoadingUnloading {
         }
 
         ProgressDialog finalPg = pg;
+        ProgressDialog finalTovarProgressDialog = tovarProgressDialog;
         call.enqueue(new retrofit2.Callback<TovarTableResponse>() {
             @Override
             public void onResponse(retrofit2.Call<TovarTableResponse> call, retrofit2.Response<TovarTableResponse> response) {
-                if (response.isSuccessful() && response.body() != null) {
-                    Log.e("TAG_TABLE", "RESPONSETovarTable: " + response.body());
-                    if (response.body().getState()) {
-                        List<TovarDB> list = response.body().getList();
+                try {
+                    if (response.isSuccessful() && response.body() != null) {
+                        Log.e("TAG_TABLE", "RESPONSETovarTable: " + response.body());
+                        if (response.body().getState()) {
+                            List<TovarDB> list = response.body().getList();
 
 
-                        try {
+                            try {
 //                            JsonObject convertedObject = new Gson().fromJson(new Gson().toJson(response.body()), JsonObject.class);
 //                            globals.writeToMLOG(Clock.getHumanTime() + "_INFO.TablesLU.class.downloadTovarTable.ответ от сервера: " + convertedObject + "\n");
-                            try {
-                                globals.writeToMLOG(Clock.getHumanTime() + "_INFO.TablesLU.class.downloadTovarTable.размер ответа: " + list.size() + "\n");
+                                try {
+                                    globals.writeToMLOG(Clock.getHumanTime() + "_INFO.TablesLU.class.downloadTovarTable.размер ответа: " + list.size() + "\n");
+                                } catch (Exception e) {
+                                    globals.writeToMLOG(Clock.getHumanTime() + "_INFO.TablesLU.class.downloadTovarTable.ответ от сервера.ERROR1: " + e + "\n");
+                                }
                             } catch (Exception e) {
-                                globals.writeToMLOG(Clock.getHumanTime() + "_INFO.TablesLU.class.downloadTovarTable.ответ от сервера.ERROR1: " + e + "\n");
+                                globals.writeToMLOG(Clock.getHumanTime() + "_INFO.TablesLU.class.downloadTovarTable.ответ от сервера.ERROR: " + e + "\n");
                             }
-                        } catch (Exception e) {
-                            globals.writeToMLOG(Clock.getHumanTime() + "_INFO.TablesLU.class.downloadTovarTable.ответ от сервера.ERROR: " + e + "\n");
-                        }
 
-                        if (list != null) {
-                            Log.e("SERVER_REALM_DB_UPDATE", "===================================.TovarTable.SIZE: " + list.size());
-                        } else {
-                            Log.e("SERVER_REALM_DB_UPDATE", "===================================.TovarTable.SIZE: NuLL");
-                        }
+                            if (list != null) {
+                                Log.e("SERVER_REALM_DB_UPDATE", "===================================.TovarTable.SIZE: " + list.size());
+                            } else {
+                                Log.e("SERVER_REALM_DB_UPDATE", "===================================.TovarTable.SIZE: NuLL");
+                            }
 
 
-                        if (RealmManager.setTovar(list)) {
-
-//                            getTovarImg(list, "small");
-//
-//                            DialogData dialog = new DialogData(context);
-//                            dialog.setTitle("Отчёт. Товары");
-//                            dialog.setText("Загружено: " + list.size() + " товаров. \nСинхронизация Таблици Товары прошла успешно.\n\n\nНачинаю загрузку фотографий Товаров.. \n(при первой синхронизации и большом количествее Товаров это может занять много времени)");
-//                            dialog.show();
-
-                            PhotoDownload.getPhotoURLFromServer(list, new Clicks.clickStatusMsg() {
-                                @Override
-                                public void onSuccess(String data) {
-                                    Log.e("test", "String data: " + data);
-
-                                    if (tovarProgressDialog != null && tovarProgressDialog.isShowing()){
-                                        tovarProgressDialog.setMessage(data);
+                            if (RealmManager.setTovar(list)) {
+                                PhotoDownload.getPhotoURLFromServer(list, new Clicks.clickStatusMsg() {
+                                    @Override
+                                    public void onSuccess(String data) {
+                                        Log.e("test", "String data: " + data);
+                                        if (finalTovarProgressDialog != null && finalTovarProgressDialog.isShowing()){
+                                            finalTovarProgressDialog.setMessage(data);
+                                        }
                                     }
 
-//                                    DialogData dialog = new DialogData(context);
-//                                    dialog.setTitle("Загрузка Товаров");
-//                                    dialog.setText(data);
-//                                    dialog.show();
-                                }
-
-                                @Override
-                                public void onFailure(String error) {
-                                    Log.e("test", "String error: " + error);
-
-                                    if (tovarProgressDialog != null && tovarProgressDialog.isShowing()){
-                                        tovarProgressDialog.setMessage(error);
+                                    @Override
+                                    public void onFailure(String error) {
+                                        Log.e("test", "String error: " + error);
+                                        if (finalTovarProgressDialog != null && finalTovarProgressDialog.isShowing()){
+                                            finalTovarProgressDialog.setMessage(error);
+                                        }
                                     }
+                                });
 
-//                                    DialogData dialog = new DialogData(context);
-//                                    dialog.setTitle("Загрузка Товаров");
-//                                    dialog.setText(error);
-//                                    dialog.show();
-                                }
-                            });
+                                if (finalPg != null)
+                                    if (finalPg.isShowing())
+                                        finalPg.dismiss();
+                            } else {
+                                if (finalPg != null)
+                                    if (finalPg.isShowing())
+                                        finalPg.dismiss();
 
-                            if (finalPg != null)
-                                if (finalPg.isShowing())
-                                    finalPg.dismiss();
-                        } else {
-                            if (finalPg != null)
-                                if (finalPg.isShowing())
-                                    finalPg.dismiss();
-
+                            }
                         }
+                    } else {
+                        if (finalPg != null)
+                            if (finalPg.isShowing())
+                                finalPg.dismiss();
+
                     }
-                } else {
+                    readyTovarTable = true;
+                }catch (Exception e){
+                    Globals.writeToMLOG("ERROR", "downloadTovarTable/onResponse/Exception", "Exception: " + e);
                     if (finalPg != null)
                         if (finalPg.isShowing())
                             finalPg.dismiss();
-
                 }
-                readyTovarTable = true;
             }
 
             @Override

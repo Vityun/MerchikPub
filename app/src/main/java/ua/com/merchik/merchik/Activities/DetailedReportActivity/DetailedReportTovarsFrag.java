@@ -42,6 +42,7 @@ import ua.com.merchik.merchik.data.RetrofitResponse.ReportPrepareServer;
 import ua.com.merchik.merchik.data.TestJsonUpload.StandartData;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsRealm;
+import ua.com.merchik.merchik.database.realm.tables.ReportPrepareRealm;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
 
 @SuppressLint("ValidFragment")
@@ -228,20 +229,21 @@ public class DetailedReportTovarsFrag extends Fragment {
                 Toast.makeText(mContext, "Список товаров по ППА пуст.", Toast.LENGTH_SHORT).show();
 
                 if (updateTov && codeDad2 != 0){
-                    downloadDetailedReportTovarsData(new Clicks.clickStatusMsg() {
-                        @Override
-                        public void onSuccess(String data) {
-                            Toast.makeText(mContext, data, Toast.LENGTH_SHORT).show();
-                            addRecycleView(getTovList());
-                            updateTov = false;
-                        }
-
-                        @Override
-                        public void onFailure(String error) {
-                            Toast.makeText(mContext, error, Toast.LENGTH_SHORT).show();
-                            updateTov = false;
-                        }
-                    });
+                    Log.d("test", "tovars is empty");
+//                    downloadDetailedReportTovarsData(new Clicks.clickStatusMsg() {
+//                        @Override
+//                        public void onSuccess(String data) {
+//                            Toast.makeText(mContext, data, Toast.LENGTH_SHORT).show();
+//                            addRecycleView(getTovList());
+//                            updateTov = false;
+//                        }
+//
+//                        @Override
+//                        public void onFailure(String error) {
+//                            Toast.makeText(mContext, error, Toast.LENGTH_SHORT).show();
+//                            updateTov = false;
+//                        }
+//                    });
                 }
 
             }
@@ -282,7 +284,7 @@ public class DetailedReportTovarsFrag extends Fragment {
                         if (response.body() != null){
                             if (response.body().getState()){
                                 if (response.body().getList() != null && response.body().getList().size() > 0){
-                                    RealmManager.setReportPrepare(response.body().getList());
+                                    ReportPrepareRealm.setAll(response.body().getList());
                                     click.onSuccess("Товары успешно обновлены!");
                                 }else {
                                     click.onFailure("Список Товаров пуст. Обратитесь к своему руководителю.");

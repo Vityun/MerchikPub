@@ -8,7 +8,6 @@ import android.widget.Toast;
 
 import androidx.appcompat.widget.PopupMenu;
 
-import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 
 import java.lang.reflect.Field;
@@ -248,20 +247,20 @@ public class Translate {
         Log.e("TRANSLATES_DEBUG", "---internalName: " + internalName);
         Log.e("TRANSLATES_DEBUG", "---Globals.langId: " + Globals.langId);
 
-        if (Globals.translatesList != null){
-            for (TranslatesSDB item : Globals.translatesList) {
-
-                Gson gson = new Gson();
-                String json = gson.toJson(item);
-                JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
-
-                Log.e("TRANSLATES_DEBUG", "TranslatesSDB: " + convertedObject);
-
-                if (item.internalName.equals(internalName) && item.langId.equals(String.valueOf(Globals.langId))) {
-                    return item;
-                }
-            }
-        }
+//        if (Globals.translatesList != null){
+//            for (TranslatesSDB item : Globals.translatesList) {
+//
+//                Gson gson = new Gson();
+//                String json = gson.toJson(item);
+//                JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
+//
+//                Log.e("TRANSLATES_DEBUG", "TranslatesSDB: " + convertedObject);
+//
+//                if (item.internalName.equals(internalName) && item.langId.equals(String.valueOf(Globals.langId))) {
+//                    return item;
+//                }
+//            }
+//        }
 
         return null;
     }
