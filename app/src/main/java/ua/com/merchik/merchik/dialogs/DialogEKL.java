@@ -608,18 +608,18 @@ public class DialogEKL {
      */
     private void setAddSotr() {
         addSotr.setOnClickListener(v -> {
-            Toast.makeText(context, "Добавление нового ПТТ находится в разработке!", Toast.LENGTH_LONG).show();
+            try {
+                Toast.makeText(context, "Добавление нового ПТТ находится в разработке!", Toast.LENGTH_LONG).show();
 
-            Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(createAddNewPTTLink()));
-            context.startActivity(browserIntent);
+                Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(createAddNewPTTLink()));
+                context.startActivity(browserIntent);
+            }catch (Exception e){
+                Globals.writeToMLOG("ERROR", "DialogEKL/setAddSotr", "Exception e: " + e);
+            }
         });
     }
 
     private String createAddNewPTTLink() {
-/*        String link = String.format("https://merchik.com.ua/mobile.php?mod=sotr_list&act=add_sotr&addr_id=%s&theme_id=%s&menu_close_only", wp.getAddr_id(), wp.getTheme_id());
-        return link;*/
-
-
         String link = String.format("/mobile.php?mod=sotr_list**act=add_sotr**addr_id=%s**theme_id=%s**menu_close_only", wp.getAddr_id(), wp.getTheme_id());
         AppUsersDB appUser = AppUserRealm.getAppUserById(userId);
         if (appUser != null) {
@@ -627,11 +627,12 @@ public class DialogEKL {
             hash = Globals.getSha1Hex(hash);
 
             String format = String.format("https://merchik.com.ua/sa.php?&u=%s&s=%s&l=%s", userId, hash, link);
+            Globals.writeToMLOG("INFO", "DialogEKL/setAddSotr/createAddNewPTTLink", "format: " + format);
             return format;
         } else {
+            Globals.writeToMLOG("INFO", "DialogEKL/setAddSotr/createAddNewPTTLink", "link: " + link);
             return link;
         }
-
     }
 
 
