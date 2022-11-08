@@ -135,9 +135,9 @@ public class OptionControlEKL<T> extends OptionControl {
         long dateTo = Clock.getDatePeriodLong(documentDt * 1000, 4);
 
 
-        if (addressSDB.tpId == 464 && !optionDB.getOptionControlId().equals("132629") && documentDt < 1682899200) { // 1682899200 == 01.05.2023 / 464 = АТБ
+        if (addressSDB.tpId == 434 && !optionDB.getOptionControlId().equals("132629") && documentDt < 1682899200) { // 1682899200 == 01.05.2023 / 434 = АТБ
             optionMsg.append("Не проверяем для АТБ до 01.05.2023");
-            signal = true;
+            signal = false;
         } else {
             // Определем Группу Товаров
             if (optionDB.getOptionControlId().equals("132629")) {
@@ -291,7 +291,7 @@ public class OptionControlEKL<T> extends OptionControl {
 
         // "подводим итог"
         // Изначально ЭТО не надо было вообще писать, НО для парней с < 5 отчётами надо сделать исключение
-        if (signal && (documentUser.reportDate05 == null || documentUser.reportDate05.getTime() > wpDataDB.getDt().getTime())){
+        if (signal && (documentUser.reportDate05 == null || documentUser.reportDate05.getTime() > wpDataDB.getDt().getTime())) {
             signal = false;
             stringBuilderMsg.append("Исполнитель еще не провел свою пятую отчетность! ЭКЛ не подписан!").append("\n\n");
         }
