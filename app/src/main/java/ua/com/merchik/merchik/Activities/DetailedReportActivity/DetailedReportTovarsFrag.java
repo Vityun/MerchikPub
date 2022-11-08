@@ -230,20 +230,20 @@ public class DetailedReportTovarsFrag extends Fragment {
 
                 if (updateTov && codeDad2 != 0){
                     Log.d("test", "tovars is empty");
-//                    downloadDetailedReportTovarsData(new Clicks.clickStatusMsg() {
-//                        @Override
-//                        public void onSuccess(String data) {
-//                            Toast.makeText(mContext, data, Toast.LENGTH_SHORT).show();
-//                            addRecycleView(getTovList());
-//                            updateTov = false;
-//                        }
-//
-//                        @Override
-//                        public void onFailure(String error) {
-//                            Toast.makeText(mContext, error, Toast.LENGTH_SHORT).show();
-//                            updateTov = false;
-//                        }
-//                    });
+                    downloadDetailedReportTovarsData(new Clicks.clickStatusMsg() {
+                        @Override
+                        public void onSuccess(String data) {
+                            Toast.makeText(mContext, data, Toast.LENGTH_SHORT).show();
+                            addRecycleView(getTovList());
+                            updateTov = false;
+                        }
+
+                        @Override
+                        public void onFailure(String error) {
+                            Toast.makeText(mContext, error, Toast.LENGTH_SHORT).show();
+                            updateTov = false;
+                        }
+                    });
                 }
 
             }

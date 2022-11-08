@@ -1,7 +1,12 @@
 package ua.com.merchik.merchik.Activities.PremiumActivity;
 
+import android.app.ProgressDialog;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -22,12 +27,17 @@ import java.util.List;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
+import ua.com.merchik.merchik.Activities.PremiumActivity.PremiumTable.PremiumTableHeader;
+import ua.com.merchik.merchik.Activities.PremiumActivity.PremiumTable.PremiumTableHeaderAdapter;
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.data.Database.Room.UsersSDB;
+import ua.com.merchik.merchik.data.RetrofitResponse.tables.Premial.PremiumPremium.Detailed;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.Premial.PremiumPremium.PremiumPremium;
+import ua.com.merchik.merchik.data.RetrofitResponse.tables.Premial.PremiumPremium.PremiumPremiumList;
 import ua.com.merchik.merchik.data.TestJsonUpload.StandartData;
+import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.dialogs.DialogsRecyclerViewAdapter.DialogAdapter;
 import ua.com.merchik.merchik.dialogs.DialogsRecyclerViewAdapter.ViewHolderTypeList;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
@@ -37,18 +47,28 @@ import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
 public class PremiumActivity extends toolbar_menus {
 
-    private RecyclerView recycler;
-    private TextView text;
+    private RecyclerView recycler, table;
+    private TextView text, userTV;
+    private Spinner spinner;
+
+    private List<PremiumTableHeader> headerArrayList = new ArrayList<>();
+    private PremiumTableHeaderAdapter adapter = createTableAdapter();
+
+    private interface PremiumRespListener {
+        void onSuccess(PremiumPremiumList res);
+
+        void onFailure(String err);
+    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-//        try {
+        try {
             setActivityContent();
             setActivityData();
-//        } catch (Exception e) {
-//            globals.alertDialogMsg(this, "Ошибка при открытии странички: " + e);
-//        }
+        } catch (Exception e) {
+            Globals.writeToMLOG("ERROR", "PremiumActivity", "Exception e: " + e);
+        }
     }
 
     private void setActivityContent() {
@@ -60,13 +80,22 @@ public class PremiumActivity extends toolbar_menus {
 
         recycler = findViewById(R.id.recycler_view);
         text = findViewById(R.id.text);
+        userTV = findViewById(R.id.userTV);
+        spinner = findViewById(R.id.spinner);
+
+        table = findViewById(R.id.table);
     }
 
     private void setActivityData() {
         setFab();
         setTextHintVisualise();
         setNavigation();
-        setRecycler();
+//        setRecycler();
+
+
+        setUser();
+        makeTableDataFirstWeek();
+        setNewRecycler();
     }
 
     /*Судя по всему это "низ" */
@@ -88,8 +117,206 @@ public class PremiumActivity extends toolbar_menus {
     private void setNavigation() {
         initDrawerStuff(findViewById(R.id.drawer_layout), findViewById(R.id.my_toolbar), findViewById(R.id.nav_view));
         NavigationView navigationView = findViewById(R.id.nav_view);
-//        navigationView.setCheckedItem();
     }
+
+
+    private void setUser() {
+        String textViewUserVal = "Сотрудник: ";
+
+        userTV.setText(textViewUserVal);
+
+        // Тут надо будет получать список пользователей
+        UsersSDB usersSDB = SQL_DB.usersDao().getById(Globals.userId);
+
+        // В данном контексте получаю лишь одного пользователя (текущего, под кем залогинился)
+        String[] userList = new String[1];
+        if (usersSDB == null) {
+            userList[0] = "тест";
+        } else {
+            userList[0] = usersSDB.fio;
+        }
+
+
+        ArrayAdapter adapter = new ArrayAdapter(this, android.R.layout.simple_spinner_item, userList);
+
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinner.setAdapter(adapter);
+        spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+                String data = adapterView.getItemAtPosition(i).toString();
+                Toast.makeText(adapterView.getContext(), "Выбрали: " + data, Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> adapterView) {
+                Toast.makeText(adapterView.getContext(), "Ничего не выбрано", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void setNewRecycler() {
+        table.setAdapter(adapter);
+        table.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false));
+    }
+
+    protected PremiumTableHeaderAdapter createTableAdapter() {
+        return new PremiumTableHeaderAdapter(headerArrayList, (View view, Detailed item) -> {
+            Toast.makeText(view.getContext(), "Ви клікнули, поки нічого не виконається", Toast.LENGTH_SHORT).show();
+        });
+    }
+
+    private void prepareTableData(String period, PremiumPremiumList res) {
+        // Должны получить список Премиальных который хотим отобразить мерчам
+        // Пробегаем по списку ПРЕМИАЛЬНЫХ
+        // Определяем сначала ЗАГОЛОВКИ
+        // Относительно каждого ЗАГОЛОВКА находим его пункты и записываем соответственно в заголовки
+        // Создаём новый экземпляр PremiumTableHeader в который запихиваем значение заголовка и значений
+        // Добавляем данные в "headerArrayList"
+
+        PremiumTableHeader.DetailedHeader header = new PremiumTableHeader.DetailedHeader();
+        header.date = period;
+        header.sumInitialBalance = res.total.nachOst;
+        header.sumComing = res.total.prihod;
+        header.sumConsumption = res.total.rashod;
+        header.sumEndBalance = res.total.konOst;
+
+        ArrayList<PremiumTableHeader.DetailedSubHeader> subHeaderArrayList = new ArrayList<>();
+        ArrayList<String> titles = new ArrayList<>();
+        for (Detailed item : res.detailed) {
+            // Если у нас в большом нашем списке нет такого подзаголовка - добавляем его
+            if (subHeaderArrayList.size() == 0 || !titles.contains(item.docDefName)) {
+                titles.add(item.docDefName);    // список в котором мы храним подзаголовки которые уже есть
+                PremiumTableHeader.DetailedSubHeader subHeader = new PremiumTableHeader.DetailedSubHeader();
+                PremiumTableHeader.DetailedHeader detailedHeader = new PremiumTableHeader.DetailedHeader();
+
+                detailedHeader.date = item.docDefName;
+                detailedHeader.sumInitialBalance = 0.0;
+                detailedHeader.sumEndBalance = 0.0;
+                for (Detailed currentItem : res.detailed) {
+                    if (currentItem.docDefName.equals(item.docDefName)){
+                        detailedHeader.sumComing += currentItem.prihod;
+                        detailedHeader.sumConsumption += currentItem.rashod;
+                        subHeader.items.add(currentItem);
+                    }
+                }
+                subHeader.header = detailedHeader;
+                subHeaderArrayList.add(subHeader);
+            }
+        }
+
+        headerArrayList.add(new PremiumTableHeader(header, subHeaderArrayList));
+        adapter.setNewData(headerArrayList);
+        adapter.notifyDataSetChanged();
+    }
+
+    private void makeTableDataFirstWeek() {
+        // Clock.getLastMonday(), Clock.getLastSunday();
+        // Clock.getCurrentMonday(), Calendar.getInstance();
+
+        ProgressDialog progressDialog = ProgressDialog.show(this, "Преміальні", "Завантажую минулий тиждень.", true, true);
+
+        downloadPremium(Clock.getLastMonday(), Clock.getLastSunday(), new PremiumRespListener() {
+            @Override
+            public void onSuccess(PremiumPremiumList res) {
+                if (progressDialog != null && progressDialog.isShowing()) {
+                    progressDialog.dismiss();
+                }
+                prepareTableData(getPeriodString(Clock.getLastMonday(), Clock.getLastSunday()), res);
+                makeTableDataSecondWeek();
+            }
+
+            @Override
+            public void onFailure(String err) {
+                if (progressDialog != null && progressDialog.isShowing()) {
+                    progressDialog.dismiss();
+                }
+                DialogData dialog = new DialogData(getBaseContext());
+                dialog.setTitle("Помилка!");
+                dialog.setText(err);
+                dialog.setClose(dialog::dismiss);
+                dialog.show();
+            }
+        });
+    }
+
+    private void makeTableDataSecondWeek() {
+        ProgressDialog progressDialog = ProgressDialog.show(this, "Преміальні", "Завантажую поточний тиждень.", true, true);
+
+        downloadPremium(Clock.getCurrentMonday(), Calendar.getInstance(), new PremiumRespListener() {
+            @Override
+            public void onSuccess(PremiumPremiumList res) {
+                if (progressDialog != null && progressDialog.isShowing()) {
+                    progressDialog.dismiss();
+                }
+                prepareTableData(getPeriodString(Clock.getCurrentMonday(), Calendar.getInstance()), res);
+            }
+
+            @Override
+            public void onFailure(String err) {
+                if (progressDialog != null && progressDialog.isShowing()) {
+                    progressDialog.dismiss();
+                }
+                DialogData dialog = new DialogData(getBaseContext());
+                dialog.setTitle("Помилка!");
+                dialog.setText(err);
+                dialog.setClose(dialog::dismiss);
+                dialog.show();
+            }
+        });
+    }
+
+    private void downloadPremium(Calendar dateFrom, Calendar dateTo, PremiumRespListener listener) {
+        DateFormat serverDF = new SimpleDateFormat("yyyy-MM-dd");
+
+        StandartData data = new StandartData();
+        data.mod = "premium";
+        data.act = "premium";
+        data.date_from = serverDF.format(dateFrom.getTime());
+        data.date_to = serverDF.format(dateTo.getTime());
+
+        Gson gson = new Gson();
+        String json = gson.toJson(data);
+        JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
+
+        retrofit2.Call<PremiumPremium> call = RetrofitBuilder.getRetrofitInterface().GET_PREMIUM_PREMIUM(RetrofitBuilder.contentType, convertedObject);
+        call.enqueue(new Callback<PremiumPremium>() {
+            @Override
+            public void onResponse(Call<PremiumPremium> call, Response<PremiumPremium> response) {
+                Log.e("test", "onResponse: " + response);
+                if (response.isSuccessful()) {
+                    if (response.body() != null && response.body().state) {
+                        if (response.body().list.state) {
+                            if (response.body().list.detailed != null && response.body().list.detailed.size() > 0) {
+                                listener.onSuccess(response.body().list);
+                            } else {
+                                listener.onFailure("Вибачаємось. Не змогли отримати данні о Преміальних. Зверніться до Вашго керівника.");
+                            }
+                        } else {
+                            listener.onFailure("Виникла помилка. Запит не опрацьовано. Зверніться до Вашого керівника.");
+                        }
+                    } else {
+                        listener.onFailure("Виникла помилка. Запит не опрацьовано або він пустий. Зверніться до Вашого керівника.");
+                    }
+                } else {
+                    listener.onFailure("Перевірте з'єднання з інтернетом та повторіть спробу пізніше.");
+                }
+            }
+
+            @Override
+            public void onFailure(Call<PremiumPremium> call, Throwable t) {
+                Log.e("test", "onFailure: " + t);
+                listener.onFailure("Щось пішло не так: " + t);
+            }
+        });
+    }
+
+    private String getPeriodString(Calendar start, Calendar end) {
+        DateFormat userDF = new SimpleDateFormat("dd.MM");
+        return userDF.format(start.getTime()) + " - " + userDF.format(end.getTime());
+    }
+
+    //------------------------------------------------------------------------------------------------
 
     private void setRecycler() {
         recycler.setAdapter(createAdapter());
@@ -107,7 +334,7 @@ public class PremiumActivity extends toolbar_menus {
         return new DialogAdapter(data);
     }
 
-    private ViewHolderTypeList createChoiceUserBlockRV(){
+    private ViewHolderTypeList createChoiceUserBlockRV() {
         ViewHolderTypeList res = new ViewHolderTypeList();
 
         ViewHolderTypeList.ChoiceSpinnerLayoutData block = new ViewHolderTypeList.ChoiceSpinnerLayoutData();
@@ -118,9 +345,9 @@ public class PremiumActivity extends toolbar_menus {
 
         // В данном контексте получаю лишь одного пользователя (текущего, под кем залогинился)
         String[] userList = new String[1];
-        if (usersSDB == null){
+        if (usersSDB == null) {
             userList[0] = "тест";
-        }else {
+        } else {
             userList[0] = usersSDB.fio;
         }
 
@@ -150,7 +377,7 @@ public class PremiumActivity extends toolbar_menus {
         return res;
     }
 
-    private ViewHolderTypeList createChoiceDateBlockRV(){
+    private ViewHolderTypeList createChoiceDateBlockRV() {
         ViewHolderTypeList res = new ViewHolderTypeList();
 
         ViewHolderTypeList.ChoiceDateLayoutData block = new ViewHolderTypeList.ChoiceDateLayoutData();
@@ -176,7 +403,7 @@ public class PremiumActivity extends toolbar_menus {
         return res;
     }
 
-    private ViewHolderTypeList createTextBlockRV(){
+    private ViewHolderTypeList createTextBlockRV() {
         ViewHolderTypeList res = new ViewHolderTypeList();
 
         ViewHolderTypeList.TextLayoutData block = new ViewHolderTypeList.TextLayoutData();
@@ -199,7 +426,7 @@ public class PremiumActivity extends toolbar_menus {
         return res;
     }
 
-    private ViewHolderTypeList createTableBlockRV(){
+    private ViewHolderTypeList createTableBlockRV() {
         ViewHolderTypeList res = new ViewHolderTypeList();
 
         ViewHolderTypeList.TablePremiumLayoutData block = new ViewHolderTypeList.TablePremiumLayoutData();
@@ -228,7 +455,7 @@ public class PremiumActivity extends toolbar_menus {
         return res;
     }
 
-    private ViewHolderTypeList.TablePremiumLayoutData.PremiumTableRow createRow(Calendar dateFrom, Calendar dateTo){
+    private ViewHolderTypeList.TablePremiumLayoutData.PremiumTableRow createRow(Calendar dateFrom, Calendar dateTo) {
         ViewHolderTypeList.TablePremiumLayoutData.PremiumTableRow row = new ViewHolderTypeList.TablePremiumLayoutData.PremiumTableRow();
 
         row.click = new ViewHolderTypeList.ClickData() {
@@ -251,9 +478,6 @@ public class PremiumActivity extends toolbar_menus {
         data.act = "premium";
         data.date_from = serverDF.format(dateFrom.getTime());
         data.date_to = serverDF.format(dateTo.getTime());
-
-//        data.date_from = "2022-05-09";
-//        data.date_to = "2022-05-15";
 
         Gson gson = new Gson();
         String json = gson.toJson(data);
@@ -290,7 +514,7 @@ public class PremiumActivity extends toolbar_menus {
         return row;
     }
 
-    private ViewHolderTypeList createButtonRefreshBlockRV(){
+    private ViewHolderTypeList createButtonRefreshBlockRV() {
         ViewHolderTypeList res = new ViewHolderTypeList();
 
         ViewHolderTypeList.ButtonLayoutData block = new ViewHolderTypeList.ButtonLayoutData();
