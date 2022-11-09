@@ -1,5 +1,6 @@
 package ua.com.merchik.merchik.Activities.WorkPlanActivity;
 
+import android.graphics.Paint;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.Html;
@@ -39,6 +40,7 @@ public class WPDataFragmentHome extends Fragment {
 
     private Globals globals = new Globals();
     private RealmResults<WpDataDB> workPlan;
+
     private enum TitleMode {SHORT, FULL}
 
     private RecyclerView recyclerView;
@@ -68,8 +70,8 @@ public class WPDataFragmentHome extends Fragment {
         filter = v.findViewById(R.id.filter);
         title = v.findViewById(R.id.title);
         title.setTextColor(-10987432);  // Как у закладки "План работ"
-//        title.setTextColor(getResources().getColor(R.color.colorDescription));
         title.setOnClickListener(view -> title.setVisibility(View.GONE));
+        title.setPaintFlags(title.getPaintFlags() | Paint.UNDERLINE_TEXT_FLAG);
         titleClose = v.findViewById(R.id.titleClose);
         titleClose.setOnClickListener(view -> {
             title.setVisibility(View.GONE);
@@ -91,11 +93,11 @@ public class WPDataFragmentHome extends Fragment {
 //        workPlan = workPlan.where().between("dt", dateFrom, dateTo).sort("dt_start", Sort.ASCENDING, "addr_id", Sort.ASCENDING).findAll();
 
         UsersSDB usersSDB = SQL_DB.usersDao().getById(Globals.userId);
-        if (System.currentTimeMillis()/1000 < 1668124799){
+        if (System.currentTimeMillis() / 1000 < 1668124799) {
             showAlertMsg();
-        }else if (usersSDB != null && usersSDB.reportCount <= 10){
+        } else if (usersSDB != null && usersSDB.reportCount <= 10) {
             showAlertMsg();
-        }else {
+        } else {
             // nothing to do
         }
 
@@ -117,10 +119,10 @@ public class WPDataFragmentHome extends Fragment {
         return v;
     }//------------------------------- /ON CREATE --------------------------------------------------
 
-    private SpannableStringBuilder createTitleMsg(RealmResults<WpDataDB> wp, TitleMode mode){
+    private SpannableStringBuilder createTitleMsg(RealmResults<WpDataDB> wp, TitleMode mode) {
         SpannableStringBuilder res = new SpannableStringBuilder();
 
-        if (wp != null && wp.size() > 0){
+        if (wp != null && wp.size() > 0) {
             // Запланированные работы
             int wpSum = wp.sum("cash_ispolnitel").intValue();
 
@@ -136,22 +138,22 @@ public class WPDataFragmentHome extends Fragment {
             int wpStatus0Sum = wpStatus0.sum("cash_ispolnitel").intValue();
             int percentWpStatus0 = (wpStatus0Size * 100) / wp.size();
 
-            if (mode.equals(TitleMode.FULL)){
-                res.append(Html.fromHtml("<b>За період: </b> з ")).append(Clock.getHumanTimeYYYYMMDD(wp.get(0).getDt().getTime()/1000)).append(" по ").append(Clock.getHumanTimeYYYYMMDD(wp.get(wp.size()-1).getDt().getTime()/1000)).append("\n\n");
-                res.append(Html.fromHtml("<b>Заплановано робіт (Пр): </b>")).append(""+wp.size()).append(" (100%),").append(" на суму ").append(""+wpSum).append(" грн.").append("\n\n");
-                res.append(Html.fromHtml("<b>Виконано робіт (Вр): </b>")).append(""+wpStatus1Size).append(" (").append(""+percentWpStatus1).append("%), на суму ").append(""+wpStatus1Sum).append(" грн.").append("\n\n");
-                res.append(Html.fromHtml("<b>Не виконано робіт (Нр): </b>")).append(""+wpStatus0Size).append(" (").append(""+percentWpStatus0).append("%), на суму ").append(""+wpStatus0Sum).append(" грн.");
-            }else if (mode.equals(TitleMode.SHORT)){
-                res.append("Пр: ").append(""+wp.size()).append(" (").append(""+wpSum).append("гр) / ").append("Вр: ").append(""+wpStatus1Size).append(" (").append(""+wpStatus1Sum).append("гр) / ").append("Нр: ").append(""+wpStatus0Size).append(" (").append(""+wpStatus0Sum).append("гр)");
+            if (mode.equals(TitleMode.FULL)) {
+                res.append(Html.fromHtml("<b>За період: </b> з ")).append(Clock.getHumanTimeYYYYMMDD(wp.get(0).getDt().getTime() / 1000)).append(" по ").append(Clock.getHumanTimeYYYYMMDD(wp.get(wp.size() - 1).getDt().getTime() / 1000)).append("\n\n");
+                res.append(Html.fromHtml("<b>Заплановано робіт (Пр): </b>")).append("" + wp.size()).append(" (100%),").append(" на суму ").append("" + wpSum).append(" грн.").append("\n\n");
+                res.append(Html.fromHtml("<b>Виконано робіт (Вр): </b>")).append("" + wpStatus1Size).append(" (").append("" + percentWpStatus1).append("%), на суму ").append("" + wpStatus1Sum).append(" грн.").append("\n\n");
+                res.append(Html.fromHtml("<b>Не виконано робіт (Нр): </b>")).append("" + wpStatus0Size).append(" (").append("" + percentWpStatus0).append("%), на суму ").append("" + wpStatus0Sum).append(" грн.");
+            } else if (mode.equals(TitleMode.SHORT)) {
+                res.append("Пр: ").append("" + wp.size()).append(" (").append("" + wpSum).append("гр) / ").append("Вр: ").append("" + wpStatus1Size).append(" (").append("" + wpStatus1Sum).append("гр) / ").append("Нр: ").append("" + wpStatus0Size).append(" (").append("" + wpStatus0Sum).append("гр)");
             }
-        }else {
+        } else {
             res.append("План робіт пустий.");
         }
 
         return res;
     }
 
-    private void showAlertMsg(){
+    private void showAlertMsg() {
         DialogData dialogData = new DialogData(getContext());
         dialogData.setTitle("УВАГА!");
         dialogData.setText("Крім поточних робіт, РЕКОМЕНДУЄМО сьогодні виконати роботи, які заплановані НА ЗАВТРА та післязавтра.");
@@ -256,7 +258,7 @@ public class WPDataFragmentHome extends Fragment {
         }
     }
 
-    private void applyFilter(DialogFilter dialog){
+    private void applyFilter(DialogFilter dialog) {
         RealmResults<WpDataDB> wp = RealmManager.getAllWorkPlan();
         if (dialog.clientId != null) {
             wp = wp.where().equalTo("client_id", dialog.clientId).findAll();
