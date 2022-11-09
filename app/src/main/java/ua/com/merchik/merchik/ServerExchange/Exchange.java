@@ -1542,6 +1542,7 @@ public class Exchange {
             mark.element_id = item.getItemId();
             mark.score = item.getScore();
             mark.tp_id = item.getTp();
+            mark.comment = item.comment;
 
             markLIST.add(mark);
         }

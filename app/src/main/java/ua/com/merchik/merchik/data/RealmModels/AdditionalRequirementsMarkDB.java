@@ -29,6 +29,8 @@ public class AdditionalRequirementsMarkDB extends RealmObject {
 
     private String uploadStatus;
 
+    public String comment;
+
     public String getId() {
         return id;
     }

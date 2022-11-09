@@ -195,7 +195,7 @@ public class DialogARMark {
                 }
                 return true;
             });
-        }catch (Exception e){
+        } catch (Exception e) {
 
         }
 
@@ -227,11 +227,11 @@ public class DialogARMark {
     }
     //----------------------------------------------------------------------------------------------
 
-    public void setTitle(CharSequence msg){
+    public void setTitle(CharSequence msg) {
         title.setText(msg);
     }
 
-    public void setTxtText(CharSequence msg){
+    public void setTxtText(CharSequence msg) {
         txtText.setText(msg);
     }
 
@@ -246,7 +246,7 @@ public class DialogARMark {
         });
     }
 
-    public void setData(CharSequence id, CharSequence addr, CharSequence grp, CharSequence number, CharSequence dateStart, CharSequence dateEnd, CharSequence author, CharSequence customer, CharSequence mark, CharSequence text){
+    public void setData(CharSequence id, CharSequence addr, CharSequence grp, CharSequence number, CharSequence dateStart, CharSequence dateEnd, CharSequence author, CharSequence customer, CharSequence mark, CharSequence text) {
         txtId.setText(id);
         txtAddr.setText(addr);
         txtGrp.setText(grp);
@@ -259,35 +259,72 @@ public class DialogARMark {
         txtText.setText(text);
     }
 
-    public void setRatingBarAR(AdditionalRequirementsDB db, Float data, DialogData.DialogClickListener clickListener){
-        if (data != null){
+    public void setRatingBarAR(AdditionalRequirementsDB db, Float data, DialogData.DialogClickListener clickListener) {
+        if (data != null) {
             ratingBar.setRating(data);
         }
 
         ratingBar.setOnRatingBarChangeListener((ratingBar, rating, fromUser) -> {
             int rate = (int) rating;
             ratingBar.setRating(rate);
-            Toast.makeText(context, "Оценка: " + rate + " установлена.", Toast.LENGTH_LONG).show();
+
+            if (rate < 6) {
+                DialogData dialogData = new DialogData(context);
+                dialogData.setTitle("Коментар");
+                dialogData.setText("Внесіть коментар до низбкої оцінки");
+                dialogData.setOperation(DialogData.Operations.TEXT, "", null, ()->{});
+                dialogData.setOk("Ok", () -> {
+                    if (dialogData.getOperationResult() != null && dialogData.getOperationResult().length() > 10){
+                        saveNewARMark(db, rate, dialogData.getOperationResult());
+                        Toast.makeText(context, "Оценка: " + rate + " установлена.", Toast.LENGTH_LONG).show();
+                    }else {
+                        Toast.makeText(context, "Внесіть коментар більший за 10 символів.", Toast.LENGTH_LONG).show();
+                    }
+                });
+                dialogData.setClose(this::dismiss);
+                dialogData.show();
+            } else {
+
+                saveNewARMark(db, rate, "");
+
+                Toast.makeText(context, "Оценка: " + rate + " установлена.", Toast.LENGTH_LONG).show();
+            }
+
+//            Toast.makeText(context, "Оценка: " + rate + " установлена.", Toast.LENGTH_LONG).show();
 
 
-            AdditionalRequirementsMarkDB markDB = new AdditionalRequirementsMarkDB();
-            markDB.setId(String.valueOf(System.currentTimeMillis()));
-            markDB.setItemId(db.getId());
-            markDB.setDt(System.currentTimeMillis()/1000);
-            markDB.setUserId(String.valueOf(Globals.userId));
-            markDB.setScore(String.valueOf(rate));
-            markDB.setTp("1");  // Для Доп. Требований
-            markDB.setUploadStatus("0");
-
-            AdditionalRequirementsMarkRealm.setNewMark(markDB);
+//            AdditionalRequirementsMarkDB markDB = new AdditionalRequirementsMarkDB();
+//            markDB.setId(String.valueOf(System.currentTimeMillis()));
+//            markDB.setItemId(db.getId());
+//            markDB.setDt(System.currentTimeMillis()/1000);
+//            markDB.setUserId(String.valueOf(Globals.userId));
+//            markDB.setScore(String.valueOf(rate));
+//            markDB.setTp("1");  // Для Доп. Требований
+//            markDB.setUploadStatus("0");
+//
+//            AdditionalRequirementsMarkRealm.setNewMark(markDB);
 
             clickListener.clicked();
         });
     }
 
+    private void saveNewARMark(AdditionalRequirementsDB db, int rate, String comment) {
+        AdditionalRequirementsMarkDB markDB = new AdditionalRequirementsMarkDB();
+        markDB.setId(String.valueOf(System.currentTimeMillis()));
+        markDB.setItemId(db.getId());
+        markDB.setDt(System.currentTimeMillis() / 1000);
+        markDB.setUserId(String.valueOf(Globals.userId));
+        markDB.setScore(String.valueOf(rate));
+        markDB.setTp("1");  // Для Доп. Требований
+        markDB.setUploadStatus("0");
+        markDB.comment = comment;
 
-    public void setRatingBarAR(Float data, Clicks.click click){
-        if (data != null){
+        AdditionalRequirementsMarkRealm.setNewMark(markDB);
+    }
+
+
+    public void setRatingBarAR(Float data, Clicks.click click) {
+        if (data != null) {
             ratingBar.setRating(data);
         }
     }
@@ -295,8 +332,8 @@ public class DialogARMark {
 
     // Для Доп. Материалов
 
-    public void setRatingBarAM(AdditionalMaterialsJOINAdditionalMaterialsAddressSDB db, Float data, DialogData.DialogClickListener clickListener){
-        if (data != null){
+    public void setRatingBarAM(AdditionalMaterialsJOINAdditionalMaterialsAddressSDB db, Float data, DialogData.DialogClickListener clickListener) {
+        if (data != null) {
             ratingBar.setRating(data);
         }
 
@@ -309,7 +346,7 @@ public class DialogARMark {
             AdditionalRequirementsMarkDB markDB = new AdditionalRequirementsMarkDB();
             markDB.setId(String.valueOf(System.currentTimeMillis()));
             markDB.setItemId(db.id);
-            markDB.setDt(System.currentTimeMillis()/1000);
+            markDB.setDt(System.currentTimeMillis() / 1000);
             markDB.setUserId(String.valueOf(Globals.userId));
             markDB.setScore(String.valueOf(rate));
             markDB.setTp("0");  // Доп. Материалы
@@ -322,8 +359,8 @@ public class DialogARMark {
     }
 
 
-    public void setRatingBarAM(Float data, Clicks.click click){
-        if (data != null){
+    public void setRatingBarAM(Float data, Clicks.click click) {
+        if (data != null) {
             ratingBar.setRating(data);
         }
     }

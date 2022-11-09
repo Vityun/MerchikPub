@@ -95,6 +95,14 @@ public class MyMigration implements RealmMigration {
             oldVersion++;
         }
 
+        if (oldVersion == 0 || oldVersion == 15){
+            RealmObjectSchema schemaAR = schema.get("AdditionalRequirementsMarkDB");
+
+            schemaAR.addField("comment", String.class);
+
+            oldVersion=newVersion;
+        }
+
     }
 }
 
