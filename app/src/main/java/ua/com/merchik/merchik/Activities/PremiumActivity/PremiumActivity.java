@@ -49,6 +49,7 @@ public class PremiumActivity extends toolbar_menus {
 
     private RecyclerView recycler, table;
     private TextView text, userTV;
+    private TextView date, col1, col2, col3, col4;
     private Spinner spinner;
 
     private List<PremiumTableHeader> headerArrayList = new ArrayList<>();
@@ -80,6 +81,11 @@ public class PremiumActivity extends toolbar_menus {
 
         recycler = findViewById(R.id.recycler_view);
         text = findViewById(R.id.text);
+        date = findViewById(R.id.name);
+        col1 = findViewById(R.id.col1);
+        col2 = findViewById(R.id.col2);
+        col3 = findViewById(R.id.col3);
+        col4 = findViewById(R.id.col4);
         userTV = findViewById(R.id.userTV);
         spinner = findViewById(R.id.spinner);
 
@@ -92,6 +98,11 @@ public class PremiumActivity extends toolbar_menus {
         setNavigation();
 //        setRecycler();
 
+        date.setText("Дата");
+        col1.setText("Поч. Зал.");
+        col2.setText("Дохід");
+        col3.setText("Витрати");
+        col4.setText("Кін. Зал.");
 
         setUser();
         makeTableDataFirstWeek();
@@ -231,7 +242,7 @@ public class PremiumActivity extends toolbar_menus {
                 if (progressDialog != null && progressDialog.isShowing()) {
                     progressDialog.dismiss();
                 }
-                DialogData dialog = new DialogData(getBaseContext());
+                DialogData dialog = new DialogData(PremiumActivity.this);
                 dialog.setTitle("Помилка!");
                 dialog.setText(err);
                 dialog.setClose(dialog::dismiss);
@@ -257,7 +268,7 @@ public class PremiumActivity extends toolbar_menus {
                 if (progressDialog != null && progressDialog.isShowing()) {
                     progressDialog.dismiss();
                 }
-                DialogData dialog = new DialogData(getBaseContext());
+                DialogData dialog = new DialogData(PremiumActivity.this);
                 dialog.setTitle("Помилка!");
                 dialog.setText(err);
                 dialog.setClose(dialog::dismiss);

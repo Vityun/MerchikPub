@@ -43,7 +43,7 @@ public class PremiumTableHeaderSubAdapter extends RecyclerView.Adapter<PremiumTa
 
     public class PremiumTableHeaderViewHolder extends RecyclerView.ViewHolder {
 
-        private ConstraintLayout layout;
+        private ConstraintLayout layout, textHeaderLayout;
         private TextView name;
         private TextView column1, column2, column3, column4;
         private RecyclerView recyclerSub;
@@ -52,6 +52,7 @@ public class PremiumTableHeaderSubAdapter extends RecyclerView.Adapter<PremiumTa
         public PremiumTableHeaderViewHolder(@NonNull View itemView) {
             super(itemView);
             layout = itemView.findViewById(R.id.premium_table_header);
+            textHeaderLayout = itemView.findViewById(R.id.header_text);
             name = itemView.findViewById(R.id.name);
             column1 = itemView.findViewById(R.id.col1);
             column2 = itemView.findViewById(R.id.col2);
@@ -61,9 +62,13 @@ public class PremiumTableHeaderSubAdapter extends RecyclerView.Adapter<PremiumTa
         }
 
         public void bind(PremiumTableHeader.DetailedSubHeader detailedSubHeader) {
-            layout.setOnClickListener(view -> {
+            textHeaderLayout.setOnClickListener(view -> {
+                detailedSubHeader.isExpanded = !detailedSubHeader.isExpanded;
+                if (detailedSubHeader.items.isEmpty()) detailedSubHeader.isExpanded = false;
                 handleRecycler(detailedSubHeader.isExpanded);
             });
+
+            textHeaderLayout.setBackgroundColor(itemView.getContext().getResources().getColor(R.color.inActive));
 
             name.setText(detailedSubHeader.header.date);
             column1.setText("" + (int) detailedSubHeader.header.sumInitialBalance);
