@@ -488,6 +488,7 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                     if (!TablesLoadingUnloading.sync) {
                         Exchange.sendWpData2();
                         Exchange.chatExchange();
+                        Exchange.chatGroupExchange();
                         tablesLoadingUnloading.uploadAllTables(toolbar_menus.this);     // Выгрузка таблиц
                         tablesLoadingUnloading.downloadAllTables(toolbar_menus.this);   // Скачивание таблиц
                     } else {

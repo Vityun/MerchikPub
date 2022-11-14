@@ -106,6 +106,19 @@ public class OptionControlEKL<T> extends OptionControl {
         }
         // -----------------------
 
+
+        /*{"addr_id":24655,"client_id":"14017","code":"16842","code_dad2":1141122024655052581,"department":0,
+        "eklCode":"978c85c545aae3921776fb787e9375cc1ab684f5","code_check":"978c85c545aae3921776fb787e9375cc1ab684f5",
+        "ID":626756,"user_id_verify":214355,"state":true,"upload":true,"user_id":204206,"vpi":1668422008860}
+
+        {"addr_id":24655,"client_id":"14176","code":"45805","code_dad2":1141122024655052636,"department":0,
+        "eklCode":"77dc5b4fe7c610c62660c13934298ff9c17cedf1","code_check":"77dc5b4fe7c610c62660c13934298ff9c17cedf1",
+        "ID":626774,"user_id_verify":206833,"state":true,"upload":true,"user_id":204206,"vpi":1668424414808}
+
+        dateFrom: 1668204000000/dateTo: 1668808800000/ids: [148]/addr: 24655/user: 204206/ptt: 0
+        */
+
+
         // TODO Это на будущее. Пока это не надо. Можно закоментить.
         // Индивидуальный-ЭКЛ (это заглушка, пока на стороне 1С нормально эт не реализовано)
         /*if (optionDB.getOptionControlId().equals("151140")) {

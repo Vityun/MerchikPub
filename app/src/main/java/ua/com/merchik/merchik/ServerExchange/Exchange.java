@@ -66,6 +66,7 @@ import ua.com.merchik.merchik.data.RetrofitResponse.photos.PhotoInfoResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.photos.PhotoInfoResponseList;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.AchievementsResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.ArticleResponse;
+import ua.com.merchik.merchik.data.RetrofitResponse.tables.ChatGrp.ChatGrpResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.ChatResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.VoteResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.update.wpdata.WpDataUpdateResponse;
@@ -165,6 +166,7 @@ public class Exchange {
                 }); // Получение планограмм
 
                 chatExchange();
+                chatGroupExchange();
 
                 new AddressExchange().downloadAddressTable(new ExchangeInterface.ExchangeResponseInterface() {
                     @Override
@@ -1726,6 +1728,48 @@ public class Exchange {
     }
 
     /**
+     * 14.11.2022
+     * Получение групп чатов
+     */
+    public static void chatGroupExchange() {
+        StandartData data = new StandartData();
+        data.mod = "chat";
+        data.act = "list";
+//        data.dt_change_from = Clock.today;
+//        data.dt_change_to = Clock.tomorrow;
+
+        Gson gson = new Gson();
+        String json = gson.toJson(data);
+        JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
+
+        retrofit2.Call<ChatGrpResponse> call = RetrofitBuilder.getRetrofitInterface().CHAT_GRP_DOWNLOAD(RetrofitBuilder.contentType, convertedObject);
+        call.enqueue(new Callback<ChatGrpResponse>() {
+            @Override
+            public void onResponse(Call<ChatGrpResponse> call, Response<ChatGrpResponse> response) {
+                Log.e("chatExchange", "response: " + response);
+                SQL_DB.chatGrpDao().insertData(response.body().list)
+                        .subscribeOn(Schedulers.io())
+                        .subscribe(new DisposableCompletableObserver() {
+                            @Override
+                            public void onComplete() {
+                                Log.e("chatExchange", "onComplete()");
+                            }
+
+                            @Override
+                            public void onError(@io.reactivex.rxjava3.annotations.NonNull Throwable e) {
+                                Log.e("chatExchange", "Throwable e: " + e);
+                            }
+                        });
+            }
+
+            @Override
+            public void onFailure(Call<ChatGrpResponse> call, Throwable t) {
+                Log.e("chatExchange", "Throwable t: " + t);
+            }
+        });
+    }
+
+    /**
      * 05.08.2021
      * Передача на сторону сервера Чатов (прочитанности)
      */
@@ -2171,7 +2215,7 @@ public class Exchange {
                                     Globals.writeToMLOG("ERROR", "downloadAchievements/onResponse/onError", "Throwable e: " + e);
                                 }
                             });
-                }catch (Exception e){
+                } catch (Exception e) {
                     Globals.writeToMLOG("ERROR", "downloadAchievements/onResponse", "Exception e: " + e);
                 }
             }
@@ -2220,7 +2264,7 @@ public class Exchange {
                                     Globals.writeToMLOG("ERROR", "downloadVoteTable/onResponse/onError", "Throwable e: " + e);
                                 }
                             });
-                }catch (Exception e){
+                } catch (Exception e) {
                     Globals.writeToMLOG("ERROR", "downloadVoteTable/onResponse", "Exception e: " + e);
                 }
             }
@@ -2285,7 +2329,6 @@ public class Exchange {
     }
 
 
-
     public void downloadArticleTable() {
         StandartData data = new StandartData();
         data.mod = "data_list";
@@ -2316,7 +2359,7 @@ public class Exchange {
                                 }
                             });
 
-                }catch (Exception e){
+                } catch (Exception e) {
                     Globals.writeToMLOG("ERROR", "downloadArticleTable/onResponse", "Exception e: " + e);
                 }
             }

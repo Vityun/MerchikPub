@@ -18,7 +18,7 @@ public class RoomManager {
                 .fallbackToDestructiveMigration()
                 .enableMultiInstanceInvalidation()
                 .allowMainThreadQueries()
-                .addMigrations(MIGRATION_25_26)
+                .addMigrations(MIGRATION_27_28)
 
                 .build();
     }
@@ -85,5 +85,14 @@ public class RoomManager {
         }
     };
 
+    static final Migration MIGRATION_27_28 = new Migration(27, 28) {
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase database) {
+            database.execSQL("CREATE TABLE IF NOT EXISTS `chat_grp` (`id` INTEGER NOT NULL, `nm` TEXT," +
+                    "`dt` INTEGER, `dt_last_update` INTEGER, `author_id` INTEGER, `theme_id` INTEGER, `addr_id` INTEGER, `client_id` TEXT, " +
+                    "`doc_id` INTEGER, `code_dad2` INTEGER, `code` INTEGER, `last_msg` TEXT, " +
+                    " PRIMARY KEY(`id`))");
+        }
+    };
 
 }

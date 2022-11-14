@@ -11,6 +11,7 @@ import ua.com.merchik.merchik.data.Database.Room.AdditionalMaterialsAddressSDB;
 import ua.com.merchik.merchik.data.Database.Room.AdditionalMaterialsSDB;
 import ua.com.merchik.merchik.data.Database.Room.AddressSDB;
 import ua.com.merchik.merchik.data.Database.Room.ArticleSDB;
+import ua.com.merchik.merchik.data.Database.Room.ChatGrpSDB;
 import ua.com.merchik.merchik.data.Database.Room.ChatSDB;
 import ua.com.merchik.merchik.data.Database.Room.CitySDB;
 import ua.com.merchik.merchik.data.Database.Room.ContentSDB;
@@ -38,6 +39,7 @@ import ua.com.merchik.merchik.database.room.DaoInterfaces.AdditionalMaterialsDao
 import ua.com.merchik.merchik.database.room.DaoInterfaces.AddressDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.ArticleDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.ChatDao;
+import ua.com.merchik.merchik.database.room.DaoInterfaces.ChatGrpDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.CityDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.ContentDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.CustomerDao;
@@ -85,9 +87,10 @@ import ua.com.merchik.merchik.database.room.DaoInterfaces.VotesDao;
                 SamplePhotoSDB.class,            // Образцы Фото
                 AchievementsSDB.class,   // Достижения
                 VoteSDB.class,               // Оценки
-                ArticleSDB.class        // Артикула
+                ArticleSDB.class,        // Артикула
+                ChatGrpSDB.class        // Группы чатов
         },
-        version = 27
+        version = 28
 )
 
 
@@ -143,6 +146,8 @@ public abstract class AppDatabase extends RoomDatabase {
     public abstract VotesDao votesDao();
 
     public abstract ArticleDao articleDao();
+
+    public abstract ChatGrpDao chatGrpDao();
 
     public class MyAutoMigration {
     }
