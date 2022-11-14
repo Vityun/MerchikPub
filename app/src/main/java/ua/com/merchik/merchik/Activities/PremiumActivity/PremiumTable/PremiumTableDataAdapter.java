@@ -109,9 +109,11 @@ public class PremiumTableDataAdapter extends RecyclerView.Adapter<PremiumTableDa
 
         private void openDoc(long codeDad2) {
             if (codeDad2 != 0){
-                WpDataDB wpDataDB = RealmManager.INSTANCE.copyFromRealm(WpDataRealm.getWpDataRowByDad2Id(codeDad2));
+                WpDataDB realmWp = WpDataRealm.getWpDataRowByDad2Id(codeDad2);
 
-                if (wpDataDB != null){
+                if (realmWp != null){
+                    WpDataDB wpDataDB = RealmManager.INSTANCE.copyFromRealm(realmWp);
+
                     long otchetId;
                     int action = wpDataDB.getAction();
                     if (action == 1 || action == 94) {
