@@ -1,5 +1,6 @@
 package ua.com.merchik.merchik.Activities.PremiumActivity.PremiumTable;
 
+import android.text.Html;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -70,11 +71,14 @@ public class PremiumTableHeaderSubAdapter extends RecyclerView.Adapter<PremiumTa
 
             textHeaderLayout.setBackgroundColor(itemView.getContext().getResources().getColor(R.color.inActive));
 
+            CharSequence prihod = (int) detailedSubHeader.header.sumComing < 0 ? Html.fromHtml("<font color=red>" + (int) detailedSubHeader.header.sumComing + "</font>") : "" + (int) detailedSubHeader.header.sumComing;
+            CharSequence rashod = (int) detailedSubHeader.header.sumConsumption < 0 ? Html.fromHtml("<font color=red>" + (int) detailedSubHeader.header.sumConsumption + "</font>") : "" + (int) detailedSubHeader.header.sumConsumption;
+
             name.setText(detailedSubHeader.header.date);
-            column1.setText("" + (int) detailedSubHeader.header.sumInitialBalance);
-            column2.setText("" + (int) detailedSubHeader.header.sumComing);
-            column3.setText("" + (int) detailedSubHeader.header.sumConsumption);
-            column4.setText("" + (int) detailedSubHeader.header.sumEndBalance);
+            column1.setText("" + ((int) detailedSubHeader.header.sumInitialBalance == 0 ? "" : (int) detailedSubHeader.header.sumInitialBalance));
+            column2.setText(prihod);
+            column3.setText(rashod);
+            column4.setText("" + ((int) detailedSubHeader.header.sumEndBalance == 0 ? "" : (int) detailedSubHeader.header.sumEndBalance));
 
             adapter = new PremiumTableDataAdapter(detailedSubHeader.items);
             recyclerSub.setAdapter(adapter);

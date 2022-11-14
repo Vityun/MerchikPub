@@ -35,4 +35,8 @@ public class Detailed {
     @SerializedName("DocDefName")
     @Expose
     public String docDefName;
+
+    @SerializedName("code_dad2")
+    @Expose
+    public Long codeDad2;
 }
