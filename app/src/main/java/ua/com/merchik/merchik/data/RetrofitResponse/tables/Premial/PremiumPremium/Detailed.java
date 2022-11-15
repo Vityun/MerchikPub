@@ -39,4 +39,12 @@ public class Detailed {
     @SerializedName("code_dad2")
     @Expose
     public Long codeDad2;
+
+    @SerializedName("Comment")
+    @Expose
+    public String comment;
+
+    @SerializedName("SumPlan")
+    @Expose
+    public double sumPlan;
 }
