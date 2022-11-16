@@ -14,6 +14,7 @@ import java.util.List;
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
 import io.reactivex.rxjava3.functions.Consumer;
+import ua.com.merchik.merchik.Activities.ReferencesActivity.Chat.ChatGrpAdapter;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.Utils.UniversalAdapter.AdapterUtil;
@@ -47,12 +48,14 @@ public class ReferencesActivity extends toolbar_menus {
         referencesEnum = (Globals.ReferencesEnum) this.getIntent().getSerializableExtra("ReferencesEnum");
 
         recycler = findViewById(R.id.recycler);
+        recycler.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false));
         activity_title = (TextView) findViewById(R.id.activity_title);
 
         initDrawerStuff(findViewById(R.id.drawer_layout), findViewById(R.id.my_toolbar), findViewById(R.id.nav_view));
 
 
         setData();
+        setModuleData();
     }
 
     private void setData() {
@@ -115,10 +118,10 @@ public class ReferencesActivity extends toolbar_menus {
 //                    return "Клиенты (" + data.customerDBList.size() + ")";
                     return "Клиенты (" + data.customers.size() + ")";
 
-                case CHAT:
+/*                case CHAT:
                     int chatSize = 0;
 
-                    SQL_DB.chatDao().getAll()
+                    SQL_DB.chatGrpDao().getAll()
                             .observeOn(AndroidSchedulers.mainThread())
                             .subscribe(res1 -> {
                                 UniversalAdapterData uData = new UniversalAdapterData();
@@ -127,12 +130,54 @@ public class ReferencesActivity extends toolbar_menus {
                                 activity_title.setText("Справочник: " + "Чаты (" + res1.size() + ")");
                             });
 
+//                    SQL_DB.chatDao().getAll()
+//                            .observeOn(AndroidSchedulers.mainThread())
+//                            .subscribe(res1 -> {
+//                                UniversalAdapterData uData = new UniversalAdapterData();
+//                                uData.chats = res1;
+//                                adapter.refresh(uData);
+//                                activity_title.setText("Справочник: " + "Чаты (" + res1.size() + ")");
+//                            });
 
-                    return "Чаты (" + chatSize + ")";
+
+                    return "Чаты (" + chatSize + ")";*/
             }
         }
 
         return res;
+    }
+
+    /**
+     * 15.11.22.
+     * На момент 15.11.22. Обновлён только раздел ЧАТЫ.
+     *
+     *
+     * По мере добавления - переходить на этот вариант обработки.
+     * */
+    private void setModuleData(){
+        if (referencesEnum != null) {
+            switch (referencesEnum) {
+                case CHAT:  // Если при открытии данного раздела у нас выяснилось что это раздел ЧАТЫ
+                    setChatData();
+                    break;
+            }
+        }
+    }
+
+    /**
+     * 15.11.22.
+     * Тут я буду заполнять Активность в соответствии с данными Чата
+     * */
+    private ChatGrpAdapter chatAdapter;
+    private void setChatData(){
+        SQL_DB.chatGrpDao().getAll()
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(result -> {
+                    chatAdapter = new ChatGrpAdapter(result, this);
+                    recycler.setAdapter(chatAdapter);
+                    activity_title.setText("Справочник: " + "Чаты (" + result.size() + ")");
+                });
+
     }
 
 }

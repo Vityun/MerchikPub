@@ -16,6 +16,9 @@ public interface ChatDao {
     @Query("SELECT * FROM chat GROUP BY chat_id ORDER BY dt DESC")
     Single<List<ChatSDB>> getAll();
 
+    @Query("SELECT * FROM chat WHERE chat_id = :id ORDER BY dt DESC")
+    Single<List<ChatSDB>> getAllById(int id);
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     public Completable insertData(List<ChatSDB> data);
 }
