@@ -14,6 +14,7 @@ import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import java.util.Arrays;
 import java.util.List;
 
 import io.realm.RealmResults;
@@ -154,6 +155,8 @@ public class PhotoLogActivity extends toolbar_menus {
 
                 int photoTp = this.getIntent().getIntExtra("photoTp", 999);     // Если открыли Журнал фото с каким-то типом = он тут
 
+                Globals.writeToMLOG("INFO", "PhotoLogActivity/setRecycler/SamplePhoto", "SamplePhoto TP: " + photoTp);
+
                 // Получаем список Образцов Фото для фрмирования запроса к БД Стэк Фото
                 List<SamplePhotoSDB> samplePhotoSDBList;
                 if (photoTp == 999) {
@@ -162,19 +165,30 @@ public class PhotoLogActivity extends toolbar_menus {
                     samplePhotoSDBList = SQL_DB.samplePhotoDao().getPhotoLogActiveAndTp(1, photoTp);
                 }
 
+                // --- DEBUG ---
+                if (samplePhotoSDBList != null){
+                    Globals.writeToMLOG("INFO", "PhotoLogActivity/setRecycler/SamplePhoto/samplePhotoSDBList", "samplePhotoSDBList.Size: " + samplePhotoSDBList.size());
+                }else {
+                    Globals.writeToMLOG("INFO", "PhotoLogActivity/setRecycler/SamplePhoto/samplePhotoSDBList", "samplePhotoSDBList is NULL");
+                }
+                // --- DEBUG ---
+
                 // Формируем ID шники для Стэк Фото
                 String[] photoIds = new String[samplePhotoSDBList.size()];
                 for (int i = 0; i < samplePhotoSDBList.size(); i++) {
                     photoIds[i] = String.valueOf(samplePhotoSDBList.get(i).photoId);
                 }
 
+                Globals.writeToMLOG("INFO", "PhotoLogActivity/setRecycler/SamplePhoto", "photoIds: " + Arrays.toString(photoIds));
+
                 stackPhoto = StackPhotoRealm.getByIds2(photoIds);
+
+                Globals.writeToMLOG("INFO", "PhotoLogActivity/setRecycler/SamplePhoto", "stackPhoto size: " + stackPhoto.size());
 
             } else {
                 photoLogMode = PhotoLogMode.BASE;
                 stackPhoto = RealmManager.getStackPhoto();
                 Globals.writeToMLOG("INFO", "PhotoLogActivity/setRecycler/RealmManager.getStackPhoto()", "stackPhoto: " + stackPhoto.size());
-
             }
         } catch (Exception e) {
             photoLogMode = PhotoLogMode.BASE;
