@@ -46,7 +46,7 @@ public class PremiumTableHeaderSubAdapter extends RecyclerView.Adapter<PremiumTa
 
         private ConstraintLayout layout, textHeaderLayout;
         private TextView name;
-        private TextView column1, column2, column3, column4;
+        private TextView column1, column5, column2, column3, column4;
         private RecyclerView recyclerSub;
         private PremiumTableDataAdapter adapter;
 
@@ -56,6 +56,7 @@ public class PremiumTableHeaderSubAdapter extends RecyclerView.Adapter<PremiumTa
             textHeaderLayout = itemView.findViewById(R.id.header_text);
             name = itemView.findViewById(R.id.name);
             column1 = itemView.findViewById(R.id.col1);
+            column5 = itemView.findViewById(R.id.col5);
             column2 = itemView.findViewById(R.id.col2);
             column3 = itemView.findViewById(R.id.col3);
             column4 = itemView.findViewById(R.id.col4);
@@ -76,6 +77,7 @@ public class PremiumTableHeaderSubAdapter extends RecyclerView.Adapter<PremiumTa
 
             name.setText(detailedSubHeader.header.date);
             column1.setText("" + ((int) detailedSubHeader.header.sumInitialBalance == 0 ? "" : (int) detailedSubHeader.header.sumInitialBalance));
+            column5.setText("-");
             column2.setText(prihod);
             column3.setText(rashod);
             column4.setText("" + ((int) detailedSubHeader.header.sumEndBalance == 0 ? "" : (int) detailedSubHeader.header.sumEndBalance));

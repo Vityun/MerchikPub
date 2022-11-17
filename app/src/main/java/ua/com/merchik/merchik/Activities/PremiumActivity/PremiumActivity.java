@@ -49,7 +49,7 @@ public class PremiumActivity extends toolbar_menus {
 
     private RecyclerView recycler, table;
     private TextView text, userTV;
-    private TextView date, col1, col2, col3, col4;
+    private TextView date, col1, col5, col2, col3, col4;
     private Spinner spinner;
 
     private List<PremiumTableHeader> headerArrayList = new ArrayList<>();
@@ -83,6 +83,7 @@ public class PremiumActivity extends toolbar_menus {
         text = findViewById(R.id.text);
         date = findViewById(R.id.name);
         col1 = findViewById(R.id.col1);
+        col5 = findViewById(R.id.col5);
         col2 = findViewById(R.id.col2);
         col3 = findViewById(R.id.col3);
         col4 = findViewById(R.id.col4);
@@ -100,6 +101,7 @@ public class PremiumActivity extends toolbar_menus {
 
         date.setText("Дата");
         col1.setText("Поч. Зал.");
+        col5.setText("План");
         col2.setText("Дохід");
         col3.setText("Витрати");
         col4.setText("Кін. Зал.");

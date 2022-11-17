@@ -62,7 +62,7 @@ public class PremiumTableDataAdapter extends RecyclerView.Adapter<PremiumTableDa
 
         private ConstraintLayout layout;
         private TextView name;
-        private TextView column1, column2, column3, column4;
+        private TextView column1, column5, column2, column3, column4;
 
         public PremiumTableHeaderViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -70,6 +70,7 @@ public class PremiumTableDataAdapter extends RecyclerView.Adapter<PremiumTableDa
             name = itemView.findViewById(R.id.name);
             name.setPaintFlags(name.getPaintFlags() | Paint.UNDERLINE_TEXT_FLAG);
             column1 = itemView.findViewById(R.id.col1);
+            column5 = itemView.findViewById(R.id.col5);
             column2 = itemView.findViewById(R.id.col2);
             column3 = itemView.findViewById(R.id.col3);
             column4 = itemView.findViewById(R.id.col4);
@@ -97,6 +98,7 @@ public class PremiumTableDataAdapter extends RecyclerView.Adapter<PremiumTableDa
             name.setTextColor(-10987432);
             column1.setText("");
             column1.setVisibility(View.GONE);
+            column5.setText("" + (int)detailed.sumPlan);
             column2.setText(prihodChar);
             column3.setText(rashodChar);
             column4.setText("");
