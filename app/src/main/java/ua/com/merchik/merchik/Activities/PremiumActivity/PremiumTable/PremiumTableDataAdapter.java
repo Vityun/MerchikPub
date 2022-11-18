@@ -99,6 +99,7 @@ public class PremiumTableDataAdapter extends RecyclerView.Adapter<PremiumTableDa
             column1.setText("");
             column1.setVisibility(View.GONE);
             column5.setText("" + (int)detailed.sumPlan);
+            column5.setTextColor(-10987432);
             column2.setText(prihodChar);
             column3.setText(rashodChar);
             column4.setText("");
