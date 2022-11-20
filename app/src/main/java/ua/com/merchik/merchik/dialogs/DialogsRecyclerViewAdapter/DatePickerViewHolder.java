@@ -61,7 +61,7 @@ public class DatePickerViewHolder extends RecyclerView.ViewHolder {
         dateFromEditText.setHint(formattedDateFrom);
         dateToEditText.setHint(formattedDateTo);
 
-        if (block.dateFrom != null && block.state){
+        if (block.dateFrom != null && block.state) {
             dateFromEditText.setText(formattedDateFrom);
 
             SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
@@ -69,7 +69,7 @@ public class DatePickerViewHolder extends RecyclerView.ViewHolder {
             block.resultDateFrom = yyyy;
         }
 
-        if (block.dateTo != null && block.state){
+        if (block.dateTo != null && block.state) {
             dateToEditText.setText(formattedDateTo);
 
             SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
@@ -78,20 +78,26 @@ public class DatePickerViewHolder extends RecyclerView.ViewHolder {
         }
 
 
-        dateFromEditText.setOnClickListener(view -> setDatePicker(dateFromEditText, new Clicks.click() {
-            @Override
-            public <T> void click(T data) {
-                block.resultDateFrom = (String) data;
-                block.click.onSuccess("Вы установили: " + dateFromEditText.getText().toString());
-            }
-        }));
-        dateToEditText.setOnClickListener(view -> setDatePicker(dateToEditText, new Clicks.click() {
-            @Override
-            public <T> void click(T data) {
-                block.resultDateTo = (String) data;
-                block.click.onSuccess("Вы установили дату: " + dateToEditText.getText().toString());
-            }
-        }));
+        dateFromEditText.setOnTouchListener((view, motionEvent) -> {
+            setDatePicker(dateFromEditText, new Clicks.click() {
+                @Override
+                public <T> void click(T data) {
+                    block.resultDateFrom = (String) data;
+                    block.click.onSuccess("Вы установили: " + dateFromEditText.getText().toString());
+                }
+            });
+            return false;
+        });
+        dateToEditText.setOnTouchListener((view, motionEvent) -> {
+            setDatePicker(dateToEditText, new Clicks.click() {
+                @Override
+                public <T> void click(T data) {
+                    block.resultDateTo = (String) data;
+                    block.click.onSuccess("Вы установили дату: " + dateToEditText.getText().toString());
+                }
+            });
+            return false;
+        });
     }
 
 
@@ -107,7 +113,7 @@ public class DatePickerViewHolder extends RecyclerView.ViewHolder {
                 d = "0" + d;
             }
 
-            String m = String.valueOf(month+1); // +1 потому что каллендарь дохуя умный и месяцы у него 0-11
+            String m = String.valueOf(month + 1); // +1 потому что каллендарь дохуя умный и месяцы у него 0-11
             if (m.length() < 2) {
                 m = "0" + m;
             }
