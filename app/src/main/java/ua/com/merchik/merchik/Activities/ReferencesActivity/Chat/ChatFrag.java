@@ -15,12 +15,11 @@ import androidx.recyclerview.widget.RecyclerView;
 import java.util.List;
 
 import ua.com.merchik.merchik.R;
-import ua.com.merchik.merchik.data.Database.Room.ChatGrpSDB;
-import ua.com.merchik.merchik.data.Database.Room.ChatSDB;
+import ua.com.merchik.merchik.data.Database.Room.Chat.ChatSDB;
 
 public class ChatFrag extends Fragment {
 
-    private ChatGrpSDB chat;
+    private ChatGrpJoinedTemp chat;
     private List<ChatSDB> massages;
 
     private ImageView back;
@@ -29,7 +28,7 @@ public class ChatFrag extends Fragment {
 
     private int norReadMassageCnt = 0;
 
-    public ChatFrag(ChatGrpSDB chat, List<ChatSDB> massages) {
+    public ChatFrag(ChatGrpJoinedTemp chat, List<ChatSDB> massages) {
         this.chat = chat;
         this.massages = massages;
     }

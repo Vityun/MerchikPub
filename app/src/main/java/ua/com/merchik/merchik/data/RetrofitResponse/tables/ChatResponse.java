@@ -5,7 +5,7 @@ import com.google.gson.annotations.SerializedName;
 
 import java.util.List;
 
-import ua.com.merchik.merchik.data.Database.Room.ChatSDB;
+import ua.com.merchik.merchik.data.Database.Room.Chat.ChatSDB;
 
 public class ChatResponse {
     @SerializedName("state")

@@ -11,8 +11,9 @@ import ua.com.merchik.merchik.data.Database.Room.AdditionalMaterialsAddressSDB;
 import ua.com.merchik.merchik.data.Database.Room.AdditionalMaterialsSDB;
 import ua.com.merchik.merchik.data.Database.Room.AddressSDB;
 import ua.com.merchik.merchik.data.Database.Room.ArticleSDB;
-import ua.com.merchik.merchik.data.Database.Room.ChatGrpSDB;
-import ua.com.merchik.merchik.data.Database.Room.ChatSDB;
+import ua.com.merchik.merchik.data.Database.Room.Chat.ChatGrpSDB;
+import ua.com.merchik.merchik.data.Database.Room.Chat.ChatGrpTEMPSDB;
+import ua.com.merchik.merchik.data.Database.Room.Chat.ChatSDB;
 import ua.com.merchik.merchik.data.Database.Room.CitySDB;
 import ua.com.merchik.merchik.data.Database.Room.ContentSDB;
 import ua.com.merchik.merchik.data.Database.Room.CustomerSDB;
@@ -88,9 +89,10 @@ import ua.com.merchik.merchik.database.room.DaoInterfaces.VotesDao;
                 AchievementsSDB.class,   // Достижения
                 VoteSDB.class,               // Оценки
                 ArticleSDB.class,        // Артикула
-                ChatGrpSDB.class        // Группы чатов
+                ChatGrpSDB.class,        // Группы чатов
+                ChatGrpTEMPSDB.class        // Временная таблица
         },
-        version = 28
+        version = 29
 )
 
 

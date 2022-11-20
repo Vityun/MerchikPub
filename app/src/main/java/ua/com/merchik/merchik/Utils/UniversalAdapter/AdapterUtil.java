@@ -25,7 +25,7 @@ import ua.com.merchik.merchik.ServerExchange.Exchange;
 import ua.com.merchik.merchik.ServerExchange.ExchangeInterface;
 import ua.com.merchik.merchik.ServerExchange.PhotoDownload;
 import ua.com.merchik.merchik.data.Database.Room.AddressSDB;
-import ua.com.merchik.merchik.data.Database.Room.ChatSDB;
+import ua.com.merchik.merchik.data.Database.Room.Chat.ChatSDB;
 import ua.com.merchik.merchik.data.Database.Room.CustomerSDB;
 import ua.com.merchik.merchik.data.Database.Room.UsersSDB;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;

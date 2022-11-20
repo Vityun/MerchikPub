@@ -1,4 +1,4 @@
-package ua.com.merchik.merchik.data.Database.Room;
+package ua.com.merchik.merchik.data.Database.Room.Chat;
 
 import androidx.room.ColumnInfo;
 import androidx.room.Entity;

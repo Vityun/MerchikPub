@@ -12,8 +12,10 @@ import androidx.recyclerview.widget.RecyclerView;
 import java.util.List;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
+import io.reactivex.rxjava3.annotations.NonNull;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
 import io.reactivex.rxjava3.functions.Consumer;
+import io.reactivex.rxjava3.observers.DisposableCompletableObserver;
 import ua.com.merchik.merchik.Activities.ReferencesActivity.Chat.ChatGrpAdapter;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.R;
@@ -150,11 +152,11 @@ public class ReferencesActivity extends toolbar_menus {
     /**
      * 15.11.22.
      * На момент 15.11.22. Обновлён только раздел ЧАТЫ.
-     *
-     *
+     * <p>
+     * <p>
      * По мере добавления - переходить на этот вариант обработки.
-     * */
-    private void setModuleData(){
+     */
+    private void setModuleData() {
         if (referencesEnum != null) {
             switch (referencesEnum) {
                 case CHAT:  // Если при открытии данного раздела у нас выяснилось что это раздел ЧАТЫ
@@ -167,16 +169,58 @@ public class ReferencesActivity extends toolbar_menus {
     /**
      * 15.11.22.
      * Тут я буду заполнять Активность в соответствии с данными Чата
-     * */
+     */
     private ChatGrpAdapter chatAdapter;
-    private void setChatData(){
+
+    private void setChatData() {
+
+        ProgressDialog pg = new ProgressDialog(this);
+        pg.setMessage("Почекайте");
+        pg.show();
+
+        try {
+            Log.d("chat_grp_time", "insertInTemp time start");
+            SQL_DB.chatGrpDao().getTempChatGrp().observeOn(AndroidSchedulers.mainThread())  // Формирую временную табличку
+                    .subscribe(result -> {
+                                Log.d("chat_grp_time", "get temp table result");
+                                SQL_DB.chatGrpDao().insertInTemp(result)                    // Записываю в неё данные
+                                        .observeOn(AndroidSchedulers.mainThread())
+                                        .subscribe(new DisposableCompletableObserver() {
+                                            @Override
+                                            public void onComplete() {
+                                                Log.d("chat_grp_time", "insert in temp table result");
+                                                SQL_DB.chatGrpDao().getChatGrpJoinedTemp().observeOn(AndroidSchedulers.mainThread())
+                                                        .subscribe(result -> {
+                                                            Log.d("chat_grp_time", "result adapter data: " + result);
+                                                            if (pg.isShowing()) pg.dismiss();
+                                                            chatAdapter = new ChatGrpAdapter(result, ReferencesActivity.this);
+                                                            recycler.setAdapter(chatAdapter);
+                                                            activity_title.setText("Справочник: " + "Чаты (" + result.size() + ")");
+                                                        });
+                                            }
+
+                                            @Override
+                                            public void onError(@NonNull Throwable e) {
+                                                Log.d("chat_grp_time", " error insert in temp table result: " + e);
+                                                if (pg.isShowing()) pg.dismiss();
+                                            }
+                                        });
+                            }
+                    );
+
+        } catch (Exception e) {
+            Log.d("chat_grp_time", "Exception e: " + e);
+        }
+
+/*        Log.d("chat_grp_time", "time start");
         SQL_DB.chatGrpDao().getAll()
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(result -> {
+                    Log.d("chat_grp_time", "time result");
                     chatAdapter = new ChatGrpAdapter(result, this);
                     recycler.setAdapter(chatAdapter);
                     activity_title.setText("Справочник: " + "Чаты (" + result.size() + ")");
-                });
+                });*/
 
     }
 

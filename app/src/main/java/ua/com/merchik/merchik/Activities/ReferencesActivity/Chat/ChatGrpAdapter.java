@@ -18,16 +18,15 @@ import java.util.List;
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.R;
-import ua.com.merchik.merchik.data.Database.Room.ChatGrpSDB;
 
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
 public class ChatGrpAdapter extends RecyclerView.Adapter<ChatGrpAdapter.DefaultViewHolder> {
 
-    private List<ChatGrpSDB> data;
+    private List<ChatGrpJoinedTemp> data;
     private AppCompatActivity activity;
 
-    public ChatGrpAdapter(List<ChatGrpSDB> data, AppCompatActivity activity) {
+    public ChatGrpAdapter(List<ChatGrpJoinedTemp> data, AppCompatActivity activity) {
         this.data = data;
         this.activity = activity;
     }
@@ -50,7 +49,7 @@ public class ChatGrpAdapter extends RecyclerView.Adapter<ChatGrpAdapter.DefaultV
 
     public class DefaultViewHolder extends RecyclerView.ViewHolder {
 
-        private ConstraintLayout layout;
+        private ConstraintLayout layout, layoutCountMsg;
         private TextView title, lastMsg, date, countMsg;
         private ImageView chatImg;
 
@@ -58,6 +57,7 @@ public class ChatGrpAdapter extends RecyclerView.Adapter<ChatGrpAdapter.DefaultV
             super(itemView);
 
             layout = itemView.findViewById(R.id.layout_chat_grp);
+            layoutCountMsg = itemView.findViewById(R.id.layoutCountMsg);
             chatImg = itemView.findViewById(R.id.chat_img);
             title = itemView.findViewById(R.id.chat_title);
             lastMsg = itemView.findViewById(R.id.chat_last_msg);
@@ -65,14 +65,10 @@ public class ChatGrpAdapter extends RecyclerView.Adapter<ChatGrpAdapter.DefaultV
             countMsg = itemView.findViewById(R.id.chat_items);
         }
 
-        public void bind(ChatGrpSDB chatGrpItem) {
-
-
-            SQL_DB.chatDao().getAllById(chatGrpItem.id)
+        public void bind(ChatGrpJoinedTemp chatGrpItem) {
+            SQL_DB.chatDao().getAllById(chatGrpItem.chatId)
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribe(result -> {
-                        countMsg.setText("" + result.size());
-
                         layout.setOnClickListener(view -> {
                             FragmentManager manager = activity.getSupportFragmentManager();
                             FragmentTransaction transaction = manager.beginTransaction();
@@ -82,9 +78,22 @@ public class ChatGrpAdapter extends RecyclerView.Adapter<ChatGrpAdapter.DefaultV
                         });
                     });
 
-            title.setText(chatGrpItem.nm);
+            StringBuilder titleStr = new StringBuilder();
+            titleStr.append(chatGrpItem.nm).append(" (").append(chatGrpItem.kolRead).append("/").append(chatGrpItem.kolUnread).append("/").append(chatGrpItem.kolVsego).append(")");
+            title.setText(titleStr);
             lastMsg.setText(chatGrpItem.lastMsg);
-            date.setText(Clock.getHumanTimeSecPattern(chatGrpItem.dtLastUpdate, "HH:mm dd-MM"));
+            date.setText(Clock.getHumanTimeSecPattern(chatGrpItem.lastUpdate, "HH:mm dd-MM"));
+            if (chatGrpItem.kolUnread != 0){
+                layoutCountMsg.setVisibility(View.VISIBLE);
+                countMsg.setVisibility(View.VISIBLE);
+                countMsg.setText("" + chatGrpItem.kolUnread);
+                chatImg.setImageResource(R.drawable.ic_email);
+            }else {
+                layoutCountMsg.setVisibility(View.GONE);
+                countMsg.setVisibility(View.GONE);
+                chatImg.setImageResource(R.drawable.ic_email_open);
+            }
+
         }
     }
 }

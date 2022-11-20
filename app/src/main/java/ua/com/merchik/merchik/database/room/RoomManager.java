@@ -18,7 +18,7 @@ public class RoomManager {
                 .fallbackToDestructiveMigration()
                 .enableMultiInstanceInvalidation()
                 .allowMainThreadQueries()
-                .addMigrations(MIGRATION_27_28)
+                .addMigrations(MIGRATION_28_29)
 
                 .build();
     }
@@ -92,6 +92,19 @@ public class RoomManager {
                     "`dt` INTEGER, `dt_last_update` INTEGER, `author_id` INTEGER, `theme_id` INTEGER, `addr_id` INTEGER, `client_id` TEXT, " +
                     "`doc_id` INTEGER, `code_dad2` INTEGER, `code` INTEGER, `last_msg` TEXT, " +
                     " PRIMARY KEY(`id`))");
+        }
+    };
+
+    static final Migration MIGRATION_28_29 = new Migration(28, 29) {
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase database) {
+            database.execSQL("create table IF NOT EXISTS t_ch_msg_gr\n" +
+                    "(\n" +
+                    "    chat_id int, \n" +
+                    "    kol_vsego int, \n" +
+                    "    kol_read int, \n" +
+                    "    kol_unread int, PRIMARY KEY(`chat_id`) \n" +
+                    ")");
         }
     };
 

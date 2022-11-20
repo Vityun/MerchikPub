@@ -9,7 +9,7 @@
     android:paddingBottom="8dp">
 
     <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/constraintLayout18"
+        android:id="@+id/layoutCountMsg"
         android:layout_width="20dp"
         android:layout_height="20dp"
         android:background="@drawable/ovar_border_red"
@@ -70,7 +70,7 @@
         android:singleLine="true"
         android:text="Последнее сообщение"
         app:layout_constraintBottom_toBottomOf="@+id/chat_img"
-        app:layout_constraintEnd_toStartOf="@+id/constraintLayout18"
+        app:layout_constraintEnd_toStartOf="@+id/layoutCountMsg"
         app:layout_constraintStart_toEndOf="@+id/chat_img"
         app:layout_constraintTop_toBottomOf="@+id/chat_title" />
 

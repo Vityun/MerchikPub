@@ -14,7 +14,7 @@ import java.util.List;
 
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.R;
-import ua.com.merchik.merchik.data.Database.Room.ChatSDB;
+import ua.com.merchik.merchik.data.Database.Room.Chat.ChatSDB;
 
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
