@@ -6,7 +6,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -56,10 +55,7 @@ public class ChatFrag extends Fragment {
 
     private void setBack() {
         back.setOnClickListener(view -> {
-//            getActivity().getSupportFragmentManager().popBackStackImmediate();
-            getActivity().onBackPressed();
-
-            Toast.makeText(getContext(), "Ви натиснули 'Назад'", Toast.LENGTH_SHORT).show();
+            getFragmentManager().beginTransaction().remove(ChatFrag.this).commit();
         });
     }
 
