@@ -27,9 +27,13 @@ public class ChatFrag extends Fragment {
 
     private int norReadMassageCnt = 0;
 
-    public ChatFrag(ChatGrpJoinedTemp chat, List<ChatSDB> massages) {
+    public ChatFrag(ChatGrpJoinedTemp chat, List<ChatSDB> massages, UpdateChat updateChat) {
         this.chat = chat;
         this.massages = massages;
+    }
+
+    public interface UpdateChat{
+        void updateChat();
     }
 
     @Override
@@ -66,7 +70,7 @@ public class ChatFrag extends Fragment {
     }
 
     private void setRecycler() {
-        recycler.setAdapter(new ChatMassagesAdapter(massages, () -> {
+        recycler.setAdapter(new ChatMassagesAdapter(massages, (ChatSDB item) -> {
             norReadMassageCnt--;
             this.count.setText("" + norReadMassageCnt);
         }));

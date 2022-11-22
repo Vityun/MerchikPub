@@ -31,6 +31,10 @@ public class ChatMassagesAdapter extends RecyclerView.Adapter<ChatMassagesAdapte
         this.listener = listener;
     }
 
+    public interface ChatMassageListener{
+        void seeMassage(ChatSDB item);
+    }
+
     @NonNull
     @Override
     public DefaultViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
@@ -76,15 +80,11 @@ public class ChatMassagesAdapter extends RecyclerView.Adapter<ChatMassagesAdapte
 
                 sendReadMassageStatus(item);
 
-                listener.seeMassage();
+                listener.seeMassage(item);
             }
             info.setText("Повідомлення: " + item.id + " (" + (item.dtRead > 0 ? "Прочитано" : "Не прочитано") + ")");
             time.setText(Clock.getHumanTimeSecPattern(item.dt, "HH:mm dd-MM"));
         }
-    }
-
-    public interface ChatMassageListener{
-        void seeMassage();
     }
 
     private void sendReadMassageStatus(ChatSDB item){
