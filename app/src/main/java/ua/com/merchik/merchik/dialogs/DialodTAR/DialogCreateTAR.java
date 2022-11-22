@@ -12,6 +12,8 @@ import android.widget.Toast;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.gson.Gson;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -120,6 +122,9 @@ public class DialogCreateTAR extends DialogData {
 
     public void refreshAdaper(StackPhotoDB photo) {
         Log.d("test", "data: " + adapter.data);
+
+        String stackJson = new Gson().toJson(photo);
+        Globals.writeToMLOG("INFO", "DialogCreateTAR.refreshAdaper", "stack photo: " + stackJson);
 
         this.photo = photo;
 

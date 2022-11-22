@@ -13,6 +13,7 @@ import androidx.viewpager.widget.ViewPager;
 
 import com.google.android.material.tabs.TabLayout;
 
+import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
 
@@ -79,6 +80,7 @@ public class TARSecondFrag extends Fragment {
     }
 
     public void setPhoto(Integer id){
+        Globals.writeToMLOG("INFO", "TARSecondFrag.setPhoto", "Photo ID: " + id);
         adapter.setDataToFrag3(id);
     }
 

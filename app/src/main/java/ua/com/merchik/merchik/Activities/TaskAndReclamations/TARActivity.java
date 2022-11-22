@@ -13,6 +13,7 @@ import androidx.viewpager.widget.ViewPager;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.tabs.TabLayout;
+import com.google.gson.Gson;
 
 import java.io.File;
 import java.util.List;
@@ -260,8 +261,8 @@ public class TARActivity extends toolbar_menus implements TARFragmentHome.OnFrag
                 Globals.writeToMLOG("INFO", "TARActivity.onActivityResult.requestCode200", "tar: " + tar);
 
                 StackPhotoDB stackPhotoDB = savePhoto(MakePhoto.openCameraPhotoUri, tar);
-
-                Globals.writeToMLOG("INFO", "TARActivity.onActivityResult.requestCode200", "stackPhotoDB: " + stackPhotoDB);
+                String stackJson = new Gson().toJson(stackPhotoDB);
+                Globals.writeToMLOG("INFO", "TARActivity.onActivityResult.requestCode200", "stackPhotoDB: " + stackJson);
 
                 MakePhoto.openCameraPhotoUri = null;
 

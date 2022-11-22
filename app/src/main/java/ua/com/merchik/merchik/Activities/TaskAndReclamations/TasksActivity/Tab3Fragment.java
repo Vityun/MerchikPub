@@ -145,14 +145,16 @@ public class Tab3Fragment extends Fragment {
                         // Подготовка данных для сохранения в БД
                         switch ((int) data) {
                             case 1:
+                                Globals.writeToMLOG("INFO", "Tab3Fragment.setAddButton.case1", "start");
                                 intentOpen.putExtra("choise", true);
                                 intentOpen.putExtra("resultCode", 101);
                                 startActivityForResult(intentOpen, 101);
-                                Toast.makeText(v.getContext(), "Короткий клик", Toast.LENGTH_SHORT).show();
+//                                Toast.makeText(v.getContext(), "Короткий клик", Toast.LENGTH_SHORT).show();
                                 break;
 
                             case 2:
                                 try {
+                                    Globals.writeToMLOG("INFO", "Tab3Fragment.setAddButton.case2", "start");
                                     TARSecondFrag.TaRID = tarData.id;
                                     MakePhoto makePhoto = new MakePhoto();
                                     makePhoto.openCamera(getActivity(), MakePhoto.CAMERA_REQUEST_TAKE_PHOTO);
@@ -160,82 +162,90 @@ public class Tab3Fragment extends Fragment {
                                     Globals.writeToMLOG("ERROR", "Tab3Fragment.setAddButton.case2", "Exception e: " + e);
                                 }
 
-                                Toast.makeText(v.getContext(), "Долгий клик", Toast.LENGTH_SHORT).show();
+//                                Toast.makeText(v.getContext(), "Долгий клик", Toast.LENGTH_SHORT).show();
                                 break;
                         }
                     }
                 });
                 dialog.clickSave(() -> {
-                    String res = dialog.comment;
+                    try {
+                        Globals.writeToMLOG("INFO", "Tab3Fragment.dialog.clickSave", "start");
+                        String res = dialog.comment;
 
-                    if(res.length() < 20){
-                        DialogData dialogShortComment = new DialogData(mContext);
-                        dialogShortComment.setTitle("Ошибка комментария");
-                        dialogShortComment.setText("Коментарий должен быть больше 20 символов");
-                        dialogShortComment.setDialogIco();
-                        dialogShortComment.setClose(dialog::dismiss);
-                        dialogShortComment.show();
+                        if(res.length() < 20){
+                            DialogData dialogShortComment = new DialogData(mContext);
+                            dialogShortComment.setTitle("Ошибка комментария");
+                            dialogShortComment.setText("Коментарий должен быть больше 20 символов");
+                            dialogShortComment.setDialogIco();
+                            dialogShortComment.setClose(dialog::dismiss);
+                            dialogShortComment.show();
 
 //                        Toast.makeText(mContext, "Коментарий должен быть больше 20 символов", Toast.LENGTH_SHORT).show();
-                        dialog.dismiss();
-                        return;
-                    }
-
-                    // Сохранение коммента в БД
-                    Toast.makeText(mContext, "Сохраняем в БД: " + res, Toast.LENGTH_SHORT).show();
-
-                    TARCommentsDB row = new TARCommentsDB();
-                    row.setID(String.valueOf(System.currentTimeMillis()));
-                    row.setComment(res);
-                    row.setDt(String.valueOf(System.currentTimeMillis() / 1000));
-                    row.setRId(String.valueOf(tarData.id));
-                    row.startUpdate = true;
-                    try {
-                        if (dialog.photo != null){
-                            row.setPhoto(dialog.photo.getPhotoServerId()); // должно быть ID с сайта
-                            row.photo_hash = dialog.photo.getPhoto_hash(); // Хэш фотографии
+                            Globals.writeToMLOG("INFO", "Tab3Fragment.dialog.clickSave", "Коментарий должен быть больше 20 символов");
+                            dialog.dismiss();
+                            return;
                         }
-                    }catch (Exception e){
-                        Toast.makeText(mContext, "Фото сохранить не удалось!", Toast.LENGTH_LONG).show();
-                    }
 
-                    row.setTp(String.valueOf(tarData.tp));
-                    row.setWho(String.valueOf(tarData.vinovnik));
+                        // Сохранение коммента в БД
+                        Toast.makeText(mContext, "Сохраняем в БД: " + res, Toast.LENGTH_SHORT).show();
 
+                        TARCommentsDB row = new TARCommentsDB();
+                        row.setID(String.valueOf(System.currentTimeMillis()));
+                        row.setComment(res);
+                        row.setDt(String.valueOf(System.currentTimeMillis() / 1000));
+                        row.setRId(String.valueOf(tarData.id));
+                        row.startUpdate = true;
+                        try {
+                            if (dialog.photo != null){
+                                row.setPhoto(dialog.photo.getPhotoServerId()); // должно быть ID с сайта
+                                row.photo_hash = dialog.photo.getPhoto_hash(); // Хэш фотографии
+                            }
+                        }catch (Exception e){
+                            Toast.makeText(mContext, "Фото сохранить не удалось!", Toast.LENGTH_LONG).show();
+                            Globals.writeToMLOG("INFO", "Tab3Fragment.dialog.clickSave", "Фото сохранить не удалось!");
+                        }
 
-
-                    tarData.lastAnswer = res;
-                    tarData.lastAnswerUserId = Globals.userId;
-                    SQL_DB.tarDao().insertData(Collections.singletonList(tarData))
-                            .subscribeOn(Schedulers.io())
-                            .subscribe(new DisposableCompletableObserver() {
-                                @Override
-                                public void onComplete() {
-                                    Log.d("test", "test");
-                                }
-
-                                @Override
-                                public void onError(@io.reactivex.rxjava3.annotations.NonNull Throwable e) {
-                                    Log.d("test", "test");
-                                }
-                            });
+                        row.setTp(String.valueOf(tarData.tp));
+                        row.setWho(String.valueOf(tarData.vinovnik));
 
 
-                    RealmManager.INSTANCE.executeTransaction((realm -> {
-                        RealmManager.INSTANCE.copyToRealm(row);
-                    }));
 
-                    // Моментальная попытка выгрузить комментарий
+                        tarData.lastAnswer = res;
+                        tarData.lastAnswerUserId = Globals.userId;
+                        SQL_DB.tarDao().insertData(Collections.singletonList(tarData))
+                                .subscribeOn(Schedulers.io())
+                                .subscribe(new DisposableCompletableObserver() {
+                                    @Override
+                                    public void onComplete() {
+                                        Log.d("test", "test");
+                                    }
+
+                                    @Override
+                                    public void onError(@io.reactivex.rxjava3.annotations.NonNull Throwable e) {
+                                        Log.d("test", "test");
+                                    }
+                                });
+
+
+                        RealmManager.INSTANCE.executeTransaction((realm -> {
+                            RealmManager.INSTANCE.copyToRealm(row);
+                        }));
+
+                        // Моментальная попытка выгрузить комментарий
 //                    Exchange exchange = new Exchange();
 //                    exchange.uploadTARComments(row);
 
-                    if (adapter != null && dataComments != null) {
-                        dataComments.add(0, row);
-                        adapter.notifyItemInserted(0);
-                        recyclerView.smoothScrollToPosition(0);
+                        if (adapter != null && dataComments != null) {
+                            dataComments.add(0, row);
+                            adapter.notifyItemInserted(0);
+                            recyclerView.smoothScrollToPosition(0);
+                        }
+
+                        dialog.dismiss();
+                    }catch (Exception e){
+                        Globals.writeToMLOG("ERROR", "Tab3Fragment.dialog.clickSave", "Exception e: " + e);
                     }
 
-                    dialog.dismiss();
                 }, 2);
                 dialog.setClose(dialog::dismiss);
                 dialog.show();
