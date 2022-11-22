@@ -56,7 +56,9 @@ public class ChatFrag extends Fragment {
 
     private void setBack() {
         back.setOnClickListener(view -> {
-            getActivity().getSupportFragmentManager().popBackStackImmediate();
+//            getActivity().getSupportFragmentManager().popBackStackImmediate();
+            getActivity().onBackPressed();
+
             Toast.makeText(getContext(), "Ви натиснули 'Назад'", Toast.LENGTH_SHORT).show();
         });
     }

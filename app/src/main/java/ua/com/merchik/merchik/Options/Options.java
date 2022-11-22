@@ -1204,7 +1204,7 @@ public class Options {
      */
     private boolean optionStartWork_138518(Context context, WpDataDB wpDataDB, OptionsDB optionsDB, OptionMassageType type, NNKMode mode) {
         boolean result;
-        globals.writeToMLOG(Clock.getHumanTime() + "_INFO.DetailedReportButtons.class.pressStartWork: " + "ENTER" + "\n");
+        Globals.writeToMLOG("INFO", "DetailedReportButtons.class.pressStartWork", "ENTER. wpDataDB.codeDAD2: " + wpDataDB.getCode_dad2());
         if (wpDataDB.getVisit_start_dt() > 0) {
             Toast.makeText(context, "Работа уже начата!", Toast.LENGTH_SHORT).show();
             globals.writeToMLOG(Clock.getHumanTime() + "_INFO.DetailedReportButtons.class.pressStartWork: " + "Работа уже начата!" + "\n");
@@ -1235,14 +1235,14 @@ public class Options {
                     }
                 });
 
-//                globals.writeToMLOG(Clock.getHumanTime() + "_INFO.DetailedReportButtons.class.pressStartWork: " + "Вы начали работу в: " + startTime + " / отчёт: " + wpDataDB.getDoc_num_otchet() + "\n");
-                Globals.writeToMLOG("INFO", "DetailedReportButtons.class.pressStartWork", "Вы начали работу в: " + startTime + " / отчёт: " + wpDataDB.getDoc_num_otchet());
+                Globals.writeToMLOG("INFO", "DetailedReportButtons.class.pressStartWork", "Вы начали работу в: " + startTime + " / отчёт: " + wpDataDB.getDoc_num_otchet() + " wpDataDB.getCode_dad2(): " + wpDataDB.getCode_dad2());
 
                 Toast.makeText(context, "Вы начали работу в: " + Clock.getHumanTimeOpt(startTime * 1000), Toast.LENGTH_SHORT).show();
                 result = true;
             } catch (Exception e) {
                 // Set to log error
                 Toast.makeText(context, "Возникла ошибка: " + e, Toast.LENGTH_SHORT).show();
+                Globals.writeToMLOG("ERROR", "DetailedReportButtons.class.pressStartWork", "wpDataDB.getCode_dad2(): " + wpDataDB.getCode_dad2() + "Exception e: " + e);
                 result = false;
             }
         }
@@ -1347,9 +1347,10 @@ public class Options {
      */
     private boolean optionEndWork_138520(Context context, WpDataDB wpDataDB, OptionsDB optionsDB, OptionMassageType type, NNKMode mode) {
         boolean result;
-        globals.writeToMLOG(Clock.getHumanTime() + "_INFO.DetailedReportButtons.class.pressEndWork: " + "ENTER" + "\n");
+        Globals.writeToMLOG("INFO", "DetailedReportButtons.class.pressEndWork", "ENTER. wpDataDB.codeDAD2: " + wpDataDB.getCode_dad2());
         if (wpDataDB.getVisit_end_dt() > 0) {
             Toast.makeText(context, "Работа уже окончена!", Toast.LENGTH_SHORT).show();
+            Globals.writeToMLOG("INFO", "DetailedReportButtons.class.pressEndWork", "Работа уже окончена!. wpDataDB.codeDAD2: " + wpDataDB.getCode_dad2());
             result = true;
         } else {
             if (wpDataDB.getVisit_start_dt() > 0) {
@@ -1386,14 +1387,16 @@ public class Options {
                 } catch (Exception e) {
                     // Set to log error
                     Toast.makeText(context, "Возникла ошибка: " + e, Toast.LENGTH_SHORT).show();
+                    Globals.writeToMLOG("ERROR", "DetailedReportButtons.class.pressEndWork", "wpDataDB.codeDAD2: " + wpDataDB.getCode_dad2() + "Exception e: " + e);
                     result = false;
                 }
             } else {
                 Toast.makeText(context, "Вы не можете закончить работу не начав её", Toast.LENGTH_SHORT).show();
+                Globals.writeToMLOG("INFO", "DetailedReportButtons.class.pressEndWork", "Вы не можете закончить работу не начав её. wpDataDB.codeDAD2: " + wpDataDB.getCode_dad2());
                 result = false;
             }
         }
-
+        Globals.writeToMLOG("INFO", "DetailedReportButtons.class.pressEndWork", "OUT. wpDataDB.codeDAD2: " + wpDataDB.getCode_dad2());
 
 //        conductOptCheck(mode, result, optionsDB);
         return result;

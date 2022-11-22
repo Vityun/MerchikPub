@@ -62,7 +62,7 @@ public class WpDataRealm {
 
     public static List<WpDataDB> getWpDataRowByIds(Long[] id) {
         return INSTANCE.where(WpDataDB.class)
-                .in("id", id)
+                .in("ID", id)
                 .findAll();
     }
 

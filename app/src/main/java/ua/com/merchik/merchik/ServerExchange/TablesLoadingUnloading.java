@@ -2942,24 +2942,28 @@ public class TablesLoadingUnloading {
         call.enqueue(new retrofit2.Callback<TovarGroupClientResponse>() {
             @Override
             public void onResponse(retrofit2.Call<TovarGroupClientResponse> call, retrofit2.Response<TovarGroupClientResponse> response) {
-                Gson gson = new Gson();
-                String json = gson.toJson(response.body());
-                JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
+                try {
+                    Gson gson = new Gson();
+                    String json = gson.toJson(response.body());
+                    JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
 
-                Log.e("downloadCustomerD", "Response: " + convertedObject);
+                    Log.e("downloadCustomerD", "Response: " + convertedObject);
 
-                Log.e("downloadCustomerD", "response.body().list: " + response.body().list.size());
-                SQL_DB.tovarGroupClientDao().insertData(response.body().list).subscribe(new DisposableCompletableObserver() {
-                    @Override
-                    public void onComplete() {
-                        Log.e("downloadCustomerD", "YEP");
-                    }
+                    Log.e("downloadCustomerD", "response.body().list: " + response.body().list.size());
+                    SQL_DB.tovarGroupClientDao().insertData(response.body().list).subscribe(new DisposableCompletableObserver() {
+                        @Override
+                        public void onComplete() {
+                            Log.e("downloadCustomerD", "YEP");
+                        }
 
-                    @Override
-                    public void onError(@io.reactivex.rxjava3.annotations.NonNull Throwable e) {
-                        Log.e("downloadCustomerD", "e: " + e);
-                    }
-                });
+                        @Override
+                        public void onError(@io.reactivex.rxjava3.annotations.NonNull Throwable e) {
+                            Log.e("downloadCustomerD", "e: " + e);
+                        }
+                    });
+                }catch (Exception e){
+                    Globals.writeToMLOG("ERR", "downloadtovar_grp_client", "Exception e: " + e);
+                }
             }
 
             @Override
