@@ -14,7 +14,10 @@ import java.util.List;
 
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.R;
+import ua.com.merchik.merchik.ServerExchange.Exchange;
+import ua.com.merchik.merchik.ServerExchange.ExchangeInterface;
 import ua.com.merchik.merchik.data.Database.Room.Chat.ChatSDB;
+import ua.com.merchik.merchik.data.TestJsonUpload.StandartData;
 
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
@@ -70,6 +73,9 @@ public class ChatMassagesAdapter extends RecyclerView.Adapter<ChatMassagesAdapte
 
                 item.dtRead = System.currentTimeMillis()/1000;
                 SQL_DB.chatDao().insertData(Collections.singletonList(item));
+
+                sendReadMassageStatus(item);
+
                 listener.seeMassage();
             }
             info.setText("Повідомлення: " + item.id + " (" + (item.dtRead > 0 ? "Прочитано" : "Не прочитано") + ")");
@@ -79,5 +85,21 @@ public class ChatMassagesAdapter extends RecyclerView.Adapter<ChatMassagesAdapte
 
     public interface ChatMassageListener{
         void seeMassage();
+    }
+
+    private void sendReadMassageStatus(ChatSDB item){
+        StandartData.StandartDataChat dataChat = new StandartData.StandartDataChat();
+        dataChat.element_id = item.id;
+        dataChat.msg_id = item.id;
+
+        Exchange.chatMarkRead(dataChat, new ExchangeInterface.ExchangeResponseInterfaceSingle() {
+            @Override
+            public <T> void onSuccess(T data) {
+            }
+
+            @Override
+            public void onFailure(String error) {
+            }
+        });
     }
 }
