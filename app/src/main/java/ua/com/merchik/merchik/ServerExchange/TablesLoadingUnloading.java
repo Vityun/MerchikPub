@@ -1687,6 +1687,7 @@ public class TablesLoadingUnloading {
 
         SynchronizationTimetableDB sTable = RealmManager.getSynchronizationTimetableRowByTable("wp_data");
         if (sTable != null) {
+            Globals.writeToMLOG("ERROR", "TablesLoadingUnloading/updateWpData/getSynchronizationTimetableRowByTable", "sTable: " + sTable);
             vpi = sTable.getVpi_app();
             Log.e("updateWpData", "vpi: " + vpi);
 
@@ -1750,10 +1751,12 @@ public class TablesLoadingUnloading {
                     @Override
                     public void onFailure(retrofit2.Call<WpDataServer> call, Throwable t) {
                         Log.e("TAG_TEST_WP", "FAILURE_0 E: " + t);
+                        Globals.writeToMLOG("ERROR", "TablesLoadingUnloading/updateWpData/onFailure", "Throwable t: " + t);
                     }
                 });
             } catch (Exception e) {
                 Log.e("TAG_TEST_WP", "FAILURE_0 CATCH: " + e.getMessage());
+                Globals.writeToMLOG("ERROR", "TablesLoadingUnloading/updateWpData/Exception2", "Exception e: " + e);
             }
             /*} else {
                 Log.e("updateWpData", "Пока РАНО синхронизовать");
@@ -2292,7 +2295,8 @@ public class TablesLoadingUnloading {
                 public void onResponse(retrofit2.Call<JsonObject> call, retrofit2.Response<JsonObject> response) {
                     Log.e("LogMp", "RESPONSE: " + response.body());
 
-                    Globals.writeToMLOG("INFO", "uploadLodMp/onResponse", "response.body(): " + response.body());
+                    // TODO Тут очень много раз в минуту дёргаю это место. Нужно проверить - нужно ли в таком количестве.
+//                    Globals.writeToMLOG("INFO", "uploadLodMp/onResponse", "response.body(): " + response.body());
 
                     try {
                         JsonObject resp = response.body();
