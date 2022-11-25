@@ -194,6 +194,14 @@ public class RealmManager {
 
                 if (row != null) {   // Если запись в бд есть
                     Globals.writeToMLOG("INFO", "setWpDataAuto", "План работ с ПРИЛОЖЕНИЯ: " + new Gson().toJson(row));
+
+                    // Это делаем для Лога, возможно нужно будет имплементировать в работу
+                    if ((wp.getVisit_start_dt() == 0 && row.getVisit_start_dt() > 0) || (wp.getVisit_end_dt() == 0 && row.getVisit_end_dt() > 0)){
+                        Globals.writeToMLOG("INFO", "setWpDataAuto", "Ситуация для отладки");
+                        Globals.writeToMLOG("INFO", "setWpDataAuto", "План работ с СЕРВЕРА: " + new Gson().toJson(wp));
+                        Globals.writeToMLOG("INFO", "setWpDataAuto", "План работ с ПРИЛОЖЕНИЯ: " + new Gson().toJson(row));
+                    }
+
                     if (wp.getDt_update() >= row.getDt_update()) {    // Если на сервере данные более новые - обновляю(перезаписываю)
                         Log.e("setWpDataAuto", "Данные с сервера с большим VPI");
                         Log.e("WP_DATA_UPDATE", "MUST UPDATE (" + wp.getDt_update() + "/" + row.getDt_update() + ")" + wp.getCode_dad2());
