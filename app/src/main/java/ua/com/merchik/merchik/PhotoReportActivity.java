@@ -1306,8 +1306,8 @@ public class PhotoReportActivity extends toolbar_menus {
                     String addressNmText = "";
 
                     try {
-                        if (RealmManager.getUsersNm(Globals.userId) != null)
-                            userNmText = RealmManager.getUsersNm(Globals.userId);
+                        if (RealmManager.getUsersNm(Integer.valueOf(wpDataObj.getPhotoUserId())) != null)
+                            userNmText = RealmManager.getUsersNm(Integer.valueOf(wpDataObj.getPhotoUserId()));
 
                         if (RealmManager.getCustomerNm(wpDataObj.getCustomerId()) != null)
                             customerNmText = RealmManager.getCustomerNm(wpDataObj.getCustomerId());
@@ -1323,7 +1323,7 @@ public class PhotoReportActivity extends toolbar_menus {
                             id,
                             "",
                             null,
-                            Globals.userId,
+                            Integer.valueOf(wpDataObj.getPhotoUserId()),
                             wpDataObj.getAddressId(),
                             wpDataObj.getCustomerId(),
                             wpDataObj.getThemeId(),

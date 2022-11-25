@@ -3,6 +3,7 @@ package ua.com.merchik.merchik.Options.Controls;
 import android.content.Context;
 
 import io.realm.RealmResults;
+import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.Options.OptionControl;
 import ua.com.merchik.merchik.Options.Options;
 import ua.com.merchik.merchik.data.OptionMassageType;
@@ -36,7 +37,7 @@ public class OptionControlPhotoBeforeStartWork<T> extends OptionControl {
     private void getDocumentVar() {
         if (document instanceof WpDataDB) {
             wpDataDB = (WpDataDB) document;
-            dateFrom = wpDataDB.getDt().getTime() - 172800000;  // -2
+            dateFrom = wpDataDB.getDt().getTime() - 345600000;  // -4
             dateTo = wpDataDB.getDt().getTime() + 345600000;    // +4
         }
     }
@@ -76,7 +77,7 @@ public class OptionControlPhotoBeforeStartWork<T> extends OptionControl {
             setIsBlockOption(signal);
 
         }catch (Exception e){
-
+            Globals.writeToMLOG("ERROR", "OptionControlPhotoBeforeStartWork", "Exception e: " + e);
         }
     }
 }

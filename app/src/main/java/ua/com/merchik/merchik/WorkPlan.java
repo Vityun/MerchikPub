@@ -126,7 +126,7 @@ public class WorkPlan {
         Map<Integer, String> customerTypeGrp = getCustomerGroups(customer_id);
         String doc_num = wpRow.getDoc_num();
         int theme_id = wpRow.getTheme_id();
-        String photo_user_id = "";
+        String photo_user_id = String.valueOf(wpRow.getUser_id());
         long dad2 = wpRow.getCode_dad2();
         String customer_txt = wpRow.getClient_txt();
         String address_txt = wpRow.getAddr_txt();

@@ -409,6 +409,7 @@ public class MakePhoto {
                 WpDataDB wpDataDB = (WpDataDB) data;
                 wpDataObj = workPlan.getKPS(wpDataDB.getId());
             }
+            wpDataObj.setPhotoType(photoType);
 
             Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
 
