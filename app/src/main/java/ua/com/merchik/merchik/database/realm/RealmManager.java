@@ -4,6 +4,8 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.util.Log;
 
+import com.google.gson.Gson;
+
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -59,6 +61,7 @@ public class RealmManager {
 
 
     private static SharedPreferences sharedPreferences;
+
     public static void init(Context context) {
         Realm.init(context);
 
@@ -75,12 +78,12 @@ public class RealmManager {
 
 
         sharedPreferences = context.getSharedPreferences(APP_PREFERENCES, Context.MODE_PRIVATE);
-        if (sharedPreferences.getBoolean("realm", false)){
+        if (sharedPreferences.getBoolean("realm", false)) {
             List<SynchronizationTimetableDB> synchronizationTimetableDBList = RealmManager.getSynchronizationTimetable();
-            if (synchronizationTimetableDBList == null){
+            if (synchronizationTimetableDBList == null) {
                 addSynchronizationTimetable();
             }
-        }else {
+        } else {
             sharedPreferences.edit().putBoolean("realm", true).apply();
             addSynchronizationTimetable();
         }
@@ -148,14 +151,6 @@ public class RealmManager {
         INSTANCE.beginTransaction();
         INSTANCE.delete(WpDataDB.class);
         INSTANCE.copyToRealmOrUpdate(wpData);
-
-//        int count = 0;
-//        for (WpDataDB item : wpData){
-//            JsonObject convertedObject = new Gson().fromJson(new Gson().toJson(item), JsonObject.class);
-//            Log.e("REALM_DB_UPDATE", "WP_DATA: item("+count+"): " + convertedObject);
-//            count++;
-//        }
-
         INSTANCE.commitTransaction();
         Log.e("REALM_DB_UPDATE", "WP_DATA_END");
         return true;
@@ -194,7 +189,11 @@ public class RealmManager {
                         .equalTo("client_id", wp.getClient_id())
                         .equalTo("isp", wp.getIsp())
                         .findFirst();
+
+                Globals.writeToMLOG("INFO", "setWpDataAuto", "План работ с СЕРВЕРА: " + new Gson().toJson(wp));
+
                 if (row != null) {   // Если запись в бд есть
+                    Globals.writeToMLOG("INFO", "setWpDataAuto", "План работ с ПРИЛОЖЕНИЯ: " + new Gson().toJson(row));
                     if (wp.getDt_update() >= row.getDt_update()) {    // Если на сервере данные более новые - обновляю(перезаписываю)
                         Log.e("setWpDataAuto", "Данные с сервера с большим VPI");
                         Log.e("WP_DATA_UPDATE", "MUST UPDATE (" + wp.getDt_update() + "/" + row.getDt_update() + ")" + wp.getCode_dad2());
@@ -202,10 +201,10 @@ public class RealmManager {
                         Globals.writeToMLOG("INFO", "setWpDataAuto", "Данные с сервера с большим VPI");
                         Globals.writeToMLOG("INFO", "setWpDataAuto", "MUST UPDATE (" + wp.getDt_update() + "/" + row.getDt_update() + ")");
 
-                        if (wp.getVisit_start_dt() == 0 && wp.getClient_start_dt() == 0 && row.getVisit_start_dt() > 0 && row.getClient_start_dt() > 0){
+                        if (wp.getVisit_start_dt() == 0 && wp.getClient_start_dt() == 0 && row.getVisit_start_dt() > 0 && row.getClient_start_dt() > 0) {
                             wp.setVisit_start_dt(row.getVisit_start_dt());
                             wp.setClient_start_dt(row.getClient_start_dt());
-                        }else if (wp.getVisit_end_dt() == 0 && wp.getClient_end_dt() == 0 && row.getVisit_end_dt() > 0 && row.getClient_end_dt() > 0){
+                        } else if (wp.getVisit_end_dt() == 0 && wp.getClient_end_dt() == 0 && row.getVisit_end_dt() > 0 && row.getClient_end_dt() > 0) {
                             wp.setVisit_end_dt(row.getVisit_end_dt());
                             wp.setClient_end_dt(row.getClient_end_dt());
                         }
@@ -258,7 +257,7 @@ public class RealmManager {
 
             Log.e("setWpDataAuto", "return: " + sendOnServer);
 
-        }catch (Exception e){
+        } catch (Exception e) {
             Globals.writeToMLOG("ERROR", "setWpDataAuto", "Exception e: " + e);
         }
         return sendOnServer;
@@ -323,7 +322,7 @@ public class RealmManager {
 
         try {
             globals.writeToMLOG(Clock.getHumanTime() + "_INFO.RealmManager.class.setOptions.Размер списка: " + optionsDBS.size() + "\n");
-        }catch (Exception e){
+        } catch (Exception e) {
             globals.writeToMLOG(Clock.getHumanTime() + "_INFO.RealmManager.class.setOptions.Ошибка1: " + e + "\n");
         }
 
@@ -333,10 +332,9 @@ public class RealmManager {
 
         try {
             globals.writeToMLOG(Clock.getHumanTime() + "_INFO.RealmManager.class.setOptions.Размер сохранённого списка: " + res.size() + "\n");
-        }catch (Exception e){
+        } catch (Exception e) {
             globals.writeToMLOG(Clock.getHumanTime() + "_INFO.RealmManager.class.setOptions.Ошибка2: " + e + "\n");
         }
-
 
 
         INSTANCE.commitTransaction();
@@ -371,7 +369,7 @@ public class RealmManager {
 
         try {
             globals.writeToMLOG(Clock.getHumanTime() + "_INFO.RealmManager.class.setTovar.Размер списка: " + list.size() + "\n");
-        }catch (Exception e){
+        } catch (Exception e) {
             globals.writeToMLOG(Clock.getHumanTime() + "_INFO.RealmManager.class.setTovar.Ошибка1: " + e + "\n");
         }
 
@@ -382,7 +380,7 @@ public class RealmManager {
 
         try {
             globals.writeToMLOG(Clock.getHumanTime() + "_INFO.RealmManager.class.setTovar.Размер сохранённого списка: " + res.size() + "\n");
-        }catch (Exception e){
+        } catch (Exception e) {
             globals.writeToMLOG(Clock.getHumanTime() + "_INFO.RealmManager.class.setTovar.Ошибка2: " + e + "\n");
         }
 
@@ -683,7 +681,8 @@ public class RealmManager {
      * 19.04.2021
      * Получение списка фотографий по данному посещению.
      *
-     * @return*/
+     * @return
+     */
     public static RealmResults<StackPhotoDB> stackPhotoByDad2(long codeDad2) {
         RealmResults<StackPhotoDB> realmResults = INSTANCE.where(StackPhotoDB.class)
                 .equalTo("code_dad2", codeDad2)
@@ -782,7 +781,7 @@ public class RealmManager {
                 .equalTo("photo_type", type)
                 .equalTo("comment", photoSize);
 
-        if (photoServerId != null && !photoServerId.equals("0")){
+        if (photoServerId != null && !photoServerId.equals("0")) {
             query.equalTo("photoServerId", photoServerId);
         }
 
@@ -1008,7 +1007,7 @@ public class RealmManager {
 
         if (list != null) {
             for (WpDataDB l : list) {
-                if (l.startUpdate || l.getSetStatus() > 0){
+                if (l.startUpdate || l.getSetStatus() > 0) {
                     StartEndData item = new StartEndData();
 
                     item.element_id = String.valueOf(l.getId());
@@ -1018,7 +1017,7 @@ public class RealmManager {
                     item.isp = String.valueOf(l.getIsp());
                     item.dt_update = l.getDt_update();
 
-                    if (l.startUpdate){
+                    if (l.startUpdate) {
                         item.visit_start_dt = String.valueOf(l.getVisit_start_dt());
                         item.visit_end_dt = String.valueOf(l.getVisit_end_dt());
                         item.client_start_dt = String.valueOf(l.getClient_start_dt());
@@ -1045,7 +1044,7 @@ public class RealmManager {
 
         if (list != null) {
             for (WpDataDB l : list) {
-                if (l.startUpdate){
+                if (l.startUpdate) {
                     StartEndData item = new StartEndData();
 
                     item.element_id = String.valueOf(l.getId());
@@ -1053,9 +1052,9 @@ public class RealmManager {
                     item.user_id = String.valueOf(l.getUser_id());
                     item.client_id = String.valueOf(l.getClient_id());
                     item.isp = String.valueOf(l.getIsp());
-                    item.dt_update = System.currentTimeMillis()/1000; // TODO DELETE THIS, ONLY DEBUG
+                    item.dt_update = System.currentTimeMillis() / 1000; // TODO DELETE THIS, ONLY DEBUG
 
-                    switch (uploadMode){
+                    switch (uploadMode) {
                         case COMMENT:
                             item.user_comment = l.user_comment;
                             item.user_comment_dt_update = l.user_comment_dt_update;
@@ -1169,11 +1168,11 @@ public class RealmManager {
 
     // Получение по ДАД_2 с плана работ списка id товаров
     /*
-    * Получение ВСЕХ ReportPrepareDB по ДАД2 данного документа, создание списка ID-шников Товаров
-    * полученных из этого ReportPrepareDB. Получение по списку ID-шников Товаров ТЗН TovarDB.
-    * Добавление в ТЗН TovarDB TradeMarkDB по id-шникам из ТЗН TovarDB. Сортировка полученного
-    * компота по sort("manufacturer.nm", Sort.ASCENDING, "sortcol", Sort.ASCENDING); (ПО ВОЗРАСТАНИЮ)
-    * */
+     * Получение ВСЕХ ReportPrepareDB по ДАД2 данного документа, создание списка ID-шников Товаров
+     * полученных из этого ReportPrepareDB. Получение по списку ID-шников Товаров ТЗН TovarDB.
+     * Добавление в ТЗН TovarDB TradeMarkDB по id-шникам из ТЗН TovarDB. Сортировка полученного
+     * компота по sort("manufacturer.nm", Sort.ASCENDING, "sortcol", Sort.ASCENDING); (ПО ВОЗРАСТАНИЮ)
+     * */
     public static RealmResults<TovarDB> getTovarListFromReportPrepareByDad2(long dad2) {
         Log.e("TovarListFromRPByDad2", "Start: " + dad2);
 
@@ -1200,16 +1199,16 @@ public class RealmManager {
 
 
         try {
-            for (TovarDB item : realmResults2){
+            for (TovarDB item : realmResults2) {
                 listTovId.add(item.getiD());
             }
 
             ArrayList<String> tovarsToDownload = neededTovars(listRpTovId, listTovId);
-            if (tovarsToDownload.size() > 0){
+            if (tovarsToDownload.size() > 0) {
                 TablesLoadingUnloading tablesLoadingUnloading = new TablesLoadingUnloading();
                 tablesLoadingUnloading.downloadTovarTable(null, tovarsToDownload);
             }
-        }catch (Exception e){
+        } catch (Exception e) {
             Log.e("TovarListFromRPByDad2", "ERR: " + e);
             return null;
         }
@@ -1218,9 +1217,8 @@ public class RealmManager {
         Log.e("TovarListFromRPByDad2", "3");
 
 
-
-        for (TovarDB item : realmResults2){
-            if (item.getManufacturer() == null){
+        for (TovarDB item : realmResults2) {
+            if (item.getManufacturer() == null) {
                 String id = item.getManufacturerId();
                 TradeMarkDB tm = TradeMarkRealm.getTradeMarkRowById(id);
                 String data = item.getSortcol().toLowerCase();
@@ -1244,14 +1242,14 @@ public class RealmManager {
     }
 
 
-    private static ArrayList<String> neededTovars(ArrayList<String> listRpTovId, ArrayList<String> listTovId){
+    private static ArrayList<String> neededTovars(ArrayList<String> listRpTovId, ArrayList<String> listTovId) {
         ArrayList<String> res = new ArrayList<>(listRpTovId);
         res.removeAll(listTovId);
         return res;
     }
 
 
-    public static  RealmResults<ReportPrepareDB> getRPBYDAD2(){
+    public static RealmResults<ReportPrepareDB> getRPBYDAD2() {
         return INSTANCE.where(ReportPrepareDB.class)
                 .equalTo("codeDad2", "1220421036217049444")
                 .findAll();
