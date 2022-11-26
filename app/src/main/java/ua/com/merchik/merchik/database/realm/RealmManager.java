@@ -149,7 +149,7 @@ public class RealmManager {
     public static boolean setWpData(List<WpDataDB> wpData) {
         Log.e("REALM_DB_UPDATE", "WP_DATA_START");
         INSTANCE.beginTransaction();
-        INSTANCE.delete(WpDataDB.class);
+//        INSTANCE.delete(WpDataDB.class);
         INSTANCE.copyToRealmOrUpdate(wpData);
         INSTANCE.commitTransaction();
         Log.e("REALM_DB_UPDATE", "WP_DATA_END");
@@ -239,28 +239,18 @@ public class RealmManager {
             INSTANCE.commitTransaction();
 
             // 2 цикл. Прогоняем данные которые надо удалить.
-            RealmResults<WpDataDB> localData = INSTANCE.where(WpDataDB.class) // Получаем всю БД (на данный момент она должна быть обновлена с сервера)
-                    .findAll();
-/*        Log.e("WP_DATA_UPDATE", "Количество данных в приложении ПОСЛЕ Ц1: " + localData.size());
+//            RealmResults<WpDataDB> localData = INSTANCE.where(WpDataDB.class) // Получаем всю БД (на данный момент она должна быть обновлена с сервера)
+//                    .findAll();
 
-        for (WpDataDB localWP : localData) {
-            Log.e("WP_DATA_UPDATE", "DELETE.start.=======================================");
-            Log.e("WP_DATA_UPDATE", "DELETE.localWP: " + localWP.getId() + " cd2: " + localWP.getCode_dad2() + " user_id: " + localWP.getUser_id() + " client_id: " + localWP.getClient_id() + " isp: " + localWP.getIsp());
-            Log.e("WP_DATA_UPDATE", "DELETE.------------------------------------------------");
-            for (WpDataDB serverWP : serverData) {
-                Log.e("WP_DATA_UPDATE", "DELETE.serverWP: " + serverWP.getId() + " cd2: " + serverWP.getCode_dad2() + " user_id: " + serverWP.getUser_id() + " client_id: " + serverWP.getClient_id() + " isp: " + serverWP.getIsp());
-                Log.e("WP_DATA_UPDATE", "DELETE.equals: " + localWP.equals(serverWP));
-            }
-            Log.e("WP_DATA_UPDATE", "DELETE.end.=======================================");
-        }*/
 
+            /*
             INSTANCE.beginTransaction();
             for (WpDataDB local : localData) {
                 if (!serverData.contains(local)) {
                     local.deleteFromRealm();
                 }
             }
-            INSTANCE.commitTransaction();
+            INSTANCE.commitTransaction();*/
 
 
             Log.e("setWpDataAuto", "return: " + sendOnServer);
