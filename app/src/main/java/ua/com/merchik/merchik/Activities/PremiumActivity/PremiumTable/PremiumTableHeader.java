@@ -12,7 +12,7 @@ public class PremiumTableHeader {
 
     public PremiumTableHeader(DetailedHeader header, List<DetailedSubHeader> subHeaders) {
         this.detailedHeader = header;
-        isExpanded = false;
+        isExpanded = true;
         this.detailedSubHeaders = subHeaders;
     }
 
@@ -25,7 +25,7 @@ public class PremiumTableHeader {
     }
 
     public static class DetailedSubHeader {
-        public boolean isExpanded;
+        public boolean isExpanded = false;
         public DetailedHeader header;
         public List<Detailed> items = new ArrayList<>();
     }

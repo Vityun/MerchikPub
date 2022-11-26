@@ -72,6 +72,7 @@ public class PremiumTableHeaderAdapter extends RecyclerView.Adapter<PremiumTable
                 if (premiumTableHeader.detailedSubHeaders.isEmpty()) premiumTableHeader.isExpanded = false;
                 handleRecycler(premiumTableHeader.isExpanded);
             });
+            handleRecycler(premiumTableHeader.isExpanded);
 
             textHeaderLayout.setBackgroundColor(itemView.getContext().getResources().getColor(R.color.active));
 
