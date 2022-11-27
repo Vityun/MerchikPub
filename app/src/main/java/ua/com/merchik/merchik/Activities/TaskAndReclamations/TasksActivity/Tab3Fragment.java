@@ -16,6 +16,8 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.gson.Gson;
+
 import java.util.Collections;
 import java.util.List;
 
@@ -229,6 +231,10 @@ public class Tab3Fragment extends Fragment {
 
                         RealmManager.INSTANCE.executeTransaction((realm -> {
                             RealmManager.INSTANCE.copyToRealm(row);
+
+                            Globals.writeToMLOG("INFO", "Tab3Fragment.dialog.clickSave", "save DB");
+                            String stackJson = new Gson().toJson(row);
+                            Globals.writeToMLOG("INFO", "Tab3Fragment.dialog.clickSave", "row: " + stackJson);
                         }));
 
                         // Моментальная попытка выгрузить комментарий
@@ -241,6 +247,7 @@ public class Tab3Fragment extends Fragment {
                             recyclerView.smoothScrollToPosition(0);
                         }
 
+                        Globals.writeToMLOG("INFO", "Tab3Fragment.dialog.clickSave", "dismiss");
                         dialog.dismiss();
                     }catch (Exception e){
                         Globals.writeToMLOG("ERROR", "Tab3Fragment.dialog.clickSave", "Exception e: " + e);

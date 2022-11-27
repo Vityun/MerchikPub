@@ -32,6 +32,7 @@ import ua.com.merchik.merchik.data.RealmModels.ThemeDB;
 import ua.com.merchik.merchik.data.RealmModels.UsersDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.data.TestViewHolderData;
+import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.AddressRealm;
 import ua.com.merchik.merchik.database.realm.tables.CustomerRealm;
 import ua.com.merchik.merchik.database.realm.tables.ThemeRealm;
@@ -123,13 +124,23 @@ public class DialogCreateTAR extends DialogData {
     public void refreshAdaper(StackPhotoDB photo) {
         Log.d("test", "data: " + adapter.data);
 
-        String stackJson = new Gson().toJson(photo);
-        Globals.writeToMLOG("INFO", "DialogCreateTAR.refreshAdaper", "stack photo: " + stackJson);
+        Globals.writeToMLOG("INFO", "DialogCreateTAR.refreshAdaper", "stack photo: " + photo);
+        Globals.writeToMLOG("INFO", "DialogCreateTAR.refreshAdaper", "stack getId: " + photo.getId());
+        Globals.writeToMLOG("INFO", "DialogCreateTAR.refreshAdaper", "stack getCode_dad2: " + photo.getCode_dad2());
+        Globals.writeToMLOG("INFO", "DialogCreateTAR.refreshAdaper", "stack getPhoto_hash: " + photo.getPhoto_hash());
 
         this.photo = photo;
 
         adapter.data.get(0).photo = photo;
         adapter.notifyDataSetChanged();
+
+        try {
+            StackPhotoDB testObj = RealmManager.INSTANCE.copyFromRealm(photo);
+            String stackJson = new Gson().toJson(testObj);
+            Globals.writeToMLOG("INFO", "DialogCreateTAR.refreshAdaper", "stackJson: " + stackJson);
+        }catch (Exception e){
+            Globals.writeToMLOG("INFO", "DialogCreateTAR.refreshAdaper", "Exception e: " + e);
+        }
     }
 
     //----------------------------------------------------------------------------------------------

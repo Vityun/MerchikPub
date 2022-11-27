@@ -248,6 +248,7 @@ public class TARActivity extends toolbar_menus implements TARFragmentHome.OnFrag
                 TARFragmentHome fragmentHome = (TARFragmentHome) fragments.get(0);
 
                 int id = data.getIntExtra("stack_photo_id", 0);
+                Globals.writeToMLOG("INFO", "TARActivity.onActivityResult.data.getIntExtra", "stack_photo_id: " + id);
                 fragmentHome.secondFrag.setPhoto(id);
                 Log.e("test", "test" + secondFrag);
             }
