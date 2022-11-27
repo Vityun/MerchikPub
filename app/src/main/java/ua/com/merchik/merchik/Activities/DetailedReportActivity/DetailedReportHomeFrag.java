@@ -90,7 +90,7 @@ public class DetailedReportHomeFrag extends Fragment {
             option_signal_layout2.addView(ll);
 
 
-            textTheme = v.findViewById(R.id.textView59);
+            textTheme = v.findViewById(R.id.theme);
 
             int themeId = wpDataDB.getTheme_id();
             ThemeDB themeDB = ThemeRealm.getByID(String.valueOf(themeId));

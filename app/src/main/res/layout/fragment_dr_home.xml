@@ -180,35 +180,85 @@
                     app:layout_constraintTop_toBottomOf="@+id/textDRMercVal" />
 
                 <TextView
-                    android:id="@+id/textView59"
+                    android:id="@+id/theme"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="32dp"
                     android:layout_marginLeft="32dp"
                     android:layout_marginTop="8dp"
                     android:text="Тема: "
+                    android:textStyle="bold"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@+id/option_signal_layout2" />
 
                 <TextView
-                    android:id="@+id/textView4"
+                    android:id="@+id/theme_data"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text=""
+                    app:layout_constraintBottom_toBottomOf="@+id/theme"
+                    app:layout_constraintStart_toEndOf="@+id/theme"
+                    app:layout_constraintTop_toTopOf="@+id/theme" />
+
+                <TextView
+                    android:id="@+id/status"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="32dp"
                     android:layout_marginLeft="32dp"
                     android:text="Статус отчёта: "
+                    android:textStyle="bold"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/textView59" />
+                    app:layout_constraintTop_toBottomOf="@+id/theme" />
 
                 <TextView
-                    android:id="@+id/textView15"
+                    android:id="@+id/status_data"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text=""
+                    app:layout_constraintBottom_toBottomOf="@+id/status"
+                    app:layout_constraintStart_toEndOf="@+id/status"
+                    app:layout_constraintTop_toTopOf="@+id/status" />
+
+                <TextView
+                    android:id="@+id/premium_plan"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="32dp"
                     android:layout_marginLeft="32dp"
-                    android:text="Премия: "
+                    android:text="Премия (план):  "
+                    android:textStyle="bold"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/textView4" />
+                    app:layout_constraintTop_toBottomOf="@+id/status" />
+
+                <TextView
+                    android:id="@+id/premium_plan_data"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text=""
+                    app:layout_constraintBottom_toBottomOf="@+id/premium_plan"
+                    app:layout_constraintStart_toEndOf="@+id/premium_plan"
+                    app:layout_constraintTop_toTopOf="@+id/premium_plan" />
+
+                <TextView
+                    android:id="@+id/textView62"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="32dp"
+                    android:layout_marginLeft="32dp"
+                    android:text="Премия (факт): "
+                    android:textStyle="bold"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/premium_plan" />
+
+                <TextView
+                    android:id="@+id/textView65"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text=""
+                    app:layout_constraintBottom_toBottomOf="@+id/textView62"
+                    app:layout_constraintStart_toEndOf="@+id/textView62"
+                    app:layout_constraintTop_toTopOf="@+id/textView62" />
 
                 <TextView
                     android:id="@+id/textView16"
@@ -217,8 +267,9 @@
                     android:layout_marginStart="32dp"
                     android:layout_marginLeft="32dp"
                     android:text="Продолжит. работ (по документу): "
+                    android:textStyle="bold"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/textView15" />
+                    app:layout_constraintTop_toBottomOf="@+id/textView62" />
 
                 <TextView
                     android:id="@+id/textView17"
@@ -227,6 +278,7 @@
                     android:layout_marginStart="32dp"
                     android:layout_marginLeft="32dp"
                     android:text="Продолжит. работ (средняя): "
+                    android:textStyle="bold"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@+id/textView16" />
 
@@ -237,6 +289,7 @@
                     android:layout_marginStart="32dp"
                     android:layout_marginLeft="32dp"
                     android:text="Стоимость часа: "
+                    android:textStyle="bold"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@+id/textView17" />
 
