@@ -19,6 +19,7 @@ import java.util.List;
 
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity;
 import ua.com.merchik.merchik.Clock;
+import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.WorkPlan;
 import ua.com.merchik.merchik.data.Data;
@@ -77,6 +78,12 @@ public class PremiumTableDataAdapter extends RecyclerView.Adapter<PremiumTableDa
         }
 
         public void bind(Detailed detailed) {
+            WpDataDB wpDataDB = findDocument(detailed.codeDad2);
+            if (wpDataDB != null){
+                name.setTextColor(-10987432);
+            }else {
+                name.setTextColor(itemView.getContext().getResources().getColor(R.color.colorToolbar));
+            }
 
             if ((int) detailed.prihod == 0) {
                 column2.setVisibility(View.INVISIBLE);
@@ -94,90 +101,97 @@ public class PremiumTableDataAdapter extends RecyclerView.Adapter<PremiumTableDa
             CharSequence prihodChar = (int) detailed.prihod < 0 ? Html.fromHtml("<font color=red>" + (int) detailed.prihod + "</font>") : "" + (int) detailed.prihod;
             CharSequence rashodChar = (int) detailed.rashod < 0 ? Html.fromHtml("<font color=red>" + (int) detailed.rashod + "</font>") : "" + (int) detailed.rashod;
 
-            name.setText(detailed.docNom + "(" + detailed.docDat + ")");
-            name.setTextColor(-10987432);
+            name.setText(detailed.docNom + " (" + Globals.reverseString(detailed.docDat) + ")");
             column1.setText("");
             column1.setVisibility(View.GONE);
-            column5.setText("" + (int)detailed.sumPlan);
+            column5.setText("" + (int) detailed.sumPlan);
             column5.setTextColor(-10987432);
             column2.setText(prihodChar);
             column3.setText(rashodChar);
             column4.setText("");
 
             name.setOnClickListener(view -> {
-//                Toast.makeText(view.getContext(), "Ви натиснули на " + detailed.docNom + ", він має код дад2: " + detailed.codeDad2, Toast.LENGTH_LONG).show();
-                openDoc(detailed.codeDad2);
+                openDoc(wpDataDB);
             });
         }
 
-        private void openDoc(long codeDad2) {
-            if (codeDad2 != 0){
+        private WpDataDB findDocument(long codeDad2) {
+            if (codeDad2 != 0) {
                 WpDataDB realmWp = WpDataRealm.getWpDataRowByDad2Id(codeDad2);
-
-                if (realmWp != null){
-                    WpDataDB wpDataDB = RealmManager.INSTANCE.copyFromRealm(realmWp);
-
-                    long otchetId;
-                    int action = wpDataDB.getAction();
-                    if (action == 1 || action == 94) {
-                        otchetId = wpDataDB.getDoc_num_otchet_id();
-                    } else {
-                        otchetId = wpDataDB.getDoc_num_1c_id();
-                    }
-
-                    String addrTxt;
-                    if (wpDataDB.getAddr_txt() != null && !wpDataDB.getAddr_txt().equals("")){
-                        addrTxt = wpDataDB.getAddr_txt();
-                    }else {
-                        AddressSDB addressSDB = SQL_DB.addressDao().getById(wpDataDB.getAddr_id());
-                        if (addressSDB != null){
-                            addrTxt = addressSDB.nm;
-                            wpDataDB.setAddr_location_xd(String.valueOf(addressSDB.locationXd));
-                            wpDataDB.setAddr_location_yd(String.valueOf(addressSDB.locationYd));
-                        }else {
-                            addrTxt = "Адресс не определён";
-                        }
-                        wpDataDB.setAddr_txt(addrTxt);
-                        WpDataRealm.setWpData(Collections.singletonList(wpDataDB));
-                    }
-
-                    String msg = String.format("Дата: %s\nАдрес: %s\nКлиент: %s\nИсполнитель: %s\n", Clock.getHumanTimeYYYYMMDD(wpDataDB.getDt().getTime()/1000), addrTxt, wpDataDB.getClient_txt(), wpDataDB.getUser_txt());
-
-                    DialogData errorMsg = new DialogData(itemView.getContext());
-                    errorMsg.setTitle("");
-                    errorMsg.setText(itemView.getContext().getString(R.string.re_questioning_wpdata_err_msg));
-                    errorMsg.setClose(errorMsg::dismiss);
-
-                    DialogData dialog = new DialogData(itemView.getContext());
-                    dialog.setTitle("Открыть посещение?");
-                    dialog.setText(msg);
-                    dialog.setOk(null, () -> {
-                        if (wpDataDB.getTheme_id() == 1182){
-                            DialogData dialogQuestionOne = new DialogData(itemView.getContext());
-                            dialogQuestionOne.setTitle("");
-                            dialogQuestionOne.setText(itemView.getContext().getString(R.string.re_questioning_wpdata_first_msg));
-                            dialogQuestionOne.setOk("Да", errorMsg::show);
-                            dialogQuestionOne.setCancel("Нет", ()->{
-                                DialogData dialogQuestionOTwo = new DialogData(itemView.getContext());
-                                dialogQuestionOne.dismiss();
-                                dialogQuestionOTwo.setTitle("");
-                                dialogQuestionOTwo.setText(itemView.getContext().getString(R.string.re_questioning_wpdata_second_msg));
-                                dialogQuestionOTwo.setOk("Да", errorMsg::show);
-                                dialogQuestionOTwo.setCancel("Нет", ()->{openReportPrepare(wpDataDB, otchetId);});
-                                dialogQuestionOTwo.show();
-                            });
-                            dialogQuestionOne.show();
-                        }else {
-                            openReportPrepare(wpDataDB, otchetId);
-                        }
-                    });
-                    dialog.show();
-
-                }else {
-                    Toast.makeText(itemView.getContext(), "Звіт не знайдено.", Toast.LENGTH_SHORT).show();
+                if (realmWp != null) {
+                    return RealmManager.INSTANCE.copyFromRealm(realmWp);
                 }
-            }else {
-                Toast.makeText(itemView.getContext(), "Звіт не знайдено.", Toast.LENGTH_SHORT).show();
+            }
+            return null;
+        }
+
+        private void openDoc(WpDataDB wpDataDB) {
+            if (wpDataDB != null) {
+                long otchetId;
+                int action = wpDataDB.getAction();
+                if (action == 1 || action == 94) {
+                    otchetId = wpDataDB.getDoc_num_otchet_id();
+                } else {
+                    otchetId = wpDataDB.getDoc_num_1c_id();
+                }
+
+                String addrTxt;
+                if (wpDataDB.getAddr_txt() != null && !wpDataDB.getAddr_txt().equals("")) {
+                    addrTxt = wpDataDB.getAddr_txt();
+                } else {
+                    AddressSDB addressSDB = SQL_DB.addressDao().getById(wpDataDB.getAddr_id());
+                    if (addressSDB != null) {
+                        addrTxt = addressSDB.nm;
+                        wpDataDB.setAddr_location_xd(String.valueOf(addressSDB.locationXd));
+                        wpDataDB.setAddr_location_yd(String.valueOf(addressSDB.locationYd));
+                    } else {
+                        addrTxt = "Адресс не определён";
+                    }
+                    wpDataDB.setAddr_txt(addrTxt);
+                    WpDataRealm.setWpData(Collections.singletonList(wpDataDB));
+                }
+
+                String msg = String.format("Дата: %s\nАдрес: %s\nКлиент: %s\nИсполнитель: %s\n", Clock.getHumanTimeYYYYMMDD(wpDataDB.getDt().getTime() / 1000), addrTxt, wpDataDB.getClient_txt(), wpDataDB.getUser_txt());
+
+                DialogData errorMsg = new DialogData(itemView.getContext());
+                errorMsg.setTitle("");
+                errorMsg.setText(itemView.getContext().getString(R.string.re_questioning_wpdata_err_msg));
+                errorMsg.setClose(errorMsg::dismiss);
+
+                DialogData dialog = new DialogData(itemView.getContext());
+                dialog.setTitle("Открыть посещение " + wpDataDB.getDoc_num_otchet() + " ?");
+                dialog.setText(msg);
+                dialog.setOk(null, () -> {
+                    if (wpDataDB.getTheme_id() == 1182) {
+                        DialogData dialogQuestionOne = new DialogData(itemView.getContext());
+                        dialogQuestionOne.setTitle("");
+                        dialogQuestionOne.setText(itemView.getContext().getString(R.string.re_questioning_wpdata_first_msg));
+                        dialogQuestionOne.setOk("Да", errorMsg::show);
+                        dialogQuestionOne.setCancel("Нет", () -> {
+                            DialogData dialogQuestionOTwo = new DialogData(itemView.getContext());
+                            dialogQuestionOne.dismiss();
+                            dialogQuestionOTwo.setTitle("");
+                            dialogQuestionOTwo.setText(itemView.getContext().getString(R.string.re_questioning_wpdata_second_msg));
+                            dialogQuestionOTwo.setOk("Да", errorMsg::show);
+                            dialogQuestionOTwo.setCancel("Нет", () -> {
+                                openReportPrepare(wpDataDB, otchetId);
+                            });
+                            dialogQuestionOTwo.show();
+                        });
+                        dialogQuestionOne.show();
+                    } else {
+                        openReportPrepare(wpDataDB, otchetId);
+                    }
+                });
+                dialog.show();
+            } else {
+                DialogData dialog = new DialogData(itemView.getContext());
+                dialog.setTitle("Звіт на поточному приладі не знайдено.");
+                dialog.setText("Звіти на приладі зберігаються до тижня. Якщо вам все ж таки треба з'ясувати питання по цьому звіту - зверніться до свого керівника.");
+                dialog.setClose(dialog::dismiss);
+                dialog.show();
+
+//                Toast.makeText(itemView.getContext(), "Звіт на поточному приладі не знайдено. Звіти на приладі зберігаються до тижня, якщо вам все ж таки треба з'ясувати питання по цьому звіту - зверніться до свого керівника.", Toast.LENGTH_LONG).show();
             }
         }
 

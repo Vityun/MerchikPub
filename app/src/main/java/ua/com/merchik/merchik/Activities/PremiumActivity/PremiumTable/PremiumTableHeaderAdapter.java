@@ -1,5 +1,6 @@
 package ua.com.merchik.merchik.Activities.PremiumActivity.PremiumTable;
 
+import android.graphics.Paint;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -58,6 +59,7 @@ public class PremiumTableHeaderAdapter extends RecyclerView.Adapter<PremiumTable
             layout = itemView.findViewById(R.id.premium_table_header);
             textHeaderLayout = itemView.findViewById(R.id.header_text);
             name = itemView.findViewById(R.id.name);
+            name.setPaintFlags(name.getPaintFlags() | Paint.UNDERLINE_TEXT_FLAG);
             column1 = itemView.findViewById(R.id.col1);
             column5 = itemView.findViewById(R.id.col5);
             column2 = itemView.findViewById(R.id.col2);
@@ -78,7 +80,8 @@ public class PremiumTableHeaderAdapter extends RecyclerView.Adapter<PremiumTable
 
             name.setText(premiumTableHeader.detailedHeader.date);
             column1.setText("" + (int) premiumTableHeader.detailedHeader.sumInitialBalance);
-            column5.setText("-");
+            column5.setText("" + (int) premiumTableHeader.detailedHeader.sumPlan);
+            column5.setTextColor(-10987432);
             column2.setText("" + (int) premiumTableHeader.detailedHeader.sumComing);
             column3.setText("" + (int) premiumTableHeader.detailedHeader.sumConsumption);
             column4.setText("" + (int) premiumTableHeader.detailedHeader.sumEndBalance);

@@ -101,8 +101,8 @@ public class PremiumActivity extends toolbar_menus {
 
         date.setText("Дата");
         col1.setText("Поч. Зал.");
-        col5.setText("План");
-        col2.setText("Дохід");
+        col5.setText("Дохід План");
+        col2.setText("Дохід Факт");
         col3.setText("Витрати");
         col4.setText("Кін. Зал.");
 
@@ -190,8 +190,8 @@ public class PremiumActivity extends toolbar_menus {
         PremiumTableHeader.DetailedHeader header = new PremiumTableHeader.DetailedHeader();
         header.date = period;
         header.sumInitialBalance = res.total.nachOst;
-        header.sumComing = res.total.prihod;
-        header.sumConsumption = res.total.rashod;
+//        header.sumComing = res.total.prihod;
+//        header.sumConsumption = res.total.rashod;
         header.sumEndBalance = res.total.konOst;
 
         ArrayList<PremiumTableHeader.DetailedSubHeader> subHeaderArrayList = new ArrayList<>();
@@ -208,6 +208,7 @@ public class PremiumActivity extends toolbar_menus {
                 detailedHeader.sumEndBalance = 0.0;
                 for (Detailed currentItem : res.detailed) {
                     if (currentItem.docDefName.equals(item.docDefName)){
+                        detailedHeader.sumPlan += currentItem.sumPlan;
                         detailedHeader.sumComing += currentItem.prihod;
                         detailedHeader.sumConsumption += currentItem.rashod;
                         subHeader.items.add(currentItem);
@@ -215,6 +216,10 @@ public class PremiumActivity extends toolbar_menus {
                 }
                 subHeader.header = detailedHeader;
                 subHeaderArrayList.add(subHeader);
+
+                header.sumPlan += detailedHeader.sumPlan;
+                header.sumComing += detailedHeader.sumComing;
+                header.sumConsumption += detailedHeader.sumConsumption;
             }
         }
 

@@ -1034,6 +1034,16 @@ public class Globals {
     public static void setProfiler() {
     }
 
+
+
+    /**
+     * 27.11.2022
+     * Реверс строки.
+     * */
+    public static String reverseString(String str){
+        return new StringBuilder(str).reverse().toString();
+    }
+
     ;
 
 

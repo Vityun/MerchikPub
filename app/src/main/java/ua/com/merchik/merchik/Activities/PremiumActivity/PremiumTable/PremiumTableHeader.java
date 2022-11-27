@@ -19,6 +19,7 @@ public class PremiumTableHeader {
     public static class DetailedHeader {
         public String date;                 // Период
         public double sumInitialBalance;    // сумма Начальный остаток
+        public double sumPlan;              // сумма План
         public double sumComing;            // сумма Приходов
         public double sumConsumption;       // сумма Расходов
         public double sumEndBalance;        // сумма Конечный остаток
