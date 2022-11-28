@@ -2,6 +2,7 @@ package ua.com.merchik.merchik.ViewHolders;
 
 import android.content.Context;
 import android.net.Uri;
+import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -46,12 +47,14 @@ public class PhotoAndInfoViewHolder extends RecyclerView.ViewHolder {
         }
 
         photo.setOnClickListener(v -> {
+            Log.e("DOUBLE_CLICK", "setOnClickListener");
             TEST_DATA test = new TEST_DATA();
             test.type = 2;
             click.click(test);
         });
 
         photo.setOnLongClickListener(view -> {
+            Log.e("DOUBLE_CLICK", "setOnLongClickListener");
             TEST_DATA test = new TEST_DATA();
             test.type = 1;
             click.click(test);
