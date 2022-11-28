@@ -1247,7 +1247,7 @@ public class Options {
             }
         }
 
-        conductOptCheck(mode, result, optionsDB);
+//        conductOptCheck(mode, result, optionsDB);
         return result;
     }
 
