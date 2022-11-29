@@ -557,12 +557,31 @@ public class Options {
             // Устраните указанные ошибки и повторите попытку проведения
         } else {
             Toast.makeText(context, "Запрос на проведение создан", Toast.LENGTH_SHORT).show();
-            RealmManager.INSTANCE.executeTransaction(realm -> {
-                if (wp != null) {
-                    wp.startUpdate = true;
-                    wp.setSetStatus(1);
-                    wp.setDt_update(System.currentTimeMillis() / 1000);
-                    realm.insertOrUpdate(wp);
+
+            DialogData dialogData = new DialogData(context);
+            dialogData.setClose(dialogData::dismiss);
+            Exchange.conductingOnServerWpData(wp.getCode_dad2(), new Click() {
+                @Override
+                public <T> void onSuccess(T data) {
+                    dialogData.setTitle("Команда на проведення звіту. ");
+                    dialogData.setText("" + data);
+                    dialogData.show();
+                }
+
+                @Override
+                public void onFailure(String error) {
+                    dialogData.setTitle("Помилка проведення звіту.");
+                    dialogData.setText("Наразі провести звіт не вдалося (див. повідомлення нижче), але запит створено і він обробиться автоматично після вирішення проблеми.\n\n" + error);
+                    dialogData.show();
+
+                    RealmManager.INSTANCE.executeTransaction(realm -> {
+                        if (wp != null) {
+                            wp.startUpdate = true;
+                            wp.setSetStatus(1);
+                            wp.setDt_update(System.currentTimeMillis() / 1000);
+                            realm.insertOrUpdate(wp);
+                        }
+                    });
                 }
             });
         }

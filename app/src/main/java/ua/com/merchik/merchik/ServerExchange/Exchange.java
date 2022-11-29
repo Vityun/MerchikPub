@@ -58,6 +58,7 @@ import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.data.RetrofitResponse.AdditionalMaterialsAddressResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.AdditionalMaterialsLinksResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.AdditionalMaterialsResponse;
+import ua.com.merchik.merchik.data.RetrofitResponse.ConductWpDataResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.TovarImgList;
 import ua.com.merchik.merchik.data.RetrofitResponse.TovarImgResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.photos.ImagesViewListImageList;
@@ -2371,4 +2372,53 @@ public class Exchange {
             }
         });
     }
+
+
+
+    /**
+     * 29.11.22.
+     * Создание прямого запроса на Проведение документа.
+     */
+    public static void conductingOnServerWpData(long codeDad2, Click click){
+        StandartData data = new StandartData();
+        data.mod = "plan";
+        data.act = "document_complete";
+        data.code_dad2 = String.valueOf(codeDad2);
+
+        Gson gson = new Gson();
+        String json = gson.toJson(data);
+        JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
+
+        retrofit2.Call<ConductWpDataResponse> call = RetrofitBuilder.getRetrofitInterface().CONDUCT_WP_DATA(RetrofitBuilder.contentType, convertedObject);
+        call.enqueue(new Callback<ConductWpDataResponse>() {
+            @Override
+            public void onResponse(Call<ConductWpDataResponse> call, Response<ConductWpDataResponse> response) {
+                Log.e("conductingOnServer", "response: " + response.body());
+                if (response.isSuccessful()){
+                    if (response.body() != null){
+                        if (response.body().state){
+                            if (response.body().document_complete){
+                                click.onSuccess(response.body().notice);
+                            }else {
+                                click.onFailure("Не можу провести документ, причина: " + response.body().notice);
+                            }
+                        }else {
+                            click.onFailure("Не можу обробити документ, причина: " + response.body().error);
+                        }
+                    }else {
+                        click.onFailure("Нема даних для обробки.");
+                    }
+                }else {
+                    click.onFailure("Код запиту до сервера: " + response.code());
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ConductWpDataResponse> call, Throwable t) {
+                Log.e("conductingOnServer", "Throwable t: " + t);
+                click.onFailure("Нема зв'язку. Помилка: " + t.toString());
+            }
+        });
+    }
+
 }

@@ -30,6 +30,7 @@ import ua.com.merchik.merchik.data.RetrofitResponse.AdditionalMaterialsLinksResp
 import ua.com.merchik.merchik.data.RetrofitResponse.AdditionalMaterialsResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.AddressTableResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.ArticleTableResponse;
+import ua.com.merchik.merchik.data.RetrofitResponse.ConductWpDataResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.CustomerGroups;
 import ua.com.merchik.merchik.data.RetrofitResponse.CustomerTableResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.EDRPOUResponse;
@@ -597,6 +598,12 @@ public interface RetrofitInterface {
             @Body JsonObject json);
 
     // -------------------------------------------------------
+
+    // Запрос на проведение отчёта исполнителя
+    @POST("mobile_app.php?")
+    Call<ConductWpDataResponse> CONDUCT_WP_DATA(
+            @Header("ContentType") String content,
+            @Body JsonObject json);
 
     // Загрузка таблички Групп Чатов
     @POST("mobile_app.php?")
