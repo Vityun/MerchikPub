@@ -570,8 +570,8 @@ public class Options {
 
                 @Override
                 public void onFailure(String error) {
-                    dialogData.setTitle("Помилка проведення звіту.");
-                    dialogData.setText("Наразі провести звіт не вдалося (див. повідомлення нижче), але запит створено і він обробиться автоматично після вирішення проблеми.\n\n" + error);
+                    dialogData.setTitle("Проведення звіту...");
+                    dialogData.setText("Зараз передати команду на проведення звіту на сервер не вдалося. Але ця команда збережена на вашому пристрої та буде передана на сервер під час наступного обміну данними.\n\n Відповідь серверу: " + error);
                     dialogData.show();
 
                     RealmManager.INSTANCE.executeTransaction(realm -> {
