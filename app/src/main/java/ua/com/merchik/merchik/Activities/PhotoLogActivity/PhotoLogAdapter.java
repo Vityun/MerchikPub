@@ -26,6 +26,8 @@ import androidx.annotation.NonNull;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.gson.Gson;
+
 import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -265,6 +267,8 @@ public class PhotoLogAdapter extends RecyclerView.Adapter<PhotoLogAdapter.ViewHo
                         dialog.setPhotos(getAdapterPosition(), photoLogData);
                         dialog.setTextInfo(photoData(photoLogDat));
                         dialog.getComment(photoLogDat.getComment(), () -> {
+                            Globals.writeToMLOG("INFO", "SAVE_PHOTO_COMMENT", "photoLogDat: " + new Gson().toJson(photoLogDat));
+                            Globals.writeToMLOG("INFO", "SAVE_PHOTO_COMMENT", "photoLogDat.getComment(): " + photoLogDat.getComment());
                             RealmManager.INSTANCE.executeTransaction(realm -> {
                                 photoLogDat.setComment(dialog.commentResult);
                                 photoLogDat.setCommentUpload(true);

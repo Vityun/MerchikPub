@@ -25,6 +25,8 @@ import androidx.recyclerview.widget.LinearSnapHelper;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.SnapHelper;
 
+import com.google.gson.Gson;
+
 import java.io.File;
 import java.util.List;
 import java.util.Timer;
@@ -138,6 +140,10 @@ public class DialogFullPhoto {
                 String coment = v.getText().toString();
 
                 StackPhotoDB row = photoLogData.get(POSITION_ADAPTER);
+
+                Globals.writeToMLOG("INFO", "SAVE_PHOTO_COMMENT", "coment: " + coment);
+                Globals.writeToMLOG("INFO", "SAVE_PHOTO_COMMENT", "StackPhotoDB row: " + new Gson().toJson(row));
+
                 RealmManager.INSTANCE.executeTransaction(realm -> {
                     row.setComment(coment);
                     row.setCommentUpload(true);
