@@ -15,6 +15,8 @@ import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -26,10 +28,13 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.R;
+import ua.com.merchik.merchik.Recyclers.KeyValueData;
+import ua.com.merchik.merchik.Recyclers.KeyValueListAdapter;
 import ua.com.merchik.merchik.WorkPlan;
 import ua.com.merchik.merchik.data.Data;
 import ua.com.merchik.merchik.data.RealmModels.ThemeDB;
@@ -52,6 +57,7 @@ public class DetailedReportHomeFrag extends Fragment {
     TextView activity_title;
     TextView textDRDateV, textDRAddrV, textDRCustV, textDRMercV, textTheme;
     LinearLayout option_signal_layout2;
+    private RecyclerView recycler;
 
     private ImageView merchikImg;
 
@@ -82,12 +88,16 @@ public class DetailedReportHomeFrag extends Fragment {
             textDRCustV = v.findViewById(R.id.textDRCustVal);
             textDRMercV = v.findViewById(R.id.textDRMercVal);
             option_signal_layout2 = v.findViewById(R.id.option_signal_layout2);
+            recycler = v.findViewById(R.id.recycler);
 
             textDRDateV.setText(Clock.getHumanTimeYYYYMMDD(list.get(0).getDate().getTime()/1000));
             textDRAddrV.setText(list.get(0).getAddr());
             textDRCustV.setText(list.get(0).getCust());
             textDRMercV.setText(list.get(0).getMerc());
             option_signal_layout2.addView(ll);
+
+            recycler.setAdapter(new KeyValueListAdapter(createKeyValueData(wpDataDB)));
+            recycler.setLayoutManager(new LinearLayoutManager(getContext(), LinearLayoutManager.VERTICAL, false));
 
 
             textTheme = v.findViewById(R.id.theme);
@@ -126,6 +136,48 @@ public class DetailedReportHomeFrag extends Fragment {
         }
 
         return v;
+    }
+
+    /*Заполнение данных над картой*/
+    private List<KeyValueData> createKeyValueData(WpDataDB wpDataDB){
+        List<KeyValueData> result = new ArrayList<>();
+
+        result.add(themeData(wpDataDB));
+        result.add(statusData(wpDataDB));
+
+        return result;
+    }
+
+    /*Заполнение строки: Тема*/
+    private KeyValueData themeData(WpDataDB wpDataDB){
+        CharSequence key;
+        CharSequence value;
+
+        key = Html.fromHtml("<b>Тема:</b>");
+
+        int themeId = wpDataDB.getTheme_id();
+        ThemeDB themeDB = ThemeRealm.getByID(String.valueOf(themeId));
+        if (themeId == 998){
+            value = themeDB.getNm();
+        }else {
+            value = Html.fromHtml("<font color=red>"+themeDB.getNm()+"</font>");
+        }
+
+        return new KeyValueData(key, value);
+    }
+
+    /*Заполнение строки: Статус отчёта*/
+    private KeyValueData statusData(WpDataDB wpDataDB){
+        CharSequence key = Html.fromHtml("<b>Статус отчёта:</b>");
+        CharSequence value;
+
+        if (wpDataDB.getStatus() == 1){
+            value = Html.fromHtml("<font color=green>Проведён</font>");
+        }else {
+            value = Html.fromHtml("<font color=red>Не проведён</font>");
+        }
+
+        return new KeyValueData(key, value);
     }
 
 

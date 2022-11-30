@@ -330,6 +330,7 @@ public class TARActivity extends toolbar_menus implements TARFragmentHome.OnFrag
     }
 
 
+    /*Real*/
     private StackPhotoDB savePhoto(String str, TasksAndReclamationsSDB tar) {
         try {
             int id = RealmManager.stackPhotoGetLastId();
@@ -349,7 +350,7 @@ public class TARActivity extends toolbar_menus implements TARFragmentHome.OnFrag
                 stackPhotoDB.setDvi(1);
             }
 
-            stackPhotoDB.setCreate_time(System.currentTimeMillis() / 1000);
+            stackPhotoDB.setCreate_time(System.currentTimeMillis());
 
             stackPhotoDB.setPhoto_hash(globals.getHashMD5FromFilePath(str, null));
             stackPhotoDB.setPhoto_num(str);
@@ -381,7 +382,7 @@ public class TARActivity extends toolbar_menus implements TARFragmentHome.OnFrag
 
             stackPhotoDB.setDvi(1);
 
-            stackPhotoDB.setCreate_time(System.currentTimeMillis() / 1000);
+            stackPhotoDB.setCreate_time(System.currentTimeMillis());
 
             stackPhotoDB.setPhoto_hash(globals.getHashMD5FromFile2(photoFile, null));
             stackPhotoDB.setPhoto_num(photoFile.getAbsolutePath());
