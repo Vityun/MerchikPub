@@ -31,7 +31,6 @@ public class WpDataRealm {
      */
     public static void setWpData(List<WpDataDB> wpData) {
         INSTANCE.beginTransaction();
-//        INSTANCE.delete(WpDataDB.class);
         INSTANCE.copyToRealmOrUpdate(wpData);
         INSTANCE.commitTransaction();
     }

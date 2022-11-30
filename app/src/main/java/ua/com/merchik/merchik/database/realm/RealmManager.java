@@ -149,7 +149,7 @@ public class RealmManager {
     public static boolean setWpData(List<WpDataDB> wpData) {
         Log.e("REALM_DB_UPDATE", "WP_DATA_START");
         INSTANCE.beginTransaction();
-//        INSTANCE.delete(WpDataDB.class);
+        INSTANCE.delete(WpDataDB.class);
         INSTANCE.copyToRealmOrUpdate(wpData);
         INSTANCE.commitTransaction();
         Log.e("REALM_DB_UPDATE", "WP_DATA_END");
@@ -240,18 +240,17 @@ public class RealmManager {
             INSTANCE.commitTransaction();
 
             // 2 цикл. Прогоняем данные которые надо удалить.
-//            RealmResults<WpDataDB> localData = INSTANCE.where(WpDataDB.class) // Получаем всю БД (на данный момент она должна быть обновлена с сервера)
-//                    .findAll();
+            RealmResults<WpDataDB> localData = INSTANCE.where(WpDataDB.class) // Получаем всю БД (на данный момент она должна быть обновлена с сервера)
+                    .findAll();
 
 
-            /*
             INSTANCE.beginTransaction();
             for (WpDataDB local : localData) {
                 if (!serverData.contains(local)) {
                     local.deleteFromRealm();
                 }
             }
-            INSTANCE.commitTransaction();*/
+            INSTANCE.commitTransaction();
 
 
             Log.e("setWpDataAuto", "return: " + sendOnServer);
