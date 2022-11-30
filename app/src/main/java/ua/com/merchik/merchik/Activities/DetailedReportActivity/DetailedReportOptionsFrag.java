@@ -21,6 +21,7 @@ import java.util.Collections;
 import java.util.List;
 
 import ua.com.merchik.merchik.Clock;
+import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.Options.Options;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.ServerExchange.Exchange;
@@ -108,42 +109,46 @@ public class DetailedReportOptionsFrag extends Fragment {
                 Toast.makeText(mContext, "Данный раздел находится в разработке", Toast.LENGTH_LONG).show();
             });
             buttonMakeAReport.setOnClickListener(b -> {
+                try {
+                    List<OptionsDB> opt = workPlan.getOptionButtons2(workPlan.getWpOpchetId(wpDataDB), wpDataDB.getId());
+                    WpDataDB wp = WpDataRealm.getWpDataRowByDad2Id(wpDataDB.getCode_dad2());
 
-                List<OptionsDB> opt = workPlan.getOptionButtons2(workPlan.getWpOpchetId(wpDataDB), wpDataDB.getId());
-                WpDataDB wp = WpDataRealm.getWpDataRowByDad2Id(wpDataDB.getCode_dad2());
-
-                new Options().conduct(getContext(), wp, opt, 3, new Clicks.click() {
-                    @Override
-                    public <T> void click(T data) {
-                        OptionsDB optionsDB = (OptionsDB) data;
-                        int scrollPosition = recycleViewDRAdapter.getItemPosition(optionsDB);
-                        OptionMassageType msgType = new OptionMassageType();
-                        msgType.type = OptionMassageType.Type.DIALOG;
-                        new Options().optControl(getContext(), wp, optionsDB, Integer.parseInt(optionsDB.getOptionControlId()), msgType, Options.NNKMode.CHECK);
-                        rvContacts.smoothScrollToPosition(scrollPosition);
-                    }
-                });
-
-                if (wpDataDB.getSetStatus() == 1) {
-                    check.setImageDrawable(mContext.getResources().getDrawable(R.drawable.ic_question_circle_regular));
-                    check.setColorFilter(mContext.getResources().getColor(R.color.colorInetYellow));
-
-//                    sendWpData2();  // Выгрузка статуса
-                    Exchange exchange = new Exchange();
-                    exchange.sendWpDataToServer(new Click() {
+                    new Options().conduct(getContext(), wp, opt, 3, new Clicks.click() {
                         @Override
-                        public <T> void onSuccess(T data) {
-                            String msg = (String) data;
-                            Toast.makeText(mContext, msg, Toast.LENGTH_LONG).show();
-                        }
-
-                        @Override
-                        public void onFailure(String error) {
-                            Toast.makeText(mContext, error, Toast.LENGTH_LONG).show();
+                        public <T> void click(T data) {
+                            OptionsDB optionsDB = (OptionsDB) data;
+                            int scrollPosition = recycleViewDRAdapter.getItemPosition(optionsDB);
+                            OptionMassageType msgType = new OptionMassageType();
+                            msgType.type = OptionMassageType.Type.DIALOG;
+                            new Options().optControl(getContext(), wp, optionsDB, Integer.parseInt(optionsDB.getOptionControlId()), msgType, Options.NNKMode.CHECK);
+                            rvContacts.smoothScrollToPosition(scrollPosition);
                         }
                     });
+
+                    if (wpDataDB.getSetStatus() == 1) {
+                        check.setImageDrawable(mContext.getResources().getDrawable(R.drawable.ic_question_circle_regular));
+                        check.setColorFilter(mContext.getResources().getColor(R.color.colorInetYellow));
+
+//                    sendWpData2();  // Выгрузка статуса
+                        Exchange exchange = new Exchange();
+                        exchange.sendWpDataToServer(new Click() {
+                            @Override
+                            public <T> void onSuccess(T data) {
+                                String msg = (String) data;
+                                Toast.makeText(mContext, msg, Toast.LENGTH_LONG).show();
+                            }
+
+                            @Override
+                            public void onFailure(String error) {
+                                Toast.makeText(mContext, error, Toast.LENGTH_LONG).show();
+                            }
+                        });
+                    }
+                }catch (Exception e){
+                    Globals.writeToMLOG("ERROR", "DetailedReportOptionsFrag/buttonMakeAReport/setOnClickListener", "Exception e: " + e);
                 }
             });
+
 
             Log.e("R_TRANSLATES", "convertedObject: START");
 
