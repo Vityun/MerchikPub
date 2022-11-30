@@ -126,6 +126,9 @@ public class WpDataDB extends RealmObject implements Serializable {
     public boolean kp;  // КП Команда на Проведение
     public boolean startUpdate;
 
+    public double cash_fact;
+    public double cash_penalty;
+
     public WpDataDB() {
     }
 

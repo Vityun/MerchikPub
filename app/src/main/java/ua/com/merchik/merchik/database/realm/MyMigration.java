@@ -95,10 +95,19 @@ public class MyMigration implements RealmMigration {
             oldVersion++;
         }
 
-        if (oldVersion == 0 || oldVersion == 15){
-            RealmObjectSchema schemaAR = schema.get("AdditionalRequirementsMarkDB");
+//        if (oldVersion == 0 || oldVersion == 15){
+//            RealmObjectSchema schemaAR = schema.get("AdditionalRequirementsMarkDB");
+//
+//            schemaAR.addField("comment", String.class);
+//
+//            oldVersion=newVersion;
+//        }
 
-            schemaAR.addField("comment", String.class);
+        if (oldVersion == 15 || oldVersion == 16){
+            RealmObjectSchema wpDataDB = schema.get("WpDataDB");
+
+            wpDataDB.addField("cash_fact", Double.class);
+            wpDataDB.addField("cash_penalty", Double.class);
 
             oldVersion=newVersion;
         }
