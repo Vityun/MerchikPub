@@ -81,9 +81,9 @@ public class RecyclerViewTPLAdapter extends RecyclerView.Adapter<RecyclerViewTPL
             editText.addTextChangedListener(new TextWatcher() {
                 @Override
                 public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-                    if (editText.getText().toString().equals("")) {
-                        editText.setText("0");
-                    }
+//                    if (editText.getText().toString().equals("")) {
+//                        editText.setText("0");
+//                    }
                 }
 
                 @Override
@@ -94,12 +94,16 @@ public class RecyclerViewTPLAdapter extends RecyclerView.Adapter<RecyclerViewTPL
                 @Override
                 public void afterTextChanged(Editable editable) {
                     click.getData(item, editable.toString());
-                    if (Integer.parseInt(editText.getText().toString()) > 0) {
-                        subtraction.getBackground().mutate().setColorFilter(new PorterDuffColorFilter(subtraction.getContext().getResources().getColor(R.color.active), PorterDuff.Mode.SRC));
-                        subtraction.setClickable(true);
-                    } else {
-                        subtraction.getBackground().mutate().setColorFilter(new PorterDuffColorFilter(subtraction.getContext().getResources().getColor(R.color.inActive), PorterDuff.Mode.SRC));
-                        subtraction.setClickable(false);
+                    if (!editText.getText().toString().equals("")){
+                        if (Integer.parseInt(editText.getText().toString()) > 0) {
+                            subtraction.getBackground().mutate().setColorFilter(new PorterDuffColorFilter(subtraction.getContext().getResources().getColor(R.color.active), PorterDuff.Mode.SRC));
+                            subtraction.setClickable(true);
+                        } else {
+                            subtraction.getBackground().mutate().setColorFilter(new PorterDuffColorFilter(subtraction.getContext().getResources().getColor(R.color.inActive), PorterDuff.Mode.SRC));
+                            subtraction.setClickable(false);
+                        }
+                    }else {
+
                     }
                 }
             });
@@ -127,9 +131,13 @@ public class RecyclerViewTPLAdapter extends RecyclerView.Adapter<RecyclerViewTPL
                 });
                 additions.setOnClickListener(view -> {
                     try {
-                        int data = Integer.parseInt(editText.getText().toString());
-                        data++;
-                        editText.setText(String.valueOf(data));
+                        if (!editText.getText().toString().equals("")){
+                            int data = Integer.parseInt(editText.getText().toString());
+                            data++;
+                            editText.setText(String.valueOf(data));
+                        }else {
+                            editText.setText("1");
+                        }
                     } catch (Exception e) {
                         Toast.makeText(itemView.getContext(), "Ошибка. Передайте её руководителю: " + e, Toast.LENGTH_LONG).show();
                     }
