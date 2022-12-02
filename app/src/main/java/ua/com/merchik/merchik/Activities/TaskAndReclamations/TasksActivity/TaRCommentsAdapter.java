@@ -103,6 +103,11 @@ public class TaRCommentsAdapter extends RecyclerView.Adapter<TaRCommentsAdapter.
 //                StackPhotoDB stackPhotoDB = StackPhotoRealm.stackPhotoDBGetPhotoBySiteId(dataItem.getPhoto());
                 if (dataItem.photo_hash != null && !dataItem.photo_hash.equals("")){
                     StackPhotoDB stackPhotoDB = StackPhotoRealm.getByHash(dataItem.photo_hash);
+
+                    if (stackPhotoDB == null && dataItem.getPhoto() != null && !dataItem.getPhoto().equals("")){
+                        stackPhotoDB = StackPhotoRealm.stackPhotoDBGetPhotoBySiteId(dataItem.getPhoto());
+                    }
+
                     if (stackPhotoDB != null){
                         if (stackPhotoDB.getPhoto_num().equals("")){
                             new PhotoDownload().downloadPhoto(false, stackPhotoDB, "/TAR", new PhotoDownload.downloadPhotoInterface() {
