@@ -3,6 +3,7 @@ package ua.com.merchik.merchik.database.realm.tables;
 import java.util.List;
 
 import io.realm.RealmResults;
+import io.realm.Sort;
 import ua.com.merchik.merchik.data.RealmModels.TARCommentsDB;
 
 import static ua.com.merchik.merchik.database.realm.RealmManager.INSTANCE;
@@ -48,6 +49,7 @@ public class TARCommentsRealm {
     public static List<TARCommentsDB> getTARCommentByTarId(String id){
         return INSTANCE.where(TARCommentsDB.class)
                 .equalTo("rId", id)
+                .sort("dt", Sort.DESCENDING)
                 .findAll();
     }
 
