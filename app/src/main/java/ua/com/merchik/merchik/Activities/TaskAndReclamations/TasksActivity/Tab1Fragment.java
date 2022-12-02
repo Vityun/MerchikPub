@@ -161,6 +161,11 @@ public class Tab1Fragment extends Fragment {
         } catch (Exception e) {
         }
 
+        try {
+            CharSequence customer = Html.fromHtml("<b>Заказчик: </b>" + CustomerRealm.getCustomerById(String.valueOf(data.client)).getNm() + "<br>");
+            stringData.append(customer);
+        } catch (Exception e) {
+        }
 
         try {
             CharSequence autor = Html.fromHtml("<b>Автор: </b>" + UsersRealm.getUsersDBById(data.author).getNm() + "<br>");
@@ -217,13 +222,6 @@ public class Tab1Fragment extends Fragment {
         try {
             CharSequence dad2B = Html.fromHtml("<b>ДАД2 (Б): </b>" + data.codeDad2SrcDoc + "<br>");
             stringData.append(dad2B);
-        } catch (Exception e) {
-        }
-
-
-        try {
-            CharSequence customer = Html.fromHtml("<b>Заказчик: </b>" + CustomerRealm.getCustomerById(String.valueOf(data.client)).getNm() + "<br>");
-            stringData.append(customer);
         } catch (Exception e) {
         }
 
