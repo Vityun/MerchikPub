@@ -1,6 +1,7 @@
 package ua.com.merchik.merchik.dialogs.DialogsRecyclerViewAdapter;
 
 import android.app.DatePickerDialog;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -79,23 +80,27 @@ public class DatePickerViewHolder extends RecyclerView.ViewHolder {
 
 
         dateFromEditText.setOnTouchListener((view, motionEvent) -> {
-            setDatePicker(dateFromEditText, new Clicks.click() {
-                @Override
-                public <T> void click(T data) {
-                    block.resultDateFrom = (String) data;
-                    block.click.onSuccess("Вы установили: " + dateFromEditText.getText().toString());
-                }
-            });
+            if (motionEvent.getAction() == MotionEvent.ACTION_DOWN) {
+                setDatePicker(dateFromEditText, new Clicks.click() {
+                    @Override
+                    public <T> void click(T data) {
+                        block.resultDateFrom = (String) data;
+                        block.click.onSuccess("Вы установили: " + dateFromEditText.getText().toString());
+                    }
+                });
+            }
             return false;
         });
         dateToEditText.setOnTouchListener((view, motionEvent) -> {
-            setDatePicker(dateToEditText, new Clicks.click() {
-                @Override
-                public <T> void click(T data) {
-                    block.resultDateTo = (String) data;
-                    block.click.onSuccess("Вы установили дату: " + dateToEditText.getText().toString());
-                }
-            });
+            if (motionEvent.getAction() == MotionEvent.ACTION_DOWN) {
+                setDatePicker(dateToEditText, new Clicks.click() {
+                    @Override
+                    public <T> void click(T data) {
+                        block.resultDateTo = (String) data;
+                        block.click.onSuccess("Вы установили дату: " + dateToEditText.getText().toString());
+                    }
+                });
+            }
             return false;
         });
     }
