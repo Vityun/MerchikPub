@@ -561,7 +561,7 @@ public class Options {
 
                 DialogData dialogData = new DialogData(context);
                 dialogData.setClose(dialogData::dismiss);
-                Exchange.conductingOnServerWpData(wp.getCode_dad2(), new Click() {
+                Exchange.conductingOnServerWpData(wp, wp.getCode_dad2(), new Click() {
                     @Override
                     public <T> void onSuccess(T data) {
                         dialogData.setTitle("Команда на проведення звіту. ");

@@ -348,8 +348,8 @@ public class TablesLoadingUnloading {
 
         String mod = "plan";
         String act = "list";
-        String date_from = Clock.getDatePeriod(-14);
-//        String date_from = timeYesterday7;
+//        String date_from = Clock.getDatePeriod(-14);
+        String date_from = timeYesterday7;
         String date_to = timeTomorrow;
 
         ProgressDialog pg = ProgressDialog.show(context, "Обмен данными с сервером.", "Обновление таблицы: " + "План работ", true, true);
@@ -599,8 +599,8 @@ public class TablesLoadingUnloading {
 
         String mod = "plan";
         String act = "options_list";
-//        String date_from = timeYesterday7;
-        String date_from = Clock.getDatePeriod(-14);
+        String date_from = timeYesterday7;
+//        String date_from = Clock.getDatePeriod(-14);
         String date_to = timeTomorrow;
 
         ProgressDialog pg = ProgressDialog.show(context, "Обмен данными с сервером.", "Обновление таблицы: " + "Опции", true, true);

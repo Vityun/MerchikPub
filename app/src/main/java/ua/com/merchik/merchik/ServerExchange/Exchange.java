@@ -2379,7 +2379,7 @@ public class Exchange {
      * 29.11.22.
      * Создание прямого запроса на Проведение документа.
      */
-    public static void conductingOnServerWpData(long codeDad2, Click click){
+    public static void conductingOnServerWpData(WpDataDB wp, long codeDad2, Click click){
         StandartData data = new StandartData();
         data.mod = "plan";
         data.act = "document_complete";
@@ -2397,10 +2397,12 @@ public class Exchange {
                 if (response.isSuccessful()){
                     if (response.body() != null){
                         if (response.body().state){
-                            if (response.body().document_complete){
+                            // Пока пусть будет, я не знаю что им там в голову бахнет
+                            if (response.body().document_complete && wp.getClient_id().equals(wp.getIsp())){
                                 click.onSuccess(response.body().notice);
                             }else {
-                                click.onFailure("Не можу провести документ, причина: " + response.body().notice);
+                                click.onSuccess(response.body().notice);
+//                                click.onFailure("Не можу провести документ, причина: " + response.body().notice);
                             }
                         }else {
                             click.onFailure("Не можу обробити документ, причина: " + response.body().error);
