@@ -18,6 +18,9 @@ import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.ServerExchange.PhotoDownload;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
 
+/**
+ * Журнал фото(Длинная рука) после клика по фотке
+ * */
 public class PhotoLogPhotoAdapter extends RecyclerView.Adapter<PhotoLogPhotoAdapter.TouchPhotoVH> {
 
     private List<StackPhotoDB> data;
@@ -25,8 +28,6 @@ public class PhotoLogPhotoAdapter extends RecyclerView.Adapter<PhotoLogPhotoAdap
     public PhotoLogPhotoAdapter(List<StackPhotoDB> data, View.OnTouchListener onTouchListener) {
         this.data = data;
     }
-
-
 
     @NonNull
     @Override
@@ -37,10 +38,10 @@ public class PhotoLogPhotoAdapter extends RecyclerView.Adapter<PhotoLogPhotoAdap
 
     @Override
     public void onBindViewHolder(@NonNull TouchPhotoVH holder, int position) {
-        int c = getItemCount() - position - 1; // Отобразить снизу вверх
+/*        int c = getItemCount() - position - 1; // Отобразить снизу вверх
         StackPhotoDB photoLogDat = data.get(c);
-        holder.bind(photoLogDat);
-//        holder.bind(data.get(position));
+        holder.bind(photoLogDat);*/
+        holder.bind(data.get(position));
     }
 
     @Override

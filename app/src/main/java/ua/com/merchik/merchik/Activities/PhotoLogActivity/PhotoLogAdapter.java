@@ -31,6 +31,7 @@ import com.google.gson.Gson;
 import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import io.realm.RealmResults;
@@ -49,6 +50,9 @@ import ua.com.merchik.merchik.dialogs.DialogFullPhoto;
 
 import static ua.com.merchik.merchik.menu_main.decodeSampledBitmapFromResource;
 
+/**
+ * Начальный Список Журнала фото.
+ * */
 public class PhotoLogAdapter extends RecyclerView.Adapter<PhotoLogAdapter.ViewHolder> implements Filterable {
 
     private Context mContext;
@@ -264,7 +268,11 @@ public class PhotoLogAdapter extends RecyclerView.Adapter<PhotoLogAdapter.ViewHo
 
                         DialogFullPhoto dialog = new DialogFullPhoto(mContext);
 
+//                        dialog.setPhotos(getAdapterPosition(), photoLogData);
+
+                        Collections.reverse(photoLogData);
                         dialog.setPhotos(getAdapterPosition(), photoLogData);
+
                         dialog.setTextInfo(photoData(photoLogDat));
                         dialog.getComment(photoLogDat.getComment(), () -> {
                             Globals.writeToMLOG("INFO", "SAVE_PHOTO_COMMENT", "photoLogDat: " + new Gson().toJson(photoLogDat));
