@@ -18,7 +18,7 @@ public class TARCommentsRealm {
             if (data != null){
                 INSTANCE.beginTransaction();
 //                INSTANCE.delete(TARCommentsDB.class);
-                INSTANCE.copyToRealmOrUpdate(data);
+                INSTANCE.copyToRealm(data);
                 INSTANCE.commitTransaction();
             }else {
                 // TODO Set to LOG info about error

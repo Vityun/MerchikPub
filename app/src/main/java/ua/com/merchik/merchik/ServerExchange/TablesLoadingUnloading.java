@@ -1132,8 +1132,8 @@ public class TablesLoadingUnloading {
             call = RetrofitBuilder.getRetrofitInterface().GET_TOVAR_T(mod, act);
         }
 
-        ProgressDialog finalPg = pg;
-        ProgressDialog finalTovarProgressDialog = tovarProgressDialog;
+//        ProgressDialog finalPg = pg;
+//        ProgressDialog finalTovarProgressDialog = tovarProgressDialog;
         call.enqueue(new retrofit2.Callback<TovarTableResponse>() {
             @Override
             public void onResponse(retrofit2.Call<TovarTableResponse> call, retrofit2.Response<TovarTableResponse> response) {
@@ -1168,50 +1168,50 @@ public class TablesLoadingUnloading {
                                     @Override
                                     public void onSuccess(String data) {
                                         Log.e("test", "String data: " + data);
-                                        if (finalTovarProgressDialog != null && finalTovarProgressDialog.isShowing()){
-                                            finalTovarProgressDialog.setMessage(data);
-                                        }
+//                                        if (finalTovarProgressDialog != null && finalTovarProgressDialog.isShowing()){
+//                                            finalTovarProgressDialog.setMessage(data);
+//                                        }
                                     }
 
                                     @Override
                                     public void onFailure(String error) {
                                         Log.e("test", "String error: " + error);
-                                        if (finalTovarProgressDialog != null && finalTovarProgressDialog.isShowing()){
-                                            finalTovarProgressDialog.setMessage(error);
-                                        }
+//                                        if (finalTovarProgressDialog != null && finalTovarProgressDialog.isShowing()){
+//                                            finalTovarProgressDialog.setMessage(error);
+//                                        }
                                     }
                                 });
 
-                                if (finalPg != null)
-                                    if (finalPg.isShowing())
-                                        finalPg.dismiss();
+//                                if (finalPg != null)
+//                                    if (finalPg.isShowing())
+//                                        finalPg.dismiss();
                             } else {
-                                if (finalPg != null)
-                                    if (finalPg.isShowing())
-                                        finalPg.dismiss();
+//                                if (finalPg != null)
+//                                    if (finalPg.isShowing())
+//                                        finalPg.dismiss();
 
                             }
                         }
                     } else {
-                        if (finalPg != null)
-                            if (finalPg.isShowing())
-                                finalPg.dismiss();
+//                        if (finalPg != null)
+//                            if (finalPg.isShowing())
+//                                finalPg.dismiss();
 
                     }
                     readyTovarTable = true;
                 }catch (Exception e){
                     Globals.writeToMLOG("ERROR", "downloadTovarTable/onResponse/Exception", "Exception: " + e);
-                    if (finalPg != null)
-                        if (finalPg.isShowing())
-                            finalPg.dismiss();
+//                    if (finalPg != null)
+//                        if (finalPg.isShowing())
+//                            finalPg.dismiss();
                 }
             }
 
             @Override
             public void onFailure(retrofit2.Call<TovarTableResponse> call, Throwable t) {
-                if (finalPg != null)
-                    if (finalPg.isShowing())
-                        finalPg.dismiss();
+//                if (finalPg != null)
+//                    if (finalPg.isShowing())
+//                        finalPg.dismiss();
                 readyTovarTable = false;
                 syncInternetError = true;
                 Log.e("TAG_TABLE", "FAILURETovarTable: " + t);
