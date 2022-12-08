@@ -78,6 +78,8 @@ import ua.com.merchik.merchik.data.RetrofitResponse.WpDataServer;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.OborotVedResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.OpinionResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.OpinionThemeResponse;
+import ua.com.merchik.merchik.data.RetrofitResponse.tables.ReportPrepare.ReportPrepareUploadList;
+import ua.com.merchik.merchik.data.RetrofitResponse.tables.ReportPrepare.ReportPrepareUploadResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.TovarGroupClientResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.TovarGroupResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.update.reportprepare.ReportPrepareUpdateResponse;
@@ -1199,7 +1201,7 @@ public class TablesLoadingUnloading {
 
                     }
                     readyTovarTable = true;
-                }catch (Exception e){
+                } catch (Exception e) {
                     Globals.writeToMLOG("ERROR", "downloadTovarTable/onResponse/Exception", "Exception: " + e);
 //                    if (finalPg != null)
 //                        if (finalPg.isShowing())
@@ -2207,19 +2209,94 @@ public class TablesLoadingUnloading {
         String actText = "set_report_data";
 
         // Получаем последние данные из REPORT_PREPARE для выгрузки на сервер (время изменения dtChange)
-        ArrayList<ReportPrepareServ> data = RealmManager.getReportPrepareToUpload();
+        List<ReportPrepareServ> data = RealmManager.getReportPrepareToUpload();
         Log.e("UPLOAD_DATA", "REPORT_PREPARE. (" + data.size() + ")");
 
         if (data != null && data.size() >= 0) {
-            retrofit2.Call<JsonObject> call = RetrofitBuilder.getRetrofitInterface().UPLOAD_REPORT_PREPARE(modText, actText, data);
-            call.enqueue(new retrofit2.Callback<JsonObject>() {
+            StandartData standartData = new StandartData();
+            standartData.mod = "report_prepare";
+            standartData.act = "set_report_data";
+
+/*        List<StandartData.ReportPrepareServ> RP = new ArrayList<>();
+        for (ReportPrepareServ item : data) {
+            StandartData.ReportPrepareServ RP_ITEM = new StandartData.ReportPrepareServ();
+
+            RP_ITEM.element_id = item.getElement_id();
+            RP_ITEM.dt = item.getDt();
+            RP_ITEM.dt_report = item.getDt_report();
+            RP_ITEM.client_id = item.getClient_id();
+            RP_ITEM.tovar_id = item.getTovar_id();
+            RP_ITEM.addr_id = item.getAddr_id();
+            RP_ITEM.price = item.getPrice();
+            RP_ITEM.face = item.getFace();
+            RP_ITEM.amount = item.getAmount();
+            RP_ITEM.dt_expire = item.getDt_expire();
+            RP_ITEM.expire_left = item.getExpire_left();
+            RP_ITEM.notes = item.getNotes();
+            RP_ITEM.up = item.getUp();
+            RP_ITEM.akciya = item.getAkciya();
+            RP_ITEM.akciya_id = item.getAkciya_id();
+            RP_ITEM.oborotved_num = item.getOborotved_num();
+            RP_ITEM.error_id = item.getError_id();
+            RP_ITEM.error_comment = item.getError_comment();
+            RP_ITEM.code_dad2 = item.getCode_dad2();
+            RP_ITEM.buyer_order_id = item.buyer_order_id;
+
+            RP.add(RP_ITEM);
+        }*/
+
+            standartData.data = data;
+
+            Gson gson = new Gson();
+            String json = gson.toJson(standartData);
+            JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
+
+            Log.e("UPLOAD_DATA", "REPORT_PREPARE.gson (" + gson + ")");
+            Log.e("UPLOAD_DATA", "REPORT_PREPARE.json (" + json + ")");
+            Log.e("UPLOAD_DATA", "REPORT_PREPARE.convertedObject (" + convertedObject + ")");
+
+
+            retrofit2.Call<ReportPrepareUploadResponse> call = RetrofitBuilder.getRetrofitInterface().SEND_RP(RetrofitBuilder.contentType, convertedObject);
+//            retrofit2.Call<JsonObject> call = RetrofitBuilder.getRetrofitInterface().UPLOAD_REPORT_PREPARE(modText, actText, data);
+            call.enqueue(new retrofit2.Callback<ReportPrepareUploadResponse>() {
                 @Override
-                public void onResponse(retrofit2.Call<JsonObject> call, retrofit2.Response<JsonObject> response) {
+                public void onResponse(retrofit2.Call<ReportPrepareUploadResponse> call, retrofit2.Response<ReportPrepareUploadResponse> response) {
                     Log.e("REPORT_PREPARE_SEND", "RESPONSE: " + response.body());
 
                     Globals.writeToMLOG("INFO", "onResponse/uploadReportPrepareToServer", "DATA/response.body(): " + response.body());
+                    String currentTime = "" + System.currentTimeMillis() / 1000;
 
-                    String json = String.valueOf(response.body());
+                    try {
+                        if (response.isSuccessful()) {
+                            if (response.body() != null) {
+                                if (response.body().state) {
+                                    if (response.body().data != null && response.body().data.size() > 0) {
+                                        for (ReportPrepareUploadList item : response.body().data) {
+                                            ReportPrepareDB reportPrepareDB = RealmManager.getReportPrepareRowById(item.elementId);
+                                            RealmManager.INSTANCE.executeTransaction(realm -> {
+                                                reportPrepareDB.setUploadStatus(0);
+                                                reportPrepareDB.setDtChange(currentTime);
+                                                RealmManager.setReportPrepareRow(reportPrepareDB);
+                                            });
+                                        }
+                                    } else {
+                                        Globals.writeToMLOG("INFO", "onResponse/uploadReportPrepareToServer/", "response.body().data == null || size == 0");
+                                    }
+                                } else {
+                                    Globals.writeToMLOG("INFO", "onResponse/uploadReportPrepareToServer/", "response.body().state: " + false);
+                                }
+                            } else {
+                                Globals.writeToMLOG("INFO", "onResponse/uploadReportPrepareToServer/", "response.body() != null");
+                            }
+                        } else {
+                            Globals.writeToMLOG("INFO", "onResponse/uploadReportPrepareToServer/", "response.body() != null");
+                        }
+                    } catch (Exception e) {
+                        Globals.writeToMLOG("ERROR", "onResponse/uploadReportPrepareToServer", "Resp not successful. response.code(): " + response.code());
+                    }
+
+
+/*                    String json = String.valueOf(response.body());
                     int maxLogSize = 1000;
                     for (int i = 0; i <= json.length() / maxLogSize; i++) {
                         int start = i * maxLogSize;
@@ -2250,12 +2327,12 @@ public class TablesLoadingUnloading {
                     } catch (Exception e) {
                         Globals.writeToMLOG("ERROR", "onResponse/uploadReportPrepareToServer", "Exception e: " + e);
                         // TODO -- JsonObject dataArray = obj.getAsJsonObject("data"); -- иногда с сервера приходит не обьект, а array
-                    }
+                    }*/
 
                 }
 
                 @Override
-                public void onFailure(retrofit2.Call<JsonObject> call, Throwable t) {
+                public void onFailure(retrofit2.Call<ReportPrepareUploadResponse> call, Throwable t) {
                     Globals.writeToMLOG("ERROR", "onFailure/uploadReportPrepareToServer", "Throwable t: " + t);
                     Log.e("REPORT_PREPARE_SEND", "FAILURE_E: " + t.getMessage());
                     Log.e("REPORT_PREPARE_SEND", "FAILURE_E2: " + t);
@@ -2264,6 +2341,7 @@ public class TablesLoadingUnloading {
 
         } else {
             // print massage NO DATA
+            return res;
         }
 
         return res;
@@ -2786,8 +2864,8 @@ public class TablesLoadingUnloading {
 
             data.sotr_id = String.valueOf(Globals.userId);
 
-            data.date_from = String.valueOf(Clock.getDateLong(-60).getTime()/1000);
-            data.date_to = String.valueOf(Clock.getDateLong(0).getTime()/1000);
+            data.date_from = String.valueOf(Clock.getDateLong(-60).getTime() / 1000);
+            data.date_to = String.valueOf(Clock.getDateLong(0).getTime() / 1000);
 
             Gson gson = new Gson();
             String json = gson.toJson(data);
@@ -2967,7 +3045,7 @@ public class TablesLoadingUnloading {
                             Log.e("downloadCustomerD", "e: " + e);
                         }
                     });
-                }catch (Exception e){
+                } catch (Exception e) {
                     Globals.writeToMLOG("ERR", "downloadtovar_grp_client", "Exception e: " + e);
                 }
             }

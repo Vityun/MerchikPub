@@ -21,7 +21,7 @@ public class ReportPrepareServ {
     private String error_id         ; // код ошибки
     private String error_comment    ; // комментарий к ошибке
     private String code_dad2        ; // код дад2
-    private String buyer_order_id   ; // Номер заказа
+    public String buyer_order_id   ; // Номер заказа
 
     public ReportPrepareServ() {
     }

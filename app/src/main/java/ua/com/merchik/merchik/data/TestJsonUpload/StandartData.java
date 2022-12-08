@@ -98,6 +98,29 @@ public class StandartData<T> {
         public String vinovnik_score_comment;
         public Integer sotr_opinion_id;     // id-шник мнения о задаче/рекламации
     }
+
+    public static class ReportPrepareServ {
+        public String element_id; // id from RP
+        public String dt;// время создания записи
+        public String dt_report; // дата отчёта (YYYY-MM-DD)
+        public String client_id; // код клиента
+        public String tovar_id; // код товара
+        public String addr_id; // код адреса
+        public String price; // цена
+        public String face; // кол фейсов
+        public int amount; // количество товара
+        public String dt_expire; // дата окончания срока годности (YYYY-MM-DD)
+        public String expire_left; // кол товара с окончанием срока годности
+        public String notes; // примечание
+        public String up; // количество поднятого товара
+        public String akciya; // признак наличия акции
+        public String akciya_id; // код акции
+        public String oborotved_num; // Остаток по оборотной ведомости
+        public String error_id; // код ошибки
+        public String error_comment; // комментарий к ошибке
+        public String code_dad2; // код дад2
+        public String buyer_order_id; // Номер заказа
+    }
 }
 
 

@@ -75,6 +75,7 @@ import ua.com.merchik.merchik.data.RetrofitResponse.tables.OpinionResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.OpinionThemeResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.Premial.Premial;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.Premial.PremiumPremium.PremiumPremium;
+import ua.com.merchik.merchik.data.RetrofitResponse.tables.ReportPrepare.ReportPrepareUploadResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.StandartResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.TasksAndReclamationsSDBResponce;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.TovarGroupClientResponse;
@@ -598,6 +599,12 @@ public interface RetrofitInterface {
             @Body JsonObject json);
 
     // -------------------------------------------------------
+
+    // Вова как обычно, что? Зачем? Оно ж работало..
+    @POST("mobile_app.php?")
+    Call<ReportPrepareUploadResponse> SEND_RP(
+            @Header("ContentType") String content,
+            @Body JsonObject json);
 
     // Запрос на проведение отчёта исполнителя
     @POST("mobile_app.php?")
