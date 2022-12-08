@@ -2254,6 +2254,7 @@ public class TablesLoadingUnloading {
             Log.e("UPLOAD_DATA", "REPORT_PREPARE.gson (" + gson + ")");
             Log.e("UPLOAD_DATA", "REPORT_PREPARE.json (" + json + ")");
             Log.e("UPLOAD_DATA", "REPORT_PREPARE.convertedObject (" + convertedObject + ")");
+            Globals.writeToMLOG("INFO", "onResponse/convertedObject", "convertedObject: " + convertedObject);
 
 
             retrofit2.Call<ReportPrepareUploadResponse> call = RetrofitBuilder.getRetrofitInterface().SEND_RP(RetrofitBuilder.contentType, convertedObject);
