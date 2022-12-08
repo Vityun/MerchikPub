@@ -564,16 +564,23 @@ public class TablesLoadingUnloading {
         String json = gson.toJson(data);
         JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
 
+        Globals.writeToMLOG("INFO", "downloadOptionsByDAD2/convertedObject", "convertedObject: " + convertedObject);
+
         retrofit2.Call<OptionsServer> call = RetrofitBuilder.getRetrofitInterface().GET_OPTIONS(RetrofitBuilder.contentType, convertedObject);
         call.enqueue(new Callback<OptionsServer>() {
             @Override
             public void onResponse(Call<OptionsServer> call, Response<OptionsServer> response) {
-                Log.e("TAG_TEST", "RESPONSE_3_2R");
                 try {
+                    // TODO Нужно будет удалить как всё отдебажим
+                    Gson gson = new Gson();
+                    String json = gson.toJson(response.body());
+                    JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
+                    Globals.writeToMLOG("INFO", "downloadOptionsByDAD2/onResponse", "response.body(): " + convertedObject);
+
                     if (response.isSuccessful() && response.body() != null) {
                         if (response.body().getState()) {
                             RealmManager.saveDownloadedOptions(response.body().getList());
-                            click.click("Данные успешно загружены и сохранены.");
+                            click.click("Данные успешно загружены и сохранены. (" + response.body().getList() + ")шт");
                         } else {
                             click.click("Обновить данные не получилось. Обратитесь к своему руководителю.");
                         }
@@ -581,13 +588,14 @@ public class TablesLoadingUnloading {
                         click.click("Ошибка. При повторении обратитесь с ней к своему руководителю. Код запроса: " + response.code());
                     }
                 } catch (Exception e) {
+                    Globals.writeToMLOG("ERROR", "downloadOptionsByDAD2/onResponse", "Exception e: " + e);
                     click.click("Ошибка при обработке данных: " + e);
                 }
             }
 
             @Override
             public void onFailure(Call<OptionsServer> call, Throwable t) {
-                Log.e("TAG_TEST", "RESPONSE_3_2F");
+                Globals.writeToMLOG("ERROR", "downloadOptionsByDAD2/onFailure", "Throwable t: " + t);
                 click.click("Ошибка связи. Повторите попытку позже. При повторении проблемы - обратитесь к своему руководителю. Ошибка: " + t);
             }
         });

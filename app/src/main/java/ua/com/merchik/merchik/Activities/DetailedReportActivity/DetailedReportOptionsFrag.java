@@ -209,6 +209,7 @@ public class DetailedReportOptionsFrag extends Fragment {
             @Override
             public <T> void click(T data) {
                 String msg = (String) data;
+                Globals.writeToMLOG("INFO", "downloadOptionsByDAD2/clickDownload/clickRESULT", "msg: " + msg);
                 Toast.makeText(view.getContext(), msg, Toast.LENGTH_LONG).show();
             }
         });
