@@ -1739,34 +1739,38 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
      * Работа с сокетом
      * */
     public void startWebSocket(Context context){
-        if (webSocket == null){
-            webSocket = RetrofitBuilder.startWebSocket(new Clicks.click() {
-                @Override
-                public <T> void click(T data) {
-                    if (data instanceof WebSocketData){
-                        WebSocketData wsData = (WebSocketData) data;
-                        switch (wsData.action){
-                            case "chat_message":
-                                Toast.makeText(context, "Новое сообщение в чате: " + wsData.chat.msg, Toast.LENGTH_SHORT).show();
-                                Globals.writeToMLOG("INFO", "TOOLBAR/startWebSocket/click/chat_message", "wsData.chat.msg: " + wsData.chat.msg);
+        try {
+            if (webSocket == null){
+                webSocket = RetrofitBuilder.startWebSocket(new Clicks.click() {
+                    @Override
+                    public <T> void click(T data) {
+                        if (data instanceof WebSocketData){
+                            WebSocketData wsData = (WebSocketData) data;
+                            switch (wsData.action){
+                                case "chat_message":
+                                    Toast.makeText(context, "Новое сообщение в чате: " + wsData.chat.msg, Toast.LENGTH_SHORT).show();
+                                    Globals.writeToMLOG("INFO", "TOOLBAR/startWebSocket/click/chat_message", "wsData.chat.msg: " + wsData.chat.msg);
 
-                                new ChatSDB().saveChatFromWebSocket(wsData.chat);
-                                break;
-                            case "global_notice":
-                                Toast.makeText(context, "Глобальное оповещение: " + wsData.text, Toast.LENGTH_SHORT).show();
-                                Globals.writeToMLOG("INFO", "TOOLBAR/startWebSocket/click/global_notice", "wsData.text: " + wsData.text);
-                                break;
-                            default:
+                                    new ChatSDB().saveChatFromWebSocket(wsData.chat);
+                                    break;
+                                case "global_notice":
+                                    Toast.makeText(context, "Глобальное оповещение: " + wsData.text, Toast.LENGTH_SHORT).show();
+                                    Globals.writeToMLOG("INFO", "TOOLBAR/startWebSocket/click/global_notice", "wsData.text: " + wsData.text);
+                                    break;
+                                default:
 //                            Toast.makeText(context, "Web Socket. Не смог определить тип сообщения. Сообщение: " + data, Toast.LENGTH_SHORT).show();
-                                Globals.writeToMLOG("INFO", "TOOLBAR/startWebSocket/click/default", "data: " + data);
-                                break;
-                        }
-                    }else {
+                                    Globals.writeToMLOG("INFO", "TOOLBAR/startWebSocket/click/default", "data: " + data);
+                                    break;
+                            }
+                        }else {
 //                    Toast.makeText(context, "Data: " + data, Toast.LENGTH_SHORT).show();
-                        Globals.writeToMLOG("INFO", "TOOLBAR/startWebSocket/click", "can`t instanceof data");
+                            Globals.writeToMLOG("INFO", "TOOLBAR/startWebSocket/click", "can`t instanceof data");
+                        }
                     }
-                }
-            });
+                });
+            }
+        }catch (Exception e){
+            Globals.writeToMLOG("ERROR", "TOOLBAR/startWebSocket/catch", "Exception e: " + e);
         }
     }
 
