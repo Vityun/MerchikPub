@@ -190,7 +190,9 @@ public class RetrofitBuilder{
                 Log.i("WebSockets", "Receiving : " + text);
                 Globals.writeToMLOG("INFO", "WebSocket/onMessage/String", "Receiving: " + text);
 
-                WebSocketData data = new Gson().fromJson(new Gson().toJson(text), WebSocketData.class);
+                JsonObject convertedObject = new Gson().fromJson(text, JsonObject.class);
+
+                WebSocketData data = new Gson().fromJson(new Gson().toJson(convertedObject), WebSocketData.class);
                 click.click(data);
             }
             @Override

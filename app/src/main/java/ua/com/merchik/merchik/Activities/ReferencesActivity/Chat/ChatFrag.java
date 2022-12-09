@@ -79,7 +79,7 @@ public class ChatFrag extends Fragment {
 
     private int calculateNotReadMsg(){
         for (ChatSDB item : massages){
-            if (item.dtRead == 0) norReadMassageCnt++;
+            if (item.dtRead != null && item.dtRead == 0) norReadMassageCnt++;
         }
         return norReadMassageCnt;
     }

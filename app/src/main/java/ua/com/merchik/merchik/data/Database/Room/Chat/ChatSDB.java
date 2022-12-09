@@ -1,5 +1,7 @@
 package ua.com.merchik.merchik.data.Database.Room.Chat;
 
+import android.util.Log;
+
 import androidx.room.ColumnInfo;
 import androidx.room.Entity;
 import androidx.room.PrimaryKey;
@@ -9,6 +11,8 @@ import com.google.gson.annotations.SerializedName;
 
 import java.util.Collections;
 
+import io.reactivex.rxjava3.observers.DisposableCompletableObserver;
+import io.reactivex.rxjava3.schedulers.Schedulers;
 import ua.com.merchik.merchik.data.WebSocketData.WSChat;
 
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
@@ -61,6 +65,18 @@ public class ChatSDB {
         chatSDB.dtRead = chat.dtRead;
         chatSDB.msg = chat.msg;
 
-        SQL_DB.chatDao().insertData(Collections.singletonList(chatSDB));
+        SQL_DB.chatDao().insertData(Collections.singletonList(chatSDB))
+                .subscribeOn(Schedulers.io())
+                .subscribe(new DisposableCompletableObserver() {
+                    @Override
+                    public void onComplete() {
+                        Log.e("chatExchange", "onComplete()");
+                    }
+
+                    @Override
+                    public void onError(@io.reactivex.rxjava3.annotations.NonNull Throwable e) {
+                        Log.e("chatExchange", "Throwable e: " + e);
+                    }
+                });
     }
 }
