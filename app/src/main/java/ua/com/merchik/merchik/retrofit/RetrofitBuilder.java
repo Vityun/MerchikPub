@@ -22,6 +22,7 @@ import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.WebSocketData.Selector;
 import ua.com.merchik.merchik.data.WebSocketData.WebSocketData;
 import ua.com.merchik.merchik.data.WebSocketData.WebsocketParam;
+import ua.com.merchik.merchik.database.realm.RealmManager;
 
 public class RetrofitBuilder{
 
@@ -143,7 +144,7 @@ public class RetrofitBuilder{
         return webSocket;
     }
 
-    public static WebSocket testWebSocket(Clicks.click click){
+    public static WebSocket startWebSocket(Clicks.click click){
         WebSocket webSocket;
         OkHttpClient client;
 
@@ -161,7 +162,7 @@ public class RetrofitBuilder{
                 WebsocketParam websocketParam = new WebsocketParam();
                 websocketParam.act = "auth";
                 websocketParam.mod = "auth";
-                websocketParam.userId = 19653;
+                websocketParam.userId = RealmManager.getAppUser().getUserId();
                 websocketParam.token = Globals.token;
 
                 Selector selector = new Selector();
@@ -179,26 +180,28 @@ public class RetrofitBuilder{
             @Override
             public void onMessage(WebSocket webSocket, String text) {
                 Log.i("WebSockets", "Receiving : " + text);
-//                WebSocketData data = new Gson().fromJson(new Gson().toJson(text), WebSocketData.class);
+                Globals.writeToMLOG("INFO", "WebSocket/onMessage/String", "Receiving: " + text);
+
                 WebSocketData data = new Gson().fromJson(new Gson().toJson(text), WebSocketData.class);
-//                click.click(data);
+                click.click(data);
             }
             @Override
             public void onMessage(WebSocket webSocket, ByteString bytes) {
                 Log.i("WebSockets", "Receiving bytes : " + bytes.hex());
+                Globals.writeToMLOG("INFO", "WebSocket/onMessage/ByteString", "Receiving bytes : " + bytes.hex());
             }
             @Override
             public void onClosing(WebSocket webSocket, int code, String reason) {
                 webSocket.close(NORMAL_CLOSURE_STATUS, null);
                 Log.i("WebSockets", "Closing : " + code + " / " + reason);
+                Globals.writeToMLOG("INFO", "WebSocket/onClosing", "Closing : " + code + " / " + reason);
             }
             @Override
             public void onFailure(WebSocket webSocket, Throwable t, Response response) {
                 Log.i("WebSockets", "Error : " + t.getMessage());
+                Globals.writeToMLOG("INFO", "WebSocket/onFailure/Throwable", "Throwable t: " + t.getMessage());
+                Globals.writeToMLOG("INFO", "WebSocket/onFailure/Response", "Response response: " + response.body());
             }});
-
-
-
         return webSocket;
     }
 

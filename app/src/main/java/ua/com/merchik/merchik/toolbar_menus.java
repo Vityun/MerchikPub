@@ -61,6 +61,7 @@ import io.realm.RealmResults;
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
 import okhttp3.RequestBody;
+import okhttp3.WebSocket;
 import retrofit2.Call;
 import retrofit2.Response;
 import ua.com.merchik.merchik.Activities.MenuMainActivity;
@@ -69,12 +70,15 @@ import ua.com.merchik.merchik.Activities.PhotoLogActivity.PhotoLogActivity;
 import ua.com.merchik.merchik.Activities.PremiumActivity.PremiumActivity;
 import ua.com.merchik.merchik.Activities.ReferencesActivity.ReferencesActivity;
 import ua.com.merchik.merchik.Activities.TaskAndReclamations.TARActivity;
+import ua.com.merchik.merchik.Activities.ToolbarActivity.WebSocketStatus;
 import ua.com.merchik.merchik.Activities.WorkPlanActivity.WPDataActivity;
 import ua.com.merchik.merchik.Activities.navigationMenu.MenuHeader;
 import ua.com.merchik.merchik.Activities.navigationMenu.MenuHeaderAdapter;
 import ua.com.merchik.merchik.ServerExchange.Exchange;
 import ua.com.merchik.merchik.ServerExchange.ExchangeInterface;
 import ua.com.merchik.merchik.ServerExchange.TablesLoadingUnloading;
+import ua.com.merchik.merchik.ViewHolders.Clicks;
+import ua.com.merchik.merchik.data.Database.Room.Chat.ChatSDB;
 import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteObjects.SiteObjectsDB;
 import ua.com.merchik.merchik.data.RealmModels.MenuItemFromWebDB;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
@@ -84,6 +88,7 @@ import ua.com.merchik.merchik.data.RetrofitResponse.PhotoHashList;
 import ua.com.merchik.merchik.data.RetrofitResponse.ServerConnection;
 import ua.com.merchik.merchik.data.UploadPhotoData.Move;
 import ua.com.merchik.merchik.data.WPDataObj;
+import ua.com.merchik.merchik.data.WebSocketData.WebSocketData;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.dialogs.DialogMap;
@@ -94,6 +99,9 @@ import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 public class toolbar_menus extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
     public Globals globals = new Globals();
     static trecker trecker = new trecker();
+    public static WebSocket webSocket;
+    public static WebSocketStatus webSocketStatus;
+
     TablesLoadingUnloading tablesLoadingUnloading = new TablesLoadingUnloading();
 
     private WPDataObj wpDataObj;
@@ -153,6 +161,8 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
 
         password = PreferenceManager.getDefaultSharedPreferences(this)
                 .getString("password", "");
+
+        startWebSocket(getApplicationContext());
 
 
         Log.e("PreferenceManager", "TOOLBAR" + PreferenceManager.getDefaultSharedPreferences(this)
@@ -1717,6 +1727,43 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                         ((GradientDrawable) background).setColor(ContextCompat.getColor(toolbar_menus.this, R.color.red_error));
                     } else if (background instanceof ColorDrawable) {
                         ((ColorDrawable) background).setColor(ContextCompat.getColor(toolbar_menus.this, R.color.red_error));
+                    }
+                }
+            });
+        }
+    }
+
+
+    /**
+     * 12.09.22
+     * Работа с сокетом
+     * */
+    public void startWebSocket(Context context){
+        if (webSocket == null){
+            webSocket = RetrofitBuilder.startWebSocket(new Clicks.click() {
+                @Override
+                public <T> void click(T data) {
+                    if (data instanceof WebSocketData){
+                        WebSocketData wsData = (WebSocketData) data;
+                        switch (wsData.action){
+                            case "chat_message":
+                                Toast.makeText(context, "Новое сообщение в чате: " + wsData.chat.msg, Toast.LENGTH_SHORT).show();
+                                Globals.writeToMLOG("INFO", "TOOLBAR/startWebSocket/click/chat_message", "wsData.chat.msg: " + wsData.chat.msg);
+
+                                new ChatSDB().saveChatFromWebSocket(wsData.chat);
+                                break;
+                            case "global_notice":
+                                Toast.makeText(context, "Глобальное оповещение: " + wsData.text, Toast.LENGTH_SHORT).show();
+                                Globals.writeToMLOG("INFO", "TOOLBAR/startWebSocket/click/global_notice", "wsData.text: " + wsData.text);
+                                break;
+                            default:
+//                            Toast.makeText(context, "Web Socket. Не смог определить тип сообщения. Сообщение: " + data, Toast.LENGTH_SHORT).show();
+                                Globals.writeToMLOG("INFO", "TOOLBAR/startWebSocket/click/default", "data: " + data);
+                                break;
+                        }
+                    }else {
+//                    Toast.makeText(context, "Data: " + data, Toast.LENGTH_SHORT).show();
+                        Globals.writeToMLOG("INFO", "TOOLBAR/startWebSocket/click", "can`t instanceof data");
                     }
                 }
             });

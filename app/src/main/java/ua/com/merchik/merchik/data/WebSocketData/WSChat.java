@@ -30,7 +30,7 @@ public class WSChat {
 
     @SerializedName("chat_id")
     @Expose
-    public Long chatId;
+    public Integer chatId;
 
     @SerializedName("dt_read")
     @Expose

@@ -1,7 +1,7 @@
 package ua.com.merchik.merchik.Activities;
 
+import android.content.Context;
 import android.os.Bundle;
-import android.util.Log;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -9,9 +9,11 @@ import androidx.appcompat.widget.Toolbar;
 
 import com.google.android.material.navigation.NavigationView;
 
+import okhttp3.WebSocket;
 import ua.com.merchik.merchik.R;
-import ua.com.merchik.merchik.ServerExchange.Exchange;
-import ua.com.merchik.merchik.dialogs.DialogFilter.Click;
+import ua.com.merchik.merchik.ViewHolders.Clicks;
+import ua.com.merchik.merchik.data.WebSocketData.WebSocketData;
+import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
 import ua.com.merchik.merchik.toolbar_menus;
 
 
@@ -27,17 +29,19 @@ public class MenuMainActivity extends toolbar_menus {
 
             findViewById(R.id.fab).setOnClickListener(v -> {
                 Toast.makeText(this, "Подсказка к данному разделу не готова", Toast.LENGTH_SHORT).show();
-                test(new Click() {
-                    @Override
-                    public <T> void onSuccess(T data) {
-                        Log.e("test", "test" + data);
-                    }
+//                test(new Click() {
+//                    @Override
+//                    public <T> void onSuccess(T data) {
+//                        Log.e("test", "test" + data);
+//                    }
+//
+//                    @Override
+//                    public void onFailure(String error) {
+//                        Log.e("test", "test" + error);
+//                    }
+//                });
 
-                    @Override
-                    public void onFailure(String error) {
-                        Log.e("test", "test" + error);
-                    }
-                });
+                test(this);
             });
 
             findViewById(R.id.fab).setOnLongClickListener(v -> {
@@ -66,12 +70,12 @@ public class MenuMainActivity extends toolbar_menus {
         activity_title.setText(getString(R.string.title_activity_menu_main));
     }
 
-    private void test(Click result) {
+/*    private void test(Click result) {
         new Exchange().downloadAchievements();
         new Exchange().downloadVoteTable();
 
         new Exchange().downloadArticleTable();
-    }
+    }*/
 
 /*        StandartData data = new StandartData();
         data.mod = "sms_verification";
@@ -165,10 +169,9 @@ public class MenuMainActivity extends toolbar_menus {
 
 
 
-    /*
-        WebSocket ws;
+    WebSocket ws;
     public void test(Context context) {
-        ws = RetrofitBuilder.testWebSocket(new Clicks.click() {
+        ws = RetrofitBuilder.startWebSocket(new Clicks.click() {
             @Override
             public <T> void click(T data) {
                 if (data instanceof WebSocketData){
@@ -196,5 +199,5 @@ public class MenuMainActivity extends toolbar_menus {
             ws.close(0, "Because I wanted");
         }
     }
-    * */
+
 }
