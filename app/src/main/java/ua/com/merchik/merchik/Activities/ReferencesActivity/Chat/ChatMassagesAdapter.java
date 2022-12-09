@@ -1,5 +1,6 @@
 package ua.com.merchik.merchik.Activities.ReferencesActivity.Chat;
 
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -12,6 +13,8 @@ import androidx.recyclerview.widget.RecyclerView;
 import java.util.Collections;
 import java.util.List;
 
+import io.reactivex.rxjava3.observers.DisposableCompletableObserver;
+import io.reactivex.rxjava3.schedulers.Schedulers;
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.ServerExchange.Exchange;
@@ -76,7 +79,19 @@ public class ChatMassagesAdapter extends RecyclerView.Adapter<ChatMassagesAdapte
                 time.setTextColor(itemView.getContext().getResources().getColor(R.color.black));
 
                 item.dtRead = System.currentTimeMillis()/1000;
-                SQL_DB.chatDao().insertData(Collections.singletonList(item));
+                SQL_DB.chatDao().insertData(Collections.singletonList(item))
+                        .subscribeOn(Schedulers.io())
+                        .subscribe(new DisposableCompletableObserver() {
+                            @Override
+                            public void onComplete() {
+                                Log.e("test", "OK");
+                            }
+
+                            @Override
+                            public void onError(@io.reactivex.rxjava3.annotations.NonNull Throwable e) {
+                                Log.e("test", "Throwable e: " + e);
+                            }
+                        });
 
                 sendReadMassageStatus(item);
 
