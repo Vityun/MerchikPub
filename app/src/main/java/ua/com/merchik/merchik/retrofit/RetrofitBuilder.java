@@ -19,6 +19,7 @@ import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
+import ua.com.merchik.merchik.data.RealmModels.AppUsersDB;
 import ua.com.merchik.merchik.data.WebSocketData.Selector;
 import ua.com.merchik.merchik.data.WebSocketData.WebSocketData;
 import ua.com.merchik.merchik.data.WebSocketData.WebsocketParam;
@@ -155,6 +156,13 @@ public class RetrofitBuilder{
                 .build();
         Log.i("WebSockets", "Headers: " + request.headers().toString());
 
+        if (Globals.userId == 0){
+            AppUsersDB appUsersDB = RealmManager.getAppUser();
+            if (appUsersDB != null){
+                Globals.userId = appUsersDB.getUserId();
+            }
+        }
+
         webSocket = client.newWebSocket(request, new WebSocketListener() {
             private static final int NORMAL_CLOSURE_STATUS = 1000;
             @Override
@@ -162,7 +170,7 @@ public class RetrofitBuilder{
                 WebsocketParam websocketParam = new WebsocketParam();
                 websocketParam.act = "auth";
                 websocketParam.mod = "auth";
-                websocketParam.userId = RealmManager.getAppUser().getUserId();
+                websocketParam.userId = Globals.userId;
                 websocketParam.token = Globals.token;
 
                 Selector selector = new Selector();
@@ -200,7 +208,9 @@ public class RetrofitBuilder{
             public void onFailure(WebSocket webSocket, Throwable t, Response response) {
                 Log.i("WebSockets", "Error : " + t.getMessage());
                 Globals.writeToMLOG("INFO", "WebSocket/onFailure/Throwable", "Throwable t: " + t.getMessage());
-                Globals.writeToMLOG("INFO", "WebSocket/onFailure/Response", "Response response: " + response.body());
+                if (response != null && response.body() != null){
+                    Globals.writeToMLOG("INFO", "WebSocket/onFailure/Response", "Response response: " + response.body());
+                }
             }});
         return webSocket;
     }
