@@ -1,6 +1,9 @@
 package ua.com.merchik.merchik;
 
 import android.annotation.SuppressLint;
+import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -28,6 +31,8 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.PopupMenu;
 import androidx.appcompat.widget.Toolbar;
+import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
 import androidx.core.content.ContextCompat;
 import androidx.core.content.FileProvider;
 import androidx.core.view.GravityCompat;
@@ -1751,7 +1756,31 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                                 if (wsData.action != null) {
                                     switch (wsData.action) {
                                         case "chat_message":
-                                            runOnUiThread(() -> Toast.makeText(context, "Новое сообщение в чате: " + wsData.chat.msg, Toast.LENGTH_SHORT).show());
+                                            runOnUiThread(() -> {
+//                                                Toast.makeText(context, "Новое сообщение в чате: " + wsData.chat.msg, Toast.LENGTH_SHORT).show();
+
+                                                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                                                    NotificationChannel channel = null;   // for heads-up notifications
+                                                    channel = new NotificationChannel("channel01", "name",
+                                                            NotificationManager.IMPORTANCE_HIGH);
+
+                                                    channel.setDescription("description");
+
+                                                    NotificationManager notificationManager = getSystemService(NotificationManager.class);
+                                                    notificationManager.createNotificationChannel(channel);
+                                                }
+
+                                                Notification notification = new NotificationCompat.Builder(context, "channel01")
+                                                        .setSmallIcon(R.mipmap.merchik)
+                                                        .setContentTitle("Нове повідомлення")
+                                                        .setContentText(wsData.chat.msg)
+                                                        .setDefaults(Notification.DEFAULT_ALL)
+                                                        .setPriority(NotificationCompat.PRIORITY_HIGH)
+                                                        .build();
+
+                                                NotificationManagerCompat notificationManager = NotificationManagerCompat.from(context);
+                                                notificationManager.notify(0, notification);
+                                            });
 
                                             Globals.writeToMLOG("INFO", "TOOLBAR/startWebSocket/click/chat_message", "wsData.chat.msg: " + wsData.chat.msg);
 

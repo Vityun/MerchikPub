@@ -1,19 +1,21 @@
 package ua.com.merchik.merchik.Activities;
 
+import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.content.Context;
+import android.os.Build;
 import android.os.Bundle;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.widget.Toolbar;
+import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
 
 import com.google.android.material.navigation.NavigationView;
 
-import okhttp3.WebSocket;
 import ua.com.merchik.merchik.R;
-import ua.com.merchik.merchik.ViewHolders.Clicks;
-import ua.com.merchik.merchik.data.WebSocketData.WebSocketData;
-import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
 import ua.com.merchik.merchik.toolbar_menus;
 
 
@@ -166,38 +168,52 @@ public class MenuMainActivity extends toolbar_menus {
         }
         });
 **/
-
-
-
-    WebSocket ws;
     public void test(Context context) {
-        ws = RetrofitBuilder.startWebSocket(new Clicks.click() {
-            @Override
-            public <T> void click(T data) {
-                if (data instanceof WebSocketData){
-                    WebSocketData wsData = (WebSocketData) data;
-                    switch (wsData.action){
-                        case "chat_message":
-                            Toast.makeText(context, "chat_message/\n\nНовое сообщение: " + wsData.chat.msg, Toast.LENGTH_SHORT).show();
-                            break;
-                        case "global_notice":
-                            Toast.makeText(context, "global_notice: " + wsData.text, Toast.LENGTH_SHORT).show();
-                            break;
-                        default:
-                            Toast.makeText(context, "Web Socket. Не смог определить тип сообщения. Сообщение: " + data, Toast.LENGTH_SHORT).show();
-                            break;
-                    }
-                }else {
-                    Toast.makeText(context, "Data: " + data, Toast.LENGTH_SHORT).show();
-                }
-            }
-        });
+/*        createNotificationChannel();
+
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(context, "2")
+                .setSmallIcon(R.mipmap.merchik)
+                .setContentTitle("Нове повідомлення")
+                .setContentText("Тестовое оповещение которое должно отобразиться при нажати на этот знак вопроса, да я так тестирую оповещения, не осуждайте меня.")
+                .setPriority(NotificationCompat.PRIORITY_HIGH);
+
+        NotificationManagerCompat notificationManager = NotificationManagerCompat.from(context);
+        notificationManager.notify(2, builder.build());*/
+
+
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            NotificationChannel channel = null;   // for heads-up notifications
+            channel = new NotificationChannel("channel01", "name",
+                    NotificationManager.IMPORTANCE_HIGH);
+
+            channel.setDescription("description");
+
+            NotificationManager notificationManager = getSystemService(NotificationManager.class);
+            notificationManager.createNotificationChannel(channel);
+        }
+
+        Notification notification = new NotificationCompat.Builder(this, "channel01")
+                .setSmallIcon(android.R.drawable.ic_dialog_info)
+                .setContentTitle("Заголовок")
+                .setContentText("Тестове повідомлення!")
+                .setDefaults(Notification.DEFAULT_ALL)
+                .setPriority(NotificationCompat.PRIORITY_HIGH)   // heads-up
+                .build();
+
+        NotificationManagerCompat notificationManager = NotificationManagerCompat.from(this);
+        notificationManager.notify(0, notification);
+
     }
 
-    private void test2(Context context){
-        if (ws != null){
-            ws.close(0, "Because I wanted");
+    private void createNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            int importance = NotificationManager.IMPORTANCE_HIGH;
+            NotificationChannel channel = new NotificationChannel("2", "name", importance);
+            channel.setDescription("description");
+            NotificationManager notificationManager = getSystemService(NotificationManager.class);
+            notificationManager.createNotificationChannel(channel);
         }
     }
+
 
 }

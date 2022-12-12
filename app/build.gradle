@@ -8,8 +8,8 @@ android {
         minSdkVersion 16
         targetSdkVersion 31
         //noinspection HighAppVersionCode
-        versionCode  2022120800
-        versionName "2022120800"
+        versionCode  2022121200
+        versionName "2022121200"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
         multiDexEnabled true
@@ -82,4 +82,8 @@ dependencies {
     // Rx Java
     implementation "io.reactivex.rxjava3:rxjava:3.0.13"
     implementation "io.reactivex.rxjava3:rxandroid:3.0.0"
+
+    // Notification
+    implementation "androidx.core:core:1.6.0"
+//    implementation 'androidx.work:work-runtime:2.7.1'
 }

@@ -69,7 +69,7 @@ public class ChatMassagesAdapter extends RecyclerView.Adapter<ChatMassagesAdapte
 
         public void bind(ChatSDB item) {
             massage.setText(item.msg);
-            if (item.dtRead > 0){
+            if (item.dtRead != null && item.dtRead > 0){
                 massage.setTextColor(itemView.getContext().getResources().getColor(R.color.colorUnselectedTab));
                 info.setTextColor(itemView.getContext().getResources().getColor(R.color.colorUnselectedTab));
                 time.setTextColor(itemView.getContext().getResources().getColor(R.color.colorUnselectedTab));
