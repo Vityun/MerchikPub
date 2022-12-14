@@ -141,7 +141,6 @@ public class OptionControlEKL<T> extends OptionControl {
             }
         }*/
 
-
         int userId = wpDataDB.getUser_id();
         String ptt = PTT;
         long dateFrom = Clock.getDatePeriodLong(documentDt * 1000, -3);
@@ -194,18 +193,6 @@ public class OptionControlEKL<T> extends OptionControl {
 
                 String msgDebug = String.format("dateFrom: %s/dateTo: %s/ids: %s/addr: %s/user: %s/ptt: %s", dateFrom, dateTo, ids, wpDataDB.getAddr_id(), wpDataDB.getUser_id(), wpDataDB.ptt_user_id);
                 Globals.writeToMLOG("INFO", "OptionControlEKL/createTZN", msgDebug);
-
-            /*{"addr_id":37194,"client_id":"8804","code":"60452","code_dad2":1051022037194052480,
-            "eklCode":"776ad4063b03320456a50bc5ad30c544c72708aa","code_check":"776ad4063b03320456a50bc5ad30c544c72708aa",
-            "ID":622428,"user_id_verify":224555,"state":true,"upload":true,"user_id":236155,"vpi":1665062607234}
-
-            {"addr_id":37194,"client_id":"8804","code":"99060","comment":"Эта заявка уже успешно проверена ранее","code_dad2":1051022037194052480,
-            "eklCode":"8f597188cfe19e2a2c9c934ec0ddf7807cf21bd8","code_check":"8f597188cfe19e2a2c9c934ec0ddf7807cf21bd8",
-            "ID":622453,"user_id_verify":224555,"state":true,"user_id":236155,"vpi":1665072617675}
-
-            dateFrom: 1664830800/dateTo: 1665003600/ids: [1495]/addr: 37194/user: 236155/ptt: 224555
-
-            */
 
                 eklSDB = SQL_DB.eklDao().getBy(dateFrom, dateTo, ids, wpDataDB.getAddr_id(), wpDataDB.getUser_id());
 

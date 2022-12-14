@@ -4,6 +4,7 @@ import android.annotation.SuppressLint;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -16,6 +17,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.preference.PreferenceManager;
+import android.text.Html;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -33,6 +35,7 @@ import androidx.appcompat.widget.PopupMenu;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
+import androidx.core.app.TaskStackBuilder;
 import androidx.core.content.ContextCompat;
 import androidx.core.content.FileProvider;
 import androidx.core.view.GravityCompat;
@@ -1758,28 +1761,42 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                                         case "chat_message":
                                             runOnUiThread(() -> {
 //                                                Toast.makeText(context, "Новое сообщение в чате: " + wsData.chat.msg, Toast.LENGTH_SHORT).show();
+                                                try {
+                                                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                                                        NotificationChannel channel = null;   // for heads-up notifications
+                                                        channel = new NotificationChannel("channel01", "name",
+                                                                NotificationManager.IMPORTANCE_HIGH);
 
-                                                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-                                                    NotificationChannel channel = null;   // for heads-up notifications
-                                                    channel = new NotificationChannel("channel01", "name",
-                                                            NotificationManager.IMPORTANCE_HIGH);
+                                                        channel.setDescription("description");
 
-                                                    channel.setDescription("description");
+                                                        NotificationManager notificationManager = getSystemService(NotificationManager.class);
+                                                        notificationManager.createNotificationChannel(channel);
+                                                    }
 
-                                                    NotificationManager notificationManager = getSystemService(NotificationManager.class);
-                                                    notificationManager.createNotificationChannel(channel);
+
+                                                    Intent resultIntent = new Intent(context, ReferencesActivity.class);
+                                                    resultIntent.putExtra("ReferencesEnum", Globals.ReferencesEnum.CHAT);
+
+                                                    TaskStackBuilder stackBuilder = TaskStackBuilder.create(context);
+                                                    stackBuilder.addNextIntentWithParentStack(resultIntent);
+
+                                                    PendingIntent resultPendingIntent = stackBuilder.getPendingIntent(0,
+                                                            PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+
+                                                    Notification notification = new NotificationCompat.Builder(context, "channel01")
+                                                            .setSmallIcon(R.mipmap.merchik)
+                                                            .setContentTitle("Нове повідомлення")
+                                                            .setContentText(Html.fromHtml(wsData.chat.msg))
+                                                            .setDefaults(Notification.DEFAULT_ALL)
+                                                            .setPriority(NotificationCompat.PRIORITY_HIGH)
+                                                            .setContentIntent(resultPendingIntent)
+                                                            .build();
+
+                                                    NotificationManagerCompat notificationManager = NotificationManagerCompat.from(context);
+                                                    notificationManager.notify(0, notification);
+                                                }catch (Exception e){
+                                                    Globals.writeToMLOG("ERROR", "TOOLBAR/startWebSocket/click/chat_message/catch", "Exception e: " + e);
                                                 }
-
-                                                Notification notification = new NotificationCompat.Builder(context, "channel01")
-                                                        .setSmallIcon(R.mipmap.merchik)
-                                                        .setContentTitle("Нове повідомлення")
-                                                        .setContentText(wsData.chat.msg)
-                                                        .setDefaults(Notification.DEFAULT_ALL)
-                                                        .setPriority(NotificationCompat.PRIORITY_HIGH)
-                                                        .build();
-
-                                                NotificationManagerCompat notificationManager = NotificationManagerCompat.from(context);
-                                                notificationManager.notify(0, notification);
                                             });
 
                                             Globals.writeToMLOG("INFO", "TOOLBAR/startWebSocket/click/chat_message", "wsData.chat.msg: " + wsData.chat.msg);
