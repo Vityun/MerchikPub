@@ -2389,6 +2389,8 @@ public class Exchange {
         String json = gson.toJson(data);
         JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
 
+        Globals.writeToMLOG("INFO", "conductingOnServerWpData", "convertedObject: " + convertedObject);
+
         retrofit2.Call<ConductWpDataResponse> call = RetrofitBuilder.getRetrofitInterface().CONDUCT_WP_DATA(RetrofitBuilder.contentType, convertedObject);
         call.enqueue(new Callback<ConductWpDataResponse>() {
             @Override
@@ -2396,6 +2398,8 @@ public class Exchange {
                 Log.e("conductingOnServer", "response: " + response.body());
                 if (response.isSuccessful()){
                     if (response.body() != null){
+                        JsonObject convertedObject = new Gson().fromJson(new Gson().toJson(response.body()), JsonObject.class);
+                        Globals.writeToMLOG("INFO", "conductingOnServerWpData/onResponse", "response.body(): " + convertedObject);
                         if (response.body().state){
                             // Пока пусть будет, я не знаю что им там в голову бахнет
                             if (response.body().document_complete && wp.getClient_id().equals(wp.getIsp())){
