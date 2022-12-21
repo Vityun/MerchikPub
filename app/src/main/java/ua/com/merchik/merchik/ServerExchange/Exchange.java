@@ -1263,17 +1263,21 @@ public class Exchange {
 //                                        realm.copyToRealmOrUpdate(finalList);
 //                                    });
 
+                                    // Удаление Старых ID
+                                    String[] ids = new String[deleteFromDb.size()];
+                                    int i = 0;
+                                    for (TARCommentsDB item : deleteFromDb) {
+                                        ids[i++] = item.getID();
+                                    }
+                                    Log.e("uploadTARComments","ids: " + ids);
+                                    boolean dell = TARCommentsRealm.getTARCommentByIds(ids).deleteAllFromRealm();
+
+                                    Log.e("uploadTARComments","dell: " + dell);
+
+
                                     RealmManager.INSTANCE.executeTransaction((realm) -> {
-                                        // Удаление Старых ID
-                                        String[] ids = new String[deleteFromDb.size()];
-                                        int i = 0;
-                                        for (TARCommentsDB item : deleteFromDb) {
-                                            ids[i++] = item.getID();
-                                        }
-                                        boolean dell = TARCommentsRealm.getTARCommentByIds(ids).deleteAllFromRealm();
-
-
                                         // Сохранение новых
+                                        Log.e("uploadTARComments","saveToDb: " + saveToDb.size());
                                         List<TARCommentsDB> result = realm.copyToRealmOrUpdate(saveToDb);
                                         Globals.writeToMLOG("INFO", "uploadTARComments/onResponse", "result list comments to seve(" + (result != null ? result.size() + "): " : "null"));
                                     });

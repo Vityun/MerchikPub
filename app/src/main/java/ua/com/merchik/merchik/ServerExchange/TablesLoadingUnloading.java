@@ -2246,7 +2246,7 @@ public class TablesLoadingUnloading {
                                 if (response.body().state) {
                                     if (response.body().data != null && response.body().data.size() > 0) {
                                         for (ReportPrepareUploadList item : response.body().data) {
-                                            ReportPrepareDB reportPrepareDB = RealmManager.getReportPrepareRowById(item.elementId);
+                                            ReportPrepareDB reportPrepareDB = INSTANCE.copyFromRealm(RealmManager.getReportPrepareRowById(item.elementId));
                                             RealmManager.INSTANCE.executeTransaction(realm -> {
                                                 reportPrepareDB.setUploadStatus(0);
                                                 reportPrepareDB.setDtChange(currentTime);
@@ -2734,16 +2734,26 @@ public class TablesLoadingUnloading {
                 @Override
                 public void onResponse(retrofit2.Call<TARCommentsResponse> call, retrofit2.Response<TARCommentsResponse> response) {
                     try {
-                        TARCommentsRealm.setTARCommentsDB(response.body().getList());
+                        Log.e("downloadTARComments", "response" + response.body());
+                        if (response.body() != null && response.body().getList() != null && response.body().getList().size() > 0){
+                            Globals.writeToMLOG("ERROR", "downloadTARComments/onResponse", "response.body().getList(): " + response.body().getList().size());
+                            TARCommentsRealm.setTARCommentsDB(response.body().getList());
+                        }
                     } catch (Exception e) {
+                        Log.e("downloadTARComments", "onResponse/Exception e" + e);
+                        Globals.writeToMLOG("ERROR", "downloadTARComments/onResponse/catch", "Exception e: " + e);
                     }
                 }
 
                 @Override
                 public void onFailure(retrofit2.Call<TARCommentsResponse> call, Throwable t) {
+                    Log.e("downloadTARComments", "onFailure/Throwable t" + t);
+                    Globals.writeToMLOG("ERROR", "downloadTARComments/onFailure", "Throwable t: " + t);
                 }
             });
         } catch (Exception e) {
+            Log.e("downloadTARComments", "Exception e" + e);
+            Globals.writeToMLOG("ERROR", "downloadTARComments/catch", "Exception e: " + e);
         }
     }
 

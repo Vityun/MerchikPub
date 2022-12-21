@@ -355,8 +355,10 @@ public class RealmManager {
 
         try {
             globals.writeToMLOG(Clock.getHumanTime() + "_INFO.RealmManager.class.setTovar.Размер списка: " + list.size() + "\n");
+            Log.e("REALM_DB_UPDATE", "setTovar list.size(): " + list.size());
         } catch (Exception e) {
             globals.writeToMLOG(Clock.getHumanTime() + "_INFO.RealmManager.class.setTovar.Ошибка1: " + e + "\n");
+            Log.e("REALM_DB_UPDATE", "setTovar Ошибка1: " + e);
         }
 
         INSTANCE.beginTransaction();
@@ -366,8 +368,10 @@ public class RealmManager {
 
         try {
             globals.writeToMLOG(Clock.getHumanTime() + "_INFO.RealmManager.class.setTovar.Размер сохранённого списка: " + res.size() + "\n");
+            Log.e("REALM_DB_UPDATE", "setTovar res.size(): " + res.size());
         } catch (Exception e) {
             globals.writeToMLOG(Clock.getHumanTime() + "_INFO.RealmManager.class.setTovar.Ошибка2: " + e + "\n");
+            Log.e("REALM_DB_UPDATE", "setTovar Ошибка2: " + e);
         }
 
 

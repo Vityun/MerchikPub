@@ -1,9 +1,15 @@
 package ua.com.merchik.merchik.database.realm.tables;
 
+import android.util.Log;
+
+import com.google.gson.Gson;
+
+import java.util.Arrays;
 import java.util.List;
 
 import io.realm.RealmResults;
 import io.realm.Sort;
+import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.data.RealmModels.TARCommentsDB;
 
 import static ua.com.merchik.merchik.database.realm.RealmManager.INSTANCE;
@@ -16,15 +22,33 @@ public class TARCommentsRealm {
     public static void setTARCommentsDB(List<TARCommentsDB> data) {
         try {
             if (data != null){
+                Log.e("setTARCommentsDB","Start data: " + new Gson().toJson(data));
+                String[] ids = new String[data.size()];
+                int i = 0;
+                for (TARCommentsDB item : data) {
+                    ids[i++] = item.getID();
+                }
+
+                Log.e("setTARCommentsDB","ids: " + Arrays.toString(ids));
+                List<TARCommentsDB> notSaveComments = INSTANCE.copyFromRealm(TARCommentsRealm.getTARCommentByIds(ids));
+                Log.e("setTARCommentsDB","notSaveComments: " + new Gson().toJson(notSaveComments));
+                if (notSaveComments != null && notSaveComments.size() > 0){
+                    for (TARCommentsDB servList : data){
+                        for (TARCommentsDB currentList : notSaveComments){
+                            if (servList.getID().equals(currentList.getID())){
+                                data.remove(servList);
+                            }
+                        }
+                    }
+                }
+                Log.e("setTARCommentsDB","End data: " + new Gson().toJson(data));
+
                 INSTANCE.beginTransaction();
-//                INSTANCE.delete(TARCommentsDB.class);
                 INSTANCE.copyToRealm(data);
                 INSTANCE.commitTransaction();
-            }else {
-                // TODO Set to LOG info about error
             }
         }catch (Exception e){
-            // TODO Set to LOG info about error
+            Globals.writeToMLOG("ERROR", "setTARCommentsDB/Exception", "Exception e: " + e);
         }
     }
 
