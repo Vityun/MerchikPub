@@ -576,7 +576,7 @@ public class TablesLoadingUnloading {
                     if (response.isSuccessful() && response.body() != null) {
                         if (response.body().getState()) {
                             RealmManager.saveDownloadedOptions(response.body().getList());
-                            click.click("Данные успешно загружены и сохранены. (" + response.body().getList() + ")шт");
+                            click.click("Данные успешно загружены и сохранены. (" + response.body().getList().size() + ")шт. Опций.");
                         } else {
                             click.click("Обновить данные не получилось. Обратитесь к своему руководителю.");
                         }
@@ -1127,8 +1127,8 @@ public class TablesLoadingUnloading {
         ProgressDialog tovarProgressDialog = null;
         ProgressDialog pg = null;
         if (context != null) {
-            tovarProgressDialog = ProgressDialog.show(context, "Обмен данными с сервером.", "Загрузка фотографий Товаров.", true, true);
-            pg = ProgressDialog.show(context, "Обмен данными с сервером.", "Обновление таблицы: " + "Товаров", true, true);
+//            tovarProgressDialog = ProgressDialog.show(context, "Обмен данными с сервером.", "Загрузка фотографий Товаров.", true, true);
+//            pg = ProgressDialog.show(context, "Обмен данными с сервером.", "Обновление таблицы: " + "Товаров", true, true);
         }
 
         retrofit2.Call<TovarTableResponse> call;
