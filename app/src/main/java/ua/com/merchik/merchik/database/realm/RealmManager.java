@@ -197,7 +197,7 @@ public class RealmManager {
                     Globals.writeToMLOG("INFO", "setWpDataAuto", "План работ с ПРИЛОЖЕНИЯ: " + new Gson().toJson(debug));
 
                     // Это делаем для Лога, возможно нужно будет имплементировать в работу
-                    if ((wp.getVisit_start_dt() == 0 && row.getVisit_start_dt() > 0) || (wp.getVisit_end_dt() == 0 && row.getVisit_end_dt() > 0)){
+                    if ((wp.getVisit_start_dt() == 0 && row.getVisit_start_dt() > 0) || (wp.getVisit_end_dt() == 0 && row.getVisit_end_dt() > 0)) {
                         Globals.writeToMLOG("INFO", "setWpDataAuto", "Ситуация для отладки");
                         Globals.writeToMLOG("INFO", "setWpDataAuto", "План работ с СЕРВЕРА: " + new Gson().toJson(wp));
                         Globals.writeToMLOG("INFO", "setWpDataAuto", "План работ с ПРИЛОЖЕНИЯ: " + new Gson().toJson(debug));
@@ -266,13 +266,9 @@ public class RealmManager {
      */
     public static boolean setImagesTp(List<ImagesTypeListDB> ImageTp) {
         Log.e("REALM_DB_UPDATE", "TYPE_START");
-
         INSTANCE.beginTransaction();
         INSTANCE.delete(ImagesTypeListDB.class);
-        for (int i = 0; i < ImageTp.size(); i++) {
-//            Log.e("SERV", "TYPE" + i);
-            INSTANCE.copyToRealmOrUpdate(ImageTp.get(i));
-        }
+        INSTANCE.copyToRealmOrUpdate(ImageTp);
         INSTANCE.commitTransaction();
         Log.e("REALM_DB_UPDATE", "TYPE_END");
         return true;
@@ -286,26 +282,18 @@ public class RealmManager {
      */
     public static void setGroupType(List<GroupTypeDB> groupTypeDB) {
         Log.e("REALM_DB_UPDATE", "setGroupType_S");
-
         INSTANCE.beginTransaction();
         INSTANCE.delete(GroupTypeDB.class);
-        for (int i = 0; i < groupTypeDB.size(); i++) {
-//            Log.e("SERV", "setGroupType: " + i + "\nID: " + groupTypeDB.get(i).getID());
-            INSTANCE.copyToRealmOrUpdate(groupTypeDB.get(i));
-        }
+        INSTANCE.copyToRealmOrUpdate(groupTypeDB);
         INSTANCE.commitTransaction();
         Log.e("REALM_DB_UPDATE", "setGroupType_E");
     }
 
     public static boolean setGroupTypeV2(List<GroupTypeDB> customerGroupsListDB) {
         Log.e("REALM_DB_UPDATE", "setGroupType_S");
-
         INSTANCE.beginTransaction();
         INSTANCE.delete(GroupTypeDB.class);
-        for (int i = 0; i < customerGroupsListDB.size(); i++) {
-//            Log.e("SERV", "setGroupType: " + i + "\nID: " + customerGroupsListDB.get(i).getID());
-            INSTANCE.copyToRealm(customerGroupsListDB.get(i));
-        }
+        INSTANCE.copyToRealm(customerGroupsListDB);
         INSTANCE.commitTransaction();
         Log.e("REALM_DB_UPDATE", "setGroupType_E");
         return true;
@@ -397,9 +385,7 @@ public class RealmManager {
 
         INSTANCE.beginTransaction();
         INSTANCE.delete(PPADB.class);
-
         INSTANCE.copyToRealmOrUpdate(list);
-
         INSTANCE.commitTransaction();
 
         Log.e("REALM_DB_UPDATE", "setPPA_E");
@@ -414,9 +400,7 @@ public class RealmManager {
         Log.e("REALM_DB_UPDATE", "setArticle_S");
         INSTANCE.beginTransaction();
         INSTANCE.delete(ArticleDB.class);
-        for (int i = 0; i < list.size(); i++) {
-            INSTANCE.copyToRealmOrUpdate(list.get(i));
-        }
+        INSTANCE.copyToRealmOrUpdate(list);
         INSTANCE.commitTransaction();
         Log.e("REALM_DB_UPDATE", "setArticle_E");
     }
@@ -430,11 +414,7 @@ public class RealmManager {
         Log.e("REALM_DB_UPDATE", "setPromo_S");
         INSTANCE.beginTransaction();
         INSTANCE.delete(PromoDB.class);
-//        Log.e("PromoDB", "SIZE: " + list.size());
-        for (int i = 0; i < list.size(); i++) {
-//            Log.e("PromoDB", i + ": " + list.get(i).getID());
-            INSTANCE.copyToRealmOrUpdate(list.get(i));
-        }
+        INSTANCE.copyToRealmOrUpdate(list);
         INSTANCE.commitTransaction();
         Log.e("REALM_DB_UPDATE", "setPromo_E");
         return true;
@@ -447,17 +427,11 @@ public class RealmManager {
      */
     public static boolean setError(List<ErrorDB> list) {
         Log.e("REALM_DB_UPDATE", "setError_S");
-
         INSTANCE.beginTransaction();
         INSTANCE.delete(ErrorDB.class);
-//        Log.e("ErrorDB", "SIZE: " + list.size());
-        for (int i = 0; i < list.size(); i++) {
-//            Log.e("ErrorDB", i + ": " + list.get(i).getID());
-            INSTANCE.copyToRealmOrUpdate(list.get(i));
-        }
+        INSTANCE.copyToRealmOrUpdate(list);
         INSTANCE.commitTransaction();
         Log.e("REALM_DB_UPDATE", "setError_E");
-
         return true;
     }
 
@@ -469,13 +443,8 @@ public class RealmManager {
         Log.e("REALM_DB_UPDATE", "setError_S");
         INSTANCE.beginTransaction();
         INSTANCE.delete(TradeMarkDB.class);
-//        Log.e("TradeMarkDB", "SIZE: " + list.size());
-        for (int i = 0; i < list.size(); i++) {
-//            Log.e("TradeMarkDB", i + ": " + list.get(i).getID());
-            INSTANCE.copyToRealmOrUpdate(list.get(i));
-        }
+        INSTANCE.copyToRealmOrUpdate(list);
         INSTANCE.commitTransaction();
-        Log.e("REALM_DB_UPDATE", "setError_E");
         return true;
     }
 

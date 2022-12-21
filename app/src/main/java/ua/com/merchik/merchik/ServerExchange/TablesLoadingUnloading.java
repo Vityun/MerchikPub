@@ -254,10 +254,6 @@ public class TablesLoadingUnloading {
                 public <T> void onSuccess(List<T> data) {
                     List<TovarGroupSDB> list = (List<TovarGroupSDB>) data;
 
-//                    Log.e("TablesLoadUpload", "START");
-//                    SQL_DB.tovarGroupDao().insertAll(list);
-//                    Log.e("TablesLoadUpload", "END");
-
                     Log.e("TablesLoadUpload", "START_1");
                     SQL_DB.tovarGroupDao().insertData(list)
                             .subscribeOn(Schedulers.io())
@@ -880,7 +876,7 @@ public class TablesLoadingUnloading {
                 String json = gson.toJson(response.body());
                 JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
 
-                Log.e("SERVER_REALM_DB_UPDATE", "ADDR_convertedObject: " + convertedObject);
+//                Log.e("SERVER_REALM_DB_UPDATE", "ADDR_convertedObject: " + convertedObject);
 
                 if (response.isSuccessful() && response.body() != null) {
                     Log.e("TAG_TABLE", "RESPONSEAddressTable: " + response.body());
@@ -2213,8 +2209,6 @@ public class TablesLoadingUnloading {
     // upload REPORT_PREPARE
     public boolean uploadReportPrepareToServer() {
         boolean res = false;
-        String modText = "report_prepare";
-        String actText = "set_report_data";
 
         // Получаем последние данные из REPORT_PREPARE для выгрузки на сервер (время изменения dtChange)
         List<ReportPrepareServ> data = RealmManager.getReportPrepareToUpload();
@@ -2224,35 +2218,6 @@ public class TablesLoadingUnloading {
             StandartData standartData = new StandartData();
             standartData.mod = "report_prepare";
             standartData.act = "set_report_data";
-
-/*        List<StandartData.ReportPrepareServ> RP = new ArrayList<>();
-        for (ReportPrepareServ item : data) {
-            StandartData.ReportPrepareServ RP_ITEM = new StandartData.ReportPrepareServ();
-
-            RP_ITEM.element_id = item.getElement_id();
-            RP_ITEM.dt = item.getDt();
-            RP_ITEM.dt_report = item.getDt_report();
-            RP_ITEM.client_id = item.getClient_id();
-            RP_ITEM.tovar_id = item.getTovar_id();
-            RP_ITEM.addr_id = item.getAddr_id();
-            RP_ITEM.price = item.getPrice();
-            RP_ITEM.face = item.getFace();
-            RP_ITEM.amount = item.getAmount();
-            RP_ITEM.dt_expire = item.getDt_expire();
-            RP_ITEM.expire_left = item.getExpire_left();
-            RP_ITEM.notes = item.getNotes();
-            RP_ITEM.up = item.getUp();
-            RP_ITEM.akciya = item.getAkciya();
-            RP_ITEM.akciya_id = item.getAkciya_id();
-            RP_ITEM.oborotved_num = item.getOborotved_num();
-            RP_ITEM.error_id = item.getError_id();
-            RP_ITEM.error_comment = item.getError_comment();
-            RP_ITEM.code_dad2 = item.getCode_dad2();
-            RP_ITEM.buyer_order_id = item.buyer_order_id;
-
-            RP.add(RP_ITEM);
-        }*/
-
             standartData.data = data;
 
             Gson gson = new Gson();
@@ -2285,7 +2250,7 @@ public class TablesLoadingUnloading {
                                             RealmManager.INSTANCE.executeTransaction(realm -> {
                                                 reportPrepareDB.setUploadStatus(0);
                                                 reportPrepareDB.setDtChange(currentTime);
-                                                RealmManager.setReportPrepareRow(reportPrepareDB);
+                                                realm.copyToRealmOrUpdate(reportPrepareDB);
                                             });
                                         }
                                     } else {
@@ -2834,7 +2799,7 @@ public class TablesLoadingUnloading {
                 @Override
                 public void onResponse(retrofit2.Call<AdditionalRequirementsServerData> call, retrofit2.Response<AdditionalRequirementsServerData> response) {
                     try {
-                        Log.e("AdditionalRequirements", "response.body(): " + response.body());
+//                        Log.e("AdditionalRequirements", "response.body(): " + response.body());
 
                         AdditionalRequirementsRealm.setDataToDB(response.body().getList());
 
@@ -3026,7 +2991,7 @@ public class TablesLoadingUnloading {
         String json = gson.toJson(data);
         JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
 
-        Log.e("downloadCustomerD", "convertedObject: " + convertedObject);
+//        Log.e("downloadCustomerD", "convertedObject: " + convertedObject);
 
         retrofit2.Call<TovarGroupClientResponse> call = RetrofitBuilder.getRetrofitInterface().GET_TABLE_TOVAR_GROUP_CLIENT(RetrofitBuilder.contentType, convertedObject);
         call.enqueue(new retrofit2.Callback<TovarGroupClientResponse>() {
@@ -3037,9 +3002,9 @@ public class TablesLoadingUnloading {
                     String json = gson.toJson(response.body());
                     JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
 
-                    Log.e("downloadCustomerD", "Response: " + convertedObject);
+//                    Log.e("downloadCustomerD", "Response: " + convertedObject);
 
-                    Log.e("downloadCustomerD", "response.body().list: " + response.body().list.size());
+//                    Log.e("downloadCustomerD", "response.body().list: " + response.body().list.size());
                     SQL_DB.tovarGroupClientDao().insertData(response.body().list).subscribe(new DisposableCompletableObserver() {
                         @Override
                         public void onComplete() {
