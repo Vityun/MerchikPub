@@ -3,18 +3,24 @@ package ua.com.merchik.merchik.Activities;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.Context;
+import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
+import androidx.core.app.TaskStackBuilder;
 
 import com.google.android.material.navigation.NavigationView;
 
+import ua.com.merchik.merchik.Activities.ReferencesActivity.ReferencesActivity;
+import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.toolbar_menus;
 
@@ -192,12 +198,26 @@ public class MenuMainActivity extends toolbar_menus {
             notificationManager.createNotificationChannel(channel);
         }
 
+        Intent resultIntent = new Intent(context, ReferencesActivity.class);
+        resultIntent.putExtra("ReferencesEnum", Globals.ReferencesEnum.CHAT);
+
+        TaskStackBuilder stackBuilder = TaskStackBuilder.create(context);
+        stackBuilder.addNextIntentWithParentStack(resultIntent);
+
+        PendingIntent resultPendingIntent = stackBuilder.getPendingIntent(0,
+                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+
+
+
         Notification notification = new NotificationCompat.Builder(this, "channel01")
                 .setSmallIcon(android.R.drawable.ic_dialog_info)
                 .setContentTitle("Заголовок")
                 .setContentText("Тестове повідомлення!")
                 .setDefaults(Notification.DEFAULT_ALL)
                 .setPriority(NotificationCompat.PRIORITY_HIGH)   // heads-up
+                .setVibrate(new long[] { 1000, 1000})
+                .setSound(Settings.System.DEFAULT_NOTIFICATION_URI)
+                .setContentIntent(resultPendingIntent)
                 .build();
 
         NotificationManagerCompat notificationManager = NotificationManagerCompat.from(this);

@@ -2516,12 +2516,9 @@ public class TablesLoadingUnloading {
     }
 
     private void saveMenuDB(ArrayList<MenuItemFromWebDB> data) {
-        INSTANCE.executeTransaction(realm -> {
-            INSTANCE.delete(MenuItemFromWebDB.class);
-            for (MenuItemFromWebDB item : data) {
-                INSTANCE.copyToRealmOrUpdate(item);
-            }
-        });
+        INSTANCE.beginTransaction();
+        INSTANCE.copyToRealmOrUpdate(data);
+        INSTANCE.commitTransaction();
     }
 
 
