@@ -469,7 +469,7 @@ public class DialogEKL {
                                         ekl_sdb.clientId = wp.getClient_id();
                                         ekl_sdb.addressId = wp.getAddr_id();
                                         ekl_sdb.dad2 = wp.getCode_dad2();
-                                        ekl_sdb.department = user.department;   // Добавлен отдел, при отправке ЭКЛ
+                                        ekl_sdb.department = user.otdelId;   // Добавлен отдел, при отправке ЭКЛ
                                         ekl_sdb.state = true;
                                         ekl_sdb.eklHashCode = resp.codeHash;
                                         ekl_sdb.vpi = System.currentTimeMillis() / 1000;

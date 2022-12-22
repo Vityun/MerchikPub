@@ -27,6 +27,9 @@ public class UserSDBJoin {
     @ColumnInfo(name = "department")
     public Integer department;
 
+    @ColumnInfo(name = "otdel_id")
+    public Integer otdelId;  // Отдел
+
     @ColumnInfo(name = "dt_update")
     public Long dtUpdate;
 
