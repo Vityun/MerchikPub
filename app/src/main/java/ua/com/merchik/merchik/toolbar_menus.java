@@ -1762,6 +1762,8 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                                             runOnUiThread(() -> {
 //                                                Toast.makeText(context, "Новое сообщение в чате: " + wsData.chat.msg, Toast.LENGTH_SHORT).show();
                                                 try {
+
+
                                                     if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
                                                         NotificationChannel channel = null;   // for heads-up notifications
                                                         channel = new NotificationChannel("channel01", "name",
@@ -1812,7 +1814,10 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                                             break;
                                     }
                                 }
-                            } else {
+                            } else if (data.equals("error")){
+                                Globals.writeToMLOG("INFO", "TOOLBAR/startWebSocket/click", "data: error. Restart.");
+                                startWebSocket(context);
+                            }else {
                                 Globals.writeToMLOG("INFO", "TOOLBAR/startWebSocket/click", "data: null");
                             }
                         } else {
@@ -1820,6 +1825,8 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                         }
                     }
                 });
+            }else {
+                Globals.writeToMLOG("INFO", "TOOLBAR/startWebSocket/", "webSocket(null): " + webSocket);
             }
         } catch (Exception e) {
             Globals.writeToMLOG("ERROR", "TOOLBAR/startWebSocket/catch", "Exception e: " + e);

@@ -17,6 +17,7 @@ import java.util.List;
 
 import io.reactivex.rxjava3.observers.DisposableCompletableObserver;
 import io.reactivex.rxjava3.schedulers.Schedulers;
+import io.realm.RealmResults;
 import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -1269,17 +1270,19 @@ public class Exchange {
                                     for (TARCommentsDB item : deleteFromDb) {
                                         ids[i++] = item.getID();
                                     }
-                                    Log.e("uploadTARComments","ids: " + ids);
-                                    boolean dell = TARCommentsRealm.getTARCommentByIds(ids).deleteAllFromRealm();
-
-                                    Log.e("uploadTARComments","dell: " + dell);
-
 
                                     RealmManager.INSTANCE.executeTransaction((realm) -> {
+                                        Log.e("uploadTARComments","ids: " + ids);
+                                        RealmResults<TARCommentsDB> dell = realm.where(TARCommentsDB.class)
+                                                .in("id", ids)
+                                                .findAll();
+                                        dell.deleteAllFromRealm();
+
+
                                         // Сохранение новых
                                         Log.e("uploadTARComments","saveToDb: " + saveToDb.size());
                                         List<TARCommentsDB> result = realm.copyToRealmOrUpdate(saveToDb);
-                                        Globals.writeToMLOG("INFO", "uploadTARComments/onResponse", "result list comments to seve(" + (result != null ? result.size() + "): " : "null"));
+                                        Globals.writeToMLOG("INFO", "uploadTARComments/onResponse", "result list comments to seve(" + (result != null ? result.size() + "): .." : "null"));
                                     });
                                 }
                             }

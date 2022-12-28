@@ -163,6 +163,8 @@ public class RetrofitBuilder{
             }
         }
 
+        Globals.writeToMLOG("INFO", "WebSocket/Headers", "Headers: " + request.headers().toString());
+
         webSocket = client.newWebSocket(request, new WebSocketListener() {
             private static final int NORMAL_CLOSURE_STATUS = 1000;
             @Override
@@ -180,9 +182,11 @@ public class RetrofitBuilder{
 
                 JsonObject convertedObject = new Gson().fromJson(new Gson().toJson(websocketParam), JsonObject.class);
 
+                Globals.writeToMLOG("INFO", "WebSocket/onOpen/convertedObject", "convertedObject: " + convertedObject);
+
                 webSocket.send(convertedObject.toString());
 
-
+                Globals.writeToMLOG("INFO", "WebSocket/onOpen/Connection accepted!", "Connection accepted!");
                 Log.i("WebSockets", "Connection accepted!");
             }
             @Override
@@ -213,6 +217,7 @@ public class RetrofitBuilder{
                 if (response != null && response.body() != null){
                     Globals.writeToMLOG("INFO", "WebSocket/onFailure/Response", "Response response: " + response.body());
                 }
+                click.click("error");
             }});
         return webSocket;
     }
