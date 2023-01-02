@@ -1695,7 +1695,7 @@ public class TablesLoadingUnloading {
 
         SynchronizationTimetableDB sTable = RealmManager.getSynchronizationTimetableRowByTable("wp_data");
         if (sTable != null) {
-            Globals.writeToMLOG("ERROR", "TablesLoadingUnloading/updateWpData/getSynchronizationTimetableRowByTable", "sTable: " + sTable);
+            Globals.writeToMLOG("INFO", "TablesLoadingUnloading/updateWpData/getSynchronizationTimetableRowByTable", "sTable: " + sTable);
             vpi = sTable.getVpi_app();
             Log.e("updateWpData", "vpi: " + vpi);
 

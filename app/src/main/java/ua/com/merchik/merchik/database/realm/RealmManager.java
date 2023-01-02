@@ -1145,7 +1145,8 @@ public class RealmManager {
      * компота по sort("manufacturer.nm", Sort.ASCENDING, "sortcol", Sort.ASCENDING); (ПО ВОЗРАСТАНИЮ)
      * */
     public static RealmResults<TovarDB> getTovarListFromReportPrepareByDad2(long dad2) {
-        Log.e("TovarListFromRPByDad2", "Start: " + dad2);
+//        Log.e("TovarListFromRPByDad2", "Start: " + dad2);
+        Globals.writeToMLOG("INFO", "getTovarListFromReportPrepareByDad2", "Start dad2: " + dad2);
 
         ArrayList<String> listRpTovId = new ArrayList<>();
         ArrayList<String> listTovId = new ArrayList<>();
@@ -1154,7 +1155,8 @@ public class RealmManager {
                 .equalTo("codeDad2", String.valueOf(dad2))
                 .findAll();
 
-        Log.e("TovarListFromRPByDad2", "realmResults: " + realmResults);
+//        Log.e("TovarListFromRPByDad2", "realmResults: " + realmResults);
+        Globals.writeToMLOG("INFO", "getTovarListFromReportPrepareByDad2", "realmResults.size(): " + realmResults.size());
 
         String[] list = new String[realmResults.size()];
         for (int i = 0; i < realmResults.size(); i++) {
@@ -1162,12 +1164,11 @@ public class RealmManager {
             listRpTovId.add(realmResults.get(i).getTovarId());
         }
 
-        Log.e("TovarListFromRPByDad2", "list: " + list);
+//        Log.e("TovarListFromRPByDad2", "list: " + list);
 
         RealmResults<TovarDB> realmResults2 = INSTANCE.where(TovarDB.class)
                 .in("iD", list)
                 .findAll();
-
 
         try {
             for (TovarDB item : realmResults2) {
@@ -1181,6 +1182,7 @@ public class RealmManager {
             }
         } catch (Exception e) {
             Log.e("TovarListFromRPByDad2", "ERR: " + e);
+            Globals.writeToMLOG("ERROR", "getTovarListFromReportPrepareByDad2", "Exception e: " + e);
             return null;
         }
 

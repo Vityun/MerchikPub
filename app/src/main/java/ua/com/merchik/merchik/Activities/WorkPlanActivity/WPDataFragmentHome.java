@@ -62,58 +62,75 @@ public class WPDataFragmentHome extends Fragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-
         View v = inflater.inflate(R.layout.fragment_tab_wp_home, container, false);
 
-        recyclerView = v.findViewById(R.id.RecyclerViewWorkPlan);
-        searchView = v.findViewById(R.id.searchView);
-        filter = v.findViewById(R.id.filter);
-        title = v.findViewById(R.id.title);
-        title.setTextColor(-10987432);  // Как у закладки "План работ"
-        title.setOnClickListener(view -> title.setVisibility(View.GONE));
-        title.setPaintFlags(title.getPaintFlags() | Paint.UNDERLINE_TEXT_FLAG);
-        titleClose = v.findViewById(R.id.titleClose);
-        titleClose.setOnClickListener(view -> {
-            title.setVisibility(View.GONE);
-            titleClose.setVisibility(View.GONE);
-        });
+        try {
+            recyclerView = v.findViewById(R.id.RecyclerViewWorkPlan);
+            searchView = v.findViewById(R.id.searchView);
+            filter = v.findViewById(R.id.filter);
+            title = v.findViewById(R.id.title);
+            title.setTextColor(-10987432);  // Как у закладки "План работ"
+            title.setOnClickListener(view -> title.setVisibility(View.GONE));
+            title.setPaintFlags(title.getPaintFlags() | Paint.UNDERLINE_TEXT_FLAG);
+            titleClose = v.findViewById(R.id.titleClose);
+            titleClose.setOnClickListener(view -> {
+                title.setVisibility(View.GONE);
+                titleClose.setVisibility(View.GONE);
+            });
 
-        // Данные для фильтра даты
-        Calendar cal = Calendar.getInstance();
-        cal.setTimeInMillis(System.currentTimeMillis());
-        cal.set(Calendar.HOUR_OF_DAY, 0);
-        cal.set(Calendar.MINUTE, 0);
-        cal.set(Calendar.SECOND, 0);
-        cal.set(Calendar.MILLISECOND, 0);
+            // Данные для фильтра даты
+            Calendar cal = Calendar.getInstance();
+            cal.setTimeInMillis(System.currentTimeMillis());
+            cal.set(Calendar.HOUR_OF_DAY, 0);
+            cal.set(Calendar.MINUTE, 0);
+            cal.set(Calendar.SECOND, 0);
+            cal.set(Calendar.MILLISECOND, 0);
 
-        dateFrom = cal.getTime();
-        dateTo = Clock.timeLongToDAte(Clock.getDatePeriodLong(cal.getTime().getTime(), +3) / 1000);
+            dateFrom = cal.getTime();
+            dateTo = Clock.timeLongToDAte(Clock.getDatePeriodLong(cal.getTime().getTime(), +3) / 1000);
 
-        workPlan = RealmManager.getAllWorkPlan();
+            workPlan = RealmManager.getAllWorkPlan();
+            try {
+                if (workPlan != null){
+                    Globals.writeToMLOG("INFO", "WPDataFragmentHome", "workPlan: " + workPlan.size());
+                    StringBuilder wpDebugData = new StringBuilder();
+                    for (WpDataDB item : workPlan){
+                        wpDebugData.append("id:").append(item.getId()).append("/").append("dad2:").append(item.getCode_dad2()).append("\n");
+                    }
+                    Globals.writeToMLOG("INFO", "WPDataFragmentHome", "wpDebugData: " + wpDebugData);
+                }else {
+                    Globals.writeToMLOG("INFO", "WPDataFragmentHome", "workPlan is null");
+                }
+            }catch (Exception e){
+                Globals.writeToMLOG("ERROR", "WPDataFragmentHome", "Exception e: " + e);
+            }
 //        workPlan = workPlan.where().between("dt", dateFrom, dateTo).sort("dt_start", Sort.ASCENDING, "addr_id", Sort.ASCENDING).findAll();
 
-        UsersSDB usersSDB = SQL_DB.usersDao().getById(Globals.userId);
-        if (System.currentTimeMillis() / 1000 < 1668124799) {
-            showAlertMsg();
-        } else if (usersSDB != null && usersSDB.reportCount <= 10) {
-            showAlertMsg();
-        } else {
-            // nothing to do
-        }
-
-
-        if (workPlan == null || workPlan.size() == 0) {
-            DialogData dialogData = new DialogData(v.getContext());
-            dialogData.setTitle("План работ пуст.");
-            dialogData.setText("Выполните Синхронизацию таблиц для получения Плана работ.");
-            dialogData.setClose(dialogData::dismiss);
-            dialogData.show();
-        } else {
-            try {
-                visualizeWpData();
-            } catch (Exception e) {
-                globals.alertDialogMsg(v.getContext(), "Возникла ошибка. Сообщите о ней своему администратору. Ошибка1: " + e);
+            UsersSDB usersSDB = SQL_DB.usersDao().getById(Globals.userId);
+            if (System.currentTimeMillis() / 1000 < 1668124799) {
+                showAlertMsg();
+            } else if (usersSDB != null && usersSDB.reportCount <= 10) {
+                showAlertMsg();
+            } else {
+                // nothing to do
             }
+
+
+            if (workPlan == null || workPlan.size() == 0) {
+                DialogData dialogData = new DialogData(v.getContext());
+                dialogData.setTitle("План работ пуст.");
+                dialogData.setText("Выполните Синхронизацию таблиц для получения Плана работ.");
+                dialogData.setClose(dialogData::dismiss);
+                dialogData.show();
+            } else {
+                try {
+                    visualizeWpData();
+                } catch (Exception e) {
+                    globals.alertDialogMsg(v.getContext(), "Возникла ошибка. Сообщите о ней своему администратору. Ошибка1: " + e);
+                }
+            }
+        }catch (Exception e){
+            Globals.writeToMLOG("ERROR", "WPDataFragmentHome/onCreateView", "Exception e: " + e);
         }
 
         return v;
@@ -162,6 +179,7 @@ public class WPDataFragmentHome extends Fragment {
     }
 
     private void visualizeWpData() {
+        Globals.writeToMLOG("INFO", "WPDataFragmentHome/visualizeWpData", "workPlan: " + workPlan.size());
         adapter = new RecycleViewWPAdapter(getContext(), workPlan);
         title.setText(createTitleMsg(workPlan, TitleMode.SHORT));
         title.setOnClickListener(view -> {

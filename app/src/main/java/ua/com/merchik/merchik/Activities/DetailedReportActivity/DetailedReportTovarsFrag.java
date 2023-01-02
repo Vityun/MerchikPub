@@ -226,6 +226,7 @@ public class DetailedReportTovarsFrag extends Fragment {
         ArrayList<TovarDB> list = null;
         if (flag) {
             List<TovarDB> dataTovar = RealmManager.getTovarListFromReportPrepareByDad2(codeDad2);
+            Globals.writeToMLOG("INFO", "DetailedReportTovarsFrag/getTovList", "codeDad2: " + codeDad2);
             if (dataTovar != null && dataTovar.size() > 0) {
                 list = (ArrayList<TovarDB>) RealmManager.INSTANCE.copyFromRealm(dataTovar);
                 Toast.makeText(mContext, "Отображен список только тех товаров, которые установлены в матрице ППА", Toast.LENGTH_SHORT).show();
@@ -240,6 +241,7 @@ public class DetailedReportTovarsFrag extends Fragment {
                         @Override
                         public void onSuccess(String data) {
                             Toast.makeText(mContext, data, Toast.LENGTH_SHORT).show();
+                            Globals.writeToMLOG("INFO", "DetailedReportTovarsFrag/getTovList.onSuccess", "String data: " + data);
                             addRecycleView(getTovList());
                             updateTov = false;
                         }
@@ -247,6 +249,7 @@ public class DetailedReportTovarsFrag extends Fragment {
                         @Override
                         public void onFailure(String error) {
                             Toast.makeText(mContext, error, Toast.LENGTH_SHORT).show();
+                            Globals.writeToMLOG("INFO", "DetailedReportTovarsFrag/getTovList.onSuccess", "String error: " + error);
                             updateTov = false;
                         }
                     });
@@ -263,11 +266,15 @@ public class DetailedReportTovarsFrag extends Fragment {
     }
 
     private void downloadDetailedReportTovarsData(Clicks.clickStatusMsg click) {
-        ProgressDialog pg = ProgressDialog.show(mContext, "Загрузка списка товаров", "Подождите окончания загрузки. Это может занять время.", true, true);
-        downloadReportPrepareByDad2(pg, click);
+        try {
+            ProgressDialog pg = ProgressDialog.show(mContext, "Загрузка списка товаров", "Подождите окончания загрузки. Это может занять время.", true, true);
+            downloadReportPrepareByDad2(pg, click);
 
-        ProgressDialog pg2 = ProgressDialog.show(mContext, "Загрузка списка опций", "Подождите окончания загрузки. Это может занять время.", true, true);
-        downloadOptionByDad2(pg2, click);
+            ProgressDialog pg2 = ProgressDialog.show(mContext, "Загрузка списка опций", "Подождите окончания загрузки. Это может занять время.", true, true);
+            downloadOptionByDad2(pg2, click);
+        }catch (Exception e){
+
+        }
     }
 
     private void downloadReportPrepareByDad2(ProgressDialog pg, Clicks.clickStatusMsg click){
