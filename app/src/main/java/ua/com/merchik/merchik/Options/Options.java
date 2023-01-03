@@ -1,5 +1,24 @@
 package ua.com.merchik.merchik.Options;
 
+import static ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity.OFS;
+import static ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity.OOS;
+import static ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity.SKUFact;
+import static ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity.SKUPlan;
+import static ua.com.merchik.merchik.Globals.OptionControlName.AKCIYA;
+import static ua.com.merchik.merchik.Globals.OptionControlName.AKCIYA_ID;
+import static ua.com.merchik.merchik.Globals.OptionControlName.AMOUNT;
+import static ua.com.merchik.merchik.Globals.OptionControlName.DT_EXPIRE;
+import static ua.com.merchik.merchik.Globals.OptionControlName.ERROR_ID;
+import static ua.com.merchik.merchik.Globals.OptionControlName.EXPIRE_LEFT;
+import static ua.com.merchik.merchik.Globals.OptionControlName.FACE;
+import static ua.com.merchik.merchik.Globals.OptionControlName.NOTES;
+import static ua.com.merchik.merchik.Globals.OptionControlName.OBOROTVED_NUM;
+import static ua.com.merchik.merchik.Globals.OptionControlName.PRICE;
+import static ua.com.merchik.merchik.Globals.OptionControlName.UP;
+import static ua.com.merchik.merchik.data.OptionMassageType.Type.DIALOG;
+import static ua.com.merchik.merchik.data.OptionMassageType.Type.STRING;
+import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
+
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
@@ -44,6 +63,7 @@ import ua.com.merchik.merchik.Options.Buttons.OptionButtAchievements;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonAddComment;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonAddNewClient;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonAvailabilityDetailedReport;
+import ua.com.merchik.merchik.Options.Buttons.OptionButtonPhotoAktionTovar;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonPhotoBeforeStartWork;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonReclamationAnswer;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonTaskAnswer;
@@ -99,25 +119,6 @@ import ua.com.merchik.merchik.dialogs.DialogAdditionalRequirements.DialogAdditio
 import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.dialogs.DialogFilter.Click;
 import ua.com.merchik.merchik.toolbar_menus;
-
-import static ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity.OFS;
-import static ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity.OOS;
-import static ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity.SKUFact;
-import static ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity.SKUPlan;
-import static ua.com.merchik.merchik.Globals.OptionControlName.AKCIYA;
-import static ua.com.merchik.merchik.Globals.OptionControlName.AKCIYA_ID;
-import static ua.com.merchik.merchik.Globals.OptionControlName.AMOUNT;
-import static ua.com.merchik.merchik.Globals.OptionControlName.DT_EXPIRE;
-import static ua.com.merchik.merchik.Globals.OptionControlName.ERROR_ID;
-import static ua.com.merchik.merchik.Globals.OptionControlName.EXPIRE_LEFT;
-import static ua.com.merchik.merchik.Globals.OptionControlName.FACE;
-import static ua.com.merchik.merchik.Globals.OptionControlName.NOTES;
-import static ua.com.merchik.merchik.Globals.OptionControlName.OBOROTVED_NUM;
-import static ua.com.merchik.merchik.Globals.OptionControlName.PRICE;
-import static ua.com.merchik.merchik.Globals.OptionControlName.UP;
-import static ua.com.merchik.merchik.data.OptionMassageType.Type.DIALOG;
-import static ua.com.merchik.merchik.data.OptionMassageType.Type.STRING;
-import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
 public class Options {
 
@@ -722,6 +723,10 @@ public class Options {
 
             case 151139:
                 new OptionButPhotoPlanogramm<>(context, dataDB, option, type, mode);
+                break;
+
+            case 157277:
+                new OptionButtonPhotoAktionTovar<>(context, dataDB, option, type, mode);
                 break;
 
             case 80977:     // Контроль Акций

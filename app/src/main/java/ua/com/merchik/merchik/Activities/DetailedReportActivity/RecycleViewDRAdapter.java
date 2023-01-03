@@ -1,5 +1,7 @@
 package ua.com.merchik.merchik.Activities.DetailedReportActivity;
 
+import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
+
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Typeface;
@@ -40,8 +42,6 @@ import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsRealm;
 import ua.com.merchik.merchik.dialogs.DialogData;
-
-import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
 public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRAdapter.ViewHolder> {
 
@@ -175,6 +175,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                     || optionId == 157276   // 2. Две опции контроля тут на всяк случай. Тестим.
                     || optionId == 157274   // 3. ..три
                     || optionId == 135159   // Достижения
+                    || optionId == 157277   // Фото Акционного Товара
             ) {
                 constraintLayout.setBackgroundResource(R.drawable.bg_temp);
                 textInteger2.setVisibility(View.VISIBLE);
