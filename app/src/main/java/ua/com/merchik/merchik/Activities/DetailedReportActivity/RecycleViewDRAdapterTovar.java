@@ -447,7 +447,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
 
                     try {
                         Log.e("TAG_REALM_LOG", "ЗАПИСЬ 4");
-                        RealmManager.setRowToLog(Collections.singletonList(new LogDB(RealmManager.getLastIdLogDB() + 1, System.currentTimeMillis() / 1000, "Нажатие на Остатки", 1169, null, null, null, null, null, Globals.session, null)));
+//                        RealmManager.setRowToLog(Collections.singletonList(new LogDB(RealmManager.getLastIdLogDB() + 1, System.currentTimeMillis() / 1000, "Нажатие на Остатки", 1169, null, null, null, null, null, Globals.session, null)));
                     } catch (Exception e) {
                         Log.e("TAG_REALM_LOG", "Ошибка(4): " + e);
                         Globals.writeToMLOG("ERROR", "RecycleViewDRAdapterTovar.bind_5", "Exception e: " + e);

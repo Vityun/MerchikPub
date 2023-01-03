@@ -1,5 +1,11 @@
 package ua.com.merchik.merchik.ServerExchange;
 
+import static ua.com.merchik.merchik.database.realm.RealmManager.INSTANCE;
+import static ua.com.merchik.merchik.database.realm.RealmManager.getSynchronizationTimetable;
+import static ua.com.merchik.merchik.database.realm.tables.PPARealm.setPPA;
+import static ua.com.merchik.merchik.database.realm.tables.WpDataRealm.getIZAList;
+import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
+
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -100,12 +106,6 @@ import ua.com.merchik.merchik.database.realm.tables.TARCommentsRealm;
 import ua.com.merchik.merchik.database.realm.tables.TasksAndReclamationsRealm;
 import ua.com.merchik.merchik.database.realm.tables.ThemeRealm;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
-
-import static ua.com.merchik.merchik.database.realm.RealmManager.INSTANCE;
-import static ua.com.merchik.merchik.database.realm.RealmManager.getSynchronizationTimetable;
-import static ua.com.merchik.merchik.database.realm.tables.PPARealm.setPPA;
-import static ua.com.merchik.merchik.database.realm.tables.WpDataRealm.getIZAList;
-import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
 
 /**
@@ -523,14 +523,14 @@ public class TablesLoadingUnloading {
                                     pg.dismiss();
                         }
 
-                        RealmManager.setRowToLog(Collections.singletonList(new LogDB(RealmManager.getLastIdLogDB() + 1, System.currentTimeMillis() / 1000, "Группы товаров с сервера: " + response.body().getList(), 1097, null, null, null, Globals.userId, null, Globals.session, null)));
+//                        RealmManager.setRowToLog(Collections.singletonList(new LogDB(RealmManager.getLastIdLogDB() + 1, System.currentTimeMillis() / 1000, "Группы товаров с сервера: " + response.body().getList(), 1097, null, null, null, Globals.userId, null, Globals.session, null)));
 
                         long currentTime = System.currentTimeMillis() / 1000;
                         RealmManager.setToSynchronizationTimetableDB(new SynchronizationTimetableDB(3, "client_group_tp", 600, currentTime, currentTime, 0, 0));
 
                     }
                 } catch (Exception e) {
-                    RealmManager.setRowToLog(Collections.singletonList(new LogDB(RealmManager.getLastIdLogDB() + 1, System.currentTimeMillis() / 1000, "Ошибка при обмене групп товаров(сервер что-то отправил): " + e, 1097, null, null, null, Globals.userId, null, Globals.session, null)));
+//                    RealmManager.setRowToLog(Collections.singletonList(new LogDB(RealmManager.getLastIdLogDB() + 1, System.currentTimeMillis() / 1000, "Ошибка при обмене групп товаров(сервер что-то отправил): " + e, 1097, null, null, null, Globals.userId, null, Globals.session, null)));
                 }
                 readyTypeGrp = true;
             }
@@ -542,7 +542,7 @@ public class TablesLoadingUnloading {
                         pg.dismiss();
                 readyTypeGrp = false;
                 syncInternetError = true;
-                RealmManager.setRowToLog(Collections.singletonList(new LogDB(RealmManager.getLastIdLogDB() + 1, System.currentTimeMillis() / 1000, "Ошибка при обмене групп товаров(ошика интернета): " + t, 1097, null, null, null, Globals.userId, null, Globals.session, null)));
+//                RealmManager.setRowToLog(Collections.singletonList(new LogDB(RealmManager.getLastIdLogDB() + 1, System.currentTimeMillis() / 1000, "Ошибка при обмене групп товаров(ошика интернета): " + t, 1097, null, null, null, Globals.userId, null, Globals.session, null)));
                 Log.e("TAG_TEST", "FAILURE_2 E: " + t);
             }
         });
@@ -786,7 +786,7 @@ public class TablesLoadingUnloading {
         String mod = "data_list";
         String act = "client_list";
 
-        RealmManager.setRowToLog(Collections.singletonList(new LogDB(RealmManager.getLastIdLogDB() + 1, System.currentTimeMillis() / 1000, "Обновление таблицы Клиенты", 1094, null, null, null, null, null, Globals.session, null)));
+//        RealmManager.setRowToLog(Collections.singletonList(new LogDB(RealmManager.getLastIdLogDB() + 1, System.currentTimeMillis() / 1000, "Обновление таблицы Клиенты", 1094, null, null, null, null, null, Globals.session, null)));
 
         ProgressDialog pg = ProgressDialog.show(context, "Обмен данными с сервером.", "Обновление таблицы: " + "Клиенты", true, true);
 
@@ -846,7 +846,7 @@ public class TablesLoadingUnloading {
 
                 readyCustomerTable = false;
                 syncInternetError = true;
-                RealmManager.setRowToLog(Collections.singletonList(new LogDB(RealmManager.getLastIdLogDB() + 1, System.currentTimeMillis() / 1000, "Ошибка при обмене т.Клиенты: " + t, 1094, null, null, null, null, null, Globals.session, null)));
+//                RealmManager.setRowToLog(Collections.singletonList(new LogDB(RealmManager.getLastIdLogDB() + 1, System.currentTimeMillis() / 1000, "Ошибка при обмене т.Клиенты: " + t, 1094, null, null, null, null, null, Globals.session, null)));
                 Log.e("TAG_TABLE", "FAILURECustomerTable: " + t);
             }
         });
@@ -957,7 +957,7 @@ public class TablesLoadingUnloading {
         String mod = "data_list";
         String act = "sotr_list";
 
-        RealmManager.setRowToLog(Collections.singletonList(new LogDB(RealmManager.getLastIdLogDB() + 1, System.currentTimeMillis() / 1000, "Обмен таблицы Сотрудники", 1095, null, null, null, null, null, Globals.session, null)));
+//        RealmManager.setRowToLog(Collections.singletonList(new LogDB(RealmManager.getLastIdLogDB() + 1, System.currentTimeMillis() / 1000, "Обмен таблицы Сотрудники", 1095, null, null, null, null, null, Globals.session, null)));
 
         ProgressDialog pg = ProgressDialog.show(context, "Обмен данными с сервером.", "Обновление таблицы: " + "Сотрудники", true, true);
 
@@ -968,7 +968,7 @@ public class TablesLoadingUnloading {
                 if (response.isSuccessful() && response.body() != null) {
                     Log.e("TAG_TABLE", "RESPONSESotrTable: " + response.body());
                     if (response.body().getState()) {
-                        RealmManager.setRowToLog(Collections.singletonList(new LogDB(RealmManager.getLastIdLogDB() + 1, System.currentTimeMillis() / 1000, "Обмен таблицы Сотрудники. Успех.", 1095, null, null, null, null, null, Globals.session, null)));
+//                        RealmManager.setRowToLog(Collections.singletonList(new LogDB(RealmManager.getLastIdLogDB() + 1, System.currentTimeMillis() / 1000, "Обмен таблицы Сотрудники. Успех.", 1095, null, null, null, null, null, Globals.session, null)));
                         if (!response.body().getList().isEmpty()) {
                             Log.e("TAG_TABLE", "ListS: 200");
 
@@ -1012,7 +1012,7 @@ public class TablesLoadingUnloading {
                                 if (pg.isShowing())
                                     pg.dismiss();
 
-                            RealmManager.setRowToLog(Collections.singletonList(new LogDB(RealmManager.getLastIdLogDB() + 1, System.currentTimeMillis() / 1000, "Обмен таблицы Сотрудники. Сотрудники пустые.", 1095, null, null, null, null, null, Globals.session, null)));
+//                            RealmManager.setRowToLog(Collections.singletonList(new LogDB(RealmManager.getLastIdLogDB() + 1, System.currentTimeMillis() / 1000, "Обмен таблицы Сотрудники. Сотрудники пустые.", 1095, null, null, null, null, null, Globals.session, null)));
                             Log.e("TAG_TABLE", "ListS: empty");
                         }
                     } else {
@@ -1020,7 +1020,7 @@ public class TablesLoadingUnloading {
                             if (pg.isShowing())
                                 pg.dismiss();
 
-                        RealmManager.setRowToLog(Collections.singletonList(new LogDB(RealmManager.getLastIdLogDB() + 1, System.currentTimeMillis() / 1000, "Обмен таблицы Сотрудники. Ошибка от Вовы: ", 1095, null, null, null, null, null, Globals.session, null)));
+//                        RealmManager.setRowToLog(Collections.singletonList(new LogDB(RealmManager.getLastIdLogDB() + 1, System.currentTimeMillis() / 1000, "Обмен таблицы Сотрудники. Ошибка от Вовы: ", 1095, null, null, null, null, null, Globals.session, null)));
                         Log.e("TAG_TABLE", "ListS: ERROR");
                     }
                 }
@@ -1034,7 +1034,7 @@ public class TablesLoadingUnloading {
                         pg.dismiss();
                 readySotrTable = false;
                 syncInternetError = true;
-                RealmManager.setRowToLog(Collections.singletonList(new LogDB(RealmManager.getLastIdLogDB() + 1, System.currentTimeMillis() / 1000, "Обмен таблицы Сотрудники. Ошибка сети: " + t, 1095, null, null, null, null, null, Globals.session, null)));
+//                RealmManager.setRowToLog(Collections.singletonList(new LogDB(RealmManager.getLastIdLogDB() + 1, System.currentTimeMillis() / 1000, "Обмен таблицы Сотрудники. Ошибка сети: " + t, 1095, null, null, null, null, null, Globals.session, null)));
                 Log.e("TAG_TABLE", "FAILURESotrTable: " + t);
             }
         });
@@ -1781,7 +1781,7 @@ public class TablesLoadingUnloading {
     //----------------------------------------------------------------------------------------------
 
     /***/
-    public void sendAndUpdateLog(Context context) {
+    public void sendAndUpdateLog() {
         String mod = "log";
         String act = "save";
         ArrayList<LogUploadToServ> data = RealmManager.getLogToSend();
@@ -2138,7 +2138,7 @@ public class TablesLoadingUnloading {
                         downloadCustomerTable(context);
                         downloadSotrTable(context);
 
-                        sendAndUpdateLog(context);
+//                        sendAndUpdateLog(context);
                         uploadReportPrepareToServer();
 
                         RealmManager.setToSynchronizationTimetableDB(new SynchronizationTimetableDB(1, "wp_data", 600, currentTime, currentTime, 0, 0));

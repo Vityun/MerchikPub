@@ -778,6 +778,8 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
 
 
                     try {
+                        tablesLoadingUnloading.sendAndUpdateLog();
+
                         Globals.writeToMLOG("INFO", "CRON LOG MP", "Попытка выгрузить ЛОГ_Местоположения");
                         tablesLoadingUnloading.uploadLodMp(new ExchangeInterface.ExchangeRes() {
                             @Override

@@ -1378,7 +1378,7 @@ public class menu_login extends AppCompatActivity {
 
                                         // Запись в лог инфы
                                         try {
-                                            RealmManager.setRowToLog(Collections.singletonList(new LogDB(RealmManager.getLastIdLogDB() + 1, System.currentTimeMillis() / 1000, "Вход в приложение. Сессия активна.", 1084, null, null, null, null, null, null, null)));
+//                                            RealmManager.setRowToLog(Collections.singletonList(new LogDB(RealmManager.getLastIdLogDB() + 1, System.currentTimeMillis() / 1000, "Вход в приложение. Сессия активна.", 1084, null, null, null, null, null, null, null)));
                                         } catch (Exception e) {
                                         }
 
@@ -1556,7 +1556,7 @@ public class menu_login extends AppCompatActivity {
 
                         // Запись в лог инфы
                         try {
-                            RealmManager.setRowToLog(Collections.singletonList(new LogDB(RealmManager.getLastIdLogDB() + 1, System.currentTimeMillis() / 1000, "Вход в приложение. (" + wil + ")", 1084, null, null, null, null, null, null, null)));
+//                            RealmManager.setRowToLog(Collections.singletonList(new LogDB(RealmManager.getLastIdLogDB() + 1, System.currentTimeMillis() / 1000, "Вход в приложение. (" + wil + ")", 1084, null, null, null, null, null, null, null)));
                         } catch (Exception e) {
                         }
 
