@@ -4,6 +4,7 @@ import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
 import io.realm.RealmObject;
+import io.realm.annotations.Ignore;
 import io.realm.annotations.PrimaryKey;
 
 public class ReportPrepareDB extends RealmObject {
@@ -123,6 +124,37 @@ public class ReportPrepareDB extends RealmObject {
     @Expose
     public Integer facesPlan;
 
+    /*
+    * 04.01.2023.
+    * Используется в опции контроля 157352
+    * Если установить 1 -- значит есть какое-то нарушение по Товару.
+    * */
+    @Ignore
+    public int errorExist;
+
+    /*
+    * 04.01.2023.
+    * Используется в опции контроля 157352
+    * Примечание к Товару. Например: записывается что именно не понравилось.
+    * */
+    @Ignore
+    public String note;
+
+    /*
+     * 04.01.2023.
+     * Используется в опции контроля 157352
+     * Количество исправлений
+     * */
+    @Ignore
+    public int fixesNum;
+
+    /*
+     * 04.01.2023.
+     * Используется в опции контроля 157352
+     * Кол. СКЮ. Заполняется единичкой, если заполнен фейс не равній нулю
+     * */
+    @Ignore
+    public int colSKU;
 
     private int uploadStatus;       // Необходимость выгрузки записи
     private String serverResponce;      // Ответ от сервера (в основном тут будет ответ почему запись не принята сервером)
