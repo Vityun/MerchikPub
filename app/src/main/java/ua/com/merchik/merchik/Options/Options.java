@@ -72,6 +72,7 @@ import ua.com.merchik.merchik.Options.Controls.OptionControlAddComment;
 import ua.com.merchik.merchik.Options.Controls.OptionControlAdditionalMaterialsMark;
 import ua.com.merchik.merchik.Options.Controls.OptionControlAdditionalRequirementsMark;
 import ua.com.merchik.merchik.Options.Controls.OptionControlAvailabilityDetailedReport;
+import ua.com.merchik.merchik.Options.Controls.OptionControlCheckDetailedReport;
 import ua.com.merchik.merchik.Options.Controls.OptionControlCheckingReasonOutOfStock;
 import ua.com.merchik.merchik.Options.Controls.OptionControlCheckingReasonOutOfStockOSV;
 import ua.com.merchik.merchik.Options.Controls.OptionControlEKL;
@@ -126,7 +127,7 @@ public class Options {
 
     private Integer[] describedOptions = new Integer[]{132624, 76815, 157241, 157243, 84006, 156928,
             151594, 80977, 135330, 133381, 135329, 138518, 151139, 132623, 133382, 137797, 135809,
-            135328, 135327, 157275, 138341, 590, 84932, 134583};
+            135328, 135327, 157275, 138341, 590, 84932, 134583, 157352};
 
     /*Сюда записываются Опции которые не прошли проверку, при особенном переданном MOD-e. Сделано
     для того что б потом можно было посмотреть название опций которые не прошли проверку и, возможно,
@@ -162,6 +163,12 @@ public class Options {
             }
 
             switch (optionControlId) {
+
+                case 157352:
+                    OptionControlCheckDetailedReport<?> optionControlCheckDetailedReport = new OptionControlCheckDetailedReport<>(context, dataDB, optionsDB, newOptionType, mode);
+                    optionControlCheckDetailedReport.showOptionMassage();
+                    break;
+
                 case 590:
                     OptionControlAchievements<?> optionControlAchievements = new OptionControlAchievements<>(context, dataDB, optionsDB, newOptionType, mode);
                     optionControlAchievements.showOptionMassage();
@@ -632,6 +639,11 @@ public class Options {
                 OptionControlPhoto<?> optionControlPhoto = new OptionControlPhoto<>(context, dataDB, option, type, mode);
                 optionControlPhoto.showOptionMassage();
                 return optionControlPhoto.isBlockOption() ? 1 : 0;
+
+            case 157352:
+                OptionControlCheckDetailedReport<?> optionControlCheckDetailedReport = new OptionControlCheckDetailedReport<>(context, dataDB, option, type, mode);
+                optionControlCheckDetailedReport.showOptionMassage();
+                return optionControlCheckDetailedReport.isBlockOption() ? 1 : 0;
 
             case 590:
                 OptionControlAchievements<?> optionControlAchievements = new OptionControlAchievements<>(context, dataDB, option, type, mode);
