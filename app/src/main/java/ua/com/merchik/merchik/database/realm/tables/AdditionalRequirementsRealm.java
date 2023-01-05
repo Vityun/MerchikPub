@@ -1,5 +1,7 @@
 package ua.com.merchik.merchik.database.realm.tables;
 
+import static ua.com.merchik.merchik.database.realm.RealmManager.INSTANCE;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -12,8 +14,6 @@ import ua.com.merchik.merchik.data.RealmModels.AdditionalRequirementsDB;
 import ua.com.merchik.merchik.data.RealmModels.AddressDB;
 import ua.com.merchik.merchik.data.RealmModels.ReportPrepareDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
-
-import static ua.com.merchik.merchik.database.realm.RealmManager.INSTANCE;
 
 /**
  * 21.04.2021
@@ -171,6 +171,7 @@ public class AdditionalRequirementsRealm {
         try {
             if (DetailedReportActivity.additionalRequirementsFilter) {
                 List<Integer> listIds = new ArrayList<>();
+//                List<String> debugData = new ArrayList<>();
                 List<ReportPrepareDB> listRP = ReportPrepareRealm.getReportPrepareByDad2(dad2);
                 List<AdditionalRequirementsDB> listAR = realmResults;
                 for (AdditionalRequirementsDB item : listAR) {
@@ -187,8 +188,12 @@ public class AdditionalRequirementsRealm {
                     }
                     if (exist) {
                         listIds.add(item.getId());
+                    }else {
+//                        debugData.add(item.getTovarId());
                     }
                 }
+//                Log.e("getData3", "listIds: " + listIds);
+//                Log.e("getData3", "debugData: " + debugData);
 
                 Integer[] ids = new Integer[listIds.size()];
                 for (int i = 0; i < listIds.size(); i++) {
