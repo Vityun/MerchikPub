@@ -65,10 +65,10 @@ public class OptionControlCheckDetailedReport<T> extends OptionControl {
             time = Clock.getDatePeriodLong(date.getTime(), -1) / 1000;    // работает в миллисекундах, по этому перевёл в секунды
 
             try {
-                if (!optionDB.getAmountMin().equals("0")){
+                if (!optionDB.getAmountMin().equals("0")) {
                     min = Integer.parseInt(optionDB.getAmountMin());
                 }
-            }catch (Exception e){
+            } catch (Exception e) {
                 Globals.writeToMLOG("INFO", "OptionControlCheckDetailedReport", "Exception e: " + e);
             }
         }
@@ -94,19 +94,19 @@ public class OptionControlCheckDetailedReport<T> extends OptionControl {
             correctionPercentage = 0;
         }
 
-        if (reportPrepare.size() == 0){
+        if (reportPrepare.size() == 0) {
             stringBuilderMsg.append("Товарів, по котрим треба перевірити виправлені ДЗ, не знайдено.");
             signal = true;
-        }else if (colSKU == 0){
+        } else if (colSKU == 0) {
             stringBuilderMsg.append("Товарів, по котрим треба виконувати ПЛАН по ФЕЙЧАС не знайдено.");
             signal = true;
-        }else if (min > 0 && correctionPercentage < min){
+        } else if (min > 0 && correctionPercentage < min) {
             stringBuilderMsg.append("Данні деталіз.звітності виправлені у ").append(fixesNum)
                     .append(" товарів, що складає ").append(correctionPercentage)
                     .append("% та менше мінімально допустимого ").append(min)
                     .append("% Ви повинні виправити данні деталіз.звітності у більшої кількості товарів.");
             signal = true;
-        }else {
+        } else {
             stringBuilderMsg.append("Данні деталіз.звітності виправлені у ").append(fixesNum)
                     .append(" товарів, що складає ").append(correctionPercentage)
                     .append("% та більше мінімально допустимого ").append(min)
@@ -116,7 +116,15 @@ public class OptionControlCheckDetailedReport<T> extends OptionControl {
 
 
         saveOptionResultInDB();
-        setIsBlockOption(signal);
+        if (signal) {
+            if (optionDB.getBlockPns().equals("1")) {
+                setIsBlockOption(signal);
+                stringBuilderMsg.append("\n\n").append("Документ проведен не будет!");
+            } else {
+                stringBuilderMsg.append("\n\n").append("Ви можете отримати Преміальні БІЛЬШЕ, якщо будете редагувати (виправляти помилки) у деталізованому звіті.");
+            }
+        }
+
     }
 
     /**
@@ -152,9 +160,9 @@ public class OptionControlCheckDetailedReport<T> extends OptionControl {
         RealmManager.INSTANCE.executeTransaction(realm -> {
             if (optionDB != null) {
                 if (signal) {
-                    optionDB.setIsSignal("2");
-                } else {
                     optionDB.setIsSignal("1");
+                } else {
+                    optionDB.setIsSignal("2");
                 }
                 realm.insertOrUpdate(optionDB);
             }
