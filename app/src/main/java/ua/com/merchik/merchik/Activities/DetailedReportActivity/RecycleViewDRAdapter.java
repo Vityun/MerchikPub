@@ -4,6 +4,7 @@ import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Color;
 import android.graphics.Typeface;
 import android.text.Html;
 import android.text.SpannableString;
@@ -11,7 +12,7 @@ import android.text.SpannableStringBuilder;
 import android.text.Spanned;
 import android.text.TextPaint;
 import android.text.style.ClickableSpan;
-import android.text.style.URLSpan;
+import android.text.style.ForegroundColorSpan;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -261,11 +262,24 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                         if (m.equals("0")) {
                             m = "3";
                         }
-                        textInteger.setText("" + RealmManager.stackPhotoShowcasePhotoCount(dad2, 0) + "/" + m);
+
+                        int madePhotos = RealmManager.stackPhotoShowcasePhotoCount(dad2, 0);
+                        int maxPhotos = Integer.parseInt(m);
+
+                        textInteger.setText("" + madePhotos + "/" + maxPhotos);
 
                         final CharSequence text = textInteger.getText();
                         final SpannableString spannableString = new SpannableString(text);
-                        spannableString.setSpan(new URLSpan(""), 0, spannableString.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+
+                        ForegroundColorSpan foregroundSpan;
+                        if (madePhotos >= maxPhotos){
+                            foregroundSpan = new ForegroundColorSpan(Color.GREEN);
+                        }else {
+                            foregroundSpan = new ForegroundColorSpan(mContext.getResources().getColor(R.color.red_error));
+                        }
+
+//                        spannableString.setSpan(new URLSpan(""), 0, spannableString.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                        spannableString.setSpan(foregroundSpan, 0, spannableString.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
                         textInteger.setText(spannableString, TextView.BufferType.SPANNABLE);
 
                         textInteger.setOnClickListener(view -> {
