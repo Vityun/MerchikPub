@@ -2,17 +2,14 @@ package ua.com.merchik.merchik.database.realm.tables;
 
 import static ua.com.merchik.merchik.database.realm.RealmManager.INSTANCE;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import io.realm.RealmResults;
-import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.data.BaseBusinessData;
 import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
 import ua.com.merchik.merchik.data.RealmModels.AdditionalRequirementsDB;
 import ua.com.merchik.merchik.data.RealmModels.AddressDB;
-import ua.com.merchik.merchik.data.RealmModels.ReportPrepareDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 
 /**
@@ -168,7 +165,10 @@ public class AdditionalRequirementsRealm {
                     .findAll();
         }
 
-        try {
+        //  09.01.2023.
+        //  Не понятно почему я это делал изначально, но сейчас оно мешает нормальной работе приложения.
+        //  Обратить внимание на то что это как-то может повлиять на работоспособность доп. требований
+/*        try {
             if (DetailedReportActivity.additionalRequirementsFilter) {
                 List<Integer> listIds = new ArrayList<>();
 //                List<String> debugData = new ArrayList<>();
@@ -209,7 +209,7 @@ public class AdditionalRequirementsRealm {
             }
         } catch (Exception e) {
             Globals.writeToMLOG("ERROR", "AdditionalRequirementsDB/getData3", "Exception e: " + e);
-        }
+        }*/
 
 
         return realmResults;
