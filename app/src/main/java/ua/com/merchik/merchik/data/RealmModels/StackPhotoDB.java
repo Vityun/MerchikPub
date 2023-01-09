@@ -5,6 +5,8 @@ import io.realm.annotations.PrimaryKey;
 
 public class StackPhotoDB extends RealmObject {
 
+    public static final int PHOTO_TOV_LEFT = 4;   // Фото Остатков Товаров
+
     @PrimaryKey
     private int id;
     private String photoServerId;   // ID фотки на сервере. Должно устанавливаться после того как сервер говорит что по хэшу такое фото уже на нём есть.

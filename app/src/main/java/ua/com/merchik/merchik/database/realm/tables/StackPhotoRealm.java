@@ -1,5 +1,7 @@
 package ua.com.merchik.merchik.database.realm.tables;
 
+import static ua.com.merchik.merchik.database.realm.RealmManager.INSTANCE;
+
 import android.util.Log;
 
 import java.util.ArrayList;
@@ -8,8 +10,6 @@ import java.util.List;
 import io.realm.RealmResults;
 import io.realm.Sort;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
-
-import static ua.com.merchik.merchik.database.realm.RealmManager.INSTANCE;
 
 public class StackPhotoRealm {
 
@@ -217,10 +217,37 @@ public class StackPhotoRealm {
                 .findAll();
     }
 
-    public static RealmResults<StackPhotoDB> getPhotosByDAD2(long dad2){
+    public static RealmResults<StackPhotoDB> getPhotosByDAD2(long dad2) {
         return INSTANCE.where(StackPhotoDB.class)
                 .equalTo("code_dad2", dad2)
                 .findAll();
+    }
+
+
+    /**
+     * 09.01.2023.
+     * Универсальная функция для получения Жернала фото
+     */
+    public static RealmResults<StackPhotoDB> getPhoto(Long dtFrom, Long dtTo, Integer userId, Long dad2, Integer photoType) {
+        RealmResults<StackPhotoDB> res = INSTANCE.where(StackPhotoDB.class).findAll();
+
+        if (dtFrom != null && dtTo != null) {
+            res = res.where().between("create_time", dtFrom, dtTo).findAll();
+        }
+
+        if (userId != null){
+            res = res.where().equalTo("user_id", userId).findAll();
+        }
+
+        if (dad2 != null){
+            res = res.where().equalTo("code_dad2", dad2).findAll();
+        }
+
+        if (photoType != null){
+            res = res.where().equalTo("photo_type", photoType).findAll();
+        }
+
+        return res;
     }
 
 
