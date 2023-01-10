@@ -6,6 +6,8 @@ import io.realm.annotations.PrimaryKey;
 public class StackPhotoDB extends RealmObject {
 
     public static final int PHOTO_TOV_LEFT = 4;   // Фото Остатков Товаров
+    public static final int PHOTO_CART_WITH_GOODS = 10;   // Фото Тележки с Товаром
+    public static final int PHOTO_SHOWCASE_BEFORE_START_WORK = 14;   // Фото витрины  до начала работ
 
     @PrimaryKey
     private int id;
