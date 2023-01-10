@@ -161,19 +161,19 @@ public class OptionControlCheckTovarUp<T> extends OptionControl {
         //5.3. построчно анализируем
         if (sumUp > 0 && stackPhotoSize > 0) {
             tznNotes.append("Поднято ").append(sumUp).append(" единиц товара, но при этом нет ФТТ (Фото Тележки с Товаром) подтверждающего это.");
-            tznErrorExist++;
+            tznErrorExist = 1;
         } else if (sumUp == 0 && stackPhotoSize > 0) {
             tznNotes.append("Есть ФотоТТ подтверждающего подъем товара но в дет.отчете не указано кол-во поднятого товара.");
-            tznErrorExist++;
+            tznErrorExist = 1;
         } else if (sumUp == 0 && stackPhotoSize == 0 && sumNumberOfTovar == 0 && sumOffset == 1 && optionDB.getBlockPns().equals("1")) {
             tznNotes.append("Товар со склада на витрину не поднимался, НО по всем позициям указана ПРИЧИНА (в поле 'Ошибка').");
-            tznErrorExist++;
+            tznErrorExist = 1;
         } else if (sumUp == 0 && stackPhotoSize == 0 && sumNumberOfTovar == 0) {
             tznNotes.append("Товар со склада на витрину не поднимался и по части позиций НЕ указана ПРИЧИНА (в поле 'Ошибка').");
-            tznErrorExist++;
+            tznErrorExist = 1;
         } else if (sumUp == 0 && stackPhotoSize == 0) {
             tznNotes.append("Товар со склада на витрину не поднимался.");
-            tznErrorExist++;
+            tznErrorExist = 1;
         } else {
             tznOffset = 1;
         }
@@ -183,7 +183,7 @@ public class OptionControlCheckTovarUp<T> extends OptionControl {
             if (usersSDB.reportDate20 == null) {
                 tznNotes.append(" Но мерч. еще не провел своего 20-го отчета.");
                 tznErrorExist = 0;
-            } else if (usersSDB.reportDate20.getTime() <= documentDate) {
+            } else if (usersSDB.reportDate20.getTime() >= documentDate) {
                 tznNotes.append(" Но мерч. еще не провел своего 20-го отчета.");
                 tznErrorExist = 0;
             }
