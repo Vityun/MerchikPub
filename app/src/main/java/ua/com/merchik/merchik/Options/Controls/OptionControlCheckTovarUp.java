@@ -159,7 +159,7 @@ public class OptionControlCheckTovarUp<T> extends OptionControl {
         }
 
         //5.3. построчно анализируем
-        if (sumUp > 0 && stackPhotoSize > 0) {
+        if (sumUp > 0 && stackPhotoSize == 0) {
             tznNotes.append("Поднято ").append(sumUp).append(" единиц товара, но при этом нет ФТТ (Фото Тележки с Товаром) подтверждающего это.");
             tznErrorExist = 1;
         } else if (sumUp == 0 && stackPhotoSize > 0) {
@@ -211,6 +211,8 @@ public class OptionControlCheckTovarUp<T> extends OptionControl {
             stringBuilderMsg.append("Товар зі складу не підіймався. Бонус не нарахован.");
             signal = true;
         }
+
+        stringBuilderMsg.append("\n\n").append(tznNotes);
 
 
         saveOptionResultInDB();
