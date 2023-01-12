@@ -1,5 +1,7 @@
 package ua.com.merchik.merchik;
 
+import static android.content.Context.LOCATION_SERVICE;
+
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.location.Location;
@@ -11,8 +13,6 @@ import android.provider.Settings;
 import android.util.Log;
 
 import androidx.core.content.ContextCompat;
-
-import static android.content.Context.LOCATION_SERVICE;
 
 
 public class trecker implements LocationListener {
@@ -54,13 +54,22 @@ public class trecker implements LocationListener {
                 locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,
                         0, 0, locationListener);
 
+                Globals.writeToMLOG("INFO", "trecker/SetUpLocationListener/", "locationManager: " + locationManager);
+
                 // Запись местоположения для дальнейшего использования
                 imHereNET = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+                Globals.writeToMLOG("INFO", "trecker/SetUpLocationListener/", "imHereNET: " + imHereNET);
+
                 imHereGPS = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+                Globals.writeToMLOG("INFO", "trecker/SetUpLocationListener/", "imHereGPS: " + imHereGPS);
+
 
                 // Включены ли службы местоопределения
                 enabledGPS = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
+                Globals.writeToMLOG("INFO", "trecker/SetUpLocationListener/", "enabledGPS: " + enabledGPS);
+
                 enabledNET = locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
+                Globals.writeToMLOG("INFO", "trecker/SetUpLocationListener/", "enabledNET: " + enabledNET);
 
                 isMockSettingsON();
             }
@@ -96,11 +105,6 @@ public class trecker implements LocationListener {
             imHereNET = location;}
     }
 
-/*    private void checkConnection(){
-        enabledGPS = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
-        enabledNET = locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
-    }*/
-
     // Проверка: включён ли мокинг
     static void isMockSettingsON() {
         if (android.os.Build.VERSION.SDK_INT >= 18) {
@@ -108,10 +112,7 @@ public class trecker implements LocationListener {
                 isMockGPS = imHereGPS.isFromMockProvider();}
             if (imHereNET != null){
                 isMockNET = imHereNET.isFromMockProvider();}
-        } /*else {
-            // Secure - устаревшее нечто
-            //isMock = !Settings.Secure.getString(context.getContentResolver(), Settings.Secure.ALLOW_MOCK_LOCATION).equals("0");
-        }*/
+        }
     }
 
     public boolean isMockGPS(Context context){

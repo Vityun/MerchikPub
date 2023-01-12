@@ -1,5 +1,7 @@
 package ua.com.merchik.merchik;
 
+import static ua.com.merchik.merchik.trecker.enabledGPS;
+
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
@@ -89,8 +91,12 @@ public class MakePhoto {
     // Выполнить проверку включённости GPS, МП и запустить фотоаппарат для фотографирования
     private static void takePhoto() {
         try {
-            Log.e("takePhoto", "takePhoto1: " + ua.com.merchik.merchik.trecker.enabledGPS);
-            if (ua.com.merchik.merchik.trecker.enabledGPS) {
+            Log.e("takePhoto", "takePhoto1: " + enabledGPS);
+            Globals.writeToMLOG("INFO", "takePhoto", "enabledGPS: " + enabledGPS);
+            Globals.writeToMLOG("INFO", "takePhoto", "trecker.imHereGPS: " + trecker.imHereGPS + "/ trecker.imHereNET: " + trecker.imHereNET);
+            Globals.writeToMLOG("INFO", "takePhoto", "Globals.CoordX: " + Globals.CoordX + "/ Globals.CoordY: " + Globals.CoordY);
+
+            if (enabledGPS) {
                 if (wp != null) {
                     if (wp.getLatitude() > 0 && wp.getLongitude() > 0) {
 //                    if (true){
@@ -99,6 +105,8 @@ public class MakePhoto {
                             Log.e("takePhoto", "takePhoto2: " + wp.getLatitude() + "/" + wp.getLongitude());
                             Log.e("takePhoto", "takePhoto3: " + Globals.CoordX + "/" + Globals.CoordX);
 
+                            Globals.writeToMLOG("INFO", "takePhoto", "wp.getLatitude(): " + wp.getLatitude() + "/ wp.getLongitude(): " + wp.getLongitude());
+                            Globals.writeToMLOG("INFO", "takePhoto", "Globals.CoordX: " + Globals.CoordX + "/ Globals.CoordY: " + Globals.CoordY);
 
                             double d = ua.com.merchik.merchik.trecker.coordinatesDistanse(wp.getLatitude(), wp.getLongitude(), Globals.CoordX, Globals.CoordY);
                             if (d > 500) {
@@ -509,7 +517,7 @@ public class MakePhoto {
     }
 
     private <T> void photoDialogs(Activity activity, WPDataObj wpDataObj, T data){
-        if (ua.com.merchik.merchik.trecker.enabledGPS) {
+        if (enabledGPS) {
             if (wpDataObj != null) {
                 if (wpDataObj.getLatitude() > 0 && wpDataObj.getLongitude() > 0) {
                     if (Globals.CoordX != 0 && Globals.CoordY != 0) {
