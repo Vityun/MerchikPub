@@ -139,7 +139,7 @@ public class OptionControlPhotoTovarsLeft<T> extends OptionControl {
         }
 
         dateFrom = Clock.getDatePeriodLong(documentDate, -dayFrom);
-        dateTo = Clock.getDatePeriodLong(documentDate, 2);  // дадим возможность ребятам ЗАВТРА внести ФОТ
+        dateTo = Clock.getDatePeriodLong(documentDate, 4);  // дадим возможность ребятам ЗАВТРА внести ФОТ (12.01.23. изменил от балды на 4. Теоретически это Сегодня +3 дня)
     }
 
     /**
