@@ -1,5 +1,7 @@
 package ua.com.merchik.merchik.database.realm;
 
+import static ua.com.merchik.merchik.Globals.APP_PREFERENCES;
+
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.util.Log;
@@ -51,8 +53,6 @@ import ua.com.merchik.merchik.data.UploadToServ.ReportPrepareServ;
 import ua.com.merchik.merchik.data.UploadToServ.WpDataUploadToServ;
 import ua.com.merchik.merchik.database.realm.tables.TradeMarkRealm;
 import ua.com.merchik.merchik.database.realm.tables.WpDataRealm;
-
-import static ua.com.merchik.merchik.Globals.APP_PREFERENCES;
 
 public class RealmManager {
 
@@ -699,29 +699,36 @@ public class RealmManager {
     }
 
     public static void stackPhotoDeletePhoto() {
-
-        // 1608285918335
-        // 1608415200262
-
         long timeDeadline = System.currentTimeMillis() - 30000;
         long time = Globals.startOfDay(timeDeadline);
 
-        Log.e("stackPhotoDeletePhoto", "timeDeadline: " + timeDeadline);
-        Log.e("stackPhotoDeletePhoto", "time: " + time);
+        long deleteTimeLessThan = Clock.getDatePeriodLong(System.currentTimeMillis(), -14);
+        long deleteTimeLessThanPhotoType0 = Clock.getDatePeriodLong(System.currentTimeMillis(), -3);
 
         RealmResults<StackPhotoDB> realmResults = INSTANCE.where(StackPhotoDB.class)
-//                .lessThan("create_time", Globals.startOfDay(System.currentTimeMillis() - 172800000))
-                .lessThan("create_time", time)
+                .lessThan("create_time", deleteTimeLessThanPhotoType0)
+                .and()
+                .notEqualTo("get_on_server", 0)
+                .equalTo("photo_type", 0)
+                .findAll();
+
+        RealmResults<StackPhotoDB> test = INSTANCE.where(StackPhotoDB.class)
+                .lessThan("create_time", deleteTimeLessThan)
                 .and()
                 .notEqualTo("get_on_server", 0)
                 .findAll();
 
-        Log.e("stackPhotoDeletePhoto", "realmResults: " + realmResults.size());
-
-        if (realmResults.size() > 0) {
+        if (realmResults != null && realmResults.size() > 0) {
+            Globals.writeToMLOG("INFO", "stackPhotoDeletePhoto", "realmResults.size(): " + realmResults.size());
             INSTANCE.beginTransaction();
-//        realmResults.deleteAllFromRealm();
-            Log.e("stackPhotoDeletePhoto", "realmResults.deleteAllFromRealm(): " + realmResults.deleteAllFromRealm());
+            realmResults.deleteAllFromRealm();
+            INSTANCE.commitTransaction();
+        }
+
+        if (test != null && test.size() > 0) {
+            Globals.writeToMLOG("INFO", "stackPhotoDeletePhoto", "test.size(): " + test.size());
+            INSTANCE.beginTransaction();
+            test.deleteAllFromRealm();
             INSTANCE.commitTransaction();
         }
     }
