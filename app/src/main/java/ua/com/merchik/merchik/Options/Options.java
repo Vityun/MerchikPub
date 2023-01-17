@@ -2462,7 +2462,7 @@ public class Options {
             list.add(new TovarOptions(PRICE, "Ц", "Цена товара", "price", "main", 579));
             list.add(new TovarOptions(FACE, "Ф", "Кол. фейсов", "face", "main", 576, 76815));
             list.add(new TovarOptions(EXPIRE_LEFT, "В", "Возврат", "expire_left", "main", 135591));
-            list.add(new TovarOptions(AMOUNT, "К", "Кол. на витрине", "amount", "main", 578, 587, 1465));
+            list.add(new TovarOptions(AMOUNT, "К", "Кол. на витрине", "amount", "main", 578, 587, 1465, 158244));
             list.add(new TovarOptions(UP, "П", "Поднято товара", "up", "main", 138644));
             list.add(new TovarOptions(DT_EXPIRE, "Д", "Дата ок. ср. год", "dt_expire", "main", 84005, 84967));
             list.add(new TovarOptions(OBOROTVED_NUM, "О", "Остаток по учёту", "oborotved_num", "main", 2243, 135448));

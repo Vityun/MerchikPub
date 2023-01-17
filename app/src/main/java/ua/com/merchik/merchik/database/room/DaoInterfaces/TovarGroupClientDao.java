@@ -18,6 +18,9 @@ public interface TovarGroupClientDao {
     @Query("SELECT * FROM tovar_grp_client WHERE id = :id")
     TovarGroupClientSDB getById(int id);
 
+    @Query("SELECT * FROM tovar_grp_client WHERE addr_tp_id = :id")
+    TovarGroupClientSDB getByAddrId(int id);
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     void insertAll(List<TovarGroupClientSDB> data);
 
