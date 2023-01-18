@@ -1,6 +1,8 @@
 package ua.com.merchik.merchik.ServerExchange;
 
 
+import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
+
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -95,8 +97,6 @@ import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.dialogs.DialogEKL;
 import ua.com.merchik.merchik.dialogs.DialogFilter.Click;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
-
-import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
 /**
  * 26.02.2021
@@ -591,6 +591,15 @@ public class Exchange {
                 long time = (System.currentTimeMillis() - exchange) / 1000;
                 Log.e("startExchange", "start/Время обновлять НЕ наступило. После обновления прошло: " + time + "секунд.");
             }
+
+
+            // Загрузка констант: процент рекламаций Киев, процент рекламаций Регионы
+//            new ReclamationPercentageExchange().downloadAndSaveReclamationPercentage();
+
+            // Загрузка таблички Длин Полочного пространства
+//            new ShelfSizeExchange().downloadShelfSize();
+
+
         } catch (Exception e) {
             Globals.writeToMLOG("ERROR", "startExchange", "Exception e: " + e);
         }

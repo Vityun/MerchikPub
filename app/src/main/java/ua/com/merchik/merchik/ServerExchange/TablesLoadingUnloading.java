@@ -363,7 +363,7 @@ public class TablesLoadingUnloading {
                     String json = gson.toJson(response.body());
                     JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
 
-                    Log.e("SERVER_REALM_DB_UPDATE", "convertedObject: " + convertedObject);
+//                    Log.e("SERVER_REALM_DB_UPDATE", "convertedObject: " + convertedObject);
 
 
                     if (response.isSuccessful() && response.body() != null) {

@@ -1,5 +1,7 @@
 package ua.com.merchik.merchik;
 
+import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
+
 import android.annotation.SuppressLint;
 import android.app.Notification;
 import android.app.NotificationChannel;
@@ -82,8 +84,10 @@ import ua.com.merchik.merchik.Activities.ToolbarActivity.WebSocketStatus;
 import ua.com.merchik.merchik.Activities.WorkPlanActivity.WPDataActivity;
 import ua.com.merchik.merchik.Activities.navigationMenu.MenuHeader;
 import ua.com.merchik.merchik.Activities.navigationMenu.MenuHeaderAdapter;
+import ua.com.merchik.merchik.ServerExchange.Constants.ReclamationPercentageExchange;
 import ua.com.merchik.merchik.ServerExchange.Exchange;
 import ua.com.merchik.merchik.ServerExchange.ExchangeInterface;
+import ua.com.merchik.merchik.ServerExchange.TablesExchange.ShelfSizeExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesLoadingUnloading;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.Database.Room.Chat.ChatSDB;
@@ -101,8 +105,6 @@ import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.dialogs.DialogMap;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
-
-import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
 public class toolbar_menus extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
     public Globals globals = new Globals();
@@ -1798,7 +1800,7 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
 
                                                     NotificationManagerCompat notificationManager = NotificationManagerCompat.from(context);
                                                     notificationManager.notify(0, notification);
-                                                }catch (Exception e){
+                                                } catch (Exception e) {
                                                     Globals.writeToMLOG("ERROR", "TOOLBAR/startWebSocket/click/chat_message/catch", "Exception e: " + e);
                                                 }
                                             });
@@ -1816,10 +1818,10 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                                             break;
                                     }
                                 }
-                            } else if (data.equals("error")){
+                            } else if (data.equals("error")) {
                                 Globals.writeToMLOG("INFO", "TOOLBAR/startWebSocket/click", "data: error. Restart.");
                                 startWebSocket(context);
-                            }else {
+                            } else {
                                 Globals.writeToMLOG("INFO", "TOOLBAR/startWebSocket/click", "data: null");
                             }
                         } else {
@@ -1827,7 +1829,7 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                         }
                     }
                 });
-            }else {
+            } else {
                 Globals.writeToMLOG("INFO", "TOOLBAR/startWebSocket/", "webSocket(null): " + webSocket);
             }
         } catch (Exception e) {

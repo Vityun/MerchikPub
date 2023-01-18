@@ -68,7 +68,7 @@ public class RealmManager {
         RealmConfiguration config = new RealmConfiguration.Builder()
                 .name("myrealm.realm")
                 .deleteRealmIfMigrationNeeded()
-//                .schemaVersion(16)
+//                .schemaVersion(17)
                 .allowWritesOnUiThread(true)
                 .allowQueriesOnUiThread(true)
                 .migration(new MyMigration())
@@ -231,7 +231,7 @@ public class RealmManager {
                 } else {
                     Log.e("WP_DATA_UPDATE", "Новые данные. Запись в БД.");
                     // Если записи в БД нет - просто записываем её туда.
-                    Log.e("setWpDataAuto", "Такой записи в БД не было. Записываю к себе");
+                    Log.e("setWpDataAuto", "Такой записи в БД не было. Записываю к себе" + wp.getCode_dad2());
                     Globals.writeToMLOG("INFO", "setWpDataAuto", "Такой записи в БД не было. Записываю к себе" + wp.getCode_dad2());
 
                     INSTANCE.copyToRealmOrUpdate(wp);

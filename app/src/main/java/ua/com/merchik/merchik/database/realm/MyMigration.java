@@ -6,6 +6,7 @@ import io.realm.DynamicRealm;
 import io.realm.RealmMigration;
 import io.realm.RealmObjectSchema;
 import io.realm.RealmSchema;
+import ua.com.merchik.merchik.Globals;
 
 // Example migration adding a new class
 public class MyMigration implements RealmMigration {
@@ -110,6 +111,24 @@ public class MyMigration implements RealmMigration {
             wpDataDB.addField("cash_penalty", Double.class);
 
             oldVersion=newVersion;
+        }
+
+        if (oldVersion == 10 || oldVersion == 11 || oldVersion == 12 || oldVersion == 13 || oldVersion == 14 || oldVersion == 15 || oldVersion == 16) {
+            RealmObjectSchema schemaTovar = schema.get("TovarDB");
+
+            Globals.writeToMLOG("ERROR", "MyMigration/old_to_17", "oldVersion: " + oldVersion + " /newVersion: " + newVersion);
+
+            if (schemaTovar != null) {
+                schemaTovar.addField("height", Double.class);
+                schemaTovar.addField("width", Double.class);
+                schemaTovar.addField("depth", Double.class);
+            }else {
+                Globals.writeToMLOG("ERROR", "MyMigration/old_to_17", "schemaTovar is null");
+            }
+
+            oldVersion++;
+
+            /**/
         }
 
     }

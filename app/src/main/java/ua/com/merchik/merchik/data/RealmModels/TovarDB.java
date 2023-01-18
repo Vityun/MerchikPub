@@ -52,6 +52,18 @@ public class TovarDB extends RealmObject {
     @Expose
     public String photoId;
 
+    @SerializedName("height")
+    @Expose
+    public Double height;   // Высота полки
+
+    @SerializedName("width")
+    @Expose
+    public Double width;    // Ширина полки
+
+    @SerializedName("depth")
+    @Expose
+    public Double depth;    // Глубина полки
+
 
     public TovarDB() {
     }
