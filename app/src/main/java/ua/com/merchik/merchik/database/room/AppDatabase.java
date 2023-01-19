@@ -25,7 +25,9 @@ import ua.com.merchik.merchik.data.Database.Room.OborotVedSDB;
 import ua.com.merchik.merchik.data.Database.Room.OpinionSDB;
 import ua.com.merchik.merchik.data.Database.Room.OpinionThemeSDB;
 import ua.com.merchik.merchik.data.Database.Room.PotentialClientSDB;
+import ua.com.merchik.merchik.data.Database.Room.ReclamationPercentageSDB;
 import ua.com.merchik.merchik.data.Database.Room.SamplePhotoSDB;
+import ua.com.merchik.merchik.data.Database.Room.ShelfSizeSDB;
 import ua.com.merchik.merchik.data.Database.Room.SiteObjectsSDB;
 import ua.com.merchik.merchik.data.Database.Room.StandartSDB;
 import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
@@ -51,7 +53,9 @@ import ua.com.merchik.merchik.database.room.DaoInterfaces.OborotVedDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.OpinionDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.OpinionThemeDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.PotentialClientDao;
+import ua.com.merchik.merchik.database.room.DaoInterfaces.ReclamationPercentageDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.SamplePhotoDao;
+import ua.com.merchik.merchik.database.room.DaoInterfaces.ShelfSizeDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.SiteObjectsDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.StandartDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.TarDao;
@@ -90,9 +94,11 @@ import ua.com.merchik.merchik.database.room.DaoInterfaces.VotesDao;
                 VoteSDB.class,               // Оценки
                 ArticleSDB.class,        // Артикула
                 ChatGrpSDB.class,        // Группы чатов
-                ChatGrpTEMPSDB.class        // Временная таблица
+                ChatGrpTEMPSDB.class,        // Временная таблица
+                ReclamationPercentageSDB.class,  // Процент рекламаций
+                ShelfSizeSDB.class      // Доля полочного пространства
         },
-        version = 29
+        version = 30
 )
 
 
@@ -150,6 +156,10 @@ public abstract class AppDatabase extends RoomDatabase {
     public abstract ArticleDao articleDao();
 
     public abstract ChatGrpDao chatGrpDao();
+
+    public abstract ReclamationPercentageDao reclamationPercentageDao();
+
+    public abstract ShelfSizeDao shelfSizeDao();
 
     public class MyAutoMigration {
     }

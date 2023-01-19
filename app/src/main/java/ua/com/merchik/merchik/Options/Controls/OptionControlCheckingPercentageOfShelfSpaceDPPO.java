@@ -26,8 +26,9 @@ import ua.com.merchik.merchik.database.realm.tables.ReportPrepareRealm;
  * Опция Контроля: Проверка доли полочного пространства (1455)
  *
  * Сравнивает ПЛАНОВЫЙ показатель ДОЛИ ПП с ФАКТИЧЕСКИМ (расчетным)
+ * DPPO - длина полочного пространства
  * */
-public class OptionControlCheckingPercentageOfShelfSpace<T> extends OptionControl {
+public class OptionControlCheckingPercentageOfShelfSpaceDPPO<T> extends OptionControl {
     public int OPTION_CONTROL_CHECK_PERCENTAGE_OF_SHELF_SPACE_ID = 1455;
 
     // document data
@@ -38,7 +39,7 @@ public class OptionControlCheckingPercentageOfShelfSpace<T> extends OptionContro
     private TovarGroupSDB tovarGroupSDB;
     private TovarGroupClientSDB tovarGroupClientSDB;
 
-    public OptionControlCheckingPercentageOfShelfSpace(Context context, T document, OptionsDB optionDB, OptionMassageType msgType, Options.NNKMode nnkMode) {
+    public OptionControlCheckingPercentageOfShelfSpaceDPPO(Context context, T document, OptionsDB optionDB, OptionMassageType msgType, Options.NNKMode nnkMode) {
         this.context = context;
         this.document = document;
         this.optionDB = optionDB;
