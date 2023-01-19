@@ -179,6 +179,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                     || optionId == 157277   // Фото Акционного Товара
                     || optionId == 157353   // Дет отчёт исправление
                     || optionId == 138643   // Подъём товара со склада
+                    || optionId == 158243   // Стикеровка
             ) {
                 constraintLayout.setBackgroundResource(R.drawable.bg_temp);
                 textInteger2.setVisibility(View.VISIBLE);

@@ -1,16 +1,18 @@
 package ua.com.merchik.merchik.database.realm.tables;
 
+import static ua.com.merchik.merchik.database.realm.RealmManager.INSTANCE;
+
 import android.util.Log;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import io.realm.RealmResults;
 import io.realm.Sort;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
+import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.dialogs.DialogFilter.data.DFWpResult;
-
-import static ua.com.merchik.merchik.database.realm.RealmManager.INSTANCE;
 
 
 /**
@@ -193,4 +195,17 @@ public class WpDataRealm {
         return result;
     }
 
+
+    public static List<WpDataDB> getWpDataBy(Date dateFrom, Date dateTo){
+        RealmResults<WpDataDB> result = INSTANCE.where(WpDataDB.class)
+                .findAll();
+
+        if (dateFrom != null && dateTo != null) {
+            result = result.where()
+                    .between("dt", dateFrom, dateTo)
+                    .findAll();
+        }
+
+        return RealmManager.INSTANCE.copyFromRealm(result);
+    }
 }
