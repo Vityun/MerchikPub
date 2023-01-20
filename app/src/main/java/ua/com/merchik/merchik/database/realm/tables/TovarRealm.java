@@ -1,10 +1,10 @@
 package ua.com.merchik.merchik.database.realm.tables;
 
+import static ua.com.merchik.merchik.database.realm.RealmManager.INSTANCE;
+
 import java.util.List;
 
 import ua.com.merchik.merchik.data.RealmModels.TovarDB;
-
-import static ua.com.merchik.merchik.database.realm.RealmManager.INSTANCE;
 
 public class TovarRealm {
 

@@ -74,11 +74,13 @@ import ua.com.merchik.merchik.Options.Controls.OptionControlAdditionalRequiremen
 import ua.com.merchik.merchik.Options.Controls.OptionControlAvailabilityDetailedReport;
 import ua.com.merchik.merchik.Options.Controls.OptionControlCheckDetailedReport;
 import ua.com.merchik.merchik.Options.Controls.OptionControlCheckTovarUp;
+import ua.com.merchik.merchik.Options.Controls.OptionControlCheckingPercentageOfShelfSpaceDPPO;
 import ua.com.merchik.merchik.Options.Controls.OptionControlCheckingReasonOutOfStock;
 import ua.com.merchik.merchik.Options.Controls.OptionControlCheckingReasonOutOfStockOSV;
 import ua.com.merchik.merchik.Options.Controls.OptionControlEKL;
 import ua.com.merchik.merchik.Options.Controls.OptionControlEndAnotherWork;
 import ua.com.merchik.merchik.Options.Controls.OptionControlFacePlan;
+import ua.com.merchik.merchik.Options.Controls.OptionControlPercentageOfThePrize;
 import ua.com.merchik.merchik.Options.Controls.OptionControlPhoto;
 import ua.com.merchik.merchik.Options.Controls.OptionControlPhotoBeforeStartWork;
 import ua.com.merchik.merchik.Options.Controls.OptionControlPhotoTovarsLeft;
@@ -129,7 +131,7 @@ public class Options {
 
     private Integer[] describedOptions = new Integer[]{132624, 76815, 157241, 157243, 84006, 156928,
             151594, 80977, 135330, 133381, 135329, 138518, 151139, 132623, 133382, 137797, 135809,
-            135328, 135327, 157275, 138341, 590, 84932, 134583, 157352, 1470, 138644};
+            135328, 135327, 157275, 138341, 590, 84932, 134583, 157352, 1470, 138644, 1455, 135061};
 
     /*Сюда записываются Опции которые не прошли проверку, при особенном переданном MOD-e. Сделано
     для того что б потом можно было посмотреть название опций которые не прошли проверку и, возможно,
@@ -165,6 +167,16 @@ public class Options {
             }
 
             switch (optionControlId) {
+
+                case 1455:
+                    OptionControlCheckingPercentageOfShelfSpaceDPPO<?> optionControlCheckingPercentageOfShelfSpaceDPPO = new OptionControlCheckingPercentageOfShelfSpaceDPPO<>(context, dataDB, optionsDB, newOptionType, mode);
+                    optionControlCheckingPercentageOfShelfSpaceDPPO.showOptionMassage();
+                    break;
+
+                case 135061:
+                    OptionControlPercentageOfThePrize<?> optionControlPercentageOfThePrize = new OptionControlPercentageOfThePrize<>(context, dataDB, optionsDB, newOptionType, mode);
+                    optionControlPercentageOfThePrize.showOptionMassage();
+                    break;
 
                 case 1470:
                     OptionControlPhotoTovarsLeft<?> optionControlPhotoTovarsLeft = new OptionControlPhotoTovarsLeft<>(context, dataDB, optionsDB, newOptionType, mode);
@@ -645,6 +657,21 @@ public class Options {
 //        try {
         Log.e("NNK", "F/optControl/optionId: " + optionId);
         switch (optionId) {
+
+            case 1455:
+                OptionControlCheckingPercentageOfShelfSpaceDPPO<?> optionControlCheckingPercentageOfShelfSpaceDPPO = new OptionControlCheckingPercentageOfShelfSpaceDPPO<>(context, dataDB, option, type, mode);
+                optionControlCheckingPercentageOfShelfSpaceDPPO.showOptionMassage();
+                break;
+
+            case 135061:
+//
+//                OptionControlCheckingPercentageOfShelfSpaceDPPO<?> test = new OptionControlCheckingPercentageOfShelfSpaceDPPO<>(context, dataDB, option, type, mode);
+//                test.showOptionMassage();
+
+                OptionControlPercentageOfThePrize<?> optionControlPercentageOfThePrize = new OptionControlPercentageOfThePrize<>(context, dataDB, option, type, mode);
+                optionControlPercentageOfThePrize.showOptionMassage();
+                break;
+
             // Контроль фотоотчётов
             case 134583:
             case 84932: // Проверка наличия ФотоОтчётов (id мне дали из 1С) (тип 0)

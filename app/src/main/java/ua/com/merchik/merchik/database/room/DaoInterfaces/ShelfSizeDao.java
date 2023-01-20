@@ -22,4 +22,7 @@ public interface ShelfSizeDao {
     Completable insertAll(List<ShelfSizeSDB> data);
 
     // ----------------------------------------------------
+
+    @Query("SELECT * FROM shelf_size WHERE client_id = :clientId AND addr_id = :addressId ORDER BY dt DESC")
+    List<ShelfSizeSDB> getBy(String clientId, Integer addressId);
 }

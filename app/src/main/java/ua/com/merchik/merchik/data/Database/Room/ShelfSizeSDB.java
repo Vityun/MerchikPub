@@ -3,6 +3,7 @@ package ua.com.merchik.merchik.data.Database.Room;
 import androidx.annotation.NonNull;
 import androidx.room.ColumnInfo;
 import androidx.room.Entity;
+import androidx.room.Ignore;
 import androidx.room.PrimaryKey;
 
 import com.google.gson.annotations.Expose;
@@ -69,4 +70,12 @@ public class ShelfSizeSDB {
     @Expose
     @ColumnInfo(name = "dt_change")
     public Long dtChange;
+
+    /*
+    * 20.01.23.
+    * Єто код ЗАСГ для опции контроля 1455
+    * Концептуально это: Клиент, Адрес, Сеть, Группа, но у меня тут в таблице вроде как нет сети
+    * */
+    @Ignore
+    public String codeZASG;
 }

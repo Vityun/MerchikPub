@@ -6,115 +6,116 @@ import com.google.gson.annotations.SerializedName;
 import io.realm.RealmObject;
 import io.realm.annotations.Ignore;
 import io.realm.annotations.PrimaryKey;
+import ua.com.merchik.merchik.data.Database.Room.TovarGroupSDB;
 
 public class ReportPrepareDB extends RealmObject {
 
     @SerializedName("ID")
     @Expose
     @PrimaryKey
-    private Long iD;
+    public Long iD;
     @SerializedName("dt")
     @Expose
-    private String dt;
+    public String dt;
     @SerializedName("dt_report")
     @Expose
-    private String dtReport;
+    public String dtReport;
     @SerializedName("time_from")
     @Expose
-    private String timeFrom;
+    public String timeFrom;
     @SerializedName("time_to")
     @Expose
-    private String timeTo;
+    public String timeTo;
     @SerializedName("isp")
     @Expose
-    private String isp;
+    public String isp;
     @SerializedName("kli")
     @Expose
-    private String kli;
+    public String kli;
     @SerializedName("tovar_id")
     @Expose
-    private String tovarId;
+    public String tovarId;
     @SerializedName("addr_id")
     @Expose
-    private String addrId;
+    public String addrId;
     @SerializedName("price")
     @Expose
-    private String price;
+    public String price;
     @SerializedName("price_min")
     @Expose
-    private String priceMin;
+    public String priceMin;
     @SerializedName("price_max")
     @Expose
-    private String priceMax;
+    public String priceMax;
     @SerializedName("face")
     @Expose
-    private String face;
+    public String face;
     @SerializedName("amount")
     @Expose
-    private int amount;
+    public int amount;
     @SerializedName("up")
     @Expose
-    private String up;
+    public String up;
     @SerializedName("dt_expire")
     @Expose
-    private String dtExpire;
+    public String dtExpire;
     @SerializedName("expire_left")
     @Expose
-    private String expireLeft;
+    public String expireLeft;
     @SerializedName("notes")
     @Expose
-    private String notes;
+    public String notes;
     @SerializedName("otchet_num")
     @Expose
-    private String otchetNum;
+    public String otchetNum;
     @SerializedName("otchet_unique")
     @Expose
-    private String otchetUnique;
+    public String otchetUnique;
     @SerializedName("code_dad2")
     @Expose
-    private String codeDad2;
+    public String codeDad2;
     @SerializedName("otchet_tp")
     @Expose
-    private String otchetTp;
+    public String otchetTp;
     @SerializedName("price_copy")
     @Expose
-    private String priceCopy;
+    public String priceCopy;
     @SerializedName("merchik_id")
     @Expose
-    private String merchikId;
+    public String merchikId;
     @SerializedName("author_id")
     @Expose
-    private String authorId;
+    public String authorId;
     @SerializedName("autofill_state")
     @Expose
-    private String autofillState;
+    public String autofillState;
     @SerializedName("client_report")
     @Expose
-    private String clientReport;
+    public String clientReport;
     @SerializedName("dt_change")
     @Expose
-    private String dtChange;
+    public String dtChange;
     @SerializedName("akciya")
     @Expose
-    private String akciya;
+    public String akciya;
     @SerializedName("akciya_id")
     @Expose
-    private String akciyaId;
+    public String akciyaId;
     @SerializedName("tovar_error")
     @Expose
-    private String tovarError;
+    public String tovarError;
     @SerializedName("oborotved_num")
     @Expose
-    private String oborotvedNum;
+    public String oborotvedNum;
     @SerializedName("state")
     @Expose
-    private String state;
+    public String state;
     @SerializedName("error_id")
     @Expose
-    private String errorId;
+    public String errorId;
     @SerializedName("error_comment")
     @Expose
-    private String errorComment;
+    public String errorComment;
 
     @SerializedName("buyer_order_id")
     @Expose
@@ -125,18 +126,18 @@ public class ReportPrepareDB extends RealmObject {
     public Integer facesPlan;
 
     /*
-    * 04.01.2023.
-    * Используется в опции контроля 157352
-    * Если установить 1 -- значит есть какое-то нарушение по Товару.
-    * */
+     * 04.01.2023.
+     * Используется в опции контроля 157352
+     * Если установить 1 -- значит есть какое-то нарушение по Товару.
+     * */
     @Ignore
     public int errorExist;
 
     /*
-    * 04.01.2023.
-    * Используется в опции контроля 157352
-    * Примечание к Товару. Например: записывается что именно не понравилось.
-    * */
+     * 04.01.2023.
+     * Используется в опции контроля 157352, 1455
+     * Примечание к Товару. Например: записывается что именно не понравилось.
+     * */
     @Ignore
     public String note;
 
@@ -150,7 +151,7 @@ public class ReportPrepareDB extends RealmObject {
 
     /*
      * 04.01.2023.
-     * Используется в опции контроля 157352
+     * Используется в опции контроля 157352, 1455
      * Кол. СКЮ. Заполняется единичкой, если заполнен фейс не равній нулю
      * */
     @Ignore
@@ -173,6 +174,70 @@ public class ReportPrepareDB extends RealmObject {
      * */
     @Ignore
     public int offset;
+
+    /*
+     * 19.01.23.
+     * Используется в опции контроля 1455
+     * Это у меня что-то типа JOIN. Потому что в Опции нужны данные Товаров
+     * */
+    @Ignore
+    public TovarDB tovarDB;
+
+    /*
+     * 19.01.23.
+     * Используется в опции контроля 1455
+     * Это у меня что-то типа JOIN. Потому что в Опции нужны данные Групп Товаров из Товаров
+     * */
+    @Ignore
+    public TovarGroupSDB tovarGroupSDB;
+
+    /*
+     * 19.01.23.
+     * Используется в опции контроля 1455
+     * Длина полочного пространства. Должна расчитываться: ( Товар.ширина * Фейс / 1000 )
+     * */
+    @Ignore
+    public Integer shelfSpaceLength;
+
+    /*
+     * 19.01.23.
+     * Используется в опции контроля 1455
+     * ДлинаППО. Общая ДЛИНА ПП всей категории в ТТ (включая конкурентов) (м)
+     * */
+    @Ignore
+    public Double widthPPO;
+
+    /*
+     * 19.01.23.
+     * Используется в опции контроля 1455
+     * ДоляПлан. Плановая ДОЛЯ ПП которую ДОЛЖЕН занимать товар КЛИЕНТА в ТТ (%)
+     * */
+    @Ignore
+    public Double plannedShare;
+
+    /*
+     * 19.01.23.
+     * Используется в опции контроля 1455
+     * ДоляФакт. Фактическая ДОЛЯ ПП которую ЗАНИМАЕТ товар КЛИЕНТА в ТТ (%)
+     * */
+    @Ignore
+    public Double shareActual;
+
+    /*
+     * 19.01.23.
+     * Используется в опции контроля 1455
+     * Отклонение. Отклонение ФАКТИЧЕСКОЙ ДОЛИ ПП от ПЛАНОВОЙ (%)
+     * */
+    @Ignore
+    public Double deflection;
+
+    /*
+     * 19.01.23.
+     * Используется в опции контроля 1455
+     * Недочёт.
+     * */
+    @Ignore
+    public Integer deficit;
 
     private int uploadStatus;       // Необходимость выгрузки записи
     private String serverResponce;      // Ответ от сервера (в основном тут будет ответ почему запись не принята сервером)
