@@ -196,13 +196,19 @@ public class WpDataRealm {
     }
 
 
-    public static List<WpDataDB> getWpDataBy(Date dateFrom, Date dateTo){
+    public static List<WpDataDB> getWpDataBy(Date dateFrom, Date dateTo, Integer status){
         RealmResults<WpDataDB> result = INSTANCE.where(WpDataDB.class)
                 .findAll();
 
         if (dateFrom != null && dateTo != null) {
             result = result.where()
                     .between("dt", dateFrom, dateTo)
+                    .findAll();
+        }
+
+        if (status != null) {
+            result = result.where()
+                    .equalTo("status", status)
                     .findAll();
         }
 

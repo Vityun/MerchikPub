@@ -5,6 +5,7 @@ import androidx.room.Insert;
 import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
 
+import java.sql.Date;
 import java.util.List;
 
 import io.reactivex.rxjava3.core.Completable;
@@ -22,4 +23,7 @@ public interface ReclamationPercentageDao {
     Completable insertAll(List<ReclamationPercentageSDB> data);
 
     // ----------------------------------------------------
+
+    @Query("SELECT * FROM reclamation_percentage WHERE tp = :tp AND dt BETWEEN :dtF AND :dtT ORDER BY dt DESC")
+    List<ReclamationPercentageSDB> getAll(Date dtF, Date dtT, Integer tp);
 }

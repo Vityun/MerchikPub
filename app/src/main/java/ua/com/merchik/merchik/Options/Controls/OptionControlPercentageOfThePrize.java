@@ -13,6 +13,7 @@ import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.Options.OptionControl;
 import ua.com.merchik.merchik.Options.Options;
+import ua.com.merchik.merchik.data.Database.Room.ReclamationPercentageSDB;
 import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
 import ua.com.merchik.merchik.data.Database.Room.UsersSDB;
 import ua.com.merchik.merchik.data.OptionMassageType;
@@ -71,12 +72,12 @@ public class OptionControlPercentageOfThePrize<T> extends OptionControl {
             WpDataDB wp = (WpDataDB) document;
 
             dt = wp.getDt();
-            dateFrom = Clock.getDatePeriodLong(wp.getDt().getTime(), -14);
+            dateFrom = Clock.getDatePeriodLong(wp.getDt().getTime(), -15);
             dateTo = Clock.getDatePeriodLong(wp.getDt().getTime(), -1);
 
-            period = " (с " + Clock.getHumanTimeSecPattern(dateFrom, "dd-MM-yy") + " по " + Clock.getHumanTimeSecPattern(dateTo, "dd-MM-yy") + ")";
+            period = " (с " + Clock.getHumanTimeSecPattern(dateFrom / 1000, "dd-MM-yy") + " по " + Clock.getHumanTimeSecPattern(dateTo / 1000, "dd-MM-yy") + ")";
 
-            kps = WpDataRealm.getWpDataBy(new Date(dateFrom), new Date(dateTo)).size();
+            kps = WpDataRealm.getWpDataBy(new Date(dateFrom), new Date(dateTo), 1).size();
 
             usersSDB = SQL_DB.usersDao().getById(wp.getUser_id());
         }
@@ -86,10 +87,26 @@ public class OptionControlPercentageOfThePrize<T> extends OptionControl {
         reclamations = filterReclamationAuthorNotUserSupervisor(SQL_DB.tarDao().getTARForOptionControl135061(0, dateFrom / 1000, dateTo / 1000));
 
         if (usersSDB.department == 3 || usersSDB.department == 8) {
-            percentReclamationConst = 1.6f;
+            java.sql.Date dateF = new java.sql.Date(dateFrom);
+            java.sql.Date dateT = new java.sql.Date(dateTo);
+            List<ReclamationPercentageSDB> percentageSDBS = SQL_DB.reclamationPercentageDao().getAll(dateF, dateT, 1);
+            if (percentageSDBS != null){
+                percentReclamationConst = percentageSDBS.get(0).percent;
+            }else {
+                percentReclamationConst = 1.6f;
+            }
+
             strReg = "% Киева";
         } else {
-            percentReclamationConst = 1.8f;
+            java.sql.Date dateF = new java.sql.Date(dateFrom);
+            java.sql.Date dateT = new java.sql.Date(dateTo);
+            List<ReclamationPercentageSDB> percentageSDBS = SQL_DB.reclamationPercentageDao().getAll(dateF, dateT, 2);
+            if (percentageSDBS != null){
+                percentReclamationConst = percentageSDBS.get(0).percent;
+            }else {
+                percentReclamationConst = 1.8f;
+            }
+
             strReg = "% Регионов";
         }
 
@@ -145,7 +162,7 @@ public class OptionControlPercentageOfThePrize<T> extends OptionControl {
             signal = true;
 
             percent = -5; //это для отображения на кнопке  135412 - ПроцентПремиальных в МВС
-        }else if (percentReclamation > (percentReclamationConst * 1.5)) {
+        } else if (percentReclamation > (percentReclamationConst * 1.5)) {
             rez = rez - 0.1f;
 
             stringBuilderMsg.append("Вы можете получить Премиальные на 10% больше, если за 14-ть дней ").append(period)
