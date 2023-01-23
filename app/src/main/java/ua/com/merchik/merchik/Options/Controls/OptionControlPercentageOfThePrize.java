@@ -110,10 +110,14 @@ public class OptionControlPercentageOfThePrize<T> extends OptionControl {
             strReg = "% Регионов";
         }
 
+        StringBuilder formula = new StringBuilder();
+
         //4.0. определим для исполнителя процент рекламаций
         if (kps > 0) {
             percentReclamation = 100 * reclamations.size() / kps;
         }
+
+        formula.append("\n\nВідсоток рекламацій = ( 100 * Кількість рекламацій / Кількість звітів )");
 
         //5.0. определим процент
         if (kps == 0) {  //для "молодых" бойцов
@@ -175,6 +179,9 @@ public class OptionControlPercentageOfThePrize<T> extends OptionControl {
 
             percent = -10; //это для отображения на кнопке  135412 - ПроцентПремиальных в МВС
         }
+
+
+        stringBuilderMsg.append(formula);
 
 
         saveOptionResultInDB();
