@@ -72,7 +72,7 @@ public class ReportPrepareRealm {
                 int id2 = Integer.parseInt(tovItem.getiD());
                 if (id1 == id2) {
                     item.tovarDB = tovItem;
-                    item.shelfSpaceLength = (int) (tovItem.width * Integer.parseInt(item.face) / 1000);
+                    item.shelfSpaceLength = (tovItem.width * Integer.parseInt(item.face) / 1000);
                     tovarGrpIdsList.add(Integer.valueOf(tovItem.getGroupId()));
                     break;
                 }

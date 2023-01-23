@@ -197,7 +197,7 @@ public class ReportPrepareDB extends RealmObject {
      * Длина полочного пространства. Должна расчитываться: ( Товар.ширина * Фейс / 1000 )
      * */
     @Ignore
-    public Integer shelfSpaceLength;
+    public Double shelfSpaceLength;
 
     /*
      * 19.01.23.

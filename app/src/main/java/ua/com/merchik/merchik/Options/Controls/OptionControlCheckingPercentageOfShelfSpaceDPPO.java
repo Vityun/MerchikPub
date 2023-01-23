@@ -13,7 +13,10 @@ import com.google.gson.Gson;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
+import io.realm.annotations.Ignore;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.Options.OptionControl;
 import ua.com.merchik.merchik.Options.Options;
@@ -136,41 +139,89 @@ public class OptionControlCheckingPercentageOfShelfSpaceDPPO<T> extends OptionCo
         Log.e("OPTION_CONTROL_1455", "shelfSize size: " + shelfSize.size());
         Globals.writeToMLOG("INFO", "OPTION_CONTROL_1455", "shelfSize size: " + shelfSize.size());
 
+
+        Map<TovarGroupSDB, List<ReportPrepareDB>> groupData = workHorse.stream().collect(Collectors.groupingBy(data -> data.tovarGroupSDB));
+        Log.e("OPTION_CONTROL_1455", "groupData: " + groupData.size());
+
         //4.0. формируем итоговую таблицу (объединяем Результат с Планом) и рассчитываем результат
-        for (ReportPrepareDB item : workHorse) {
-            String codeZASG = "" + clientId + addressId + item.tovarGroupSDB.id;
+        List<OptionResultTable> result = new ArrayList<>();
+        for (Map.Entry<TovarGroupSDB, List<ReportPrepareDB>> item : groupData.entrySet()) {
+            String codeZASG = "" + clientId + addressId + item.getKey().id;
+
+            OptionResultTable optionResultTable = new OptionResultTable();
+            optionResultTable.grpId = item.getKey().id;
+            optionResultTable.grp = item.getKey().nm;
+
+
+            optionResultTable.face = item.getValue().stream().map(table -> Integer.parseInt(table.face)).reduce(0, Integer::sum);
+            optionResultTable.colSKU = item.getValue().stream().map(table -> table.colSKU).reduce(0, Integer::sum);
+            optionResultTable.sizePPF = item.getValue().stream().map(table -> table.shelfSpaceLength).reduce(0d, Double::sum);
+
+
+//            optionResultTable.plannedShare = null;
+//            optionResultTable.shareActual = null;
+//            optionResultTable.deflection = null;
+//            optionResultTable.deficit = null;
+//            optionResultTable.widthPPO = null;
+//            optionResultTable.note = null;
+
+
             if (shelfSize.stream().filter(itm -> itm.codeZASG.equals(codeZASG)).findFirst().orElse(null) != null) {
                 ShelfSizeSDB shelfSizeSDB = shelfSize.get(0);
                 if (shelfSizeSDB.width == 0) {
-                    item.plannedShare = Double.valueOf(shelfSizeSDB.planzn);
-                    item.shareActual = 0d;
-                    item.deflection = 0d;
-                    item.deficit = 0;
-                    item.note = " для (" + item.tovarGroupSDB.nm + ") не определена Общая Длина ПП (ДППО)";
+//                    Log.e("OPTION_CONTROL_1455", "=== START 0 ===");
+                    optionResultTable.plannedShare = Double.valueOf(shelfSizeSDB.planzn);
+                    optionResultTable.shareActual = 0d;
+                    optionResultTable.deflection = 0d;
+                    optionResultTable.deficit = 0;
+                    optionResultTable.note = " для (" + optionResultTable.grp + ") не определена Общая Длина ПП (ДППО)";
                 } else {
-                    item.widthPPO = Double.valueOf(shelfSizeSDB.width);
-                    item.plannedShare = Double.valueOf(shelfSizeSDB.planzn);
-                    item.shareActual = 100 * item.tovarDB.width / item.widthPPO;
-                    item.deflection = item.shareActual - item.plannedShare;
-                    item.deficit = item.deflection < -10 ? 1 : 0;
-                    item.note = item.deficit == 1 ? "(" + item.tovarGroupSDB.nm + ") НЕ выполнен план "
-                            + item.plannedShare + "%: (" + item.widthPPO * item.plannedShare / 100 + " м.), а факт: "
-                            + item.shareActual + "% (" + item.tovarDB.width + " м. из " + item.widthPPO + " м.) " : "Недоточ=0";
+//                    Log.e("OPTION_CONTROL_1455", "=== START 1 ===");
+//                    Log.e("OPTION_CONTROL_1455", "shelfSizeSDB.width: " + shelfSizeSDB.width);
+                    optionResultTable.widthPPO = Double.valueOf(shelfSizeSDB.width);
+//                    Log.e("OPTION_CONTROL_1455", "item.widthPPO: " + item.widthPPO);
+
+//                    Log.e("OPTION_CONTROL_1455", "shelfSizeSDB.planzn: " + shelfSizeSDB.planzn);
+                    optionResultTable.plannedShare = Double.valueOf(shelfSizeSDB.planzn);
+//                    Log.e("OPTION_CONTROL_1455", "item.plannedShare: " + item.plannedShare);
+
+//                    Log.e("OPTION_CONTROL_1455", "shelfSizeSDB.planzn: " + item.plannedShare);
+                    optionResultTable.shareActual = 100 * optionResultTable.sizePPF / optionResultTable.widthPPO;
+//                    Log.e("OPTION_CONTROL_1455", "item.shareActual: " + item.shareActual);
+
+//                    Log.e("OPTION_CONTROL_1455", "item.shareActual: " + item.shareActual);
+//                    Log.e("OPTION_CONTROL_1455", "item.plannedShare: " + item.plannedShare);
+                    optionResultTable.deflection = optionResultTable.shareActual - optionResultTable.plannedShare;
+//                    Log.e("OPTION_CONTROL_1455", "item.deflection: " + item.deflection);
+
+                    optionResultTable.deficit = optionResultTable.deflection < -10 ? 1 : 0;
+//                    Log.e("OPTION_CONTROL_1455", "item.deficit: " + item.deficit);
+
+                    optionResultTable.note = optionResultTable.deficit == 1 ? "(" + optionResultTable.grp + ") НЕ выполнен план "
+                            + optionResultTable.plannedShare + "%: (" + optionResultTable.widthPPO * optionResultTable.plannedShare / 100 + " м.), а факт: "
+                            + optionResultTable.shareActual + "% (" + optionResultTable.sizePPF + " м. из " + optionResultTable.widthPPO + " м.) " : "Недоточ=0";
+
+
+//                    Log.e("OPTION_CONTROL_1455", "=== END ===");
                 }
             } else {
-                item.plannedShare = 0d;
-                item.shareActual = 0d;
-                item.deflection = 0d;
-                item.deficit = 0;
-                item.note = "для (" + item.tovarGroupSDB.nm + ") не определена Общая Длина ПП (ДППО)";
+//                Log.e("OPTION_CONTROL_1455", "=== START 2 ===");
+                optionResultTable.plannedShare = 0d;
+                optionResultTable.shareActual = 0d;
+                optionResultTable.deflection = 0d;
+                optionResultTable.deficit = 0;
+                optionResultTable.note = "для (" + optionResultTable.grp + ") не определена Общая Длина ПП (ДППО)";
             }
-            noteOC1455.append(item.note).append("\n");
+            noteOC1455.append(optionResultTable.note).append("\n");
+
+
+            result.add(optionResultTable);
         }
 
-        int deficitSum = workHorse.stream().map(table -> table.deficit).reduce(0, Integer::sum);
+        int deficitSum = result.stream().map(table -> table.deficit).reduce(0, Integer::sum);
 
         //5.0. подведем итог
-        if (workHorse.size() == 0){
+        if (result.size() == 0){
             stringBuilderMsg.append("Данные о Длине ПП не заполнены ни для одной товарной группы!");
             signal = true;
         }else if (deficitSum > 0) {
@@ -213,6 +264,62 @@ public class OptionControlCheckingPercentageOfShelfSpaceDPPO<T> extends OptionCo
                 realm.insertOrUpdate(optionDB);
             }
         });
+    }
+
+    private class OptionResultTable {
+        public Integer grpId;
+        public String grp;
+        public String note;
+        /*
+         * 19.01.23.
+         * Используется в опции контроля 1455
+         * Длина полочного пространства. Должна расчитываться: ( Товар.ширина * Фейс / 1000 )
+         * */
+        @Ignore
+        public Integer shelfSpaceLength;
+
+        /*
+         * 19.01.23.
+         * Используется в опции контроля 1455
+         * ДлинаППО. Общая ДЛИНА ПП всей категории в ТТ (включая конкурентов) (м)
+         * */
+        @Ignore
+        public Double widthPPO;
+
+        /*
+         * 19.01.23.
+         * Используется в опции контроля 1455
+         * ДоляПлан. Плановая ДОЛЯ ПП которую ДОЛЖЕН занимать товар КЛИЕНТА в ТТ (%)
+         * */
+        @Ignore
+        public Double plannedShare;
+
+        /*
+         * 19.01.23.
+         * Используется в опции контроля 1455
+         * ДоляФакт. Фактическая ДОЛЯ ПП которую ЗАНИМАЕТ товар КЛИЕНТА в ТТ (%)
+         * */
+        @Ignore
+        public Double shareActual;
+
+        /*
+         * 19.01.23.
+         * Используется в опции контроля 1455
+         * Отклонение. Отклонение ФАКТИЧЕСКОЙ ДОЛИ ПП от ПЛАНОВОЙ (%)
+         * */
+        @Ignore
+        public Double deflection;
+
+        /*
+         * 19.01.23.
+         * Используется в опции контроля 1455
+         * Недочёт.
+         * */
+        @Ignore
+        public Integer deficit;
+        public Integer face;
+        public Integer colSKU;
+        public Double sizePPF;
     }
 
 

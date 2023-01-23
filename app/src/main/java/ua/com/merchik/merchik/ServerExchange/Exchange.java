@@ -26,6 +26,7 @@ import retrofit2.Callback;
 import retrofit2.Response;
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
+import ua.com.merchik.merchik.ServerExchange.Constants.ReclamationPercentageExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.AddressExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.CityExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.CustomerExchange;
@@ -33,6 +34,7 @@ import ua.com.merchik.merchik.ServerExchange.TablesExchange.LanguagesExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.OblastExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.PotentialClientTableExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.SamplePhotoExchange;
+import ua.com.merchik.merchik.ServerExchange.TablesExchange.ShelfSizeExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.SiteObjectsExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.StandartExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.TranslationsExchange;
@@ -594,10 +596,10 @@ public class Exchange {
 
 
             // Загрузка констант: процент рекламаций Киев, процент рекламаций Регионы
-//            new ReclamationPercentageExchange().downloadAndSaveReclamationPercentage();
+            new ReclamationPercentageExchange().downloadAndSaveReclamationPercentage();
 
             // Загрузка таблички Длин Полочного пространства
-//            new ShelfSizeExchange().downloadShelfSize();
+            new ShelfSizeExchange().downloadShelfSize();
 
 
         } catch (Exception e) {
