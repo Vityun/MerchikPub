@@ -117,36 +117,36 @@ public class OptionControlPercentageOfThePrize<T> extends OptionControl {
 
         //5.0. определим процент
         if (kps == 0) {  //для "молодых" бойцов
-            stringBuilderMsg.append("За период ").append(period).append(" Ваших ОИ не обнаржено! Вы получаете Премиальные на базовом уровне.");
+            stringBuilderMsg.append("За період ").append(period).append(" Ваші звіти не знайдено! Ви отримаєте Преміальні на базовому рівні.");
             signal = false;
         } else if (usersSDB.reportDate20 != null && usersSDB.reportDate20.getTime() > dt.getTime()) { //до 20-й отчетности
-            stringBuilderMsg.append("Вы получаете Премиальные на базовом уровне т.к. еще не провели свою 20-ю отчетность. В дальнейшем у Вас будет возможность увеличить этот процент! (при отсутствии рекламаций).");
+            stringBuilderMsg.append("Ви отримаєте Преміальні на базовому рівні тому що ще не провели свою 20-ту звітність. В майбутньому у Вас буде можливість збільшити цей вітсоток! (якщо відсутні рекламації).");
             signal = false;
         } else if (percentReclamation < (percentReclamationConst / 2)) { //менее 50% от СРЕДНЕГО
             rez = rez + 0.05f;
 
-            stringBuilderMsg.append("Вы получаете Премиальные на 5% больше других т.к. ").append(period).append(", отношение полученных Вами рекламаций (")
-                    .append(reclamations.size()).append("рек) к вып. работам (").append(kps).append("кпс) составляет: (")
-                    .append(percentReclamation).append("%). Это заметно меньше среднего ").append(percentReclamationConst)
-                    .append(strReg).append(". (меньше 50% от среднего)");
+            stringBuilderMsg.append("Ви отримаєте Преміальні на 5% більше інших тому що ").append(period).append(", співвідношення отриманих Вами рекламацій (")
+                    .append(reclamations.size()).append("рек) к виконаним роботам (").append(kps).append("кпс) складає: (")
+                    .append(percentReclamation).append("%). Це набагато менше середнього ").append(percentReclamationConst)
+                    .append(strReg).append(". (менше 50% від середнього)");
             signal = false;
 
             percent = 5; //это для отображения на кнопке  135412 - ПроцентПремиальных в МВС
         } else if (percentReclamation >= (percentReclamationConst / 2) && percentReclamation <= percentReclamationConst) {
 
-            stringBuilderMsg.append("Вы можете получить Премиальные на 5% больше других если за 14-ть ")
-                    .append(period).append(" будете получать меньше рекламаций! Если отношение полученных Вами рекламаций к вып. работам составит менее: (")
-                    .append((percentReclamationConst / 2)).append("). У Вас сейчас ").append(percentReclamation).append("%");
+            stringBuilderMsg.append("Ви можете отримати Преміальні на 5% більше інших якщо за 14-ть ")
+                    .append(period).append(" будете отримувати менше рекламацій! Якщо співвідношення отриманих Вами рекламацій до вик. робіт складає меньше: (")
+                    .append((percentReclamationConst / 2)).append("). У Вас наразі ").append(percentReclamation).append("%");
             signal = false;
 
             percent = 0;//это для отображения на кнопке  135412 - ПроцентПремиальных в МВС
         } else if (percentReclamation >= percentReclamationConst && percentReclamation <= (percentReclamationConst * 1.5)) {
             rez = rez - 0.05f;
 
-            stringBuilderMsg.append("Вы можете получить Премиальные на 5% больше, если за 14-ть дней ").append(period)
-                    .append(" будете получать меньше рекламаций! Если отношение полученных Вами рекламаций к количеству вып. работ (кпс) будет составлять менее ")
-                    .append(percentReclamationConst).append("%. Сейчас у Вас (").append(reclamations.size()).append("рек) и отношение к вып. работам (")
-                    .append(kps).append("кпс) составляет: (").append(percentReclamation).append("%). Это больше среднего ").append(percentReclamationConst)
+            stringBuilderMsg.append("Ви можете отримати Преміальні на 5% більше, якщо за 14-ть діб ").append(period)
+                    .append(" будете отримувати менше рекламацій! Якщо співвідношення отриманих Вами рекламацій до кількості вик. робіт (кпс) буде складати менше ")
+                    .append(percentReclamationConst).append("%. Наразі у Вас (").append(reclamations.size()).append("рек) та співвідношення до вик. робіт (")
+                    .append(kps).append("кпс) складає: (").append(percentReclamation).append("%). Це більше середнього ").append(percentReclamationConst)
                     .append(strReg).append(".");
             signal = true;
 
@@ -154,23 +154,23 @@ public class OptionControlPercentageOfThePrize<T> extends OptionControl {
         } else if (percentReclamation > (percentReclamationConst * 1.5) && kps < 20) {  //для ребят у которых МАЛО кпс делаем поблажку
             rez = rez - 0.05f;
 
-            stringBuilderMsg.append("Вы можете получить Премиальные на 5% больше, если за 14-ть дней ").append(period)
-                    .append(" будете получать меньше рекламаций! Если отношение полученных Вами рекламаций к количеству вып. работ (кпс) будет составлять менее ")
-                    .append(percentReclamationConst).append("%. Сейчас у Вас (").append(reclamations.size()).append("рек) и к отношение вып. работам (")
-                    .append(kps).append("кпс) составляет: (").append(percentReclamation).append("%). Это на много больше среднего ")
-                    .append(percentReclamationConst).append(strReg).append(". (больше, чем в полтора раза от среднего)");
+            stringBuilderMsg.append("Ви можете отримати Преміальні на 5% більше, якщо за 14-ть діб ").append(period)
+                    .append(" будете отримувати менше рекламацій! Якщо співвідношення отриманих Вами рекламацій до кількості вик. робіт (кпс) буде складати меньш за ")
+                    .append(percentReclamationConst).append("%. Наразі у Вас (").append(reclamations.size()).append("рек) та співвідноення до вик. роботам (")
+                    .append(kps).append("кпс) складає: (").append(percentReclamation).append("%). Це на багато більше середнього ")
+                    .append(percentReclamationConst).append(strReg).append(". (більше, ніж в півтора рази від середнього)");
             signal = true;
 
             percent = -5; //это для отображения на кнопке  135412 - ПроцентПремиальных в МВС
         } else if (percentReclamation > (percentReclamationConst * 1.5)) {
             rez = rez - 0.1f;
 
-            stringBuilderMsg.append("Вы можете получить Премиальные на 10% больше, если за 14-ть дней ").append(period)
-                    .append(" будете получать меньше рекламаций! Если отношение полученных Вами рекламаций к количеству вып. работ (кпс) будет составлять менее ")
-                    .append(percentReclamationConst).append("%. С ").append(Clock.getHumanTimeSecPattern(dateFrom, "dd-MM-yy")).append(" по ")
-                    .append(Clock.getHumanTimeSecPattern(dateTo, "dd-MM-yy")).append(" у Вас (").append(reclamations.size()).append("рек) и к отношение вып. работам (")
-                    .append(kps).append("кпс) составляет: (").append(percentReclamation).append("%). Это на много больше среднего ").append(percentReclamationConst).append(strReg)
-                    .append(". (больше, чем в полтора раза от среднего)");
+            stringBuilderMsg.append("Ви можете отримати Преміальні на 10% більше, якщо за 14-ть діб ").append(period)
+                    .append(" будете отримувати менше рекламацій! Якщо співвідношення отриманих Вами рекламацій до кількості вик. робіт (кпс) буде складати меньш за ")
+                    .append(percentReclamationConst).append("%. З ").append(Clock.getHumanTimeSecPattern(dateFrom, "dd-MM-yy")).append(" по ")
+                    .append(Clock.getHumanTimeSecPattern(dateTo, "dd-MM-yy")).append(" у Вас (").append(reclamations.size()).append("рек) та співвідноення до вик. роботам (")
+                    .append(kps).append("кпс) складає: (").append(percentReclamation).append("%). Це на багато більше середнього ").append(percentReclamationConst).append(strReg)
+                    .append(". (більше, ніж в півтора рази від середнього)");
             signal = true;
 
             percent = -10; //это для отображения на кнопке  135412 - ПроцентПремиальных в МВС
@@ -181,9 +181,9 @@ public class OptionControlPercentageOfThePrize<T> extends OptionControl {
         if (signal) {
             if (optionDB.getBlockPns().equals("1")) {
                 setIsBlockOption(signal);
-                stringBuilderMsg.append("\n\n").append("Документ проведен не будет!");
+                stringBuilderMsg.append("\n\n").append("Документ проведен не буде!");
             } else {
-                stringBuilderMsg.append("\n\n").append("Вы можете получить Премиальные БОЛЬШЕ, если будете расписывать планы работ без избыточных проверок.");
+                stringBuilderMsg.append("\n\n").append("Ви можете отримати Преміальні БІЛЬШЕ, якщо будете отримувати менше рекламацій.");
             }
         }
     }
