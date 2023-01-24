@@ -90,9 +90,9 @@ public class OptionControlPercentageOfThePrize<T> extends OptionControl {
             java.sql.Date dateF = new java.sql.Date(dateFrom);
             java.sql.Date dateT = new java.sql.Date(dateTo);
             List<ReclamationPercentageSDB> percentageSDBS = SQL_DB.reclamationPercentageDao().getAll(dateF, dateT, 1);
-            if (percentageSDBS != null){
+            if (percentageSDBS != null) {
                 percentReclamationConst = percentageSDBS.get(0).percent;
-            }else {
+            } else {
                 percentReclamationConst = 1.6f;
             }
 
@@ -101,9 +101,9 @@ public class OptionControlPercentageOfThePrize<T> extends OptionControl {
             java.sql.Date dateF = new java.sql.Date(dateFrom);
             java.sql.Date dateT = new java.sql.Date(dateTo);
             List<ReclamationPercentageSDB> percentageSDBS = SQL_DB.reclamationPercentageDao().getAll(dateF, dateT, 2);
-            if (percentageSDBS != null){
+            if (percentageSDBS != null) {
                 percentReclamationConst = percentageSDBS.get(0).percent;
-            }else {
+            } else {
                 percentReclamationConst = 1.8f;
             }
 
@@ -160,7 +160,7 @@ public class OptionControlPercentageOfThePrize<T> extends OptionControl {
 
             stringBuilderMsg.append("Ви можете отримати Преміальні на 5% більше, якщо за 14-ть діб ").append(period)
                     .append(" будете отримувати менше рекламацій! Якщо співвідношення отриманих Вами рекламацій до кількості вик. робіт (кпс) буде складати меньш за ")
-                    .append(percentReclamationConst).append("%. Наразі у Вас (").append(reclamations.size()).append("рек) та співвідноення до вик. роботам (")
+                    .append(percentReclamationConst).append("%. Наразі у Вас (").append(reclamations.size()).append("рек) та співвідношення до вик. роботам (")
                     .append(kps).append("кпс) складає: (").append(percentReclamation).append("%). Це на багато більше середнього ")
                     .append(percentReclamationConst).append(strReg).append(". (більше, ніж в півтора рази від середнього)");
             signal = true;
@@ -171,8 +171,8 @@ public class OptionControlPercentageOfThePrize<T> extends OptionControl {
 
             stringBuilderMsg.append("Ви можете отримати Преміальні на 10% більше, якщо за 14-ть діб ").append(period)
                     .append(" будете отримувати менше рекламацій! Якщо співвідношення отриманих Вами рекламацій до кількості вик. робіт (кпс) буде складати меньш за ")
-                    .append(percentReclamationConst).append("%. З ").append(Clock.getHumanTimeSecPattern(dateFrom, "dd-MM-yy")).append(" по ")
-                    .append(Clock.getHumanTimeSecPattern(dateTo, "dd-MM-yy")).append(" у Вас (").append(reclamations.size()).append("рек) та співвідноення до вик. роботам (")
+                    .append(percentReclamationConst).append("%. З ").append(Clock.getHumanTimeSecPattern(dateFrom / 1000, "dd-MM-yy")).append(" по ")
+                    .append(Clock.getHumanTimeSecPattern(dateTo / 1000, "dd-MM-yy")).append(" у Вас (").append(reclamations.size()).append("рек) та співвідношення до вик. роботам (")
                     .append(kps).append("кпс) складає: (").append(percentReclamation).append("%). Це на багато більше середнього ").append(percentReclamationConst).append(strReg)
                     .append(". (більше, ніж в півтора рази від середнього)");
             signal = true;

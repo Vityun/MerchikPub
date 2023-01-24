@@ -167,52 +167,32 @@ public class OptionControlCheckingPercentageOfShelfSpaceDPPO<T> extends OptionCo
 
 
             if (shelfSize.stream().filter(itm -> itm.codeZASG.equals(codeZASG)).findFirst().orElse(null) != null) {
-                ShelfSizeSDB shelfSizeSDB = shelfSize.get(0);
+                ShelfSizeSDB shelfSizeSDB = shelfSize.stream().filter(itm -> itm.codeZASG.equals(codeZASG)).findFirst().get();
+//                ShelfSizeSDB shelfSizeSDB = shelfSize.get(0);
                 if (shelfSizeSDB.width == 0) {
-//                    Log.e("OPTION_CONTROL_1455", "=== START 0 ===");
                     optionResultTable.plannedShare = Double.valueOf(shelfSizeSDB.planzn);
                     optionResultTable.shareActual = 0d;
                     optionResultTable.deflection = 0d;
                     optionResultTable.deficit = 0;
                     optionResultTable.note = " для (" + optionResultTable.grp + ") не определена Общая Длина ПП (ДППО)";
                 } else {
-//                    Log.e("OPTION_CONTROL_1455", "=== START 1 ===");
-//                    Log.e("OPTION_CONTROL_1455", "shelfSizeSDB.width: " + shelfSizeSDB.width);
                     optionResultTable.widthPPO = Double.valueOf(shelfSizeSDB.width);
-//                    Log.e("OPTION_CONTROL_1455", "item.widthPPO: " + item.widthPPO);
-
-//                    Log.e("OPTION_CONTROL_1455", "shelfSizeSDB.planzn: " + shelfSizeSDB.planzn);
                     optionResultTable.plannedShare = Double.valueOf(shelfSizeSDB.planzn);
-//                    Log.e("OPTION_CONTROL_1455", "item.plannedShare: " + item.plannedShare);
-
-//                    Log.e("OPTION_CONTROL_1455", "shelfSizeSDB.planzn: " + item.plannedShare);
                     optionResultTable.shareActual = 100 * optionResultTable.sizePPF / optionResultTable.widthPPO;
-//                    Log.e("OPTION_CONTROL_1455", "item.shareActual: " + item.shareActual);
-
-//                    Log.e("OPTION_CONTROL_1455", "item.shareActual: " + item.shareActual);
-//                    Log.e("OPTION_CONTROL_1455", "item.plannedShare: " + item.plannedShare);
                     optionResultTable.deflection = optionResultTable.shareActual - optionResultTable.plannedShare;
-//                    Log.e("OPTION_CONTROL_1455", "item.deflection: " + item.deflection);
-
                     optionResultTable.deficit = optionResultTable.deflection < -10 ? 1 : 0;
-//                    Log.e("OPTION_CONTROL_1455", "item.deficit: " + item.deficit);
-
-                    optionResultTable.note = optionResultTable.deficit == 1 ? "(" + optionResultTable.grp + ") НЕ выполнен план "
-                            + optionResultTable.plannedShare + "%: (" + optionResultTable.widthPPO * optionResultTable.plannedShare / 100 + " м.), а факт: "
-                            + optionResultTable.shareActual + "% (" + optionResultTable.sizePPF + " м. из " + optionResultTable.widthPPO + " м.) " : "Недоточ=0";
-
-
-//                    Log.e("OPTION_CONTROL_1455", "=== END ===");
+                    optionResultTable.note = optionResultTable.deficit == 1 ? " (" + optionResultTable.grp + ") НЕ выполнен план "
+                            + optionResultTable.plannedShare + "%: (" + String.format("%.2f", optionResultTable.widthPPO * optionResultTable.plannedShare / 100) + " м.), а факт: "
+                            + String.format("%.1f", optionResultTable.shareActual) + "% (" + String.format("%.2f", optionResultTable.sizePPF) + " м. из " + String.format("%.2f", optionResultTable.widthPPO) + " м.) " : "";
                 }
             } else {
-//                Log.e("OPTION_CONTROL_1455", "=== START 2 ===");
                 optionResultTable.plannedShare = 0d;
                 optionResultTable.shareActual = 0d;
                 optionResultTable.deflection = 0d;
                 optionResultTable.deficit = 0;
                 optionResultTable.note = "для (" + optionResultTable.grp + ") не определена Общая Длина ПП (ДППО)";
             }
-            noteOC1455.append(optionResultTable.note).append("\n");
+            noteOC1455.append(optionResultTable.note).append("");
 
 
             result.add(optionResultTable);

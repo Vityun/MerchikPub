@@ -51,24 +51,30 @@ public class ShelfSizeExchange {
 
 
         Log.e("ShelfSizeExchange", "data: " + new Gson().toJson(data));
-        Log.e("ShelfSizeExchange", "dataS: " + data.list.size());
+        try {
+            Log.e("ShelfSizeExchange", "dataS: " + data.list.size());
 
-        if (data != null && data.state && data.list != null && data.list.size() > 0) {
-            SQL_DB.shelfSizeDao().insertAll(data.list)
-                    .subscribeOn(Schedulers.io())
-                    .subscribe(new DisposableCompletableObserver() {
-                        @Override
-                        public void onComplete() {
-                            Log.e("ShelfSizeExchange", "onComplete OK");
-                            Globals.writeToMLOG("OK", "ShelfSizeExchange/onResponse/onComplete", "OK");
-                        }
 
-                        @Override
-                        public void onError(@io.reactivex.rxjava3.annotations.NonNull Throwable e) {
-                            Log.e("ShelfSizeExchange", "onError e: " + e);
-                            Globals.writeToMLOG("ERROR", "ShelfSizeExchange/onResponse/onError", "Throwable e: " + e);
-                        }
-                    });
+            if (data != null && data.state && data.list != null && data.list.size() > 0) {
+                SQL_DB.shelfSizeDao().insertAll(data.list)
+                        .subscribeOn(Schedulers.io())
+                        .subscribe(new DisposableCompletableObserver() {
+                            @Override
+                            public void onComplete() {
+                                Log.e("ShelfSizeExchange", "onComplete OK");
+                                Globals.writeToMLOG("OK", "ShelfSizeExchange/onResponse/onComplete", "OK");
+                            }
+
+                            @Override
+                            public void onError(@io.reactivex.rxjava3.annotations.NonNull Throwable e) {
+                                Log.e("ShelfSizeExchange", "onError e: " + e);
+                                Globals.writeToMLOG("ERROR", "ShelfSizeExchange/onResponse/onError", "Throwable e: " + e);
+                            }
+                        });
+            }
+
+        } catch (Exception e) {
+            Log.e("ShelfSizeExchange", "Exception e: " + e);
         }
     }
 

@@ -13,7 +13,7 @@ import java.util.List;
 
 import ua.com.merchik.merchik.R;
 
-public class KeyValueListAdapter extends RecyclerView.Adapter<KeyValueListAdapter.ViewHolder>  {
+public class KeyValueListAdapter extends RecyclerView.Adapter<KeyValueListAdapter.ViewHolder> {
 
     private List<KeyValueData> data;
 
@@ -53,6 +53,9 @@ public class KeyValueListAdapter extends RecyclerView.Adapter<KeyValueListAdapte
         public void bind(KeyValueData keyValueData) {
             key.setText(keyValueData.key);
             value.setText(keyValueData.value);
+            value.setOnClickListener(view -> {
+                if (keyValueData.click != null) keyValueData.click.click();
+            });
         }
     }
 }
