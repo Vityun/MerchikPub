@@ -63,6 +63,7 @@ import ua.com.merchik.merchik.Options.Buttons.OptionButtAchievements;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonAddComment;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonAddNewClient;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonAvailabilityDetailedReport;
+import ua.com.merchik.merchik.Options.Buttons.OptionButtonPercentageOfThePrize;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonPhotoAktionTovar;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonPhotoBeforeStartWork;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonReclamationAnswer;
@@ -657,6 +658,10 @@ public class Options {
 //        try {
         Log.e("NNK", "F/optControl/optionId: " + optionId);
         switch (optionId) {
+
+            case 135412:
+                new OptionButtonPercentageOfThePrize<>(context, dataDB, option, type, mode);
+                break;
 
             case 1455:
                 OptionControlCheckingPercentageOfShelfSpaceDPPO<?> optionControlCheckingPercentageOfShelfSpaceDPPO = new OptionControlCheckingPercentageOfShelfSpaceDPPO<>(context, dataDB, option, type, mode);
