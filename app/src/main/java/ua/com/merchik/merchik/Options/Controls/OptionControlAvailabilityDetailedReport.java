@@ -1,6 +1,14 @@
 package ua.com.merchik.merchik.Options.Controls;
 
+import static ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity.OFS;
+import static ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity.SKUFact;
+import static ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity.SKUPlan;
+import static ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity.detailedReportRPList;
+import static ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity.detailedReportTovList;
+
+import android.annotation.SuppressLint;
 import android.content.Context;
+import android.text.Html;
 import android.util.Log;
 
 import ua.com.merchik.merchik.Options.OptionControl;
@@ -13,12 +21,6 @@ import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.ReportPrepareRealm;
 import ua.com.merchik.merchik.database.realm.tables.WpDataRealm;
-
-import static ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity.OFS;
-import static ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity.SKUFact;
-import static ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity.SKUPlan;
-import static ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity.detailedReportRPList;
-import static ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity.detailedReportTovList;
 
 public class OptionControlAvailabilityDetailedReport<T> extends OptionControl {
     public int OPTION_CONTROL_AVAILABILITY_OF_A_DR_ID = 76815;
@@ -56,6 +58,7 @@ public class OptionControlAvailabilityDetailedReport<T> extends OptionControl {
         }
     }
 
+    @SuppressLint("NewApi")
     private void executeOption() {
         int test = 0;
 
@@ -109,41 +112,41 @@ public class OptionControlAvailabilityDetailedReport<T> extends OptionControl {
             SKUFact = 0;
         }
 
-        stringBuilderMsg.append("Представленность товара.\n\n");
+        spannableStringBuilder.append(Html.fromHtml("<b>Представленность товара.</b>")).append("\n\n");
 
         // Формирование сообщения для пользователя
         // . . .
-        stringBuilderMsg.append("СКЮ (план)=").append((int)SKUPlan).append("шт., СКЮ (факт)=")
-                .append((int)SKUFact).append("шт., ОФС: ")
+        spannableStringBuilder.append(Html.fromHtml("<b>СКЮ (план)=</b>")).append(String.valueOf((int)SKUPlan)).append("шт.,\n").append(Html.fromHtml("<b>СКЮ (факт)=</b>"))
+                .append(String.valueOf((int)SKUFact)).append("шт.,\n").append(Html.fromHtml("<b> ОФС: </b>"))
                 .append(SKUFact > SKUPlan ? "товаров больше, чем должно быть на " + String.format("%.2f", OFS) + "%" : "отсутствует " + String.format("%.2f", OFS) + "% товаров.");
 
         // Формирование Сигналов для БЛОКИРОВКИ
         if (OFS == 100) {
             signal = true;
-            stringBuilderMsg.append("\n\nВы можете снять сигнал, если полностью и правильно заполните детализированный отчет! \n" +
+            spannableStringBuilder.append("\n\nВы можете снять сигнал, если полностью и правильно заполните детализированный отчет! \n" +
                     "В случае, если на витрине (и на складе) реально нет части товара напишите об этом в комментарии (см. на кнопку \"Комментарий\")");
         } else if (OFS > Integer.parseInt(optionDB.getAmountMax()) && Integer.parseInt(optionDB.getAmountMax()) > 0) {
             signal = true;
-            stringBuilderMsg.append(" и это больше ").append(optionDB.getAmountMax()).append("% (максимально допустимого).");
+            spannableStringBuilder.append(" и это больше ").append(optionDB.getAmountMax()).append("% (максимально допустимого).");
 
             if (clientId.equals("9295") && find > 1) {   // Костыль для клиента Бетта
                 signal = false;
-                stringBuilderMsg.append(" Комментарий об отсутствии товара написан, сигнал отменён!");
+                spannableStringBuilder.append(" Комментарий об отсутствии товара написан, сигнал отменён!");
             } else if (clientId.equals("8633") && find > 1){
                 signal = false;
-                stringBuilderMsg.append(" Комментарий об отсутствии товара написан, сигнал отменён!");
+                spannableStringBuilder.append(" Комментарий об отсутствии товара написан, сигнал отменён!");
             } else if (find > 0) {
                 signal = false;
-                stringBuilderMsg.append(" Примечание об отсутствии товара отписано, сигнал отменен!");
+                spannableStringBuilder.append(" Примечание об отсутствии товара отписано, сигнал отменен!");
                 // глТекстЧата=глТекстЧата+". СМС об отсутствии товара заказчику отправлено, сигнал отменен!";
             } else if (clientId.equals("9295")) {
-                stringBuilderMsg.append(" Вы можете снять сигнал, если полностью и правильно заполните детализированный отчет! \n" +
+                spannableStringBuilder.append(" Вы можете снять сигнал, если полностью и правильно заполните детализированный отчет! \n" +
                         "В случае, если на витрине (и на складе) реально нет части товара напишите об этом в комментарии (см. на кнопку \"Комментарий\")");
             } else if (clientId.equals("8633")){
-                stringBuilderMsg.append(" Вы можете снять сигнал, если полностью и правильно заполните детализированный отчет! \n" +
+                spannableStringBuilder.append(" Вы можете снять сигнал, если полностью и правильно заполните детализированный отчет! \n" +
                         "В случае, если на витрине (и на складе) реально нет части товара напишите об этом в комментарии (см. на кнопку \"Комментарий\")");
             } else {
-                stringBuilderMsg.append(" Вы можете снять сигнал, если полностью и правильно заполните детализированный отчет! \n" +
+                spannableStringBuilder.append(" Вы можете снять сигнал, если полностью и правильно заполните детализированный отчет! \n" +
                         "В случае, если на витрине (и на складе) реально нет части товара напишите об этом в комментарии (см. на кнопку \"Комментарий\")");
                 // massageToUser += " Вы можете снять сигнал, если Примечание к Товару заказчику о том, что товара мало (или он отсутствует).";
                 // глТекстЧата=глТекстЧата+" Вы можете снять сигнал, если отправите СМС заказчику о том, что товара мало (или он отсутствует).";
@@ -156,26 +159,29 @@ public class OptionControlAvailabilityDetailedReport<T> extends OptionControl {
             if (OFS >= 90) {
                 optionDB.setBlockPns("1");
                 signal = true;
-                stringBuilderMsg.append("\n\nВы можете снять сигнал, если напишите комментарии о причинах отсутствия товара.");
+                spannableStringBuilder.append("\n\nВы можете снять сигнал, если напишите комментарии о причинах отсутствия товара.");
             } else {
                 optionDB.setBlockPns("0");
             }
         }
 
-        stringBuilderMsg.append("\n\nОписание:\nСКЮ (План) - количество товарных позиций которые должны быть в торговой точке по плану.\nСКЮ (Факт) - количество товарных позиций которые фактически стоят на витрине.\nОФС - процент товара, который отсутствует по сравнению с планом");
+        spannableStringBuilder.append("\n\nОписание:\n").append(Html.fromHtml("<b>СКЮ (План)</b>"))
+                .append(" - количество товарных позиций которые должны быть в торговой точке по плану.\n")
+                .append(Html.fromHtml("<b>СКЮ (Факт)</b>")).append(" - количество товарных позиций которые фактически стоят на витрине.\n")
+                .append(Html.fromHtml("<b>ОФС</b>")).append(" - процент товара, который отсутствует по сравнению с планом");
 
         // Штатная блокировка
         if (signal) {
             if (optionDB.getBlockPns().equals("1") && docStatus == 0) {         //блокировать проведение ОИ, если есть сигнал
-                stringBuilderMsg.append("\n\nДокумент проведен не будет!");
+                spannableStringBuilder.append("\n\nДокумент проведен не будет!");
             } else if (OFS == 100 && docStatus == 0) {                          //блокировать проведение ОИ, если вообще не указаны товары
-                stringBuilderMsg.append("\n\nДокумент проведен не будет!");
+                spannableStringBuilder.append("\n\nДокумент проведен не будет!");
             } else {
-                stringBuilderMsg.append("\n\nВы можете получить Премиальные БОЛЬШЕ, если ОФС не будет превышать ")
-                        .append(Integer.parseInt(optionDB.getAmountMax())).append("%");
+                spannableStringBuilder.append("\n\nВы можете получить Премиальные БОЛЬШЕ, если ОФС не будет превышать ")
+                        .append(Character.highSurrogate(Integer.parseInt(optionDB.getAmountMax()))).append("%");
             }
         }else {
-            stringBuilderMsg.append("\n\nЗамечаний нет.");
+            spannableStringBuilder.append("\n\nЗамечаний нет.");
         }
 
         RealmManager.INSTANCE.executeTransaction(realm -> {
