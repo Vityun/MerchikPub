@@ -63,7 +63,6 @@ import ua.com.merchik.merchik.Options.Buttons.OptionButtAchievements;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonAddComment;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonAddNewClient;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonAvailabilityDetailedReport;
-import ua.com.merchik.merchik.Options.Buttons.OptionButtonPercentageOfThePrize;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonPhotoAktionTovar;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonPhotoBeforeStartWork;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonReclamationAnswer;
@@ -660,7 +659,14 @@ public class Options {
         switch (optionId) {
 
             case 135412:
-                new OptionButtonPercentageOfThePrize<>(context, dataDB, option, type, mode);
+//                new OptionButtonPercentageOfThePrize<>(context, dataDB, option, type, mode);
+
+                DialogData dialogData = new DialogData(context);
+                dialogData.setTitle(option.getOptionTxt());
+                dialogData.setText(option.getOptionDescr());
+                dialogData.setClose(dialogData::dismiss);
+                dialogData.show();
+
                 break;
 
             case 1455:

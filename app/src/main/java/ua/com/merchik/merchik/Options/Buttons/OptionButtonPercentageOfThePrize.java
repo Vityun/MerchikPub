@@ -1,7 +1,12 @@
 package ua.com.merchik.merchik.Options.Buttons;
 
 import android.content.Context;
+import android.os.Build;
 import android.text.Html;
+import android.text.SpannableStringBuilder;
+import android.util.Log;
+
+import androidx.annotation.RequiresApi;
 
 import ua.com.merchik.merchik.Options.OptionControl;
 import ua.com.merchik.merchik.Options.Options;
@@ -15,6 +20,13 @@ public class OptionButtonPercentageOfThePrize<T> extends OptionControl {
 
     private WpDataDB wpDataDB;
 
+    public String date; // Період
+    public int kps;  // Вып. работ
+    public int reclam;   // Получ. реклам.
+    public Double reclamPer;    // Проц. реклам.
+    public float maxPer; // Макс. проц.:
+    public int bonus; //Бонус/Снижение:
+
     public OptionButtonPercentageOfThePrize(Context context, T document, OptionsDB optionDB, OptionMassageType msgType, Options.NNKMode nnkMode) {
         this.context = context;
         this.document = document;
@@ -22,7 +34,9 @@ public class OptionButtonPercentageOfThePrize<T> extends OptionControl {
         this.msgType = msgType;
         this.nnkMode = nnkMode;
         getDocumentVar();
-        executeOption();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            executeOption();
+        }
     }
 
     private void getDocumentVar() {
@@ -31,25 +45,57 @@ public class OptionButtonPercentageOfThePrize<T> extends OptionControl {
         }
     }
 
-    private void executeOption() {
-        spannableStringBuilder.append(Html.fromHtml("<b>Відсоток преміальних\n\n"));
+    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
+    public void executeOption() {
+        try {
+            if (date != null) {
+                spannableStringBuilder.append(Html.fromHtml("<b>Відсоток преміальних"));
 
-        spannableStringBuilder.append(Html.fromHtml("<b>Період: </b>"))            .append("...").append("\n");
-        spannableStringBuilder.append(Html.fromHtml("<b>Вып. работ: </b>"))        .append("...").append(" кпс\n");
-        spannableStringBuilder.append(Html.fromHtml("<b>Получ. реклам.: </b>"))    .append("...").append("шт.\n");
-        spannableStringBuilder.append(Html.fromHtml("<b>Проц. реклам.: </b>"))     .append("...").append("%\n");
-        spannableStringBuilder.append(Html.fromHtml("<b>Макс. проц.: </b>"))       .append("...").append("%\n");
-        spannableStringBuilder.append(Html.fromHtml("<b>Бонус/Снижение: </b>"))    .append("...").append("%\n\n");
+                spannableStringBuilder.append("\n\n");
 
-        spannableStringBuilder.append(Html.fromHtml("<b>Описание:</b>\n"));
-        spannableStringBuilder.append(Html.fromHtml("<b>Период (дней)</b>")).append(" - период, за который рассчитываются показатели\n");
-        spannableStringBuilder.append(Html.fromHtml("<b>Вып. работ (кпс)</b>")).append(" - количество выполненных работ\n");
-        spannableStringBuilder.append(Html.fromHtml("<b>Получ. реклам. (рек)</b>")).append(" - количество полученных рекламаций \n");
-        spannableStringBuilder.append(Html.fromHtml("<b>Проц. реклам. (%)</b>")).append(" - 100*рек/кпс\n");
-        spannableStringBuilder.append(Html.fromHtml("<b>Макс. проц. (%)</b>")).append(" - максимально допустимый процент рекламаций ... %\n\n");
+                CharSequence valBonus = counter2Text();
 
-        spannableStringBuilder.append("Вы получили ... % рекламаций поэтому ваши премиальные снижены/увеличены на ... %");
+                spannableStringBuilder.append(Html.fromHtml("<b>Період: </b>")).append(date).append("\n");
+                spannableStringBuilder.append(Html.fromHtml("<b>Вик. робіт: </b>")).append(String.valueOf(kps)).append(" кпс\n");
+                spannableStringBuilder.append(Html.fromHtml("<b>Отримано. рек.: </b>")).append(String.valueOf(reclam)).append(" шт.\n");
+                spannableStringBuilder.append(Html.fromHtml("<b>Відсоток. рек.: </b>")).append(String.format("%.2f", reclamPer)).append("%\n");
+                spannableStringBuilder.append(Html.fromHtml("<b>Макс. відсоток.: </b>")).append(String.valueOf(maxPer)).append("%\n");
+                spannableStringBuilder.append(Html.fromHtml(bonus >= 0 ? "<b>Бонус: </b>" : "<b>Зниження: </b>"))
+                        .append(bonus >= 0 ? Html.fromHtml("<font color=green>" + bonus + "%</font>") : Html.fromHtml("<font color=red>" + bonus + "%</font>"))
+                        .append(", ").append(bonus >= 0 ? Html.fromHtml("<font color=green>" + valBonus + "%</font>") : Html.fromHtml("<font color=red>" + valBonus + "%</font>")).append(" грн.").append("\n\n");
 
-        showOptionMassage();
+                spannableStringBuilder.append(Html.fromHtml("<b>Пояснення:</b>")).append("\n");
+                spannableStringBuilder.append(Html.fromHtml("<b>Період (діб)</b>")).append(" - період, за який розраховуються показники\n");
+                spannableStringBuilder.append(Html.fromHtml("<b>Вик. робіт (кпс)</b>")).append(" - кількість виконаних робіт\n");
+                spannableStringBuilder.append(Html.fromHtml("<b>Отримано. рек. (рек)</b>")).append(" - кількість отриманих рекламацій \n");
+                spannableStringBuilder.append(Html.fromHtml("<b>Відсоток. рек. (%)</b>")).append(" - 100% * ").append(String.valueOf(reclam)).append("/")
+                        .append(String.valueOf(kps)).append(" = ").append(String.format("%.2f", reclamPer)).append("%").append("\n");
+                spannableStringBuilder.append(Html.fromHtml("<b>Макс. відсоток. (%)</b>")).append(" - максимально допустимий відсоток рекламацій ").append(String.valueOf(maxPer)).append(" %\n\n");
+
+                spannableStringBuilder.append("Ви отримали ").append(String.format("%.2f", reclamPer))
+                        .append("% рекламацій (при максимально допустимому показнику ").append(String.valueOf(maxPer)).append("%)").append(" тому ваші преміальні ")
+                        .append(bonus >= 0 ? "збільшено" : "зменшено").append(" на ")
+                        .append(bonus >= 0 ? Html.fromHtml("<font color=green>" + bonus + "%</font>") : Html.fromHtml("<font color=red>" + bonus + "%</font>"))
+                        .append(", ").append(bonus >= 0 ? Html.fromHtml("<font color=green>" + valBonus + "%</font>") : Html.fromHtml("<font color=red>" + valBonus + "%</font>")).append(" грн.");
+
+
+                spannableStringBuilder.append("");
+            }
+
+        } catch (Exception e) {
+            Log.e("test_135412", "Exception e: " + e);
+            e.printStackTrace();
+        }
+    }
+
+    public SpannableStringBuilder getMsg() {
+        return spannableStringBuilder;
+    }
+
+    private CharSequence counter2Text() {
+        CharSequence res = "";
+        res = "~" + String.format("%.2f", wpDataDB.getCash_zakaz() * 0.08);
+        res = Html.fromHtml("" + res + "");
+        return res;
     }
 }

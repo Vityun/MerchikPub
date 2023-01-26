@@ -11,6 +11,7 @@ import java.util.List;
 
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
+import ua.com.merchik.merchik.Options.Buttons.OptionButtonPercentageOfThePrize;
 import ua.com.merchik.merchik.Options.OptionControl;
 import ua.com.merchik.merchik.Options.Options;
 import ua.com.merchik.merchik.data.Database.Room.ReclamationPercentageSDB;
@@ -47,6 +48,7 @@ public class OptionControlPercentageOfThePrize<T> extends OptionControl {
     private Date dt;
     private int kps;
     private int percentReclamation;
+    private Double percentReclamation2;
     private float percentReclamationConst;
 
     private UsersSDB usersSDB;
@@ -75,7 +77,7 @@ public class OptionControlPercentageOfThePrize<T> extends OptionControl {
             dateFrom = Clock.getDatePeriodLong(wp.getDt().getTime(), -15);
             dateTo = Clock.getDatePeriodLong(wp.getDt().getTime(), -1);
 
-            period = " (с " + Clock.getHumanTimeSecPattern(dateFrom / 1000, "dd-MM-yy") + " по " + Clock.getHumanTimeSecPattern(dateTo / 1000, "dd-MM-yy") + ")";
+            period = " з " + Clock.getHumanTimeSecPattern(dateFrom / 1000, "dd-MM-yy") + " по " + Clock.getHumanTimeSecPattern(dateTo / 1000, "dd-MM-yy") + "";
 
             kps = WpDataRealm.getWpDataBy(new Date(dateFrom), new Date(dateTo), 1).size();
 
@@ -115,6 +117,7 @@ public class OptionControlPercentageOfThePrize<T> extends OptionControl {
         //4.0. определим для исполнителя процент рекламаций
         if (kps > 0) {
             percentReclamation = 100 * reclamations.size() / kps;
+            percentReclamation2 = Double.valueOf(100 * reclamations.size() / kps);
         }
 
         formula.append("\n\nВідсоток рекламацій = ( 100 * Кількість рекламацій / Кількість звітів )");
@@ -182,15 +185,28 @@ public class OptionControlPercentageOfThePrize<T> extends OptionControl {
 
 
         stringBuilderMsg.append(formula);
+        stringBuilderMsg = new StringBuilder();    // Потому что я могу
+
+        OptionButtonPercentageOfThePrize buttonOption = new OptionButtonPercentageOfThePrize<>(context, document, optionDB, msgType, nnkMode);
+        buttonOption.date = period;
+        buttonOption.kps = kps;
+        buttonOption.reclam = reclamations.size();
+        buttonOption.reclamPer = percentReclamation2;
+        buttonOption.maxPer = percentReclamationConst;
+        buttonOption.bonus = percent;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            buttonOption.executeOption();
+            spannableStringBuilder = buttonOption.getMsg();
+        }
 
 
         saveOptionResultInDB();
         if (signal) {
             if (optionDB.getBlockPns().equals("1")) {
                 setIsBlockOption(signal);
-                stringBuilderMsg.append("\n\n").append("Документ проведен не буде!");
+                spannableStringBuilder.append("\n\n").append("Документ проведен не буде!");
             } else {
-                stringBuilderMsg.append("\n\n").append("Ви можете отримати Преміальні БІЛЬШЕ, якщо будете отримувати менше рекламацій.");
+                spannableStringBuilder.append("\n\n").append("Ви можете отримати Преміальні БІЛЬШЕ, якщо будете отримувати менше рекламацій.");
             }
         }
     }
