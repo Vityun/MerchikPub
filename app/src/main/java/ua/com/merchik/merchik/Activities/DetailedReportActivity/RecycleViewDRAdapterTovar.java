@@ -1,5 +1,18 @@
 package ua.com.merchik.merchik.Activities.DetailedReportActivity;
 
+import static ua.com.merchik.merchik.Globals.OptionControlName.AKCIYA;
+import static ua.com.merchik.merchik.Globals.OptionControlName.AKCIYA_ID;
+import static ua.com.merchik.merchik.Globals.OptionControlName.ERROR_ID;
+import static ua.com.merchik.merchik.database.realm.RealmManager.INSTANCE;
+import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
+import static ua.com.merchik.merchik.dialogs.DialogData.Operations;
+import static ua.com.merchik.merchik.dialogs.DialogData.Operations.Date;
+import static ua.com.merchik.merchik.dialogs.DialogData.Operations.DoubleSpinner;
+import static ua.com.merchik.merchik.dialogs.DialogData.Operations.EditTextAndSpinner;
+import static ua.com.merchik.merchik.dialogs.DialogData.Operations.Number;
+import static ua.com.merchik.merchik.dialogs.DialogData.Operations.Text;
+import static ua.com.merchik.merchik.menu_main.decodeSampledBitmapFromResource;
+
 import android.app.Dialog;
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -57,7 +70,6 @@ import ua.com.merchik.merchik.data.Database.Room.OborotVedSDB;
 import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
 import ua.com.merchik.merchik.data.PhotoDescriptionText;
 import ua.com.merchik.merchik.data.RealmModels.ErrorDB;
-import ua.com.merchik.merchik.data.RealmModels.LogDB;
 import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
 import ua.com.merchik.merchik.data.RealmModels.PromoDB;
 import ua.com.merchik.merchik.data.RealmModels.ReportPrepareDB;
@@ -74,19 +86,6 @@ import ua.com.merchik.merchik.database.realm.tables.ReportPrepareRealm;
 import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.dialogs.DialogPhotoTovar;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
-
-import static ua.com.merchik.merchik.Globals.OptionControlName.AKCIYA;
-import static ua.com.merchik.merchik.Globals.OptionControlName.AKCIYA_ID;
-import static ua.com.merchik.merchik.Globals.OptionControlName.ERROR_ID;
-import static ua.com.merchik.merchik.database.realm.RealmManager.INSTANCE;
-import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
-import static ua.com.merchik.merchik.dialogs.DialogData.Operations;
-import static ua.com.merchik.merchik.dialogs.DialogData.Operations.Date;
-import static ua.com.merchik.merchik.dialogs.DialogData.Operations.DoubleSpinner;
-import static ua.com.merchik.merchik.dialogs.DialogData.Operations.EditTextAndSpinner;
-import static ua.com.merchik.merchik.dialogs.DialogData.Operations.Number;
-import static ua.com.merchik.merchik.dialogs.DialogData.Operations.Text;
-import static ua.com.merchik.merchik.menu_main.decodeSampledBitmapFromResource;
 
 public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewDRAdapterTovar.ViewHolder> implements Filterable {
 
@@ -339,7 +338,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                 // Получение RP
                 ReportPrepareDB rp = ReportPrepareRealm.getReportPrepareByTov(String.valueOf(codeDad2), list.getiD());
                 String ostatok = rp.getOborotvedNum();
-                Long ostatokDate = Long.parseLong(rp.getDt());
+                Long ostatokDate = Long.parseLong(rp.oborotved_num_date);
 
 
                 // 30 дней в миллисекундах == 2592000000

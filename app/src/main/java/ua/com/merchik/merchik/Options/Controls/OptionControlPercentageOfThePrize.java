@@ -4,6 +4,7 @@ import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
 import android.content.Context;
 import android.os.Build;
+import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -54,18 +55,24 @@ public class OptionControlPercentageOfThePrize<T> extends OptionControl {
     private UsersSDB usersSDB;
 
     public OptionControlPercentageOfThePrize(Context context, T document, OptionsDB optionDB, OptionMassageType msgType, Options.NNKMode nnkMode) {
-        this.context = context;
-        this.document = document;
-        this.optionDB = optionDB;
-        this.msgType = msgType;
-        this.nnkMode = nnkMode;
-        getDocumentVar();
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            executeOption();
-        } else {
-            StringBuilder sb = new StringBuilder();
-            sb.append("Build.VERSION.SDK_INT: ").append(Build.VERSION.SDK_INT).append("  Build.VERSION_CODES.N: ").append(Build.VERSION_CODES.N);
-            Globals.writeToMLOG("INFO", "OptionControlPercentageOfThePrize", "sb: " + sb);
+        try {
+            this.context = context;
+            this.document = document;
+            this.optionDB = optionDB;
+            this.msgType = msgType;
+            this.nnkMode = nnkMode;
+            getDocumentVar();
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                executeOption();
+            } else {
+                StringBuilder sb = new StringBuilder();
+                sb.append("Build.VERSION.SDK_INT: ").append(Build.VERSION.SDK_INT).append("  Build.VERSION_CODES.N: ").append(Build.VERSION_CODES.N);
+                Globals.writeToMLOG("INFO", "OptionControlPercentageOfThePrize", "sb: " + sb);
+            }
+        }catch (Exception e){
+            Globals.writeToMLOG("INFO", "OptionControlPercentageOfThePrize", "Exception e: " + e);
+            Log.e("test_135412", "Exception e: " + e);
+            e.printStackTrace();
         }
     }
 

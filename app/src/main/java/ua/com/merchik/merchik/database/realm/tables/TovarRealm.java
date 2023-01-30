@@ -20,4 +20,15 @@ public class TovarRealm {
                 .findAll();
     }
 
+    public static List<TovarDB> getTov(){
+        return INSTANCE.where(TovarDB.class)
+                .notEqualTo("photoId", "0")
+                .findAll();
+    }
+
+    public static List<TovarDB> getAllTov(){
+        return INSTANCE.where(TovarDB.class)
+                .findAll();
+    }
+
 }

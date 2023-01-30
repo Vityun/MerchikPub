@@ -1,6 +1,7 @@
 package ua.com.merchik.merchik.Activities;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -9,8 +10,7 @@ import androidx.appcompat.widget.Toolbar;
 import com.google.android.material.navigation.NavigationView;
 
 import ua.com.merchik.merchik.R;
-import ua.com.merchik.merchik.ServerExchange.Constants.ReclamationPercentageExchange;
-import ua.com.merchik.merchik.ServerExchange.TablesExchange.ShelfSizeExchange;
+import ua.com.merchik.merchik.database.realm.tables.TovarRealm;
 import ua.com.merchik.merchik.toolbar_menus;
 
 
@@ -46,11 +46,8 @@ public class MenuMainActivity extends toolbar_menus {
     }
 
     private void test() {
-        // Загрузка констант: процент рекламаций Киев, процент рекламаций Регионы
-        new ReclamationPercentageExchange().downloadAndSaveReclamationPercentage();
-
-        // Загрузка таблички Длин Полочного пространства
-        new ShelfSizeExchange().downloadShelfSize();
+        Log.e("test", "getTov: " + TovarRealm.getTov().size());
+        Log.e("test", "getAllTov: " + TovarRealm.getAllTov().size());
     }
 
     // =================================== --- onCreate --- ========================================

@@ -601,6 +601,12 @@ public class Exchange {
             // Загрузка таблички Длин Полочного пространства
             new ShelfSizeExchange().downloadShelfSize();
 
+            try {
+                updateTAR(SQL_DB.tarDao().getByUploadStatusVotes());
+            }catch (Exception e){
+
+            }
+
 
         } catch (Exception e) {
             Globals.writeToMLOG("ERROR", "startExchange", "Exception e: " + e);
@@ -630,8 +636,8 @@ public class Exchange {
             el.addr_id = item.addr;
             el.user_id = item.author;
             el.client_id = item.client;
-//            el.vinovnik_id = item.vinovnik;
-            el.vinovnik_id = 14041;     // TODO КРИТИЧНО, ТОЛЬКО ТЕСТЫ !!!
+            el.vinovnik_id = item.vinovnik;
+//            el.vinovnik_id = 14041;     // TODO КРИТИЧНО, ТОЛЬКО ТЕСТЫ !!!
             el.date = Clock.getDateString(item.dt);
             el.photo_id = item.photo;
             el.photo_hash = item.photoHash;
@@ -1325,11 +1331,6 @@ public class Exchange {
      * (время, мнение, комменты)
      */
     public static void updateTAR(TasksAndReclamationsSDB uploadData) {
-        // Подготовка данных на выгрузку
-//        List<TasksAndReclamationsSDB> uploadList = new ArrayList<TasksAndReclamationsSDB>();
-
-//        if (uploadList != null && uploadList.size() > 0){
-
         StandartData standartData = new StandartData();
         standartData.mod = "reclamation";
         standartData.act = "update_data";
@@ -1350,17 +1351,22 @@ public class Exchange {
 
         JsonObject convertedObject = new Gson().fromJson(new Gson().toJson(standartData), JsonObject.class);
         Log.e("updateTAR", "convertedObject:" + convertedObject);
+        Globals.writeToMLOG("INGO", "updateTAR", "convertedObject:" + convertedObject);
 
         retrofit2.Call<JsonObject> call = RetrofitBuilder.getRetrofitInterface().TEST_JSON_UPLOAD(RetrofitBuilder.contentType, convertedObject);
         call.enqueue(new Callback<JsonObject>() {
             @Override
             public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
                 Log.e("updateTAR", "response:" + response.body());
+                Globals.writeToMLOG("INGO", "updateTAR", "response.body():" + response.body());
+                uploadData.uploadStatus = 0;
+                SQL_DB.tarDao().insertData(Collections.singletonList(uploadData));
             }
 
             @Override
             public void onFailure(Call<JsonObject> call, Throwable t) {
                 Log.e("updateTAR", "t:" + t);
+                Globals.writeToMLOG("INGO", "updateTAR", "t:" + t);
             }
         });
 

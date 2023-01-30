@@ -66,6 +66,9 @@ public interface TarDao {
     @Query("SELECT * FROM tasks_and_reclamations WHERE uploadStatus = :uploadStatus")
     List<TasksAndReclamationsSDB> getByUploadStatus(Integer uploadStatus);
 
+    @Query("SELECT * FROM tasks_and_reclamations WHERE uploadStatus = 1 AND vote_score > 0 AND vinovnik_score > 0")
+    TasksAndReclamationsSDB getByUploadStatusVotes();
+
     @Query("SELECT * FROM tasks_and_reclamations WHERE tp = :tp")
     Flowable<List<TasksAndReclamationsSDB>> getAllByTpRx(int tp);
 

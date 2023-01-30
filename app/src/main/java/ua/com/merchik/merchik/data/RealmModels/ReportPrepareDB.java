@@ -104,9 +104,15 @@ public class ReportPrepareDB extends RealmObject {
     @SerializedName("tovar_error")
     @Expose
     public String tovarError;
+
     @SerializedName("oborotved_num")
     @Expose
     public String oborotvedNum;
+
+    @SerializedName("oborotved_num_date")
+    @Expose
+    public String oborotved_num_date;
+
     @SerializedName("state")
     @Expose
     public String state;
