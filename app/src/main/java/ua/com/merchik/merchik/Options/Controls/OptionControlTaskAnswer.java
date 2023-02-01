@@ -1,5 +1,7 @@
 package ua.com.merchik.merchik.Options.Controls;
 
+import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
+
 import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
@@ -37,8 +39,6 @@ import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.ReportPrepareRealm;
 import ua.com.merchik.merchik.database.realm.tables.TARCommentsRealm;
 import ua.com.merchik.merchik.database.realm.tables.ThemeRealm;
-
-import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
 /**
  * Опция контроля 135329
@@ -124,8 +124,8 @@ public class OptionControlTaskAnswer<T> extends OptionControl {
 
             // Убираю мусор с данных
             for (TasksAndReclamationsSDB item : tarList) {
-                if (item.client == null || item.client.equals("0")) tarList.remove(item);
-                if (item.dtRealPost > Clock.dateConvertToLong(documentDate)) tarList.remove(item);
+                if (item.client == null || item.client.equals("0")) /*tarList.remove(item)*/continue;
+                if (item.dtRealPost > Clock.dateConvertToLong(documentDate)) /*tarList.remove(item)*/continue;
 
                 // изменения за 11.10.22
                 // Гемор изза того что я не умею джойнить разные таблички между собой. Или мне впадлу джойнить как я умею.
@@ -133,7 +133,7 @@ public class OptionControlTaskAnswer<T> extends OptionControl {
                 if (customerSDBList.stream().filter(listItem -> listItem.id.equals(item.client)).findFirst().orElse(null) != null) {
                     currentCustomer = customerSDBList.stream().filter(listItem -> listItem.id.equals(item.client)).findFirst().get();
                 }
-                if (currentCustomer != null && currentCustomer.reclReplyMode == 1 && !customerSDB.equals(currentCustomer)) tarList.remove(item);    // То самое изменение
+                if (currentCustomer != null && currentCustomer.reclReplyMode == 1 && !customerSDB.equals(currentCustomer)) /*tarList.remove(item)*/continue;    // То самое изменение
                 // конец изменений за 11.10.22
 
 
@@ -244,6 +244,7 @@ public class OptionControlTaskAnswer<T> extends OptionControl {
 
             Globals.writeToMLOG("INFO", "OptionControlTaskAnswer/executeOption/spannableStringBuilder", "spannableStringBuilder: " + spannableStringBuilder);
         } catch (Exception e) {
+            e.printStackTrace();
             Globals.writeToMLOG("ERROR", "OptionControlTaskAnswer/executeOption/Exception", "Exception e: " + e);
         }
     }

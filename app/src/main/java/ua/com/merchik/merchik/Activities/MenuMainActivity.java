@@ -1,5 +1,7 @@
 package ua.com.merchik.merchik.Activities;
 
+import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
+
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.TextView;
@@ -9,7 +11,10 @@ import androidx.appcompat.widget.Toolbar;
 
 import com.google.android.material.navigation.NavigationView;
 
+import java.util.List;
+
 import ua.com.merchik.merchik.R;
+import ua.com.merchik.merchik.data.Database.Room.CustomerSDB;
 import ua.com.merchik.merchik.database.realm.tables.TovarRealm;
 import ua.com.merchik.merchik.toolbar_menus;
 
@@ -48,6 +53,15 @@ public class MenuMainActivity extends toolbar_menus {
     private void test() {
         Log.e("test", "getTov: " + TovarRealm.getTov().size());
         Log.e("test", "getAllTov: " + TovarRealm.getAllTov().size());
+
+
+        List<CustomerSDB> customerSDBList = SQL_DB.customerDao().getAll();
+        String[] tovIds = new String[customerSDBList.size()];
+        for (int i = 0; i < customerSDBList.size(); i++){
+            tovIds[i] = customerSDBList.get(i).id;
+        }
+
+        Log.e("test", "getTov: " + TovarRealm.getByCliIds(tovIds).size());
     }
 
     // =================================== --- onCreate --- ========================================
