@@ -1,5 +1,13 @@
 package ua.com.merchik.merchik.Options.Controls;
 
+import static ua.com.merchik.merchik.Globals.OptionControlName.AKCIYA_ID;
+import static ua.com.merchik.merchik.database.realm.RealmManager.INSTANCE;
+import static ua.com.merchik.merchik.dialogs.DialogData.Operations.Date;
+import static ua.com.merchik.merchik.dialogs.DialogData.Operations.DoubleSpinner;
+import static ua.com.merchik.merchik.dialogs.DialogData.Operations.EditTextAndSpinner;
+import static ua.com.merchik.merchik.dialogs.DialogData.Operations.Number;
+import static ua.com.merchik.merchik.dialogs.DialogData.Operations.Text;
+
 import android.content.Context;
 import android.text.SpannableString;
 import android.text.SpannableStringBuilder;
@@ -37,14 +45,6 @@ import ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsRealm;
 import ua.com.merchik.merchik.database.realm.tables.ReportPrepareRealm;
 import ua.com.merchik.merchik.database.realm.tables.TovarRealm;
 import ua.com.merchik.merchik.dialogs.DialogData;
-
-import static ua.com.merchik.merchik.Globals.OptionControlName.AKCIYA_ID;
-import static ua.com.merchik.merchik.database.realm.RealmManager.INSTANCE;
-import static ua.com.merchik.merchik.dialogs.DialogData.Operations.Date;
-import static ua.com.merchik.merchik.dialogs.DialogData.Operations.DoubleSpinner;
-import static ua.com.merchik.merchik.dialogs.DialogData.Operations.EditTextAndSpinner;
-import static ua.com.merchik.merchik.dialogs.DialogData.Operations.Number;
-import static ua.com.merchik.merchik.dialogs.DialogData.Operations.Text;
 
 /**
  * 06.06.2022
@@ -409,7 +409,7 @@ public class OptionControlPromotion<T> extends OptionControl {
                 rp.setAkciyaId(data);
                 rp.setAkciya(data2);
                 rp.setUploadStatus(1);
-                rp.setDtChange(String.valueOf(System.currentTimeMillis() / 1000));
+                rp.setDtChange(System.currentTimeMillis() / 1000);
                 RealmManager.setReportPrepareRow(rp);
             });
         }

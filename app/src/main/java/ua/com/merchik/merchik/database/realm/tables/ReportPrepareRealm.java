@@ -37,7 +37,7 @@ public class ReportPrepareRealm {
                 .findAll();
     }
 
-    public static RealmResults<ReportPrepareDB> getRPLastChange(String clientId, int addrId, long dtChange) {
+    public static RealmResults<ReportPrepareDB> getRPLastChange(String clientId, String addrId, long dtChange) {
         return INSTANCE.where(ReportPrepareDB.class)
                 .equalTo("kli", clientId)
                 .equalTo("addrId", addrId)

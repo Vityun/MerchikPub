@@ -201,7 +201,7 @@ public class OptionControlTaskAnswer<T> extends OptionControl {
                     } else if (theme.need_report == 1) {
 
                         long timeCreateTAR = item.dtRealPost;
-                        RealmResults<ReportPrepareDB> rp = ReportPrepareRealm.getRPLastChange(item.client, item.addr, timeCreateTAR);
+                        RealmResults<ReportPrepareDB> rp = ReportPrepareRealm.getRPLastChange(item.client, String.valueOf(item.addr), timeCreateTAR);
 
                         if (rp == null || rp.size() == 0) {
                             Globals.writeToMLOG("INFO", "OptionControlTaskAnswer/executeOption/for/data", "rp: " + rp.size());

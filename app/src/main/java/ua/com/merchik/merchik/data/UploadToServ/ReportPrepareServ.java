@@ -3,7 +3,7 @@ package ua.com.merchik.merchik.data.UploadToServ;
 public class ReportPrepareServ {
 
     private String element_id       ; // id from RP
-    private String dt               ;// время создания записи
+    private long dt               ;// время создания записи
     private String dt_report        ; // дата отчёта (YYYY-MM-DD)
     private String client_id        ; // код клиента
     private String tovar_id         ; // код товара
@@ -26,7 +26,7 @@ public class ReportPrepareServ {
     public ReportPrepareServ() {
     }
 
-    public ReportPrepareServ(String element_id, String dt, String dt_report, String client_id, String tovar_id, String addr_id, String price, String face, int amount, String dt_expire, String expire_left, String notes, String up, String akciya, String akciya_id, String oborotved_num, String error_id, String error_comment, String code_dad2, String buyer_order_id) {
+    public ReportPrepareServ(String element_id, long dt, String dt_report, String client_id, String tovar_id, String addr_id, String price, String face, int amount, String dt_expire, String expire_left, String notes, String up, String akciya, String akciya_id, String oborotved_num, String error_id, String error_comment, String code_dad2, String buyer_order_id) {
         this.element_id = element_id;
         this.dt = dt;
         this.dt_report = dt_report;
@@ -57,11 +57,11 @@ public class ReportPrepareServ {
         this.element_id = element_id;
     }
 
-    public String getDt() {
+    public long getDt() {
         return dt;
     }
 
-    public void setDt(String dt) {
+    public void setDt(long dt) {
         this.dt = dt;
     }
 

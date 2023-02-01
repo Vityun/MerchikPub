@@ -92,9 +92,11 @@ public class ReportPrepareDB extends RealmObject {
     @SerializedName("client_report")
     @Expose
     public String clientReport;
+
     @SerializedName("dt_change")
     @Expose
-    public String dtChange;
+    public long dtChange;
+
     @SerializedName("akciya")
     @Expose
     public String akciya;
@@ -469,11 +471,11 @@ public class ReportPrepareDB extends RealmObject {
         this.clientReport = clientReport;
     }
 
-    public String getDtChange() {
+    public long getDtChange() {
         return dtChange;
     }
 
-    public void setDtChange(String dtChange) {
+    public void setDtChange(long dtChange) {
         this.dtChange = dtChange;
     }
 

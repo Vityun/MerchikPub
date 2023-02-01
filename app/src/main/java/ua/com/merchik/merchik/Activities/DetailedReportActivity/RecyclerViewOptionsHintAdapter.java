@@ -25,7 +25,7 @@ public class RecyclerViewOptionsHintAdapter extends RecyclerView.Adapter<Recycle
     private Dialog dialog;
     private ReportPrepareDB reportPrepareTovar;
 
-    private String currentTime = "" + System.currentTimeMillis()/1000;
+    private long currentTime = System.currentTimeMillis()/1000;
 
     public RecyclerViewOptionsHintAdapter(Context context, List<RecentItem> list, ReportPrepareDB rpt, Dialog dialog, String type) {
         this.mContext = context;

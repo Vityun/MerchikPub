@@ -141,7 +141,7 @@ public class OptionControlCheckDetailedReport<T> extends OptionControl {
                 } else {
                     item.colSKU = 1;
                 }
-                long dtChangeTime = Long.parseLong(item.getDtChange());
+                long dtChangeTime = item.getDtChange();
                 if (dtChangeTime < time) {
                     item.errorExist = 1;
                     item.note = "исправление не внесено";

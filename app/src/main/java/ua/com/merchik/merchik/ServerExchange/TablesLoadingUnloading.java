@@ -2238,7 +2238,7 @@ public class TablesLoadingUnloading {
                     Log.e("REPORT_PREPARE_SEND", "RESPONSE: " + response.body());
 
                     Globals.writeToMLOG("INFO", "onResponse/uploadReportPrepareToServer", "DATA/response.body(): " + response.body());
-                    String currentTime = "" + System.currentTimeMillis() / 1000;
+                    long currentTime = System.currentTimeMillis() / 1000;
 
                     try {
                         if (response.isSuccessful()) {

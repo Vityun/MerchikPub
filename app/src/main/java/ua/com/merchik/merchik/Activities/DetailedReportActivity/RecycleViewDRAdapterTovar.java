@@ -1126,7 +1126,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                     INSTANCE.executeTransaction(realm -> {
                         table.setPrice(data);
                         table.setUploadStatus(1);
-                        table.setDtChange(String.valueOf(System.currentTimeMillis() / 1000));
+                        table.setDtChange(System.currentTimeMillis() / 1000);
                         RealmManager.setReportPrepareRow(table);
                     });
                     break;
@@ -1136,7 +1136,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                     INSTANCE.executeTransaction(realm -> {
                         table.setFace(data);
                         table.setUploadStatus(1);
-                        table.setDtChange(String.valueOf(System.currentTimeMillis() / 1000));
+                        table.setDtChange(System.currentTimeMillis() / 1000);
                         RealmManager.setReportPrepareRow(table);
                     });
                     break;
@@ -1146,7 +1146,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                     INSTANCE.executeTransaction(realm -> {
                         table.setExpireLeft(data);
                         table.setUploadStatus(1);
-                        table.setDtChange(String.valueOf(System.currentTimeMillis() / 1000));
+                        table.setDtChange(System.currentTimeMillis() / 1000);
                         RealmManager.setReportPrepareRow(table);
                     });
                     break;
@@ -1156,7 +1156,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                     INSTANCE.executeTransaction(realm -> {
                         table.setAmount(Integer.parseInt(data));
                         table.setUploadStatus(1);
-                        table.setDtChange(String.valueOf(System.currentTimeMillis() / 1000));
+                        table.setDtChange(System.currentTimeMillis() / 1000);
                         RealmManager.setReportPrepareRow(table);
                     });
                     break;
@@ -1166,7 +1166,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                     INSTANCE.executeTransaction(realm -> {
                         table.setOborotvedNum(data);
                         table.setUploadStatus(1);
-                        table.setDtChange(String.valueOf(System.currentTimeMillis() / 1000));
+                        table.setDtChange(System.currentTimeMillis() / 1000);
                         RealmManager.setReportPrepareRow(table);
                     });
                     break;
@@ -1176,7 +1176,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                     INSTANCE.executeTransaction(realm -> {
                         table.setUp(data);
                         table.setUploadStatus(1);
-                        table.setDtChange(String.valueOf(System.currentTimeMillis() / 1000));
+                        table.setDtChange(System.currentTimeMillis() / 1000);
                         RealmManager.setReportPrepareRow(table);
                     });
                     break;
@@ -1186,7 +1186,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                     INSTANCE.executeTransaction(realm -> {
                         table.setDtExpire(data);
                         table.setUploadStatus(1);
-                        table.setDtChange(String.valueOf(System.currentTimeMillis() / 1000));
+                        table.setDtChange(System.currentTimeMillis() / 1000);
                         RealmManager.setReportPrepareRow(table);
                     });
                     break;
@@ -1199,7 +1199,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                         table.setErrorComment(data2);
                         table.setNotes(data2);
                         table.setUploadStatus(1);
-                        table.setDtChange(String.valueOf(System.currentTimeMillis() / 1000));
+                        table.setDtChange(System.currentTimeMillis() / 1000);
                         RealmManager.setReportPrepareRow(table);
                     });
                     break;
@@ -1210,7 +1210,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                         table.setAkciyaId(data);
                         table.setAkciya(data2);
                         table.setUploadStatus(1);
-                        table.setDtChange(String.valueOf(System.currentTimeMillis() / 1000));
+                        table.setDtChange(System.currentTimeMillis() / 1000);
                         RealmManager.setReportPrepareRow(table);
                     });
                     break;
@@ -1220,7 +1220,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                     INSTANCE.executeTransaction(realm -> {
                         table.setAkciya(data);
                         table.setUploadStatus(1);
-                        table.setDtChange(String.valueOf(System.currentTimeMillis() / 1000));
+                        table.setDtChange(System.currentTimeMillis() / 1000);
                         RealmManager.setReportPrepareRow(table);
                     });
                     break;
@@ -1230,7 +1230,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                     INSTANCE.executeTransaction(realm -> {
                         table.setNotes(data);
                         table.setUploadStatus(1);
-                        table.setDtChange(String.valueOf(System.currentTimeMillis() / 1000));
+                        table.setDtChange(System.currentTimeMillis() / 1000);
                         RealmManager.setReportPrepareRow(table);
                     });
                     break;
