@@ -1,5 +1,11 @@
 package ua.com.merchik.merchik.Activities.DetailedReportActivity;
 
+import static ua.com.merchik.merchik.PhotoReportActivity.exifPhotoData;
+import static ua.com.merchik.merchik.PhotoReportActivity.getImageOrientation;
+import static ua.com.merchik.merchik.PhotoReportActivity.resaveBitmap;
+import static ua.com.merchik.merchik.PhotoReportActivity.resizeImageFile;
+import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
+
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Intent;
@@ -52,12 +58,6 @@ import ua.com.merchik.merchik.database.realm.tables.StackPhotoRealm;
 import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
 import ua.com.merchik.merchik.toolbar_menus;
-
-import static ua.com.merchik.merchik.PhotoReportActivity.exifPhotoData;
-import static ua.com.merchik.merchik.PhotoReportActivity.getImageOrientation;
-import static ua.com.merchik.merchik.PhotoReportActivity.resaveBitmap;
-import static ua.com.merchik.merchik.PhotoReportActivity.resizeImageFile;
-import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
 public class DetailedReportActivity extends toolbar_menus {
 

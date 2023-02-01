@@ -1,5 +1,7 @@
 package ua.com.merchik.merchik.Activities.DetailedReportActivity;
 
+import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
+
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
@@ -32,8 +34,6 @@ import ua.com.merchik.merchik.database.realm.tables.UsersRealm;
 import ua.com.merchik.merchik.dialogs.DialodTAR.DialogCreateTAR;
 import ua.com.merchik.merchik.dialogs.DialogData;
 
-import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
-
 public class DetailedReportTARFrag extends Fragment {
 
     private Context mContext;
@@ -54,7 +54,8 @@ public class DetailedReportTARFrag extends Fragment {
         View v = inflater.inflate(R.layout.fragment_dr_tar, container, false);
 
         fragmentManager = getParentFragmentManager();
-        tasksAndReclamationsSDBList = SQL_DB.tarDao().getAllByInfo(1, wpDataDB.getClient_id(), wpDataDB.getAddr_id(), (System.currentTimeMillis() / 1000 - 5184000));
+//        tasksAndReclamationsSDBList = SQL_DB.tarDao().getAllByInfo(1, wpDataDB.getClient_id(), wpDataDB.getAddr_id(), (System.currentTimeMillis() / 1000 - 5184000));
+        tasksAndReclamationsSDBList = SQL_DB.tarDao().getAllByInfo(0, wpDataDB.getAddr_id());
 
         try {
             FloatingActionButton fabAdd = v.findViewById(R.id.fabAdd);
