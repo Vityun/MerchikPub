@@ -126,21 +126,28 @@ public class OptionControlPromotion<T> extends OptionControl {
             }
 
             TovarDB tov = TovarRealm.getById(item.getTovarId());
-            String msg = String.format("(%s) %s (%s)", item.getTovarId(), tov.getNm(), tov.getWeight());
+            if (tov != null){
+                String msg = String.format("(%s) %s (%s)", item.getTovarId(), tov.getNm(), tov.getWeight());
 
-            if (OSV == 1 && (item.getAkciyaId().equals("") || item.getAkciyaId().equals("0"))) {
-                // Для товара с ОСВ (Особым Вниманием) Вы должны обязательно указать ТИП Акции.
-                err++;
-                errType2Cnt++;
-                errMsgType2.append(createLinkedString(msg, item, tov)).append("\n");
-            } else if (OSV == 1 && (item.getAkciya() != null  && (item.getAkciya().equals("") || item.getAkciya().equals("0")))) {
-                // Для товара с ОСВ (Особым Вниманием) Вы должны обязательно указать наличие (или отсутствие) Акции.
+                if (OSV == 1 && (item.getAkciyaId().equals("") || item.getAkciyaId().equals("0"))) {
+                    // Для товара с ОСВ (Особым Вниманием) Вы должны обязательно указать ТИП Акции.
+                    err++;
+                    errType2Cnt++;
+                    errMsgType2.append(createLinkedString(msg, item, tov)).append("\n");
+                } else if (OSV == 1 && (item.getAkciya() != null  && (item.getAkciya().equals("") || item.getAkciya().equals("0")))) {
+                    // Для товара с ОСВ (Особым Вниманием) Вы должны обязательно указать наличие (или отсутствие) Акции.
+                    err++;
+                    errType1Cnt++;
+                    errMsgType1.append(createLinkedString(msg, item, tov)).append("\n");
+                } else if (!item.getAkciyaId().equals("") && !item.getAkciyaId().equals("0")) {
+                    find = 1;
+                }
+            }else {
                 err++;
                 errType1Cnt++;
-                errMsgType1.append(createLinkedString(msg, item, tov)).append("\n");
-            } else if (!item.getAkciyaId().equals("") && !item.getAkciyaId().equals("0")) {
-                find = 1;
+                errMsgType1.append("Товар з ідентифікатором: (").append(item.getTovarId()).append(") не знайдено").append("\n");
             }
+
         }
 
         // Формирование сообщения
