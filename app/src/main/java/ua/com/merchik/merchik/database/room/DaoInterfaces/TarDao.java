@@ -59,7 +59,7 @@ public interface TarDao {
     List<TasksAndReclamationsSDB> getAllByInfo(int tp, String client, int address, long dt, int state);
 
 
-    @Query("SELECT tar.*, addr.nm AS addr_nm FROM tasks_and_reclamations tar LEFT JOIN address addr ON tar.addr = addr.id WHERE state = :state AND addr = :address ")
+    @Query("SELECT tar.*, addr.nm AS addr_nm FROM tasks_and_reclamations tar LEFT JOIN address addr ON tar.addr = addr.id WHERE state = :state AND addr = :address ORDER BY client")
     List<TasksAndReclamationsSDB> getAllByInfo(int state, int address);
 
 

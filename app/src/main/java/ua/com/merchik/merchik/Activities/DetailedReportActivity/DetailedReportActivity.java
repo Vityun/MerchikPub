@@ -72,6 +72,7 @@ public class DetailedReportActivity extends toolbar_menus {
 
     public static FloatingActionButton fab;
     public static List<TasksAndReclamationsSDB> tarList;
+    private List<TasksAndReclamationsSDB> tasksAndReclamationsSDBList;
     public static boolean additionalRequirementsFilter = true;  // true - по наличию в RP. false - отображаем ВСЁ
 
 
@@ -121,6 +122,7 @@ public class DetailedReportActivity extends toolbar_menus {
 
         // Задачи для Закладочки "ЗИР"
         tarList = SQL_DB.tarDao().getAllByInfo(1, wpDataDB.getClient_id(), wpDataDB.getAddr_id(), (System.currentTimeMillis() / 1000 - 5184000), 0);
+        tasksAndReclamationsSDBList = SQL_DB.tarDao().getAllByInfo(0, wpDataDB.getAddr_id());
 
         globals.writeToMLOG(Clock.getHumanTime() + "DetailedReportActivity.onCreate: " + "ENTER" + "\n");
 
@@ -155,7 +157,7 @@ public class DetailedReportActivity extends toolbar_menus {
         StringBuffer tarTabTitle = new StringBuffer();
         tarTabTitle.append("ЗИР");
         if (tarList != null && tarList.size() > 0) {
-            tarTabTitle.append("(").append("<font color='red'>").append(tarList.size()).append("</font>").append(")");
+            tarTabTitle.append("(").append("<font color='red'>").append(tasksAndReclamationsSDBList.size()).append("</font>").append("/").append("<font color='red'>").append(tarList.size()).append("</font>").append(")");
         }
         tabLayout.getTabAt(3).setText(Html.fromHtml(String.valueOf(tarTabTitle)));
 
