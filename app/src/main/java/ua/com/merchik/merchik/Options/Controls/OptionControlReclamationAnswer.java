@@ -122,7 +122,7 @@ public class OptionControlReclamationAnswer<T> extends OptionControl {
                 if (customerSDBList.stream().filter(listItem -> listItem.id.equals(item.client)).findFirst().orElse(null) != null) {
                     currentCustomer = customerSDBList.stream().filter(listItem -> listItem.id.equals(item.client)).findFirst().get();
                 }
-                if (currentCustomer != null && currentCustomer.reclReplyMode == 1 && !customerSDB.equals(currentCustomer)) /*tarList.remove(item)*/continue;    // То самое изменение
+                if (currentCustomer != null && currentCustomer.reclReplyMode == 1 && !customerSDB.id.equals(currentCustomer.id)) /*tarList.remove(item)*/continue;    // То самое изменение
                 // конец изменений за 11.10.22
 
                 ThemeDB theme = ThemeRealm.getThemeById(String.valueOf(item.themeId));

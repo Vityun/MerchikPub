@@ -82,7 +82,7 @@ public class OptionControlPhotoTovarsLeftClient<T> extends OptionControl {
 
     @RequiresApi(api = Build.VERSION_CODES.N)
     private void executeOption() {
-        List<StackPhotoDB> stackPhoto = StackPhotoRealm.getPhoto(dateFrom, dateTo, null, clientId, null, PHOTO_TOV_LEFT);
+        List<StackPhotoDB> stackPhoto = StackPhotoRealm.getPhoto(dateFrom, dateTo, null, addrId, clientId, null, PHOTO_TOV_LEFT);
 
         if (tpId == 8923 && (usersSDB.reportDate01 != null || usersSDB.reportDate05.getTime() >= documentDate)) {
             stringBuilderMsg.append("Для Новуса наличие ФОТ не проверяем до 5-го отчета.");
