@@ -44,6 +44,7 @@ public class OptionControlPhotoTovarsLeftClient<T> extends OptionControl {
 
     private int addrId;
     private String clientId;
+    private String clientNm;
     private long dad2 = 0;
     private long documentDate;  // На данный момент в миллисекундах
     private long dateFrom;
@@ -68,6 +69,7 @@ public class OptionControlPhotoTovarsLeftClient<T> extends OptionControl {
 
             addrId = wp.getAddr_id();
             clientId = wp.getClient_id();
+            clientNm = wp.getClient_txt();
             dad2 = wp.getCode_dad2();
             documentDate = wp.getDt().getTime();
 
@@ -88,26 +90,26 @@ public class OptionControlPhotoTovarsLeftClient<T> extends OptionControl {
             stringBuilderMsg.append("Для Новуса наличие ФОТ не проверяем до 5-го отчета.");
             signal = false;
         } else if (tpId == 8923 && stackPhoto.size() < COL_MIN) {
-            stringBuilderMsg.append("За период с ").append(Clock.getHumanTimeSecPattern(dateFrom / 1000, "dd-MM"))
+            stringBuilderMsg.append("По клиенту ").append(clientNm).append(". ").append("За период с ").append(Clock.getHumanTimeSecPattern(dateFrom / 1000, "dd-MM"))
                     .append(" по ").append(Clock.getHumanTimeSecPattern(dateTo / 1000, "dd-MM"))
                     .append(" есть ").append(stackPhoto.size())
                     .append(" ФОТ. Для Новуса можно использовать ФОТ из приложения НОВУС. Но ФОТ должно быть столько-же, сколько СКЮ: ")
                     .append(COL_MIN).append(" (не более 10-и)");
             signal = true;
         } else if (stackPhoto.size() > 0) {
-            stringBuilderMsg.append("За период с ").append(Clock.getHumanTimeSecPattern(dateFrom / 1000, "dd-MM"))
+            stringBuilderMsg.append("По клиенту ").append(clientNm).append(". ").append("За период с ").append(Clock.getHumanTimeSecPattern(dateFrom / 1000, "dd-MM"))
                     .append(" по ").append(Clock.getHumanTimeSecPattern(dateTo / 1000, "dd-MM"))
                     .append(" Сотрудником ").append(usersSDB.fio).append(" выполнено ").append(stackPhoto.size())
                     .append(" ФОТ (Фото Остатков Товаров)");
             signal = false;
         } else if (usersSDB.reportDate20 == null || documentDate <= usersSDB.reportDate20.getTime() || (usersSDB.reportDate20 != null && usersSDB.reportCount < 30)) {
-            stringBuilderMsg.append("Не проверяю наличие ФОТ (Фото Остатков Товаров) для исполнителей не провевших 20-ть отчетов");
+            stringBuilderMsg.append("По клиенту ").append(clientNm).append(". ").append("Не проверяю наличие ФОТ (Фото Остатков Товаров) для исполнителей не провевших 20-ть отчетов");
             signal = false;
         } else if (Arrays.stream(groups).anyMatch(x -> Objects.equals(x, tpId))) {
-            stringBuilderMsg.append("Не проверяю наличие ФОТ (Фото Остатков Товаров) для сетей: Сільпо, АТБ");  // todo Нужно будет Сети нормально вписать, а не руками.
+            stringBuilderMsg.append("По клиенту ").append(clientNm).append(". ").append("Не проверяю наличие ФОТ (Фото Остатков Товаров) для сетей: Сільпо, АТБ");  // todo Нужно будет Сети нормально вписать, а не руками.
             signal = false;
         } else {
-            stringBuilderMsg.append("За период с ").append(Clock.getHumanTimeSecPattern(dateFrom / 1000, "dd-MM"))
+            stringBuilderMsg.append("По клиенту ").append(clientNm).append(". ").append("За период с ").append(Clock.getHumanTimeSecPattern(dateFrom / 1000, "dd-MM"))
                     .append(" по ").append(Clock.getHumanTimeSecPattern(dateTo / 1000, "dd-MM"))
                     .append(" Сотрудником ").append(usersSDB.fio).append(" НЕ выполнено ни одного ФОТ (Фото Остатков Товаров) по ЛЮБОМУ Адресо/Клиенту.");
             signal = true;
