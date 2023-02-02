@@ -228,22 +228,26 @@ public class StackPhotoRealm {
      * 09.01.2023.
      * Универсальная функция для получения Жернала фото
      */
-    public static RealmResults<StackPhotoDB> getPhoto(Long dtFrom, Long dtTo, Integer userId, Long dad2, Integer photoType) {
+    public static RealmResults<StackPhotoDB> getPhoto(Long dtFrom, Long dtTo, Integer userId, String clientId, Long dad2, Integer photoType) {
         RealmResults<StackPhotoDB> res = INSTANCE.where(StackPhotoDB.class).findAll();
 
         if (dtFrom != null && dtTo != null) {
             res = res.where().between("create_time", dtFrom, dtTo).findAll();
         }
 
-        if (userId != null){
+        if (userId != null) {
             res = res.where().equalTo("user_id", userId).findAll();
         }
 
-        if (dad2 != null){
+        if (clientId != null) {
+            res = res.where().equalTo("client_id", clientId).findAll();
+        }
+
+        if (dad2 != null) {
             res = res.where().equalTo("code_dad2", dad2).findAll();
         }
 
-        if (photoType != null){
+        if (photoType != null) {
             res = res.where().equalTo("photo_type", photoType).findAll();
         }
 

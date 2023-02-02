@@ -84,6 +84,7 @@ import ua.com.merchik.merchik.Options.Controls.OptionControlPercentageOfThePrize
 import ua.com.merchik.merchik.Options.Controls.OptionControlPhoto;
 import ua.com.merchik.merchik.Options.Controls.OptionControlPhotoBeforeStartWork;
 import ua.com.merchik.merchik.Options.Controls.OptionControlPhotoTovarsLeft;
+import ua.com.merchik.merchik.Options.Controls.OptionControlPhotoTovarsLeftClient;
 import ua.com.merchik.merchik.Options.Controls.OptionControlPromotion;
 import ua.com.merchik.merchik.Options.Controls.OptionControlReclamationAnswer;
 import ua.com.merchik.merchik.Options.Controls.OptionControlRegistrationPotentialClient;
@@ -131,7 +132,8 @@ public class Options {
 
     private Integer[] describedOptions = new Integer[]{132624, 76815, 157241, 157243, 84006, 156928,
             151594, 80977, 135330, 133381, 135329, 138518, 151139, 132623, 133382, 137797, 135809,
-            135328, 135327, 157275, 138341, 590, 84932, 134583, 157352, 1470, 138644, 1455, 135061};
+            135328, 135327, 157275, 138341, 590, 84932, 134583, 157352, 1470, 138644, 1455, 135061,
+            158361};
 
     /*Сюда записываются Опции которые не прошли проверку, при особенном переданном MOD-e. Сделано
     для того что б потом можно было посмотреть название опций которые не прошли проверку и, возможно,
@@ -181,6 +183,11 @@ public class Options {
                 case 1470:
                     OptionControlPhotoTovarsLeft<?> optionControlPhotoTovarsLeft = new OptionControlPhotoTovarsLeft<>(context, dataDB, optionsDB, newOptionType, mode);
                     optionControlPhotoTovarsLeft.showOptionMassage();
+                    break;
+
+                case 158361:
+                    OptionControlPhotoTovarsLeftClient<?> optionControlPhotoTovarsLeftClient = new OptionControlPhotoTovarsLeftClient<>(context, dataDB, optionsDB, newOptionType, mode);
+                    optionControlPhotoTovarsLeftClient.showOptionMassage();
                     break;
 
                 case 138644:
@@ -694,6 +701,11 @@ public class Options {
                 OptionControlPhotoTovarsLeft<?> optionControlPhotoTovarsLeft = new OptionControlPhotoTovarsLeft<>(context, dataDB, option, type, mode);
                 optionControlPhotoTovarsLeft.showOptionMassage();
                 return optionControlPhotoTovarsLeft.isBlockOption() ? 1 : 0;
+
+            case 158361:
+                OptionControlPhotoTovarsLeftClient<?> optionControlPhotoTovarsLeftClient = new OptionControlPhotoTovarsLeftClient<>(context, dataDB, option, type, mode);
+                optionControlPhotoTovarsLeftClient.showOptionMassage();
+                return optionControlPhotoTovarsLeftClient.isBlockOption() ? 1 : 0;
 
             case 138644:
                 OptionControlCheckTovarUp<?> optionControlCheckTovarUp = new OptionControlCheckTovarUp<>(context, dataDB, option, type, mode);

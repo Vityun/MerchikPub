@@ -95,6 +95,7 @@ public class OptionControlCheckTovarUp<T> extends OptionControl {
                 Clock.getDatePeriodLong(documentDate, -1),
                 Clock.getDatePeriodLong(documentDate, 1),
                 null,
+                null,
                 dad2,
                 PHOTO_CART_WITH_GOODS
         );
@@ -105,6 +106,7 @@ public class OptionControlCheckTovarUp<T> extends OptionControl {
                 stackPhoto = StackPhotoRealm.getPhoto(
                         Clock.getDatePeriodLong(documentDate, -1),
                         Clock.getDatePeriodLong(documentDate, 1),
+                        null,
                         null,
                         dad2,
                         PHOTO_SHOWCASE_BEFORE_START_WORK

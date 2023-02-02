@@ -28,8 +28,8 @@ import ua.com.merchik.merchik.database.realm.tables.StackPhotoRealm;
  * 06.04.2023.
  * Контроль наличия Фото Остатков Товаров (для любого из Клиентов)
  */
-public class OptionControlPhotoTovarsLeft<T> extends OptionControl {
-    public int OPTION_CONTROL_PHOTO_TOVARS_LEFT_ID = 1470;
+public class OptionControlPhotoTovarsLeftClient<T> extends OptionControl {
+    public int OPTION_CONTROL_PHOTO_TOVARS_LEFT_ID = 158361;
 
     private static final int DEFAULT_DAY_FROM = 8;  // Количество дней "С"
     private static final int COL_MIN = 1;  // Минимальное кол-во фоток которое нужно для работы опции
@@ -50,7 +50,7 @@ public class OptionControlPhotoTovarsLeft<T> extends OptionControl {
     private long dateTo;
     private Integer tpId; // идентификатор сети (сильпо, атб..)
 
-    public OptionControlPhotoTovarsLeft(Context context, T document, OptionsDB optionDB, OptionMassageType msgType, Options.NNKMode nnkMode) {
+    public OptionControlPhotoTovarsLeftClient(Context context, T document, OptionsDB optionDB, OptionMassageType msgType, Options.NNKMode nnkMode) {
         this.context = context;
         this.document = document;
         this.optionDB = optionDB;
@@ -82,7 +82,7 @@ public class OptionControlPhotoTovarsLeft<T> extends OptionControl {
 
     @RequiresApi(api = Build.VERSION_CODES.N)
     private void executeOption() {
-        List<StackPhotoDB> stackPhoto = StackPhotoRealm.getPhoto(dateFrom, dateTo, null, null,  null, PHOTO_TOV_LEFT);
+        List<StackPhotoDB> stackPhoto = StackPhotoRealm.getPhoto(dateFrom, dateTo, null, clientId, null, PHOTO_TOV_LEFT);
 
         if (tpId == 8923 && (usersSDB.reportDate01 != null || usersSDB.reportDate05.getTime() >= documentDate)) {
             stringBuilderMsg.append("Для Новуса наличие ФОТ не проверяем до 5-го отчета.");
