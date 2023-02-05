@@ -135,7 +135,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
             int optionId = Integer.parseInt(butt.get(getAdapterPosition()).getOptionId());
 
             // Выделяет жирным ОСОБЕННЫЕ Кнопки Опций
-            if (optionId == 132968) { // Фото витрины)
+            if (optionId == 132968 || optionId == 158309 || optionId == 158308) { // Фото витрины)
                 textTitle.setTypeface(null, Typeface.BOLD);
             } else {
                 textTitle.setTypeface(null, Typeface.NORMAL);
@@ -182,6 +182,8 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                     || optionId == 158243   // Стикеровка
                     || optionId == 135412   // Процент премиальных
                     || optionId == 151748   // ДОЛЯ полочного пространства
+                    || optionId == 158309   // "Фото Витрины" (Наближене)
+                    || optionId == 158308   // "Фото Витрины" (Панорамне)
             ) {
                 constraintLayout.setBackgroundResource(R.drawable.bg_temp);
                 textInteger2.setVisibility(View.VISIBLE);
@@ -261,6 +263,9 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                         }
                         textInteger.setText("" + Clock.getHumanTimeOpt(endTime * 1000));
                         break;
+
+                    case (158309):  // Фото витрины Приближённое
+                    case (158308):  // Фото витрины отдалённое
                     case (132968):  // Вставляем количество выполненных Фоток Витрин
                         String m = optionsButtons.getAmountMin();
                         if (m.equals("0")) {
@@ -410,7 +415,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
             // ДОЛГИЙ клик по Кнопке Опции
             OptionsDB test = optionsButtons;
             constraintLayout.setOnLongClickListener(view -> {
-                if (optionId == 132968) {
+                if (optionId == 132968 || optionId == 158309 || optionId == 158308) {
                     DialogData dialog = new DialogData(itemView.getContext());
                     dialog.setTitle("Внесите пароль!");
                     dialog.setText("Для продолжения внесите пароль: ");
@@ -429,7 +434,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                         int pass = day + dat2;
 
                         if (res == pass) {
-                            longClickButton(test, 132968, detailedReportButtons, optionsButtons);
+                            longClickButton(test, optionId, detailedReportButtons, optionsButtons);
                         } else {
                             Toast.makeText(dialog.context, "Внесите корректный пароль", Toast.LENGTH_SHORT).show();
                         }
@@ -464,7 +469,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
     private void longClickButton(OptionsDB test, int optId, DetailedReportButtons detailedReportButtons, OptionsDB optionsButtons) {
         optionDetailPhotos(test);
 
-        if (optId == 132968) {
+        if (optId == 132968 || optId == 158309 || optId == 158308) {
             if (dataDB instanceof WpDataDB) {
                 WpDataDB wpDataDB = (WpDataDB) dataDB;
                 detailedReportButtons.buttonClick(mContext, wpDataDB, optionsButtons, 1);
@@ -588,6 +593,8 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
         int photoType = 0;
         boolean showPhotoLink = false;
         switch (option.getOptionId()) {
+            case "158309":
+            case "158308":
             case "132968":  // - 0  - фото витрины
                 photoType = 0;
                 showPhotoLink = true;
