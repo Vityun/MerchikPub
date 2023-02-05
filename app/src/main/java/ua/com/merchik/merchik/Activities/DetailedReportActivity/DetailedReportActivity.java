@@ -157,7 +157,12 @@ public class DetailedReportActivity extends toolbar_menus {
         StringBuffer tarTabTitle = new StringBuffer();
         tarTabTitle.append("ЗИР");
         if (tarList != null && tarList.size() > 0) {
-            tarTabTitle.append("(").append("<font color='red'>").append(tasksAndReclamationsSDBList.size()).append("</font>").append("/").append("<font color='red'>").append(tarList.size()).append("</font>").append(")");
+            tarTabTitle.append("(");
+            if (tasksAndReclamationsSDBList != null && tasksAndReclamationsSDBList.size() > 0){
+                tarTabTitle.append("<font color='red'>").append(tasksAndReclamationsSDBList.size()).append("</font>").append("/");
+            }
+            tarTabTitle.append("<font color='red'>").append(tarList.size()).append("</font>");
+            tarTabTitle.append(")");
         }
         tabLayout.getTabAt(3).setText(Html.fromHtml(String.valueOf(tarTabTitle)));
 
