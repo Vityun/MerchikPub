@@ -1,5 +1,7 @@
 package ua.com.merchik.merchik.Activities.DetailedReportActivity;
 
+import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
+
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
@@ -34,8 +36,6 @@ import ua.com.merchik.merchik.dialogs.DialogAdditionalRequirements.DialogAdditio
 import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.dialogs.DialogEKL;
 import ua.com.merchik.merchik.toolbar_menus;
-
-import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
 public class DetailedReportButtons {
     private final WorkPlan workPlan = new WorkPlan();
@@ -75,6 +75,8 @@ public class DetailedReportButtons {
                 }
                 break;*/
 
+            case 158309:
+            case 158308:
             case 132968: // Фото витрины
                 globals.fixMP(); // Фиксация Местоположения в таблице ЛогМп
                 if (mod == 1) {

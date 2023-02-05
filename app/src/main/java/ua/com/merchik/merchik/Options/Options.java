@@ -896,6 +896,8 @@ public class Options {
             case 138521:
                 return optionControlEndWork_138521(context, dataDB, option, type, mode) ? 0 : 1;
 
+            case 158309:
+            case 158308:
             case 132968:
                 if (dataDB instanceof WpDataDB) {
                     optionMakePhoto0_132968(context, (WpDataDB) dataDB, option, type, mode);
