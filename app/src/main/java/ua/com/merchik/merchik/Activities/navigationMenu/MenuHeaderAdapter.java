@@ -1,5 +1,7 @@
 package ua.com.merchik.merchik.Activities.navigationMenu;
 
+import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
+
 import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.PorterDuff;
@@ -25,6 +27,7 @@ import java.util.List;
 import java.util.StringTokenizer;
 
 import ua.com.merchik.merchik.Clock;
+import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.data.RealmModels.MenuItemFromWebDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
@@ -309,6 +312,21 @@ public class MenuHeaderAdapter extends RecyclerView.Adapter<MenuHeaderAdapter.Me
                 res.add("");
 
                 return res;
+
+            case 143:   // Задачи
+                try {
+                    long time = Clock.getDateLong(-30).getTime() / 1000;
+                    res.add(SQL_DB.tarDao().getAllByTp(Globals.userId, 1, time).size());
+                }catch (Exception e){}
+                return res;
+
+            case 144:   // Рекламации
+                try {
+                    long time = Clock.getDateLong(-30).getTime() / 1000;
+                    res.add(SQL_DB.tarDao().getAllByTp(Globals.userId, 0, time).size());
+                }catch (Exception e){}
+                return res;
+
             default:
                 return res;
         }

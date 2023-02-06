@@ -17,6 +17,9 @@ public interface TarDao {
     @Query("SELECT * FROM tasks_and_reclamations")
     List<TasksAndReclamationsSDB> getAll();
 
+    @Query("SELECT * FROM tasks_and_reclamations WHERE tp = :tp")
+    List<TasksAndReclamationsSDB> getAllByTp(int tp);
+
 //    @Query("SELECT * FROM tasks_and_reclamations")
     @Query("SELECT tar.*, addr.location_xd AS coord_X , addr.location_yd AS coord_Y FROM tasks_and_reclamations tar LEFT JOIN address addr ON tar.addr = addr.id GROUP BY tar.addr ORDER BY dt ;")
     List<TasksAndReclamationsSDB> getAllJoinAddressSDB();

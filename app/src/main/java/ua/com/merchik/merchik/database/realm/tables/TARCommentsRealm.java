@@ -1,5 +1,7 @@
 package ua.com.merchik.merchik.database.realm.tables;
 
+import static ua.com.merchik.merchik.database.realm.RealmManager.INSTANCE;
+
 import android.util.Log;
 
 import com.google.gson.Gson;
@@ -11,8 +13,6 @@ import io.realm.RealmResults;
 import io.realm.Sort;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.data.RealmModels.TARCommentsDB;
-
-import static ua.com.merchik.merchik.database.realm.RealmManager.INSTANCE;
 
 public class TARCommentsRealm {
     /**
@@ -90,9 +90,40 @@ public class TARCommentsRealm {
      * Для опции контроля 135329
      *
      * @param id
-     * @param userId*/
-    public static List<TARCommentsDB> getTARCommentsToOptionControl(Integer id, Integer userId){
-        return INSTANCE.where(TARCommentsDB.class)
+     * @param userId
+     * @param mode  - Если установлен в 1: отбираю ВСЕ комментарии по данной задачи.
+     *              - Если НЕ указан: Отображаю комментарии только те, к которым есть фотографии
+     */
+    public static List<TARCommentsDB> getTARCommentsToOptionControl(Integer id, Integer userId, Integer mode){
+
+        RealmResults<TARCommentsDB> res = INSTANCE.where(TARCommentsDB.class).findAll();
+
+        res = res.where()
+                .equalTo("rId", String.valueOf(id))
+                .equalTo("who", String.valueOf(userId)).findAll();
+
+        if (mode != null && mode == 1){
+            res = res.where()
+                    .beginGroup()
+                    .notEqualTo("photo", "0")
+                    .notEqualTo("photo", "")
+                    .endGroup()
+                    .or()
+                    .beginGroup()
+                    .notEqualTo("photo_hash", "0")
+                    .notEqualTo("photo_hash", "")
+                    .endGroup()
+                    .findAll();
+        }
+
+        if (res != null){
+            return INSTANCE.copyFromRealm(res);
+        }else {
+            return null;
+        }
+
+
+/*        return INSTANCE.where(TARCommentsDB.class)
                 .equalTo("rId", String.valueOf(id))
                 .equalTo("who", String.valueOf(userId))
                 .and()
@@ -105,7 +136,7 @@ public class TARCommentsRealm {
                 .notEqualTo("photo_hash", "0")
                 .notEqualTo("photo_hash", "")
                 .endGroup()
-                .findAll();
+                .findAll();*/
     }
 
 

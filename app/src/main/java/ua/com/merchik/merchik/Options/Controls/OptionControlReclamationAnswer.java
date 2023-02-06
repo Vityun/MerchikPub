@@ -65,7 +65,7 @@ public class OptionControlReclamationAnswer<T> extends OptionControl {
     private void getDocumentVar() {
         if (document instanceof WpDataDB) {
             wpDataDB = (WpDataDB) document;
-            documentDate = Clock.getHumanTimeYYYYMMDD(wpDataDB.getDt().getTime()/1000);
+            documentDate = Clock.getHumanTimeYYYYMMDD(wpDataDB.getDt().getTime() / 1000);
             clientId = wpDataDB.getClient_id();
             addressId = wpDataDB.getAddr_id();
             userId = wpDataDB.getUser_id();
@@ -82,8 +82,8 @@ public class OptionControlReclamationAnswer<T> extends OptionControl {
             // todo [Док-30 -- Док-НачалоРабот]
             long date1 = Clock.getDatePeriodLong(-30) / 1000;
 //            long date2 = Clock.getDatePeriodLong(-1) / 1000;
-            long date2 = System.currentTimeMillis()/1000;
-            if (wpDataDB.getVisit_start_dt() > 0){
+            long date2 = System.currentTimeMillis() / 1000;
+            if (wpDataDB.getVisit_start_dt() > 0) {
                 date2 = wpDataDB.getVisit_start_dt();
             }
             List<TasksAndReclamationsSDB> result = new ArrayList<>();
@@ -91,9 +91,9 @@ public class OptionControlReclamationAnswer<T> extends OptionControl {
 
             List<TasksAndReclamationsSDB> tarList;
             // костыляки для конторки любимой
-            if (System.currentTimeMillis() > 1664928000000L){
+            if (System.currentTimeMillis() > 1664928000000L) {
                 tarList = SQL_DB.tarDao().getTARForOptionControl(0, addressId, userId, 0, date1, date2);
-            }else {
+            } else {
                 tarList = SQL_DB.tarDao().getTARForOptionControl150822(0, addressId, clientId, userId, 0, date1, date2);
             }
 
@@ -113,8 +113,10 @@ public class OptionControlReclamationAnswer<T> extends OptionControl {
 
             // Убираю мусор с данных
             for (TasksAndReclamationsSDB item : tarList) {
-                if (item.client == null || item.client.equals("0")) /*tarList.remove(item)*/continue;
-                if (item.dtRealPost > Clock.dateConvertToLong(documentDate)) /*tarList.remove(item)*/continue;
+                if (item.client == null || item.client.equals("0")) /*tarList.remove(item)*/
+                    continue;
+                if (item.dtRealPost > Clock.dateConvertToLong(documentDate)) /*tarList.remove(item)*/
+                    continue;
 
                 // изменения за 11.10.22
                 // Гемор изза того что я не умею джойнить разные таблички между собой. Или мне впадлу джойнить как я умею.
@@ -122,7 +124,8 @@ public class OptionControlReclamationAnswer<T> extends OptionControl {
                 if (customerSDBList.stream().filter(listItem -> listItem.id.equals(item.client)).findFirst().orElse(null) != null) {
                     currentCustomer = customerSDBList.stream().filter(listItem -> listItem.id.equals(item.client)).findFirst().get();
                 }
-                if (currentCustomer != null && currentCustomer.reclReplyMode == 1 && !customerSDB.id.equals(currentCustomer.id)) /*tarList.remove(item)*/continue;    // То самое изменение
+                if (currentCustomer != null && currentCustomer.reclReplyMode == 1 && !customerSDB.id.equals(currentCustomer.id)) /*tarList.remove(item)*/
+                    continue;    // То самое изменение
                 // конец изменений за 11.10.22
 
                 ThemeDB theme = ThemeRealm.getThemeById(String.valueOf(item.themeId));
@@ -167,12 +170,38 @@ public class OptionControlReclamationAnswer<T> extends OptionControl {
                         // Признак ошибки = 1
                         // Номер задачи
 
-                        List<TARCommentsDB> commentsRealm = TARCommentsRealm.getTARCommentsToOptionControl(item.id, item.vinovnik);
-                        if (commentsRealm != null && commentsRealm.size() == 0) {
+                        String comm = "";
+
+                        List<TARCommentsDB> commentsRealm = null;
+
+                        if (1675987200000L < System.currentTimeMillis()) {
+                            commentsRealm = TARCommentsRealm.getTARCommentsToOptionControl(item.id, item.vinovnik, 1);
+                        } else {
+                            commentsRealm = TARCommentsRealm.getTARCommentsToOptionControl(item.id, item.vinovnik, null);
+                            if (commentsRealm != null) {
+                                for (TARCommentsDB tarCommentItem : commentsRealm) {
+                                    if (tarCommentItem.photo == null || tarCommentItem.photo.equals("") && tarCommentItem.photo_hash == null || tarCommentItem.photo_hash.equals("")) {
+                                        comm = tarCommentItem.comment;
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+
+
+                        if (!comm.equals("")) {
+                            spannableStringBuilder.append("Для даної теми ви повинні додати ФотоЗвіт до коментаря: <")
+                                    .append(comm).append("> (").append(createLinkedString(item.id1c, item.id)).append(" от ").append(Clock.getHumanTimeSecPattern(item.dtRealPost / 1000, "dd-MM")).append("\n");
+
+                            result.add(item);
+                        } else if (commentsRealm != null && commentsRealm.size() == 0) {
                             massageToUser = msg;
                             spannableStringBuilder.append(msg).append(": ").append(createLinkedString(item.id1c, item.id)).append("\n");
 
                             result.add(item);
+                        } else {
+                            Globals.writeToMLOG("INFO", "OptionControlTaskAnswer/executeOption/for/data/need_photo",
+                                    "Не смог найти комменты в БД комментов по item.id: " + item.id + ", item.vinovnik: " + item.vinovnik);
                         }
 
                     } else if (theme.need_report == 1) {
@@ -180,7 +209,7 @@ public class OptionControlReclamationAnswer<T> extends OptionControl {
                         long timeCreateTAR = item.dtRealPost;
                         RealmResults<ReportPrepareDB> rp = ReportPrepareRealm.getRPLastChange(item.client, String.valueOf(item.addr), timeCreateTAR);
 
-                        if (rp == null || rp.size() == 0){
+                        if (rp == null || rp.size() == 0) {
                             String msg = context.getString(R.string.option_control_135330_no_detailed_report);
                             massageToUser = msg;
                             spannableStringBuilder.append(msg).append(": ").append(createLinkedString(item.id1c, item.id)).append("\n");
@@ -190,7 +219,7 @@ public class OptionControlReclamationAnswer<T> extends OptionControl {
                     } else {
                         // Смотрю в потолок
                     }
-                }else {
+                } else {
                     // Смотрю в потолок, бо тема у задачи = 3 и ничего блокироваться не должно
                 }
             }
@@ -207,9 +236,9 @@ public class OptionControlReclamationAnswer<T> extends OptionControl {
             signal = reclamationCount > 0;
             RealmManager.INSTANCE.executeTransaction(realm -> {
                 if (optionDB != null) {
-                    if (signal){
+                    if (signal) {
                         optionDB.setIsSignal("1");
-                    }else {
+                    } else {
                         optionDB.setIsSignal("2");
                     }
                     realm.insertOrUpdate(optionDB);
@@ -229,7 +258,7 @@ public class OptionControlReclamationAnswer<T> extends OptionControl {
     }
 
     private SpannableString createLinkedString(String msg, int id) {
-        if (msg.equals("")){
+        if (msg.equals("")) {
             msg = String.valueOf(id);
         }
 

@@ -10,22 +10,23 @@ public class TARCommentsDB extends RealmObject {
     @SerializedName("ID")
     @Expose
     @PrimaryKey
-    private String id;
+    public String id;
     @SerializedName("tp")
     @Expose
-    private String tp;
+    public String tp;
     @SerializedName("dt")
     @Expose
-    private String dt;
+    public String dt;
     @SerializedName("who")
     @Expose
-    private String who;
+    public String who;
     @SerializedName("comment")
     @Expose
-    private String comment;
+    public String comment;
+
     @SerializedName("photo")
     @Expose
-    private String photo;
+    public String photo;
 
     @SerializedName("photo_hash")
     @Expose
@@ -33,19 +34,19 @@ public class TARCommentsDB extends RealmObject {
 
     @SerializedName("r_id")
     @Expose
-    private String rId;
+    public String rId;
     @SerializedName("dvi")
     @Expose
-    private String dvi;
+    public String dvi;
     @SerializedName("from_1c")
     @Expose
-    private String from1c;
+    public String from1c;
     @SerializedName("report_id")
     @Expose
-    private String reportId;
+    public String reportId;
     @SerializedName("responce_id")
     @Expose
-    private String responceId;
+    public String responceId;
 
     public boolean startUpdate;
 
