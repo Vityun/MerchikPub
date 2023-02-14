@@ -174,13 +174,13 @@ public class OptionControlReclamationAnswer<T> extends OptionControl {
 
                         List<TARCommentsDB> commentsRealm = null;
 
-                        if (1675987200000L < System.currentTimeMillis()) {
+                        if (System.currentTimeMillis() < 1675987200000L) {
                             commentsRealm = TARCommentsRealm.getTARCommentsToOptionControl(item.id, item.vinovnik, 1);
                         } else {
                             commentsRealm = TARCommentsRealm.getTARCommentsToOptionControl(item.id, item.vinovnik, null);
                             if (commentsRealm != null) {
                                 for (TARCommentsDB tarCommentItem : commentsRealm) {
-                                    if (tarCommentItem.photo == null || tarCommentItem.photo.equals("") && tarCommentItem.photo_hash == null || tarCommentItem.photo_hash.equals("")) {
+                                    if (!checkHavePhoto(tarCommentItem)) {
                                         comm = tarCommentItem.comment;
                                         break;
                                     }
@@ -189,9 +189,10 @@ public class OptionControlReclamationAnswer<T> extends OptionControl {
                         }
 
 
+
                         if (!comm.equals("")) {
                             spannableStringBuilder.append("Для даної теми ви повинні додати ФотоЗвіт до коментаря: <")
-                                    .append(comm).append("> (").append(createLinkedString(item.id1c, item.id)).append(" от ").append(Clock.getHumanTimeSecPattern(item.dtRealPost / 1000, "dd-MM")).append("\n");
+                                    .append(comm).append("> (").append(createLinkedString(item.id1c, item.id)).append(" от ").append(Clock.getHumanTimeSecPattern(item.dtRealPost / 1000, "dd-MM")).append(")").append("\n");
 
                             result.add(item);
                         } else if (commentsRealm != null && commentsRealm.size() == 0) {
@@ -284,6 +285,20 @@ public class OptionControlReclamationAnswer<T> extends OptionControl {
         } catch (Exception e) {
             Globals.writeToMLOG("ERROR", "OptionControlTaskAnswer/createLinkedString/Exception", "Exception e: " + e);
         }
+        return res;
+    }
+
+    private boolean checkHavePhoto(TARCommentsDB comment) {
+        boolean res = false;
+
+        if (comment.photo != null && !comment.photo.equals("")) {
+            res = true;
+        }
+
+        if (comment.photo_hash != null && !comment.photo_hash.equals("")) {
+            res = true;
+        }
+
         return res;
     }
 }

@@ -149,218 +149,243 @@ public class Exchange {
                 globals.fixMP();    //
 
 
-                downloadAdditionalMaterials();
+                try {
+                    downloadAdditionalMaterials();
+                } catch (Exception e) {
+                    Globals.writeToMLOG("ERROR", "startExchange/downloadAdditionalMaterials", "Exception e: " + e);
+                }
 
-                planogram(new ExchangeInterface.ExchangeResponseInterface() {
-                    @Override
-                    public <T> void onSuccess(List<T> data) {
-                        try {
-                            List<ImagesViewListImageList> datalist = (List<ImagesViewListImageList>) data;
-                            PhotoDownload.savePhotoToDB2(datalist);
-                            Globals.writeToMLOG("INFO", "startExchange/planogram.onSuccess", "OK");
-                        } catch (Exception e) {
-                            Globals.writeToMLOG("ERROR", "startExchange/planogram.onSuccess", "Exception e: " + e);
+                try {
+                    planogram(new ExchangeInterface.ExchangeResponseInterface() {
+                        @Override
+                        public <T> void onSuccess(List<T> data) {
+                            try {
+                                List<ImagesViewListImageList> datalist = (List<ImagesViewListImageList>) data;
+                                PhotoDownload.savePhotoToDB2(datalist);
+                                Globals.writeToMLOG("INFO", "startExchange/planogram.onSuccess", "OK");
+                            } catch (Exception e) {
+                                Globals.writeToMLOG("ERROR", "startExchange/planogram.onSuccess", "Exception e: " + e);
+                            }
                         }
-                    }
 
-                    @Override
-                    public void onFailure(String error) {
-                        Globals.writeToMLOG("FAIL", "startExchange/planogram/onFailure", error);
-                    }
-                }); // Получение планограмм
+                        @Override
+                        public void onFailure(String error) {
+                            Globals.writeToMLOG("FAIL", "startExchange/planogram/onFailure", error);
+                        }
+                    }); // Получение планограмм
+                } catch (Exception e) {
+                    Globals.writeToMLOG("ERROR", "startExchange/planogram", "Exception e: " + e);
+                }
 
-                chatExchange();
-                chatGroupExchange();
+                try {
+                    chatExchange();
+                    chatGroupExchange();
+                } catch (Exception e) {
+                    Globals.writeToMLOG("ERROR", "startExchange/chatExchange/chatGroupExchange", "Exception e: " + e);
+                }
 
-                new AddressExchange().downloadAddressTable(new ExchangeInterface.ExchangeResponseInterface() {
-                    @Override
-                    public <T> void onSuccess(List<T> data) {
-                        try {
-                            Log.e("AddressExchange", "START");
-                            SQL_DB.addressDao().insertData((List<AddressSDB>) data)
+
+                try {
+                    new AddressExchange().downloadAddressTable(new ExchangeInterface.ExchangeResponseInterface() {
+                        @Override
+                        public <T> void onSuccess(List<T> data) {
+                            try {
+                                Log.e("AddressExchange", "START");
+                                SQL_DB.addressDao().insertData((List<AddressSDB>) data)
+                                        .subscribeOn(Schedulers.io())
+                                        .subscribe(new DisposableCompletableObserver() {
+                                            @Override
+                                            public void onComplete() {
+                                                Log.e("AddressExchange", "END1");
+                                            }
+
+                                            @Override
+                                            public void onError(@io.reactivex.rxjava3.annotations.NonNull Throwable e) {
+                                                Log.e("AddressExchange", "END1: " + e);
+                                            }
+                                        });
+                                Log.e("AddressExchange", "END");
+
+                            } catch (Exception e) {
+
+                            }
+                        }
+
+                        @Override
+                        public void onFailure(String error) {
+                            Log.e("HEUTE", "1error." + error);
+                        }
+                    });
+                    new CustomerExchange().downloadCustomerTable(new ExchangeInterface.ExchangeResponseInterface() {
+                        @Override
+                        public <T> void onSuccess(List<T> data) {
+                            try {
+                                SQL_DB.customerDao().insertData((List<CustomerSDB>) data)
+                                        .subscribeOn(Schedulers.io())
+                                        .subscribe(new DisposableCompletableObserver() {
+                                            @Override
+                                            public void onComplete() {
+                                            }
+
+                                            @Override
+                                            public void onError(@io.reactivex.rxjava3.annotations.NonNull Throwable e) {
+                                            }
+                                        });
+
+                            } catch (Exception e) {
+                            }
+                        }
+
+                        @Override
+                        public void onFailure(String error) {
+                            Log.e("HEUTE", "2error." + error);
+                        }
+                    });
+                    new UsersExchange().downloadUsersTable(new ExchangeInterface.ExchangeResponseInterface() {
+                        @Override
+                        public <T> void onSuccess(List<T> data) {
+                            Log.e("downloadUsersTable", "onSuccess: " + data);
+                            try {
+                                SQL_DB.usersDao().insertData((List<UsersSDB>) data)
+                                        .subscribeOn(Schedulers.io())
+                                        .subscribe(new DisposableCompletableObserver() {
+                                            @Override
+                                            public void onComplete() {
+                                            }
+
+                                            @Override
+                                            public void onError(@io.reactivex.rxjava3.annotations.NonNull Throwable e) {
+                                            }
+                                        });
+                            } catch (Exception e) {
+
+                            }
+                        }
+
+                        @Override
+                        public void onFailure(String error) {
+                            Log.e("HEUTE", "3error." + error);
+                            Log.e("downloadUsersTable", "onFailure: " + error);
+                        }
+                    });
+                    new CityExchange().downloadCityTable(new ExchangeInterface.ExchangeResponseInterface() {
+                        @Override
+                        public <T> void onSuccess(List<T> data) {
+                            try {
+                                SQL_DB.cityDao().insertData((List<CitySDB>) data)
+                                        .subscribeOn(Schedulers.io())
+                                        .subscribe(new DisposableCompletableObserver() {
+                                            @Override
+                                            public void onComplete() {
+                                            }
+
+                                            @Override
+                                            public void onError(@io.reactivex.rxjava3.annotations.NonNull Throwable e) {
+                                            }
+                                        });
+                            } catch (Exception e) {
+
+                            }
+                        }
+
+                        @Override
+                        public void onFailure(String error) {
+                            Log.e("HEUTE", "4error." + error);
+                        }
+                    });
+                    new OblastExchange().downloadOblastTable(new ExchangeInterface.ExchangeResponseInterface() {
+                        @Override
+                        public <T> void onSuccess(List<T> data) {
+                            try {
+                                SQL_DB.oblastDao().insertData((List<OblastSDB>) data)
+                                        .subscribeOn(Schedulers.io())
+                                        .subscribe(new DisposableCompletableObserver() {
+                                            @Override
+                                            public void onComplete() {
+                                            }
+
+                                            @Override
+                                            public void onError(@io.reactivex.rxjava3.annotations.NonNull Throwable e) {
+                                            }
+                                        });
+                            } catch (Exception e) {
+
+                            }
+                        }
+
+                        @Override
+                        public void onFailure(String error) {
+                            Log.e("HEUTE", "5error." + error);
+                        }
+                    });
+                } catch (Exception e) {
+                    Globals.writeToMLOG("ERROR", "startExchange/AddressExchange,CustomerExchange,UsersExchange,CityExchange,OblastExchange", "Exception e: " + e);
+                }
+
+
+                try {
+                    // Синхронизация стандартов
+                    StandartExchange standartExchange = new StandartExchange();
+                    standartExchange.downloadStandartTable(new ExchangeInterface.ExchangeResponseInterface() {
+                        @Override
+                        public <T> void onSuccess(List<T> data) {
+                            Log.e("MerchikTest", "data: " + data);
+                            SQL_DB.standartDao().insertData((List<StandartSDB>) data)
                                     .subscribeOn(Schedulers.io())
                                     .subscribe(new DisposableCompletableObserver() {
                                         @Override
                                         public void onComplete() {
-                                            Log.e("AddressExchange", "END1");
+                                            Globals.writeToMLOG("INFO", "Exchange.downloadStandartTable.onComplete", "Успешно сохранило Стандарты (" + data.size() + ")шт в БД");
                                         }
 
                                         @Override
                                         public void onError(@io.reactivex.rxjava3.annotations.NonNull Throwable e) {
-                                            Log.e("AddressExchange", "END1: " + e);
+                                            Globals.writeToMLOG("INFO", "Exchange.downloadStandartTable.onError", "Ошибка при сохранении в БД: " + e);
                                         }
                                     });
-                            Log.e("AddressExchange", "END");
-
-                        } catch (Exception e) {
-
                         }
-                    }
 
-                    @Override
-                    public void onFailure(String error) {
-                        Log.e("HEUTE", "1error." + error);
-                    }
-                });
-                new CustomerExchange().downloadCustomerTable(new ExchangeInterface.ExchangeResponseInterface() {
-                    @Override
-                    public <T> void onSuccess(List<T> data) {
-                        try {
-                            SQL_DB.customerDao().insertData((List<CustomerSDB>) data)
-                                    .subscribeOn(Schedulers.io())
-                                    .subscribe(new DisposableCompletableObserver() {
-                                        @Override
-                                        public void onComplete() {
-                                        }
-
-                                        @Override
-                                        public void onError(@io.reactivex.rxjava3.annotations.NonNull Throwable e) {
-                                        }
-                                    });
-
-                        } catch (Exception e) {
+                        @Override
+                        public void onFailure(String error) {
+                            Log.e("MerchikTest", "error: " + error);
                         }
-                    }
-
-                    @Override
-                    public void onFailure(String error) {
-                        Log.e("HEUTE", "2error." + error);
-                    }
-                });
-                new UsersExchange().downloadUsersTable(new ExchangeInterface.ExchangeResponseInterface() {
-                    @Override
-                    public <T> void onSuccess(List<T> data) {
-                        Log.e("downloadUsersTable", "onSuccess: " + data);
-                        try {
-                            SQL_DB.usersDao().insertData((List<UsersSDB>) data)
-                                    .subscribeOn(Schedulers.io())
-                                    .subscribe(new DisposableCompletableObserver() {
-                                        @Override
-                                        public void onComplete() {
-                                        }
-
-                                        @Override
-                                        public void onError(@io.reactivex.rxjava3.annotations.NonNull Throwable e) {
-                                        }
-                                    });
-                        } catch (Exception e) {
-
-                        }
-                    }
-
-                    @Override
-                    public void onFailure(String error) {
-                        Log.e("HEUTE", "3error." + error);
-                        Log.e("downloadUsersTable", "onFailure: " + error);
-                    }
-                });
-                new CityExchange().downloadCityTable(new ExchangeInterface.ExchangeResponseInterface() {
-                    @Override
-                    public <T> void onSuccess(List<T> data) {
-                        try {
-                            SQL_DB.cityDao().insertData((List<CitySDB>) data)
-                                    .subscribeOn(Schedulers.io())
-                                    .subscribe(new DisposableCompletableObserver() {
-                                        @Override
-                                        public void onComplete() {
-                                        }
-
-                                        @Override
-                                        public void onError(@io.reactivex.rxjava3.annotations.NonNull Throwable e) {
-                                        }
-                                    });
-                        } catch (Exception e) {
-
-                        }
-                    }
-
-                    @Override
-                    public void onFailure(String error) {
-                        Log.e("HEUTE", "4error." + error);
-                    }
-                });
-                new OblastExchange().downloadOblastTable(new ExchangeInterface.ExchangeResponseInterface() {
-                    @Override
-                    public <T> void onSuccess(List<T> data) {
-                        try {
-                            SQL_DB.oblastDao().insertData((List<OblastSDB>) data)
-                                    .subscribeOn(Schedulers.io())
-                                    .subscribe(new DisposableCompletableObserver() {
-                                        @Override
-                                        public void onComplete() {
-                                        }
-
-                                        @Override
-                                        public void onError(@io.reactivex.rxjava3.annotations.NonNull Throwable e) {
-                                        }
-                                    });
-                        } catch (Exception e) {
-
-                        }
-                    }
-
-                    @Override
-                    public void onFailure(String error) {
-                        Log.e("HEUTE", "5error." + error);
-                    }
-                });
-
-
-                // Синхронизация стандартов
-                StandartExchange standartExchange = new StandartExchange();
-                standartExchange.downloadStandartTable(new ExchangeInterface.ExchangeResponseInterface() {
-                    @Override
-                    public <T> void onSuccess(List<T> data) {
-                        Log.e("MerchikTest", "data: " + data);
-                        SQL_DB.standartDao().insertData((List<StandartSDB>) data)
-                                .subscribeOn(Schedulers.io())
-                                .subscribe(new DisposableCompletableObserver() {
-                                    @Override
-                                    public void onComplete() {
-                                        Globals.writeToMLOG("INFO", "Exchange.downloadStandartTable.onComplete", "Успешно сохранило Стандарты (" + data.size() + ")шт в БД");
-                                    }
-
-                                    @Override
-                                    public void onError(@io.reactivex.rxjava3.annotations.NonNull Throwable e) {
-                                        Globals.writeToMLOG("INFO", "Exchange.downloadStandartTable.onError", "Ошибка при сохранении в БД: " + e);
-                                    }
-                                });
-                    }
-
-                    @Override
-                    public void onFailure(String error) {
-                        Log.e("MerchikTest", "error: " + error);
-                    }
-                });
-                standartExchange.downloadContentTable(new ExchangeInterface.ExchangeResponseInterface() {
-                    @Override
-                    public <T> void onSuccess(List<T> data) {
-                        Log.e("MerchikTest", "data: " + data);
+                    });
+                    standartExchange.downloadContentTable(new ExchangeInterface.ExchangeResponseInterface() {
+                        @Override
+                        public <T> void onSuccess(List<T> data) {
+                            Log.e("MerchikTest", "data: " + data);
 //                        List<ContentSDB> save = (List<ContentSDB>) data;
-                        SQL_DB.contentDao().insertData((List<ContentSDB>) data)
-                                .subscribeOn(Schedulers.io())
-                                .subscribe(new DisposableCompletableObserver() {
-                                    @Override
-                                    public void onComplete() {
-                                        Globals.writeToMLOG("INFO", "Exchange.downloadContentTable.onComplete", "Успешно сохранило Контенты (" + data.size() + ")шт в БД");
-                                    }
+                            SQL_DB.contentDao().insertData((List<ContentSDB>) data)
+                                    .subscribeOn(Schedulers.io())
+                                    .subscribe(new DisposableCompletableObserver() {
+                                        @Override
+                                        public void onComplete() {
+                                            Globals.writeToMLOG("INFO", "Exchange.downloadContentTable.onComplete", "Успешно сохранило Контенты (" + data.size() + ")шт в БД");
+                                        }
 
-                                    @Override
-                                    public void onError(@io.reactivex.rxjava3.annotations.NonNull Throwable e) {
-                                        Globals.writeToMLOG("INFO", "Exchange.downloadContentTable.onError", "Ошибка при сохранении в БД: " + e);
-                                    }
-                                });
-                    }
+                                        @Override
+                                        public void onError(@io.reactivex.rxjava3.annotations.NonNull Throwable e) {
+                                            Globals.writeToMLOG("INFO", "Exchange.downloadContentTable.onError", "Ошибка при сохранении в БД: " + e);
+                                        }
+                                    });
+                        }
 
-                    @Override
-                    public void onFailure(String error) {
-                        Log.e("MerchikTest", "error: " + error);
-                    }
-                });
+                        @Override
+                        public void onFailure(String error) {
+                            Log.e("MerchikTest", "error: " + error);
+                        }
+                    });
+                } catch (Exception e) {
+                    Globals.writeToMLOG("ERROR", "startExchange/StandartExchange", "Exception e: " + e);
+                }
 
 
-                // Чудо, что ты тут делаешь?
-                new DialogEKL(context, null).responseCheckEKLList();
+                try {
+                    // Чудо, что ты тут делаешь?
+                    new DialogEKL(context, null).responseCheckEKLList();
+                } catch (Exception e) {
+                    Globals.writeToMLOG("ERROR", "startExchange/DialogEKL", "Exception e: " + e);
+                }
 
 
                 try {
@@ -526,88 +551,126 @@ public class Exchange {
                     globals.writeToMLOG(Clock.getHumanTime() + "_INFO.Exchange.class.startExchange.Ошибка.3." + e + "\n");
                 }
 
-                sendARMark();   // ОТПРАВКА ТЕСТ ОЦЕНОК
+                try {
+                    sendARMark();   // ОТПРАВКА ТЕСТ ОЦЕНОК
+                } catch (Exception e) {
+                    Globals.writeToMLOG("ERROR", "startExchange/ReclamationPercentageExchange", "Exception e: " + e);
+                }
+
 
 //                updateLanguages();  // Обновление языков
 //                updateSiteObj();    // Обновление Обьектов Сайта
 //                updateTranslates();  // Обновление Переводов
 
 
-                new PotentialClientTableExchange().downloadPotentialClientTable(new Clicks.clickStatusMsg() {
-                    @Override
-                    public void onSuccess(String data) {
-                        Globals.writeToMLOG("INFO", "Exchange/downloadPotentialClientTable/onSuccess", "data: " + data);
-                    }
-
-                    @Override
-                    public void onFailure(String error) {
-                        Globals.writeToMLOG("INFO", "Exchange/downloadPotentialClientTable/onFailure", "error: " + error);
-                    }
-                });
-
-
-                /*Загрузка ОБРАЗЦОВ ФОТО*/
-                SamplePhotoExchange samplePhotoExchange = new SamplePhotoExchange();
-                samplePhotoExchange.downloadSamplePhotoTable(new Clicks.clickStatus() {
-                    @Override
-                    public void onSuccess(Object data) {
-                        Globals.writeToMLOG("INFO", "Exchange/SamplePhotoExchange()/onSuccess", "data: " + data);
-
-                        List<SamplePhotoSDB> res = (List<SamplePhotoSDB>) data;
-
-                        try {
-                            RealmManager.INSTANCE.executeTransaction(realm -> {
-                                if (samplePhotoExchange.synchronizationTimetableDB != null) {
-                                    samplePhotoExchange.synchronizationTimetableDB.setVpi_app(System.currentTimeMillis() / 1000);
-                                    realm.copyToRealmOrUpdate(samplePhotoExchange.synchronizationTimetableDB);
-                                }
-                            });
-                        } catch (Exception e) {
-                            Globals.writeToMLOG("ERROR", "SamplePhotoExchange/downloadSamplePhotoTable/onResponse/onComplete/synchronizationTimetableDB", "Exception e: " + e);
+                try {
+                    new PotentialClientTableExchange().downloadPotentialClientTable(new Clicks.clickStatusMsg() {
+                        @Override
+                        public void onSuccess(String data) {
+                            Globals.writeToMLOG("INFO", "Exchange/downloadPotentialClientTable/onSuccess", "data: " + data);
                         }
 
-                        samplePhotoExchange.downloadSamplePhotos(res, new Clicks.clickStatusMsg() {
-                            @Override
-                            public void onSuccess(String data) {
-                                Globals.writeToMLOG("INFO", "2Exchange/SamplePhotoExchange()/onSuccess", "data: " + data);
+                        @Override
+                        public void onFailure(String error) {
+                            Globals.writeToMLOG("INFO", "Exchange/downloadPotentialClientTable/onFailure", "error: " + error);
+                        }
+                    });
+                } catch (Exception e) {
+                    Globals.writeToMLOG("ERROR", "startExchange/PotentialClientTableExchange", "Exception e: " + e);
+                }
+
+
+                try {
+                    /*Загрузка ОБРАЗЦОВ ФОТО*/
+                    SamplePhotoExchange samplePhotoExchange = new SamplePhotoExchange();
+                    samplePhotoExchange.downloadSamplePhotoTable(new Clicks.clickStatus() {
+                        @Override
+                        public void onSuccess(Object data) {
+                            Globals.writeToMLOG("INFO", "Exchange/SamplePhotoExchange()/onSuccess", "data: " + data);
+
+                            List<SamplePhotoSDB> res = (List<SamplePhotoSDB>) data;
+
+                            try {
+                                RealmManager.INSTANCE.executeTransaction(realm -> {
+                                    if (samplePhotoExchange.synchronizationTimetableDB != null) {
+                                        samplePhotoExchange.synchronizationTimetableDB.setVpi_app(System.currentTimeMillis() / 1000);
+                                        realm.copyToRealmOrUpdate(samplePhotoExchange.synchronizationTimetableDB);
+                                    }
+                                });
+                            } catch (Exception e) {
+                                Globals.writeToMLOG("ERROR", "SamplePhotoExchange/downloadSamplePhotoTable/onResponse/onComplete/synchronizationTimetableDB", "Exception e: " + e);
                             }
 
-                            @Override
-                            public void onFailure(String error) {
-                                Globals.writeToMLOG("ERROR", "2Exchange/SamplePhotoExchange()/onFailure", "error: " + error);
-                            }
-                        });
-                    }
+                            samplePhotoExchange.downloadSamplePhotos(res, new Clicks.clickStatusMsg() {
+                                @Override
+                                public void onSuccess(String data) {
+                                    Globals.writeToMLOG("INFO", "2Exchange/SamplePhotoExchange()/onSuccess", "data: " + data);
+                                }
 
-                    @Override
-                    public void onFailure(String error) {
-                        Globals.writeToMLOG("ERROR", "Exchange/SamplePhotoExchange()/onFailure", "error: " + error);
-                    }
-                });
+                                @Override
+                                public void onFailure(String error) {
+                                    Globals.writeToMLOG("ERROR", "2Exchange/SamplePhotoExchange()/onFailure", "error: " + error);
+                                }
+                            });
+                        }
 
-                downloadAchievements();
-                downloadVoteTable();
-                downloadArticleTable();
+                        @Override
+                        public void onFailure(String error) {
+                            Globals.writeToMLOG("ERROR", "Exchange/SamplePhotoExchange()/onFailure", "error: " + error);
+                        }
+                    });
+                } catch (Exception e) {
+                    Globals.writeToMLOG("ERROR", "startExchange/SamplePhotoExchange", "Exception e: " + e);
+                }
 
+
+                try {
+                    downloadAchievements();
+                } catch (Exception e) {
+                    Globals.writeToMLOG("ERROR", "startExchange/downloadAchievements", "Exception e: " + e);
+                }
+
+                try {
+                    downloadVoteTable();
+                } catch (Exception e) {
+                    Globals.writeToMLOG("ERROR", "startExchange/downloadVoteTable", "Exception e: " + e);
+                }
+
+
+                try {
+                    downloadArticleTable();
+                } catch (Exception e) {
+                    Globals.writeToMLOG("ERROR", "startExchange/downloadArticleTable", "Exception e: " + e);
+                }
+
+
+                try {
+                    // Загрузка констант: процент рекламаций Киев, процент рекламаций Регионы
+                    new ReclamationPercentageExchange().downloadAndSaveReclamationPercentage();
+                } catch (Exception e) {
+                    Globals.writeToMLOG("ERROR", "startExchange/ReclamationPercentageExchange", "Exception e: " + e);
+                }
+
+
+                try {
+                    // Загрузка таблички Длин Полочного пространства
+                    new ShelfSizeExchange().downloadShelfSize();
+                } catch (Exception e) {
+                    Globals.writeToMLOG("ERROR", "startExchange/ShelfSizeExchange", "Exception e: " + e);
+                }
+
+
+                try {
+                    updateTAR(SQL_DB.tarDao().getByUploadStatusVotes());
+                } catch (Exception e) {
+                    Globals.writeToMLOG("ERROR", "startExchange/updateTAR", "Exception e: " + e);
+                }
+
+                // --------------------------------------------------------------
             } else {
                 long time = (System.currentTimeMillis() - exchange) / 1000;
                 Log.e("startExchange", "start/Время обновлять НЕ наступило. После обновления прошло: " + time + "секунд.");
             }
-
-
-            // Загрузка констант: процент рекламаций Киев, процент рекламаций Регионы
-            new ReclamationPercentageExchange().downloadAndSaveReclamationPercentage();
-
-            // Загрузка таблички Длин Полочного пространства
-            new ShelfSizeExchange().downloadShelfSize();
-
-            try {
-                updateTAR(SQL_DB.tarDao().getByUploadStatusVotes());
-            }catch (Exception e){
-
-            }
-
-
         } catch (Exception e) {
             Globals.writeToMLOG("ERROR", "startExchange", "Exception e: " + e);
         }
@@ -1289,7 +1352,7 @@ public class Exchange {
                                     }
 
                                     RealmManager.INSTANCE.executeTransaction((realm) -> {
-                                        Log.e("uploadTARComments","ids: " + ids);
+                                        Log.e("uploadTARComments", "ids: " + ids);
                                         RealmResults<TARCommentsDB> dell = realm.where(TARCommentsDB.class)
                                                 .in("id", ids)
                                                 .findAll();
@@ -1297,7 +1360,7 @@ public class Exchange {
 
 
                                         // Сохранение новых
-                                        Log.e("uploadTARComments","saveToDb: " + saveToDb.size());
+                                        Log.e("uploadTARComments", "saveToDb: " + saveToDb.size());
                                         List<TARCommentsDB> result = realm.copyToRealmOrUpdate(saveToDb);
                                         Globals.writeToMLOG("INFO", "uploadTARComments/onResponse", "result list comments to seve(" + (result != null ? result.size() + "): .." : "null"));
                                     });
@@ -2398,12 +2461,11 @@ public class Exchange {
     }
 
 
-
     /**
      * 29.11.22.
      * Создание прямого запроса на Проведение документа.
      */
-    public static void conductingOnServerWpData(WpDataDB wp, long codeDad2, Click click){
+    public static void conductingOnServerWpData(WpDataDB wp, long codeDad2, Click click) {
         StandartData data = new StandartData();
         data.mod = "plan";
         data.act = "document_complete";
@@ -2420,25 +2482,25 @@ public class Exchange {
             @Override
             public void onResponse(Call<ConductWpDataResponse> call, Response<ConductWpDataResponse> response) {
                 Log.e("conductingOnServer", "response: " + response.body());
-                if (response.isSuccessful()){
-                    if (response.body() != null){
+                if (response.isSuccessful()) {
+                    if (response.body() != null) {
                         JsonObject convertedObject = new Gson().fromJson(new Gson().toJson(response.body()), JsonObject.class);
                         Globals.writeToMLOG("INFO", "conductingOnServerWpData/onResponse", "response.body(): " + convertedObject);
-                        if (response.body().state){
+                        if (response.body().state) {
                             // Пока пусть будет, я не знаю что им там в голову бахнет
-                            if (response.body().document_complete && wp.getClient_id().equals(wp.getIsp())){
+                            if (response.body().document_complete && wp.getClient_id().equals(wp.getIsp())) {
                                 click.onSuccess(response.body().notice);
-                            }else {
+                            } else {
                                 click.onSuccess(response.body().notice);
 //                                click.onFailure("Не можу провести документ, причина: " + response.body().notice);
                             }
-                        }else {
+                        } else {
                             click.onFailure("Не можу обробити документ, причина: " + response.body().error);
                         }
-                    }else {
+                    } else {
                         click.onFailure("Нема даних для обробки.");
                     }
-                }else {
+                } else {
                     click.onFailure("Код запиту до сервера: " + response.code());
                 }
             }

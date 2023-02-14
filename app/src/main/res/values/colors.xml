@@ -12,6 +12,8 @@
     <color name="colorToolbar">#D8D8D8</color>
 
     <!--Цвета для теста инета-->
+    <color name="green_default">#00FF00</color>
+    <color name="green_default_petrov">#00A800</color>
     <color name="colorInetGreen">#16B91B</color>
     <color name="greenCol">#66BB6A</color>
     <color name="colorInetGreenDark">#0C630E</color>

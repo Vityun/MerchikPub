@@ -42,9 +42,6 @@ import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonObject;
-
 import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -106,6 +103,10 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
 
     public enum DRAdapterTovarTPLTypeView {
         GONE, FULL
+    }
+
+    public enum OldDateOstatok {
+        ELDEST, OLD, NEW
     }
 
 
@@ -244,12 +245,22 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
 
         }
 
-        private String getArticle(TovarDB tovar) {
+        /*
+        Получаем значение артикула товара
+        mode -- Добавлять перед значением "Арт:" или нет*/
+        private String getArticle(TovarDB tovar, int mode) {
             try {
                 StringBuilder res = new StringBuilder();
                 ArticleSDB articleSDB = SQL_DB.articleDao().getByTovId(Integer.parseInt(tovar.getiD()));
                 if (articleSDB != null) {
-                    res.append("Арт: ").append(articleSDB.vendorCode);
+                    if (mode == 0){
+                        // Пока ничего
+                    }else if (mode == 1){
+                        res.append("Арт: ");
+                    }else {
+                        // Пока ничего
+                    }
+                    res.append(articleSDB.vendorCode);
                     return res.toString();
                 } else {
                     return "";
@@ -277,7 +288,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
             weight.setText(weightString);
             weight.setTextSize(16);
 
-            article.setText(getArticle(list));
+            article.setText(getArticle(list, 1));
 
             try {
                 Drawable background = constraintLayout.getBackground();
@@ -367,17 +378,22 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                     Globals.writeToMLOG("ERROR", "RecycleViewDRAdapterTovar.bind_3", "Exception e: " + e);
                 }
 
-                boolean isOld = isOldOstatokDate(ostatokDate);
+                OldDateOstatok isOld = isOldOstatokDate(ostatokDate);
 
                 String balanceTxt = String.format("Ост: %s / %s", balanceData, balanceDate);
 
                 CharSequence text = Html.fromHtml("<u>" + balanceTxt + "</u>");
+
                 // Разукрашивание строки в Зелёный цвет если на не старая
-                if (!isOld) {
+                if (isOld.equals(OldDateOstatok.NEW)) {
                     text = Html.fromHtml("<u><font color='#00FF00'>" + balanceTxt + "</font></u>");
                 }
 
-                if (ostatok != null && !ostatok.equals("0")) {
+                if (isOld.equals(OldDateOstatok.OLD)) {
+                    text = Html.fromHtml("<u><font color='#e6e6e6'>" + balanceTxt + "</font></u>");
+                }
+
+                if (ostatok != null && !ostatok.equals("0") && (isOld.equals(OldDateOstatok.NEW) || isOld.equals(OldDateOstatok.OLD))) {
                     balance.setText(text);
                 }
 
@@ -394,13 +410,13 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
 
                         Log.e("OBOROT_VED", "data: " + data);
 
-                        //
-                        for (OborotVedSDB test : data) {
-                            Gson gson = new Gson();
-                            String json = gson.toJson(test);
-                            JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
-                            Log.e("OBOROT_VED", "test(" + test.tovId + "): " + convertedObject);
-                        }
+
+//                        for (OborotVedSDB test : data) {
+//                            Gson gson = new Gson();
+//                            String json = gson.toJson(test);
+//                            JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
+//                            Log.e("OBOROT_VED", "test(" + test.tovId + "): " + convertedObject);
+//                        }
 
 
 //                        CharSequence startBalance = Html.fromHtml("<b>Нач. Ост.("+data.get(0).dat+"): </b>" + data.get(0).kolOst + "<br>");
@@ -454,7 +470,6 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
 
                     SpannableStringBuilder stringBuilder = new SpannableStringBuilder();
 
-                    CharSequence date = Html.fromHtml("<strong>Дата остатков: </strong>" + finalBalanceDate + "<br>");
                     CharSequence addres = Html.fromHtml("<b>Адрес: </b>" + SQL_DB.addressDao().getById(addressId).nm + "<br>");
                     CharSequence client = Html.fromHtml("<b>Клиент: </b>" + SQL_DB.customerDao().getById(clientId).nm + "<br>");
 
@@ -462,30 +477,52 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                     CharSequence tovar = Html.fromHtml("<b>Товар: </b>" + list.getNm() + "<br>");
                     CharSequence barcode = Html.fromHtml("<b>Штрихкод: </b>" + list.getBarcode() + "<br>");
 
-                    stringBuilder.append(date);     // Дата остатков
+                    CharSequence articul;
+                    String articulStr = getArticle(list, 0);
+                    if (articulStr != null && !articulStr.equals("")){
+                        articul = Html.fromHtml("<b>Артикул: </b>" + articulStr + "<br>");
+                    }else {
+                        articul = Html.fromHtml("<b>Артикул: </b>(нет данных) <br>");
+                    }
+
                     stringBuilder.append(addres);   // Адрес
                     stringBuilder.append(client);   // Клиент
 
                     stringBuilder.append(tovarCode);    // ID Товара
                     stringBuilder.append(tovar);    // Товар
                     stringBuilder.append(barcode);    // Штрихкод товара
+                    stringBuilder.append(articul);    // Артикул товара
 
+                    if (isOld.equals(OldDateOstatok.OLD)) {
+                        CharSequence date = Html.fromHtml("<strong>Дата остатков: </strong><font color='#e6e6e6'>" + finalBalanceDate + "</font><br>");
+                        stringBuilder.append(date);     // Дата остатков
 
-                    if (isOld) {
-                        CharSequence ostatokChar = Html.fromHtml("<b>Остаток: </b><font color='#FF0000'>Устарел</font>" + "<br><br>");
+                        CharSequence ostatokChar = Html.fromHtml("<b>Остаток: </b><font color='#e6e6e6'>Устарел</font>" + "<br><br>");
                         stringBuilder.append(ostatokChar);       // Остаток
-
-                        stringBuilder.append(Html.fromHtml("Данные об остатке <font color='#FF0000'>устарели</font>"));
+                        stringBuilder.append(Html.fromHtml("Данные об остатке <font color='#e6e6e6'>устарели</font>"));
                     } else {
-                        CharSequence ostatokChar = Html.fromHtml("<b>Остаток: " + finalBalanceData + " шт</b>" + "<br><br>");
-                        stringBuilder.append(ostatokChar);       // Остаток
+                        CharSequence date = Html.fromHtml("<strong>Дата остатков: </strong><font color='#00A800'>" + finalBalanceDate + "</font><br>");
+                        stringBuilder.append(date);     // Дата остатков
 
-                        stringBuilder.append(Html.fromHtml("Данные об остатке <b>актуальны</b>"));
+                        CharSequence ostatokChar = Html.fromHtml("<b>Остаток: </b><font color='#00A800'>" + finalBalanceData + "</font> <b>шт</b>" + "<br><br>");
+                        stringBuilder.append(ostatokChar);       // Остаток
+                        stringBuilder.append(Html.fromHtml("Данные об остатке <b><font color='#00A800'>актуальны</font></b>"));
                     }
 
+
+
+
+
+                    // Додаємо пробільчики, для того щоб не поряд була вся інфа
+                    stringBuilder.append("\n\n\n");
+
+                    // Додавання "таблички"
+                    stringBuilder.append(oborotVed);
+
                     DialogData dialog = new DialogData(mContext);
-                    dialog.setTitle("Остатки");
-                    dialog.setText(stringBuilder + "\n\n\n" + oborotVed);
+                    dialog.setTitle("Остатки товара в ТТ");
+                    dialog.setText(stringBuilder);
+//                    dialog.setText(stringBuilder + "\n\n\n" + oborotVed);
                     dialog.show();
                 });
 
@@ -679,7 +716,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
         private void showFacePlan(ReportPrepareDB reportPrepareDB) {
             if (reportPrepareDB != null && reportPrepareDB.facesPlan != null && reportPrepareDB.facesPlan > 0) {
                 facePlan.setVisibility(View.VISIBLE);
-                facePlan.setText("План: " + reportPrepareDB.facesPlan + " фейси");
+                facePlan.setText("План: " + reportPrepareDB.facesPlan + " фейс.");
                 facePlan.setOnClickListener(view -> {
                     Toast.makeText(mContext, "План по фейсам равен: " + reportPrepareDB.facesPlan, Toast.LENGTH_SHORT).show();
                 });
@@ -701,14 +738,23 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
          * @param date -- дата которую проверяем
          */
         // TODO работа с датой. проверяю устарелость.
-        private boolean isOldOstatokDate(Long date) {
+        private OldDateOstatok isOldOstatokDate(Long date) {
             // Если данных нет - считаю их устаревшими
             if (date == null) {
-                return true;
+                return OldDateOstatok.ELDEST;
             }
 
-            // Если дата остатков больше -30 дней -- значит они ещё актуальны, иначе - нет.
-            return date * 1000 <= (System.currentTimeMillis() - 2592000000L);
+            // Если дата остатков больше -30 дней -- значит они уже устарели
+            if (date * 1000 <= (System.currentTimeMillis() - 2592000000L)) {
+                return OldDateOstatok.ELDEST;
+            }
+
+            // Если дата остатков больше -14 дней -- значит они ещё актуальны, иначе - нет.
+            if (date * 1000 <= (System.currentTimeMillis() - 1209600000L)) {
+                return OldDateOstatok.OLD;
+            }
+
+            return OldDateOstatok.NEW;
         }
 
 
@@ -757,7 +803,16 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                         DialogPhotoTovar dialogPhotoTovar = new DialogPhotoTovar(mContext);
 
                         dialogPhotoTovar.setPhotoTovar(Uri.parse(stackPhotoDB.getPhoto_num()));
+
+                        StringBuilder sb = new StringBuilder();
+                        sb.append("Штрихкод: ").append(tovar.getBarcode()).append("\n");
+                        sb.append("Артикул: ").append(getArticle(tovar, 0));
+
+
                         dialogPhotoTovar.setPhotoBarcode(tovar.getBarcode());
+//                        dialogPhotoTovar.setPhotoBarcode(sb);
+
+                        dialogPhotoTovar.setTextInfo(sb);
 
                         dialogPhotoTovar.setClose(dialogPhotoTovar::dismiss);
                         dialogPhotoTovar.show();

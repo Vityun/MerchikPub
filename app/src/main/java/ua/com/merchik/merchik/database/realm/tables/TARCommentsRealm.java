@@ -105,11 +105,13 @@ public class TARCommentsRealm {
         if (mode != null && mode == 1){
             res = res.where()
                     .beginGroup()
+                    .isNotNull("photo")
                     .notEqualTo("photo", "0")
                     .notEqualTo("photo", "")
                     .endGroup()
                     .or()
                     .beginGroup()
+                    .isNotNull("photo_hash")
                     .notEqualTo("photo_hash", "0")
                     .notEqualTo("photo_hash", "")
                     .endGroup()

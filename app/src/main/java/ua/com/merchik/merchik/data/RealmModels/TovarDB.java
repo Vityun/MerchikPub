@@ -4,6 +4,7 @@ import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
 import io.realm.RealmObject;
+import io.realm.annotations.Ignore;
 import io.realm.annotations.PrimaryKey;
 
 public class TovarDB extends RealmObject {
@@ -63,6 +64,9 @@ public class TovarDB extends RealmObject {
     @SerializedName("depth")
     @Expose
     public Double depth;    // Глубина полки
+
+    @Ignore
+    public Long article;    // Артикул
 
 
     public TovarDB() {

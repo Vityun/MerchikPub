@@ -1,5 +1,7 @@
 package ua.com.merchik.merchik.Filter;
 
+import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
+
 import android.content.Context;
 import android.util.Log;
 
@@ -10,6 +12,7 @@ import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.ViewHolders.AutoTextUsersViewHolder;
 import ua.com.merchik.merchik.data.Database.Room.AddressSDB;
+import ua.com.merchik.merchik.data.Database.Room.ArticleSDB;
 import ua.com.merchik.merchik.data.Database.Room.CustomerSDB;
 import ua.com.merchik.merchik.data.Database.Room.OpinionSDB;
 import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
@@ -75,7 +78,7 @@ public class MyFilter {
 //                });
 
                 // Дата
-                if (item.getDt() != null && !item.getDt().equals("") && Clock.getHumanTimeYYYYMMDD(item.getDt().getTime()/1000).toLowerCase().contains(constraint)) {   //+TODO CHANGE DATE
+                if (item.getDt() != null && !item.getDt().equals("") && Clock.getHumanTimeYYYYMMDD(item.getDt().getTime() / 1000).toLowerCase().contains(constraint)) {   //+TODO CHANGE DATE
                     results.add(item);
                 }
                 // Адрес
@@ -94,7 +97,7 @@ public class MyFilter {
 //                else if (theme.get() != null && theme.get().getNm() != null && !theme.get().getNm().equals("") && theme.get().getNm().toLowerCase().contains(constraint)){
 //                    results.add(item);
 //                }
-            }catch (Exception e){
+            } catch (Exception e) {
                 Log.d("test", "test");
             }
         }
@@ -138,30 +141,46 @@ public class MyFilter {
 
 
     public List<TovarDB> getFilteredResultsTOV(String constraint, List<TovarDB> sorted, List<TovarDB> orig) {
-
-        Log.e("getFilteredResultsTOV", "constraint: " + constraint);
-        try {
-            Log.e("getFilteredResultsTOV", "sorted: " + sorted.size());
-        } catch (Exception e) {
-        }
-
-        Log.e("getFilteredResultsTOV", "orig: " + orig.size());
-
         List<TovarDB> results = new ArrayList<>();
-        if (sorted == null) {
-            sorted = orig;
-        }
 
-        for (TovarDB item : sorted) {
-
-            //
-            if (item.getNm() != null && !item.getNm().equals("") && item.getNm().toLowerCase().contains(constraint)) {
-                results.add(item);
-            } else if (item.getWeight() != null && !item.getWeight().equals("") && item.getWeight().toLowerCase().contains(constraint)) {
-                results.add(item);
-            } else if (item.getBarcode() != null && !item.getBarcode().equals("") && item.getBarcode().toLowerCase().contains(constraint)) {
-                results.add(item);
+        try {
+            Log.e("getFilteredResultsTOV", "constraint: " + constraint);
+            try {
+                Log.e("getFilteredResultsTOV", "sorted: " + sorted.size());
+            } catch (Exception e) {
             }
+
+            Log.e("getFilteredResultsTOV", "orig: " + orig.size());
+
+
+            for (TovarDB item : orig) {
+                ArticleSDB article = SQL_DB.articleDao().getByTovId(Integer.parseInt(item.getiD()));
+                if (article != null){
+                    item.article = article.vendorCode;
+                }
+            }
+
+            if (sorted == null) {
+                sorted = orig;
+            }
+
+            Log.e("getFilteredResultsTOV", "orig: " + orig.size());
+
+            for (TovarDB item : sorted) {
+                //
+                if (item.getNm() != null && !item.getNm().equals("") && item.getNm().toLowerCase().contains(constraint)) {
+                    results.add(item);
+                } else if (item.getWeight() != null && !item.getWeight().equals("") && item.getWeight().toLowerCase().contains(constraint)) {
+                    results.add(item);
+                } else if (item.getBarcode() != null && !item.getBarcode().equals("") && item.getBarcode().toLowerCase().contains(constraint)) {
+                    results.add(item);
+                } else if (item.article != null && (!String.valueOf(item.article).equals("") || !String.valueOf(item.article).equals("0")) && String.valueOf(item.article).toLowerCase().contains(constraint)) {
+                    results.add(item);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            Log.e("getFilteredResultsTOV", "Exception e: " + e);
         }
 
         return results;

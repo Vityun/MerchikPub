@@ -25,7 +25,7 @@ public class DialogPhotoTovar {
     private Dialog dialog;
     private Context context;
 
-    private TextView barcode, barcodeError;
+    private TextView barcode, barcodeError, textInfo;
     private ImageView photo, photoBarcode;
 
     private ImageButton close, help, videoHelp, call;
@@ -44,6 +44,8 @@ public class DialogPhotoTovar {
 
         barcode = dialog.findViewById(R.id.barcode);
         barcodeError = dialog.findViewById(R.id.barcodeError);
+        textInfo = dialog.findViewById(R.id.info);
+        textInfo.setVisibility(View.GONE);
 
         photo = dialog.findViewById(R.id.imageTovFull);
         photoBarcode = dialog.findViewById(R.id.photoBarcode);
@@ -76,12 +78,18 @@ public class DialogPhotoTovar {
         try {
             Log.e("ФОТО_ТОВАРОВ", "setPhotoTovar: +");
             photo.setImageURI(uri);
-        }catch (Exception e){
+        } catch (Exception e) {
             Log.e("ФОТО_ТОВАРОВ", "setPhotoTovar: Ошибка ниже: ");
             e.printStackTrace();
         }
     }
 
+    public void setTextInfo(StringBuilder stringBuilder) {
+        if (stringBuilder != null){
+            textInfo.setText(stringBuilder);
+            textInfo.setVisibility(View.VISIBLE);
+        }
+    }
 
     public void setPhotoBarcode(String barcode) {
 
@@ -109,10 +117,11 @@ public class DialogPhotoTovar {
 
 
             barcodeError.setVisibility(View.VISIBLE);
-            Spanned spanned = Html.fromHtml( "<font color=red>Штрихкод " + barcode + " распознать не удалось</font>");
+            Spanned spanned = Html.fromHtml("<font color=red>Штрихкод " + barcode + " распознать не удалось</font>");
             barcodeError.setText(spanned);
-        }finally {
-            this.barcode.setText(barcode);
+        } finally {
+//            this.barcode.setText(barcode);
+            this.barcode.setVisibility(View.GONE);
         }
     }
 }

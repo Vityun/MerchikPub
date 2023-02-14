@@ -164,6 +164,7 @@ public class OptionControlTaskAnswer<T> extends OptionControl {
                         result.add(item);
 
 //                    } else if (item.lastAnswer.length() == 0 || item.author.equals(item.lastAnswerUserId)) {
+
                     } else if (item.lastAnswer.length() == 0 || userId != item.lastAnswerUserId) {
                         String msg = context.getString(R.string.option_control_135329_not_write_tar_comment);
                         // todo создать и заполнить данные для сообщения пользователю
@@ -192,14 +193,20 @@ public class OptionControlTaskAnswer<T> extends OptionControl {
 
                         List<TARCommentsDB> commentsRealm = null;
 
-                        if (1675987200000L < System.currentTimeMillis()) {
+                        if (System.currentTimeMillis() < 1675987200000L) {
+//                        if (1675987200000L < System.currentTimeMillis()) {
                             commentsRealm = TARCommentsRealm.getTARCommentsToOptionControl(item.id, item.vinovnik, 1);
                         } else {
                             commentsRealm = TARCommentsRealm.getTARCommentsToOptionControl(item.id, item.vinovnik, null);
                             if (commentsRealm != null) {
                                 for (TARCommentsDB tarCommentItem : commentsRealm) {
-                                    if (tarCommentItem.photo == null || tarCommentItem.photo.equals("") && tarCommentItem.photo_hash == null || tarCommentItem.photo_hash.equals("")) {
+                                    Globals.writeToMLOG("INFO", "OptionControlTaskAnswer/executeOption/for/data/need_photo", "tarCommentItem.photo: " + tarCommentItem.photo);
+                                    Globals.writeToMLOG("INFO", "OptionControlTaskAnswer/executeOption/for/data/need_photo", "tarCommentItem.photo_hash: " + tarCommentItem.photo_hash);
+
+                                    if (!checkHavePhoto(tarCommentItem)) {
                                         comm = tarCommentItem.comment;
+                                        Globals.writeToMLOG("INFO", "OptionControlTaskAnswer/executeOption/for/data/need_photo", "comm: " + comm);
+
                                         break;
                                     }
                                 }
@@ -208,7 +215,7 @@ public class OptionControlTaskAnswer<T> extends OptionControl {
 
                         if (!comm.equals("")) {
                             spannableStringBuilder.append("Для даної теми ви повинні додати ФотоЗвіт до коментаря: <")
-                                    .append(comm).append("> (").append(createLinkedString(item.id1c, item.id)).append(" от ").append(Clock.getHumanTimeSecPattern(item.dtRealPost / 1000, "dd-MM")).append("\n");
+                                    .append(comm).append("> (").append(createLinkedString(item.id1c, item.id)).append(" от ").append(Clock.getHumanTimeSecPattern(item.dtRealPost / 1000, "dd-MM")).append(")").append("\n");
 
                             result.add(item);
                         } else if (commentsRealm != null && commentsRealm.size() == 0) {
@@ -276,6 +283,20 @@ public class OptionControlTaskAnswer<T> extends OptionControl {
 
     public int problemTaskCount() {
         return taskCount;
+    }
+
+    private boolean checkHavePhoto(TARCommentsDB comment) {
+        boolean res = false;
+
+        if (comment.photo != null && !comment.photo.equals("")) {
+            res = true;
+        }
+
+        if (comment.photo_hash != null && !comment.photo_hash.equals("")) {
+            res = true;
+        }
+
+        return res;
     }
 
     private SpannableString createLinkedString(String msg, int id) {
