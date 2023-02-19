@@ -4,6 +4,7 @@ public class TARCommentDataListUpload {
 
 
     public String id;
+    public String comment_id;
     public String comment;
     public String photo_id;
     public String photo_hash;

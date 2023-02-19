@@ -22,7 +22,7 @@ public class TARSecondFrag extends Fragment {
     private TabLayout tabLayout;
     private ViewPager viewPager;
 
-    private TasksAndReclamationsSDB data;
+    public TasksAndReclamationsSDB data;
     private FragmentManager fragmentManager;
 
     public static int TaRID = 0;
@@ -82,6 +82,11 @@ public class TARSecondFrag extends Fragment {
     public void setPhoto(Integer id){
         Globals.writeToMLOG("INFO", "TARSecondFrag.setPhoto", "Photo ID: " + id);
         adapter.setDataToFrag3(id);
+    }
+
+    public void setPhotoComment(Integer id, int tarCommentIndex){
+        Globals.writeToMLOG("INFO", "TARSecondFrag.setPhotoComment", "Photo ID: " + id + " tarCommentIndex: " + tarCommentIndex);
+        adapter.setDataToFrag3(id, tarCommentIndex);
     }
 
 

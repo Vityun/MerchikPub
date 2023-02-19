@@ -1,5 +1,7 @@
 package ua.com.merchik.merchik.Activities.TaskAndReclamations.TasksActivity;
 
+import static ua.com.merchik.merchik.menu_main.decodeSampledBitmapFromResource;
+
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.text.Html;
@@ -21,6 +23,7 @@ import java.text.SimpleDateFormat;
 import java.util.List;
 
 import ua.com.merchik.merchik.Clock;
+import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.ServerExchange.PhotoDownload;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
@@ -30,16 +33,20 @@ import ua.com.merchik.merchik.database.realm.tables.StackPhotoRealm;
 import ua.com.merchik.merchik.database.realm.tables.UsersRealm;
 import ua.com.merchik.merchik.dialogs.DialogData;
 
-import static ua.com.merchik.merchik.menu_main.decodeSampledBitmapFromResource;
-
 public class TaRCommentsAdapter extends RecyclerView.Adapter<TaRCommentsAdapter.ViewHolder>  {
 
     private Context mContext;
     private List<TARCommentsDB> data;
+    private CommentPhotoClick commentPhotoClick;
 
-    public TaRCommentsAdapter(Context mContext, List<TARCommentsDB> data) {
+    public interface CommentPhotoClick {
+        void commentPhotoClick(int i);
+    }
+
+    public TaRCommentsAdapter(Context mContext, List<TARCommentsDB> data, CommentPhotoClick commentPhotoClick) {
         this.mContext = mContext;
         this.data = data;
+        this.commentPhotoClick = commentPhotoClick;
     }
 
     public class ViewHolder extends RecyclerView.ViewHolder {
@@ -101,10 +108,10 @@ public class TaRCommentsAdapter extends RecyclerView.Adapter<TaRCommentsAdapter.
             // В случае если фото есть в базе данных стэк фото
             try {
 //                StackPhotoDB stackPhotoDB = StackPhotoRealm.stackPhotoDBGetPhotoBySiteId(dataItem.getPhoto());
-                if (dataItem.photo_hash != null && !dataItem.photo_hash.equals("")){
+                if ((dataItem.photo_hash != null && !dataItem.photo_hash.equals("")) || (dataItem.photo != null && !dataItem.photo.equals(""))){
                     StackPhotoDB stackPhotoDB = StackPhotoRealm.getByHash(dataItem.photo_hash);
 
-                    if (stackPhotoDB == null && dataItem.getPhoto() != null && !dataItem.getPhoto().equals("")){
+                    if (stackPhotoDB == null && dataItem.photo != null && !dataItem.photo.equals("") && !dataItem.photo.equals("0")){
                         stackPhotoDB = StackPhotoRealm.stackPhotoDBGetPhotoBySiteId(dataItem.getPhoto());
                     }
 
@@ -113,7 +120,7 @@ public class TaRCommentsAdapter extends RecyclerView.Adapter<TaRCommentsAdapter.
                             new PhotoDownload().downloadPhoto(false, stackPhotoDB, "/TAR", new PhotoDownload.downloadPhotoInterface() {
                                 @Override
                                 public void onSuccess(StackPhotoDB data) {
-                                    Log.e("test", "onSuccess: " + data);
+                                    Globals.writeToMLOG("INFO", "newPhotoDownload().downloadPhoto(", "data: " + data);
 //                                photo.setImageURI(Uri.parse(data.getPhoto_num()));
                                     File file = new File(data.getPhoto_num());
                                     Bitmap b = decodeSampledBitmapFromResource(file, 200, 200);
@@ -124,7 +131,7 @@ public class TaRCommentsAdapter extends RecyclerView.Adapter<TaRCommentsAdapter.
 
                                 @Override
                                 public void onFailure(String s) {
-                                    Log.e("test", "onFailure: " + s);
+                                    Globals.writeToMLOG("INFO", "newPhotoDownload().downloadPhoto(", "s: " + s);
                                 }
                             });
                         }else {
@@ -135,9 +142,16 @@ public class TaRCommentsAdapter extends RecyclerView.Adapter<TaRCommentsAdapter.
                                 photo.setImageBitmap(b);
                             }
                         }
+                    }else {
+                        Log.e("test", "test"); // Фото есть, но не на стороне приложения
+//                        photo.setImageDrawable(mContext.getResources().getDrawable(R.drawable.ic_47));
                     }
                 }else {
                     Toast.makeText(itemView.getContext(), "Не обнаружена фотография.", Toast.LENGTH_LONG).show();
+                    photo.setImageDrawable(mContext.getResources().getDrawable(R.drawable.ic_47));
+                    photo.setOnClickListener((view)->{
+                        commentPhotoClick.commentPhotoClick(data.indexOf(dataItem));
+                    });
                 }
             }catch (Exception e){
                 Log.e("test", "НЕ удалось отобразить фото Exception: " + e);

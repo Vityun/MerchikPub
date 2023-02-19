@@ -1274,6 +1274,10 @@ public class Exchange {
                 dataItem.id = item.getRId();
                 dataItem.comment = item.getComment();
 
+                if (item.commentId != null && item.dtUpdate != null && item.dtUpdate != 0){
+                    dataItem.comment_id = String.valueOf(item.commentId);
+                }
+
                 if (item.getPhoto() != null && !item.getPhoto().equals("")) {
                     dataItem.photo_id = item.getPhoto();
                 }
@@ -1321,6 +1325,7 @@ public class Exchange {
                                         if (res.getList().get(i).getState() != null && res.getList().get(i).getState()) {
                                             TARCommentsDB recreateComment = new TARCommentsDB();  // Для того что б "обновлять" по первичному ключу данные/ copy
                                             recreateComment.setID(res.getList().get(i).getInfo().getCommentId());
+                                            recreateComment.commentId = Integer.valueOf(res.getList().get(i).getInfo().getCommentId());
                                             recreateComment.setTp(finalList.get(i).getTp());
                                             recreateComment.setDt(finalList.get(i).getDt());
                                             recreateComment.setWho(finalList.get(i).getWho());

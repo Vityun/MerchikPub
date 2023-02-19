@@ -36,6 +36,9 @@ public class MakePhoto {
     public static final int REQUEST_TAKE_PHOTO = 101;          // Получение фотки с Журнала Фото
     public static final int CAMERA_REQUEST_TAKE_PHOTO = 200;   // Для нового интента выполнения фото
     public static final int CAMERA_REQUEST_TAKE_PHOTO_TEST = 201;   // Тестовый реквест для фото
+
+    public static final int CAMERA_REQUEST_TAR_COMMENT_PHOTO = 203; // ЗИР. Закладка переписки. Список комментариев. Возможность делать фото к коментарию.
+
     public static File image;
     private static Context mContext;
     public static WPDataObj wp;

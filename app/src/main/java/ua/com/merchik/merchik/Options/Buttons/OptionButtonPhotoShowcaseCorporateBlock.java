@@ -14,13 +14,13 @@ import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.data.WPDataObj;
 
-public class OptionButPhotoPlanogramm<T> extends OptionControl {
-    public int OPTION_BUTTON_PHOTO_PLANOGRAMM_ID = 151139;
+public class OptionButtonPhotoShowcaseCorporateBlock<T> extends OptionControl {
+    public static int OPTION_BUTTON_PhotoShowcaseCorporateBlock_ID = 158604;
 
     private WpDataDB wpDataDB;
     private final WorkPlan workPlan = new WorkPlan();
 
-    public OptionButPhotoPlanogramm(Context context, T document, OptionsDB optionDB, OptionMassageType msgType, Options.NNKMode nnkMode) {
+    public OptionButtonPhotoShowcaseCorporateBlock(Context context, T document, OptionsDB optionDB, OptionMassageType msgType, Options.NNKMode nnkMode) {
         this.context = context;
         this.document = document;
         this.optionDB = optionDB;
@@ -41,7 +41,7 @@ public class OptionButPhotoPlanogramm<T> extends OptionControl {
         new Globals().fixMP();// Фиксация Местоположения в таблице ЛогМп
         try {
             WPDataObj wpDataObj = workPlan.getKPS(wpDataDB.getId());
-            wpDataObj.setPhotoType("5");
+            wpDataObj.setPhotoType("41");
 
             MakePhoto makePhoto = new MakePhoto();
             makePhoto.pressedMakePhotoOldStyle((Activity) context, wpDataObj, wpDataDB);

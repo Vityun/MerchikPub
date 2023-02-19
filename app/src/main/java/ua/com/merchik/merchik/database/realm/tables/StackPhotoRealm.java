@@ -217,9 +217,10 @@ public class StackPhotoRealm {
                 .findAll();
     }
 
-    public static RealmResults<StackPhotoDB> getPhotosByDAD2(long dad2) {
+    public static RealmResults<StackPhotoDB> getPhotosByDAD2(long dad2, int photoType) {
         return INSTANCE.where(StackPhotoDB.class)
                 .equalTo("code_dad2", dad2)
+                .equalTo("photo_type", photoType)
                 .findAll();
     }
 

@@ -184,6 +184,9 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                     || optionId == 151748   // ДОЛЯ полочного пространства
                     || optionId == 158309   // "Фото Витрины" (Наближене)
                     || optionId == 158308   // "Фото Витрины" (Панорамне)
+                    || optionId == 158604   // ФВ (Наполненность)
+                    || optionId == 158605   // ФВ (Корпор. блок)
+                    || optionId == 158606   // Дополнительное место продаж
             ) {
                 constraintLayout.setBackgroundResource(R.drawable.bg_temp);
                 textInteger2.setVisibility(View.VISIBLE);

@@ -685,6 +685,8 @@ public class PhotoDownload {
             public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
                 if (response.isSuccessful() && response.body() != null) {
 
+                    Globals.writeToMLOG("INFO", "newPhotoDownload().downloadPhoto(", "response.body(): " + response.body());
+
                     Log.e("downloadPhoto", "response.body(): " + response.body().byteStream());
 
                     Bitmap bmp = BitmapFactory.decodeStream(response.body().byteStream());

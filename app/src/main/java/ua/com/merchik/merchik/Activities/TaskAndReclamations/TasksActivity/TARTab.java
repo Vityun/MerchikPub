@@ -46,6 +46,10 @@ public class TARTab extends FragmentPagerAdapter {
         tab3Fragment.setPhoto(id);
     }
 
+    public void setDataToFrag3(Integer id, int tarCommentIndex){
+        tab3Fragment.setPhotoTARComment(id, tarCommentIndex);
+    }
+
 
     @Override
     public int getCount() {

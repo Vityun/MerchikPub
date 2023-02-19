@@ -65,6 +65,9 @@ import ua.com.merchik.merchik.Options.Buttons.OptionButtonAddNewClient;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonAvailabilityDetailedReport;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonPhotoAktionTovar;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonPhotoBeforeStartWork;
+import ua.com.merchik.merchik.Options.Buttons.OptionButtonPhotoShowcaseCorporateBlock;
+import ua.com.merchik.merchik.Options.Buttons.OptionButtonPhotoShowcaseFullness;
+import ua.com.merchik.merchik.Options.Buttons.OptionButtonPhotoShowcaseNear;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonReclamationAnswer;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonTaskAnswer;
 import ua.com.merchik.merchik.Options.Controls.OptionControlAchievements;
@@ -809,6 +812,18 @@ public class Options {
                 new OptionButPhotoPlanogramm<>(context, dataDB, option, type, mode);
                 break;
 
+            case 158309:
+                new OptionButtonPhotoShowcaseNear<>(context, dataDB, option, type, mode);
+                break;
+
+            case 158604:
+                new OptionButtonPhotoShowcaseCorporateBlock<>(context, dataDB, option, type, mode);
+                break;
+
+            case 158605:
+                new OptionButtonPhotoShowcaseFullness<>(context, dataDB, option, type, mode);
+                break;
+
             case 157277:
                 new OptionButtonPhotoAktionTovar<>(context, dataDB, option, type, mode);
                 break;
@@ -896,7 +911,6 @@ public class Options {
             case 138521:
                 return optionControlEndWork_138521(context, dataDB, option, type, mode) ? 0 : 1;
 
-            case 158309:
             case 158308:
             case 132968:
                 if (dataDB instanceof WpDataDB) {

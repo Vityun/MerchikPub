@@ -320,6 +320,11 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                 this.startActivity(menuItem165browserIntent);
                 break;
 
+            case 169:
+                Intent menuItem169browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://merchik.com.ua/sa.php?&u=222388&s=4600a1857c7008ab0ebfa8d1a168f26ebe7315b8&l=/mobile.php?mod=lessons**act=list**platform_id=5"));
+                this.startActivity(menuItem169browserIntent);
+                break;
+
         }
 
 

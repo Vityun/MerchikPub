@@ -11,6 +11,11 @@ public class TARCommentsDB extends RealmObject {
     @Expose
     @PrimaryKey
     public String id;
+
+    @SerializedName("comment_id")
+    @Expose
+    public Integer commentId;
+
     @SerializedName("tp")
     @Expose
     public String tp;
@@ -47,6 +52,10 @@ public class TARCommentsDB extends RealmObject {
     @SerializedName("responce_id")
     @Expose
     public String responceId;
+
+    @SerializedName("dt_update")
+    @Expose
+    public Long dtUpdate;
 
     public boolean startUpdate;
 

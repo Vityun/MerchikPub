@@ -1,5 +1,9 @@
 package ua.com.merchik.merchik.Activities.TaskAndReclamations;
 
+import static ua.com.merchik.merchik.Activities.TaskAndReclamations.TasksActivity.Tab3Fragment.TARCommentIndex;
+import static ua.com.merchik.merchik.MakePhoto.CAMERA_REQUEST_TAR_COMMENT_PHOTO;
+import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
+
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
@@ -26,6 +30,8 @@ import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.MakePhoto;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
+import ua.com.merchik.merchik.data.Database.Room.AddressSDB;
+import ua.com.merchik.merchik.data.Database.Room.CustomerSDB;
 import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
 import ua.com.merchik.merchik.data.RealmModels.AddressDB;
 import ua.com.merchik.merchik.data.RealmModels.CustomerDB;
@@ -34,8 +40,6 @@ import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.StackPhotoRealm;
 import ua.com.merchik.merchik.dialogs.DialodTAR.DialogCreateTAR;
 import ua.com.merchik.merchik.toolbar_menus;
-
-import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
 public class TARActivity extends toolbar_menus implements TARFragmentHome.OnFragmentInteractionListener, TARHomeFrag.OnFragmentInteractionListener {
 
@@ -226,6 +230,11 @@ public class TARActivity extends toolbar_menus implements TARFragmentHome.OnFrag
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
+        Log.e("TARActivity", "onActivityResult");
+        Log.e("TARActivity", "requestCode: " + requestCode);
+        Log.e("TARActivity", "resultCode: " + resultCode);
+        Log.e("TARActivity", "Intent: " + data);
+
         try {
             Log.d("test", "data: " + requestCode + resultCode);
             Globals.writeToMLOG("INFO", "TARActivity.onActivityResult", "resultCode: " + resultCode);
@@ -285,6 +294,19 @@ public class TARActivity extends toolbar_menus implements TARFragmentHome.OnFrag
                 fragmentHome.homeFrag.dialog.setData(stackPhotoDB);
                 fragmentHome.homeFrag.dialog.setDataUpdate();
                 fragmentHome.homeFrag.dialog.refreshAdaper(stackPhotoDB);
+            }
+
+            if (requestCode == CAMERA_REQUEST_TAR_COMMENT_PHOTO) {
+                List<Fragment> fragments = fragmentManager.getFragments();
+                TARFragmentHome fragmentHome = (TARFragmentHome) fragments.get(0);
+
+                AddressSDB addr = SQL_DB.addressDao().getById(fragmentHome.secondFrag.data.addr);
+                CustomerSDB client = SQL_DB.customerDao().getById(fragmentHome.secondFrag.data.client);
+
+                StackPhotoDB stackPhotoDB = saveTestPhoto(new File(MakePhoto.openCameraPhotoUri), addr, client);
+                MakePhoto.openCameraPhotoUri = null;
+
+                fragmentHome.secondFrag.setPhotoComment(stackPhotoDB.getId(), TARCommentIndex);
             }
 
 
@@ -376,6 +398,47 @@ public class TARActivity extends toolbar_menus implements TARFragmentHome.OnFrag
 
             stackPhotoDB.setClient_id(client.getId());
             stackPhotoDB.setCustomerTxt(client.getNm());
+
+            stackPhotoDB.setUser_id(Globals.userId);
+            stackPhotoDB.setPhoto_type(0);
+
+            stackPhotoDB.setDvi(1);
+
+            stackPhotoDB.setCreate_time(System.currentTimeMillis());
+
+            stackPhotoDB.setPhoto_hash(globals.getHashMD5FromFile2(photoFile, null));
+            stackPhotoDB.setPhoto_num(photoFile.getAbsolutePath());
+
+
+            RealmManager.stackPhotoSavePhoto(stackPhotoDB);
+            return stackPhotoDB;
+        } catch (Exception e) {
+            Globals.writeToMLOG("ERROR", "TARActivity.onActivityResult.savePhoto", "Exception e: " + e);
+            return null;
+        }
+    }
+
+
+    /**
+     * 15.02.23.
+     * Ну это ***. Сделано на ***, как и всё тут. Главное "что б быстро"
+     *
+     * На момент написания - сохраняет фотографию в БД. Фото берётся из Комментариев отписания на Задачи / Рекламации
+     * */
+    private StackPhotoDB saveTestPhoto(File photoFile, AddressSDB addr, CustomerSDB client) {
+        try {
+            int id = RealmManager.stackPhotoGetLastId();
+            id++;
+            StackPhotoDB stackPhotoDB = new StackPhotoDB();
+            stackPhotoDB.setId(id);
+            stackPhotoDB.setDt(System.currentTimeMillis() / 1000);
+            stackPhotoDB.setTime_event(Clock.getHumanTime2(System.currentTimeMillis() / 1000));
+
+            stackPhotoDB.setAddr_id(addr.id);
+            stackPhotoDB.setAddressTxt(addr.nm);
+
+            stackPhotoDB.setClient_id(client.id);
+            stackPhotoDB.setCustomerTxt(client.nm);
 
             stackPhotoDB.setUser_id(Globals.userId);
             stackPhotoDB.setPhoto_type(0);

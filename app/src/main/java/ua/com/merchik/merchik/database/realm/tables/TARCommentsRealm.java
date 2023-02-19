@@ -15,58 +15,65 @@ import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.data.RealmModels.TARCommentsDB;
 
 public class TARCommentsRealm {
+
+    public static void saveOrUpdate(List<TARCommentsDB> data) {
+        INSTANCE.beginTransaction();
+        INSTANCE.copyToRealmOrUpdate(data);
+        INSTANCE.commitTransaction();
+    }
+
     /**
      * 23.03.2021
      * Сохранение данных в таблицу "Комментарии к рекламациям" / "Переписка"
-     *
+     * <p>
      * 21.12.2022
      * Добавлен этот лютый костыль из-за:
      * Если удалять и перезаписывать таблицу - выясняется что на стороне приложения ЕСТЬ фотография
      * у комментария, а на стороне сервера ЕЩЁ нет. Таким образом сервер, при синхронизации затирал
      * данные о фотографии в приложении и по итогу люди переставали видеть фото к комментам ЗИР.
-     *
+     * <p>
      * Сделанное решение делает невозможным загрузку данных изменённых на сервере.
      */
     public static void setTARCommentsDB(List<TARCommentsDB> data) {
         try {
-            if (data != null){
-                Log.e("setTARCommentsDB","Start data: " + new Gson().toJson(data));
+            if (data != null) {
+                Log.e("setTARCommentsDB", "Start data: " + new Gson().toJson(data));
                 String[] ids = new String[data.size()];
                 int i = 0;
                 for (TARCommentsDB item : data) {
                     ids[i++] = item.getID();
                 }
 
-                Log.e("setTARCommentsDB","ids: " + Arrays.toString(ids));
+                Log.e("setTARCommentsDB", "ids: " + Arrays.toString(ids));
                 List<TARCommentsDB> notSaveComments = INSTANCE.copyFromRealm(TARCommentsRealm.getTARCommentByIds(ids));
-                Log.e("setTARCommentsDB","notSaveComments: " + new Gson().toJson(notSaveComments));
-                if (notSaveComments != null && notSaveComments.size() > 0){
-                    for (TARCommentsDB servList : data){
-                        for (TARCommentsDB currentList : notSaveComments){
-                            if (servList.getID().equals(currentList.getID())){
+                Log.e("setTARCommentsDB", "notSaveComments: " + new Gson().toJson(notSaveComments));
+                if (notSaveComments != null && notSaveComments.size() > 0) {
+                    for (TARCommentsDB servList : data) {
+                        for (TARCommentsDB currentList : notSaveComments) {
+                            if (servList.getID().equals(currentList.getID())) {
                                 data.remove(servList);
                             }
                         }
                     }
                 }
-                Log.e("setTARCommentsDB","End data: " + new Gson().toJson(data));
+                Log.e("setTARCommentsDB", "End data: " + new Gson().toJson(data));
 
                 INSTANCE.beginTransaction();
                 INSTANCE.copyToRealm(data);
                 INSTANCE.commitTransaction();
             }
-        }catch (Exception e){
+        } catch (Exception e) {
             Globals.writeToMLOG("ERROR", "setTARCommentsDB/Exception", "Exception e: " + e);
         }
     }
 
-    public static TARCommentsDB getTARCommentById(String id){
+    public static TARCommentsDB getTARCommentById(String id) {
         return INSTANCE.where(TARCommentsDB.class)
                 .equalTo("id", id)
                 .findFirst();
     }
 
-    public static RealmResults<TARCommentsDB> getTARCommentByIds(String[] ids){
+    public static RealmResults<TARCommentsDB> getTARCommentByIds(String[] ids) {
         return INSTANCE.where(TARCommentsDB.class)
                 .in("id", ids)
                 .findAll();
@@ -77,8 +84,9 @@ public class TARCommentsRealm {
      * 23.03.2021
      * Получение комментариев (переписки) по ID ЗИР-а
      *
-     * @return*/
-    public static List<TARCommentsDB> getTARCommentByTarId(String id){
+     * @return
+     */
+    public static List<TARCommentsDB> getTARCommentByTarId(String id) {
         return INSTANCE.where(TARCommentsDB.class)
                 .equalTo("rId", id)
                 .sort("dt", Sort.DESCENDING)
@@ -91,10 +99,10 @@ public class TARCommentsRealm {
      *
      * @param id
      * @param userId
-     * @param mode  - Если установлен в 1: отбираю ВСЕ комментарии по данной задачи.
-     *              - Если НЕ указан: Отображаю комментарии только те, к которым есть фотографии
+     * @param mode   - Если установлен в 1: отбираю ВСЕ комментарии по данной задачи.
+     *               - Если НЕ указан: Отображаю комментарии только те, к которым есть фотографии
      */
-    public static List<TARCommentsDB> getTARCommentsToOptionControl(Integer id, Integer userId, Integer mode){
+    public static List<TARCommentsDB> getTARCommentsToOptionControl(Integer id, Integer userId, Integer mode) {
 
         RealmResults<TARCommentsDB> res = INSTANCE.where(TARCommentsDB.class).findAll();
 
@@ -102,7 +110,7 @@ public class TARCommentsRealm {
                 .equalTo("rId", String.valueOf(id))
                 .equalTo("who", String.valueOf(userId)).findAll();
 
-        if (mode != null && mode == 1){
+        if (mode != null && mode == 1) {
             res = res.where()
                     .beginGroup()
                     .isNotNull("photo")
@@ -118,9 +126,9 @@ public class TARCommentsRealm {
                     .findAll();
         }
 
-        if (res != null){
+        if (res != null) {
             return INSTANCE.copyFromRealm(res);
-        }else {
+        } else {
             return null;
         }
 
@@ -145,15 +153,15 @@ public class TARCommentsRealm {
     /**
      * 26.03.2021
      * Получение комментов созданных на моей стороне для выгрузки на сервер.
-     *
+     * <p>
      * Будет работать так: Получаю данные без ID, выгружаю их на сервер, обновляю с серверными
      * ID-шками, записываю обратно в базу данных.
-     * */
-    public static List<TARCommentsDB> getTARCommentToUpload(){
-         return INSTANCE.where(TARCommentsDB.class)
+     */
+    public static List<TARCommentsDB> getTARCommentToUpload() {
+        return INSTANCE.where(TARCommentsDB.class)
 //                 .isNull("id")
-                 .equalTo("startUpdate", true)
-                 .findAll();
+                .equalTo("startUpdate", true)
+                .findAll();
     }
 
 }

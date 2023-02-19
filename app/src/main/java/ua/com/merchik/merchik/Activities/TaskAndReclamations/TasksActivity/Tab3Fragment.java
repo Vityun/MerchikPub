@@ -1,5 +1,8 @@
 package ua.com.merchik.merchik.Activities.TaskAndReclamations.TasksActivity;
 
+import static ua.com.merchik.merchik.MakePhoto.CAMERA_REQUEST_TAR_COMMENT_PHOTO;
+import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
+
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
@@ -30,14 +33,13 @@ import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.WorkPlan;
 import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
+import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
 import ua.com.merchik.merchik.data.RealmModels.TARCommentsDB;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.StackPhotoRealm;
 import ua.com.merchik.merchik.database.realm.tables.TARCommentsRealm;
 import ua.com.merchik.merchik.dialogs.DialodTAR.DialogCreateTAR;
 import ua.com.merchik.merchik.dialogs.DialogData;
-
-import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
 public class Tab3Fragment extends Fragment {
 
@@ -51,6 +53,8 @@ public class Tab3Fragment extends Fragment {
     private DialogCreateTAR dialog;
 
     private Integer photoId;
+
+    public static int TARCommentIndex;  // 15.02.23. Для того что б ОБНОВЛЯТЬ комментарии (добавлять фото)
 
     public Tab3Fragment() {
     }
@@ -66,6 +70,20 @@ public class Tab3Fragment extends Fragment {
         }
     }
 
+    public void setPhotoTARComment(Integer id, int tarCommentIndex) {
+        photoId = id;
+        StackPhotoDB photoDB = RealmManager.INSTANCE.copyFromRealm(StackPhotoRealm.getById(id));
+
+        TARCommentsDB tarCommentsDB = dataComments.get(tarCommentIndex);
+        tarCommentsDB.photo_hash = photoDB.getPhoto_hash();
+        tarCommentsDB.dtUpdate = System.currentTimeMillis()/1000;
+        tarCommentsDB.startUpdate = true;
+        dataComments.set(tarCommentIndex, tarCommentsDB);
+
+        TARCommentsRealm.saveOrUpdate(Collections.singletonList(tarCommentsDB));
+
+        adapter.notifyDataSetChanged();
+    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -305,12 +323,24 @@ public class Tab3Fragment extends Fragment {
     private TaRCommentsAdapter adapter;
     private List<TARCommentsDB> dataComments;
 
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        Log.e("Tab3Fragment", "onActivityResult");
+        Log.e("Tab3Fragment", "requestCode: " + requestCode);
+        Log.e("Tab3Fragment", "resultCode: " + resultCode);
+        Log.e("Tab3Fragment", "Intent: " + data);
+    }
+
     private void setRecycler() {
         dataComments = RealmManager.INSTANCE.copyFromRealm(TARCommentsRealm.getTARCommentByTarId(String.valueOf(tarData.id)));
 
         Collections.reverse(dataComments);
 
-        adapter = new TaRCommentsAdapter(mContext, dataComments);
+        adapter = new TaRCommentsAdapter(mContext, dataComments, (int index) -> {
+            TARCommentIndex = index;
+
+            new MakePhoto().openCamera(getActivity(), CAMERA_REQUEST_TAR_COMMENT_PHOTO);
+        });
         recyclerView.setAdapter(adapter);
         recyclerView.setLayoutManager(new LinearLayoutManager(mContext, LinearLayoutManager.VERTICAL, false));
     }
