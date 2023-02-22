@@ -187,6 +187,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                     || optionId == 158604   // ФВ (Наполненность)
                     || optionId == 158605   // ФВ (Корпор. блок)
                     || optionId == 158606   // Дополнительное место продаж
+                    || optionId == 157354   // Фото ДМП.
             ) {
                 constraintLayout.setBackgroundResource(R.drawable.bg_temp);
                 textInteger2.setVisibility(View.VISIBLE);
@@ -196,7 +197,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                     if (optionId == 133382) {
                         textInteger2.setVisibility(View.VISIBLE);
                         textInteger2.setText("+1100 грн.");
-                    }else {
+                    } else {
                         textInteger2.setVisibility(View.GONE);
                     }
                 }
@@ -268,31 +269,10 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                         break;
 
                     case (158309):  // Фото витрины Приближённое
-                    case (158308):  // Фото витрины отдалённое
-                    case (132968):  // Вставляем количество выполненных Фоток Витрин
-                        String m = optionsButtons.getAmountMin();
-                        if (m.equals("0")) {
-                            m = "3";
-                        }
-
-                        int madePhotos = RealmManager.stackPhotoShowcasePhotoCount(dad2, 0);
-                        int maxPhotos = Integer.parseInt(m);
-
-                        textInteger.setText("" + madePhotos + "/" + maxPhotos);
-
-                        final CharSequence text = textInteger.getText();
-                        final SpannableString spannableString = new SpannableString(text);
-
-                        ForegroundColorSpan foregroundSpan;
-                        if (madePhotos >= maxPhotos){
-                            foregroundSpan = new ForegroundColorSpan(Color.GREEN);
-                        }else {
-                            foregroundSpan = new ForegroundColorSpan(mContext.getResources().getColor(R.color.red_error));
-                        }
-
-//                        spannableString.setSpan(new URLSpan(""), 0, spannableString.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-                        spannableString.setSpan(foregroundSpan, 0, spannableString.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-                        textInteger.setText(spannableString, TextView.BufferType.SPANNABLE);
+                        textInteger.setText(
+                                setPhotoCountsMakeAndMust(optionsButtons, RealmManager.stackPhotoShowcasePhotoCount(dad2, 39)),
+                                TextView.BufferType.SPANNABLE
+                        );
 
                         textInteger.setOnClickListener(view -> {
                             Intent intent = new Intent(view.getContext(), PhotoLogActivity.class);
@@ -301,6 +281,49 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                             view.getContext().startActivity(intent);
                         });
                         break;
+                    case (158308):  // Фото витрины отдалённое
+                    case (132968):  // Вставляем количество выполненных Фоток Витрин
+                        textInteger.setText(
+                                setPhotoCountsMakeAndMust(optionsButtons, RealmManager.stackPhotoShowcasePhotoCount(dad2, 0)),
+                                TextView.BufferType.SPANNABLE
+                        );
+
+                        textInteger.setOnClickListener(view -> {
+                            Intent intent = new Intent(view.getContext(), PhotoLogActivity.class);
+                            intent.putExtra("report_prepare", true);
+                            intent.putExtra("dad2", dad2);
+                            view.getContext().startActivity(intent);
+                        });
+                        break;
+
+                    case (157354):
+                        textInteger.setText(
+                                setPhotoCountsMakeAndMust(optionsButtons, RealmManager.stackPhotoShowcasePhotoCount(dad2, 42)),
+                                TextView.BufferType.SPANNABLE
+                        );
+
+                        textInteger.setOnClickListener(view -> {
+                            Intent intent = new Intent(view.getContext(), PhotoLogActivity.class);
+                            intent.putExtra("report_prepare", true);
+                            intent.putExtra("dad2", dad2);
+                            view.getContext().startActivity(intent);
+                        });
+                        break;
+
+                    case (158604):
+                        textInteger.setText(
+                                setPhotoCountsMakeAndMust(optionsButtons, RealmManager.stackPhotoShowcasePhotoCount(dad2, 41)),
+                                TextView.BufferType.SPANNABLE
+                        );
+
+                        textInteger.setOnClickListener(view -> {
+                            Intent intent = new Intent(view.getContext(), PhotoLogActivity.class);
+                            intent.putExtra("report_prepare", true);
+                            intent.putExtra("dad2", dad2);
+                            view.getContext().startActivity(intent);
+                        });
+                        break;
+
                     case (135809):  // Вставляем количество выполненных Фото витрины ДО начала работ
                         textInteger.setText("" + RealmManager.stackPhotoShowcasePhotoCount(dad2, 14));
                         break;
@@ -689,6 +712,38 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
             }
         };
         res.setSpan(clickableSpan, 0, msg.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        return res;
+    }
+
+
+    /**
+     * 21.02.23.
+     * Отображение кол-ва фоток которые были сделаны и нужно сделать по каждому типу фото.
+     */
+    private SpannableString setPhotoCountsMakeAndMust(OptionsDB option, int dataBaseCount) {
+        SpannableString res;
+        String data = "";
+
+        // Если не указано минимальное кол-во фоток у опции, считаем что фоток надо зделать 3шт.
+        String min = option.getAmountMin();
+        if (min.equals("0")) {
+            min = "3";
+        }
+
+        int maxPhotos = Integer.parseInt(min);
+
+        data = "" + dataBaseCount + "/" + maxPhotos;
+
+        res = new SpannableString(data);
+
+        ForegroundColorSpan foregroundSpan158309;
+        if (dataBaseCount >= maxPhotos) {
+            foregroundSpan158309 = new ForegroundColorSpan(Color.GREEN);
+        } else {
+            foregroundSpan158309 = new ForegroundColorSpan(mContext.getResources().getColor(R.color.red_error));
+        }
+
+        res.setSpan(foregroundSpan158309, 0, res.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         return res;
     }
 

@@ -65,6 +65,7 @@ import ua.com.merchik.merchik.Options.Buttons.OptionButtonAddNewClient;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonAvailabilityDetailedReport;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonPhotoAktionTovar;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonPhotoBeforeStartWork;
+import ua.com.merchik.merchik.Options.Buttons.OptionButtonPhotoDMP;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonPhotoShowcaseCorporateBlock;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonPhotoShowcaseFullness;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonPhotoShowcaseNear;
@@ -86,6 +87,7 @@ import ua.com.merchik.merchik.Options.Controls.OptionControlFacePlan;
 import ua.com.merchik.merchik.Options.Controls.OptionControlPercentageOfThePrize;
 import ua.com.merchik.merchik.Options.Controls.OptionControlPhoto;
 import ua.com.merchik.merchik.Options.Controls.OptionControlPhotoBeforeStartWork;
+import ua.com.merchik.merchik.Options.Controls.OptionControlPhotoPromotion;
 import ua.com.merchik.merchik.Options.Controls.OptionControlPhotoTovarsLeft;
 import ua.com.merchik.merchik.Options.Controls.OptionControlPhotoTovarsLeftClient;
 import ua.com.merchik.merchik.Options.Controls.OptionControlPromotion;
@@ -248,9 +250,19 @@ public class Options {
                     optionControlPromotion.showOptionMassage();
                     break;
 
+                case 157278:
+                    OptionControlPhotoPromotion<?> optionControlPhotoPromotion = new OptionControlPhotoPromotion<>(context, dataDB, optionsDB, newOptionType, mode);
+                    optionControlPhotoPromotion.showOptionMassage();
+                    break;
+
                 case 134583:
                 case 84932: // Проверка наличия ФотоОтчётов (id мне дали из 1С) (тип 0)
-//                    checkPhotoReport(context, dataDB, optionsDB, type, mode);
+                case 141361:
+                case 158606:
+                case 158607:
+                case 158608:
+                case 158609:
+                    //                    checkPhotoReport(context, dataDB, optionsDB, type, mode);
                     OptionControlPhoto<?> optionControlPhoto = new OptionControlPhoto<>(context, dataDB, optionsDB, newOptionType, mode);
                     optionControlPhoto.showOptionMassage();
                     break;
@@ -268,9 +280,9 @@ public class Options {
                     checkPhoto(dataDB, optionsDB, "10");
                     break;
 
-                case 141361:  // Проверка наличия Фото тележка с товаром (тип 31)
-                    checkPhoto(dataDB, optionsDB, "31");
-                    break;
+//                case 141361:  // Проверка наличия Фото тележка с товаром (тип 31)
+//                    checkPhoto(dataDB, optionsDB, "31");
+//                    break;
 
                 case 141886:    // Проверка наличия Фото Документов (3)
                     checkPhoto(dataDB, optionsDB, "3");
@@ -695,6 +707,11 @@ public class Options {
 
             // Контроль фотоотчётов
             case 134583:
+            case 141361:
+            case 158606:
+            case 158607:
+            case 158608:
+            case 158609:
             case 84932: // Проверка наличия ФотоОтчётов (id мне дали из 1С) (тип 0)
                 OptionControlPhoto<?> optionControlPhoto = new OptionControlPhoto<>(context, dataDB, option, type, mode);
                 optionControlPhoto.showOptionMassage();
@@ -828,6 +845,10 @@ public class Options {
                 new OptionButtonPhotoAktionTovar<>(context, dataDB, option, type, mode);
                 break;
 
+            case 157354:
+                new OptionButtonPhotoDMP<>(context, dataDB, option, type, mode);
+                break;
+
             case 80977:     // Контроль Акций
 
             case 156882:    // Кнопка Акций
@@ -835,6 +856,11 @@ public class Options {
                 optionControlPromotion.showOptionMassage();
 
                 return optionControlPromotion.isBlockOption() ? 1 : 0;
+
+            case 157278:
+                OptionControlPhotoPromotion<?> optionControlPhotoPromotion = new OptionControlPhotoPromotion<>(context, dataDB, option, type, mode);
+                optionControlPhotoPromotion.showOptionMassage();
+                return optionControlPhotoPromotion.isBlockOption() ? 1 : 0;
 
             case 156928:
                 OptionControlEndAnotherWork optionControlEndAnotherWork = new OptionControlEndAnotherWork(context, dataDB, option, type, mode);
@@ -957,7 +983,6 @@ public class Options {
             case 138340:
                 option138340(context, dataDB, option, type, mode);
                 break;
-
 
             default:
 

@@ -46,6 +46,7 @@ public class OptionControlPhoto<T> extends OptionControl {
         switch (optionDB.getOptionControlId()){
             case "141361":
                 photoType = 31; // Фото товара на скалде
+                m = 1;
                 break;
 
             case "158606":  // Корпоративный блок
@@ -67,7 +68,7 @@ public class OptionControlPhoto<T> extends OptionControl {
         }
 
         RealmResults<StackPhotoDB> stackPhotoDB = StackPhotoRealm.getPhotosByDAD2(wpDataDB.getCode_dad2(), photoType);
-        if (stackPhotoDB.size() < m){
+        if (stackPhotoDB != null && stackPhotoDB.size() < m){
             stringBuilderMsg.append("Вы должны сделать: ").append(m).append(" фото, а сделали: ").append(stackPhotoDB.size()).append(" - доделайте фотографии.");
             signal = true;
         }else {

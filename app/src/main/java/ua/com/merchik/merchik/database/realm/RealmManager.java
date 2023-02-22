@@ -647,6 +647,15 @@ public class RealmManager {
         return realmResults.size();
     }
 
+    public static List<StackPhotoDB> stackPhotoByDad2AndType(long codeDad2, int photoType) {
+        RealmResults<StackPhotoDB> realmResults = INSTANCE.where(StackPhotoDB.class)
+                .equalTo("code_dad2", codeDad2)
+                .equalTo("photo_type", photoType)
+                .isNotNull("photo_hash")
+                .findAll();
+        return INSTANCE.copyFromRealm(realmResults);
+    }
+
 
     /**
      * 19.04.2021
