@@ -41,7 +41,7 @@ public class OptionControlPhotoPromotion<T> extends OptionControl {
         if (document instanceof WpDataDB) {
             WpDataDB wpDataDB = (WpDataDB) document;
 
-            documentDate = Clock.getHumanTimeYYYYMMDD(wpDataDB.getDt().getTime()/1000); //+TODO CHANGE DATE
+            documentDate = Clock.getHumanTimeYYYYMMDD(wpDataDB.getDt().getTime() / 1000); //+TODO CHANGE DATE
 
             clientId = wpDataDB.getClient_id();
             addressId = wpDataDB.getAddr_id();
@@ -83,6 +83,7 @@ public class OptionControlPhotoPromotion<T> extends OptionControl {
 
 
         List<StackPhotoDB> stackPhotoDBS = RealmManager.stackPhotoByDad2AndType(Long.parseLong(optionDB.getCodeDad2()), 28);
+        int size = 0;
 
         // 5.0
         // Тут должена формироваться более подроная информация о том с какими Товарами есть пролема
@@ -95,9 +96,10 @@ public class OptionControlPhotoPromotion<T> extends OptionControl {
                 totalOSV++;
             }
 
-            if (stackPhotoDBS != null && stackPhotoDBS.size() > 0){
+            if (stackPhotoDBS != null && stackPhotoDBS.size() > 0) {
+                size = stackPhotoDBS.size();
                 find++;
-            }else {
+            } else {
                 err++;
                 comment = "Нема світлини Акціонного товару з ОСУ (Особливою Увагою).";
             }
@@ -118,16 +120,16 @@ public class OptionControlPhotoPromotion<T> extends OptionControl {
         // 6.0
         // Тут формируются более короткие соообшения касательно наличия акций у Товаров
         if (reportPrepare.size() == 0) {
-            massageToUser = "Товаров, по которым надо проверять факт наличия Акции, не обнаружено.";
+            massageToUser = "Товарів, по котрим треба перевіряти наявність Акцції, не знайдено.";
             signal = 1;
-        }else if (totalOSV == 0){
-            massageToUser = "Для данной ТТ, на текущий момент, нет товаров с ОСВ (Особым Вниманием). Контролировать нечего. Замечаний нет.";
+        } else if (totalOSV == 0) {
+            massageToUser = "Товарів з ОСУ (Особливою увагою), по котрим треба виконати світлини 'Акцційного товару', не знайдено.";
             signal = 2;
         } else if (err > 0) {
-            massageToUser = "Не предоставлена информация о типе и наличии Акции по товару (" + err + " шт.) (в т.ч. с ОСВ (Особым Вниманием)). См. таблицу.";
+            massageToUser = "Не виконані світлини по (" + err + " шт.) з " + totalOSV + " Акційних товарів, які присутні на полицях.";
             signal = 1;
         } else {
-            massageToUser = "Замечаний по предоставлению информации о наличии Акций по товарам (в т.ч. с ОСВ (Особым Вниманием)) нет.";
+            massageToUser = "Зауважень по виготовленню світлин 'Акцційних товарів' нема. Виготовлено " + size + " світлин.";
             signal = 2;
         }
 
