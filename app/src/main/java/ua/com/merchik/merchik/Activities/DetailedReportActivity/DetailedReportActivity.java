@@ -1,5 +1,7 @@
 package ua.com.merchik.merchik.Activities.DetailedReportActivity;
 
+import static ua.com.merchik.merchik.Activities.TaskAndReclamations.TasksActivity.Tab3Fragment.TARCommentIndex;
+import static ua.com.merchik.merchik.MakePhoto.CAMERA_REQUEST_TAR_COMMENT_PHOTO;
 import static ua.com.merchik.merchik.PhotoReportActivity.exifPhotoData;
 import static ua.com.merchik.merchik.PhotoReportActivity.getImageOrientation;
 import static ua.com.merchik.merchik.PhotoReportActivity.resaveBitmap;
@@ -19,6 +21,8 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
 import androidx.viewpager.widget.ViewPager;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
@@ -35,6 +39,7 @@ import java.util.List;
 import io.realm.RealmResults;
 import retrofit2.Call;
 import retrofit2.Response;
+import ua.com.merchik.merchik.Activities.TaskAndReclamations.TARFragmentHome;
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.MakePhoto;
@@ -44,6 +49,8 @@ import ua.com.merchik.merchik.ServerExchange.TablesLoadingUnloading;
 import ua.com.merchik.merchik.Translate;
 import ua.com.merchik.merchik.WorkPlan;
 import ua.com.merchik.merchik.data.Data;
+import ua.com.merchik.merchik.data.Database.Room.AddressSDB;
+import ua.com.merchik.merchik.data.Database.Room.CustomerSDB;
 import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
 import ua.com.merchik.merchik.data.Database.Room.TranslatesSDB;
 import ua.com.merchik.merchik.data.RealmModels.ReportPrepareDB;
@@ -478,6 +485,24 @@ public class DetailedReportActivity extends toolbar_menus {
             StackPhotoRealm.deleteByPhotoNum(MakePhoto.photoNum);
         }
 
+        if (requestCode == CAMERA_REQUEST_TAR_COMMENT_PHOTO) {
+            try {
+                FragmentManager fragmentManager = getSupportFragmentManager();
+                List<Fragment> fragments = fragmentManager.getFragments();
+                TARFragmentHome fragmentHome = (TARFragmentHome) fragments.get(0);
+
+                AddressSDB addr = SQL_DB.addressDao().getById(fragmentHome.secondFrag.data.addr);
+                CustomerSDB client = SQL_DB.customerDao().getById(fragmentHome.secondFrag.data.client);
+
+                StackPhotoDB stackPhotoDB = saveTestPhoto(new File(MakePhoto.openCameraPhotoUri), addr, client);
+                MakePhoto.openCameraPhotoUri = null;
+
+                fragmentHome.secondFrag.setPhotoComment(stackPhotoDB.getId(), TARCommentIndex);
+            }catch (Exception e){
+                Globals.writeToMLOG("ERROR", "DR/CAMERA_REQUEST_TAR_COMMENT_PHOTO", "Exception e: " + e);
+            }
+        }
+
         try {
             // Если отменили сьемку:
             if (resultCode == Activity.RESULT_CANCELED && requestCode == 101) image.delete();
@@ -550,8 +575,39 @@ public class DetailedReportActivity extends toolbar_menus {
     }
 
 
-    public static void makeRealPhoto() {
+    /*Это ***, такое же в TARAct*/
+    private StackPhotoDB saveTestPhoto(File photoFile, AddressSDB addr, CustomerSDB client) {
+        try {
+            int id = RealmManager.stackPhotoGetLastId();
+            id++;
+            StackPhotoDB stackPhotoDB = new StackPhotoDB();
+            stackPhotoDB.setId(id);
+            stackPhotoDB.setDt(System.currentTimeMillis() / 1000);
+            stackPhotoDB.setTime_event(Clock.getHumanTime2(System.currentTimeMillis() / 1000));
 
+            stackPhotoDB.setAddr_id(addr.id);
+            stackPhotoDB.setAddressTxt(addr.nm);
+
+            stackPhotoDB.setClient_id(client.id);
+            stackPhotoDB.setCustomerTxt(client.nm);
+
+            stackPhotoDB.setUser_id(Globals.userId);
+            stackPhotoDB.setPhoto_type(0);
+
+            stackPhotoDB.setDvi(1);
+
+            stackPhotoDB.setCreate_time(System.currentTimeMillis());
+
+            stackPhotoDB.setPhoto_hash(globals.getHashMD5FromFile2(photoFile, null));
+            stackPhotoDB.setPhoto_num(photoFile.getAbsolutePath());
+
+
+            RealmManager.stackPhotoSavePhoto(stackPhotoDB);
+            return stackPhotoDB;
+        } catch (Exception e) {
+            Globals.writeToMLOG("ERROR", "TARActivity.onActivityResult.savePhoto", "Exception e: " + e);
+            return null;
+        }
     }
 }
 

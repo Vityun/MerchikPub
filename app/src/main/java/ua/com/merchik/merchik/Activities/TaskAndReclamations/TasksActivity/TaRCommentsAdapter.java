@@ -12,7 +12,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.constraintlayout.widget.ConstraintLayout;
@@ -143,11 +142,14 @@ public class TaRCommentsAdapter extends RecyclerView.Adapter<TaRCommentsAdapter.
                             }
                         }
                     }else {
-                        Log.e("test", "test"); // Фото есть, но не на стороне приложения
-//                        photo.setImageDrawable(mContext.getResources().getDrawable(R.drawable.ic_47));
+//                        Toast.makeText(itemView.getContext(), "Не обнаружена фотография.", Toast.LENGTH_LONG).show();
+                        photo.setImageDrawable(mContext.getResources().getDrawable(R.drawable.ic_47));
+                        photo.setOnClickListener((view)->{
+                            commentPhotoClick.commentPhotoClick(data.indexOf(dataItem));
+                        });
                     }
                 }else {
-                    Toast.makeText(itemView.getContext(), "Не обнаружена фотография.", Toast.LENGTH_LONG).show();
+//                    Toast.makeText(itemView.getContext(), "Не обнаружена фотография.", Toast.LENGTH_LONG).show();
                     photo.setImageDrawable(mContext.getResources().getDrawable(R.drawable.ic_47));
                     photo.setOnClickListener((view)->{
                         commentPhotoClick.commentPhotoClick(data.indexOf(dataItem));
