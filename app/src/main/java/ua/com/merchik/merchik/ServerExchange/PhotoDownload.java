@@ -779,7 +779,7 @@ public class PhotoDownload {
 
                 @Override
                 public void onFailure(String error) {
-
+                    Globals.writeToMLOG("ERR", "savePhotoToDB2/downloadPhoto/Planogram", "error: " + error);
                 }
             });
         }

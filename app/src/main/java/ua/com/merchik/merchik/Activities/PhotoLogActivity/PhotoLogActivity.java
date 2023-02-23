@@ -1,5 +1,7 @@
 package ua.com.merchik.merchik.Activities.PhotoLogActivity;
 
+import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
+
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.Editable;
@@ -30,8 +32,6 @@ import ua.com.merchik.merchik.database.realm.tables.StackPhotoRealm;
 import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.dialogs.DialogFilter.DialogFilter;
 import ua.com.merchik.merchik.toolbar_menus;
-
-import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
 public class PhotoLogActivity extends toolbar_menus {
 
@@ -140,10 +140,9 @@ public class PhotoLogActivity extends toolbar_menus {
 
                 if (stackPhoto == null) {
                     Toast.makeText(this, "Фото Планограмм НЕ найдено. \n\nОбратитесь к Вашему руководителю.", Toast.LENGTH_LONG).show();
+                }else {
+                    Globals.writeToMLOG("INFO", "PhotoLogActivity/setRecycler/planogram", "stackPhoto: " + stackPhoto.size());
                 }
-
-                Globals.writeToMLOG("INFO", "PhotoLogActivity/setRecycler/planogram", "stackPhoto: " + stackPhoto.size());
-
             } else if (this.getIntent().getBooleanExtra("report_prepare", false)) {
                 photoLogMode = PhotoLogMode.REPORT_PREPARE;
                 stackPhoto = RealmManager.getStackPhotoLogByDad2(this.getIntent().getLongExtra("dad2", 0));
