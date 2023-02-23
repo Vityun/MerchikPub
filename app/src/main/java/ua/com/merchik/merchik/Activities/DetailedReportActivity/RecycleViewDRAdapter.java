@@ -728,6 +728,8 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
         String min = option.getAmountMin();
         if (min.equals("0")) {
             min = "3";
+
+            if (option.getOptionId().equals("141360")) min = "1";
         }
 
         int maxPhotos = Integer.parseInt(min);

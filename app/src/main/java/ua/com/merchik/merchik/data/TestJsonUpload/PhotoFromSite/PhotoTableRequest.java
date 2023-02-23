@@ -1,5 +1,5 @@
 package ua.com.merchik.merchik.data.TestJsonUpload.PhotoFromSite;
-
+/*Вот это мне надо*/
 public class PhotoTableRequest {
 
     public String mod;

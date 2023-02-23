@@ -91,6 +91,10 @@ public class OptionControlPhotoPromotion<T> extends OptionControl {
         int totalOSV = 0;
         for (ReportPrepareDB item : reportPrepare) {
             int OSV = 0;
+
+            // ЕСЛИ Аккии нет (2) - пропускаем
+            if (item.akciyaId == null || item.akciyaId.equals("")) continue;
+
             if (Arrays.asList(tovIds).contains(item.getTovarId())) {
                 OSV = 1;
                 totalOSV++;
