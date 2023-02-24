@@ -1,5 +1,7 @@
 package ua.com.merchik.merchik.Activities.TaskAndReclamations.TasksActivity;
 
+import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
+
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
@@ -33,8 +35,6 @@ import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
 import ua.com.merchik.merchik.data.TestJsonUpload.PhotoFromSite.PhotoTableRequest;
 import ua.com.merchik.merchik.dialogs.DialodTAR.DialogCreateTAR;
-
-import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
 public class TARHomeFrag extends Fragment implements TARFragmentHome.OnFragmentInteractionListener {
 
@@ -257,7 +257,7 @@ public class TARHomeFrag extends Fragment implements TARFragmentHome.OnFragmentI
         }
         request.id_list = ids;
 
-        photoDownloader.getPhotoInfoAndSaveItToDB(request);
+        photoDownloader.getPhotoInfoAndSaveItToDB(request, () -> {});
     }
 
 

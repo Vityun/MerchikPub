@@ -568,7 +568,7 @@ public class PhotoDownload {
      *
      * @param data - JSON запрос на сайт для получения списка фоток.
      */
-    public void getPhotoInfoAndSaveItToDB(PhotoTableRequest data) {
+    public void getPhotoInfoAndSaveItToDB(PhotoTableRequest data, Clicks.clickVoid click) {
         Log.e("getPhotoInfo2", "HERE");
         JsonObject object = new Gson().fromJson(new Gson().toJson(data), JsonObject.class);
 
@@ -591,7 +591,7 @@ public class PhotoDownload {
                 }
 
                 try {
-                    savePhotoInfoToDB(response.body().getList());
+                    savePhotoInfoToDB(response.body().getList(), click);
                 } catch (Exception e) {
                     // TODO ERROR ЗАпись в Лог что не получилось получить данные о фотках
                     Log.e("getPhotoInfo2", "Exception e: " + e);
@@ -615,7 +615,7 @@ public class PhotoDownload {
      * <p>
      * Эта функция в перспективе будет расширяться как и стэкфото
      */
-    public void savePhotoInfoToDB(List<ModImagesViewList> list) {
+    public void savePhotoInfoToDB(List<ModImagesViewList> list, Clicks.clickVoid click) {
         List<StackPhotoDB> stackList = new ArrayList<>();   // Создаём список для записи в БД
         int id = RealmManager.stackPhotoGetLastId() + 1;    // Для новой записи добавляем ID
 
@@ -653,6 +653,7 @@ public class PhotoDownload {
             }
         }
         RealmManager.stackPhotoSavePhoto(stackList);
+        click.click();
     }
 
 

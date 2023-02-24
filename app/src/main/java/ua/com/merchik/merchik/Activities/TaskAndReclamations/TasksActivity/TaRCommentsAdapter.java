@@ -25,14 +25,16 @@ import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.ServerExchange.PhotoDownload;
+import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
 import ua.com.merchik.merchik.data.RealmModels.TARCommentsDB;
 import ua.com.merchik.merchik.data.RealmModels.UsersDB;
+import ua.com.merchik.merchik.data.TestJsonUpload.PhotoFromSite.PhotoTableRequest;
 import ua.com.merchik.merchik.database.realm.tables.StackPhotoRealm;
 import ua.com.merchik.merchik.database.realm.tables.UsersRealm;
 import ua.com.merchik.merchik.dialogs.DialogData;
 
-public class TaRCommentsAdapter extends RecyclerView.Adapter<TaRCommentsAdapter.ViewHolder>  {
+public class TaRCommentsAdapter extends RecyclerView.Adapter<TaRCommentsAdapter.ViewHolder> {
 
     private Context mContext;
     private List<TARCommentsDB> data;
@@ -85,7 +87,7 @@ public class TaRCommentsAdapter extends RecyclerView.Adapter<TaRCommentsAdapter.
                     UsersDB usersDB = UsersRealm.getUsersDBById(Integer.parseInt(dataItem.getWho()));
                     CharSequence str = usersDB.getNm();
                     line3.append(str);
-                }catch (Exception e){
+                } catch (Exception e) {
                     // TODO data is empty
                     line3.append(dataItem.getWho());
                 }
@@ -107,33 +109,37 @@ public class TaRCommentsAdapter extends RecyclerView.Adapter<TaRCommentsAdapter.
             // В случае если фото есть в базе данных стэк фото
             try {
 //                StackPhotoDB stackPhotoDB = StackPhotoRealm.stackPhotoDBGetPhotoBySiteId(dataItem.getPhoto());
-                if ((dataItem.photo_hash != null && !dataItem.photo_hash.equals("")) || (dataItem.photo != null && !dataItem.photo.equals(""))){
+                if ((dataItem.photo_hash != null && !dataItem.photo_hash.equals("")) || (dataItem.photo != null && !dataItem.photo.equals(""))) {
                     StackPhotoDB stackPhotoDB = StackPhotoRealm.getByHash(dataItem.photo_hash);
 
-                    if (stackPhotoDB == null && dataItem.photo != null && !dataItem.photo.equals("") && !dataItem.photo.equals("0")){
+                    if (stackPhotoDB == null && dataItem.photo != null && !dataItem.photo.equals("") && !dataItem.photo.equals("0")) {
                         stackPhotoDB = StackPhotoRealm.stackPhotoDBGetPhotoBySiteId(dataItem.getPhoto());
                     }
 
-                    if (stackPhotoDB != null){
-                        if (stackPhotoDB.getPhoto_num().equals("")){
-                            new PhotoDownload().downloadPhoto(false, stackPhotoDB, "/TAR", new PhotoDownload.downloadPhotoInterface() {
-                                @Override
-                                public void onSuccess(StackPhotoDB data) {
-                                    Globals.writeToMLOG("INFO", "newPhotoDownload().downloadPhoto(", "data: " + data);
+                    if (stackPhotoDB != null) {
+                        if (stackPhotoDB.getPhoto_num().equals("")) {
+                            if (stackPhotoDB.getPhotoServerId() != null && !stackPhotoDB.getPhotoServerId().equals("")) {
+                                downloadPhoto(stackPhotoDB, TaRCommentsAdapter.this::notifyDataSetChanged);
+                            } else {
+                                new PhotoDownload().downloadPhoto(false, stackPhotoDB, "/TAR", new PhotoDownload.downloadPhotoInterface() {
+                                    @Override
+                                    public void onSuccess(StackPhotoDB data) {
+                                        Globals.writeToMLOG("INFO", "newPhotoDownload().downloadPhoto(", "data: " + data);
 //                                photo.setImageURI(Uri.parse(data.getPhoto_num()));
-                                    File file = new File(data.getPhoto_num());
-                                    Bitmap b = decodeSampledBitmapFromResource(file, 200, 200);
-                                    if (b != null) {
-                                        photo.setImageBitmap(b);
+                                        File file = new File(data.getPhoto_num());
+                                        Bitmap b = decodeSampledBitmapFromResource(file, 200, 200);
+                                        if (b != null) {
+                                            photo.setImageBitmap(b);
+                                        }
                                     }
-                                }
 
-                                @Override
-                                public void onFailure(String s) {
-                                    Globals.writeToMLOG("INFO", "newPhotoDownload().downloadPhoto(", "s: " + s);
-                                }
-                            });
-                        }else {
+                                    @Override
+                                    public void onFailure(String s) {
+                                        Globals.writeToMLOG("INFO", "newPhotoDownload().downloadPhoto(", "s: " + s);
+                                    }
+                                });
+                            }
+                        } else {
 //                        photo.setImageURI(Uri.parse(stackPhotoDB.getPhoto_num()));
                             File file = new File(stackPhotoDB.getPhoto_num());
                             Bitmap b = decodeSampledBitmapFromResource(file, 200, 200);
@@ -141,27 +147,27 @@ public class TaRCommentsAdapter extends RecyclerView.Adapter<TaRCommentsAdapter.
                                 photo.setImageBitmap(b);
                             }
                         }
-                    }else {
+                    } else {
 //                        Toast.makeText(itemView.getContext(), "Не обнаружена фотография.", Toast.LENGTH_LONG).show();
                         photo.setImageDrawable(mContext.getResources().getDrawable(R.drawable.ic_47));
-                        photo.setOnClickListener((view)->{
+                        photo.setOnClickListener((view) -> {
                             commentPhotoClick.commentPhotoClick(data.indexOf(dataItem));
                         });
                     }
-                }else {
+                } else {
 //                    Toast.makeText(itemView.getContext(), "Не обнаружена фотография.", Toast.LENGTH_LONG).show();
                     photo.setImageDrawable(mContext.getResources().getDrawable(R.drawable.ic_47));
-                    photo.setOnClickListener((view)->{
+                    photo.setOnClickListener((view) -> {
                         commentPhotoClick.commentPhotoClick(data.indexOf(dataItem));
                     });
                 }
-            }catch (Exception e){
+            } catch (Exception e) {
                 Log.e("test", "НЕ удалось отобразить фото Exception: " + e);
             }
 
 
             // Клик по элементу
-            layout.setOnClickListener(v->{
+            layout.setOnClickListener(v -> {
 //                try {
 //                    StackPhotoDB stackPhotoDB = StackPhotoRealm.getByHash(dataItem.photo_hash);
 //                    DialogFullPhoto dialogFullPhoto = new DialogFullPhoto(mContext);
@@ -199,5 +205,16 @@ public class TaRCommentsAdapter extends RecyclerView.Adapter<TaRCommentsAdapter.
     }
 
 
+    private void downloadPhoto(StackPhotoDB stackPhotoDB, Clicks.clickVoid click) {
+        PhotoDownload photoDownloader = new PhotoDownload();
+
+        PhotoTableRequest request = new PhotoTableRequest();
+        request.mod = "images_view";
+        request.act = "list_image";
+        request.nolimit = "1";
+        request.id_list = stackPhotoDB.getPhotoServerId();
+
+        photoDownloader.getPhotoInfoAndSaveItToDB(request, click);
+    }
 
 }
