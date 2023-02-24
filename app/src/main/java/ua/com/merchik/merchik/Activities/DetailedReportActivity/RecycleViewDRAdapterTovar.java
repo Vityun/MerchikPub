@@ -598,6 +598,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                                 if (tovOptTplList.get(i).getOptionControlName() != Globals.OptionControlName.AKCIYA) {
                                     if (tovOptTplList.get(i).getOptionControlName().equals(AKCIYA_ID) && finalDeletePromoOption) {
                                         // втыкаю
+                                        showDialog(list, tovOptTplList.get(i), finalReportPrepareTovar, tovarId, String.valueOf(codeDad2), clientId, finalBalanceData1, finalBalanceDate1);
                                     } else {
                                         showDialog(list, tovOptTplList.get(i), finalReportPrepareTovar, tovarId, String.valueOf(codeDad2), clientId, finalBalanceData1, finalBalanceDate1);
                                     }
