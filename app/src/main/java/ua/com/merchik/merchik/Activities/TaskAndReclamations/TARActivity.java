@@ -300,6 +300,9 @@ public class TARActivity extends toolbar_menus implements TARFragmentHome.OnFrag
                 List<Fragment> fragments = fragmentManager.getFragments();
                 TARFragmentHome fragmentHome = (TARFragmentHome) fragments.get(0);
 
+                Globals.writeToMLOG("INFO", "CAMERA_REQUEST_TAR_COMMENT_PHOTO", "fragmentHome.secondFrag.data.addr: " + fragmentHome.secondFrag.data.addr);
+                Globals.writeToMLOG("INFO", "CAMERA_REQUEST_TAR_COMMENT_PHOTO", "fragmentHome.secondFrag.data.client: " + fragmentHome.secondFrag.data.client);
+
                 AddressSDB addr = SQL_DB.addressDao().getById(fragmentHome.secondFrag.data.addr);
                 CustomerSDB client = SQL_DB.customerDao().getById(fragmentHome.secondFrag.data.client);
 

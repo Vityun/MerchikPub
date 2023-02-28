@@ -33,6 +33,7 @@ import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.ServerExchange.PhotoDownload;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
+import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
 import ua.com.merchik.merchik.data.TestJsonUpload.PhotoFromSite.PhotoTableRequest;
 import ua.com.merchik.merchik.dialogs.DialodTAR.DialogCreateTAR;
 
@@ -257,7 +258,17 @@ public class TARHomeFrag extends Fragment implements TARFragmentHome.OnFragmentI
         }
         request.id_list = ids;
 
-        photoDownloader.getPhotoInfoAndSaveItToDB(request, () -> {});
+        photoDownloader.getPhotoInfoAndSaveItToDB(request, new Clicks.clickObjectAndStatus<StackPhotoDB>() {
+            @Override
+            public void onSuccess(StackPhotoDB data) {
+
+            }
+
+            @Override
+            public void onFailure(String error) {
+
+            }
+        });
     }
 
 

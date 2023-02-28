@@ -9,9 +9,15 @@ public class PremiumPremiumList {
     @SerializedName("state")
     @Expose
     public boolean state;
+
     @SerializedName("total")
     @Expose
     public Total total;
+//
+//    @SerializedName("total")
+//    @Expose
+//    public Integer totalInt;
+
     @SerializedName("detailed")
     @Expose
     public List<Detailed> detailed = null;

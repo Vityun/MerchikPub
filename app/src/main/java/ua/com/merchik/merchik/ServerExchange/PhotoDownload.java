@@ -59,7 +59,7 @@ public class PhotoDownload {
         String idStringList = createPhotoIdList(dataIds);   // Формируем ID фотографий через Запятую
 
         // Если список ID меня не устраивает
-        if (idStringList == null || idStringList.length() == 0){
+        if (idStringList == null || idStringList.length() == 0) {
             result.onFailure("По какой-то причине не смогли сформировать список ID-шников");
             return;
         }
@@ -121,8 +121,9 @@ public class PhotoDownload {
      * Загрузка фотографий по ссылкам
      *
      * @param list
-     * @param result*/
-    public void downloadPhoto(String photoDir, String photoTypeDir, List<TovarImgList> list, Clicks.clickStatusMsg result){
+     * @param result
+     */
+    public void downloadPhoto(String photoDir, String photoTypeDir, List<TovarImgList> list, Clicks.clickStatusMsg result) {
         for (TovarImgList item : list) {
             String url = item.getPhotoUrl().replace("thumb_", "");
             retrofit2.Call<ResponseBody> call = RetrofitBuilder.getRetrofitInterface().DOWNLOAD_PHOTO_BY_URL(url);
@@ -133,7 +134,7 @@ public class PhotoDownload {
                         if (response.body() != null) {
                             try {
                                 Bitmap bmp = BitmapFactory.decodeStream(response.body().byteStream());
-                                String path = Globals.saveImageHD(bmp, photoDir,photoTypeDir + item.getID());
+                                String path = Globals.saveImageHD(bmp, photoDir, photoTypeDir + item.getID());
 
                                 int id = RealmManager.stackPhotoGetLastId();
                                 id++;
@@ -180,13 +181,13 @@ public class PhotoDownload {
     public String createPhotoIdList(List<Integer> dataIds) {
         StringBuilder res = new StringBuilder();
         try {
-            if (dataIds != null && dataIds.size()>0){
+            if (dataIds != null && dataIds.size() > 0) {
                 for (Integer item : dataIds) {
                     res.append(item).append(", ");
                 }
                 res = new StringBuilder(res.substring(0, res.length() - 2));   // Убираю последний ", " - для того что б на сервере не произошло каких-то приколов.
             }
-        }catch (Exception e){
+        } catch (Exception e) {
             Globals.writeToMLOG("ERROR", "PhotoDownload/createPhotoIdList", "Exception e: " + e);
         }
 
@@ -568,7 +569,7 @@ public class PhotoDownload {
      *
      * @param data - JSON запрос на сайт для получения списка фоток.
      */
-    public void getPhotoInfoAndSaveItToDB(PhotoTableRequest data, Clicks.clickVoid click) {
+    public void getPhotoInfoAndSaveItToDB(PhotoTableRequest data, Clicks.clickObjectAndStatus<StackPhotoDB> clickUpdatePhoto) {
         Log.e("getPhotoInfo2", "HERE");
         JsonObject object = new Gson().fromJson(new Gson().toJson(data), JsonObject.class);
 
@@ -579,7 +580,7 @@ public class PhotoDownload {
             @Override
             public void onResponse(retrofit2.Call<ModImagesView> call, retrofit2.Response<ModImagesView> response) {
 
-                Gson gson = new Gson();
+/*                Gson gson = new Gson();
                 String json = gson.toJson(response.body());
                 JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
 
@@ -588,13 +589,29 @@ public class PhotoDownload {
                 Log.e("getPhotoInfo2", "size: " + response.body().getList().size());
                 for (ModImagesViewList item : response.body().getList()) {
                     Log.e("getPhotoInfo2", "item.ID: " + item.getID());
-                }
+                }*/
 
                 try {
-                    savePhotoInfoToDB(response.body().getList(), click);
+                    if (response.isSuccessful()) {
+                        if (response.body() != null) {
+                            if (response.body().getState() && response.body().getList() != null && response.body().getList().size() > 0) {
+                                savePhotoInfoToDB(response.body().getList(), clickUpdatePhoto);
+                            } else {
+                                clickUpdatePhoto.onFailure("Проблема с загрузкой фото. Обратитесь к руководителю.");
+                                Globals.writeToMLOG("INFO", "getPhotoInfoAndSaveItToDB",
+                                        "response.body().getState(): " + response.body().getState() +
+                                                "response.body().getList() == NULL OR 0");
+                            }
+                        } else {
+                            clickUpdatePhoto.onFailure("Проблема с загрузкой фото. Обратитесь к руководителю.");
+                        }
+                    } else {
+                        clickUpdatePhoto.onFailure("Проблема с загрузкой фото. Обратитесь к руководителю.");
+                    }
+
                 } catch (Exception e) {
-                    // TODO ERROR ЗАпись в Лог что не получилось получить данные о фотках
-                    Log.e("getPhotoInfo2", "Exception e: " + e);
+                    clickUpdatePhoto.onFailure("Проблема с загрузкой фото. Обратитесь к руководителю.");
+                    Globals.writeToMLOG("ERROR", "getPhotoInfoAndSaveItToDB", "Не удалось сохранить фото в БД. Exception e: " + e);
                 }
             }
 
@@ -614,8 +631,12 @@ public class PhotoDownload {
      * поставить признак что они уже выгружались.
      * <p>
      * Эта функция в перспективе будет расширяться как и стэкфото
+     * <p>
+     * 28.02.23. Добавил Clicks.clickObjectAndStatus<StackPhotoDB> clickUpdatePhoto для того что б
+     * была возможность вернуть фотку которую только что загрузили. На момент написания коммента,
+     * понимаю что надо будет потом сделать адекватнее и возращать список.
      */
-    public void savePhotoInfoToDB(List<ModImagesViewList> list, Clicks.clickVoid click) {
+    public void savePhotoInfoToDB(List<ModImagesViewList> list, Clicks.clickObjectAndStatus<StackPhotoDB> clickUpdatePhoto) {
         List<StackPhotoDB> stackList = new ArrayList<>();   // Создаём список для записи в БД
         int id = RealmManager.stackPhotoGetLastId() + 1;    // Для новой записи добавляем ID
 
@@ -653,7 +674,7 @@ public class PhotoDownload {
             }
         }
         RealmManager.stackPhotoSavePhoto(stackList);
-        click.click();
+        clickUpdatePhoto.onSuccess(stackList.get(0));   // TODO Это стоит сделать адекватнее. Сделано это только для частного случая.
     }
 
 

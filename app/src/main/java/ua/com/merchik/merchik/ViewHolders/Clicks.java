@@ -36,7 +36,7 @@ public interface Clicks<T> {
         void onFailure(String error);
     }
 
-    interface clickStatus<T>{
+    interface clickObjectAndStatus<T>{
         // Отработка успешного результата
         void onSuccess(T data);
 

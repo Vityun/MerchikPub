@@ -12,6 +12,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.constraintlayout.widget.ConstraintLayout;
@@ -108,59 +109,90 @@ public class TaRCommentsAdapter extends RecyclerView.Adapter<TaRCommentsAdapter.
             // Скачивание фотокграфий или их отображение
             // В случае если фото есть в базе данных стэк фото
             try {
-//                StackPhotoDB stackPhotoDB = StackPhotoRealm.stackPhotoDBGetPhotoBySiteId(dataItem.getPhoto());
                 if ((dataItem.photo_hash != null && !dataItem.photo_hash.equals("")) || (dataItem.photo != null && !dataItem.photo.equals(""))) {
-                    StackPhotoDB stackPhotoDB = StackPhotoRealm.getByHash(dataItem.photo_hash);
+                    // Если данные о фотографиях есть - Окей, если нет - даю возможность сделать фото.
 
-                    if (stackPhotoDB == null && dataItem.photo != null && !dataItem.photo.equals("") && !dataItem.photo.equals("0")) {
-                        stackPhotoDB = StackPhotoRealm.stackPhotoDBGetPhotoBySiteId(dataItem.getPhoto());
-                    }
-
-                    if (stackPhotoDB != null) {
-                        if (stackPhotoDB.getPhoto_num().equals("")) {
-                            if (stackPhotoDB.getPhotoServerId() != null && !stackPhotoDB.getPhotoServerId().equals("")) {
-                                downloadPhoto(stackPhotoDB, TaRCommentsAdapter.this::notifyDataSetChanged);
-                            } else {
-                                new PhotoDownload().downloadPhoto(false, stackPhotoDB, "/TAR", new PhotoDownload.downloadPhotoInterface() {
-                                    @Override
-                                    public void onSuccess(StackPhotoDB data) {
-                                        Globals.writeToMLOG("INFO", "newPhotoDownload().downloadPhoto(", "data: " + data);
-//                                photo.setImageURI(Uri.parse(data.getPhoto_num()));
-                                        File file = new File(data.getPhoto_num());
-                                        Bitmap b = decodeSampledBitmapFromResource(file, 200, 200);
-                                        if (b != null) {
-                                            photo.setImageBitmap(b);
-                                        }
-                                    }
-
-                                    @Override
-                                    public void onFailure(String s) {
-                                        Globals.writeToMLOG("INFO", "newPhotoDownload().downloadPhoto(", "s: " + s);
-                                    }
-                                });
-                            }
-                        } else {
-//                        photo.setImageURI(Uri.parse(stackPhotoDB.getPhoto_num()));
-                            File file = new File(stackPhotoDB.getPhoto_num());
-                            Bitmap b = decodeSampledBitmapFromResource(file, 200, 200);
-                            if (b != null) {
-                                photo.setImageBitmap(b);
-                            }
-                        }
+                    // Если фото есть - я его должен отобразить, если фото нет - скачать.
+                    StackPhotoDB tarCommentPhoto = getTarCommentPhoto(dataItem);
+                    if (tarCommentPhoto != null) {
+                        // Фото есть на стороне приложения, нужно их отобразить.
+                        setTarCommentPhoto(tarCommentPhoto);
                     } else {
-//                        Toast.makeText(itemView.getContext(), "Не обнаружена фотография.", Toast.LENGTH_LONG).show();
-                        photo.setImageDrawable(mContext.getResources().getDrawable(R.drawable.ic_47));
-                        photo.setOnClickListener((view) -> {
-                            commentPhotoClick.commentPhotoClick(data.indexOf(dataItem));
+                        // Загрузка и отображение фотографий с сайта
+                        checkAndDownloadPhoto(dataItem, new Clicks.clickObjectAndStatus<StackPhotoDB>() {
+                            @Override
+                            public void onSuccess(StackPhotoDB data) {
+                                setTarCommentPhoto(data);
+                            }
+
+                            @Override
+                            public void onFailure(String error) {
+                                Toast.makeText(itemView.getContext(), error, Toast.LENGTH_LONG).show();
+                            }
                         });
                     }
                 } else {
-//                    Toast.makeText(itemView.getContext(), "Не обнаружена фотография.", Toast.LENGTH_LONG).show();
+                    // Даю возможнось сделать фото (оно потом вігрузиться на сторону Сайта)
                     photo.setImageDrawable(mContext.getResources().getDrawable(R.drawable.ic_47));
                     photo.setOnClickListener((view) -> {
                         commentPhotoClick.commentPhotoClick(data.indexOf(dataItem));
                     });
                 }
+
+
+//                StackPhotoDB stackPhotoDB = StackPhotoRealm.stackPhotoDBGetPhotoBySiteId(dataItem.getPhoto());
+//                if ((dataItem.photo_hash != null && !dataItem.photo_hash.equals("")) || (dataItem.photo != null && !dataItem.photo.equals(""))) {
+//                    StackPhotoDB stackPhotoDB = StackPhotoRealm.getByHash(dataItem.photo_hash);
+//
+//                    if (stackPhotoDB == null && dataItem.photo != null && !dataItem.photo.equals("") && !dataItem.photo.equals("0")) {
+//                        stackPhotoDB = StackPhotoRealm.stackPhotoDBGetPhotoBySiteId(dataItem.getPhoto());
+//                    }
+//
+//                    if (stackPhotoDB != null) {
+//                        if (stackPhotoDB.getPhoto_num().equals("")) {
+//                            if (stackPhotoDB.getPhotoServerId() != null && !stackPhotoDB.getPhotoServerId().equals("")) {
+////                                downloadPhoto(stackPhotoDB, TaRCommentsAdapter.this::notifyDataSetChanged);
+//                            } else {
+//                                new PhotoDownload().downloadPhoto(false, stackPhotoDB, "/TAR", new PhotoDownload.downloadPhotoInterface() {
+//                                    @Override
+//                                    public void onSuccess(StackPhotoDB data) {
+//                                        Globals.writeToMLOG("INFO", "newPhotoDownload().downloadPhoto(", "data: " + data);
+////                                photo.setImageURI(Uri.parse(data.getPhoto_num()));
+//                                        File file = new File(data.getPhoto_num());
+//                                        Bitmap b = decodeSampledBitmapFromResource(file, 200, 200);
+//                                        if (b != null) {
+//                                            photo.setImageBitmap(b);
+//                                        }
+//                                    }
+//
+//                                    @Override
+//                                    public void onFailure(String s) {
+//                                        Globals.writeToMLOG("INFO", "newPhotoDownload().downloadPhoto(", "s: " + s);
+//                                    }
+//                                });
+//                            }
+//                        } else {
+////                        photo.setImageURI(Uri.parse(stackPhotoDB.getPhoto_num()));
+//                            File file = new File(stackPhotoDB.getPhoto_num());
+//                            Bitmap b = decodeSampledBitmapFromResource(file, 200, 200);
+//                            if (b != null) {
+//                                photo.setImageBitmap(b);
+//                            }
+//                        }
+//                    } else {
+////                        Toast.makeText(itemView.getContext(), "Не обнаружена фотография.", Toast.LENGTH_LONG).show();
+//                        photo.setImageDrawable(mContext.getResources().getDrawable(R.drawable.ic_47));
+//                        photo.setOnClickListener((view) -> {
+//                            commentPhotoClick.commentPhotoClick(data.indexOf(dataItem));
+//                        });
+//                    }
+//                } else {
+////                    Toast.makeText(itemView.getContext(), "Не обнаружена фотография.", Toast.LENGTH_LONG).show();
+//                    photo.setImageDrawable(mContext.getResources().getDrawable(R.drawable.ic_47));
+//                    photo.setOnClickListener((view) -> {
+//                        commentPhotoClick.commentPhotoClick(data.indexOf(dataItem));
+//                    });
+//                }
             } catch (Exception e) {
                 Log.e("test", "НЕ удалось отобразить фото Exception: " + e);
             }
@@ -185,6 +217,94 @@ public class TaRCommentsAdapter extends RecyclerView.Adapter<TaRCommentsAdapter.
                 dialog.show();
             });
         }
+
+
+        /**
+         * 28.02.23.
+         * Определяем по какому принципу мы будем загружать фотографию
+         */
+        private void checkAndDownloadPhoto(TARCommentsDB tarCommentsDB, Clicks.clickObjectAndStatus<StackPhotoDB> clickUpdatePhoto) {
+            if (tarCommentsDB.photo_hash != null && !tarCommentsDB.photo_hash.equals("") && !tarCommentsDB.photo_hash.equals("0")) {
+                // Загружаю фотку по ХЭШу
+                // Пока что не загружаю. В Теории оно у меня уже есть.
+                // Пока нужно разобраться с загрузкой фото на мою сторону по ID.
+            } else if (tarCommentsDB.photo != null && !tarCommentsDB.photo.equals("") && !tarCommentsDB.photo.equals("0")) {
+                // Загружаю фотку по ID
+                downloadPhotoInfoById(tarCommentsDB.photo, new Clicks.clickObjectAndStatus<StackPhotoDB>() {
+                    @Override
+                    public void onSuccess(StackPhotoDB data) {
+                        new PhotoDownload().downloadPhoto(false, data, "/TAR", new PhotoDownload.downloadPhotoInterface() {
+                            @Override
+                            public void onSuccess(StackPhotoDB data) {
+                                Globals.writeToMLOG("INFO", "newPhotoDownload().downloadPhoto(", "data: " + data);
+                                clickUpdatePhoto.onSuccess(data);
+                            }
+
+                            @Override
+                            public void onFailure(String s) {
+                                Globals.writeToMLOG("INFO", "newPhotoDownload().downloadPhoto(", "s: " + s);
+                                clickUpdatePhoto.onFailure(s);
+                            }
+                        });
+                    }
+
+                    @Override
+                    public void onFailure(String error) {
+                        Globals.writeToMLOG("INFO", "downloadPhotoInfoById().onFailure(", "s: " + error);
+                        clickUpdatePhoto.onFailure(error);
+                    }
+                });
+            } else {
+                // В теории я сюда никогда не должен попасть. А если вдруг как-то попаду - должен
+                // отобразить что фото уже есть у Коммента, но отобразить его не могу.
+            }
+        }
+
+
+        private void downloadPhotoInfoById(String stackPhotoDBID, Clicks.clickObjectAndStatus<StackPhotoDB> clickUpdatePhoto) {
+            PhotoDownload photoDownloader = new PhotoDownload();
+
+            PhotoTableRequest request = new PhotoTableRequest();
+            request.mod = "images_view";
+            request.act = "list_image";
+            request.nolimit = "1";
+            request.id_list = stackPhotoDBID;
+
+            photoDownloader.getPhotoInfoAndSaveItToDB(request, clickUpdatePhoto);
+        }
+
+
+        /**
+         * 28.02.23.
+         * Получает из TARComments инфу о фотке и возвращает саму фотку.
+         */
+        private StackPhotoDB getTarCommentPhoto(TARCommentsDB tarCommentsDB) {
+            StackPhotoDB res;
+
+            if (tarCommentsDB.photo_hash != null && !tarCommentsDB.photo_hash.equals("") && !tarCommentsDB.photo_hash.equals("0")) {
+                res = StackPhotoRealm.getByHash(tarCommentsDB.photo_hash);
+            } else if (tarCommentsDB.photo != null && !tarCommentsDB.photo.equals("") && !tarCommentsDB.photo.equals("0")) {
+                res = StackPhotoRealm.stackPhotoDBGetPhotoBySiteId(tarCommentsDB.getPhoto());
+            } else {
+                return null;
+            }
+
+            return res;
+        }
+
+
+        /**
+         * 28.02.23
+         * Устанавливаем фото.
+         */
+        private void setTarCommentPhoto(StackPhotoDB stackPhotoDB) {
+            File file = new File(stackPhotoDB.getPhoto_num());
+            Bitmap b = decodeSampledBitmapFromResource(file, 200, 200);
+            if (b != null) {
+                photo.setImageBitmap(b);
+            }
+        }
+
     }
 
     @NonNull
@@ -203,18 +323,4 @@ public class TaRCommentsAdapter extends RecyclerView.Adapter<TaRCommentsAdapter.
     public int getItemCount() {
         return data.size();
     }
-
-
-    private void downloadPhoto(StackPhotoDB stackPhotoDB, Clicks.clickVoid click) {
-        PhotoDownload photoDownloader = new PhotoDownload();
-
-        PhotoTableRequest request = new PhotoTableRequest();
-        request.mod = "images_view";
-        request.act = "list_image";
-        request.nolimit = "1";
-        request.id_list = stackPhotoDB.getPhotoServerId();
-
-        photoDownloader.getPhotoInfoAndSaveItToDB(request, click);
-    }
-
 }

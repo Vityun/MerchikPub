@@ -317,12 +317,12 @@ public class PremiumActivity extends toolbar_menus {
         test.enqueue(new Callback<JsonObject>() {
             @Override
             public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
-                Log.e("test", "onResponse: " + response);
+                Log.e("premium_test", "onResponse: " + response.body());
             }
 
             @Override
             public void onFailure(Call<JsonObject> call, Throwable t) {
-                Log.e("test", "Throwable t: " + t);
+                Log.e("premium_test", "Throwable t: " + t);
             }
         });
 

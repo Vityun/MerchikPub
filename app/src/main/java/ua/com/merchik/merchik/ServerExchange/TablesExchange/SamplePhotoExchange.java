@@ -31,7 +31,7 @@ public class SamplePhotoExchange {
 
     public SynchronizationTimetableDB synchronizationTimetableDB;
 
-    public void downloadSamplePhotoTable(Clicks.clickStatus click) {
+    public void downloadSamplePhotoTable(Clicks.clickObjectAndStatus click) {
 
         StandartData data = new StandartData();
         data.mod = "images_view";

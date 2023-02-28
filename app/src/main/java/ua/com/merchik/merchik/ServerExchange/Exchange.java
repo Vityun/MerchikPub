@@ -583,7 +583,7 @@ public class Exchange {
                 try {
                     /*Загрузка ОБРАЗЦОВ ФОТО*/
                     SamplePhotoExchange samplePhotoExchange = new SamplePhotoExchange();
-                    samplePhotoExchange.downloadSamplePhotoTable(new Clicks.clickStatus() {
+                    samplePhotoExchange.downloadSamplePhotoTable(new Clicks.clickObjectAndStatus() {
                         @Override
                         public void onSuccess(Object data) {
                             Globals.writeToMLOG("INFO", "Exchange/SamplePhotoExchange()/onSuccess", "data: " + data);
