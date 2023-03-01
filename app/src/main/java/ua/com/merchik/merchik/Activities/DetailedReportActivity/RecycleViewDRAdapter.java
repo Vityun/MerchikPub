@@ -615,6 +615,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
          * 132969 - 10 - Фото тележка с товаром
          * 141360 - 31 - Фото товара на складе
          * 141885 - 3  - Фото Документов
+         * 158605 - 40 - Корпоративный блок
          * */
         int photoType = 0;
         boolean showPhotoLink = false;
@@ -643,6 +644,10 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                 break;
             case "141885":  // - 3  - Фото Документов
                 photoType = 3;
+                showPhotoLink = true;
+                break;
+            case "158605":  // - 40 - Корпоративный блок
+                photoType = 40;
                 showPhotoLink = true;
                 break;
         }
