@@ -1,8 +1,8 @@
 <resources>
     <string name="app_name">merchik</string>
-    <string name="ver">022802</string>
+    <string name="ver">030100</string>
     <string name="debug_status">0</string>
-    <string name="debug_date">2023-02-28</string>
+    <string name="debug_date">2023-03-01</string>
 
     <!--Activity titles-->
     <string name="title_activity_premium">Премиальные</string>
