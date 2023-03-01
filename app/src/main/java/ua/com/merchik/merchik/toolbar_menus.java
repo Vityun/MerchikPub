@@ -762,7 +762,7 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                 server.sessionCheckAndLogin(toolbar_menus.this, login, password);   // Проверка активности сессии и логин, если сессия протухла
                 internetStatus = server.internetStatus();       // Обновление статуса интеренета
 //            pingServer(1);                            // ОБМЕН ЦВЕТ
-                RealmManager.stackPhotoDeletePhoto();           // Удаление фото < 2 дня
+//                RealmManager.stackPhotoDeletePhoto();           // Удаление фото < 2 дня
                 lightStatus();                                  // Обновление статуса Светофоров
                 setupBadge(RealmManager.stackPhotoNotUploadedPhotosCount()); // Подсчёт кол-ва фоток в БД & Установка числа в счётчик
 
