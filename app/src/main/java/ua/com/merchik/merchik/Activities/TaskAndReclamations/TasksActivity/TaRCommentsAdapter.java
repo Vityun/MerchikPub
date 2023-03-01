@@ -109,7 +109,7 @@ public class TaRCommentsAdapter extends RecyclerView.Adapter<TaRCommentsAdapter.
             // Скачивание фотокграфий или их отображение
             // В случае если фото есть в базе данных стэк фото
             try {
-                if ((dataItem.photo_hash != null && !dataItem.photo_hash.equals("")) || (dataItem.photo != null && !dataItem.photo.equals(""))) {
+                if ((dataItem.photo_hash != null && !dataItem.photo_hash.equals("")) || (dataItem.photo != null && !dataItem.photo.equals("0") && !dataItem.photo.equals(""))) {
                     // Если данные о фотографиях есть - Окей, если нет - даю возможность сделать фото.
 
                     // Если фото есть - я его должен отобразить, если фото нет - скачать.

@@ -37,6 +37,7 @@ import ua.com.merchik.merchik.data.RealmModels.AddressDB;
 import ua.com.merchik.merchik.data.RealmModels.CustomerDB;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
 import ua.com.merchik.merchik.database.realm.RealmManager;
+import ua.com.merchik.merchik.database.realm.tables.CustomerRealm;
 import ua.com.merchik.merchik.database.realm.tables.StackPhotoRealm;
 import ua.com.merchik.merchik.dialogs.DialodTAR.DialogCreateTAR;
 import ua.com.merchik.merchik.toolbar_menus;
@@ -304,9 +305,14 @@ public class TARActivity extends toolbar_menus implements TARFragmentHome.OnFrag
                 Globals.writeToMLOG("INFO", "CAMERA_REQUEST_TAR_COMMENT_PHOTO", "fragmentHome.secondFrag.data.client: " + fragmentHome.secondFrag.data.client);
 
                 AddressSDB addr = SQL_DB.addressDao().getById(fragmentHome.secondFrag.data.addr);
-                CustomerSDB client = SQL_DB.customerDao().getById(fragmentHome.secondFrag.data.client);
+                CustomerSDB client = SQL_DB.customerDao().getById(fragmentHome.secondFrag.data.client); // TODO починить Клиентов
+                CustomerDB clientRealm = CustomerRealm.getCustomerById(fragmentHome.secondFrag.data.client);
 
-                StackPhotoDB stackPhotoDB = saveTestPhoto(new File(MakePhoto.openCameraPhotoUri), addr, client);
+                Globals.writeToMLOG("INFO", "CAMERA_REQUEST_TAR_COMMENT_PHOTO", "AddressSDB: " + addr);
+                Globals.writeToMLOG("INFO", "CAMERA_REQUEST_TAR_COMMENT_PHOTO", "CustomerSDB: " + client);
+                Globals.writeToMLOG("INFO", "CAMERA_REQUEST_TAR_COMMENT_PHOTO", "clientRealm: " + clientRealm);
+
+                StackPhotoDB stackPhotoDB = saveTestPhoto(new File(MakePhoto.openCameraPhotoUri), addr, clientRealm);
                 MakePhoto.openCameraPhotoUri = null;
 
                 fragmentHome.secondFrag.setPhotoComment(stackPhotoDB.getId(), TARCommentIndex);
@@ -428,7 +434,7 @@ public class TARActivity extends toolbar_menus implements TARFragmentHome.OnFrag
      *
      * На момент написания - сохраняет фотографию в БД. Фото берётся из Комментариев отписания на Задачи / Рекламации
      * */
-    private StackPhotoDB saveTestPhoto(File photoFile, AddressSDB addr, CustomerSDB client) {
+    private StackPhotoDB saveTestPhoto(File photoFile, AddressSDB addr, CustomerDB client) {
         try {
             int id = RealmManager.stackPhotoGetLastId();
             id++;
@@ -440,8 +446,8 @@ public class TARActivity extends toolbar_menus implements TARFragmentHome.OnFrag
             stackPhotoDB.setAddr_id(addr.id);
             stackPhotoDB.setAddressTxt(addr.nm);
 
-            stackPhotoDB.setClient_id(client.id);
-            stackPhotoDB.setCustomerTxt(client.nm);
+            stackPhotoDB.setClient_id(client.getId());
+            stackPhotoDB.setCustomerTxt(client.getNm());
 
             stackPhotoDB.setUser_id(Globals.userId);
             stackPhotoDB.setPhoto_type(0);

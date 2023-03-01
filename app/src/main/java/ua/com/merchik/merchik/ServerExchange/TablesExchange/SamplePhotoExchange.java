@@ -1,5 +1,7 @@
 package ua.com.merchik.merchik.ServerExchange.TablesExchange;
 
+import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
+
 import android.util.Log;
 
 import com.google.gson.Gson;
@@ -24,8 +26,6 @@ import ua.com.merchik.merchik.data.TestJsonUpload.StandartData;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.StackPhotoRealm;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
-
-import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
 public class SamplePhotoExchange {
 
@@ -60,6 +60,8 @@ public class SamplePhotoExchange {
         Gson gson = new Gson();
         String json = gson.toJson(data);
         JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
+
+        Globals.writeToMLOG("INFO", "SamplePhotoExchange/downloadSamplePhotoTable", "convertedObject: " + convertedObject);
 
         retrofit2.Call<SamplePhotoResponse> call = RetrofitBuilder.getRetrofitInterface().GET_SAMPLE_PHOTO(RetrofitBuilder.contentType, convertedObject);
         call.enqueue(new Callback<SamplePhotoResponse>() {
