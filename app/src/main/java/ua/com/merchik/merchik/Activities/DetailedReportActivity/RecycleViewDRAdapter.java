@@ -281,10 +281,38 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                             view.getContext().startActivity(intent);
                         });
                         break;
+                    case (158605):
+                        textInteger.setText(
+                                setPhotoCountsMakeAndMust(optionsButtons, RealmManager.stackPhotoShowcasePhotoCount(dad2, 40)),
+                                TextView.BufferType.SPANNABLE
+                        );
+
+                        textInteger.setOnClickListener(view -> {
+                            Intent intent = new Intent(view.getContext(), PhotoLogActivity.class);
+                            intent.putExtra("report_prepare", true);
+                            intent.putExtra("dad2", dad2);
+                            view.getContext().startActivity(intent);
+                        });
+                        break;
                     case (158308):  // Фото витрины отдалённое
                     case (132968):  // Вставляем количество выполненных Фоток Витрин
                         textInteger.setText(
                                 setPhotoCountsMakeAndMust(optionsButtons, RealmManager.stackPhotoShowcasePhotoCount(dad2, 0)),
+                                TextView.BufferType.SPANNABLE
+                        );
+
+                        textInteger.setOnClickListener(view -> {
+                            Intent intent = new Intent(view.getContext(), PhotoLogActivity.class);
+                            intent.putExtra("report_prepare", true);
+                            intent.putExtra("dad2", dad2);
+                            view.getContext().startActivity(intent);
+                        });
+                        break;
+
+
+                    case (158606):
+                        textInteger.setText(
+                                setPhotoCountsMakeAndMust(optionsButtons, RealmManager.stackPhotoShowcasePhotoCount(dad2, 36)),
                                 TextView.BufferType.SPANNABLE
                         );
 
@@ -616,6 +644,9 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
          * 141360 - 31 - Фото товара на складе
          * 141885 - 3  - Фото Документов
          * 158605 - 40 - Корпоративный блок
+         * 157354 - 42 - Фото ДМП
+         * 158606 - 36 - доп. место продажи
+         * 158604 - 41 - Наполненность
          * */
         int photoType = 0;
         boolean showPhotoLink = false;
@@ -626,28 +657,49 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                 photoType = 0;
                 showPhotoLink = true;
                 break;
-            case "135809":  // - 14 - Фото витрины До начала работ
-                photoType = 14;
-                showPhotoLink = true;
-                break;
-            case "135158":  // - 4  - Фото остатков товаров
-                photoType = 4;
-                showPhotoLink = true;
-                break;
-            case "132969":  // - 10 - Фото тележка с товаром
-                photoType = 10;
-                showPhotoLink = true;
-                break;
-            case "141360":  // - 31 - Фото товара на складе
-                photoType = 31;
-                showPhotoLink = true;
-                break;
+
             case "141885":  // - 3  - Фото Документов
                 photoType = 3;
                 showPhotoLink = true;
                 break;
+
+            case "135158":  // - 4  - Фото остатков товаров
+                photoType = 4;
+                showPhotoLink = true;
+                break;
+
+            case "132969":  // - 10 - Фото тележка с товаром
+                photoType = 10;
+                showPhotoLink = true;
+                break;
+
+            case "135809":  // - 14 - Фото витрины До начала работ
+                photoType = 14;
+                showPhotoLink = true;
+                break;
+
+            case "141360":  // - 31 - Фото товара на складе
+                photoType = 31;
+                showPhotoLink = true;
+                break;
+
+            case "158606":  //- 36 - доп. место продажи
+                photoType = 36;
+                showPhotoLink = true;
+                break;
+
             case "158605":  // - 40 - Корпоративный блок
                 photoType = 40;
+                showPhotoLink = true;
+                break;
+
+            case "158604": //- 41 - Наполненность
+                photoType = 41;
+                showPhotoLink = true;
+                break;
+
+            case "157354":  // - 42 - Фото ДМП
+                photoType = 42;
                 showPhotoLink = true;
                 break;
         }
