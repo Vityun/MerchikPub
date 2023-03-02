@@ -1066,7 +1066,7 @@ public class Exchange {
      */
     private void getPhotoFromSite() {
 
-        SynchronizationTimetableDB synchronizationTimetableDB = RealmManager.getSynchronizationTimetableRowByTable("stack_photo");
+        SynchronizationTimetableDB synchronizationTimetableDB = RealmManager.INSTANCE.copyFromRealm(RealmManager.getSynchronizationTimetableRowByTable("stack_photo"));
 
         PhotoDownload server = new PhotoDownload();
         PhotoTableRequest data = new PhotoTableRequest();
