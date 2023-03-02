@@ -385,20 +385,24 @@ public class PhotoDownload {
         call.enqueue(new retrofit2.Callback<ModImagesView>() {
             @Override
             public void onResponse(retrofit2.Call<ModImagesView> call, retrofit2.Response<ModImagesView> response) {
-
                 try {
-                    Log.e("getPhotoFromServer", "test.response: " + response);
-                    Log.e("getPhotoFromServer", "test.response: " + response.body());
-
                     JsonObject JS = new Gson().fromJson(new Gson().toJson(response.body()), JsonObject.class);
 
-                    Log.e("getPhotoFromServer", "JS: " + JS);
-                    Log.e("getPhotoFromServer", "response.body().getList().size(): " + response.body().getList().size());
+//                    Log.e("getPhotoFromServer", "JS: " + JS);
+//                    Log.e("getPhotoFromServer", "response.body().getList().size(): " + response.body().getList().size());
+
+                    Globals.writeToMLOG("INFO", "" + getClass().getName() + "/getPhotoFromServer/onResponse", "JS: " + JS);
+                    int size = 0;
+                    if (response.body() != null && response.body().getState() && response.body().getList() != null){
+                        size = response.body().getList().size();
+                    }
+                    Globals.writeToMLOG("INFO", "" + getClass().getName() + "/getPhotoFromServer/onResponse", "size: " + size);
 
                     savePhotoToDB(response.body().getList());
 
                     Log.e("getPhotoFromServer", "response.body().getTotal(): " + response.body().getTotalPages());
                 } catch (Exception e) {
+                    Globals.writeToMLOG("ERROR", "" + getClass().getName() + "/getPhotoFromServer/onResponse", "Exception e: " + e);
                 }
 
             }
@@ -406,6 +410,7 @@ public class PhotoDownload {
             @Override
             public void onFailure(retrofit2.Call<ModImagesView> call, Throwable t) {
                 Log.e("getPhotoFromServer", "test.t:" + t);
+                Globals.writeToMLOG("ERROR", "" + getClass().getName() + "/getPhotoFromServer/onFailure", "Throwable t: " + t);
             }
         });
     }
@@ -453,7 +458,7 @@ public class PhotoDownload {
 
                             @Override
                             public void onFailure(String error) {
-
+                                Globals.writeToMLOG("ERR", getClass().getName() + "savePhotoToDB/onFailure", "String error: " + error);
                             }
                         });
 
@@ -747,17 +752,30 @@ public class PhotoDownload {
         call.enqueue(new Callback<ResponseBody>() {
             @Override
             public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
-                InputStream data = response.body().byteStream(); // <--- TODO BUG    java.lang.NullPointerException: Attempt to invoke virtual method 'java.io.InputStream okhttp3.ResponseBody.byteStream()' on a null object reference at ua.com.merchik.merchik.ServerExchange.PhotoDownload$8.onResponse(PhotoDownload.java:574)
+                try {
+                    if (response.isSuccessful()){
+                        if (response.body() != null){
+                            Globals.writeToMLOG("ERROR", "downloadPhoto/onResponse", "response.body(): " + response.body());
+                            InputStream data = response.body().byteStream(); // <--- TODO BUG    java.lang.NullPointerException: Attempt to invoke virtual method 'java.io.InputStream okhttp3.ResponseBody.byteStream()' on a null object reference at ua.com.merchik.merchik.ServerExchange.PhotoDownload$8.onResponse(PhotoDownload.java:574)
 
-                if (data.toString().length() > 0) {
-                    Bitmap bmp = BitmapFactory.decodeStream(data);
-                    if (bmp != null) {
-                        exchange.onSuccess(bmp);
-                    } else {
-                        exchange.onFailure("Фото нет");
+                            if (data.toString().length() > 0) {
+                                Bitmap bmp = BitmapFactory.decodeStream(data);
+                                if (bmp != null) {
+                                    exchange.onSuccess(bmp);
+                                } else {
+                                    exchange.onFailure("Фото нет");
+                                }
+                            } else {
+                                exchange.onFailure("Фото нет");
+                            }
+                        }else {
+                            exchange.onFailure("response.body() == 0");
+                        }
+                    }else {
+                        exchange.onFailure("Код: " + response.code());
                     }
-                } else {
-                    exchange.onFailure("Фото нет");
+                }catch (Exception e){
+                    Globals.writeToMLOG("ERROR", "downloadPhoto/onResponse", "Exception e: " + e);
                 }
             }
 

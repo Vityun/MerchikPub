@@ -1065,15 +1065,21 @@ public class Exchange {
      * свои фото, а руководитель - Все
      */
     private void getPhotoFromSite() {
+
+        SynchronizationTimetableDB synchronizationTimetableDB = RealmManager.getSynchronizationTimetableRowByTable("stack_photo");
+
         PhotoDownload server = new PhotoDownload();
         PhotoTableRequest data = new PhotoTableRequest();
         data.mod = "images_view";
         data.act = "list_image";
         data.nolimit = "1";
-        data.dt_upload = String.valueOf(RealmManager.getSynchronizationTimetableRowByTable("stack_photo").getVpi_app());
-        data.date_from = Clock.yesterday;
+        data.dt_upload = String.valueOf(synchronizationTimetableDB.getVpi_app());
+        data.date_from = Clock.today_7;
         data.date_to = Clock.today;
 
+        // Типо говорю что я уже обновился, что б мне постоянно не прилетали фотки и я не задалбівал сервер
+        synchronizationTimetableDB.setVpi_app(System.currentTimeMillis()/1000);
+        RealmManager.setToSynchronizationTimetableDB(synchronizationTimetableDB);
 
         WpDataRealm.UserPostRes info = WpDataRealm.userPost(Globals.userId);
         switch (info) {
@@ -1084,15 +1090,15 @@ public class Exchange {
 
             case SUBORDINATE:
                 Log.e("getPhotoFromSite", "SUBORDINATE");
-//                data.sotr_id = String.valueOf(Globals.userId);
+                data.sotr_id = String.valueOf(Globals.userId);
                 globals.writeToMLOG(Clock.getHumanTime() + "_INFO.Exchange.class.getPhotoFromSite: " + "SUBORDINATE" + "\n");
-//                server.getPhotoFromServer(data);
+                server.getPhotoFromServer(data);
                 break;
 
             case MANAGER:
                 Log.e("getPhotoFromSite", "MANAGER");
                 globals.writeToMLOG(Clock.getHumanTime() + "_INFO.Exchange.class.getPhotoFromSite: " + "MANAGER" + "\n");
-                server.getPhotoFromServer(data);
+//                server.getPhotoFromServer(data);
                 break;
         }
     }
