@@ -1276,6 +1276,9 @@ public class Exchange {
 
             List<TARCommentDataListUpload> dataList = new ArrayList<>();
             for (TARCommentsDB item : list) {
+
+                Globals.writeToMLOG("INFO", "uploadTARComments/ОбновилФотоУКомментария", "tarCommentsDB: " + new Gson().toJson(item));
+
                 TARCommentDataListUpload dataItem = new TARCommentDataListUpload();
                 dataItem.id = item.getRId();
                 dataItem.comment = item.getComment();

@@ -80,6 +80,8 @@ public class Tab3Fragment extends Fragment {
         tarCommentsDB.startUpdate = true;
         dataComments.set(tarCommentIndex, tarCommentsDB);
 
+        Globals.writeToMLOG("INFO", "setPhotoTARComment/ОбновилФотоУКомментария", "tarCommentsDB: " + new Gson().toJson(tarCommentsDB));
+
         TARCommentsRealm.saveOrUpdate(Collections.singletonList(tarCommentsDB));
 
         adapter.notifyDataSetChanged();

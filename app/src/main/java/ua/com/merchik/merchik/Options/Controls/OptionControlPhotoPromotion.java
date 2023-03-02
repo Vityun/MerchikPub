@@ -98,6 +98,7 @@ public class OptionControlPhotoPromotion<T> extends OptionControl {
             if (Arrays.asList(tovIds).contains(item.getTovarId())) {
                 OSV = 1;
                 totalOSV++;
+                errMsgType1.append("Для товара: ").append(item.tovarId).append(" нужно сделать фото.").append("\n");
             }
 
             if (stackPhotoDBS != null && stackPhotoDBS.size() > 0) {
@@ -106,6 +107,7 @@ public class OptionControlPhotoPromotion<T> extends OptionControl {
             } else {
                 err++;
                 comment = "Нема світлини Акціонного товару з ОСУ (Особливою Увагою).";
+                errMsgType1.append("Товар з ідентифікатором: (").append(item.getTovarId()).append(") не знайдено").append("\n");
             }
         }
 
