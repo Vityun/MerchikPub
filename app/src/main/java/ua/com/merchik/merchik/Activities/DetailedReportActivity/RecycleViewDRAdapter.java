@@ -484,6 +484,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
             OptionsDB test = optionsButtons;
             constraintLayout.setOnLongClickListener(view -> {
                 if (optionId == 132968 || optionId == 158309 || optionId == 158308) {
+                    optionDetailPhotos(test);
                     DialogData dialog = new DialogData(itemView.getContext());
                     dialog.setTitle("Внесите пароль!");
                     dialog.setText("Для продолжения внесите пароль: ");
