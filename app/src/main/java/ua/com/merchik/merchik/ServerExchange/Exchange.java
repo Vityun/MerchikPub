@@ -1259,9 +1259,9 @@ public class Exchange {
 
         List<TARCommentsDB> list = new ArrayList<>();
         if (tarCommentsDB != null) {
-            list.add(tarCommentsDB);
+            list.add(RealmManager.INSTANCE.copyFromRealm(tarCommentsDB));
         } else {
-            list = TARCommentsRealm.getTARCommentToUpload();
+            list = RealmManager.INSTANCE.copyFromRealm(TARCommentsRealm.getTARCommentToUpload());
         }
 
         Globals.writeToMLOG("INFO", "uploadTARComments", "list comments to upload(" + (list != null ? list.size() + "): " : "null"));

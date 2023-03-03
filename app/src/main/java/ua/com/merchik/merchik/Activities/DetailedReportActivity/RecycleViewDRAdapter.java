@@ -309,6 +309,20 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                         });
                         break;
 
+                    case (157277):  // Вставляем количество выполненных Фото Акционного Товара
+                        textInteger.setText(
+                                setPhotoCountsMakeAndMust(optionsButtons, RealmManager.stackPhotoShowcasePhotoCount(dad2, 28)),
+                                TextView.BufferType.SPANNABLE
+                        );
+
+                        textInteger.setOnClickListener(view -> {
+                            Intent intent = new Intent(view.getContext(), PhotoLogActivity.class);
+                            intent.putExtra("report_prepare", true);
+                            intent.putExtra("dad2", dad2);
+                            view.getContext().startActivity(intent);
+                        });
+                        break;
+
 
                     case (158606):
                         textInteger.setText(
@@ -647,6 +661,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
          * 157354 - 42 - Фото ДМП
          * 158606 - 36 - доп. место продажи
          * 158604 - 41 - Наполненность
+         * 157277 - 28 - Фото Акционного Товара
          * */
         int photoType = 0;
         boolean showPhotoLink = false;
@@ -675,6 +690,11 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
 
             case "135809":  // - 14 - Фото витрины До начала работ
                 photoType = 14;
+                showPhotoLink = true;
+                break;
+
+            case "157277":  // - 28 - Фото Акционного Товара
+                photoType = 28;
                 showPhotoLink = true;
                 break;
 
