@@ -131,6 +131,21 @@ public class MyMigration implements RealmMigration {
             /**/
         }
 
+
+        if (oldVersion == 11 || oldVersion == 12 || oldVersion == 13 || oldVersion == 14 || oldVersion == 15 || oldVersion == 16 || oldVersion == 17) {
+            RealmObjectSchema schemaStackPhoto18 = schema.get("StackPhotoDB");
+
+            Globals.writeToMLOG("ERROR", "MyMigration/old_to_18", "oldVersion: " + oldVersion + " /newVersion: " + newVersion);
+
+            if (schemaStackPhoto18 != null) {
+                schemaStackPhoto18.addField("tovar_id", String.class);
+            }else {
+                Globals.writeToMLOG("ERROR", "MyMigration/old_to_18", "schemaTovar is null");
+            }
+
+            oldVersion++;
+        }
+
     }
 }
 

@@ -100,8 +100,7 @@ public class menu_main extends AppCompatActivity {
     Context mContext = this;
 
 
-
-//    server server = new server();
+    //    server server = new server();
     VersionApp VersionApp = new VersionApp();
     Globals globals = new Globals();
     URL URL = new URL();// Класс для преобразования HashMap-ов в URLData строку.
@@ -124,7 +123,7 @@ public class menu_main extends AppCompatActivity {
     boolean exec;   // Решает - выгружатьфото или нет. Присваевается в зависимости от наличия данных к фото пришедших от Web
     double lat, lon;    // Координаты магазина
 
-    int distanceMin=500, wp_data_id;
+    int distanceMin = 500, wp_data_id;
     int internetStatus;
     float distanceAB;
     private long mLastClickTime = 0; // Время нажатия на кнопку Сделать фото
@@ -164,10 +163,9 @@ public class menu_main extends AppCompatActivity {
     private static final int CAMERA_REQUEST = 1;
     static final int REQUEST_TAKE_PHOTO = 1;
     private static final int PERMISSION_REQUEST = 1;
-    private static final long MIN_CLICK_INTERVAL=1000;
+    private static final long MIN_CLICK_INTERVAL = 1000;
 
     // ---------------------------------------------------------------------------------------------
-
 
 
     @SuppressLint({"SimpleDateFormat", "SetTextI18n"})
@@ -213,7 +211,8 @@ public class menu_main extends AppCompatActivity {
         button_make_photo = findViewById(R.id.button_make_photo);
         button_comment = findViewById(R.id.button_comment);
         button_close = findViewById(R.id.button_close);
-        imageViewMerch = findViewById(R.id.imageViewMerchik2);imageViewMerch.setAlpha(0.8f); // Лого и его прозрачность
+        imageViewMerch = findViewById(R.id.imageViewMerchik2);
+        imageViewMerch.setAlpha(0.8f); // Лого и его прозрачность
         imageView = findViewById(R.id.imageView);
         textView_comment = findViewById(R.id.textView_comment);
         textViewInfoCustomerAddress = findViewById(R.id.textInfo);
@@ -246,7 +245,7 @@ public class menu_main extends AppCompatActivity {
         updateDataBase();
 
         // URI from site
-        if(!UriToParseFromSite.equals("")) {
+        if (!UriToParseFromSite.equals("")) {
             exec = true;
             JSON = URL.ParsingURLtoJSON(UriToParseFromSite);
             Log.e("TAG_SITE_URL", "JSON: " + JSON);
@@ -366,10 +365,10 @@ public class menu_main extends AppCompatActivity {
                                         customer_id_txt = arr.get(i).getAsJsonObject().get("nm").getAsString();
                                     }
                                 }
-                            }else{
+                            } else {
                                 customer_id_txt = "не визначений";
                             }
-                        }catch (Exception e){
+                        } catch (Exception e) {
                             customer_id_txt = "не визначений";
                         }
 
@@ -382,10 +381,10 @@ public class menu_main extends AppCompatActivity {
                                         address_id_txt = arr1.get(i).getAsJsonObject().get("nm").getAsString();
                                     }
                                 }
-                            }else {
+                            } else {
                                 address_id_txt = "не визначений";
                             }
-                        }catch (Exception e){
+                        } catch (Exception e) {
                             address_id_txt = "не визначений";
                         }
 
@@ -399,10 +398,10 @@ public class menu_main extends AppCompatActivity {
                                         customerTypeGrp_txt = arr2.get(i).getAsJsonObject().get("nm").getAsString();
                                     }
                                 }
-                            }else{
+                            } else {
                                 customerTypeGrp_txt = "не визначений";
                             }
-                        }catch (Exception e){
+                        } catch (Exception e) {
                             customerTypeGrp_txt = "не визначений";
                         }
 
@@ -415,13 +414,12 @@ public class menu_main extends AppCompatActivity {
                                         photo_type_txt = arr3.get(i).getAsJsonObject().get("nm").getAsString();
                                     }
                                 }
-                            }else {
+                            } else {
                                 photo_type_txt = "не визначений";
                             }
-                        }catch (Exception e){
+                        } catch (Exception e) {
                             photo_type_txt = "не визначений";
                         }
-
 
 
                         customerTypeGrpArr = new WorkPlan().getCustomerGroups(customer_id);
@@ -431,7 +429,7 @@ public class menu_main extends AppCompatActivity {
                         if(customrAndAdress[3] == null) {photo_type_txt = "не визначений";}else {photo_type_txt = customrAndAdress[3];}*/
 
 
-                        Log.e("KPS_FROM_SERV", ""+ date + address_id_txt + customer_id_txt+ customerTypeGrp_txt);
+                        Log.e("KPS_FROM_SERV", "" + date + address_id_txt + customer_id_txt + customerTypeGrp_txt);
                         textViewInfoCustomerAddress.setText("Дата: " + date + "\n");
                         textViewInfoCustomerAddress.append("Адреса: " + address_id_txt + "\n");
                         textViewInfoCustomerAddress.append("Клієнт: " + customer_id_txt + "\n");
@@ -445,7 +443,6 @@ public class menu_main extends AppCompatActivity {
                         Log.e("MVSAboutPhotoC", "FAILURE_C_E2: " + t);
                     }
                 });
-
 
 
                 String mod2 = "filter_list";
@@ -466,7 +463,7 @@ public class menu_main extends AppCompatActivity {
                             Log.e("MVSAboutPhotoA", jsonMVS.substring(start, end));
                         }*/
 
-                        if (!(response.body() == null)){
+                        if (!(response.body() == null)) {
                             try {
                                 if (!response.body().getAsJsonObject("menu_list").getAsJsonArray("addr_id").isJsonNull()) {
                                     JsonArray arr = response.body().getAsJsonObject("menu_list").getAsJsonArray("addr_id");
@@ -476,11 +473,11 @@ public class menu_main extends AppCompatActivity {
                                             lon = Double.parseDouble(arr.get(i).getAsJsonObject().get("lon").getAsString());
                                         }
                                     }
-                                }else{
+                                } else {
                                     lat = 0;
                                     lon = 0;
                                 }
-                            }catch (Exception e){
+                            } catch (Exception e) {
                                 lat = 0;
                                 lon = 0;
                             }
@@ -493,7 +490,6 @@ public class menu_main extends AppCompatActivity {
                         Log.e("MVSAboutPhotoA", "FAILURE_A_E2: " + t);
                     }
                 });
-
 
 
                 //----------------
@@ -513,18 +509,17 @@ public class menu_main extends AppCompatActivity {
                     lat = Float.parseFloat(customrAndAdress[4]);
                 }*/
 
-            }else {
+            } else {
                 globals.alertDialogMsg(this, "Данные о посещении с сервера не получены. Обратитесь к своему руководителю или воспользуйтесь Планом работ в приложении. Ответ от сервера: " + JSON);
             }
 
 
-
-        } else if (wp_data_id > 0){// WPDATA
+        } else if (wp_data_id > 0) {// WPDATA
             exec = true;
             Intent intent = getIntent();
 
             if ((WPDataObj) intent.getSerializableExtra("dataFromWPObj") != null) {
-                WPDataObj wp = (WPDataObj)intent.getSerializableExtra("dataFromWPObj");
+                WPDataObj wp = (WPDataObj) intent.getSerializableExtra("dataFromWPObj");
 
                 if (wp != null) {
                     long wpId = wp.getId();
@@ -548,19 +543,24 @@ public class menu_main extends AppCompatActivity {
                 }
             }
 
-            if(customer_id_txt == null || customer_id_txt.equals("")) customer_id_txt = "не визначений";
-            if(address_id_txt == null || address_id_txt.equals("")) address_id_txt = "не визначений";
-            if (customerTypeGrpArr == null){
+            if (customer_id_txt == null || customer_id_txt.equals(""))
+                customer_id_txt = "не визначений";
+            if (address_id_txt == null || address_id_txt.equals(""))
+                address_id_txt = "не визначений";
+            if (customerTypeGrpArr == null) {
                 customerTypeGrp_txt = "не визначений";
-            }else{
-                if (customerTypeGrpArr.size() == 1) customerTypeGrp_txt = customerTypeGrpArr.values().toArray(new String[0])[0];
-                else if (customerTypeGrpArr.size() > 1) customerTypeGrp_txt = "" + customerTypeGrpArr.size() + " групп"; else customerTypeGrp_txt = "не визначений";
+            } else {
+                if (customerTypeGrpArr.size() == 1)
+                    customerTypeGrp_txt = customerTypeGrpArr.values().toArray(new String[0])[0];
+                else if (customerTypeGrpArr.size() > 1)
+                    customerTypeGrp_txt = "" + customerTypeGrpArr.size() + " групп";
+                else customerTypeGrp_txt = "не визначений";
             }
             photo_type_txt = "Фото витрины";
 
-        }else{
+        } else {
             exec = false;
-            globals.uriNonElementMassage = globals.alertMassage("Не найдены реквизиты посещения: Дата, адрес, клиент...\n\nЗакройте это приложение и откройте его снова из детализированного отчёта в мобильной версии сайта.", globals.uriNonElementMassage,this);
+            globals.uriNonElementMassage = globals.alertMassage("Не найдены реквизиты посещения: Дата, адрес, клиент...\n\nЗакройте это приложение и откройте его снова из детализированного отчёта в мобильной версии сайта.", globals.uriNonElementMassage, this);
         }
 
 
@@ -574,7 +574,7 @@ public class menu_main extends AppCompatActivity {
         Spinner sPT = photoTypeSpinner();   // Получаем спиннер Типа фото
         try {
             sPT.setOnItemSelectedListener(new MyOnItemSelectedListener());
-        }catch (Exception e){
+        } catch (Exception e) {
             //Toast.makeText(menu_main.this, "Err", Toast.LENGTH_LONG).show();
         }
 
@@ -611,8 +611,6 @@ public class menu_main extends AppCompatActivity {
         // "загружаем" значение Автоотправки
 /*        globals.autoSend = PreferenceManager.getDefaultSharedPreferences(this)
                 .getBoolean("checkAutoSend", true);*/
-
-
 
 
     }//--------------------------------------------------------------------- /ON CREATE ---------------------------------------------------------------------
@@ -662,10 +660,10 @@ public class menu_main extends AppCompatActivity {
     //        retrofit2.Call<String> call = RetrofitBuilder.getRetrofitInterface().TEST_API_DATA_JSON(appData);
 
 
-
-    /** 18.08.2020
+    /**
+     * 18.08.2020
      * Диалог который делает невозможным начать работу, если не обновлены таблици.
-     * */
+     */
     private void updateDataBase() {
 /*        try {
             if (RealmManager.getAllWorkPlan().size() == 0){
@@ -751,15 +749,13 @@ public class menu_main extends AppCompatActivity {
     }*/
 
 
-
-
     // Заполняем спинер типов фото
-    private Spinner photoTypeSpinner(){
+    private Spinner photoTypeSpinner() {
         Spinner s = findViewById(R.id.spinnerPhotoType);
         try {
             RealmResults<ImagesTypeListDB> imagesTypeList = RealmManager.getAllImagesTypeList();
-            for (int i=0; i<imagesTypeList.size(); i++){
-                if (imagesTypeList.get(i).getNm() != null && !imagesTypeList.get(i).getNm().equals("")){
+            for (int i = 0; i < imagesTypeList.size(); i++) {
+                if (imagesTypeList.get(i).getNm() != null && !imagesTypeList.get(i).getNm().equals("")) {
                     mapSpinner.put(imagesTypeList.get(i).getId(), imagesTypeList.get(i).getNm());
                 }
             }
@@ -776,12 +772,12 @@ public class menu_main extends AppCompatActivity {
                 adapter.setDropDownViewResource(android.R.layout.simple_spinner_item);
                 s.setAdapter(adapter);
                 s.setSelection(spinnerPosition);
-            }catch (Exception e){
+            } catch (Exception e) {
 
             }
 
 
-        }catch (Exception e){
+        } catch (Exception e) {
             globals.alertDialogMsg(this, "Список типов фото получить не удалось, попробуйте нажать в меню 3х точек на \"Перейти на главную\". Если после этого ошибка повторится - обратитесь к Вашему руководителю." + e);
         }
         return s;
@@ -790,10 +786,10 @@ public class menu_main extends AppCompatActivity {
 
     /**
      * Создание меню в toolbox-е
-     *
+     * <p>
      * 1. Иконка связи с инетом
      * 2. Троеточие
-     * */
+     */
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
@@ -839,41 +835,41 @@ public class menu_main extends AppCompatActivity {
 
     /**
      * Обработка функцтонала в ToolBox-е
-     * */
+     */
     @SuppressLint("DefaultLocale")
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
 
         // ... "На главную"
-        if (id == R.id.action_to_main){
+        if (id == R.id.action_to_main) {
             refreshActivity();
         }
 
         // ... "План работ"
-        if (id == R.id.action_to_wpdata){
+        if (id == R.id.action_to_wpdata) {
             try {
 //                Intent intent = new Intent(menu_main.this, menu_wp_data.class);
                 Intent intent = new Intent(menu_main.this, WPDataActivity.class);
                 startActivity(intent);
-            }catch (Exception e){
+            } catch (Exception e) {
                 globals.alertDialogMsg(this, "Не получилось перейти в активность \"План работ\" изза ошибки: " + e);
             }
 
         }
 
         // ... Отобразить подсказку
-        if (id == R.id.action_info){
+        if (id == R.id.action_info) {
             showHelpMassage();
         }
 
-        if (id == R.id.action_autosend){
+        if (id == R.id.action_autosend) {
             boolean change = !Globals.autoSend;
             item.setChecked(change);
             Globals.autoSend = change;
 
             String stat = "включен";    // stat = статус в который перевели Автовыгрузку
-            if (!Globals.autoSend){
+            if (!Globals.autoSend) {
                 stat = "выключен";
             }
             globals.alertDialogMsg(this, "Обмен данными с сервером в автоматическом режиме " + stat);
@@ -884,7 +880,7 @@ public class menu_main extends AppCompatActivity {
         }
 
         // ... Журнал фото
-        if (id == R.id.action_photo_log){
+        if (id == R.id.action_photo_log) {
             PhotoLog photoLog = new PhotoLog();
             photoLog.viewPhotoLog(this);
         }
@@ -926,13 +922,13 @@ public class menu_main extends AppCompatActivity {
 */
 
         // serv
-        if (id == R.id.check_sever){
+        if (id == R.id.check_sever) {
             int status = lightsStatusServer();
-            if (status == 1){
+            if (status == 1) {
                 globals.alertDialogMsg(this, "С сервером всё впорядке.");
-            }else if (status == 2){
+            } else if (status == 2) {
                 globals.alertDialogMsg(this, "Сервер не доступен. Повторите попытку позже.");
-            }else if (status == 0){
+            } else if (status == 0) {
                 globals.alertDialogMsg(this, "Данные о наличии сервера ещё не получены. Повторите попытку позже.");
             }
             return true;
@@ -950,26 +946,26 @@ public class menu_main extends AppCompatActivity {
         }*/
 
         // gps
-        if (id == R.id.check_GPS){
+        if (id == R.id.check_GPS) {
             int status = lightsStatusGPS();
-            if (status == 1){
+            if (status == 1) {
                 globals.alertDialogMsg(this, "Координаты GPS актуальны по состоянию на:\nДата: " + lastGPSData + "\nВремя: " + lastGPSTime + "\n\nКоординаты: \nlat: " + CoordX + "\nlon: " + CoordY);
-            }else if (status == 2){
+            } else if (status == 2) {
                 globals.alertDialogMsg(this, "Координаты GPS актуальны по состоянию на:\nДата: " + lastGPSData + "\nВремя: " + lastGPSTime + "\n\nКоординаты: \nlat: " + CoordX + "\nlon: " + CoordY + "\n\nДанные просрочены на " + delayGPS + " минут.\n\nВам необходимо получить свежие данные о местоположении данного устройства.");
-            }else if (status == 3){
+            } else if (status == 3) {
                 globals.alertDialogMsg(this, "GPS не может определить местоположение данного устройства.\nВыйдите из помещения и повторите попытку определения местоположения.");
             }
             return true;
         }
 
         // net
-        if (id == R.id.check_NET){
+        if (id == R.id.check_NET) {
             int status = lightsStatusNET();
-            if (status == 1){
+            if (status == 1) {
                 globals.alertDialogMsg(this, "Координаты NET актуальны по состоянию на:\nДата: " + lastNETData + "\nВремя: " + lastNETTime);
-            }else if (status == 2){
+            } else if (status == 2) {
                 globals.alertDialogMsg(this, "Координаты NET актуальны по состоянию на:\nДата: " + lastNETData + "\nВремя: " + lastNETTime + "\n\nДанные просрочены на " + delayNET + " минут.\n\nВам необходимо получить свежие данные о местоположении данного устройства.");
-            }else if (status == 3){
+            } else if (status == 3) {
                 globals.alertDialogMsg(this, "NET не может определить местоположение данного устройства.\nВыйдите из помещения и повторите попытку определения местоположения.");
             }
             return true;
@@ -999,26 +995,28 @@ public class menu_main extends AppCompatActivity {
 
     /* Storing the file url as it'll be null after returning from camera app */
     @Override
-    protected void onSaveInstanceState(Bundle outState){
+    protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
     }
 
     @Override
-    protected void onRestoreInstanceState(Bundle savedInstanceState){
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
         super.onRestoreInstanceState(savedInstanceState);
     }
 
 
     // Обновление текущей активности
-    public void refreshActivity(){
+    public void refreshActivity() {
         Intent i = new Intent(this, this.getClass());
         finish();
         this.startActivity(i);
     }
 
 
-    /**Проверка версии приложения*/
-    private void checkAPPVer(){
+    /**
+     * Проверка версии приложения
+     */
+    private void checkAPPVer() {
 /*        final Handler handler = new Handler();
         handler.postDelayed(new Runnable() {
             int count = 0;
@@ -1037,7 +1035,7 @@ public class menu_main extends AppCompatActivity {
 
 
     // Выполнить проверку включённости GPS, МП и запустить фотоаппарат для фотографирования
-    private void takePhoto(){
+    private void takePhoto() {
         if (trecker.enabledGPS) {
             if (lat > 0 && lon > 0) {
                 if (CoordX > 0 && CoordY > 0) {
@@ -1053,7 +1051,7 @@ public class menu_main extends AppCompatActivity {
                         String falseButton2 = "<font color='#000000'>Нет</font>";
 
                         alertMassageMP(1, title, msg, trueButton, falseButton, title2, msg2, trueButton2, falseButton2);
-                    } else if (serverTimeControl()){
+                    } else if (serverTimeControl()) {
                         String timeStamp = new SimpleDateFormat("HH:mm:ss").format(System.currentTimeMillis());
                         String timeStamp2 = new SimpleDateFormat("HH:mm:ss").format(RetrofitBuilder.getServerTime());
                         String timeDifference = "" + (Globals.serverGetTime - RetrofitBuilder.getServerTime()) / 1000;
@@ -1072,10 +1070,10 @@ public class menu_main extends AppCompatActivity {
                         String bf2 = "<font color='#000000'>Нет</font>";
 
                         alertMassageMP(1, t1, m1, bt1, bf1, t2, m2, bt2, bf2);
-                    }else{
+                    } else {
                         dispatchTakePictureIntent(); // Метод который запускает камеру и создаёт файл фото.
                     }
-                }else{
+                } else {
                     Log.e("Проверка координат", "X: " + CoordX + " Y: " + CoordY);
                     String t1 = "Координаты не определены";
                     String m1 = "GPS на Вашем телефоне включен, но по какой-то причине не смог определить Ваши координаты.\n" +
@@ -1112,28 +1110,28 @@ public class menu_main extends AppCompatActivity {
     }
 
 
-
-
     // BUTTON --- Запуск камеры для фотографии
-    public void makePhoto(View view){
+    public void makePhoto(View view) {
         try {
             if (exec) {
                 choiceCustomerGroup();
-            }else{
-                globals.uriNonElementMassage = globals.alertMassage("Не указаны реквизиты посещения: Дата, адрес, клиент...\n\nЗапустите приложение с МВС или получите данные с Плана работ", globals.uriNonElementMassage,this);
+            } else {
+                globals.uriNonElementMassage = globals.alertMassage("Не указаны реквизиты посещения: Дата, адрес, клиент...\n\nЗапустите приложение с МВС или получите данные с Плана работ", globals.uriNonElementMassage, this);
             }
-        }catch (Exception e){
+        } catch (Exception e) {
             globals.alertDialogMsg(this, "ОШИБКА ПРИ ВЫПОЛНЕНИИ ФОТО: " + e);
         }
     }
 
 
     // BUTTON --- Продолжить сьемку
-    public void makePhotoOffline(View view){
-        if (!savePhotoToDB()){
-            Toast toast = Toast.makeText(this, "Фото сохранить не удалось! Повторите попытку и обновите страничку.\n\nЕсли ошибка повторяется - обратитесь к руководителю.", Toast.LENGTH_LONG);toast.show();
-        }else {
-            Toast toast = Toast.makeText(this, "Фото сохранено и готово к отправке.", Toast.LENGTH_SHORT);toast.show();
+    public void makePhotoOffline(View view) {
+        if (!savePhotoToDB()) {
+            Toast toast = Toast.makeText(this, "Фото сохранить не удалось! Повторите попытку и обновите страничку.\n\nЕсли ошибка повторяется - обратитесь к руководителю.", Toast.LENGTH_LONG);
+            toast.show();
+        } else {
+            Toast toast = Toast.makeText(this, "Фото сохранено и готово к отправке.", Toast.LENGTH_SHORT);
+            toast.show();
         }
 
         choiceCustomerGroup();
@@ -1142,10 +1140,12 @@ public class menu_main extends AppCompatActivity {
 
     // BUTTON --- Сохранить состояние фото и закрыть(обновить активность)
     public void close(View view) {
-        if (!savePhotoToDB()){
-            Toast toast = Toast.makeText(this, "Фото сохранить не удалось! Повторите попытку и обновите страничку.\n\nЕсли ошибка повторяется - обратитесь к руководителю.", Toast.LENGTH_LONG);toast.show();
-        }else {
-            Toast toast = Toast.makeText(this, "Фото сохранено и готово к отправке.", Toast.LENGTH_SHORT);toast.show();
+        if (!savePhotoToDB()) {
+            Toast toast = Toast.makeText(this, "Фото сохранить не удалось! Повторите попытку и обновите страничку.\n\nЕсли ошибка повторяется - обратитесь к руководителю.", Toast.LENGTH_LONG);
+            toast.show();
+        } else {
+            Toast toast = Toast.makeText(this, "Фото сохранено и готово к отправке.", Toast.LENGTH_SHORT);
+            toast.show();
         }
 
         button_photo.setVisibility(View.VISIBLE); // Скрываем кнопки для Фото
@@ -1160,14 +1160,15 @@ public class menu_main extends AppCompatActivity {
 
 
     // BUTTON --- Кнопка загрузки фотографии
-    /**Кнопочка обмена. Реализует:
-     *
+
+    /**
+     * Кнопочка обмена. Реализует:
+     * <p>
      * 1. Выгрузку фото
      * 2. Обмен таблиц с сервером(План работа, Группы товаров, Тип Фото, Опции, report_prepare)
-     *
-     * */
+     */
 
-    public void uploadPhoto(View view){
+    public void uploadPhoto(View view) {
 
         final Dialog dialog = new Dialog(this);
         dialog.setContentView(R.layout.alertdialog_exchange);
@@ -1186,7 +1187,7 @@ public class menu_main extends AppCompatActivity {
                 try {
                     Log.e("TAG_REALM_LOG", "ЗАПИСЬ 4");
 //                    RealmManager.setRowToLog(Collections.singletonList(new LogDB(RealmManager.getLastIdLogDB()+1, System.currentTimeMillis()/1000, "Нажатие на кнопку \"Синхронизовать\"", 1089, null, null, null, Integer.parseInt(user_id), null, Globals.session, null)));
-                }catch (Exception e){
+                } catch (Exception e) {
                     Log.e("TAG_REALM_LOG", "Ошибка(4): " + e);
                 }
 
@@ -1207,7 +1208,7 @@ public class menu_main extends AppCompatActivity {
 
                     tablesLoadingUnloading.downloadTradeMarksTable(context);            // Таблица Торговых марок
 
-                }catch (Exception e){
+                } catch (Exception e) {
                     // запись в ЛОг
                 }
 
@@ -1234,13 +1235,13 @@ public class menu_main extends AppCompatActivity {
                 // Запись в Лог
                 try {
                     Log.e("TAG_REALM_LOG", "ЗАПИСЬ 5");
-                    RealmManager.setRowToLog(Collections.singletonList(new LogDB(RealmManager.getLastIdLogDB()+1, System.currentTimeMillis()/1000, "Нажатие на кнопку \"выгрузка фото\"", 1088, customer_id, Integer.parseInt(address_id), null, Integer.parseInt(user_id), null, Globals.session, date)));
-                }catch (Exception e){
+                    RealmManager.setRowToLog(Collections.singletonList(new LogDB(RealmManager.getLastIdLogDB() + 1, System.currentTimeMillis() / 1000, "Нажатие на кнопку \"выгрузка фото\"", 1088, customer_id, Integer.parseInt(address_id), null, Integer.parseInt(user_id), null, Globals.session, date)));
+                } catch (Exception e) {
                     Log.e("TAG_REALM_LOG", "Ошибка(5): " + e);
                 }
 
                 int countPhoto = stackPhotoTableCount();
-                if (countPhoto > 0){
+                if (countPhoto > 0) {
                     String msg = "Сейчас будет выгружено " + countPhoto + " фото на сервер. Дождитесь сообщения об окончании работы.";
 
                     AlertDialog.Builder builder = new AlertDialog.Builder(menu_main.this);
@@ -1280,17 +1281,20 @@ public class menu_main extends AppCompatActivity {
 
     // BUTTON --- Кнопка добавления комментария
     public void addComment(View v) {
-        if (textView_comment != null && !comment.equals("")){
+        if (textView_comment != null && !comment.equals("")) {
             button_comment.setText("Изменить комментарий");
         }
         COMMENTS();
     }
 
 
-    /**Сохраняет данные о фото и само фото в БД
-     * @return  true    - если данные сохранить удалось
-     *          false   - есил произошла какая-то ошибка*/
-    private boolean savePhotoToDB(){
+    /**
+     * Сохраняет данные о фото и само фото в БД
+     *
+     * @return true    - если данные сохранить удалось
+     * false   - есил произошла какая-то ошибка
+     */
+    private boolean savePhotoToDB() {
         try {
             int coord = Coordinates();// Получение кординат и типа данных
 
@@ -1325,7 +1329,6 @@ public class menu_main extends AppCompatActivity {
 
             // mod 1 = "Устаревший" вариант для сбора информации об устройстве и координатах
             GP = POST_10(1);// Запись пост данных в переменную для БД для последущей отправки на сервер
-
 
 
             if (RealmManager.chechPhotoExist(photoToDB.getAbsolutePath())) {
@@ -1366,7 +1369,7 @@ public class menu_main extends AppCompatActivity {
                     }
                 }
 
-                try{
+                try {
                     int id = RealmManager.stackPhotoGetLastId();
                     id++;
 
@@ -1375,10 +1378,18 @@ public class menu_main extends AppCompatActivity {
                     Integer themId = null;
                     Integer photoType = null;
 
-                    if (user_id != null && !user_id.equals("")){userId = Integer.parseInt(user_id);}
-                    if (address_id != null && !address_id.equals("")){addrId = Integer.parseInt(address_id);}
-                    if (theme_id != null && !theme_id.equals("")){themId = Integer.parseInt(theme_id);}
-                    if (photo_type != null && !photo_type.equals("")){photoType = Integer.parseInt(photo_type);}
+                    if (user_id != null && !user_id.equals("")) {
+                        userId = Integer.parseInt(user_id);
+                    }
+                    if (address_id != null && !address_id.equals("")) {
+                        addrId = Integer.parseInt(address_id);
+                    }
+                    if (theme_id != null && !theme_id.equals("")) {
+                        themId = Integer.parseInt(theme_id);
+                    }
+                    if (photo_type != null && !photo_type.equals("")) {
+                        photoType = Integer.parseInt(photo_type);
+                    }
 
 
                     String userNmText = "";
@@ -1395,60 +1406,60 @@ public class menu_main extends AppCompatActivity {
                         if (RealmManager.getAddressNm(Integer.valueOf(address_id)) != null)
                             addressNmText = RealmManager.getAddressNm(Integer.valueOf(address_id));
 
-                    }catch (Exception e){
+                    } catch (Exception e) {
                         // Ошибка NPE при получении имени пользователя с БД
                         globals.alertDialogMsg(this, "Фото сохранено, но возникли некоторые проблемы: " + e);
                     }
 
-                StackPhotoDB stackPhotoDB = new StackPhotoDB(
-                                    id,
-                                    "",
-                                    null,
-                                    userId,
-                                    addrId,
-                                    customer_id,
-                                    themId,
-                                    date,
-                                    unixTime,
-                                    System.currentTimeMillis(),
-                                    0,
-                                    0,
-                                    dad2,
-                                    path,
-                                    hash,
-                                    photoType,
-                                    photo_user_id,
-                                    customerTypeGrp,
-                                    doc_num,
-                                    comment,
-                                    GP,
-                                    0,
-                                    0,
-                                    false,
-                                    userNmText,
-                                    customerNmText,
-                                    addressNmText
-                                    );
+                    StackPhotoDB stackPhotoDB = new StackPhotoDB(
+                            id,
+                            "",
+                            null,
+                            userId,
+                            addrId,
+                            customer_id,
+                            themId,
+                            date,
+                            unixTime,
+                            System.currentTimeMillis(),
+                            0,
+                            0,
+                            dad2,
+                            path,
+                            hash,
+                            photoType,
+                            photo_user_id,
+                            customerTypeGrp,
+                            doc_num,
+                            comment,
+                            GP,
+                            0,
+                            0,
+                            false,
+                            userNmText,
+                            customerNmText,
+                            addressNmText
+                    );
 
-                            // Проверка - есть ли что-то NULL для сохранения в БД
-                                RealmManager.stackPhotoSavePhoto(stackPhotoDB);
-                                try {
-                                    Log.e("TAG_REALM_LOG", "ЗАПИСЬ 3");
-                                    RealmManager.setRowToLog(Collections.singletonList(new LogDB(RealmManager.getLastIdLogDB()+1, System.currentTimeMillis()/1000, "Успешное сохранение фото в БД", 1087, customer_id, addrId, null, Integer.parseInt(user_id), null, Globals.session, date)));
-                                }catch (Exception e){
-                                    Log.e("TAG_REALM_LOG", "Ошибка(3): " + e);
-                                }
-                                return true;
+                    // Проверка - есть ли что-то NULL для сохранения в БД
+                    RealmManager.stackPhotoSavePhoto(stackPhotoDB);
+                    try {
+                        Log.e("TAG_REALM_LOG", "ЗАПИСЬ 3");
+                        RealmManager.setRowToLog(Collections.singletonList(new LogDB(RealmManager.getLastIdLogDB() + 1, System.currentTimeMillis() / 1000, "Успешное сохранение фото в БД", 1087, customer_id, addrId, null, Integer.parseInt(user_id), null, Globals.session, date)));
                     } catch (Exception e) {
-                        globals.alertDialogMsg(this, "Ошибка сохранения в БД: " + e);
+                        Log.e("TAG_REALM_LOG", "Ошибка(3): " + e);
                     }
+                    return true;
+                } catch (Exception e) {
+                    globals.alertDialogMsg(this, "Ошибка сохранения в БД: " + e);
+                }
 
             } else {
                 globals.alertDialogMsg(this, "Такое фото уже существует. Если ошибка повторяется - обратитесь к Вашему руководителю");
                 return false;
             }
 
-        }catch (Exception e){
+        } catch (Exception e) {
             globals.alertDialogMsg(this, "Ошибка при сохранении фото. При возникновении этой ошибки - обратитесь к руководителю. Код ошибки: " + e);
         }
         return false;
@@ -1456,95 +1467,98 @@ public class menu_main extends AppCompatActivity {
 
 
     /*Alert dialog для выбора групы товара клиента*/
-    private void choiceCustomerGroup(){
-        if (customerTypeGrpArr != null){
+    private void choiceCustomerGroup() {
+        if (customerTypeGrpArr != null) {
             final String[] result = customerTypeGrpArr.values().toArray(new String[0]);
-            if (customerTypeGrpArr.size() > 1){
+            if (customerTypeGrpArr.size() > 1) {
                 new AlertDialog.Builder(this)
                         .setTitle("Выберите группу товара для следующего фото: ")
                         .setItems(result, new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
-                                Toast t = Toast.makeText(menu_main.this, "Выбрана группа товара: " + result[which], Toast.LENGTH_LONG);t.show();
+                                Toast t = Toast.makeText(menu_main.this, "Выбрана группа товара: " + result[which], Toast.LENGTH_LONG);
+                                t.show();
                                 customerTypeGrp = globals.getKeyForValue(result[which], customerTypeGrpArr);
                                 takePhoto();
                             }
                         })
                         .show();
-            }else if (customerTypeGrpArr.size() == 1){
+            } else if (customerTypeGrpArr.size() == 1) {
                 customerTypeGrp = globals.getKeyForValue(result[0], customerTypeGrpArr);
                 Toast.makeText(this, "Выбрана группа товара: " + result[0], Toast.LENGTH_LONG).show();
                 takePhoto();
-            }else{
+            } else {
                 globals.alertDialogMsg(this, "Не обнаружено ни одной группы товаров по данному клиенту. Сообщите об этом Администратору!");
                 customerTypeGrp = "";
                 takePhoto();
             }
-        }else {
+        } else {
             globals.alertDialogMsg(this, "Не выбрано посещение\n\nЗайдите в раздел План работ, выберите посещение и повторите попытку.");
         }
     }
 
 
     // Размещение фотки по URI адрессу для пользователя, отображение фотографии загрузки
-    public void onActivityResult(int requestCode, int resultCode, Intent intent){
+    public void onActivityResult(int requestCode, int resultCode, Intent intent) {
         super.onActivityResult(requestCode, resultCode, intent);
 
         try {
-        // Если отменили сьемку:
-        if(resultCode == Activity.RESULT_CANCELED && requestCode == 1){
-            image.delete();
-        }
-
-        // Если сьемка успешная:
-        if (requestCode == CAMERA_REQUEST && resultCode == Activity.RESULT_OK){
-            if (image != null && image.exists()) {
-                if (image.length() > 0) {       //
-
-                    final int rotation = getImageOrientation(image.getPath()); //Проверка на сколько градусов повёрнуто изображение
-                    if (rotation > 0){
-                        photoToDB = resaveBitmap(image, rotation);  // ДляСамсунгов и тп.. Разворачиваем как надо.
-                    }else{
-                        photoToDB = image;  // Для нормальных телефонов - оставляем как есть
-                    }
-
-                    setupBadge(stackPhotoTableCount());
-
-                    textView_comment.setText(null);comment = "";  // Обнуление коментария для новой фото
-                    button_comment.setText("Добавить комментарий"); // "Возвращение" к исходной кнопки "Добавить комментарий"
-
-                    button_photo.setVisibility(View.GONE); // Скрываем кнопки для Фото
-                    button_make_photo.setVisibility(View.VISIBLE);
-                    button_close.setVisibility(View.VISIBLE);
-                    imageViewMerch.setVisibility(View.GONE);
-                    imageView.setVisibility(View.VISIBLE);
-
-                    Bitmap b = decodeSampledBitmapFromResource(image, 200, 200);
-                    if (b != null) {
-                        imageView.setImageBitmap(b);
-                    }else{
-                        globals.alertDialogMsg(this, "Фото ужать не получилось");
-                    }
-                    button_comment.setVisibility(View.VISIBLE); // Отображение кнопки комментария
-
-                    Toast t = Toast.makeText(this, "Фото сделано, не забудьте его сохранить!", Toast.LENGTH_LONG);t.show();
-
-                }else { // Если фото получилось нулевым - файлик удаляется
-                    deleteImageFile(image, image);
-                }
-            }else {
-                globals.alertDialogMsg(this, "Фото не было создано, повторите попытку");
+            // Если отменили сьемку:
+            if (resultCode == Activity.RESULT_CANCELED && requestCode == 1) {
+                image.delete();
             }
-        }
 
-        }catch (Exception e){
+            // Если сьемка успешная:
+            if (requestCode == CAMERA_REQUEST && resultCode == Activity.RESULT_OK) {
+                if (image != null && image.exists()) {
+                    if (image.length() > 0) {       //
+
+                        final int rotation = getImageOrientation(image.getPath()); //Проверка на сколько градусов повёрнуто изображение
+                        if (rotation > 0) {
+                            photoToDB = resaveBitmap(image, rotation);  // ДляСамсунгов и тп.. Разворачиваем как надо.
+                        } else {
+                            photoToDB = image;  // Для нормальных телефонов - оставляем как есть
+                        }
+
+                        setupBadge(stackPhotoTableCount());
+
+                        textView_comment.setText(null);
+                        comment = "";  // Обнуление коментария для новой фото
+                        button_comment.setText("Добавить комментарий"); // "Возвращение" к исходной кнопки "Добавить комментарий"
+
+                        button_photo.setVisibility(View.GONE); // Скрываем кнопки для Фото
+                        button_make_photo.setVisibility(View.VISIBLE);
+                        button_close.setVisibility(View.VISIBLE);
+                        imageViewMerch.setVisibility(View.GONE);
+                        imageView.setVisibility(View.VISIBLE);
+
+                        Bitmap b = decodeSampledBitmapFromResource(image, 200, 200);
+                        if (b != null) {
+                            imageView.setImageBitmap(b);
+                        } else {
+                            globals.alertDialogMsg(this, "Фото ужать не получилось");
+                        }
+                        button_comment.setVisibility(View.VISIBLE); // Отображение кнопки комментария
+
+                        Toast t = Toast.makeText(this, "Фото сделано, не забудьте его сохранить!", Toast.LENGTH_LONG);
+                        t.show();
+
+                    } else { // Если фото получилось нулевым - файлик удаляется
+                        deleteImageFile(image, image);
+                    }
+                } else {
+                    globals.alertDialogMsg(this, "Фото не было создано, повторите попытку");
+                }
+            }
+
+        } catch (Exception e) {
             globals.alertDialogMsg(this, "Ошибка при выполнении фото: " + e);
         }
     }
 
     // Создание фото и пути к ней
     public void dispatchTakePictureIntent() {
-        try{
+        try {
             Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
             if (takePictureIntent.resolveActivity(this.getPackageManager()) != null) {
                 String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
@@ -1571,7 +1585,7 @@ public class menu_main extends AppCompatActivity {
                 takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, contentUri);
                 startActivityForResult(takePictureIntent, REQUEST_TAKE_PHOTO);
             }
-        }catch (Exception e){
+        } catch (Exception e) {
             globals.alertDialogMsg(this, "Ошибка при создании фото: " + e);
         }
     }
@@ -1601,9 +1615,8 @@ public class menu_main extends AppCompatActivity {
 
     /**
      * Разрешение на использование хра
-     *
-     * */
-    public  boolean isStoragePermissionGranted() {
+     */
+    public boolean isStoragePermissionGranted() {
         if (Build.VERSION.SDK_INT >= 23) {
             if (checkSelfPermission(android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
                     == PackageManager.PERMISSION_GRANTED) {
@@ -1614,37 +1627,36 @@ public class menu_main extends AppCompatActivity {
                         new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1);
                 return false;
             }
-        }
-        else { //permission is automatically granted on sdk<23 upon installation
+        } else { //permission is automatically granted on sdk<23 upon installation
             return true;
         }
     }
 
 
     // Удаление файла
-    private void deleteImageFile(File fileOld, File fileNew){
+    private void deleteImageFile(File fileOld, File fileNew) {
 
         fileNew.delete();
         fileOld.delete();
 
-        if(fileOld.exists()){
+        if (fileOld.exists()) {
             try {
                 fileOld.getCanonicalFile().delete();
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            if(fileOld.exists()){
+            if (fileOld.exists()) {
                 getApplicationContext().deleteFile(fileOld.getName());
             }
         }
 
-        if(fileNew.exists()){
+        if (fileNew.exists()) {
             try {
                 fileNew.getCanonicalFile().delete();
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            if(fileNew.exists()){
+            if (fileNew.exists()) {
                 getApplicationContext().deleteFile(fileNew.getName());
             }
         }
@@ -1652,7 +1664,7 @@ public class menu_main extends AppCompatActivity {
 
 
     // Создание уменьшеного файла
-    public File resizeImageFile(File image){
+    public File resizeImageFile(File image) {
         File f = null;
         Bitmap res = null;
         int origWidth, origHeight;
@@ -1663,18 +1675,18 @@ public class menu_main extends AppCompatActivity {
         try {
             origWidth = readyToDecode.getWidth();
             origHeight = readyToDecode.getHeight();
-        }catch (NullPointerException e){
+        } catch (NullPointerException e) {
             globals.alertDialogMsg(this, "Фото ужать не вышло. Обратитесь к руководителю. (Ошибка №1)");
             return image;
         }
 
         final int destWidth = 1500;//width you need
 
-        if(origWidth > destWidth){
-            int destHeight = origHeight/( origWidth / destWidth ) ;
+        if (origWidth > destWidth) {
+            int destHeight = origHeight / (origWidth / destWidth);
             Bitmap b2 = Bitmap.createScaledBitmap(readyToDecode, destWidth, destHeight, false);
             ByteArrayOutputStream outStream = new ByteArrayOutputStream();
-            b2.compress(Bitmap.CompressFormat.JPEG,90 , outStream);
+            b2.compress(Bitmap.CompressFormat.JPEG, 90, outStream);
             res = b2;
 
             try {
@@ -1705,7 +1717,7 @@ public class menu_main extends AppCompatActivity {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-        }else {
+        } else {
             //Globals.alertDialogMsg("Фото ужать не вышло. Оно слишком маленькое. (Ошибка №0)", this);
             return image;
         }
@@ -1716,7 +1728,7 @@ public class menu_main extends AppCompatActivity {
 
 
     // Получение информации о фотографии
-    public File exifPhotoData (File file){
+    public File exifPhotoData(File file) {
         ExifInterface exif = null;
         try {
             exif = new ExifInterface(file.getAbsolutePath());
@@ -1741,7 +1753,7 @@ public class menu_main extends AppCompatActivity {
 
 
     // Получение даты создания фото
-    private int getExifCreateData (File file){
+    private int getExifCreateData(File file) {
         ExifInterface exif = null;
         try {
             exif = new ExifInterface(file.getAbsolutePath());
@@ -1751,14 +1763,14 @@ public class menu_main extends AppCompatActivity {
 
         if (exif != null) {
             return exif.getAttributeInt(ExifInterface.TAG_DATETIME_ORIGINAL, 0);
-        }else {
+        } else {
             return 0;
         }
     }
 
 
     // Вызов диалогового окна для комментария
-    public void COMMENTS (){
+    public void COMMENTS() {
 
         final AlertDialog dialogBuilder = new AlertDialog.Builder(this).create();
         LayoutInflater inflater = this.getLayoutInflater();
@@ -1767,7 +1779,7 @@ public class menu_main extends AppCompatActivity {
         final EditText editTextComment = (EditText) dialogView.findViewById(R.id.edt_comment);
         Button button1 = (Button) dialogView.findViewById(R.id.buttonSubmit);
 
-        if (!comment.equals("")){
+        if (!comment.equals("")) {
             editTextComment.append(comment);
         }
 
@@ -1790,10 +1802,10 @@ public class menu_main extends AppCompatActivity {
 
 
     // Вызов диалогового окна "Фото загружено"
-    public void photoUpload(String msg, boolean err){
+    public void photoUpload(String msg, boolean err) {
 
-        if (!err){
-            SpannableString redSpannable= new SpannableString(msg);
+        if (!err) {
+            SpannableString redSpannable = new SpannableString(msg);
             redSpannable.setSpan(new ForegroundColorSpan(Color.RED), 0, msg.length(), 0);
         }
 
@@ -1802,12 +1814,12 @@ public class menu_main extends AppCompatActivity {
             builder.setCancelable(false);
             builder.setMessage(msg);
             builder.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    finish();
-                    refreshActivity();
-                }
-            })
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            finish();
+                            refreshActivity();
+                        }
+                    })
                     .setNegativeButton("Больше не показывать", new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
@@ -1819,7 +1831,7 @@ public class menu_main extends AppCompatActivity {
                     });
 
             builder.create().show();
-        }else {
+        } else {
             globals.refresh = true;
             refreshActivity();
         }
@@ -1841,12 +1853,13 @@ public class menu_main extends AppCompatActivity {
     }
 
 
-    /**POST.. для 10 минутной отправки на сервер данных
+    /**
+     * POST.. для 10 минутной отправки на сервер данных
      * Формирование данных для отправки на сервер
-     *
+     * <p>
      * return - POST String in base64
-     * */
-    public String POST_10 (int mod){
+     */
+    public String POST_10(int mod) {
 
         if (mod == 1) {
             //Coordinates();
@@ -1864,7 +1877,7 @@ public class menu_main extends AppCompatActivity {
                 display.getSize(size);
                 width = size.x;
                 height = size.y;
-            }catch (Exception e){
+            } catch (Exception e) {
 
             }
 
@@ -1929,34 +1942,36 @@ public class menu_main extends AppCompatActivity {
             }
 
             return base64;
-        }
-        else{   //--- mod 2
+        } else {   //--- mod 2
 
             return "mod2";
         }
     }
 
-    /** Метод для получения геоданных сети в случае если GPS-данные не доступны
-     * */
-    public int Coordinates(){
+    /**
+     * Метод для получения геоданных сети в случае если GPS-данные не доступны
+     */
+    public int Coordinates() {
 
         int res;
         int minGPSTime = 1200;
-        long ut = unixTime/1000;
+        long ut = unixTime / 1000;
 
         // Передача параметра с подделкой координат
-        if(trecker.isMockGPS || trecker.isMockNET){
+        if (trecker.isMockGPS || trecker.isMockNET) {
             mocking = 0;
-        }else{mocking = 1;}
+        } else {
+            mocking = 1;
+        }
 
-        if (true){
+        if (true) {
             res = 4;
-        }else if (trecker.imHereNET == null){
+        } else if (trecker.imHereNET == null) {
             res = 5;
         }
 
 
-        if (trecker.imHereGPS != null && ut - trecker.imHereGPS.getTime()/1000 < 1800) {
+        if (trecker.imHereGPS != null && ut - trecker.imHereGPS.getTime() / 1000 < 1800) {
 
             CoordX = trecker.imHereGPS.getLatitude();
             CoordY = trecker.imHereGPS.getLongitude();
@@ -1967,7 +1982,7 @@ public class menu_main extends AppCompatActivity {
 
             res = 1;
 
-        }else if(trecker.imHereNET != null){
+        } else if (trecker.imHereNET != null) {
 
             CoordX = trecker.imHereNET.getLatitude();
             CoordY = trecker.imHereNET.getLongitude();
@@ -1978,17 +1993,17 @@ public class menu_main extends AppCompatActivity {
 
             res = 2;
 
-            if (trecker.imHereGPS != null){
+            if (trecker.imHereGPS != null) {
                 res = 6;
             }
 
-        }else {
+        } else {
             res = 0;
 //            Toast toast = Toast.makeText(this, "Приложение не может получить данные о местоположении данного устройства. Попробуйте нажать в меню 3х точек на кнопку \"Перейти на главную\". \n\nЕсли ошибка повторяется - сообщите об этом своему руководителю.", Toast.LENGTH_SHORT);toast.show();
         }
 
 
-        RealmManager.setRowToLog(Collections.singletonList(new LogDB(RealmManager.getLastIdLogDB()+1, System.currentTimeMillis()/1000, "Координаты "+ "res:" + res + " (X: "+ CoordX +")" + "(Y: "+ CoordY +")" + " Time: " + CoordTime, 1126, null, null, null, null, null, Globals.session, null)));
+        RealmManager.setRowToLog(Collections.singletonList(new LogDB(RealmManager.getLastIdLogDB() + 1, System.currentTimeMillis() / 1000, "Координаты " + "res:" + res + " (X: " + CoordX + ")" + "(Y: " + CoordY + ")" + " Time: " + CoordTime, 1126, null, null, null, null, null, Globals.session, null)));
 
         return res;
     }
@@ -1997,7 +2012,7 @@ public class menu_main extends AppCompatActivity {
     /**
      * Метод с документации.
      * Расчёт оптимального размера файла фотографии для загрузки в память
-     * */
+     */
     public static int calculateInSampleSize(BitmapFactory.Options options, int reqWidth, int reqHeight) {
         // Raw height and width of image
         final int height = options.outHeight;
@@ -2021,14 +2036,15 @@ public class menu_main extends AppCompatActivity {
     }
 
 
-    /**РАЗОБРАТЬСЯ
+    /**
+     * РАЗОБРАТЬСЯ
      * Метод с документации.
      * Декодирует обьект(фото) что б не вылетала ошибка OutOfMemoryError
-     *
+     * <p>
      * зачем и на что влияет resId
      * разобраться с методами: BitmapFactory.decodeResource, мне вроде нужен был декодирование файла.
-     * */
-    public static Bitmap decodeSampledBitmapFromResource(File res,int reqWidth, int reqHeight) {
+     */
+    public static Bitmap decodeSampledBitmapFromResource(File res, int reqWidth, int reqHeight) {
         try {
             // First decode with inJustDecodeBounds=true to check dimensions
             final BitmapFactory.Options options = new BitmapFactory.Options();
@@ -2041,7 +2057,7 @@ public class menu_main extends AppCompatActivity {
             // Decode bitmap with inSampleSize set
             options.inJustDecodeBounds = false;
             return BitmapFactory.decodeFile(res.getAbsolutePath(), options);
-        }catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         }
         return null;
@@ -2052,120 +2068,126 @@ public class menu_main extends AppCompatActivity {
 
     // НОВАЯ ВЫГРУЗКА ФОТО
     // ---------------------------------------------------------------------------------------------
+
     /**
      * Получение и выгрузка фоток.
-     *
+     * <p>
      * mod = 1 -- Выгрузка в ручном режиме
      * mod = 2 -- Выгрузка вызвана из крона (Автовыгрузка)
-     * */
-    private void getPhotoAndUpload(int mod){
-        if (internetStatus == 1){// inet+
+     */
+    private void getPhotoAndUpload(int mod) {
+        if (internetStatus == 1) {// inet+
             RealmResults<StackPhotoDB> results = RealmManager.getStackPhotoPhotoToUpload();
 
-            for (int i=0; i<results.size(); i++){
-                if (results.get(i) != null){
+            for (int i = 0; i < results.size(); i++) {
+                if (results.get(i) != null) {
                     photoUploadToServer(mod, results.get(i));
                 }
             }
 
         } else if (internetStatus == 2) {// inet-
 
-        }else{
+        } else {
 
         }
     }
 
     // Выгрузка фоток
-    private void photoUploadToServer(int mode, StackPhotoDB photoDB){
+    private void photoUploadToServer(int mode, StackPhotoDB photoDB) {
 
         final MediaType MEDIA_TYPE_JPG = MediaType.parse("image/jpg");
 
         int photoId = photoDB.getId();
-        String mod              = "images_prepare";
+        String mod = "images_prepare";
 //        String act              = "upload_image";
-        String act              = "upload_photo";
+        String act = "upload_photo";
 
-        String client_id            = "";
-        String addr_id              = "";
-        String date                 = "";
-        String img_type_id          = "";
-        String photo_user_id        = "";
-        String client_tovar_group   = "";
-        String doc_num              = "";
-        String theme_id             = "";
-        String comment              = "";
-        String dvi              = "";
-        String code_dad2            = "";
-        String gp                   = "";
+        String client_id = "";
+        String addr_id = "";
+        String date = "";
+        String img_type_id = "";
+        String photo_user_id = "";
+        String client_tovar_group = "";
+        String doc_num = "";
+        String theme_id = "";
+        String comment = "";
+        String dvi = "";
+        String code_dad2 = "";
+        String gp = "";
+        String tovar_id = "";
 
-        if (photoDB.getClient_id() != null){
+        if (photoDB.getClient_id() != null) {
             client_id = String.valueOf(photoDB.getClient_id());
         }
 
-        if (photoDB.getAddr_id() != null){
+        if (photoDB.getAddr_id() != null) {
             addr_id = String.valueOf(photoDB.getAddr_id());
         }
 
-        if (photoDB.getTime_event() != null){
+        if (photoDB.getTime_event() != null) {
             date = photoDB.getTime_event();
         }
 
-        if (photoDB.getPhoto_type() != null){
+        if (photoDB.getPhoto_type() != null) {
             img_type_id = String.valueOf(photoDB.getPhoto_type());
         }
 
-        if (photoDB.getPhoto_user_id() != null){
+        if (photoDB.getPhoto_user_id() != null) {
             photo_user_id = String.valueOf(photoDB.getPhoto_user_id());
         }
 
-        if (photoDB.getPhoto_group_id() != null){
+        if (photoDB.getPhoto_group_id() != null) {
             client_tovar_group = photoDB.getPhoto_group_id();
         }
 
-        if (photoDB.getDoc_id() != null){
+        if (photoDB.getDoc_id() != null) {
             doc_num = photoDB.getDoc_id();
         }
 
-        if (photoDB.getTheme_id() != null){
+        if (photoDB.getTheme_id() != null) {
             theme_id = String.valueOf(photoDB.getTheme_id());
         }
 
-        if (photoDB.getComment() != null){
+        if (photoDB.getComment() != null) {
             comment = photoDB.getComment();
         }
 
-        if (photoDB.getDvi() != null){
+        if (photoDB.getDvi() != null) {
             dvi = String.valueOf(photoDB.getDvi());
         }
 
-        try{
+
+        if (photoDB.tovar_id != null && !photoDB.tovar_id.equals("")){
+            tovar_id = photoDB.tovar_id;
+        }
+
+        try {
             code_dad2 = String.valueOf(photoDB.getCode_dad2());
-        }catch (Exception e){
+        } catch (Exception e) {
             // Запись ошибки
             code_dad2 = "";
         }
 
-        if (photoDB.getGp() != null){
+        if (photoDB.getGp() != null) {
             gp = photoDB.getGp();
         }
 
 
         RequestBody mod2 = RequestBody.create(MediaType.parse("text/plain"), mod);
-        RequestBody act2                 = RequestBody.create(MediaType.parse("text/plain"), act              );
-        RequestBody client_id2           = RequestBody.create(MediaType.parse("text/plain"), client_id        );
-        RequestBody addr_id2             = RequestBody.create(MediaType.parse("text/plain"), addr_id          );
-        RequestBody date2                = RequestBody.create(MediaType.parse("text/plain"), date             );
-        RequestBody img_type_id2         = RequestBody.create(MediaType.parse("text/plain"), img_type_id      );
-        RequestBody photo_user_id2       = RequestBody.create(MediaType.parse("text/plain"), photo_user_id    );
-        RequestBody client_tovar_group2  = RequestBody.create(MediaType.parse("text/plain"), client_tovar_group);
-        RequestBody doc_num2             = RequestBody.create(MediaType.parse("text/plain"), doc_num);
-        RequestBody theme_id2            = RequestBody.create(MediaType.parse("text/plain"), theme_id         );
-        RequestBody comment2             = RequestBody.create(MediaType.parse("text/plain"), comment          );
-        RequestBody dvi2                 = RequestBody.create(MediaType.parse("text/plain"), dvi              );
-        RequestBody codeDad2             = RequestBody.create(MediaType.parse("text/plain"), code_dad2        );
-        RequestBody gp2                  = RequestBody.create(MediaType.parse("text/plain"), gp               );
-
-
+        RequestBody act2 = RequestBody.create(MediaType.parse("text/plain"), act);
+        RequestBody client_id2 = RequestBody.create(MediaType.parse("text/plain"), client_id);
+        RequestBody addr_id2 = RequestBody.create(MediaType.parse("text/plain"), addr_id);
+        RequestBody date2 = RequestBody.create(MediaType.parse("text/plain"), date);
+        RequestBody img_type_id2 = RequestBody.create(MediaType.parse("text/plain"), img_type_id);
+        RequestBody photo_user_id2 = RequestBody.create(MediaType.parse("text/plain"), photo_user_id);
+        RequestBody client_tovar_group2 = RequestBody.create(MediaType.parse("text/plain"), client_tovar_group);
+        RequestBody doc_num2 = RequestBody.create(MediaType.parse("text/plain"), doc_num);
+        RequestBody theme_id2 = RequestBody.create(MediaType.parse("text/plain"), theme_id);
+        RequestBody comment2 = RequestBody.create(MediaType.parse("text/plain"), comment);
+        RequestBody dvi2 = RequestBody.create(MediaType.parse("text/plain"), dvi);
+        RequestBody codeDad2 = RequestBody.create(MediaType.parse("text/plain"), code_dad2);
+        RequestBody gp2 = RequestBody.create(MediaType.parse("text/plain"), gp);
+        RequestBody tov2 = RequestBody.create(MediaType.parse("text/plain"), tovar_id);
 
 
         //pass it like this
@@ -2177,49 +2199,48 @@ public class menu_main extends AppCompatActivity {
 
         Log.e("TAG_SEND_PHOTO", "Data: \n"
                 + "\n mod:" + mod
-                + "\n act:"  + act
-                + "\n client_id:"  + client_id
-                + "\n addr_id:"  + addr_id
-                + "\n date:"  + date
-                + "\n img_type_id:"  + img_type_id
-                + "\n photo_user_id:" +  photo_user_id
-                + "\n client_tovar_group:" +  client_tovar_group
-                + "\n doc_num:" +  doc_num
-                + "\n theme_id:"  + theme_id
-                + "\n comment:"  + comment
-                + "\n code_dad2:"  + code_dad2
-                + "\n gp:"  + null
-                + "\n photo:" +  photo);
+                + "\n act:" + act
+                + "\n client_id:" + client_id
+                + "\n addr_id:" + addr_id
+                + "\n date:" + date
+                + "\n img_type_id:" + img_type_id
+                + "\n photo_user_id:" + photo_user_id
+                + "\n client_tovar_group:" + client_tovar_group
+                + "\n doc_num:" + doc_num
+                + "\n theme_id:" + theme_id
+                + "\n comment:" + comment
+                + "\n code_dad2:" + code_dad2
+                + "\n gp:" + null
+                + "\n photo:" + photo);
 
         String data = "" + "mod:" + mod
-                + "\n act:"  + act
-                + "\n client_id:"  + client_id
-                + "\n addr_id:"  + addr_id
-                + "\n date:"  + date
-                + "\n img_type_id:"  + img_type_id
-                + "\n photo_user_id:" +  photo_user_id
-                + "\n client_tovar_group:" +  client_tovar_group
-                + "\n doc_num:" +  doc_num
-                + "\n theme_id:"  + theme_id
-                + "\n comment:"  + comment
-                + "\n code_dad2:"  + code_dad2
-                + "\n gp:"  + null
-                + "\n photo:" +  photo;
+                + "\n act:" + act
+                + "\n client_id:" + client_id
+                + "\n addr_id:" + addr_id
+                + "\n date:" + date
+                + "\n img_type_id:" + img_type_id
+                + "\n photo_user_id:" + photo_user_id
+                + "\n client_tovar_group:" + client_tovar_group
+                + "\n doc_num:" + doc_num
+                + "\n theme_id:" + theme_id
+                + "\n comment:" + comment
+                + "\n code_dad2:" + code_dad2
+                + "\n gp:" + null
+                + "\n photo:" + photo;
 
-        RealmManager.setRowToLog(Collections.singletonList(new LogDB(RealmManager.getLastIdLogDB()+1, System.currentTimeMillis()/1000, "Данные(" + RealmManager.getStackPhotoPhotoToUpload().size() + "): " + data , 1088, null, null, null, null, null, Globals.session, null)));
-
+        RealmManager.setRowToLog(Collections.singletonList(new LogDB(RealmManager.getLastIdLogDB() + 1, System.currentTimeMillis() / 1000, "Данные(" + RealmManager.getStackPhotoPhotoToUpload().size() + "): " + data, 1088, null, null, null, null, null, Globals.session, null)));
 
 
         // РУЧНАЯ ВЫГРУЗКА
-        if (mode==1) {
+        if (mode == 1) {
             retrofit2.Call<JsonObject> call = RetrofitBuilder.getRetrofitInterface()
-                    .SEND_PHOTO_2_BODY(mod2, act2, client_id2, addr_id2, date2, img_type_id2, photo_user_id2, client_tovar_group2, doc_num2, theme_id2, comment2, dvi2, codeDad2, gp2, photo);
+                    .SEND_PHOTO_2_BODY(mod2, act2, client_id2, addr_id2, date2, img_type_id2, photo_user_id2, client_tovar_group2, doc_num2, theme_id2, comment2, dvi2, codeDad2, gp2, tov2, photo);
 
             String finalDate = date;
             String finalDate1 = date;
 
-            try{
-                RealmManager.setRowToLog(Collections.singletonList(new LogDB(RealmManager.getLastIdLogDB()+1, System.currentTimeMillis()/1000, "Попытка выгрузки фото." + call, 1088, null, null, null, null, null, Globals.session, null)));
+            try {
+                RealmManager.setRowToLog(Collections.singletonList(new LogDB(RealmManager.getLastIdLogDB() + 1, System.currentTimeMillis() / 1000, "Попытка выгрузки фото." + call, 1088, null, null, null, null, null, Globals.session, null)));
 
                 call.enqueue(new retrofit2.Callback<JsonObject>() {
                     @Override
@@ -2232,32 +2253,32 @@ public class menu_main extends AppCompatActivity {
                         if (response.isSuccessful() && response.body() != null) {
                             try {
                                 if (jsonR != null) {
-                                    RealmManager.setRowToLog(Collections.singletonList(new LogDB(RealmManager.getLastIdLogDB()+1, System.currentTimeMillis()/1000, "(Адрес/Пользователь)" + address_id + "/" + user_id + "Ответ от сервера: " + jsonR, 1088, customer_id, null, null, null, null, Globals.session, finalDate)));
+                                    RealmManager.setRowToLog(Collections.singletonList(new LogDB(RealmManager.getLastIdLogDB() + 1, System.currentTimeMillis() / 1000, "(Адрес/Пользователь)" + address_id + "/" + user_id + "Ответ от сервера: " + jsonR, 1088, customer_id, null, null, null, null, Globals.session, finalDate)));
                                     if (!jsonR.get("state").isJsonNull() && jsonR.get("state").getAsBoolean()) {
                                         try {
                                             RealmManager.INSTANCE.executeTransaction(realm -> photoDB.setUpload_to_server(System.currentTimeMillis()));
                                             RealmManager.stackPhotoSavePhoto(photoDB);
 
                                             Toast.makeText(menu_main.this, "Фото " + photoId + " выгружено на сервер.", Toast.LENGTH_SHORT).show();
-                                        }catch (Exception e){
+                                        } catch (Exception e) {
                                             String msg = Arrays.toString(e.getStackTrace());
                                             globals.alertDialogMsg(menu_main.this, msg);
                                         }
-                                    } else if (!jsonR.get("state").isJsonNull() && !jsonR.get("state").getAsBoolean()){
+                                    } else if (!jsonR.get("state").isJsonNull() && !jsonR.get("state").getAsBoolean()) {
                                         if (!jsonR.get("error").isJsonNull() || jsonR.get("error") != null) {
                                             String error = jsonR.get("error").getAsString();
                                             globals.alertDialogMsg(menu_main.this, "(Выгрузка фото)Возникла ошибка: " + error);
-                                        }else {
+                                        } else {
                                             globals.alertDialogMsg(menu_main.this, "Фото не выгружено. Сообщите об этом руководителю. Ответ от сервера: " + inputStream);
                                         }
-                                    }else {
+                                    } else {
                                         globals.alertDialogMsg(menu_main.this, "Ошибка: " + jsonR);//Toast toast = Toast.makeText(this, "Данные сохранить не получилось, повторите попытку", Toast.LENGTH_SHORT);toast.show();
                                     }
-                                }else {
+                                } else {
                                     globals.alertDialogMsg(menu_main.this, "Не удалось получить ответ от сервера. Скорее всего отсутствует интернет. Проверьте связь и повторите попытку или обратитесь к Ващему руководителю.");//Toast toast = Toast.makeText(this, "Не удалось получить ответ от сервера. Скорее всего отсутствует интернет. Проверьте связь и повторите попытку или обратитесь к Ващему руководителю.", Toast.LENGTH_SHORT);toast.show();
                                 }
-                            }catch (Exception e){
-                                RealmManager.setRowToLog(Collections.singletonList(new LogDB(RealmManager.getLastIdLogDB()+1, System.currentTimeMillis()/1000, "(Адрес/Пользователь)" + address_id + "/" + user_id + "Ошибка при разборе ответа с сервера: " + e, 1088, customer_id, null, null, null, null, Globals.session, finalDate1)));
+                            } catch (Exception e) {
+                                RealmManager.setRowToLog(Collections.singletonList(new LogDB(RealmManager.getLastIdLogDB() + 1, System.currentTimeMillis() / 1000, "(Адрес/Пользователь)" + address_id + "/" + user_id + "Ошибка при разборе ответа с сервера: " + e, 1088, customer_id, null, null, null, null, Globals.session, finalDate1)));
                                 globals.alertDialogMsg(menu_main.this, "Ошибка при выгрузке фото - повторите попытку позже или обратитесь к Вашему руководителю. \nОшибка: " + e);
                             }
                         }
@@ -2271,8 +2292,8 @@ public class menu_main extends AppCompatActivity {
 
                         try {
                             Log.e("TAG_REALM_LOG", "ЗАПИСЬ 5");
-                            RealmManager.setRowToLog(Collections.singletonList(new LogDB(RealmManager.getLastIdLogDB()+1, System.currentTimeMillis()/1000, "Ошибка при выгрузке фото(FAILURE): " + t, 1088, customer_id, Integer.parseInt(address_id), null, Integer.parseInt(user_id), null, Globals.session, finalDate1)));
-                        }catch (Exception e){
+                            RealmManager.setRowToLog(Collections.singletonList(new LogDB(RealmManager.getLastIdLogDB() + 1, System.currentTimeMillis() / 1000, "Ошибка при выгрузке фото(FAILURE): " + t, 1088, customer_id, Integer.parseInt(address_id), null, Integer.parseInt(user_id), null, Globals.session, finalDate1)));
+                        } catch (Exception e) {
                             Log.e("TAG_REALM_LOG", "Ошибка(5): " + e);
                         }
 
@@ -2280,29 +2301,24 @@ public class menu_main extends AppCompatActivity {
                         Toast.makeText(menu_main.this, "Проблема с связью: " + t, Toast.LENGTH_SHORT).show();
                     }
                 });
-            }catch (Exception e){
-                RealmManager.setRowToLog(Collections.singletonList(new LogDB(RealmManager.getLastIdLogDB()+1, System.currentTimeMillis()/1000, "Ошибка при выгрузке фото: " + e, 1088, customer_id, null, null, null, null, Globals.session, finalDate)));
+            } catch (Exception e) {
+                RealmManager.setRowToLog(Collections.singletonList(new LogDB(RealmManager.getLastIdLogDB() + 1, System.currentTimeMillis() / 1000, "Ошибка при выгрузке фото: " + e, 1088, customer_id, null, null, null, null, Globals.session, finalDate)));
             }
 
         }
     }
 
 
-
-
-    public void showHelpMassage(){
+    public void showHelpMassage() {
         String msg = getString(R.string.text_help_photo);
         globals.alertDialogMsg(this, msg);
     }
 
-    private void printErrOnFailure(IOException e, String mod){
+    private void printErrOnFailure(IOException e, String mod) {
         String err = String.valueOf(e);
         String msg = String.format("%sВыгрузка не удалась. Повторите попытку или обратитесь к руководителю если ошибка повторяется. Код ошибки: %s", mod, err);
         globals.alertDialogMsg(menu_main.this, msg);
     }
-
-
-
 
 
     // ===================================== КРОНЧИК ============== КРОНЧИК =============== КРОНЧИК ==================== КРОНЧИК ================= КРОНЧИК ========
@@ -2325,7 +2341,7 @@ public class menu_main extends AppCompatActivity {
                     tablesLoadingUnloading.updateTables(menu_main.this);*/
                 }
 
-            }catch (Exception e){
+            } catch (Exception e) {
                 globals.alertDialogMsg(menu_main.this, "При возникновении этой ошибки - обратитесь к Вашему руководителю. Ошибка крона: " + e);
             }
 
@@ -2334,19 +2350,17 @@ public class menu_main extends AppCompatActivity {
     };
 
 
-
-
     /**
      * Функция 10сек крона которая будет получать по хэшам выгруженые на Сайт фото и удалять их
      * (Счётчик глобальный)
      * Также запускает автовыгрузку фоток
-     * */
-    public void cronCheckUploadsPhotoOnServer(){
+     */
+    public void cronCheckUploadsPhotoOnServer() {
         try {
             final RealmResults<StackPhotoDB> realmResults = RealmManager.stackPhotoGetHashs();
 
-            if (!realmResults.isEmpty()){
-                Toast.makeText(menu_main.this, "Сервер не обработал: " + realmResults.size()+1 + " фоток.", Toast.LENGTH_SHORT);
+            if (!realmResults.isEmpty()) {
+                Toast.makeText(menu_main.this, "Сервер не обработал: " + realmResults.size() + 1 + " фоток.", Toast.LENGTH_SHORT);
 
                 String mod = "images_view";
                 String act = "list_image";
@@ -2355,7 +2369,7 @@ public class menu_main extends AppCompatActivity {
                 String date_to = Clock.tomorrow;
                 ArrayList<String> listHash = new ArrayList<>();
 
-                for (int i=0; i<realmResults.size(); i++){
+                for (int i = 0; i < realmResults.size(); i++) {
                     listHash.add(i, realmResults.get(i).getPhoto_hash());
                 }
 
@@ -2367,11 +2381,11 @@ public class menu_main extends AppCompatActivity {
 
                         try {
                             if (response.isSuccessful() && response.body() != null) {
-                                if (response.body().getState()){
+                                if (response.body().getState()) {
                                     if (response.body().getTotalPages() > 0) {
                                         List<PhotoHashList> list = response.body().getList();
                                         for (int i = 0; i < list.size(); i++) {
-                                            for (int j=0; j<realmResults.size(); j++){
+                                            for (int j = 0; j < realmResults.size(); j++) {
                                                 if (list.get(i).getHash().equals(realmResults.get(j).getPhoto_hash())) {
                                                     int finalJ = j;
                                                     RealmManager.INSTANCE.executeTransaction(realm -> {
@@ -2380,13 +2394,13 @@ public class menu_main extends AppCompatActivity {
                                                 }
                                             }
                                         }
-                                    }else {
+                                    } else {
                                         Toast.makeText(menu_main.this, "Фото для проверки есть, но сервером ещё не обработаны.", Toast.LENGTH_SHORT).show();
                                     }
-                                }else{
+                                } else {
                                 }
                             }
-                        }catch (Exception e){
+                        } catch (Exception e) {
                             Toast.makeText(menu_main.this, "Ошибка при проверке фото с сервера: " + e, Toast.LENGTH_SHORT).show();
                         }
 
@@ -2396,9 +2410,9 @@ public class menu_main extends AppCompatActivity {
                     public void onFailure(Call<PhotoHash> call, Throwable t) {
                     }
                 });
-            }else{
+            } else {
             }
-        }catch (Exception e){
+        } catch (Exception e) {
             Toast.makeText(menu_main.this, "Ошибка при проверке фото: " + e, Toast.LENGTH_SHORT).show();
         }
 
@@ -2407,24 +2421,37 @@ public class menu_main extends AppCompatActivity {
     /**
      * Функция которая просто получает кол-во строчек "счётчик локальный" фото готовых на выгрузку
      * с таблички stack_photo
-     * */
-    private int stackPhotoTableCount(){
+     */
+    private int stackPhotoTableCount() {
         return RealmManager.stackPhotoNotUploadedPhotosCount();
     }
 
 
     //Проверки для меню
-    /**Отвечает за общий цвет светофора*/
-    public void lightStatus(){
+
+    /**
+     * Отвечает за общий цвет светофора
+     */
+    public void lightStatus() {
         int lightColorInet = 0;
         int lightColorTrec = 0;
 
 //        if (lightsStatusInternet() == 1){lightColorInet = 1;} else if(lightsStatusInternet() > 1){lightColorInet = 2;}
-        if (lightsStatusServer() == 1){lightColorInet = 1;} else if(lightsStatusServer() > 1){lightColorInet = 2;}
+        if (lightsStatusServer() == 1) {
+            lightColorInet = 1;
+        } else if (lightsStatusServer() > 1) {
+            lightColorInet = 2;
+        }
 
 //        lightsStatusOnline();
 
-        if (lightsStatusProvider() == 1){lightColorTrec = 1;}else if(lightsStatusProvider() == 2){lightColorTrec = 2;} else if(lightsStatusProvider() > 2){lightColorTrec = 3;}
+        if (lightsStatusProvider() == 1) {
+            lightColorTrec = 1;
+        } else if (lightsStatusProvider() == 2) {
+            lightColorTrec = 2;
+        } else if (lightsStatusProvider() > 2) {
+            lightColorTrec = 3;
+        }
 //        if (lightsStatusMP() == 1){lightColorTrec = 1;} else if(lightsStatusMP() > 1){lightColorTrec = 3;}
 
         if (menu != null) {
@@ -2460,12 +2487,14 @@ public class menu_main extends AppCompatActivity {
         return 0;
     }*/
 
-    /**Отвечает за обновление статуса Сервера в меню светофора*/
-    public int lightsStatusServer(){
+    /**
+     * Отвечает за обновление статуса Сервера в меню светофора
+     */
+    public int lightsStatusServer() {
         if (menu != null) {
             MenuItem item = menu.findItem(R.id.check_sever);
 //            if (server.pingServer(this)) {
-            if ( server.serverIsOn()){
+            if (server.serverIsOn()) {
                 item.setIcon(ContextCompat.getDrawable(this, R.mipmap.light_green));
                 return 1;
             } else {
@@ -2494,8 +2523,10 @@ public class menu_main extends AppCompatActivity {
         return 0;
     }*/
 
-    /**Обобщённый цвет GPS & NET*/
-    public int lightsStatusProvider(){
+    /**
+     * Обобщённый цвет GPS & NET
+     */
+    public int lightsStatusProvider() {
         int res = 4;
         int statGPS = lightsStatusGPS();
         int statNET = lightsStatusNET();
@@ -2521,9 +2552,11 @@ public class menu_main extends AppCompatActivity {
         return res;
     }
 
-    /**Отвечает за обновление статуса Геоданных в меню светофора*/
+    /**
+     * Отвечает за обновление статуса Геоданных в меню светофора
+     */
     @SuppressLint("SimpleDateFormat")
-    public int lightsStatusGPS(){
+    public int lightsStatusGPS() {
         if (menu != null) {
             MenuItem item = menu.findItem(R.id.check_GPS);
             Coordinates();
@@ -2555,9 +2588,11 @@ public class menu_main extends AppCompatActivity {
         return 0;
     }
 
-    /**Отвечает за обновление статуса NET*/
+    /**
+     * Отвечает за обновление статуса NET
+     */
     @SuppressLint("SimpleDateFormat")
-    public int lightsStatusNET(){
+    public int lightsStatusNET() {
         if (menu != null) {
             MenuItem item = menu.findItem(R.id.check_NET);
             Coordinates();
@@ -2590,10 +2625,10 @@ public class menu_main extends AppCompatActivity {
     }
 
 
-
-
-    /**Предупреждение что фото выполняется при нарушении МП*/
-    private void alertMassage(String msg){
+    /**
+     * Предупреждение что фото выполняется при нарушении МП
+     */
+    private void alertMassage(String msg) {
         AlertDialog.Builder builder = new AlertDialog.Builder(this, R.style.MyDialogTheme);
         builder.setTitle("Не выбрано Посещение");
         builder.setCancelable(false);
@@ -2605,15 +2640,15 @@ public class menu_main extends AppCompatActivity {
         builder.create().show();
     }
 
-    /**Схема перевопроса
+    /**
+     * Схема перевопроса
      *
-     * @param title         Заголовок сообщения
-     * @param msg           Сообщение для основного окна
-     * @param trueButton    Текст позитивной кнопки
-     * @param falseButton   Текст негативной кнопки
-     *
-     * */
-    private void alertMassageMP(int mod, String title, String msg, String trueButton, String falseButton, String title2, String msg2, String trueButton2, String falseButton2){
+     * @param title       Заголовок сообщения
+     * @param msg         Сообщение для основного окна
+     * @param trueButton  Текст позитивной кнопки
+     * @param falseButton Текст негативной кнопки
+     */
+    private void alertMassageMP(int mod, String title, String msg, String trueButton, String falseButton, String title2, String msg2, String trueButton2, String falseButton2) {
         AlertDialog.Builder builder = new AlertDialog.Builder(this, R.style.MyDialogTheme);
         builder.setTitle(title);
         builder.setCancelable(false);
@@ -2621,32 +2656,30 @@ public class menu_main extends AppCompatActivity {
         if (mod == 1) {
             builder.setPositiveButton(Html.fromHtml(trueButton), (dialog, which) -> alertMassageMPPhoto(title2, msg2, trueButton2, falseButton2));
         }
-        builder.setNegativeButton(Html.fromHtml(falseButton), (dialog, which) -> {});
-        builder.create().show();
-    }
-
-
-    /**
-     * @param title2            Заголовок сообщения
-     * @param msg2              Сообщение для основного окна
-     * @param trueButton2       Текст позитивной кнопки
-     * @param falseButton2      Текст негативной кнопки   */
-    private void alertMassageMPPhoto(String title2, String msg2, String trueButton2, String falseButton2){
-        AlertDialog.Builder builder = new AlertDialog.Builder(this, R.style.MyDialogTheme);
-        builder.setTitle(title2);
-        builder.setCancelable(false);
-        builder.setMessage(msg2);
-        builder.setPositiveButton(Html.fromHtml(trueButton2), (dialog, which) -> {});
-        builder.setNegativeButton(Html.fromHtml(falseButton2), (dialog, which) -> {
-            dispatchTakePictureIntent(); // Метод который запускает камеру и создаёт файл фото.
+        builder.setNegativeButton(Html.fromHtml(falseButton), (dialog, which) -> {
         });
         builder.create().show();
     }
 
 
-
-
-
+    /**
+     * @param title2       Заголовок сообщения
+     * @param msg2         Сообщение для основного окна
+     * @param trueButton2  Текст позитивной кнопки
+     * @param falseButton2 Текст негативной кнопки
+     */
+    private void alertMassageMPPhoto(String title2, String msg2, String trueButton2, String falseButton2) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this, R.style.MyDialogTheme);
+        builder.setTitle(title2);
+        builder.setCancelable(false);
+        builder.setMessage(msg2);
+        builder.setPositiveButton(Html.fromHtml(trueButton2), (dialog, which) -> {
+        });
+        builder.setNegativeButton(Html.fromHtml(falseButton2), (dialog, which) -> {
+            dispatchTakePictureIntent(); // Метод который запускает камеру и создаёт файл фото.
+        });
+        builder.create().show();
+    }
 
 
     // ---------------------------------------------------------------------------------------------
@@ -2660,7 +2693,7 @@ public class menu_main extends AppCompatActivity {
             try {
                 String photoType = parent.getSelectedItem().toString();
                 photo_type = globals.getKeyForValue(photoType, mapSpinner);
-            }catch(Exception e){
+            } catch (Exception e) {
                 //Globals.alertDialogMsg("err: " + e, menu_main.this);
             }
         }
@@ -2670,11 +2703,11 @@ public class menu_main extends AppCompatActivity {
     }
 
 
-
     // ПОВОРОТ ФОТОК (проверка сделанная для самсунгов которые разворачивают фотографии)
+
     /**
      * Поворачивает фото в 0:0
-     * */
+     */
     private Bitmap checkRotationFromCamera(Bitmap bitmap, String pathToFile, int rotate) {
         Matrix matrix = new Matrix();
         matrix.postRotate(rotate);
@@ -2684,7 +2717,7 @@ public class menu_main extends AppCompatActivity {
 
     /**
      * Получает ориентацию фотографии.
-     * */
+     */
     public static int getImageOrientation(String imagePath) {
         int rotate = 0;
         try {
@@ -2707,7 +2740,9 @@ public class menu_main extends AppCompatActivity {
         return rotate;
     }
 
-    /**Перезаписывает повернутое фото в новый файл*/
+    /**
+     * Перезаписывает повернутое фото в новый файл
+     */
     private File resaveBitmap(File img, int rotation) { //help for fix landscape photos
         OutputStream outStream = null;
         File file = new File(img.toURI());
@@ -2725,17 +2760,18 @@ public class menu_main extends AppCompatActivity {
         return file;
     }
 
-    private boolean serverTimeControl(){
+    private boolean serverTimeControl() {
         long currentTime = System.currentTimeMillis();
-        if (RetrofitBuilder.getServerTime() != 0){
+        if (RetrofitBuilder.getServerTime() != 0) {
             if (currentTime - Globals.serverGetTime <= 3600) {
-                return (Globals.serverGetTime - RetrofitBuilder.getServerTime())/1000 > 20;
+                return (Globals.serverGetTime - RetrofitBuilder.getServerTime()) / 1000 > 20;
             } else {
                 return false;
             }
-        }else{return false;}
+        } else {
+            return false;
+        }
     }
-
 
 
 }//END OF CLASS..

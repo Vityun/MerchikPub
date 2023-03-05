@@ -246,6 +246,7 @@ public interface RetrofitInterface {
                                        @Part("dvi") RequestBody dvi,
                                        @Part("code_dad2") RequestBody codeDad2,
                                        @Part("gp") RequestBody gp,
+                                       @Part("tovar_id") RequestBody tovar_id,
                                        @Part MultipartBody.Part photo);
 
     @POST("mobile_app.php?")

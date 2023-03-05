@@ -38,6 +38,7 @@ public class MakePhoto {
     public static final int CAMERA_REQUEST_TAKE_PHOTO_TEST = 201;   // Тестовый реквест для фото
 
     public static final int CAMERA_REQUEST_TAR_COMMENT_PHOTO = 203; // ЗИР. Закладка переписки. Список комментариев. Возможность делать фото к коментарию.
+    public static final int CAMERA_REQUEST_PROMOTION_TOV_PHOTO = 204; // Опция Фото Акционного Товара + ценника
 
     public static File image;
     private static Context mContext;

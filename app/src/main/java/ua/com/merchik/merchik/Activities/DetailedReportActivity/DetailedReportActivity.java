@@ -1,11 +1,15 @@
 package ua.com.merchik.merchik.Activities.DetailedReportActivity;
 
 import static ua.com.merchik.merchik.Activities.TaskAndReclamations.TasksActivity.Tab3Fragment.TARCommentIndex;
+import static ua.com.merchik.merchik.MakePhoto.CAMERA_REQUEST_PROMOTION_TOV_PHOTO;
 import static ua.com.merchik.merchik.MakePhoto.CAMERA_REQUEST_TAR_COMMENT_PHOTO;
+import static ua.com.merchik.merchik.Options.Controls.OptionControlPhotoPromotion.tovarDBOPTION_CONTROL_PROMOTION_ID;
+import static ua.com.merchik.merchik.Options.Controls.OptionControlPhotoPromotion.wpDataDBOPTION_CONTROL_PROMOTION_ID;
 import static ua.com.merchik.merchik.PhotoReportActivity.exifPhotoData;
 import static ua.com.merchik.merchik.PhotoReportActivity.getImageOrientation;
 import static ua.com.merchik.merchik.PhotoReportActivity.resaveBitmap;
 import static ua.com.merchik.merchik.PhotoReportActivity.resizeImageFile;
+import static ua.com.merchik.merchik.data.RealmModels.StackPhotoDB.PHOTO_PROMOTION_TOV;
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
 import android.annotation.SuppressLint;
@@ -501,6 +505,13 @@ public class DetailedReportActivity extends toolbar_menus {
             }catch (Exception e){
                 Globals.writeToMLOG("ERROR", "DR/CAMERA_REQUEST_TAR_COMMENT_PHOTO", "Exception e: " + e);
             }
+        }else if (requestCode == CAMERA_REQUEST_PROMOTION_TOV_PHOTO && resultCode == RESULT_OK){
+            try {
+                savePhotoPromotionTov(new File(MakePhoto.openCameraPhotoUri), wpDataDBOPTION_CONTROL_PROMOTION_ID, tovarDBOPTION_CONTROL_PROMOTION_ID);
+                // Концептуально тут нужно эту фотку как-то обработать.
+            }catch (Exception e){
+                Globals.writeToMLOG("ERROR", "DR/CAMERA_REQUEST_PROMOTION_TOV_PHOTO", "Exception e: " + e);
+            }
         }
 
         try {
@@ -606,6 +617,53 @@ public class DetailedReportActivity extends toolbar_menus {
             return stackPhotoDB;
         } catch (Exception e) {
             Globals.writeToMLOG("ERROR", "TARActivity.onActivityResult.savePhoto", "Exception e: " + e);
+            return null;
+        }
+    }
+
+
+    /**
+     * 05.03.23.
+     * Сохранение фото Акционного товара + акции
+     * */
+    private StackPhotoDB savePhotoPromotionTov(File photoFile, WpDataDB wpDataDB, TovarDB tovarDB){
+        try {
+
+            Globals.writeToMLOG("INFO", "OptionControlPhotoPromotion/savePhotoPromotionTov", "wp_dad2: " + wpDataDB.getCode_dad2());
+            Globals.writeToMLOG("INFO", "OptionControlPhotoPromotion/savePhotoPromotionTov", "tov.id: " + tovarDB.getiD());
+
+            int id = RealmManager.stackPhotoGetLastId();
+            id++;
+            StackPhotoDB stackPhotoDB = new StackPhotoDB();
+            stackPhotoDB.setId(id);
+            stackPhotoDB.setDt(System.currentTimeMillis() / 1000);
+            stackPhotoDB.setTime_event(Clock.getHumanTime2(System.currentTimeMillis() / 1000));
+
+            stackPhotoDB.setAddr_id(wpDataDB.getAddr_id());
+            stackPhotoDB.setAddressTxt(wpDataDB.getAddr_txt());
+
+            stackPhotoDB.setClient_id(wpDataDB.getClient_id());
+            stackPhotoDB.setCustomerTxt(wpDataDB.getClient_txt());
+
+            stackPhotoDB.code_dad2 = wpDataDB.getCode_dad2();
+
+            stackPhotoDB.setUser_id(Globals.userId);
+            stackPhotoDB.setPhoto_type(PHOTO_PROMOTION_TOV);
+
+            stackPhotoDB.tovar_id = tovarDB.getiD();
+
+            stackPhotoDB.setDvi(1);
+
+            stackPhotoDB.setCreate_time(System.currentTimeMillis());
+
+            stackPhotoDB.setPhoto_hash(globals.getHashMD5FromFile2(photoFile, null));
+            stackPhotoDB.setPhoto_num(photoFile.getAbsolutePath());
+
+
+            RealmManager.stackPhotoSavePhoto(stackPhotoDB);
+            return stackPhotoDB;
+        } catch (Exception e) {
+            Globals.writeToMLOG("ERROR", "DRActivity.onActivityResult.savePhotoPromotionTov", "Exception e: " + e);
             return null;
         }
     }

@@ -8,58 +8,62 @@ public class StackPhotoDB extends RealmObject {
     public static final int PHOTO_TOV_LEFT = 4;   // Фото Остатков Товаров
     public static final int PHOTO_CART_WITH_GOODS = 10;   // Фото Тележки с Товаром
     public static final int PHOTO_SHOWCASE_BEFORE_START_WORK = 14;   // Фото витрины  до начала работ
+    public static final int PHOTO_PROMOTION_TOV = 28;   // Фото Акционного Товара + ценник
 
     @PrimaryKey
     private int id;
-    private String photoServerId;   // ID фотки на сервере. Должно устанавливаться после того как сервер говорит что по хэшу такое фото уже на нём есть.
+    public String photoServerId;   // ID фотки на сервере. Должно устанавливаться после того как сервер говорит что по хэшу такое фото уже на нём есть.
 
-    private Long dt;                    // дата
+    public Long dt;                    // дата
 
-    private Integer object_id;          //
-    private Integer user_id;
-    private Integer addr_id;
-    private String client_id;
-    private Integer theme_id;
-    private String time_event;          // Дата выполнения работ с Плана работ. Формат: YYYY-MM-DD
-    private long vpi;                   // Время последнего изменения
-    private long create_time;           // Время создания фото
-    private long upload_to_server;      // Время выгрузки НА сервер
-    private long get_on_server;         // Время когда фото обработано сервером
-    private long code_dad2;
-    private String photo_num;           // Путь к файлу и его название
-    private String photo_hash;          // Хэш фотографии
-    private Integer photo_type;         // Тип фото (из таблички типов фото)
+    public Integer object_id;          //
+    public Integer user_id;
+    public Integer addr_id;
+    public String client_id;
+    public Integer theme_id;
 
-    private String photo_size;         // Размер фото Full - большой, Small - thumb_
+    public String tovar_id;
 
-    private String photo_user_id;
-    private String photo_group_id;
-    private String doc_id;
-    private String comment;
-    private String gp;
-    private long upload_time;
-    private long upload_status;
-    private boolean status;
+    public String time_event;          // Дата выполнения работ с Плана работ. Формат: YYYY-MM-DD
+    public long vpi;                   // Время последнего изменения
+    public long create_time;           // Время создания фото
+    public long upload_to_server;      // Время выгрузки НА сервер
+    public long get_on_server;         // Время когда фото обработано сервером
+    public long code_dad2;
+    public String photo_num;           // Путь к файлу и его название
+    public String photo_hash;          // Хэш фотографии
+    public Integer photo_type;         // Тип фото (из таблички типов фото)
 
-    private Integer error;
-    private long errorTime;
-    private String errorTxt;
+    public String photo_size;         // Размер фото Full - большой, Small - thumb_
 
-    private String userTxt;
-    private String customerTxt;
-    private String addressTxt;
-    private String photo_typeTxt;
+    public String photo_user_id;
+    public String photo_group_id;
+    public String doc_id;
+    public String comment;
+    public String gp;
+    public long upload_time;
+    public long upload_status;
+    public boolean status;
 
-    private Integer approve;
-    private Integer dvi;            // ДВИ - для внутреннего использования
-    private String mark;            // Оценка данной фотки. Должно в перспективе быть в другой табличке, но пока тут. Выставлять должен руководитель.
-    private String premiya;         // Премия. НА данный момент мне не дали понять что именно и когда это устанавливается.
-    private String photoServerURL;  // URL этой фотки на сервере для того что б её можно было загрузить в приложение. По умолчанию будет писаться thumb_ для экономии места/трафика
+    public Integer error;
+    public long errorTime;
+    public String errorTxt;
 
-    private boolean dviUpload;
-    private boolean commentUpload;
-    private boolean markUpload;
-    private boolean premiyaUpload;
+    public String userTxt;
+    public String customerTxt;
+    public String addressTxt;
+    public String photo_typeTxt;
+
+    public Integer approve;
+    public Integer dvi;            // ДВИ - для внутреннего использования
+    public String mark;            // Оценка данной фотки. Должно в перспективе быть в другой табличке, но пока тут. Выставлять должен руководитель.
+    public String premiya;         // Премия. НА данный момент мне не дали понять что именно и когда это устанавливается.
+    public String photoServerURL;  // URL этой фотки на сервере для того что б её можно было загрузить в приложение. По умолчанию будет писаться thumb_ для экономии места/трафика
+
+    public boolean dviUpload;
+    public boolean commentUpload;
+    public boolean markUpload;
+    public boolean premiyaUpload;
 
     public StackPhotoDB() {
     }

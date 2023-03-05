@@ -1021,6 +1021,7 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
         String dvi = "";
         String code_dad2 = "";
         String gp = "";
+        String tovar_id = "";
 
         // Распаковка данных с БД
         if (photoDB.getClient_id() != null) {
@@ -1063,6 +1064,11 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
             dvi = String.valueOf(photoDB.getDvi());
         }
 
+
+        if (photoDB.tovar_id != null && !photoDB.tovar_id.equals("")){
+            tovar_id = photoDB.tovar_id;
+        }
+
         try {
             code_dad2 = String.valueOf(photoDB.getCode_dad2());
         } catch (Exception e) {
@@ -1089,6 +1095,7 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
         RequestBody dvi2 = RequestBody.create(MediaType.parse("text/plain"), dvi);
         RequestBody codeDad2 = RequestBody.create(MediaType.parse("text/plain"), code_dad2);
         RequestBody gp2 = RequestBody.create(MediaType.parse("text/plain"), gp);
+        RequestBody tov2 = RequestBody.create(MediaType.parse("text/plain"), tovar_id);
 
         File file = new File(photoDB.getPhoto_num());
 
@@ -1134,7 +1141,7 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
 
         if (mode == 1) {
             retrofit2.Call<JsonObject> call = RetrofitBuilder.getRetrofitInterface()
-                    .SEND_PHOTO_2_BODY(mod2, act2, client_id2, addr_id2, date2, img_type_id2, photo_user_id2, client_tovar_group2, doc_num2, theme_id2, comment2, dvi2, codeDad2, gp2, photo);
+                    .SEND_PHOTO_2_BODY(mod2, act2, client_id2, addr_id2, date2, img_type_id2, photo_user_id2, client_tovar_group2, doc_num2, theme_id2, comment2, dvi2, codeDad2, gp2, tov2, photo);
 //            call.cancel();
 
             try {

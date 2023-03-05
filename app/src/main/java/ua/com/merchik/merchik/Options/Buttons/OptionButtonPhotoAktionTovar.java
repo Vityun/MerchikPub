@@ -1,18 +1,16 @@
 package ua.com.merchik.merchik.Options.Buttons;
 
-import android.app.Activity;
 import android.content.Context;
 import android.util.Log;
 
 import ua.com.merchik.merchik.Globals;
-import ua.com.merchik.merchik.MakePhoto;
+import ua.com.merchik.merchik.Options.Controls.OptionControlPhotoPromotion;
 import ua.com.merchik.merchik.Options.OptionControl;
 import ua.com.merchik.merchik.Options.Options;
 import ua.com.merchik.merchik.WorkPlan;
 import ua.com.merchik.merchik.data.OptionMassageType;
 import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
-import ua.com.merchik.merchik.data.WPDataObj;
 
 public class OptionButtonPhotoAktionTovar<T> extends OptionControl {
     public int OPTION_BUTTON_AKTION_TOVAR_ID = 157277;
@@ -40,11 +38,14 @@ public class OptionButtonPhotoAktionTovar<T> extends OptionControl {
     private void executeOption() {
         new Globals().fixMP();// Фиксация Местоположения в таблице ЛогМп
         try {
-            WPDataObj wpDataObj = workPlan.getKPS(wpDataDB.getId());
-            wpDataObj.setPhotoType("28");
+//            WPDataObj wpDataObj = workPlan.getKPS(wpDataDB.getId());
+//            wpDataObj.setPhotoType("28");
+//
+//            MakePhoto makePhoto = new MakePhoto();
+//            makePhoto.pressedMakePhotoOldStyle((Activity) context, wpDataObj, wpDataDB);
 
-            MakePhoto makePhoto = new MakePhoto();
-            makePhoto.pressedMakePhotoOldStyle((Activity) context, wpDataObj, wpDataDB);
+            new OptionControlPhotoPromotion<>(context, document, optionDB, msgType, nnkMode).showOptionMassage();
+
         } catch (Exception e) {
             Globals.writeToMLOG("ERROR", "OptionButtonPhotoAktionTovar/executeOption/Exception", "Exception e: " + e);
         }
