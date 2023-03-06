@@ -116,7 +116,7 @@ public class ModImagesViewList {
 
     @SerializedName("code_dad2")
     @Expose
-    public long codeDad2;
+    public String codeDad2;
 
     public String getID() {
         return iD;

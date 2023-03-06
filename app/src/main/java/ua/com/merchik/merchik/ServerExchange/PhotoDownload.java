@@ -381,6 +381,20 @@ public class PhotoDownload {
         Globals.writeToMLOG("INFO", getClass().getName() + "getPhotoFromServer", "convertedObject: " + convertedObject);
 
 
+/*        retrofit2.Call<JsonObject> callTest = RetrofitBuilder.getRetrofitInterface().TEST_JSON_UPLOAD(contentType, convertedObject);
+        callTest.enqueue(new Callback<JsonObject>() {
+            @Override
+            public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
+                Log.e("test", "response: " + response.body());
+            }
+
+            @Override
+            public void onFailure(Call<JsonObject> call, Throwable t) {
+
+            }
+        });*/
+
+
         retrofit2.Call<ModImagesView> call = RetrofitBuilder.getRetrofitInterface().MOD_IMAGES_VIEW_CALL(contentType, convertedObject);
         call.enqueue(new retrofit2.Callback<ModImagesView>() {
             @Override
@@ -434,7 +448,7 @@ public class PhotoDownload {
                                 stackPhotoDB.setId(id[0]);
                                 stackPhotoDB.setObject_id(1);   // Добавлено что б эти фотки не пытались выгружаться обычным обменом
 
-                                stackPhotoDB.code_dad2 = item.codeDad2;
+                                stackPhotoDB.code_dad2 = Long.parseLong(item.codeDad2);
 
                                 stackPhotoDB.setTime_event(Clock.getHumanTime3(item.getDt()));
                                 stackPhotoDB.setCreate_time(System.currentTimeMillis());// реквизиты что б фотки не выгружались обратно на сервер
