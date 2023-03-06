@@ -434,6 +434,8 @@ public class PhotoDownload {
                                 stackPhotoDB.setId(id[0]);
                                 stackPhotoDB.setObject_id(1);   // Добавлено что б эти фотки не пытались выгружаться обычным обменом
 
+                                stackPhotoDB.code_dad2 = item.codeDad2;
+
                                 stackPhotoDB.setTime_event(Clock.getHumanTime3(item.getDt()));
                                 stackPhotoDB.setCreate_time(System.currentTimeMillis());// реквизиты что б фотки не выгружались обратно на сервер
                                 stackPhotoDB.setUpload_to_server(System.currentTimeMillis());// реквизиты что б фотки не выгружались обратно на сервер

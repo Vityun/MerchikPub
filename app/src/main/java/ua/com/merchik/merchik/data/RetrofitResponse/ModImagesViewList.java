@@ -114,6 +114,10 @@ public class ModImagesViewList {
     @Expose
     private String photoUserIdTxt;
 
+    @SerializedName("code_dad2")
+    @Expose
+    public long codeDad2;
+
     public String getID() {
         return iD;
     }
