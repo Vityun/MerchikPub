@@ -395,6 +395,10 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
 
                 if (ostatok != null && !ostatok.equals("0") && (isOld.equals(OldDateOstatok.NEW) || isOld.equals(OldDateOstatok.OLD))) {
                     balance.setText(text);
+                }else if (ostatok == null){
+
+                }else {
+                    balance.setText(text);
                 }
 
 
