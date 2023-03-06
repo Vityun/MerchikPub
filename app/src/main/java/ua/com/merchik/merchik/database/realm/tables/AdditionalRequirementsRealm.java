@@ -2,6 +2,8 @@ package ua.com.merchik.merchik.database.realm.tables;
 
 import static ua.com.merchik.merchik.database.realm.RealmManager.INSTANCE;
 
+import android.util.Log;
+
 import java.util.List;
 
 import io.realm.RealmResults;
@@ -129,6 +131,11 @@ public class AdditionalRequirementsRealm {
 
         AddressDB addressDB = AddressRealm.getAddressById(addressId);
 
+        RealmResults debug = INSTANCE.where(AdditionalRequirementsDB.class)
+                .equalTo("clientId", clientId)
+                .findAll();
+        Log.d("debug", "debug: " + debug);
+
 
         RealmResults realmResults = INSTANCE.where(AdditionalRequirementsDB.class)
                 .equalTo("clientId", clientId)
@@ -164,55 +171,7 @@ public class AdditionalRequirementsRealm {
                     .equalTo("themeId", String.valueOf(themeId))
                     .findAll();
         }
-
-        //  09.01.2023.
-        //  Не понятно почему я это делал изначально, но сейчас оно мешает нормальной работе приложения.
-        //  Обратить внимание на то что это как-то может повлиять на работоспособность доп. требований
-/*        try {
-            if (DetailedReportActivity.additionalRequirementsFilter) {
-                List<Integer> listIds = new ArrayList<>();
-//                List<String> debugData = new ArrayList<>();
-                List<ReportPrepareDB> listRP = ReportPrepareRealm.getReportPrepareByDad2(dad2);
-                List<AdditionalRequirementsDB> listAR = realmResults;
-                for (AdditionalRequirementsDB item : listAR) {
-                    boolean exist = false;
-                    for (ReportPrepareDB itemRP : listRP) {
-                        if (item.getTovarId().equals("0")){
-                            exist = true;
-                            break;
-                        }
-                        if (item.getTovarId().equals(itemRP.getTovarId())) {
-                            exist = true;
-                            break;
-                        }
-                    }
-                    if (exist) {
-                        listIds.add(item.getId());
-                    }else {
-//                        debugData.add(item.getTovarId());
-                    }
-                }
-//                Log.e("getData3", "listIds: " + listIds);
-//                Log.e("getData3", "debugData: " + debugData);
-
-                Integer[] ids = new Integer[listIds.size()];
-                for (int i = 0; i < listIds.size(); i++) {
-                    ids[i] = listIds.get(i);
-                }
-                realmResults = realmResults.where()
-                        .in("id", ids)
-                        .findAll();
-                Globals.writeToMLOG("INFO", "AdditionalRequirementsDB/getData3", "Отображаем RP список: " + realmResults.size());
-            } else {
-                // ничего не делаем
-                Globals.writeToMLOG("INFO", "AdditionalRequirementsDB/getData3", "Отображаем весь список: " + realmResults.size());
-            }
-        } catch (Exception e) {
-            Globals.writeToMLOG("ERROR", "AdditionalRequirementsDB/getData3", "Exception e: " + e);
-        }*/
-
-
-        return realmResults;
+                return realmResults;
     }
 
 
