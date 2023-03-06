@@ -15,13 +15,17 @@
         android:layout_marginTop="16dp"
         android:layout_marginEnd="16dp"
         android:layout_marginRight="16dp"
-        android:text="data"
+        android:layout_marginBottom="16dp"
+        android:fadeScrollbars="false"
         android:maxLines="15"
-        android:scrollbars = "vertical"
+        android:scrollbars="vertical"
+        android:text="data"
+        app:layout_constraintBottom_toTopOf="@+id/textView61"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/TARPhoto" />
+        app:layout_constraintTop_toBottomOf="@+id/TARPhoto"
+        app:layout_constraintVertical_bias="0.0" />
 
     <ImageView
         android:id="@+id/TARPhoto"
@@ -59,6 +63,7 @@
         android:layout_marginLeft="16dp"
         android:text="Оценка задачи: "
         android:textStyle="bold"
+        android:visibility="gone"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/text_data" />
 
@@ -68,10 +73,11 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
         android:layout_marginLeft="16dp"
+        android:layout_marginTop="16dp"
         android:text="Оценка объективности: "
         android:textStyle="bold"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textView60" />
+        app:layout_constraintTop_toBottomOf="@+id/text_data" />
 
     <RatingBar
         android:id="@+id/ratingBar2"
@@ -82,6 +88,7 @@
         android:layout_marginRight="16dp"
         android:isIndicator="false"
         android:numStars="9"
+        android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="@+id/textView60"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
@@ -111,9 +118,12 @@
         android:layout_marginStart="16dp"
         android:layout_marginLeft="16dp"
         android:layout_marginTop="16dp"
-        android:text="TextView"
+        android:layout_marginBottom="16dp"
         android:clickable="true"
+        android:text="TextView"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textView61" />
+        app:layout_constraintTop_toBottomOf="@+id/textView61"
+        app:layout_constraintVertical_bias="0.0" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

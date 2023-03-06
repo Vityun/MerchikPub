@@ -1,5 +1,8 @@
 package ua.com.merchik.merchik.Activities.TaskAndReclamations.TasksActivity;
 
+import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
+import static ua.com.merchik.merchik.menu_main.decodeSampledBitmapFromResource;
+
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.net.Uri;
@@ -46,9 +49,6 @@ import ua.com.merchik.merchik.database.realm.tables.WpDataRealm;
 import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.dialogs.DialogPhotoTovar;
 import ua.com.merchik.merchik.toolbar_menus;
-
-import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
-import static ua.com.merchik.merchik.menu_main.decodeSampledBitmapFromResource;
 
 public class Tab1Fragment extends Fragment {
 
@@ -155,6 +155,44 @@ public class Tab1Fragment extends Fragment {
         }
 
 
+
+        try {
+            int tp = data.tp;
+            int state = data.state;
+
+            CharSequence status = Html.fromHtml("<b>Статус: </b>" + TasksAndReclamationsRealm.getStatusTxt(tp, state) + "<br>");
+            stringData.append(status);
+        } catch (Exception e) {
+        }
+
+
+        try {
+            String money;
+            String title;
+
+            title = "<b>Сумма штрафа: </b>";
+            if (data.state == 1 || data.state == 3){
+                money = "0";
+            }else{
+                money = "<font color='red'> -" + data.sumPenalty + " (виновнику)</font>";
+            }
+
+
+            CharSequence penalty = Html.fromHtml(title + money + "<br>");
+            stringData.append(penalty);
+
+            if (data.zamenaUserId != null && data.zamenaUserId != 0) {
+                String titlePr = "<b>Сумма премии: </b>";
+                String moneyPr = "+" + data.sumPenalty + " (замене)";
+
+                CharSequence premiya = Html.fromHtml(titlePr + moneyPr + "<br>");
+                stringData.append(premiya);
+            }
+        } catch (Exception e) {
+            Log.d("test", "test" + e);
+        }
+
+
         try {
             CharSequence address = Html.fromHtml("<b>Адрес: </b>" + AddressRealm.getAddressById(data.addr).getNm() + "<br>");
             stringData.append(address);
@@ -225,42 +263,6 @@ public class Tab1Fragment extends Fragment {
         } catch (Exception e) {
         }
 
-
-        try {
-            int tp = data.tp;
-            int state = data.state;
-
-            CharSequence status = Html.fromHtml("<b>Статус: </b>" + TasksAndReclamationsRealm.getStatusTxt(tp, state) + "<br>");
-            stringData.append(status);
-        } catch (Exception e) {
-        }
-
-
-        try {
-            String money;
-            String title;
-
-            title = "<b>Сумма штрафа: </b>";
-            if (data.state == 1 || data.state == 3){
-                money = "0";
-            }else{
-                money = "<font color='red'> -" + data.sumPenalty + " (виновнику)</font>";
-            }
-
-
-            CharSequence penalty = Html.fromHtml(title + money + "<br>");
-            stringData.append(penalty);
-
-            if (data.zamenaUserId != null && data.zamenaUserId != 0) {
-                String titlePr = "<b>Сумма премии: </b>";
-                String moneyPr = "+" + data.sumPenalty + " (замене)";
-
-                CharSequence premiya = Html.fromHtml(titlePr + moneyPr + "<br>");
-                stringData.append(premiya);
-            }
-        } catch (Exception e) {
-            Log.d("test", "test" + e);
-        }
 
         try {
 //            CharSequence qwe = Html.fromHtml("<b>----------</b>" + "" + "<br>");
