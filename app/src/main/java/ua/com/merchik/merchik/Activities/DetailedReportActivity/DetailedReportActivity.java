@@ -169,7 +169,7 @@ public class DetailedReportActivity extends toolbar_menus {
         tarTabTitle.append("ЗИР");
         if (tarList != null && tarList.size() > 0) {
             tarTabTitle.append("(");
-            if (tasksAndReclamationsSDBList != null && tasksAndReclamationsSDBList.size() > 0){
+            if (tasksAndReclamationsSDBList != null && tasksAndReclamationsSDBList.size() > 0) {
                 tarTabTitle.append("<font color='red'>").append(tasksAndReclamationsSDBList.size()).append("</font>").append("/");
             }
             tarTabTitle.append("<font color='red'>").append(tarList.size()).append("</font>");
@@ -338,7 +338,7 @@ public class DetailedReportActivity extends toolbar_menus {
 
     private void setTab() {
         List<TovarDB> dataTovar = RealmManager.getTovarListFromReportPrepareByDad2(wpDataDB.getCode_dad2());
-        if (dataTovar != null){
+        if (dataTovar != null) {
             List<TovarDB> dataTovarDownloadList = RealmManager.getTovarListPhotoToDownload(dataTovar, "small");
             TablesLoadingUnloading tablesLoadingUnloading = new TablesLoadingUnloading();
             tablesLoadingUnloading.getTovarImg(dataTovar, "small");
@@ -403,7 +403,7 @@ public class DetailedReportActivity extends toolbar_menus {
     @SuppressLint("MissingSuperCall")
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode,resultCode,data);
+        super.onActivityResult(requestCode, resultCode, data);
 
         Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult", "requestCode / resultCode / data: " + requestCode + "/" + resultCode + "/" + data);
 
@@ -502,14 +502,14 @@ public class DetailedReportActivity extends toolbar_menus {
                 MakePhoto.openCameraPhotoUri = null;
 
                 fragmentHome.secondFrag.setPhotoComment(stackPhotoDB.getId(), TARCommentIndex);
-            }catch (Exception e){
+            } catch (Exception e) {
                 Globals.writeToMLOG("ERROR", "DR/CAMERA_REQUEST_TAR_COMMENT_PHOTO", "Exception e: " + e);
             }
-        }else if (requestCode == CAMERA_REQUEST_PROMOTION_TOV_PHOTO && resultCode == RESULT_OK){
+        } else if (requestCode == CAMERA_REQUEST_PROMOTION_TOV_PHOTO && resultCode == RESULT_OK) {
             try {
                 savePhotoPromotionTov(new File(MakePhoto.openCameraPhotoUri), wpDataDBOPTION_CONTROL_PROMOTION_ID, tovarDBOPTION_CONTROL_PROMOTION_ID);
                 // Концептуально тут нужно эту фотку как-то обработать.
-            }catch (Exception e){
+            } catch (Exception e) {
                 Globals.writeToMLOG("ERROR", "DR/CAMERA_REQUEST_PROMOTION_TOV_PHOTO", "Exception e: " + e);
             }
         }
@@ -625,8 +625,8 @@ public class DetailedReportActivity extends toolbar_menus {
     /**
      * 05.03.23.
      * Сохранение фото Акционного товара + акции
-     * */
-    private StackPhotoDB savePhotoPromotionTov(File photoFile, WpDataDB wpDataDB, TovarDB tovarDB){
+     */
+    private StackPhotoDB savePhotoPromotionTov(File photoFile, WpDataDB wpDataDB, TovarDB tovarDB) {
         try {
 
             Globals.writeToMLOG("INFO", "OptionControlPhotoPromotion/savePhotoPromotionTov", "wp_dad2: " + wpDataDB.getCode_dad2());
@@ -636,7 +636,7 @@ public class DetailedReportActivity extends toolbar_menus {
             id++;
             StackPhotoDB stackPhotoDB = new StackPhotoDB();
             stackPhotoDB.setId(id);
-            stackPhotoDB.setDt(System.currentTimeMillis() / 1000);
+            stackPhotoDB.setDt(wpDataDB.getDt().getTime() / 1000);
             stackPhotoDB.setTime_event(Clock.getHumanTime2(System.currentTimeMillis() / 1000));
 
             stackPhotoDB.setAddr_id(wpDataDB.getAddr_id());
