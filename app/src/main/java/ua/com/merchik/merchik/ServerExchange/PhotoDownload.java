@@ -463,6 +463,7 @@ public class PhotoDownload {
                                 stackPhotoDB.setAddr_id(Integer.valueOf(item.getAddrId()));
                                 stackPhotoDB.setClient_id(item.getClientId());
                                 stackPhotoDB.setPhoto_type(Integer.valueOf(item.getPhotoTp()));
+                                stackPhotoDB.photo_hash = item.getHash();
 
                                 stackPhotoDB.setDvi(Integer.valueOf(item.getDvi()));
 
