@@ -1,5 +1,8 @@
 package ua.com.merchik.merchik.Options.Controls;
 
+import static ua.com.merchik.merchik.database.realm.RealmManager.INSTANCE;
+import static ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsRealm.AdditionalRequirementsModENUM.HIDE_FOR_USER;
+
 import android.content.Context;
 import android.os.Build;
 
@@ -28,8 +31,6 @@ import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsMarkRealm;
 import ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsRealm;
 import ua.com.merchik.merchik.database.realm.tables.CustomerRealm;
-
-import static ua.com.merchik.merchik.database.realm.RealmManager.INSTANCE;
 
 public class OptionControlAdditionalRequirementsMark<T> extends OptionControl {
     public int OPTION_CONTROL_ADD_COMMENT_ID = 138341;
@@ -82,7 +83,7 @@ public class OptionControlAdditionalRequirementsMark<T> extends OptionControl {
             long dateTo = Clock.getDatePeriodLong(dateDocumentLong, +4) / 1000;     // Дата документа +3 дня
 
             // Получаем Доп.Требования.
-            RealmResults<AdditionalRequirementsDB> realmResults = AdditionalRequirementsRealm.getData3(document);
+            RealmResults<AdditionalRequirementsDB> realmResults = AdditionalRequirementsRealm.getData3(document, HIDE_FOR_USER);
             List<AdditionalRequirementsDB> data = RealmManager.INSTANCE.copyFromRealm(realmResults);
 
 //            // DEBUG DATA-------------

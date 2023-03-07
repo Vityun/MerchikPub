@@ -1,5 +1,7 @@
 package ua.com.merchik.merchik.Activities.DetailedReportActivity;
 
+import static ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsRealm.AdditionalRequirementsModENUM.DEFAULT;
+
 import android.annotation.SuppressLint;
 import android.app.ProgressDialog;
 import android.content.Context;
@@ -153,9 +155,9 @@ public class DetailedReportTovarsFrag extends Fragment {
                 // TODO OH SHIT
                 List<AdditionalRequirementsDB> data;
                 if (wpDataDB != null) {
-                    data = AdditionalRequirementsRealm.getData3(wpDataDB);
+                    data = AdditionalRequirementsRealm.getData3(wpDataDB, DEFAULT);
                 } else {
-                    data = AdditionalRequirementsRealm.getData3(tasksAndReclamationsSDB);
+                    data = AdditionalRequirementsRealm.getData3(tasksAndReclamationsSDB, DEFAULT);
                 }
 
                 Log.e("АКЦИЯ_ТОВАРА", "data: " + data);

@@ -1,5 +1,6 @@
 package ua.com.merchik.merchik.Activities.DetailedReportActivity;
 
+import static ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsRealm.AdditionalRequirementsModENUM.HIDE_FOR_USER;
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
 import android.content.Context;
@@ -400,7 +401,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
 
                     case 138339:    // Доп Требования
                         // Устанавливаю в счётчик доп. требований их количество
-                        textInteger.setText("" + AdditionalRequirementsRealm.getData3(dataDB).size());
+                        textInteger.setText("" + AdditionalRequirementsRealm.getData3(dataDB, HIDE_FOR_USER).size());
                         break;
 
                     case 138340:    // Доп Требования

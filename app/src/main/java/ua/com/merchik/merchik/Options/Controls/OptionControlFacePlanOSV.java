@@ -1,5 +1,9 @@
 package ua.com.merchik.merchik.Options.Controls;
 
+import static ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity.detailedReportRPList;
+import static ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity.detailedReportTovList;
+import static ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsRealm.AdditionalRequirementsModENUM.HIDE_FOR_USER;
+
 import android.content.Context;
 import android.os.Build;
 
@@ -16,9 +20,6 @@ import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsRealm;
 import ua.com.merchik.merchik.database.realm.tables.ReportPrepareRealm;
-
-import static ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity.detailedReportRPList;
-import static ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity.detailedReportTovList;
 
 class OptionControlFacePlanOSV<T> extends OptionControl {
 
@@ -72,7 +73,7 @@ class OptionControlFacePlanOSV<T> extends OptionControl {
 
         //3.0. получим список товаров с особым вниманием (хранится в Доп.Требованиях)
         //3.1. выделим сперва список товаров
-        List<AdditionalRequirementsDB> additionalRequirementsDBS = AdditionalRequirementsRealm.getData3(document);
+        List<AdditionalRequirementsDB> additionalRequirementsDBS = AdditionalRequirementsRealm.getData3(document, HIDE_FOR_USER);
 
 
         //4.0. проверим, по каким из товаров с ОСВ отсутствуют на витрине?

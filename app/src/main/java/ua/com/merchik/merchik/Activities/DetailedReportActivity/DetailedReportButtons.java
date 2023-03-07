@@ -1,5 +1,6 @@
 package ua.com.merchik.merchik.Activities.DetailedReportActivity;
 
+import static ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsRealm.AdditionalRequirementsModENUM.HIDE_FOR_USER;
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
 import android.app.Activity;
@@ -186,7 +187,7 @@ public class DetailedReportButtons {
 //                List<AdditionalRequirementsDB> data = AdditionalRequirementsRealm.getData2(String.valueOf(wpDataDB.getClient_id()), String.valueOf(wpDataDB.getAddr_id()));
 //                Log.e("AdditionalRequirements", "data.size(): " + data.size());
 
-                List<AdditionalRequirementsDB> data = AdditionalRequirementsRealm.getData3(wpDataDB);
+                List<AdditionalRequirementsDB> data = AdditionalRequirementsRealm.getData3(wpDataDB, HIDE_FOR_USER);
                 Log.e("AdditionalRequirements", "data2.size(): " + data.size());
 
 

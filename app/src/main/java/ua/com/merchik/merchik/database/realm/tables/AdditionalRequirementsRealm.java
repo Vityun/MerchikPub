@@ -2,8 +2,6 @@ package ua.com.merchik.merchik.database.realm.tables;
 
 import static ua.com.merchik.merchik.database.realm.RealmManager.INSTANCE;
 
-import android.util.Log;
-
 import java.util.List;
 
 import io.realm.RealmResults;
@@ -108,8 +106,17 @@ public class AdditionalRequirementsRealm {
         return res;
     }
 
+    /**
+     * 07.03.23.
+     * Режим работы функции "getData3". В зависимости от енума - данные будут или скрываться или нет.
+     */
+    public enum AdditionalRequirementsModENUM {
+        DEFAULT,            // Штатный режим, отображаю Всё. Такое как было ДО написания этого безобразия. Нужно для Акций и тп..
+        HIDE_FOR_USER,      // Скрывать для пользователя. Нужно для Кнопки Доп. Требований. что б не показывался мерчандайзерам всякий мусор.
+        HIDE_FOR_CLIENT     // Скрывать для клиента. Добавил просто потому что в БД есть такое поле и может в будущем пригодиться.
+    }
 
-    public static <T> RealmResults<AdditionalRequirementsDB> getData3(T data) {
+    public static <T> RealmResults<AdditionalRequirementsDB> getData3(T data, AdditionalRequirementsModENUM mod) {
         int themeId, addressId;
         String clientId;
         long dad2;
@@ -131,16 +138,31 @@ public class AdditionalRequirementsRealm {
 
         AddressDB addressDB = AddressRealm.getAddressById(addressId);
 
-        RealmResults debug = INSTANCE.where(AdditionalRequirementsDB.class)
-                .equalTo("clientId", clientId)
-                .findAll();
-        Log.d("debug", "debug: " + debug);
-
 
         RealmResults realmResults = INSTANCE.where(AdditionalRequirementsDB.class)
                 .equalTo("clientId", clientId)
                 .equalTo("not_approve", "0")
                 .findAll();
+
+        switch (mod){
+            case HIDE_FOR_USER:
+                realmResults = realmResults.where()
+                        .equalTo("hideUser", "0")
+                        .findAll();
+                break;
+
+            case HIDE_FOR_CLIENT:
+                realmResults = realmResults.where()
+                        .equalTo("hideClient", "0")
+                        .findAll();
+                break;
+
+            case DEFAULT:
+                realmResults = realmResults.where()
+                        .equalTo("hideUser", "1")
+                        .findAll();
+                break;
+        }
 
 
         realmResults = realmResults.where()
@@ -171,7 +193,7 @@ public class AdditionalRequirementsRealm {
                     .equalTo("themeId", String.valueOf(themeId))
                     .findAll();
         }
-                return realmResults;
+        return realmResults;
     }
 
 

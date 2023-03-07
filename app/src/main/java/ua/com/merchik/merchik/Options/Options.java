@@ -17,6 +17,7 @@ import static ua.com.merchik.merchik.Globals.OptionControlName.PRICE;
 import static ua.com.merchik.merchik.Globals.OptionControlName.UP;
 import static ua.com.merchik.merchik.data.OptionMassageType.Type.DIALOG;
 import static ua.com.merchik.merchik.data.OptionMassageType.Type.STRING;
+import static ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsRealm.AdditionalRequirementsModENUM.HIDE_FOR_USER;
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
 import android.app.Activity;
@@ -1089,7 +1090,7 @@ public class Options {
     }
 
     private <T> void option138339(Context context, T dataDB, OptionsDB option, OptionMassageType type, NNKMode mode) {
-        List<AdditionalRequirementsDB> data = AdditionalRequirementsRealm.getData3(dataDB);
+        List<AdditionalRequirementsDB> data = AdditionalRequirementsRealm.getData3(dataDB, HIDE_FOR_USER);
 
         DialogAdditionalRequirements dialogAdditionalRequirements = new DialogAdditionalRequirements(context);
 
@@ -1747,7 +1748,7 @@ public class Options {
             long dateTo = Clock.getDatePeriodLong(date, +3) / 1000;     // Дата документа +3 дня
 
             // Получаем Доп.Требования.
-            RealmResults<AdditionalRequirementsDB> realmResults = AdditionalRequirementsRealm.getData3(dataDB);
+            RealmResults<AdditionalRequirementsDB> realmResults = AdditionalRequirementsRealm.getData3(dataDB, HIDE_FOR_USER);
             List<AdditionalRequirementsDB> data = RealmManager.INSTANCE.copyFromRealm(realmResults);
 
             // Получаем Оценки этих Доп. требований.
