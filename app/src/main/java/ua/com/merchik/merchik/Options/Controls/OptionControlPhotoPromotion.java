@@ -131,20 +131,20 @@ public class OptionControlPhotoPromotion<T> extends OptionControl {
                     if (currentTovPhoto != null) {
                         OSV = 1;
                         totalOSV++;
-                        errMsgType1.append(createLinkedString(item, true)).append("\n");
+                        errMsgType1.append(createLinkedString(item, currentTovPhoto)).append("\n");
                     } else {
                         err++;
                         errType1Cnt++;
                         OSV = 1;
                         totalOSV++;
-                        errMsgType1.append(createLinkedString(item, false)).append("\n");
+                        errMsgType1.append(createLinkedString(item, null)).append("\n");
                     }
                 } else {
                     err++;
                     errType1Cnt++;
                     OSV = 1;
                     totalOSV++;
-                    errMsgType1.append(createLinkedString(item, false)).append("\n");
+                    errMsgType1.append(createLinkedString(item, null)).append("\n");
                 }
             }
 
@@ -216,9 +216,9 @@ public class OptionControlPhotoPromotion<T> extends OptionControl {
      * 05.03.23.
      * Делает кликабельным Товар, что б при клике можно было б сделать фото.
      *
-     * @param isThereAPhoto: true - если товар ЕСТЬ, false - Если Товара НЕТ
+     * @param stackPhotoDB: Фото из БД. Нужно для того что б правильно отрисовывать цвета товарам.
      */
-    private SpannableString createLinkedString(ReportPrepareDB item, boolean isThereAPhoto) {
+    private SpannableString createLinkedString(ReportPrepareDB item, StackPhotoDB stackPhotoDB) {
         TovarDB tov = RealmManager.INSTANCE.copyFromRealm(TovarRealm.getById(item.getTovarId()));
         String msg = String.format("(%s) %s (%s)", item.getTovarId(), tov.getNm(), tov.getWeight());
         SpannableString res = new SpannableString(msg);
@@ -239,11 +239,16 @@ public class OptionControlPhotoPromotion<T> extends OptionControl {
 
             @Override
             public void updateDrawState(TextPaint ds) {
-//                super.updateDrawState(ds);
-                if (isThereAPhoto){
-                    ds.setColor(Color.GREEN);
+                if (stackPhotoDB != null){
+                    if (stackPhotoDB.get_on_server != 0){
+                        ds.setColor(Color.GREEN);
+                    }else if (stackPhotoDB.create_time != 0 && stackPhotoDB.upload_to_server != 0){
+                        ds.setColor(Color.YELLOW);
+                    }else {
+                        ds.setColor(Color.RED);
+                    }
                 }else {
-                    ds.setColor(Color.RED);
+                    ds.setColor(Color.GRAY);
                 }
                 ds.setUnderlineText(false);
             }
