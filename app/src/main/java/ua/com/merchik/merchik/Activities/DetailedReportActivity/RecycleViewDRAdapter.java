@@ -39,6 +39,7 @@ import ua.com.merchik.merchik.data.Database.Room.SiteObjectsSDB;
 import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
 import ua.com.merchik.merchik.data.OptionMassageType;
 import ua.com.merchik.merchik.data.OptionsButtons;
+import ua.com.merchik.merchik.data.RealmModels.AdditionalRequirementsDB;
 import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.database.realm.RealmManager;
@@ -809,6 +810,16 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
             min = "3";
 
             if (option.getOptionId().equals("141360")) min = "1";
+            try {
+                if (option.getOptionId().equals("157277")){
+                    List<AdditionalRequirementsDB> ad = AdditionalRequirementsRealm.getDocumentAdditionalRequirements(dataDB, true, 157278, null, null, null);
+                    if (ad != null && ad.size() > 0){
+                        min = String.valueOf(ad.size());
+                    }
+                }
+            }catch (Exception e){
+
+            }
         }
 
         int maxPhotos = Integer.parseInt(min);
