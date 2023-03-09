@@ -57,7 +57,11 @@ public class OptionControlPhotoPromotion<T> extends OptionControl {
 
         getDocumentVar();
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            executeOption();
+            try {
+                executeOption();
+            }catch (Exception e){
+                Globals.writeToMLOG("INFO", "OptionControlPhotoPromotion/executeOption", "Exception e: " + e);
+            }
         }
     }
 
@@ -250,7 +254,7 @@ public class OptionControlPhotoPromotion<T> extends OptionControl {
                 }else {
                     ds.setColor(Color.GRAY);
                 }
-                ds.setUnderlineText(false);
+                ds.setUnderlineText(true);
             }
         };
 
