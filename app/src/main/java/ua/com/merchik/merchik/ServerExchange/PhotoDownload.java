@@ -16,6 +16,7 @@ import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
+import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
@@ -449,7 +450,8 @@ public class PhotoDownload {
 
                                 stackPhotoDB.code_dad2 = Long.parseLong(item.codeDad2);
 
-                                stackPhotoDB.setTime_event(String.valueOf(item.getDt()/1000));
+                                stackPhotoDB.dt = item.getDt();
+                                stackPhotoDB.setTime_event(Clock.getHumanTime3(item.getDt()));
                                 stackPhotoDB.setCreate_time(System.currentTimeMillis());// реквизиты что б фотки не выгружались обратно на сервер
                                 stackPhotoDB.setUpload_to_server(System.currentTimeMillis());// реквизиты что б фотки не выгружались обратно на сервер
                                 stackPhotoDB.setGet_on_server(System.currentTimeMillis());// реквизиты что б фотки не выгружались обратно на сервер
