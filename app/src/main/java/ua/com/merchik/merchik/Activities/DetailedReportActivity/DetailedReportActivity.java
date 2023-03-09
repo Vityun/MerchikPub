@@ -637,7 +637,8 @@ public class DetailedReportActivity extends toolbar_menus {
             StackPhotoDB stackPhotoDB = new StackPhotoDB();
             stackPhotoDB.setId(id);
             stackPhotoDB.setDt(wpDataDB.getDt().getTime() / 1000);
-            stackPhotoDB.setTime_event(Clock.getHumanTime2(System.currentTimeMillis() / 1000));
+//            stackPhotoDB.setTime_event(Clock.getHumanTime2(System.currentTimeMillis() / 1000));
+            stackPhotoDB.setTime_event(Clock.getHumanTime3(wpDataDB.getDt().getTime() / 1000));
 
             stackPhotoDB.setAddr_id(wpDataDB.getAddr_id());
             stackPhotoDB.setAddressTxt(wpDataDB.getAddr_txt());
