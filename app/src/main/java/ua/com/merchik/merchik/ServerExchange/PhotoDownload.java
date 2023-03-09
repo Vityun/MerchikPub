@@ -452,7 +452,7 @@ public class PhotoDownload {
 
                                 stackPhotoDB.dt = item.getDt();
                                 stackPhotoDB.setTime_event(Clock.getHumanTime3(item.getDt()));
-                                stackPhotoDB.setCreate_time(System.currentTimeMillis());// реквизиты что б фотки не выгружались обратно на сервер
+                                stackPhotoDB.setCreate_time(item.getDt()*1000);// реквизиты что б фотки не выгружались обратно на сервер
                                 stackPhotoDB.setUpload_to_server(System.currentTimeMillis());// реквизиты что б фотки не выгружались обратно на сервер
                                 stackPhotoDB.setGet_on_server(System.currentTimeMillis());// реквизиты что б фотки не выгружались обратно на сервер
 
