@@ -2341,26 +2341,26 @@ public class Options {
                 // Должен добавить в 'temps' элемент + записывать в опцию её символ
                 // todo должен написать функцию.
                 if (!containsName(temps, temp.getOrderField())) {
-                    if (temp.getOptionControlName().equals(AKCIYA_ID) && promotion) {
-                        // ничего не делаю
-                    } else {
+//                    if (temp.getOptionControlName().equals(AKCIYA_ID) && promotion) {
+//                        // ничего не делаю
+//                    } else {
                         Globals.Triple uploaded = checkUploadedTPL(reportPrepareTovar, getTPLData(temp, reportPrepareTovar));
                         tplRequired.append(setOptionTPLColor(temp.getOptionShort(), true, uploaded));
                         temps.add(temp);
-                    }
+//                    }
                 }
             }
 
             if (ids.contains(optionControlId)) {
                 TovarOptions temp = listTovOpt.get(listTovOpt.indexOf(new TovarOptions(optionControlId)));
                 if (!containsName(temps, temp.getOrderField())) {
-                    if (temp.getOptionControlName().equals(AKCIYA_ID) && promotion) {
-                        // ничего не делаю
-                    } else {
+//                    if (temp.getOptionControlName().equals(AKCIYA_ID) && promotion) {
+//                        // ничего не делаю
+//                    } else {
                         Globals.Triple uploaded = checkUploadedTPL(reportPrepareTovar, getTPLData(temp, reportPrepareTovar));
                         tplRequired.append(setOptionTPLColor(temp.getOptionShort(), true, uploaded));
                         temps.add(temp);
-                    }
+//                    }
                 }
             }
         }
