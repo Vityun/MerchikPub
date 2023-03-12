@@ -93,7 +93,7 @@ public class OptionControlCheckTovarUp<T> extends OptionControl {
         // Получаем Фото Товара с Тележки
         List<StackPhotoDB> stackPhoto = StackPhotoRealm.getPhoto(
                 Clock.getDatePeriodLong(documentDate, -1),
-                Clock.getDatePeriodLong(documentDate, 1),
+                Clock.getDatePeriodLong(documentDate, 3),
                 null,
                 null,
                 null,
@@ -106,7 +106,7 @@ public class OptionControlCheckTovarUp<T> extends OptionControl {
             if (tpId == 8196) {
                 stackPhoto = StackPhotoRealm.getPhoto(
                         Clock.getDatePeriodLong(documentDate, -1),
-                        Clock.getDatePeriodLong(documentDate, 1),
+                        Clock.getDatePeriodLong(documentDate, 3),
                         null,
                         null,
                         null,
