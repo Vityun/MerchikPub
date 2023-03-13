@@ -1470,10 +1470,33 @@ public class RealmManager {
                 .findFirst();
     }
 
+    public static List<SiteObjectsDB> getLesson(Integer[] ids) {
+        RealmResults<SiteObjectsDB> res = INSTANCE.where(SiteObjectsDB.class)
+                .in("id", ids)
+                .findAll();
+        if (res != null) {
+            return RealmManager.INSTANCE.copyFromRealm(res);
+        } else {
+            return null;
+        }
+    }
+
     public static SiteHintsDB getVideoLesson(int id) {
         return INSTANCE.where(SiteHintsDB.class)
                 .equalTo("id", id)
                 .findFirst();
+    }
+
+    public static List<SiteHintsDB> getVideoLesson(Integer[] ids) {
+        RealmResults<SiteHintsDB> res = INSTANCE.where(SiteHintsDB.class)
+                .in("id", ids)
+                .findAll();
+
+        if (res != null) {
+            return RealmManager.INSTANCE.copyFromRealm(res);
+        } else {
+            return null;
+        }
     }
 
 

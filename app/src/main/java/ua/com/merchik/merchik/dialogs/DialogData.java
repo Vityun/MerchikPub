@@ -40,6 +40,7 @@ import java.io.File;
 import java.lang.reflect.Field;
 import java.util.Calendar;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import ua.com.merchik.merchik.Globals;
@@ -328,10 +329,59 @@ public class DialogData {
                 return true;
             });
         } catch (Exception e) {
-
+            Globals.writeToMLOG("ERROR", "DialogData/setVideoLesson", "Exception e: " + e);
         }
+    }
+
+    public void setVideoLesson(Context context, boolean visualise, Integer[] objectIds, DialogClickListener clickListener) {
+        try {
+            if (visualise) {
+                imgBtnVideoLesson.setVisibility(View.VISIBLE);
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                    imgBtnVideoLesson.getBackground().setTint(Color.RED);
+                } else {
+                    imgBtnVideoLesson.setBackgroundColor(Color.RED);
+                }
+                imgBtnVideoLesson.setColorFilter(Color.WHITE);
+            }
+
+            List<SiteObjectsDB> siteObjects = RealmManager.getLesson(objectIds);
+
+            List<SiteHintsDB> data = null;
+            try {
+                if (siteObjects != null) {
+                    Integer[] siteObjectIds = new Integer[siteObjects.size()];
+                    for (int i = 0; i < siteObjects.size(); i++) {
+                        int lessId = Integer.parseInt(siteObjects.get(i).getLessonId());
+                        if (lessId != 0) siteObjectIds[i] = lessId;
+                    }
+                    data = RealmManager.getVideoLesson(siteObjectIds);
+                }
+            } catch (Exception e) {
+                Log.e("setVideoLesson", "Exception e: " + e);
+            }
+
+            List<SiteHintsDB> finalData = data;
+            imgBtnVideoLesson.setOnClickListener(v -> {
+                if (finalData != null) {
+                    Log.e("setVideoLesson", "click1");
+                    if (clickListener == null) {
+                        DialogVideo dialogVideo = new DialogVideo(context);
+                        dialogVideo.setTitle("Перелік відео уроків");
+//                        dialogVideo.setVideos();
+                        dialogVideo.setClose(dialogVideo::dismiss);
+                        dialogVideo.show();
+                    }
+                } else {
+                    Log.e("setVideoLesson", "click4");
+                    Toast.makeText(context, "Для этой странички Видеоурок ещё не создан.", Toast.LENGTH_LONG).show();
+                }
 
 
+            });
+        } catch (Exception e) {
+            Globals.writeToMLOG("ERROR", "DialogData/setVideoLesson", "Exception e: " + e);
+        }
     }
 
     public void setImgBtnCall(Context context) {
@@ -985,7 +1035,6 @@ public class DialogData {
         drawable = context.getResources().getDrawable(R.drawable.shape_rounded_corner);
         layoutDialog.setBackground(drawable);
     }
-
 
 
 //    public void setDialogColorBack(){

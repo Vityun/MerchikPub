@@ -78,7 +78,6 @@ public class DialogVideo extends DialogData {
 
     @SuppressLint("SetJavaScriptEnabled")
     public void setVideo(String url){
-
         WebView displayYoutubeVideo = (WebView) dialog.findViewById(R.id.youtube);
         displayYoutubeVideo.setWebChromeClient(new WebChromeClient());
 
@@ -99,8 +98,9 @@ public class DialogVideo extends DialogData {
         displayYoutubeVideo.getSettings().setLayoutAlgorithm(WebSettings.LayoutAlgorithm.SINGLE_COLUMN);
 //        displayYoutubeVideo.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
         displayYoutubeVideo.loadData(url, "text/html", "utf-8");
+    }
 
-
+    public void setVideos(String url){
 
     }
 
