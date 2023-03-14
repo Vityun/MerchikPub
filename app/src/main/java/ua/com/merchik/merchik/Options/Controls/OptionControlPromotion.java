@@ -229,7 +229,7 @@ public class OptionControlPromotion<T> extends OptionControl {
             @Override
             public void updateDrawState(TextPaint ds) {
                 super.updateDrawState(ds);
-                ds.setUnderlineText(false);
+                ds.setUnderlineText(true);
             }
         };
         res.setSpan(clickableSpan, 0, msg.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);

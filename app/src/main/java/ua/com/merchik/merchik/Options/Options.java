@@ -779,6 +779,7 @@ public class Options {
                 }
                 return optionControlCheckingReasonOutOfStockOSV.isBlockOption() ? 1 : 0;
 
+            case 157242:
             case 157241:
                 OptionControlCheckingReasonOutOfStock<?> optionControlCheckingReasonOutOfStock = new OptionControlCheckingReasonOutOfStock<>(context, dataDB, option, type, mode);
 //                if (optionControlCheckingReasonOutOfStock.isBlockOption()){

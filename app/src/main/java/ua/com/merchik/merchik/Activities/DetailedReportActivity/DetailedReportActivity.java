@@ -653,7 +653,7 @@ public class DetailedReportActivity extends toolbar_menus {
 
             stackPhotoDB.tovar_id = tovarDB.getiD();
 
-            stackPhotoDB.setDvi(1);
+//            stackPhotoDB.setDvi(1);
 
             stackPhotoDB.setCreate_time(System.currentTimeMillis());
 

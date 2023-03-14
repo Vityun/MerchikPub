@@ -1,5 +1,7 @@
 package ua.com.merchik.merchik;
 
+import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
+
 import android.content.Context;
 import android.content.Intent;
 import android.text.SpannableString;
@@ -33,8 +35,6 @@ import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.ThemeRealm;
 import ua.com.merchik.merchik.database.realm.tables.WpDataRealm;
 import ua.com.merchik.merchik.dialogs.DialogData;
-
-import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
 public class RecycleViewWPAdapter extends RecyclerView.Adapter<RecycleViewWPAdapter.ViewHolder> implements Filterable {
 
@@ -105,8 +105,11 @@ public class RecycleViewWPAdapter extends RecyclerView.Adapter<RecycleViewWPAdap
                 otchetId = wpDataDB.getDoc_num_1c_id();
             }
 
-            // Расчёт Факт/Снижение/План
-            String t_price = String.format("%s/+%s/%s", 0.00, 0, wpDataDB.getCash_ispolnitel());
+//            // Расчёт Факт/Снижение/План
+//            String t_price = String.format("%s/+%s/%s", 0.00, 0, wpDataDB.getCash_ispolnitel());
+
+            // Факт/снижение
+            String t_price = String.format("%s/-%s/%s",(int)wpDataDB.getCash_ispolnitel(), (int)wpDataDB.cash_penalty, (int)wpDataDB.cash_fact);
 
             SpannableString string = new SpannableString(t_price);
             string.setSpan(new UnderlineSpan(), 0, string.length(), 0);
@@ -114,7 +117,8 @@ public class RecycleViewWPAdapter extends RecyclerView.Adapter<RecycleViewWPAdap
             addr.setText(wpDataDB.getAddr_txt());
             cust.setText(wpDataDB.getClient_txt());
             merc.setText(wpDataDB.getUser_txt());
-            date.setText(Clock.getHumanTimeYYYYMMDD(wpDataDB.getDt().getTime()/1000) + " " + Clock.getHumanTimeOpt(wpDataDB.getDt_start() * 1000));
+//            date.setText(Clock.getHumanTimeYYYYMMDD(wpDataDB.getDt().getTime()/1000) + " " + Clock.getHumanTimeOpt(wpDataDB.getDt_start() * 1000));
+            date.setText(Clock.getHumanTimeSecPattern(wpDataDB.getDt().getTime()/1000, "dd-MM-yy") + " " + Clock.getHumanTimeOpt(wpDataDB.getDt_start() * 1000));
             price.setText(string);
             price.setMovementMethod(LinkMovementMethod.getInstance());
 

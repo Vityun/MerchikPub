@@ -154,8 +154,8 @@ public class DetailedReportHomeFrag extends Fragment {
         result.add(themeData(wpDataDB));
         result.add(statusData(wpDataDB));
         result.add(new KeyValueData(Html.fromHtml("<b>Премия (план):</b>"), "" + wpDataDB.getCash_ispolnitel(), null));
+        result.add(new KeyValueData(Html.fromHtml("<b>Снижение (по опциям):</b>"), Html.fromHtml("<u>" + wpDataDB.cash_penalty + "</u>"), this::openConductDialog));
         result.add(new KeyValueData(Html.fromHtml("<b>Премия (факт):</b>"), "" + wpDataDB.cash_fact, null));
-        result.add(new KeyValueData(Html.fromHtml("<b>Снижение:</b>"), Html.fromHtml("<u>" + wpDataDB.cash_penalty + "</u>"), this::openConductDialog));
         result.add(new KeyValueData(Html.fromHtml("<b>Продолж. работ (по документу):</b>"), "", null));
         result.add(new KeyValueData(Html.fromHtml("<b>Продолж. работ (средняя):</b>"), "", null));
         result.add(new KeyValueData(Html.fromHtml("<b>Стоимость часа:</b>"), "", null));
