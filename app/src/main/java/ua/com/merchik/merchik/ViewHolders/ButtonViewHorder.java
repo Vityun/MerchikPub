@@ -9,6 +9,7 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import ua.com.merchik.merchik.R;
+import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteHintsDB;
 import ua.com.merchik.merchik.data.TestViewHolderData;
 
 public class ButtonViewHorder extends RecyclerView.ViewHolder {
@@ -26,6 +27,14 @@ public class ButtonViewHorder extends RecyclerView.ViewHolder {
         button.setText(data.msg);
         button.setOnClickListener(v->{
             Toast.makeText(context, "История ещё в разработке", Toast.LENGTH_SHORT).show();
+        });
+    }
+
+    public void bind(SiteHintsDB data, Clicks.click click) {
+        String s = data.getNm().replace("&quot;", "\"");
+        button.setText(s);
+        button.setOnClickListener(v->{
+            click.click(data);
         });
     }
 }

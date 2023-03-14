@@ -1481,6 +1481,11 @@ public class RealmManager {
         }
     }
 
+    public static List<SiteHintsDB> getAllVideoLessons() {
+        return INSTANCE.copyFromRealm(INSTANCE.where(SiteHintsDB.class)
+                .findAll());
+    }
+
     public static SiteHintsDB getVideoLesson(int id) {
         return INSTANCE.where(SiteHintsDB.class)
                 .equalTo("id", id)

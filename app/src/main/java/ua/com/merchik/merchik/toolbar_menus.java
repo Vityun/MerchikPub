@@ -213,7 +213,8 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                 dialog.setText(finalStr);
                 dialog.setMerchikIco(context);
                 dialog.setImgBtnCall(context);
-                dialog.setVideoLesson(context, true, videoLesson, null);
+//                dialog.setVideoLesson(context, true, videoLesson, null);
+                dialog.setVideoLesson(context, true, new Integer[]{1, 2}, null);
                 dialog.show();
             });
         } catch (Exception e) {

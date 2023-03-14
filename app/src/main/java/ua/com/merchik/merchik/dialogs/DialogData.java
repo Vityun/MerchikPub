@@ -368,7 +368,7 @@ public class DialogData {
                     if (clickListener == null) {
                         DialogVideo dialogVideo = new DialogVideo(context);
                         dialogVideo.setTitle("Перелік відео уроків");
-//                        dialogVideo.setVideos();
+                        dialogVideo.setVideos(finalData);
                         dialogVideo.setClose(dialogVideo::dismiss);
                         dialogVideo.show();
                     }
