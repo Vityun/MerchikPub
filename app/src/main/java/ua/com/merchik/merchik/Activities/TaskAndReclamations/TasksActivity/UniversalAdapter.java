@@ -117,7 +117,7 @@ public class UniversalAdapter extends RecyclerView.Adapter<UniversalAdapter.View
                         } else if (background instanceof ColorDrawable) {
                             ((ColorDrawable) background).setColor(ContextCompat.getColor(mContext, R.color.yellow));
                         }
-                    }else {
+                    } else {
                         if (background instanceof ShapeDrawable) {
                             ((ShapeDrawable) background).getPaint().setColor(ContextCompat.getColor(mContext, R.color.white));
                         } else if (background instanceof GradientDrawable) {
@@ -238,9 +238,25 @@ public class UniversalAdapter extends RecyclerView.Adapter<UniversalAdapter.View
                 SpannableStringBuilder line5 = new SpannableStringBuilder();
                 try {
 
-                    line5.append(Html.fromHtml("<font color='red'>" + data.sumPenalty + "</font>"));
-                    line5.append("/");
-                    line5.append(Html.fromHtml("<font color='red'>" + data.sumPremiya + "</font>"));
+                    if (data.tp == 1) {
+                        line5.append(Html.fromHtml("<font color='red'>" + data.sumPenalty + "</font>"));
+                        line5.append("/");
+                        if (data.state == 0) {
+                            line5.append(Html.fromHtml("<font color='red'>" + data.sumPremiya + "</font>"));
+                        } else {
+                            line5.append(Html.fromHtml("<font color='red'>" + 0 + "</font>"));
+                        }
+                    } else {
+                        if (data.state == 0 || data.state == 2) {
+                            line5.append(Html.fromHtml("<font color='red'>" + data.sumPenalty + "</font>"));
+                        } else {
+                            line5.append(Html.fromHtml("<font color='red'>" + 0 + "</font>"));
+                        }
+                        line5.append("/");
+                        line5.append(Html.fromHtml("<font color='red'>" + data.sumPremiya + "</font>"));
+                    }
+
+
                     line5.append(" ");
 
                 } catch (Exception e) {
