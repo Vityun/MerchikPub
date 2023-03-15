@@ -497,7 +497,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                     stringBuilder.append(barcode);    // Штрихкод товара
                     stringBuilder.append(articul);    // Артикул товара
 
-                    if (isOld.equals(OldDateOstatok.OLD)) {
+                    if (isOld.equals(OldDateOstatok.OLD) || isOld.equals(OldDateOstatok.ELDEST)) {
                         CharSequence date = Html.fromHtml("<strong>Дата остатков: </strong><font color='#e6e6e6'>" + finalBalanceDate + "</font><br>");
                         stringBuilder.append(date);     // Дата остатков
 
@@ -512,10 +512,6 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                         stringBuilder.append(ostatokChar);       // Остаток
                         stringBuilder.append(Html.fromHtml("Данные об остатке <b><font color='#00A800'>актуальны</font></b>"));
                     }
-
-
-
-
 
                     // Додаємо пробільчики, для того щоб не поряд була вся інфа
                     stringBuilder.append("\n\n\n");
@@ -745,17 +741,23 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
         // TODO работа с датой. проверяю устарелость.
         private OldDateOstatok isOldOstatokDate(Long date) {
             // Если данных нет - считаю их устаревшими
+            // 1667772000000
+            // 1676298698480
             if (date == null) {
                 return OldDateOstatok.ELDEST;
             }
 
+            long dateMill = date * 1000;
+
             // Если дата остатков больше -30 дней -- значит они уже устарели
-            if (date * 1000 <= (System.currentTimeMillis() - 2592000000L)) {
+            long ostatok30day = System.currentTimeMillis() - 2592000000L;
+            if (dateMill <= ostatok30day) {
                 return OldDateOstatok.ELDEST;
             }
 
             // Если дата остатков больше -14 дней -- значит они ещё актуальны, иначе - нет.
-            if (date * 1000 <= (System.currentTimeMillis() - 1209600000L)) {
+            long ostatok14day = System.currentTimeMillis() - 1209600000L;
+            if (dateMill <= ostatok14day) {
                 return OldDateOstatok.OLD;
             }
 
