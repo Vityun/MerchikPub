@@ -105,10 +105,10 @@ public class RecycleViewWPAdapter extends RecyclerView.Adapter<RecycleViewWPAdap
                 otchetId = wpDataDB.getDoc_num_1c_id();
             }
 
-//            // Расчёт Факт/Снижение/План
+//            // План/Снижение/Расчёт Факт
 //            String t_price = String.format("%s/+%s/%s", 0.00, 0, wpDataDB.getCash_ispolnitel());
 
-            // Факт/снижение
+            // План/Снижение/Расчёт Факт
             String t_price = String.format("%s/-%s/%s",(int)wpDataDB.getCash_ispolnitel(), (int)wpDataDB.cash_penalty, (int)wpDataDB.cash_fact);
 
             SpannableString string = new SpannableString(t_price);
@@ -154,8 +154,8 @@ public class RecycleViewWPAdapter extends RecyclerView.Adapter<RecycleViewWPAdap
         private void setPriceInfo(Context context, WpDataDB wp) {
             StringBuilder stringBuilder = new StringBuilder();
             stringBuilder.append("План: ").append(wp.getCash_ispolnitel()).append("\n");
-            stringBuilder.append("Снижение: ").append("0").append("\n");
-            stringBuilder.append("Факт: ").append(wp.getCash_ispolnitel()).append("\n");
+            stringBuilder.append("Снижение: ").append(wp.cash_penalty).append("\n");
+            stringBuilder.append("Факт: ").append(wp.cash_fact).append("\n");
 
             DialogData dialog = new DialogData(context);
             dialog.setTitle("Расчёт");
