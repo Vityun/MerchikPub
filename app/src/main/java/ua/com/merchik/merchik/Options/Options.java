@@ -527,10 +527,32 @@ public class Options {
 
 
     /**
+     * 15.03.23
+     * В нашем случае этот ENUM будет работать как режим для "Проведения документа". На момент
+     * написания должно быть 2 режима в которых должна работать эта функция.
+     * В первом случае - классическое нажатие на кнопку "Провести", во втором случае это нажатие на
+     * снижение в отчёте исполнителя на Главной закладке.
+     */
+    public enum ConductMode {
+        DEFAULT_CONDUCT,        // Первый режим в котором отрабатывает обычный клик по кнопке провести.
+        SALARY_CUT              // Клик на Снижение. Отображает только снижающие опции. НЕ начинает проведение.
+    }
+
+    /**
      * 23.07.21
      * "Нажатие" на "Провести"
+     * <p>
+     * Перепроверка всех опций. В зависимости от их статуса (блокирующая или нет) отображает список
+     * пользователям (блок) опций и опций со (~снижением)
+     * <p>
+     * 15.03.23
+     * Начал использовать и на закладке "Главная" в отчёте исполнителя. Там, при клика на число
+     * снижения, люди должны увидеть какие именно опции им делают снижения. Блокирующие опции
+     * отображать не надо (да и особо нет смысла) + не надо отправлять запрос на проведение.
+     * Для реализации этого функционала я введу режим специальный и в зависимости от него буду
+     * настраивать опцию.
      */
-    public void conduct(Context context, WpDataDB wp, List<OptionsDB> options, int optCount, Clicks.click click) {
+    public void conduct(Context context, WpDataDB wp, List<OptionsDB> options, ConductMode mode, Clicks.click click) {
         try {
             int register = 0;
 
@@ -568,8 +590,6 @@ public class Options {
                         StringBuffer msg = new StringBuffer();
                         optionsSum.append(createLinkedString(dialog,
                                 msg.append("* ").append(item.getOptionControlTxt())/*.append(" (").append(counter2Text(wp)).append(")").append("\n")*/, item, click)).append(" ").append(Html.fromHtml("<font color=red>(" + counter2Text(wp) + "грн.)</font>")).append("\n");
-                        ;
-
                         optionSumRes += wp.getCash_zakaz() * 0.08;
                     }
                 }
@@ -579,68 +599,88 @@ public class Options {
 
             Log.e("conduct", "optionNotConduct: " + optionNotConduct);
 
-            if (optionNotConduct.size() > 0) {
-//        if (register > 0) {
 
+            switch (mode) {
+                case SALARY_CUT:
+                    dialog.setDialogIco();
+                    dialog.setTitle("Вы получаете снижения по следущим опциям: ");
 
-                // Не все опции(действия) выполнены
-                // Не выполнены:
+                    SpannableStringBuilder salaryCutText = new SpannableStringBuilder();
+                    salaryCutText.append(optionsSum);
+                    salaryCutText.append("\n\nВы можете ещё получить: " + "~")
+                            .append(String.format("%.2f", optionSumRes))
+                            .append("грн, если выполните опции выше.");
 
-                dialog.setDialogIco();
-                dialog.setTitle("Не все опции(действия) выполнены.");
+                    dialog.setText(salaryCutText, () -> {
+                    });
 
+                    break;
 
-                SpannableStringBuilder resStr = new SpannableStringBuilder();
-                resStr.append("Не выполнены: \n\n");
-                for (OptionsDB item : optionNotConduct) {
-                    Log.e("optionNotConduct", "------------------------------START----------------------------------");
-                    Log.e("optionNotConduct", "OptionsDB item.getOptionTxt(): " + item.getOptionTxt());
-                    Log.e("optionNotConduct", "OptionsDB item.getOptionId(): " + item.getOptionId());
-                    Log.e("optionNotConduct", "OptionsDB item.getOptionControlId(): " + item.getOptionControlId());
-                    StringBuffer msg = new StringBuffer();
-                    resStr.append(createLinkedString(dialog, msg.append("* ").append(item.getOptionControlTxt()), item, click)).append(" ").append(Html.fromHtml("<font color=red>(блок)</font>")).append("\n");
-                    Log.e("optionNotConduct", "------------------------------END----------------------------------");
-                }
-                resStr.append(optionsSum);
-                resStr.append("\n\nУстраните указанные ошибки и повторите попытку проведения." + "\n\nВы можете ещё получить: " + "~")
-                        .append(String.format("%.2f", optionSumRes)).append("грн, если выполните опции выше.");
+                case DEFAULT_CONDUCT:
+                    if (optionNotConduct.size() > 0) {
+                        // Не все опции(действия) выполнены
+                        // Не выполнены:
+                        dialog.setDialogIco();
+                        dialog.setTitle("Не все опции(действия) выполнены.");
 
-                dialog.setText(resStr, () -> {
-                });
-                dialog.setClose(dialog::dismiss);
-                dialog.show();
+                        SpannableStringBuilder resStr = new SpannableStringBuilder();
+                        resStr.append("Не выполнены: \n\n");
+                        for (OptionsDB item : optionNotConduct) {
+                            Log.e("optionNotConduct", "------------------------------START----------------------------------");
+                            Log.e("optionNotConduct", "OptionsDB item.getOptionTxt(): " + item.getOptionTxt());
+                            Log.e("optionNotConduct", "OptionsDB item.getOptionId(): " + item.getOptionId());
+                            Log.e("optionNotConduct", "OptionsDB item.getOptionControlId(): " + item.getOptionControlId());
+                            StringBuffer msg = new StringBuffer();
+                            resStr.append(createLinkedString(dialog, msg.append("* ").append(item.getOptionControlTxt()), item, click)).append(" ").append(Html.fromHtml("<font color=red>(блок)</font>")).append("\n");
+                            Log.e("optionNotConduct", "------------------------------END----------------------------------");
+                        }
+                        resStr.append(optionsSum);
+                        resStr.append("\n\nУстраните указанные ошибки и повторите попытку проведения." + "\n\nВы можете ещё получить: " + "~")
+                                .append(String.format("%.2f", optionSumRes)).append("грн, если выполните опции выше.");
 
-                // Устраните указанные ошибки и повторите попытку проведения
-            } else {
-                Toast.makeText(context, "Запрос на проведение создан", Toast.LENGTH_SHORT).show();
+                        dialog.setText(resStr, () -> {
+                        });
 
-                DialogData dialogData = new DialogData(context);
-                dialogData.setClose(dialogData::dismiss);
-                Exchange.conductingOnServerWpData(wp, wp.getCode_dad2(), new Click() {
-                    @Override
-                    public <T> void onSuccess(T data) {
-                        dialogData.setTitle("Команда на проведення звіту. ");
-                        dialogData.setText("" + data);
-                        dialogData.show();
-                    }
+                    } else {
+                        dialog.setTitle("Блокирующие опции не обнаружены.");
+                        dialog.setText("Создаю запрос на проведение документа.");
 
-                    @Override
-                    public void onFailure(String error) {
-                        dialogData.setTitle("Проведення звіту...");
-                        dialogData.setText("Зараз передати команду на проведення звіту на сервер не вдалося. Але ця команда збережена на вашому пристрої та буде передана на сервер під час наступного обміну данними.\n\n Відповідь серверу: " + error);
-                        dialogData.show();
+                        Toast.makeText(context, "Запрос на проведение создан", Toast.LENGTH_SHORT).show();
+                        DialogData dialogData = new DialogData(context);
+                        dialogData.setClose(dialogData::dismiss);
+                        Exchange.conductingOnServerWpData(wp, wp.getCode_dad2(), new Click() {
+                            @Override
+                            public <T> void onSuccess(T data) {
+                                dialogData.setTitle("Команда на проведення звіту. ");
+                                dialogData.setText("" + data);
+                                dialogData.show();
+                            }
 
-                        RealmManager.INSTANCE.executeTransaction(realm -> {
-                            if (wp != null) {
-                                wp.startUpdate = true;
-                                wp.setSetStatus(1);
-                                wp.setDt_update(System.currentTimeMillis() / 1000);
-                                realm.insertOrUpdate(wp);
+                            @Override
+                            public void onFailure(String error) {
+                                dialogData.setTitle("Проведення звіту...");
+                                dialogData.setText("Зараз передати команду на проведення звіту на сервер не вдалося. Але ця команда збережена на вашому пристрої та буде передана на сервер під час наступного обміну данними.\n\n Відповідь серверу: " + error);
+                                dialogData.show();
+
+                                RealmManager.INSTANCE.executeTransaction(realm -> {
+                                    if (wp != null) {
+                                        wp.startUpdate = true;
+                                        wp.setSetStatus(1);
+                                        wp.setDt_update(System.currentTimeMillis() / 1000);
+                                        realm.insertOrUpdate(wp);
+                                    }
+                                });
                             }
                         });
                     }
-                });
+                    break;
+
+                default:
+                    break;
             }
+
+            dialog.setClose(dialog::dismiss);
+            dialog.show();
 
         } catch (Exception e) {
             Globals.writeToMLOG("ERROR", "Options/conduct/catch", "Exception e: " + e);
@@ -2345,9 +2385,9 @@ public class Options {
 //                    if (temp.getOptionControlName().equals(AKCIYA_ID) && promotion) {
 //                        // ничего не делаю
 //                    } else {
-                        Globals.Triple uploaded = checkUploadedTPL(reportPrepareTovar, getTPLData(temp, reportPrepareTovar));
-                        tplRequired.append(setOptionTPLColor(temp.getOptionShort(), true, uploaded));
-                        temps.add(temp);
+                    Globals.Triple uploaded = checkUploadedTPL(reportPrepareTovar, getTPLData(temp, reportPrepareTovar));
+                    tplRequired.append(setOptionTPLColor(temp.getOptionShort(), true, uploaded));
+                    temps.add(temp);
 //                    }
                 }
             }
@@ -2358,9 +2398,9 @@ public class Options {
 //                    if (temp.getOptionControlName().equals(AKCIYA_ID) && promotion) {
 //                        // ничего не делаю
 //                    } else {
-                        Globals.Triple uploaded = checkUploadedTPL(reportPrepareTovar, getTPLData(temp, reportPrepareTovar));
-                        tplRequired.append(setOptionTPLColor(temp.getOptionShort(), true, uploaded));
-                        temps.add(temp);
+                    Globals.Triple uploaded = checkUploadedTPL(reportPrepareTovar, getTPLData(temp, reportPrepareTovar));
+                    tplRequired.append(setOptionTPLColor(temp.getOptionShort(), true, uploaded));
+                    temps.add(temp);
 //                    }
                 }
             }

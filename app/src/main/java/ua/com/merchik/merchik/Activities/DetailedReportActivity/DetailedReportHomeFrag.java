@@ -1,5 +1,7 @@
 package ua.com.merchik.merchik.Activities.DetailedReportActivity;
 
+import static ua.com.merchik.merchik.Options.Options.ConductMode.SALARY_CUT;
+
 import android.annotation.SuppressLint;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
@@ -246,7 +248,7 @@ public class DetailedReportHomeFrag extends Fragment {
         WorkPlan workPlan = new WorkPlan();
         List<OptionsDB> opt = workPlan.getOptionButtons2(workPlan.getWpOpchetId(wpDataDB), wpDataDB.getId());
         WpDataDB wp = WpDataRealm.getWpDataRowByDad2Id(wpDataDB.getCode_dad2());
-        new Options().conduct(getContext(), wp, opt, 3, new Clicks.click() {
+        new Options().conduct(getContext(), wp, opt, SALARY_CUT, new Clicks.click() {
             @Override
             public <T> void click(T data) {
                 OptionsDB optionsDB = (OptionsDB) data;

@@ -1,5 +1,8 @@
 package ua.com.merchik.merchik.Activities.DetailedReportActivity;
 
+import static ua.com.merchik.merchik.Options.Options.ConductMode.DEFAULT_CONDUCT;
+import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
+
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.os.Bundle;
@@ -35,8 +38,6 @@ import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.database.realm.tables.WpDataRealm;
 import ua.com.merchik.merchik.dialogs.DialogFilter.Click;
-
-import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
 @SuppressLint("ValidFragment")
 public class DetailedReportOptionsFrag extends Fragment {
@@ -113,7 +114,7 @@ public class DetailedReportOptionsFrag extends Fragment {
                     List<OptionsDB> opt = workPlan.getOptionButtons2(workPlan.getWpOpchetId(wpDataDB), wpDataDB.getId());
                     WpDataDB wp = WpDataRealm.getWpDataRowByDad2Id(wpDataDB.getCode_dad2());
 
-                    new Options().conduct(getContext(), wp, opt, 3, new Clicks.click() {
+                    new Options().conduct(getContext(), wp, opt, DEFAULT_CONDUCT, new Clicks.click() {
                         @Override
                         public <T> void click(T data) {
                             OptionsDB optionsDB = (OptionsDB) data;
