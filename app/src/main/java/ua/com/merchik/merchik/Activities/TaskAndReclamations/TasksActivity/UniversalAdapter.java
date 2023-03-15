@@ -247,13 +247,23 @@ public class UniversalAdapter extends RecyclerView.Adapter<UniversalAdapter.View
                             line5.append(Html.fromHtml("<font color='red'>" + 0 + "</font>"));
                         }
                     } else {
-                        if (data.state == 0 || data.state == 2) {
+
+                        if (data.state == 0) {
                             line5.append(Html.fromHtml("<font color='red'>" + data.sumPenalty + "</font>"));
-                        } else {
+                            line5.append("/");
+                            line5.append(Html.fromHtml("<font color='red'>-" + data.sumPenalty + "</font>"));
+                        } else if (data.state == 1) {
+                            line5.append(Html.fromHtml("<font color='red'>" + data.sumPenalty + "</font>"));
+                            line5.append("/");
                             line5.append(Html.fromHtml("<font color='red'>" + 0 + "</font>"));
                         }
-                        line5.append("/");
-                        line5.append(Html.fromHtml("<font color='red'>" + data.sumPremiya + "</font>"));
+//                        if (data.state == 1) {
+//                            line5.append(Html.fromHtml("<font color='red'>" + data.sumPenalty + "</font>"));
+//                        } else {
+//                            line5.append(Html.fromHtml("<font color='red'>" + 0 + "</font>"));
+//                        }
+//                        line5.append("/");
+//                        line5.append(Html.fromHtml("<font color='red'>" + data.sumPremiya + "</font>"));
                     }
 
 
