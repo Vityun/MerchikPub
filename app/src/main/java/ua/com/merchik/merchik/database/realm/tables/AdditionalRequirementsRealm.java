@@ -158,9 +158,9 @@ public class AdditionalRequirementsRealm {
                 break;
 
             case DEFAULT:
-                realmResults = realmResults.where()
-                        .equalTo("hideUser", "1")
-                        .findAll();
+//                realmResults = realmResults.where()
+//                        .equalTo("hideUser", "1")
+//                        .findAll();
                 break;
         }
 
