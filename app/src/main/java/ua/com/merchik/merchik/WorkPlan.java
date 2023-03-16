@@ -1,37 +1,51 @@
 package ua.com.merchik.merchik;
 
 
+import static ua.com.merchik.merchik.Options.Options.describedOptionsButt;
+import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
+
 import android.content.Context;
+import android.os.Build;
 import android.util.Log;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.IntStream;
 
 import io.realm.RealmResults;
 import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
-import ua.com.merchik.merchik.data.RealmModels.GroupTypeDB;
 import ua.com.merchik.merchik.data.OptionsButtons;
+import ua.com.merchik.merchik.data.RealmModels.GroupTypeDB;
 import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
-import ua.com.merchik.merchik.data.WPDataObj;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
+import ua.com.merchik.merchik.data.WPDataObj;
 import ua.com.merchik.merchik.database.realm.RealmManager;
-
-import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
 public class WorkPlan {
 
     /**
      * ПОЛУЧИТЬ ОПЦИИ ОБЫЧНЫЕ
-     * */
-    public LinearLayout getOptionLinearLayout(Context mContext, long otchetId){
+     */
+    public LinearLayout getOptionLinearLayout(Context mContext, long otchetId) {
 //        RealmResults<OptionsDB> options = RealmManager.getOptionsNOButton(otchetId);
         RealmResults<OptionsDB> options = RealmManager.getOptionsButton(otchetId);
 
+        // Отображаю "Описанные" на стороне приложения опции
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            IntStream intStream = Arrays.stream(describedOptionsButt);
+            String[] answer = intStream.sorted().mapToObj(String::valueOf).toArray(String[]::new);
+
+            options = options.where()
+                    .in("optionId", answer)
+                    .sort("so")
+                    .findAll();
+        }
 
         List<OptionsDB> arraylist;
         arraylist = RealmManager.INSTANCE.copyFromRealm(options);
@@ -46,14 +60,14 @@ public class WorkPlan {
         ll.setId((int) otchetId);
         ll.setScrollContainer(true);
 
-        for (int i=0; i<arraylist.size(); i++){
+        for (int i = 0; i < arraylist.size(); i++) {
             long linearId = Long.parseLong(arraylist.get(i).getID());
 
             ImageView imgOpt = new ImageView(mContext);// Устанавливаем контекст для Опций
             imgOpt.setImageResource(R.drawable.option_signal_null); // Устанавливаем Сигнал опции
-            if (arraylist.get(i).getIsSignal().equals("1")){
+            if (arraylist.get(i).getIsSignal().equals("1")) {
                 imgOpt.setImageResource(R.drawable.option_signal_bad); // Устанавливаем Сигнал опции
-            }else if (arraylist.get(i).getIsSignal().equals("2")){
+            } else if (arraylist.get(i).getIsSignal().equals("2")) {
                 imgOpt.setImageResource(R.drawable.option_signal_ok); // Устанавливаем Сигнал опции
             }
             imgOpt.setId((int) linearId);
@@ -76,18 +90,19 @@ public class WorkPlan {
     /**
      * ПОЛУЧИТЬ ОПЦИИ КНОПКИ
      *
-     * @return*/
-    public ArrayList<OptionsButtons> getOptionButtons(long otchetId, int wpId){
+     * @return
+     */
+    public ArrayList<OptionsButtons> getOptionButtons(long otchetId, int wpId) {
         RealmResults<OptionsDB> options = RealmManager.getOptionsButton(otchetId);
         ArrayList<OptionsButtons> arraylist = new ArrayList<>();
 
-        for (int i=0; i<options.size(); i++){
+        for (int i = 0; i < options.size(); i++) {
             long id = Long.parseLong(options.get(i).getID());
             int optionId = Integer.parseInt(options.get(i).getOptionId());
             String optionButtonOptionTxt = options.get(i).getOptionTxt();
             String optionButtonIsSignal = options.get(i).getIsSignal();
 
-            OptionsButtons optionsButtons = new OptionsButtons(id, optionId, wpId ,optionButtonOptionTxt, optionButtonIsSignal);
+            OptionsButtons optionsButtons = new OptionsButtons(id, optionId, wpId, optionButtonOptionTxt, optionButtonIsSignal);
             arraylist.add(optionsButtons);
         }
 
@@ -95,7 +110,7 @@ public class WorkPlan {
     }
 
     //
-    public List<OptionsDB> getOptionButtons2(long otchetId, long wpId){
+    public List<OptionsDB> getOptionButtons2(long otchetId, long wpId) {
         RealmResults<OptionsDB> options = RealmManager.getOptionsButton(otchetId);
         List<OptionsDB> arraylist;
         arraylist = RealmManager.INSTANCE.copyFromRealm(options);
@@ -103,8 +118,7 @@ public class WorkPlan {
     }
 
 
-
-    public List<OptionsDB> getAllOtchetOptions(long otchetId, String codeDad2){
+    public List<OptionsDB> getAllOtchetOptions(long otchetId, String codeDad2) {
         RealmResults<OptionsDB> options = RealmManager.getOptionsByOtchetId(otchetId, codeDad2);
         List<OptionsDB> arraylist = new ArrayList<>();
         arraylist = options;
@@ -112,14 +126,14 @@ public class WorkPlan {
     }
 
 
-
-
-    /**Получить данные о КПСе*/
-    public WPDataObj getKPS(long wpId){
+    /**
+     * Получить данные о КПСе
+     */
+    public WPDataObj getKPS(long wpId) {
         WpDataDB wpRow = RealmManager.getWorkPlanRowById(wpId);
 
         long id = wpRow.getId();
-        String date = Clock.getHumanTimeYYYYMMDD(wpRow.getDt().getTime()/1000);
+        String date = Clock.getHumanTimeYYYYMMDD(wpRow.getDt().getTime() / 1000);
         String customer_id = wpRow.getClient_id();
         int address_id = wpRow.getAddr_id();
         String photo_type = "0";
@@ -132,14 +146,14 @@ public class WorkPlan {
         String address_txt = wpRow.getAddr_txt();
 
         Float lat = null, lon = null;
-        if (wpRow.getAddr_location_xd() != null && !wpRow.getAddr_location_xd().equals("")){
+        if (wpRow.getAddr_location_xd() != null && !wpRow.getAddr_location_xd().equals("")) {
             lat = Float.valueOf(wpRow.getAddr_location_xd());
             lon = Float.valueOf(wpRow.getAddr_location_yd());
         }
         return new WPDataObj(wpId, date, customer_id, address_id, photo_type, customerTypeGrp, doc_num, theme_id, photo_user_id, dad2, customer_txt, address_txt, lat, lon);
     }
 
-    public WPDataObj getKPS(TasksAndReclamationsSDB task){
+    public WPDataObj getKPS(TasksAndReclamationsSDB task) {
         WPDataObj result = new WPDataObj();
 
         result.setDate(String.valueOf(task.dt));
@@ -157,12 +171,12 @@ public class WorkPlan {
         return result;
     }
 
-    public Map<Integer, String> getCustomerGroups(String customer_id){
+    public Map<Integer, String> getCustomerGroups(String customer_id) {
         Map<Integer, String> mapCustomerType = new HashMap<>();
         Log.e("TAG_TEST_GRP", "CUSTOMER_ID: " + customer_id);
         RealmResults<GroupTypeDB> realmResults = RealmManager.getAllGroupTypeByCustomerId(customer_id);
         Log.e("TAG_TEST_GRP", "realm result: " + realmResults);
-        for (int i=0; i<realmResults.size(); i++){
+        for (int i = 0; i < realmResults.size(); i++) {
             mapCustomerType.put(realmResults.get(i).getID(), realmResults.get(i).getNm());
         }
         return mapCustomerType;
@@ -171,16 +185,16 @@ public class WorkPlan {
 
     /**
      * Возвращает id-шник отчёта. Зависит от action.
-     * */
-    public long getWpOpchetId(WpDataDB wpDataDB){
+     */
+    public long getWpOpchetId(WpDataDB wpDataDB) {
         try {
             int action = wpDataDB.getAction();
-            if (action == 1 || action == 94){
+            if (action == 1 || action == 94) {
                 return wpDataDB.getDoc_num_otchet_id();
-            }else{
+            } else {
                 return wpDataDB.getDoc_num_1c_id();
             }
-        }catch (Exception e){
+        } catch (Exception e) {
             Globals.addLog();// Запись в таблицу Лога
             return 0;
         }
