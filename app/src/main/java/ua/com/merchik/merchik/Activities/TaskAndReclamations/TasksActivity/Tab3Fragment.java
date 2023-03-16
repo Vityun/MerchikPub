@@ -35,9 +35,11 @@ import ua.com.merchik.merchik.WorkPlan;
 import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
 import ua.com.merchik.merchik.data.RealmModels.TARCommentsDB;
+import ua.com.merchik.merchik.data.RealmModels.ThemeDB;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.StackPhotoRealm;
 import ua.com.merchik.merchik.database.realm.tables.TARCommentsRealm;
+import ua.com.merchik.merchik.database.realm.tables.ThemeRealm;
 import ua.com.merchik.merchik.dialogs.DialodTAR.DialogCreateTAR;
 import ua.com.merchik.merchik.dialogs.DialogData;
 
@@ -194,6 +196,20 @@ public class Tab3Fragment extends Fragment {
                         Globals.writeToMLOG("INFO", "Tab3Fragment.dialog.clickSave", "start");
                         String res = dialog.comment;
 
+                        ThemeDB theme = ThemeRealm.getThemeById(String.valueOf(this.tarData.themeId));
+                        if(theme.need_photo == 1 && dialog.photo == null){
+                            DialogData dialogNoPhoto = new DialogData(mContext);
+                            dialogNoPhoto.setTitle("Ошибка комментария");
+                            dialogNoPhoto.setText("По данной темы у коментария должна быть фотография, выполните фото прежде чем сохранить коментарий.");
+                            dialogNoPhoto.setDialogIco();
+                            dialogNoPhoto.setClose(dialog::dismiss);
+                            dialogNoPhoto.show();
+
+                            Globals.writeToMLOG("INFO", "Tab3Fragment.dialog.clickSave", "У комментария должна быть фотография. Задача: " + this.tarData.id);
+                            dialog.dismiss();
+                            return;
+                        }
+
                         if(res.length() < 20){
                             DialogData dialogShortComment = new DialogData(mContext);
                             dialogShortComment.setTitle("Ошибка комментария");
@@ -202,7 +218,6 @@ public class Tab3Fragment extends Fragment {
                             dialogShortComment.setClose(dialog::dismiss);
                             dialogShortComment.show();
 
-//                        Toast.makeText(mContext, "Коментарий должен быть больше 20 символов", Toast.LENGTH_SHORT).show();
                             Globals.writeToMLOG("INFO", "Tab3Fragment.dialog.clickSave", "Коментарий должен быть больше 20 символов");
                             dialog.dismiss();
                             return;
