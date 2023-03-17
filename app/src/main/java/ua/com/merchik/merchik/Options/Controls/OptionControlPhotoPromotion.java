@@ -12,6 +12,7 @@ import android.text.SpannableStringBuilder;
 import android.text.Spanned;
 import android.text.TextPaint;
 import android.text.style.ClickableSpan;
+import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
@@ -122,6 +123,7 @@ public class OptionControlPhotoPromotion<T> extends OptionControl {
         // Тут должена формироваться более подроная информация о том с какими Товарами есть пролема
         int find = 0;
         int totalOSV = 0;
+        boolean showTovList = false;
         for (ReportPrepareDB item : reportPrepare) {
             int OSV = 0;
 
@@ -130,13 +132,14 @@ public class OptionControlPhotoPromotion<T> extends OptionControl {
 
             if (Arrays.asList(tovIds).contains(item.getTovarId())) {
                 if (stackPhotoDBS != null && stackPhotoDBS.size() > 0) {
-//                    StackPhotoDB currentTovPhoto = stackPhotoDBS.stream().filter(listItem -> listItem.tovar_id.equals(item.getTovarId())).findFirst().get().get();
                     StackPhotoDB currentTovPhoto = stackPhotoDBS.stream().filter(listItem -> listItem.tovar_id.equals(item.getTovarId())).findFirst().orElse(null);
                     if (currentTovPhoto != null) {
+                        showTovList = true;
                         OSV = 1;
                         totalOSV++;
                         errMsgType1.append(createLinkedString(item, currentTovPhoto)).append("\n");
                     } else {
+                        showTovList = true;
                         err++;
                         errType1Cnt++;
                         OSV = 1;
@@ -144,6 +147,7 @@ public class OptionControlPhotoPromotion<T> extends OptionControl {
                         errMsgType1.append(createLinkedString(item, null)).append("\n");
                     }
                 } else {
+                    showTovList = true;
                     err++;
                     errType1Cnt++;
                     OSV = 1;
@@ -152,19 +156,22 @@ public class OptionControlPhotoPromotion<T> extends OptionControl {
                 }
             }
 
+            showTovList = true;
+
             if (stackPhotoDBS != null && stackPhotoDBS.size() > 0) {
                 size = stackPhotoDBS.size();
                 find++;
             } else {
-//                errType1Cnt++;
                 err++;
                 comment = "Нема світлини Акціонного товару з ОСУ (Особливою Увагою).";
 //                errMsgType1.append("Товар з ідентифікатором: (").append(item.getTovarId()).append(") не знайдено").append("\n");
             }
         }
 
+        Log.e("test", "test" + errType1Cnt);
+
         // Формирование сообщения
-        if (errType1Cnt > 0) {
+        if (errType1Cnt > 0 || showTovList) {
             errMsgType1.append("нужно сделать фото.").append("\n");
             spannableStringBuilder.append(errMsgType1);
         }
