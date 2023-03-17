@@ -290,7 +290,7 @@ public class TARActivity extends toolbar_menus implements TARFragmentHome.OnFrag
                 AddressDB addr = fragmentHome.homeFrag.dialog.address;
                 CustomerDB client = fragmentHome.homeFrag.dialog.customer;
 
-                StackPhotoDB stackPhotoDB = saveTestPhoto(new File(MakePhoto.openCameraPhotoUri), addr, client);
+                StackPhotoDB stackPhotoDB = saveTestPhoto(new File(MakePhoto.openCameraPhotoUri), addr, client, fragmentHome.secondFrag.data);
 
                 fragmentHome.homeFrag.dialog.setData(stackPhotoDB);
                 fragmentHome.homeFrag.dialog.setDataUpdate();
@@ -312,7 +312,7 @@ public class TARActivity extends toolbar_menus implements TARFragmentHome.OnFrag
                 Globals.writeToMLOG("INFO", "CAMERA_REQUEST_TAR_COMMENT_PHOTO", "CustomerSDB: " + client);
                 Globals.writeToMLOG("INFO", "CAMERA_REQUEST_TAR_COMMENT_PHOTO", "clientRealm: " + clientRealm);
 
-                StackPhotoDB stackPhotoDB = saveTestPhoto(new File(MakePhoto.openCameraPhotoUri), addr, clientRealm);
+                StackPhotoDB stackPhotoDB = saveTestPhoto(new File(MakePhoto.openCameraPhotoUri), addr, clientRealm, fragmentHome.secondFrag.data);
                 MakePhoto.openCameraPhotoUri = null;
 
                 fragmentHome.secondFrag.setPhotoComment(stackPhotoDB.getId(), TARCommentIndex);
@@ -393,7 +393,7 @@ public class TARActivity extends toolbar_menus implements TARFragmentHome.OnFrag
         }
     }
 
-    private StackPhotoDB saveTestPhoto(File photoFile, AddressDB addr, CustomerDB client) {
+    private StackPhotoDB saveTestPhoto(File photoFile, AddressDB addr, CustomerDB client, TasksAndReclamationsSDB tar) {
         try {
             int id = RealmManager.stackPhotoGetLastId();
             id++;
@@ -409,7 +409,11 @@ public class TARActivity extends toolbar_menus implements TARFragmentHome.OnFrag
             stackPhotoDB.setCustomerTxt(client.getNm());
 
             stackPhotoDB.setUser_id(Globals.userId);
-            stackPhotoDB.setPhoto_type(0);
+            if (tar.themeId == 150){
+                stackPhotoDB.setPhoto_type(18);
+            }else {
+                stackPhotoDB.setPhoto_type(0);
+            }
 
             stackPhotoDB.setDvi(1);
 
@@ -434,7 +438,7 @@ public class TARActivity extends toolbar_menus implements TARFragmentHome.OnFrag
      *
      * На момент написания - сохраняет фотографию в БД. Фото берётся из Комментариев отписания на Задачи / Рекламации
      * */
-    private StackPhotoDB saveTestPhoto(File photoFile, AddressSDB addr, CustomerDB client) {
+    private StackPhotoDB saveTestPhoto(File photoFile, AddressSDB addr, CustomerDB client, TasksAndReclamationsSDB tar) {
         try {
             int id = RealmManager.stackPhotoGetLastId();
             id++;
@@ -450,7 +454,11 @@ public class TARActivity extends toolbar_menus implements TARFragmentHome.OnFrag
             stackPhotoDB.setCustomerTxt(client.getNm());
 
             stackPhotoDB.setUser_id(Globals.userId);
-            stackPhotoDB.setPhoto_type(0);
+            if (tar.themeId == 150){
+                stackPhotoDB.setPhoto_type(18);
+            }else {
+                stackPhotoDB.setPhoto_type(0);
+            }
 
             stackPhotoDB.setDvi(1);
 
