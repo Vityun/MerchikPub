@@ -195,19 +195,14 @@ public class DialogData {
     //
     public void setText(SpannableStringBuilder text, DialogClickListener clickListener) {
         this.text.setVisibility(View.VISIBLE);
-//        this.text.setMovementMethod(LinkMovementMethod.getInstance());
 
-
-        this.text.setMovementMethod(ClickableMovementMethod.getInstance());
-//        this.text.setMovementMethod(ClickableMovementMethod.getInstance());
+        this.text.setMovementMethod(ClickableMovementMethod.getInstance());// Делаю возможность скролить текст
         this.text.setClickable(false);
         this.text.setLongClickable(false);
 
         if (text != null && !text.equals("")) {
             this.text.setText(text);
             this.text.setOnClickListener(v -> clickListener.clicked());
-            // Делаю возможность скролить текст
-//            this.text.setMovementMethod(LinkMovementMethod.getInstance());
         } else {
             this.text.setVisibility(View.GONE);
         }

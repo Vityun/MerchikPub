@@ -231,13 +231,14 @@ public class OptionControlPhotoPromotion<T> extends OptionControl {
      */
     private SpannableString createLinkedString(ReportPrepareDB item, StackPhotoDB stackPhotoDB) {
         TovarDB tov = RealmManager.INSTANCE.copyFromRealm(TovarRealm.getById(item.getTovarId()));
-        String msg = String.format("(%s) %s (%s)", item.getTovarId(), tov.getNm(), tov.getWeight());
+        String tovName = tov.getNm().replace("&quot;", "\"");
+        String msg = String.format("(%s) %s (%s)", tov.getBarcode(), tovName, tov.getWeight());
         SpannableString res = new SpannableString(msg);
 
         ClickableSpan clickableSpan = new ClickableSpan() {
             @Override
             public void onClick(View textView) {
-                Toast.makeText(textView.getContext(), "Виготовлення світлини по товару(" + tov.getiD() + "): " + tov.getNm(), Toast.LENGTH_LONG).show();
+                Toast.makeText(textView.getContext(), "Виготовлення світлини по товару(" + tov.getBarcode() + "): " + tovName, Toast.LENGTH_LONG).show();
 
                 wpDataDBOPTION_CONTROL_PROMOTION_ID = wp;
                 tovarDBOPTION_CONTROL_PROMOTION_ID = tov;
