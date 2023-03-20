@@ -202,7 +202,7 @@ public class Tab3Fragment extends Fragment {
                             dialogNoPhoto.setTitle("Ошибка комментария");
                             dialogNoPhoto.setText("По данной темы у коментария должна быть фотография, выполните фото прежде чем сохранить коментарий.");
                             dialogNoPhoto.setDialogIco();
-                            dialogNoPhoto.setClose(dialog::dismiss);
+                            dialogNoPhoto.setClose(dialogNoPhoto::dismiss);
                             dialogNoPhoto.show();
 
                             Globals.writeToMLOG("INFO", "Tab3Fragment.dialog.clickSave", "У комментария должна быть фотография. Задача: " + this.tarData.id);
