@@ -2731,7 +2731,7 @@ $options_list_tpl=array(
 (UP,            "П", "Поднято товара"           , "up", "main", 138644));
 (DT_EXPIRE,     "Д", "Дата ок. ср. год"         , "dt_expire", "main", 84005, 84967));
 (OBOROTVED_NUM, "О", "Остаток по учёту"         , "oborotved_num", "main", 2243, 135448));
-(ERROR_ID,      "Ш", "Ошибка товара"            , "error_id", "main", 135592));
+(ERROR_ID,      "Ш", "Ошибка товара"            , "error_id", "main", 135592, 157242, !157241, !157243));
 (AKCIYA_ID,     "А", "Вид акции"                , "akciya_id", "main", 80977));
 (AKCIYA,        "Н", "Наличие акции"            , "akciya", "main", 80977));
 (NOTES,         "П", "Примечание"               , "notes", "main", 135590));
