@@ -60,7 +60,7 @@ public class OptionControlPhotoPromotion<T> extends OptionControl {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             try {
                 executeOption();
-            }catch (Exception e){
+            } catch (Exception e) {
                 Globals.writeToMLOG("INFO", "OptionControlPhotoPromotion/executeOption", "Exception e: " + e);
             }
         }
@@ -193,7 +193,7 @@ public class OptionControlPhotoPromotion<T> extends OptionControl {
             massageToUser = "Товарів з ОСУ (Особливою увагою), по котрим треба виконати світлини 'Акцційного товару', не знайдено.";
             signal = 2;
         } else if (err > 0) {
-            massageToUser = "Не виконані світлини по (" + err + " шт.) з " + totalOSV + " Акційних товарів, які присутні на полицях.";
+            massageToUser = "Не виконані світлини по (" + errType1Cnt + " шт.) з " + totalOSV + " Акційних товарів, які присутні на полицях.";
             signal = 1;
         } else {
             massageToUser = "Зауважень по виготовленню світлин 'Акцційних товарів' нема. Виготовлено " + size + " світлин.";
@@ -204,7 +204,7 @@ public class OptionControlPhotoPromotion<T> extends OptionControl {
 
         // 7.0 сохраним сигнал
 //        if (optionDB.getIsSignal().equals("0")) {
-            saveOption(String.valueOf(signal));
+        saveOption(String.valueOf(signal));
 //        }
 
         // 8.0 Блокировка проведения
@@ -251,15 +251,15 @@ public class OptionControlPhotoPromotion<T> extends OptionControl {
 
             @Override
             public void updateDrawState(TextPaint ds) {
-                if (stackPhotoDB != null){
-                    if (stackPhotoDB.get_on_server != 0){
+                if (stackPhotoDB != null) {
+                    if (stackPhotoDB.get_on_server != 0) {
                         ds.setColor(Color.GREEN);
-                    }else if (stackPhotoDB.create_time != 0 && stackPhotoDB.upload_to_server != 0){
+                    } else if (stackPhotoDB.create_time != 0 && stackPhotoDB.upload_to_server != 0) {
                         ds.setColor(Color.YELLOW);
-                    }else {
+                    } else {
                         ds.setColor(Color.RED);
                     }
-                }else {
+                } else {
                     ds.setColor(Color.GRAY);
                 }
                 ds.setUnderlineText(true);
