@@ -958,7 +958,9 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
 
             dialog.show();
 
-            dialogList.add(dialog);
+            if (!tpl.getOptionId().contains(157242)){
+                dialogList.add(dialog);
+            }
         }
 
         private SimpleExpandableListAdapter createExpandableAdapter(Context context) {

@@ -195,6 +195,7 @@ public class DialogData {
     //
     public void setText(SpannableStringBuilder text, DialogClickListener clickListener) {
         this.text.setVisibility(View.VISIBLE);
+        this.text.setScrollbarFadingEnabled(false);
 
         this.text.setMovementMethod(ClickableMovementMethod.getInstance());// Делаю возможность скролить текст
         this.text.setClickable(false);
