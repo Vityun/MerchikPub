@@ -419,6 +419,7 @@ public class Tab1Fragment extends Fragment {
                     Toast.makeText(getContext(), "Комментарий НЕ сохранён", Toast.LENGTH_SHORT).show();
                     dialog.dismiss();
                 });
+                dialog.show();
             }
         });
     }
