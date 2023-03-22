@@ -196,31 +196,41 @@ public class PhotoLogActivity extends toolbar_menus {
         }
 
         Integer resultCode = this.getIntent().getIntExtra("resultCode", 0);
+        PhotoLogMode finalPhotoLogMode = photoLogMode;
         recycleViewPLAdapter = new PhotoLogAdapter(this, stackPhoto, getChoice(), new Clicks.click() {
             @Override
             public <T> void click(T data) {
-                PhotoAndInfoViewHolder.stackPhotoDB = (StackPhotoDB) data;
+                switch (finalPhotoLogMode){
+                    case SAMPLE_PHOTO:
+                        finish();
+                        break;
 
-                Intent intent = new Intent();
-                intent.putExtra("stack_photo_id", PhotoAndInfoViewHolder.stackPhotoDB.getId());
+                    default:
+                        PhotoAndInfoViewHolder.stackPhotoDB = (StackPhotoDB) data;
 
-                if (resultCode != null && resultCode != 0) {
-                    switch (resultCode) {
-                        case 100:
-                            setResult(100, intent);
-                            break;
+                        Intent intent = new Intent();
+                        intent.putExtra("stack_photo_id", PhotoAndInfoViewHolder.stackPhotoDB.getId());
 
-                        case 101:
-                            setResult(101, intent);
-                            break;
+                        if (resultCode != null && resultCode != 0) {
+                            switch (resultCode) {
+                                case 100:
+                                    setResult(100, intent);
+                                    break;
 
-                        default:
-                            setResult(100, intent);
-                            break;
-                    }
+                                case 101:
+                                    setResult(101, intent);
+                                    break;
+
+                                default:
+                                    setResult(100, intent);
+                                    break;
+                            }
+                        }
+
+                        finish();
+                        break;
                 }
 
-                finish();
             }
         });
         recycleViewPLAdapter.setPhotoLogMode(photoLogMode);
