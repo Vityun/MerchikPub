@@ -374,7 +374,11 @@ public class TARActivity extends toolbar_menus implements TARFragmentHome.OnFrag
             stackPhotoDB.setAddr_id(tar.addr);
             stackPhotoDB.setClient_id(tar.client);
             stackPhotoDB.setUser_id(tar.vinovnik);
-            stackPhotoDB.setPhoto_type(0);
+            if (tar.themeId == 150){
+                stackPhotoDB.setPhoto_type(18);
+            }else {
+                stackPhotoDB.setPhoto_type(0);
+            }
             stackPhotoDB.setCode_dad2(tar.codeDad2);
 
             if (tar.themeId == 1174) {
