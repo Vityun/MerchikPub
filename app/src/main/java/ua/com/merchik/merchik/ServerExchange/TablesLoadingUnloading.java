@@ -3,7 +3,6 @@ package ua.com.merchik.merchik.ServerExchange;
 import static ua.com.merchik.merchik.database.realm.RealmManager.INSTANCE;
 import static ua.com.merchik.merchik.database.realm.RealmManager.getSynchronizationTimetable;
 import static ua.com.merchik.merchik.database.realm.tables.PPARealm.setPPA;
-import static ua.com.merchik.merchik.database.realm.tables.WpDataRealm.getIZAList;
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
 import android.app.ProgressDialog;
@@ -2655,13 +2654,12 @@ public class TablesLoadingUnloading {
             PPARequest data = new PPARequest();
             data.mod = "ppa";
             data.act = "list";
-            data.code_iza = getIZAList();
+//            data.code_iza = getIZAList();
 
             Gson gson = new Gson();
             String json = gson.toJson(data);
             JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
 
-//        Log.e("MenuMainTest", "convertedObject: " + convertedObject);
 
             retrofit2.Call<PPAonResponse> call = RetrofitBuilder.getRetrofitInterface().GET_TABLE_PPA(RetrofitBuilder.contentType, convertedObject);
             call.enqueue(new retrofit2.Callback<PPAonResponse>() {
@@ -2669,18 +2667,20 @@ public class TablesLoadingUnloading {
                 public void onResponse(retrofit2.Call<PPAonResponse> call, retrofit2.Response<PPAonResponse> response) {
                     try {
 //                    Log.e("MenuMainTest", "res/list/size: " + response.body().getList().size());
+                        Log.e("MenuMainTest", "test");
                         setPPA(response.body().getList());
                     } catch (Exception e) {
-
+                        Log.e("MenuMainTest", "Exception e: " + e);
                     }
                 }
 
                 @Override
                 public void onFailure(retrofit2.Call<PPAonResponse> call, Throwable t) {
-//                Log.e("MenuMainTest", "test.t:" + t);
+                    Log.e("MenuMainTest", "test.t:" + t);
                 }
             });
         } catch (Exception e) {
+            Log.e("MenuMainTest", "Exception e.t:" + e);
         }
     }
 
@@ -2735,7 +2735,7 @@ public class TablesLoadingUnloading {
                 public void onResponse(retrofit2.Call<TARCommentsResponse> call, retrofit2.Response<TARCommentsResponse> response) {
                     try {
                         Log.e("downloadTARComments", "response" + response.body());
-                        if (response.body() != null && response.body().getList() != null && response.body().getList().size() > 0){
+                        if (response.body() != null && response.body().getList() != null && response.body().getList().size() > 0) {
                             Globals.writeToMLOG("ERROR", "downloadTARComments/onResponse", "response.body().getList(): " + response.body().getList().size());
                             TARCommentsRealm.setTARCommentsDB(response.body().getList());
                         }
