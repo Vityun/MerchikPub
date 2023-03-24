@@ -170,6 +170,11 @@ public class AchievementsSDB {
     @ColumnInfo(name = "confirm_state")
     public Integer confirmState;
 
+    @SerializedName("theme_id")
+    @Expose
+    @ColumnInfo(name = "theme_id")
+    public Integer themeId;
+
     // ---------- ДЛЯ ОПЦИИ КОНТРОЛЯ НАЧАЛО---------------
 
     @Ignore
