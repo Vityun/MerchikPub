@@ -253,11 +253,11 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                 StringBuilder res = new StringBuilder();
                 ArticleSDB articleSDB = SQL_DB.articleDao().getByTovId(Integer.parseInt(tovar.getiD()));
                 if (articleSDB != null) {
-                    if (mode == 0){
+                    if (mode == 0) {
                         // Пока ничего
-                    }else if (mode == 1){
+                    } else if (mode == 1) {
                         res.append("Арт: ");
-                    }else {
+                    } else {
                         // Пока ничего
                     }
                     res.append(articleSDB.vendorCode);
@@ -395,9 +395,9 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
 
                 if (ostatok != null && !ostatok.equals("0") && (isOld.equals(OldDateOstatok.NEW) || isOld.equals(OldDateOstatok.OLD))) {
                     balance.setText(text);
-                }else if (ostatok == null){
+                } else if (ostatok == null) {
 
-                }else {
+                } else {
                     balance.setText(text);
                 }
 
@@ -483,9 +483,9 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
 
                     CharSequence articul;
                     String articulStr = getArticle(list, 0);
-                    if (articulStr != null && !articulStr.equals("")){
+                    if (articulStr != null && !articulStr.equals("")) {
                         articul = Html.fromHtml("<b>Артикул: </b>" + articulStr + "<br>");
-                    }else {
+                    } else {
                         articul = Html.fromHtml("<b>Артикул: </b>(нет данных) <br>");
                     }
 
@@ -560,7 +560,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
             RecyclerViewTPLAdapter recyclerViewTPLAdapter = new RecyclerViewTPLAdapter(
                     options.getRequiredOptionsTPL(optionsList2),
                     finalReportPrepareTovar1,
-                    (tpl, data) -> operetionSaveRPToDB(tpl, finalReportPrepareTovar1, data, null, list)
+                    (tpl, data, data2) -> operetionSaveRPToDB(tpl, finalReportPrepareTovar1, data, data2, list)
             );
             recyclerView.setAdapter(recyclerViewTPLAdapter);
             recyclerView.setLayoutManager(new LinearLayoutManager(mContext, LinearLayoutManager.VERTICAL, false));
@@ -958,7 +958,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
 
             dialog.show();
 
-            if (!tpl.getOptionId().contains(157242)){
+            if (!tpl.getOptionId().contains(157242)) {
                 dialogList.add(dialog);
             }
         }
@@ -1270,24 +1270,27 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
 
                 case AKCIYA_ID:
                     Log.e("SAVE_TO_REPORT_OPT", "AKCIYA_ID: " + data);
+                    Log.e("SAVE_TO_REPORT_OPT", "AKCIYA_ID_А: " + data2);
                     INSTANCE.executeTransaction(realm -> {
                         table.setAkciyaId(data);
-                        table.setAkciya(data2);
+                        if (data2 != null && !data2.equals("")){
+                            table.setAkciya(data2);
+                        }
                         table.setUploadStatus(1);
                         table.setDtChange(System.currentTimeMillis() / 1000);
                         RealmManager.setReportPrepareRow(table);
                     });
                     break;
 
-                case AKCIYA:
-                    Log.e("SAVE_TO_REPORT_OPT", "AKCIYA: " + data);
-                    INSTANCE.executeTransaction(realm -> {
-                        table.setAkciya(data);
-                        table.setUploadStatus(1);
-                        table.setDtChange(System.currentTimeMillis() / 1000);
-                        RealmManager.setReportPrepareRow(table);
-                    });
-                    break;
+//                case AKCIYA:
+//                    Log.e("SAVE_TO_REPORT_OPT", "AKCIYA: " + data);
+//                    INSTANCE.executeTransaction(realm -> {
+//                        table.setAkciya(data2);     // 25.03.23. Поменял с Дата на Дата2 потому что в выпадающем списке ТПЛов боюсь что запутаются данные с AKCIYA_ID. Сделалл так что б было одинаково и там и там
+//                        table.setUploadStatus(1);
+//                        table.setDtChange(System.currentTimeMillis() / 1000);
+//                        RealmManager.setReportPrepareRow(table);
+//                    });
+//                    break;
 
                 case NOTES:
                     Log.e("SAVE_TO_REPORT_OPT", "NOTES: " + data);
