@@ -2,7 +2,7 @@
 <resources>
     <string-array name="planets_array">
         <item>Відс.</item>
-        <item>Невст.</item>
+        <item> - </item>
         <item>Наяв.</item>
     </string-array>
 </resources>
