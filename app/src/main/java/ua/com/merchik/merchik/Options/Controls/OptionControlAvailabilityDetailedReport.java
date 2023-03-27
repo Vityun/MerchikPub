@@ -202,7 +202,7 @@ public class OptionControlAvailabilityDetailedReport<T> extends OptionControl {
         }
 
         spannableStringBuilder.append("\n\n");
-        spannableStringBuilder.append(createLinkedString(makeLink()));
+        spannableStringBuilder.append(createLinkedString("Отправка СМС", makeLink()));
 
         RealmManager.INSTANCE.executeTransaction(realm -> {
             if (optionDB != null) {
@@ -218,12 +218,12 @@ public class OptionControlAvailabilityDetailedReport<T> extends OptionControl {
         setIsBlockOption(signal);
     }
 
-    private SpannableString createLinkedString(String msg) {
+    private SpannableString createLinkedString(String msg, String link) {
         SpannableString res = new SpannableString(msg);
         ClickableSpan clickableSpan = new ClickableSpan() {
             @Override
             public void onClick(View textView) {
-                Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(msg));
+                Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(link));
                 textView.getContext().startActivity(browserIntent);
             }
 
