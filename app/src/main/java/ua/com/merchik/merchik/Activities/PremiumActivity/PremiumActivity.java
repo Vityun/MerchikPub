@@ -1,13 +1,17 @@
 package ua.com.merchik.merchik.Activities.PremiumActivity;
 
+import static ua.com.merchik.merchik.Globals.userId;
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
 import android.app.ProgressDialog;
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -36,12 +40,14 @@ import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.data.Database.Room.UsersSDB;
+import ua.com.merchik.merchik.data.RealmModels.AppUsersDB;
 import ua.com.merchik.merchik.data.RealmModels.LogDB;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.Premial.PremiumPremium.Detailed;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.Premial.PremiumPremium.PremiumPremium;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.Premial.PremiumPremium.PremiumPremiumList;
 import ua.com.merchik.merchik.data.TestJsonUpload.StandartData;
 import ua.com.merchik.merchik.database.realm.RealmManager;
+import ua.com.merchik.merchik.database.realm.tables.AppUserRealm;
 import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.dialogs.DialogsRecyclerViewAdapter.DialogAdapter;
 import ua.com.merchik.merchik.dialogs.DialogsRecyclerViewAdapter.ViewHolderTypeList;
@@ -50,10 +56,16 @@ import ua.com.merchik.merchik.toolbar_menus;
 
 public class PremiumActivity extends toolbar_menus {
 
+/*    String hash = String.format("%s%s%s", appUser.getUserId(), appUser.getPassword(), "AvgrgsYihSHp6Ok9yQXfSHp6Ok9nXdXr3OSHp6Ok9UPBTzTjrF20Nsz3");
+    hash = Globals.getSha1Hex(hash);
+
+    String format = String.format("https://merchik.com.ua/sa.php?&u=%s&s=%s&l=%s", userId, hash, link);*/
+
     private RecyclerView recycler, table;
     private TextView text, userTV;
     private TextView date, col1, col5, col2, col3, col4;
     private Spinner spinner;
+    private Button buttonErr, buttonStat;
 
     private List<PremiumTableHeader> headerArrayList = new ArrayList<>();
     private PremiumTableHeaderAdapter adapter = createTableAdapter();
@@ -106,6 +118,9 @@ public class PremiumActivity extends toolbar_menus {
         userTV = findViewById(R.id.userTV);
         spinner = findViewById(R.id.spinner);
 
+        buttonErr = findViewById(R.id.button);
+        buttonStat = findViewById(R.id.button1);
+
         table = findViewById(R.id.table);
     }
 
@@ -125,6 +140,35 @@ public class PremiumActivity extends toolbar_menus {
         setUser();
         makeTableDataFirstWeek();
         setNewRecycler();
+
+        setButtonErr();
+        setButtonStat();
+    }
+
+    private void setButtonStat() {
+        buttonStat.setOnClickListener(view -> {
+            AppUsersDB appUser = AppUserRealm.getAppUserById(userId);
+            String hash = String.format("%s%s%s", appUser.getUserId(), appUser.getPassword(), "AvgrgsYihSHp6Ok9yQXfSHp6Ok9nXdXr3OSHp6Ok9UPBTzTjrF20Nsz3");
+            hash = Globals.getSha1Hex(hash);
+
+            String format = String.format("https://merchik.com.ua/sa.php?&u=%s&s=%s&l=/mobile.php?mod=premium**act=list_stats", userId, hash);
+
+            Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(format));
+            this.startActivity(browserIntent);
+        });
+    }
+
+    private void setButtonErr() {
+        buttonErr.setOnClickListener(view -> {
+            AppUsersDB appUser = AppUserRealm.getAppUserById(userId);
+            String hash = String.format("%s%s%s", appUser.getUserId(), appUser.getPassword(), "AvgrgsYihSHp6Ok9yQXfSHp6Ok9nXdXr3OSHp6Ok9UPBTzTjrF20Nsz3");
+            hash = Globals.getSha1Hex(hash);
+
+            String format = String.format("https://merchik.com.ua/sa.php?&u=%s&s=%s&l=/mobile.php?mod=ticket**act=create**theme_id=997**page=premium", userId, hash);
+
+            Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(format));
+            this.startActivity(browserIntent);
+        });
     }
 
     /*Судя по всему это "низ" */
