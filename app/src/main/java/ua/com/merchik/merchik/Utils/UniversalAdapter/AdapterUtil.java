@@ -1,7 +1,22 @@
 package ua.com.merchik.merchik.Utils.UniversalAdapter;
 
+import static ua.com.merchik.merchik.Globals.userId;
+import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
+import static ua.com.merchik.merchik.menu_main.decodeSampledBitmapFromResource;
+import static ua.com.merchik.merchik.toolbar_menus.internetStatus;
+
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Bitmap;
+import android.net.Uri;
+import android.os.Build;
+import android.text.Html;
+import android.text.SpannableString;
+import android.text.SpannableStringBuilder;
+import android.text.Spanned;
+import android.text.TextPaint;
+import android.text.style.ClickableSpan;
+import android.text.style.StyleSpan;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -11,6 +26,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -28,15 +44,13 @@ import ua.com.merchik.merchik.data.Database.Room.AddressSDB;
 import ua.com.merchik.merchik.data.Database.Room.Chat.ChatSDB;
 import ua.com.merchik.merchik.data.Database.Room.CustomerSDB;
 import ua.com.merchik.merchik.data.Database.Room.UsersSDB;
+import ua.com.merchik.merchik.data.RealmModels.AppUsersDB;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
 import ua.com.merchik.merchik.data.TestJsonUpload.StandartData;
 import ua.com.merchik.merchik.database.realm.RealmManager;
+import ua.com.merchik.merchik.database.realm.tables.AppUserRealm;
 import ua.com.merchik.merchik.database.realm.tables.StackPhotoRealm;
 import ua.com.merchik.merchik.dialogs.DialogData;
-
-import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
-import static ua.com.merchik.merchik.menu_main.decodeSampledBitmapFromResource;
-import static ua.com.merchik.merchik.toolbar_menus.internetStatus;
 
 public class AdapterUtil extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
@@ -65,7 +79,8 @@ public class AdapterUtil extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         Log.e("AdapterUtil", "ENTER data КЛИЕНТЫ SIZE: " + custSize);
         Log.e("AdapterUtil", "ENTER data СОТРУДНИКИ SIZE: " + userSize);
     }
-    public void refresh(UniversalAdapterData newData){
+
+    public void refresh(UniversalAdapterData newData) {
         data = newData;
         notifyDataSetChanged();
     }
@@ -80,7 +95,7 @@ public class AdapterUtil extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
         DefaultViewHolder viewHolder = (DefaultViewHolder) holder;
 
-        switch (referencesEnum){
+        switch (referencesEnum) {
             case ADDRESS:
 //                viewHolder.bind(data.addressDBList.get(position), referencesEnum);
                 viewHolder.bind(data.address.get(position), referencesEnum);
@@ -106,7 +121,7 @@ public class AdapterUtil extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     @Override
     public int getItemCount() {
         try {
-            switch (referencesEnum){
+            switch (referencesEnum) {
                 case ADDRESS:
 //                    return data.addressDBList.size();
                     return data.address.size();
@@ -123,7 +138,8 @@ public class AdapterUtil extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                     return data.chats.size();
 
 
-                default: return 0;
+                default:
+                    return 0;
             }
         } catch (Exception e) {
             return 0;
@@ -164,7 +180,7 @@ public class AdapterUtil extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             Log.e("AdapterUtil", "data: " + data);
 
 
-            switch (referencesEnum){
+            switch (referencesEnum) {
                 case ADDRESS:
                     bindAddress((AddressSDB) data);
                     break;
@@ -213,7 +229,7 @@ public class AdapterUtil extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             Log.e("AdapterUtilStack", "stackPhotoDBAll: " + StackPhotoRealm.getAll().size());
 
             // Если в Базе данных такой фотки нет - я постараюсь её загрузить
-            if (data.img_personal_photo_stackId != null){
+            if (data.img_personal_photo_stackId != null) {
                 Log.e("AdapterUtil", "(" + data.id + ")Фото есть: " + data.img_personal_photo_stackId);
 
                 StackPhotoDB photo = StackPhotoRealm.getById(data.img_personal_photo_stackId);
@@ -232,7 +248,7 @@ public class AdapterUtil extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                     Log.e("AdapterUtil", "(" + data.id + ")Фото есть, ошибка: " + e);
                     image.setImageResource(R.mipmap.merchik);
                 }
-            }else {
+            } else {
                 Log.e("AdapterUtil", "(" + data.id + ") надо качать?");
                 image.setImageResource(R.mipmap.merchik);
                 Log.e("AdapterUtil", "(" + data.id + ")скачиваю");
@@ -246,7 +262,7 @@ public class AdapterUtil extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                         image.setImageBitmap(bitmap);
 
                         // Сохраняю фото в памяти и получаю место хранения
-                        String path = Globals.savePhotoToPhoneMemory("/Sotr", "Sotr"+data.id, bitmap);
+                        String path = Globals.savePhotoToPhoneMemory("/Sotr", "Sotr" + data.id, bitmap);
 
                         // создаю в БД запись этой фотки
                         int newId = RealmManager.stackPhotoGetLastId() + 1;
@@ -286,8 +302,9 @@ public class AdapterUtil extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                 });
             }
 
-
-
+            layout.setOnClickListener(view -> {
+                openSotrInfoDialog(data);
+            });
 
 
         }
@@ -323,7 +340,7 @@ public class AdapterUtil extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             String autor = "Не определено";
             String test = SQL_DB.usersDao().getUserName(data.userId);
             String destination = SQL_DB.usersDao().getUserName(data.userIdTo);
-            if (test != null && !test.equals("")){
+            if (test != null && !test.equals("")) {
                 autor = test;
             }
 
@@ -333,10 +350,10 @@ public class AdapterUtil extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             text4.setText("" + destination);
             text5.setText("" + data.chatId);
 
-            if (data.dtRead == 0){
+            if (data.dtRead == 0) {
                 image.setImageDrawable(mContext.getResources().getDrawable(R.drawable.ic_email));
                 image.setColorFilter(mContext.getResources().getColor(R.color.black));
-            }else {
+            } else {
                 image.setImageDrawable(mContext.getResources().getDrawable(R.drawable.ic_email_open));
                 image.setColorFilter(mContext.getResources().getColor(R.color.shadow));
             }
@@ -348,7 +365,7 @@ public class AdapterUtil extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             msg.append("Код Чата: ").append(data.chatId).append("\n");
             msg.append("Сообщение: ").append(data.msg).append("\n");
 
-            layout.setOnClickListener((v)->{
+            layout.setOnClickListener((v) -> {
                 try {
                     DialogData dialog = new DialogData(mContext);
                     dialog.setTitle("Сообщение " + data.id);
@@ -356,7 +373,7 @@ public class AdapterUtil extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                     dialog.setClose(dialog::dismiss);
                     dialog.show();
 
-                    data.dtRead = System.currentTimeMillis()/1000;
+                    data.dtRead = System.currentTimeMillis() / 1000;
                     SQL_DB.chatDao().insertData(Collections.singletonList(data))
                             .subscribeOn(Schedulers.io())
                             .subscribe(new DisposableCompletableObserver() {
@@ -376,9 +393,9 @@ public class AdapterUtil extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                     dataChat.element_id = data.id;
                     dataChat.msg_id = data.id;
 
-                    if (internetStatus != 1){
+                    if (internetStatus != 1) {
 
-                    }else {
+                    } else {
                         Exchange.chatMarkRead(dataChat, new ExchangeInterface.ExchangeResponseInterfaceSingle() {
                             @Override
                             public <T> void onSuccess(T data) {
@@ -393,7 +410,7 @@ public class AdapterUtil extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                     }
 
                     notifyDataSetChanged();
-                }catch (Exception e){
+                } catch (Exception e) {
                     Toast.makeText(layout.getContext(), "При чтении сообщения произошла ошибка. Обратитесь к своему руководителю за помощью.", Toast.LENGTH_LONG).show();
                     Globals.writeToMLOG("ERROR", "AdapterUtil/bindChats", "Exception e: " + e);
                 }
@@ -402,7 +419,95 @@ public class AdapterUtil extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         }
     }
 
+    /**
+     * 27.03.23.
+     * Создаю модальное окно с "Карточкой сотрудника".
+     * На данном этапе это сделано колхозно и нужно только для того что б сделать перессылку на сайт.
+     */
+    private void openSotrInfoDialog(UsersSDB data) {
+        DialogData dialog = new DialogData(mContext);
+        dialog.setTitle("Картка користувача");
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            dialog.setText(makeEmployeeCardText(data), () -> {
+            });
+        } else {
+            dialog.setText("Обратитесь к Вашему руководителю.");
+        }
+        dialog.setClose(dialog::dismiss);
+        dialog.show();
+    }
 
+    /**
+     * 27.03.23.
+     * Колхозно собрана информация о сотруднике. Это надо будет переделывать.
+     * На данный момент основная задача этого безобразия - сделать перессылку на сайт для того что б
+     * мерчандайзеры могли определить координаты своего места жительства.
+     * <p>
+     * На стороне приложения, для этих целей есть не описанная точка входа(П.Сайт 25 Ноября 22г):
+     * mod=location
+     * act=save_home_location
+     */
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+    private SpannableStringBuilder makeEmployeeCardText(UsersSDB data) {
+        SpannableStringBuilder res = new SpannableStringBuilder();
+        StyleSpan boldSpan = new StyleSpan(android.graphics.Typeface.BOLD);
+
+        res.append(Html.fromHtml("<b>ФИО: </b>"))
+                .append(data.fio)
+                .append("\n");
+
+        // ФИРМА-------
+        res.append(Html.fromHtml("<b>Фирма: </b>"));
+        try {
+            res.append(SQL_DB.customerDao().getById(data.clientId).nm);
+        } catch (Exception e) {
+            res.append("Определить фирму не получилось");
+        }
+        res.append("\n");
+        //--------------
+
+        res.append(Html.fromHtml("<b>Телефон: </b>"))
+                .append(data.tel)
+                .append("\n");
+
+        res.append(Html.fromHtml("<b>Количество отчётов: </b>"))
+                .append(String.valueOf(data.reportCount))
+                .append("\n");
+
+        if (data.id == userId) {
+            res.append("\n");
+            res.append(createLinkedString("Определить координаты места жительства", makeLink()));
+        }
+
+        return res;
+    }
+
+    private SpannableString createLinkedString(String msg, String link) {
+        SpannableString res = new SpannableString(msg);
+        ClickableSpan clickableSpan = new ClickableSpan() {
+            @Override
+            public void onClick(View textView) {
+                Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(link));
+                textView.getContext().startActivity(browserIntent);
+            }
+
+            @Override
+            public void updateDrawState(TextPaint ds) {
+                super.updateDrawState(ds);
+                ds.setUnderlineText(true);
+            }
+        };
+        res.setSpan(clickableSpan, 0, msg.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        return res;
+    }
+
+    private String makeLink() {
+        AppUsersDB appUser = AppUserRealm.getAppUserById(userId);
+        String hash = String.format("%s%s%s", appUser.getUserId(), appUser.getPassword(), "AvgrgsYihSHp6Ok9yQXfSHp6Ok9nXdXr3OSHp6Ok9UPBTzTjrF20Nsz3");
+        hash = Globals.getSha1Hex(hash);
+
+        return String.format("https://merchik.com.ua/sa.php?&u=%s&s=%s&l=/mobile.php?mod=sotr_list**act=my_profile", userId, hash);
+    }
 
 
 }

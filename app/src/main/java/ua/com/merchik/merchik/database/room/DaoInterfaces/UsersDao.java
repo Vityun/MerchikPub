@@ -17,6 +17,9 @@ public interface UsersDao {
     @Query("SELECT * FROM sotr")
     Flowable<List<UsersSDB>> getAll();
 
+    @Query("SELECT * FROM sotr ORDER BY fio")
+    Flowable<List<UsersSDB>> getAllSortedFIO();
+
     @Query("SELECT * FROM sotr")
     List<UsersSDB> getAll2();
 

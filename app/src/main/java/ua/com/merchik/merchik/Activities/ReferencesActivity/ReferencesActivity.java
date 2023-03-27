@@ -1,5 +1,7 @@
 package ua.com.merchik.merchik.Activities.ReferencesActivity;
 
+import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
+
 import android.app.ProgressDialog;
 import android.os.Bundle;
 import android.util.Log;
@@ -23,8 +25,6 @@ import ua.com.merchik.merchik.Utils.UniversalAdapter.AdapterUtil;
 import ua.com.merchik.merchik.Utils.UniversalAdapter.UniversalAdapterData;
 import ua.com.merchik.merchik.data.Database.Room.UsersSDB;
 import ua.com.merchik.merchik.toolbar_menus;
-
-import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
 public class ReferencesActivity extends toolbar_menus {
     Globals globals = new Globals();
@@ -90,7 +90,7 @@ public class ReferencesActivity extends toolbar_menus {
                 case USERS:
                     CompositeDisposable disposable = new CompositeDisposable();
                     ProgressDialog pg = ProgressDialog.show(this, "Отображение данных", "Подождите пока данные подготовятся", true, true);
-                    disposable.add(SQL_DB.usersDao().getAll()
+                    disposable.add(SQL_DB.usersDao().getAllSortedFIO()
                             .observeOn(AndroidSchedulers.mainThread())
                             .subscribe(new Consumer<List<UsersSDB>>() {
                                 @Override
@@ -105,6 +105,8 @@ public class ReferencesActivity extends toolbar_menus {
                                             pg.dismiss();
 
                                     disposable.dispose();
+
+                                    activity_title.setText("Справочник: " + "Сотрудники (" + res.size() + ")");
                                 }
                             })
                     );
