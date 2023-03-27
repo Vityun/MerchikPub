@@ -90,7 +90,7 @@ public class ReferencesActivity extends toolbar_menus {
                 case USERS:
                     CompositeDisposable disposable = new CompositeDisposable();
                     ProgressDialog pg = ProgressDialog.show(this, "Отображение данных", "Подождите пока данные подготовятся", true, true);
-                    disposable.add(SQL_DB.usersDao().getAllSortedFIO()
+                    disposable.add(SQL_DB.usersDao().getAllSortedFIO(Globals.userId)
                             .observeOn(AndroidSchedulers.mainThread())
                             .subscribe(new Consumer<List<UsersSDB>>() {
                                 @Override
