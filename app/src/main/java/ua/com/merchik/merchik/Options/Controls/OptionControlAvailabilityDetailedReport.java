@@ -5,20 +5,32 @@ import static ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedR
 import static ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity.SKUPlan;
 import static ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity.detailedReportRPList;
 import static ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity.detailedReportTovList;
+import static ua.com.merchik.merchik.Globals.userId;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.Intent;
+import android.net.Uri;
 import android.text.Html;
+import android.text.SpannableString;
+import android.text.Spanned;
+import android.text.TextPaint;
+import android.text.style.ClickableSpan;
 import android.util.Log;
+import android.view.View;
 
+import ua.com.merchik.merchik.Clock;
+import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.Options.OptionControl;
 import ua.com.merchik.merchik.Options.Options;
 import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
 import ua.com.merchik.merchik.data.OptionMassageType;
+import ua.com.merchik.merchik.data.RealmModels.AppUsersDB;
 import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
 import ua.com.merchik.merchik.data.RealmModels.ReportPrepareDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.database.realm.RealmManager;
+import ua.com.merchik.merchik.database.realm.tables.AppUserRealm;
 import ua.com.merchik.merchik.database.realm.tables.ReportPrepareRealm;
 import ua.com.merchik.merchik.database.realm.tables.WpDataRealm;
 
@@ -29,6 +41,7 @@ public class OptionControlAvailabilityDetailedReport<T> extends OptionControl {
     private String clientId;
     private int docStatus;  // Проведён ли документ
     private String comment;
+    private WpDataDB wp;
 
     private boolean signal = false;
     private int find = 0;
@@ -46,11 +59,12 @@ public class OptionControlAvailabilityDetailedReport<T> extends OptionControl {
 
     private void getDocumentVar() {
         if (document instanceof WpDataDB) {
-            WpDataDB wp = WpDataRealm.getWpDataRowByDad2Id(((WpDataDB) document).getCode_dad2());
+            WpDataDB wp = WpDataRealm.getWpDataRowByDad2Id(((WpDataDB) document).getCode_dad2());   // ЧТО ЭТО? ЗАЧЕМ???
             dad2 = wp.getCode_dad2();
             clientId = wp.getClient_id();
             docStatus = wp.getStatus();
             comment = wp.user_comment;
+            this.wp = wp;
         } else if (document instanceof TasksAndReclamationsSDB) {
             TasksAndReclamationsSDB tasksAndReclamationsSDB = (TasksAndReclamationsSDB) document;
             dad2 = tasksAndReclamationsSDB.codeDad2;
@@ -187,6 +201,9 @@ public class OptionControlAvailabilityDetailedReport<T> extends OptionControl {
             spannableStringBuilder.append("\n\nЗамечаний нет.");
         }
 
+        spannableStringBuilder.append("\n\n");
+        spannableStringBuilder.append(createLinkedString(makeLink()));
+
         RealmManager.INSTANCE.executeTransaction(realm -> {
             if (optionDB != null) {
                 if (signal){
@@ -199,6 +216,37 @@ public class OptionControlAvailabilityDetailedReport<T> extends OptionControl {
         });
 
         setIsBlockOption(signal);
+    }
+
+    private SpannableString createLinkedString(String msg) {
+        SpannableString res = new SpannableString(msg);
+        ClickableSpan clickableSpan = new ClickableSpan() {
+            @Override
+            public void onClick(View textView) {
+                Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(msg));
+                textView.getContext().startActivity(browserIntent);
+            }
+
+            @Override
+            public void updateDrawState(TextPaint ds) {
+                super.updateDrawState(ds);
+                ds.setUnderlineText(true);
+            }
+        };
+        res.setSpan(clickableSpan, 0, msg.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        return res;
+    }
+
+    private String makeLink(){
+        AppUsersDB appUser = AppUserRealm.getAppUserById(userId);
+        String hash = String.format("%s%s%s", appUser.getUserId(), appUser.getPassword(), "AvgrgsYihSHp6Ok9yQXfSHp6Ok9nXdXr3OSHp6Ok9UPBTzTjrF20Nsz3");
+        hash = Globals.getSha1Hex(hash);
+
+        String addrId = String.valueOf(wp.getAddr_id());
+        String date = Clock.getHumanTimeSecPattern(wp.getDt().getTime(), "yyyy-MM-dd");
+        String clientId = String.valueOf(wp.getClient_id());
+
+        return String.format("https://merchik.com.ua/sa.php?&u=%s&s=%s&l=/mobile.php?mod=message**act=to_client_addr**addr_id=%s**date=%s**client_id=%s", userId, hash, addrId, date, clientId);
     }
 
 }
