@@ -670,7 +670,6 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
         int photoType = 0;
         boolean showPhotoLink = false;
         switch (option.getOptionId()) {
-            case "158309":
             case "158308":
             case "132968":  // - 0  - фото витрины
                 photoType = 0;
@@ -709,6 +708,11 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
 
             case "158606":  //- 36 - доп. место продажи
                 photoType = 36;
+                showPhotoLink = true;
+                break;
+
+            case "158309":  // - 39 - "Фото Витрины" (Наближене)
+                photoType = 39;
                 showPhotoLink = true;
                 break;
 
