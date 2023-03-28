@@ -1141,6 +1141,15 @@ public class Exchange {
             return;
         }
 
+        StringBuilder sb = new StringBuilder();
+        sb.append("mod: ").append(mod).append("\n");
+        sb.append("act: ").append(act).append("\n");
+        sb.append("tovarOnly: ").append(tovarOnly).append("\n");
+        sb.append("imageType: ").append(imageType).append("\n");
+        sb.append("listId: ").append(listId).append("\n");
+
+        Globals.writeToMLOG("INFO", "getTovarImg", sb.toString());
+
         retrofit2.Call<TovarImgResponse> call = RetrofitBuilder.getRetrofitInterface().GET_TOVAR_PHOTO_INFO(mod, act, tovarOnly, nolimit, imageType, listId);
         String finalImageType = imageType;
         call.enqueue(new retrofit2.Callback<TovarImgResponse>() {
@@ -1149,6 +1158,8 @@ public class Exchange {
                 if (response.isSuccessful() && response.body() != null) {
                     try {
                         List<TovarImgList> list = response.body().getList();
+
+                        Globals.writeToMLOG("INFO", "getTovarImg/onResponse", new Gson().toJson(list));
 
                         if (list != null) {
                             downloadTovarImg(list, finalImageType, operationResult);

@@ -221,6 +221,8 @@ public class PhotoDownload {
         // Отладочная инфа
         long start = System.currentTimeMillis() / 1000;
 
+        Globals.writeToMLOG("INFO", "getPhotoURLFromServer", "convertedObject: " + convertedObject);
+
         retrofit2.Call<TovarImgResponse> call = RetrofitBuilder.getRetrofitInterface().GET_TOVAR_PHOTO_INFO_JSON(RetrofitBuilder.contentType, convertedObject);
         call.enqueue(new Callback<TovarImgResponse>() {
             @Override
@@ -231,7 +233,7 @@ public class PhotoDownload {
                 String json = gson.toJson(response);
                 JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
 
-                Globals.writeToMLOG("INFO", "getPhotoURLFromServer", "convertedObject: " + convertedObject);
+                Globals.writeToMLOG("INFO", "getPhotoURLFromServer.onResponse", "convertedObject: " + convertedObject);
 
                 if (response.isSuccessful()) {
                     if (response.body() != null) {
@@ -305,6 +307,7 @@ public class PhotoDownload {
 
             if (photoTP == 18) {
                 count++;
+                Globals.writeToMLOG("INFO", "getPhotoURLFromServer.onResponse.downloadPhoto", "convertedObject: " + new Gson().toJson(item));
                 retrofit2.Call<ResponseBody> call = RetrofitBuilder.getRetrofitInterface().DOWNLOAD_PHOTO_BY_URL(item.getPhotoUrl());
                 int finalCount = count;
                 call.enqueue(new Callback<ResponseBody>() {
@@ -314,7 +317,7 @@ public class PhotoDownload {
                             if (response.body() != null) {
                                 try {
                                     Bitmap bmp = BitmapFactory.decodeStream(response.body().byteStream());
-                                    String path = Globals.saveImage1(bmp, "TOVAR_" + item.getTovarId());
+                                    String path = Globals.saveImage1(bmp, "TOVAR_" + item.getTovarId() + "_SID" + item.getID());
 
                                     int id = RealmManager.stackPhotoGetLastId();
                                     id++;
@@ -323,11 +326,17 @@ public class PhotoDownload {
                                     stackPhotoDB.setId(id);
                                     stackPhotoDB.setPhotoServerId(item.getID());
                                     stackPhotoDB.setObject_id(Integer.valueOf(item.getTovarId()));
+
+                                    stackPhotoDB.addr_id = Integer.valueOf(item.getAddrId());
+                                    stackPhotoDB.approve = Integer.valueOf(item.getApprove());
+                                    stackPhotoDB.dvi = Integer.valueOf(item.getDvi());
+
                                     stackPhotoDB.setVpi(0);
                                     stackPhotoDB.setCreate_time(System.currentTimeMillis());
                                     stackPhotoDB.setUpload_to_server(0);
                                     stackPhotoDB.setGet_on_server(0);
                                     stackPhotoDB.setPhoto_num(path);
+                                    stackPhotoDB.setPhoto_hash(item.getHash());
                                     stackPhotoDB.setPhoto_type(Integer.valueOf(item.getPhotoTp()));
                                     stackPhotoDB.setComment("small");
                                     stackPhotoDB.setUpload_time(0);

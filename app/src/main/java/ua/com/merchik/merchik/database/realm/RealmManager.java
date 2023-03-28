@@ -592,18 +592,7 @@ public class RealmManager {
     public static void stackPhotoSavePhoto(List<StackPhotoDB> stackPhotoDB) {
         INSTANCE.beginTransaction();
         Log.e("TAG_TABLE", "PHOTO_TOVAR_URL_path_id.List: " + stackPhotoDB.size());
-
-
-//        for (StackPhotoDB item: stackPhotoDB){
-//            Log.e("stackPhotoSavePhoto", "(I)item.getAddrId: " + item.getAddrId());
-//        }
-
         List<StackPhotoDB> i = INSTANCE.copyToRealmOrUpdate(stackPhotoDB);
-
-//        for (StackPhotoDB item: i){
-//            Log.e("stackPhotoSavePhoto", "(O)item.getAddrId: " + item.getAddrId());
-//        }
-
         INSTANCE.commitTransaction();
     }
 
@@ -771,6 +760,14 @@ public class RealmManager {
         if (photoServerId != null && !photoServerId.equals("0")) {
             query.equalTo("photoServerId", photoServerId);
         }
+
+
+//        Log.e("R_TOVAR", "Integer id: " + id);
+//        Log.e("R_TOVAR", "String photoServerId: " + photoServerId);
+//        Log.e("R_TOVAR", "Integer type: " + type);
+//        Log.e("R_TOVAR", "boolean size: " + size);
+//        List<StackPhotoDB> test = query.findAll();
+//        Log.e("R_TOVAR", "test: " + test.size());
 
         return query.findFirst();
     }

@@ -1173,17 +1173,11 @@ public class TablesLoadingUnloading {
                                     @Override
                                     public void onSuccess(String data) {
                                         Log.e("test", "String data: " + data);
-//                                        if (finalTovarProgressDialog != null && finalTovarProgressDialog.isShowing()){
-//                                            finalTovarProgressDialog.setMessage(data);
-//                                        }
                                     }
 
                                     @Override
                                     public void onFailure(String error) {
                                         Log.e("test", "String error: " + error);
-//                                        if (finalTovarProgressDialog != null && finalTovarProgressDialog.isShowing()){
-//                                            finalTovarProgressDialog.setMessage(error);
-//                                        }
                                     }
                                 });
 
