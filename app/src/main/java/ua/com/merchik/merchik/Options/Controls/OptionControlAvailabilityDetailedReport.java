@@ -203,6 +203,7 @@ public class OptionControlAvailabilityDetailedReport<T> extends OptionControl {
 
         spannableStringBuilder.append("\n\n");
         spannableStringBuilder.append(createLinkedString("Отправка СМС", makeLink()));
+        notCloseSpannableStringBuilderDialog = true;
 
         RealmManager.INSTANCE.executeTransaction(realm -> {
             if (optionDB != null) {
