@@ -162,7 +162,7 @@ public class Exchange {
                             try {
                                 List<ImagesViewListImageList> datalist = (List<ImagesViewListImageList>) data;
                                 PhotoDownload.savePhotoToDB2(datalist);
-                                Globals.writeToMLOG("INFO", "startExchange/planogram.onSuccess", "OK");
+                                Globals.writeToMLOG("INFO", "startExchange/planogram.onSuccess", "OK: " + datalist.size());
                             } catch (Exception e) {
                                 Globals.writeToMLOG("ERROR", "startExchange/planogram.onSuccess", "Exception e: " + e);
                             }

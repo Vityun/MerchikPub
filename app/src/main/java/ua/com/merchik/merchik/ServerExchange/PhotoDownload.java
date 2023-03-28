@@ -444,7 +444,6 @@ public class PhotoDownload {
             Globals.writeToMLOG("INFO", getClass().getName() + "savePhotoToDB", "List<ModImagesViewList> list: " + list.size());
 
             List<StackPhotoDB> stackList = new ArrayList<>();
-            final int[] id = {RealmManager.stackPhotoGetLastId() + 1};
 
             for (ModImagesViewList item : list) {
                 if (StackPhotoRealm.stackPhotoDBGetPhotoBySiteId(item.getID()) == null) {
@@ -454,7 +453,7 @@ public class PhotoDownload {
                             @Override
                             public void onSuccess(Bitmap bitmap) {
                                 StackPhotoDB stackPhotoDB = new StackPhotoDB();
-                                stackPhotoDB.setId(id[0]);
+                                stackPhotoDB.setId(RealmManager.stackPhotoGetLastId() + 1);
                                 stackPhotoDB.setObject_id(1);   // Добавлено что б эти фотки не пытались выгружаться обычным обменом
 
                                 stackPhotoDB.code_dad2 = Long.parseLong(item.codeDad2);
@@ -481,7 +480,6 @@ public class PhotoDownload {
                                 RealmManager.stackPhotoSavePhoto(stackPhotoDB);
 
                                 stackList.add(stackPhotoDB);
-                                id[0]++;
                             }
 
                             @Override
@@ -783,7 +781,7 @@ public class PhotoDownload {
                 try {
                     if (response.isSuccessful()){
                         if (response.body() != null){
-                            Globals.writeToMLOG("ERROR", "downloadPhoto/onResponse", "response.body(): " + response.body());
+                            Globals.writeToMLOG("INFO", "downloadPhoto/onResponse", "response.body(): " + response.body());
                             InputStream data = response.body().byteStream(); // <--- TODO BUG    java.lang.NullPointerException: Attempt to invoke virtual method 'java.io.InputStream okhttp3.ResponseBody.byteStream()' on a null object reference at ua.com.merchik.merchik.ServerExchange.PhotoDownload$8.onResponse(PhotoDownload.java:574)
 
                             if (data.toString().length() > 0) {
@@ -819,30 +817,34 @@ public class PhotoDownload {
             downloadPhoto(item.photoUrl, new ExchangeInterface.ExchangePhoto() {
                 @Override
                 public void onSuccess(Bitmap bitmap) {
-                    StackPhotoDB photoDB = new StackPhotoDB();
-                    photoDB.setId(RealmManager.stackPhotoGetLastId() + 1);
-                    photoDB.setPhotoServerId(String.valueOf(item.id));
-                    photoDB.setDt(item.dt);
-                    photoDB.setClient_id(item.clientId);
-                    photoDB.setAddr_id(item.addrId);
-                    photoDB.setUser_id(item.merchikId);
-                    photoDB.setPhoto_type(item.photoTp);
+                    Globals.writeToMLOG("INFO", "savePhotoToDB2/downloadPhoto/Planogram", "String.valueOf(item.id): " + String.valueOf(item.id));
+                    try {
+                        StackPhotoDB photoDB = new StackPhotoDB();
+                        photoDB.setId(RealmManager.stackPhotoGetLastId() + 1);
+                        photoDB.setPhotoServerId(String.valueOf(item.id));
+                        photoDB.setDt(item.dt);
+                        photoDB.setClient_id(item.clientId);
+                        photoDB.setAddr_id(item.addrId);
+                        photoDB.setUser_id(item.merchikId);
+                        photoDB.setPhoto_type(item.photoTp);
 
-                    photoDB.setCreate_time(System.currentTimeMillis());// реквизиты что б фотки не выгружались обратно на сервер
-                    photoDB.setUpload_to_server(System.currentTimeMillis());// реквизиты что б фотки не выгружались обратно на сервер
-                    photoDB.setGet_on_server(System.currentTimeMillis());// реквизиты что б фотки не выгружались обратно на сервер
+                        photoDB.setCreate_time(System.currentTimeMillis());// реквизиты что б фотки не выгружались обратно на сервер
+                        photoDB.setUpload_to_server(System.currentTimeMillis());// реквизиты что б фотки не выгружались обратно на сервер
+                        photoDB.setGet_on_server(System.currentTimeMillis());// реквизиты что б фотки не выгружались обратно на сервер
 
-                    photoDB.setPhoto_num(Globals.savePhotoToPhoneMemory("/Planogram", "" + item.id, bitmap));
-                    photoDB.setApprove(item.approve);
+                        photoDB.setPhoto_num(Globals.savePhotoToPhoneMemory("/Planogram", "" + item.id, bitmap));
+                        photoDB.setApprove(item.approve);
 
-                    photoDB.setDvi(item.dvi);
-                    photoDB.setPhotoServerURL(item.photoUrl);
+                        photoDB.setDvi(item.dvi);
+                        photoDB.setPhotoServerURL(item.photoUrl);
 
-//                    photoDB.setCustomerTxt(CustomerRealm.getCustomerById(String.valueOf(item.clientId)).getNm());
-//                    photoDB.setAddressTxt(AddressRealm.getAddressById(item.merchikId).getNm());
-//                    photoDB.setUserTxt(UsersRealm.getUsersDBById(item.merchikId).getNm());
+                        Globals.writeToMLOG("INFO", "savePhotoToDB2/downloadPhoto/Planogram", "photoDB: " + new Gson().toJson(photoDB));
 
-                    RealmManager.stackPhotoSavePhoto(photoDB);
+                        RealmManager.stackPhotoSavePhoto(photoDB);
+                    }catch (Exception e){
+                        Globals.writeToMLOG("ERR", "savePhotoToDB2/downloadPhoto/Planogram", "Exception e: " + e);
+                    }
+
                 }
 
                 @Override
