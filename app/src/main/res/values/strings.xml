@@ -194,6 +194,7 @@
     <string name="option_control_135330_no_photo">Кроме ответа по данной теме Вы должны разместить ФотоОтчет </string>
     <string name="option_control_135330_no_detailed_report">Кроме ответа по данной теме Вы должны внести изменения в Дет.Отчет </string>
     <string name="option_control_135330_msg_what_must_do">Вы должны ознакомиться с указанными рекламациями, Выполнить и Отписать их.</string>
+    <string name="description_calendar_imb_btn">Календар</string>
 
 
 </resources>

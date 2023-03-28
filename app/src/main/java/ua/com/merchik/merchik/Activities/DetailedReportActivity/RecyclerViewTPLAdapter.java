@@ -11,11 +11,13 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.recyclerview.widget.RecyclerView;
 
 import org.honorato.multistatetogglebutton.MultiStateToggleButton;
@@ -51,6 +53,9 @@ public class RecyclerViewTPLAdapter extends RecyclerView.Adapter<RecyclerView.Vi
     @Override
     public int getItemViewType(int position) {
         switch (dataTpl.get(position).getOptionControlName()) {
+            case DT_EXPIRE:
+            case ERROR_ID:
+                return 2;
             case AKCIYA:
             case AKCIYA_ID:
                 return 1;
@@ -70,6 +75,8 @@ public class RecyclerViewTPLAdapter extends RecyclerView.Adapter<RecyclerView.Vi
                 return new ViewHolder(LayoutInflater.from(parent.getContext()).inflate(R.layout.item_rv_tpl, parent, false));
             case 1:
                 return new ViewHolderPromo(LayoutInflater.from(parent.getContext()).inflate(R.layout.item_rv_tpl_promotion, parent, false));
+            case 2:
+                return new ViewHolderUniversal(LayoutInflater.from(parent.getContext()).inflate(R.layout.item_rv_tpl_universal, parent, false));
         }
 
         return null;
@@ -87,6 +94,11 @@ public class RecyclerViewTPLAdapter extends RecyclerView.Adapter<RecyclerView.Vi
             case 1:
                 ViewHolderPromo viewHolder1 = (ViewHolderPromo) holder;
                 viewHolder1.bind(dataTpl.get(position));
+                break;
+
+            case 2:
+                ViewHolderUniversal viewHolderUniversal = (ViewHolderUniversal) holder;
+                viewHolderUniversal.bind(dataTpl.get(position));
                 break;
         }
     }
@@ -365,5 +377,45 @@ public class RecyclerViewTPLAdapter extends RecyclerView.Adapter<RecyclerView.Vi
             }
             return map;
         }
+    }
+
+    class ViewHolderUniversal extends RecyclerView.ViewHolder {
+        private ConstraintLayout layout, layoutData;
+        private TextView textTPL;
+        private Spinner spinner;
+        private ImageButton imageButton;
+        private EditText editText;
+
+        public ViewHolderUniversal(@NonNull View itemView) {
+            super(itemView);
+            layout = itemView.findViewById(R.id.layout);
+            layoutData = itemView.findViewById(R.id.layoutData);
+            textTPL = itemView.findViewById(R.id.tpl);
+            spinner = itemView.findViewById(R.id.spinner);
+            imageButton = itemView.findViewById(R.id.imageButton);
+            editText = itemView.findViewById(R.id.editText);
+        }
+
+        public void bind(TovarOptions item) {
+            textTPL.setText(item.getOptionLong() + ": ");
+            switch (item.getOptionControlName()) {
+                case DT_EXPIRE:
+                    showImageButtonWithCalendar();
+                    break;
+
+                case ERROR_ID:
+                    showSpinnerWithErrorList();
+                    break;
+            }
+        }
+
+        private void showImageButtonWithCalendar() {
+            imageButton.setVisibility(View.VISIBLE);
+        }
+
+        private void showSpinnerWithErrorList() {
+            spinner.setVisibility(View.VISIBLE);
+        }
+
     }
 }
