@@ -1,5 +1,6 @@
 package ua.com.merchik.merchik.Activities.DetailedReportActivity;
 
+import android.app.DatePickerDialog;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffColorFilter;
 import android.text.Editable;
@@ -22,6 +23,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import org.honorato.multistatetogglebutton.MultiStateToggleButton;
 
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -29,6 +31,7 @@ import java.util.Map;
 import io.realm.RealmResults;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.R;
+import ua.com.merchik.merchik.data.RealmModels.ErrorDB;
 import ua.com.merchik.merchik.data.RealmModels.PromoDB;
 import ua.com.merchik.merchik.data.RealmModels.ReportPrepareDB;
 import ua.com.merchik.merchik.data.TovarOptions;
@@ -384,7 +387,7 @@ public class RecyclerViewTPLAdapter extends RecyclerView.Adapter<RecyclerView.Vi
         private TextView textTPL;
         private Spinner spinner;
         private ImageButton imageButton;
-        private EditText editText;
+        private EditText editText, editTextDate;
 
         public ViewHolderUniversal(@NonNull View itemView) {
             super(itemView);
@@ -394,27 +397,84 @@ public class RecyclerViewTPLAdapter extends RecyclerView.Adapter<RecyclerView.Vi
             spinner = itemView.findViewById(R.id.spinner);
             imageButton = itemView.findViewById(R.id.imageButton);
             editText = itemView.findViewById(R.id.editText);
+            editTextDate = itemView.findViewById(R.id.editTextDate);
         }
 
         public void bind(TovarOptions item) {
             textTPL.setText(item.getOptionLong() + ": ");
             switch (item.getOptionControlName()) {
                 case DT_EXPIRE:
-                    showImageButtonWithCalendar();
+                    showImageButtonWithCalendar(item);
                     break;
 
                 case ERROR_ID:
-                    showSpinnerWithErrorList();
+                    showSpinnerWithErrorList(item);
                     break;
             }
         }
 
-        private void showImageButtonWithCalendar() {
+        private void showImageButtonWithCalendar(TovarOptions item) {
             imageButton.setVisibility(View.VISIBLE);
+            editTextDate.setVisibility(View.VISIBLE);
+
+            editTextDate.setText(dataRp.dtExpire);
+            imageButton.setOnClickListener(view -> {
+                Calendar mcurrentDate = Calendar.getInstance();
+                int mDay = mcurrentDate.get(Calendar.DAY_OF_MONTH);
+                int mMonth = mcurrentDate.get(Calendar.MONTH);
+                int mYear = mcurrentDate.get(Calendar.YEAR);
+                DatePickerDialog datePickerDialog = new DatePickerDialog(imageButton.getContext(), (v, year, month, dayOfMonth) -> {
+                    month = month + 1;
+                    String date = year + "-" + month + "-" + dayOfMonth;
+                    editTextDate.setText(date);
+                    click.getData(item, date, null);    // Сохранение данных
+                }, mYear, mMonth, mDay);
+                datePickerDialog.show();
+            });
         }
 
-        private void showSpinnerWithErrorList() {
+        private void showSpinnerWithErrorList(TovarOptions item) {
             spinner.setVisibility(View.VISIBLE);
+
+            Map<String, String> mapSpinner2 = getSpinnerDataMap();
+            String[] res = mapSpinner2.values().toArray(new String[0]);
+
+            ArrayAdapter<String> adapter = new ArrayAdapter<>(spinner.getContext(), android.R.layout.simple_spinner_item, res);
+            adapter.setDropDownViewResource(android.R.layout.simple_spinner_item);
+            spinner.setAdapter(adapter);
+
+            spinner.setSelection(adapter.getPosition(mapSpinner2.get(dataRp.akciyaId)));
+
+            spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                @Override
+                public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+                    try {
+                        String s = adapterView.getSelectedItem().toString();
+                        String res = Globals.getKeyForValueS(s, mapSpinner2);
+
+                        click.getData(item, res, dataRp.errorComment);
+
+                    } catch (Exception e) {
+                        // TODO Рассматривать ошибку
+                    }
+                }
+
+                @Override
+                public void onNothingSelected(AdapterView<?> adapterView) {
+
+                }
+            });
+        }
+
+        private Map<String, String> getSpinnerDataMap() {
+            Map<String, String> map = new HashMap<>();
+            RealmResults<ErrorDB> errorDbList = RealmManager.getAllErrorDb();
+            for (int i = 0; i < errorDbList.size(); i++) {
+                if (errorDbList.get(i).getNm() != null && !errorDbList.get(i).getNm().equals("")) {
+                    map.put(errorDbList.get(i).getID(), errorDbList.get(i).getNm());
+                }
+            }
+            return map;
         }
 
     }
