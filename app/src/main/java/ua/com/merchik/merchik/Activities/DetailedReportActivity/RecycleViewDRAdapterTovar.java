@@ -631,6 +631,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                                 showDialog(list, tovOptTplList.get(i), finalReportPrepareTovar, tovarId, String.valueOf(codeDad2), clientId, finalBalanceData1, finalBalanceDate1);
                             }
                         }
+                        Collections.reverse(dialogList);
                         dialogList.get(0).show();
                     } catch (Exception e) {
                         Globals.writeToMLOG("ERROR", "RecycleViewDRAdapterTovar.bind_7.1", "Exception e: " + e);
@@ -657,6 +658,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                                 showDialog(list, tpl, rp, tovarId, String.valueOf(codeDad2), clientId, "", "");
                             }
                         }
+                        Collections.reverse(dialogList);
                         dialogList.get(0).show();
                     } catch (Exception e) {
                         Globals.writeToMLOG("ERROR", "RecycleViewDRAdapterTovar.bind_8", "Exception e: " + e);
