@@ -1,5 +1,7 @@
 package ua.com.merchik.merchik.Options.Controls;
 
+import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
+
 import android.content.Context;
 import android.os.Build;
 
@@ -21,8 +23,6 @@ import ua.com.merchik.merchik.data.OptionMassageType;
 import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.database.realm.RealmManager;
-
-import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
 public class OptionControlAchievements<T> extends OptionControl {
     public int OPTION_CONTROL_ACHIEVEMENTS_ID = 590;
@@ -77,7 +77,8 @@ public class OptionControlAchievements<T> extends OptionControl {
                 dateDocument = wpDataDB.getDt().getTime() / 1000;
 
                 // dateDocument*1000 -- Делаем такую херь, потому что функция работает в миллисекундах. / 1000 - для перевода в секунды.
-                dateFrom = Clock.getDatePeriodLong(dateDocument * 1000, -35) / 1000;
+                int minusDay = Integer.parseInt(optionDB.getAmountMax()) > 0 ? Integer.parseInt(optionDB.getAmountMax()) : 30;
+                dateFrom = Clock.getDatePeriodLong(dateDocument * 1000, minusDay) / 1000;
                 dateTo = Clock.getDatePeriodLong(dateDocument * 1000, 0) / 1000;
             }
 
@@ -166,12 +167,13 @@ public class OptionControlAchievements<T> extends OptionControl {
                 int sumError = 0;
                 try {
                     sumError = achievementsSDBList.stream().map(table -> table.error).reduce(0, Integer::sum);
-                }catch (Exception ignored){}
+                } catch (Exception ignored) {
+                }
                 if (sumError == achievementsSDBList.size()) {
                     sumOptionError = 1;
                 } else {
-                    for (AchievementsSDB item : achievementsSDBList){
-                        if (item.error == null || item.error == 0){
+                    for (AchievementsSDB item : achievementsSDBList) {
+                        if (item.error == null || item.error == 0) {
                             resultAchievements.add(item);
                         }
                     }
@@ -179,16 +181,16 @@ public class OptionControlAchievements<T> extends OptionControl {
             }
 
             //4.0. готовим сообщение и сигнал
-            if (sumOptionError == 0 && traineeSignal == 0){
+            if (sumOptionError == 0 && traineeSignal == 0) {
                 stringBuilderMsg.append("За период с ").append(Clock.getHumanTimeYYYYMMDD(dateFrom)).append(" по ").append(Clock.getHumanTimeYYYYMMDD(dateTo)).append(" ЕСТЬ утвержденные достижения (с оценкой ")
                         .append(minScore).append(" и более) ").append("???"/*TODO Тут указано ТекПос, откуда я его беру?*/).append(" по ").append(customerSDBDocument.nm)
                         .append(". И переданы клиенту для начисления премии.").append(SPIS);
                 signal = false;
-            }else if (traineeSignal > 0){
+            } else if (traineeSignal > 0) {
                 stringBuilderMsg.append(trainee).append("За период с ").append(Clock.getHumanTimeYYYYMMDD(dateFrom)).append(" по ").append(Clock.getHumanTimeYYYYMMDD(dateTo)).append(" НЕТ утвержденных достижений (с оценкой ")
                         .append(minScore).append(" и более) по ").append(SPIS);
                 signal = false;
-            }else {
+            } else {
                 stringBuilderMsg.append(trainee).append("За период с ").append(Clock.getHumanTimeYYYYMMDD(dateFrom)).append(" по ").append(Clock.getHumanTimeYYYYMMDD(dateTo)).append(" НЕТ утвержденных достижений (с оценкой ")
                         .append(minScore).append(" и более) по ").append(SPIS).append(".");
             }
