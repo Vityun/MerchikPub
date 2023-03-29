@@ -598,13 +598,14 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                                 if (tovOptTplList.get(i).getOptionControlName() != Globals.OptionControlName.AKCIYA) {
                                     if (tovOptTplList.get(i).getOptionControlName().equals(AKCIYA_ID) && finalDeletePromoOption) {
                                         // втыкаю
-                                        showDialog(list, tovOptTplList.get(i), finalReportPrepareTovar, tovarId, String.valueOf(codeDad2), clientId, finalBalanceData1, finalBalanceDate1);
+//                                        showDialog(list, tovOptTplList.get(i), finalReportPrepareTovar, tovarId, String.valueOf(codeDad2), clientId, finalBalanceData1, finalBalanceDate1);
                                     } else {
                                         showDialog(list, tovOptTplList.get(i), finalReportPrepareTovar, tovarId, String.valueOf(codeDad2), clientId, finalBalanceData1, finalBalanceDate1);
                                     }
                                 }
                             }
-
+                            Collections.reverse(dialogList);
+                            dialogList.get(0).show();
                         } else {
                             DialogData dialog = new DialogData(mContext);
                             dialog.setTitle("Внимание!");
@@ -630,6 +631,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                                 showDialog(list, tovOptTplList.get(i), finalReportPrepareTovar, tovarId, String.valueOf(codeDad2), clientId, finalBalanceData1, finalBalanceDate1);
                             }
                         }
+                        dialogList.get(0).show();
                     } catch (Exception e) {
                         Globals.writeToMLOG("ERROR", "RecycleViewDRAdapterTovar.bind_7.1", "Exception e: " + e);
                     }
@@ -655,6 +657,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                                 showDialog(list, tpl, rp, tovarId, String.valueOf(codeDad2), clientId, "", "");
                             }
                         }
+                        dialogList.get(0).show();
                     } catch (Exception e) {
                         Globals.writeToMLOG("ERROR", "RecycleViewDRAdapterTovar.bind_8", "Exception e: " + e);
                         globals.alertDialogMsg(mContext, "Не удалось открыть Опцию. Если ошибка повторяется - обратитесь к своему руководителю.\n\nОшибка: " + e);
@@ -862,15 +865,14 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
             DialogData dialog = new DialogData(mContext);
             dialog.setTitle("");
             dialog.setText("");
-            dialog.setClose(() -> {
-                for (DialogData d : dialogList) {
-                    d.dismiss();
-                }
-            });
+            dialog.setClose(dialog::dismiss);
             dialog.setLesson(mContext, true, 802);
             dialog.setVideoLesson(mContext, true, 803, null);
             dialog.setImage(true, getPhotoFromDB(list));
             dialog.setAdditionalText(setPhotoInfo(reportPrepareDB, tpl, list, finalBalanceData1, finalBalanceDate1));
+
+            // Сделано для того что б можно было контролировать какая опция сейчас открыта
+            dialog.tovarOptions = tpl;
 
             // Устанавливаем дату для операций (в данной реализации только для DoubleSpinner & EditTextAndSpinner)
             switch (tpl.getOptionControlName()) {
@@ -920,7 +922,20 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                 });
             }
 
-            dialog.setCancel("Пропустить", dialog::dismiss);
+            dialog.setCancel("Пропустить", ()->{
+                dialog.dismiss();
+                dialogList.remove(0);
+                if (dialogList.size() > 0){
+                    int face = 0;
+                    if (reportPrepareDB.face != null && !reportPrepareDB.face.equals("")) face = Integer.parseInt(reportPrepareDB.face);
+                    if (dialogList.get(0).tovarOptions.getOptionControlName().equals(ERROR_ID) && face > 0){
+                        // НЕ отображаю модальное окно и удаляю его
+                        dialogList.remove(0);
+                    }else {
+                        dialogList.get(0).show();
+                    }
+                }
+            });
 
             if (!tpl.getOptionControlName().equals(AKCIYA_ID) && !tpl.getOptionControlName().equals(AKCIYA)) {
                 String mod = "report_prepare";
@@ -956,11 +971,11 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
             }
 
 
-            dialog.show();
+//            dialog.show();
 
-            if (!tpl.getOptionId().contains(157242)) {
+//            if (!tpl.getOptionId().contains(157242)) {
                 dialogList.add(dialog);
-            }
+//            }
         }
 
         private SimpleExpandableListAdapter createExpandableAdapter(Context context) {
