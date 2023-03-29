@@ -908,6 +908,8 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                         refreshElement(cd2, list.getiD());
                     }
 
+                    dialogShowRule(reportPrepareDB);
+
                     notifyItemChanged(adapterPosition);
                 });
             } else {
@@ -918,23 +920,15 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                         refreshElement(cd2, list.getiD());
                     }
 
+                    dialogShowRule(reportPrepareDB);
+
                     notifyItemChanged(adapterPosition);
                 });
             }
 
-            dialog.setCancel("Пропустить", ()->{
+            dialog.setCancel("Пропустить", () -> {
                 dialog.dismiss();
-                dialogList.remove(0);
-                if (dialogList.size() > 0){
-                    int face = 0;
-                    if (reportPrepareDB.face != null && !reportPrepareDB.face.equals("")) face = Integer.parseInt(reportPrepareDB.face);
-                    if (dialogList.get(0).tovarOptions.getOptionControlName().equals(ERROR_ID) && face > 0){
-                        // НЕ отображаю модальное окно и удаляю его
-                        dialogList.remove(0);
-                    }else {
-                        dialogList.get(0).show();
-                    }
-                }
+                dialogShowRule(reportPrepareDB);
             });
 
             if (!tpl.getOptionControlName().equals(AKCIYA_ID) && !tpl.getOptionControlName().equals(AKCIYA)) {
@@ -970,11 +964,28 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                 });
             }
 
-
-//            dialog.show();
-
             if (!tpl.getOptionId().contains(157242)) {
                 dialogList.add(dialog);
+            }
+        }
+
+        /**
+         * 29.03.23.
+         * Специальное правило по которому отображаю последовательно модальные окошки из
+         * списка dialogList.
+         * */
+        private void dialogShowRule(ReportPrepareDB reportPrepareDB) {
+            dialogList.remove(0);
+            if (dialogList.size() > 0) {
+                int face = 0;
+                if (reportPrepareDB.face != null && !reportPrepareDB.face.equals(""))
+                    face = Integer.parseInt(reportPrepareDB.face);
+                if (dialogList.get(0).tovarOptions.getOptionControlName().equals(ERROR_ID) && face > 0) {
+                    // НЕ отображаю модальное окно и удаляю его. Уникальное правило потому что потому.
+                    dialogList.remove(0);
+                } else {
+                    dialogList.get(0).show();
+                }
             }
         }
 
@@ -1288,7 +1299,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                     Log.e("SAVE_TO_REPORT_OPT", "AKCIYA_ID_А: " + data2);
                     INSTANCE.executeTransaction(realm -> {
                         table.setAkciyaId(data);
-                        if (data2 != null && !data2.equals("")){
+                        if (data2 != null && !data2.equals("")) {
                             table.setAkciya(data2);
                         }
                         table.setUploadStatus(1);
