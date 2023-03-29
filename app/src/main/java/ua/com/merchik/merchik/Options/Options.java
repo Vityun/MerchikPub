@@ -2563,7 +2563,7 @@ public class Options {
                 if (!temps.contains(temp)) {
                     if (temp.getOptionControlName().equals(AKCIYA_ID) || temp.getOptionControlName().equals(AKCIYA)) {
                         // ничего не делаю
-                        temps.add(temp);
+//                        temps.add(temp);
                     } else {
                         temps.add(temp);
                     }

@@ -11,9 +11,9 @@ import ua.com.merchik.merchik.Globals;
 public class SpinnerDecode implements AdapterView.OnItemSelectedListener {
     private Globals globals = new Globals();
     private String spinnerString = "";
-    private Map<String, String> mapSpinner = new HashMap<>();
+    private Map<Integer, String> mapSpinner = new HashMap<>();
 
-    public void setData(Map<String, String> data) {
+    public void setData(Map<Integer, String> data) {
         mapSpinner = data;
     }
 

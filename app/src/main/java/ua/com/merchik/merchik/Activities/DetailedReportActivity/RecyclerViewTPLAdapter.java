@@ -333,7 +333,7 @@ public class RecyclerViewTPLAdapter extends RecyclerView.Adapter<RecyclerView.Vi
         private void setSpinner(TovarOptions item) {
             // AKCIYA_ID
             // Выбор какая именно у нас Акция
-            Map<String, String> mapSpinner2 = getSpinnerDataMap();
+            Map<Integer, String> mapSpinner2 = getSpinnerDataMap();
             String[] res = mapSpinner2.values().toArray(new String[0]);
 
             ArrayAdapter<String> adapter = new ArrayAdapter<>(spinner.getContext(), android.R.layout.simple_spinner_item, res);
@@ -370,12 +370,12 @@ public class RecyclerViewTPLAdapter extends RecyclerView.Adapter<RecyclerView.Vi
 
         }
 
-        private Map<String, String> getSpinnerDataMap() {
-            Map<String, String> map = new HashMap<>();
+        private Map<Integer, String> getSpinnerDataMap() {
+            Map<Integer, String> map = new HashMap<>();
             RealmResults<PromoDB> promoDbList = RealmManager.getAllPromoDb();
             for (int i = 0; i < promoDbList.size(); i++) {
                 if (promoDbList.get(i).getNm() != null && !promoDbList.get(i).getNm().equals("")) {
-                    map.put(promoDbList.get(i).getID(), promoDbList.get(i).getNm());
+                    map.put(Integer.valueOf(promoDbList.get(i).getID()), promoDbList.get(i).getNm());
                 }
             }
             return map;
@@ -436,7 +436,7 @@ public class RecyclerViewTPLAdapter extends RecyclerView.Adapter<RecyclerView.Vi
         private void showSpinnerWithErrorList(TovarOptions item) {
             spinner.setVisibility(View.VISIBLE);
 
-            Map<String, String> mapSpinner2 = getSpinnerDataMap();
+            Map<Integer, String> mapSpinner2 = getSpinnerDataMap();
             String[] res = mapSpinner2.values().toArray(new String[0]);
 
             ArrayAdapter<String> adapter = new ArrayAdapter<>(spinner.getContext(), android.R.layout.simple_spinner_item, res);
@@ -466,12 +466,12 @@ public class RecyclerViewTPLAdapter extends RecyclerView.Adapter<RecyclerView.Vi
             });
         }
 
-        private Map<String, String> getSpinnerDataMap() {
-            Map<String, String> map = new HashMap<>();
+        private Map<Integer, String> getSpinnerDataMap() {
+            Map<Integer, String> map = new HashMap<>();
             RealmResults<ErrorDB> errorDbList = RealmManager.getAllErrorDb();
             for (int i = 0; i < errorDbList.size(); i++) {
                 if (errorDbList.get(i).getNm() != null && !errorDbList.get(i).getNm().equals("")) {
-                    map.put(errorDbList.get(i).getID(), errorDbList.get(i).getNm());
+                    map.put(Integer.valueOf(errorDbList.get(i).getID()), errorDbList.get(i).getNm());
                 }
             }
             return map;

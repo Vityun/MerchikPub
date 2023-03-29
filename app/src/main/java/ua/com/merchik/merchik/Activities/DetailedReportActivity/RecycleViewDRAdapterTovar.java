@@ -598,7 +598,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                                 if (tovOptTplList.get(i).getOptionControlName() != Globals.OptionControlName.AKCIYA) {
                                     if (tovOptTplList.get(i).getOptionControlName().equals(AKCIYA_ID) && finalDeletePromoOption) {
                                         // втыкаю
-//                                        showDialog(list, tovOptTplList.get(i), finalReportPrepareTovar, tovarId, String.valueOf(codeDad2), clientId, finalBalanceData1, finalBalanceDate1);
+                                        showDialog(list, tovOptTplList.get(i), finalReportPrepareTovar, tovarId, String.valueOf(codeDad2), clientId, finalBalanceData1, finalBalanceDate1, true);
                                     } else {
                                         showDialog(list, tovOptTplList.get(i), finalReportPrepareTovar, tovarId, String.valueOf(codeDad2), clientId, finalBalanceData1, finalBalanceDate1, true);
                                     }
@@ -900,9 +900,9 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                         PromoDB promoDB = PromoRealm.getPromoDBById(reportPrepareDB.getAkciyaId());
                         dialog.setOperationTextData(promoDB != null ? promoDB.getNm() : reportPrepareDB.getAkciyaId());
 
-                        Map<String, String> map = new HashMap<>();
-                        map.put("2", "Акция отсутствует");
-                        map.put("1", "Есть акция");
+                        Map<Integer, String> map = new HashMap<>();
+                        map.put(2, "Акция отсутствует");
+                        map.put(1, "Есть акция");
 
                         String akciya = map.get(reportPrepareDB.getAkciya());
 
@@ -918,7 +918,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                             refreshElement(cd2, list.getiD());
                         }
 
-                        dialogShowRule();
+                        dialogShowRule(clickType);
 
                         notifyItemChanged(adapterPosition);
                     });
@@ -930,7 +930,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                             refreshElement(cd2, list.getiD());
                         }
 
-                        dialogShowRule();
+                        dialogShowRule(clickType);
 
                         notifyItemChanged(adapterPosition);
                     });
@@ -938,7 +938,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
 
                 dialog.setCancel("Пропустить", () -> {
                     dialog.dismiss();
-                    dialogShowRule();
+                    dialogShowRule(clickType);
                 });
 
                 if (!tpl.getOptionControlName().equals(AKCIYA_ID) && !tpl.getOptionControlName().equals(AKCIYA)) {
@@ -986,13 +986,13 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
          * Специальное правило по которому отображаю последовательно модальные окошки из
          * списка dialogList.
          */
-        private void dialogShowRule() {
+        private void dialogShowRule(boolean clickType) {
             dialogList.remove(0);
             if (dialogList.size() > 0) {
                 int face = 0;
                 if (dialogList.get(0).reportPrepareDB.face != null && !dialogList.get(0).reportPrepareDB.face.equals(""))
                     face = Integer.parseInt(dialogList.get(0).reportPrepareDB.face);
-                if (dialogList.get(0).tovarOptions.getOptionControlName().equals(ERROR_ID) && (dialogList.get(0).tovarOptions.getOptionId().contains(157242) || dialogList.get(0).tovarOptions.getOptionId().contains(157241) || dialogList.get(0).tovarOptions.getOptionId().contains(157243)) && face > 0) {
+                if (clickType && dialogList.get(0).tovarOptions.getOptionControlName().equals(ERROR_ID) && (dialogList.get(0).tovarOptions.getOptionId().contains(157242) || dialogList.get(0).tovarOptions.getOptionId().contains(157241) || dialogList.get(0).tovarOptions.getOptionId().contains(157243)) && face > 0) {
                     // НЕ отображаю модальное окно и удаляю его. Уникальное правило потому что потому.
                     dialogList.remove(0);
                 } else {
@@ -1058,14 +1058,14 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
             return adapter;
         }
 
-        private Map<String, String> setMapData(Globals.OptionControlName optionControlName) {
-            Map<String, String> map = new HashMap<>();
+        private Map<Integer, String> setMapData(Globals.OptionControlName optionControlName) {
+            Map<Integer, String> map = new HashMap<>();
             switch (optionControlName) {
                 case ERROR_ID:
                     RealmResults<ErrorDB> errorDbList = RealmManager.getAllErrorDb();
                     for (int i = 0; i < errorDbList.size(); i++) {
                         if (errorDbList.get(i).getNm() != null && !errorDbList.get(i).getNm().equals("")) {
-                            map.put(errorDbList.get(i).getID(), errorDbList.get(i).getNm());
+                            map.put(Integer.valueOf(errorDbList.get(i).getID()), errorDbList.get(i).getNm());
                         }
                     }
                     return map;
@@ -1074,14 +1074,19 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                     RealmResults<PromoDB> promoDbList = RealmManager.getAllPromoDb();
                     for (int i = 0; i < promoDbList.size(); i++) {
                         if (promoDbList.get(i).getNm() != null && !promoDbList.get(i).getNm().equals("")) {
-                            map.put(promoDbList.get(i).getID(), promoDbList.get(i).getNm());
+                            map.put(Integer.valueOf(promoDbList.get(i).getID()), promoDbList.get(i).getNm());
                         }
                     }
+
+                    map.put(0, "Оберіть тип акції");
+
                     return map;
 
                 case AKCIYA:
-                    map.put("2", "Акция отсутствует");
-                    map.put("1", "Есть акция");
+                    map.put(2, "Акция отсутствует");
+                    map.put(1, "Есть акция");
+
+                    map.put(0, "Оберіть наявність акції");
 
                     return map;
 

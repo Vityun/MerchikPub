@@ -250,14 +250,14 @@ public class OptionControlPromotion<T> extends OptionControl {
     TovarOptions TPL = new TovarOptions(AKCIYA_ID, "А", "Вид акции", "akciya_id", "main", 80977);
 
     // Нужно для заполенния ТПЛ-ов
-    private Map<String, String> setMapData(Globals.OptionControlName optionControlName) {
-        Map<String, String> map = new HashMap<>();
+    private Map<Integer, String> setMapData(Globals.OptionControlName optionControlName) {
+        Map<Integer, String> map = new HashMap<>();
         switch (optionControlName) {
             case ERROR_ID:
                 RealmResults<ErrorDB> errorDbList = RealmManager.getAllErrorDb();
                 for (int i = 0; i < errorDbList.size(); i++) {
                     if (errorDbList.get(i).getNm() != null && !errorDbList.get(i).getNm().equals("")) {
-                        map.put(errorDbList.get(i).getID(), errorDbList.get(i).getNm());
+                        map.put(Integer.valueOf(errorDbList.get(i).getID()), errorDbList.get(i).getNm());
                     }
                 }
                 return map;
@@ -266,14 +266,14 @@ public class OptionControlPromotion<T> extends OptionControl {
                 RealmResults<PromoDB> promoDbList = RealmManager.getAllPromoDb();
                 for (int i = 0; i < promoDbList.size(); i++) {
                     if (promoDbList.get(i).getNm() != null && !promoDbList.get(i).getNm().equals("")) {
-                        map.put(promoDbList.get(i).getID(), promoDbList.get(i).getNm());
+                        map.put(Integer.valueOf(promoDbList.get(i).getID()), promoDbList.get(i).getNm());
                     }
                 }
                 return map;
 
             case AKCIYA:
-                map.put("2", "Акция отсутствует");
-                map.put("1", "Есть акция");
+                map.put(2, "Акция отсутствует");
+                map.put(1, "Есть акция");
 
                 return map;
 

@@ -18,6 +18,7 @@ import android.text.SpannableStringBuilder;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.view.inputmethod.EditorInfo;
 import android.widget.AdapterView;
@@ -61,8 +62,8 @@ public class DialogData {
     public Context context;
 
     // ---- Data input Dialog ----
-    private Map<String, String> mapSpinner;
-    private Map<String, String> mapSpinner2;
+    private Map<Integer, String> mapSpinner;
+    private Map<Integer, String> mapSpinner2;
     private String textData, textData2;
     public TovarOptions tovarOptions;
     public ReportPrepareDB reportPrepareDB;
@@ -577,7 +578,7 @@ public class DialogData {
      * 3 - EditText дата
      * 4 - Spinner выбор
      */
-    public void setOperation(Operations operation, String data, Map<String, String> map, DialogClickListener listener) {
+    public void setOperation(Operations operation, String data, Map<Integer, String> map, DialogClickListener listener) {
         listenerOK = listener;
         operationLayout.setVisibility(View.VISIBLE);
         ok.setVisibility(View.VISIBLE);
@@ -770,17 +771,36 @@ public class DialogData {
                 if (mapSpinner != null && mapSpinner.size() > 0) {
                     String[] res = mapSpinner.values().toArray(new String[0]);
 
-//                    ArrayList<String> res = new ArrayList<>();
-//                    for (Map.Entry<String, String> entry : mapSpinner.entrySet()){
-//                        res.add(Integer.parseInt(entry.getKey()), entry.getValue());
-//                    }
-
-                    ArrayAdapter<String> adapter = new ArrayAdapter<>(dialog.getContext(), android.R.layout.simple_spinner_item, res);
+                    ArrayAdapter<String> adapter = new ArrayAdapter(dialog.getContext(), android.R.layout.simple_spinner_item, res){
+                        @Override
+                        public boolean isEnabled(int position) {
+                            if (position == 0) {
+                                return false;
+                            } else {
+                                return true;
+                            }
+                        }
+                        @Override
+                        public View getDropDownView(int position, View convertView,
+                                                    ViewGroup parent) {
+                            View view = super.getDropDownView(position, convertView, parent);
+                            TextView tv = (TextView) view;
+                            if (position == 0) {
+                                // Set the hint text color gray
+                                tv.setTextColor(Color.GRAY);
+                            } else {
+                                tv.setTextColor(Color.BLACK);
+                            }
+                            return view;
+                        }
+                    };
                     adapter.setDropDownViewResource(android.R.layout.simple_spinner_item);
                     spinner.setAdapter(adapter);
 
-                    int spinnerPosition = adapter.getPosition(textData);
-                    spinner.setSelection(spinnerPosition);
+                    if (textData != null && !textData.equals("") && !textData.equals("0")){
+                        int spinnerPosition = adapter.getPosition(textData);
+                        spinner.setSelection(spinnerPosition);
+                    }
 
                     SpinnerDialogData spinnerDialogData = new SpinnerDialogData();
                     spinnerDialogData.setData(mapSpinner);
@@ -791,12 +811,36 @@ public class DialogData {
                 if (mapSpinner2 != null && mapSpinner2.size() > 0) {
                     String[] res = mapSpinner2.values().toArray(new String[0]);
 
-                    ArrayAdapter<String> adapter = new ArrayAdapter<>(dialog.getContext(), android.R.layout.simple_spinner_item, res);
+                    ArrayAdapter<String> adapter = new ArrayAdapter(dialog.getContext(), android.R.layout.simple_spinner_item, res){
+                        @Override
+                        public boolean isEnabled(int position) {
+                            if (position == 0) {
+                                return false;
+                            } else {
+                                return true;
+                            }
+                        }
+                        @Override
+                        public View getDropDownView(int position, View convertView,
+                                                    ViewGroup parent) {
+                            View view = super.getDropDownView(position, convertView, parent);
+                            TextView tv = (TextView) view;
+                            if (position == 0) {
+                                // Set the hint text color gray
+                                tv.setTextColor(Color.GRAY);
+                            } else {
+                                tv.setTextColor(Color.BLACK);
+                            }
+                            return view;
+                        }
+                    };
                     adapter.setDropDownViewResource(android.R.layout.simple_spinner_item);
                     spinner2.setAdapter(adapter);
 
-                    int spinnerPosition = adapter.getPosition(textData2);
-                    spinner2.setSelection(spinnerPosition);
+                    if (textData2 != null && !textData2.equals("") && !textData2.equals("0")){
+                        int spinnerPosition = adapter.getPosition(textData2);
+                        spinner2.setSelection(spinnerPosition);
+                    }
 
                     SpinnerDialogData spinnerDialogData = new SpinnerDialogData();
                     spinnerDialogData.setData(mapSpinner2);
@@ -809,8 +853,12 @@ public class DialogData {
                     result = Globals.getKeyForValueS(spinner.getSelectedItem().toString(), mapSpinner);
                     result2 = Globals.getKeyForValueS(spinner2.getSelectedItem().toString(), mapSpinner2);
 
-                    listener.clicked();
-                    dialog.dismiss();
+                    if (result.equals("") || result.equals("0") || result2.equals("") || result2.equals("0")){
+                        Toast.makeText(dialog.getContext(), "Для збереження потрібно внести ОБИДВА реквізити! \nСпробуйте ще раз.", Toast.LENGTH_LONG).show();
+                    }else {
+                        listener.clicked();
+                        dialog.dismiss();
+                    }
                 });
 
                 break;
@@ -926,7 +974,7 @@ public class DialogData {
      * 27.01.2021
      * Устанавливаем данные для спинера 1
      */
-    public void setOperationSpinnerData(Map<String, String> map) {
+    public void setOperationSpinnerData(Map<Integer, String> map) {
         mapSpinner = map;
     }
 
@@ -934,7 +982,7 @@ public class DialogData {
      * 27.01.2021
      * Устанавливаем данные для спинера 2
      */
-    public void setOperationSpinner2Data(Map<String, String> map) {
+    public void setOperationSpinner2Data(Map<Integer, String> map) {
         mapSpinner2 = map;
     }
 
@@ -1072,9 +1120,9 @@ public class DialogData {
     private class SpinnerDialogData implements AdapterView.OnItemSelectedListener {
         private Globals globals = new Globals();
         private String spinnerString = "";
-        private Map<String, String> mapSpinner = new HashMap<>();
+        private Map<Integer, String> mapSpinner = new HashMap<>();
 
-        public void setData(Map<String, String> data) {
+        public void setData(Map<Integer, String> data) {
             mapSpinner = data;
         }
 

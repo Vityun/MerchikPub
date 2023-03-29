@@ -1,5 +1,7 @@
 package ua.com.merchik.merchik;
 
+import static ua.com.merchik.merchik.toolbar_menus.internetStatus;
+
 import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -58,8 +60,6 @@ import ua.com.merchik.merchik.data.Database.Room.TranslatesSDB;
 import ua.com.merchik.merchik.data.RealmModels.LogMPDB;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.dialogs.DialogData;
-
-import static ua.com.merchik.merchik.toolbar_menus.internetStatus;
 
 public class Globals {
 
@@ -428,14 +428,14 @@ public class Globals {
 //    }
 
 
-    public static String getKeyForValueS(Object desiredObject, Map<String, String> map) {
+    public static String getKeyForValueS(Object desiredObject, Map<Integer, String> map) {
         //HashMap<String,Object> map=new HashMap<String,Object>();
-        Set<Map.Entry<String, String>> entrySet = map.entrySet();
+        Set<Map.Entry<Integer, String>> entrySet = map.entrySet();
 
         //Object desiredObject=new Object();//что хотим найти
-        for (Map.Entry<String, String> pair : entrySet) {
+        for (Map.Entry<Integer, String> pair : entrySet) {
             if (desiredObject.equals(pair.getValue())) {
-                return pair.getKey();// нашли наше значение и возвращаем  ключ
+                return String.valueOf(pair.getKey());// нашли наше значение и возвращаем  ключ
             }
         }
         return null;

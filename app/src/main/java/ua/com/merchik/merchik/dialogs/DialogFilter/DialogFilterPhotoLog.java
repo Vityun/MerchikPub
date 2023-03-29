@@ -85,7 +85,7 @@ public class DialogFilterPhotoLog {
     private void setElements(){
         editText.setText(text);
 
-        Map<String, String> map =  PhotoTypeRealm.getPhotoTypeMap();
+        Map<Integer, String> map =  PhotoTypeRealm.getPhotoTypeMap();
 
         String[] res = map.values().toArray(new String[0]);
         ArrayAdapter<String> adapter = new ArrayAdapter<>(dialog.getContext(), android.R.layout.simple_spinner_item, res);
