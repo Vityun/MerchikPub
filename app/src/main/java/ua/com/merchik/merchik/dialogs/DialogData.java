@@ -51,6 +51,7 @@ import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteHintsDB;
 import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteObjects.SiteObjectsDB;
 import ua.com.merchik.merchik.data.PhotoDescriptionText;
+import ua.com.merchik.merchik.data.RealmModels.ReportPrepareDB;
 import ua.com.merchik.merchik.data.TovarOptions;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.ErrorRealm;
@@ -64,6 +65,7 @@ public class DialogData {
     private Map<String, String> mapSpinner2;
     private String textData, textData2;
     public TovarOptions tovarOptions;
+    public ReportPrepareDB reportPrepareDB;
 
 
     // ---- Data output Dialog ----

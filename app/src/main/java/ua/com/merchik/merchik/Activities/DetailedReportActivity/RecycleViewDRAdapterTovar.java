@@ -32,7 +32,6 @@ import android.widget.Button;
 import android.widget.Filter;
 import android.widget.Filterable;
 import android.widget.ImageView;
-import android.widget.SimpleExpandableListAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -60,6 +59,7 @@ import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.ServerExchange.Exchange;
 import ua.com.merchik.merchik.ServerExchange.PhotoDownload;
 import ua.com.merchik.merchik.ServerExchange.TablesLoadingUnloading;
+import ua.com.merchik.merchik.Utils.MySimpleExpandableListAdapter;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.WorkPlan;
 import ua.com.merchik.merchik.data.Database.Room.ArticleSDB;
@@ -600,7 +600,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                                         // втыкаю
 //                                        showDialog(list, tovOptTplList.get(i), finalReportPrepareTovar, tovarId, String.valueOf(codeDad2), clientId, finalBalanceData1, finalBalanceDate1);
                                     } else {
-                                        showDialog(list, tovOptTplList.get(i), finalReportPrepareTovar, tovarId, String.valueOf(codeDad2), clientId, finalBalanceData1, finalBalanceDate1);
+                                        showDialog(list, tovOptTplList.get(i), finalReportPrepareTovar, tovarId, String.valueOf(codeDad2), clientId, finalBalanceData1, finalBalanceDate1, true);
                                     }
                                 }
                             }
@@ -628,7 +628,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                         // В Цикле открываем Н количество инфы
                         for (int i = tovOptTplList.size() - 1; i >= 0; i--) {
                             if (tovOptTplList.get(i).getOptionControlName() != Globals.OptionControlName.AKCIYA) {
-                                showDialog(list, tovOptTplList.get(i), finalReportPrepareTovar, tovarId, String.valueOf(codeDad2), clientId, finalBalanceData1, finalBalanceDate1);
+                                showDialog(list, tovOptTplList.get(i), finalReportPrepareTovar, tovarId, String.valueOf(codeDad2), clientId, finalBalanceData1, finalBalanceDate1, false);
                             }
                         }
                         Collections.reverse(dialogList);
@@ -655,7 +655,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                         Collections.reverse(tovOptTplList); // Реверснул что б отображалось более менее адекватно пользователю (в естественном порядке)
                         for (TovarOptions tpl : tovOptTplList) {
                             if (tpl.getOptionControlName() != Globals.OptionControlName.AKCIYA) {
-                                showDialog(list, tpl, rp, tovarId, String.valueOf(codeDad2), clientId, "", "");
+                                showDialog(list, tpl, rp, tovarId, String.valueOf(codeDad2), clientId, "", "", false);
                             }
                         }
                         Collections.reverse(dialogList);
@@ -861,23 +861,31 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
          */
         private List<DialogData> dialogList = new ArrayList<>();
 
-        private void showDialog(TovarDB list, TovarOptions tpl, ReportPrepareDB reportPrepareDB, String tovarId, String cd2, String clientId, String finalBalanceData1, String finalBalanceDate1) {
-            final int adapterPosition = getAdapterPosition();
+        /**
+         * 29.03.23
+         * boolean clickType - добавлено для того что б различать долгий/короткий клик
+         * true - короткий
+         * false - длинный
+         * */
+        private void showDialog(TovarDB list, TovarOptions tpl, ReportPrepareDB reportPrepareDB, String tovarId, String cd2, String clientId, String finalBalanceData1, String finalBalanceDate1, boolean clickType) {
+            try {
+                final int adapterPosition = getAdapterPosition();
 
-            DialogData dialog = new DialogData(mContext);
-            dialog.setTitle("");
-            dialog.setText("");
-            dialog.setClose(dialog::dismiss);
-            dialog.setLesson(mContext, true, 802);
-            dialog.setVideoLesson(mContext, true, 803, null);
-            dialog.setImage(true, getPhotoFromDB(list));
-            dialog.setAdditionalText(setPhotoInfo(reportPrepareDB, tpl, list, finalBalanceData1, finalBalanceDate1));
+                DialogData dialog = new DialogData(mContext);
+                dialog.setTitle("");
+                dialog.setText("");
+                dialog.setClose(dialog::dismiss);
+                dialog.setLesson(mContext, true, 802);
+                dialog.setVideoLesson(mContext, true, 803, null);
+                dialog.setImage(true, getPhotoFromDB(list));
+                dialog.setAdditionalText(setPhotoInfo(reportPrepareDB, tpl, list, finalBalanceData1, finalBalanceDate1));
 
-            // Сделано для того что б можно было контролировать какая опция сейчас открыта
-            dialog.tovarOptions = tpl;
+                // Сделано для того что б можно было контролировать какая опция сейчас открыта
+                dialog.tovarOptions = tpl;
+                dialog.reportPrepareDB = reportPrepareDB;
 
-            // Устанавливаем дату для операций (в данной реализации только для DoubleSpinner & EditTextAndSpinner)
-            switch (tpl.getOptionControlName()) {
+                // Устанавливаем дату для операций (в данной реализации только для DoubleSpinner & EditTextAndSpinner)
+                switch (tpl.getOptionControlName()) {
 //                case ERROR_ID:
 //                    dialog.setOperationSpinnerData(setMapData(tpl.getOptionControlName()));
 //
@@ -885,89 +893,94 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
 //                    dialog.setOperationTextData2(reportPrepareDB.getErrorComment());
 //                    break;
 
-                case AKCIYA_ID:
-                    dialog.setOperationSpinnerData(setMapData(tpl.getOptionControlName()));
-                    dialog.setOperationSpinner2Data(setMapData(Globals.OptionControlName.AKCIYA));
+                    case AKCIYA_ID:
+                        dialog.setOperationSpinnerData(setMapData(tpl.getOptionControlName()));
+                        dialog.setOperationSpinner2Data(setMapData(Globals.OptionControlName.AKCIYA));
 
-                    PromoDB promoDB = PromoRealm.getPromoDBById(reportPrepareDB.getAkciyaId());
-                    dialog.setOperationTextData(promoDB != null ? promoDB.getNm() : reportPrepareDB.getAkciyaId());
+                        PromoDB promoDB = PromoRealm.getPromoDBById(reportPrepareDB.getAkciyaId());
+                        dialog.setOperationTextData(promoDB != null ? promoDB.getNm() : reportPrepareDB.getAkciyaId());
 
-                    Map<String, String> map = new HashMap<>();
-                    map.put("2", "Акция отсутствует");
-                    map.put("1", "Есть акция");
+                        Map<String, String> map = new HashMap<>();
+                        map.put("2", "Акция отсутствует");
+                        map.put("1", "Есть акция");
 
-                    String akciya = map.get(reportPrepareDB.getAkciya());
+                        String akciya = map.get(reportPrepareDB.getAkciya());
 
-                    dialog.setOperationTextData2(akciya);
-                    break;
+                        dialog.setOperationTextData2(akciya);
+                        break;
 
-            }
+                }
 
-            if (tpl.getOptionControlName() != null && tpl.getOptionControlName().equals(ERROR_ID)) {    // Работа с ошибками
-                dialog.setExpandableListView(createExpandableAdapter(dialog.context), () -> {
-                    if (dialog.getOperationResult() != null) {
-                        operetionSaveRPToDB(tpl, reportPrepareDB, dialog.getOperationResult(), dialog.getOperationResult2(), null);
-                        refreshElement(cd2, list.getiD());
-                    }
+                if (tpl.getOptionControlName() != null && tpl.getOptionControlName().equals(ERROR_ID)) {    // Работа с ошибками
+                    dialog.setExpandableListView(createExpandableAdapter(dialog.context), () -> {
+                        if (dialog.getOperationResult() != null) {
+                            operetionSaveRPToDB(tpl, reportPrepareDB, dialog.getOperationResult(), dialog.getOperationResult2(), null);
+                            refreshElement(cd2, list.getiD());
+                        }
 
-                    dialogShowRule(reportPrepareDB);
+                        dialogShowRule();
 
-                    notifyItemChanged(adapterPosition);
+                        notifyItemChanged(adapterPosition);
+                    });
+                } else {
+                    dialog.setOperation(operationType(tpl), getCurrentData(tpl, cd2, tovarId), setMapData(tpl.getOptionControlName()), () -> {
+                        if (dialog.getOperationResult() != null) {
+                            operetionSaveRPToDB(tpl, reportPrepareDB, dialog.getOperationResult(), dialog.getOperationResult2(), null);
+                            Toast.makeText(mContext, "Внесено: " + dialog.getOperationResult(), Toast.LENGTH_LONG).show();
+                            refreshElement(cd2, list.getiD());
+                        }
+
+                        dialogShowRule();
+
+                        notifyItemChanged(adapterPosition);
+                    });
+                }
+
+                dialog.setCancel("Пропустить", () -> {
+                    dialog.dismiss();
+                    dialogShowRule();
                 });
-            } else {
-                dialog.setOperation(operationType(tpl), getCurrentData(tpl, cd2, tovarId), setMapData(tpl.getOptionControlName()), () -> {
-                    if (dialog.getOperationResult() != null) {
-                        operetionSaveRPToDB(tpl, reportPrepareDB, dialog.getOperationResult(), dialog.getOperationResult2(), null);
-                        Toast.makeText(mContext, "Внесено: " + dialog.getOperationResult(), Toast.LENGTH_LONG).show();
-                        refreshElement(cd2, list.getiD());
-                    }
 
-                    dialogShowRule(reportPrepareDB);
-
-                    notifyItemChanged(adapterPosition);
-                });
-            }
-
-            dialog.setCancel("Пропустить", () -> {
-                dialog.dismiss();
-                dialogShowRule(reportPrepareDB);
-            });
-
-            if (!tpl.getOptionControlName().equals(AKCIYA_ID) && !tpl.getOptionControlName().equals(AKCIYA)) {
-                String mod = "report_prepare";
-                String act = "get_param_stats";
-                retrofit2.Call<ReportHint> call = RetrofitBuilder.getRetrofitInterface().GET_REPORT_HINT(mod, act, tovarId, cd2, clientId);
-                call.enqueue(new retrofit2.Callback<ReportHint>() {
-                    @Override
-                    public void onResponse(retrofit2.Call<ReportHint> call, retrofit2.Response<ReportHint> response) {
-                        if (response.isSuccessful() && response.body() != null) {
-                            ReportHint reportHint = response.body();
-                            if (reportHint.getState()) {
-                                for (ReportHintList item : reportHint.getList()) {
-                                    if (tpl.getOrderField().equals(item.getField())) {
-                                        dialog.setAdditionalOperation(setAdapter(tpl, reportHint.getList(), value -> {
-                                            operetionSaveRPToDB(tpl, reportPrepareDB, value, dialog.getOperationResult2(), null);
-                                            Toast.makeText(mContext, "Внесено: " + value, Toast.LENGTH_LONG).show();
-                                            refreshElement(cd2, list.getiD());
-                                            notifyItemChanged(adapterPosition);
-                                            dialog.dismiss();
-                                        }), setLayout());
+                if (!tpl.getOptionControlName().equals(AKCIYA_ID) && !tpl.getOptionControlName().equals(AKCIYA)) {
+                    String mod = "report_prepare";
+                    String act = "get_param_stats";
+                    retrofit2.Call<ReportHint> call = RetrofitBuilder.getRetrofitInterface().GET_REPORT_HINT(mod, act, tovarId, cd2, clientId);
+                    call.enqueue(new retrofit2.Callback<ReportHint>() {
+                        @Override
+                        public void onResponse(retrofit2.Call<ReportHint> call, retrofit2.Response<ReportHint> response) {
+                            if (response.isSuccessful() && response.body() != null) {
+                                ReportHint reportHint = response.body();
+                                if (reportHint.getState()) {
+                                    for (ReportHintList item : reportHint.getList()) {
+                                        if (tpl.getOrderField().equals(item.getField())) {
+                                            dialog.setAdditionalOperation(setAdapter(tpl, reportHint.getList(), value -> {
+                                                operetionSaveRPToDB(tpl, reportPrepareDB, value, dialog.getOperationResult2(), null);
+                                                Toast.makeText(mContext, "Внесено: " + value, Toast.LENGTH_LONG).show();
+                                                refreshElement(cd2, list.getiD());
+                                                notifyItemChanged(adapterPosition);
+                                                dialog.dismiss();
+                                            }), setLayout());
+                                        }
                                     }
-                                }
 //                            dialog.show();
+                                }
                             }
                         }
-                    }
 
-                    @Override
-                    public void onFailure(Call<ReportHint> call, Throwable t) {
+                        @Override
+                        public void onFailure(Call<ReportHint> call, Throwable t) {
 //                    dialog.show();
-                    }
-                });
-            }
+                        }
+                    });
+                }
 
-            if (!tpl.getOptionId().contains(157242)) {
-                dialogList.add(dialog);
+                if (!tpl.getOptionId().contains(157242) && clickType) {
+                    dialogList.add(dialog);
+                }else if (!clickType){
+                    dialogList.add(dialog);
+                }
+            }catch (Exception e){
+                Log.d("test", "test" + e);
             }
         }
 
@@ -976,12 +989,12 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
          * Специальное правило по которому отображаю последовательно модальные окошки из
          * списка dialogList.
          * */
-        private void dialogShowRule(ReportPrepareDB reportPrepareDB) {
+        private void dialogShowRule() {
             dialogList.remove(0);
             if (dialogList.size() > 0) {
                 int face = 0;
-                if (reportPrepareDB.face != null && !reportPrepareDB.face.equals(""))
-                    face = Integer.parseInt(reportPrepareDB.face);
+                if (dialogList.get(0).reportPrepareDB.face != null && !dialogList.get(0).reportPrepareDB.face.equals(""))
+                    face = Integer.parseInt(dialogList.get(0).reportPrepareDB.face);
                 if (dialogList.get(0).tovarOptions.getOptionControlName().equals(ERROR_ID) && face > 0) {
                     // НЕ отображаю модальное окно и удаляю его. Уникальное правило потому что потому.
                     dialogList.remove(0);
@@ -991,7 +1004,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
             }
         }
 
-        private SimpleExpandableListAdapter createExpandableAdapter(Context context) {
+        private MySimpleExpandableListAdapter createExpandableAdapter(Context context) {
 
             Map<String, String> map;
             ArrayList<Map<String, String>> groupDataList = new ArrayList<>();
@@ -1039,7 +1052,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                 }
             }
 
-            SimpleExpandableListAdapter adapter = new SimpleExpandableListAdapter(
+            MySimpleExpandableListAdapter adapter = new MySimpleExpandableListAdapter(
                     context, groupDataList,
                     android.R.layout.simple_expandable_list_item_1, groupFrom,
                     groupTo, сhildDataList, android.R.layout.simple_list_item_1,
