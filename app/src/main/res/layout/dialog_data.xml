@@ -504,6 +504,7 @@
                 android:visibility="gone"
                 android:background="@drawable/border_map"
                 android:elevation="4dp"
+                android:fadeScrollbars="false"
                 app:layout_constraintBottom_toTopOf="@+id/editText2"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"

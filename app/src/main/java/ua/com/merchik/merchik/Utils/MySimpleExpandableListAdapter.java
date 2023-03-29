@@ -4,6 +4,7 @@ import android.content.Context;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.SimpleExpandableListAdapter;
+import android.widget.TextView;
 
 import java.util.List;
 import java.util.Map;
@@ -19,11 +20,21 @@ public class MySimpleExpandableListAdapter extends SimpleExpandableListAdapter {
     @Override
     public View getGroupView(int groupPosition, boolean isExpanded, View convertView, ViewGroup parent) {
         View result = super.getGroupView(groupPosition, isExpanded, convertView, parent);
+        TextView tv = (TextView) result;
+        tv.setTextSize(14.0f);
         if (isExpanded) {
             result.setBackgroundColor(result.getContext().getResources().getColor(R.color.active));
         } else {
             result.setBackgroundColor(result.getContext().getResources().getColor(R.color.inActive));
         }
+        return result;
+    }
+
+    @Override
+    public View getChildView(int groupPosition, int childPosition, boolean isLastChild, View convertView, ViewGroup parent) {
+        View result = super.getChildView(groupPosition, childPosition, isLastChild, convertView, parent);
+        TextView tv = (TextView) result;
+        tv.setTextSize(14.0f);
         return result;
     }
 }
