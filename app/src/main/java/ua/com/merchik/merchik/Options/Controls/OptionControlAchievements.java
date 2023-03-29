@@ -78,7 +78,7 @@ public class OptionControlAchievements<T> extends OptionControl {
 
                 // dateDocument*1000 -- Делаем такую херь, потому что функция работает в миллисекундах. / 1000 - для перевода в секунды.
                 int minusDay = Integer.parseInt(optionDB.getAmountMax()) > 0 ? Integer.parseInt(optionDB.getAmountMax()) : 30;
-                dateFrom = Clock.getDatePeriodLong(dateDocument * 1000, minusDay) / 1000;
+                dateFrom = Clock.getDatePeriodLong(dateDocument * 1000, -minusDay) / 1000;
                 dateTo = Clock.getDatePeriodLong(dateDocument * 1000, 0) / 1000;
             }
 
