@@ -866,7 +866,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
          * boolean clickType - добавлено для того что б различать долгий/короткий клик
          * true - короткий
          * false - длинный
-         * */
+         */
         private void showDialog(TovarDB list, TovarOptions tpl, ReportPrepareDB reportPrepareDB, String tovarId, String cd2, String clientId, String finalBalanceData1, String finalBalanceDate1, boolean clickType) {
             try {
                 final int adapterPosition = getAdapterPosition();
@@ -974,12 +974,9 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                     });
                 }
 
-                if (!tpl.getOptionId().contains(157242) && clickType) {
-                    dialogList.add(dialog);
-                }else if (!clickType){
-                    dialogList.add(dialog);
-                }
-            }catch (Exception e){
+                dialogList.add(dialog);
+
+            } catch (Exception e) {
                 Log.d("test", "test" + e);
             }
         }
@@ -988,14 +985,14 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
          * 29.03.23.
          * Специальное правило по которому отображаю последовательно модальные окошки из
          * списка dialogList.
-         * */
+         */
         private void dialogShowRule() {
             dialogList.remove(0);
             if (dialogList.size() > 0) {
                 int face = 0;
                 if (dialogList.get(0).reportPrepareDB.face != null && !dialogList.get(0).reportPrepareDB.face.equals(""))
                     face = Integer.parseInt(dialogList.get(0).reportPrepareDB.face);
-                if (dialogList.get(0).tovarOptions.getOptionControlName().equals(ERROR_ID) && face > 0) {
+                if (dialogList.get(0).tovarOptions.getOptionControlName().equals(ERROR_ID) && (dialogList.get(0).tovarOptions.getOptionId().contains(157242) || dialogList.get(0).tovarOptions.getOptionId().contains(157241) || dialogList.get(0).tovarOptions.getOptionId().contains(157243)) && face > 0) {
                     // НЕ отображаю модальное окно и удаляю его. Уникальное правило потому что потому.
                     dialogList.remove(0);
                 } else {
