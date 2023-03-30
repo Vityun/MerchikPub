@@ -2,7 +2,9 @@ package ua.com.merchik.merchik.Activities.DetailedReportActivity;
 
 import static ua.com.merchik.merchik.Globals.OptionControlName.AKCIYA;
 import static ua.com.merchik.merchik.Globals.OptionControlName.AKCIYA_ID;
+import static ua.com.merchik.merchik.Globals.OptionControlName.DT_EXPIRE;
 import static ua.com.merchik.merchik.Globals.OptionControlName.ERROR_ID;
+import static ua.com.merchik.merchik.Globals.OptionControlName.UP;
 import static ua.com.merchik.merchik.database.realm.RealmManager.INSTANCE;
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 import static ua.com.merchik.merchik.dialogs.DialogData.Operations;
@@ -916,21 +918,21 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                         if (dialog.getOperationResult() != null) {
                             operetionSaveRPToDB(tpl, reportPrepareDB, dialog.getOperationResult(), dialog.getOperationResult2(), null);
                             refreshElement(cd2, list.getiD());
+                            dialogShowRule(clickType);
                         }
-
-                        dialogShowRule(clickType);
 
                         notifyItemChanged(adapterPosition);
                     });
                 } else {
                     dialog.setOperation(operationType(tpl), getCurrentData(tpl, cd2, tovarId), setMapData(tpl.getOptionControlName()), () -> {
-                        if (dialog.getOperationResult() != null) {
+                        if (dialog.getOperationResult() != null && !dialog.getOperationResult().equals("")) {
                             operetionSaveRPToDB(tpl, reportPrepareDB, dialog.getOperationResult(), dialog.getOperationResult2(), null);
                             Toast.makeText(mContext, "Внесено: " + dialog.getOperationResult(), Toast.LENGTH_LONG).show();
                             refreshElement(cd2, list.getiD());
+                            dialogShowRule(clickType);
+                        }else {
+                            Toast.makeText(dialog.context, "Внесите корректно данные", Toast.LENGTH_LONG).show();
                         }
-
-                        dialogShowRule(clickType);
 
                         notifyItemChanged(adapterPosition);
                     });
@@ -959,6 +961,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                                                 refreshElement(cd2, list.getiD());
                                                 notifyItemChanged(adapterPosition);
                                                 dialog.dismiss();
+                                                dialogShowRule(clickType);
                                             }), setLayout());
                                         }
                                     }
@@ -992,8 +995,20 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                 int face = 0;
                 if (dialogList.get(0).reportPrepareDB.face != null && !dialogList.get(0).reportPrepareDB.face.equals(""))
                     face = Integer.parseInt(dialogList.get(0).reportPrepareDB.face);
-                if (clickType && dialogList.get(0).tovarOptions.getOptionControlName().equals(ERROR_ID) && (dialogList.get(0).tovarOptions.getOptionId().contains(157242) || dialogList.get(0).tovarOptions.getOptionId().contains(157241) || dialogList.get(0).tovarOptions.getOptionId().contains(157243)) && face > 0) {
+                if (clickType &&
+//                        dialogList.get(0).tovarOptions.getOptionControlName().equals(UP) &&
+//                        dialogList.get(0).tovarOptions.getOptionControlName().equals(DT_EXPIRE) &&
+                        dialogList.get(0).tovarOptions.getOptionControlName().equals(ERROR_ID) &&
+                        (dialogList.get(0).tovarOptions.getOptionId().contains(157242) ||
+                                dialogList.get(0).tovarOptions.getOptionId().contains(157241) ||
+                                dialogList.get(0).tovarOptions.getOptionId().contains(157243)) &&
+                        face > 0) {
                     // НЕ отображаю модальное окно и удаляю его. Уникальное правило потому что потому.
+                    dialogList.remove(0);
+                } else if (clickType &&
+                        (dialogList.get(0).tovarOptions.getOptionControlName().equals(UP) ||
+                                dialogList.get(0).tovarOptions.getOptionControlName().equals(DT_EXPIRE)) &&
+                        face == 0) {
                     dialogList.remove(0);
                 } else {
                     dialogList.get(0).show();

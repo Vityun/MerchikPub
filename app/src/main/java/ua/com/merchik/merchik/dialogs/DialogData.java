@@ -623,7 +623,9 @@ public class DialogData {
                         //todo hide keyborad
                         result = v.getText().toString();
                         listener.clicked();
-                        dialog.dismiss();
+                        if (result != null && !result.equals("")){
+                            dialog.dismiss();
+                        }
                         return true;
                     }
                     return false;
@@ -633,7 +635,9 @@ public class DialogData {
                     Log.e("setOperation", "Text.result: " + result);
 
                     listener.clicked();
-                    dialog.dismiss();
+                    if (result != null && !result.equals("")){
+                        dialog.dismiss();
+                    }
                 });
                 break;
 
@@ -685,7 +689,9 @@ public class DialogData {
                         //todo hide keyborad
                         result = v.getText().toString();
                         listener.clicked();
-                        dialog.dismiss();
+                        if (result != null && !result.equals("")){
+                            dialog.dismiss();
+                        }
                         return true;
                     }
                     return false;
@@ -695,7 +701,9 @@ public class DialogData {
                     Log.e("setOperation", "Number.result: " + result);
 
                     listener.clicked();
-                    dialog.dismiss();
+                    if (result != null && !result.equals("")){
+                        dialog.dismiss();
+                    }
                 });
                 break;
 
