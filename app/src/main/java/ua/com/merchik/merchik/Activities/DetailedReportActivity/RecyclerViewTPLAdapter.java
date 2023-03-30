@@ -1,6 +1,7 @@
 package ua.com.merchik.merchik.Activities.DetailedReportActivity;
 
 import android.app.DatePickerDialog;
+import android.content.Context;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffColorFilter;
 import android.text.Editable;
@@ -12,6 +13,7 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ExpandableListView;
 import android.widget.ImageButton;
 import android.widget.Spinner;
 import android.widget.TextView;
@@ -23,6 +25,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import org.honorato.multistatetogglebutton.MultiStateToggleButton;
 
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
@@ -31,11 +34,13 @@ import java.util.Map;
 import io.realm.RealmResults;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.R;
+import ua.com.merchik.merchik.Utils.MySimpleExpandableListAdapter;
 import ua.com.merchik.merchik.data.RealmModels.ErrorDB;
 import ua.com.merchik.merchik.data.RealmModels.PromoDB;
 import ua.com.merchik.merchik.data.RealmModels.ReportPrepareDB;
 import ua.com.merchik.merchik.data.TovarOptions;
 import ua.com.merchik.merchik.database.realm.RealmManager;
+import ua.com.merchik.merchik.database.realm.tables.ErrorRealm;
 
 public class RecyclerViewTPLAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
@@ -388,6 +393,7 @@ public class RecyclerViewTPLAdapter extends RecyclerView.Adapter<RecyclerView.Vi
         private Spinner spinner;
         private ImageButton imageButton;
         private EditText editText, editTextDate;
+        private ExpandableListView expListView;
 
         public ViewHolderUniversal(@NonNull View itemView) {
             super(itemView);
@@ -398,6 +404,7 @@ public class RecyclerViewTPLAdapter extends RecyclerView.Adapter<RecyclerView.Vi
             imageButton = itemView.findViewById(R.id.imageButton);
             editText = itemView.findViewById(R.id.editText);
             editTextDate = itemView.findViewById(R.id.editTextDate);
+            expListView = itemView.findViewById(R.id.expListView);
         }
 
         public void bind(TovarOptions item) {
@@ -408,7 +415,8 @@ public class RecyclerViewTPLAdapter extends RecyclerView.Adapter<RecyclerView.Vi
                     break;
 
                 case ERROR_ID:
-                    showSpinnerWithErrorList(item);
+                    showErrorList(item);
+//                    showSpinnerWithErrorList(item);
                     break;
             }
         }
@@ -477,5 +485,86 @@ public class RecyclerViewTPLAdapter extends RecyclerView.Adapter<RecyclerView.Vi
             return map;
         }
 
+        /**
+         * 30.03.23.
+         * Отображение Ошибок. (Как в модальном окне)
+         * */
+        private void showErrorList(TovarOptions item){
+            expListView.setVisibility(View.VISIBLE);
+            expListView.setAdapter(createExpandableAdapter(expListView.getContext()));
+            expListView.setOnChildClickListener(getErrorExpandableListView(item));
+        }
+
+        private MySimpleExpandableListAdapter createExpandableAdapter(Context context) {
+            Map<String, String> map;
+            ArrayList<Map<String, String>> groupDataList = new ArrayList<>();
+
+            // список атрибутов групп для чтения
+            String[] groupFrom = new String[]{"groupName"};
+            // список ID view-элементов, в которые будет помещены атрибуты групп
+            int groupTo[] = new int[]{android.R.id.text1};
+
+            // список атрибутов элементов для чтения
+            String childFrom[] = new String[]{"monthName"};
+            // список ID view-элементов, в которые будет помещены атрибуты
+            // элементов
+            int childTo[] = new int[]{android.R.id.text1};
+
+            // создаем общую коллекцию для коллекций элементов
+            ArrayList<ArrayList<Map<String, String>>> сhildDataList = new ArrayList<>();
+            // создаем коллекцию элементов для первой группы
+            ArrayList<Map<String, String>> сhildDataItemList = new ArrayList<>();
+
+            // Получение данных с БД
+            RealmResults<ErrorDB> errorDbList = RealmManager.getAllErrorDb();
+            RealmResults<ErrorDB> errorGroupsDB = errorDbList.where().equalTo("parentId", "0").findAll();
+
+            for (ErrorDB group : errorGroupsDB) {
+                map = new HashMap<>();
+                map.put("groupName", group.getNm());
+                groupDataList.add(map);
+
+                RealmResults<ErrorDB> errorItemsDB = errorDbList.where().equalTo("parentId", group.getID()).findAll();
+                if (errorItemsDB != null && errorItemsDB.size() > 0) {
+                    сhildDataItemList = new ArrayList<>();
+                    for (ErrorDB item : errorItemsDB) {
+                        map = new HashMap<>();
+                        map.put("monthName", "* " + item.getNm());
+                        сhildDataItemList.add(map);
+                    }
+                    сhildDataList.add(сhildDataItemList);
+                } else {
+                    сhildDataItemList = new ArrayList<>();
+                    map = new HashMap<>();
+                    map.put("monthName", "* " + group.getNm());
+                    сhildDataItemList.add(map);
+                    сhildDataList.add(сhildDataItemList);
+                }
+            }
+
+            MySimpleExpandableListAdapter adapter = new MySimpleExpandableListAdapter(
+                    context, groupDataList,
+                    android.R.layout.simple_expandable_list_item_1, groupFrom,
+                    groupTo, сhildDataList, android.R.layout.simple_list_item_1,
+                    childFrom, childTo);
+
+            return adapter;
+        }
+
+        private ExpandableListView.OnChildClickListener getErrorExpandableListView(TovarOptions item) {
+            return (expandableListView, view, groupPos, childPos, l) -> {
+                Map<String, String> map;
+                map = (Map<String, String>) expandableListView.getExpandableListAdapter().getChild(groupPos, childPos);
+
+                String str = map.get("monthName");
+                String res = str.replace("* ", "");
+
+                Toast.makeText(expListView.getContext(), "Выбрали ошибку: " + res, Toast.LENGTH_SHORT).show();
+
+                String result = ErrorRealm.getErrorDbByNm(res).getID();
+                click.getData(item, result, dataRp.errorComment);
+                return false;
+            };
+        }
     }
 }

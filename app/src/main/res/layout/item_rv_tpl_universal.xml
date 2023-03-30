@@ -30,6 +30,23 @@
         app:layout_constraintStart_toEndOf="@+id/tpl"
         app:layout_constraintTop_toTopOf="@+id/tpl">
 
+        <ExpandableListView
+            android:id="@+id/expListView"
+            android:layout_width="0dp"
+            android:layout_height="150dp"
+            android:layout_marginStart="16dp"
+            android:layout_marginLeft="16dp"
+            android:layout_marginTop="8dp"
+            android:background="@drawable/border_map"
+            android:elevation="4dp"
+            android:fadeScrollbars="false"
+            android:visibility="gone"
+            app:layout_constraintBottom_toTopOf="@+id/editText2"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:visibility="visible" />
+
         <EditText
             android:id="@+id/editTextDate"
             android:layout_width="wrap_content"
