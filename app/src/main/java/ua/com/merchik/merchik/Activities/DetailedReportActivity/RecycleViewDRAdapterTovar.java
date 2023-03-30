@@ -560,7 +560,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
 
             ReportPrepareDB finalReportPrepareTovar1 = reportPrepareTovar2;
             RecyclerViewTPLAdapter recyclerViewTPLAdapter = new RecyclerViewTPLAdapter(
-                    options.getRequiredOptionsTPL(optionsList2),
+                    options.getRequiredOptionsTPL(optionsList2, deletePromoOption),
                     finalReportPrepareTovar1,
                     (tpl, data, data2) -> operetionSaveRPToDB(tpl, finalReportPrepareTovar1, data, data2, list)
             );
@@ -589,8 +589,11 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                 constraintLayout.setOnClickListener(v -> {
                     Log.e("DRAdapterTovar", "ClickListener");
                     try {
+                        // На всякий случай зачищаю модальные окна.
+                        dialogList = new ArrayList<>();
+
                         // Получаем инфу об обязательных опциях
-                        List<TovarOptions> tovOptTplList = options.getRequiredOptionsTPL(optionsList2);
+                        List<TovarOptions> tovOptTplList = options.getRequiredOptionsTPL(optionsList2, finalDeletePromoOption);
 
                         Log.e("DRAdapterTovar", "Кол-во. обязательных опций: " + tovOptTplList.size());
 
@@ -643,6 +646,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                     return true;
                 });
             } else {// Если такого товара НЕТ
+                boolean finalDeletePromoOption1 = deletePromoOption;
                 constraintLayout.setOnClickListener(v -> {
 
                     ReportPrepareDB rp = createNewRPRow(list);
@@ -651,7 +655,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
 
                     try {
                         // Получаем инфу об обязательных опциях
-                        List<TovarOptions> tovOptTplList = options.getRequiredOptionsTPL(optionsList2);
+                        List<TovarOptions> tovOptTplList = options.getRequiredOptionsTPL(optionsList2, finalDeletePromoOption1);
 
                         // В Цикле открываем Н количество инфы
                         Collections.reverse(tovOptTplList); // Реверснул что б отображалось более менее адекватно пользователю (в естественном порядке)
@@ -906,7 +910,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                         map.put(2, "Акция отсутствует");
                         map.put(1, "Есть акция");
 
-                        String akciya = map.get(reportPrepareDB.getAkciya());
+                        String akciya = map.get(Integer.parseInt(reportPrepareDB.getAkciya()));
 
                         dialog.setOperationTextData2(akciya);
                         break;
@@ -1005,11 +1009,17 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                         face > 0) {
                     // НЕ отображаю модальное окно и удаляю его. Уникальное правило потому что потому.
                     dialogList.remove(0);
+                    if (dialogList.size() > 0){
+                        dialogList.get(0).show();
+                    }
                 } else if (clickType &&
                         (dialogList.get(0).tovarOptions.getOptionControlName().equals(UP) ||
                                 dialogList.get(0).tovarOptions.getOptionControlName().equals(DT_EXPIRE)) &&
                         face == 0) {
                     dialogList.remove(0);
+                    if (dialogList.size() > 0){
+                        dialogList.get(0).show();
+                    }
                 } else {
                     dialogList.get(0).show();
                 }

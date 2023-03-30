@@ -2547,7 +2547,7 @@ public class Options {
 
 
     // Передача инфы об обязательных Опциях ТПЛов
-    public List<TovarOptions> getRequiredOptionsTPL(List<OptionsDB> optionsDB) {
+    public List<TovarOptions> getRequiredOptionsTPL(List<OptionsDB> optionsDB, boolean promotion) {
         List<TovarOptions> tplOptionsList = getTovarOptins();
 
         List<TovarOptions> temps = new ArrayList<>();
@@ -2561,7 +2561,7 @@ public class Options {
                 // Это нужно что б 2 раза не появлялись Диалоги
                 // Проверяем "есть ли уже такая опция" ?
                 if (!temps.contains(temp)) {
-                    if (temp.getOptionControlName().equals(AKCIYA_ID) || temp.getOptionControlName().equals(AKCIYA)) {
+                    if ((temp.getOptionControlName().equals(AKCIYA_ID) || temp.getOptionControlName().equals(AKCIYA)) && promotion) {
                         // ничего не делаю
 //                        temps.add(temp);
                     } else {
@@ -2577,7 +2577,7 @@ public class Options {
                 // Это нужно что б 2 раза не появлялись Диалоги
                 // Проверяем "есть ли уже такая опция" ?
                 if (!temps.contains(temp)) {
-                    if (temp.getOptionControlName().equals(AKCIYA_ID) || temp.getOptionControlName().equals(AKCIYA)) {
+                    if ((temp.getOptionControlName().equals(AKCIYA_ID) || temp.getOptionControlName().equals(AKCIYA)) && promotion) {
                         // ничего не делаю
                     } else {
                         temps.add(temp);
