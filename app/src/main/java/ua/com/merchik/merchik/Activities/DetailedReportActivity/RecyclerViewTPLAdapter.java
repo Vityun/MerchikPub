@@ -281,12 +281,6 @@ public class RecyclerViewTPLAdapter extends RecyclerView.Adapter<RecyclerView.Vi
         }
 
         private void setSwitch(TovarOptions item) {
-            // Тут будем описывать что делает свич
-
-            // "2", "Акция отсутствует"
-            // "1", "Есть акция"
-            // AKCIYA
-
             button.setColorRes(R.color.active, R.color.inActive);
 
             if (dataRp != null) {
@@ -383,6 +377,7 @@ public class RecyclerViewTPLAdapter extends RecyclerView.Adapter<RecyclerView.Vi
                     map.put(Integer.valueOf(promoDbList.get(i).getID()), promoDbList.get(i).getNm());
                 }
             }
+            map.put(0, "Оберіть тип акції");
             return map;
         }
     }
