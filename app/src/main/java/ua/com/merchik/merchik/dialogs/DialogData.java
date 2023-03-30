@@ -623,7 +623,7 @@ public class DialogData {
                         //todo hide keyborad
                         result = v.getText().toString();
                         listener.clicked();
-                        if (result != null && !result.equals("")){
+                        if (result != null && !result.equals("")) {
                             dialog.dismiss();
                         }
                         return true;
@@ -635,7 +635,7 @@ public class DialogData {
                     Log.e("setOperation", "Text.result: " + result);
 
                     listener.clicked();
-                    if (result != null && !result.equals("")){
+                    if (result != null && !result.equals("")) {
                         dialog.dismiss();
                     }
                 });
@@ -689,7 +689,7 @@ public class DialogData {
                         //todo hide keyborad
                         result = v.getText().toString();
                         listener.clicked();
-                        if (result != null && !result.equals("")){
+                        if (result != null && !result.equals("")) {
                             dialog.dismiss();
                         }
                         return true;
@@ -701,7 +701,7 @@ public class DialogData {
                     Log.e("setOperation", "Number.result: " + result);
 
                     listener.clicked();
-                    if (result != null && !result.equals("")){
+                    if (result != null && !result.equals("")) {
                         dialog.dismiss();
                     }
                 });
@@ -779,7 +779,7 @@ public class DialogData {
                 if (mapSpinner != null && mapSpinner.size() > 0) {
                     String[] res = mapSpinner.values().toArray(new String[0]);
 
-                    ArrayAdapter<String> adapter = new ArrayAdapter(dialog.getContext(), android.R.layout.simple_spinner_item, res){
+                    ArrayAdapter<String> adapter = new ArrayAdapter(dialog.getContext(), android.R.layout.simple_spinner_item, res) {
                         @Override
                         public boolean isEnabled(int position) {
                             if (position == 0) {
@@ -788,6 +788,7 @@ public class DialogData {
                                 return true;
                             }
                         }
+
                         @Override
                         public View getDropDownView(int position, View convertView,
                                                     ViewGroup parent) {
@@ -805,12 +806,21 @@ public class DialogData {
                     adapter.setDropDownViewResource(android.R.layout.simple_spinner_item);
                     spinner.setAdapter(adapter);
 
-                    if (textData != null && !textData.equals("") && !textData.equals("0")){
+                    if (textData != null && !textData.equals("") && !textData.equals("0")) {
                         int spinnerPosition = adapter.getPosition(textData);
                         spinner.setSelection(spinnerPosition);
                     }
 
-                    SpinnerDialogData spinnerDialogData = new SpinnerDialogData();
+                    SpinnerDialogData spinnerDialogData = new SpinnerDialogData() {
+                        public void onItemSelected(AdapterView<?> parent,
+                                                   View view, int pos, long id) {
+                            try {
+                                String s = parent.getSelectedItem().toString();
+                                result = Globals.getKeyForValueS(s, mapSpinner);
+                            } catch (Exception e) {
+                            }
+                        }
+                    };
                     spinnerDialogData.setData(mapSpinner);
                     Log.e("setOperation", "map: " + mapSpinner);
                     spinner.setOnItemSelectedListener(spinnerDialogData);
@@ -819,7 +829,7 @@ public class DialogData {
                 if (mapSpinner2 != null && mapSpinner2.size() > 0) {
                     String[] res = mapSpinner2.values().toArray(new String[0]);
 
-                    ArrayAdapter<String> adapter = new ArrayAdapter(dialog.getContext(), android.R.layout.simple_spinner_item, res){
+                    ArrayAdapter<String> adapter = new ArrayAdapter(dialog.getContext(), android.R.layout.simple_spinner_item, res) {
                         @Override
                         public boolean isEnabled(int position) {
                             if (position == 0) {
@@ -828,6 +838,7 @@ public class DialogData {
                                 return true;
                             }
                         }
+
                         @Override
                         public View getDropDownView(int position, View convertView,
                                                     ViewGroup parent) {
@@ -845,12 +856,21 @@ public class DialogData {
                     adapter.setDropDownViewResource(android.R.layout.simple_spinner_item);
                     spinner2.setAdapter(adapter);
 
-                    if (textData2 != null && !textData2.equals("") && !textData2.equals("0")){
+                    if (textData2 != null && !textData2.equals("") && !textData2.equals("0")) {
                         int spinnerPosition = adapter.getPosition(textData2);
                         spinner2.setSelection(spinnerPosition);
                     }
 
-                    SpinnerDialogData spinnerDialogData = new SpinnerDialogData();
+                    SpinnerDialogData spinnerDialogData = new SpinnerDialogData(){
+                        public void onItemSelected(AdapterView<?> parent,
+                                                   View view, int pos, long id) {
+                            try {
+                                String s = parent.getSelectedItem().toString();
+                                result2 = Globals.getKeyForValueS(s, mapSpinner2);
+                            } catch (Exception e) {
+                            }
+                        }
+                    };
                     spinnerDialogData.setData(mapSpinner2);
                     Log.e("setOperation", "map: " + mapSpinner2);
                     spinner2.setOnItemSelectedListener(spinnerDialogData);
@@ -861,9 +881,9 @@ public class DialogData {
                     result = Globals.getKeyForValueS(spinner.getSelectedItem().toString(), mapSpinner);
                     result2 = Globals.getKeyForValueS(spinner2.getSelectedItem().toString(), mapSpinner2);
 
-                    if (result.equals("") || result.equals("0") || result2.equals("") || result2.equals("0")){
+                    if (result.equals("") || result.equals("0") || result2.equals("") || result2.equals("0")) {
                         Toast.makeText(dialog.getContext(), "Для збереження потрібно внести ОБИДВА реквізити! \nСпробуйте ще раз.", Toast.LENGTH_LONG).show();
-                    }else {
+                    } else {
                         listener.clicked();
                         dialog.dismiss();
                     }

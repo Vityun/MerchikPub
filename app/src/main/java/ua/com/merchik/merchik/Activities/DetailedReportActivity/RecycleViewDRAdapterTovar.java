@@ -880,7 +880,9 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                 DialogData dialog = new DialogData(mContext);
                 dialog.setTitle("");
                 dialog.setText("");
-                dialog.setClose(dialog::dismiss);
+                dialog.setClose(() -> {
+                    closeDialogRule(dialog, dialog::dismiss);    // Особенное правило закрытия для модального окна с Акцией
+                });
                 dialog.setLesson(mContext, true, 802);
                 dialog.setVideoLesson(mContext, true, 803, null);
                 dialog.setImage(true, getPhotoFromDB(list));
@@ -934,7 +936,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                             Toast.makeText(mContext, "Внесено: " + dialog.getOperationResult(), Toast.LENGTH_LONG).show();
                             refreshElement(cd2, list.getiD());
                             dialogShowRule(clickType);
-                        }else {
+                        } else {
                             Toast.makeText(dialog.context, "Внесите корректно данные", Toast.LENGTH_LONG).show();
                         }
 
@@ -942,10 +944,10 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                     });
                 }
 
-                dialog.setCancel("Пропустить", () -> {
+                dialog.setCancel("Пропустить", () -> closeDialogRule(dialog, () -> {
                     dialog.dismiss();
                     dialogShowRule(clickType);
-                });
+                }));
 
                 if (!tpl.getOptionControlName().equals(AKCIYA_ID) && !tpl.getOptionControlName().equals(AKCIYA)) {
                     String mod = "report_prepare";
@@ -1000,8 +1002,6 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                 if (dialogList.get(0).reportPrepareDB.face != null && !dialogList.get(0).reportPrepareDB.face.equals(""))
                     face = Integer.parseInt(dialogList.get(0).reportPrepareDB.face);
                 if (clickType &&
-//                        dialogList.get(0).tovarOptions.getOptionControlName().equals(UP) &&
-//                        dialogList.get(0).tovarOptions.getOptionControlName().equals(DT_EXPIRE) &&
                         dialogList.get(0).tovarOptions.getOptionControlName().equals(ERROR_ID) &&
                         (dialogList.get(0).tovarOptions.getOptionId().contains(157242) ||
                                 dialogList.get(0).tovarOptions.getOptionId().contains(157241) ||
@@ -1009,7 +1009,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                         face > 0) {
                     // НЕ отображаю модальное окно и удаляю его. Уникальное правило потому что потому.
                     dialogList.remove(0);
-                    if (dialogList.size() > 0){
+                    if (dialogList.size() > 0) {
                         dialogList.get(0).show();
                     }
                 } else if (clickType &&
@@ -1017,7 +1017,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                                 dialogList.get(0).tovarOptions.getOptionControlName().equals(DT_EXPIRE)) &&
                         face == 0) {
                     dialogList.remove(0);
-                    if (dialogList.size() > 0){
+                    if (dialogList.size() > 0) {
                         dialogList.get(0).show();
                     }
                 } else {
@@ -1025,6 +1025,33 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                 }
             }
         }
+
+        /**
+         * 30.03.23.
+         * Уникальное событие для Акций.
+         * Если модальное окно для внесения Акции и внесён один из реквизитов - запрещаю что-то
+         * делать.
+         */
+        private void closeDialogRule(DialogData dialog, Clicks.clickVoid click) {
+            if (dialog.tovarOptions.getOptionControlName().equals(AKCIYA) || dialog.tovarOptions.getOptionControlName().equals(AKCIYA_ID)) {
+                if ((dialog.getOperationResult() == null && dialog.getOperationResult2() != null) ||
+                        (dialog.getOperationResult() != null && dialog.getOperationResult2() == null) ||
+                        ((dialog.getOperationResult() != null && (dialog.getOperationResult().equals("") || dialog.getOperationResult().equals("0"))) &&
+                                (dialog.getOperationResult2() != null && (!dialog.getOperationResult2().equals("") && !dialog.getOperationResult2().equals("0")))
+                        ) ||
+                        ((dialog.getOperationResult2() != null && (dialog.getOperationResult2().equals("") || dialog.getOperationResult2().equals("0"))) &&
+                                (dialog.getOperationResult() != null && (!dialog.getOperationResult().equals("") && !dialog.getOperationResult().equals("0")))
+                        )
+                ) {
+                    Toast.makeText(dialog.context, "Внесіть, будь-ласка, обидва реквізити!", Toast.LENGTH_LONG).show();
+                } else {
+                    click.click();
+                }
+            } else {
+                click.click();
+            }
+        }
+
 
         private MySimpleExpandableListAdapter createExpandableAdapter(Context context) {
 
