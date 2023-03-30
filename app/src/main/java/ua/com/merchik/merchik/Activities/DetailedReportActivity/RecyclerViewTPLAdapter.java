@@ -2,6 +2,7 @@ package ua.com.merchik.merchik.Activities.DetailedReportActivity;
 
 import android.app.DatePickerDialog;
 import android.content.Context;
+import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffColorFilter;
 import android.text.Editable;
@@ -335,11 +336,34 @@ public class RecyclerViewTPLAdapter extends RecyclerView.Adapter<RecyclerView.Vi
             Map<Integer, String> mapSpinner2 = getSpinnerDataMap();
             String[] res = mapSpinner2.values().toArray(new String[0]);
 
-            ArrayAdapter<String> adapter = new ArrayAdapter<>(spinner.getContext(), android.R.layout.simple_spinner_item, res);
+            ArrayAdapter<String> adapter = new ArrayAdapter(spinner.getContext(), android.R.layout.simple_spinner_item, res) {
+                @Override
+                public boolean isEnabled(int position) {
+                    if (position == 0) {
+                        return false;
+                    } else {
+                        return true;
+                    }
+                }
+
+                @Override
+                public View getDropDownView(int position, View convertView,
+                                            ViewGroup parent) {
+                    View view = super.getDropDownView(position, convertView, parent);
+                    TextView tv = (TextView) view;
+                    if (position == 0) {
+                        // Set the hint text color gray
+                        tv.setTextColor(Color.GRAY);
+                    } else {
+                        tv.setTextColor(Color.BLACK);
+                    }
+                    return view;
+                }
+            };
             adapter.setDropDownViewResource(android.R.layout.simple_spinner_item);
             spinner.setAdapter(adapter);
 
-            data1 = mapSpinner2.get(dataRp.akciyaId);
+            data1 = mapSpinner2.get(Integer.parseInt(dataRp.akciyaId));
             int spinnerPosition = adapter.getPosition(data1);
             spinner.setSelection(spinnerPosition);
 
