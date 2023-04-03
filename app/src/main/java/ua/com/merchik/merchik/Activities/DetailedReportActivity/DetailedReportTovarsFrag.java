@@ -216,7 +216,7 @@ public class DetailedReportTovarsFrag extends Fragment {
                 return res;
 
             case PPA:
-                res = PPADBRealm.getTovarListByPPA(wpDataDB.getClient_id(), wpDataDB.getAddr_id(), null);
+                res = PPADBRealm.getTovarListByPPA(wpDataDB.getClient_id(), null, null);
                 return res;
 
             case ONE:

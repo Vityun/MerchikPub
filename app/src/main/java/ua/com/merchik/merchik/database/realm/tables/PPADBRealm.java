@@ -15,27 +15,29 @@ public class PPADBRealm {
     /**
      * 03.04.23.
      * Получаю Товары по ППА
-     * */
-    public static List<TovarDB> getTovarListByPPA(String client_id, int addr_id, String isp) {
+     */
+    public static List<TovarDB> getTovarListByPPA(String client_id, Integer addr_id, String isp) {
         List<TovarDB> res = new ArrayList<>();
 
         RealmResults<PPADB> data = INSTANCE.where(PPADB.class).findAll();
 
-        if (client_id != null && !client_id.equals("")){
+        if (client_id != null && !client_id.equals("")) {
             data = data.where().equalTo("client", client_id).findAll();
         }
 
-        String addrId = String.valueOf(addr_id);
-        if (addrId != null && !addrId.equals("")){
-            data = data.where().equalTo("addrId", addrId).findAll();
+        if (addr_id != null) {
+            String addrId = String.valueOf(addr_id);
+            if (!addrId.equals("")) {
+                data = data.where().equalTo("addrId", addrId).findAll();
+            }
         }
 
-        if (isp != null && !isp.equals("")){
+        if (isp != null && !isp.equals("")) {
             data = data.where().equalTo("isp", isp).findAll();
         }
 
         ArrayList<String> listRpTovId = new ArrayList<>();
-        if (data != null && data.size() > 0){
+        if (data != null && data.size() > 0) {
             String[] list = new String[data.size()];
             for (int i = 0; i < data.size(); i++) {
                 list[i] = data.get(i).getTovarId();
@@ -46,7 +48,7 @@ public class PPADBRealm {
                     .in("iD", list)
                     .findAll();
 
-            if (realmResults2 != null && realmResults2.size() > 0){
+            if (realmResults2 != null && realmResults2.size() > 0) {
                 res = INSTANCE.copyFromRealm(realmResults2);
             }
         }

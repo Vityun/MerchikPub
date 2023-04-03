@@ -4,17 +4,17 @@
 
     <item
         android:id="@+id/popup_dr"
-        android:title="Тов. по звіту"/>
+        android:title="видалити зайві товари"/>
 
     <item
         android:id="@+id/popup_ppa"
-        android:title="Тов. по ППА"/>
+        android:title="додати товари з ППА"/>
 
     <item
         android:id="@+id/popup_all"
-        android:title="Всі товари"/>
+        android:title="додати усі товари замовника"/>
 
     <item
         android:id="@+id/popup_tov"
-        android:title="Один товар"/>
+        android:title="додати один товар"/>
 </menu>
