@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <item
+        android:id="@+id/popup_dr"
+        android:title="Тов. по звіту"/>
+
+    <item
+        android:id="@+id/popup_ppa"
+        android:title="Тов. по ППА"/>
+
+    <item
+        android:id="@+id/popup_all"
+        android:title="Всі товари"/>
+
+    <item
+        android:id="@+id/popup_tov"
+        android:title="Один товар"/>
+</menu>

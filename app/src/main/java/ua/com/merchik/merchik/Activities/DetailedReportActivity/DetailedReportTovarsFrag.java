@@ -17,6 +17,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.appcompat.widget.PopupMenu;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -44,6 +45,7 @@ import ua.com.merchik.merchik.data.RetrofitResponse.ReportPrepareServer;
 import ua.com.merchik.merchik.data.TestJsonUpload.StandartData;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsRealm;
+import ua.com.merchik.merchik.database.realm.tables.PPADBRealm;
 import ua.com.merchik.merchik.database.realm.tables.ReportPrepareRealm;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
 
@@ -96,7 +98,8 @@ public class DetailedReportTovarsFrag extends Fragment {
             rvTovar = (RecyclerView) v.findViewById(R.id.DRRecyclerViewTovar);
             allTov = v.findViewById(R.id.textLikeLink);
 
-            setTextLikeLink();
+//            setTextLikeLink();
+            setPopup();
             addRecycleView(getTovList());
         } catch (Exception e) {
             Globals.writeToMLOG("ERROR", "DetailedReportTovarsFrag/onCreateView", "Exception e: " + e);
@@ -134,6 +137,98 @@ public class DetailedReportTovarsFrag extends Fragment {
                 Globals.writeToMLOG("ERROR", "", "Exception e: " + e);
             }
         });
+    }
+
+
+    /**
+     * 03.04.23.
+     * Делаю так что-б выпадал список, при клике на плюсик.
+     */
+    private void setPopup() {
+        fullTovList.setRotation(45);
+        fullTovList.setOnClickListener(view -> {
+            showPopup(view);
+        });
+    }
+
+    /**
+     * 03.04.23.
+     * Отображаю попап
+     * @param view
+     */
+    private void showPopup(View view) {
+        PopupMenu popupMenu = new PopupMenu(view.getContext(), view);
+        popupMenu.inflate(R.menu.popup_dr_tovar_list);
+
+        popupMenu.setOnMenuItemClickListener(item -> {
+            try {
+
+            }catch (Exception e){
+                Toast.makeText(getContext(), "Произошла ошибка: " + e, Toast.LENGTH_LONG).show();
+            }
+            List<TovarDB> tovarDBList = new ArrayList<>();
+            switch (item.getItemId()) {
+                case R.id.popup_dr:
+                    tovarDBList = getTovListNew(TovarDisplayType.DETAILED_REPORT);
+                    Toast.makeText(getContext(), "Показываю Товары как было.(" + tovarDBList.size() + ")", Toast.LENGTH_SHORT).show();
+                    addRecycleView(tovarDBList);
+                    return true;
+
+                case R.id.popup_ppa:
+                    tovarDBList = getTovListNew(TovarDisplayType.PPA);
+                    Toast.makeText(getContext(), "Показываю Товары по ППА.(" + tovarDBList.size() + ")", Toast.LENGTH_SHORT).show();
+                    addRecycleView(tovarDBList);
+                    return true;
+
+                case R.id.popup_all:
+                    tovarDBList = getTovListNew(TovarDisplayType.ALL);
+                    Toast.makeText(getContext(), "Показываю все Товары.(" + tovarDBList.size() + ")", Toast.LENGTH_SHORT).show();
+                    addRecycleView(tovarDBList);
+                    return true;
+
+                case R.id.popup_tov:
+                    Toast.makeText(getContext(), "Показываю один Товар. (В РАЗРАБОТКЕ!)", Toast.LENGTH_SHORT).show();
+                    return true;
+                default:
+                    return false;
+            }
+        });
+
+        popupMenu.show();
+    }
+
+    private enum TovarDisplayType{
+        DETAILED_REPORT,
+        PPA,
+        ALL,
+        ONE
+    }
+
+    /**
+     * 03.04.23.
+     * По новой формирую Товары
+     * */
+    private List<TovarDB> getTovListNew(TovarDisplayType type){
+        List<TovarDB> res = new ArrayList<>();
+        switch (type){
+            case DETAILED_REPORT:
+                res = RealmManager.getTovarListFromReportPrepareByDad2(codeDad2);
+                return res;
+
+            case PPA:
+                res = PPADBRealm.getTovarListByPPA(wpDataDB.getClient_id(), wpDataDB.getAddr_id(), null);
+                return res;
+
+            case ONE:
+                // На данный момент ничего не делаю
+                return null;
+
+            case ALL:
+            default:
+                res = RealmManager.getTovarListByCustomer(clientId);
+                return res;
+        }
+
     }
 
 
@@ -211,7 +306,7 @@ public class DetailedReportTovarsFrag extends Fragment {
                 public void onTextChanged(CharSequence s, int start, int before, int count) {
                 }
             });
-        }catch (Exception e){
+        } catch (Exception e) {
             Globals.writeToMLOG("ERROR", "DetailedReportTovarsFrag/addRecycleView/List<TovarDB> list", "Exception e: " + e);
         }
     }
@@ -224,6 +319,7 @@ public class DetailedReportTovarsFrag extends Fragment {
      * Отображает список товаров по ППА или весь список товаров по данному клиенту
      */
     private boolean updateTov = true;
+
     private ArrayList<TovarDB> getTovList() {
         ArrayList<TovarDB> list = null;
         if (flag) {
@@ -236,7 +332,7 @@ public class DetailedReportTovarsFrag extends Fragment {
             } else {
                 Toast.makeText(mContext, "Список товаров по ППА пуст.", Toast.LENGTH_SHORT).show();
 
-                if (updateTov && codeDad2 != 0){
+                if (updateTov && codeDad2 != 0) {
                     Log.d("test", "tovars is empty");
                     Globals.writeToMLOG("INFO", "DetailedReportTovarsFrag/getTovList", "tovars is empty");
                     downloadDetailedReportTovarsData(new Clicks.clickStatusMsg() {
@@ -274,12 +370,12 @@ public class DetailedReportTovarsFrag extends Fragment {
 
             ProgressDialog pg2 = ProgressDialog.show(mContext, "Загрузка списка опций", "Подождите окончания загрузки. Это может занять время.", true, true);
             downloadOptionByDad2(pg2, click);
-        }catch (Exception e){
+        } catch (Exception e) {
 
         }
     }
 
-    private void downloadReportPrepareByDad2(ProgressDialog pg, Clicks.clickStatusMsg click){
+    private void downloadReportPrepareByDad2(ProgressDialog pg, Clicks.clickStatusMsg click) {
         StandartData standartData = new StandartData();
         standartData.mod = "report_prepare";
         standartData.act = "list_data";
@@ -296,29 +392,29 @@ public class DetailedReportTovarsFrag extends Fragment {
             @Override
             public void onResponse(Call<ReportPrepareServer> call, Response<ReportPrepareServer> response) {
                 try {
-                    if (response.isSuccessful()){
-                        if (response.body() != null){
-                            if (response.body().getState()){
-                                if (response.body().getList() != null && response.body().getList().size() > 0){
+                    if (response.isSuccessful()) {
+                        if (response.body() != null) {
+                            if (response.body().getState()) {
+                                if (response.body().getList() != null && response.body().getList().size() > 0) {
                                     ReportPrepareRealm.setAll(response.body().getList());
                                     click.onSuccess("Товары успешно обновлены!");
-                                }else {
+                                } else {
                                     click.onFailure("Список Товаров пуст. Обратитесь к своему руководителю.");
                                 }
-                            }else {
-                                if (response.body().getError() != null){
+                            } else {
+                                if (response.body().getError() != null) {
                                     click.onFailure("Данные обновить не получилось. Это связанно с: " + response.body().getError());
-                                }else {
+                                } else {
                                     click.onFailure("Данные обновить не получилось. Ошибку обнаружить не получилось. Обратитесь к руководителю.");
                                 }
                             }
-                        }else {
+                        } else {
                             click.onFailure("Запрашиваемых данных не обнаружено.");
                         }
-                    }else {
+                    } else {
                         click.onFailure("Произошла ошибка при обновлении списка товаров. Ошибка: " + response.code());
                     }
-                }catch (Exception e){
+                } catch (Exception e) {
                     Globals.writeToMLOG("ERROR", "DetailedReportTovarsFrag/downloadReportPrepareByDad2/onResponse", "Exception e: " + e);
                     click.onFailure("Произошла ошибка. Передайте её руководителю: " + e);
                 }
@@ -335,7 +431,7 @@ public class DetailedReportTovarsFrag extends Fragment {
         });
     }
 
-    private void downloadOptionByDad2(ProgressDialog pg, Clicks.clickStatusMsg click){
+    private void downloadOptionByDad2(ProgressDialog pg, Clicks.clickStatusMsg click) {
         StandartData standartData = new StandartData();
         standartData.mod = "plan";
         standartData.act = "options_list";
@@ -350,29 +446,29 @@ public class DetailedReportTovarsFrag extends Fragment {
             @Override
             public void onResponse(Call<OptionsServer> call, Response<OptionsServer> response) {
                 try {
-                    if (response.isSuccessful()){
-                        if (response.body() != null){
-                            if (response.body().getState()){
-                                if (response.body().getList() != null && response.body().getList().size() > 0){
+                    if (response.isSuccessful()) {
+                        if (response.body() != null) {
+                            if (response.body().getState()) {
+                                if (response.body().getList() != null && response.body().getList().size() > 0) {
                                     RealmManager.saveDownloadedOptions(response.body().getList());
                                     click.onSuccess("Опции успешно обновлены!");
-                                }else {
+                                } else {
                                     click.onFailure("Список Опций пуст. Обратитесь к своему руководителю.");
                                 }
-                            }else {
-                                if (response.body().getError() != null){
+                            } else {
+                                if (response.body().getError() != null) {
                                     click.onFailure("Данные обновить не получилось. Это связанно с: " + response.body().getError());
-                                }else {
+                                } else {
                                     click.onFailure("Данные обновить не получилось. Ошибку обнаружить не получилось. Обратитесь к руководителю.");
                                 }
                             }
-                        }else {
+                        } else {
                             click.onFailure("Запрашиваемых данных не обнаружено.");
                         }
-                    }else {
+                    } else {
                         click.onFailure("Произошла ошибка при обновлении списка опций. Ошибка: " + response.code());
                     }
-                }catch (Exception e){
+                } catch (Exception e) {
                     Globals.writeToMLOG("ERROR", "DetailedReportTovarsFrag/downloadOptionByDad2/onResponse", "Exception e: " + e);
                     click.onFailure("Произошла ошибка. Передайте её руководителю: " + e);
                 }
