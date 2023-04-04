@@ -154,6 +154,7 @@ public class DetailedReportTovarsFrag extends Fragment {
     /**
      * 03.04.23.
      * Отображаю попап
+     *
      * @param view
      */
     private void showPopup(View view) {
@@ -163,7 +164,7 @@ public class DetailedReportTovarsFrag extends Fragment {
         popupMenu.setOnMenuItemClickListener(item -> {
             try {
 
-            }catch (Exception e){
+            } catch (Exception e) {
                 Toast.makeText(getContext(), "Произошла ошибка: " + e, Toast.LENGTH_LONG).show();
             }
             List<TovarDB> tovarDBList = new ArrayList<>();
@@ -188,6 +189,18 @@ public class DetailedReportTovarsFrag extends Fragment {
 
                 case R.id.popup_tov:
                     Toast.makeText(getContext(), "Показываю один Товар. (В РАЗРАБОТКЕ!)", Toast.LENGTH_SHORT).show();
+
+//                    RecycleViewDRAdapterTovar adapter = new RecycleViewDRAdapterTovar(getContext(), getTovListNew(TovarDisplayType.ONE), wpDataDB, RecycleViewDRAdapterTovar.OpenType.DIALOG);
+//
+//                    DialogData dialog = new DialogData(getContext());
+//                    dialog.setTitle("Выберите нужный Товар");
+//                    dialog.setRecycler(adapter, new LinearLayoutManager(getContext(), LinearLayoutManager.VERTICAL, false));
+//                    dialog.setClose(dialog::dismiss);
+//                    dialog.setOk("Додати", ()->{
+//                        dialog.dismiss();
+//                    });
+//                    dialog.show();
+
                     return true;
                 default:
                     return false;
@@ -197,7 +210,7 @@ public class DetailedReportTovarsFrag extends Fragment {
         popupMenu.show();
     }
 
-    private enum TovarDisplayType{
+    private enum TovarDisplayType {
         DETAILED_REPORT,
         PPA,
         ALL,
@@ -207,10 +220,10 @@ public class DetailedReportTovarsFrag extends Fragment {
     /**
      * 03.04.23.
      * По новой формирую Товары
-     * */
-    private List<TovarDB> getTovListNew(TovarDisplayType type){
+     */
+    private List<TovarDB> getTovListNew(TovarDisplayType type) {
         List<TovarDB> res = new ArrayList<>();
-        switch (type){
+        switch (type) {
             case DETAILED_REPORT:
                 res = RealmManager.getTovarListFromReportPrepareByDad2(codeDad2);
                 return res;
@@ -220,9 +233,6 @@ public class DetailedReportTovarsFrag extends Fragment {
                 return res;
 
             case ONE:
-                // На данный момент ничего не делаю
-                return null;
-
             case ALL:
             default:
                 res = RealmManager.getTovarListByCustomer(clientId);
@@ -271,7 +281,7 @@ public class DetailedReportTovarsFrag extends Fragment {
             // TODO OH SHIT
             RecycleViewDRAdapterTovar recycleViewDRAdapter;
             if (wpDataDB != null) {
-                recycleViewDRAdapter = new RecycleViewDRAdapterTovar(mContext, list, wpDataDB);
+                recycleViewDRAdapter = new RecycleViewDRAdapterTovar(mContext, list, wpDataDB, RecycleViewDRAdapterTovar.OpenType.DEFAULT);
             } else {
                 recycleViewDRAdapter = new RecycleViewDRAdapterTovar(mContext, list, tasksAndReclamationsSDB);
             }

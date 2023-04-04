@@ -223,7 +223,7 @@
             app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/text"
-            tools:visibility="visible">
+            tools:visibility="gone">
 
             <ImageView
                 android:id="@+id/img"
@@ -622,10 +622,9 @@
             android:visibility="gone"
             app:layout_constraintBottom_toTopOf="@+id/ok"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="1.0"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/text"
-            tools:visibility="gone" />
+            tools:visibility="visible" />
 
         <androidx.constraintlayout.widget.Barrier
             android:layout_width="wrap_content"

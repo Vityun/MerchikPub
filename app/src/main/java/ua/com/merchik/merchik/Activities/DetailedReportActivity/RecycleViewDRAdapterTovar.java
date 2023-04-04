@@ -93,6 +93,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
     private List<TovarDB> dataFilterable;
     //    private WpDataDB wpDataDB;
     private DRAdapterTovarTPLTypeView tplType;
+    private OpenType openType;
 
     private List<Integer> tovIdList;
 
@@ -102,6 +103,10 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
     private long codeDad2;
     private String clientId;
     private int addressId;
+
+    public enum OpenType {
+        DEFAULT, DIALOG
+    }
 
     public enum DRAdapterTovarTPLTypeView {
         GONE, FULL
@@ -113,10 +118,11 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
 
 
     /*Определяем конструктор*/
-    public RecycleViewDRAdapterTovar(Context context, List<TovarDB> list, WpDataDB wp) {
+    public RecycleViewDRAdapterTovar(Context context, List<TovarDB> list, WpDataDB wp, OpenType openType) {
         this.mContext = context;
         this.dataList = list;
         this.dataFilterable = list;
+        this.openType = openType;
 
 //        this.wpDataDB = wp;
         codeDad2 = wp.getCode_dad2();
@@ -233,6 +239,11 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
             article = v.findViewById(R.id.article);
             facePlan = v.findViewById(R.id.facePlan);
             recyclerView = v.findViewById(R.id.recyclerView2);
+
+            if (openType.equals(OpenType.DIALOG)){
+                textViewItemTovarOptLine.setVisibility(View.GONE);
+                recyclerView.setVisibility(View.GONE);
+            }
 
 
             // Dialog
@@ -558,14 +569,20 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
             Log.e("onBindViewHolder", "s: " + s);
 
 
-            ReportPrepareDB finalReportPrepareTovar1 = reportPrepareTovar2;
-            RecyclerViewTPLAdapter recyclerViewTPLAdapter = new RecyclerViewTPLAdapter(
-                    options.getRequiredOptionsTPL(optionsList2, deletePromoOption),
-                    finalReportPrepareTovar1,
-                    (tpl, data, data2) -> operetionSaveRPToDB(tpl, finalReportPrepareTovar1, data, data2, list)
-            );
-            recyclerView.setAdapter(recyclerViewTPLAdapter);
-            recyclerView.setLayoutManager(new LinearLayoutManager(mContext, LinearLayoutManager.VERTICAL, false));
+            try {
+                if (openType.equals(OpenType.DEFAULT)){
+                    ReportPrepareDB finalReportPrepareTovar1 = reportPrepareTovar2;
+                    RecyclerViewTPLAdapter recyclerViewTPLAdapter = new RecyclerViewTPLAdapter(
+                            options.getRequiredOptionsTPL(optionsList2, deletePromoOption),
+                            finalReportPrepareTovar1,
+                            (tpl, data, data2) -> operetionSaveRPToDB(tpl, finalReportPrepareTovar1, data, data2, list)
+                    );
+                    recyclerView.setAdapter(recyclerViewTPLAdapter);
+                    recyclerView.setLayoutManager(new LinearLayoutManager(mContext, LinearLayoutManager.VERTICAL, false));
+                }
+            }catch (Exception e){
+               Globals.writeToMLOG("ERR", "RecyclerViewTPLAdapter", "Exception e: " + e);
+            }
 
             if (tplType.equals(DRAdapterTovarTPLTypeView.FULL)) {
                 recyclerView.setVisibility(View.VISIBLE);
