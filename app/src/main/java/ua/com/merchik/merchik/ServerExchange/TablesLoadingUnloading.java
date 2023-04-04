@@ -2803,8 +2803,6 @@ public class TablesLoadingUnloading {
                 @Override
                 public void onResponse(retrofit2.Call<AdditionalRequirementsServerData> call, retrofit2.Response<AdditionalRequirementsServerData> response) {
                     try {
-//                        Log.e("AdditionalRequirements", "response.body(): " + response.body());
-
                         AdditionalRequirementsRealm.setDataToDB(response.body().getList());
 
                         Gson gson = new Gson();
@@ -2813,16 +2811,21 @@ public class TablesLoadingUnloading {
 
                         Log.e("AdditionalRequirements", "data: " + convertedObject);
 
+                        Globals.writeToMLOG("ERR", "downloadAdditionalRequirements/onResponse", "convertedObject: " + convertedObject);
+                        Globals.writeToMLOG("ERR", "downloadAdditionalRequirements/onResponse", "response.body().getList(): " + response.body().getList().size());
+
                     } catch (Exception e) {
+                        Globals.writeToMLOG("ERR", "downloadAdditionalRequirements/onResponse", "Exception e: " + e);
                     }
                 }
 
                 @Override
                 public void onFailure(retrofit2.Call<AdditionalRequirementsServerData> call, Throwable t) {
+                    Globals.writeToMLOG("ERR", "downloadAdditionalRequirements/onFailure", "Throwable t: " + t);
                 }
             });
         } catch (Exception e) {
-
+            Globals.writeToMLOG("ERR", "downloadAdditionalRequirements", "Exception e: " + e);
         }
     }
 
