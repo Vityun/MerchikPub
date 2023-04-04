@@ -255,15 +255,16 @@ public class DetailedReportTovarsFrag extends Fragment {
                     data = AdditionalRequirementsRealm.getData3(tasksAndReclamationsSDB, DEFAULT);
                 }
 
-                Log.e("АКЦИЯ_ТОВАРА", "data: " + data);
+                Globals.writeToMLOG("INFO", "DetailedReportTovarsFrag/addRecycleView/AdditionalRequirementsDB", "data: " + data);
+
                 for (AdditionalRequirementsDB item : data) {
                     if (item.getTovarId() != null && !item.getTovarId().equals("0") && !item.getTovarId().equals("")) {
                         promotionalTov.add(Integer.valueOf(item.getTovarId()));
                     }
                 }
-                Log.e("АКЦИЯ_ТОВАРА", "promotionalTov: " + promotionalTov);
+                Globals.writeToMLOG("INFO", "DetailedReportTovarsFrag/addRecycleView/AdditionalRequirementsDB", "promotionalTov: " + promotionalTov);
             } catch (Exception e) {
-                Log.e("АКЦИЯ_ТОВАРА", "List Exception e: " + e);
+                Globals.writeToMLOG("INFO", "DetailedReportTovarsFrag/addRecycleView/AdditionalRequirementsDB", "Exception e: " + e);
             }
 
 
