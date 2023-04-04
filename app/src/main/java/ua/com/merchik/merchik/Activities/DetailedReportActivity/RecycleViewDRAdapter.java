@@ -456,7 +456,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                     // Обработка нажатия на кнопку
                     OptionMassageType msgType = new OptionMassageType();
                     msgType.type = OptionMassageType.Type.DIALOG;
-                    msgType = options.NNK(mContext, dataDB, optionsButtons, msgType, Options.NNKMode.MAKE, () -> {
+                    msgType = options.NNK(mContext, dataDB, optionsButtons, butt, msgType, Options.NNKMode.MAKE, () -> {
                         if (dataDB instanceof WpDataDB) {
                             detailedReportButtons.buttonClick(mContext, (WpDataDB) dataDB, butt.get(getAdapterPosition()), 0);
                             setCheck(POS, optionsButtons, Options.NNKMode.NULL);

@@ -48,6 +48,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import io.reactivex.rxjava3.observers.DisposableCompletableObserver;
 import io.reactivex.rxjava3.schedulers.Schedulers;
@@ -460,7 +461,7 @@ public class Options {
      * Нажатие На Кнопку (ННК) -- абстрактное название. На самом деле в принципе обработка
      * состояний опций
      * */
-    public <T> OptionMassageType NNK(Context context, T dataDB, OptionsDB option, OptionMassageType type, NNKMode mode, Clicks.clickVoid click) {
+    public <T> OptionMassageType NNK(Context context, T dataDB, OptionsDB option, List<OptionsDB> optionList, OptionMassageType type, NNKMode mode, Clicks.clickVoid click) {
         OptionMassageType result = new OptionMassageType();
         int res = 0;    // Счётчик для накапливания "блокировок" у данной опции
 
@@ -477,12 +478,23 @@ public class Options {
 
         // Проход по первой опции блокировки
         if (!option.getOptionBlock1().equals("0")) {
-            res += optControl(context, dataDB, option, Integer.parseInt(option.getOptionBlock1()), type, mode);
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+                OptionsDB optionsDB = optionList.stream().filter(optionListItem -> Objects.equals(optionListItem.getOptionControlId(), option.getOptionBlock1()))
+                        .findAny()
+                        .orElse(null);
+                res += optControl(context, dataDB, optionsDB, Integer.parseInt(option.getOptionBlock1()), type, mode);
+            }
         }
 
         // Проход по второй опции блокировки
         if (!option.getOptionBlock2().equals("0")) {
-            res += optControl(context, dataDB, option, Integer.parseInt(option.getOptionBlock2()), type, mode);
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+                OptionsDB optionsDB = optionList.stream().filter(optionListItem -> Objects.equals(optionListItem.getOptionControlId(), option.getOptionBlock2()))
+                        .findAny()
+                        .orElse(null);
+                res += optControl(context, dataDB, optionsDB, Integer.parseInt(option.getOptionBlock2()), type, mode);
+            }
+//            res += optControl(context, dataDB, option, Integer.parseInt(option.getOptionBlock2()), type, mode);
         }
 
         Log.e("NNK", "END_res: " + res);
