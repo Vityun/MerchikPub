@@ -285,7 +285,7 @@ public class DetailedReportTovarsFrag extends Fragment {
             if (wpDataDB != null) {
                 recycleViewDRAdapter = new RecycleViewDRAdapterTovar(mContext, list, wpDataDB, RecycleViewDRAdapterTovar.OpenType.DEFAULT);
             } else {
-                recycleViewDRAdapter = new RecycleViewDRAdapterTovar(mContext, list, tasksAndReclamationsSDB);
+                recycleViewDRAdapter = new RecycleViewDRAdapterTovar(mContext, list, tasksAndReclamationsSDB, RecycleViewDRAdapterTovar.OpenType.DEFAULT);
             }
             recycleViewDRAdapter.setAkciyaTovList(promotionalTov);
 

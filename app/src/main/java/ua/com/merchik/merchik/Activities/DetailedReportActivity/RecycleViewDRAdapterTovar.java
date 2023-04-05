@@ -134,10 +134,11 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
         Globals.writeToMLOG("INFO", "RecycleViewDRAdapterTovar.RecycleViewDRAdapterTovar", "list.size(): " + list.size());
     }
 
-    public RecycleViewDRAdapterTovar(Context context, List<TovarDB> list, TasksAndReclamationsSDB tasksAndReclamationsSDB) {
+    public RecycleViewDRAdapterTovar(Context context, List<TovarDB> list, TasksAndReclamationsSDB tasksAndReclamationsSDB, OpenType openType) {
         this.mContext = context;
         this.dataList = list;
         this.dataFilterable = list;
+        this.openType = openType;
 
         codeDad2 = tasksAndReclamationsSDB.codeDad2SrcDoc;
         clientId = tasksAndReclamationsSDB.client;
