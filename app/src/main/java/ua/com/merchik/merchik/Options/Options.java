@@ -475,6 +475,8 @@ public class Options {
         Log.e("NNK", "option.getOptionBlock1(): " + option.getOptionBlock1());
         Log.e("NNK", "option.getOptionBlock2(): " + option.getOptionBlock2());
 
+        Log.e("NNK", "option.getOptionBlock2(): " + optionList);
+
 
         // Проход по первой опции блокировки
         if (!option.getOptionBlock1().equals("0")) {
@@ -482,7 +484,9 @@ public class Options {
                 OptionsDB optionsDB = optionList.stream().filter(optionListItem -> Objects.equals(optionListItem.getOptionControlId(), option.getOptionBlock1()))
                         .findAny()
                         .orElse(null);
-                res += optControl(context, dataDB, optionsDB, Integer.parseInt(option.getOptionBlock1()), type, mode);
+                if (optionsDB != null){
+                    res += optControl(context, dataDB, optionsDB, Integer.parseInt(option.getOptionBlock1()), type, mode);
+                }
             }
         }
 
@@ -492,7 +496,9 @@ public class Options {
                 OptionsDB optionsDB = optionList.stream().filter(optionListItem -> Objects.equals(optionListItem.getOptionControlId(), option.getOptionBlock2()))
                         .findAny()
                         .orElse(null);
-                res += optControl(context, dataDB, optionsDB, Integer.parseInt(option.getOptionBlock2()), type, mode);
+                if (optionsDB != null){
+                    res += optControl(context, dataDB, optionsDB, Integer.parseInt(option.getOptionBlock2()), type, mode);
+                }
             }
 //            res += optControl(context, dataDB, option, Integer.parseInt(option.getOptionBlock2()), type, mode);
         }
@@ -507,9 +513,6 @@ public class Options {
                     break;
 
                 case MAKE:
-
-                    break;
-
                 case CHECK:
                     DialogData dialogData2 = new DialogData(context);
                     dialogData2.setTitle("Блокировка");

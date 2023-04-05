@@ -6,6 +6,7 @@ import android.text.SpannableString;
 import android.text.Spanned;
 import android.text.TextPaint;
 import android.text.style.ClickableSpan;
+import android.util.Log;
 import android.view.View;
 
 import java.io.Serializable;
@@ -98,6 +99,8 @@ public class OptionControlEndAnotherWork<T> extends OptionControl {
         }
 
         setIsBlockOption(signal);
+        Log.d("test", "spannableStringBuilder: " + spannableStringBuilder);
+        Log.d("test", "massageToUser: " + massageToUser);
     }
 
     public boolean isSignal() {
