@@ -1582,6 +1582,8 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                     Toast toast = Toast.makeText(mContext, "Отобрано: " + dataList.size() + " товаров", Toast.LENGTH_SHORT);
                     toast.setGravity(Gravity.CENTER, 0, 0);
                     toast.show();
+                }else {
+                    dataList = dataFilterable;
                 }
                 notifyDataSetChanged();
             }
