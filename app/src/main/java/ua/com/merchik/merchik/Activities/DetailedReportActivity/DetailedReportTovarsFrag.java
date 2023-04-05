@@ -28,6 +28,7 @@ import com.google.gson.JsonObject;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -195,7 +196,7 @@ public class DetailedReportTovarsFrag extends Fragment {
                     Toast.makeText(getContext(), "Показываю один Товар. (В РАЗРАБОТКЕ!)", Toast.LENGTH_SHORT).show();
 
                     DialogData dialog = new DialogData(getContext());
-                    dialog.setTitle("Выберите нужный Товар");
+                    dialog.setTitle("Оберіть Товар");
                     dialog.setText("");
 
                     RecycleViewDRAdapterTovar adapter = new RecycleViewDRAdapterTovar(getContext(), getTovListNew(TovarDisplayType.ONE), wpDataDB, RecycleViewDRAdapterTovar.OpenType.DIALOG);
@@ -208,7 +209,9 @@ public class DetailedReportTovarsFrag extends Fragment {
                             dialog.dismiss();
                         }
                     });
+                    adapter.getFilter().filter(dialog.getEditTextSearchText());
 
+                    dialog.setEditTextSearch(adapter);
                     dialog.setRecycler(adapter, new LinearLayoutManager(getContext(), LinearLayoutManager.VERTICAL, false));
                     dialog.setClose(dialog::dismiss);
 
@@ -238,7 +241,9 @@ public class DetailedReportTovarsFrag extends Fragment {
         List<TovarDB> res = new ArrayList<>();
         switch (type) {
             case DETAILED_REPORT:
-                res = RealmManager.getTovarListFromReportPrepareByDad2(codeDad2);
+                if (RealmManager.getTovarListFromReportPrepareByDad2(codeDad2) != null){
+                    res = RealmManager.INSTANCE.copyFromRealm(Objects.requireNonNull(RealmManager.getTovarListFromReportPrepareByDad2(codeDad2)));
+                }
                 return res;
 
             case PPA:
@@ -248,7 +253,7 @@ public class DetailedReportTovarsFrag extends Fragment {
             case ONE:
             case ALL:
             default:
-                res = RealmManager.getTovarListByCustomer(clientId);
+                res = RealmManager.INSTANCE.copyFromRealm(RealmManager.getTovarListByCustomer(clientId));
                 return res;
         }
 

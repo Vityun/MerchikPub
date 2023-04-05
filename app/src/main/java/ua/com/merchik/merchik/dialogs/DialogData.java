@@ -44,6 +44,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import ua.com.merchik.merchik.Activities.DetailedReportActivity.RecycleViewDRAdapterTovar;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.TelephoneMask;
@@ -87,7 +88,7 @@ public class DialogData {
 
     public ImageView photo, merchikIco;
 
-    private EditText editText, editDate, editText2;
+    private EditText editText, editDate, editText2, editTextSearch;
     private Spinner spinner, spinner2;
     private ExpandableListView expListView;
 
@@ -139,6 +140,7 @@ public class DialogData {
         merchikIco = dialog.findViewById(R.id.merchik_ico);
 
         // ---------- operation block ----------
+        editTextSearch = dialog.findViewById(R.id.editTextSearch);
         editText = dialog.findViewById(R.id.editText);
         editDate = dialog.findViewById(R.id.editDate);
         spinner = dialog.findViewById(R.id.spinner);
@@ -186,6 +188,35 @@ public class DialogData {
         } else {
             this.text.setVisibility(View.GONE);
         }
+    }
+
+    public void setEditTextSearch(RecycleViewDRAdapterTovar adapter) {
+        this.editTextSearch.setVisibility(View.VISIBLE);
+        this.editTextSearch.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void afterTextChanged(Editable s) {
+                if (s.length() != 0) {
+                    adapter.getFilter().filter(s);
+                }
+            }
+
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+            }
+        });
+    }
+
+    public String getEditTextSearchText(){
+        String res = "";
+        if (this.editTextSearch != null){
+            res = this.editTextSearch.getText().toString();
+        }
+        return res;
     }
 
     public void setTextTest(SpannableStringBuilder text) {

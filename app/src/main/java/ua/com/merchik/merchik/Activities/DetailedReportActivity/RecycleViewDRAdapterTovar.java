@@ -1576,35 +1576,15 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
 
             @Override
             protected void publishResults(CharSequence constraint, FilterResults results) {
-                dataList = (List<TovarDB>) results.values;
+                if (constraint.length() != 0){
+                    dataList = (List<TovarDB>) results.values;
 
-                Toast toast = Toast.makeText(mContext, "Отобрано: " + dataList.size() + " товаров", Toast.LENGTH_SHORT);
-                toast.setGravity(Gravity.CENTER, 0, 0);
-                toast.show();
-
+                    Toast toast = Toast.makeText(mContext, "Отобрано: " + dataList.size() + " товаров", Toast.LENGTH_SHORT);
+                    toast.setGravity(Gravity.CENTER, 0, 0);
+                    toast.show();
+                }
                 notifyDataSetChanged();
             }
-
-//            @Override
-//            protected FilterResults performFiltering(CharSequence constraint) {
-//                List<TovarDB> filteredResults = null;
-//                if (constraint.length() == 0) {
-//                    filteredResults = dataList;
-//                } else {
-//                    filteredResults = getFilteredResults(constraint.toString().toLowerCase());
-//                }
-//
-//                FilterResults results = new FilterResults();
-//                results.values = filteredResults;
-//                return results;
-//            }
-//
-//            @Override
-//            protected void publishResults(CharSequence constraint, FilterResults results) {
-//                dataList = (List<TovarDB>) results.values;
-//                notifyDataSetChanged();
-//            }
-
         };
 
 
