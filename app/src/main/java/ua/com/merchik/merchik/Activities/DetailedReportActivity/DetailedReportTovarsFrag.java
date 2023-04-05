@@ -100,7 +100,8 @@ public class DetailedReportTovarsFrag extends Fragment {
 
 //            setTextLikeLink();
             setPopup();
-            addRecycleView(getTovList());
+//            addRecycleView(getTovList());
+            addRecycleView(getTovListNew(TovarDisplayType.DETAILED_REPORT));
         } catch (Exception e) {
             Globals.writeToMLOG("ERROR", "DetailedReportTovarsFrag/onCreateView", "Exception e: " + e);
         }
@@ -132,7 +133,8 @@ public class DetailedReportTovarsFrag extends Fragment {
                     DetailedReportActivity.additionalRequirementsFilter = false;
                 }
                 flag = !flag;
-                addRecycleView(getTovList());
+//                addRecycleView(getTovList());
+                addRecycleView(getTovListNew(TovarDisplayType.DETAILED_REPORT));
             } catch (Exception e) {
                 Globals.writeToMLOG("ERROR", "", "Exception e: " + e);
             }
@@ -351,7 +353,8 @@ public class DetailedReportTovarsFrag extends Fragment {
                         public void onSuccess(String data) {
                             Toast.makeText(mContext, data, Toast.LENGTH_SHORT).show();
                             Globals.writeToMLOG("INFO", "DetailedReportTovarsFrag/getTovList.onSuccess", "String data: " + data);
-                            addRecycleView(getTovList());
+//                            addRecycleView(getTovList());
+                            addRecycleView(getTovListNew(TovarDisplayType.DETAILED_REPORT));
                             updateTov = false;
                         }
 
