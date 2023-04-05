@@ -26,6 +26,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import retrofit2.Call;
@@ -47,6 +48,7 @@ import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsRealm;
 import ua.com.merchik.merchik.database.realm.tables.PPADBRealm;
 import ua.com.merchik.merchik.database.realm.tables.ReportPrepareRealm;
+import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
 
 @SuppressLint("ValidFragment")
@@ -192,16 +194,25 @@ public class DetailedReportTovarsFrag extends Fragment {
                 case R.id.popup_tov:
                     Toast.makeText(getContext(), "Показываю один Товар. (В РАЗРАБОТКЕ!)", Toast.LENGTH_SHORT).show();
 
-//                    RecycleViewDRAdapterTovar adapter = new RecycleViewDRAdapterTovar(getContext(), getTovListNew(TovarDisplayType.ONE), wpDataDB, RecycleViewDRAdapterTovar.OpenType.DIALOG);
-//
-//                    DialogData dialog = new DialogData(getContext());
-//                    dialog.setTitle("Выберите нужный Товар");
-//                    dialog.setRecycler(adapter, new LinearLayoutManager(getContext(), LinearLayoutManager.VERTICAL, false));
-//                    dialog.setClose(dialog::dismiss);
-//                    dialog.setOk("Додати", ()->{
-//                        dialog.dismiss();
-//                    });
-//                    dialog.show();
+                    DialogData dialog = new DialogData(getContext());
+                    dialog.setTitle("Выберите нужный Товар");
+                    dialog.setText("");
+
+                    RecycleViewDRAdapterTovar adapter = new RecycleViewDRAdapterTovar(getContext(), getTovListNew(TovarDisplayType.ONE), wpDataDB, RecycleViewDRAdapterTovar.OpenType.DIALOG);
+                    adapter.elementClick(new Clicks.click() {
+                        @Override
+                        public <T> void click(T data) {
+                            TovarDB tov = (TovarDB) data;
+                            Toast.makeText(getContext(), "Ви обрали: " + tov.getNm(), Toast.LENGTH_SHORT).show();
+                            addRecycleView(Collections.singletonList(tov));
+                            dialog.dismiss();
+                        }
+                    });
+
+                    dialog.setRecycler(adapter, new LinearLayoutManager(getContext(), LinearLayoutManager.VERTICAL, false));
+                    dialog.setClose(dialog::dismiss);
+
+                    dialog.show();
 
                     return true;
                 default:

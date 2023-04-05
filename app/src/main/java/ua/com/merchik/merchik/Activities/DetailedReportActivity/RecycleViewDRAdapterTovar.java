@@ -98,6 +98,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
     private List<Integer> tovIdList;
 
     private Clicks.clickVoid click;
+    private Clicks.click clickTovar;
 
 
     private long codeDad2;
@@ -180,6 +181,10 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
 
     public void refreshAdapter(Clicks.clickVoid click) {
         this.click = click;
+    }
+
+    public void elementClick(Clicks.click click) {
+        this.clickTovar = click;
     }
 
     public void setTplType(DRAdapterTovarTPLTypeView type) {
@@ -606,89 +611,94 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                 boolean finalDeletePromoOption = deletePromoOption;
                 constraintLayout.setOnClickListener(v -> {
                     Log.e("DRAdapterTovar", "ClickListener");
-                    try {
-                        // На всякий случай зачищаю модальные окна.
-                        dialogList = new ArrayList<>();
+                    if (openType.equals(OpenType.DEFAULT)){
+                        try {
+                            // На всякий случай зачищаю модальные окна.
+                            dialogList = new ArrayList<>();
 
-                        // Получаем инфу об обязательных опциях
-                        List<TovarOptions> tovOptTplList = options.getRequiredOptionsTPL(optionsList2, finalDeletePromoOption);
+                            // Получаем инфу об обязательных опциях
+                            List<TovarOptions> tovOptTplList = options.getRequiredOptionsTPL(optionsList2, finalDeletePromoOption);
 
-                        Log.e("DRAdapterTovar", "Кол-во. обязательных опций: " + tovOptTplList.size());
+                            Log.e("DRAdapterTovar", "Кол-во. обязательных опций: " + tovOptTplList.size());
 
-                        if (tovOptTplList.size() > 0) {
-                            // В Цикле открываем Н количество инфы
-                            for (int i = tovOptTplList.size() - 1; i >= 0; i--) {
-                                if (tovOptTplList.get(i).getOptionControlName() != Globals.OptionControlName.AKCIYA) {
-                                    if (tovOptTplList.get(i).getOptionControlName().equals(AKCIYA_ID) && finalDeletePromoOption) {
-                                        // втыкаю
-                                        showDialog(list, tovOptTplList.get(i), finalReportPrepareTovar, tovarId, String.valueOf(codeDad2), clientId, finalBalanceData1, finalBalanceDate1, true);
-                                    } else {
-                                        showDialog(list, tovOptTplList.get(i), finalReportPrepareTovar, tovarId, String.valueOf(codeDad2), clientId, finalBalanceData1, finalBalanceDate1, true);
+                            if (tovOptTplList.size() > 0) {
+                                // В Цикле открываем Н количество инфы
+                                for (int i = tovOptTplList.size() - 1; i >= 0; i--) {
+                                    if (tovOptTplList.get(i).getOptionControlName() != Globals.OptionControlName.AKCIYA) {
+                                        if (tovOptTplList.get(i).getOptionControlName().equals(AKCIYA_ID) && finalDeletePromoOption) {
+                                            // втыкаю
+                                            showDialog(list, tovOptTplList.get(i), finalReportPrepareTovar, tovarId, String.valueOf(codeDad2), clientId, finalBalanceData1, finalBalanceDate1, true);
+                                        } else {
+                                            showDialog(list, tovOptTplList.get(i), finalReportPrepareTovar, tovarId, String.valueOf(codeDad2), clientId, finalBalanceData1, finalBalanceDate1, true);
+                                        }
                                     }
                                 }
+                                Collections.reverse(dialogList);
+                                dialogList.get(0).show();
+                            } else {
+                                DialogData dialog = new DialogData(mContext);
+                                dialog.setTitle("Внимание!");
+                                dialog.setText("Для данного товара не определены реквизиты обязательные для заполнения. Для принудительного вызова списка реквизитов выполните длинный клик по товару. ");
+                                dialog.setClose(dialog::dismiss);
+                                dialog.show();
                             }
-                            Collections.reverse(dialogList);
-                            dialogList.get(0).show();
-                        } else {
-                            DialogData dialog = new DialogData(mContext);
-                            dialog.setTitle("Внимание!");
-                            dialog.setText("Для данного товара не определены реквизиты обязательные для заполнения. Для принудительного вызова списка реквизитов выполните длинный клик по товару. ");
-                            dialog.setClose(dialog::dismiss);
-                            dialog.show();
+
+
+                        } catch (Exception e) {
+                            Globals.writeToMLOG("ERROR", "RecycleViewDRAdapterTovar.bind_7", "Exception e: " + e);
+                            globals.alertDialogMsg(mContext, "Не удалось открыть Опцию. Если ошибка повторяется - обратитесь к своему руководителю.\n\nОшибка: " + e);
                         }
-
-
-                    } catch (Exception e) {
-                        Globals.writeToMLOG("ERROR", "RecycleViewDRAdapterTovar.bind_7", "Exception e: " + e);
-                        globals.alertDialogMsg(mContext, "Не удалось открыть Опцию. Если ошибка повторяется - обратитесь к своему руководителю.\n\nОшибка: " + e);
+                    }else {
+                        clickTovar.click(list);
                     }
                 });
 
                 constraintLayout.setOnLongClickListener(v -> {
-                    try {
-                        // Получаем инфу о всех опциях
-                        List<TovarOptions> tovOptTplList = options.getAllOptionsTPL();
-                        // В Цикле открываем Н количество инфы
-                        for (int i = tovOptTplList.size() - 1; i >= 0; i--) {
-                            if (tovOptTplList.get(i).getOptionControlName() != Globals.OptionControlName.AKCIYA) {
-                                showDialog(list, tovOptTplList.get(i), finalReportPrepareTovar, tovarId, String.valueOf(codeDad2), clientId, finalBalanceData1, finalBalanceDate1, false);
+                    if (openType.equals(OpenType.DEFAULT)){
+                        try {
+                            // Получаем инфу о всех опциях
+                            List<TovarOptions> tovOptTplList = options.getAllOptionsTPL();
+                            // В Цикле открываем Н количество инфы
+                            for (int i = tovOptTplList.size() - 1; i >= 0; i--) {
+                                if (tovOptTplList.get(i).getOptionControlName() != Globals.OptionControlName.AKCIYA) {
+                                    showDialog(list, tovOptTplList.get(i), finalReportPrepareTovar, tovarId, String.valueOf(codeDad2), clientId, finalBalanceData1, finalBalanceDate1, false);
+                                }
                             }
+                            Collections.reverse(dialogList);
+                            dialogList.get(0).show();
+                        } catch (Exception e) {
+                            Globals.writeToMLOG("ERROR", "RecycleViewDRAdapterTovar.bind_7.1", "Exception e: " + e);
                         }
-                        Collections.reverse(dialogList);
-                        dialogList.get(0).show();
-                    } catch (Exception e) {
-                        Globals.writeToMLOG("ERROR", "RecycleViewDRAdapterTovar.bind_7.1", "Exception e: " + e);
                     }
-
-
                     return true;
                 });
             } else {// Если такого товара НЕТ
+
                 boolean finalDeletePromoOption1 = deletePromoOption;
                 constraintLayout.setOnClickListener(v -> {
+                    if (openType.equals(OpenType.DEFAULT)){
+                        ReportPrepareDB rp = createNewRPRow(list);
+                        Log.e("DRAdapterTovar", "ClickListenerТовара нет");
+                        try {
+                            // Получаем инфу об обязательных опциях
+                            List<TovarOptions> tovOptTplList = options.getRequiredOptionsTPL(optionsList2, finalDeletePromoOption1);
 
-                    ReportPrepareDB rp = createNewRPRow(list);
-
-                    Log.e("DRAdapterTovar", "ClickListenerТовара нет");
-
-                    try {
-                        // Получаем инфу об обязательных опциях
-                        List<TovarOptions> tovOptTplList = options.getRequiredOptionsTPL(optionsList2, finalDeletePromoOption1);
-
-                        // В Цикле открываем Н количество инфы
-                        Collections.reverse(tovOptTplList); // Реверснул что б отображалось более менее адекватно пользователю (в естественном порядке)
-                        for (TovarOptions tpl : tovOptTplList) {
-                            if (tpl.getOptionControlName() != Globals.OptionControlName.AKCIYA) {
-                                showDialog(list, tpl, rp, tovarId, String.valueOf(codeDad2), clientId, "", "", false);
+                            // В Цикле открываем Н количество инфы
+                            Collections.reverse(tovOptTplList); // Реверснул что б отображалось более менее адекватно пользователю (в естественном порядке)
+                            for (TovarOptions tpl : tovOptTplList) {
+                                if (tpl.getOptionControlName() != Globals.OptionControlName.AKCIYA) {
+                                    showDialog(list, tpl, rp, tovarId, String.valueOf(codeDad2), clientId, "", "", false);
+                                }
                             }
+                            Collections.reverse(dialogList);
+                            dialogList.get(0).show();
+                        } catch (Exception e) {
+                            Globals.writeToMLOG("ERROR", "RecycleViewDRAdapterTovar.bind_8", "Exception e: " + e);
+                            globals.alertDialogMsg(mContext, "Не удалось открыть Опцию. Если ошибка повторяется - обратитесь к своему руководителю.\n\nОшибка: " + e);
                         }
-                        Collections.reverse(dialogList);
-                        dialogList.get(0).show();
-                    } catch (Exception e) {
-                        Globals.writeToMLOG("ERROR", "RecycleViewDRAdapterTovar.bind_8", "Exception e: " + e);
-                        globals.alertDialogMsg(mContext, "Не удалось открыть Опцию. Если ошибка повторяется - обратитесь к своему руководителю.\n\nОшибка: " + e);
+                    }else {
+                        clickTovar.click(list);
                     }
-
                 });
             }
 
