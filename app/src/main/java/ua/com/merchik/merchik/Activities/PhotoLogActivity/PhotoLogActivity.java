@@ -24,6 +24,7 @@ import java.util.List;
 import io.realm.RealmResults;
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
+import ua.com.merchik.merchik.MakePhoto;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.ViewHolders.PhotoAndInfoViewHolder;
@@ -141,7 +142,8 @@ public class PhotoLogActivity extends toolbar_menus {
                 imageView.setRotation(45);
                 imageView.setOnClickListener((view) -> {
                     Toast.makeText(view.getContext(), "open camera", Toast.LENGTH_SHORT).show();
-
+                    MakePhoto makePhoto = new MakePhoto();
+                    makePhoto.openCamera(this, MakePhoto.CAMERA_REQUEST_TAKE_PHOTO);
                 });
 
                 photoLogMode = PhotoLogMode.PLANOGRAM;
