@@ -5,14 +5,25 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
+<!--    <data>
+        <import type="ua.com.merchik.merchik.Activities.DetailedReportActivity.RecycleViewDRAdapterTovar" />
+        <variable
+            name="adapter"
+            type="ua.com.merchik.merchik.Activities.DetailedReportActivity.RecycleViewDRAdapterTovar" />
+    </data>-->
+
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         tools:context="tablayout.example.com.tablayout.HomeFragment">
 
         <androidx.constraintlayout.widget.ConstraintLayout
+            xmlns:android="http://schemas.android.com/apk/res/android"
+            xmlns:app="http://schemas.android.com/apk/res-auto"
             android:layout_width="match_parent"
             android:layout_height="match_parent">
+
+
 
             <TextView
                 android:id="@+id/textLikeLink"
@@ -41,7 +52,7 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/textLikeLink" />
 
-            <androidx.recyclerview.widget.RecyclerView
+<!--            <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/DRRecyclerViewTovar"
                 android:layout_width="0dp"
                 android:layout_height="0dp"
@@ -51,7 +62,29 @@
                 app:layout_constraintHorizontal_bias="0.0"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/drEditTextFindTovar"
-                app:layout_constraintVertical_bias="0.0" />
+                app:adapter="@{adapter}"
+                app:layout_constraintVertical_bias="0.0" />-->
+
+<!--            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/DRRecyclerViewTovar"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_marginTop="4dp"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/drEditTextFindTovar" />-->
+
+            <ua.com.merchik.merchik.Utils.CustomRecyclerView
+                android:id="@+id/DRRecyclerViewTovar"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_marginTop="4dp"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/drEditTextFindTovar" />
+
 
             <ImageView
                 android:id="@+id/full_tov_list"
@@ -66,18 +99,6 @@
                 app:layout_constraintEnd_toStartOf="@+id/filter"
                 app:layout_constraintTop_toTopOf="@+id/drEditTextFindTovar"
                 app:srcCompat="@drawable/ic_letter_x" />
-
-
-            <!--            <ImageView-->
-            <!--                android:id="@+id/filter"-->
-            <!--                android:layout_width="20dp"-->
-            <!--                android:layout_height="20dp"-->
-            <!--                android:layout_marginEnd="8dp"-->
-            <!--                android:layout_marginRight="8dp"-->
-            <!--                app:layout_constraintBottom_toBottomOf="@+id/drEditTextFindTovar"-->
-            <!--                app:layout_constraintEnd_toEndOf="parent"-->
-            <!--                app:layout_constraintTop_toTopOf="@+id/drEditTextFindTovar"-->
-            <!--                app:srcCompat="@drawable/ic_filter" />-->
 
             <ImageButton
                 android:id="@+id/filter"

@@ -20,7 +20,6 @@ import android.widget.Toast;
 import androidx.appcompat.widget.PopupMenu;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
@@ -36,6 +35,7 @@ import retrofit2.Response;
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.R;
+import ua.com.merchik.merchik.Utils.CustomRecyclerView;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.Data;
 import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
@@ -65,8 +65,11 @@ public class DetailedReportTovarsFrag extends Fragment {
 
     private EditText editText;
     private TextView allTov;
-    private RecyclerView rvTovar;
+//    private RecyclerView recyclerView;
+    private CustomRecyclerView recyclerView;
     private ImageView fullTovList, filter;
+
+    RecycleViewDRAdapterTovar adapter;
 
     private boolean flag = true;
 
@@ -98,7 +101,8 @@ public class DetailedReportTovarsFrag extends Fragment {
             fullTovList = v.findViewById(R.id.full_tov_list);
             filter = v.findViewById(R.id.filter);
 
-            rvTovar = (RecyclerView) v.findViewById(R.id.DRRecyclerViewTovar);
+//            rvTovar = (RecyclerView) v.findViewById(R.id.DRRecyclerViewTovar);
+            recyclerView = v.findViewById(R.id.DRRecyclerViewTovar);
             allTov = v.findViewById(R.id.textLikeLink);
 
 //            setTextLikeLink();
@@ -199,7 +203,7 @@ public class DetailedReportTovarsFrag extends Fragment {
                     dialog.setTitle("Оберіть Товар");
                     dialog.setText("");
 
-                    RecycleViewDRAdapterTovar adapter = new RecycleViewDRAdapterTovar(getContext(), getTovListNew(TovarDisplayType.ONE), wpDataDB, RecycleViewDRAdapterTovar.OpenType.DIALOG);
+                    adapter = new RecycleViewDRAdapterTovar(getContext(), getTovListNew(TovarDisplayType.ONE), wpDataDB, RecycleViewDRAdapterTovar.OpenType.DIALOG);
                     adapter.elementClick(new Clicks.click() {
                         @Override
                         public <T> void click(T data) {
@@ -297,32 +301,36 @@ public class DetailedReportTovarsFrag extends Fragment {
 
 
             // TODO OH SHIT
-            RecycleViewDRAdapterTovar recycleViewDRAdapter;
+//            RecycleViewDRAdapterTovar recycleViewDRAdapter;
             if (wpDataDB != null) {
-                recycleViewDRAdapter = new RecycleViewDRAdapterTovar(mContext, list, wpDataDB, RecycleViewDRAdapterTovar.OpenType.DEFAULT);
+                adapter = new RecycleViewDRAdapterTovar(mContext, list, wpDataDB, RecycleViewDRAdapterTovar.OpenType.DEFAULT);
             } else {
-                recycleViewDRAdapter = new RecycleViewDRAdapterTovar(mContext, list, tasksAndReclamationsSDB, RecycleViewDRAdapterTovar.OpenType.DEFAULT);
+                adapter = new RecycleViewDRAdapterTovar(mContext, list, tasksAndReclamationsSDB, RecycleViewDRAdapterTovar.OpenType.DEFAULT);
             }
-            recycleViewDRAdapter.setAkciyaTovList(promotionalTov);
+            adapter.setAkciyaTovList(promotionalTov);
 
-            recycleViewDRAdapter.setTplType(RecycleViewDRAdapterTovar.DRAdapterTovarTPLTypeView.GONE);
+            adapter.setTplType(RecycleViewDRAdapterTovar.DRAdapterTovarTPLTypeView.GONE);
 
-            RecycleViewDRAdapterTovar finalRecycleViewDRAdapter = recycleViewDRAdapter;
-            recycleViewDRAdapter.refreshAdapter(() -> {
-                finalRecycleViewDRAdapter.switchTPLView();
-                rvTovar.setAdapter(finalRecycleViewDRAdapter);
-                rvTovar.setLayoutManager(new LinearLayoutManager(mContext, LinearLayoutManager.VERTICAL, false));
-                finalRecycleViewDRAdapter.notifyDataSetChanged();
+//            RecycleViewDRAdapterTovar finalRecycleViewDRAdapter = recycleViewDRAdapter;
+            adapter.refreshAdapter(() -> {
+                adapter.switchTPLView();
+                recyclerView.setAdapter(adapter);
+//                rvTovar.setAdapter(finalRecycleViewDRAdapter);
+                recyclerView.setLayoutManager(new LinearLayoutManager(mContext, LinearLayoutManager.VERTICAL, false));
+//                rvTovar.setLayoutManager(new LinearLayoutManager(mContext, LinearLayoutManager.VERTICAL, false));
+                adapter.notifyDataSetChanged();
             });
 
-            rvTovar.setAdapter(recycleViewDRAdapter);
-            rvTovar.setLayoutManager(new LinearLayoutManager(mContext, LinearLayoutManager.VERTICAL, false));
+            recyclerView.setAdapter(adapter);
+//            rvTovar.setAdapter(recycleViewDRAdapter);
+            recyclerView.setLayoutManager(new LinearLayoutManager(mContext, LinearLayoutManager.VERTICAL, false));
+//            rvTovar.setLayoutManager(new LinearLayoutManager(mContext, LinearLayoutManager.VERTICAL, false));
 
             editText.addTextChangedListener(new TextWatcher() {
                 @Override
                 public void afterTextChanged(Editable s) {
                     if (s.length() != 0) {
-                        recycleViewDRAdapter.getFilter().filter(s);
+                        adapter.getFilter().filter(s);
                     }
                 }
 

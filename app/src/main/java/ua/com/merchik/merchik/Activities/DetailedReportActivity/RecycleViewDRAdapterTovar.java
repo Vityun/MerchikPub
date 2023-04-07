@@ -61,6 +61,7 @@ import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.ServerExchange.Exchange;
 import ua.com.merchik.merchik.ServerExchange.PhotoDownload;
 import ua.com.merchik.merchik.ServerExchange.TablesLoadingUnloading;
+import ua.com.merchik.merchik.Utils.CustomRecyclerView;
 import ua.com.merchik.merchik.Utils.MySimpleExpandableListAdapter;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.WorkPlan;
@@ -218,7 +219,8 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
         TextView tovGroup;
         TextView tradeMark;
         TextView textViewItemTovarOptLine, article;
-        RecyclerView recyclerView;
+//        RecyclerView recyclerView;
+        CustomRecyclerView recyclerView;
 
         TextView balance, facePlan;
 
@@ -245,6 +247,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
             article = v.findViewById(R.id.article);
             facePlan = v.findViewById(R.id.facePlan);
             recyclerView = v.findViewById(R.id.recyclerView2);
+            recyclerView.setMode(1);
 
             if (openType.equals(OpenType.DIALOG)){
                 textViewItemTovarOptLine.setVisibility(View.GONE);
