@@ -138,8 +138,10 @@ public class PhotoLogActivity extends toolbar_menus {
 
             } else if (this.getIntent().getBooleanExtra("planogram", false)) {
                 imageView.setVisibility(View.VISIBLE);
+                imageView.setRotation(45);
                 imageView.setOnClickListener((view) -> {
                     Toast.makeText(view.getContext(), "open camera", Toast.LENGTH_SHORT).show();
+
                 });
 
                 photoLogMode = PhotoLogMode.PLANOGRAM;
