@@ -7,8 +7,10 @@ import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
+import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -39,6 +41,7 @@ public class PhotoLogActivity extends toolbar_menus {
     private TextView activity_title;
     private ImageButton filter;
     private RecyclerView recyclerView;
+    private ImageView imageView;
 
     //----------------------------------------------------------------------------------------------
     @Override
@@ -105,6 +108,7 @@ public class PhotoLogActivity extends toolbar_menus {
 
         editText = (EditText) findViewById(R.id.searchViewPhotoLog);
         filter = findViewById(R.id.filter);
+        imageView = findViewById(R.id.imageView);
 
         setFilter();
     }
@@ -133,6 +137,11 @@ public class PhotoLogActivity extends toolbar_menus {
                 Globals.writeToMLOG("INFO", "PhotoLogActivity/setRecycler/StackPhotoRealm.getTARFilterPhoto", "stackPhoto: " + stackPhoto.size());
 
             } else if (this.getIntent().getBooleanExtra("planogram", false)) {
+                imageView.setVisibility(View.VISIBLE);
+                imageView.setOnClickListener((view) -> {
+                    Toast.makeText(view.getContext(), "open camera", Toast.LENGTH_SHORT).show();
+                });
+
                 photoLogMode = PhotoLogMode.PLANOGRAM;
                 int addr = this.getIntent().getIntExtra("address", 0);
                 String cust = this.getIntent().getStringExtra("customer");
@@ -140,7 +149,7 @@ public class PhotoLogActivity extends toolbar_menus {
 
                 if (stackPhoto == null) {
                     Toast.makeText(this, "Фото Планограмм НЕ найдено. \n\nОбратитесь к Вашему руководителю.", Toast.LENGTH_LONG).show();
-                }else {
+                } else {
                     Globals.writeToMLOG("INFO", "PhotoLogActivity/setRecycler/planogram", "stackPhoto: " + stackPhoto.size());
                 }
             } else if (this.getIntent().getBooleanExtra("report_prepare", false)) {
@@ -165,9 +174,9 @@ public class PhotoLogActivity extends toolbar_menus {
                 }
 
                 // --- DEBUG ---
-                if (samplePhotoSDBList != null){
+                if (samplePhotoSDBList != null) {
                     Globals.writeToMLOG("INFO", "PhotoLogActivity/setRecycler/SamplePhoto/samplePhotoSDBList", "samplePhotoSDBList.Size: " + samplePhotoSDBList.size());
-                }else {
+                } else {
                     Globals.writeToMLOG("INFO", "PhotoLogActivity/setRecycler/SamplePhoto/samplePhotoSDBList", "samplePhotoSDBList is NULL");
                 }
                 // --- DEBUG ---
@@ -200,7 +209,7 @@ public class PhotoLogActivity extends toolbar_menus {
         recycleViewPLAdapter = new PhotoLogAdapter(this, stackPhoto, getChoice(), new Clicks.click() {
             @Override
             public <T> void click(T data) {
-                switch (finalPhotoLogMode){
+                switch (finalPhotoLogMode) {
                     case SAMPLE_PHOTO:
                         finish();
                         break;

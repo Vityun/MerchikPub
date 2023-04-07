@@ -36,6 +36,7 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
         android:layout_marginLeft="8dp"
+        android:layout_marginTop="8dp"
         android:layout_marginEnd="8dp"
         android:layout_marginRight="8dp"
         android:background="#00CA1A1A"
@@ -45,10 +46,25 @@
         android:inputType="text"
         android:visibility="visible"
         app:actionViewClass="android.widget.SearchView"
-        app:layout_constraintEnd_toStartOf="@+id/filter"
+        app:layout_constraintEnd_toStartOf="@+id/imageView"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/include"
         tools:visibility="visible"></EditText>
+
+    <ImageView
+        android:id="@+id/imageView"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginRight="8dp"
+        android:background="@drawable/selector_rounded_button"
+        android:elevation="100dp"
+        android:padding="8dp"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="@+id/filter"
+        app:layout_constraintEnd_toStartOf="@+id/filter"
+        app:layout_constraintTop_toTopOf="@+id/filter"
+        app:srcCompat="@drawable/ic_letter_x" />
 
     <ImageButton
         android:id="@+id/filter"
