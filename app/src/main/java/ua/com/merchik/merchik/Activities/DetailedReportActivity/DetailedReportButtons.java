@@ -270,6 +270,7 @@ public class DetailedReportButtons {
 
             case 138767:
                 intentPhotoLog.putExtra("planogram", true);
+                intentPhotoLog.putExtra("dad2", wpDataDB.getCode_dad2());
                 intentPhotoLog.putExtra("customer", wpDataDB.getClient_id());
                 intentPhotoLog.putExtra("address", wpDataDB.getAddr_id());
                 context.startActivity(intentPhotoLog);

@@ -1,5 +1,6 @@
 package ua.com.merchik.merchik.Activities.PhotoLogActivity;
 
+import static ua.com.merchik.merchik.MakePhoto.CAMERA_REQUEST_TAKE_PHOTO;
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
 import android.content.Intent;
@@ -18,6 +19,7 @@ import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import java.io.File;
 import java.util.Arrays;
 import java.util.List;
 
@@ -28,10 +30,14 @@ import ua.com.merchik.merchik.MakePhoto;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.ViewHolders.PhotoAndInfoViewHolder;
+import ua.com.merchik.merchik.data.Database.Room.AddressSDB;
+import ua.com.merchik.merchik.data.Database.Room.CustomerSDB;
 import ua.com.merchik.merchik.data.Database.Room.SamplePhotoSDB;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
+import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.StackPhotoRealm;
+import ua.com.merchik.merchik.database.realm.tables.WpDataRealm;
 import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.dialogs.DialogFilter.DialogFilter;
 import ua.com.merchik.merchik.toolbar_menus;
@@ -43,6 +49,7 @@ public class PhotoLogActivity extends toolbar_menus {
     private ImageButton filter;
     private RecyclerView recyclerView;
     private ImageView imageView;
+    private long codeDad2;
 
     //----------------------------------------------------------------------------------------------
     @Override
@@ -138,12 +145,13 @@ public class PhotoLogActivity extends toolbar_menus {
                 Globals.writeToMLOG("INFO", "PhotoLogActivity/setRecycler/StackPhotoRealm.getTARFilterPhoto", "stackPhoto: " + stackPhoto.size());
 
             } else if (this.getIntent().getBooleanExtra("planogram", false)) {
+                codeDad2 = this.getIntent().getLongExtra("dad2", 0);
                 imageView.setVisibility(View.VISIBLE);
                 imageView.setRotation(45);
                 imageView.setOnClickListener((view) -> {
                     Toast.makeText(view.getContext(), "open camera", Toast.LENGTH_SHORT).show();
                     MakePhoto makePhoto = new MakePhoto();
-                    makePhoto.openCamera(this, MakePhoto.CAMERA_REQUEST_TAKE_PHOTO);
+                    makePhoto.openCamera(this, CAMERA_REQUEST_TAKE_PHOTO);
                 });
 
                 photoLogMode = PhotoLogMode.PLANOGRAM;
@@ -327,6 +335,70 @@ public class PhotoLogActivity extends toolbar_menus {
             filter.setImageDrawable(getResources().getDrawable(R.drawable.ic_filterbold));
         } else {
             filter.setImageDrawable(getResources().getDrawable(R.drawable.ic_filter));
+        }
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        switch (requestCode) {
+            case CAMERA_REQUEST_TAKE_PHOTO:
+                if (resultCode == RESULT_OK) {
+                    savePhoto();
+                } else {
+                    // Тут надо будет обработать удаление, наверно, фотки.
+                }
+                break;
+        }
+    }
+
+    /**
+     * Сделано для сохранения фото планограмм.
+     */
+    private void savePhoto() {
+        if (codeDad2 != 0) {
+            WpDataDB wp = RealmManager.INSTANCE.copyFromRealm(WpDataRealm.getWpDataRowByDad2Id(codeDad2));
+
+            AddressSDB addr = SQL_DB.addressDao().getById(wp.getAddr_id());
+            CustomerSDB client = SQL_DB.customerDao().getById(wp.getClient_id());
+
+            StackPhotoDB stackPhotoDB = saveTestPhoto(new File(MakePhoto.openCameraPhotoUri), addr, client);
+            MakePhoto.openCameraPhotoUri = null;
+        }
+    }
+
+    private StackPhotoDB saveTestPhoto(File photoFile, AddressSDB addr, CustomerSDB client) {
+        try {
+            int id = RealmManager.stackPhotoGetLastId();
+            id++;
+            StackPhotoDB stackPhotoDB = new StackPhotoDB();
+            stackPhotoDB.setId(id);
+            stackPhotoDB.setDt(System.currentTimeMillis() / 1000);
+            stackPhotoDB.setTime_event(Clock.getHumanTime2(System.currentTimeMillis() / 1000));
+
+            stackPhotoDB.setAddr_id(addr.id);
+            stackPhotoDB.setAddressTxt(addr.nm);
+
+            stackPhotoDB.setClient_id(client.id);
+            stackPhotoDB.setCustomerTxt(client.nm);
+
+            stackPhotoDB.setUser_id(Globals.userId);
+            stackPhotoDB.setPhoto_type(5);
+
+            stackPhotoDB.setDvi(1);
+
+            stackPhotoDB.setCreate_time(System.currentTimeMillis());
+
+            stackPhotoDB.setPhoto_hash(globals.getHashMD5FromFile2(photoFile, null));
+            stackPhotoDB.setPhoto_num(photoFile.getAbsolutePath());
+
+
+            RealmManager.stackPhotoSavePhoto(stackPhotoDB);
+            return stackPhotoDB;
+        } catch (Exception e) {
+            Globals.writeToMLOG("ERROR", "TARActivity.onActivityResult.savePhoto", "Exception e: " + e);
+            return null;
         }
     }
 
