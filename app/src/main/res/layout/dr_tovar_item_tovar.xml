@@ -60,11 +60,11 @@
 
         <TextView
             android:id="@+id/textViewItemTovarSecondLine"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
             android:layout_marginLeft="16dp"
-            android:maxLines="1"
+            android:maxLines="2"
             android:text="Вес, Штрихкод"
             app:layout_constraintEnd_toStartOf="@+id/article"
             app:layout_constraintHorizontal_bias="0.0"
