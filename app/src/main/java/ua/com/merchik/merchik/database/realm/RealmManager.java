@@ -558,6 +558,16 @@ public class RealmManager {
                 .findAll();
     }
 
+    public static RealmResults<OptionsDB> getOptionsButtonRED(long otchetId) {
+        String sOtchetId = String.valueOf(otchetId);
+        return INSTANCE.where(OptionsDB.class)
+                .equalTo("docId", sOtchetId)
+                .and()
+                .equalTo("optionGroup", "3161")
+                .equalTo("isSignal", "1")
+                .findAll();
+    }
+
     public static OptionsDB getOptionById(String id) {
         return INSTANCE.where(OptionsDB.class)
                 .equalTo("iD", id)

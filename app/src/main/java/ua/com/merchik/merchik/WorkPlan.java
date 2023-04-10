@@ -34,7 +34,8 @@ public class WorkPlan {
      */
     public LinearLayout getOptionLinearLayout(Context mContext, long otchetId) {
 //        RealmResults<OptionsDB> options = RealmManager.getOptionsNOButton(otchetId);
-        RealmResults<OptionsDB> options = RealmManager.getOptionsButton(otchetId);
+//        RealmResults<OptionsDB> options = RealmManager.getOptionsButton(otchetId);
+        RealmResults<OptionsDB> options = RealmManager.getOptionsButtonRED(otchetId);
 
         // Отображаю "Описанные" на стороне приложения опции
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
