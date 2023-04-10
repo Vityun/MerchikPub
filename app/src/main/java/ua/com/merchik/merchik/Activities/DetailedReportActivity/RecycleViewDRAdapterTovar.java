@@ -26,7 +26,6 @@ import android.net.Uri;
 import android.text.Html;
 import android.text.SpannableStringBuilder;
 import android.util.Log;
-import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -150,6 +149,19 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
         Globals.writeToMLOG("INFO", "RecycleViewDRAdapterTovar.RecycleViewDRAdapterTovar", "list.size(): " + list.size());
     }
 
+    /**
+     * 10.04.23.
+     * получаем текущие данные с ресайклера.
+     */
+    public List<TovarDB> getAdapterDataList() {
+        return this.dataList;
+    }
+
+
+    public void updateAdapterData(List<TovarDB> data) {
+        this.dataList = data;
+    }
+
     public void setAkciyaTovList(List<Integer> tovIdList) {
         this.tovIdList = tovIdList;
         Log.e("АКЦИЯ_ТОВАРА", "tovIdList: " + tovIdList);
@@ -219,7 +231,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
         TextView tovGroup;
         TextView tradeMark;
         TextView textViewItemTovarOptLine, article;
-//        RecyclerView recyclerView;
+        //        RecyclerView recyclerView;
         CustomRecyclerView recyclerView;
 
         TextView balance, facePlan;
@@ -249,7 +261,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
             recyclerView = v.findViewById(R.id.recyclerView2);
             recyclerView.setMode(1);
 
-            if (openType.equals(OpenType.DIALOG)){
+            if (openType.equals(OpenType.DIALOG)) {
                 textViewItemTovarOptLine.setVisibility(View.GONE);
                 recyclerView.setVisibility(View.GONE);
             }
@@ -579,7 +591,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
 
 
             try {
-                if (openType.equals(OpenType.DEFAULT)){
+                if (openType.equals(OpenType.DEFAULT)) {
                     ReportPrepareDB finalReportPrepareTovar1 = reportPrepareTovar2;
                     RecyclerViewTPLAdapter recyclerViewTPLAdapter = new RecyclerViewTPLAdapter(
                             options.getRequiredOptionsTPL(optionsList2, deletePromoOption),
@@ -589,8 +601,8 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                     recyclerView.setAdapter(recyclerViewTPLAdapter);
                     recyclerView.setLayoutManager(new LinearLayoutManager(mContext, LinearLayoutManager.VERTICAL, false));
                 }
-            }catch (Exception e){
-               Globals.writeToMLOG("ERR", "RecyclerViewTPLAdapter", "Exception e: " + e);
+            } catch (Exception e) {
+                Globals.writeToMLOG("ERR", "RecyclerViewTPLAdapter", "Exception e: " + e);
             }
 
             if (tplType.equals(DRAdapterTovarTPLTypeView.FULL)) {
@@ -614,7 +626,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                 boolean finalDeletePromoOption = deletePromoOption;
                 constraintLayout.setOnClickListener(v -> {
                     Log.e("DRAdapterTovar", "ClickListener");
-                    if (openType.equals(OpenType.DEFAULT)){
+                    if (openType.equals(OpenType.DEFAULT)) {
                         try {
                             // На всякий случай зачищаю модальные окна.
                             dialogList = new ArrayList<>();
@@ -651,13 +663,13 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                             Globals.writeToMLOG("ERROR", "RecycleViewDRAdapterTovar.bind_7", "Exception e: " + e);
                             globals.alertDialogMsg(mContext, "Не удалось открыть Опцию. Если ошибка повторяется - обратитесь к своему руководителю.\n\nОшибка: " + e);
                         }
-                    }else {
+                    } else {
                         clickTovar.click(list);
                     }
                 });
 
                 constraintLayout.setOnLongClickListener(v -> {
-                    if (openType.equals(OpenType.DEFAULT)){
+                    if (openType.equals(OpenType.DEFAULT)) {
                         try {
                             // Получаем инфу о всех опциях
                             List<TovarOptions> tovOptTplList = options.getAllOptionsTPL();
@@ -679,7 +691,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
 
                 boolean finalDeletePromoOption1 = deletePromoOption;
                 constraintLayout.setOnClickListener(v -> {
-                    if (openType.equals(OpenType.DEFAULT)){
+                    if (openType.equals(OpenType.DEFAULT)) {
                         ReportPrepareDB rp = createNewRPRow(list);
                         Log.e("DRAdapterTovar", "ClickListenerТовара нет");
                         try {
@@ -699,7 +711,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                             Globals.writeToMLOG("ERROR", "RecycleViewDRAdapterTovar.bind_8", "Exception e: " + e);
                             globals.alertDialogMsg(mContext, "Не удалось открыть Опцию. Если ошибка повторяется - обратитесь к своему руководителю.\n\nОшибка: " + e);
                         }
-                    }else {
+                    } else {
                         clickTovar.click(list);
                     }
                 });
@@ -1579,13 +1591,13 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
 
             @Override
             protected void publishResults(CharSequence constraint, FilterResults results) {
-                if (constraint.length() != 0){
+                if (constraint.length() != 0) {
                     dataList = (List<TovarDB>) results.values;
 
-                    Toast toast = Toast.makeText(mContext, "Отобрано: " + dataList.size() + " товаров", Toast.LENGTH_SHORT);
-                    toast.setGravity(Gravity.CENTER, 0, 0);
-                    toast.show();
-                }else {
+//                    Toast toast = Toast.makeText(mContext, "Отобрано: " + dataList.size() + " товаров", Toast.LENGTH_SHORT);
+//                    toast.setGravity(Gravity.CENTER, 0, 0);
+//                    toast.show();
+                } else {
                     dataList = dataFilterable;
                 }
                 notifyDataSetChanged();

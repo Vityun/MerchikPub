@@ -26,8 +26,11 @@ import com.google.gson.JsonObject;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -65,7 +68,7 @@ public class DetailedReportTovarsFrag extends Fragment {
 
     private EditText editText;
     private TextView allTov;
-//    private RecyclerView recyclerView;
+    //    private RecyclerView recyclerView;
     private CustomRecyclerView recyclerView;
     private ImageView fullTovList, filter;
 
@@ -180,36 +183,38 @@ public class DetailedReportTovarsFrag extends Fragment {
             switch (item.getItemId()) {
                 case R.id.popup_dr:
                     tovarDBList = getTovListNew(TovarDisplayType.DETAILED_REPORT);
-                    Toast.makeText(getContext(), "Показываю Товары как было.(" + tovarDBList.size() + ")", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getContext(), "Видалено зайві товари.(" + tovarDBList.size() + ")", Toast.LENGTH_SHORT).show();
                     addRecycleView(tovarDBList);
                     return true;
 
                 case R.id.popup_ppa:
                     tovarDBList = getTovListNew(TovarDisplayType.PPA);
-                    Toast.makeText(getContext(), "Показываю Товары по ППА.(" + tovarDBList.size() + ")", Toast.LENGTH_SHORT).show();
-                    addRecycleView(tovarDBList);
+                    Toast.makeText(getContext(), "Додано товари з ППА. (" + tovarDBList.size() + ")", Toast.LENGTH_SHORT).show();
+//                    addRecycleView(tovarDBList);
+                    addTovarToRecyclerView(tovarDBList);
                     return true;
 
                 case R.id.popup_all:
                     tovarDBList = getTovListNew(TovarDisplayType.ALL);
-                    Toast.makeText(getContext(), "Показываю все Товары.(" + tovarDBList.size() + ")", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getContext(), "Додано всі товари.(" + tovarDBList.size() + ")", Toast.LENGTH_SHORT).show();
                     addRecycleView(tovarDBList);
                     return true;
 
                 case R.id.popup_tov:
-                    Toast.makeText(getContext(), "Показываю один Товар. (В РАЗРАБОТКЕ!)", Toast.LENGTH_SHORT).show();
+//                    Toast.makeText(getContext(), "Показываю один Товар. (В РАЗРАБОТКЕ!)", Toast.LENGTH_SHORT).show();
 
                     DialogData dialog = new DialogData(getContext());
                     dialog.setTitle("Оберіть Товар");
                     dialog.setText("");
 
-                    adapter = new RecycleViewDRAdapterTovar(getContext(), getTovListNew(TovarDisplayType.ONE), wpDataDB, RecycleViewDRAdapterTovar.OpenType.DIALOG);
+                    RecycleViewDRAdapterTovar adapter = new RecycleViewDRAdapterTovar(getContext(), getTovListNew(TovarDisplayType.ONE), wpDataDB, RecycleViewDRAdapterTovar.OpenType.DIALOG);
                     adapter.elementClick(new Clicks.click() {
                         @Override
                         public <T> void click(T data) {
                             TovarDB tov = (TovarDB) data;
-                            Toast.makeText(getContext(), "Ви обрали: " + tov.getNm(), Toast.LENGTH_SHORT).show();
-                            addRecycleView(Collections.singletonList(tov));
+                            Toast.makeText(getContext(), "Додано товар: " + tov.getNm(), Toast.LENGTH_SHORT).show();
+//                            addRecycleView(Collections.singletonList(tov));
+                            addTovarToRecyclerView(Collections.singletonList(tov));
                             dialog.dismiss();
                         }
                     });
@@ -245,7 +250,7 @@ public class DetailedReportTovarsFrag extends Fragment {
         List<TovarDB> res = new ArrayList<>();
         switch (type) {
             case DETAILED_REPORT:
-                if (RealmManager.getTovarListFromReportPrepareByDad2(codeDad2) != null){
+                if (RealmManager.getTovarListFromReportPrepareByDad2(codeDad2) != null) {
                     res = RealmManager.INSTANCE.copyFromRealm(Objects.requireNonNull(RealmManager.getTovarListFromReportPrepareByDad2(codeDad2)));
                 }
                 return res;
@@ -261,6 +266,23 @@ public class DetailedReportTovarsFrag extends Fragment {
                 return res;
         }
 
+    }
+
+
+    /**
+     * 10.04.23.
+     * Отвечает за именно добавление данных в Товары
+     * */
+    private void addTovarToRecyclerView(List<TovarDB> newTovarList) {
+        LinkedList<TovarDB> data = new LinkedList<>(adapter.getAdapterDataList());
+
+        Set<TovarDB> set = new LinkedHashSet<>(newTovarList);
+        set.addAll(data);
+        data.clear();
+        data.addAll(set);
+
+        adapter.updateAdapterData(data);
+        adapter.notifyDataSetChanged();
     }
 
 
