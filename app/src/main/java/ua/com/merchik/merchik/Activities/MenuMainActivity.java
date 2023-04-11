@@ -55,6 +55,27 @@ public class MenuMainActivity extends toolbar_menus {
 //
 //            }
 //        });
+
+/*        // Получаем Bitmap из ImageView
+        Bitmap bitmap = ((BitmapDrawable)imageView.getDrawable()).getBitmap();
+
+// Создаем новый Bitmap с такими же размерами, как и исходное изображение
+        Bitmap newBitmap = Bitmap.createBitmap(bitmap.getWidth(), bitmap.getHeight(), bitmap.getConfig());
+
+// Создаем объект класса Canvas для нового Bitmap
+        Canvas canvas = new Canvas(newBitmap);
+
+// Рисуем прямоугольник на изображении
+        Paint paint = new Paint();
+        paint.setColor(Color.BLUE);
+        paint.setStyle(Paint.Style.STROKE);
+        paint.setStrokeWidth(5f);
+
+        Rect rect = new Rect(left, top, right, bottom);
+        canvas.drawRect(rect, paint);
+
+// Устанавливаем новый Bitmap в ImageView
+        imageView.setImageBitmap(newBitmap);*/
     }
 
     // =================================== --- onCreate --- ========================================
