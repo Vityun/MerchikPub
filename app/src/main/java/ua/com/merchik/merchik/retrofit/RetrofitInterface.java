@@ -35,6 +35,7 @@ import ua.com.merchik.merchik.data.RetrofitResponse.CustomerGroups;
 import ua.com.merchik.merchik.data.RetrofitResponse.CustomerTableResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.EDRPOUResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.ErrorTableResponce;
+import ua.com.merchik.merchik.data.RetrofitResponse.FragmentsResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.ImageTypes;
 import ua.com.merchik.merchik.data.RetrofitResponse.Login;
 import ua.com.merchik.merchik.data.RetrofitResponse.Logout;
@@ -602,6 +603,14 @@ public interface RetrofitInterface {
             @Body JsonObject json);
 
     // -------------------------------------------------------
+
+    /**
+     * 11.04.23.
+     * */
+    @POST("mobile_app.php?")
+    Call<FragmentsResponse> FRAGMENTS_TABLE_RESPONSE(
+            @Header("ContentType") String content,
+            @Body JsonObject json);
 
     @POST("mobile_app.php?")
     Call<ReclamationPercentageResponse> ReclamationPercentage_DOWNLOAD_TABLE(

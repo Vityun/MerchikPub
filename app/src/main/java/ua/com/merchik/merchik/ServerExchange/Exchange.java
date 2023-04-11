@@ -30,6 +30,7 @@ import ua.com.merchik.merchik.ServerExchange.Constants.ReclamationPercentageExch
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.AddressExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.CityExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.CustomerExchange;
+import ua.com.merchik.merchik.ServerExchange.TablesExchange.FragmentsExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.LanguagesExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.OblastExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.PotentialClientTableExchange;
@@ -664,6 +665,22 @@ public class Exchange {
                     updateTAR(SQL_DB.tarDao().getByUploadStatusVotes());
                 } catch (Exception e) {
                     Globals.writeToMLOG("ERROR", "startExchange/updateTAR", "Exception e: " + e);
+                }
+
+                try {
+                    new FragmentsExchange().downloadFragmentsTable(new ExchangeInterface.ExchangeResponseInterface() {
+                        @Override
+                        public <T> void onSuccess(List<T> data) {
+
+                        }
+
+                        @Override
+                        public void onFailure(String error) {
+
+                        }
+                    });
+                }catch (Exception e){
+                    Globals.writeToMLOG("ERROR", "FragmentsExchange/downloadFragmentsTable", "Exception e: " + e);
                 }
 
                 // --------------------------------------------------------------

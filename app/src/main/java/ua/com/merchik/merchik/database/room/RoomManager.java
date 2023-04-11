@@ -18,7 +18,7 @@ public class RoomManager {
                 .fallbackToDestructiveMigration()
                 .enableMultiInstanceInvalidation()
                 .allowMainThreadQueries()
-                .addMigrations(MIGRATION_29_30)
+                .addMigrations(MIGRATION_30_31)
 
                 .build();
     }
@@ -133,6 +133,24 @@ public class RoomManager {
                     "`dt` INTEGER, " +
                     "`dt_day` TEXT, " +
                     "`dt_change` INTEGER, " +
+
+                    " PRIMARY KEY(`id`))");
+        }
+    };
+
+    static final Migration MIGRATION_30_31 = new Migration(30, 31) {
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase database) {
+            database.execSQL("CREATE TABLE IF NOT EXISTS `fragment` (`id` INTEGER NOT NULL," +
+                    "`img_id` INTEGER," +
+                    "`region_num` INTEGER," +
+                    "`x1` INTEGER," +
+                    "`y1` INTEGER," +
+                    "`x2` INTEGER," +
+                    "`y2` INTEGER," +
+                    "`comment` TEXT," +
+                    "`author_id` INTEGER," +
+                    "`dt_update` INTEGER, " +
 
                     " PRIMARY KEY(`id`))");
         }

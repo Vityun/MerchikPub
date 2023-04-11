@@ -19,6 +19,7 @@ import ua.com.merchik.merchik.data.Database.Room.ContentSDB;
 import ua.com.merchik.merchik.data.Database.Room.CustomerSDB;
 import ua.com.merchik.merchik.data.Database.Room.DateConverter;
 import ua.com.merchik.merchik.data.Database.Room.EKL_SDB;
+import ua.com.merchik.merchik.data.Database.Room.FragmentSDB;
 import ua.com.merchik.merchik.data.Database.Room.LanguagesSDB;
 import ua.com.merchik.merchik.data.Database.Room.OblastSDB;
 import ua.com.merchik.merchik.data.Database.Room.OborotVedSDB;
@@ -47,6 +48,7 @@ import ua.com.merchik.merchik.database.room.DaoInterfaces.CityDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.ContentDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.CustomerDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.EKLDao;
+import ua.com.merchik.merchik.database.room.DaoInterfaces.FragmentDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.LanguagesDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.OblastDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.OborotVedDao;
@@ -96,9 +98,10 @@ import ua.com.merchik.merchik.database.room.DaoInterfaces.VotesDao;
                 ChatGrpSDB.class,        // Группы чатов
                 ChatGrpTEMPSDB.class,        // Временная таблица
                 ReclamationPercentageSDB.class,  // Процент рекламаций
-                ShelfSizeSDB.class      // Доля полочного пространства
+                ShelfSizeSDB.class,      // Доля полочного пространства
+                FragmentSDB.class           // Таблица Фрагментов (полей на фото)
         },
-        version = 30
+        version = 31
 )
 
 
@@ -160,6 +163,8 @@ public abstract class AppDatabase extends RoomDatabase {
     public abstract ReclamationPercentageDao reclamationPercentageDao();
 
     public abstract ShelfSizeDao shelfSizeDao();
+
+    public abstract FragmentDao fragmentDao();
 
     public class MyAutoMigration {
     }

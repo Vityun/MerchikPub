@@ -1,22 +1,14 @@
 package ua.com.merchik.merchik.Activities;
 
 import android.os.Bundle;
-import android.util.Log;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.widget.Toolbar;
 
 import com.google.android.material.navigation.NavigationView;
-import com.google.gson.Gson;
-import com.google.gson.JsonObject;
 
-import retrofit2.Call;
-import retrofit2.Response;
-import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.R;
-import ua.com.merchik.merchik.data.TestJsonUpload.StandartData;
-import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
 import ua.com.merchik.merchik.toolbar_menus;
 
 
@@ -52,29 +44,17 @@ public class MenuMainActivity extends toolbar_menus {
     }
 
     private void test() {
-        StandartData data = new StandartData();
-        data.mod = "images_view";
-        data.act = "list_image_region";
-
-        data.dt_change_from = String.valueOf(Clock.getDatePeriodLong(System.currentTimeMillis(), -60) / 1000);
-        data.dt_change_to = String.valueOf(Clock.getDatePeriodLong(System.currentTimeMillis(), 1) / 1000);
-
-        Gson gson = new Gson();
-        String json = gson.toJson(data);
-        JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
-
-        retrofit2.Call<JsonObject> call = RetrofitBuilder.getRetrofitInterface().TEST_JSON_UPLOAD(RetrofitBuilder.contentType, convertedObject);
-        call.enqueue(new retrofit2.Callback<JsonObject>() {
-            @Override
-            public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
-                Log.e("test", "response: " + response);
-            }
-
-            @Override
-            public void onFailure(retrofit2.Call<JsonObject> call, Throwable t) {
-                Log.e("test", "Throwable: " + t);
-            }
-        });
+//        new FragmentsExchange().downloadFragmentsTable(new ExchangeInterface.ExchangeResponseInterface() {
+//            @Override
+//            public <T> void onSuccess(List<T> data) {
+//
+//            }
+//
+//            @Override
+//            public void onFailure(String error) {
+//
+//            }
+//        });
     }
 
     // =================================== --- onCreate --- ========================================
