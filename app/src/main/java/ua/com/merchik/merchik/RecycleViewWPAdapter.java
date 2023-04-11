@@ -29,10 +29,12 @@ import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportAc
 import ua.com.merchik.merchik.Filter.MyFilter;
 import ua.com.merchik.merchik.data.Data;
 import ua.com.merchik.merchik.data.Database.Room.AddressSDB;
+import ua.com.merchik.merchik.data.RealmModels.TradeMarkDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.data.WPDataObj;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.ThemeRealm;
+import ua.com.merchik.merchik.database.realm.tables.TradeMarkRealm;
 import ua.com.merchik.merchik.database.realm.tables.WpDataRealm;
 import ua.com.merchik.merchik.dialogs.DialogData;
 
@@ -63,6 +65,8 @@ public class RecycleViewWPAdapter extends RecyclerView.Adapter<RecycleViewWPAdap
         ImageView wp_image;
         ImageView check;
 
+        private TextView groupTitle, groupText; // мережа
+
         ViewHolder(View view) {
             super(view);
             this.mView = view;
@@ -77,6 +81,9 @@ public class RecycleViewWPAdapter extends RecyclerView.Adapter<RecycleViewWPAdap
             theme = view.findViewById(R.id.theme);
             options = (LinearLayout) view.findViewById(R.id.option_signal_layout1);//setContentView
             wp_image = (ImageView) view.findViewById(R.id.wp_image1);
+
+            groupTitle = view.findViewById(R.id.groupTitle);
+            groupText = view.findViewById(R.id.groupData);
 
             check = (ImageView) view.findViewById(R.id.check);
         }
@@ -132,6 +139,15 @@ public class RecycleViewWPAdapter extends RecyclerView.Adapter<RecycleViewWPAdap
             }catch (Exception e){
                 // Тема не успела загрузиться
                 theme.setText("Тема не обнаружена");
+            }
+
+            try {
+//                wpDataDB.gr
+                AddressSDB addr = SQL_DB.addressDao().getById(wpDataDB.getAddr_id());
+                TradeMarkDB tradeMarkDB = TradeMarkRealm.getTradeMarkRowById(String.valueOf(addr.tpId));
+                groupText.setText(tradeMarkDB.getNm());
+            }catch (Exception e){
+                groupText.setText("Мережа не знайдена");
             }
 
 
