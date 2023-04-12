@@ -1,5 +1,11 @@
 package ua.com.merchik.merchik.Activities.PhotoLogActivity;
 
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
+import android.graphics.Rect;
+import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -20,7 +26,7 @@ import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
 
 /**
  * Журнал фото(Длинная рука) после клика по фотке
- * */
+ */
 public class PhotoLogPhotoAdapter extends RecyclerView.Adapter<PhotoLogPhotoAdapter.TouchPhotoVH> {
 
     private List<StackPhotoDB> data;
@@ -97,8 +103,6 @@ public class PhotoLogPhotoAdapter extends RecyclerView.Adapter<PhotoLogPhotoAdap
             setImage(photo);
 
 
-
-
 //            // Попытка отрисовать отрисовать фото.
 //            try {
 //                image.setImageURI(Uri.parse(photo.getPhoto_num()));
@@ -106,9 +110,6 @@ public class PhotoLogPhotoAdapter extends RecyclerView.Adapter<PhotoLogPhotoAdap
 //                // Есть случаи когда оно пытается отрисовать фото которые ещё не загружены на
 //                // телефон - в таком случае ничего не отрисовуем
 //            }
-
-
-
 
 
 //            PhotoDownload photoDownload = new PhotoDownload();
@@ -128,50 +129,54 @@ public class PhotoLogPhotoAdapter extends RecyclerView.Adapter<PhotoLogPhotoAdap
 //            }
 
 
-
         }
-
 
 
         /**
          * 02.03.2021
          * Отрисовка фотографии.
-         *
+         * <p>
          * На данный момент (02.03.2021) в этом месте может отрисоваться фото по 3м разным сценариям:
          * Первый(основной) - человек делал фото самостоятельно и надо его отобразить с памяти.
          * Второй - Отоб
-         * */
-        private void setImage(StackPhotoDB photo){
-            try{
-                if (photo.getPhoto_size() == null){ // Отображение фотографии с памяти телефона
+         */
+        private void setImage(StackPhotoDB photo) {
+            try {
+                if (photo.getPhoto_size() == null) { // Отображение фотографии с памяти телефона
                     Log.e("FULL_PHOTO", "Фото было выполенно на телефоне и загружается с памяти");
 //                    Toast.makeText(image.getContext(), "Фото было выполенно на телефоне и загружается с памяти", Toast.LENGTH_LONG).show();
 
                     image.setImageURI(Uri.parse(photo.getPhoto_num()));
-                }else if (photo.getPhoto_size().equals("Full")){    // Если фото большое - просто его отображаем
+                } else if (photo.getPhoto_size().equals("Full")) {    // Если фото большое - просто его отображаем
                     Log.e("FULL_PHOTO", "Фото было загружено с сервера и отображается в БОЛЬШОМ формате");
 //                    Toast.makeText(image.getContext(), "Фото было загружено с сервера и отображается в БОЛЬШОМ формате", Toast.LENGTH_LONG).show();
 
                     image.setImageURI(Uri.parse(photo.getPhoto_num()));
-                }else if (photo.getPhoto_size().equals("Small")){
+                } else if (photo.getPhoto_size().equals("Small")) {
                     Log.e("FULL_PHOTO", "Фото отображается в маленьком формате, но уже начинает грузиться в большом");
 //                    Toast.makeText(image.getContext(), "Фото отображается в маленьком формате, но уже начинает грузиться в большом", Toast.LENGTH_LONG).show();
 
                     image.setImageURI(Uri.parse(photo.getPhoto_num()));
                     downloadFullPhoto(photo);
-                }else {
+                } else {
 //                    Toast.makeText(image.getContext(), "Не получилось отобразить фото. Обратитесь к Вашему руководителю.", Toast.LENGTH_LONG).show();
                 }
-            }catch (Exception e){
+
+//                setFragmentOnImage();
+
+//                setFragmentClick();
+
+
+            } catch (Exception e) {
                 // Разбирать ошибку.
             }
         }
 
 
         /*Загрузка фото в большом формате*/
-        private void downloadFullPhoto(StackPhotoDB photo){
+        private void downloadFullPhoto(StackPhotoDB photo) {
             PhotoDownload photoDownload = new PhotoDownload();
-            if (photo.getPhotoServerURL() != null && !photo.getPhotoServerURL().equals("")){
+            if (photo.getPhotoServerURL() != null && !photo.getPhotoServerURL().equals("")) {
                 photoDownload.downloadPhoto(true, photo, new PhotoDownload.downloadPhotoInterface() {
                     @Override
                     public void onSuccess(StackPhotoDB data) {
@@ -190,7 +195,82 @@ public class PhotoLogPhotoAdapter extends RecyclerView.Adapter<PhotoLogPhotoAdap
             }
         }
 
+        /**
+         * 12.04.23.
+         * Отрисовка фрагмента на фото
+         * НУЖНО ПЕРЕДАВАТЬ КООРДИНАТЫ
+         * */
+        private Rect rect;
+        private void setFragmentOnImage(){
+            // Получаем Bitmap из ImageView
+            Bitmap bitmap = ((BitmapDrawable) image.getDrawable()).getBitmap();
 
+            // Создаем новый Bitmap с такими же размерами, как и исходное изображение
+            Bitmap newBitmap = bitmap.copy(Bitmap.Config.ARGB_8888, true);
+
+            // Создаем объект класса Canvas для нового Bitmap
+            Canvas canvas = new Canvas(newBitmap);
+
+            // Рисуем прямоугольник на изображении
+            Paint paint = new Paint();
+            paint.setColor(Color.BLUE);
+            paint.setStyle(Paint.Style.STROKE);
+            paint.setStrokeWidth(5f);
+
+
+            rect = new Rect(100, 200, 300, 400);
+            canvas.drawRect(rect, paint);
+
+            // Устанавливаем новый Bitmap в ImageView
+            image.setImageBitmap(newBitmap);
+        }
+
+
+        /**
+         * 12.04.23.
+         * Обработка клика по фрагменту
+         * НУЖНО ПЕРЕДАВАТЬ КООРДИНАТЫ
+         * */
+        private void setFragmentClick(){
+
+            image.setOnTouchListener(new View.OnTouchListener() {
+                @Override
+                public boolean onTouch(View v, MotionEvent event) {
+                    float x = event.getX();
+                    float y = event.getY();
+                    Log.d("Coordinates", "x: " + x + " y: " + y);
+
+                    // Проверяем, попадает ли клик в прямоугольную область
+                    if (x >= 100 && x <= 300 && y >= 200 && y <= 400) {
+                        // Клик попадает в прямоугольную область
+                        // Добавьте здесь код для обработки клика
+//                        Toast.makeText(image.getContext(), "Клик по ФРАГМЕНТУ!", Toast.LENGTH_SHORT).show();
+                    }else {
+//                        Toast.makeText(image.getContext(), "Клик мимо фрагмента!", Toast.LENGTH_SHORT).show();
+                    }
+
+                    if (rect.contains((int)x, (int)y)) {
+                        // Точка находится внутри прямоугольника
+                    } else {
+                        // Точка находится за пределами прямоугольника
+                    }
+
+
+                    return true;
+                }
+            });
+
+/*            image.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    // Получаем координаты клика
+                    float x = v.getX();
+                    float y = v.getY();
+
+
+                }
+            });*/
+        }
     }
 
 }
