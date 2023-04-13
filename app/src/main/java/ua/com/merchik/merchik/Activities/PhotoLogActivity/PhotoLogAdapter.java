@@ -64,12 +64,15 @@ public class PhotoLogAdapter extends RecyclerView.Adapter<PhotoLogAdapter.ViewHo
     private Clicks.click click;
     private PhotoLogMode photoLogMode;
 
-    public PhotoLogAdapter(Context context, RealmResults<StackPhotoDB> photoLogData, boolean mod, Clicks.click click) {
+    private PhotoLogPhotoAdapter.OnPhotoClickListener mOnPhotoClickListener;
+
+    public PhotoLogAdapter(Context context, RealmResults<StackPhotoDB> photoLogData, boolean mod, Clicks.click click, PhotoLogPhotoAdapter.OnPhotoClickListener mOnPhotoClickListener) {
         this.mContext = context;
         this.photoLogData = RealmManager.INSTANCE.copyFromRealm(photoLogData);
         this.photoLogDataList = RealmManager.INSTANCE.copyFromRealm(photoLogData);
         this.mod = mod;
         this.click = click;
+        this.mOnPhotoClickListener = mOnPhotoClickListener;
     }
 
     public void updateData(RealmResults<StackPhotoDB> photoLogData) {
@@ -260,13 +263,13 @@ public class PhotoLogAdapter extends RecyclerView.Adapter<PhotoLogAdapter.ViewHo
 
 
             if (photoLogMode.equals(PhotoLogMode.SAMPLE_PHOTO)) {
-                openDialog(photoLogMode, photoLogDat);
+                openDialog(photoLogMode, photoLogDat, mOnPhotoClickListener);
             }
 
 
             // 13/08/2020 Выгрузка фоток из Журнала фото
             imageView.setOnClickListener(v -> {
-                openDialog(photoLogMode, photoLogDat);
+                openDialog(photoLogMode, photoLogDat, mOnPhotoClickListener);
             });
 
             //04.01.2021 Долгое нажатие - выгрузка фото
@@ -325,14 +328,14 @@ public class PhotoLogAdapter extends RecyclerView.Adapter<PhotoLogAdapter.ViewHo
 //            }
         }
 
-        public void openDialog(PhotoLogMode photoLogMode, StackPhotoDB photoLogDat) {
+        public void openDialog(PhotoLogMode photoLogMode, StackPhotoDB photoLogDat, PhotoLogPhotoAdapter.OnPhotoClickListener mOnPhotoClickListener) {
             try {
                 Log.e("setPhotos", "2position: " + getAdapterPosition());
                 Log.e("setPhotos", "2photoLogData: " + photoLogData.get(getAdapterPosition()).getId());
 
                 DialogFullPhoto dialog = new DialogFullPhoto(mContext);
                 Collections.reverse(photoLogData);
-                dialog.setPhotos(getAdapterPosition(), photoLogData);
+                dialog.setPhotos(getAdapterPosition(), photoLogData, mOnPhotoClickListener, dialog::dismiss);
 
                 dialog.setTextInfo(photoData(photoLogDat));
                 dialog.getComment(photoLogDat.getComment(), () -> {

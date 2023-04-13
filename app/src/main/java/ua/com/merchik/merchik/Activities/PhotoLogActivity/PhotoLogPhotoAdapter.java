@@ -12,6 +12,7 @@ import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
@@ -22,6 +23,7 @@ import java.util.List;
 
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.ServerExchange.PhotoDownload;
+import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
 
 /**
@@ -31,8 +33,17 @@ public class PhotoLogPhotoAdapter extends RecyclerView.Adapter<PhotoLogPhotoAdap
 
     private List<StackPhotoDB> data;
 
-    public PhotoLogPhotoAdapter(List<StackPhotoDB> data, View.OnTouchListener onTouchListener) {
+    private OnPhotoClickListener mOnPhotoClickListener;
+    private Clicks.clickVoid clickVoid;
+
+    public interface OnPhotoClickListener {
+        void onPhotoClicked(StackPhotoDB photoDB);
+    }
+
+    public PhotoLogPhotoAdapter(List<StackPhotoDB> data, View.OnTouchListener onTouchListener, OnPhotoClickListener mOnPhotoClickListener, Clicks.clickVoid clickVoid) {
         this.data = data;
+        this.mOnPhotoClickListener = mOnPhotoClickListener;
+        this.clickVoid = clickVoid;
     }
 
     @NonNull
@@ -166,10 +177,27 @@ public class PhotoLogPhotoAdapter extends RecyclerView.Adapter<PhotoLogPhotoAdap
 
 //                setFragmentClick();
 
+                image.setOnLongClickListener(view -> {
+                    openFullScreenPhoto(view, photo);
+                    return false;
+                });
 
             } catch (Exception e) {
                 // Разбирать ошибку.
             }
+        }
+        
+        /**
+         * 13.04.23.
+         * Обработка долгого клика по фото. 
+         * Должно открывать фрагмент и в нём размещать фотографию на весь экран.
+         *
+         * @param view
+         * @param photo*/
+        private void openFullScreenPhoto(View view, StackPhotoDB photo){
+            Toast.makeText(view.getContext(), "Открыл фулл фото", Toast.LENGTH_SHORT).show();
+            clickVoid.click();
+            mOnPhotoClickListener.onPhotoClicked(photo);
         }
 
 

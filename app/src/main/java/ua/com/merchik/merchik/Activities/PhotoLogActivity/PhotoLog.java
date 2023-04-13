@@ -50,7 +50,7 @@ public class PhotoLog {
             SearchView searchView = (SearchView) dialog.findViewById(R.id.searchViewPhotoLog);
 
             RecyclerView recyclerView = (RecyclerView) dialog.findViewById(R.id.recyclerViewPhotoLog);
-            PhotoLogAdapter recycleViewPLAdapter = new PhotoLogAdapter(context, RealmManager.getStackPhoto(), false, null);
+            PhotoLogAdapter recycleViewPLAdapter = new PhotoLogAdapter(context, RealmManager.getStackPhoto(), false, null, null);
             recyclerView.setAdapter(recycleViewPLAdapter);
             recyclerView.setLayoutManager(new LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false));
 

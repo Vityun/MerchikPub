@@ -1,5 +1,7 @@
 package ua.com.merchik.merchik.dialogs;
 
+import static ua.com.merchik.merchik.menu_main.decodeSampledBitmapFromResource;
+
 import android.app.Dialog;
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -36,11 +38,10 @@ import ua.com.merchik.merchik.Activities.PhotoLogActivity.PhotoLogAdapter;
 import ua.com.merchik.merchik.Activities.PhotoLogActivity.PhotoLogPhotoAdapter;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.R;
+import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.dialogs.DialodTAR.DialogCreateTAR;
-
-import static ua.com.merchik.merchik.menu_main.decodeSampledBitmapFromResource;
 
 public class DialogFullPhoto {
 
@@ -160,7 +161,7 @@ public class DialogFullPhoto {
         });
     }
 
-    public void setPhotos(int pos, List<StackPhotoDB> data) {
+    public void setPhotos(int pos, List<StackPhotoDB> data, PhotoLogPhotoAdapter.OnPhotoClickListener mOnPhotoClickListener, Clicks.clickVoid clickVoid) {
         List<StackPhotoDB> list = data;
 
         photoLogData = list;
@@ -196,7 +197,7 @@ public class DialogFullPhoto {
             }
 
             return result;
-        });
+        }, mOnPhotoClickListener, clickVoid);
 
         LinearLayoutManager manager = new LinearLayoutManager(context, RecyclerView.HORIZONTAL, false);
 

@@ -16,6 +16,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.widget.Toolbar;
+import androidx.fragment.app.FragmentManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -252,6 +253,22 @@ public class PhotoLogActivity extends toolbar_menus {
                         break;
                 }
 
+            }
+        }, new PhotoLogPhotoAdapter.OnPhotoClickListener() {
+            @Override
+            public void onPhotoClicked(StackPhotoDB photoDB) {
+                // создаем фрагмент PhotoFullScreenFragment и передаем ему позицию нажатого элемента
+                PhotoFullScreenFragment fragment = new PhotoFullScreenFragment(photoDB);
+//                Bundle args = new Bundle();
+//                args.putInt("position", 0);
+//                fragment.setArguments(args);
+
+                // открываем фрагмент
+                FragmentManager fragmentManager = getSupportFragmentManager();
+                fragmentManager.beginTransaction()
+                        .replace(R.id.actitity_photo_log, fragment)
+                        .addToBackStack(null)
+                        .commit();
             }
         });
         recycleViewPLAdapter.setPhotoLogMode(photoLogMode);
