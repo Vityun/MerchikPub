@@ -26,7 +26,6 @@ import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
 import ua.com.merchik.merchik.data.UploadPhotoData.ImagesPrepareUploadPhoto;
 import ua.com.merchik.merchik.data.UploadPhotoData.Move;
 import ua.com.merchik.merchik.database.realm.RealmManager;
-import ua.com.merchik.merchik.database.realm.tables.StackPhotoRealm;
 import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
 
@@ -308,8 +307,8 @@ public class PhotoReports {
 
         if (file.length() == 0) {
             Globals.writeToMLOG("INFO", "PhotoReports.buildCall", "file.length()");
-            StackPhotoDB sp = StackPhotoRealm.getById(photoDB.getId());
-            sp.deleteFromRealm();
+//            StackPhotoDB sp = StackPhotoRealm.getById(photoDB.getId());
+//            sp.deleteFromRealm();
             callback.onFailure(photoDB, "Файл фотографии [id:" + photoDB.getId() + "] равен: " + file.length() + "(пуст)");
             return;
         }
