@@ -25,11 +25,15 @@ import androidx.fragment.app.Fragment;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.ortiz.touchview.TouchImageView;
 
+import java.util.Collections;
 import java.util.List;
 
+import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.data.Database.Room.FragmentSDB;
+import ua.com.merchik.merchik.data.RealmModels.LogDB;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
+import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.dialogs.DialogData;
 
 public class PhotoFullScreenFragment extends Fragment {
@@ -103,6 +107,20 @@ public class PhotoFullScreenFragment extends Fragment {
                             dialog.setText(fragmentSDB.get(0).comment);
                             dialog.setClose(dialog::dismiss);
                             dialog.show();
+
+                            RealmManager.setRowToLog(Collections.singletonList(
+                                    new LogDB(
+                                            RealmManager.getLastIdLogDB() + 1,
+                                            System.currentTimeMillis() / 1000,
+                                            "Факт натискання на фрагмент. (" + fragmentSDB.get(0).id + ")",
+                                            1258,
+                                            photoDB.client_id,
+                                            photoDB.addr_id,
+                                            Long.getLong(photoDB.photoServerId),
+                                            null,
+                                            System.currentTimeMillis() / 1000,
+                                            Globals.session,
+                                            String.valueOf(photoDB.dt))));
                         } else {
                             Log.d("Coordinates", "-");
                         }
