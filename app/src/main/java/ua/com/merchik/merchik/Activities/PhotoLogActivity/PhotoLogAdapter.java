@@ -12,7 +12,6 @@ import android.net.Uri;
 import android.text.Html;
 import android.text.Spanned;
 import android.util.Log;
-import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -432,9 +431,9 @@ public class PhotoLogAdapter extends RecyclerView.Adapter<PhotoLogAdapter.ViewHo
             protected void publishResults(CharSequence constraint, FilterResults results) {
                 photoLogData = (List<StackPhotoDB>) results.values;
 
-                Toast toast = Toast.makeText(mContext, "Отобрано: " + photoLogData.size() + " фото", Toast.LENGTH_SHORT);
-                toast.setGravity(Gravity.CENTER, 0, 0);
-                toast.show();
+//                Toast toast = Toast.makeText(mContext, "Отобрано: " + photoLogData.size() + " фото", Toast.LENGTH_SHORT);
+//                toast.setGravity(Gravity.CENTER, 0, 0);
+//                toast.show();
 
                 notifyDataSetChanged();
             }

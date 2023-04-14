@@ -1,5 +1,7 @@
 package ua.com.merchik.merchik.Activities.PhotoLogActivity;
 
+import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
+
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -24,6 +26,7 @@ import java.util.List;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.ServerExchange.PhotoDownload;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
+import ua.com.merchik.merchik.data.Database.Room.FragmentSDB;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
 
 /**
@@ -173,7 +176,18 @@ public class PhotoLogPhotoAdapter extends RecyclerView.Adapter<PhotoLogPhotoAdap
 //                    Toast.makeText(image.getContext(), "Не получилось отобразить фото. Обратитесь к Вашему руководителю.", Toast.LENGTH_LONG).show();
                 }
 
-//                setFragmentOnImage();
+
+                if (photo.photoServerId != null && !photo.photoServerId.equals("")) {
+                    List<FragmentSDB> fragmentSDB = SQL_DB.fragmentDao().getAllByPhotoId(Integer.parseInt(photo.photoServerId));
+                    if (fragmentSDB != null && fragmentSDB.size() > 0) {
+                        setFragmentOnImage(fragmentSDB);
+//                        image.setOnTouchListener((v, event) -> {
+//                            checkFragmentClick(v, event);
+//                            return true;
+//                        });
+                    }
+                }
+
 
 //                setFragmentClick();
 
@@ -186,15 +200,16 @@ public class PhotoLogPhotoAdapter extends RecyclerView.Adapter<PhotoLogPhotoAdap
                 // Разбирать ошибку.
             }
         }
-        
+
         /**
          * 13.04.23.
-         * Обработка долгого клика по фото. 
+         * Обработка долгого клика по фото.
          * Должно открывать фрагмент и в нём размещать фотографию на весь экран.
          *
          * @param view
-         * @param photo*/
-        private void openFullScreenPhoto(View view, StackPhotoDB photo){
+         * @param photo
+         */
+        private void openFullScreenPhoto(View view, StackPhotoDB photo) {
             Toast.makeText(view.getContext(), "Открыл фулл фото", Toast.LENGTH_SHORT).show();
             clickVoid.click();
             mOnPhotoClickListener.onPhotoClicked(photo);
@@ -227,9 +242,10 @@ public class PhotoLogPhotoAdapter extends RecyclerView.Adapter<PhotoLogPhotoAdap
          * 12.04.23.
          * Отрисовка фрагмента на фото
          * НУЖНО ПЕРЕДАВАТЬ КООРДИНАТЫ
-         * */
+         */
         private Rect rect;
-        private void setFragmentOnImage(){
+
+        private void setFragmentOnImage(List<FragmentSDB> fragment) {
             // Получаем Bitmap из ImageView
             Bitmap bitmap = ((BitmapDrawable) image.getDrawable()).getBitmap();
 
@@ -241,13 +257,25 @@ public class PhotoLogPhotoAdapter extends RecyclerView.Adapter<PhotoLogPhotoAdap
 
             // Рисуем прямоугольник на изображении
             Paint paint = new Paint();
-            paint.setColor(Color.BLUE);
-            paint.setStyle(Paint.Style.STROKE);
+            paint.setColor(Color.GRAY);
+            paint.setStyle(Paint.Style.FILL_AND_STROKE);
             paint.setStrokeWidth(5f);
+            paint.setAlpha(128); // устанавливаем прозрачность
 
-
-            rect = new Rect(100, 200, 300, 400);
+            rect = new Rect(fragment.get(0).x1, fragment.get(0).y1, fragment.get(0).x2, fragment.get(0).y2);
             canvas.drawRect(rect, paint);
+
+            paint.setStyle(Paint.Style.STROKE);
+            paint.setAlpha(255); // возвращаем непрозрачность
+
+            canvas.drawRect(rect, paint);
+
+            paint.setStyle(Paint.Style.FILL);
+            paint.setColor(Color.WHITE);
+            paint.setTextSize(40f);
+
+            canvas.drawText("1", rect.left + 10, rect.top + 50, paint);
+
 
             // Устанавливаем новый Bitmap в ImageView
             image.setImageBitmap(newBitmap);
@@ -258,34 +286,31 @@ public class PhotoLogPhotoAdapter extends RecyclerView.Adapter<PhotoLogPhotoAdap
          * 12.04.23.
          * Обработка клика по фрагменту
          * НУЖНО ПЕРЕДАВАТЬ КООРДИНАТЫ
-         * */
-        private void setFragmentClick(){
+         */
+        private void setFragmentClick() {
 
-            image.setOnTouchListener(new View.OnTouchListener() {
-                @Override
-                public boolean onTouch(View v, MotionEvent event) {
-                    float x = event.getX();
-                    float y = event.getY();
-                    Log.d("Coordinates", "x: " + x + " y: " + y);
+            image.setOnTouchListener((v, event) -> {
+                float x = event.getX();
+                float y = event.getY();
+                Log.d("Coordinates", "x: " + x + " y: " + y);
 
-                    // Проверяем, попадает ли клик в прямоугольную область
-                    if (x >= 100 && x <= 300 && y >= 200 && y <= 400) {
-                        // Клик попадает в прямоугольную область
-                        // Добавьте здесь код для обработки клика
+                // Проверяем, попадает ли клик в прямоугольную область
+                if (x >= 100 && x <= 300 && y >= 200 && y <= 400) {
+                    // Клик попадает в прямоугольную область
+                    // Добавьте здесь код для обработки клика
 //                        Toast.makeText(image.getContext(), "Клик по ФРАГМЕНТУ!", Toast.LENGTH_SHORT).show();
-                    }else {
+                } else {
 //                        Toast.makeText(image.getContext(), "Клик мимо фрагмента!", Toast.LENGTH_SHORT).show();
-                    }
-
-                    if (rect.contains((int)x, (int)y)) {
-                        // Точка находится внутри прямоугольника
-                    } else {
-                        // Точка находится за пределами прямоугольника
-                    }
-
-
-                    return true;
                 }
+
+                if (rect.contains((int) x, (int) y)) {
+                    // Точка находится внутри прямоугольника
+                } else {
+                    // Точка находится за пределами прямоугольника
+                }
+
+
+                return true;
             });
 
 /*            image.setOnClickListener(new View.OnClickListener() {

@@ -15,6 +15,9 @@ public interface FragmentDao {
     @Query("SELECT * FROM fragment")
     List<FragmentSDB> getAll();
 
+    @Query("SELECT * FROM fragment WHERE img_id = :id")
+    List<FragmentSDB> getAllByPhotoId(int id);
+
     @Query("SELECT * FROM fragment WHERE id = :id")
     FragmentSDB getById(int id);
 

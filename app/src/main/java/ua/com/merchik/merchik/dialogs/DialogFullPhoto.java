@@ -66,7 +66,7 @@ public class DialogFullPhoto {
     private TextView photoInfo;
     private CheckBox dvi;
     private EditText comment;
-    private ImageButton next, play, previous;
+    private ImageButton next, play, previous, openFullSize;
     private Button task;
 
     private RatingBar indicatorRatingBar;
@@ -88,6 +88,7 @@ public class DialogFullPhoto {
         next = dialog.findViewById(R.id.next_photo);
         play = dialog.findViewById(R.id.play_photo);
         previous = dialog.findViewById(R.id.previous_photo);
+        openFullSize = dialog.findViewById(R.id.open_full_size);
         recycler = dialog.findViewById(R.id.photos_recycler);
 
         indicatorRatingBar = dialog.findViewById(R.id.ratingBar3);
@@ -169,6 +170,11 @@ public class DialogFullPhoto {
 
         Log.e("setPhotos", "position: " + position);
         Log.e("setPhotos", "photoLogData: " + photoLogData.get(position).getId());
+
+        openFullSize.setOnClickListener(view -> {
+            mOnPhotoClickListener.onPhotoClicked(data.get(pos));
+            dialog.dismiss();
+        });
 
         PhotoLogPhotoAdapter adapter = new PhotoLogPhotoAdapter(list, (v, event) -> {
             boolean result = true;

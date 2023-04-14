@@ -120,6 +120,10 @@ public class MyFilter {
 //                results.add(item);
 //            }
 
+            // ID сайта
+            if (item.getPhotoServerId() != null && !item.getPhotoServerId().equals("") && item.getPhotoServerId().toLowerCase().contains(constraint)) {
+                results.add(item);
+            }
 
             // Адрес
             if (item.getAddressTxt() != null && !item.getAddressTxt().equals("") && item.getAddressTxt().toLowerCase().contains(constraint)) {

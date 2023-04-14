@@ -225,6 +225,23 @@
             app:layout_constraintVertical_bias="0.0"
             app:srcCompat="@drawable/ic_angle_right_solid" />
 
+        <ImageButton
+            android:id="@+id/open_full_size"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:layout_marginEnd="8dp"
+            android:layout_marginRight="8dp"
+            android:layout_marginBottom="8dp"
+            android:paddingLeft="9dp"
+            android:paddingTop="0dp"
+            android:paddingRight="9dp"
+            android:paddingBottom="0dp"
+            android:scaleType="centerInside"
+            android:elevation="10dp"
+            app:layout_constraintBottom_toBottomOf="@+id/photos_recycler"
+            app:layout_constraintEnd_toEndOf="@+id/photos_recycler"
+            app:srcCompat="@android:drawable/ic_menu_search" />
+
         <TextView
             android:id="@+id/textView56"
             android:layout_width="wrap_content"
