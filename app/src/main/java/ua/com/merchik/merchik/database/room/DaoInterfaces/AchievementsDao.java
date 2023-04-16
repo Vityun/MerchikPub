@@ -27,7 +27,7 @@ public interface AchievementsDao {
     // ---------------------------------------------------------
 
     /*Получение Достижений для Опции контроля Достижений*/
-    @Query("SELECT * FROM achievements WHERE client_id = :clientId AND addr_id = :addressId AND (dt_ut IS NOT NULL AND dt_ut BETWEEN :dtFrom AND :dtTo) ORDER BY dt_ut DESC")
-    List<AchievementsSDB> getForOptionControl(Long dtFrom, Long dtTo, String clientId, Integer addressId);
+    @Query("SELECT * FROM achievements WHERE theme_id = :themeId AND client_id = :clientId AND addr_id = :addressId AND (dt_ut IS NOT NULL AND dt_ut BETWEEN :dtFrom AND :dtTo) ORDER BY dt_ut DESC")
+    List<AchievementsSDB> getForOptionControl(Long dtFrom, Long dtTo, String clientId, Integer addressId, Integer themeId);
 
 }

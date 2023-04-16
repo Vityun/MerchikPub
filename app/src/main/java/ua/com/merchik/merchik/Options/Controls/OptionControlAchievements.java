@@ -43,6 +43,7 @@ public class OptionControlAchievements<T> extends OptionControl {
     private CustomerSDB customerSDBDocument;
     private UsersSDB usersSDBDocument;
     private AddressSDB addressSDBDocument;
+    private Integer themeId;
 
     private Long dateDocument;  // В секундах
     private Long dateFrom = 0L;
@@ -76,6 +77,10 @@ public class OptionControlAchievements<T> extends OptionControl {
                 addressSDBDocument = SQL_DB.addressDao().getById(wpDataDB.getAddr_id());
                 dateDocument = wpDataDB.getDt().getTime() / 1000;
 
+                if (System.currentTimeMillis() > 1681603200000L){
+                    themeId = 1251;
+                }
+
                 // dateDocument*1000 -- Делаем такую херь, потому что функция работает в миллисекундах. / 1000 - для перевода в секунды.
                 int minusDay = Integer.parseInt(optionDB.getAmountMax()) > 0 ? Integer.parseInt(optionDB.getAmountMax()) : 30;
                 dateFrom = Clock.getDatePeriodLong(dateDocument * 1000, -minusDay) / 1000;
@@ -100,7 +105,7 @@ public class OptionControlAchievements<T> extends OptionControl {
 
             // 3.1. Получим данные о достижениях.
             // Сразу отсортировали (свежие должны быть сверху)
-            List<AchievementsSDB> achievementsSDBList = SQL_DB.achievementsDao().getForOptionControl(dateFrom, dateTo, customerSDBDocument.id, addressSDBDocument.id);
+            List<AchievementsSDB> achievementsSDBList = SQL_DB.achievementsDao().getForOptionControl(dateFrom, dateTo, customerSDBDocument.id, addressSDBDocument.id, themeId);
 
             List<Integer> ids = new ArrayList<>();
             for (AchievementsSDB item : achievementsSDBList) {
