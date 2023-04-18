@@ -25,6 +25,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import io.realm.RealmResults;
+import ua.com.merchik.merchik.Activities.FullScreenPhotoActivity.PhotoFullScreenFragment;
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.MakePhoto;

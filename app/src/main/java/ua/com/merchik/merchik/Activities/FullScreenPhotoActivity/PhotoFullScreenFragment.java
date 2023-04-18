@@ -1,4 +1,4 @@
-package ua.com.merchik.merchik.Activities.PhotoLogActivity;
+package ua.com.merchik.merchik.Activities.FullScreenPhotoActivity;
 
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
