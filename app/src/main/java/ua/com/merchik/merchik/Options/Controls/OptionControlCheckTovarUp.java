@@ -105,7 +105,7 @@ public class OptionControlCheckTovarUp<T> extends OptionControl {
         if (stackPhoto == null || stackPhoto.size() == 0) {
             if (tpId == 8196) {
                 stackPhoto = StackPhotoRealm.getPhoto(
-                        Clock.getDatePeriodLong(documentDate, -1),
+                        Clock.getDatePeriodLong(documentDate, -3),  // 18.04.23. Жаловались что не видит фото опция. Я так ещё подфиксил (1 на 3 изменил)
                         Clock.getDatePeriodLong(documentDate, 3),
                         null,
                         null,
@@ -113,13 +113,22 @@ public class OptionControlCheckTovarUp<T> extends OptionControl {
                         dad2,
                         PHOTO_SHOWCASE_BEFORE_START_WORK
                 );
+
+                if (stackPhoto != null){
+                    Globals.writeToMLOG("ERROR", "OptionControlCheckTovarUp/executeOption/sumUp", "stackPhoto (null): " + stackPhoto.size());
+                }else {
+                    Globals.writeToMLOG("ERROR", "OptionControlCheckTovarUp/executeOption/sumUp", "stackPhoto (null): " + "null");
+                }
             }
+        }else {
+            Globals.writeToMLOG("ERROR", "OptionControlCheckTovarUp/executeOption/sumUp", "stackPhoto: " + stackPhoto.size());
         }
 
         // 5 проверим кол-во поднятого товара
         int sumUp = 0;
         try {
             sumUp = reportPrepare.stream().map(table -> Integer.parseInt(table.getUp())).reduce(0, Integer::sum);
+            Globals.writeToMLOG("ERROR", "OptionControlCheckTovarUp/executeOption/sumUp", "sumUp: " + sumUp);
         } catch (Exception e) {
             Globals.writeToMLOG("ERROR", "OptionControlCheckTovarUp/executeOption/sumUp", "Exception e: " + e);
         }
