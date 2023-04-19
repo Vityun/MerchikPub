@@ -26,15 +26,18 @@ import androidx.fragment.app.Fragment;
 
 import java.io.File;
 import java.util.Collections;
+import java.util.List;
 
 import io.reactivex.rxjava3.observers.DisposableCompletableObserver;
 import io.reactivex.rxjava3.schedulers.Schedulers;
+import ua.com.merchik.merchik.Activities.FullScreenPhotoActivity.PhotoFragments;
 import ua.com.merchik.merchik.Activities.TaskAndReclamations.TARActivity;
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.ServerExchange.Exchange;
 import ua.com.merchik.merchik.ServerExchange.PhotoDownload;
+import ua.com.merchik.merchik.data.Database.Room.FragmentSDB;
 import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
 import ua.com.merchik.merchik.data.RealmModels.ThemeDB;
@@ -106,6 +109,13 @@ public class Tab1Fragment extends Fragment {
         return v;
     }
 
+    private void setFragmentsOnPhoto() {
+        List<FragmentSDB> fragmentSDB = SQL_DB.fragmentDao().getAllByPhotoId(Integer.parseInt(String.valueOf(data.photo)));
+        for (int i = 0; i < fragmentSDB.size(); i++) {
+            new PhotoFragments().setPhotoFragment(fragmentSDB.get(i), String.valueOf(i + 1), imageView, PhotoFragments.PhotoFragmentsSize.SMALL);
+        }
+    }
+
 
     /**
      * 22.03.2021
@@ -155,7 +165,6 @@ public class Tab1Fragment extends Fragment {
         }
 
 
-
         try {
             int tp = data.tp;
             int state = data.state;
@@ -171,9 +180,9 @@ public class Tab1Fragment extends Fragment {
             String title;
 
             title = "<b>Сумма штрафа: </b>";
-            if (data.state == 1 || data.state == 3){
+            if (data.state == 1 || data.state == 3) {
                 money = "0";
-            }else{
+            } else {
                 money = "<font color='red'> -" + data.sumPenalty + " (виновнику)</font>";
             }
 
@@ -219,9 +228,9 @@ public class Tab1Fragment extends Fragment {
 
         try {
             String zamena = "";
-            if (data.zamenaUserId != null && data.zamenaUserId != 0){
+            if (data.zamenaUserId != null && data.zamenaUserId != 0) {
                 zamena = UsersRealm.getUsersDBById(data.zamenaUserId).getNm();
-            }else {
+            } else {
                 zamena = "Не установлена";
             }
 
@@ -316,6 +325,7 @@ public class Tab1Fragment extends Fragment {
             Bitmap b = decodeSampledBitmapFromResource(file, 200, 200);
             if (b != null) {
                 imageView.setImageBitmap(b);
+                setFragmentsOnPhoto();
             }
         }
 
@@ -512,7 +522,8 @@ public class Tab1Fragment extends Fragment {
             stackPhotoDB = StackPhotoRealm.getById(Integer.parseInt(photo));
 
             DialogPhotoTovar dialogPhotoTovar = new DialogPhotoTovar(mContext);
-            dialogPhotoTovar.setPhotoTovar(Uri.parse(stackPhotoDB.getPhoto_num()));
+//            dialogPhotoTovar.setPhotoTovar(Uri.parse(stackPhotoDB.getPhoto_num()));
+            dialogPhotoTovar.setPhotoTovar(stackPhotoDB);
             dialogPhotoTovar.setClose(dialogPhotoTovar::dismiss);
             dialogPhotoTovar.show();
 
@@ -533,7 +544,8 @@ public class Tab1Fragment extends Fragment {
                 @Override
                 public void onSuccess(StackPhotoDB data) {
                     DialogPhotoTovar dialogPhotoTovar = new DialogPhotoTovar(mContext);
-                    dialogPhotoTovar.setPhotoTovar(Uri.parse(finalStackPhotoDB.getPhoto_num()));
+//                    dialogPhotoTovar.setPhotoTovar(Uri.parse(finalStackPhotoDB.getPhoto_num()));
+                    dialogPhotoTovar.setPhotoTovar(finalStackPhotoDB);
                     dialogPhotoTovar.setClose(dialogPhotoTovar::dismiss);
                     dialogPhotoTovar.show();
                 }

@@ -1,5 +1,7 @@
 package ua.com.merchik.merchik.dialogs;
 
+import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
+
 import android.app.Dialog;
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -18,7 +20,12 @@ import com.google.zxing.MultiFormatWriter;
 import com.google.zxing.common.BitMatrix;
 import com.journeyapps.barcodescanner.BarcodeEncoder;
 
+import java.util.List;
+
+import ua.com.merchik.merchik.Activities.FullScreenPhotoActivity.PhotoFragments;
 import ua.com.merchik.merchik.R;
+import ua.com.merchik.merchik.data.Database.Room.FragmentSDB;
+import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
 
 public class DialogPhotoTovar {
 
@@ -84,8 +91,22 @@ public class DialogPhotoTovar {
         }
     }
 
+    public void setPhotoTovar(StackPhotoDB stackPhotoDB) {
+        try {
+            Log.e("ФОТО_ТОВАРОВ", "setPhotoTovar: +");
+            photo.setImageURI(Uri.parse(stackPhotoDB.getPhoto_num()));
+            List<FragmentSDB> fragmentSDB = SQL_DB.fragmentDao().getAllByPhotoId(Integer.parseInt(stackPhotoDB.photoServerId));
+            for (int i = 0; i < fragmentSDB.size(); i++) {
+                new PhotoFragments().setPhotoFragment(fragmentSDB.get(i), String.valueOf(i+1),photo, PhotoFragments.PhotoFragmentsSize.BIG);
+            }
+        } catch (Exception e) {
+            Log.e("ФОТО_ТОВАРОВ", "setPhotoTovar: Ошибка ниже: ");
+            e.printStackTrace();
+        }
+    }
+
     public void setTextInfo(StringBuilder stringBuilder) {
-        if (stringBuilder != null){
+        if (stringBuilder != null) {
             textInfo.setText(stringBuilder);
             textInfo.setVisibility(View.VISIBLE);
         }

@@ -262,7 +262,13 @@ public class PhotoLogPhotoAdapter extends RecyclerView.Adapter<PhotoLogPhotoAdap
             paint.setStrokeWidth(5f);
             paint.setAlpha(128); // устанавливаем прозрачность
 
-            rect = new Rect(fragment.get(0).x1, fragment.get(0).y1, fragment.get(0).x2, fragment.get(0).y2);
+            int bitmapHeight = bitmap.getHeight();
+            int newY1 = bitmapHeight - fragment.get(0).y1;
+            int newY2 = bitmapHeight - fragment.get(0).y2;
+
+            rect = new Rect(fragment.get(0).x1, newY1, fragment.get(0).x2, newY2);
+
+//            rect = new Rect(fragment.get(0).x1, fragment.get(0).y1, fragment.get(0).x2, fragment.get(0).y2);
             canvas.drawRect(rect, paint);
 
             paint.setStyle(Paint.Style.STROKE);
@@ -274,7 +280,7 @@ public class PhotoLogPhotoAdapter extends RecyclerView.Adapter<PhotoLogPhotoAdap
             paint.setColor(Color.WHITE);
             paint.setTextSize(40f);
 
-            canvas.drawText("1", rect.left + 10, rect.top + 50, paint);
+            canvas.drawText("1", rect.left + 10, rect.bottom + 50, paint);
 
 
             // Устанавливаем новый Bitmap в ImageView
