@@ -101,7 +101,15 @@ public class OptionControlCheckTovarUp<T> extends OptionControl {
                 PHOTO_CART_WITH_GOODS
         );
 
-        Globals.writeToMLOG("INFO", "OptionControlCheckTovarUp/executeOption/sumUp", "stackPhoto: " + stackPhoto.size());
+        try {
+            Globals.writeToMLOG("INFO", "OptionControlCheckTovarUp/executeOption/sumUp!!!", "stackPhoto!!!!: " + stackPhoto.size());
+            Globals.writeToMLOG("INFO", "OptionControlCheckTovarUp/executeOption/sumUp!!!", "stackPhoto!!!!: " + stackPhoto.get(0).getId());
+            Globals.writeToMLOG("INFO", "OptionControlCheckTovarUp/executeOption/sumUp!!!", "stackPhoto!!!!: " + stackPhoto.get(0).getPhotoServerId());
+            Globals.writeToMLOG("INFO", "OptionControlCheckTovarUp/executeOption/sumUp!!!", "stackPhoto!!!!: " + stackPhoto.get(0).getPhoto_hash());
+        }catch (Exception e){
+            Globals.writeToMLOG("INFO", "OptionControlCheckTovarUp/executeOption/sumUp!!!", "stackPhoto!!!!Exception e: " + e);
+        }
+
 
         // если ФТТ нет и это АШАН то проверяем еще наличие ФВ До начала работ... для Ашанов сделано исключение
         if (stackPhoto == null || stackPhoto.size() == 0) {
