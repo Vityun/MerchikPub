@@ -101,6 +101,8 @@ public class OptionControlCheckTovarUp<T> extends OptionControl {
                 PHOTO_CART_WITH_GOODS
         );
 
+        Globals.writeToMLOG("INFO", "OptionControlCheckTovarUp/executeOption/sumUp", "stackPhoto: " + stackPhoto.size());
+
         // если ФТТ нет и это АШАН то проверяем еще наличие ФВ До начала работ... для Ашанов сделано исключение
         if (stackPhoto == null || stackPhoto.size() == 0) {
             if (tpId == 8196) {
@@ -115,20 +117,22 @@ public class OptionControlCheckTovarUp<T> extends OptionControl {
                 );
 
                 if (stackPhoto != null){
-                    Globals.writeToMLOG("ERROR", "OptionControlCheckTovarUp/executeOption/sumUp", "stackPhoto (null): " + stackPhoto.size());
+                    Globals.writeToMLOG("INFO", "OptionControlCheckTovarUp/executeOption/sumUp", "stackPhoto (null): " + stackPhoto.size());
                 }else {
-                    Globals.writeToMLOG("ERROR", "OptionControlCheckTovarUp/executeOption/sumUp", "stackPhoto (null): " + "null");
+                    Globals.writeToMLOG("INFO", "OptionControlCheckTovarUp/executeOption/sumUp", "stackPhoto (null): " + "null");
                 }
             }
         }else {
-            Globals.writeToMLOG("ERROR", "OptionControlCheckTovarUp/executeOption/sumUp", "stackPhoto: " + stackPhoto.size());
+            Globals.writeToMLOG("INFO", "OptionControlCheckTovarUp/executeOption/sumUp", "stackPhoto: " + stackPhoto.size());
         }
+
+        Globals.writeToMLOG("INFO", "OptionControlCheckTovarUp/executeOption/sumUp", "stackPhoto: " + stackPhoto.size());
 
         // 5 проверим кол-во поднятого товара
         int sumUp = 0;
         try {
             sumUp = reportPrepare.stream().map(table -> Integer.parseInt(table.getUp())).reduce(0, Integer::sum);
-            Globals.writeToMLOG("ERROR", "OptionControlCheckTovarUp/executeOption/sumUp", "sumUp: " + sumUp);
+            Globals.writeToMLOG("INFO", "OptionControlCheckTovarUp/executeOption/sumUp", "sumUp: " + sumUp);
         } catch (Exception e) {
             Globals.writeToMLOG("ERROR", "OptionControlCheckTovarUp/executeOption/sumUp", "Exception e: " + e);
         }
