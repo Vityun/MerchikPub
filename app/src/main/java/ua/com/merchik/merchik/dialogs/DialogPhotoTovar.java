@@ -94,6 +94,8 @@ public class DialogPhotoTovar {
     public void setPhotoTovar(StackPhotoDB stackPhotoDB) {
         try {
             Log.e("ФОТО_ТОВАРОВ", "setPhotoTovar: +");
+            barcode.setVisibility(View.GONE);
+            photoBarcode.setVisibility(View.GONE);
             photo.setImageURI(Uri.parse(stackPhotoDB.getPhoto_num()));
             List<FragmentSDB> fragmentSDB = SQL_DB.fragmentDao().getAllByPhotoId(Integer.parseInt(stackPhotoDB.photoServerId));
             for (int i = 0; i < fragmentSDB.size(); i++) {
