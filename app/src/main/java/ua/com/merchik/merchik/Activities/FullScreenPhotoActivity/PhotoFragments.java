@@ -29,10 +29,10 @@ public class PhotoFragments {
 
         // Рисуем прямоугольник на изображении
         Paint paint = new Paint();
-        paint.setColor(Color.BLACK);
+        paint.setColor(Color.RED);
         paint.setStyle(Paint.Style.FILL_AND_STROKE);
         paint.setStrokeWidth(5f);
-        paint.setAlpha(128); // устанавливаем прозрачность
+        paint.setAlpha(64); // устанавливаем прозрачность
 
         Log.d("Coordinates", "fragment.get(0).x1: " + fragment.x1);
         Log.d("Coordinates", "fragment.get(0).x2: " + fragment.x2);
