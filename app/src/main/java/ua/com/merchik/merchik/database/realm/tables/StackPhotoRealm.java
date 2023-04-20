@@ -9,6 +9,7 @@ import java.util.List;
 
 import io.realm.RealmResults;
 import io.realm.Sort;
+import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
 
 public class StackPhotoRealm {
@@ -232,28 +233,63 @@ public class StackPhotoRealm {
     public static RealmResults<StackPhotoDB> getPhoto(Long dtFrom, Long dtTo, Integer userId, Integer addrId, String clientId, Long dad2, Integer photoType) {
         RealmResults<StackPhotoDB> res = INSTANCE.where(StackPhotoDB.class).findAll();
 
+        if (res != null){
+            Globals.writeToMLOG("INFO", "StackPhotoRealm.getPhoto.res", "res: " + res.size());
+        }
+
+        Globals.writeToMLOG("INFO", "StackPhotoRealm.getPhoto.Long dtFrom", "Long dtFrom: " + dtFrom);
+        Globals.writeToMLOG("INFO", "StackPhotoRealm.getPhoto.Long dtTo", "Long dtTo: " + dtTo);
+        Globals.writeToMLOG("INFO", "StackPhotoRealm.getPhoto.Integer userId", "Integer userId: " + userId);
+        Globals.writeToMLOG("INFO", "StackPhotoRealm.getPhoto.Integer addrId", "Integer addrId: " + addrId);
+        Globals.writeToMLOG("INFO", "StackPhotoRealm.getPhoto.String clientId", "String clientId: " + clientId);
+        Globals.writeToMLOG("INFO", "StackPhotoRealm.getPhoto.Long dad2", "Long dad2: " + dad2);
+        Globals.writeToMLOG("INFO", "StackPhotoRealm.getPhoto.Integer photoType", "Integer photoType: " + photoType);
+
+
         if (dtFrom != null && dtTo != null) {
             res = res.where().between("create_time", dtFrom, dtTo).findAll();
+            if (res != null){
+                Globals.writeToMLOG("INFO", "StackPhotoRealm.getPhoto.dtFromdtTo", "res: " + res.size());
+            }
         }
 
         if (userId != null) {
             res = res.where().equalTo("user_id", userId).findAll();
+            if (res != null){
+                Globals.writeToMLOG("INFO", "StackPhotoRealm.getPhoto.userId", "res: " + res.size());
+            }
         }
 
         if (addrId != null) {
             res = res.where().equalTo("addr_id", addrId).findAll();
+            if (res != null){
+                Globals.writeToMLOG("INFO", "StackPhotoRealm.getPhoto.addrId", "res: " + res.size());
+            }
         }
 
         if (clientId != null) {
             res = res.where().equalTo("client_id", clientId).findAll();
+            if (res != null){
+                Globals.writeToMLOG("INFO", "StackPhotoRealm.getPhoto.clientId", "res: " + res.size());
+            }
         }
 
         if (dad2 != null) {
             res = res.where().equalTo("code_dad2", dad2).findAll();
+            if (res != null){
+                Globals.writeToMLOG("INFO", "StackPhotoRealm.getPhoto.dad2", "res: " + res.size());
+            }
         }
 
         if (photoType != null) {
             res = res.where().equalTo("photo_type", photoType).findAll();
+            if (res != null){
+                Globals.writeToMLOG("INFO", "StackPhotoRealm.getPhoto.photoType", "res: " + res.size());
+            }
+        }
+
+        if (res != null){
+            Globals.writeToMLOG("INFO", "StackPhotoRealm.getPhoto.all", "res: " + res.size());
         }
 
         return res;

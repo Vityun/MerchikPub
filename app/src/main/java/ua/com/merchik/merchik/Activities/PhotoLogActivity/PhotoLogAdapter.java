@@ -551,6 +551,12 @@ public class PhotoLogAdapter extends RecyclerView.Adapter<PhotoLogAdapter.ViewHo
      */
     public static Spanned photoData(StackPhotoDB data) {
 
+        try {
+            Globals.writeToMLOG("INFO", "PhotoLogAdapter.photoData", "StackPhotoDB data: " + new Gson().toJson(data));
+        }catch (Exception e){
+            Globals.writeToMLOG("ERROR", "PhotoLogAdapter.photoData", "Exception e: " + e);
+        }
+
         String create = "Не обнаружено", upload = "Не обнаружено", server = "Не обнаружено";
 
         String timeMls = String.valueOf(data.getErrorTime());
@@ -578,7 +584,7 @@ public class PhotoLogAdapter extends RecyclerView.Adapter<PhotoLogAdapter.ViewHo
         }
 
         Spanned res;
-        res = Html.fromHtml("<b>ID: </b>" + data.getId() + "<br>"
+        res = Html.fromHtml("<b>ID: </b>" + data.getId() + " / " + data.photoServerId + "<br>"
                 + "<b>Дата: </b>" + data.getTime_event() + "<br>"
                 + "<b>Пользователь: </b>" + data.getUserTxt() + "<br>"
                 + "<b>Клиент: </b>" + data.getCustomerTxt() + "<br>"
