@@ -18,8 +18,8 @@ import androidx.core.content.ContextCompat;
 public class trecker implements LocationListener {
 
     //private LocationManager locationManager; // FOR VISIBILITY
-    static Location imHereGPS; // GPS coordinates
-    static Location imHereNET; // Network coordinates
+    public static Location imHereGPS; // GPS coordinates
+    public static Location imHereNET; // Network coordinates
     public static boolean enabledGPS;
     static boolean enabledNET;
     static boolean isMockGPS;

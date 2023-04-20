@@ -1,4 +1,4 @@
-package ua.com.merchik.merchik;
+package ua.com.merchik.merchik.MakePhoto;
 
 import static ua.com.merchik.merchik.trecker.enabledGPS;
 
@@ -23,22 +23,32 @@ import java.util.Arrays;
 import java.util.Date;
 
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity;
+import ua.com.merchik.merchik.Clock;
+import ua.com.merchik.merchik.Globals;
+import ua.com.merchik.merchik.PhotoReportActivity;
+import ua.com.merchik.merchik.R;
+import ua.com.merchik.merchik.WorkPlan;
 import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.data.WPDataObj;
 import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
+import ua.com.merchik.merchik.trecker;
 
 public class MakePhoto {
 
     static Globals globals = new Globals();
     private static final int CAMERA_REQUEST = 1;
     public static final int REQUEST_TAKE_PHOTO = 101;          // Получение фотки с Журнала Фото
+
+    // Кода 200 я решил использовать для выполнения фото.
     public static final int CAMERA_REQUEST_TAKE_PHOTO = 200;   // Для нового интента выполнения фото
     public static final int CAMERA_REQUEST_TAKE_PHOTO_TEST = 201;   // Тестовый реквест для фото
-
     public static final int CAMERA_REQUEST_TAR_COMMENT_PHOTO = 203; // ЗИР. Закладка переписки. Список комментариев. Возможность делать фото к коментарию.
     public static final int CAMERA_REQUEST_PROMOTION_TOV_PHOTO = 204; // Опция Фото Акционного Товара + ценника
+
+    // Кода 500 буду использовать для выбора фото из галереи
+    public static final int PICK_GALLERY_IMAGE_REQUEST = 500;
 
     public static File image;
     private static Context mContext;

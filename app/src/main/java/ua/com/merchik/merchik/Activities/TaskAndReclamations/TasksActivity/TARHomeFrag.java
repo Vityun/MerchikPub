@@ -28,7 +28,7 @@ import ua.com.merchik.merchik.Activities.PhotoLogActivity.PhotoLogActivity;
 import ua.com.merchik.merchik.Activities.TaskAndReclamations.TARFragmentHome;
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
-import ua.com.merchik.merchik.MakePhoto;
+import ua.com.merchik.merchik.MakePhoto.MakePhoto;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.ServerExchange.PhotoDownload;
 import ua.com.merchik.merchik.ViewHolders.Clicks;

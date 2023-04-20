@@ -1,10 +1,10 @@
 package ua.com.merchik.merchik.Activities.TaskAndReclamations.TasksActivity.TARCommentMakePhoto;
 
-import static ua.com.merchik.merchik.MakePhoto.CAMERA_REQUEST_TAR_COMMENT_PHOTO;
+import static ua.com.merchik.merchik.MakePhoto.MakePhoto.CAMERA_REQUEST_TAR_COMMENT_PHOTO;
 
 import android.app.Activity;
 
-import ua.com.merchik.merchik.MakePhoto;
+import ua.com.merchik.merchik.MakePhoto.MakePhoto;
 
 public class TARCommentMakePhoto {
 

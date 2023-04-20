@@ -5,7 +5,7 @@ import android.content.Context;
 import android.util.Log;
 
 import ua.com.merchik.merchik.Globals;
-import ua.com.merchik.merchik.MakePhoto;
+import ua.com.merchik.merchik.MakePhoto.MakePhoto;
 import ua.com.merchik.merchik.Options.OptionControl;
 import ua.com.merchik.merchik.Options.Options;
 import ua.com.merchik.merchik.WorkPlan;

@@ -1,6 +1,6 @@
 package ua.com.merchik.merchik.Options.Controls;
 
-import static ua.com.merchik.merchik.MakePhoto.CAMERA_REQUEST_PROMOTION_TOV_PHOTO;
+import static ua.com.merchik.merchik.MakePhoto.MakePhoto.CAMERA_REQUEST_PROMOTION_TOV_PHOTO;
 import static ua.com.merchik.merchik.data.RealmModels.StackPhotoDB.PHOTO_PROMOTION_TOV;
 
 import android.app.Activity;
@@ -23,7 +23,7 @@ import java.util.List;
 
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
-import ua.com.merchik.merchik.MakePhoto;
+import ua.com.merchik.merchik.MakePhoto.MakePhoto;
 import ua.com.merchik.merchik.Options.OptionControl;
 import ua.com.merchik.merchik.Options.Options;
 import ua.com.merchik.merchik.data.OptionMassageType;

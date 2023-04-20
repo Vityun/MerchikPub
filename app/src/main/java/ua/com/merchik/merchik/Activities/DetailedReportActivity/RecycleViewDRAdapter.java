@@ -35,6 +35,7 @@ import ua.com.merchik.merchik.Options.Controls.OptionControlReclamationAnswer;
 import ua.com.merchik.merchik.Options.Controls.OptionControlTaskAnswer;
 import ua.com.merchik.merchik.Options.Options;
 import ua.com.merchik.merchik.R;
+import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.Database.Room.SiteObjectsSDB;
 import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
 import ua.com.merchik.merchik.data.OptionMassageType;
@@ -51,6 +52,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
     private List<OptionsDB> butt;
     private List<SiteObjectsSDB> translate;
     private Context mContext;
+    private Clicks.clickVoid click;
     //    private static WpDataDB wpDataDB;
     private T dataDB;
 
@@ -571,7 +573,8 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
 
 
     /*Определяем конструктор*/
-    public RecycleViewDRAdapter(Context context, T dataDB, List<OptionsDB> dataButtons, List<SiteObjectsSDB> list) {
+    public RecycleViewDRAdapter(Context context, T dataDB, List<OptionsDB> dataButtons, List<SiteObjectsSDB> list, Clicks.clickVoid click) {
+        this.click = click;
         this.dataDB = dataDB;
         this.butt = dataButtons;
         this.translate = list;
@@ -743,6 +746,18 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
         ss.append(additionalText);
         if (showPhotoLink) {
             ss.append("\n\n");
+            switch (option.getOptionId()) {
+                case "135158":  // - 4  - Фото остатков товаров
+                    ss.append(createLinkedStringGal(mContext, "Завантажити фото з галереї", photoType, ()->{
+                        // В данном случае надо открыть галерею и выбрать фото остатков
+//                        WpDataDB wp = (WpDataDB) dataDB;
+//                        new MakePhotoFromGalery().openGalleryToPeakPhoto(mContext.getApplicationContext(), wp);
+                        click.click();
+                    }));
+
+                    ss.append("\n\n");
+                    break;
+            }
             ss.append(createLinkedString(mContext, "Показать образец фото", photoType));
         }
 
@@ -788,6 +803,25 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                 } catch (Exception e) {
                     Toast.makeText(context, "Показать образец фото error: " + e, Toast.LENGTH_SHORT).show();
                 }
+            }
+
+            @Override
+            public void updateDrawState(TextPaint ds) {
+                super.updateDrawState(ds);
+                ds.setUnderlineText(false);
+            }
+        };
+        res.setSpan(clickableSpan, 0, msg.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        return res;
+    }
+
+    private SpannableString createLinkedStringGal(Context context, String msg, int photoType, Clicks.clickVoid click){
+        SpannableString res = new SpannableString(msg);
+        ClickableSpan clickableSpan = new ClickableSpan() {
+            @Override
+            public void onClick(View textView) {
+                // Буду открывать и сохранять с галереи мусорку
+                click.click();
             }
 
             @Override

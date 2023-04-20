@@ -1,6 +1,6 @@
 package ua.com.merchik.merchik.Activities.PhotoLogActivity;
 
-import static ua.com.merchik.merchik.MakePhoto.CAMERA_REQUEST_TAKE_PHOTO;
+import static ua.com.merchik.merchik.MakePhoto.MakePhoto.CAMERA_REQUEST_TAKE_PHOTO;
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
 import android.content.Intent;
@@ -28,7 +28,7 @@ import io.realm.RealmResults;
 import ua.com.merchik.merchik.Activities.FullScreenPhotoActivity.PhotoFullScreenFragment;
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
-import ua.com.merchik.merchik.MakePhoto;
+import ua.com.merchik.merchik.MakePhoto.MakePhoto;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.ViewHolders.PhotoAndInfoViewHolder;

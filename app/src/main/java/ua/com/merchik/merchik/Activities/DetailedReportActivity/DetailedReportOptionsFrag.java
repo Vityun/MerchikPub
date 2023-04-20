@@ -1,10 +1,12 @@
 package ua.com.merchik.merchik.Activities.DetailedReportActivity;
 
+import static ua.com.merchik.merchik.MakePhoto.MakePhotoFromGalery.MakePhotoFromGaleryWpDataDB;
 import static ua.com.merchik.merchik.Options.Options.ConductMode.DEFAULT_CONDUCT;
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -179,7 +181,12 @@ public class DetailedReportOptionsFrag extends Fragment {
             }
 
             if (optionsButtons != null && optionsButtons.size() > 0) {
-                recycleViewDRAdapter = new RecycleViewDRAdapter(mContext, wpDataDB, optionsButtons, list);
+                recycleViewDRAdapter = new RecycleViewDRAdapter(mContext, wpDataDB, optionsButtons, list, ()->{
+                    MakePhotoFromGaleryWpDataDB = wpDataDB;
+                    Intent intent = new Intent(Intent.ACTION_PICK);
+                    intent.setType("image/*");
+                    ((DetailedReportActivity) mContext).startActivityForResult(Intent.createChooser(intent, "Select Picture"), 500);
+                });
                 rvContacts.setAdapter(recycleViewDRAdapter);
                 rvContacts.setLayoutManager(new LinearLayoutManager(mContext, LinearLayoutManager.VERTICAL, false));
             } else {

@@ -1,5 +1,7 @@
 package ua.com.merchik.merchik.Activities.TaskAndReclamations.TasksActivity;
 
+import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
+
 import android.content.Context;
 import android.os.Bundle;
 import android.util.Log;
@@ -22,8 +24,6 @@ import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
 import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.OptionsRealm;
-
-import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
 public class Tab2Fragment extends Fragment {
 
@@ -79,7 +79,7 @@ public class Tab2Fragment extends Fragment {
 //            wp = RealmManager.INSTANCE.copyFromRealm(wp);
 //        }
 
-        RecycleViewDRAdapter recycleViewDRAdapter = new RecycleViewDRAdapter(mContext, data, list, listTr);
+        RecycleViewDRAdapter recycleViewDRAdapter = new RecycleViewDRAdapter(mContext, data, list, listTr, ()->{});
         recyclerView.setAdapter(recycleViewDRAdapter);
         recyclerView.setLayoutManager(new LinearLayoutManager(mContext, LinearLayoutManager.VERTICAL, false));
     }

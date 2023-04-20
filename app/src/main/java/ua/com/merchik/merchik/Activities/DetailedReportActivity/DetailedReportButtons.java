@@ -16,7 +16,7 @@ import java.util.List;
 
 import ua.com.merchik.merchik.Activities.PhotoLogActivity.PhotoLogActivity;
 import ua.com.merchik.merchik.Globals;
-import ua.com.merchik.merchik.MakePhoto;
+import ua.com.merchik.merchik.MakePhoto.MakePhoto;
 import ua.com.merchik.merchik.Options.Options;
 import ua.com.merchik.merchik.PhotoReportActivity;
 import ua.com.merchik.merchik.Utils.UniversalAdapter.UniversalAdapter;

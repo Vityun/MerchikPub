@@ -59,7 +59,7 @@ import ua.com.merchik.merchik.Adapters.TextAdapter;
 import ua.com.merchik.merchik.BuildConfig;
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
-import ua.com.merchik.merchik.MakePhoto;
+import ua.com.merchik.merchik.MakePhoto.MakePhoto;
 import ua.com.merchik.merchik.Options.Buttons.OptionButPhotoPlanogramm;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtAchievements;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonAddComment;

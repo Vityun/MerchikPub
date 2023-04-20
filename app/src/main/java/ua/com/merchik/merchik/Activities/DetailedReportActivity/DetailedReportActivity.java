@@ -1,8 +1,10 @@
 package ua.com.merchik.merchik.Activities.DetailedReportActivity;
 
 import static ua.com.merchik.merchik.Activities.TaskAndReclamations.TasksActivity.Tab3Fragment.TARCommentIndex;
-import static ua.com.merchik.merchik.MakePhoto.CAMERA_REQUEST_PROMOTION_TOV_PHOTO;
-import static ua.com.merchik.merchik.MakePhoto.CAMERA_REQUEST_TAR_COMMENT_PHOTO;
+import static ua.com.merchik.merchik.MakePhoto.MakePhoto.CAMERA_REQUEST_PROMOTION_TOV_PHOTO;
+import static ua.com.merchik.merchik.MakePhoto.MakePhoto.CAMERA_REQUEST_TAR_COMMENT_PHOTO;
+import static ua.com.merchik.merchik.MakePhoto.MakePhoto.PICK_GALLERY_IMAGE_REQUEST;
+import static ua.com.merchik.merchik.MakePhoto.MakePhotoFromGalery.MakePhotoFromGaleryWpDataDB;
 import static ua.com.merchik.merchik.Options.Controls.OptionControlPhotoPromotion.tovarDBOPTION_CONTROL_PROMOTION_ID;
 import static ua.com.merchik.merchik.Options.Controls.OptionControlPhotoPromotion.wpDataDBOPTION_CONTROL_PROMOTION_ID;
 import static ua.com.merchik.merchik.PhotoReportActivity.exifPhotoData;
@@ -15,8 +17,11 @@ import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Intent;
+import android.database.Cursor;
 import android.graphics.Color;
+import android.net.Uri;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.text.Html;
 import android.util.Log;
 import android.view.WindowManager;
@@ -46,7 +51,7 @@ import retrofit2.Response;
 import ua.com.merchik.merchik.Activities.TaskAndReclamations.TARFragmentHome;
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
-import ua.com.merchik.merchik.MakePhoto;
+import ua.com.merchik.merchik.MakePhoto.MakePhoto;
 import ua.com.merchik.merchik.PhotoReportActivity;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.ServerExchange.TablesLoadingUnloading;
@@ -398,6 +403,19 @@ public class DetailedReportActivity extends toolbar_menus {
         DetailedReportTab.refreshAdapter();
     }
 
+    private String getRealPathFromURI(Uri contentUri) {
+        String[] projection = { MediaStore.Images.Media.DATA };
+        Cursor cursor = getApplicationContext().getContentResolver().query(contentUri, projection, null, null, null);
+        if (cursor == null) {
+            return null;
+        }
+        int columnIndex = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
+        cursor.moveToFirst();
+        String path = cursor.getString(columnIndex);
+        cursor.close();
+        return path;
+    }
+
 
     // Размещение фотки по URI адрессу для пользователя, отображение фотографии загрузки
     @SuppressLint("MissingSuperCall")
@@ -406,6 +424,13 @@ public class DetailedReportActivity extends toolbar_menus {
         super.onActivityResult(requestCode, resultCode, data);
 
         Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult", "requestCode / resultCode / data: " + requestCode + "/" + resultCode + "/" + data);
+
+        if (requestCode == PICK_GALLERY_IMAGE_REQUEST && resultCode == RESULT_OK && data != null && data.getData() != null) {
+            Uri uri = data.getData();
+            String filePath = getRealPathFromURI(uri);
+
+            savePhoto(new File(filePath), MakePhotoFromGaleryWpDataDB);
+        }
 
         switch (requestCode) {
             case 101:
@@ -660,6 +685,41 @@ public class DetailedReportActivity extends toolbar_menus {
             stackPhotoDB.setPhoto_hash(globals.getHashMD5FromFile2(photoFile, null));
             stackPhotoDB.setPhoto_num(photoFile.getAbsolutePath());
 
+
+            RealmManager.stackPhotoSavePhoto(stackPhotoDB);
+            return stackPhotoDB;
+        } catch (Exception e) {
+            Globals.writeToMLOG("ERROR", "DRActivity.onActivityResult.savePhotoPromotionTov", "Exception e: " + e);
+            return null;
+        }
+    }
+
+
+    private StackPhotoDB savePhoto(File photoFile, WpDataDB wpDataDB) {
+        try {
+            int id = RealmManager.stackPhotoGetLastId();
+            id++;
+            StackPhotoDB stackPhotoDB = new StackPhotoDB();
+            stackPhotoDB.setId(id);
+            stackPhotoDB.setDt(wpDataDB.getDt().getTime() / 1000);
+//            stackPhotoDB.setTime_event(Clock.getHumanTime2(System.currentTimeMillis() / 1000));
+            stackPhotoDB.setTime_event(Clock.getHumanTimeSecPattern(wpDataDB.getDt().getTime() / 1000, "yyyy-MM-dd"));
+
+            stackPhotoDB.setAddr_id(wpDataDB.getAddr_id());
+            stackPhotoDB.setAddressTxt(wpDataDB.getAddr_txt());
+
+            stackPhotoDB.setClient_id(wpDataDB.getClient_id());
+            stackPhotoDB.setCustomerTxt(wpDataDB.getClient_txt());
+
+            stackPhotoDB.code_dad2 = wpDataDB.getCode_dad2();
+
+            stackPhotoDB.setUser_id(Globals.userId);
+            stackPhotoDB.setPhoto_type(4);      // Тип фото Остатков
+
+            stackPhotoDB.setCreate_time(System.currentTimeMillis());
+
+            stackPhotoDB.setPhoto_hash(globals.getHashMD5FromFile2(photoFile, null));
+            stackPhotoDB.setPhoto_num(photoFile.getAbsolutePath());
 
             RealmManager.stackPhotoSavePhoto(stackPhotoDB);
             return stackPhotoDB;
