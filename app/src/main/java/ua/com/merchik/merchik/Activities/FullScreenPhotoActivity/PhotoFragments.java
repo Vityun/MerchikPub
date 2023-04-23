@@ -1,18 +1,29 @@
 package ua.com.merchik.merchik.Activities.FullScreenPhotoActivity;
 
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Rect;
+import android.graphics.RectF;
 import android.graphics.drawable.BitmapDrawable;
 import android.util.Log;
+import android.view.MotionEvent;
 import android.widget.ImageView;
 
+import java.util.Collections;
+import java.util.List;
+
+import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.data.Database.Room.FragmentSDB;
+import ua.com.merchik.merchik.data.RealmModels.LogDB;
+import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
+import ua.com.merchik.merchik.database.realm.RealmManager;
+import ua.com.merchik.merchik.dialogs.DialogData;
 
 public class PhotoFragments {
-
     public enum PhotoFragmentsSize {
         BIG, SMALL
     }
@@ -86,5 +97,69 @@ public class PhotoFragments {
 
         // Устанавливаем новый Bitmap в ImageView
         image.setImageBitmap(newBitmap);
+    }
+
+    public void setPhotoFragmentClick(List<FragmentSDB> fragmentSDB, StackPhotoDB stackPhotoDB, ImageView photo){
+        photo.setOnTouchListener((v, event) -> {
+            if (event.getAction() == MotionEvent.ACTION_DOWN) {
+                float x = event.getX();
+                float y = event.getY();
+
+                // Конвертируем координаты к реальным размерам изображения
+                float[] pts = {x, y};
+                Matrix matrix1 = ((ImageView) v).getImageMatrix();
+                matrix1.invert(matrix1);
+                matrix1.mapPoints(pts);
+
+                for (FragmentSDB item : fragmentSDB){
+                    setFragmentClick(item, photo, x, y, v.getContext(), stackPhotoDB);
+                }
+            }
+            return true;
+        });
+    }
+
+    private void setFragmentClick(FragmentSDB fragmentSDB, ImageView photo, float x, float y, Context context, StackPhotoDB stackPhotoDB){
+        Bitmap bitmap = ((BitmapDrawable) photo.getDrawable()).getBitmap();
+        int bitmapHeight = bitmap.getHeight();
+
+        int newY1 = bitmapHeight - fragmentSDB.y1;
+        int newY2 = bitmapHeight - fragmentSDB.y2;
+
+        // Проверяем, находится ли точка внутри прямоугольника
+        RectF rect = new RectF(fragmentSDB.x1, newY1, fragmentSDB.x2, newY2);
+
+        // Получаем матрицу, чтобы перевести координаты прямоугольника в координаты View
+        Matrix matrix2 = new Matrix();
+        photo.getImageMatrix().invert(matrix2);
+        RectF rectInImageView = new RectF();
+        matrix2.mapRect(rectInImageView, rect);
+
+        if (rectInImageView.contains(x, y)) {
+            // Клик был внутри прямоугольника
+            // Здесь можно выполнить нужное действие
+            Log.d("Coordinates", "+");
+            DialogData dialog = new DialogData(context);
+            dialog.setTitle("Фрагмент(" + fragmentSDB.id + ")");
+            dialog.setText(fragmentSDB.comment);
+            dialog.setClose(dialog::dismiss);
+            dialog.show();
+
+            RealmManager.setRowToLog(Collections.singletonList(
+                    new LogDB(
+                            RealmManager.getLastIdLogDB() + 1,
+                            System.currentTimeMillis() / 1000,
+                            "Факт натискання на фрагмент. (" + fragmentSDB.id + ")",
+                            1258,
+                            stackPhotoDB.client_id,
+                            stackPhotoDB.addr_id,
+                            Long.getLong(stackPhotoDB.photoServerId),
+                            null,
+                            System.currentTimeMillis() / 1000,
+                            Globals.session,
+                            String.valueOf(stackPhotoDB.dt))));
+        } else {
+            Log.d("Coordinates", "-");
+        }
     }
 }

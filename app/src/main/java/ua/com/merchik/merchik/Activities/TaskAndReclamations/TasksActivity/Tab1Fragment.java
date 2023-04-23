@@ -50,6 +50,7 @@ import ua.com.merchik.merchik.database.realm.tables.ThemeRealm;
 import ua.com.merchik.merchik.database.realm.tables.UsersRealm;
 import ua.com.merchik.merchik.database.realm.tables.WpDataRealm;
 import ua.com.merchik.merchik.dialogs.DialogData;
+import ua.com.merchik.merchik.dialogs.DialogFullPhotoR;
 import ua.com.merchik.merchik.dialogs.DialogPhotoTovar;
 import ua.com.merchik.merchik.toolbar_menus;
 
@@ -543,11 +544,17 @@ public class Tab1Fragment extends Fragment {
             new PhotoDownload().downloadPhoto(true, stackPhotoDB, "/TaR", new PhotoDownload.downloadPhotoInterface() {
                 @Override
                 public void onSuccess(StackPhotoDB data) {
-                    DialogPhotoTovar dialogPhotoTovar = new DialogPhotoTovar(mContext);
-//                    dialogPhotoTovar.setPhotoTovar(Uri.parse(finalStackPhotoDB.getPhoto_num()));
-                    dialogPhotoTovar.setPhotoTovar(finalStackPhotoDB);
-                    dialogPhotoTovar.setClose(dialogPhotoTovar::dismiss);
-                    dialogPhotoTovar.show();
+//                    DialogPhotoTovar dialogPhotoTovar = new DialogPhotoTovar(mContext);
+////                    dialogPhotoTovar.setPhotoTovar(Uri.parse(finalStackPhotoDB.getPhoto_num()));
+//                    dialogPhotoTovar.setPhotoTovar(finalStackPhotoDB);
+//                    dialogPhotoTovar.setClose(dialogPhotoTovar::dismiss);
+//                    dialogPhotoTovar.show();
+
+                    DialogFullPhotoR dialog = new DialogFullPhotoR(mContext);
+                    dialog.setPhoto(finalStackPhotoDB);
+                    dialog.setClose(dialog::dismiss);
+                    dialog.show();
+
                 }
 
                 @Override
