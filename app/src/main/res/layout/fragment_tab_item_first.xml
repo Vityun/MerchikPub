@@ -4,7 +4,6 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:maxHeight="400dp"
     android:minHeight="100dp"
     android:orientation="vertical">
 
@@ -17,32 +16,31 @@
         android:layout_marginTop="16dp"
         android:layout_marginEnd="16dp"
         android:layout_marginRight="16dp"
-        android:layout_marginBottom="16dp"
         android:fadeScrollbars="false"
         android:maxLines="15"
         android:scrollbars="vertical"
         android:text="data"
-        app:layout_constraintBottom_toTopOf="@+id/textView61"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/TARPhoto"
-        app:layout_constraintVertical_bias="0.0" />
+        app:layout_constraintTop_toBottomOf="@+id/TARPhoto" />
 
     <ImageView
         android:id="@+id/TARPhoto"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_height="0dp"
         android:layout_marginStart="16dp"
         android:layout_marginLeft="16dp"
         android:layout_marginTop="16dp"
-        android:layout_marginBottom="16dp"
         android:background="@drawable/border_map"
-
         android:elevation="4dp"
+        android:maxHeight="200dp"
+        android:minHeight="100dp"
+        android:minWidth="100dp"
+        android:maxWidth="200dp"
         android:padding="8dp"
         android:scaleType="centerCrop"
-        app:layout_constraintBottom_toTopOf="@+id/text_data"
+        android:adjustViewBounds="true"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:srcCompat="@mipmap/merchik_m" />
