@@ -16,7 +16,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.widget.Toolbar;
-import androidx.fragment.app.FragmentManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -25,7 +24,6 @@ import java.util.Arrays;
 import java.util.List;
 
 import io.realm.RealmResults;
-import ua.com.merchik.merchik.Activities.FullScreenPhotoActivity.PhotoFullScreenFragment;
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.MakePhoto.MakePhoto;
@@ -42,6 +40,7 @@ import ua.com.merchik.merchik.database.realm.tables.StackPhotoRealm;
 import ua.com.merchik.merchik.database.realm.tables.WpDataRealm;
 import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.dialogs.DialogFilter.DialogFilter;
+import ua.com.merchik.merchik.dialogs.DialogFullPhotoR;
 import ua.com.merchik.merchik.toolbar_menus;
 
 public class PhotoLogActivity extends toolbar_menus {
@@ -258,18 +257,24 @@ public class PhotoLogActivity extends toolbar_menus {
         }, new PhotoLogPhotoAdapter.OnPhotoClickListener() {
             @Override
             public void onPhotoClicked(StackPhotoDB photoDB) {
-                // создаем фрагмент PhotoFullScreenFragment и передаем ему позицию нажатого элемента
-                PhotoFullScreenFragment fragment = new PhotoFullScreenFragment(photoDB);
-//                Bundle args = new Bundle();
-//                args.putInt("position", 0);
-//                fragment.setArguments(args);
 
-                // открываем фрагмент
-                FragmentManager fragmentManager = getSupportFragmentManager();
-                fragmentManager.beginTransaction()
-                        .replace(R.id.actitity_photo_log, fragment)
-                        .addToBackStack(null)
-                        .commit();
+                DialogFullPhotoR dialog = new DialogFullPhotoR(getApplicationContext());
+                dialog.setPhoto(photoDB);
+                dialog.setClose(dialog::dismiss);
+                dialog.show();
+
+                // создаем фрагмент PhotoFullScreenFragment и передаем ему позицию нажатого элемента
+//                PhotoFullScreenFragment fragment = new PhotoFullScreenFragment(photoDB);
+////                Bundle args = new Bundle();
+////                args.putInt("position", 0);
+////                fragment.setArguments(args);
+//
+//                // открываем фрагмент
+//                FragmentManager fragmentManager = getSupportFragmentManager();
+//                fragmentManager.beginTransaction()
+//                        .replace(R.id.actitity_photo_log, fragment)
+//                        .addToBackStack(null)
+//                        .commit();
             }
         });
         recycleViewPLAdapter.setPhotoLogMode(photoLogMode);
