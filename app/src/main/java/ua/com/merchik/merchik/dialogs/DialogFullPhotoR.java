@@ -7,8 +7,10 @@ import android.app.Dialog;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.net.Uri;
+import android.view.WindowManager;
 import android.widget.ImageButton;
-import android.widget.ImageView;
+
+import com.ortiz.touchview.TouchImageView;
 
 import java.io.File;
 import java.util.List;
@@ -26,7 +28,7 @@ public class DialogFullPhotoR {
     public StackPhotoDB photoDB;
 
     // ------------------------
-    private ImageView photo;
+    private TouchImageView photo;
     private ImageButton camera;
     // ------------------------
     private ImageButton close, help, videoHelp, call;
@@ -36,11 +38,18 @@ public class DialogFullPhotoR {
         dialog = new Dialog(context);
         dialog.setCancelable(false);
         dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+
+        int width = (int) (context.getResources().getDisplayMetrics().widthPixels * 0.90);
+//        int height = (int) (context.getResources().getDisplayMetrics().widthPixels * 0.90);
+
         dialog.setContentView(R.layout.dialog_photo_fullscreen);
+        dialog.getWindow().setLayout(width, WindowManager.LayoutParams.MATCH_PARENT);
+
         close = dialog.findViewById(R.id.imageButtonClose);
         help = dialog.findViewById(R.id.imageButtonLesson);
 
         photo = dialog.findViewById(R.id.photo);
+//        photo.setAdjustViewBounds(true);
         camera = dialog.findViewById(R.id.camera);
     }
 

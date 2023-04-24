@@ -554,7 +554,6 @@ public class Tab1Fragment extends Fragment {
                     dialog.setPhoto(finalStackPhotoDB);
                     dialog.setClose(dialog::dismiss);
                     dialog.show();
-
                 }
 
                 @Override
