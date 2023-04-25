@@ -78,13 +78,13 @@ public class OptionControlAchievements<T> extends OptionControl {
                 dateDocument = wpDataDB.getDt().getTime() / 1000;
 
                 if (System.currentTimeMillis() > 1681603200000L){
-                    themeId = 1251;
+                    themeId = 595;
                 }
 
                 // dateDocument*1000 -- Делаем такую херь, потому что функция работает в миллисекундах. / 1000 - для перевода в секунды.
                 int minusDay = Integer.parseInt(optionDB.getAmountMax()) > 0 ? Integer.parseInt(optionDB.getAmountMax()) : 30;
                 dateFrom = Clock.getDatePeriodLong(dateDocument * 1000, -minusDay) / 1000;
-                dateTo = Clock.getDatePeriodLong(dateDocument * 1000, 0) / 1000;
+                dateTo = Clock.getDatePeriodLong(dateDocument * 1000, 1) / 1000;
             }
 
         } catch (Exception e) {
@@ -199,11 +199,11 @@ public class OptionControlAchievements<T> extends OptionControl {
                 signal = false;
             } else if (traineeSignal > 0) {
                 stringBuilderMsg.append(trainee).append(period).append(" НЕМА досягнень (з оцінкою ")
-                        .append(minScore).append(" чи більш) по").append(SPIS).append(".");
+                        .append(minScore).append(" чи більш) по ").append(SPIS).append(".");
                 signal = false;
             } else {
                 stringBuilderMsg.append(trainee).append(period).append(" НЕМА досягнень (з оцінкою ")
-                        .append(minScore).append(" чи більш) по").append(SPIS).append(".");
+                        .append(minScore).append(" чи більш) по ").append(SPIS).append(".");
                 signal = true;
             }
 
