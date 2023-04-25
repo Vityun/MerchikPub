@@ -133,10 +133,10 @@ public class OptionControlAchievements<T> extends OptionControl {
                         item.error = 1;
                         item.note = new StringBuilder().append("у достижения ").append(item.serverId).append(" установлен признак ДВИ=1");
                         SPIS.append(item.note).append(", ");
-                    } else if (item.confirmState != 1) {
-                        item.error = 1;
-                        item.note = new StringBuilder().append("достижение ").append(item.serverId).append(" НЕ утверждено Супервайзером");
-                        SPIS.append(item.note).append(", ");
+//                    } else if (item.confirmState != 1) {
+//                        item.error = 1;
+//                        item.note = new StringBuilder().append("достижение ").append(item.serverId).append(" НЕ утверждено Супервайзером");
+//                        SPIS.append(item.note).append(", ");
                     } else if (item.score.equals("-") || item.score.equals("0")) {
                         item.error = 1;
                         item.note = new StringBuilder().append("достижение ").append(item.serverId).append(" НЕ оценено Территориалом");
@@ -185,19 +185,26 @@ public class OptionControlAchievements<T> extends OptionControl {
                 }
             }
 
+
+            StringBuilder period = new StringBuilder();
+            period.append("За період з ").append(Clock.getHumanTimeYYYYMMDD(dateFrom)).append(" по ").append(Clock.getHumanTimeYYYYMMDD(dateTo));
             //4.0. готовим сообщение и сигнал
             if (sumOptionError == 0 && traineeSignal == 0) {
-                stringBuilderMsg.append("За период с ").append(Clock.getHumanTimeYYYYMMDD(dateFrom)).append(" по ").append(Clock.getHumanTimeYYYYMMDD(dateTo)).append(" ЕСТЬ утвержденные достижения (с оценкой ")
-                        .append(minScore).append(" и более) ").append("???"/*TODO Тут указано ТекПос, откуда я его беру?*/).append(" по ").append(customerSDBDocument.nm)
-                        .append(". И переданы клиенту для начисления премии.").append(SPIS);
+                stringBuilderMsg.append(period).append(" Є досягнення (з оцінкою ").append(minScore).append(" чи більш) ")
+                        .append(wpDataDB.getAddr_txt()).append(" по ").append(customerSDBDocument.nm).append(". Та передані кліенту для нарахування премії.");
+
+//            stringBuilderMsg.append(" ЕСТЬ утвержденные достижения (с оценкой ")
+//                        .append(minScore).append(" и более) ").append("???"/*TODO Тут указано ТекПос, откуда я его беру?*/).append(" по ").append(customerSDBDocument.nm)
+//                        .append(". И переданы клиенту для начисления премии.").append(SPIS);
                 signal = false;
             } else if (traineeSignal > 0) {
-                stringBuilderMsg.append(trainee).append("За период с ").append(Clock.getHumanTimeYYYYMMDD(dateFrom)).append(" по ").append(Clock.getHumanTimeYYYYMMDD(dateTo)).append(" НЕТ утвержденных достижений (с оценкой ")
-                        .append(minScore).append(" и более) по ").append(SPIS);
+                stringBuilderMsg.append(trainee).append(period).append(" НЕМА досягнень (з оцінкою ")
+                        .append(minScore).append(" чи більш) по").append(SPIS).append(".");
                 signal = false;
             } else {
-                stringBuilderMsg.append(trainee).append("За период с ").append(Clock.getHumanTimeYYYYMMDD(dateFrom)).append(" по ").append(Clock.getHumanTimeYYYYMMDD(dateTo)).append(" НЕТ утвержденных достижений (с оценкой ")
-                        .append(minScore).append(" и более) по ").append(SPIS).append(".");
+                stringBuilderMsg.append(trainee).append(period).append(" НЕМА досягнень (з оцінкою ")
+                        .append(minScore).append(" чи більш) по").append(SPIS).append(".");
+                signal = true;
             }
 
             // Сохранение
