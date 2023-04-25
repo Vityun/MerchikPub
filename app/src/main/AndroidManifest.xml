@@ -145,6 +145,7 @@ android:theme="@style/Theme.AppCompat.Light.NoActionBar"
         <activity
             android:name=".Activities.TaskAndReclamations.TARActivity"
             android:theme="@style/AppTheme.NoActionBar"
+            android:screenOrientation="portrait"
             >
         </activity>
 
