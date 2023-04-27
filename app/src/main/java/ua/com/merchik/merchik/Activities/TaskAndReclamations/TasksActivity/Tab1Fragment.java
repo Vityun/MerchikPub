@@ -327,11 +327,14 @@ public class Tab1Fragment extends Fragment {
             if (b != null) {
                 imageView.setImageBitmap(b);
                 setFragmentsOnPhoto();
+                try {
+                    DialogFullPhotoR dialog = new DialogFullPhotoR(mContext);
+                    dialog.setPhoto(StackPhotoRealm.getById(data.photo));
+                    dialog.setClose(dialog::dismiss);
+                    dialog.show();
+                }catch (Exception e){
 
-                DialogFullPhotoR dialog = new DialogFullPhotoR(mContext);
-                dialog.setPhoto(photo1);
-                dialog.setClose(dialog::dismiss);
-                dialog.show();
+                }
             }
         }
 
