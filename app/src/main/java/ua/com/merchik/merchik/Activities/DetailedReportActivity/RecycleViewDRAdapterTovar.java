@@ -16,6 +16,8 @@ import static ua.com.merchik.merchik.dialogs.DialogData.Operations.Text;
 import static ua.com.merchik.merchik.menu_main.decodeSampledBitmapFromResource;
 
 import android.app.Dialog;
+import android.content.ClipData;
+import android.content.ClipboardManager;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.drawable.ColorDrawable;
@@ -321,6 +323,19 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
             name.setTextSize(16);
             weight.setText(weightString);
             weight.setTextSize(16);
+
+            weight.setOnClickListener(v -> {
+                // Получение объекта ClipboardManager из системы
+                ClipboardManager clipboard = (ClipboardManager) mContext.getSystemService(Context.CLIPBOARD_SERVICE);
+
+                // Создание объекта ClipData для копирования текста в буфер обмена
+                ClipData clip = ClipData.newPlainText("Штрихкод", list.getBarcode());
+
+                // Копирование ClipData в буфер обмена
+                clipboard.setPrimaryClip(clip);
+
+                Toast.makeText(mContext, "Скопировано в буфер обмена: " + list.getBarcode(), Toast.LENGTH_LONG).show();
+            });
 
             article.setText(getArticle(list, 1));
 
