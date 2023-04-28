@@ -18,7 +18,7 @@ public class RoomManager {
                 .fallbackToDestructiveMigration()
                 .enableMultiInstanceInvalidation()
                 .allowMainThreadQueries()
-                .addMigrations(MIGRATION_30_31)
+                .addMigrations(MIGRATION_31_32)
 
                 .build();
     }
@@ -153,6 +153,31 @@ public class RoomManager {
                     "`dt_update` INTEGER, " +
 
                     " PRIMARY KEY(`id`))");
+        }
+    };
+
+    static final Migration MIGRATION_31_32 = new Migration(31, 32) {
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase database) {
+            // 1. Создайте временную таблицу с новой схемой
+            database.execSQL(
+                    "CREATE TABLE IF NOT EXISTS client_temp (" +
+                            "id TEXT NOT NULL PRIMARY KEY, " +
+                            "nm TEXT, " +
+                            "edrpou TEXT, " +
+                            "main_tov_grp INTEGER, " +
+                            "dt_update INTEGER, " +
+                            "recl_reply_mode INTEGER)");
+
+            // 2. Копируйте данные из таблицы client в client_temp
+            // Обратите внимание, что мы используем функцию CAST(edrpou AS TEXT) в запросе INSERT, чтобы сконвертировать значение из типа LONG в TEXT.
+            database.execSQL("INSERT INTO client_temp SELECT id, nm, CAST(edrpou AS TEXT), main_tov_grp, dt_update, recl_reply_mode FROM client");
+
+            // 3. Удалите оригинальную таблицу client
+            database.execSQL("DROP TABLE client");
+
+            // 4. Переименуйте временную таблицу client_temp в client
+            database.execSQL("ALTER TABLE client_temp RENAME TO client");
         }
     };
 

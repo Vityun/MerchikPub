@@ -101,7 +101,7 @@ import ua.com.merchik.merchik.database.room.DaoInterfaces.VotesDao;
                 ShelfSizeSDB.class,      // Доля полочного пространства
                 FragmentSDB.class           // Таблица Фрагментов (полей на фото)
         },
-        version = 31
+        version = 32
 )
 
 

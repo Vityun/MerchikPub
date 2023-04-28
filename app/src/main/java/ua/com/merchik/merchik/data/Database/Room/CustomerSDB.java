@@ -25,7 +25,7 @@ public class CustomerSDB {
     @SerializedName("edrpou")
     @Expose
     @ColumnInfo(name = "edrpou")
-    public Long edrpou;
+    public String edrpou;
 
     @SerializedName("main_tov_grp")
     @Expose
