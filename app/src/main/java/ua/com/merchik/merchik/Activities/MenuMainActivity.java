@@ -1,5 +1,8 @@
 package ua.com.merchik.merchik.Activities;
 
+import static ua.com.merchik.merchik.ServerExchange.TablesLoadingUnloading.downloadSiteHints;
+import static ua.com.merchik.merchik.ServerExchange.TablesLoadingUnloading.downloadVideoLessons;
+
 import android.os.Bundle;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -44,38 +47,8 @@ public class MenuMainActivity extends toolbar_menus {
     }
 
     private void test() {
-//        new FragmentsExchange().downloadFragmentsTable(new ExchangeInterface.ExchangeResponseInterface() {
-//            @Override
-//            public <T> void onSuccess(List<T> data) {
-//
-//            }
-//
-//            @Override
-//            public void onFailure(String error) {
-//
-//            }
-//        });
-
-/*        // Получаем Bitmap из ImageView
-        Bitmap bitmap = ((BitmapDrawable)imageView.getDrawable()).getBitmap();
-
-// Создаем новый Bitmap с такими же размерами, как и исходное изображение
-        Bitmap newBitmap = Bitmap.createBitmap(bitmap.getWidth(), bitmap.getHeight(), bitmap.getConfig());
-
-// Создаем объект класса Canvas для нового Bitmap
-        Canvas canvas = new Canvas(newBitmap);
-
-// Рисуем прямоугольник на изображении
-        Paint paint = new Paint();
-        paint.setColor(Color.BLUE);
-        paint.setStyle(Paint.Style.STROKE);
-        paint.setStrokeWidth(5f);
-
-        Rect rect = new Rect(left, top, right, bottom);
-        canvas.drawRect(rect, paint);
-
-// Устанавливаем новый Bitmap в ImageView
-        imageView.setImageBitmap(newBitmap);*/
+        downloadSiteHints("2");
+        downloadVideoLessons();
     }
 
     // =================================== --- onCreate --- ========================================

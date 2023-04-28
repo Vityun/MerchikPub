@@ -198,13 +198,16 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
         Log.e("setFab", "videoLesson: " + videoLesson);
 
         try {
-            SiteObjectsDB object = RealmManager.INSTANCE.copyFromRealm(RealmManager.getLesson(textLesson));
-
-            Log.e("setFab", "REALtextLesson: " + textLesson);
-            Log.e("setFab", "REALvideoLesson: " + videoLesson);
-
-            String str = object.getComments();
-            str = str.replace("&quot;", "\"");
+            String str = "";
+            try {
+                SiteObjectsDB object = RealmManager.INSTANCE.copyFromRealm(RealmManager.getLesson(textLesson));
+                Log.e("setFab", "REALtextLesson: " + textLesson);
+                Log.e("setFab", "REALvideoLesson: " + videoLesson);
+                str = object.getComments();
+                str = str.replace("&quot;", "\"");
+            }catch (Exception e){
+                str = "";
+            }
 
             String finalStr = str;
             fab.setOnClickListener(view -> {

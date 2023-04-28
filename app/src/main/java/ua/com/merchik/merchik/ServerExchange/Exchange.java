@@ -1,6 +1,8 @@
 package ua.com.merchik.merchik.ServerExchange;
 
 
+import static ua.com.merchik.merchik.ServerExchange.TablesLoadingUnloading.downloadSiteHints;
+import static ua.com.merchik.merchik.ServerExchange.TablesLoadingUnloading.downloadVideoLessons;
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
 import android.app.ProgressDialog;
@@ -681,6 +683,13 @@ public class Exchange {
                     });
                 }catch (Exception e){
                     Globals.writeToMLOG("ERROR", "FragmentsExchange/downloadFragmentsTable", "Exception e: " + e);
+                }
+
+                try {
+                    downloadSiteHints("2");
+                    downloadVideoLessons();
+                }catch (Exception e){
+                    Globals.writeToMLOG("ERROR", "startExchange/downloadSiteHints/downloadVideoLessons", "Exception e: " + e);
                 }
 
                 // --------------------------------------------------------------

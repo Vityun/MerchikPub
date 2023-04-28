@@ -99,10 +99,10 @@ public class Tab1Fragment extends Fragment {
 
         if (TARActivity.TARType == 1) {
             toolbar_menus.textLesson = 1183;
-            toolbar_menus.videoLesson = 1184;
+            toolbar_menus.videoLesson = 3528;
         } else {
             toolbar_menus.textLesson = 1185;
-            toolbar_menus.videoLesson = 1186;
+            toolbar_menus.videoLesson = 3528;
         }
 
         toolbar_menus.setFab(v.getContext(), TARActivity.fab); // ГЛАВНАЯ

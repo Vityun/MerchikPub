@@ -2534,7 +2534,7 @@ public class TablesLoadingUnloading {
                             saveSiteObjectsDB(response.body().getObjectList());
                         }
                     } catch (Exception e) {
-
+                        Log.e("downloadSiteHints", "Exception e: " + e);
                     }
 
                 }
@@ -2553,15 +2553,10 @@ public class TablesLoadingUnloading {
 
     private static void saveSiteObjectsDB(List<SiteObjectsDB> data) {
         if (data != null) {
-            Log.e("saveSiteObjectsDB", "data+");
+            Log.e("saveSiteObjectsDB", "data+ : " + data.size());
             INSTANCE.executeTransaction(realm -> {
                 INSTANCE.delete(SiteObjectsDB.class);
                 INSTANCE.copyToRealmOrUpdate(data);
-/*
-                for (SiteObjectsDB item : data) {
-                    Log.e("saveSiteObjectsDB", "data id: " + item.getID() + " |nm: " + item.getNm());
-                    INSTANCE.copyToRealmOrUpdate(item);
-                }*/
             });
         } else {
             Log.e("saveSiteObjectsDB", "data-");
@@ -2593,7 +2588,7 @@ public class TablesLoadingUnloading {
      * platform_id - код платформы
      * dt - дата"
      */
-    public void downloadVideoLessons() {
+    public static void downloadVideoLessons() {
         String mod = "lesson";
         String act = "list";
 
@@ -2624,7 +2619,7 @@ public class TablesLoadingUnloading {
         });
     }
 
-    private void saveSiteHintsDB(List<SiteHintsDB> data) {
+    public static void saveSiteHintsDB(List<SiteHintsDB> data) {
         Log.e("downloadVideoLessons", "saveSiteHintsDB/data: " + data);
 
         try {

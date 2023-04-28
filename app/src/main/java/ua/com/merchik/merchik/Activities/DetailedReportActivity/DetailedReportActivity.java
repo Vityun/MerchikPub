@@ -381,6 +381,12 @@ public class DetailedReportActivity extends toolbar_menus {
                     toolbar_menus.videoLesson = 823;
                     toolbar_menus.setFab(DetailedReportActivity.this, DetailedReportActivity.fab); // ТОВАР
 
+                } else if (tab.getPosition() == 3){
+                    Log.e("onTabSelected", "ЗИР");
+
+//                    toolbar_menus.textLesson = 822;
+                    toolbar_menus.videoLesson = 3527;
+                    toolbar_menus.setFab(DetailedReportActivity.this, DetailedReportActivity.fab); // ЗИР
                 }
 
                 viewPager.setCurrentItem(tab.getPosition());
