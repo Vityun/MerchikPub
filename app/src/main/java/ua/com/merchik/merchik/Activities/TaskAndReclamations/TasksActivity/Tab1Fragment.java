@@ -328,10 +328,14 @@ public class Tab1Fragment extends Fragment {
                 imageView.setImageBitmap(b);
                 setFragmentsOnPhoto();
                 try {
-                    DialogFullPhotoR dialog = new DialogFullPhotoR(mContext);
-                    dialog.setPhoto(StackPhotoRealm.getById(data.photo));
-                    dialog.setClose(dialog::dismiss);
-                    dialog.show();
+                    List<FragmentSDB> fragmentSDB = SQL_DB.fragmentDao().getAllByPhotoId(Integer.parseInt(String.valueOf(data.photo)));
+                    StackPhotoDB stackPhotoDB = StackPhotoRealm.stackPhotoDBGetPhotoBySiteId(String.valueOf(data.photo));
+                    if (stackPhotoDB != null && fragmentSDB != null){
+                        DialogFullPhotoR dialog = new DialogFullPhotoR(mContext);
+                        dialog.setPhoto(stackPhotoDB);
+                        dialog.setClose(dialog::dismiss);
+                        dialog.show();
+                    }
                 }catch (Exception e){
 
                 }
