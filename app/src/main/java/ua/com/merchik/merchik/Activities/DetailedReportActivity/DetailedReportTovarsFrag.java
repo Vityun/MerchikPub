@@ -203,7 +203,7 @@ public class DetailedReportTovarsFrag extends Fragment {
                     if (customerSDB != null && customerSDB.ppaAuto == 0){
                         DialogData dialogData = new DialogData(getContext());
                         dialogData.setTitle("Увага");
-                        dialogData.setText(Html.fromHtml("<font color='RED'>Кліент НЕ хоче додавати товар. Відмовитися від додавання Переліку товарів?</font>"));
+                        dialogData.setText(Html.fromHtml("<font color='RED'>Кліент НЕ хоче додавати товар. Відмовитися від додавання товарів?</font>"));
                         dialogData.setDialogIco();
                         dialogData.setOk("Так", ()->{});
                         dialogData.setCancel("Ні", ()-> {

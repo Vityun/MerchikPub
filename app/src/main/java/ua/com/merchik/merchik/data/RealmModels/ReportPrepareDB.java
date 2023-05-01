@@ -133,6 +133,9 @@ public class ReportPrepareDB extends RealmObject {
     @Expose
     public Integer facesPlan;
 
+    private int uploadStatus;       // Необходимость выгрузки записи
+    private String serverResponce;      // Ответ от сервера (в основном тут будет ответ почему запись не принята сервером)
+
     /*
      * 04.01.2023.
      * Используется в опции контроля 157352
@@ -247,9 +250,45 @@ public class ReportPrepareDB extends RealmObject {
     @Ignore
     public Integer deficit;
 
-    private int uploadStatus;       // Необходимость выгрузки записи
-    private String serverResponce;      // Ответ от сервера (в основном тут будет ответ почему запись не принята сервером)
+    /*
+     * 01.05.23.
+     * Используется в опции контроля 575
+     * Реквизит для подсчета количества СКЮ по УЧЕТУ
+     * */
+    @Ignore
+    public Integer numberSKUForAccounting;
 
+    /*
+     * 01.05.23.
+     * Используется в опции контроля 575
+     * Реквизит для подсчета количества СКЮ по ФАКТУ
+     * */
+    @Ignore
+    public Integer numberSKUForFact;
+
+    /*
+     * 01.05.23.
+     * Используется в опции контроля 575
+     * Разница
+     * */
+    @Ignore
+    public Integer difference;
+
+    /*
+     * 01.05.23.
+     * Используется в опции контроля 575
+     * Наруш. //признак ошибки
+     * */
+    @Ignore
+    public Integer error;
+
+    /*
+     * 01.05.23.
+     * Используется в опции контроля 575
+     * Прим. //описание ошибки
+     * */
+    @Ignore
+    public String errorNote;
 
     public ReportPrepareDB() {
     }
