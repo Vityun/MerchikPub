@@ -45,5 +45,5 @@ public class CustomerSDB {
     @SerializedName("ppa_auto")
     @Expose
     @ColumnInfo(name = "ppa_auto")
-    public Integer ppaAuto;   
+    public Integer ppaAuto;
 }

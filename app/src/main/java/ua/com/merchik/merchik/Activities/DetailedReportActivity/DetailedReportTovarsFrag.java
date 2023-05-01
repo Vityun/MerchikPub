@@ -1,12 +1,14 @@
 package ua.com.merchik.merchik.Activities.DetailedReportActivity;
 
 import static ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsRealm.AdditionalRequirementsModENUM.DEFAULT;
+import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
 import android.annotation.SuppressLint;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.os.Bundle;
 import android.text.Editable;
+import android.text.Html;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -41,6 +43,7 @@ import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.Utils.CustomRecyclerView;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.Data;
+import ua.com.merchik.merchik.data.Database.Room.CustomerSDB;
 import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
 import ua.com.merchik.merchik.data.RealmModels.AdditionalRequirementsDB;
 import ua.com.merchik.merchik.data.RealmModels.TovarDB;
@@ -179,7 +182,7 @@ public class DetailedReportTovarsFrag extends Fragment {
             } catch (Exception e) {
                 Toast.makeText(getContext(), "Произошла ошибка: " + e, Toast.LENGTH_LONG).show();
             }
-            List<TovarDB> tovarDBList = new ArrayList<>();
+            List<TovarDB> tovarDBList;
             switch (item.getItemId()) {
                 case R.id.popup_dr:
                     tovarDBList = getTovListNew(TovarDisplayType.DETAILED_REPORT);
@@ -190,18 +193,31 @@ public class DetailedReportTovarsFrag extends Fragment {
                 case R.id.popup_ppa:
                     tovarDBList = getTovListNew(TovarDisplayType.PPA);
                     Toast.makeText(getContext(), "Додано товари з ППА. (" + tovarDBList.size() + ")", Toast.LENGTH_SHORT).show();
-//                    addRecycleView(tovarDBList);
                     addTovarToRecyclerView(tovarDBList);
                     return true;
 
                 case R.id.popup_all:
                     tovarDBList = getTovListNew(TovarDisplayType.ALL);
-                    Toast.makeText(getContext(), "Додано всі товари.(" + tovarDBList.size() + ")", Toast.LENGTH_SHORT).show();
-                    addRecycleView(tovarDBList);
+
+                    CustomerSDB customerSDB = SQL_DB.customerDao().getById(wpDataDB.getClient_id());
+                    if (customerSDB != null && customerSDB.ppaAuto == 0){
+                        DialogData dialogData = new DialogData(getContext());
+                        dialogData.setTitle("Увага");
+                        dialogData.setText(Html.fromHtml("<font color='RED'>Кліент НЕ хоче додавати товар. Відмовитися від додавання Переліку товарів?</font>"));
+                        dialogData.setDialogIco();
+                        dialogData.setOk("Так", ()->{});
+                        dialogData.setCancel("Ні", ()-> {
+                            openAllTov(tovarDBList);
+                            dialogData.dismiss();
+                        });
+                        dialogData.setClose(dialogData::dismiss);
+                        dialogData.show();
+                    }else {
+                        openAllTov(tovarDBList);
+                    }
                     return true;
 
                 case R.id.popup_tov:
-//                    Toast.makeText(getContext(), "Показываю один Товар. (В РАЗРАБОТКЕ!)", Toast.LENGTH_SHORT).show();
 
                     DialogData dialog = new DialogData(getContext());
                     dialog.setTitle("Оберіть Товар");
@@ -233,6 +249,11 @@ public class DetailedReportTovarsFrag extends Fragment {
         });
 
         popupMenu.show();
+    }
+
+    private void openAllTov(List<TovarDB> tovarDBList){
+        Toast.makeText(getContext(), "Додано всі товари.(" + tovarDBList.size() + ")", Toast.LENGTH_SHORT).show();
+        addRecycleView(tovarDBList);
     }
 
     private enum TovarDisplayType {
