@@ -41,4 +41,9 @@ public class CustomerSDB {
     @Expose
     @ColumnInfo(name = "recl_reply_mode")
     public Integer reclReplyMode;   // РежОтветаНаЗиР
+
+    @SerializedName("ppa_auto")
+    @Expose
+    @ColumnInfo(name = "ppa_auto")
+    public Integer ppaAuto;   
 }

@@ -18,7 +18,7 @@ public class RoomManager {
                 .fallbackToDestructiveMigration()
                 .enableMultiInstanceInvalidation()
                 .allowMainThreadQueries()
-                .addMigrations(MIGRATION_31_32)
+                .addMigrations(MIGRATION_32_33)
 
                 .build();
     }
@@ -178,6 +178,14 @@ public class RoomManager {
 
             // 4. Переименуйте временную таблицу client_temp в client
             database.execSQL("ALTER TABLE client_temp RENAME TO client");
+        }
+    };
+
+
+    static final Migration MIGRATION_32_33 = new Migration(32, 33) {
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase database) {
+            database.execSQL("ALTER TABLE client ADD COLUMN ppa_auto INTEGER");
         }
     };
 
