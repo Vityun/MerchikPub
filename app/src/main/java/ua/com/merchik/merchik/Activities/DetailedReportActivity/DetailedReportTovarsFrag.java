@@ -177,11 +177,16 @@ public class DetailedReportTovarsFrag extends Fragment {
         popupMenu.inflate(R.menu.popup_dr_tovar_list);
 
         popupMenu.setOnMenuItemClickListener(item -> {
-            try {
 
-            } catch (Exception e) {
-                Toast.makeText(getContext(), "Произошла ошибка: " + e, Toast.LENGTH_LONG).show();
-            }
+            CustomerSDB customerSDB = SQL_DB.customerDao().getById(wpDataDB.getClient_id());
+
+            DialogData dialogData = new DialogData(getContext());
+            dialogData.setTitle("Увага");
+            dialogData.setText(Html.fromHtml("<font color='RED'>Для цього кліенту не треба додавати товари. <br><br>Відмовитися від додавання товарів?</font>"));
+            dialogData.setDialogIco();
+            dialogData.setOk("Так", ()->{});
+
+
             List<TovarDB> tovarDBList;
             switch (item.getItemId()) {
                 case R.id.popup_dr:
@@ -192,20 +197,25 @@ public class DetailedReportTovarsFrag extends Fragment {
 
                 case R.id.popup_ppa:
                     tovarDBList = getTovListNew(TovarDisplayType.PPA);
-                    Toast.makeText(getContext(), "Додано товари з ППА. (" + tovarDBList.size() + ")", Toast.LENGTH_SHORT).show();
-                    addTovarToRecyclerView(tovarDBList);
+
+                    if (customerSDB != null && customerSDB.ppaAuto == 0){
+                        dialogData.setCancel("Ні", ()-> {
+                            Toast.makeText(getContext(), "Додано товари з ППА. (" + tovarDBList.size() + ")", Toast.LENGTH_SHORT).show();
+                            addTovarToRecyclerView(tovarDBList);
+                            dialogData.dismiss();
+                        });
+                        dialogData.setClose(dialogData::dismiss);
+                        dialogData.show();
+                    }else {
+                        Toast.makeText(getContext(), "Додано товари з ППА. (" + tovarDBList.size() + ")", Toast.LENGTH_SHORT).show();
+                        addTovarToRecyclerView(tovarDBList);
+                    }
                     return true;
 
                 case R.id.popup_all:
                     tovarDBList = getTovListNew(TovarDisplayType.ALL);
 
-                    CustomerSDB customerSDB = SQL_DB.customerDao().getById(wpDataDB.getClient_id());
                     if (customerSDB != null && customerSDB.ppaAuto == 0){
-                        DialogData dialogData = new DialogData(getContext());
-                        dialogData.setTitle("Увага");
-                        dialogData.setText(Html.fromHtml("<font color='RED'>Кліент НЕ хоче додавати товар. Відмовитися від додавання товарів?</font>"));
-                        dialogData.setDialogIco();
-                        dialogData.setOk("Так", ()->{});
                         dialogData.setCancel("Ні", ()-> {
                             openAllTov(tovarDBList);
                             dialogData.dismiss();
@@ -218,30 +228,16 @@ public class DetailedReportTovarsFrag extends Fragment {
                     return true;
 
                 case R.id.popup_tov:
-
-                    DialogData dialog = new DialogData(getContext());
-                    dialog.setTitle("Оберіть Товар");
-                    dialog.setText("");
-
-                    RecycleViewDRAdapterTovar adapter = new RecycleViewDRAdapterTovar(getContext(), getTovListNew(TovarDisplayType.ONE), wpDataDB, RecycleViewDRAdapterTovar.OpenType.DIALOG);
-                    adapter.elementClick(new Clicks.click() {
-                        @Override
-                        public <T> void click(T data) {
-                            TovarDB tov = (TovarDB) data;
-                            Toast.makeText(getContext(), "Додано товар: " + tov.getNm(), Toast.LENGTH_SHORT).show();
-//                            addRecycleView(Collections.singletonList(tov));
-                            addTovarToRecyclerView(Collections.singletonList(tov));
-                            dialog.dismiss();
-                        }
-                    });
-                    adapter.getFilter().filter(dialog.getEditTextSearchText());
-
-                    dialog.setEditTextSearch(adapter);
-                    dialog.setRecycler(adapter, new LinearLayoutManager(getContext(), LinearLayoutManager.VERTICAL, false));
-                    dialog.setClose(dialog::dismiss);
-
-                    dialog.show();
-
+                    if (customerSDB != null && customerSDB.ppaAuto == 0){
+                        dialogData.setCancel("Ні", ()-> {
+                            openOneTov();
+                            dialogData.dismiss();
+                        });
+                        dialogData.setClose(dialogData::dismiss);
+                        dialogData.show();
+                    }else {
+                        openOneTov();
+                    }
                     return true;
                 default:
                     return false;
@@ -254,6 +250,30 @@ public class DetailedReportTovarsFrag extends Fragment {
     private void openAllTov(List<TovarDB> tovarDBList){
         Toast.makeText(getContext(), "Додано всі товари.(" + tovarDBList.size() + ")", Toast.LENGTH_SHORT).show();
         addRecycleView(tovarDBList);
+    }
+
+    private void openOneTov(){
+        DialogData dialog = new DialogData(getContext());
+        dialog.setTitle("Оберіть Товар");
+        dialog.setText("");
+
+        RecycleViewDRAdapterTovar adapter = new RecycleViewDRAdapterTovar(getContext(), getTovListNew(TovarDisplayType.ONE), wpDataDB, RecycleViewDRAdapterTovar.OpenType.DIALOG);
+        adapter.elementClick(new Clicks.click() {
+            @Override
+            public <T> void click(T data) {
+                TovarDB tov = (TovarDB) data;
+                Toast.makeText(getContext(), "Додано товар: " + tov.getNm(), Toast.LENGTH_SHORT).show();
+                addTovarToRecyclerView(Collections.singletonList(tov));
+                dialog.dismiss();
+            }
+        });
+        adapter.getFilter().filter(dialog.getEditTextSearchText());
+
+        dialog.setEditTextSearch(adapter);
+        dialog.setRecycler(adapter, new LinearLayoutManager(getContext(), LinearLayoutManager.VERTICAL, false));
+        dialog.setClose(dialog::dismiss);
+
+        dialog.show();
     }
 
     private enum TovarDisplayType {
