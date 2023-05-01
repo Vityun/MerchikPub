@@ -724,7 +724,7 @@ public class TablesLoadingUnloading {
                             Log.e("SERVER_REALM_DB_UPDATE", "===================================.ReportPrepare.SIZE: " + response.body().getList().size());
                             Globals.writeToMLOG("INFO", "downloadReportPrepare/onResponse", "response.body().getList().size(): " + response.body().getList().size());
 
-                            // TODO only for debug
+/*                            // TODO only for debug
                             try {
                                 String dates = "";
                                 for (ReportPrepareDB rp : response.body().getList()) {
@@ -733,7 +733,7 @@ public class TablesLoadingUnloading {
                                 Globals.writeToMLOG("INFO", "downloadReportPrepare/onResponse", "response.body().getList().dates: " + dates);
                             } catch (Exception e) {
                                 Globals.writeToMLOG("ERROR", "downloadReportPrepare/onResponse", "response.body().getList().dates.Exception e: " + e);
-                            }
+                            }*/
 
                         } else {
                             Log.e("SERVER_REALM_DB_UPDATE", "===================================.ReportPrepare.SIZE: NuLL");
