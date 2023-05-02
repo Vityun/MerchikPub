@@ -58,9 +58,13 @@ public class AddressSDB {
     @ColumnInfo(name = "location_yd")
     public Float locationYd;
 
-
     @SerializedName("kol_kass")
     @Expose
     @ColumnInfo(name = "kol_kass")
     public Integer kolKass;
+
+    @SerializedName("nomer_tt")
+    @Expose
+    @ColumnInfo(name = "nomer_tt")
+    public Integer nomerTT;
 }
