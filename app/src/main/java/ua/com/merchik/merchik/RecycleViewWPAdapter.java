@@ -65,6 +65,8 @@ public class RecycleViewWPAdapter extends RecyclerView.Adapter<RecycleViewWPAdap
         ImageView wp_image;
         ImageView check;
 
+        TextView numberTTTitle, numberTT;
+
         private TextView groupTitle, groupText; // мережа
 
         ViewHolder(View view) {
@@ -81,6 +83,9 @@ public class RecycleViewWPAdapter extends RecyclerView.Adapter<RecycleViewWPAdap
             theme = view.findViewById(R.id.theme);
             options = (LinearLayout) view.findViewById(R.id.option_signal_layout1);//setContentView
             wp_image = (ImageView) view.findViewById(R.id.wp_image1);
+
+            numberTTTitle = view.findViewById(R.id.numberTTTitle);
+            numberTT = view.findViewById(R.id.numberTT);
 
             groupTitle = view.findViewById(R.id.groupTitle);
             groupText = view.findViewById(R.id.groupData);
@@ -122,10 +127,18 @@ public class RecycleViewWPAdapter extends RecyclerView.Adapter<RecycleViewWPAdap
             string.setSpan(new UnderlineSpan(), 0, string.length(), 0);
 
             AddressSDB addressSDB = SQL_DB.addressDao().getById(wpDataDB.getAddr_id());
+            String numberTTS = addressSDB != null && addressSDB.nomerTT != null && addressSDB.nomerTT != 0 ? "" + addressSDB.nomerTT + "" : "";
 
-            String numberTT = addressSDB != null && addressSDB.nomerTT != null && addressSDB.nomerTT != 0 ? "номер ТТ (" + addressSDB.nomerTT + ")\n" : "";
+            if (!numberTTS.equals("")){
+                numberTTTitle.setVisibility(View.VISIBLE);
+                numberTT.setVisibility(View.VISIBLE);
+                numberTT.setText(numberTTS);
+            }else {
+                numberTTTitle.setVisibility(View.GONE);
+                numberTT.setVisibility(View.GONE);
+            }
 
-            addr.setText(numberTT + wpDataDB.getAddr_txt());
+            addr.setText(wpDataDB.getAddr_txt());
             cust.setText(wpDataDB.getClient_txt());
             merc.setText(wpDataDB.getUser_txt());
 //            date.setText(Clock.getHumanTimeYYYYMMDD(wpDataDB.getDt().getTime()/1000) + " " + Clock.getHumanTimeOpt(wpDataDB.getDt_start() * 1000));

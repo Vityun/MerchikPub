@@ -63,6 +63,31 @@
             app:layout_constraintTop_toBottomOf="@+id/theme" />
 
         <TextView
+            android:id="@+id/numberTTTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_toRightOf="@+id/wp_image1"
+            android:text="  Номер ТТ: "
+            android:textStyle="bold"
+            android:visibility="gone"
+            app:layout_constraintStart_toEndOf="@+id/wp_image1"
+            app:layout_constraintTop_toBottomOf="@+id/groupTitle" />
+
+        <TextView
+            android:id="@+id/numberTT"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="4dp"
+            android:layout_marginRight="4dp"
+            android:layout_toRightOf="@+id/addrlabel1"
+            android:maxLines="1"
+            android:singleLine="true"
+            android:visibility="gone"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/numberTTTitle"
+            app:layout_constraintTop_toBottomOf="@+id/groupData" />
+
+        <TextView
             android:id="@+id/addrlabel1"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -70,7 +95,7 @@
             android:text="  Адрес: "
             android:textStyle="bold"
             app:layout_constraintStart_toEndOf="@+id/wp_image1"
-            app:layout_constraintTop_toBottomOf="@+id/groupTitle" />
+            app:layout_constraintTop_toBottomOf="@+id/numberTTTitle" />
 
         <TextView
             android:id="@+id/addr1"
@@ -86,7 +111,7 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="1.0"
             app:layout_constraintStart_toEndOf="@+id/addrlabel1"
-            app:layout_constraintTop_toBottomOf="@+id/groupData" />
+            app:layout_constraintTop_toBottomOf="@+id/numberTT" />
 
         <TextView
             android:id="@+id/themelabel"
