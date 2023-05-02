@@ -152,7 +152,7 @@ public class OptionControlInventory<T> extends OptionControl {
                 signal = false;
             } else if (errorSUM > 0) {
                 stringBuilderMsg.append("по ").append(errorSUM).append(" товарам є зауваження по проведенню інвентарізації.");
-                signal = false;
+                signal = true;
             } else {
                 stringBuilderMsg.append("По ОБЛІКУ рахується ").append(numberSKUForAccountingSUM)
                         .append(" товарів (СКЮ), загальною кількістю ").append(numberoborotvedNumSUM)
@@ -161,7 +161,7 @@ public class OptionControlInventory<T> extends OptionControl {
                         .append(" шт. Відсоток відхилення СКЮ=").append(percentageDeviationNumberSKYU)
                         .append("%. Відсоток відхилення товарного запасу = ").append(percentageDeviationTotalInventory)
                         .append("%");
-                signal = false;
+                signal = true;
             }
 
 
