@@ -121,7 +121,11 @@ public class RecycleViewWPAdapter extends RecyclerView.Adapter<RecycleViewWPAdap
             SpannableString string = new SpannableString(t_price);
             string.setSpan(new UnderlineSpan(), 0, string.length(), 0);
 
-            addr.setText(wpDataDB.getAddr_txt());
+            AddressSDB addressSDB = SQL_DB.addressDao().getById(wpDataDB.getAddr_id());
+
+            String numberTT = addressSDB != null && addressSDB.nomerTT != null && addressSDB.nomerTT != 0 ? "номер ТТ (" + addressSDB.nomerTT + ")\n" : "";
+
+            addr.setText(numberTT + wpDataDB.getAddr_txt());
             cust.setText(wpDataDB.getClient_txt());
             merc.setText(wpDataDB.getUser_txt());
 //            date.setText(Clock.getHumanTimeYYYYMMDD(wpDataDB.getDt().getTime()/1000) + " " + Clock.getHumanTimeOpt(wpDataDB.getDt_start() * 1000));
