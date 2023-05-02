@@ -1,5 +1,7 @@
 package ua.com.merchik.merchik.Options.Controls;
 
+import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
+
 import android.content.Context;
 import android.os.Build;
 import android.util.Log;
@@ -25,8 +27,6 @@ import ua.com.merchik.merchik.data.OptionMassageType;
 import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.database.realm.RealmManager;
-
-import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
 public class OptionControlEKL<T> extends OptionControl {
     public int OPTION_CONTROL_EKL_ID = 84006;
@@ -147,8 +147,8 @@ public class OptionControlEKL<T> extends OptionControl {
         long dateTo = Clock.getDatePeriodLong(documentDt * 1000, 4);
 
 
-        if (addressSDB.tpId == 434 && !optionDB.getOptionControlId().equals("132629") && documentDt < 1682899200) { // 1682899200 == 01.05.2023 / 434 = АТБ
-            optionMsg.append("Не проверяем для АТБ до 01.05.2023");
+        if (addressSDB.tpId == 434 && !optionDB.getOptionControlId().equals("132629") && documentDt < 1693526400) { // 1693526400 == 01.09.2023 / 434 = АТБ
+            optionMsg.append("Не проверяем для АТБ до 01.09.2023");
             signal = false;
         } else {
             // Определем Группу Товаров
