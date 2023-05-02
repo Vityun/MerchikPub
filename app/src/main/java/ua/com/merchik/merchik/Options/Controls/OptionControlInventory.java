@@ -39,10 +39,15 @@ public class OptionControlInventory<T> extends OptionControl {
     private int colMax;
     private int numberSKUForAccountingSUM;     // реквизит для подсчета количества СКЮ по УЧЕТУ
     private int numberSKUForFactSUM;           // реквизит для подсчета количества СКЮ по ФАКТУ
+    private int numberoborotvedNumSUM;
+    private int colSUM;
+    private int errorSUM;
 //    private int difference;                 // Разница
 
     private int percentageDeviationNumberSKYU;      // Відсоток відхилення кількості СКЮ
     private int percentageDeviationTotalInventory;  // Відсоток відхилення загального товарного запасу
+
+    private StringBuilder resMassage = new StringBuilder();
 
     private WpDataDB wpDataDB;
     private AddressSDB addressSDBDocument;
@@ -125,17 +130,40 @@ public class OptionControlInventory<T> extends OptionControl {
             //4.0. подсчитаем процент отклонения СКЮ (учетного от фактического)
             numberSKUForAccountingSUM = reportPrepare.stream().map(table -> table.numberSKUForAccounting).reduce(0, Integer::sum);
             numberSKUForFactSUM = reportPrepare.stream().map(table -> table.numberSKUForFact).reduce(0, Integer::sum);
+            numberoborotvedNumSUM = reportPrepare.stream().map(table -> Integer.parseInt(table.oborotvedNum)).reduce(0, Integer::sum);
+            colSUM = reportPrepare.stream().map(table -> table.amount).reduce(0, Integer::sum);
+
             try {
                 percentageDeviationNumberSKYU = 100 * numberSKUForAccountingSUM / numberSKUForFactSUM;
-            }catch (Exception e){
+            } catch (Exception e) {
                 percentageDeviationNumberSKYU = 100;
             }
 
             try {
-//                percentageDeviationTotalInventory =
-            }catch (Exception e){
+                percentageDeviationTotalInventory = 100 * numberoborotvedNumSUM / colSUM;
+            } catch (Exception e) {
                 percentageDeviationTotalInventory = 100;
             }
+
+            //5.0. готовим сообщение и сигнал
+            errorSUM = reportPrepare.stream().map(table -> table.error).reduce(0, Integer::sum);
+            if (reportPrepare.size() == 0) {
+                stringBuilderMsg.append("Нема даних для аналізу.");
+                signal = false;
+            } else if (errorSUM > 0) {
+                stringBuilderMsg.append("по ").append(errorSUM).append(" товарам є зауваження по проведенню інвентарізації.");
+                signal = false;
+            } else {
+                stringBuilderMsg.append("По ОБЛІКУ рахується ").append(numberSKUForAccountingSUM)
+                        .append(" товарів (СКЮ), загальною кількістю ").append(numberoborotvedNumSUM)
+                        .append(" шт, ФАКТИЧНО знайдено (склад + вітрина) ").append(numberSKUForFactSUM)
+                        .append(" товарів загальною кількістю ").append(reportPrepare.size())
+                        .append(" шт. Відсоток відхилення СКЮ=").append(percentageDeviationNumberSKYU)
+                        .append("%. Відсоток відхилення товарного запасу = ").append(percentageDeviationTotalInventory)
+                        .append("%");
+                signal = false;
+            }
+
 
             // ---
             RealmManager.INSTANCE.executeTransaction(realm -> {
