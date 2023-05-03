@@ -27,6 +27,7 @@ import java.util.List;
 import io.reactivex.rxjava3.observers.DisposableCompletableObserver;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 import ua.com.merchik.merchik.Activities.PhotoLogActivity.PhotoLogActivity;
+import ua.com.merchik.merchik.Activities.TaskAndReclamations.TARActivity;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.MakePhoto.MakePhoto;
 import ua.com.merchik.merchik.R;
@@ -42,6 +43,7 @@ import ua.com.merchik.merchik.database.realm.tables.TARCommentsRealm;
 import ua.com.merchik.merchik.database.realm.tables.ThemeRealm;
 import ua.com.merchik.merchik.dialogs.DialodTAR.DialogCreateTAR;
 import ua.com.merchik.merchik.dialogs.DialogData;
+import ua.com.merchik.merchik.toolbar_menus;
 
 public class Tab3Fragment extends Fragment {
 
@@ -102,6 +104,16 @@ public class Tab3Fragment extends Fragment {
         add = v.findViewById(R.id.constraintLayoutAdd);
 
         setFragmentData();  // Установка наполнения фрагмента
+
+
+        if (TARActivity.TARType == 1) {
+            toolbar_menus.textLesson = 1183;
+            toolbar_menus.videoLesson = 3623;
+        } else {
+            toolbar_menus.textLesson = 1185;
+            toolbar_menus.videoLesson = 3623;
+        }
+        toolbar_menus.setFab(v.getContext(), TARActivity.fab); // ГЛАВНАЯ
 
         return v;
     }

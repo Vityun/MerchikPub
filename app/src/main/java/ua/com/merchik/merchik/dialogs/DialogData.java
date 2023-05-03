@@ -40,6 +40,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import java.io.File;
 import java.lang.reflect.Field;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -53,6 +54,7 @@ import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteHintsDB;
 import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteObjects.SiteObjectsDB;
 import ua.com.merchik.merchik.data.PhotoDescriptionText;
+import ua.com.merchik.merchik.data.RealmModels.LogDB;
 import ua.com.merchik.merchik.data.RealmModels.ReportPrepareDB;
 import ua.com.merchik.merchik.data.TovarOptions;
 import ua.com.merchik.merchik.database.realm.RealmManager;
@@ -309,6 +311,22 @@ public class DialogData {
             imgBtnVideoLesson.setOnClickListener(v -> {
 
                 Log.e("setVideoLesson", "click");
+
+                long obj = finalData.getID();
+
+                RealmManager.setRowToLog(Collections.singletonList(
+                        new LogDB(
+                                RealmManager.getLastIdLogDB() + 1,
+                                System.currentTimeMillis() / 1000,
+                                "Факт перегляду відео-урока. " + finalData.getTitle(),
+                                1261,
+                                null,
+                                null,
+                                obj,
+                                null,
+                                System.currentTimeMillis() / 1000,
+                                Globals.session,
+                                null)));
 
                 if (finalData != null) {
                     Log.e("setVideoLesson", "click1");
