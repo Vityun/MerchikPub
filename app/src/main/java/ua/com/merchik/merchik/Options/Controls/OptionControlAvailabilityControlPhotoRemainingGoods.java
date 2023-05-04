@@ -20,10 +20,13 @@ import ua.com.merchik.merchik.data.RealmModels.AdditionalRequirementsDB;
 import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
 import ua.com.merchik.merchik.data.RealmModels.ReportPrepareDB;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
+import ua.com.merchik.merchik.data.RealmModels.TovarDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
+import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsRealm;
 import ua.com.merchik.merchik.database.realm.tables.ReportPrepareRealm;
 import ua.com.merchik.merchik.database.realm.tables.StackPhotoRealm;
+import ua.com.merchik.merchik.database.realm.tables.TovarRealm;
 
 
 /**
@@ -33,7 +36,7 @@ import ua.com.merchik.merchik.database.realm.tables.StackPhotoRealm;
  * // Вызывается из функции КонтрольОпций.
  * // ДокИст - документ - источник типа Задача, ОтчетИсполнителя, ОтчетОСтажировке и пр. к которому подчинена данная опция
  * // ДокОпц - документ - набор опций (на момент передачи в єту функцию позиционирован на конкретную строку с ДАННОЙ опцией)
- * */
+ */
 public class OptionControlAvailabilityControlPhotoRemainingGoods<T> extends OptionControl {
 
     public int OPTION_CONTROL_AVAILABILITY_CONTROL_PHOTO_REMAINING_GOODS_ID = 159707;
@@ -73,7 +76,7 @@ public class OptionControlAvailabilityControlPhotoRemainingGoods<T> extends Opti
                 customerSDBDocument = SQL_DB.customerDao().getById(wpDataDB.getClient_id());
                 addressSDBDocument = SQL_DB.addressDao().getById(wpDataDB.getAddr_id());
             }
-        }catch (Exception e){
+        } catch (Exception e) {
             Globals.writeToMLOG("ERROR", "OptionControlAvailabilityControlPhotoRemainingGoods/getDocumentVar", "Exception e: " + e);
         }
     }
@@ -89,7 +92,7 @@ public class OptionControlAvailabilityControlPhotoRemainingGoods<T> extends Opti
             List<AdditionalRequirementsDB> additionalRequirements = AdditionalRequirementsRealm.getDocumentAdditionalRequirements(document, true, OPTION_CONTROL_AVAILABILITY_CONTROL_PHOTO_REMAINING_GOODS_ID, null, null, null);
 
             //3.1. получаем список товаров для которых установлен признак ОСВ
-            if (additionalRequirements != null && additionalRequirements.size() > 0){
+            if (additionalRequirements != null && additionalRequirements.size() > 0) {
                 tovIds = new String[additionalRequirements.size()];
                 for (int i = 0; i < additionalRequirements.size(); i++) {
                     tovIds[i] = additionalRequirements.get(i).getTovarId();
@@ -106,12 +109,58 @@ public class OptionControlAvailabilityControlPhotoRemainingGoods<T> extends Opti
             }
 
             //4.0. получим данные о размещенных ФОТ по конкретному ДАД2
-            List<StackPhotoDB> stackPhoto = StackPhotoRealm.getPhoto(null, null, userId, null, null, dad2, 4, tovIds); // Тип фото, Исполнитель, Дад2, Список Товаров . 4-Фото Остатков Товаров,
+            List<StackPhotoDB> stackPhotoList = StackPhotoRealm.getPhoto(null, null, userId, null, null, dad2, 4, tovIds); // Тип фото, Исполнитель, Дад2, Список Товаров . 4-Фото Остатков Товаров,
+
+            //5.2. заполним ее данными ОСВ
+            for (ReportPrepareDB item : reportPrepare) {
+                int face = Integer.parseInt(item.face);
+                if (face == 0 && stackPhotoList.stream().anyMatch(stackPhoto -> stackPhoto.tovar_id.equals(item.getTovarId()))) {
+                    TovarDB tovar = TovarRealm.getById(item.getTovarId());
+                    item.error = 1;
+                    item.errorNote = "Ви повинні завантажити в нашу систему світлину з залишком товару: (" + tovar.getiD() + ") " + tovar.getNm() + " отриману з додатку мережі.";
+                }
+            }
+
+            // Итоговое количество нарушений
+            int errorSum = reportPrepare.stream()
+                    .mapToInt(rp -> rp.error)
+                    .sum();
+
+            //6.0. готовим сообщение и сигнал
+            if (reportPrepare.size() == 0) {
+                stringBuilderMsg.append("Товарів, не знайдено.");
+                signal = true;
+            } else if (errorSum > 0) {
+                stringBuilderMsg.append("Не надані світлини з ЗАЛИШКАМИ ").append(errorSum).append(" відсутніх товарів. Див. таблицю. Таким чином Ви повинні підтвердити, що даних товарів нема на залишках.");
+                signal = true;
+            } else {
+                stringBuilderMsg.append("Зауваженнь по наданню світлин залишків по відсутнім товарам нема.");
+                signal = false;
+            }
+
+            // Сохранение
+            RealmManager.INSTANCE.executeTransaction(realm -> {
+                if (optionDB != null) {
+                    if (signal) {
+                        optionDB.setIsSignal("1");
+                    } else {
+                        optionDB.setIsSignal("2");
+                    }
+                    realm.insertOrUpdate(optionDB);
+                }
+            });
+
+            if (signal) {
+                if (optionDB.getBlockPns().equals("1")) {
+                    setIsBlockOption(signal);
+                    stringBuilderMsg.append("\n\n").append("Документ проведен не будет!");
+                } else {
+                    stringBuilderMsg.append("\n\n").append("Вы можете получить Премиальные БОЛЬШЕ, если будете делать Достижения.");
+                }
+            }
 
 
-
-
-        }catch (Exception e){
+        } catch (Exception e) {
             Globals.writeToMLOG("ERROR", "OptionControlAvailabilityControlPhotoRemainingGoods/executeOption", "Exception e: " + e);
         }
     }
