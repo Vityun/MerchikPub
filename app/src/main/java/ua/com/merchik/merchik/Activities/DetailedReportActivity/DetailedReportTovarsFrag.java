@@ -198,7 +198,7 @@ public class DetailedReportTovarsFrag extends Fragment {
                 case R.id.popup_ppa:
                     tovarDBList = getTovListNew(TovarDisplayType.PPA);
 
-                    if (customerSDB != null && customerSDB.ppaAuto == 1){
+                    if (customerSDB != null && customerSDB.ppaAuto == 1 && !customerSDB.id.equals("9382") && !customerSDB.id.equals("32246")){ // 9382 - Витмарк, 32246 - Ласунка
                         dialogData.setCancel("Ні", ()-> {
                             Toast.makeText(getContext(), "Додано товари з ППА. (" + tovarDBList.size() + ")", Toast.LENGTH_SHORT).show();
                             addTovarToRecyclerView(tovarDBList);
@@ -215,7 +215,7 @@ public class DetailedReportTovarsFrag extends Fragment {
                 case R.id.popup_all:
                     tovarDBList = getTovListNew(TovarDisplayType.ALL);
 
-                    if (customerSDB != null && customerSDB.ppaAuto == 1){
+                    if (customerSDB != null && customerSDB.ppaAuto == 1 && !customerSDB.id.equals("9382") && !customerSDB.id.equals("32246")){
                         dialogData.setCancel("Ні", ()-> {
                             openAllTov(tovarDBList);
                             dialogData.dismiss();
@@ -228,7 +228,7 @@ public class DetailedReportTovarsFrag extends Fragment {
                     return true;
 
                 case R.id.popup_tov:
-                    if (customerSDB != null && customerSDB.ppaAuto == 1){
+                    if (customerSDB != null && customerSDB.ppaAuto == 1 && !customerSDB.id.equals("9382") && !customerSDB.id.equals("32246")){
                         dialogData.setCancel("Ні", ()-> {
                             openOneTov();
                             dialogData.dismiss();
