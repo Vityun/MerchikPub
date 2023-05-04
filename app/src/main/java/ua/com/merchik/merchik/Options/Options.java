@@ -77,6 +77,7 @@ import ua.com.merchik.merchik.Options.Controls.OptionControlAchievements;
 import ua.com.merchik.merchik.Options.Controls.OptionControlAddComment;
 import ua.com.merchik.merchik.Options.Controls.OptionControlAdditionalMaterialsMark;
 import ua.com.merchik.merchik.Options.Controls.OptionControlAdditionalRequirementsMark;
+import ua.com.merchik.merchik.Options.Controls.OptionControlAvailabilityControlPhotoRemainingGoods;
 import ua.com.merchik.merchik.Options.Controls.OptionControlAvailabilityDetailedReport;
 import ua.com.merchik.merchik.Options.Controls.OptionControlCheckDetailedReport;
 import ua.com.merchik.merchik.Options.Controls.OptionControlCheckTovarUp;
@@ -148,7 +149,7 @@ public class Options {
     public static int[] describedOptions = new int[]{132624, 76815, 157241, 157243, 84006, 156928,
             151594, 80977, 135330, 133381, 135329, 138518, 151139, 132623, 133382, 137797, 135809,
             135328, 135327, 157275, 138341, 590, 84932, 134583, 157352, 1470, 138644, 1455, 135061,
-            158361};
+            158361, 159707};
 
     /*Сюда записываются Опции которые не прошли проверку, при особенном переданном MOD-e. Сделано
     для того что б потом можно было посмотреть название опций которые не прошли проверку и, возможно,
@@ -184,6 +185,10 @@ public class Options {
             }
 
             switch (optionControlId) {
+                case 159707:
+                    OptionControlAvailabilityControlPhotoRemainingGoods<?> optionControlAvailabilityControlPhotoRemainingGoods = new OptionControlAvailabilityControlPhotoRemainingGoods<>(context, dataDB, optionsDB, newOptionType, mode);
+                    optionControlAvailabilityControlPhotoRemainingGoods.showOptionMassage();
+                    break;
 
                 case 1455:
                     OptionControlCheckingPercentageOfShelfSpaceDPPO<?> optionControlCheckingPercentageOfShelfSpaceDPPO = new OptionControlCheckingPercentageOfShelfSpaceDPPO<>(context, dataDB, optionsDB, newOptionType, mode);
@@ -514,12 +519,13 @@ public class Options {
 
                 case MAKE:
                 case CHECK:
-                    DialogData dialogData2 = new DialogData(context);
-                    dialogData2.setTitle("Блокировка");
-                    dialogData2.setText("Данная Опция заблокированна ОПЦИЕЙ: " + option.getOptionBlock1() + "/" + option.getOptionBlock2());
-                    dialogData2.setClose(dialogData2::dismiss);
-
-                    result.dialog = dialogData2;
+                    // TODO надо прочекать этот момент
+//                    DialogData dialogData2 = new DialogData(context);
+//                    dialogData2.setTitle("Блокировка");
+//                    dialogData2.setText("Данная Опция заблокированна ОПЦИЕЙ: " + option.getOptionBlock1() + "/" + option.getOptionBlock2());
+//                    dialogData2.setClose(dialogData2::dismiss);
+//
+//                    result.dialog = dialogData2;
 
                     return result;
 
@@ -743,6 +749,11 @@ public class Options {
 //        try {
         Log.e("NNK", "F/optControl/optionId: " + optionId);
         switch (optionId) {
+
+            case 159707:
+                OptionControlAvailabilityControlPhotoRemainingGoods<?> optionControlAvailabilityControlPhotoRemainingGoods = new OptionControlAvailabilityControlPhotoRemainingGoods<>(context, dataDB, option, type, mode);
+                optionControlAvailabilityControlPhotoRemainingGoods.showOptionMassage();
+                break;
 
             case 135412:
 //                new OptionButtonPercentageOfThePrize<>(context, dataDB, option, type, mode);
