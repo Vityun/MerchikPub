@@ -1,5 +1,6 @@
 package ua.com.merchik.merchik;
 
+import static ua.com.merchik.merchik.Globals.userId;
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
 import android.annotation.SuppressLint;
@@ -90,6 +91,7 @@ import ua.com.merchik.merchik.ServerExchange.TablesLoadingUnloading;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.Database.Room.Chat.ChatSDB;
 import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteObjects.SiteObjectsDB;
+import ua.com.merchik.merchik.data.RealmModels.AppUsersDB;
 import ua.com.merchik.merchik.data.RealmModels.MenuItemFromWebDB;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
 import ua.com.merchik.merchik.data.RetrofitResponse.Logout;
@@ -100,6 +102,7 @@ import ua.com.merchik.merchik.data.UploadPhotoData.Move;
 import ua.com.merchik.merchik.data.WPDataObj;
 import ua.com.merchik.merchik.data.WebSocketData.WebSocketData;
 import ua.com.merchik.merchik.database.realm.RealmManager;
+import ua.com.merchik.merchik.database.realm.tables.AppUserRealm;
 import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.dialogs.DialogMap;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
@@ -327,6 +330,21 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
             case 169:
                 Intent menuItem169browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://merchik.com.ua/sa.php?&u=222388&s=4600a1857c7008ab0ebfa8d1a168f26ebe7315b8&l=/mobile.php?mod=lessons**act=list**platform_id=5"));
                 this.startActivity(menuItem169browserIntent);
+                break;
+
+            case 173:
+                String link = String.format("/mobile.php?mod=ticket**act=create**theme_id=611**client_id**addr_id");
+                link = link.replace("&", "**");
+
+                AppUsersDB appUser = AppUserRealm.getAppUserById(userId);
+
+                String hash = String.format("%s%s%s", appUser.getUserId(), appUser.getPassword(), "AvgrgsYihSHp6Ok9yQXfSHp6Ok9nXdXr3OSHp6Ok9UPBTzTjrF20Nsz3");
+                hash = Globals.getSha1Hex(hash);
+
+                String format = String.format("https://merchik.com.ua/sa.php?&u=%s&s=%s&l=%s", userId, hash, link);
+
+                Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(format));
+                this.startActivity(browserIntent);
                 break;
 
         }
