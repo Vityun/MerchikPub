@@ -98,8 +98,8 @@ public class OptionControlCheckTovarUp<T> extends OptionControl {
                 null,
                 null,
                 dad2,
-                PHOTO_CART_WITH_GOODS
-        );
+                PHOTO_CART_WITH_GOODS,
+                null);
 
         try {
             Globals.writeToMLOG("INFO", "OptionControlCheckTovarUp/executeOption/sumUp!!!", "stackPhoto!!!!: " + stackPhoto.size());
@@ -121,8 +121,8 @@ public class OptionControlCheckTovarUp<T> extends OptionControl {
                         null,
                         null,
                         dad2,
-                        PHOTO_SHOWCASE_BEFORE_START_WORK
-                );
+                        PHOTO_SHOWCASE_BEFORE_START_WORK,
+                        null);
 
                 if (stackPhoto != null){
                     Globals.writeToMLOG("INFO", "OptionControlCheckTovarUp/executeOption/sumUp", "stackPhoto (null): " + stackPhoto.size());
