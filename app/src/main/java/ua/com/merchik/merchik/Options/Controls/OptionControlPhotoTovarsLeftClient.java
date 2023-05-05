@@ -112,9 +112,9 @@ public class OptionControlPhotoTovarsLeftClient<T> extends OptionControl {
                 stringBuilderMsg.append("По клиенту ").append(clientNm).append(". ").append("Не проверяю наличие ФОТ (Фото Остатков Товаров) для сетей: Сільпо, АТБ");  // todo Нужно будет Сети нормально вписать, а не руками.
                 signal = false;
             }
-        } else if (1681776000 < System.currentTimeMillis()/1000) {
+        } else if (1681776000 < System.currentTimeMillis()/1000 && Arrays.stream(groupsNew).anyMatch(x -> Objects.equals(x, tpId))) {
             if (Arrays.stream(groupsNew).anyMatch(x -> Objects.equals(x, tpId))) {
-                stringBuilderMsg.append("По клиенту ").append(clientNm).append(". ").append("Не проверяю наличие ФОТ (Фото Остатков Товаров) для сетей: Сільпо, АТБ");  // todo Нужно будет Сети нормально вписать, а не руками.
+                stringBuilderMsg.append("По клиенту ").append(clientNm).append(". ").append("Не проверяю наличие ФОТ (Фото Остатков Товаров) для сетей: АТБ");  // todo Нужно будет Сети нормально вписать, а не руками.
                 signal = false;
             }
         } else {
