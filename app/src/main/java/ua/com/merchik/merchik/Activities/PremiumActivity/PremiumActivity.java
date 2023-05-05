@@ -90,7 +90,7 @@ public class PremiumActivity extends toolbar_menus {
                             null,
                             null,
                             null,
-                            System.currentTimeMillis() / 1000,
+                            null,
                             Globals.session,
                             null)));
             setActivityContent();

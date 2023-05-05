@@ -324,7 +324,7 @@ public class DialogData {
                                 null,
                                 obj,
                                 null,
-                                System.currentTimeMillis() / 1000,
+                                null,
                                 Globals.session,
                                 null)));
 

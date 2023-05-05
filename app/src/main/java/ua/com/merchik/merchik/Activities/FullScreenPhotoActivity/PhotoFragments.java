@@ -155,7 +155,7 @@ public class PhotoFragments {
                             stackPhotoDB.addr_id,
                             Long.getLong(stackPhotoDB.photoServerId),
                             null,
-                            System.currentTimeMillis() / 1000,
+                            null,
                             Globals.session,
                             String.valueOf(stackPhotoDB.dt))));
         } else {

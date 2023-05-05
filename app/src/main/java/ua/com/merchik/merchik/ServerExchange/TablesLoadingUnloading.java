@@ -1783,7 +1783,7 @@ public class TablesLoadingUnloading {
 
         Log.e("LOG_SEND", "call: " + data.size());
 
-        if (data.size() > 1) {
+        if (data.size() > 0) {
             retrofit2.Call<JsonObject> call = RetrofitBuilder.getRetrofitInterface().LOG(mod, act, data);
             Log.e("LOG_SEND", "call: " + call);
             call.enqueue(new retrofit2.Callback<JsonObject>() {
