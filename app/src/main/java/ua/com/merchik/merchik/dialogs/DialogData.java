@@ -100,6 +100,7 @@ public class DialogData {
     public ImageButton imgBtnCall;
 
     private Button ok, cancel, cancel2;
+    private Button operationButton1, operationButton2;
     // ---- UI end ----
 
 
@@ -149,6 +150,10 @@ public class DialogData {
         spinner2 = dialog.findViewById(R.id.spinner2);
         expListView = dialog.findViewById(R.id.expListView);
         editText2 = dialog.findViewById(R.id.editText2);
+
+        // operation buttons
+        operationButton1 = dialog.findViewById(R.id.operationButton1);
+        operationButton2 = dialog.findViewById(R.id.operationButton2);
 
         // ---------- buttons ----------
         ok = dialog.findViewById(R.id.ok);
@@ -999,6 +1004,18 @@ public class DialogData {
         }
 
         Log.e("setOperation", "All.result: " + result);
+    }
+
+    public void setOperationButtons(String button1, DialogClickListener listenerButton1, String button2, DialogClickListener listenerButton2){
+        operationLayout.setVisibility(View.VISIBLE);
+        operationButton1.setVisibility(View.VISIBLE);
+        operationButton2.setVisibility(View.VISIBLE);
+
+        operationButton1.setText(button1);
+        operationButton1.setOnClickListener(v -> listenerButton1.clicked());
+
+        operationButton2.setText(button2);
+        operationButton2.setOnClickListener(v -> listenerButton2.clicked());
     }
 
     public void setExpandableListView(SimpleExpandableListAdapter adapter, DialogClickListener listener) {

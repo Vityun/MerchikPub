@@ -135,7 +135,7 @@ public class Globals {
     }
 
     public enum OptionControlName {
-        PRICE, FACE, EXPIRE_LEFT, AMOUNT, OBOROTVED_NUM, UP, DT_EXPIRE, ERROR_ID, AKCIYA_ID, AKCIYA, NOTES
+        PRICE, FACE, EXPIRE_LEFT, AMOUNT, OBOROTVED_NUM, UP, DT_EXPIRE, ERROR_ID, AKCIYA_ID, AKCIYA, NOTES, PHOTO
     }
 
     public enum SourceAct {

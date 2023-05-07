@@ -54,6 +54,7 @@ import java.util.Map;
 
 import io.realm.RealmResults;
 import retrofit2.Call;
+import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportTovar.TovarRequisites;
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Filter.MyFilter;
 import ua.com.merchik.merchik.Globals;
@@ -93,7 +94,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
     private Context mContext;
     private List<TovarDB> dataList;
     private List<TovarDB> dataFilterable;
-    //    private WpDataDB wpDataDB;
+    private WpDataDB wpDataDB;
     private DRAdapterTovarTPLTypeView tplType;
     private OpenType openType;
 
@@ -127,7 +128,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
         this.dataFilterable = list;
         this.openType = openType;
 
-//        this.wpDataDB = wp;
+        this.wpDataDB = wp;
         codeDad2 = wp.getCode_dad2();
         clientId = wp.getClient_id();
         addressId = wp.getAddr_id();
@@ -663,7 +664,15 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                                         }
                                     }
                                 }
+
+
                                 Collections.reverse(dialogList);
+
+                                if (finalReportPrepareTovar.face.equals("0")){
+                                    dialogList.add(new TovarRequisites(list, finalReportPrepareTovar).createDialog(mContext, wpDataDB));
+                                }
+
+
                                 dialogList.get(0).show();
                             } else {
                                 DialogData dialog = new DialogData(mContext);
@@ -1207,6 +1216,8 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
 
 
         /**
+         * !!! 05.05.23. Перенёс эту штуку для простого вызова в TovarRequisites
+         * <p>
          * 11.01.2021
          * Заполнение обекта с данными о фото
          *
@@ -1561,17 +1572,16 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
     }
 
 
-    private File getPhotoFromDB(TovarDB tovar) {
+    /*Устаревшее, такое же есть в TovarRequisites*/
+    public File getPhotoFromDB(TovarDB tovar) {
 
         int id = Integer.parseInt(tovar.getiD());
 
         StackPhotoDB stackPhotoDB = RealmManager.getTovarPhotoByIdAndType(id, tovar.photoId, 18, false);
         if (stackPhotoDB != null) {
             if (stackPhotoDB.getObject_id() == id) {
-                Log.e("R_TOVAR", "ФОТО ЕСТЬ(" + stackPhotoDB.getObject_id() + "/" + id + ")");
                 if (stackPhotoDB.getPhoto_num() != null && !stackPhotoDB.getPhoto_num().equals("")) {
                     File file = new File(stackPhotoDB.getPhoto_num());
-                    Log.e("R_TOVAR", "PATH: " + file.getPath());
                     return file;
                 }
             }

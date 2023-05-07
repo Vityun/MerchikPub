@@ -1,5 +1,7 @@
 package ua.com.merchik.merchik.data;
 
+import static ua.com.merchik.merchik.Globals.OptionControlName.PHOTO;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -61,6 +63,11 @@ public class TovarOptions {
     @Override
     public int hashCode() {
         return Objects.hash(optionId, optionShort, optionLong, orderField, optionType);
+    }
+
+
+    public TovarOptions createTovarOptionPhoto(){
+        return new TovarOptions(PHOTO, "P", "Фото залишків товару", "photo", "main", 0);
     }
 
     public List<Integer> getOptionId() {
