@@ -33,6 +33,7 @@ import java.util.List;
 import java.util.Map;
 
 import io.realm.RealmResults;
+import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportTovar.TovarRequisites;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.Utils.MySimpleExpandableListAdapter;
@@ -42,6 +43,8 @@ import ua.com.merchik.merchik.data.RealmModels.ReportPrepareDB;
 import ua.com.merchik.merchik.data.TovarOptions;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.ErrorRealm;
+import ua.com.merchik.merchik.database.realm.tables.TovarRealm;
+import ua.com.merchik.merchik.database.realm.tables.WpDataRealm;
 
 public class RecyclerViewTPLAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
@@ -62,6 +65,8 @@ public class RecyclerViewTPLAdapter extends RecyclerView.Adapter<RecyclerView.Vi
     @Override
     public int getItemViewType(int position) {
         switch (dataTpl.get(position).getOptionControlName()) {
+            case PHOTO:
+                return 3;
             case DT_EXPIRE:
             case ERROR_ID:
                 return 2;
@@ -86,6 +91,8 @@ public class RecyclerViewTPLAdapter extends RecyclerView.Adapter<RecyclerView.Vi
                 return new ViewHolderPromo(LayoutInflater.from(parent.getContext()).inflate(R.layout.item_rv_tpl_promotion, parent, false));
             case 2:
                 return new ViewHolderUniversal(LayoutInflater.from(parent.getContext()).inflate(R.layout.item_rv_tpl_universal, parent, false));
+            case 3:
+                return new ViewHolderButton(LayoutInflater.from(parent.getContext()).inflate(R.layout.item_rv_tpl_button, parent, false));
         }
 
         return null;
@@ -108,6 +115,11 @@ public class RecyclerViewTPLAdapter extends RecyclerView.Adapter<RecyclerView.Vi
             case 2:
                 ViewHolderUniversal viewHolderUniversal = (ViewHolderUniversal) holder;
                 viewHolderUniversal.bind(dataTpl.get(position));
+                break;
+
+            case 3:
+                ViewHolderButton viewHolderButton = (ViewHolderButton) holder;
+                viewHolderButton.bind(dataTpl.get(position));
                 break;
         }
     }
@@ -507,8 +519,8 @@ public class RecyclerViewTPLAdapter extends RecyclerView.Adapter<RecyclerView.Vi
         /**
          * 30.03.23.
          * Отображение Ошибок. (Как в модальном окне)
-         * */
-        private void showErrorList(TovarOptions item){
+         */
+        private void showErrorList(TovarOptions item) {
             expListView.setVisibility(View.VISIBLE);
             expListView.setAdapter(createExpandableAdapter(expListView.getContext()));
             expListView.setOnChildClickListener(getErrorExpandableListView(item));
@@ -584,6 +596,24 @@ public class RecyclerViewTPLAdapter extends RecyclerView.Adapter<RecyclerView.Vi
                 click.getData(item, result, dataRp.errorComment);
                 return false;
             };
+        }
+    }
+
+    class ViewHolderButton extends RecyclerView.ViewHolder {
+
+        private Button button;
+
+        public ViewHolderButton(@NonNull View itemView) {
+            super(itemView);
+            button = itemView.findViewById(R.id.button);
+        }
+
+        public void bind(TovarOptions item) {
+
+            button.setOnClickListener(v -> {
+//                Toast.makeText(itemView.getContext(), "Тест", Toast.LENGTH_SHORT).show();
+                new TovarRequisites(TovarRealm.getById(dataRp.tovarId), dataRp).createDialog(itemView.getContext(), WpDataRealm.getWpDataRowByDad2Id(Long.parseLong(dataRp.codeDad2))).show();
+            });
         }
     }
 }

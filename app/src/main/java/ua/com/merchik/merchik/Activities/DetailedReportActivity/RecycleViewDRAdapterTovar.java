@@ -610,8 +610,12 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
             try {
                 if (openType.equals(OpenType.DEFAULT)) {
                     ReportPrepareDB finalReportPrepareTovar1 = reportPrepareTovar2;
+
+                    List<TovarOptions> requiredOptionsTPL = options.getRequiredOptionsTPL(optionsList2, deletePromoOption);
+                    // Тут должно быть условие. Я его пока не добавляю. (если фейс = 0 и есть ОК 159707)
+                    requiredOptionsTPL.add(new TovarOptions().createTovarOptionPhoto());
                     RecyclerViewTPLAdapter recyclerViewTPLAdapter = new RecyclerViewTPLAdapter(
-                            options.getRequiredOptionsTPL(optionsList2, deletePromoOption),
+                            requiredOptionsTPL,
                             finalReportPrepareTovar1,
                             (tpl, data, data2) -> operetionSaveRPToDB(tpl, finalReportPrepareTovar1, data, data2, list)
                     );
@@ -668,9 +672,6 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
 
 
                                 Collections.reverse(dialogList);
-
-//                                if (finalReportPrepareTovar.face.equals("0")) {
-
 
                                 boolean optionExists = false;
                                 if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
