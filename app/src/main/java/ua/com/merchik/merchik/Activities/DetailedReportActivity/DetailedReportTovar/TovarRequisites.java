@@ -55,6 +55,10 @@ public class TovarRequisites {
         res.setImage(true, getPhotoFromDB(tovar));
         res.setAdditionalText(setPhotoInfo(reportPrepareDB, new TovarOptions().createTovarOptionPhoto(), tovar, "", ""));
 
+        // Сделано для того что б можно было контролировать какая опция сейчас открыта
+        res.tovarOptions = new TovarOptions().createTovarOptionPhoto();
+        res.reportPrepareDB = reportPrepareDB;
+
         res.setOperationButtons(
                 "Зробити фото",
                 () -> {

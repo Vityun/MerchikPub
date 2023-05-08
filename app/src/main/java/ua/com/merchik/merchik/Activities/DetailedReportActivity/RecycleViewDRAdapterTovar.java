@@ -4,6 +4,7 @@ import static ua.com.merchik.merchik.Globals.OptionControlName.AKCIYA;
 import static ua.com.merchik.merchik.Globals.OptionControlName.AKCIYA_ID;
 import static ua.com.merchik.merchik.Globals.OptionControlName.DT_EXPIRE;
 import static ua.com.merchik.merchik.Globals.OptionControlName.ERROR_ID;
+import static ua.com.merchik.merchik.Globals.OptionControlName.PHOTO;
 import static ua.com.merchik.merchik.Globals.OptionControlName.UP;
 import static ua.com.merchik.merchik.database.realm.RealmManager.INSTANCE;
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
@@ -668,8 +669,19 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
 
                                 Collections.reverse(dialogList);
 
-                                if (finalReportPrepareTovar.face.equals("0")){
-                                    dialogList.add(new TovarRequisites(list, finalReportPrepareTovar).createDialog(mContext, wpDataDB));
+//                                if (finalReportPrepareTovar.face.equals("0")) {
+
+
+                                boolean optionExists = false;
+                                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+                                    String opt = "159707";
+                                    optionExists = optionsList2.stream().anyMatch(
+                                            optionsDB -> optionsDB.getOptionId().equals(opt) &&
+                                                    optionsDB.getOptionControlId().equals(opt));
+
+                                    if (optionExists) {
+                                        dialogList.add(new TovarRequisites(list, finalReportPrepareTovar).createDialog(mContext, wpDataDB));
+                                    }
                                 }
 
 
@@ -1083,6 +1095,15 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                         (dialogList.get(0).tovarOptions.getOptionControlName().equals(UP) ||
                                 dialogList.get(0).tovarOptions.getOptionControlName().equals(DT_EXPIRE)) &&
                         face == 0) {
+                    dialogList.remove(0);
+                    if (dialogList.size() > 0) {
+                        dialogList.get(0).show();
+                    }
+                } else if (clickType &&
+                        dialogList.get(0).tovarOptions.getOptionControlName().equals(PHOTO) &&
+//                        dialogList.get(0).tovarOptions.getOptionId().contains(159707) &&
+                        face == 0
+                ) {
                     dialogList.remove(0);
                     if (dialogList.size() > 0) {
                         dialogList.get(0).show();
