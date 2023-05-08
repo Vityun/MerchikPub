@@ -326,7 +326,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
             weight.setText(weightString);
             weight.setTextSize(16);
 
-            weight.setOnClickListener(v -> {
+            weight.setOnLongClickListener(v -> {
                 // Получение объекта ClipboardManager из системы
                 ClipboardManager clipboard = (ClipboardManager) mContext.getSystemService(Context.CLIPBOARD_SERVICE);
 
@@ -337,6 +337,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                 clipboard.setPrimaryClip(clip);
 
                 Toast.makeText(mContext, "Скопировано в буфер обмена: " + list.getBarcode(), Toast.LENGTH_LONG).show();
+                return false;
             });
 
             article.setText(getArticle(list, 1));
