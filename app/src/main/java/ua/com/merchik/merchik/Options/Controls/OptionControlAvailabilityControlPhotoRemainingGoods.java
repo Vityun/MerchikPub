@@ -4,12 +4,19 @@ import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
 import android.content.Context;
 import android.os.Build;
+import android.text.SpannableString;
+import android.text.SpannableStringBuilder;
+import android.text.Spanned;
+import android.text.TextPaint;
+import android.text.style.ClickableSpan;
+import android.view.View;
 
 import androidx.annotation.RequiresApi;
 
 import java.util.Arrays;
 import java.util.List;
 
+import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportTovar.TovarRequisites;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.Options.OptionControl;
 import ua.com.merchik.merchik.Options.Options;
@@ -27,6 +34,7 @@ import ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsRealm;
 import ua.com.merchik.merchik.database.realm.tables.ReportPrepareRealm;
 import ua.com.merchik.merchik.database.realm.tables.StackPhotoRealm;
 import ua.com.merchik.merchik.database.realm.tables.TovarRealm;
+import ua.com.merchik.merchik.database.realm.tables.WpDataRealm;
 
 
 /**
@@ -54,6 +62,8 @@ public class OptionControlAvailabilityControlPhotoRemainingGoods<T> extends Opti
     private WpDataDB wpDataDB;
     private AddressSDB addressSDBDocument;
     private CustomerSDB customerSDBDocument;
+
+    private SpannableStringBuilder tovs = new SpannableStringBuilder();
 
     public OptionControlAvailabilityControlPhotoRemainingGoods(Context context, T document, OptionsDB optionDB, OptionMassageType msgType, Options.NNKMode nnkMode) {
         this.context = context;
@@ -87,7 +97,7 @@ public class OptionControlAvailabilityControlPhotoRemainingGoods<T> extends Opti
         try {
 
             //2.0. получим данные о товарах в отчете (если она еще не рассчитана)
-            List<ReportPrepareDB> reportPrepare = ReportPrepareRealm.getReportPrepareByDad2(dad2);
+            List<ReportPrepareDB> reportPrepare = RealmManager.INSTANCE.copyFromRealm(ReportPrepareRealm.getReportPrepareByDad2(dad2));
 
             //3.0. получим список товаров с особым вниманием (хранится в Доп.Требованиях)
             List<AdditionalRequirementsDB> additionalRequirements = AdditionalRequirementsRealm.getDocumentAdditionalRequirements(document, true, OPTION_CONTROL_AVAILABILITY_CONTROL_PHOTO_REMAINING_GOODS_ID, null, null, null);
@@ -113,29 +123,37 @@ public class OptionControlAvailabilityControlPhotoRemainingGoods<T> extends Opti
             List<StackPhotoDB> stackPhotoList = StackPhotoRealm.getPhoto(null, null, userId, null, null, dad2, 4, tovIds); // Тип фото, Исполнитель, Дад2, Список Товаров . 4-Фото Остатков Товаров,
 
             //5.2. заполним ее данными ОСВ
+            tovs.append("Ви повинні завантажити в нашу систему світлину з залишком товару:").append("\n");
             for (ReportPrepareDB item : reportPrepare) {
                 int face = Integer.parseInt(item.face);
-                if (face == 0 && stackPhotoList.stream().anyMatch(stackPhoto -> stackPhoto.tovar_id.equals(item.getTovarId()))) {
+                if (face == 0 && !stackPhotoList.stream().anyMatch(stackPhoto -> stackPhoto.tovar_id.equals(item.getTovarId()))) {
                     TovarDB tovar = TovarRealm.getById(item.getTovarId());
                     item.error = 1;
-                    item.errorNote = "Ви повинні завантажити в нашу систему світлину з залишком товару: (" + tovar.getiD() + ") " + tovar.getNm() + " отриману з додатку мережі.";
+                    item.errorNote = "(" + tovar.getiD() + ") " + tovar.getNm() + " отриману з додатку мережі.";
+
+                    tovs.append(createLinkedString(item.errorNote, item)).append("\n");
+                }else {
+                    item.error = 0;
                 }
             }
 
             // Итоговое количество нарушений
-            int errorSum = reportPrepare.stream()
+            Integer errorSum = reportPrepare.stream()
                     .mapToInt(rp -> rp.error)
                     .sum();
 
             //6.0. готовим сообщение и сигнал
             if (reportPrepare.size() == 0) {
-                stringBuilderMsg.append("Товарів, не знайдено.");
+                spannableStringBuilder.append("Товарів, не знайдено.");
                 signal = true;
-            } else if (errorSum > 0) {
-                stringBuilderMsg.append("Не надані світлини з ЗАЛИШКАМИ ").append(errorSum).append(" відсутніх товарів. Див. таблицю. Таким чином Ви повинні підтвердити, що даних товарів нема на залишках.");
+            } else if (errorSum != null && errorSum > 0) {
+                String s = String.valueOf(errorSum);
+                spannableStringBuilder.append("Не надані світлини з ЗАЛИШКАМИ ").append(s).append(" відсутніх товарів. Таким чином Ви повинні підтвердити, що даних товарів нема на залишках.");
+
+                spannableStringBuilder.append("\n\n").append(tovs);
                 signal = true;
             } else {
-                stringBuilderMsg.append("Зауваженнь по наданню світлин залишків по відсутнім товарам нема.");
+                spannableStringBuilder.append("Зауваженнь по наданню світлин залишків по відсутнім товарам нема.");
                 signal = false;
             }
 
@@ -154,9 +172,9 @@ public class OptionControlAvailabilityControlPhotoRemainingGoods<T> extends Opti
             if (signal) {
                 if (optionDB.getBlockPns().equals("1")) {
                     setIsBlockOption(signal);
-                    stringBuilderMsg.append("\n\n").append("Документ проведен не будет!");
+                    spannableStringBuilder.append("\n\n").append("Документ проведен не будет!");
                 } else {
-                    stringBuilderMsg.append("\n\n").append("Вы можете получить Премиальные БОЛЬШЕ, если будете делать Достижения.");
+                    spannableStringBuilder.append("\n\n").append("Вы можете получить Премиальные БОЛЬШЕ, если будете делать Достижения.");
                 }
             }
 
@@ -164,5 +182,30 @@ public class OptionControlAvailabilityControlPhotoRemainingGoods<T> extends Opti
         } catch (Exception e) {
             Globals.writeToMLOG("ERROR", "OptionControlAvailabilityControlPhotoRemainingGoods/executeOption", "Exception e: " + e);
         }
+    }
+
+    private SpannableString createLinkedString(String msg, ReportPrepareDB rp) {
+        SpannableString res = new SpannableString(msg);
+
+        try {
+            ClickableSpan clickableSpan = new ClickableSpan() {
+                @Override
+                public void onClick(View textView) {
+                    new TovarRequisites(TovarRealm.getById(rp.tovarId), rp).createDialog(textView.getContext(), WpDataRealm.getWpDataRowByDad2Id(Long.parseLong(rp.codeDad2))).show();
+                }
+
+                @Override
+                public void updateDrawState(TextPaint ds) {
+                    super.updateDrawState(ds);
+                    ds.setUnderlineText(false);
+//                    ds.setColor(Color.GREEN);
+                }
+            };
+            int count = msg.length();
+            res.setSpan(clickableSpan, 0, count, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        } catch (Exception e) {
+            Globals.writeToMLOG("ERROR", "OptionControlAvailabilityControlPhotoRemainingGoods/executeOption/createLinkedString/Exception", "Exception e: " + e);
+        }
+        return res;
     }
 }
