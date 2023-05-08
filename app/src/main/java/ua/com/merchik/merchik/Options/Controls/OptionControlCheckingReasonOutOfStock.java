@@ -29,6 +29,7 @@ import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportAc
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.Options.OptionControl;
 import ua.com.merchik.merchik.Options.Options;
+import ua.com.merchik.merchik.Utils.MySimpleExpandableListAdapter;
 import ua.com.merchik.merchik.data.OptionMassageType;
 import ua.com.merchik.merchik.data.PhotoDescriptionText;
 import ua.com.merchik.merchik.data.RealmModels.ErrorDB;
@@ -157,17 +158,23 @@ public class OptionControlCheckingReasonOutOfStock<T> extends OptionControl {
                 dialog.setImage(true, getPhotoFromDB(tov));
                 dialog.setAdditionalText(setPhotoInfo(TPL, tov, "", ""));
 
-                dialog.setOperationSpinnerData(setMapData(AKCIYA_ID));
-                dialog.setOperationSpinner2Data(setMapData(Globals.OptionControlName.AKCIYA));
-                dialog.setOperationTextData(reportPrepareDB.getAkciyaId());
-                dialog.setOperationTextData2(reportPrepareDB.getAkciya());
-
-                dialog.setOperation(operationType(TPL), getCurrentData(TPL, reportPrepareDB.getCodeDad2(), reportPrepareDB.getTovarId()), setMapData(TPL.getOptionControlName()), () -> {
+                dialog.setExpandableListView(createExpandableAdapter(dialog.context), () -> {
                     if (dialog.getOperationResult() != null) {
                         operetionSaveRPToDB(TPL, reportPrepareDB, dialog.getOperationResult(), dialog.getOperationResult2(), null, dialog.context);
-                        Toast.makeText(dialog.context, "Внесено: " + dialog.getOperationResult(), Toast.LENGTH_LONG).show();
                     }
                 });
+
+//                dialog.setOperationSpinnerData(setMapData(AKCIYA_ID));
+//                dialog.setOperationSpinner2Data(setMapData(Globals.OptionControlName.AKCIYA));
+//                dialog.setOperationTextData(reportPrepareDB.getAkciyaId());
+//                dialog.setOperationTextData2(reportPrepareDB.getAkciya());
+//
+//                dialog.setOperation(operationType(TPL), getCurrentData(TPL, reportPrepareDB.getCodeDad2(), reportPrepareDB.getTovarId()), setMapData(TPL.getOptionControlName()), () -> {
+//                    if (dialog.getOperationResult() != null) {
+//                        operetionSaveRPToDB(TPL, reportPrepareDB, dialog.getOperationResult(), dialog.getOperationResult2(), null, dialog.context);
+//                        Toast.makeText(dialog.context, "Внесено: " + dialog.getOperationResult(), Toast.LENGTH_LONG).show();
+//                    }
+//                });
 
                 dialog.show();
             }
@@ -357,5 +364,64 @@ public class OptionControlCheckingReasonOutOfStock<T> extends OptionControl {
                 RealmManager.setReportPrepareRow(rp);
             });
         }
+    }
+
+
+
+    private MySimpleExpandableListAdapter createExpandableAdapter(Context context) {
+
+        Map<String, String> map;
+        ArrayList<Map<String, String>> groupDataList = new ArrayList<>();
+
+        // список атрибутов групп для чтения
+        String[] groupFrom = new String[]{"groupName"};
+        // список ID view-элементов, в которые будет помещены атрибуты групп
+        int groupTo[] = new int[]{android.R.id.text1};
+
+        // список атрибутов элементов для чтения
+        String childFrom[] = new String[]{"monthName"};
+        // список ID view-элементов, в которые будет помещены атрибуты
+        // элементов
+        int childTo[] = new int[]{android.R.id.text1};
+
+        // создаем общую коллекцию для коллекций элементов
+        ArrayList<ArrayList<Map<String, String>>> сhildDataList = new ArrayList<>();
+        // создаем коллекцию элементов для первой группы
+        ArrayList<Map<String, String>> сhildDataItemList = new ArrayList<>();
+
+        // Получение данных с БД
+        RealmResults<ErrorDB> errorDbList = RealmManager.getAllErrorDb();
+        RealmResults<ErrorDB> errorGroupsDB = errorDbList.where().equalTo("parentId", "0").findAll();
+
+        for (ErrorDB group : errorGroupsDB) {
+            map = new HashMap<>();
+            map.put("groupName", group.getNm());
+            groupDataList.add(map);
+
+            RealmResults<ErrorDB> errorItemsDB = errorDbList.where().equalTo("parentId", group.getID()).findAll();
+            if (errorItemsDB != null && errorItemsDB.size() > 0) {
+                сhildDataItemList = new ArrayList<>();
+                for (ErrorDB item : errorItemsDB) {
+                    map = new HashMap<>();
+                    map.put("monthName", "* " + item.getNm());
+                    сhildDataItemList.add(map);
+                }
+                сhildDataList.add(сhildDataItemList);
+            } else {
+                сhildDataItemList = new ArrayList<>();
+                map = new HashMap<>();
+                map.put("monthName", "* " + group.getNm());
+                сhildDataItemList.add(map);
+                сhildDataList.add(сhildDataItemList);
+            }
+        }
+
+        MySimpleExpandableListAdapter adapter = new MySimpleExpandableListAdapter(
+                context, groupDataList,
+                android.R.layout.simple_expandable_list_item_1, groupFrom,
+                groupTo, сhildDataList, android.R.layout.simple_list_item_1,
+                childFrom, childTo);
+
+        return adapter;
     }
 }
