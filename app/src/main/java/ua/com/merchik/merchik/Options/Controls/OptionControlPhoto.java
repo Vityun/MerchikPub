@@ -81,6 +81,7 @@ public class OptionControlPhoto<T> extends OptionControl {
             if (optionDB != null) {
                 if (signal) {
                     optionDB.setIsSignal("1");
+                    setIsBlockOption(signal);
                 } else {
                     optionDB.setIsSignal("2");
                 }

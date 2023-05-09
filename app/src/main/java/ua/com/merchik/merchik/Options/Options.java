@@ -491,6 +491,7 @@ public class Options {
                         .orElse(null);
                 if (optionsDB != null){
                     res += optControl(context, dataDB, optionsDB, Integer.parseInt(option.getOptionBlock1()), type, mode);
+                    Log.e("NNK", "res OK 1: " + res);
                 }
             }
         }
@@ -503,9 +504,9 @@ public class Options {
                         .orElse(null);
                 if (optionsDB != null){
                     res += optControl(context, dataDB, optionsDB, Integer.parseInt(option.getOptionBlock2()), type, mode);
+                    Log.e("NNK", "res OK 2: " + res);
                 }
             }
-//            res += optControl(context, dataDB, option, Integer.parseInt(option.getOptionBlock2()), type, mode);
         }
 
         Log.e("NNK", "END_res: " + res);
