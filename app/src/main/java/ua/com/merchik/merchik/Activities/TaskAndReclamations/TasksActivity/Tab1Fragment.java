@@ -330,7 +330,7 @@ public class Tab1Fragment extends Fragment {
                 try {
                     List<FragmentSDB> fragmentSDB = SQL_DB.fragmentDao().getAllByPhotoId(Integer.parseInt(String.valueOf(data.photo)));
                     StackPhotoDB stackPhotoDB = StackPhotoRealm.stackPhotoDBGetPhotoBySiteId(String.valueOf(data.photo));
-                    if (stackPhotoDB != null && fragmentSDB != null){
+                    if (stackPhotoDB != null && fragmentSDB != null && fragmentSDB.size() > 0){
                         DialogFullPhotoR dialog = new DialogFullPhotoR(mContext);
                         dialog.setPhoto(stackPhotoDB);
                         dialog.setClose(dialog::dismiss);
