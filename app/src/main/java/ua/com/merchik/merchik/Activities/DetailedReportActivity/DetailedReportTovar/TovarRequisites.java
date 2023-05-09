@@ -13,6 +13,7 @@ import java.io.File;
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.MakePhoto.MakePhoto;
+import ua.com.merchik.merchik.MakePhoto.MakePhotoFromGalery;
 import ua.com.merchik.merchik.data.PhotoDescriptionText;
 import ua.com.merchik.merchik.data.RealmModels.ReportPrepareDB;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
@@ -62,11 +63,12 @@ public class TovarRequisites {
         res.setOperationButtons(
                 "Зробити фото",
                 () -> {
-                    new MakePhoto().pressedMakePhoto((Activity) context, wpDataDB, "4");
+                    new MakePhoto().pressedMakePhoto((Activity) context, wpDataDB, "4", reportPrepareDB.tovarId);
                 },
                 "Вибрати з галереї",
                 () -> {
                     MakePhotoFromGaleryWpDataDB = wpDataDB;
+                    MakePhotoFromGalery.tovarId = reportPrepareDB.tovarId;
                     Intent intent = new Intent(Intent.ACTION_PICK);
                     intent.setType("image/*");
                     ((DetailedReportActivity) context).startActivityForResult(Intent.createChooser(intent, "Select Picture"), 500);

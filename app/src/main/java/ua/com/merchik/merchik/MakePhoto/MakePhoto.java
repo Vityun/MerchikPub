@@ -420,6 +420,7 @@ public class MakePhoto {
      */
     public static String photoNum; // URI фотографии
     public static String photoType = "0";
+    public static String tovarId = "";
     public <T> void makePhoto(Activity activity, T data) {
         try {
             final WorkPlan workPlan = new WorkPlan();
@@ -489,6 +490,25 @@ public class MakePhoto {
                 wpDataObj = workPlan.getKPS(wpDataDB.getId());
             }
             MakePhoto.photoType = photoType;
+            Globals.writeToMLOG("INFO", "pressedMakePhoto", "photoType: " + photoType);
+            choiceCustomerGroupAndPhoto2(activity, wpDataObj, data);
+        } catch (Exception e) {
+            Globals.writeToMLOG("ERROR", "pressedMakePhoto", "Exception e: " + e);
+        }
+    }
+
+    public <T> void pressedMakePhoto(Activity activity, T data, String photoType, String tovarId) {
+        try {
+            final WorkPlan workPlan = new WorkPlan();
+            WPDataObj wpDataObj;
+            if (data instanceof TasksAndReclamationsSDB){
+                wpDataObj = workPlan.getKPS((TasksAndReclamationsSDB) data);
+            }else {
+                WpDataDB wpDataDB = (WpDataDB) data;
+                wpDataObj = workPlan.getKPS(wpDataDB.getId());
+            }
+            MakePhoto.photoType = photoType;
+            MakePhoto.tovarId = tovarId;
             Globals.writeToMLOG("INFO", "pressedMakePhoto", "photoType: " + photoType);
             choiceCustomerGroupAndPhoto2(activity, wpDataObj, data);
         } catch (Exception e) {

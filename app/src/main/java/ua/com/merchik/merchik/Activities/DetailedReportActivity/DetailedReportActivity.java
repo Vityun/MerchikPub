@@ -52,6 +52,7 @@ import ua.com.merchik.merchik.Activities.TaskAndReclamations.TARFragmentHome;
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.MakePhoto.MakePhoto;
+import ua.com.merchik.merchik.MakePhoto.MakePhotoFromGalery;
 import ua.com.merchik.merchik.PhotoReportActivity;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.ServerExchange.TablesLoadingUnloading;
@@ -381,7 +382,7 @@ public class DetailedReportActivity extends toolbar_menus {
                     toolbar_menus.videoLesson = 823;
                     toolbar_menus.setFab(DetailedReportActivity.this, DetailedReportActivity.fab); // ТОВАР
 
-                } else if (tab.getPosition() == 3){
+                } else if (tab.getPosition() == 3) {
                     Log.e("onTabSelected", "ЗИР");
 
 //                    toolbar_menus.textLesson = 822;
@@ -410,7 +411,7 @@ public class DetailedReportActivity extends toolbar_menus {
     }
 
     private String getRealPathFromURI(Uri contentUri) {
-        String[] projection = { MediaStore.Images.Media.DATA };
+        String[] projection = {MediaStore.Images.Media.DATA};
         Cursor cursor = getApplicationContext().getContentResolver().query(contentUri, projection, null, null, null);
         if (cursor == null) {
             return null;
@@ -435,7 +436,7 @@ public class DetailedReportActivity extends toolbar_menus {
             Uri uri = data.getData();
             String filePath = getRealPathFromURI(uri);
 
-            savePhoto(new File(filePath), MakePhotoFromGaleryWpDataDB);
+            savePhoto(new File(filePath), MakePhotoFromGaleryWpDataDB, MakePhotoFromGalery.tovarId);
         }
 
         switch (requestCode) {
@@ -505,6 +506,10 @@ public class DetailedReportActivity extends toolbar_menus {
                 photo.setPhoto_hash(hash);
                 photo.setPhoto_num(photoFile.getAbsolutePath());
                 photo.setPhoto_type(Integer.valueOf(MakePhoto.photoType));
+                if (MakePhoto.photoType.equals("4")) {
+                    photo.tovar_id = MakePhoto.tovarId;
+                    Globals.writeToMLOG("INFO", "requestCode == 201 && resultCode == RESULT_OK/photo_save", "MakePhoto.tovarId: " + MakePhoto.tovarId);
+                }
 
                 JsonObject jsonObject2 = new Gson().fromJson(new Gson().toJson(photo), JsonObject.class);
 
@@ -701,7 +706,7 @@ public class DetailedReportActivity extends toolbar_menus {
     }
 
 
-    private StackPhotoDB savePhoto(File photoFile, WpDataDB wpDataDB) {
+    private StackPhotoDB savePhoto(File photoFile, WpDataDB wpDataDB, String tovarId) {
         try {
             int id = RealmManager.stackPhotoGetLastId();
             id++;
@@ -721,6 +726,7 @@ public class DetailedReportActivity extends toolbar_menus {
 
             stackPhotoDB.setUser_id(Globals.userId);
             stackPhotoDB.setPhoto_type(4);      // Тип фото Остатков
+            stackPhotoDB.tovar_id = tovarId;
 
             stackPhotoDB.setCreate_time(System.currentTimeMillis());
 

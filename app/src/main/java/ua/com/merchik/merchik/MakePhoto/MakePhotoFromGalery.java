@@ -11,6 +11,7 @@ import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 public class MakePhotoFromGalery {
 
     public static WpDataDB MakePhotoFromGaleryWpDataDB;
+    public static String tovarId;
     public void openGalleryToPeakPhoto(Context context, WpDataDB wp){
         MakePhotoFromGaleryWpDataDB = wp;
         Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
