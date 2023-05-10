@@ -592,7 +592,7 @@ public class DialogData {
 
     public void setEditTextText(String text) {
         if (editText != null) {
-            editText.setHint(text);
+            editText.setText(text);
         }
     }
 
