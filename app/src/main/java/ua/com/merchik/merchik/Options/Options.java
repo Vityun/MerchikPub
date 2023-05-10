@@ -606,7 +606,7 @@ public class Options {
                 // Создаю список опций который блокирует
                 if (controlResult == 0) {
                     Log.e("conduct", "Опция контроля выполнена: " + controlResult);
-                } else if (controlResult == 1) {
+                } else if (controlResult == 1 && item.getBlockPns().equals("1")) {
                     Log.e("conduct", "Опция контроля НЕ выполнена: " + controlResult);
                     Log.e("conduct", "Я добавил опцию: " + item.getOptionTxt());
                     optionNotConduct.add(item);
