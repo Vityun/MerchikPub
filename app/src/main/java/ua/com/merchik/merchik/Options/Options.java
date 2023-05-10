@@ -490,7 +490,7 @@ public class Options {
                         .findAny()
                         .orElse(null);
                 if (optionsDB != null){
-                    res += optControl(context, dataDB, optionsDB, Integer.parseInt(option.getOptionBlock1()), type, mode);
+                    res += optControl(context, dataDB, optionsDB, Integer.parseInt(option.getOptionBlock1()), type, NNKMode.CHECK);
                     Log.e("NNK", "res OK 1: " + res);
                 }
             }
@@ -503,7 +503,7 @@ public class Options {
                         .findAny()
                         .orElse(null);
                 if (optionsDB != null){
-                    res += optControl(context, dataDB, optionsDB, Integer.parseInt(option.getOptionBlock2()), type, mode);
+                    res += optControl(context, dataDB, optionsDB, Integer.parseInt(option.getOptionBlock2()), type, NNKMode.CHECK);
                     Log.e("NNK", "res OK 2: " + res);
                 }
             }
@@ -753,7 +753,7 @@ public class Options {
 
             case 159707:
                 OptionControlAvailabilityControlPhotoRemainingGoods<?> optionControlAvailabilityControlPhotoRemainingGoods = new OptionControlAvailabilityControlPhotoRemainingGoods<>(context, dataDB, option, type, mode);
-                optionControlAvailabilityControlPhotoRemainingGoods.showOptionMassage();
+                if (mode.equals(NNKMode.MAKE) && optionControlAvailabilityControlPhotoRemainingGoods.isBlockOption()) optionControlAvailabilityControlPhotoRemainingGoods.showOptionMassage();
                 break;
 
             case 135412:
@@ -769,7 +769,7 @@ public class Options {
 
             case 1455:
                 OptionControlCheckingPercentageOfShelfSpaceDPPO<?> optionControlCheckingPercentageOfShelfSpaceDPPO = new OptionControlCheckingPercentageOfShelfSpaceDPPO<>(context, dataDB, option, type, mode);
-                optionControlCheckingPercentageOfShelfSpaceDPPO.showOptionMassage();
+                if (mode.equals(NNKMode.MAKE) && optionControlCheckingPercentageOfShelfSpaceDPPO.isBlockOption()) optionControlCheckingPercentageOfShelfSpaceDPPO.showOptionMassage();
                 break;
 
             case 135061:
@@ -778,7 +778,7 @@ public class Options {
 //                test.showOptionMassage();
 
                 OptionControlPercentageOfThePrize<?> optionControlPercentageOfThePrize = new OptionControlPercentageOfThePrize<>(context, dataDB, option, type, mode);
-                optionControlPercentageOfThePrize.showOptionMassage();
+                if (mode.equals(NNKMode.MAKE) && optionControlPercentageOfThePrize.isBlockOption()) optionControlPercentageOfThePrize.showOptionMassage();
                 break;
 
             // Контроль фотоотчётов
@@ -790,32 +790,32 @@ public class Options {
             case 158609:
             case 84932: // Проверка наличия ФотоОтчётов (id мне дали из 1С) (тип 0)
                 OptionControlPhoto<?> optionControlPhoto = new OptionControlPhoto<>(context, dataDB, option, type, mode);
-                optionControlPhoto.showOptionMassage();
+                if (mode.equals(NNKMode.MAKE) && optionControlPhoto.isBlockOption()) optionControlPhoto.showOptionMassage();
                 return optionControlPhoto.isBlockOption() ? 1 : 0;
 
             case 1470:
                 OptionControlPhotoTovarsLeft<?> optionControlPhotoTovarsLeft = new OptionControlPhotoTovarsLeft<>(context, dataDB, option, type, mode);
-                optionControlPhotoTovarsLeft.showOptionMassage();
+                if (mode.equals(NNKMode.MAKE) && optionControlPhotoTovarsLeft.isBlockOption()) optionControlPhotoTovarsLeft.showOptionMassage();
                 return optionControlPhotoTovarsLeft.isBlockOption() ? 1 : 0;
 
             case 158361:
                 OptionControlPhotoTovarsLeftClient<?> optionControlPhotoTovarsLeftClient = new OptionControlPhotoTovarsLeftClient<>(context, dataDB, option, type, mode);
-                optionControlPhotoTovarsLeftClient.showOptionMassage();
+                if (mode.equals(NNKMode.MAKE) && optionControlPhotoTovarsLeftClient.isBlockOption()) optionControlPhotoTovarsLeftClient.showOptionMassage();
                 return optionControlPhotoTovarsLeftClient.isBlockOption() ? 1 : 0;
 
             case 138644:
                 OptionControlCheckTovarUp<?> optionControlCheckTovarUp = new OptionControlCheckTovarUp<>(context, dataDB, option, type, mode);
-                optionControlCheckTovarUp.showOptionMassage();
+                if (mode.equals(NNKMode.MAKE) && optionControlCheckTovarUp.isBlockOption()) optionControlCheckTovarUp.showOptionMassage();
                 return optionControlCheckTovarUp.isBlockOption() ? 1 : 0;
 
             case 157352:
                 OptionControlCheckDetailedReport<?> optionControlCheckDetailedReport = new OptionControlCheckDetailedReport<>(context, dataDB, option, type, mode);
-                optionControlCheckDetailedReport.showOptionMassage();
+                if (mode.equals(NNKMode.MAKE) && optionControlCheckDetailedReport.isBlockOption()) optionControlCheckDetailedReport.showOptionMassage();
                 return optionControlCheckDetailedReport.isBlockOption() ? 1 : 0;
 
             case 590:
                 OptionControlAchievements<?> optionControlAchievements = new OptionControlAchievements<>(context, dataDB, option, type, mode);
-                optionControlAchievements.showOptionMassage();
+                if (mode.equals(NNKMode.MAKE) && optionControlAchievements.isBlockOption()) optionControlAchievements.showOptionMassage();
                 return optionControlAchievements.isBlockOption() ? 1 : 0;
 
             case 135159:
@@ -825,18 +825,18 @@ public class Options {
             case 157274:
             case 157275:
                 OptionControlFacePlan<?> optionControlFacePlan = new OptionControlFacePlan<>(context, dataDB, option, type, mode);
-                optionControlFacePlan.showOptionMassage();
+                if (mode.equals(NNKMode.MAKE) && optionControlFacePlan.isBlockOption()) optionControlFacePlan.showOptionMassage();
                 return optionControlFacePlan.isBlockOption() ? 1 : 0;
 
             case 84006:
                 OptionControlEKL<?> optionControlEKL = new OptionControlEKL<>(context, dataDB, option, type, mode);
-                optionControlEKL.showOptionMassage();
+                if (mode.equals(NNKMode.MAKE) && optionControlEKL.isBlockOption()) optionControlEKL.showOptionMassage();
                 return optionControlEKL.isBlockOption() ? 1 : 0;
 
             case 133381:
                 OptionControlRegistrationPotentialClient<?> optionControlRegistrationPotentialClient = new OptionControlRegistrationPotentialClient<>(context, dataDB, option, type, mode);
 //                if (optionControlRegistrationPotentialClient.isBlockOption()) {
-                optionControlRegistrationPotentialClient.showOptionMassage();
+                if (mode.equals(NNKMode.MAKE) && optionControlRegistrationPotentialClient.isBlockOption()) optionControlRegistrationPotentialClient.showOptionMassage();
 //                }
                 return optionControlRegistrationPotentialClient.isBlockOption() ? 1 : 0;
 
@@ -850,7 +850,7 @@ public class Options {
             case 157243:
                 OptionControlCheckingReasonOutOfStockOSV<?> optionControlCheckingReasonOutOfStockOSV = new OptionControlCheckingReasonOutOfStockOSV<>(context, dataDB, option, type, mode);
                 if (optionControlCheckingReasonOutOfStockOSV.isBlockOption()) {
-                    optionControlCheckingReasonOutOfStockOSV.showOptionMassage();
+                    if (mode.equals(NNKMode.MAKE) && optionControlCheckingReasonOutOfStockOSV.isBlockOption()) optionControlCheckingReasonOutOfStockOSV.showOptionMassage();
                 }
                 return optionControlCheckingReasonOutOfStockOSV.isBlockOption() ? 1 : 0;
 
@@ -858,7 +858,7 @@ public class Options {
             case 157241:
                 OptionControlCheckingReasonOutOfStock<?> optionControlCheckingReasonOutOfStock = new OptionControlCheckingReasonOutOfStock<>(context, dataDB, option, type, mode);
 //                if (optionControlCheckingReasonOutOfStock.isBlockOption()){
-                optionControlCheckingReasonOutOfStock.showOptionMassage();
+                if (mode.equals(NNKMode.MAKE) && optionControlCheckingReasonOutOfStock.isBlockOption()) optionControlCheckingReasonOutOfStock.showOptionMassage();
 //                }
                 return optionControlCheckingReasonOutOfStock.isBlockOption() ? 1 : 0;
 
@@ -869,7 +869,7 @@ public class Options {
             case 151594:
                 OptionControlPhotoBeforeStartWork<?> optionControlPhotoBeforeStartWork = new OptionControlPhotoBeforeStartWork<>(context, dataDB, option, type, mode);
                 if (optionControlPhotoBeforeStartWork.isBlockOption()) {
-                    optionControlPhotoBeforeStartWork.showOptionMassage();
+                    if (mode.equals(NNKMode.MAKE) && optionControlPhotoBeforeStartWork.isBlockOption()) optionControlPhotoBeforeStartWork.showOptionMassage();
                 }
                 return optionControlPhotoBeforeStartWork.isBlockOption() ? 1 : 0;
 
@@ -879,12 +879,12 @@ public class Options {
 
             case 135330:
                 OptionControlReclamationAnswer<?> optionControlReclamationAnswer = new OptionControlReclamationAnswer<>(context, dataDB, option, type, mode);
-                optionControlReclamationAnswer.showOptionMassage();
+                if (mode.equals(NNKMode.MAKE) && optionControlReclamationAnswer.isBlockOption()) optionControlReclamationAnswer.showOptionMassage();
                 return optionControlReclamationAnswer.isBlockOption() ? 1 : 0;
 
             case 132624:
                 OptionControlAddComment<?> optionControlAddComment = new OptionControlAddComment<>(context, dataDB, option, type, mode);
-                optionControlAddComment.showOptionMassage();
+                if (mode.equals(NNKMode.MAKE) && optionControlAddComment.isBlockOption()) optionControlAddComment.showOptionMassage();
                 return optionControlAddComment.isBlockOption() ? 1 : 0;
 
             case 132623:
@@ -894,7 +894,7 @@ public class Options {
             case 76815:
                 OptionControlAvailabilityDetailedReport optionControlAvailabilityDetailedReport = new OptionControlAvailabilityDetailedReport(context, dataDB, option, type, mode);
                 if (optionControlAvailabilityDetailedReport.isBlockOption()) {
-                    optionControlAvailabilityDetailedReport.showOptionMassage();
+                    if (mode.equals(NNKMode.MAKE) && optionControlAvailabilityDetailedReport.isBlockOption()) optionControlAvailabilityDetailedReport.showOptionMassage();
                 }
 //                if (mode.equals(NNKMode.CHECK)){
 //                    optionControlAvailabilityDetailedReport.showOptionMassage();
@@ -930,7 +930,7 @@ public class Options {
 
             case 156882:    // Кнопка Акций
                 OptionControlPromotion<?> optionControlPromotion = new OptionControlPromotion<>(context, dataDB, option, type, mode);
-                optionControlPromotion.showOptionMassage();
+                if (mode.equals(NNKMode.MAKE) && optionControlPromotion.isBlockOption()) optionControlPromotion.showOptionMassage();
 
                 return optionControlPromotion.isBlockOption() ? 1 : 0;
 
@@ -941,7 +941,7 @@ public class Options {
 
             case 156928:
                 OptionControlEndAnotherWork optionControlEndAnotherWork = new OptionControlEndAnotherWork(context, dataDB, option, type, mode);
-                optionControlEndAnotherWork.showOptionMassage();
+                if (mode.equals(NNKMode.MAKE) && optionControlEndAnotherWork.isBlockOption()) optionControlEndAnotherWork.showOptionMassage();
                 return optionControlEndAnotherWork.isBlockOption() ? 1 : 0;
 
             case 135327: // Задача
@@ -950,7 +950,7 @@ public class Options {
 
             case 135329:
                 OptionControlTaskAnswer optionControlTask = new OptionControlTaskAnswer(context, dataDB, option, type, mode);
-                optionControlTask.showOptionMassage();
+                if (mode.equals(NNKMode.MAKE) && optionControlTask.isBlockOption()) optionControlTask.showOptionMassage();
                 return optionControlTask.isBlockOption() ? 1 : 0;
 
             // Эти 2 в принципе разные, но для меня на данный момент они занимаются одним и тем же
