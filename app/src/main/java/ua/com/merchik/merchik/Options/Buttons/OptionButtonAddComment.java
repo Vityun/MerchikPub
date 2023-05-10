@@ -3,8 +3,15 @@ package ua.com.merchik.merchik.Options.Buttons;
 import android.content.Context;
 import android.widget.Toast;
 
+import androidx.recyclerview.widget.LinearLayoutManager;
+
+import java.util.ArrayList;
+import java.util.List;
+
 import ua.com.merchik.merchik.Options.OptionControl;
 import ua.com.merchik.merchik.Options.Options;
+import ua.com.merchik.merchik.ViewHolders.Clicks;
+import ua.com.merchik.merchik.ViewHolders.TextViewClickAdapter;
 import ua.com.merchik.merchik.data.OptionMassageType;
 import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
@@ -40,11 +47,27 @@ public class OptionButtonAddComment<T> extends OptionControl {
             text = wpDataDB.user_comment;
         }
 
+        showDefaultDialog(text);
+    }
+
+    private void showDefaultDialog(String text){
         DialogData dialog = new DialogData(context);
         dialog.setTitle("Внесите комментарий");
         dialog.setText("Внесите комментарий к отчёту и нажмите 'Сохранить'");
         dialog.setOperation(DialogData.Operations.TEXT, text, null, null);
-        dialog.setCancel("Сохранить", ()->{
+
+        if (wpDataDB.getClient_id().equals("14874")){
+            dialog.setAdditionalOperation(new TextViewClickAdapter(getStringsTetaMarket(), new Clicks.click() {
+                @Override
+                public <T> void click(T data) {
+                    Toast.makeText(dialog.context, "Ви обрали: " + data, Toast.LENGTH_LONG).show();
+                    dialog.setEditTextText((String) data);
+                }
+            }), new LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false));
+        }
+
+
+        dialog.setOk("Сохранить", ()->{
             String comment = dialog.getOperationResult();
 
             if (comment != null && comment.length() > 1){
@@ -65,6 +88,17 @@ public class OptionButtonAddComment<T> extends OptionControl {
         });
         dialog.setClose(dialog::dismiss);
         dialog.show();
+    }
+
+    private List<String> getStringsTetaMarket(){
+        List<String> comments = new ArrayList<>();
+        comments.add("Всі товари в наявності, більше 5 шт на кожне місце викладки.");
+        comments.add("Деякі товари відсутні на складі.");
+        comments.add("Всі товари в наявності, але менше 5 шт на кожне місце викладки. Персонал магазину не дозволив виставити по 5 шт. Номер розпорядження офісу керуючому магазину повідомив (ла) - товар зі складу все одно не винесли.");
+        comments.add("На початок візиту на полиці менше 5шт на кожному місці викладки стартових пакетів, після звернення до персоналу товар зі складу винесли.");
+        comments.add("Інша інформація щодо наявності товару, кількості місць викладки, тощо. Заповнити самостійно в довільній формі.");
+
+        return comments;
     }
 
 

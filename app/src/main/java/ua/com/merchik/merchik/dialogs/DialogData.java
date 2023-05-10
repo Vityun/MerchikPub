@@ -590,6 +590,12 @@ public class DialogData {
         }
     }
 
+    public void setEditTextText(String text) {
+        if (editText != null) {
+            editText.setHint(text);
+        }
+    }
+
     /*27.03.2022
      * Использование базового EditText как поля для внесения телефона
      * */
@@ -1103,13 +1109,26 @@ public class DialogData {
             rView.setVisibility(View.VISIBLE);
             textView42.setVisibility(View.VISIBLE);
 
+//            GradientDrawable backgroundGradient = (GradientDrawable) rView.getBackground();
+//            backgroundGradient.setStroke(2, Color.parseColor("#B1BCBE"));
+
+            rView.setHasFixedSize(true);
+            rView.setLayoutManager(layout);
+            rView.setAdapter(adapter);
+        }
+    }
+
+    public void setAdditionalOperationRecycler(RecyclerView.Adapter adapter, RecyclerView.LayoutManager layout) {
+            additionalOperationLayout.setVisibility(View.VISIBLE);
+            rView.setVisibility(View.VISIBLE);
+            textView42.setVisibility(View.VISIBLE);
+
             GradientDrawable backgroundGradient = (GradientDrawable) rView.getBackground();
             backgroundGradient.setStroke(2, Color.parseColor("#B1BCBE"));
 
             rView.setHasFixedSize(true);
             rView.setLayoutManager(layout);
             rView.setAdapter(adapter);
-        }
     }
 
     public void setRecycler(RecyclerView.Adapter adapter, RecyclerView.LayoutManager layout) {
