@@ -239,4 +239,5 @@ public class DialogAdditionalRequirements {
         recyclerView.setAdapter(adapter);
         recyclerView.setLayoutManager(new LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false));
     }
+
 }

@@ -37,6 +37,7 @@ public class OptionControlPhotoTovarsLeft<T> extends OptionControl {
     // option data
     private boolean signal = false;
     private Integer[] groups = {346, 434};  // исключаем из отчетов: 346-Сильпо, 434-АТБ
+    private Integer[] groupsNew = {434};  // исключаем из отчетов: 434-АТБ
 
     // document data
     private UsersSDB usersSDB;
@@ -103,10 +104,13 @@ public class OptionControlPhotoTovarsLeft<T> extends OptionControl {
         } else if (usersSDB.reportDate20 == null || documentDate <= usersSDB.reportDate20.getTime() || (usersSDB.reportDate20 != null && usersSDB.reportCount < 30)) {
             stringBuilderMsg.append("Не проверяю наличие ФОТ (Фото Остатков Товаров) для исполнителей не провевших 20-ть отчетов");
             signal = false;
-        } else if (Arrays.stream(groups).anyMatch(x -> Objects.equals(x, tpId))) {
+        } else if (System.currentTimeMillis()/1000 < 1683849600 && Arrays.stream(groups).anyMatch(x -> Objects.equals(x, tpId))) {
             stringBuilderMsg.append("Не проверяю наличие ФОТ (Фото Остатков Товаров) для сетей: Сільпо, АТБ");  // todo Нужно будет Сети нормально вписать, а не руками.
             signal = false;
-        } else {
+        }else if (System.currentTimeMillis()/1000 > 1683849600 && Arrays.stream(groupsNew).anyMatch(x -> Objects.equals(x, tpId))){
+            stringBuilderMsg.append("Не проверяю наличие ФОТ (Фото Остатков Товаров) для сетей: АТБ");  // todo Нужно будет Сети нормально вписать, а не руками.
+            signal = false;
+        }else {
             stringBuilderMsg.append("За период с ").append(Clock.getHumanTimeSecPattern(dateFrom / 1000, "dd-MM"))
                     .append(" по ").append(Clock.getHumanTimeSecPattern(dateTo / 1000, "dd-MM"))
                     .append(" Сотрудником ").append(usersSDB.fio).append(" НЕ выполнено ни одного ФОТ (Фото Остатков Товаров) по ЛЮБОМУ Адресо/Клиенту.");
