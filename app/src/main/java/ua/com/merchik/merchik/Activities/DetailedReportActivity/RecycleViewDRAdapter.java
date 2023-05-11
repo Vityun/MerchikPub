@@ -193,6 +193,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                     || optionId == 158606   // Дополнительное место продаж
                     || optionId == 157354   // Фото ДМП.
                     || optionId == 157242   // Причина отсутствия товара
+                    || optionId == 159726   // Фото торговой точки
             ) {
                 constraintLayout.setBackgroundResource(R.drawable.bg_temp);
                 textInteger2.setVisibility(View.VISIBLE);
@@ -317,6 +318,20 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                     case (157277):  // Вставляем количество выполненных Фото Акционного Товара
                         textInteger.setText(
                                 setPhotoCountsMakeAndMust(optionsButtons, RealmManager.stackPhotoShowcasePhotoCount(dad2, 28)),
+                                TextView.BufferType.SPANNABLE
+                        );
+
+                        textInteger.setOnClickListener(view -> {
+                            Intent intent = new Intent(view.getContext(), PhotoLogActivity.class);
+                            intent.putExtra("report_prepare", true);
+                            intent.putExtra("dad2", dad2);
+                            view.getContext().startActivity(intent);
+                        });
+                        break;
+
+                    case (159726):  // Вставляем количество выполненных Фото Акционного Товара
+                        textInteger.setText(
+                                setPhotoCountsMakeAndMust(optionsButtons, RealmManager.stackPhotoShowcasePhotoCount(dad2, 37)),
                                 TextView.BufferType.SPANNABLE
                         );
 
@@ -669,6 +684,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
          * 158606 - 36 - доп. место продажи
          * 158604 - 41 - Наполненность
          * 157277 - 28 - Фото Акционного Товара
+         * 159726 - 37 - Фото ТТ
          * */
         int photoType = 0;
         boolean showPhotoLink = false;
@@ -716,6 +732,11 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
 
             case "158309":  // - 39 - "Фото Витрины" (Наближене)
                 photoType = 39;
+                showPhotoLink = true;
+                break;
+
+            case "159726":  // - 37 - Фото ТТ
+                photoType = 37;
                 showPhotoLink = true;
                 break;
 

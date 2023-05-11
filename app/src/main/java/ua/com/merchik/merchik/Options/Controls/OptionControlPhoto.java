@@ -65,6 +65,10 @@ public class OptionControlPhoto<T> extends OptionControl {
                 photoType = 42;
                 break;
 
+            case "159726":  // Фото торговой точки
+                photoType = 37;
+                break;
+
         }
 
         RealmResults<StackPhotoDB> stackPhotoDB = StackPhotoRealm.getPhotosByDAD2(wpDataDB.getCode_dad2(), photoType);
