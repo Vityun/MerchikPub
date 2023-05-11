@@ -64,6 +64,7 @@ import ua.com.merchik.merchik.data.RealmModels.TARCommentsDB;
 import ua.com.merchik.merchik.data.RealmModels.TovarDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.data.RetrofitResponse.AdditionalMaterialsAddressResponse;
+import ua.com.merchik.merchik.data.RetrofitResponse.AdditionalMaterialsGroupsResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.AdditionalMaterialsLinksResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.AdditionalMaterialsResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.ConductWpDataResponse;
@@ -2141,11 +2142,17 @@ public class Exchange {
         String json = gson.toJson(data);
         JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
 
-        retrofit2.Call<JsonObject> call = RetrofitBuilder.getRetrofitInterface().TEST_JSON_UPLOAD(RetrofitBuilder.contentType, convertedObject);
-        call.enqueue(new Callback<JsonObject>() {
+        retrofit2.Call<AdditionalMaterialsGroupsResponse> call = RetrofitBuilder.getRetrofitInterface().AdditionalMaterialsGroupsResponse_JSON_UPLOAD(RetrofitBuilder.contentType, convertedObject);
+        call.enqueue(new Callback<AdditionalMaterialsGroupsResponse>() {
             @Override
-            public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
+            public void onResponse(Call<AdditionalMaterialsGroupsResponse> call, Response<AdditionalMaterialsGroupsResponse> response) {
                 Log.e("test", "test" + response);
+
+                try {
+                    SQL_DB.additionalMaterialsGroupsDao().insertAll(response.body().list);
+                }catch (Exception e){
+
+                }
 
 
                 /*{"state":true,"list":[{"ID":"5","file_id":"9393","group_id":"346","author_id":"19653","dt_update":null},
@@ -2153,7 +2160,7 @@ public class Exchange {
             }
 
             @Override
-            public void onFailure(Call<JsonObject> call, Throwable t) {
+            public void onFailure(Call<AdditionalMaterialsGroupsResponse> call, Throwable t) {
                 Log.e("test", "test" + t);
             }
         });

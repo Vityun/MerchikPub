@@ -26,6 +26,7 @@ import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteHints;
 import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteObjects.SiteObjects;
 import ua.com.merchik.merchik.data.PPAonResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.AdditionalMaterialsAddressResponse;
+import ua.com.merchik.merchik.data.RetrofitResponse.AdditionalMaterialsGroupsResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.AdditionalMaterialsLinksResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.AdditionalMaterialsResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.AddressTableResponse;
@@ -603,6 +604,11 @@ public interface RetrofitInterface {
             @Body JsonObject json);
 
     // -------------------------------------------------------
+
+    @POST("mobile_app.php?")
+    Call<AdditionalMaterialsGroupsResponse> AdditionalMaterialsGroupsResponse_JSON_UPLOAD(
+            @Header("ContentType") String content,
+            @Body JsonObject json);
 
     /**
      * 11.04.23.
