@@ -8,6 +8,7 @@ import androidx.room.TypeConverters;
 
 import ua.com.merchik.merchik.data.Database.Room.AchievementsSDB;
 import ua.com.merchik.merchik.data.Database.Room.AdditionalMaterialsAddressSDB;
+import ua.com.merchik.merchik.data.Database.Room.AdditionalMaterialsGroupsSDB;
 import ua.com.merchik.merchik.data.Database.Room.AdditionalMaterialsSDB;
 import ua.com.merchik.merchik.data.Database.Room.AddressSDB;
 import ua.com.merchik.merchik.data.Database.Room.ArticleSDB;
@@ -40,6 +41,7 @@ import ua.com.merchik.merchik.data.Database.Room.VoteSDB;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.AchievementsDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.AdditionalMaterialsAddressDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.AdditionalMaterialsDao;
+import ua.com.merchik.merchik.database.room.DaoInterfaces.AdditionalMaterialsGroupsDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.AddressDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.ArticleDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.ChatDao;
@@ -89,6 +91,7 @@ import ua.com.merchik.merchik.database.room.DaoInterfaces.VotesDao;
                 ContentSDB.class,        // Контенты
                 TasksAndReclamationsSDB.class,   // Задачи и Рекламации
                 AdditionalMaterialsAddressSDB.class,
+                AdditionalMaterialsGroupsSDB.class,
                 AdditionalMaterialsSDB.class,
                 PotentialClientSDB.class,       // Потенциальный клиент
                 SamplePhotoSDB.class,            // Образцы Фото
@@ -100,8 +103,9 @@ import ua.com.merchik.merchik.database.room.DaoInterfaces.VotesDao;
                 ReclamationPercentageSDB.class,  // Процент рекламаций
                 ShelfSizeSDB.class,      // Доля полочного пространства
                 FragmentSDB.class           // Таблица Фрагментов (полей на фото)
+
         },
-        version = 34
+        version = 35
 )
 
 
@@ -145,6 +149,8 @@ public abstract class AppDatabase extends RoomDatabase {
     public abstract TarDao tarDao();
 
     public abstract AdditionalMaterialsAddressDao additionalMaterialsAddressDao();
+
+    public abstract AdditionalMaterialsGroupsDao additionalMaterialsGroupsDao();
 
     public abstract AdditionalMaterialsDao additionalMaterialsDao();
 

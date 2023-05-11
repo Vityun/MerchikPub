@@ -18,7 +18,7 @@ public class RoomManager {
                 .fallbackToDestructiveMigration()
                 .enableMultiInstanceInvalidation()
                 .allowMainThreadQueries()
-                .addMigrations(MIGRATION_33_34)
+                .addMigrations(MIGRATION_34_35)
 
                 .build();
     }
@@ -193,6 +193,23 @@ public class RoomManager {
         @Override
         public void migrate(@NonNull SupportSQLiteDatabase database) {
             database.execSQL("ALTER TABLE address ADD COLUMN nomer_tt INTEGER");
+        }
+    };
+
+    private static final String CREATE_ADDITIONAL_MATERIALS_GROUPS_TABLE =
+            "CREATE TABLE IF NOT EXISTS additional_materials_groups (" +
+                    "id INTEGER PRIMARY KEY NOT NULL," +
+                    "file_id INTEGER," +
+                    "group_id INTEGER," +
+                    "author_id INTEGER," +
+                    "dt_update INTEGER" +
+                    ")";
+
+
+    static final Migration MIGRATION_34_35 = new Migration(34, 35) {
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase database) {
+            database.execSQL(CREATE_ADDITIONAL_MATERIALS_GROUPS_TABLE);
         }
     };
 
