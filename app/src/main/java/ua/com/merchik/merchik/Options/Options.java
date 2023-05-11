@@ -792,6 +792,7 @@ public class Options {
             case 158608:
             case 158609:
             case 84932: // Проверка наличия ФотоОтчётов (id мне дали из 1С) (тип 0)
+            case 159726:
                 OptionControlPhoto<?> optionControlPhoto = new OptionControlPhoto<>(context, dataDB, option, type, mode);
                 if (mode.equals(NNKMode.MAKE) || (mode.equals(NNKMode.CHECK) && optionControlPhoto.isBlockOption()))
                     optionControlPhoto.showOptionMassage();
