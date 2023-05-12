@@ -164,18 +164,6 @@ public class OptionControlCheckingReasonOutOfStock<T> extends OptionControl {
                     }
                 });
 
-//                dialog.setOperationSpinnerData(setMapData(AKCIYA_ID));
-//                dialog.setOperationSpinner2Data(setMapData(Globals.OptionControlName.AKCIYA));
-//                dialog.setOperationTextData(reportPrepareDB.getAkciyaId());
-//                dialog.setOperationTextData2(reportPrepareDB.getAkciya());
-//
-//                dialog.setOperation(operationType(TPL), getCurrentData(TPL, reportPrepareDB.getCodeDad2(), reportPrepareDB.getTovarId()), setMapData(TPL.getOptionControlName()), () -> {
-//                    if (dialog.getOperationResult() != null) {
-//                        operetionSaveRPToDB(TPL, reportPrepareDB, dialog.getOperationResult(), dialog.getOperationResult2(), null, dialog.context);
-//                        Toast.makeText(dialog.context, "Внесено: " + dialog.getOperationResult(), Toast.LENGTH_LONG).show();
-//                    }
-//                });
-
                 dialog.show();
             }
 

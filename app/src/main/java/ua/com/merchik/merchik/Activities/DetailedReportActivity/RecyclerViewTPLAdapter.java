@@ -1,5 +1,9 @@
 package ua.com.merchik.merchik.Activities.DetailedReportActivity;
 
+import static ua.com.merchik.merchik.Globals.OptionControlName.AKCIYA_ID;
+import static ua.com.merchik.merchik.Globals.OptionControlName.ERROR_ID;
+import static ua.com.merchik.merchik.database.realm.RealmManager.INSTANCE;
+
 import android.app.DatePickerDialog;
 import android.content.Context;
 import android.graphics.Color;
@@ -26,6 +30,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import org.honorato.multistatetogglebutton.MultiStateToggleButton;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
@@ -37,14 +42,18 @@ import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportTo
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.Utils.MySimpleExpandableListAdapter;
+import ua.com.merchik.merchik.data.PhotoDescriptionText;
 import ua.com.merchik.merchik.data.RealmModels.ErrorDB;
 import ua.com.merchik.merchik.data.RealmModels.PromoDB;
 import ua.com.merchik.merchik.data.RealmModels.ReportPrepareDB;
+import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
+import ua.com.merchik.merchik.data.RealmModels.TovarDB;
 import ua.com.merchik.merchik.data.TovarOptions;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.ErrorRealm;
 import ua.com.merchik.merchik.database.realm.tables.TovarRealm;
 import ua.com.merchik.merchik.database.realm.tables.WpDataRealm;
+import ua.com.merchik.merchik.dialogs.DialogData;
 
 public class RecyclerViewTPLAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
@@ -66,9 +75,10 @@ public class RecyclerViewTPLAdapter extends RecyclerView.Adapter<RecyclerView.Vi
     public int getItemViewType(int position) {
         switch (dataTpl.get(position).getOptionControlName()) {
             case PHOTO:
+            case ERROR_ID:
                 return 3;
             case DT_EXPIRE:
-            case ERROR_ID:
+
                 return 2;
             case AKCIYA:
             case AKCIYA_ID:
@@ -119,7 +129,17 @@ public class RecyclerViewTPLAdapter extends RecyclerView.Adapter<RecyclerView.Vi
 
             case 3:
                 ViewHolderButton viewHolderButton = (ViewHolderButton) holder;
-                viewHolderButton.bind(dataTpl.get(position));
+
+                switch (dataTpl.get(position).getOptionControlName()) {
+                    case PHOTO:
+                        viewHolderButton.bind();
+                        break;
+
+                    case ERROR_ID:
+                        viewHolderButton.bind(dataTpl.get(position));
+                        break;
+                }
+
                 break;
         }
     }
@@ -610,10 +630,158 @@ public class RecyclerViewTPLAdapter extends RecyclerView.Adapter<RecyclerView.Vi
 
         public void bind(TovarOptions item) {
 
+            TovarDB tov = TovarRealm.getById(dataRp.tovarId);
+
+            DialogData dialog = new DialogData(itemView.getContext());
+            dialog.setTitle("");
+            dialog.setText("");
+            dialog.setClose(dialog::dismiss);
+
+            dialog.setImage(true, getPhotoFromDB(tov));
+            dialog.setAdditionalText(setPhotoInfo(TPL, tov, "", ""));
+
+            dialog.setExpandableListView(createExpandableAdapter(dialog.context), () -> {
+                if (dialog.getOperationResult() != null) {
+                    operetionSaveRPToDB(TPL, dataRp, dialog.getOperationResult(), dialog.getOperationResult2(), null, dialog.context);
+                }
+            });
+
+            dialog.show();
+        }
+
+        public void bind() {
             button.setOnClickListener(v -> {
-//                Toast.makeText(itemView.getContext(), "Тест", Toast.LENGTH_SHORT).show();
                 new TovarRequisites(TovarRealm.getById(dataRp.tovarId), dataRp).createDialog(itemView.getContext(), WpDataRealm.getWpDataRowByDad2Id(Long.parseLong(dataRp.codeDad2))).show();
             });
+        }
+
+
+        TovarOptions TPL = new TovarOptions(ERROR_ID, "Ш", "Ошибка товара", "error_id", "main", 135592, 157242);
+        private File getPhotoFromDB(TovarDB tovar) {
+            int id = Integer.parseInt(tovar.getiD());
+            StackPhotoDB stackPhotoDB = RealmManager.getTovarPhotoByIdAndType(id, tovar.photoId, 18, false);
+            if (stackPhotoDB != null) {
+                if (stackPhotoDB.getObject_id() == id) {
+                    if (stackPhotoDB.getPhoto_num() != null && !stackPhotoDB.getPhoto_num().equals("")) {
+                        File file = new File(stackPhotoDB.getPhoto_num());
+                        return file;
+                    }
+                }
+            }
+            return null;
+        }
+
+        private PhotoDescriptionText setPhotoInfo(TovarOptions tpl, TovarDB tovar, String finalBalanceData1, String finalBalanceDate1) {
+            PhotoDescriptionText res = new PhotoDescriptionText();
+
+            try {
+                String weightString = String.format("%s, %s", tovar.getWeight(), tovar.getBarcode()); // составление строк веса и штрихкода для того что б выводить в одно поле
+
+                String title = tpl.getOptionLong();
+
+                if (DetailedReportActivity.rpThemeId == 1178) {
+                    if (tpl.getOptionId().contains(578) || tpl.getOptionId().contains(1465)) {
+                        title = "Кол-во выкуп. товара";
+                    }
+
+                    if (tpl.getOptionId().contains(579)) {
+                        title = "Цена выкуп. товара";
+                    }
+                }
+
+                if (DetailedReportActivity.rpThemeId == 33) {
+                    if (tpl.getOptionId().contains(587)) {
+                        title = "Кол-во заказанного товара";
+                    }
+                }
+
+                res.row1Text = title;
+                res.row1TextValue = "";
+                res.row2TextValue = tovar.getNm();
+                res.row3TextValue = weightString;
+
+                res.row4TextValue = RealmManager.getNmById(tovar.getManufacturerId()) != null ? RealmManager.getNmById(tovar.getManufacturerId()).getNm() : "";
+
+                res.row5Text = "Ост.:";
+                res.row5TextValue = finalBalanceData1 + " шт на " + finalBalanceDate1;
+            } catch (Exception e) {
+                Globals.writeToMLOG("ERROR", "RecycleViewDRAdapterTovar.setPhotoInfo", "Exception e: " + e);
+            }
+            return res;
+        }
+
+        private MySimpleExpandableListAdapter createExpandableAdapter(Context context) {
+
+            Map<String, String> map;
+            ArrayList<Map<String, String>> groupDataList = new ArrayList<>();
+
+            // список атрибутов групп для чтения
+            String[] groupFrom = new String[]{"groupName"};
+            // список ID view-элементов, в которые будет помещены атрибуты групп
+            int groupTo[] = new int[]{android.R.id.text1};
+
+            // список атрибутов элементов для чтения
+            String childFrom[] = new String[]{"monthName"};
+            // список ID view-элементов, в которые будет помещены атрибуты
+            // элементов
+            int childTo[] = new int[]{android.R.id.text1};
+
+            // создаем общую коллекцию для коллекций элементов
+            ArrayList<ArrayList<Map<String, String>>> сhildDataList = new ArrayList<>();
+            // создаем коллекцию элементов для первой группы
+            ArrayList<Map<String, String>> сhildDataItemList = new ArrayList<>();
+
+            // Получение данных с БД
+            RealmResults<ErrorDB> errorDbList = RealmManager.getAllErrorDb();
+            RealmResults<ErrorDB> errorGroupsDB = errorDbList.where().equalTo("parentId", "0").findAll();
+
+            for (ErrorDB group : errorGroupsDB) {
+                map = new HashMap<>();
+                map.put("groupName", group.getNm());
+                groupDataList.add(map);
+
+                RealmResults<ErrorDB> errorItemsDB = errorDbList.where().equalTo("parentId", group.getID()).findAll();
+                if (errorItemsDB != null && errorItemsDB.size() > 0) {
+                    сhildDataItemList = new ArrayList<>();
+                    for (ErrorDB item : errorItemsDB) {
+                        map = new HashMap<>();
+                        map.put("monthName", "* " + item.getNm());
+                        сhildDataItemList.add(map);
+                    }
+                    сhildDataList.add(сhildDataItemList);
+                } else {
+                    сhildDataItemList = new ArrayList<>();
+                    map = new HashMap<>();
+                    map.put("monthName", "* " + group.getNm());
+                    сhildDataItemList.add(map);
+                    сhildDataList.add(сhildDataItemList);
+                }
+            }
+
+            MySimpleExpandableListAdapter adapter = new MySimpleExpandableListAdapter(
+                    context, groupDataList,
+                    android.R.layout.simple_expandable_list_item_1, groupFrom,
+                    groupTo, сhildDataList, android.R.layout.simple_list_item_1,
+                    childFrom, childTo);
+
+            return adapter;
+        }
+
+        private void operetionSaveRPToDB(TovarOptions tpl, ReportPrepareDB rp, String data, String data2, TovarDB tovarDB, Context context) {
+            if (data == null || data.equals("")) {
+                Toast.makeText(context, "Для сохранения - внесите данные", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            if (tpl.getOptionControlName() == AKCIYA_ID) {
+                INSTANCE.executeTransaction(realm -> {
+                    rp.setAkciyaId(data);
+                    rp.setAkciya(data2);
+                    rp.setUploadStatus(1);
+                    rp.setDtChange(System.currentTimeMillis() / 1000);
+                    RealmManager.setReportPrepareRow(rp);
+                });
+            }
         }
     }
 }
