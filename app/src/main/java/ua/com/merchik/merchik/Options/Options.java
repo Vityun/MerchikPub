@@ -1205,7 +1205,8 @@ public class Options {
     private <T> void option138340(Context context, T dataDB, OptionsDB option, OptionMassageType type, NNKMode mode) {
         String expire = Clock.getHumanTimeYYYYMMDD(System.currentTimeMillis() / 1000);
         List<AdditionalMaterialsSDB> data1 = SQL_DB.additionalMaterialsDao().getAllForOption(option.getClientId(), "1", "0", expire);
-        List<AdditionalMaterialsJOINAdditionalMaterialsAddressSDB> data = SQL_DB.additionalMaterialsDao().getAllForOptionTEST(option.getClientId(), Integer.parseInt(option.getAddrId()), "1", "0");
+//        List<AdditionalMaterialsJOINAdditionalMaterialsAddressSDB> data = SQL_DB.additionalMaterialsDao().getAllForOptionTEST(option.getClientId(), Integer.parseInt(option.getAddrId()), "1", "0");
+        List<AdditionalMaterialsJOINAdditionalMaterialsAddressSDB> data = SQL_DB.additionalMaterialsDao().getAllForOptionTEST(option.getClientId(), Integer.parseInt(option.getAddrId()), "0");
 
         DialogAdditionalRequirements dialogAdditionalRequirements = new DialogAdditionalRequirements(context);
 

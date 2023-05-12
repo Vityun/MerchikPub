@@ -1,5 +1,7 @@
 package ua.com.merchik.merchik.Options.Controls;
 
+import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
+
 import android.content.Context;
 import android.os.Build;
 
@@ -26,8 +28,6 @@ import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsMarkRealm;
 import ua.com.merchik.merchik.database.realm.tables.CustomerRealm;
-
-import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
 public class OptionControlAdditionalMaterialsMark<T> extends OptionControl {
     public int OPTION_CONTROL_ADD_COMMENT_ID = 138342;
@@ -80,7 +80,8 @@ public class OptionControlAdditionalMaterialsMark<T> extends OptionControl {
             long dateTo = Clock.getDatePeriodLong(dateDocumentLong, +4) / 1000;     // Дата документа +3 дня
 
             // Получаем Доп.материалы.
-            List<AdditionalMaterialsJOINAdditionalMaterialsAddressSDB> data = SQL_DB.additionalMaterialsDao().getAllForOptionTEST(optionDB.getClientId(), Integer.parseInt(optionDB.getAddrId()), "1", "0");
+//            List<AdditionalMaterialsJOINAdditionalMaterialsAddressSDB> data = SQL_DB.additionalMaterialsDao().getAllForOptionTEST(optionDB.getClientId(), Integer.parseInt(optionDB.getAddrId()), "1", "0");
+            List<AdditionalMaterialsJOINAdditionalMaterialsAddressSDB> data = SQL_DB.additionalMaterialsDao().getAllForOptionTEST(optionDB.getClientId(), Integer.parseInt(optionDB.getAddrId()), "0");
 
             // Проверяем, есть ли вообще данные
             if (data != null && data.size() > 0) {
