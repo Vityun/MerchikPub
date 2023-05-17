@@ -1057,10 +1057,9 @@ public class Options {
             // Контроль Опции Доп. Требований
             case 138341:
                 try {
-//                    optionControlAdditionalRequirements_138341(context, dataDB, option, type, mode);
-
                     OptionControlAdditionalRequirementsMark<?> optionControlAdditionalRequirementsMark = new OptionControlAdditionalRequirementsMark<>(context, dataDB, option, type, mode);
-                    optionControlAdditionalRequirementsMark.showOptionMassage();
+                    if (mode.equals(NNKMode.MAKE) || (mode.equals(NNKMode.CHECK) && optionControlAdditionalRequirementsMark.isBlockOption()))
+                        optionControlAdditionalRequirementsMark.showOptionMassage();
 
                     return optionControlAdditionalRequirementsMark.isBlockOption() ? 1 : 0;
                 } catch (Exception e) {
@@ -1070,7 +1069,8 @@ public class Options {
             case 138342:
                 try {
                     OptionControlAdditionalMaterialsMark<?> optionControlAdditionalMaterialsMark = new OptionControlAdditionalMaterialsMark<>(context, dataDB, option, type, mode);
-                    optionControlAdditionalMaterialsMark.showOptionMassage();
+                    if (mode.equals(NNKMode.MAKE) || (mode.equals(NNKMode.CHECK) && optionControlAdditionalMaterialsMark.isBlockOption()))
+                        optionControlAdditionalMaterialsMark.showOptionMassage();
 
                     return optionControlAdditionalMaterialsMark.isBlockOption() ? 1 : 0;
                 } catch (Exception e) {
@@ -1227,7 +1227,7 @@ public class Options {
         dialogAdditionalRequirements.show();
     }
 
-    private List<AdditionalMaterialsJOINAdditionalMaterialsAddressSDB> amToAma(List<AdditionalMaterialsSDB> AM){
+    private List<AdditionalMaterialsJOINAdditionalMaterialsAddressSDB> amToAma(List<AdditionalMaterialsSDB> AM) {
         List<AdditionalMaterialsJOINAdditionalMaterialsAddressSDB> AMA = new ArrayList<>(); // создаем новый список
         for (AdditionalMaterialsSDB am : AM) {
             AdditionalMaterialsJOINAdditionalMaterialsAddressSDB ama = new AdditionalMaterialsJOINAdditionalMaterialsAddressSDB();
