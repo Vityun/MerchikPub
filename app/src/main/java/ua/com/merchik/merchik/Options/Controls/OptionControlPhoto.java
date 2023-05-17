@@ -10,6 +10,7 @@ import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.database.realm.RealmManager;
+import ua.com.merchik.merchik.database.realm.tables.ImagesTypeListRealm;
 import ua.com.merchik.merchik.database.realm.tables.StackPhotoRealm;
 
 public class OptionControlPhoto<T> extends OptionControl {
@@ -73,7 +74,7 @@ public class OptionControlPhoto<T> extends OptionControl {
 
         RealmResults<StackPhotoDB> stackPhotoDB = StackPhotoRealm.getPhotosByDAD2(wpDataDB.getCode_dad2(), photoType);
         if (stackPhotoDB != null && stackPhotoDB.size() < m){
-            stringBuilderMsg.append("Вы должны сделать: ").append(m).append(" фото, а сделали: ").append(stackPhotoDB.size()).append(" - доделайте фотографии.");
+            stringBuilderMsg.append("Вы должны сделать: ").append(m).append(" фото с типом: ").append(ImagesTypeListRealm.getByID(photoType).getNm()).append(", а сделали: ").append(stackPhotoDB.size()).append(" - доделайте фотографии.");
             signal = true;
         }else {
             stringBuilderMsg.append("Жалоб по фыполнению фото нет. Сделано: ").append(stackPhotoDB.size()).append(" фото.");
