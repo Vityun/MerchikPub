@@ -759,7 +759,7 @@ public class Options {
                 OptionControlAvailabilityControlPhotoRemainingGoods<?> optionControlAvailabilityControlPhotoRemainingGoods = new OptionControlAvailabilityControlPhotoRemainingGoods<>(context, dataDB, option, type, mode);
                 if (mode.equals(NNKMode.MAKE) || (mode.equals(NNKMode.CHECK) && optionControlAvailabilityControlPhotoRemainingGoods.isBlockOption()))
                     optionControlAvailabilityControlPhotoRemainingGoods.showOptionMassage();
-                break;
+                return optionControlAvailabilityControlPhotoRemainingGoods.isBlockOption() ? 1 : 0;
 
             case 135412:
 //                new OptionButtonPercentageOfThePrize<>(context, dataDB, option, type, mode);
