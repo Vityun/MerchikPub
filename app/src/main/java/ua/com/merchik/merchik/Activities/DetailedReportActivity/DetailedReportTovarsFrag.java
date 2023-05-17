@@ -330,7 +330,7 @@ public class DetailedReportTovarsFrag extends Fragment {
                 return res;
 
             case PPA:
-                res = PPADBRealm.getTovarListByPPA(wpDataDB.getClient_id(), null, null);
+                res = PPADBRealm.getTovarListByPPA(clientId, null, null);
                 return res;
 
             case ONE:
