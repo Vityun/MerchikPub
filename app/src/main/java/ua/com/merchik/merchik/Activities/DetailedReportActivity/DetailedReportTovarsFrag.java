@@ -177,14 +177,28 @@ public class DetailedReportTovarsFrag extends Fragment {
         popupMenu.inflate(R.menu.popup_dr_tovar_list);
 
         popupMenu.setOnMenuItemClickListener(item -> {
+            CustomerSDB customerSDB = null;
+            try {
+                customerSDB = SQL_DB.customerDao().getById(wpDataDB.getClient_id());
+            } catch (Exception e) {
+                // Обработка исключения при получении по идентификатору из wpDataDB
+            }
 
-            CustomerSDB customerSDB = SQL_DB.customerDao().getById(wpDataDB.getClient_id());
+            if (customerSDB == null) {
+                try {
+                    customerSDB = SQL_DB.customerDao().getById(tasksAndReclamationsSDB.client);
+                } catch (Exception e) {
+                    // Обработка исключения при получении по идентификатору из tasksAndReclamationsSDB
+                }
+            }
+
 
             DialogData dialogData = new DialogData(getContext());
             dialogData.setTitle("Увага");
             dialogData.setText(Html.fromHtml("<font color='RED'>По даному замовнику КАТЕГОРИЧНО ЗАБОРОНЕНО додавати товари! <br><br>Відмовитися від додавання товарів?</font>"));
             dialogData.setDialogIco();
-            dialogData.setOk("Так", ()->{});
+            dialogData.setOk("Так", () -> {
+            });
 
 
             List<TovarDB> tovarDBList;
@@ -198,15 +212,15 @@ public class DetailedReportTovarsFrag extends Fragment {
                 case R.id.popup_ppa:
                     tovarDBList = getTovListNew(TovarDisplayType.PPA);
 
-                    if (customerSDB != null && customerSDB.ppaAuto == 1 && !customerSDB.id.equals("9382") && !customerSDB.id.equals("32246")){ // 9382 - Витмарк, 32246 - Ласунка
-                        dialogData.setCancel("Ні", ()-> {
+                    if (customerSDB != null && customerSDB.ppaAuto == 1 && !customerSDB.id.equals("9382") && !customerSDB.id.equals("32246")) { // 9382 - Витмарк, 32246 - Ласунка
+                        dialogData.setCancel("Ні", () -> {
                             Toast.makeText(getContext(), "Додано товари з ППА. (" + tovarDBList.size() + ")", Toast.LENGTH_SHORT).show();
                             addTovarToRecyclerView(tovarDBList);
                             dialogData.dismiss();
                         });
                         dialogData.setClose(dialogData::dismiss);
                         dialogData.show();
-                    }else {
+                    } else {
                         Toast.makeText(getContext(), "Додано товари з ППА. (" + tovarDBList.size() + ")", Toast.LENGTH_SHORT).show();
                         addTovarToRecyclerView(tovarDBList);
                     }
@@ -215,27 +229,27 @@ public class DetailedReportTovarsFrag extends Fragment {
                 case R.id.popup_all:
                     tovarDBList = getTovListNew(TovarDisplayType.ALL);
 
-                    if (customerSDB != null && customerSDB.ppaAuto == 1 && !customerSDB.id.equals("9382") && !customerSDB.id.equals("32246")){
-                        dialogData.setCancel("Ні", ()-> {
+                    if (customerSDB != null && customerSDB.ppaAuto == 1 && !customerSDB.id.equals("9382") && !customerSDB.id.equals("32246")) {
+                        dialogData.setCancel("Ні", () -> {
                             openAllTov(tovarDBList);
                             dialogData.dismiss();
                         });
                         dialogData.setClose(dialogData::dismiss);
                         dialogData.show();
-                    }else {
+                    } else {
                         openAllTov(tovarDBList);
                     }
                     return true;
 
                 case R.id.popup_tov:
-                    if (customerSDB != null && customerSDB.ppaAuto == 1 && !customerSDB.id.equals("9382") && !customerSDB.id.equals("32246")){
-                        dialogData.setCancel("Ні", ()-> {
+                    if (customerSDB != null && customerSDB.ppaAuto == 1 && !customerSDB.id.equals("9382") && !customerSDB.id.equals("32246")) {
+                        dialogData.setCancel("Ні", () -> {
                             openOneTov();
                             dialogData.dismiss();
                         });
                         dialogData.setClose(dialogData::dismiss);
                         dialogData.show();
-                    }else {
+                    } else {
                         openOneTov();
                     }
                     return true;
@@ -247,12 +261,12 @@ public class DetailedReportTovarsFrag extends Fragment {
         popupMenu.show();
     }
 
-    private void openAllTov(List<TovarDB> tovarDBList){
+    private void openAllTov(List<TovarDB> tovarDBList) {
         Toast.makeText(getContext(), "Додано всі товари.(" + tovarDBList.size() + ")", Toast.LENGTH_SHORT).show();
         addRecycleView(tovarDBList);
     }
 
-    private void openOneTov(){
+    private void openOneTov() {
         DialogData dialog = new DialogData(getContext());
         dialog.setTitle("Оберіть Товар");
         dialog.setText("");
@@ -294,7 +308,7 @@ public class DetailedReportTovarsFrag extends Fragment {
                 if (RealmManager.getTovarListFromReportPrepareByDad2(codeDad2) != null) {
                     res = RealmManager.INSTANCE.copyFromRealm(Objects.requireNonNull(RealmManager.getTovarListFromReportPrepareByDad2(codeDad2)));
 
-                    if (res.size() == 0){
+                    if (res.size() == 0) {
                         downloadDetailedReportTovarsData(new Clicks.clickStatusMsg() {
                             @Override
                             public void onSuccess(String data) {
@@ -332,7 +346,7 @@ public class DetailedReportTovarsFrag extends Fragment {
     /**
      * 10.04.23.
      * Отвечает за именно добавление данных в Товары
-     * */
+     */
     private void addTovarToRecyclerView(List<TovarDB> newTovarList) {
         LinkedList<TovarDB> data = new LinkedList<>(adapter.getAdapterDataList());
 
