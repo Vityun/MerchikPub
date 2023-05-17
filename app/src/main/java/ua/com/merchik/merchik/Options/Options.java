@@ -483,6 +483,18 @@ public class Options {
 
         Log.e("NNK", "option.getOptionBlock2(): " + optionList);
 
+        // Проход по второй опции блокировки
+        if (!option.getOptionBlock2().equals("0")) {
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+                OptionsDB optionsDB = optionList.stream().filter(optionListItem -> Objects.equals(optionListItem.getOptionControlId(), option.getOptionBlock2()))
+                        .findAny()
+                        .orElse(null);
+                if (optionsDB != null) {
+                    res += optControl(context, dataDB, optionsDB, Integer.parseInt(option.getOptionBlock2()), type, NNKMode.CHECK);
+                    Log.e("NNK", "res OK 2: " + res);
+                }
+            }
+        }
 
         // Проход по первой опции блокировки
         if (!option.getOptionBlock1().equals("0")) {
@@ -493,19 +505,6 @@ public class Options {
                 if (optionsDB != null) {
                     res += optControl(context, dataDB, optionsDB, Integer.parseInt(option.getOptionBlock1()), type, NNKMode.CHECK);
                     Log.e("NNK", "res OK 1: " + res);
-                }
-            }
-        }
-
-        // Проход по второй опции блокировки
-        if (!option.getOptionBlock2().equals("0")) {
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
-                OptionsDB optionsDB = optionList.stream().filter(optionListItem -> Objects.equals(optionListItem.getOptionControlId(), option.getOptionBlock2()))
-                        .findAny()
-                        .orElse(null);
-                if (optionsDB != null) {
-                    res += optControl(context, dataDB, optionsDB, Integer.parseInt(option.getOptionBlock2()), type, NNKMode.CHECK);
-                    Log.e("NNK", "res OK 2: " + res);
                 }
             }
         }
