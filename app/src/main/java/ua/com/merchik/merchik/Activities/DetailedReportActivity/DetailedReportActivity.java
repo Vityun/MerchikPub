@@ -14,9 +14,13 @@ import static ua.com.merchik.merchik.PhotoReportActivity.resizeImageFile;
 import static ua.com.merchik.merchik.data.RealmModels.StackPhotoDB.PHOTO_PROMOTION_TOV;
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
+import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.content.ContentResolver;
+import android.content.ContentUris;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Color;
 import android.net.Uri;
@@ -30,6 +34,9 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.viewpager.widget.ViewPager;
@@ -125,9 +132,25 @@ public class DetailedReportActivity extends toolbar_menus {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        // Регистрация ActivityResultLauncher
+        requestPermissionLauncher = registerForActivityResult(
+                new ActivityResultContracts.RequestPermission(), isGranted -> {
+                    if (isGranted) {
+                        // Разрешение получено, продолжайте удаление файла
+                        Log.e("deleteFile", "Разрешение получено, продолжайте удаление файла");
+                    } else {
+                        // Разрешение не получено, обработайте соответствующим образом
+                        Log.e("deleteFile", "Например, выведите сообщение пользователю или выполните альтернативные действия");
+                    }
+                }
+        );
+
+
         Globals.writeToMLOG("INFO", "DetailedReportActivity/onCreate", "Открыли по новой активность. Смотри Выше лог - после чего именно.");
 
         setActivityData();
+
+        registrationPermission();
 
         SKUPlan = 0;
         SKUFact = 0;
@@ -232,6 +255,113 @@ public class DetailedReportActivity extends toolbar_menus {
         }
 
     }//--------------------------------------------------------------------- /ON CREATE ---------------------------------------------------------------------
+
+
+    ActivityResultLauncher<String> requestPermissionLauncher;
+    private void registrationPermission(){
+        // Регистрация ActivityResultLauncher
+        requestPermissionLauncher = registerForActivityResult(
+                new ActivityResultContracts.RequestPermission(), isGranted -> {
+                    if (isGranted) {
+                        // Разрешение получено, продолжайте удаление файла
+                        Log.e("deleteFile", "Разрешение получено, продолжайте удаление файла1");
+                    } else {
+                        // Разрешение не получено, обработайте соответствующим образом
+                        // Например, выведите сообщение пользователю или выполните альтернативные действия
+                        Log.e("deleteFile", "Разрешение получено, продолжайте удаление файла2");
+                    }
+                }
+        );
+    }
+
+    private void checkAndDeleteFile(Uri fileUri) {
+        final String filePath = getRealPathFromURI(fileUri); // Переменная filePath объявлена как final
+
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+            Log.e("deleteFile", "getContentResolver().takePersistableUriPermission");
+            getContentResolver().takePersistableUriPermission(fileUri, Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+        }
+
+        // Проверяем наличие разрешения на запись во внешнее хранилище
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                == PackageManager.PERMISSION_GRANTED) {
+            // Разрешение уже предоставлено, продолжайте удаление файла
+            Log.e("deleteFile", "PERMISSION_GRANTED");
+            deleteFileFromMediaStore(filePath);
+        } else {
+            // Разрешение не предоставлено, запрашиваем его у пользователя
+            Log.e("deleteFile", "Разрешение не предоставлено, запрашиваем его у пользователя");
+            requestPermissionLauncher.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE);
+        }
+    }
+
+    private void deleteFileFromMediaStore(String filePath) {
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+            // Используем SAF для удаления файла
+            Uri uri = MediaStore.Files.getContentUri(MediaStore.VOLUME_EXTERNAL);
+            String selection = MediaStore.MediaColumns.DATA + "=?";
+            String[] selectionArgs = new String[]{filePath};
+
+            int deletedRows = getContentResolver().delete(uri, selection, selectionArgs);
+
+            if (deletedRows > 0) {
+                // Файл успешно удален
+                Log.e("deleteFile", "Файл успешно удален");
+            } else {
+                // Возникла ошибка при удалении файла
+                Log.e("deleteFile", "Возникла ошибка при удалении файла");
+            }
+        } else {
+            // Версия Android ниже 10, можно использовать старый метод удаления файла
+            File file = new File(filePath);
+            boolean deleted = file.delete();
+
+            if (deleted) {
+                // Файл успешно удален
+                Log.e("deleteFile", "Файл успешно удален1");
+            } else {
+                // Возникла ошибка при удалении файла
+                Log.e("deleteFile", "Возникла ошибка при удалении файла1");
+            }
+        }
+    }
+
+    private void deleteFileFromMediaStore2(String filePath) {
+        ContentResolver contentResolver = getContentResolver();
+        Uri mediaStoreUri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
+        String selection = MediaStore.Images.Media.DATA + "=?";
+        String[] selectionArgs = new String[]{filePath};
+
+        // Получение ID файла в MediaStore
+        long fileId = -1;
+        try (Cursor cursor = contentResolver.query(mediaStoreUri, null, selection, selectionArgs, null)) {
+            if (cursor != null && cursor.moveToFirst()) {
+                int idColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media._ID);
+                fileId = cursor.getLong(idColumn);
+            }
+        }
+
+        if (fileId != -1) {
+            // Создание Uri файла в MediaStore с использованием ID
+            Uri fileContentUri = ContentUris.withAppendedId(mediaStoreUri, fileId);
+
+            // Удаление файла из MediaStore
+            int deletedRows = contentResolver.delete(fileContentUri, null, null);
+            if (deletedRows > 0) {
+                // Файл успешно удален
+                Log.e("deleteFile", "Файл успешно удален");
+            } else {
+                // Не удалось удалить файл
+                Log.e("deleteFile", "Не удалось удалить файл");
+            }
+        } else {
+            // Файл не найден в MediaStore
+            Log.e("deleteFile", "Файл не найден в MediaStore");
+        }
+    }
+
+
+
 
     /*Получаю строчку с Пална работ и храню её для Отчёта*/
     private void setActivityData() {
@@ -436,7 +566,20 @@ public class DetailedReportActivity extends toolbar_menus {
             Uri uri = data.getData();
             String filePath = getRealPathFromURI(uri);
 
-            savePhoto(new File(filePath), MakePhotoFromGaleryWpDataDB, MakePhotoFromGalery.tovarId);
+//            DialogData dialogData = new DialogData(this);
+//            dialogData.setTitle("Удалить фото?");
+//            dialogData.setText("Вы можете Удалить уже загруженное в приложение фото, для того что б оно не занимало место на телефоне. Удалить?");
+//
+//            dialogData.setOk("Да", () -> {
+//                checkAndDeleteFile(uri);
+//            });
+//
+//            dialogData.setCancel("Нет", () -> {
+                savePhoto(new File(filePath), MakePhotoFromGaleryWpDataDB, MakePhotoFromGalery.tovarId);
+//            });
+//
+//            dialogData.show();
+//            dialogData.setClose(dialogData::dismiss);
         }
 
         switch (requestCode) {

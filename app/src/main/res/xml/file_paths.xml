@@ -5,15 +5,23 @@
 <!--    <external-path name="images" path="/" />-->
 <!--</paths>-->
 
+<!--17.05.23-->
 <!--Для всех нормальных людей-->
-<paths>
+<!--<paths>
     <external-path name="images" path="."/>
-<!--    <external-files-path name="images" path="/" />-->
+&lt;!&ndash;    <external-files-path name="images" path="/" />&ndash;&gt;
+</paths>-->
+
+
+<paths xmlns:android="http://schemas.android.com/apk/res/android">
+    <external-path
+        name="external_files"
+        path="." />
 </paths>
 
 
-<!--Алёна Шпинеева-->
-<!--Не подходит Лере Валерьевне, такая же ошибка как у Алёны, но НА ЭТОМ подходе-->
-<!--<paths>-->
-<!--    <external-path name="images" path="."/>-->
-<!--</paths>-->
+    <!--Алёна Шпинеева-->
+    <!--Не подходит Лере Валерьевне, такая же ошибка как у Алёны, но НА ЭТОМ подходе-->
+    <!--<paths>-->
+    <!--    <external-path name="images" path="."/>-->
+    <!--</paths>-->
