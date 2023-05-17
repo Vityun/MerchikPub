@@ -86,19 +86,19 @@ public class DetailedReportButtons {
                 }
                 break;
 
-            case 135158: // Фото остатков товаров
-                globals.fixMP(); // Фиксация Местоположения в таблице ЛогМп
-                wpDataObj.setPhotoType("4");
-                if (mod == 1) {
-                    intentPhotoReport.putExtra("dataFromWPObj", wpDataObj);
-                    context.startActivity(intentPhotoReport);
-                } else {
+//            case 135158: // Фото остатков товаров
+//                globals.fixMP(); // Фиксация Местоположения в таблице ЛогМп
+//                wpDataObj.setPhotoType("4");
+//                if (mod == 1) {
 //                    intentPhotoReport.putExtra("dataFromWPObj", wpDataObj);
-//                    MakePhoto.startToMakePhoto(context, wpDataObj);
-                    MakePhoto makePhoto = new MakePhoto();
-                    makePhoto.pressedMakePhotoOldStyle((Activity) context, wpDataObj, wpDataDB);
-                }
-                break;
+//                    context.startActivity(intentPhotoReport);
+//                } else {
+////                    intentPhotoReport.putExtra("dataFromWPObj", wpDataObj);
+////                    MakePhoto.startToMakePhoto(context, wpDataObj);
+//                    MakePhoto makePhoto = new MakePhoto();
+//                    makePhoto.pressedMakePhotoOldStyle((Activity) context, wpDataObj, wpDataDB);
+//                }
+//                break;
 
             case 132969: // Фото тележка с товаром
                 globals.fixMP(); // Фиксация Местоположения в таблице ЛогМп

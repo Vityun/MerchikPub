@@ -144,7 +144,7 @@ public class AdditionalRequirementsRealm {
                 .equalTo("not_approve", "0")
                 .findAll();
 
-        switch (mod){
+        switch (mod) {
             case HIDE_FOR_USER:
                 realmResults = realmResults.where()
                         .equalTo("hideUser", "0")
@@ -188,11 +188,21 @@ public class AdditionalRequirementsRealm {
 
                 .findAll();
 
-        if (themeId != 998) {
+        if (themeId == 998) {
+            realmResults = realmResults.where()
+                    .equalTo("themeId", "1182")
+                    .findAll();
+        } else {
             realmResults = realmResults.where()
                     .equalTo("themeId", String.valueOf(themeId))
                     .findAll();
         }
+
+//        if (themeId != 998) {
+//            realmResults = realmResults.where()
+//                    .equalTo("themeId", String.valueOf(themeId))
+//                    .findAll();
+//        }
         return realmResults;
     }
 
