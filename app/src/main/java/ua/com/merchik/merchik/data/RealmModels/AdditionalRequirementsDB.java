@@ -65,6 +65,10 @@ public class AdditionalRequirementsDB extends RealmObject {
     @Expose
     public String userId;
 
+    @SerializedName("addr_tt_id")
+    @Expose
+    public Integer addrTTId;
+
     public Integer getId() {
         return id;
     }
