@@ -271,8 +271,9 @@ public class Options {
                     optionControlPhotoPromotion.showOptionMassage();
                     break;
 
+                case 132971:    // Проверка наличия Фото тележка с товаром (тип 10)
                 case 134583:
-                case 84932: // Проверка наличия ФотоОтчётов (id мне дали из 1С) (тип 0)
+                case 84932:     // Проверка наличия ФотоОтчётов (id мне дали из 1С) (тип 0)
                 case 141361:
                 case 158606:
                 case 158607:
@@ -292,9 +293,9 @@ public class Options {
 //                    checkPhoto(dataDB, optionsDB, "4");
 //                    break;
 
-                case 132971:  // Проверка наличия Фото тележка с товаром (тип 10)
-                    checkPhoto(dataDB, optionsDB, "10");
-                    break;
+//                case 132971:  // Проверка наличия Фото тележка с товаром (тип 10)
+//                    checkPhoto(dataDB, optionsDB, "10");
+//                    break;
 
 //                case 141361:  // Проверка наличия Фото тележка с товаром (тип 31)
 //                    checkPhoto(dataDB, optionsDB, "31");
@@ -476,6 +477,7 @@ public class Options {
 
         Log.e("NNK", "--------------------------------");
         Log.e("NNK", "option.option_id: " + option.getOptionId());
+        Log.e("NNK", "option.option_control_id: " + option.getOptionControlId());
         Log.e("NNK", "START_res: " + res);
 
         Log.e("NNK", "option.getOptionBlock1(): " + option.getOptionBlock1());
@@ -789,6 +791,7 @@ public class Options {
                 break;
 
             // Контроль фотоотчётов
+            case 132971:    // Проверка наличия Фото тележка с товаром (тип 10)
             case 134583:
             case 141361:
             case 158606:
@@ -1475,6 +1478,13 @@ public class Options {
 //                if (!res) {
 //                    optionNotConduct.add(optionsDB);
 //                }
+
+                DialogData dialog = new DialogData(context);
+                dialog.setTitle("Ошибка");
+                dialog.setDialogIco();
+                dialog.setText("Прежде чем выполнять данную опцию (действие) вы должны выполнить опцию: " + "Контроль наличия времени начала работ (ВРН)");
+                dialog.setClose(dialog::dismiss);
+                dialog.show();
                 break;
 
             case NULL:

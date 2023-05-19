@@ -1,5 +1,7 @@
 package ua.com.merchik.merchik.Activities.WorkPlanActivity;
 
+import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
+
 import android.graphics.Paint;
 import android.os.Bundle;
 import android.text.Editable;
@@ -33,8 +35,6 @@ import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.dialogs.DialogFilter.DialogFilter;
-
-import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
 public class WPDataFragmentHome extends Fragment {
 
@@ -87,7 +87,7 @@ public class WPDataFragmentHome extends Fragment {
             cal.set(Calendar.MILLISECOND, 0);
 
             dateFrom = cal.getTime();
-            dateTo = Clock.timeLongToDAte(Clock.getDatePeriodLong(cal.getTime().getTime(), +3) / 1000);
+            dateTo = Clock.timeLongToDAte(Clock.getDatePeriodLong(cal.getTime().getTime(), +4) / 1000);
 
             workPlan = RealmManager.getAllWorkPlan();
             try {

@@ -499,11 +499,11 @@ public class DetailedReportTovarsFrag extends Fragment {
 
     private void downloadDetailedReportTovarsData(Clicks.clickStatusMsg click) {
         try {
-            ProgressDialog pg = ProgressDialog.show(mContext, "Загрузка списка товаров", "Подождите окончания загрузки. Это может занять время.", true, true);
-            downloadReportPrepareByDad2(pg, click);
-
-            ProgressDialog pg2 = ProgressDialog.show(mContext, "Загрузка списка опций", "Подождите окончания загрузки. Это может занять время.", true, true);
-            downloadOptionByDad2(pg2, click);
+//            ProgressDialog pg = ProgressDialog.show(mContext, "Загрузка списка товаров", "Подождите окончания загрузки. Это может занять время.", true, true);
+//            downloadReportPrepareByDad2(pg, click);
+//
+//            ProgressDialog pg2 = ProgressDialog.show(mContext, "Загрузка списка опций", "Подождите окончания загрузки. Это может занять время.", true, true);
+//            downloadOptionByDad2(pg2, click);
         } catch (Exception e) {
 
         }

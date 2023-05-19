@@ -45,6 +45,16 @@ public class OptionControlPhoto<T> extends OptionControl {
         int photoType = 0;
 
         switch (optionDB.getOptionControlId()){
+            case "84932":
+                photoType = 0;
+                m = 3;
+                break;
+
+            case "132971":
+                photoType = 10; // Проверка наличия Фото тележка с товаром (тип 10)
+                m = 1;
+                break;
+
             case "141361":
                 photoType = 31; // Фото товара на скалде
                 m = 1;
