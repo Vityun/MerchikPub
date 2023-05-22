@@ -190,7 +190,7 @@ public class AdditionalRequirementsRealm {
 
         if (themeId == 998) {
             realmResults = realmResults.where()
-                    .equalTo("themeId", "1182")
+                    .notEqualTo("themeId", "1182")
                     .findAll();
         } else {
             realmResults = realmResults.where()
