@@ -202,6 +202,8 @@ public class AdditionalRequirementsRealm {
         if (ttCategory != null){
             realmResults = realmResults.where()
                     .equalTo("addrTTId", ttCategory)
+                    .or()
+                    .equalTo("addrTTId", 0)
                     .findAll();
         }
 
