@@ -146,14 +146,14 @@ public class OptionControlPhotoCartWithGoods<T> extends OptionControl {
                 signal = false;
             } else if (workCount < 4 && themeId == 998) {
                 stringBuilderMsg.append("Сотрудник ").append(usersSDBDocument.fio)
-                        .append(" за период с ").append(Clock.getHumanTimeSecPattern(dateFrom, "MM:dd"))
-                        .append(" по ").append(Clock.getHumanTimeSecPattern(dateTo, "MM:dd"))
+                        .append(" за период с ").append(Clock.getHumanTimeSecPattern(dateFrom, "MM-dd"))
+                        .append(" по ").append(Clock.getHumanTimeSecPattern(dateTo, "MM-dd"))
                         .append(" дней и провел ").append(workCount).append(" отчетов по данному КлиентоАдресу. Данный тип фото начинаем проверять после проведения более 3-х отчетов за 30-ь дней.");
                 signal = false;
             }else {
                 stringBuilderMsg.append("Фото Тележки с Товаром (ФТТ) отсутствует (или помечено на ДВИ) по данному клиенту и адресу за период с ")
-                        .append(Clock.getHumanTimeSecPattern(dateFrom, "MM:dd"))
-                        .append(" по ").append(Clock.getHumanTimeSecPattern(dateTo, "MM:dd"))
+                        .append(Clock.getHumanTimeSecPattern(dateFrom, "MM-dd"))
+                        .append(" по ").append(Clock.getHumanTimeSecPattern(dateTo, "MM-dd"))
                         .append(" . При этом проведено ").append(workCount).append(" отчетов.")
                         .append(" Вы можете получить Премиальные больше, если разместите ФТТ.");
                 signal = true;
