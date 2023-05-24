@@ -196,7 +196,7 @@ public class WpDataRealm {
     }
 
 
-    public static List<WpDataDB> getWpDataBy(Date dateFrom, Date dateTo, Integer status){
+    public static List<WpDataDB> getWpDataBy(Date dateFrom, Date dateTo, Integer status, Integer addressId, String customerId, Integer userId){
         RealmResults<WpDataDB> result = INSTANCE.where(WpDataDB.class)
                 .findAll();
 
@@ -209,6 +209,24 @@ public class WpDataRealm {
         if (status != null) {
             result = result.where()
                     .equalTo("status", status)
+                    .findAll();
+        }
+
+        if (addressId != null) {
+            result = result.where()
+                    .equalTo("status", addressId)
+                    .findAll();
+        }
+
+        if (customerId != null) {
+            result = result.where()
+                    .equalTo("status", customerId)
+                    .findAll();
+        }
+
+        if (userId != null) {
+            result = result.where()
+                    .equalTo("status", userId)
                     .findAll();
         }
 

@@ -91,6 +91,7 @@ import ua.com.merchik.merchik.Options.Controls.OptionControlFacePlan;
 import ua.com.merchik.merchik.Options.Controls.OptionControlPercentageOfThePrize;
 import ua.com.merchik.merchik.Options.Controls.OptionControlPhoto;
 import ua.com.merchik.merchik.Options.Controls.OptionControlPhotoBeforeStartWork;
+import ua.com.merchik.merchik.Options.Controls.OptionControlPhotoCartWithGoods;
 import ua.com.merchik.merchik.Options.Controls.OptionControlPhotoPromotion;
 import ua.com.merchik.merchik.Options.Controls.OptionControlPhotoTovarsLeft;
 import ua.com.merchik.merchik.Options.Controls.OptionControlPhotoTovarsLeftClient;
@@ -150,7 +151,7 @@ public class Options {
     public static int[] describedOptions = new int[]{132624, 76815, 157241, 157243, 84006, 156928,
             151594, 80977, 135330, 133381, 135329, 138518, 151139, 132623, 133382, 137797, 135809,
             135328, 135327, 157275, 138341, 590, 84932, 134583, 157352, 1470, 138644, 1455, 135061,
-            158361, 159707, 575};
+            158361, 159707, 575, 132971};
 
     /*Сюда записываются Опции которые не прошли проверку, при особенном переданном MOD-e. Сделано
     для того что б потом можно было посмотреть название опций которые не прошли проверку и, возможно,
@@ -271,7 +272,7 @@ public class Options {
                     optionControlPhotoPromotion.showOptionMassage();
                     break;
 
-                case 132971:    // Проверка наличия Фото тележка с товаром (тип 10)
+//                case 132971:    // Проверка наличия Фото тележка с товаром (тип 10)
                 case 134583:
                 case 84932:     // Проверка наличия ФотоОтчётов (id мне дали из 1С) (тип 0)
                 case 141361:
@@ -295,9 +296,10 @@ public class Options {
 //                    checkPhoto(dataDB, optionsDB, "4");
 //                    break;
 
-//                case 132971:  // Проверка наличия Фото тележка с товаром (тип 10)
-//                    checkPhoto(dataDB, optionsDB, "10");
-//                    break;
+                case 132971:  // Проверка наличия Фото тележка с товаром (тип 10)
+                    OptionControlPhotoCartWithGoods<?> optionControlPhotoCartWithGoods = new OptionControlPhotoCartWithGoods<>(context, dataDB, optionsDB, newOptionType, mode);
+                    optionControlPhotoCartWithGoods.showOptionMassage();
+                    break;
 
 //                case 141361:  // Проверка наличия Фото тележка с товаром (тип 31)
 //                    checkPhoto(dataDB, optionsDB, "31");
@@ -755,6 +757,12 @@ public class Options {
         Log.e("NNK", "F/optControl/optionId: " + optionId);
         switch (optionId) {
 
+            case 132971:  // Проверка наличия Фото тележка с товаром (тип 10)
+                OptionControlPhotoCartWithGoods<?> optionControlPhotoCartWithGoods = new OptionControlPhotoCartWithGoods<>(context, dataDB, option, type, mode);
+                if (mode.equals(NNKMode.MAKE) || (mode.equals(NNKMode.CHECK) && optionControlPhotoCartWithGoods.isBlockOption()))
+                    optionControlPhotoCartWithGoods.showOptionMassage();
+                return optionControlPhotoCartWithGoods.isBlockOption() ? 1 : 0;
+
             case 135158:
                 OptionButtonPhotoFOT<?> optionButtonPhotoFOT = new OptionButtonPhotoFOT<>(context, dataDB, option, type, mode);
                 break;
@@ -793,7 +801,7 @@ public class Options {
                 break;
 
             // Контроль фотоотчётов
-            case 132971:    // Проверка наличия Фото тележка с товаром (тип 10)
+//            case 132971:    // Проверка наличия Фото тележка с товаром (тип 10)
             case 134583:
             case 141361:
             case 158606:

@@ -86,7 +86,7 @@ public class OptionControlPercentageOfThePrize<T> extends OptionControl {
 
             period = " з " + Clock.getHumanTimeSecPattern(dateFrom / 1000, "dd-MM-yy") + " по " + Clock.getHumanTimeSecPattern(dateTo / 1000, "dd-MM-yy") + "";
 
-            kps = WpDataRealm.getWpDataBy(new Date(dateFrom), new Date(dateTo), 1).size();
+            kps = WpDataRealm.getWpDataBy(new Date(dateFrom), new Date(dateTo), 1, null, null, null).size();
 
             usersSDB = SQL_DB.usersDao().getById(wp.getUser_id());
         }
