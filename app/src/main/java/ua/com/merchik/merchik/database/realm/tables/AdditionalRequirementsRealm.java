@@ -116,7 +116,7 @@ public class AdditionalRequirementsRealm {
         HIDE_FOR_CLIENT     // Скрывать для клиента. Добавил просто потому что в БД есть такое поле и может в будущем пригодиться.
     }
 
-    public static <T> RealmResults<AdditionalRequirementsDB> getData3(T data, AdditionalRequirementsModENUM mod) {
+    public static <T> RealmResults<AdditionalRequirementsDB> getData3(T data, AdditionalRequirementsModENUM mod, Integer ttCategory) {
         int themeId, addressId;
         String clientId;
         long dad2;
@@ -195,6 +195,13 @@ public class AdditionalRequirementsRealm {
         } else {
             realmResults = realmResults.where()
                     .equalTo("themeId", String.valueOf(themeId))
+                    .findAll();
+        }
+
+        // Поиск по категориям ТТ
+        if (ttCategory != null){
+            realmResults = realmResults.where()
+                    .equalTo("addrTTId", ttCategory)
                     .findAll();
         }
 

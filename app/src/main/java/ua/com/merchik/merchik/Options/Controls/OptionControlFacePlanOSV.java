@@ -73,7 +73,7 @@ class OptionControlFacePlanOSV<T> extends OptionControl {
 
         //3.0. получим список товаров с особым вниманием (хранится в Доп.Требованиях)
         //3.1. выделим сперва список товаров
-        List<AdditionalRequirementsDB> additionalRequirementsDBS = AdditionalRequirementsRealm.getData3(document, HIDE_FOR_USER);
+        List<AdditionalRequirementsDB> additionalRequirementsDBS = AdditionalRequirementsRealm.getData3(document, HIDE_FOR_USER, null);
 
 
         //4.0. проверим, по каким из товаров с ОСВ отсутствуют на витрине?

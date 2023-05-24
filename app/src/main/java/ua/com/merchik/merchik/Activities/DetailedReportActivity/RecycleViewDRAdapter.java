@@ -194,6 +194,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                     || optionId == 157354   // Фото ДМП.
                     || optionId == 157242   // Причина отсутствия товара
                     || optionId == 159726   // Фото торговой точки
+                    || optionId == 159706   // Инвентаризация
             ) {
                 constraintLayout.setBackgroundResource(R.drawable.bg_temp);
                 textInteger2.setVisibility(View.VISIBLE);
@@ -420,7 +421,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
 
                     case 138339:    // Доп Требования
                         // Устанавливаю в счётчик доп. требований их количество
-                        textInteger.setText("" + AdditionalRequirementsRealm.getData3(dataDB, HIDE_FOR_USER).size());
+                        textInteger.setText("" + AdditionalRequirementsRealm.getData3(dataDB, HIDE_FOR_USER, null).size());
                         break;
 
                     case 138340:    // Доп Требования

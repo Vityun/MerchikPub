@@ -1,21 +1,22 @@
 package ua.com.merchik.merchik.Activities;
 
-import static ua.com.merchik.merchik.Globals.userId;
-
-import android.content.Intent;
-import android.net.Uri;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.widget.Toolbar;
 
 import com.google.android.material.navigation.NavigationView;
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 
-import ua.com.merchik.merchik.Globals;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 import ua.com.merchik.merchik.R;
-import ua.com.merchik.merchik.data.RealmModels.AppUsersDB;
-import ua.com.merchik.merchik.database.realm.tables.AppUserRealm;
+import ua.com.merchik.merchik.data.TestJsonUpload.StandartData;
+import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
 import ua.com.merchik.merchik.toolbar_menus;
 
 
@@ -51,21 +52,116 @@ public class MenuMainActivity extends toolbar_menus {
     }
 
     private void test() {
-        String link = String.format("/mobile.php?mod=ticket**act=create**theme_id=611**client_id**addr_id");
-        link = link.replace("&", "**");
-
-        AppUsersDB appUser = AppUserRealm.getAppUserById(userId);
-
-        String hash = String.format("%s%s%s", appUser.getUserId(), appUser.getPassword(), "AvgrgsYihSHp6Ok9yQXfSHp6Ok9nXdXr3OSHp6Ok9UPBTzTjrF20Nsz3");
-        hash = Globals.getSha1Hex(hash);
-
-        String format = String.format("https://merchik.com.ua/sa.php?&u=%s&s=%s&l=%s", userId, hash, link);
-
-
-        Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(format));
-        this.startActivity(browserIntent);
+        planogram();    // PlanogramSDB
+        planogramAddr();
+        planogramGrp(); // PlanogramGroupListSDB
+        planogramImg(); // PlanogramImgListSDB
     }
 
+    private void planogram() {
+        // Просто планограммы
+        StandartData data = new StandartData();
+        data.mod = "planogram";
+        data.act = "list";
+        data.nolimit = "1";
+
+        Gson gson = new Gson();
+        String json = gson.toJson(data);
+        JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
+        Log.e("MAIN_test", "Просто планограммы convertedObject: " + convertedObject);
+
+        retrofit2.Call<JsonObject> call = RetrofitBuilder.getRetrofitInterface().TEST_JSON_UPLOAD(RetrofitBuilder.contentType, convertedObject);
+        call.enqueue(new Callback<JsonObject>() {
+            @Override
+            public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
+                Log.e("MAIN_test", "Просто планограммы: " + response);
+                Log.e("MAIN_test", "Просто планограммы body: " + response.body());
+            }
+
+            @Override
+            public void onFailure(Call<JsonObject> call, Throwable t) {
+                Log.e("MAIN_test", "Просто планограммы: " + t);
+            }
+        });
+    }
+
+    private void planogramAddr(){
+        StandartData data = new StandartData();
+        data.mod = "planogram";
+        data.act = "addr_list";
+        data.nolimit = "1";
+
+        Gson gson = new Gson();
+        String json = gson.toJson(data);
+        JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
+        Log.e("MAIN_test", "Адреса планограммы convertedObject: " + convertedObject);
+
+        retrofit2.Call<JsonObject> call = RetrofitBuilder.getRetrofitInterface().TEST_JSON_UPLOAD(RetrofitBuilder.contentType, convertedObject);
+        call.enqueue(new Callback<JsonObject>() {
+            @Override
+            public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
+                Log.e("MAIN_test", "Адреса планограммы: " + response);
+                Log.e("MAIN_test", "Адреса планограммы body: " + response.body());
+            }
+
+            @Override
+            public void onFailure(Call<JsonObject> call, Throwable t) {
+                Log.e("MAIN_test", "Адреса планограммы: " + t);
+            }
+        });
+    }
+
+    private void planogramGrp(){
+        StandartData data = new StandartData();
+        data.mod = "planogram";
+        data.act = "group_list";
+        data.nolimit = "1";
+
+        Gson gson = new Gson();
+        String json = gson.toJson(data);
+        JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
+        Log.e("MAIN_test", "Группы планограммы convertedObject: " + convertedObject);
+
+        retrofit2.Call<JsonObject> call = RetrofitBuilder.getRetrofitInterface().TEST_JSON_UPLOAD(RetrofitBuilder.contentType, convertedObject);
+        call.enqueue(new Callback<JsonObject>() {
+            @Override
+            public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
+                Log.e("MAIN_test", "Группы планограммы: " + response);
+                Log.e("MAIN_test", "Группы планограммы body: " + response.body());
+            }
+
+            @Override
+            public void onFailure(Call<JsonObject> call, Throwable t) {
+                Log.e("MAIN_test", "Группы планограммы: " + t);
+            }
+        });
+    }
+
+    private void planogramImg(){
+        StandartData data = new StandartData();
+        data.mod = "planogram";
+        data.act = "img_list";
+        data.nolimit = "1";
+
+        Gson gson = new Gson();
+        String json = gson.toJson(data);
+        JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
+        Log.e("MAIN_test", "Фото планограммы convertedObject: " + convertedObject);
+
+        retrofit2.Call<JsonObject> call = RetrofitBuilder.getRetrofitInterface().TEST_JSON_UPLOAD(RetrofitBuilder.contentType, convertedObject);
+        call.enqueue(new Callback<JsonObject>() {
+            @Override
+            public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
+                Log.e("MAIN_test", "Фото планограммы: " + response);
+                Log.e("MAIN_test", "Фото планограммы body: " + response.body());
+            }
+
+            @Override
+            public void onFailure(Call<JsonObject> call, Throwable t) {
+                Log.e("MAIN_test", "Фото планограммы: " + t);
+            }
+        });
+    }
     // =================================== --- onCreate --- ========================================
 
     private void setActivityContent() {
@@ -75,7 +171,6 @@ public class MenuMainActivity extends toolbar_menus {
         getSupportActionBar().setDisplayShowTitleEnabled(false);
         activity_title.setText(getString(R.string.title_activity_menu_main));
     }
-
 
 
 }

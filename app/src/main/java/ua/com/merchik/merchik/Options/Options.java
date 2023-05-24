@@ -150,7 +150,7 @@ public class Options {
     public static int[] describedOptions = new int[]{132624, 76815, 157241, 157243, 84006, 156928,
             151594, 80977, 135330, 133381, 135329, 138518, 151139, 132623, 133382, 137797, 135809,
             135328, 135327, 157275, 138341, 590, 84932, 134583, 157352, 1470, 138644, 1455, 135061,
-            158361, 159707};
+            158361, 159707, 575};
 
     /*Сюда записываются Опции которые не прошли проверку, при особенном переданном MOD-e. Сделано
     для того что б потом можно было посмотреть название опций которые не прошли проверку и, возможно,
@@ -1195,7 +1195,7 @@ public class Options {
     }
 
     private <T> void option138339(Context context, T dataDB, OptionsDB option, OptionMassageType type, NNKMode mode) {
-        List<AdditionalRequirementsDB> data = AdditionalRequirementsRealm.getData3(dataDB, HIDE_FOR_USER);
+        List<AdditionalRequirementsDB> data = AdditionalRequirementsRealm.getData3(dataDB, HIDE_FOR_USER, null);
 
         DialogAdditionalRequirements dialogAdditionalRequirements = new DialogAdditionalRequirements(context);
 
@@ -1479,12 +1479,17 @@ public class Options {
 //                    optionNotConduct.add(optionsDB);
 //                }
 
-                DialogData dialog = new DialogData(context);
-                dialog.setTitle("Ошибка");
-                dialog.setDialogIco();
-                dialog.setText("Прежде чем выполнять данную опцию (действие) вы должны выполнить опцию: " + "Контроль наличия времени начала работ (ВРН)");
-                dialog.setClose(dialog::dismiss);
-                dialog.show();
+                if (res) {
+                    // Всё хорошо с опцией контроля
+                } else {
+                    // Нужно отобразить сообщение что всё плохо
+                    DialogData dialog = new DialogData(context);
+                    dialog.setTitle("Ошибка. Проверка.");
+                    dialog.setDialogIco();
+                    dialog.setText("Прежде чем выполнять данную опцию (действие) вы должны выполнить опцию: " + "Контроль наличия времени начала работ (ВРН)");
+                    dialog.setClose(dialog::dismiss);
+                    dialog.show();
+                }
                 break;
 
             case NULL:
@@ -1893,7 +1898,7 @@ public class Options {
             long dateTo = Clock.getDatePeriodLong(date, +3) / 1000;     // Дата документа +3 дня
 
             // Получаем Доп.Требования.
-            RealmResults<AdditionalRequirementsDB> realmResults = AdditionalRequirementsRealm.getData3(dataDB, HIDE_FOR_USER);
+            RealmResults<AdditionalRequirementsDB> realmResults = AdditionalRequirementsRealm.getData3(dataDB, HIDE_FOR_USER, null);
             List<AdditionalRequirementsDB> data = RealmManager.INSTANCE.copyFromRealm(realmResults);
 
             // Получаем Оценки этих Доп. требований.

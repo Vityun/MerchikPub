@@ -4,6 +4,12 @@ import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
 import android.content.Context;
 import android.os.Build;
+import android.text.SpannableString;
+import android.text.Spanned;
+import android.text.TextPaint;
+import android.text.style.ClickableSpan;
+import android.view.View;
+import android.widget.Toast;
 
 import androidx.annotation.RequiresApi;
 
@@ -19,9 +25,11 @@ import ua.com.merchik.merchik.data.Database.Room.UsersSDB;
 import ua.com.merchik.merchik.data.OptionMassageType;
 import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
 import ua.com.merchik.merchik.data.RealmModels.ReportPrepareDB;
+import ua.com.merchik.merchik.data.RealmModels.TovarDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.ReportPrepareRealm;
+import ua.com.merchik.merchik.database.realm.tables.TovarRealm;
 
 
 /*
@@ -106,18 +114,24 @@ public class OptionControlInventory<T> extends OptionControl {
                 if (Integer.parseInt(item.face) > 0 && item.amount == 0) {
                     item.error = 1;
                     item.errorNote = "Товар є в НАЯВНОСТІ на вітрині (Фейс>0), та НЕ зазначений на ФАКТИЧНИХ залишках на (склад + вітрина)";
+
+                    resultRP.add(item);
                 }
 
                 //сравниваем реквизиты ОборотВед и Остаток по Факту (Склад + Витрина)
                 if (Integer.parseInt(item.oborotvedNum) > 0 && item.amount == 0) {
                     item.error = 1;
                     item.errorNote = "Товар рахується по ОБЛІКУ (ОборотВед>0), та НЕ зазначений на ФАКТИЧНИХ залишках на (склад + вітрина) і користувач не зазначив 'помилку'";
+
+                    resultRP.add(item);
                 }
 
                 //сравниваем реквизиты ОборотВед и Остаток по Факту (Склад + Витрина)
                 if (Integer.parseInt(item.oborotvedNum) == 0 && item.amount > 0) {
                     item.error = 1;
                     item.errorNote = "Товар фактично є в НАЯВНОСТІ (склад + вітрина), та не значиться по ОБЛІКУ (ОборотВед>0) і користувач не зазначив 'помилку'";
+
+                    resultRP.add(item);
                 }
 
                 if (item.error == 1 && Integer.parseInt(item.tovarError) > 0) {
@@ -148,13 +162,13 @@ public class OptionControlInventory<T> extends OptionControl {
             //5.0. готовим сообщение и сигнал
             errorSUM = reportPrepare.stream().map(table -> table.error).reduce(0, Integer::sum);
             if (reportPrepare.size() == 0) {
-                stringBuilderMsg.append("Нема даних для аналізу.");
+                resMassage.append("Нема даних для аналізу.");
                 signal = false;
             } else if (errorSUM > 0) {
-                stringBuilderMsg.append("по ").append(errorSUM).append(" товарам є зауваження по проведенню інвентарізації.");
+                resMassage.append("по ").append(errorSUM).append(" товарам є зауваження по проведенню інвентарізації.");
                 signal = true;
             } else {
-                stringBuilderMsg.append("По ОБЛІКУ рахується ").append(numberSKUForAccountingSUM)
+                resMassage.append("По ОБЛІКУ рахується ").append(numberSKUForAccountingSUM)
                         .append(" товарів (СКЮ), загальною кількістю ").append(numberoborotvedNumSUM)
                         .append(" шт, ФАКТИЧНО знайдено (склад + вітрина) ").append(numberSKUForFactSUM)
                         .append(" товарів загальною кількістю ").append(reportPrepare.size())
@@ -162,6 +176,13 @@ public class OptionControlInventory<T> extends OptionControl {
                         .append("%. Відсоток відхилення товарного запасу = ").append(percentageDeviationTotalInventory)
                         .append("%");
                 signal = true;
+            }
+
+            spannableStringBuilder.append(resMassage);
+
+            for (ReportPrepareDB item : resultRP) {
+                TovarDB tov = TovarRealm.getById(item.tovarId);
+                spannableStringBuilder.append(createLinkedString(tov.getNm() + " " + item.errorNote, item, tov));
             }
 
 
@@ -181,14 +202,58 @@ public class OptionControlInventory<T> extends OptionControl {
             if (signal) {
                 if (optionDB.getBlockPns().equals("1")) {
                     setIsBlockOption(signal);
-                    stringBuilderMsg.append("\n\n").append("Документ проведен не будет!");
+                    spannableStringBuilder.append("\n\n").append("Документ проведен не будет!");
                 } else {
-                    stringBuilderMsg.append("\n\n").append("Вы можете получить Премиальные БОЛЬШЕ, если будете делать Достижения.");
+                    spannableStringBuilder.append("\n\n").append("Вы можете получить Премиальные БОЛЬШЕ, если будете делать Достижения.");
                 }
             }
+
         } catch (Exception e) {
             Globals.writeToMLOG("ERROR", "OptionControlInventory/executeOption", "Exception e: " + e);
         }
+    }
+
+    private SpannableString createLinkedString(String msg, ReportPrepareDB reportPrepareDB, TovarDB tov) {
+        SpannableString res = new SpannableString(msg);
+        ClickableSpan clickableSpan = new ClickableSpan() {
+            @Override
+            public void onClick(View textView) {
+
+                Toast.makeText(textView.getContext(), msg, Toast.LENGTH_LONG).show();
+
+//                Toast.makeText(textView.getContext(), "id: " + reportPrepareDB.getTovarId(), Toast.LENGTH_LONG).show();
+//
+//                DialogData dialog = new DialogData(textView.getContext());
+//                dialog.setTitle("");
+//                dialog.setText("");
+//                dialog.setClose(dialog::dismiss);
+//
+//                dialog.setImage(true, getPhotoFromDB(tov));
+//                dialog.setAdditionalText(setPhotoInfo(TPL, tov, "", ""));
+//
+//                dialog.setOperationSpinnerData(setMapData(AKCIYA_ID));
+//                dialog.setOperationSpinner2Data(setMapData(Globals.OptionControlName.AKCIYA));
+//                dialog.setOperationTextData(reportPrepareDB.getAkciyaId());
+//                dialog.setOperationTextData2(reportPrepareDB.getAkciya());
+//
+//                dialog.setOperation(operationType(TPL), getCurrentData(TPL, reportPrepareDB.getCodeDad2(), reportPrepareDB.getTovarId()), setMapData(TPL.getOptionControlName()), () -> {
+//                    if (dialog.getOperationResult() != null) {
+//                        operetionSaveRPToDB(TPL, reportPrepareDB, dialog.getOperationResult(), dialog.getOperationResult2(), null, dialog.context);
+//                        Toast.makeText(dialog.context, "Внесено: " + dialog.getOperationResult(), Toast.LENGTH_LONG).show();
+//                    }
+//                });
+//
+//                dialog.show();
+            }
+
+            @Override
+            public void updateDrawState(TextPaint ds) {
+                super.updateDrawState(ds);
+                ds.setUnderlineText(true);
+            }
+        };
+        res.setSpan(clickableSpan, 0, msg.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        return res;
     }
 
 }

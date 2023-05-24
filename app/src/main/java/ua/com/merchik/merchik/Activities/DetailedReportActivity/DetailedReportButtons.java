@@ -187,7 +187,7 @@ public class DetailedReportButtons {
 //                List<AdditionalRequirementsDB> data = AdditionalRequirementsRealm.getData2(String.valueOf(wpDataDB.getClient_id()), String.valueOf(wpDataDB.getAddr_id()));
 //                Log.e("AdditionalRequirements", "data.size(): " + data.size());
 
-                List<AdditionalRequirementsDB> data = AdditionalRequirementsRealm.getData3(wpDataDB, HIDE_FOR_USER);
+                List<AdditionalRequirementsDB> data = AdditionalRequirementsRealm.getData3(wpDataDB, HIDE_FOR_USER, null);
                 Log.e("AdditionalRequirements", "data2.size(): " + data.size());
 
 
