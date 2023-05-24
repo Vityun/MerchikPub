@@ -1,8 +1,10 @@
 package ua.com.merchik.merchik.Options.Controls;
 
 import android.content.Context;
+import android.util.Log;
 
 import io.realm.RealmResults;
+import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.Options.OptionControl;
 import ua.com.merchik.merchik.Options.Options;
 import ua.com.merchik.merchik.data.OptionMassageType;
@@ -21,14 +23,19 @@ public class OptionControlPhoto<T> extends OptionControl {
     private WpDataDB wpDataDB;
 
     public OptionControlPhoto(Context context, T document, OptionsDB optionDB, OptionMassageType msgType, Options.NNKMode nnkMode) {
-        this.context = context;
-        this.document = document;
-        this.optionDB = optionDB;
-        this.msgType = msgType;
-        this.nnkMode = nnkMode;
+        try {
+            this.context = context;
+            this.document = document;
+            this.optionDB = optionDB;
+            this.msgType = msgType;
+            this.nnkMode = nnkMode;
 
-        getDocumentVar();
-        executeOption();
+            getDocumentVar();
+            executeOption();
+        }catch (Exception e){
+            Log.e("OptionControlPhoto", "Exception e: " + e);
+            Globals.writeToMLOG("ERR", "OptionControlPhoto", "Exception e: " + e);
+        }
     }
 
     private void getDocumentVar() {
@@ -77,6 +84,7 @@ public class OptionControlPhoto<T> extends OptionControl {
                 break;
 
             case "159726":  // Фото торговой точки
+            case "159725":  // Кнопка "Фото Торговой Точки (ФТТ)"
                 photoType = 37;
                 break;
 

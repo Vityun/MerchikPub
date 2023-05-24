@@ -143,7 +143,7 @@ public class Options {
             138520, 138773, 137797, 138339, 141360, 141910, 141888, 141885, 84007, 132666, 139576,
             138767, 135742, 132621, 84003, 138340, 135327, 135328, 156882, 151139, 132623, 133382,
             157275, 157276, 157274, 135159, 157277, 157353, 138643, 158243, 135412, 151748, 158309,
-            158308, 158604, 158605, 158606, 157354, 157242
+            158308, 158604, 158605, 158606, 157354, 157242, 159725
     };
 
 
@@ -279,6 +279,8 @@ public class Options {
                 case 158607:
                 case 158608:
                 case 158609:
+                case 159726:    // Фото торговой точки
+                case 159725:    // Кнопка "Фото Торговой Точки (ФТТ)"
                     //                    checkPhotoReport(context, dataDB, optionsDB, type, mode);
                     OptionControlPhoto<?> optionControlPhoto = new OptionControlPhoto<>(context, dataDB, optionsDB, newOptionType, mode);
                     optionControlPhoto.showOptionMassage();
@@ -798,8 +800,9 @@ public class Options {
             case 158607:
             case 158608:
             case 158609:
-            case 84932: // Проверка наличия ФотоОтчётов (id мне дали из 1С) (тип 0)
-            case 159726:
+            case 84932:     // Проверка наличия ФотоОтчётов (id мне дали из 1С) (тип 0)
+            case 159726:    // Фото торговой точки
+            case 159725:    // Кнопка "Фото Торговой Точки (ФТТ)"
                 OptionControlPhoto<?> optionControlPhoto = new OptionControlPhoto<>(context, dataDB, option, type, mode);
                 if (mode.equals(NNKMode.MAKE) || (mode.equals(NNKMode.CHECK) && optionControlPhoto.isBlockOption()))
                     optionControlPhoto.showOptionMassage();

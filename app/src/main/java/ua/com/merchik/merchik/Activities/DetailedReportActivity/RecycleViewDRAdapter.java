@@ -195,6 +195,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                     || optionId == 157242   // Причина отсутствия товара
                     || optionId == 159726   // Фото торговой точки
                     || optionId == 159706   // Инвентаризация
+                    || optionId == 159725   // Кнопка "Фото Торговой Точки (ФТТ)"
             ) {
                 constraintLayout.setBackgroundResource(R.drawable.bg_temp);
                 textInteger2.setVisibility(View.VISIBLE);
@@ -330,7 +331,8 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                         });
                         break;
 
-                    case (159726):  // Вставляем количество выполненных Фото Акционного Товара
+                    case (159726):  // Фото ТТ
+                    case (159725):  // Кнопка "Фото Торговой Точки (ФТТ)"
                         textInteger.setText(
                                 setPhotoCountsMakeAndMust(optionsButtons, RealmManager.stackPhotoShowcasePhotoCount(dad2, 37)),
                                 TextView.BufferType.SPANNABLE
@@ -343,7 +345,6 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                             view.getContext().startActivity(intent);
                         });
                         break;
-
 
                     case (158606):
                         textInteger.setText(
@@ -687,6 +688,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
          * 158604 - 41 - Наполненность
          * 157277 - 28 - Фото Акционного Товара
          * 159726 - 37 - Фото ТТ
+         * 159725 - 37 - Кнопка "Фото Торговой Точки (ФТТ)"
          * */
         int photoType = 0;
         boolean showPhotoLink = false;
@@ -738,6 +740,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                 break;
 
             case "159726":  // - 37 - Фото ТТ
+            case "159725":  // - 37 - Кнопка "Фото Торговой Точки (ФТТ)"
                 photoType = 37;
                 showPhotoLink = true;
                 break;
