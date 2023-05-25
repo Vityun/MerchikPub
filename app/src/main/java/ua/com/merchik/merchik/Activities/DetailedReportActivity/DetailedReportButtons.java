@@ -22,6 +22,7 @@ import ua.com.merchik.merchik.PhotoReportActivity;
 import ua.com.merchik.merchik.Utils.UniversalAdapter.UniversalAdapter;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.WorkPlan;
+import ua.com.merchik.merchik.data.Database.Room.AddressSDB;
 import ua.com.merchik.merchik.data.Database.Room.ContentSDB;
 import ua.com.merchik.merchik.data.Database.Room.StandartSDB;
 import ua.com.merchik.merchik.data.RealmModels.AdditionalRequirementsDB;
@@ -187,7 +188,13 @@ public class DetailedReportButtons {
 //                List<AdditionalRequirementsDB> data = AdditionalRequirementsRealm.getData2(String.valueOf(wpDataDB.getClient_id()), String.valueOf(wpDataDB.getAddr_id()));
 //                Log.e("AdditionalRequirements", "data.size(): " + data.size());
 
-                List<AdditionalRequirementsDB> data = AdditionalRequirementsRealm.getData3(wpDataDB, HIDE_FOR_USER, null);
+                Integer ttCategory = null;
+                AddressSDB addressSDB = SQL_DB.addressDao().getById(wpDataDB.getAddr_id());
+                if (addressSDB != null){
+                    ttCategory = addressSDB.ttId;
+                }
+
+                List<AdditionalRequirementsDB> data = AdditionalRequirementsRealm.getData3(wpDataDB, HIDE_FOR_USER, ttCategory);
                 Log.e("AdditionalRequirements", "data2.size(): " + data.size());
 
 

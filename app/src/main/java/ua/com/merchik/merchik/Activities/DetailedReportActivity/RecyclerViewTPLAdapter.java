@@ -78,7 +78,6 @@ public class RecyclerViewTPLAdapter extends RecyclerView.Adapter<RecyclerView.Vi
             case ERROR_ID:
                 return 3;
             case DT_EXPIRE:
-
                 return 2;
             case AKCIYA:
             case AKCIYA_ID:
@@ -186,7 +185,8 @@ public class RecyclerViewTPLAdapter extends RecyclerView.Adapter<RecyclerView.Vi
                 @Override
                 public void afterTextChanged(Editable editable) {
                     click.getData(item, editable.toString(), null);
-                    if (!editText.getText().toString().equals("")) {
+                    if (item.getOptionControlName().equals(Globals.OptionControlName.FACE) ||
+                            item.getOptionControlName().equals(Globals.OptionControlName.UP) && !editText.getText().toString().equals("")) {
                         if (Integer.parseInt(editText.getText().toString()) > 0) {
                             subtraction.getBackground().mutate().setColorFilter(new PorterDuffColorFilter(subtraction.getContext().getResources().getColor(R.color.active), PorterDuff.Mode.SRC));
                             subtraction.setClickable(true);
@@ -622,31 +622,31 @@ public class RecyclerViewTPLAdapter extends RecyclerView.Adapter<RecyclerView.Vi
     class ViewHolderButton extends RecyclerView.ViewHolder {
 
         private Button button;
+        private TextView textView;
 
         public ViewHolderButton(@NonNull View itemView) {
             super(itemView);
             button = itemView.findViewById(R.id.button);
+            textView = itemView.findViewById(R.id.title);
         }
 
         public void bind(TovarOptions item) {
-
-            TovarDB tov = TovarRealm.getById(dataRp.tovarId);
-
-            DialogData dialog = new DialogData(itemView.getContext());
-            dialog.setTitle("");
-            dialog.setText("");
-            dialog.setClose(dialog::dismiss);
-
-            dialog.setImage(true, getPhotoFromDB(tov));
-            dialog.setAdditionalText(setPhotoInfo(TPL, tov, "", ""));
-
-            dialog.setExpandableListView(createExpandableAdapter(dialog.context), () -> {
-                if (dialog.getOperationResult() != null) {
-                    operetionSaveRPToDB(TPL, dataRp, dialog.getOperationResult(), dialog.getOperationResult2(), null, dialog.context);
-                }
+            textView.setText("Ошибка Товара");
+            button.setOnClickListener(v -> {
+                TovarDB tov = TovarRealm.getById(dataRp.tovarId);
+                DialogData dialog = new DialogData(itemView.getContext());
+                dialog.setTitle("");
+                dialog.setText("");
+                dialog.setClose(dialog::dismiss);
+                dialog.setImage(true, getPhotoFromDB(tov));
+                dialog.setAdditionalText(setPhotoInfo(TPL, tov, "", ""));
+                dialog.setExpandableListView(createExpandableAdapter(dialog.context), () -> {
+                    if (dialog.getOperationResult() != null) {
+                        operetionSaveRPToDB(TPL, dataRp, dialog.getOperationResult(), dialog.getOperationResult2(), null, dialog.context);
+                    }
+                });
+                dialog.show();
             });
-
-            dialog.show();
         }
 
         public void bind() {
@@ -657,6 +657,7 @@ public class RecyclerViewTPLAdapter extends RecyclerView.Adapter<RecyclerView.Vi
 
 
         TovarOptions TPL = new TovarOptions(ERROR_ID, "Ш", "Ошибка товара", "error_id", "main", 135592, 157242);
+
         private File getPhotoFromDB(TovarDB tovar) {
             int id = Integer.parseInt(tovar.getiD());
             StackPhotoDB stackPhotoDB = RealmManager.getTovarPhotoByIdAndType(id, tovar.photoId, 18, false);

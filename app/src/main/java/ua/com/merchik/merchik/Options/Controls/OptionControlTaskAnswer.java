@@ -29,6 +29,7 @@ import ua.com.merchik.merchik.Options.Options;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.data.Database.Room.CustomerSDB;
 import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
+import ua.com.merchik.merchik.data.Database.Room.UsersSDB;
 import ua.com.merchik.merchik.data.OptionMassageType;
 import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
 import ua.com.merchik.merchik.data.RealmModels.ReportPrepareDB;
@@ -50,6 +51,7 @@ public class OptionControlTaskAnswer<T> extends OptionControl {
 
     private WpDataDB wpDataDB;
     private CustomerSDB customerSDB;
+    private UsersSDB usersSDB;
 
     private String clientId, documentDate;
     private int userId, addressId, taskCount;
@@ -83,6 +85,7 @@ public class OptionControlTaskAnswer<T> extends OptionControl {
             userId = wpDataDB.getUser_id();
 
             customerSDB = SQL_DB.customerDao().getById(clientId);
+            usersSDB = SQL_DB.usersDao().getById(userId);
         }
     }
 
@@ -254,13 +257,25 @@ public class OptionControlTaskAnswer<T> extends OptionControl {
             Globals.writeToMLOG("INFO", "OptionControlTaskAnswer/executeOption/List<TasksAndReclamationsSDB>", "result: " + result.size());
 
             taskCount = result.size(); // Число задач по которым возникли проблемы.
-            if (taskCount > 0) {
-                spannableStringBuilder.append("\n").append(context.getString(R.string.option_control_135329_msg_what_must_do));
+            // Блокировка
+//            signal = taskCount > 0;
+
+            if (tarList.size() == 0) {
+                spannableStringBuilder.append("Активных задач по клиенту(ам) нет.");
+                signal = false;
+            } else if (result.size() == 0) {
+                spannableStringBuilder.append("Обнаружено ").append(String.valueOf(result.size())).append(" активных задач с ответами. Замечаний нет.");
+                signal = false;
+            } else if (usersSDB.reportDate20 == null && usersSDB.reportCount < 20) {
+                spannableStringBuilder.append("Исполнитель ").append(usersSDB.fio).append(" еще не провел своего 20-го отчета.");
+                signal = false;
+            } else {
+//                spannableStringBuilder.append("\n").append(context.getString(R.string.option_control_135329_msg_what_must_do));
+                stringBuilderMsg.append("Отсутствует ответ на ").append(tarList).append(" активных задач. Вы должны сперва исправить замечания, затем написать ответ на указанные задачи, а потом проводить данный документ!");
+                signal = true;
             }
 
 
-            // Блокировка
-            signal = taskCount > 0;
             RealmManager.INSTANCE.executeTransaction(realm -> {
                 if (optionDB != null) {
                     if (signal) {
