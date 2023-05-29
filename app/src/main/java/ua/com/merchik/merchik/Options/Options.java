@@ -72,6 +72,7 @@ import ua.com.merchik.merchik.Options.Buttons.OptionButtonPhotoFOT;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonPhotoShowcaseCorporateBlock;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonPhotoShowcaseFullness;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonPhotoShowcaseNear;
+import ua.com.merchik.merchik.Options.Buttons.OptionButtonPhotoTT;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonReclamationAnswer;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonTaskAnswer;
 import ua.com.merchik.merchik.Options.Controls.OptionControlAchievements;
@@ -767,6 +768,10 @@ public class Options {
                 OptionButtonPhotoFOT<?> optionButtonPhotoFOT = new OptionButtonPhotoFOT<>(context, dataDB, option, type, mode);
                 break;
 
+            case 159725:
+                OptionButtonPhotoTT<?> optionButtonPhotoTT = new OptionButtonPhotoTT<>(context, dataDB, option, type, mode);
+                break;
+
             case 159707:
                 OptionControlAvailabilityControlPhotoRemainingGoods<?> optionControlAvailabilityControlPhotoRemainingGoods = new OptionControlAvailabilityControlPhotoRemainingGoods<>(context, dataDB, option, type, mode);
                 if (mode.equals(NNKMode.MAKE) || (mode.equals(NNKMode.CHECK) && optionControlAvailabilityControlPhotoRemainingGoods.isBlockOption()))
@@ -810,7 +815,7 @@ public class Options {
             case 158609:
             case 84932:     // Проверка наличия ФотоОтчётов (id мне дали из 1С) (тип 0)
             case 159726:    // Фото торговой точки
-            case 159725:    // Кнопка "Фото Торговой Точки (ФТТ)"
+//            case 159725:    // Кнопка "Фото Торговой Точки (ФТТ)"
                 OptionControlPhoto<?> optionControlPhoto = new OptionControlPhoto<>(context, dataDB, option, type, mode);
                 if (mode.equals(NNKMode.MAKE) || (mode.equals(NNKMode.CHECK) && optionControlPhoto.isBlockOption()))
                     optionControlPhoto.showOptionMassage();
