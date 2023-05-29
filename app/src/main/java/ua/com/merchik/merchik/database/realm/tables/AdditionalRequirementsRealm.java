@@ -2,6 +2,8 @@ package ua.com.merchik.merchik.database.realm.tables;
 
 import static ua.com.merchik.merchik.database.realm.RealmManager.INSTANCE;
 
+import android.util.Log;
+
 import java.util.List;
 
 import io.realm.RealmResults;
@@ -117,6 +119,9 @@ public class AdditionalRequirementsRealm {
     }
 
     public static <T> RealmResults<AdditionalRequirementsDB> getData3(T data, AdditionalRequirementsModENUM mod, Integer ttCategory) {
+
+        Log.e("getData3", "mod: " + mod);
+
         int themeId, addressId;
         String clientId;
         long dad2;
@@ -144,26 +149,6 @@ public class AdditionalRequirementsRealm {
                 .equalTo("not_approve", "0")
                 .findAll();
 
-        switch (mod) {
-            case HIDE_FOR_USER:
-                realmResults = realmResults.where()
-                        .equalTo("hideUser", "0")
-                        .findAll();
-                break;
-
-            case HIDE_FOR_CLIENT:
-                realmResults = realmResults.where()
-                        .equalTo("hideClient", "0")
-                        .findAll();
-                break;
-
-            case DEFAULT:
-//                realmResults = realmResults.where()
-//                        .equalTo("hideUser", "1")
-//                        .findAll();
-                break;
-        }
-
 
         realmResults = realmResults.where()
                 .beginGroup()
@@ -188,6 +173,38 @@ public class AdditionalRequirementsRealm {
 
                 .findAll();
 
+        RealmResults realmResults1 = realmResults.where()
+                .equalTo("hideUser", "1")
+                .findAll();
+
+        RealmResults realmResults2 = realmResults.where()
+                .equalTo("hideClient", "1")
+                .findAll();
+
+        Log.e("getData3", "realmResults1: " + realmResults1);
+        Log.e("getData3", "realmResults2: " + realmResults2);
+
+        switch (mod) {
+            case HIDE_FOR_USER:
+                realmResults = realmResults.where()
+                        .equalTo("hideUser", "0")
+                        .findAll();
+                break;
+
+            case HIDE_FOR_CLIENT:
+                realmResults = realmResults.where()
+                        .equalTo("hideClient", "0")
+                        .findAll();
+                break;
+
+            case DEFAULT:
+//                realmResults = realmResults.where()
+//                        .equalTo("hideUser", "1")
+//                        .findAll();
+                break;
+        }
+
+
         if (themeId == 998) {
             realmResults = realmResults.where()
                     .notEqualTo("themeId", "1182")
@@ -199,7 +216,7 @@ public class AdditionalRequirementsRealm {
         }
 
         // Поиск по категориям ТТ
-        if (ttCategory != null){
+        if (ttCategory != null) {
             realmResults = realmResults.where()
                     .equalTo("addrTTId", ttCategory)
                     .or()
