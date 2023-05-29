@@ -15,6 +15,7 @@ import static ua.com.merchik.merchik.Globals.OptionControlName.NOTES;
 import static ua.com.merchik.merchik.Globals.OptionControlName.OBOROTVED_NUM;
 import static ua.com.merchik.merchik.Globals.OptionControlName.PRICE;
 import static ua.com.merchik.merchik.Globals.OptionControlName.UP;
+import static ua.com.merchik.merchik.Options.Options.ConductMode.DEFAULT_CONDUCT;
 import static ua.com.merchik.merchik.data.OptionMassageType.Type.DIALOG;
 import static ua.com.merchik.merchik.data.OptionMassageType.Type.STRING;
 import static ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsRealm.AdditionalRequirementsModENUM.HIDE_FOR_USER;
@@ -1728,6 +1729,19 @@ public class Options {
             }
         }
         Globals.writeToMLOG("INFO", "DetailedReportButtons.class.pressEndWork", "OUT. wpDataDB.codeDAD2: " + wpDataDB.getCode_dad2());
+
+
+        WorkPlan workPlan = new WorkPlan();
+        List<OptionsDB> opt = workPlan.getOptionButtons2(workPlan.getWpOpchetId(wpDataDB), wpDataDB.getId());
+        new Options().conduct(context, wpDataDB, opt, DEFAULT_CONDUCT, new Clicks.click() {
+            @Override
+            public <T> void click(T data) {
+                OptionsDB optionsDB = (OptionsDB) data;
+                OptionMassageType msgType = new OptionMassageType();
+                msgType.type = OptionMassageType.Type.DIALOG;
+                new Options().optControl(context, wpDataDB, optionsDB, Integer.parseInt(optionsDB.getOptionControlId()), msgType, Options.NNKMode.CHECK);
+            }
+        });
 
 //        conductOptCheck(mode, result, optionsDB);
         return result;
