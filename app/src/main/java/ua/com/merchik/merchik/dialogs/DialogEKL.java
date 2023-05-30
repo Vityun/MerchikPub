@@ -1,5 +1,10 @@
 package ua.com.merchik.merchik.dialogs;
 
+import static android.view.MotionEvent.ACTION_UP;
+import static ua.com.merchik.merchik.Globals.userId;
+import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
+import static ua.com.merchik.merchik.toolbar_menus.internetStatus;
+
 import android.app.Dialog;
 import android.content.Context;
 import android.content.Intent;
@@ -53,11 +58,6 @@ import ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsRealm;
 import ua.com.merchik.merchik.database.realm.tables.AppUserRealm;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
 
-import static android.view.MotionEvent.ACTION_UP;
-import static ua.com.merchik.merchik.Globals.userId;
-import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
-import static ua.com.merchik.merchik.toolbar_menus.internetStatus;
-
 public class DialogEKL {
 
     private Context context;
@@ -65,7 +65,7 @@ public class DialogEKL {
 
     public ImageButton close, help, videoHelp, call, addSotr;
     private TextView title;
-    private Button buttonSend, buttonCheck;
+    private Button buttonSend, buttonCheck, buttonSend2, buttonSend3;
     private EditText editText;
     private AutoCompleteTextView sotr, tel;
 
@@ -104,6 +104,9 @@ public class DialogEKL {
             addSotr = dialog.findViewById(R.id.add_sotr);
 
             buttonSend = dialog.findViewById(R.id.buttonSend);
+            buttonSend2 = dialog.findViewById(R.id.buttonSend2);
+            buttonSend3 = dialog.findViewById(R.id.buttonSend3);
+
             buttonCheck = dialog.findViewById(R.id.buttonCheck);
             editText = dialog.findViewById(R.id.editText);
             title = dialog.findViewById(R.id.title);
@@ -510,9 +513,17 @@ public class DialogEKL {
                     Toast.makeText(context, "Выберите сотрудника для отправки ЭКЛа", Toast.LENGTH_LONG).show();
                     Globals.writeToMLOG("RESP", "DialogEKL.sendStartEKL/", "Выберите сотрудника для отправки ЭКЛа");
                 }
-            }catch (Exception e){
+            } catch (Exception e) {
                 Globals.writeToMLOG("ERROR", "DialogEKL.sendStartEKL/buttonSend.setOnClickListener", "Exception e: " + e);
             }
+        });
+
+        buttonSend2.setOnClickListener(v -> {
+            sendEKL(v.getContext(), "telegram");
+        });
+
+        buttonSend3.setOnClickListener(v -> {
+            sendEKL(v.getContext(), "viber");
         });
 
         editText.addTextChangedListener(new TextWatcher() {
@@ -599,6 +610,108 @@ public class DialogEKL {
         });
     }
 
+    private void sendEKL(Context context, String telType){
+        responseSendPTTEKLCode(telType, new ExchangeInterface.ExchangeResponseInterfaceSingle() {
+            @Override
+            public <T> void onSuccess(T data) {
+                try {
+                    enterCode = false;
+                    EKLRespData resp = (EKLRespData) data;
+
+                    Gson gson = new Gson();
+                    String json = gson.toJson(resp);
+                    JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
+
+                    Globals.writeToMLOG("RESP", "DialogEKL.sendStartEKL/onResponse/onSuccess", "convertedObject: " + convertedObject);
+                    Log.e("DialogEKL", "sendStartEKL/onResponse: " + convertedObject);
+
+
+                    // Создание в БД нового ЭКЛ-а
+                    EKL_SDB ekl_sdb = new EKL_SDB();
+                    ekl_sdb.id = resp.requestId;
+                    ekl_sdb.userId = wp.getUser_id();    // App User
+                    ekl_sdb.sotrId = user.id;   // PTT
+                    ekl_sdb.clientId = wp.getClient_id();
+                    ekl_sdb.addressId = wp.getAddr_id();
+                    ekl_sdb.dad2 = wp.getCode_dad2();
+                    ekl_sdb.department = user.otdelId;   // Добавлен отдел, при отправке ЭКЛ
+                    ekl_sdb.state = true;
+                    ekl_sdb.eklHashCode = resp.codeHash;
+                    ekl_sdb.vpi = System.currentTimeMillis() / 1000;
+
+                    // Запись ЭКЛ-а для текущего окна
+                    ekl = ekl_sdb;
+
+                    Log.e("DialogEKL", "ekl_sdb: " + ekl_sdb.id);
+                    Log.e("DialogEKL", "ekl_sdb: " + ekl_sdb.dad2);
+
+                    // Запись ЭКЛ-а в базу данных
+                    SQL_DB.eklDao().insertAll(Collections.singletonList(ekl_sdb));
+
+//                                Toast.makeText(context, "Код отправлен. Ответ: " + convertedObject, Toast.LENGTH_LONG).show();
+
+                    Toast.makeText(context, "Код Представителю Торговой Точки отправлен", Toast.LENGTH_SHORT).show();
+                } catch (Exception e) {
+                    Globals.writeToMLOG("RESP", "DialogEKL.sendStartEKL/onResponse/onSuccess/Exception", "Exception e: " + e);
+                }
+            }
+
+            @Override
+            public void onFailure(String error) {
+
+                if (error.equals("register_messenger")){
+                    DialogData dialogData = new DialogData(context);
+                    dialogData.setTitle("Внимание! Получатель сообщения (ПТТ) ещё не подключён к нашему боту.");
+                    dialogData.setText("Для того, чтобы он подключился, нажмите кнопку ОК. На телефон ПТТ будет отправлена SMS с ссылкой, " +
+                            "перейдя по которой он автоматически подключится к нашему боту и Вы сможете отправлять сообщения ему через мессенджер.");
+                    dialogData.setOk("Ok", ()->{
+                        sendRegistrationInTelegram(telType);
+                    });
+                    dialogData.setCancel("Нет", dialogData::dismiss);
+                    dialogData.setClose(dialogData::dismiss);
+                    dialogData.show();
+                }
+
+                Globals.writeToMLOG("FAIL", "DialogEKL.sendStartEKL/onFailure", "t: " + error);
+                Log.e("DialogEKL", "sendStartEKL/onFailure: " + error);
+                Toast.makeText(context, "При отправке кода ЭКЛ возникла ошибка, повторите попытку позже или обратитесь к Вашему руководителю. Ошибка: " + error, Toast.LENGTH_LONG).show();
+            }
+        });
+    }
+
+
+    private void sendRegistrationInTelegram(String telType){
+        try {
+            StandartData data = new StandartData();
+            data.mod = "sms_verification";
+            data.act = "sms_messenger_registration_url";
+
+            data.sotr_id = String.valueOf(user.id);
+            data.tel_type = telType;
+
+            Gson gson = new Gson();
+            String json = gson.toJson(data);
+            JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
+
+            Log.e("DialogEKL", "sendStartEKL/dataSend: " + convertedObject);
+
+            retrofit2.Call<JsonObject> call = RetrofitBuilder.getRetrofitInterface().TEST_JSON_UPLOAD(RetrofitBuilder.contentType, convertedObject);
+            call.enqueue(new Callback<JsonObject>() {
+                @Override
+                public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
+                    Globals.writeToMLOG("INFO", "sendRegistrationInTelegram/onResponse", "response.body(): " + new Gson().toJson(response.body()));
+                }
+
+                @Override
+                public void onFailure(Call<JsonObject> call, Throwable t) {
+                    Globals.writeToMLOG("INFO", "sendRegistrationInTelegram/onFailure", "Throwable t: " + t);
+                }
+            });
+        }catch (Exception e){
+            Globals.writeToMLOG("INFO", "sendRegistrationInTelegram/", "Exception e: " + e);
+        }
+    }
+
 
     /**
      * 16.07.2021
@@ -613,7 +726,7 @@ public class DialogEKL {
 
                 Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(createAddNewPTTLink()));
                 context.startActivity(browserIntent);
-            }catch (Exception e){
+            } catch (Exception e) {
                 Globals.writeToMLOG("ERROR", "DialogEKL/setAddSotr", "Exception e: " + e);
             }
         });
@@ -679,7 +792,53 @@ public class DialogEKL {
                 exchange.onFailure(t.toString());
             }
         });
+    }
 
+
+    /**
+     * 30.05.23.
+     * Сделано для кнопок "отпарвить на телеграмм", "отправить на вайбер"
+     * */
+    public void responseSendPTTEKLCode(String telType, ExchangeInterface.ExchangeResponseInterfaceSingle exchange) {
+        StandartData data = new StandartData();
+        data.mod = "sms_verification";
+        data.act = "verification_send";
+
+        data.option_id = 84007;
+        data.sotr_id = String.valueOf(user.id);
+        data.code_dad2 = String.valueOf(wp.getCode_dad2());
+        data.tel_type = telType;
+
+        Gson gson = new Gson();
+        String json = gson.toJson(data);
+        JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
+
+        Log.e("DialogEKL", "sendStartEKL/dataSend: " + convertedObject);
+
+        retrofit2.Call<EKLRespData> call = RetrofitBuilder.getRetrofitInterface().EKL_RESP_DATA_CALL(RetrofitBuilder.contentType, convertedObject);
+        call.enqueue(new Callback<EKLRespData>() {
+            @Override
+            public void onResponse(Call<EKLRespData> call, Response<EKLRespData> response) {
+                if (response.body() != null) {
+                    Globals.writeToMLOG("INFO", "responseSendPTTEKLCode/TELEGRAM", "response.body(): " + new Gson().toJson(response.body()));
+                    if (response.body().state) {
+                        exchange.onSuccess(response.body());
+                    } else {
+                        if (response.body().additional_action.equals("register_messenger")){
+                            exchange.onFailure("register_messenger");
+                        }
+                        exchange.onFailure("Ошибка со стороны сервера: " + response.body().error);
+                    }
+                } else {
+                    exchange.onFailure("Ответ с сервера пустой. Повторите попытку позже.");
+                }
+            }
+
+            @Override
+            public void onFailure(Call<EKLRespData> call, Throwable t) {
+                exchange.onFailure(t.toString());
+            }
+        });
     }
 
 
@@ -904,6 +1063,8 @@ public class DialogEKL {
             String[] telNumber = new String[2];
             telNumber[0] = hideTelephone(res.tel);
             telNumber[1] = hideTelephone(res.tel2);
+//            telNumber[2] = "телеграм";
+//            telNumber[3] = "вайбер";
 
             ArrayAdapter<String> adapter = new ArrayAdapter<String>(context,
                     android.R.layout.simple_list_item_1, telNumber);
@@ -1049,6 +1210,11 @@ public class DialogEKL {
         @SerializedName("error")
         @Expose
         public String error;
+
+        /*30.05.23 Добавлено для анализа какая именно ошибка.*/
+        @SerializedName("additional_action")
+        @Expose
+        public String additional_action;
     }
 
     public class EKLCheckData {
