@@ -8,6 +8,7 @@ import android.text.SpannableStringBuilder;
 import android.text.Spanned;
 import android.text.TextPaint;
 import android.text.style.ClickableSpan;
+import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
@@ -49,14 +50,18 @@ public class OptionControlReturnOfGoods<T> extends OptionControl {
     private boolean signal = false;
 
     public OptionControlReturnOfGoods(Context context, T document, OptionsDB optionDB, OptionMassageType msgType, Options.NNKMode nnkMode) {
-        this.context = context;
-        this.document = document;
-        this.optionDB = optionDB;
-        this.msgType = msgType;
-        this.nnkMode = nnkMode;
+        try {
+            this.context = context;
+            this.document = document;
+            this.optionDB = optionDB;
+            this.msgType = msgType;
+            this.nnkMode = nnkMode;
 
-        getDocumentVar();
-        executeOption();
+            getDocumentVar();
+            executeOption();
+        }catch (Exception e){
+            Log.e("OCReturnOfGoods", "Exception e: " + e);
+        }
     }
 
     private void getDocumentVar() {
@@ -140,6 +145,8 @@ public class OptionControlReturnOfGoods<T> extends OptionControl {
             signal = false;
             resultMsg.append("Зауважень по наданню інформації про необхідність повернення товару (в т.р. з ОСУ (Особовою Увагою)) нема.").append("\n\n");
         }
+
+        spannableStringBuilder = resultMsg;
 
 
         // Установка Сигнала

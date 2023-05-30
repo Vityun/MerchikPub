@@ -765,6 +765,7 @@ public class Options {
         Log.e("NNK", "F/optControl/optionId: " + optionId);
         switch (optionId) {
 
+            case 159799:    // Кнопка "Возврат"
             case 135591:// Выполняется проверка НАЛИЧИЯ данных о количестве ВОЗВРАТА товара или запись в поле "ошибка" о том, что его "возвращать НЕ нужно".
                 OptionControlReturnOfGoods<?> optionControlReturnOfGoods = new OptionControlReturnOfGoods<>(context, dataDB, option, type, mode);
                 if (mode.equals(NNKMode.MAKE) || (mode.equals(NNKMode.CHECK) && optionControlReturnOfGoods.isBlockOption()))
