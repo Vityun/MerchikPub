@@ -665,7 +665,7 @@ public class Options {
                         // Не все опции(действия) выполнены
                         // Не выполнены:
                         dialog.setDialogIco();
-                        dialog.setTitle("Не все опции(действия) выполнены.");
+                        dialog.setTitle("Не все опции(действия) выполнены.\n\nВаш отчёт не будет проведён и не будет начислена за него оплата!");
 
                         SpannableStringBuilder resStr = new SpannableStringBuilder();
                         resStr.append("Не выполнены: \n\n");
