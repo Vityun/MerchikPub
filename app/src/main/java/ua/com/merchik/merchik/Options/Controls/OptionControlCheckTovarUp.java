@@ -91,7 +91,7 @@ public class OptionControlCheckTovarUp<T> extends OptionControl {
         List<ReportPrepareDB> reportPrepare = RealmManager.INSTANCE.copyFromRealm(ReportPrepareRealm.getReportPrepareByDad2(dad2));
 
         // Получаем Фото Товара с Тележки
-        List<StackPhotoDB> stackPhoto = StackPhotoRealm.getPhoto(
+        List<StackPhotoDB> stackPhoto = RealmManager.INSTANCE.copyFromRealm(StackPhotoRealm.getPhoto(
                 Clock.getDatePeriodLong(documentDate, -3),
                 Clock.getDatePeriodLong(documentDate, 1),
                 null,
@@ -99,13 +99,14 @@ public class OptionControlCheckTovarUp<T> extends OptionControl {
                 null,
                 dad2,
                 PHOTO_CART_WITH_GOODS,
-                null);
+                null));
 
         try {
-            Globals.writeToMLOG("INFO", "OptionControlCheckTovarUp/executeOption/sumUp!!!", "stackPhoto!!!!: " + stackPhoto.size());
-            Globals.writeToMLOG("INFO", "OptionControlCheckTovarUp/executeOption/sumUp!!!", "stackPhoto!!!!: " + stackPhoto.get(0).getId());
-            Globals.writeToMLOG("INFO", "OptionControlCheckTovarUp/executeOption/sumUp!!!", "stackPhoto!!!!: " + stackPhoto.get(0).getPhotoServerId());
-            Globals.writeToMLOG("INFO", "OptionControlCheckTovarUp/executeOption/sumUp!!!", "stackPhoto!!!!: " + stackPhoto.get(0).getPhoto_hash());
+            Globals.writeToMLOG("INFO", "OptionControlCheckTovarUp/executeOption/sumUp!!!", "stackPhoto/stackPhoto!!!!: " + stackPhoto);
+            Globals.writeToMLOG("INFO", "OptionControlCheckTovarUp/executeOption/sumUp!!!", "stackPhoto/size!!!!: " + stackPhoto.size());
+            Globals.writeToMLOG("INFO", "OptionControlCheckTovarUp/executeOption/sumUp!!!", "stackPhoto/getId!!!!: " + stackPhoto.get(0).getId());
+            Globals.writeToMLOG("INFO", "OptionControlCheckTovarUp/executeOption/sumUp!!!", "stackPhoto/getPhotoServerId!!!!: " + stackPhoto.get(0).getPhotoServerId());
+            Globals.writeToMLOG("INFO", "OptionControlCheckTovarUp/executeOption/sumUp!!!", "stackPhoto/getPhoto_hash!!!!: " + stackPhoto.get(0).getPhoto_hash());
         }catch (Exception e){
             Globals.writeToMLOG("INFO", "OptionControlCheckTovarUp/executeOption/sumUp!!!", "stackPhoto!!!!Exception e: " + e);
         }
@@ -114,7 +115,7 @@ public class OptionControlCheckTovarUp<T> extends OptionControl {
         // если ФТТ нет и это АШАН то проверяем еще наличие ФВ До начала работ... для Ашанов сделано исключение
         if (stackPhoto == null || stackPhoto.size() == 0) {
             if (tpId == 8196) {
-                stackPhoto = StackPhotoRealm.getPhoto(
+                stackPhoto = RealmManager.INSTANCE.copyFromRealm(StackPhotoRealm.getPhoto(
                         Clock.getDatePeriodLong(documentDate, -3),  // 18.04.23. Жаловались что не видит фото опция. Я так ещё подфиксил (1 на 3 изменил)
                         Clock.getDatePeriodLong(documentDate, 3),
                         null,
@@ -122,7 +123,7 @@ public class OptionControlCheckTovarUp<T> extends OptionControl {
                         null,
                         dad2,
                         PHOTO_SHOWCASE_BEFORE_START_WORK,
-                        null);
+                        null));
 
                 if (stackPhoto != null){
                     Globals.writeToMLOG("INFO", "OptionControlCheckTovarUp/executeOption/sumUp", "stackPhoto (null): " + stackPhoto.size());
