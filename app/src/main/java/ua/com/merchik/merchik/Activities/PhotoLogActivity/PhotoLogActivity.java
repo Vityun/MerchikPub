@@ -223,6 +223,7 @@ public class PhotoLogActivity extends toolbar_menus {
             @Override
             public <T> void click(T data) {
                 try {
+                    // TODO тут есть косяк, у мерчиков по какой-то причине вылетало приложение. resultCode == 101 не срабатывал там где должен был. Вообще это лучше по другому делать.
                     switch (finalPhotoLogMode) {
                         case SAMPLE_PHOTO:
                             finish();
