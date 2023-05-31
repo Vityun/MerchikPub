@@ -264,23 +264,26 @@ public class TARActivity extends toolbar_menus implements TARFragmentHome.OnFrag
             }
 
             if (requestCode == 200) {
+                if (resultCode != 0){
+                    Globals.writeToMLOG("INFO", "TARActivity.onActivityResult.requestCode200", "MakePhoto.openCameraPhotoUri: " + MakePhoto.openCameraPhotoUri);
 
-                Globals.writeToMLOG("INFO", "TARActivity.onActivityResult.requestCode200", "MakePhoto.openCameraPhotoUri: " + MakePhoto.openCameraPhotoUri);
+                    TasksAndReclamationsSDB tar = SQL_DB.tarDao().getById(TARSecondFrag.TaRID);
 
-                TasksAndReclamationsSDB tar = SQL_DB.tarDao().getById(TARSecondFrag.TaRID);
+                    Globals.writeToMLOG("INFO", "TARActivity.onActivityResult.requestCode200", "tar: " + tar);
 
-                Globals.writeToMLOG("INFO", "TARActivity.onActivityResult.requestCode200", "tar: " + tar);
+                    StackPhotoDB stackPhotoDB = savePhoto(MakePhoto.openCameraPhotoUri, tar);
+                    String stackJson = new Gson().toJson(stackPhotoDB);
+                    Globals.writeToMLOG("INFO", "TARActivity.onActivityResult.requestCode200", "stackPhotoDB: " + stackJson);
 
-                StackPhotoDB stackPhotoDB = savePhoto(MakePhoto.openCameraPhotoUri, tar);
-                String stackJson = new Gson().toJson(stackPhotoDB);
-                Globals.writeToMLOG("INFO", "TARActivity.onActivityResult.requestCode200", "stackPhotoDB: " + stackJson);
+                    MakePhoto.openCameraPhotoUri = null;
 
-                MakePhoto.openCameraPhotoUri = null;
+                    List<Fragment> fragments = fragmentManager.getFragments();
+                    TARFragmentHome fragmentHome = (TARFragmentHome) fragments.get(0);
 
-                List<Fragment> fragments = fragmentManager.getFragments();
-                TARFragmentHome fragmentHome = (TARFragmentHome) fragments.get(0);
-
-                fragmentHome.secondFrag.setPhoto(stackPhotoDB.getId());
+                    fragmentHome.secondFrag.setPhoto(stackPhotoDB.getId());
+                }else {
+                    Globals.writeToMLOG("INFO", "TARActivity.onActivityResult.resultCode", "resultCode.resultCode: " + resultCode);
+                }
             }
 
             if (requestCode == 202) {

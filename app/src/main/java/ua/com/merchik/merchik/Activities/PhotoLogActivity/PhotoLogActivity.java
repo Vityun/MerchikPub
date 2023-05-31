@@ -222,37 +222,45 @@ public class PhotoLogActivity extends toolbar_menus {
         recycleViewPLAdapter = new PhotoLogAdapter(this, stackPhoto, getChoice(), new Clicks.click() {
             @Override
             public <T> void click(T data) {
-                switch (finalPhotoLogMode) {
-                    case SAMPLE_PHOTO:
-                        finish();
-                        break;
+                try {
+                    switch (finalPhotoLogMode) {
+                        case SAMPLE_PHOTO:
+                            finish();
+                            break;
 
-                    default:
-                        PhotoAndInfoViewHolder.stackPhotoDB = (StackPhotoDB) data;
+                        default:
+                            PhotoAndInfoViewHolder.stackPhotoDB = (StackPhotoDB) data;
 
-                        Intent intent = new Intent();
-                        intent.putExtra("stack_photo_id", PhotoAndInfoViewHolder.stackPhotoDB.getId());
+                            Intent intent = new Intent();
+                            intent.putExtra("stack_photo_id", PhotoAndInfoViewHolder.stackPhotoDB.getId());
 
-                        if (resultCode != null && resultCode != 0) {
-                            switch (resultCode) {
-                                case 100:
-                                    setResult(100, intent);
-                                    break;
+                            if (resultCode != null && resultCode != 0) {
+                                switch (resultCode) {
+                                    case 100:
+                                        setResult(100, intent);
+                                        break;
 
-                                case 101:
-                                    setResult(101, intent);
-                                    break;
+                                    case 101:
+                                        setResult(101, intent);
+                                        break;
 
-                                default:
-                                    setResult(100, intent);
-                                    break;
+                                    default:
+                                        setResult(100, intent);
+                                        break;
+                                }
                             }
-                        }
 
-                        finish();
-                        break;
+                            finish();
+                            break;
+                    }
+                }catch (Exception e){
+                    Globals.writeToMLOG("ERROR", "PhotoLogActivity/PhotoLogAdapter/click", "Exeption: " + e);
+                    DialogData dialogData = new DialogData(getApplicationContext());
+                    dialogData.setTitle("Произошла ошибка");
+                    dialogData.setText("Попробуйте повторить попытку, если ошибка повторяется - передайте руководителю отладочный файл.");
+                    dialogData.setClose(dialogData::dismiss);
+                    dialogData.show();
                 }
-
             }
         }, new PhotoLogPhotoAdapter.OnPhotoClickListener() {
             @Override
