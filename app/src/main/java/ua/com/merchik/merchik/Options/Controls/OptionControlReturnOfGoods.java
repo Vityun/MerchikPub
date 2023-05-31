@@ -96,7 +96,7 @@ public class OptionControlReturnOfGoods<T> extends OptionControl {
 
             boolean osv = false; // Товар с Особым Вниманием
 
-            if (item.getFace() != null && !item.getFace().equals("") && !item.getFace().equals("0")) {
+            if (item.getFace() != null && !item.getFace().equals("") && item.getFace().equals("0")) {
                 //если товар есть то и проверять нечего
                 continue;
             }
@@ -106,15 +106,17 @@ public class OptionControlReturnOfGoods<T> extends OptionControl {
                 Log.e("OCReturnOfGoods", "item.iD: " + item.iD);
                 Log.e("OCReturnOfGoods", "item.expireLeft: " + item.expireLeft);
                 Log.e("OCReturnOfGoods", "item.getErrorId(): " + item.getErrorId());
-                Log.e("OCReturnOfGoods", "-----------------------------------------");
 
-                if (item.expireLeft != null && item.expireLeft.equals("0") &&
-                        item.getErrorId() != null && !item.getErrorId().equals("") && !item.getErrorId().equals("0")){
+                if ((item.expireLeft != null && item.expireLeft.equals("0")) &&
+                        (item.getErrorId() != null && !item.getErrorId().equals("") && item.getErrorId().equals("0"))){
 
                     errCnt++;
                     item.error = 1;
                     item.errorNote = "Для кожного наявного товара ви зобов'язані зазначити або кількіть товару, що підлягає поверненню, або обрати 'привід' = товар поверненню НЕ підлягає.";
                     result.add(item);
+                    Log.e("OCReturnOfGoods", "Добавил iD: " + item.iD);
+                }else {
+                    Log.e("OCReturnOfGoods", "НЕ Добавил iD: " + item.iD);
                 }
             }else { //если есть товары с ОСВ то проверяем только по ним
                 Integer tovId = Integer.valueOf(item.getTovarId());
@@ -123,14 +125,16 @@ public class OptionControlReturnOfGoods<T> extends OptionControl {
                 }
 
                 if (osv &&
-                        item.expireLeft != null && item.expireLeft.equals("0") &&
-                        item.getErrorId() != null && !item.getErrorId().equals("") && !item.getErrorId().equals("0")) {
+                        (item.expireLeft != null && item.expireLeft.equals("0")) &&
+                        (item.getErrorId() != null && !item.getErrorId().equals("") && item.getErrorId().equals("0"))) {
                     errCnt++;
                     item.error = 1;
                     item.errorNote = "Для товара с ОСВ (Особливою увагою) ви зобов'язані зазначити або кількіть товару, що підлягає поверненню, або обрати 'привід' = товар поверненню НЕ підлягає.";
                     result.add(item);
                 }
             }
+
+            Log.e("OCReturnOfGoods", "-----------------------------------------");
         }
 
 
@@ -145,7 +149,7 @@ public class OptionControlReturnOfGoods<T> extends OptionControl {
                 TovarDB tov = TovarRealm.getById(item.getTovarId());
                 String msg = String.format("(%s) %s (%s): %s", item.getTovarId(), tov.getNm(), tov.getWeight(), item.errorNote);
 
-                resultMsg.append(createLinkedString(msg, item, tov));
+                resultMsg.append(createLinkedString(msg, item, tov)).append("\n\n");
             }
         }else {
             signal = false;
