@@ -629,6 +629,10 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
 
         // ... Настройки
         if (id == R.id.action_settings) {
+
+            AppUsersDB appUsersDB = AppUserRealm.getAppUser();
+            Globals.writeToMLOG("INFO", "USER_INFO", "appUsersDB: " + new Gson().toJson(appUsersDB));
+
             DialogData dialog = new DialogData(this);
             dialog.setTitle("Настройки");
             dialog.setText("Отправить служебный файл?");
