@@ -1,5 +1,7 @@
 package ua.com.merchik.merchik.database.realm.tables;
 
+import static ua.com.merchik.merchik.database.realm.RealmManager.INSTANCE;
+
 import java.util.List;
 
 import io.realm.RealmResults;
@@ -7,8 +9,6 @@ import io.realm.Sort;
 import ua.com.merchik.merchik.data.Database.Room.AdditionalMaterialsJOIN.AdditionalMaterialsJOINAdditionalMaterialsAddressSDB;
 import ua.com.merchik.merchik.data.RealmModels.AdditionalRequirementsDB;
 import ua.com.merchik.merchik.data.RealmModels.AdditionalRequirementsMarkDB;
-
-import static ua.com.merchik.merchik.database.realm.RealmManager.INSTANCE;
 
 public class AdditionalRequirementsMarkRealm {
 
@@ -27,19 +27,6 @@ public class AdditionalRequirementsMarkRealm {
 
 
     public static AdditionalRequirementsMarkDB getMark(long dt, int id, String userId) {
-//        AdditionalRequirementsMarkDB res = null;
-//        RealmQuery query = INSTANCE.where(AdditionalRequirementsMarkDB.class);
-//
-//        if (dt == 0) {
-//            query.greaterThan("dt", dt);
-//        }
-//
-//        query.equalTo("itemId", id);
-//        query.equalTo("userId", userId);
-//        query.sort("dt", Sort.DESCENDING);
-//        res = (AdditionalRequirementsMarkDB) query.findFirst();
-//
-//        return res;
         AdditionalRequirementsMarkDB data = INSTANCE.where(AdditionalRequirementsMarkDB.class)
                 .greaterThan("dt", dt)
                 .equalTo("itemId", id)

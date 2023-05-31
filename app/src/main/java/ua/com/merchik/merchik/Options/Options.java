@@ -1230,7 +1230,7 @@ public class Options {
         DialogAdditionalRequirements dialogAdditionalRequirements = new DialogAdditionalRequirements(context);
 
         dialogAdditionalRequirements.setTitle("Доп. требования (" + data.size() + ")");
-        dialogAdditionalRequirements.setRecycler(data);
+        dialogAdditionalRequirements.setRecycler((WpDataDB) dataDB, data);
 
         dialogAdditionalRequirements.setClose(dialogAdditionalRequirements::dismiss);
         dialogAdditionalRequirements.setLesson(context, true, 1232);
@@ -1249,10 +1249,10 @@ public class Options {
 
         if (data != null && data.size() > 0) {
             dialogAdditionalRequirements.setTitle("Доп. материалы (" + data.size() + ")");
-            dialogAdditionalRequirements.setRecyclerAM(data);
+            dialogAdditionalRequirements.setRecyclerAM((WpDataDB)dataDB, data);
         } else if (data1 != null && data1.size() > 0) {
             dialogAdditionalRequirements.setTitle("Доп. материалы (" + data1.size() + ")");
-            dialogAdditionalRequirements.setRecyclerAM(amToAma(data1));
+            dialogAdditionalRequirements.setRecyclerAM((WpDataDB)dataDB, amToAma(data1));
         }
 
 

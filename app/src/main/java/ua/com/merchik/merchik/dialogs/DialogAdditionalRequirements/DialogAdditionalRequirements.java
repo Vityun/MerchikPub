@@ -24,6 +24,7 @@ import ua.com.merchik.merchik.data.Database.Room.AdditionalMaterialsJOIN.Additio
 import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteHintsDB;
 import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteObjects.SiteObjectsDB;
 import ua.com.merchik.merchik.data.RealmModels.AdditionalRequirementsDB;
+import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.dialogs.DialogVideo;
@@ -228,14 +229,14 @@ public class DialogAdditionalRequirements {
         title.setText(charSequence);
     }
 
-    public void setRecycler(List<AdditionalRequirementsDB> data){
-        AdditionalRequirementsAdapter adapter = new AdditionalRequirementsAdapter(context, data);
+    public void setRecycler(WpDataDB wp, List<AdditionalRequirementsDB> data){
+        AdditionalRequirementsAdapter adapter = new AdditionalRequirementsAdapter(context, data, wp);
         recyclerView.setAdapter(adapter);
         recyclerView.setLayoutManager(new LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false));
     }
 
-    public void setRecyclerAM(List<AdditionalMaterialsJOINAdditionalMaterialsAddressSDB> data){
-        AdditionalMaterialsAdapter adapter = new AdditionalMaterialsAdapter(context, data);
+    public void setRecyclerAM(WpDataDB wp, List<AdditionalMaterialsJOINAdditionalMaterialsAddressSDB> data){
+        AdditionalMaterialsAdapter adapter = new AdditionalMaterialsAdapter(context, data, wp);
         recyclerView.setAdapter(adapter);
         recyclerView.setLayoutManager(new LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false));
     }

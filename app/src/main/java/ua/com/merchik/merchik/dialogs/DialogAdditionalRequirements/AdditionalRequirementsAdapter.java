@@ -22,6 +22,7 @@ import ua.com.merchik.merchik.data.RealmModels.AdditionalRequirementsDB;
 import ua.com.merchik.merchik.data.RealmModels.AdditionalRequirementsMarkDB;
 import ua.com.merchik.merchik.data.RealmModels.TovarDB;
 import ua.com.merchik.merchik.data.RealmModels.TradeMarkDB;
+import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.database.realm.tables.TovarRealm;
 import ua.com.merchik.merchik.database.realm.tables.TradeMarkRealm;
 import ua.com.merchik.merchik.dialogs.DialogAdditionalRequirements.DialogARMark.DialogARMark;
@@ -35,10 +36,12 @@ public class AdditionalRequirementsAdapter extends RecyclerView.Adapter<Addition
 
     private Context context;
     private List<AdditionalRequirementsDB> data;
+    private WpDataDB wpDataDB;
 
-    public AdditionalRequirementsAdapter(Context context, List<AdditionalRequirementsDB> data) {
+    public AdditionalRequirementsAdapter(Context context, List<AdditionalRequirementsDB> data, WpDataDB wp) {
         this.context = context;
         this.data = data;
+        this.wpDataDB = wp;
     }
 
     public class ViewHolder extends RecyclerView.ViewHolder {
@@ -77,7 +80,8 @@ public class AdditionalRequirementsAdapter extends RecyclerView.Adapter<Addition
 
                 text.setText(additionalText);
 
-                long dateFrom = Clock.getDatePeriodLong(System.currentTimeMillis(), -15) / 1000;
+                long dateDocumentLong = Clock.dateConvertToLong(Clock.getHumanTimeYYYYMMDD(wpDataDB.getDt().getTime() / 1000));
+                long dateFrom = Clock.getDatePeriodLong(dateDocumentLong, -15) / 1000;
                 AdditionalRequirementsMarkDB additionalRequirementsMarkDB = AdditionalRequirementsMarkRealm.getMark(dateFrom, elementDB.getId(), String.valueOf(Globals.userId));
 
                 signal.setColorFilter(context.getResources().getColor(R.color.shadow));

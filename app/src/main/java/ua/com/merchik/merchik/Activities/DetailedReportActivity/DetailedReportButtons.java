@@ -201,7 +201,7 @@ public class DetailedReportButtons {
                 DialogAdditionalRequirements dialogAdditionalRequirements = new DialogAdditionalRequirements(context);
 
                 dialogAdditionalRequirements.setTitle("Доп. требования (" + data.size() + ")");
-                dialogAdditionalRequirements.setRecycler(data);
+                dialogAdditionalRequirements.setRecycler(wpDataDB, data);
 
                 dialogAdditionalRequirements.setClose(dialogAdditionalRequirements::dismiss);
                 dialogAdditionalRequirements.setLesson(context, true, 1232);

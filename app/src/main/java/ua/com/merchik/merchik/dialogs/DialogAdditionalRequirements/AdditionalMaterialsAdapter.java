@@ -24,6 +24,7 @@ import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.ServerExchange.Exchange;
 import ua.com.merchik.merchik.data.Database.Room.AdditionalMaterialsJOIN.AdditionalMaterialsJOINAdditionalMaterialsAddressSDB;
 import ua.com.merchik.merchik.data.RealmModels.AdditionalRequirementsMarkDB;
+import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsMarkRealm;
 import ua.com.merchik.merchik.dialogs.DialogAdditionalRequirements.DialogARMark.DialogARMark;
 import ua.com.merchik.merchik.dialogs.DialogFilter.Click;
@@ -32,10 +33,12 @@ public class AdditionalMaterialsAdapter extends RecyclerView.Adapter<AdditionalM
 
     private Context context;
     private List<AdditionalMaterialsJOINAdditionalMaterialsAddressSDB> data;
+    private WpDataDB wpDataDB;
 
-    public AdditionalMaterialsAdapter(Context context, List<AdditionalMaterialsJOINAdditionalMaterialsAddressSDB> data) {
+    public AdditionalMaterialsAdapter(Context context, List<AdditionalMaterialsJOINAdditionalMaterialsAddressSDB> data, WpDataDB wp) {
         this.context = context;
         this.data = data;
+        this.wpDataDB = wp;
     }
 
     public class ViewHolder extends RecyclerView.ViewHolder {
@@ -58,7 +61,8 @@ public class AdditionalMaterialsAdapter extends RecyclerView.Adapter<AdditionalM
             try {
                 text.setText(item.txt);
 
-                long dateFrom = Clock.getDatePeriodLong(System.currentTimeMillis(), -15) / 1000;
+                long dateDocumentLong = Clock.dateConvertToLong(Clock.getHumanTimeYYYYMMDD(wpDataDB.getDt().getTime() / 1000));
+                long dateFrom = Clock.getDatePeriodLong(dateDocumentLong, -15) / 1000;
                 AdditionalRequirementsMarkDB additionalRequirementsMarkDB = AdditionalRequirementsMarkRealm.getMark(dateFrom, item.id, String.valueOf(Globals.userId));
 
 //                Gson gson = new Gson();
