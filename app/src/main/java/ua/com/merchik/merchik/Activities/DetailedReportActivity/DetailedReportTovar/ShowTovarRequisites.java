@@ -1,0 +1,592 @@
+package ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportTovar;
+
+import static ua.com.merchik.merchik.Globals.OptionControlName.AKCIYA;
+import static ua.com.merchik.merchik.Globals.OptionControlName.AKCIYA_ID;
+import static ua.com.merchik.merchik.Globals.OptionControlName.DT_EXPIRE;
+import static ua.com.merchik.merchik.Globals.OptionControlName.ERROR_ID;
+import static ua.com.merchik.merchik.Globals.OptionControlName.PHOTO;
+import static ua.com.merchik.merchik.Globals.OptionControlName.UP;
+import static ua.com.merchik.merchik.database.realm.RealmManager.INSTANCE;
+import static ua.com.merchik.merchik.dialogs.DialogData.Operations.Date;
+import static ua.com.merchik.merchik.dialogs.DialogData.Operations.DoubleSpinner;
+import static ua.com.merchik.merchik.dialogs.DialogData.Operations.EditTextAndSpinner;
+import static ua.com.merchik.merchik.dialogs.DialogData.Operations.Number;
+import static ua.com.merchik.merchik.dialogs.DialogData.Operations.Text;
+
+import android.content.Context;
+import android.util.Log;
+import android.widget.Toast;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import io.realm.RealmResults;
+import ua.com.merchik.merchik.Globals;
+import ua.com.merchik.merchik.Options.Options;
+import ua.com.merchik.merchik.Utils.MySimpleExpandableListAdapter;
+import ua.com.merchik.merchik.ViewHolders.Clicks;
+import ua.com.merchik.merchik.data.RealmModels.ErrorDB;
+import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
+import ua.com.merchik.merchik.data.RealmModels.PromoDB;
+import ua.com.merchik.merchik.data.RealmModels.ReportPrepareDB;
+import ua.com.merchik.merchik.data.RealmModels.TovarDB;
+import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
+import ua.com.merchik.merchik.data.TovarOptions;
+import ua.com.merchik.merchik.database.realm.RealmManager;
+import ua.com.merchik.merchik.database.realm.tables.PromoRealm;
+import ua.com.merchik.merchik.dialogs.DialogData;
+
+public class ShowTovarRequisites {
+
+    private Context context;
+    private WpDataDB wpDataDB;
+    private TovarDB tovarDB;
+
+
+    private final Options options = new Options();
+    private final TovarRequisites tovarRequisites = new TovarRequisites();
+
+    private List<DialogData> dialogList = new ArrayList<>();
+
+    public ShowTovarRequisites(Context context, WpDataDB wpDataDB, TovarDB tovarDB) {
+        this.context = context;
+        this.wpDataDB = wpDataDB;
+        this.tovarDB = tovarDB;
+    }
+
+    public void showDialogs() {
+        boolean finalDeletePromoOption = true;
+
+        ReportPrepareDB reportPrepareTovar = RealmManager.INSTANCE.copyFromRealm(RealmManager.getTovarReportPrepare(String.valueOf(wpDataDB.getCode_dad2()), tovarDB.getiD()));
+        List<OptionsDB> optionsList2 = RealmManager.getTovarOptionInReportPrepare(String.valueOf(wpDataDB.getCode_dad2()), tovarDB.getiD());
+        List<TovarOptions> tovOptTplList = options.getRequiredOptionsTPL(optionsList2, finalDeletePromoOption);   // true - потому что так захотел
+
+        if (tovOptTplList.size() > 0) {
+            // В Цикле открываем Н количество инфы
+            for (int i = tovOptTplList.size() - 1; i >= 0; i--) {
+                if (tovOptTplList.get(i).getOptionControlName() != Globals.OptionControlName.AKCIYA) {
+                    if (tovOptTplList.get(i).getOptionControlName().equals(AKCIYA_ID) && finalDeletePromoOption) {
+                        // втыкаю
+                        showDialog(tovarDB, tovOptTplList.get(i), reportPrepareTovar, tovarDB.getiD(), String.valueOf(wpDataDB.getCode_dad2()), wpDataDB.getClient_id(), "", "", true);
+                    } else {
+                        showDialog(tovarDB, tovOptTplList.get(i), reportPrepareTovar, tovarDB.getiD(), String.valueOf(wpDataDB.getCode_dad2()), wpDataDB.getClient_id(), "", "", true);
+                    }
+                }
+            }
+
+
+            Collections.reverse(dialogList);
+
+            boolean optionExists = false;
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+                String opt = "159707";
+                optionExists = optionsList2.stream().anyMatch(
+                        optionsDB -> optionsDB.getOptionId().equals(opt) ||
+                                optionsDB.getOptionControlId().equals(opt));
+
+                if (optionExists) {
+                    dialogList.add(new TovarRequisites(tovarDB, reportPrepareTovar).createDialog(context, wpDataDB));
+                }
+            }
+        }
+
+        dialogList.get(0).show();
+    }
+
+
+    private void showDialog(TovarDB list, TovarOptions tpl, ReportPrepareDB reportPrepareDB, String tovarId, String cd2, String clientId, String finalBalanceData1, String finalBalanceDate1, boolean clickType) {
+        try {
+            DialogData dialog = new DialogData(context);
+            dialog.setTitle("");
+            dialog.setText("");
+            dialog.setClose(() -> {
+                closeDialogRule(dialog, dialog::dismiss);    // Особенное правило закрытия для модального окна с Акцией
+            });
+            dialog.setLesson(context, true, 802);
+            dialog.setVideoLesson(context, true, 803, null);
+            dialog.setImage(true, tovarRequisites.getPhotoFromDB(list));
+            dialog.setAdditionalText(tovarRequisites.setPhotoInfo(reportPrepareDB, tpl, list, finalBalanceData1, finalBalanceDate1));
+
+            // Сделано для того что б можно было контролировать какая опция сейчас открыта
+            dialog.tovarOptions = tpl;
+            dialog.reportPrepareDB = reportPrepareDB;
+
+            // Устанавливаем дату для операций (в данной реализации только для DoubleSpinner & EditTextAndSpinner)
+            switch (tpl.getOptionControlName()) {
+                case AKCIYA_ID:
+                    dialog.setOperationSpinnerData(setMapData(tpl.getOptionControlName()));
+                    dialog.setOperationSpinner2Data(setMapData(Globals.OptionControlName.AKCIYA));
+
+                    PromoDB promoDB = PromoRealm.getPromoDBById(reportPrepareDB.getAkciyaId());
+                    dialog.setOperationTextData(promoDB != null ? promoDB.getNm() : reportPrepareDB.getAkciyaId());
+
+                    Map<Integer, String> map = new HashMap<>();
+                    map.put(2, "Акция отсутствует");
+                    map.put(1, "Есть акция");
+
+                    String akciya = map.get(Integer.parseInt(reportPrepareDB.getAkciya()));
+
+                    dialog.setOperationTextData2(akciya);
+                    break;
+            }
+
+            if (tpl.getOptionControlName() != null && tpl.getOptionControlName().equals(ERROR_ID)) {    // Работа с ошибками
+                dialog.setExpandableListView(createExpandableAdapter(dialog.context), () -> {
+                    if (dialog.getOperationResult() != null) {
+                        operetionSaveRPToDB(tpl, reportPrepareDB, dialog.getOperationResult(), dialog.getOperationResult2(), null);
+                        dialogShowRule(clickType);
+                    }
+                });
+            } else {
+                dialog.setOperation(operationType(tpl), getCurrentData(tpl, cd2, tovarId), setMapData(tpl.getOptionControlName()), () -> {
+                    if (dialog.getOperationResult() != null && !dialog.getOperationResult().equals("")) {
+                        operetionSaveRPToDB(tpl, reportPrepareDB, dialog.getOperationResult(), dialog.getOperationResult2(), null);
+                        Toast.makeText(context, "Внесено: " + dialog.getOperationResult(), Toast.LENGTH_LONG).show();
+                        dialogShowRule(clickType);
+                    } else {
+                        Toast.makeText(dialog.context, "Внесите корректно данные", Toast.LENGTH_LONG).show();
+                    }
+                });
+            }
+
+            dialog.setCancel("Пропустить", () -> closeDialogRule(dialog, () -> {
+                dialog.dismiss();
+                dialogShowRule(clickType);
+            }));
+
+            dialogList.add(dialog);
+
+        } catch (Exception e) {
+            Log.d("test", "test" + e);
+        }
+    }
+
+
+    /**
+     * 30.03.23.
+     * Уникальное событие для Акций.
+     * Если модальное окно для внесения Акции и внесён один из реквизитов - запрещаю что-то
+     * делать.
+     */
+    private void closeDialogRule(DialogData dialog, Clicks.clickVoid click) {
+        if (dialog.tovarOptions.getOptionControlName().equals(AKCIYA) || dialog.tovarOptions.getOptionControlName().equals(AKCIYA_ID)) {
+            if ((dialog.getOperationResult() == null && dialog.getOperationResult2() != null) ||
+                    (dialog.getOperationResult() != null && dialog.getOperationResult2() == null) ||
+                    ((dialog.getOperationResult() != null && (dialog.getOperationResult().equals("") || dialog.getOperationResult().equals("0"))) &&
+                            (dialog.getOperationResult2() != null && (!dialog.getOperationResult2().equals("") && !dialog.getOperationResult2().equals("0")))
+                    ) ||
+                    ((dialog.getOperationResult2() != null && (dialog.getOperationResult2().equals("") || dialog.getOperationResult2().equals("0"))) &&
+                            (dialog.getOperationResult() != null && (!dialog.getOperationResult().equals("") && !dialog.getOperationResult().equals("0")))
+                    )
+            ) {
+                Toast.makeText(dialog.context, "Внесіть, будь-ласка, обидва реквізити!", Toast.LENGTH_LONG).show();
+            } else {
+                click.click();
+            }
+        } else {
+            click.click();
+        }
+    }
+
+
+    /**
+     * 29.03.23.
+     * Специальное правило по которому отображаю последовательно модальные окошки из
+     * списка dialogList.
+     */
+    private void dialogShowRule(boolean clickType) {
+        dialogList.remove(0);
+        if (dialogList.size() > 0) {
+            int face = 0;
+            if (dialogList.get(0).reportPrepareDB.face != null && !dialogList.get(0).reportPrepareDB.face.equals(""))
+                face = Integer.parseInt(dialogList.get(0).reportPrepareDB.face);
+            if (clickType &&
+                    dialogList.get(0).tovarOptions.getOptionControlName().equals(ERROR_ID) &&
+                    (dialogList.get(0).tovarOptions.getOptionId().contains(157242) ||
+                            dialogList.get(0).tovarOptions.getOptionId().contains(157241) ||
+                            dialogList.get(0).tovarOptions.getOptionId().contains(157243)) &&
+                    face > 0) {
+                // НЕ отображаю модальное окно и удаляю его. Уникальное правило потому что потому.
+                dialogList.remove(0);
+                if (dialogList.size() > 0) {
+                    dialogList.get(0).show();
+                }
+            } else if (clickType &&
+                    (dialogList.get(0).tovarOptions.getOptionControlName().equals(UP) ||
+                            dialogList.get(0).tovarOptions.getOptionControlName().equals(DT_EXPIRE)) &&
+                    face == 0) {
+                dialogList.remove(0);
+                if (dialogList.size() > 0) {
+                    dialogList.get(0).show();
+                }
+            } else if (clickType &&
+                    dialogList.get(0).tovarOptions.getOptionControlName().equals(PHOTO) &&
+//                        dialogList.get(0).tovarOptions.getOptionId().contains(159707) &&
+                    face != 0
+            ) {
+                dialogList.remove(0);
+                if (dialogList.size() > 0) {
+                    dialogList.get(0).show();
+                }
+            } else {
+                dialogList.get(0).show();
+            }
+        }
+    }
+
+
+
+    private Map<Integer, String> setMapData(Globals.OptionControlName optionControlName) {
+        Map<Integer, String> map = new HashMap<>();
+        switch (optionControlName) {
+            case ERROR_ID:
+                RealmResults<ErrorDB> errorDbList = RealmManager.getAllErrorDb();
+                for (int i = 0; i < errorDbList.size(); i++) {
+                    if (errorDbList.get(i).getNm() != null && !errorDbList.get(i).getNm().equals("")) {
+                        map.put(Integer.valueOf(errorDbList.get(i).getID()), errorDbList.get(i).getNm());
+                    }
+                }
+                return map;
+
+            case AKCIYA_ID:
+                RealmResults<PromoDB> promoDbList = RealmManager.getAllPromoDb();
+                for (int i = 0; i < promoDbList.size(); i++) {
+                    if (promoDbList.get(i).getNm() != null && !promoDbList.get(i).getNm().equals("")) {
+                        map.put(Integer.valueOf(promoDbList.get(i).getID()), promoDbList.get(i).getNm());
+                    }
+                }
+
+                map.put(0, "Оберіть тип акції");
+
+                return map;
+
+            case AKCIYA:
+                map.put(2, "Акция отсутствует");
+                map.put(1, "Есть акция");
+
+                map.put(0, "Оберіть наявність акції");
+
+                return map;
+
+            default:
+                return null;
+        }
+    }
+
+
+    private MySimpleExpandableListAdapter createExpandableAdapter(Context context) {
+
+        Map<String, String> map;
+        ArrayList<Map<String, String>> groupDataList = new ArrayList<>();
+
+        // список атрибутов групп для чтения
+        String[] groupFrom = new String[]{"groupName"};
+        // список ID view-элементов, в которые будет помещены атрибуты групп
+        int groupTo[] = new int[]{android.R.id.text1};
+
+        // список атрибутов элементов для чтения
+        String childFrom[] = new String[]{"monthName"};
+        // список ID view-элементов, в которые будет помещены атрибуты
+        // элементов
+        int childTo[] = new int[]{android.R.id.text1};
+
+        // создаем общую коллекцию для коллекций элементов
+        ArrayList<ArrayList<Map<String, String>>> сhildDataList = new ArrayList<>();
+        // создаем коллекцию элементов для первой группы
+        ArrayList<Map<String, String>> сhildDataItemList = new ArrayList<>();
+
+        // Получение данных с БД
+        RealmResults<ErrorDB> errorDbList = RealmManager.getAllErrorDb();
+        RealmResults<ErrorDB> errorGroupsDB = errorDbList.where().equalTo("parentId", "0").findAll();
+
+        for (ErrorDB group : errorGroupsDB) {
+            map = new HashMap<>();
+            map.put("groupName", group.getNm());
+            groupDataList.add(map);
+
+            RealmResults<ErrorDB> errorItemsDB = errorDbList.where().equalTo("parentId", group.getID()).findAll();
+            if (errorItemsDB != null && errorItemsDB.size() > 0) {
+                сhildDataItemList = new ArrayList<>();
+                for (ErrorDB item : errorItemsDB) {
+                    map = new HashMap<>();
+                    map.put("monthName", "* " + item.getNm());
+                    сhildDataItemList.add(map);
+                }
+                сhildDataList.add(сhildDataItemList);
+            } else {
+                сhildDataItemList = new ArrayList<>();
+                map = new HashMap<>();
+                map.put("monthName", "* " + group.getNm());
+                сhildDataItemList.add(map);
+                сhildDataList.add(сhildDataItemList);
+            }
+        }
+
+        MySimpleExpandableListAdapter adapter = new MySimpleExpandableListAdapter(
+                context, groupDataList,
+                android.R.layout.simple_expandable_list_item_1, groupFrom,
+                groupTo, сhildDataList, android.R.layout.simple_list_item_1,
+                childFrom, childTo);
+
+        return adapter;
+    }
+
+
+
+    /**
+     * 15.01.2021
+     * <p>
+     * Функционал в зависимости от операции
+     */
+    private void operetionSaveRPToDB(TovarOptions tpl, ReportPrepareDB rp, String data, String data2, TovarDB tovarDB) {
+        if (rp == null) {
+            rp = createNewRPRow(tovarDB);
+        }
+
+        if (data == null || data.equals("")) {
+            Toast.makeText(context, "Для сохранения - внесите данные", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        ReportPrepareDB table = rp;
+        switch (tpl.getOptionControlName()) {
+            case PRICE:
+                Log.e("SAVE_TO_REPORT_OPT", "PRICE: " + data);
+                INSTANCE.executeTransaction(realm -> {
+                    table.setPrice(data);
+                    table.setUploadStatus(1);
+                    table.setDtChange(System.currentTimeMillis() / 1000);
+                    RealmManager.setReportPrepareRow(table);
+                });
+                break;
+
+            case FACE:
+                Log.e("SAVE_TO_REPORT_OPT", "FACE: " + data);
+                INSTANCE.executeTransaction(realm -> {
+                    table.setFace(data);
+                    table.setUploadStatus(1);
+                    table.setDtChange(System.currentTimeMillis() / 1000);
+                    RealmManager.setReportPrepareRow(table);
+                });
+                break;
+
+            case EXPIRE_LEFT:
+                Log.e("SAVE_TO_REPORT_OPT", "EXPIRE_LEFT: " + data);
+                INSTANCE.executeTransaction(realm -> {
+                    table.setExpireLeft(data);
+                    table.setUploadStatus(1);
+                    table.setDtChange(System.currentTimeMillis() / 1000);
+                    RealmManager.setReportPrepareRow(table);
+                });
+                break;
+
+            case AMOUNT:
+                Log.e("SAVE_TO_REPORT_OPT", "AMOUNT: " + data);
+                INSTANCE.executeTransaction(realm -> {
+                    table.setAmount(Integer.parseInt(data));
+                    table.setUploadStatus(1);
+                    table.setDtChange(System.currentTimeMillis() / 1000);
+                    RealmManager.setReportPrepareRow(table);
+                });
+                break;
+
+            case OBOROTVED_NUM:
+                Log.e("SAVE_TO_REPORT_OPT", "OBOROTVED_NUM: " + data);
+                INSTANCE.executeTransaction(realm -> {
+                    table.setOborotvedNum(data);
+                    table.setUploadStatus(1);
+                    table.setDtChange(System.currentTimeMillis() / 1000);
+                    RealmManager.setReportPrepareRow(table);
+                });
+                break;
+
+            case UP:
+                Log.e("SAVE_TO_REPORT_OPT", "UP: " + data);
+                INSTANCE.executeTransaction(realm -> {
+                    table.setUp(data);
+                    table.setUploadStatus(1);
+                    table.setDtChange(System.currentTimeMillis() / 1000);
+                    RealmManager.setReportPrepareRow(table);
+                });
+                break;
+
+            case DT_EXPIRE:
+                Log.e("SAVE_TO_REPORT_OPT", "DT_EXPIRE: " + data);
+                INSTANCE.executeTransaction(realm -> {
+                    table.setDtExpire(data);
+                    table.setUploadStatus(1);
+                    table.setDtChange(System.currentTimeMillis() / 1000);
+                    RealmManager.setReportPrepareRow(table);
+                });
+                break;
+
+            case ERROR_ID:
+                Log.e("SAVE_TO_REPORT_OPT", "ERROR_ID: " + data);
+                Log.e("SAVE_TO_REPORT_OPT", "ERROR_COMMENT: " + data2);
+                INSTANCE.executeTransaction(realm -> {
+                    table.setErrorId(data);
+                    table.setErrorComment(data2);
+                    table.setNotes(data2);
+                    table.setUploadStatus(1);
+                    table.setDtChange(System.currentTimeMillis() / 1000);
+                    RealmManager.setReportPrepareRow(table);
+                });
+                break;
+
+            case AKCIYA_ID:
+                Log.e("SAVE_TO_REPORT_OPT", "AKCIYA_ID: " + data);
+                Log.e("SAVE_TO_REPORT_OPT", "AKCIYA_ID_А: " + data2);
+                INSTANCE.executeTransaction(realm -> {
+                    table.setAkciyaId(data);
+                    if (data2 != null && !data2.equals("")) {
+                        table.setAkciya(data2);
+                    }
+                    table.setUploadStatus(1);
+                    table.setDtChange(System.currentTimeMillis() / 1000);
+                    RealmManager.setReportPrepareRow(table);
+                });
+                break;
+
+//                case AKCIYA:
+//                    Log.e("SAVE_TO_REPORT_OPT", "AKCIYA: " + data);
+//                    INSTANCE.executeTransaction(realm -> {
+//                        table.setAkciya(data2);     // 25.03.23. Поменял с Дата на Дата2 потому что в выпадающем списке ТПЛов боюсь что запутаются данные с AKCIYA_ID. Сделалл так что б было одинаково и там и там
+//                        table.setUploadStatus(1);
+//                        table.setDtChange(System.currentTimeMillis() / 1000);
+//                        RealmManager.setReportPrepareRow(table);
+//                    });
+//                    break;
+
+            case NOTES:
+                Log.e("SAVE_TO_REPORT_OPT", "NOTES: " + data);
+                INSTANCE.executeTransaction(realm -> {
+                    table.setNotes(data);
+                    table.setUploadStatus(1);
+                    table.setDtChange(System.currentTimeMillis() / 1000);
+                    RealmManager.setReportPrepareRow(table);
+                });
+                break;
+
+        }
+    }
+
+
+    private ReportPrepareDB createNewRPRow(TovarDB list) {
+        ReportPrepareDB rp = new ReportPrepareDB();
+
+        long id = RealmManager.reportPrepareGetLastId();
+        id = id + 1;
+
+        rp.setID(id);
+        rp.setDt(String.valueOf(System.currentTimeMillis()));
+        rp.setDtReport(String.valueOf(System.currentTimeMillis()));
+        rp.setKli(wpDataDB.getClient_id());
+        rp.setTovarId(list.getiD());
+        rp.setAddrId(String.valueOf(wpDataDB.getAddr_id()));
+        rp.setPrice("");
+        rp.setFace("");
+        rp.setAmount(0);
+        rp.setDtExpire("");
+        rp.setExpireLeft("");
+        rp.setNotes("");
+        rp.setUp("");
+        rp.setAkciya("");
+        rp.setAkciyaId("");
+        rp.setOborotvedNum("");
+        rp.setErrorId("");
+        rp.setErrorComment("");
+        rp.setCodeDad2(String.valueOf(wpDataDB.getCode_dad2()));
+
+        // TODO сохранение в БД новой строки что б потом работать с ней в getCurrentData()
+        INSTANCE.beginTransaction();
+        INSTANCE.copyToRealmOrUpdate(rp);
+        INSTANCE.commitTransaction();
+        return rp;
+    }
+
+    /**
+     * 11.01.2021
+     * Установкаа типа операции
+     */
+    private DialogData.Operations operationType(TovarOptions tpl) {
+        switch (tpl.getOrderField()) {
+            case ("price"):
+            case ("face"):
+            case ("expire_left"):
+            case ("amount"):
+            case ("oborotved_num"):
+            case ("up"):
+                return Number;
+
+            case ("dt_expire"):
+                return Date;
+
+
+            case ("akciya_id"):
+//                case ("akciya"):
+                return DoubleSpinner;
+
+            case ("error_id"):
+                return EditTextAndSpinner;
+
+            case ("notes"):
+                return Text;
+
+            default:
+                return Text;
+        }
+    }
+
+    /**
+     * 15.01.2021
+     * <p>
+     * Функционал в зависимости от операции
+     */
+    private String getCurrentData(TovarOptions tpl, String cd, String id) {
+        ReportPrepareDB table = RealmManager.getTovarReportPrepare(cd, id);
+        switch (tpl.getOptionControlName()) {
+            case PRICE:
+                return table.getPrice();
+
+            case FACE:
+                return table.getFace();
+
+            case EXPIRE_LEFT:
+                return table.getExpireLeft();
+
+            case AMOUNT:
+                return String.valueOf(table.getAmount());
+
+            case OBOROTVED_NUM:
+                return table.getOborotvedNum();
+
+            case UP:
+                return table.getUp();
+
+            case DT_EXPIRE:
+                return table.getDtExpire();
+
+            case ERROR_ID:
+                return table.getErrorId();
+
+            case AKCIYA_ID:
+                return table.getAkciyaId();
+
+            case AKCIYA:
+                return table.getAkciya();
+
+            case NOTES:
+                return table.getNotes();
+
+        }
+
+        return null;
+    }
+
+
+
+
+}

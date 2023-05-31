@@ -10,11 +10,11 @@ import android.text.TextPaint;
 import android.text.style.ClickableSpan;
 import android.util.Log;
 import android.view.View;
-import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportTovar.ShowTovarRequisites;
 import ua.com.merchik.merchik.Options.OptionControl;
 import ua.com.merchik.merchik.Options.Options;
 import ua.com.merchik.merchik.data.OptionMassageType;
@@ -102,8 +102,14 @@ public class OptionControlReturnOfGoods<T> extends OptionControl {
             }
 
             if (osvSize == 0) {
-                if (item.expireLeft != null && item.expireLeft.equals("") && item.getFace().equals("0") &&
-                        item.getErrorId() != null && !item.getErrorId().equals("") && item.getErrorId().equals("0")){
+
+                Log.e("OCReturnOfGoods", "item.iD: " + item.iD);
+                Log.e("OCReturnOfGoods", "item.expireLeft: " + item.expireLeft);
+                Log.e("OCReturnOfGoods", "item.getErrorId(): " + item.getErrorId());
+                Log.e("OCReturnOfGoods", "-----------------------------------------");
+
+                if (item.expireLeft != null && item.expireLeft.equals("0") &&
+                        item.getErrorId() != null && !item.getErrorId().equals("") && !item.getErrorId().equals("0")){
 
                     errCnt++;
                     item.error = 1;
@@ -117,8 +123,8 @@ public class OptionControlReturnOfGoods<T> extends OptionControl {
                 }
 
                 if (osv &&
-                        item.expireLeft != null && !item.expireLeft.equals("") && item.getErrorId().equals("0") &&
-                        item.getErrorId() != null && !item.getErrorId().equals("") && item.getErrorId().equals("0")) {
+                        item.expireLeft != null && item.expireLeft.equals("0") &&
+                        item.getErrorId() != null && !item.getErrorId().equals("") && !item.getErrorId().equals("0")) {
                     errCnt++;
                     item.error = 1;
                     item.errorNote = "Для товара с ОСВ (Особливою увагою) ви зобов'язані зазначити або кількіть товару, що підлягає поверненню, або обрати 'привід' = товар поверненню НЕ підлягає.";
@@ -134,12 +140,12 @@ public class OptionControlReturnOfGoods<T> extends OptionControl {
             resultMsg.append("Товарів, по котрим треба перевірити необхідність повернення, не знайдено.").append("\n\n");
         } else if (errCnt > 0) {
             signal = true;
-            resultMsg.append("Не надана інформация про необхідність повернення товару (в т.р. з ОСУ (Особовою Увагою)). Див. таблицю.").append("\n\n");
+            resultMsg.append("Не надана інформация про необхідність повернення товару (в т.р. з ОСУ (Особовою Увагою)). Див. таблицю: ").append("\n\n");
             for (ReportPrepareDB item : result){
                 TovarDB tov = TovarRealm.getById(item.getTovarId());
                 String msg = String.format("(%s) %s (%s): %s", item.getTovarId(), tov.getNm(), tov.getWeight(), item.errorNote);
 
-                resultMsg.append(createLinkedString(msg, item));
+                resultMsg.append(createLinkedString(msg, item, tov));
             }
         }else {
             signal = false;
@@ -147,6 +153,7 @@ public class OptionControlReturnOfGoods<T> extends OptionControl {
         }
 
         spannableStringBuilder = resultMsg;
+        spannableStringBuilder.append("\n\n");
 
 
         // Установка Сигнала
@@ -172,12 +179,14 @@ public class OptionControlReturnOfGoods<T> extends OptionControl {
         }
     }
 
-    private SpannableString createLinkedString(String msg, ReportPrepareDB reportPrepareDB) {
+    private SpannableString createLinkedString(String msg, ReportPrepareDB reportPrepareDB, TovarDB tov) {
         SpannableString res = new SpannableString(msg);
         ClickableSpan clickableSpan = new ClickableSpan() {
             @Override
             public void onClick(View textView) {
-                Toast.makeText(textView.getContext(), "Функция в разработке. Идентификатор Товара: " + reportPrepareDB.getTovarId(), Toast.LENGTH_LONG).show();
+//                Toast.makeText(textView.getContext(), "Функция в разработке. Идентификатор Товара: " + reportPrepareDB.getTovarId(), Toast.LENGTH_LONG).show();
+
+                showDialogs(textView.getContext(), tov);
             }
 
             @Override
@@ -188,5 +197,11 @@ public class OptionControlReturnOfGoods<T> extends OptionControl {
         };
         res.setSpan(clickableSpan, 0, msg.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         return res;
+    }
+
+
+
+    private void showDialogs(Context context, TovarDB tovarDB){
+        new ShowTovarRequisites(context, wpDataDB, tovarDB).showDialogs();
     }
 }
