@@ -630,8 +630,17 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
         // ... Настройки
         if (id == R.id.action_settings) {
 
-            AppUsersDB appUsersDB = AppUserRealm.getAppUser();
-            Globals.writeToMLOG("INFO", "USER_INFO", "appUsersDB: " + new Gson().toJson(appUsersDB));
+            try {
+                AppUsersDB appUsersDB = AppUserRealm.getAppUser();
+                StringBuilder sb = new StringBuilder();
+
+                sb.append("login: ").append(appUsersDB.getLogin()).append(" ");
+                sb.append("pass: ").append(appUsersDB.getPassword()).append(" ");
+
+                Globals.writeToMLOG("INFO", "USER_INFO", "appUsersDB: " + sb);
+            }catch (Exception e){
+                Globals.writeToMLOG("INFO", "USER_INFO", "Exception e: " + e);
+            }
 
             DialogData dialog = new DialogData(this);
             dialog.setTitle("Настройки");

@@ -78,6 +78,13 @@ public class DetailedReportOptionsFrag extends Fragment {
 
             Button download = v.findViewById(R.id.download);
             TextView information = v.findViewById(R.id.info_msg);
+            TextView planfact = v.findViewById(R.id.planfact);
+
+            // todo это надо будет вынести в отдельную функцию. И скорее всего перересовывать при клике на "провести"
+            StringBuilder sb = new StringBuilder();
+            sb.append("Прем.(план):").append(wpDataDB.getCash_ispolnitel()).append("\n\n");
+            sb.append("Прем.(факт):").append(wpDataDB.cash_fact).append("\n");
+            planfact.setText(sb);
 
             ImageView check = v.findViewById(R.id.check);
             if (wpDataDB.getSetStatus() == 1) {

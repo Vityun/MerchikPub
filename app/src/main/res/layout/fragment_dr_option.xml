@@ -69,6 +69,20 @@
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent" />
 
+            <TextView
+                android:id="@+id/planfact"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:layout_marginLeft="8dp"
+                android:layout_marginTop="16dp"
+                android:elevation="10dp"
+                android:gravity="fill_horizontal"
+                android:text="TextView"
+                app:layout_constraintBottom_toBottomOf="@+id/button3"
+                app:layout_constraintStart_toStartOf="@+id/button3"
+                app:layout_constraintTop_toTopOf="@+id/button3" />
+
             <Button
                 android:id="@+id/button3"
                 android:layout_width="0dp"
@@ -89,13 +103,13 @@
                 android:id="@+id/check"
                 android:layout_width="50dp"
                 android:layout_height="50dp"
-                android:layout_marginStart="8dp"
-                android:layout_marginLeft="8dp"
                 android:layout_marginTop="8dp"
+                android:layout_marginEnd="8dp"
+                android:layout_marginRight="8dp"
                 android:layout_marginBottom="8dp"
                 android:elevation="7dp"
                 app:layout_constraintBottom_toBottomOf="@+id/button3"
-                app:layout_constraintStart_toStartOf="@+id/button3"
+                app:layout_constraintEnd_toEndOf="@+id/button3"
                 app:layout_constraintTop_toTopOf="@+id/button3"
                 app:srcCompat="@drawable/ic_check" />
 

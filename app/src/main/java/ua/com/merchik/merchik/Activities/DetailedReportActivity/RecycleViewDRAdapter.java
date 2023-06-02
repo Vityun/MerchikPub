@@ -36,6 +36,7 @@ import ua.com.merchik.merchik.Options.Controls.OptionControlTaskAnswer;
 import ua.com.merchik.merchik.Options.Options;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
+import ua.com.merchik.merchik.data.Database.Room.AddressSDB;
 import ua.com.merchik.merchik.data.Database.Room.SiteObjectsSDB;
 import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
 import ua.com.merchik.merchik.data.OptionMassageType;
@@ -423,7 +424,13 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
 
                     case 138339:    // Доп Требования
                         // Устанавливаю в счётчик доп. требований их количество
-                        textInteger.setText("" + AdditionalRequirementsRealm.getData3(dataDB, HIDE_FOR_USER, null).size());
+                        Integer ttCategory = null;
+                        WpDataDB wp = (WpDataDB)dataDB;
+                        AddressSDB addressSDB = SQL_DB.addressDao().getById(wp.getAddr_id());
+                        if (addressSDB != null){
+                            ttCategory = addressSDB.ttId;
+                        }
+                        textInteger.setText("" + AdditionalRequirementsRealm.getData3(dataDB, HIDE_FOR_USER, ttCategory).size());
                         break;
 
                     case 138340:    // Доп Требования

@@ -754,30 +754,22 @@ public class RealmManager {
         String photoSize = "small";
         if (size) photoSize = "full";
 
-        Log.e("GET_TOV_PHOTO", "Data: " + id + "/" + type + "/" + size);
-//        StackPhotoDB res = INSTANCE.where(StackPhotoDB.class)
-//                .equalTo("object_id", id)
-//                .equalTo("photoServerId", photoServerId)
-//                .equalTo("photo_type", type)
-//                .equalTo("comment", photoSize)
-//                .findFirst();
+        Log.e("GET_TOV_PHOTO", "Data: " + id + "/" + photoServerId + "/" + type + "/" + size);
 
-        RealmQuery<StackPhotoDB> query = INSTANCE.where(StackPhotoDB.class)
-                .equalTo("object_id", id)
-                .equalTo("photo_type", type)
-                .equalTo("comment", photoSize);
-
+        RealmQuery<StackPhotoDB> query = INSTANCE.where(StackPhotoDB.class);
         if (photoServerId != null && !photoServerId.equals("0")) {
-            query.equalTo("photoServerId", photoServerId);
+            query.equalTo("photoServerId", photoServerId)
+                    .sort("approve", Sort.DESCENDING, "photoServerId", Sort.DESCENDING);
+        } else {
+            query.equalTo("object_id", id)
+                    .equalTo("photo_type", type)
+                    .equalTo("comment", photoSize)
+//                    .equalTo("approve", 1)
+                    .sort("approve", Sort.DESCENDING, "photoServerId", Sort.DESCENDING);
         }
 
-
-//        Log.e("R_TOVAR", "Integer id: " + id);
-//        Log.e("R_TOVAR", "String photoServerId: " + photoServerId);
-//        Log.e("R_TOVAR", "Integer type: " + type);
-//        Log.e("R_TOVAR", "boolean size: " + size);
-//        List<StackPhotoDB> test = query.findAll();
-//        Log.e("R_TOVAR", "test: " + test.size());
+        StackPhotoDB st = query.findFirst();
+        Log.e("GET_TOV_PHOTO", "st: " + st);
 
         return query.findFirst();
     }
