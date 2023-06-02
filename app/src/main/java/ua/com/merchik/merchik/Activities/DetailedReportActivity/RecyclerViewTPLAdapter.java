@@ -640,7 +640,11 @@ public class RecyclerViewTPLAdapter extends RecyclerView.Adapter<RecyclerView.Vi
                 dialog.setClose(dialog::dismiss);
                 dialog.setImage(true, getPhotoFromDB(tov));
                 dialog.setAdditionalText(setPhotoInfo(TPL, tov, "", ""));
-                dialog.setExpandableListView(createExpandableAdapter(dialog.context), () -> {
+                String groupPos = null;
+                if (TPL.getOptionId().contains(135591)){
+                    groupPos = "22";
+                }
+                dialog.setExpandableListView(createExpandableAdapter(dialog.context, groupPos), () -> {
                     if (dialog.getOperationResult() != null) {
                         operetionSaveRPToDB(TPL, dataRp, dialog.getOperationResult(), dialog.getOperationResult2(), null, dialog.context);
                     }
@@ -711,7 +715,7 @@ public class RecyclerViewTPLAdapter extends RecyclerView.Adapter<RecyclerView.Vi
             return res;
         }
 
-        private MySimpleExpandableListAdapter createExpandableAdapter(Context context) {
+        private MySimpleExpandableListAdapter createExpandableAdapter(Context context, String groupPos) {
 
             Map<String, String> map;
             ArrayList<Map<String, String>> groupDataList = new ArrayList<>();

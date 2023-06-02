@@ -26,6 +26,7 @@ import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
 import android.graphics.drawable.ShapeDrawable;
 import android.net.Uri;
+import android.os.Build;
 import android.text.Html;
 import android.text.SpannableStringBuilder;
 import android.util.Log;
@@ -39,6 +40,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.RequiresApi;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.GridLayoutManager;
@@ -108,6 +110,9 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
     private long codeDad2;
     private String clientId;
     private int addressId;
+
+    // Получаем инфу об обязательных опциях
+    private List<TovarOptions> tovOptTplList;
 
     public enum OpenType {
         DEFAULT, DIALOG
@@ -179,8 +184,10 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
 
 
     @Override
-    public void onBindViewHolder(RecycleViewDRAdapterTovar.ViewHolder viewHolder, int position) {
-        viewHolder.bind(dataList.get(position));
+    public void onBindViewHolder(ViewHolder viewHolder, int position) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            viewHolder.bind(dataList.get(position));
+        }
     }
 
 
@@ -308,6 +315,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
             }
         }
 
+        @RequiresApi(api = Build.VERSION_CODES.N)
         public void bind(TovarDB list) {
 
             boolean deletePromoOption = false;
@@ -654,7 +662,8 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                             dialogList = new ArrayList<>();
 
                             // Получаем инфу об обязательных опциях
-                            List<TovarOptions> tovOptTplList = options.getRequiredOptionsTPL(optionsList2, finalDeletePromoOption);
+//                            List<TovarOptions> tovOptTplList;
+                            tovOptTplList = options.getRequiredOptionsTPL(optionsList2, finalDeletePromoOption);
 
                             Log.e("DRAdapterTovar", "Кол-во. обязательных опций: " + tovOptTplList.size());
 
@@ -954,6 +963,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
          * true - короткий
          * false - длинный
          */
+        @RequiresApi(api = Build.VERSION_CODES.N)
         private void showDialog(TovarDB list, TovarOptions tpl, ReportPrepareDB reportPrepareDB, String tovarId, String cd2, String clientId, String finalBalanceData1, String finalBalanceDate1, boolean clickType) {
             try {
                 final int adapterPosition = getAdapterPosition();
@@ -1001,7 +1011,12 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                 }
 
                 if (tpl.getOptionControlName() != null && tpl.getOptionControlName().equals(ERROR_ID)) {    // Работа с ошибками
-                    dialog.setExpandableListView(createExpandableAdapter(dialog.context), () -> {
+                    String groupPos = null;
+                    boolean containsOptionId = tovOptTplList.stream().anyMatch(tovarOptions -> tovarOptions.getOptionId().contains(135591));
+                    if (containsOptionId){
+                        groupPos = "22";
+                    }
+                    dialog.setExpandableListView(createExpandableAdapter(dialog.context, groupPos), () -> {
                         if (dialog.getOperationResult() != null) {
                             operetionSaveRPToDB(tpl, reportPrepareDB, dialog.getOperationResult(), dialog.getOperationResult2(), null);
                             refreshElement(cd2, list.getiD());
@@ -1143,7 +1158,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
         }
 
 
-        private MySimpleExpandableListAdapter createExpandableAdapter(Context context) {
+        private MySimpleExpandableListAdapter createExpandableAdapter(Context context, String groupPos) {
 
             Map<String, String> map;
             ArrayList<Map<String, String>> groupDataList = new ArrayList<>();
@@ -1154,7 +1169,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
             int groupTo[] = new int[]{android.R.id.text1};
 
             // список атрибутов элементов для чтения
-            String childFrom[] = new String[]{"monthName"};
+            String childFrom[] = new String[]{"itemName"};
             // список ID view-элементов, в которые будет помещены атрибуты
             // элементов
             int childTo[] = new int[]{android.R.id.text1};
@@ -1171,6 +1186,8 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
             for (ErrorDB group : errorGroupsDB) {
                 map = new HashMap<>();
                 map.put("groupName", group.getNm());
+                map.put("groupId", group.getID());
+
                 groupDataList.add(map);
 
                 RealmResults<ErrorDB> errorItemsDB = errorDbList.where().equalTo("parentId", group.getID()).findAll();
@@ -1178,14 +1195,14 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                     сhildDataItemList = new ArrayList<>();
                     for (ErrorDB item : errorItemsDB) {
                         map = new HashMap<>();
-                        map.put("monthName", "* " + item.getNm());
+                        map.put("itemName", "* " + item.getNm());
                         сhildDataItemList.add(map);
                     }
                     сhildDataList.add(сhildDataItemList);
                 } else {
                     сhildDataItemList = new ArrayList<>();
                     map = new HashMap<>();
-                    map.put("monthName", "* " + group.getNm());
+                    map.put("itemName", "* " + group.getNm());
                     сhildDataItemList.add(map);
                     сhildDataList.add(сhildDataItemList);
                 }
@@ -1196,6 +1213,19 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                     android.R.layout.simple_expandable_list_item_1, groupFrom,
                     groupTo, сhildDataList, android.R.layout.simple_list_item_1,
                     childFrom, childTo);
+
+
+            // Проверка наличия группы с идентификатором 22
+            int groupPosition = -1;
+            for (int i = 0; i < groupDataList.size(); i++) {
+                Map<String, String> groupData = groupDataList.get(i);
+                String groupId = groupData.get("groupId"); // Здесь нужно использовать правильный ключ для идентификатора группы
+                if (groupId != null && groupId.equals(groupPos)) {
+                    groupPosition = i;
+                    break;
+                }
+            }
+            adapter.group = groupPosition;
 
             return adapter;
         }

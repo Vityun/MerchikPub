@@ -29,7 +29,6 @@ import android.widget.ExpandableListView;
 import android.widget.ExpandableListView.OnChildClickListener;
 import android.widget.ImageButton;
 import android.widget.ImageView;
-import android.widget.SimpleExpandableListAdapter;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -49,6 +48,7 @@ import ua.com.merchik.merchik.Activities.DetailedReportActivity.RecycleViewDRAda
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.TelephoneMask;
+import ua.com.merchik.merchik.Utils.MySimpleExpandableListAdapter;
 import ua.com.merchik.merchik.Utils.Test.ClickableMovementMethod;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteHintsDB;
@@ -1024,7 +1024,7 @@ public class DialogData {
         operationButton2.setOnClickListener(v -> listenerButton2.clicked());
     }
 
-    public void setExpandableListView(SimpleExpandableListAdapter adapter, DialogClickListener listener) {
+    public void setExpandableListView(MySimpleExpandableListAdapter adapter, DialogClickListener listener) {
         operationLayout.setVisibility(View.VISIBLE);
         ok.setVisibility(View.VISIBLE);
         ok.setText("Сохранить");
@@ -1035,6 +1035,12 @@ public class DialogData {
 
         expListView.setAdapter(adapter);
         expListView.setOnChildClickListener(getErrorExpandableListView());
+
+        // Позиционирование адаптера на группе 22 и раскрытие её элементов
+        if (adapter.group != -1) {
+            expListView.expandGroup(adapter.group);
+            expListView.setSelectedGroup(adapter.group);
+        }
 
         ok.setOnClickListener(v -> {
             String res2 = editText2.getText().toString();

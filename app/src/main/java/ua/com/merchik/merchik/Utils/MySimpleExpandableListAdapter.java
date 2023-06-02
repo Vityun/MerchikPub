@@ -13,6 +13,8 @@ import ua.com.merchik.merchik.R;
 
 public class MySimpleExpandableListAdapter extends SimpleExpandableListAdapter {
 
+    public int group = -1;
+
     public MySimpleExpandableListAdapter(Context context, List<? extends Map<String, ?>> groupData, int groupLayout, String[] groupFrom, int[] groupTo, List<? extends List<? extends Map<String, ?>>> childData, int childLayout, String[] childFrom, int[] childTo) {
         super(context, groupData, groupLayout, groupFrom, groupTo, childData, childLayout, childFrom, childTo);
     }

@@ -14,8 +14,11 @@ import static ua.com.merchik.merchik.dialogs.DialogData.Operations.Number;
 import static ua.com.merchik.merchik.dialogs.DialogData.Operations.Text;
 
 import android.content.Context;
+import android.os.Build;
 import android.util.Log;
 import android.widget.Toast;
+
+import androidx.annotation.RequiresApi;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -51,6 +54,8 @@ public class ShowTovarRequisites {
 
     private List<DialogData> dialogList = new ArrayList<>();
 
+    List<TovarOptions> tovOptTplList;
+
     public ShowTovarRequisites(Context context, WpDataDB wpDataDB, TovarDB tovarDB) {
         this.context = context;
         this.wpDataDB = wpDataDB;
@@ -58,11 +63,11 @@ public class ShowTovarRequisites {
     }
 
     public void showDialogs() {
-        boolean finalDeletePromoOption = true;
+        boolean finalDeletePromoOption = true;  // true - потому что так захотел
 
         ReportPrepareDB reportPrepareTovar = RealmManager.INSTANCE.copyFromRealm(RealmManager.getTovarReportPrepare(String.valueOf(wpDataDB.getCode_dad2()), tovarDB.getiD()));
         List<OptionsDB> optionsList2 = RealmManager.getTovarOptionInReportPrepare(String.valueOf(wpDataDB.getCode_dad2()), tovarDB.getiD());
-        List<TovarOptions> tovOptTplList = options.getRequiredOptionsTPL(optionsList2, finalDeletePromoOption);   // true - потому что так захотел
+        tovOptTplList = options.getRequiredOptionsTPL(optionsList2, finalDeletePromoOption);
 
         if (tovOptTplList.size() > 0) {
             // В Цикле открываем Н количество инфы
@@ -97,6 +102,7 @@ public class ShowTovarRequisites {
     }
 
 
+    @RequiresApi(api = Build.VERSION_CODES.N)
     private void showDialog(TovarDB list, TovarOptions tpl, ReportPrepareDB reportPrepareDB, String tovarId, String cd2, String clientId, String finalBalanceData1, String finalBalanceDate1, boolean clickType) {
         try {
             DialogData dialog = new DialogData(context);
@@ -134,7 +140,12 @@ public class ShowTovarRequisites {
             }
 
             if (tpl.getOptionControlName() != null && tpl.getOptionControlName().equals(ERROR_ID)) {    // Работа с ошибками
-                dialog.setExpandableListView(createExpandableAdapter(dialog.context), () -> {
+                String groupPos = null;
+                boolean containsOptionId = tovOptTplList.stream().anyMatch(tovarOptions -> tovarOptions.getOptionId().contains(135591));
+                if (containsOptionId){
+                    groupPos = "22";
+                }
+                dialog.setExpandableListView(createExpandableAdapter(dialog.context, groupPos), () -> {
                     if (dialog.getOperationResult() != null) {
                         operetionSaveRPToDB(tpl, reportPrepareDB, dialog.getOperationResult(), dialog.getOperationResult2(), null);
                         dialogShowRule(clickType);
@@ -277,7 +288,7 @@ public class ShowTovarRequisites {
     }
 
 
-    private MySimpleExpandableListAdapter createExpandableAdapter(Context context) {
+    private MySimpleExpandableListAdapter createExpandableAdapter(Context context, String groupPos) {
 
         Map<String, String> map;
         ArrayList<Map<String, String>> groupDataList = new ArrayList<>();
@@ -288,7 +299,7 @@ public class ShowTovarRequisites {
         int groupTo[] = new int[]{android.R.id.text1};
 
         // список атрибутов элементов для чтения
-        String childFrom[] = new String[]{"monthName"};
+        String childFrom[] = new String[]{"itemName"};
         // список ID view-элементов, в которые будет помещены атрибуты
         // элементов
         int childTo[] = new int[]{android.R.id.text1};
@@ -305,6 +316,8 @@ public class ShowTovarRequisites {
         for (ErrorDB group : errorGroupsDB) {
             map = new HashMap<>();
             map.put("groupName", group.getNm());
+            map.put("groupId", group.getID());
+
             groupDataList.add(map);
 
             RealmResults<ErrorDB> errorItemsDB = errorDbList.where().equalTo("parentId", group.getID()).findAll();
@@ -312,14 +325,14 @@ public class ShowTovarRequisites {
                 сhildDataItemList = new ArrayList<>();
                 for (ErrorDB item : errorItemsDB) {
                     map = new HashMap<>();
-                    map.put("monthName", "* " + item.getNm());
+                    map.put("itemName", "* " + item.getNm());
                     сhildDataItemList.add(map);
                 }
                 сhildDataList.add(сhildDataItemList);
             } else {
                 сhildDataItemList = new ArrayList<>();
                 map = new HashMap<>();
-                map.put("monthName", "* " + group.getNm());
+                map.put("itemName", "* " + group.getNm());
                 сhildDataItemList.add(map);
                 сhildDataList.add(сhildDataItemList);
             }
@@ -330,6 +343,18 @@ public class ShowTovarRequisites {
                 android.R.layout.simple_expandable_list_item_1, groupFrom,
                 groupTo, сhildDataList, android.R.layout.simple_list_item_1,
                 childFrom, childTo);
+
+        // Проверка наличия группы с идентификатором 22
+        int groupPosition = -1;
+        for (int i = 0; i < groupDataList.size(); i++) {
+            Map<String, String> groupData = groupDataList.get(i);
+            String groupId = groupData.get("groupId"); // Здесь нужно использовать правильный ключ для идентификатора группы
+            if (groupId != null && groupId.equals(groupPos)) {
+                groupPosition = i;
+                break;
+            }
+        }
+        adapter.group = groupPosition;
 
         return adapter;
     }
