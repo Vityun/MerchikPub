@@ -441,81 +441,7 @@ public class DialogEKL {
 
         buttonSend.setBackgroundResource(R.drawable.bg_temp);
         buttonSend.setOnClickListener(v -> {
-            try {
-                Toast.makeText(context, "Дождитесь сообщения об окончании работы", Toast.LENGTH_LONG).show();
-                if (user != null) {
-                    Globals.writeToMLOG("RESP", "DialogEKL.sendStartEKL/", "user: " + user);
-                    if (enterCode) {
-                        Globals.writeToMLOG("RESP", "DialogEKL.sendStartEKL/", "enterCode: " + enterCode);
-                        if (internetStatus == 1) {
-                            Globals.writeToMLOG("RESP", "DialogEKL.sendStartEKL/internetStatus", "internetStatus: " + internetStatus);
-                            responseSendPTTEKLCode(new ExchangeInterface.ExchangeResponseInterfaceSingle() {
-                                @Override
-                                public <T> void onSuccess(T data) {
-                                    try {
-                                        enterCode = false;
-                                        EKLRespData resp = (EKLRespData) data;
-
-                                        Gson gson = new Gson();
-                                        String json = gson.toJson(resp);
-                                        JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
-
-                                        Globals.writeToMLOG("RESP", "DialogEKL.sendStartEKL/onResponse/onSuccess", "convertedObject: " + convertedObject);
-                                        Log.e("DialogEKL", "sendStartEKL/onResponse: " + convertedObject);
-
-
-                                        // Создание в БД нового ЭКЛ-а
-                                        EKL_SDB ekl_sdb = new EKL_SDB();
-                                        ekl_sdb.id = resp.requestId;
-                                        ekl_sdb.userId = wp.getUser_id();    // App User
-                                        ekl_sdb.sotrId = user.id;   // PTT
-                                        ekl_sdb.clientId = wp.getClient_id();
-                                        ekl_sdb.addressId = wp.getAddr_id();
-                                        ekl_sdb.dad2 = wp.getCode_dad2();
-                                        ekl_sdb.department = user.otdelId;   // Добавлен отдел, при отправке ЭКЛ
-                                        ekl_sdb.state = true;
-                                        ekl_sdb.eklHashCode = resp.codeHash;
-                                        ekl_sdb.vpi = System.currentTimeMillis() / 1000;
-
-                                        // Запись ЭКЛ-а для текущего окна
-                                        ekl = ekl_sdb;
-
-                                        Log.e("DialogEKL", "ekl_sdb: " + ekl_sdb.id);
-                                        Log.e("DialogEKL", "ekl_sdb: " + ekl_sdb.dad2);
-
-                                        // Запись ЭКЛ-а в базу данных
-                                        SQL_DB.eklDao().insertAll(Collections.singletonList(ekl_sdb));
-
-//                                Toast.makeText(context, "Код отправлен. Ответ: " + convertedObject, Toast.LENGTH_LONG).show();
-
-                                        Toast.makeText(context, "Код Представителю Торговой Точки отправлен", Toast.LENGTH_SHORT).show();
-                                    } catch (Exception e) {
-                                        Globals.writeToMLOG("RESP", "DialogEKL.sendStartEKL/onResponse/onSuccess/Exception", "Exception e: " + e);
-                                    }
-                                }
-
-                                @Override
-                                public void onFailure(String error) {
-                                    Globals.writeToMLOG("FAIL", "DialogEKL.sendStartEKL/onFailure", "t: " + error);
-                                    Log.e("DialogEKL", "sendStartEKL/onFailure: " + error);
-                                    Toast.makeText(context, "При отправке кода ЭКЛ возникла ошибка, повторите попытку позже или обратитесь к Вашему руководителю. Ошибка: " + error, Toast.LENGTH_LONG).show();
-                                }
-                            });
-                        } else {
-                            Toast.makeText(context, "Обнаружена проблема с сетью, проверьте интернет соединение и повторите попытку позже.", Toast.LENGTH_SHORT).show();
-                            Globals.writeToMLOG("RESP", "DialogEKL.sendStartEKL/", "Обнаружена проблема с сетью, проверьте интернет соединение и повторите попытку позже.");
-                        }
-                    } else {
-                        Toast.makeText(context, "Вы уже отправили КОД ПТТшнику", Toast.LENGTH_LONG).show();
-                        Globals.writeToMLOG("RESP", "DialogEKL.sendStartEKL/", "Вы уже отправили КОД ПТТшнику");
-                    }
-                } else {
-                    Toast.makeText(context, "Выберите сотрудника для отправки ЭКЛа", Toast.LENGTH_LONG).show();
-                    Globals.writeToMLOG("RESP", "DialogEKL.sendStartEKL/", "Выберите сотрудника для отправки ЭКЛа");
-                }
-            } catch (Exception e) {
-                Globals.writeToMLOG("ERROR", "DialogEKL.sendStartEKL/buttonSend.setOnClickListener", "Exception e: " + e);
-            }
+            pressButtonSend();
         });
 
         buttonSend2.setOnClickListener(v -> {
@@ -708,6 +634,104 @@ public class DialogEKL {
             });
         }catch (Exception e){
             Globals.writeToMLOG("INFO", "sendRegistrationInTelegram/", "Exception e: " + e);
+        }
+    }
+
+
+    /**
+     * 06.06.23.
+     * Нажатие на кнопку "Отправить код птт".
+     * */
+    private void pressButtonSend(){
+        DialogData dialog = new DialogData(context);
+        dialog.setTitle("");
+        dialog.setText("Для відправлення ЄКЛ краще використовувати Вайбер чи Телеграмм. \n\nВідмовитись від відправлення ЄКЛ за допомогою СМС?");
+        dialog.setOk("Так", dialog::dismiss);
+        dialog.setCancel("Ні", this::sendSMSToPTT);
+        dialog.setClose(dialog::dismiss);
+        dialog.show();
+    }
+
+    /**
+     * 06.06.23.
+     * Функционал который отправляет SMS Сообщение ПТТшнику на телефон.
+     * Все проверки и анализ инфы которая возвращается.
+     * */
+    private void sendSMSToPTT(){
+        try {
+            Toast.makeText(context, "Дождитесь сообщения об окончании работы", Toast.LENGTH_LONG).show();
+            if (user != null) {
+                Globals.writeToMLOG("RESP", "DialogEKL.sendStartEKL/", "user: " + user);
+                if (enterCode) {
+                    Globals.writeToMLOG("RESP", "DialogEKL.sendStartEKL/", "enterCode: " + enterCode);
+                    if (internetStatus == 1) {
+                        Globals.writeToMLOG("RESP", "DialogEKL.sendStartEKL/internetStatus", "internetStatus: " + internetStatus);
+                        responseSendPTTEKLCode(new ExchangeInterface.ExchangeResponseInterfaceSingle() {
+                            @Override
+                            public <T> void onSuccess(T data) {
+                                try {
+                                    enterCode = false;
+                                    EKLRespData resp = (EKLRespData) data;
+
+                                    Gson gson = new Gson();
+                                    String json = gson.toJson(resp);
+                                    JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
+
+                                    Globals.writeToMLOG("RESP", "DialogEKL.sendStartEKL/onResponse/onSuccess", "convertedObject: " + convertedObject);
+                                    Log.e("DialogEKL", "sendStartEKL/onResponse: " + convertedObject);
+
+
+                                    // Создание в БД нового ЭКЛ-а
+                                    EKL_SDB ekl_sdb = new EKL_SDB();
+                                    ekl_sdb.id = resp.requestId;
+                                    ekl_sdb.userId = wp.getUser_id();    // App User
+                                    ekl_sdb.sotrId = user.id;   // PTT
+                                    ekl_sdb.clientId = wp.getClient_id();
+                                    ekl_sdb.addressId = wp.getAddr_id();
+                                    ekl_sdb.dad2 = wp.getCode_dad2();
+                                    ekl_sdb.department = user.otdelId;   // Добавлен отдел, при отправке ЭКЛ
+                                    ekl_sdb.state = true;
+                                    ekl_sdb.eklHashCode = resp.codeHash;
+                                    ekl_sdb.vpi = System.currentTimeMillis() / 1000;
+
+                                    // Запись ЭКЛ-а для текущего окна
+                                    ekl = ekl_sdb;
+
+                                    Log.e("DialogEKL", "ekl_sdb: " + ekl_sdb.id);
+                                    Log.e("DialogEKL", "ekl_sdb: " + ekl_sdb.dad2);
+
+                                    // Запись ЭКЛ-а в базу данных
+                                    SQL_DB.eklDao().insertAll(Collections.singletonList(ekl_sdb));
+
+//                                Toast.makeText(context, "Код отправлен. Ответ: " + convertedObject, Toast.LENGTH_LONG).show();
+
+                                    Toast.makeText(context, "Код Представителю Торговой Точки отправлен", Toast.LENGTH_SHORT).show();
+                                } catch (Exception e) {
+                                    Globals.writeToMLOG("RESP", "DialogEKL.sendStartEKL/onResponse/onSuccess/Exception", "Exception e: " + e);
+                                }
+                            }
+
+                            @Override
+                            public void onFailure(String error) {
+                                Globals.writeToMLOG("FAIL", "DialogEKL.sendStartEKL/onFailure", "t: " + error);
+                                Log.e("DialogEKL", "sendStartEKL/onFailure: " + error);
+                                Toast.makeText(context, "При отправке кода ЭКЛ возникла ошибка, повторите попытку позже или обратитесь к Вашему руководителю. Ошибка: " + error, Toast.LENGTH_LONG).show();
+                            }
+                        });
+                    } else {
+                        Toast.makeText(context, "Обнаружена проблема с сетью, проверьте интернет соединение и повторите попытку позже.", Toast.LENGTH_SHORT).show();
+                        Globals.writeToMLOG("RESP", "DialogEKL.sendStartEKL/", "Обнаружена проблема с сетью, проверьте интернет соединение и повторите попытку позже.");
+                    }
+                } else {
+                    Toast.makeText(context, "Вы уже отправили КОД ПТТшнику", Toast.LENGTH_LONG).show();
+                    Globals.writeToMLOG("RESP", "DialogEKL.sendStartEKL/", "Вы уже отправили КОД ПТТшнику");
+                }
+            } else {
+                Toast.makeText(context, "Выберите сотрудника для отправки ЭКЛа", Toast.LENGTH_LONG).show();
+                Globals.writeToMLOG("RESP", "DialogEKL.sendStartEKL/", "Выберите сотрудника для отправки ЭКЛа");
+            }
+        } catch (Exception e) {
+            Globals.writeToMLOG("ERROR", "DialogEKL.sendStartEKL/buttonSend.setOnClickListener", "Exception e: " + e);
         }
     }
 
