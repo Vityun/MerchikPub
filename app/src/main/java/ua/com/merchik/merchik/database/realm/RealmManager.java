@@ -759,13 +759,13 @@ public class RealmManager {
         RealmQuery<StackPhotoDB> query = INSTANCE.where(StackPhotoDB.class);
         if (photoServerId != null && !photoServerId.equals("0")) {
             query.equalTo("photoServerId", photoServerId)
-                    .sort("approve", Sort.DESCENDING, "photoServerId", Sort.DESCENDING);
+                    .sort("approve", Sort.DESCENDING, "photoServerId", Sort.ASCENDING);
         } else {
             query.equalTo("object_id", id)
                     .equalTo("photo_type", type)
                     .equalTo("comment", photoSize)
 //                    .equalTo("approve", 1)
-                    .sort("approve", Sort.DESCENDING, "photoServerId", Sort.DESCENDING);
+                    .sort("approve", Sort.DESCENDING, "photoServerId", Sort.ASCENDING);
         }
 
         StackPhotoDB st = query.findFirst();
