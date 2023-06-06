@@ -658,7 +658,6 @@ public class DialogEKL {
 
             @Override
             public void onFailure(String error) {
-
                 if (error.equals("register_messenger")){
                     DialogData dialogData = new DialogData(context);
                     dialogData.setTitle("Внимание! Получатель сообщения (ПТТ) ещё не подключён к нашему боту.");
@@ -670,11 +669,11 @@ public class DialogEKL {
                     dialogData.setCancel("Нет", dialogData::dismiss);
                     dialogData.setClose(dialogData::dismiss);
                     dialogData.show();
+                }else {
+                    Globals.writeToMLOG("FAIL", "DialogEKL.sendStartEKL/onFailure", "t: " + error);
+                    Log.e("DialogEKL", "sendStartEKL/onFailure: " + error);
+                    Toast.makeText(context, "При отправке кода ЭКЛ возникла ошибка, повторите попытку позже или обратитесь к Вашему руководителю. Ошибка: " + error, Toast.LENGTH_LONG).show();
                 }
-
-                Globals.writeToMLOG("FAIL", "DialogEKL.sendStartEKL/onFailure", "t: " + error);
-                Log.e("DialogEKL", "sendStartEKL/onFailure: " + error);
-                Toast.makeText(context, "При отправке кода ЭКЛ возникла ошибка, повторите попытку позже или обратитесь к Вашему руководителю. Ошибка: " + error, Toast.LENGTH_LONG).show();
             }
         });
     }
@@ -687,7 +686,7 @@ public class DialogEKL {
             data.act = "sms_messenger_registration_url";
 
             data.sotr_id = String.valueOf(user.id);
-            data.tel_type = telType;
+            data.messenger_type = telType;
 
             Gson gson = new Gson();
             String json = gson.toJson(data);
