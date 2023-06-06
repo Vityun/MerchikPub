@@ -244,8 +244,12 @@ public class PhotoLogAdapter extends RecyclerView.Adapter<PhotoLogAdapter.ViewHo
 
 
             try {
+                Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST/PHOTO_LOG", "photoLogDat: " + photoLogDat.getId());
+                Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST/PHOTO_LOG", "photoLogDat.getPhoto_num(): " + photoLogDat.getPhoto_num());
                 File file = new File(photoLogDat.getPhoto_num());
+                Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST/PHOTO_LOG", "file: " + file.length());
                 Bitmap b = decodeSampledBitmapFromResource(file, 200, 200);
+                Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST/PHOTO_LOG", "b: " + b);
                 if (b != null) {
                     imageView.setImageBitmap(b);
                 } else {
@@ -257,7 +261,9 @@ public class PhotoLogAdapter extends RecyclerView.Adapter<PhotoLogAdapter.ViewHo
                 } catch (Exception exception) {
                     // TODO cant visualise photo exception
                     Log.e("test", "test");
+                    Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST/PHOTO_LOG", "Exception exception: " + exception);
                 }
+                Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST/PHOTO_LOG", "Exception e: " + e);
             }
 
 

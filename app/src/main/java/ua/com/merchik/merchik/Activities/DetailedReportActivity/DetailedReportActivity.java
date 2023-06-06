@@ -563,23 +563,17 @@ public class DetailedReportActivity extends toolbar_menus {
         Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult", "requestCode / resultCode / data: " + requestCode + "/" + resultCode + "/" + data);
 
         if (requestCode == PICK_GALLERY_IMAGE_REQUEST && resultCode == RESULT_OK && data != null && data.getData() != null) {
-            Uri uri = data.getData();
-            String filePath = getRealPathFromURI(uri);
-
-//            DialogData dialogData = new DialogData(this);
-//            dialogData.setTitle("Удалить фото?");
-//            dialogData.setText("Вы можете Удалить уже загруженное в приложение фото, для того что б оно не занимало место на телефоне. Удалить?");
-//
-//            dialogData.setOk("Да", () -> {
-//                checkAndDeleteFile(uri);
-//            });
-//
-//            dialogData.setCancel("Нет", () -> {
-                savePhoto(new File(filePath), MakePhotoFromGaleryWpDataDB, MakePhotoFromGalery.tovarId);
-//            });
-//
-//            dialogData.show();
-//            dialogData.setClose(dialogData::dismiss);
+            try {
+                Uri uri = data.getData();
+                Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST", "Uri uri: " + uri);
+                String filePath = getRealPathFromURI(uri);
+                Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST", "filePath: " + filePath);
+                File file = new File(filePath);
+                Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST", "file: " + file.length());
+                savePhoto(file, MakePhotoFromGaleryWpDataDB, MakePhotoFromGalery.tovarId);
+            }catch (Exception e){
+                Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST", "Exception e: " + e);
+            }
         }
 
         switch (requestCode) {
@@ -851,6 +845,12 @@ public class DetailedReportActivity extends toolbar_menus {
 
     private StackPhotoDB savePhoto(File photoFile, WpDataDB wpDataDB, String tovarId) {
         try {
+            String pathFileAbsolute = photoFile.getAbsolutePath();
+            String pathFilePath = photoFile.getPath();
+
+            Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST", "pathFileAbsolute: " + pathFileAbsolute);
+            Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST", "pathFilePath: " + pathFilePath);
+
             int id = RealmManager.stackPhotoGetLastId();
             id++;
             StackPhotoDB stackPhotoDB = new StackPhotoDB();
@@ -867,7 +867,7 @@ public class DetailedReportActivity extends toolbar_menus {
 
             stackPhotoDB.code_dad2 = wpDataDB.getCode_dad2();
 
-            stackPhotoDB.setUser_id(Globals.userId);
+            stackPhotoDB.setUser_id(wpDataDB.getUser_id());
             stackPhotoDB.setPhoto_type(4);      // Тип фото Остатков
             stackPhotoDB.tovar_id = tovarId;
 
@@ -876,10 +876,13 @@ public class DetailedReportActivity extends toolbar_menus {
             stackPhotoDB.setPhoto_hash(globals.getHashMD5FromFile2(photoFile, null));
             stackPhotoDB.setPhoto_num(photoFile.getAbsolutePath());
 
+            String jo = new Gson().toJson(stackPhotoDB);
+            Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST", "stackPhotoDB: " + jo);
+
             RealmManager.stackPhotoSavePhoto(stackPhotoDB);
             return stackPhotoDB;
         } catch (Exception e) {
-            Globals.writeToMLOG("ERROR", "DRActivity.onActivityResult.savePhotoPromotionTov", "Exception e: " + e);
+            Globals.writeToMLOG("ERROR", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST", "Exception e: " + e);
             return null;
         }
     }
