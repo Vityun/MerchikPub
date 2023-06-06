@@ -1,6 +1,6 @@
 package ua.com.merchik.merchik.Options.Controls;
 
-import static ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsRealm.AdditionalRequirementsModENUM.HIDE_FOR_USER;
+import static ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsRealm.AdditionalRequirementsModENUM.DEFAULT;
 
 import android.content.Context;
 import android.text.SpannableString;
@@ -8,6 +8,7 @@ import android.text.SpannableStringBuilder;
 import android.text.Spanned;
 import android.text.TextPaint;
 import android.text.style.ClickableSpan;
+import android.util.Log;
 import android.view.View;
 
 import java.util.ArrayList;
@@ -68,12 +69,15 @@ public class OptionControlCheckingReasonOutOfStockOSV<T> extends OptionControl {
         List<ReportPrepareDB> detailedReportRPList = ReportPrepareRealm.getReportPrepareByDad2(wpDataDB.getCode_dad2());
 
         // Получаем Товары с особым вниманием
-        List<AdditionalRequirementsDB> additionalRequirementsDBS = AdditionalRequirementsRealm.getData3(document, HIDE_FOR_USER, null);
+        List<AdditionalRequirementsDB> additionalRequirementsDBS = AdditionalRequirementsRealm.getData3(document, DEFAULT, null);
         for (AdditionalRequirementsDB item : additionalRequirementsDBS) {
             if (item.getTovarId() != null && !item.getTovarId().equals("") && !item.getTovarId().equals("0")) {
                 tovarIds.add(Integer.valueOf(item.getTovarId()));
             }
         }
+
+        Log.e("OCReasonOutOfStockOSV", "tovarIds: " + tovarIds);
+        Log.e("OCReasonOutOfStockOSV", "detailedReportRPList: " + detailedReportRPList);
 
         // проверим, по каким из товаров с ОСВ отсутствуют на витрине?
         for (ReportPrepareDB item : detailedReportRPList) {
@@ -90,11 +94,11 @@ public class OptionControlCheckingReasonOutOfStockOSV<T> extends OptionControl {
                 osv = true;
             }
 
-            if (osv && item.getErrorId() != null && !item.getErrorId().equals("") && !item.getErrorId().equals("0")) {
-                find++;
-            }else {
+            if (osv && (item.getErrorId() == null || item.getErrorId().equals("") || item.getErrorId().equals("0"))) {
                 errCnt++;
                 result.add(item);
+            }else {
+                find++;
             }
         }
 

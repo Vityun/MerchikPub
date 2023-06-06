@@ -371,7 +371,7 @@ public class OptionControlCheckingReasonOutOfStock<T> extends OptionControl {
         int groupTo[] = new int[]{android.R.id.text1};
 
         // список атрибутов элементов для чтения
-        String childFrom[] = new String[]{"monthName"};
+        String childFrom[] = new String[]{"itemName"};
         // список ID view-элементов, в которые будет помещены атрибуты
         // элементов
         int childTo[] = new int[]{android.R.id.text1};
@@ -395,14 +395,14 @@ public class OptionControlCheckingReasonOutOfStock<T> extends OptionControl {
                 сhildDataItemList = new ArrayList<>();
                 for (ErrorDB item : errorItemsDB) {
                     map = new HashMap<>();
-                    map.put("monthName", "* " + item.getNm());
+                    map.put("itemName", "* " + item.getNm());
                     сhildDataItemList.add(map);
                 }
                 сhildDataList.add(сhildDataItemList);
             } else {
                 сhildDataItemList = new ArrayList<>();
                 map = new HashMap<>();
-                map.put("monthName", "* " + group.getNm());
+                map.put("itemName", "* " + group.getNm());
                 сhildDataItemList.add(map);
                 сhildDataList.add(сhildDataItemList);
             }

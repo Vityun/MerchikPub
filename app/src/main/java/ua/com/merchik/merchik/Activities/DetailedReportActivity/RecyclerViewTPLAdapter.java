@@ -556,7 +556,7 @@ public class RecyclerViewTPLAdapter extends RecyclerView.Adapter<RecyclerView.Vi
             int groupTo[] = new int[]{android.R.id.text1};
 
             // список атрибутов элементов для чтения
-            String childFrom[] = new String[]{"monthName"};
+            String childFrom[] = new String[]{"itemName"};
             // список ID view-элементов, в которые будет помещены атрибуты
             // элементов
             int childTo[] = new int[]{android.R.id.text1};
@@ -580,14 +580,14 @@ public class RecyclerViewTPLAdapter extends RecyclerView.Adapter<RecyclerView.Vi
                     сhildDataItemList = new ArrayList<>();
                     for (ErrorDB item : errorItemsDB) {
                         map = new HashMap<>();
-                        map.put("monthName", "* " + item.getNm());
+                        map.put("itemName", "* " + item.getNm());
                         сhildDataItemList.add(map);
                     }
                     сhildDataList.add(сhildDataItemList);
                 } else {
                     сhildDataItemList = new ArrayList<>();
                     map = new HashMap<>();
-                    map.put("monthName", "* " + group.getNm());
+                    map.put("itemName", "* " + group.getNm());
                     сhildDataItemList.add(map);
                     сhildDataList.add(сhildDataItemList);
                 }
@@ -607,7 +607,7 @@ public class RecyclerViewTPLAdapter extends RecyclerView.Adapter<RecyclerView.Vi
                 Map<String, String> map;
                 map = (Map<String, String>) expandableListView.getExpandableListAdapter().getChild(groupPos, childPos);
 
-                String str = map.get("monthName");
+                String str = map.get("itemName");
                 String res = str.replace("* ", "");
 
                 Toast.makeText(expListView.getContext(), "Выбрали ошибку: " + res, Toast.LENGTH_SHORT).show();
@@ -726,7 +726,7 @@ public class RecyclerViewTPLAdapter extends RecyclerView.Adapter<RecyclerView.Vi
             int groupTo[] = new int[]{android.R.id.text1};
 
             // список атрибутов элементов для чтения
-            String childFrom[] = new String[]{"monthName"};
+            String childFrom[] = new String[]{"itemName"};
             // список ID view-элементов, в которые будет помещены атрибуты
             // элементов
             int childTo[] = new int[]{android.R.id.text1};
@@ -750,14 +750,14 @@ public class RecyclerViewTPLAdapter extends RecyclerView.Adapter<RecyclerView.Vi
                     сhildDataItemList = new ArrayList<>();
                     for (ErrorDB item : errorItemsDB) {
                         map = new HashMap<>();
-                        map.put("monthName", "* " + item.getNm());
+                        map.put("itemName", "* " + item.getNm());
                         сhildDataItemList.add(map);
                     }
                     сhildDataList.add(сhildDataItemList);
                 } else {
                     сhildDataItemList = new ArrayList<>();
                     map = new HashMap<>();
-                    map.put("monthName", "* " + group.getNm());
+                    map.put("itemName", "* " + group.getNm());
                     сhildDataItemList.add(map);
                     сhildDataList.add(сhildDataItemList);
                 }

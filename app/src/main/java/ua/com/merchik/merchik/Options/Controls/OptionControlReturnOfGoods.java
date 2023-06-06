@@ -1,6 +1,6 @@
 package ua.com.merchik.merchik.Options.Controls;
 
-import static ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsRealm.AdditionalRequirementsModENUM.HIDE_FOR_USER;
+import static ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsRealm.AdditionalRequirementsModENUM.DEFAULT;
 
 import android.content.Context;
 import android.text.SpannableString;
@@ -83,7 +83,7 @@ public class OptionControlReturnOfGoods<T> extends OptionControl {
         List<ReportPrepareDB> detailedReportRPList = ReportPrepareRealm.getReportPrepareByDad2(wpDataDB.getCode_dad2());
 
         // Получаем Товары с особым вниманием
-        List<AdditionalRequirementsDB> additionalRequirementsDBS = AdditionalRequirementsRealm.getData3(document, HIDE_FOR_USER, null);
+        List<AdditionalRequirementsDB> additionalRequirementsDBS = AdditionalRequirementsRealm.getData3(document, DEFAULT, null);
         for (AdditionalRequirementsDB item : additionalRequirementsDBS) {
             if (item.getTovarId() != null && !item.getTovarId().equals("") && !item.getTovarId().equals("0")) {
                 tovarIds.add(Integer.valueOf(item.getTovarId()));

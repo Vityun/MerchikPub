@@ -1065,7 +1065,7 @@ public class DialogData {
             Map<String, String> map;
             map = (Map<String, String>) expandableListView.getExpandableListAdapter().getChild(groupPos, childPos);
 
-            String str = map.get("monthName");
+            String str = map.get("itemName");
             String res = str.replace("* ", "");
 
             Toast.makeText(context, "Выбрали ошибку: " + res, Toast.LENGTH_SHORT).show();
