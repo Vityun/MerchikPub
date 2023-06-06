@@ -227,7 +227,7 @@ public class Tab3Fragment extends Fragment {
                             dialogShortComment.setTitle("Ошибка комментария");
                             dialogShortComment.setText("Коментарий должен быть больше 20 символов");
                             dialogShortComment.setDialogIco();
-                            dialogShortComment.setClose(dialog::dismiss);
+                            dialogShortComment.setClose(dialogShortComment::dismiss);
                             dialogShortComment.show();
 
                             Globals.writeToMLOG("INFO", "Tab3Fragment.dialog.clickSave", "Коментарий должен быть больше 20 символов");
