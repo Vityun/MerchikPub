@@ -147,7 +147,7 @@ public class OptionControlReturnOfGoods<T> extends OptionControl {
             resultMsg.append("Не надана інформация про необхідність повернення товару (в т.р. з ОСУ (Особовою Увагою)). Див. таблицю: ").append("\n\n");
             for (ReportPrepareDB item : result){
                 TovarDB tov = TovarRealm.getById(item.getTovarId());
-                String msg = String.format("(%s) %s (%s): %s", item.getTovarId(), tov.getNm(), tov.getWeight(), item.errorNote);
+                String msg = String.format("(%s) %s (%s): %s", tov.getBarcode(), tov.getNm(), tov.getWeight(), item.errorNote);
 
                 resultMsg.append(createLinkedString(msg, item, tov)).append("\n\n");
             }

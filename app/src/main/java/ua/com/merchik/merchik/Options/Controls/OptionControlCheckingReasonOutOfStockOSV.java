@@ -9,11 +9,12 @@ import android.text.Spanned;
 import android.text.TextPaint;
 import android.text.style.ClickableSpan;
 import android.view.View;
-import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportTovar.ShowTovarRequisites;
+import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.Options.OptionControl;
 import ua.com.merchik.merchik.Options.Options;
 import ua.com.merchik.merchik.data.OptionMassageType;
@@ -34,14 +35,18 @@ public class OptionControlCheckingReasonOutOfStockOSV<T> extends OptionControl {
     private boolean signal = false;
 
     public OptionControlCheckingReasonOutOfStockOSV(Context context, T document, OptionsDB optionDB, OptionMassageType msgType, Options.NNKMode nnkMode) {
-        this.context = context;
-        this.document = document;
-        this.optionDB = optionDB;
-        this.msgType = msgType;
-        this.nnkMode = nnkMode;
+        try {
+            this.context = context;
+            this.document = document;
+            this.optionDB = optionDB;
+            this.msgType = msgType;
+            this.nnkMode = nnkMode;
 
-        getDocumentVar();
-        executeOption();
+            getDocumentVar();
+            executeOption();
+        }catch (Exception e){
+            Globals.writeToMLOG("ERR", "OptionControlCheckingReasonOutOfStockOSV/", "Exception e: " + e);
+        }
     }
 
     private void getDocumentVar() {
@@ -103,9 +108,9 @@ public class OptionControlCheckingReasonOutOfStockOSV<T> extends OptionControl {
             resultMsg.append("Не предоставлена информация о ПИЧИНАХ отсутствия товара (в т.ч. с ОСВ (Особым Вниманием)). См. ниже.").append("\n\n");
             for (ReportPrepareDB item : result){
                 TovarDB tov = TovarRealm.getById(item.getTovarId());
-                String msg = String.format("(%s) %s (%s)", item.getTovarId(), tov.getNm(), tov.getWeight());
+                String msg = String.format("(%s) %s (%s)", tov.getBarcode(), tov.getNm(), tov.getWeight());
 
-                resultMsg.append(createLinkedString(msg, item));
+                resultMsg.append(createLinkedString(msg, item, tov)).append("\n");
             }
 //        }else if (find == 0){
 //            signal = true;
@@ -114,6 +119,9 @@ public class OptionControlCheckingReasonOutOfStockOSV<T> extends OptionControl {
             signal = false;
             resultMsg.append("Замечаний по предоставлению информации о ПРИЧИНАХ отсутствия товаров (в т.ч. с ОСВ (Особым Вниманием)) нет.").append("\n\n");
         }
+
+        spannableStringBuilder.append(resultMsg);
+
 
 
         // Установка Сигнала
@@ -131,20 +139,21 @@ public class OptionControlCheckingReasonOutOfStockOSV<T> extends OptionControl {
         // 8.0 Блокировка проведения
         if (signal) {
             if (optionDB.getBlockPns().equals("1") && wpDataDB.getStatus() == 0){
-                resultMsg.append("Документ проведен не будет!").append("\n\n");
+                spannableStringBuilder.append("Документ проведен не будет!").append("\n\n");
             }else {
-                resultMsg.append("Вы можете получить Премиальные БОЛЬШЕ, если будете указывать информацию о причинах отсутствия товаров.").append("\n\n");
+                spannableStringBuilder.append("Вы можете получить Премиальные БОЛЬШЕ, если будете указывать информацию о причинах отсутствия товаров.").append("\n\n");
             }
             setIsBlockOption(true);
         }
     }
 
-    private SpannableString createLinkedString(String msg, ReportPrepareDB reportPrepareDB) {
+    private SpannableString createLinkedString(String msg, ReportPrepareDB reportPrepareDB, TovarDB tov) {
         SpannableString res = new SpannableString(msg);
         ClickableSpan clickableSpan = new ClickableSpan() {
             @Override
             public void onClick(View textView) {
-                Toast.makeText(textView.getContext(), "Функция в разработке. Идентификатор Товара: " + reportPrepareDB.getTovarId(), Toast.LENGTH_LONG).show();
+//                Toast.makeText(textView.getContext(), "Функция в разработке. Идентификатор Товара: " + reportPrepareDB.getTovarId(), Toast.LENGTH_LONG).show();
+                showDialogs(textView.getContext(), tov);
             }
 
             @Override
@@ -155,5 +164,9 @@ public class OptionControlCheckingReasonOutOfStockOSV<T> extends OptionControl {
         };
         res.setSpan(clickableSpan, 0, msg.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         return res;
+    }
+
+    private void showDialogs(Context context, TovarDB tovarDB){
+        new ShowTovarRequisites(context, wpDataDB, tovarDB).showDialogs();
     }
 }
