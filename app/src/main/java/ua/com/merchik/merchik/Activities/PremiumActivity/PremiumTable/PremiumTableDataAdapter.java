@@ -1,5 +1,7 @@
 package ua.com.merchik.merchik.Activities.PremiumActivity.PremiumTable;
 
+import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
+
 import android.content.Intent;
 import android.graphics.Paint;
 import android.text.Html;
@@ -13,25 +15,33 @@ import androidx.annotation.NonNull;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.List;
 
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity;
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.R;
+import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.WorkPlan;
 import ua.com.merchik.merchik.data.Data;
 import ua.com.merchik.merchik.data.Database.Room.AddressSDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
+import ua.com.merchik.merchik.data.RetrofitResponse.PremiumResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.Premial.PremiumPremium.Detailed;
+import ua.com.merchik.merchik.data.TestJsonUpload.StandartData;
 import ua.com.merchik.merchik.data.WPDataObj;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.WpDataRealm;
 import ua.com.merchik.merchik.dialogs.DialogData;
-
-import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
+import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
 
 public class PremiumTableDataAdapter extends RecyclerView.Adapter<PremiumTableDataAdapter.PremiumTableHeaderViewHolder> {
 
@@ -113,6 +123,17 @@ public class PremiumTableDataAdapter extends RecyclerView.Adapter<PremiumTableDa
             name.setOnClickListener(view -> {
                 openDoc(wpDataDB);
             });
+
+            layout.setOnClickListener(v -> {
+                Toast.makeText(v.getContext(), "Завантажуються данні...", Toast.LENGTH_SHORT).show();
+                getPremiumText(detailed.docNom, data -> {
+                    DialogData dialogData = new DialogData(v.getContext());
+                    dialogData.setTitle("");
+                    dialogData.setText(data);
+                    dialogData.setClose(dialogData::dismiss);
+                    dialogData.show();
+                });
+            });
         }
 
         private WpDataDB findDocument(long codeDad2) {
@@ -190,8 +211,6 @@ public class PremiumTableDataAdapter extends RecyclerView.Adapter<PremiumTableDa
                 dialog.setText("Звіти на приладі зберігаються до тижня. Якщо вам все ж таки треба з'ясувати питання по цьому звіту - зверніться до свого керівника.");
                 dialog.setClose(dialog::dismiss);
                 dialog.show();
-
-//                Toast.makeText(itemView.getContext(), "Звіт на поточному приладі не знайдено. Звіти на приладі зберігаються до тижня, якщо вам все ж таки треба з'ясувати питання по цьому звіту - зверніться до свого керівника.", Toast.LENGTH_LONG).show();
             }
         }
 
@@ -218,6 +237,40 @@ public class PremiumTableDataAdapter extends RecyclerView.Adapter<PremiumTableDa
             } catch (Exception e) {
                 Toast.makeText(itemView.getContext(), "Помилка: " + e, Toast.LENGTH_SHORT).show();
             }
+        }
+
+
+        private void getPremiumText(String smeta, Clicks.clickText clickText){
+            StandartData data = new StandartData();
+            data.mod = "premium";
+            data.act = "get_salary_basis";
+            data.smeta = smeta;
+
+            Gson gson = new Gson();
+            String json = gson.toJson(data);
+            JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
+
+            retrofit2.Call<PremiumResponse> call = RetrofitBuilder.getRetrofitInterface().Premium_get_salary_basis_RESPONSE(RetrofitBuilder.contentType, convertedObject);
+            call.enqueue(new Callback<PremiumResponse>() {
+                @Override
+                public void onResponse(Call<PremiumResponse> call, Response<PremiumResponse> response) {
+                    if (response.isSuccessful()){
+                        if (response.body() != null && response.body().state){
+                            clickText.click(response.body().basis);
+                        }else {
+                            clickText.click("Дані отримати не вийшло. Повторіть спробу або зверніться до вашого керівника.");
+                        }
+                    }else {
+                        clickText.click("Проблема із зв'язком. Спробуйте пізніше.");
+                    }
+                }
+
+                @Override
+                public void onFailure(Call<PremiumResponse> call, Throwable t) {
+                    Globals.writeToMLOG("ERROR", "getPremiumText", "Throwable t: " + t);
+                    clickText.click("Отримати дані не вийшло. Зверніться до керівника за допомогою.");
+                }
+            });
         }
     }
 

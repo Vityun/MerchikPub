@@ -49,7 +49,7 @@ public class ReclamationPercentageExchange {
      */
     private void saveReclamationPercentage(ReclamationPercentageResponse data) {
 
-        Log.e("ReclamationPercentage", "data: " + new Gson().toJson(data));
+//        Log.e("ReclamationPercentage", "data: " + new Gson().toJson(data));
         Log.e("ReclamationPercentage", "dataS: " + data.list.size());
 
         if (data != null && data.state && data.list != null && data.list.size() > 0) {

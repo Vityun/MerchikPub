@@ -65,6 +65,7 @@ public class StandartData<T> {
     public String type;         // registration - при регистрации учетной записи recover  - при запросе восстановления пароля
     public String tp;           // тип для того что б получать данные о проценте рекламаций по Киеву и Регионам
     public String messenger_type;
+    public String smeta;        // 12.06.23. Для Премиальны. Передаю смету для того что б потом по смете получить подробную информацию (в моём случае текст снижения)
     // ------------------------------------
 
     public static class Filter {

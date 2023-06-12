@@ -45,6 +45,7 @@ import ua.com.merchik.merchik.data.RetrofitResponse.OptionsServer;
 import ua.com.merchik.merchik.data.RetrofitResponse.PPATableResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.PhotoHash;
 import ua.com.merchik.merchik.data.RetrofitResponse.PotentialClientResponse;
+import ua.com.merchik.merchik.data.RetrofitResponse.PremiumResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.PromoTableResponce;
 import ua.com.merchik.merchik.data.RetrofitResponse.ReportHint;
 import ua.com.merchik.merchik.data.RetrofitResponse.ReportPrepareServer;
@@ -604,6 +605,15 @@ public interface RetrofitInterface {
             @Body JsonObject json);
 
     // -------------------------------------------------------
+
+    /**
+     * 12.06.23.
+     * Премиальные. Получение подробной информации о снижении и тп..
+     * */
+    @POST("mobile_app.php?")
+    Call<PremiumResponse> Premium_get_salary_basis_RESPONSE(
+            @Header("ContentType") String content,
+            @Body JsonObject json);
 
     @POST("mobile_app.php?")
     Call<AdditionalMaterialsGroupsResponse> AdditionalMaterialsGroupsResponse_JSON_UPLOAD(

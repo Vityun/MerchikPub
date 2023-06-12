@@ -386,8 +386,8 @@ public class PhotoDownload {
         String contentType = "application/json";
         JsonObject convertedObject = new Gson().fromJson(new Gson().toJson(data), JsonObject.class);
 
-        Log.e("getPhotoFromServer", "convertedObject: " + convertedObject);
-        Globals.writeToMLOG("INFO", getClass().getName() + "getPhotoFromServer", "convertedObject: " + convertedObject);
+//        Log.e("getPhotoFromServer", "convertedObject: " + convertedObject);
+//        Globals.writeToMLOG("INFO", getClass().getName() + "getPhotoFromServer", "convertedObject: " + convertedObject);
 
 
 /*        retrofit2.Call<JsonObject> callTest = RetrofitBuilder.getRetrofitInterface().TEST_JSON_UPLOAD(contentType, convertedObject);
@@ -409,12 +409,12 @@ public class PhotoDownload {
             @Override
             public void onResponse(retrofit2.Call<ModImagesView> call, retrofit2.Response<ModImagesView> response) {
                 try {
-                    JsonObject JS = new Gson().fromJson(new Gson().toJson(response.body()), JsonObject.class);
+//                    JsonObject JS = new Gson().fromJson(new Gson().toJson(response.body()), JsonObject.class);
 
 //                    Log.e("getPhotoFromServer", "JS: " + JS);
 //                    Log.e("getPhotoFromServer", "response.body().getList().size(): " + response.body().getList().size());
 
-                    Globals.writeToMLOG("INFO", "" + getClass().getName() + "/getPhotoFromServer/onResponse", "JS: " + JS);
+//                    Globals.writeToMLOG("INFO", "" + getClass().getName() + "/getPhotoFromServer/onResponse", "JS: " + JS);
                     int size = 0;
                     if (response.body() != null && response.body().getState() && response.body().getList() != null){
                         size = response.body().getList().size();
@@ -604,7 +604,7 @@ public class PhotoDownload {
         Log.e("getPhotoInfo2", "HERE");
         JsonObject object = new Gson().fromJson(new Gson().toJson(data), JsonObject.class);
 
-        Log.e("getPhotoInfo2", "DATA: " + object);
+//        Log.e("getPhotoInfo2", "DATA: " + object);
 
         retrofit2.Call<ModImagesView> call = RetrofitBuilder.getRetrofitInterface().MOD_IMAGES_VIEW_CALL(RetrofitBuilder.contentType, object);
         call.enqueue(new retrofit2.Callback<ModImagesView>() {
@@ -838,7 +838,7 @@ public class PhotoDownload {
                         photoDB.setDvi(item.dvi);
                         photoDB.setPhotoServerURL(item.photoUrl);
 
-                        Globals.writeToMLOG("INFO", "savePhotoToDB2/downloadPhoto/Planogram", "photoDB: " + new Gson().toJson(photoDB));
+//                        Globals.writeToMLOG("INFO", "savePhotoToDB2/downloadPhoto/Planogram", "photoDB: " + new Gson().toJson(photoDB));
 
                         RealmManager.stackPhotoSavePhoto(photoDB);
                     }catch (Exception e){

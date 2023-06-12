@@ -1346,8 +1346,8 @@ public class menu_login extends AppCompatActivity {
                             SessionCheck resp = response.body();
                             Log.e("APP_LOGIN", "AUTH: " + resp.getAuth());
 
-                            JsonObject convertedObject = new Gson().fromJson(new Gson().toJson(response.body()), JsonObject.class);
-                            Log.e("APP_LOGIN", "convertedObject: " + convertedObject);
+//                            JsonObject convertedObject = new Gson().fromJson(new Gson().toJson(response.body()), JsonObject.class);
+//                            Log.e("APP_LOGIN", "convertedObject: " + convertedObject);
 
 
                             // Сохраняем id сессии
@@ -1473,8 +1473,8 @@ public class menu_login extends AppCompatActivity {
                     public void onResponse(retrofit2.Call<Login> callLogin, retrofit2.Response<Login> response) {
                         if (response.isSuccessful() && response.body() != null) {
 
-                            JsonObject convertedObject = new Gson().fromJson(new Gson().toJson(response.body()), JsonObject.class);
-                            Log.e("APP_LOGIN", "convertedObject: " + convertedObject);
+//                            JsonObject convertedObject = new Gson().fromJson(new Gson().toJson(response.body()), JsonObject.class);
+//                            Log.e("APP_LOGIN", "convertedObject: " + convertedObject);
 
                             // Разбираем ответ на логин
                             Log.e("APP_LOGIN", "LOGIN_callLogin: " + response.body().getState());
@@ -1530,7 +1530,7 @@ public class menu_login extends AppCompatActivity {
             @Override
             public void onResponse(retrofit2.Call<SessionCheck> callAUTH, retrofit2.Response<SessionCheck> RESPONSE) {
                 if (RESPONSE.isSuccessful() && RESPONSE.body() != null) {
-                    JsonObject convertedObject = new Gson().fromJson(new Gson().toJson(RESPONSE.body()), JsonObject.class);
+//                    JsonObject convertedObject = new Gson().fromJson(new Gson().toJson(RESPONSE.body()), JsonObject.class);
 
                     SessionCheck resp = RESPONSE.body();
 

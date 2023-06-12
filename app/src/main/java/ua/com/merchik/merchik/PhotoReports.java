@@ -378,7 +378,7 @@ public class PhotoReports {
                 .SEND_PHOTO_2_BODY(mod2, act2, client_id2, addr_id2, date2, img_type_id2, photo_user_id2, client_tovar_group2, doc_num2, theme_id2, comment2, dvi2, codeDad2, gp2, tov2, photo);
 
 
-        Globals.writeToMLOG("INFO", "PhotoReports/buildCall/CALL", "call: " + new Gson().toJson(call.request().body()));
+//        Globals.writeToMLOG("INFO", "PhotoReports/buildCall/CALL", "call: " + new Gson().toJson(call.request().body()));
         call.enqueue(new retrofit2.Callback<JsonObject>() {
             @Override
             public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
