@@ -19,13 +19,17 @@ import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.ContentResolver;
 import android.content.ContentUris;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Color;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.provider.MediaStore;
+import android.provider.Settings;
 import android.text.Html;
 import android.util.Log;
 import android.view.WindowManager;
@@ -36,6 +40,7 @@ import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
@@ -554,6 +559,34 @@ public class DetailedReportActivity extends toolbar_menus {
     }
 
 
+    private static final int READ_EXTERNAL_STORAGE_REQUEST_CODE = 123;
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == READ_EXTERNAL_STORAGE_REQUEST_CODE) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                // Разрешение на чтение внешнего хранилища получено
+                // Вы можете продолжить выполнение действий, требующих разрешения
+                Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST.onRequestPermissionsResult", "Разрешение на чтение внешнего хранилища получено");
+            } else {
+                // Разрешение на чтение внешнего хранилища отклонено
+                // Вы можете выполнить действия, когда разрешение не было предоставлено
+                Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST.onRequestPermissionsResult", "Разрешение на чтение внешнего хранилища отклонено");
+            }
+        }
+    }
+
+    private boolean checkManageExternalStoragePermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            return Environment.isExternalStorageManager();
+        }else {
+            return true;
+        }
+    }
+
+
+
+
     // Размещение фотки по URI адрессу для пользователя, отображение фотографии загрузки
     @SuppressLint("MissingSuperCall")
     @Override
@@ -564,13 +597,56 @@ public class DetailedReportActivity extends toolbar_menus {
 
         if (requestCode == PICK_GALLERY_IMAGE_REQUEST && resultCode == RESULT_OK && data != null && data.getData() != null) {
             try {
-                Uri uri = data.getData();
-                Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST", "Uri uri: " + uri);
-                String filePath = getRealPathFromURI(uri);
-                Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST", "filePath: " + filePath);
-                File file = new File(filePath);
-                Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST", "file: " + file.length());
-                savePhoto(file, MakePhotoFromGaleryWpDataDB, MakePhotoFromGalery.tovarId);
+
+//                if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
+                    // У вас есть доступ к чтению файлов
+                    // Можете выполнять необходимые операции с файлами
+//                    Uri uri = data.getData();
+//                    Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST", "Uri uri: " + uri);
+//                    String filePath = getRealPathFromURI(uri);
+//                    Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST", "filePath: " + filePath);
+//                    File file = new File(filePath);
+//                    Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST", "file: " + file.length());
+//                    savePhoto(uri, MakePhotoFromGaleryWpDataDB, MakePhotoFromGalery.tovarId, getApplicationContext());
+//                } else {
+                    // У вас нет доступа к чтению файлов
+                    // Можете запросить разрешение у пользователя//
+//                     Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST", "Нет доступов");
+//                    ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, 123);
+//                }
+
+
+                if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED
+                        || ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+                    ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1);
+                } else {
+                    // У вас уже есть разрешения на доступ к файлам
+                    // Можете выполнять необходимые операции с файлами
+                    Uri uri = data.getData();
+                    Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST", "Uri uri: " + uri);
+                    String filePath = getRealPathFromURI(uri);
+                    Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST", "filePath: " + filePath);
+                    File file = new File(filePath);
+                    Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST", "file: " + file.length());
+                    savePhoto(uri, MakePhotoFromGaleryWpDataDB, MakePhotoFromGalery.tovarId, getApplicationContext());
+                }
+
+
+
+
+
+//                if (checkManageExternalStoragePermission()) {
+//                    Uri uri = data.getData();
+//                    Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST", "Uri uri: " + uri);
+//                    String filePath = getRealPathFromURI(uri);
+//                    Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST", "filePath: " + filePath);
+//                    File file = new File(filePath);
+//                    Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST", "file: " + file.length());
+//                    savePhoto(uri, MakePhotoFromGaleryWpDataDB, MakePhotoFromGalery.tovarId, getApplicationContext());
+//                }else {
+//                    Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST", "Нет доступов");
+//                    requestManageExternalStoragePermission(this);
+//                }
             }catch (Exception e){
                 Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST", "Exception e: " + e);
             }
@@ -730,6 +806,16 @@ public class DetailedReportActivity extends toolbar_menus {
     }
 
 
+    private void requestManageExternalStoragePermission(Context context) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            Intent intent = new Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION);
+            Uri uri = Uri.fromParts("package", context.getPackageName(), null);
+            intent.setData(uri);
+            startActivityForResult(intent, 123);
+        }
+    }
+
+
     /**
      * 29.06.2021
      */
@@ -843,13 +929,13 @@ public class DetailedReportActivity extends toolbar_menus {
     }
 
 
-    private StackPhotoDB savePhoto(File photoFile, WpDataDB wpDataDB, String tovarId) {
+    private StackPhotoDB savePhoto(Uri uri, WpDataDB wpDataDB, String tovarId, Context context) {
         try {
-            String pathFileAbsolute = photoFile.getAbsolutePath();
-            String pathFilePath = photoFile.getPath();
-
-            Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST", "pathFileAbsolute: " + pathFileAbsolute);
-            Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST", "pathFilePath: " + pathFilePath);
+//            String pathFileAbsolute = photoFile.getAbsolutePath();
+//            String pathFilePath = photoFile.getPath();
+//
+//            Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST", "pathFileAbsolute: " + pathFileAbsolute);
+//            Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST", "pathFilePath: " + pathFilePath);
 
             int id = RealmManager.stackPhotoGetLastId();
             id++;
@@ -867,14 +953,23 @@ public class DetailedReportActivity extends toolbar_menus {
 
             stackPhotoDB.code_dad2 = wpDataDB.getCode_dad2();
 
-            stackPhotoDB.setUser_id(wpDataDB.getUser_id());
+            stackPhotoDB.setUser_id(Globals.userId);
+            stackPhotoDB.setUserTxt(SQL_DB.usersDao().getUserName(Globals.userId));
             stackPhotoDB.setPhoto_type(4);      // Тип фото Остатков
             stackPhotoDB.tovar_id = tovarId;
 
             stackPhotoDB.setCreate_time(System.currentTimeMillis());
 
-            stackPhotoDB.setPhoto_hash(globals.getHashMD5FromFile2(photoFile, null));
-            stackPhotoDB.setPhoto_num(photoFile.getAbsolutePath());
+            String hash = globals.getHashMD5FromFileTEST(uri, context);
+            Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST", "hash: " + hash);
+
+            stackPhotoDB.setPhoto_hash(hash);
+
+            if (Build.VERSION.SDK_INT == Build.VERSION_CODES.Q){
+                stackPhotoDB.setPhoto_num(String.valueOf(uri));
+            }else {
+                stackPhotoDB.setPhoto_num(getRealPathFromURI(uri));
+            }
 
             String jo = new Gson().toJson(stackPhotoDB);
             Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST", "stackPhotoDB: " + jo);

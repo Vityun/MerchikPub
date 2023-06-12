@@ -10,12 +10,14 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.location.Location;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
 import android.os.Handler;
+import android.provider.MediaStore;
 import android.text.Spanned;
 import android.util.Base64;
 import android.util.Log;
@@ -23,6 +25,7 @@ import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 
 import androidx.annotation.NonNull;
+import androidx.core.content.FileProvider;
 
 import com.google.gson.Gson;
 import com.google.i18n.phonenumbers.PhoneNumberMatch;
@@ -204,12 +207,12 @@ public class Globals {
             builder.setCancelable(false);
             builder.setMessage(msg);
             builder.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    TEST[0] = true;
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            TEST[0] = true;
 //                    refreshActivity(context);
-                }
-            })
+                        }
+                    })
                     .setNegativeButton("Больше не показывать", new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
@@ -306,10 +309,60 @@ public class Globals {
         }
     }
 
-    public String getHashMD5FromFile2(File file, Context context) {
+    // ===============================================================================================================
+    public String getHashMD5FromFileTEST(Uri uri, Context context) {
         InputStream inputStream = null;
         try {
-            inputStream = new FileInputStream(file);
+
+            Globals.writeToMLOG("INFO",
+                    "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST/getHashMD5FromFile2",
+                    "uri: " + uri);
+
+            Globals.writeToMLOG("INFO",
+                    "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST/getHashMD5FromFile2",
+                    "uri.getPath(): " + uri.getPath());
+
+//            File file = new File(uri.getPath());
+            File file = new File(getRealPathFromURI(uri, context));
+
+//            Uri uriFileProvider = FileProvider.getUriForFile(context, context.getPackageName() + ".provider", file);
+//            Globals.writeToMLOG("INFO",
+//                    "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST/getHashMD5FromFile2",
+//                    "uriFileProvider: " + uriFileProvider);
+
+            Globals.writeToMLOG("INFO",
+                    "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST/getHashMD5FromFile2",
+                    "file.length(): " + file.length());
+
+            // 1
+            boolean fileExists = file.exists();
+            Globals.writeToMLOG("INFO",
+                    "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST/getHashMD5FromFile2",
+                    "fileExists: " + fileExists);
+
+            // 2
+            boolean isReadable = file.canRead();
+            if (isReadable) {
+                // У тебя есть права на чтение файла
+                Globals.writeToMLOG("INFO",
+                        "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST/getHashMD5FromFile2",
+                        "У тебя есть права на чтение файла isReadable: " + isReadable);
+            } else {
+                // У тебя нет прав на чтение файла
+                Globals.writeToMLOG("INFO",
+                        "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST/getHashMD5FromFile2",
+                        "У тебя нет прав на чтение файла isReadable: " + isReadable);
+            }
+
+            try {
+                inputStream = context.getContentResolver().openInputStream(uri);
+            } catch (Exception e) {
+                Globals.writeToMLOG("INFO",
+                        "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST/getHashMD5FromFile2",
+                        "inputStream Exception(2) e: " + e);
+            }
+
+
             byte[] buffer = new byte[1024];
             MessageDigest digest = MessageDigest.getInstance("MD5");
             int numRead = 0;
@@ -321,6 +374,129 @@ public class Globals {
             byte[] md5Bytes = digest.digest();
             return convertHashToString(md5Bytes);
         } catch (Exception e) {
+            Globals.writeToMLOG("INFO",
+                    "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST/getHashMD5FromFile2",
+                    "Exception(1) e: " + e);
+//            if (context != null) {
+//                alertDialogMsg(context, "photo: " + inputStream + "\nОшибка в подсчёте MD5: " + e);
+//            }
+            return null;
+        } finally {
+            if (inputStream != null) {
+                try {
+                    inputStream.close();
+                } catch (Exception e) {
+                    Globals.writeToMLOG("INFO",
+                            "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST/getHashMD5FromFile2",
+                            "Exception(2) e: " + e);
+//                    if (context != null) {
+//                        alertDialogMsg(context, "Не вышло изза фото: " + e);
+//                    }
+                }
+            }
+        }
+    }
+
+    public static String getRealPathFromURI(Uri contentUri, Context context) {
+        String[] projection = {MediaStore.Images.Media.DATA};
+        Cursor cursor = context.getApplicationContext().getContentResolver().query(contentUri, projection, null, null, null);
+        if (cursor == null) {
+            return null;
+        }
+        int columnIndex = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
+        cursor.moveToFirst();
+        String path = cursor.getString(columnIndex);
+        cursor.close();
+        return path;
+    }
+
+    public static String getRealPathFromURITEST(Uri uri, Context context) {
+        String filePath = null;
+        if (uri.getScheme().equals("content")) {
+            Cursor cursor = context.getContentResolver().query(uri, null, null, null, null);
+            if (cursor != null && cursor.moveToFirst()) {
+                int columnIndex = cursor.getColumnIndex(MediaStore.Images.ImageColumns.DATA);
+                filePath = cursor.getString(columnIndex);
+                cursor.close();
+            }
+        } else if (uri.getScheme().equals("file")) {
+            filePath = uri.getPath();
+        }
+        return filePath;
+    }
+
+
+    public String getHashMD5FromFile2(File file, Context context) {
+        InputStream inputStream = null;
+        try {
+
+/*            // 1
+            File file1 = new File(file.getAbsolutePath());
+            boolean fileExists = file1.exists();
+            Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST/getHashMD5FromFile2", "fileExists: " + fileExists);
+
+            // 2
+            boolean isReadable = file.canRead();
+            if (isReadable) {
+                // У тебя есть права на чтение файла
+                Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST/getHashMD5FromFile2", "У тебя есть права на чтение файла isReadable: " + isReadable);
+            } else {
+                // У тебя нет прав на чтение файла
+                Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST/getHashMD5FromFile2", "У тебя нет прав на чтение файла isReadable: " + isReadable);
+            }
+
+            //3
+            int readPermission = ContextCompat.checkSelfPermission(context, Manifest.permission.READ_EXTERNAL_STORAGE);
+            if (readPermission == PackageManager.PERMISSION_GRANTED) {
+                // Разрешение на чтение внешнего хранилища есть
+                Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST/getHashMD5FromFile2", "Разрешение на чтение внешнего хранилища есть");
+            } else {
+                // Разрешение на чтение внешнего хранилища отсутствует
+                Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST/getHashMD5FromFile2", "Разрешение на чтение внешнего хранилища отсутствует");
+            }*/
+
+
+//            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && context != null) {
+//                // Используем новую систему Scoped Storage
+//                // Используй getContentResolver().openInputStream(uri) для получения InputStream
+//            Uri fileUri = FileProvider.getUriForFile(context, context.getPackageName() + ".provider", file);
+//            Uri fileUri2 = FileProvider.getUriForFile(context, context.getPackageName() + ".provider", file1);
+//
+//            Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST/getHashMD5FromFile2", "fileUri: " + fileUri);
+//            Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST/getHashMD5FromFile2", "fileUri2: " + fileUri2);
+//
+//            try {
+//                inputStream = context.getContentResolver().openInputStream(fileUri);
+//            } catch (Exception e) {
+//                Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST/getHashMD5FromFile2", "inputStream Exception(1) e: " + e);
+//            }
+//
+//            try {
+//                inputStream = context.getContentResolver().openInputStream(fileUri2);
+//            } catch (Exception e) {
+//                Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST/getHashMD5FromFile2", "inputStream Exception(2) e: " + e);
+//            }
+
+
+            inputStream = context.getContentResolver().openInputStream(getFileUri(context, file));
+//            } else {
+            // Используем старый подход
+            // Используй new FileInputStream(file) для получения InputStream
+//                inputStream = new FileInputStream(file);
+//            }
+
+            byte[] buffer = new byte[1024];
+            MessageDigest digest = MessageDigest.getInstance("MD5");
+            int numRead = 0;
+            while (numRead != -1) {
+                numRead = inputStream.read(buffer);
+                if (numRead > 0)
+                    digest.update(buffer, 0, numRead);
+            }
+            byte[] md5Bytes = digest.digest();
+            return convertHashToString(md5Bytes);
+        } catch (Exception e) {
+            Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST/getHashMD5FromFile2", "Exception(1) e: " + e);
             if (context != null) {
                 alertDialogMsg(context, "photo: " + inputStream + "\nОшибка в подсчёте MD5: " + e);
             }
@@ -330,11 +506,25 @@ public class Globals {
                 try {
                     inputStream.close();
                 } catch (Exception e) {
+                    Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST/getHashMD5FromFile2", "Exception(2) e: " + e);
                     if (context != null) {
                         alertDialogMsg(context, "Не вышло изза фото: " + e);
                     }
                 }
             }
+        }
+    }
+
+    public Uri getFileUri(Context context, File file) {
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                return FileProvider.getUriForFile(context, context.getPackageName() + ".provider", file);
+            } else {
+                return Uri.fromFile(file);
+            }
+        } catch (Exception e) {
+            Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST/getHashMD5FromFile2/getFileUri", "Exception e: " + e);
+            return null;
         }
     }
 
@@ -492,9 +682,9 @@ public class Globals {
     /**
      * 09.09.2022
      * Сохранение фото в память телефона.
-     *
+     * <p>
      * imageDir - "/Tovar" (например)
-     * */
+     */
     public static String saveImageHD(Bitmap finalBitmap, String imageDir, String image_name) {
         File myDir = MyApplication.getAppContext().getExternalFilesDir(Environment.DIRECTORY_PICTURES + imageDir);
         myDir.mkdirs();
@@ -516,7 +706,6 @@ public class Globals {
 
         return file.getAbsolutePath();
     }
-
 
 
     public static String saveImage1(Bitmap finalBitmap, String image_name) {
@@ -1035,12 +1224,11 @@ public class Globals {
     }
 
 
-
     /**
      * 27.11.2022
      * Реверс строки.
-     * */
-    public static String reverseString(String str){
+     */
+    public static String reverseString(String str) {
         return new StringBuilder(str).reverse().toString();
     }
 

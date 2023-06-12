@@ -24,6 +24,7 @@ import ua.com.merchik.merchik.data.WebSocketData.Selector;
 import ua.com.merchik.merchik.data.WebSocketData.WebSocketData;
 import ua.com.merchik.merchik.data.WebSocketData.WebsocketParam;
 import ua.com.merchik.merchik.database.realm.RealmManager;
+import okhttp3.logging.HttpLoggingInterceptor;
 
 public class RetrofitBuilder{
 
@@ -61,12 +62,31 @@ public class RetrofitBuilder{
 //            .writeTimeout(5, TimeUnit.SECONDS)
             .build();
 
+    HttpLoggingInterceptor loggingInterceptor = new HttpLoggingInterceptor(new HttpLoggingInterceptor.Logger() {
+        @Override
+        public void log(String message) {
+            Log.e("M_UPLOAD_GALLERY", "RETROFIT: " + message); // Здесь можно использовать другой уровень логирования по вашему усмотрению
+        }
+    });
+
+
+
 
     private RetrofitBuilder() {
         Gson gson = new GsonBuilder()
                 .setLenient()
                 .setDateFormat("yyyy-MM-dd")
                 .create();
+
+        loggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
+        OkHttpClient.Builder httpClientBuilder = new OkHttpClient.Builder();
+        httpClientBuilder.addInterceptor(loggingInterceptor);
+        httpClientBuilder.cookieJar(cookie)
+                .connectTimeout(10, TimeUnit.SECONDS)
+                .readTimeout(40, TimeUnit.SECONDS)
+                .writeTimeout(30, TimeUnit.SECONDS);
+
+        OkHttpClient client = httpClientBuilder.build();
 
 
         Retrofit retrofit;

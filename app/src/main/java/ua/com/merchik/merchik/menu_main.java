@@ -2059,6 +2059,7 @@ public class menu_main extends AppCompatActivity {
             return BitmapFactory.decodeFile(res.getAbsolutePath(), options);
         } catch (Exception e) {
             e.printStackTrace();
+            Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST/PHOTO_LOG.decodeSampledBitmapFromResource", "Exception e: " + e);
         }
         return null;
     }

@@ -1,6 +1,9 @@
 package ua.com.merchik.merchik;
 
 import android.content.Context;
+import android.net.Uri;
+import android.os.Build;
+import android.os.Environment;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -303,7 +306,53 @@ public class PhotoReports {
         RequestBody gp2 = RequestBody.create(MediaType.parse("text/plain"), gp);
         RequestBody tov2 = RequestBody.create(MediaType.parse("text/plain"), tovar_id);
 
-        File file = new File(photoDB.getPhoto_num());
+        File file;
+        file = new File(photoDB.getPhoto_num());
+
+        Log.e("M_UPLOAD_GALLERY", "\n\nStart");
+        Log.e("M_UPLOAD_GALLERY", "id: " + photoDB.getId());
+        try {
+            Globals.writeToMLOG("INFO", "PhotoReports.buildCall", "file.length()1: " + file.length());
+            if (file.length() == 0) {
+                Uri uri = Uri.parse(photoDB.getPhoto_num());
+                Log.e("M_UPLOAD_GALLERY", "uri: " + uri);
+                Log.e("M_UPLOAD_GALLERY", "mContext: " + mContext);
+
+                // Проверяем версию Android и выполняем соответствующие действия
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                    // Версия Android 11 и выше
+                    if (checkManageExternalStoragePermission()) {
+                        try {
+                            Log.e("M_UPLOAD_GALLERY", "2");
+                            file = new File(Globals.getRealPathFromURI(uri, mContext));
+                            Log.e("M_UPLOAD_GALLERY", "uri_file.length()2.1: " + file.length());
+                            Globals.writeToMLOG("INFO", "PhotoReports.buildCall", "uri_file.length()2.1: " + file.length());
+                        } catch (Exception e) {
+                            Log.e("M_UPLOAD_GALLERY", "Uri.parse/Exception e: " + e);
+                        }
+                    } else {
+                        // Запрос разрешения MANAGE_EXTERNAL_STORAGE
+//                        requestManageExternalStoragePermission();
+                        Globals.writeToMLOG("INFO", "PhotoReports.buildCall", "Запрос разрешения MANAGE_EXTERNAL_STORAGE: Нет доступа");
+                    }
+                } else {
+                    // Версия Android ниже 11
+                    try {
+                        Log.e("M_UPLOAD_GALLERY", "2");
+                        file = new File(Globals.getRealPathFromURI(uri, mContext));
+                        Log.e("M_UPLOAD_GALLERY", "uri_file.length()2.1: " + file.length());
+                        Globals.writeToMLOG("INFO", "PhotoReports.buildCall", "uri_file.length()2.1: " + file.length());
+                    } catch (Exception e) {
+                        Log.e("M_UPLOAD_GALLERY", "Uri.parse/Exception e: " + e);
+                        Globals.writeToMLOG("INFO", "PhotoReports.buildCall", "uri_file.length()2.1: Exception e" + e);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            Log.e("M_UPLOAD_GALLERY", "uri/Exception e: " + e);
+            Globals.writeToMLOG("INFO", "PhotoReports.buildCall", "file.length()Exception e: " + e);
+        }
+
 
         if (file.length() == 0) {
             Globals.writeToMLOG("INFO", "PhotoReports.buildCall", "file.length()");
@@ -313,26 +362,33 @@ public class PhotoReports {
             return;
         }
 
+
+
+        Log.e("M_UPLOAD_GALLERY", "FILE RES: " + file.length());
+
         // MultipartBody.Part is used to send also the actual file name
-        MultipartBody.Part photo = MultipartBody.Part.createFormData("photos[]", file.getName(), RequestBody.create(MEDIA_TYPE_JPG, file));
+        RequestBody requestBody = RequestBody.create(MediaType.parse("image/*"), file);
+        MultipartBody.Part photo = MultipartBody.Part.createFormData("photos[]", file.getName(), requestBody);
+
+//        MultipartBody.Part photo = MultipartBody.Part.createFormData("photos[]", file.getName(), RequestBody.create(MEDIA_TYPE_JPG, file));
+        Globals.writeToMLOG("INFO", "PhotoReports.buildCall", "photo: " + photo);
 
         // Создание вызова
         retrofit2.Call<JsonObject> call = RetrofitBuilder.getRetrofitInterface()
                 .SEND_PHOTO_2_BODY(mod2, act2, client_id2, addr_id2, date2, img_type_id2, photo_user_id2, client_tovar_group2, doc_num2, theme_id2, comment2, dvi2, codeDad2, gp2, tov2, photo);
 
 
-        Globals.writeToMLOG("INFO", "PhotoReports/buildCall/CALL", "call: " + call.request().body());
+        Globals.writeToMLOG("INFO", "PhotoReports/buildCall/CALL", "call: " + new Gson().toJson(call.request().body()));
         call.enqueue(new retrofit2.Callback<JsonObject>() {
             @Override
             public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
 
-//                callback.onSuccess(photoDB, "");
-//                callback.onFailure(photoDB, "");
-//                \каденко татьяна(214255) -- 0934647952
-//                \тишкина ольга(101959) -- 0667516029
-//                \kotuk
+                Log.e("M_UPLOAD_GALLERY", "HERE IN onResponse");
+                Globals.writeToMLOG("INFO", "PhotoReports/buildCall/CALL/onResponse/responseBody", "HERE IN");
 
+                Globals.writeToMLOG("INFO", "PhotoReports/buildCall/CALL/onResponse/responseBody", "HERE IN call: " + call);
 
+                Globals.writeToMLOG("INFO", "PhotoReports/buildCall/CALL/onResponse/responseBody", "HERE IN response: " + response);
                 try {
                     if (response.isSuccessful()) {
                         if (response.body() != null) {
@@ -377,82 +433,31 @@ public class PhotoReports {
                         callback.onFailure(photoDB, "Запрос прошел с ошибкой, возможно проблема на сервере, повторите попытку позже. code: " + response.code());
                     }
                 } catch (Exception e) {
+                    Globals.writeToMLOG("INFO", "PhotoReports/buildCall/CALL/onResponse/responseBody", "HEREException e: " + e);
                     callback.onFailure(photoDB, "ВНИМАНИЕ! Передайте эту ошибку Вашему руководителю: " + e);
                 }
-
-
-
-
-/*                JsonObject jsonR = response.body();
-                ImagesPrepareUploadPhoto info = new Gson().fromJson(new Gson().toJson(response.body()), ImagesPrepareUploadPhoto.class);
-
-                if (response.isSuccessful() && response.body() != null) {
-                    try {
-                        if (jsonR != null) {
-                            if (!jsonR.get("state").isJsonNull() && jsonR.get("state").getAsBoolean()) {
-                                if (!jsonR.get("move").isJsonNull()) {
-                                    try {
-                                        JSONObject j = new JSONObject(jsonR.get("move").toString());
-                                        Iterator keys = j.keys();
-                                        Move obj = new Gson().fromJson(jsonR.get("move").getAsJsonObject().get(keys.next().toString()), Move.class);
-
-                                        if (obj.getRes().equals("true") || obj.getRes().equals("1")) {
-                                            RealmManager.INSTANCE.executeTransaction(realm -> {
-                                                photoDB.setUpload_to_server(System.currentTimeMillis());
-                                                RealmManager.INSTANCE.copyToRealmOrUpdate(photoDB);
-                                            });
-                                            callback.onSuccess(photoDB, "test text");
-                                        } else {
-                                            callback.onFailure(photoDB, "(Выгрузка фото)Возникла ошибка. Ответ от сервера: " + response.body().toString());
-                                        }
-
-                                    } catch (Exception e) {
-                                        String msg = Arrays.toString(e.getStackTrace());
-                                        callback.onFailure(photoDB, "(Выгрузка фото)Возникла ошибка. Ответ от сервера: " + msg + response.body().toString());
-                                    }
-                                } else {
-                                    callback.onFailure(photoDB, "(Выгрузка фото)Возникла ошибка. Ответ от сервера: " + response.body().toString());
-                                }
-
-                            } else if (!jsonR.get("state").isJsonNull() && !jsonR.get("state").getAsBoolean()) {
-                                try {
-                                    if (!jsonR.get("error").isJsonNull() || jsonR.get("error") != null) {
-
-//                                        String error = jsonR.get("error").getAsString();
-                                        String error = info.list.get(0).error;
-                                        callback.onFailure(photoDB, "(Выгрузка фото)Возникла ошибка: " + error);
-                                    } else {
-                                        callback.onFailure(photoDB, "Фото не выгружено. Сообщите об этом руководителю. Ответ от сервера: " + "NULL");
-                                    }
-                                } catch (Exception e) {
-                                    // error с ошибкой
-                                    callback.onFailure(photoDB, "" + e);
-                                }
-                                callback.onFailure(photoDB, "При выгрузке произошла ошибка. Попробуйте перелогиниться и повторить попытку. Если ошибка будет повторяться - обратитесь к Вашему администатору");
-                            } else {
-                                callback.onFailure(photoDB, "Ошибка: " + jsonR);
-                            }
-                        } else {
-                            callback.onFailure(photoDB, "Не удалось получить ответ от сервера. Скорее всего отсутствует интернет. Проверьте связь и повторите попытку или обратитесь к Ващему руководителю.");
-                        }
-                    } catch (Exception e) {
-                        callback.onFailure(photoDB, "Ошибка при выгрузке фото - повторите попытку позже или обратитесь к Вашему руководителю. \nОшибка: " + e);
-                    }
-                } else {
-                    callback.onFailure(photoDB, "Запрос прошел НЕ УДАЧНО. Повторите попытку позже. Ошибка: " + response.body());
-                }*/
-
-
-                //OLD
-//                responseTEST(response, photoDB, callback);
             }
 
             @Override
             public void onFailure(Call<JsonObject> call, Throwable t) {
+                Log.e("M_UPLOAD_GALLERY", "HERE IN onFailure: " + t);
                 Globals.writeToMLOG("FAILURE", "PhotoReports/buildCall/CALL/onFailure", "t.toString(): " + t.toString());
                 callback.onFailure(photoDB, t.toString());
             }
         });
+        Globals.writeToMLOG("INFO", "PhotoReports/buildCall/CALL/onResponse/responseBody", "HERE AFTER");
+
+
+        Log.e("M_UPLOAD_GALLERY", "End");
+    }
+
+
+    private boolean checkManageExternalStoragePermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            return Environment.isExternalStorageManager();
+        }else {
+            return false;
+        }
     }
 
 

@@ -14,9 +14,9 @@
 
 
 <paths xmlns:android="http://schemas.android.com/apk/res/android">
-    <external-path
-        name="external_files"
-        path="." />
+    <external-path name="external_files" path="." />
+    <external-files-path name="external_files_path" path="." />
+    <external-path name="images" path="/" />
 </paths>
 
 

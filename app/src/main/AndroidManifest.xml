@@ -7,9 +7,7 @@
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
-<!--
-    <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE"/>
--->
+<!--    <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE"/>-->
     <uses-feature android:name="android.hardware.camera"
         android:required="true" />
     <uses-permission android:name="android.permission.CALL_PHONE" />
@@ -39,7 +37,7 @@ android:theme="@style/Theme.AppCompat.Light.NoActionBar"
     -->
 
 
-    <!--        android:requestLegacyExternalStorage = "true"-->
+<!--    android:requestLegacyExternalStorage = "true"-->
 
 
     <application
@@ -54,8 +52,8 @@ android:theme="@style/Theme.AppCompat.Light.NoActionBar"
         android:supportsRtl="true"
         android:label="@string/app_name"
         android:theme="@style/AppTheme"
-        android:versionCode="2023060500"
-        android:versionName="2023060500"
+        android:versionCode="2023061001"
+        android:versionName="2023061001"
         tools:targetApi="m"
         >
 

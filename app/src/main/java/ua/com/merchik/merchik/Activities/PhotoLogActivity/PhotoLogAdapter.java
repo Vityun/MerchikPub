@@ -25,6 +25,7 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.constraintlayout.widget.ConstraintLayout;
+import androidx.core.content.FileProvider;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.gson.Gson;
@@ -244,12 +245,37 @@ public class PhotoLogAdapter extends RecyclerView.Adapter<PhotoLogAdapter.ViewHo
 
 
             try {
-                Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST/PHOTO_LOG", "photoLogDat: " + photoLogDat.getId());
-                Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST/PHOTO_LOG", "photoLogDat.getPhoto_num(): " + photoLogDat.getPhoto_num());
                 File file = new File(photoLogDat.getPhoto_num());
-                Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST/PHOTO_LOG", "file: " + file.length());
+                Uri uriFileProvider = FileProvider.getUriForFile(mContext, mContext.getPackageName() + ".provider", file);
+                imageView.setImageURI(uriFileProvider);
+            }catch (Exception e){
+                Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST/PHOTO_LOG", "Exception e: " + e);
+                try {
+                    imageView.setImageURI(Uri.parse(photoLogDat.getPhoto_num()));
+                }catch (Exception e1){
+                    Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST/PHOTO_LOG", "Exception e1: " + e1);
+                    try {
+                        File file = new File(photoLogDat.getPhoto_num());
+                        Bitmap b = decodeSampledBitmapFromResource(file, 200, 200);
+                        imageView.setImageBitmap(b);
+                    }catch (Exception e2){
+                        Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST/PHOTO_LOG", "Exception e2: " + e2);
+                    }
+                }
+            }
+
+
+
+
+
+
+/*            try {
+//                Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST/PHOTO_LOG", "photoLogDat: " + photoLogDat.getId());
+//                Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST/PHOTO_LOG", "photoLogDat.getPhoto_num(): " + photoLogDat.getPhoto_num());
+                File file = new File(photoLogDat.getPhoto_num());
+//                Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST/PHOTO_LOG", "file: " + file.length());
                 Bitmap b = decodeSampledBitmapFromResource(file, 200, 200);
-                Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST/PHOTO_LOG", "b: " + b);
+//                Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST/PHOTO_LOG", "b: " + b);
                 if (b != null) {
                     imageView.setImageBitmap(b);
                 } else {
@@ -264,7 +290,7 @@ public class PhotoLogAdapter extends RecyclerView.Adapter<PhotoLogAdapter.ViewHo
                     Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST/PHOTO_LOG", "Exception exception: " + exception);
                 }
                 Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST/PHOTO_LOG", "Exception e: " + e);
-            }
+            }*/
 
 
             if (photoLogMode.equals(PhotoLogMode.SAMPLE_PHOTO)) {

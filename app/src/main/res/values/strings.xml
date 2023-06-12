@@ -1,14 +1,13 @@
 <resources>
     <string name="app_name">merchik</string>
-    <string name="ver">060600</string>
+    <string name="ver">061000</string>
     <string name="debug_status">0</string>
-    <string name="debug_date">2023-0-05</string>
+    <string name="debug_date">2023-06-10</string>
 
     <!--Activity titles-->
     <string name="title_activity_premium">Премиальные</string>
     <string name="title_activity_menu_main">Рабочий стол</string>
     <string name="activity_title_photo_report">Фотоотчёт</string>
-
     <string name="login_info">Введите ваш логин и пароль: </string>
     <string name="login">Вход</string>
     <string name="logout">Выход</string>

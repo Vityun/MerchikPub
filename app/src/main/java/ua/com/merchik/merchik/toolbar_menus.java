@@ -636,6 +636,8 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
 
                 sb.append("login: ").append(appUsersDB.getLogin()).append(" ");
                 sb.append("pass: ").append(appUsersDB.getPassword()).append(" ");
+                sb.append("Build.VERSION.SDK_INT: ").append(Build.VERSION.SDK_INT).append(" ");
+                sb.append("Build.MODEL: ").append(Build.MODEL).append(" ");
 
                 Globals.writeToMLOG("INFO", "USER_INFO", "appUsersDB: " + sb);
             }catch (Exception e){

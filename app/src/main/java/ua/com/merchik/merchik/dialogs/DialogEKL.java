@@ -309,6 +309,7 @@ public class DialogEKL {
 //        data.get(0).tel = "+380667472811";
 
         AutoTextUsersViewHolder adapterUser = new AutoTextUsersViewHolder(context, android.R.layout.simple_dropdown_item_1line, data);
+        sotr.setDropDownHeight(9 * sotr.getLineHeight());
 
         adapterUser.setAdditionalInformation(AutoTextUsersViewHolder.AutoTextUserEnum.DEPARTMENT);
 
