@@ -80,6 +80,7 @@ public class DialogEKL {
     boolean isKeyboardShowing = true;
     private Integer element_id;
     private String telType = "";
+    private String telephone = "";
     private int cnt = 0;
 
     //---------------------------
@@ -1105,7 +1106,16 @@ public class DialogEKL {
                     } else if (position == 1) {
                         telType = "tel2";
                     }
+
+                    telephone = (String) item;
                 }
+            });
+
+            tel.setOnLongClickListener(v -> {
+                if (!telephone.equals("")){
+                    Globals.telephoneCall(context, telephone);
+                }
+                return false;
             });
 
         } else if (!res.tel.equals("") || !res.tel2.equals("")) {
