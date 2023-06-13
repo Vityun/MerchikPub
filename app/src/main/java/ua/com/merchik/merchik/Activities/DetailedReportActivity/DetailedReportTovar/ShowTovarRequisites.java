@@ -18,8 +18,6 @@ import android.os.Build;
 import android.util.Log;
 import android.widget.Toast;
 
-import androidx.annotation.RequiresApi;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -102,7 +100,7 @@ public class ShowTovarRequisites {
     }
 
 
-    @RequiresApi(api = Build.VERSION_CODES.N)
+//    @RequiresApi(api = Build.VERSION_CODES.N)
     private void showDialog(TovarDB list, TovarOptions tpl, ReportPrepareDB reportPrepareDB, String tovarId, String cd2, String clientId, String finalBalanceData1, String finalBalanceDate1, boolean clickType) {
         try {
             DialogData dialog = new DialogData(context);
@@ -141,8 +139,11 @@ public class ShowTovarRequisites {
 
             if (tpl.getOptionControlName() != null && tpl.getOptionControlName().equals(ERROR_ID)) {    // Работа с ошибками
                 String groupPos = null;
-                boolean containsOptionId = tovOptTplList.stream().anyMatch(tovarOptions -> tovarOptions.getOptionId().contains(135591));
-                if (containsOptionId){
+                boolean containsOptionId = false;
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                    containsOptionId = tovOptTplList.stream().anyMatch(tovarOptions -> tovarOptions.getOptionId().contains(135591));
+                }
+                if (containsOptionId) {
                     groupPos = "22";
                 }
                 dialog.setExpandableListView(createExpandableAdapter(dialog.context, groupPos), () -> {

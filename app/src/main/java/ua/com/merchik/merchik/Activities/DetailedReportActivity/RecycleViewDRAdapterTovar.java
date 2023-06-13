@@ -40,7 +40,6 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.annotation.RequiresApi;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.GridLayoutManager;
@@ -185,9 +184,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
 
     @Override
     public void onBindViewHolder(ViewHolder viewHolder, int position) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            viewHolder.bind(dataList.get(position));
-        }
+        viewHolder.bind(dataList.get(position));
     }
 
 
@@ -315,7 +312,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
             }
         }
 
-        @RequiresApi(api = Build.VERSION_CODES.N)
+        //        @RequiresApi(api = Build.VERSION_CODES.N)
         public void bind(TovarDB list) {
             try {
                 boolean deletePromoOption = false;
@@ -687,7 +684,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                                     if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
                                         String opt = "159707";
                                         optionExists = optionsList2.stream().anyMatch(
-                                                optionsDB -> optionsDB.getOptionId().equals(opt)  ||
+                                                optionsDB -> optionsDB.getOptionId().equals(opt) ||
                                                         optionsDB.getOptionControlId().equals(opt));
 
                                         if (optionExists) {
@@ -806,7 +803,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                         return false;
                     });
                 }
-            }catch (Exception e){
+            } catch (Exception e) {
                 Globals.writeToMLOG("ERROR", "RecycleViewDRAdapterTovar/bind", "Exception e: " + e);
             }
         }
@@ -966,7 +963,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
          * true - короткий
          * false - длинный
          */
-        @RequiresApi(api = Build.VERSION_CODES.N)
+//        @RequiresApi(api = Build.VERSION_CODES.N)
         private void showDialog(TovarDB list, TovarOptions tpl, ReportPrepareDB reportPrepareDB, String tovarId, String cd2, String clientId, String finalBalanceData1, String finalBalanceDate1, boolean clickType) {
             try {
                 final int adapterPosition = getAdapterPosition();
@@ -1015,8 +1012,11 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
 
                 if (tpl.getOptionControlName() != null && tpl.getOptionControlName().equals(ERROR_ID)) {    // Работа с ошибками
                     String groupPos = null;
-                    boolean containsOptionId = tovOptTplList.stream().anyMatch(tovarOptions -> tovarOptions.getOptionId().contains(135591));
-                    if (containsOptionId){
+                    boolean containsOptionId = false;
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                        containsOptionId = tovOptTplList.stream().anyMatch(tovarOptions -> tovarOptions.getOptionId().contains(135591));
+                    }
+                    if (containsOptionId) {
                         groupPos = "22";
                     }
                     dialog.setExpandableListView(createExpandableAdapter(dialog.context, groupPos), () -> {
