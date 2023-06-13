@@ -317,162 +317,162 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
 
         @RequiresApi(api = Build.VERSION_CODES.N)
         public void bind(TovarDB list) {
-
-            boolean deletePromoOption = false;
-
-            String balanceData = "?";
-            String balanceDate = "?";
-
-            String tovarId = list.getiD();
-
-
-            imageView.setImageResource(R.mipmap.merchik);
-
-            String weightString = String.format("%s, %s", list.getWeight(), list.getBarcode());
-            name.setText(list.getNm());
-            name.setTextSize(16);
-            weight.setText(weightString);
-            weight.setTextSize(16);
-
-            weight.setOnLongClickListener(v -> {
-                // Получение объекта ClipboardManager из системы
-                ClipboardManager clipboard = (ClipboardManager) mContext.getSystemService(Context.CLIPBOARD_SERVICE);
-
-                // Создание объекта ClipData для копирования текста в буфер обмена
-                ClipData clip = ClipData.newPlainText("Штрихкод", list.getBarcode());
-
-                // Копирование ClipData в буфер обмена
-                clipboard.setPrimaryClip(clip);
-
-                Toast.makeText(mContext, "Скопировано в буфер обмена: " + list.getBarcode(), Toast.LENGTH_LONG).show();
-                return false;
-            });
-
-            article.setText(getArticle(list, 1));
-
             try {
-                Drawable background = constraintLayout.getBackground();
+                boolean deletePromoOption = false;
 
-                Log.e("АКЦИЯ_ТОВАРА", "TEST1: " + tovIdList);
-                Log.e("АКЦИЯ_ТОВАРА", "TEST2: " + list.getiD());
+                String balanceData = "?";
+                String balanceDate = "?";
 
-                int id = Integer.parseInt(list.getiD());
-                Log.e("АКЦИЯ_ТОВАРА", "TEST3: " + tovIdList.contains(id));
+                String tovarId = list.getiD();
 
 
-                if (tovIdList.contains(id)) {
-                    Log.e("АКЦИЯ_ТОВАРА", "YELLOW " + list.getiD());
-                    if (background instanceof ShapeDrawable) {
-                        ((ShapeDrawable) background).getPaint().setColor(ContextCompat.getColor(mContext, R.color.yellow));
-                    } else if (background instanceof GradientDrawable) {
-                        ((GradientDrawable) background).setColor(ContextCompat.getColor(mContext, R.color.yellow));
-                    } else if (background instanceof ColorDrawable) {
-                        ((ColorDrawable) background).setColor(ContextCompat.getColor(mContext, R.color.yellow));
+                imageView.setImageResource(R.mipmap.merchik);
+
+                String weightString = String.format("%s, %s", list.getWeight(), list.getBarcode());
+                name.setText(list.getNm());
+                name.setTextSize(16);
+                weight.setText(weightString);
+                weight.setTextSize(16);
+
+                weight.setOnLongClickListener(v -> {
+                    // Получение объекта ClipboardManager из системы
+                    ClipboardManager clipboard = (ClipboardManager) mContext.getSystemService(Context.CLIPBOARD_SERVICE);
+
+                    // Создание объекта ClipData для копирования текста в буфер обмена
+                    ClipData clip = ClipData.newPlainText("Штрихкод", list.getBarcode());
+
+                    // Копирование ClipData в буфер обмена
+                    clipboard.setPrimaryClip(clip);
+
+                    Toast.makeText(mContext, "Скопировано в буфер обмена: " + list.getBarcode(), Toast.LENGTH_LONG).show();
+                    return false;
+                });
+
+                article.setText(getArticle(list, 1));
+
+                try {
+                    Drawable background = constraintLayout.getBackground();
+
+                    Log.e("АКЦИЯ_ТОВАРА", "TEST1: " + tovIdList);
+                    Log.e("АКЦИЯ_ТОВАРА", "TEST2: " + list.getiD());
+
+                    int id = Integer.parseInt(list.getiD());
+                    Log.e("АКЦИЯ_ТОВАРА", "TEST3: " + tovIdList.contains(id));
+
+
+                    if (tovIdList.contains(id)) {
+                        Log.e("АКЦИЯ_ТОВАРА", "YELLOW " + list.getiD());
+                        if (background instanceof ShapeDrawable) {
+                            ((ShapeDrawable) background).getPaint().setColor(ContextCompat.getColor(mContext, R.color.yellow));
+                        } else if (background instanceof GradientDrawable) {
+                            ((GradientDrawable) background).setColor(ContextCompat.getColor(mContext, R.color.yellow));
+                        } else if (background instanceof ColorDrawable) {
+                            ((ColorDrawable) background).setColor(ContextCompat.getColor(mContext, R.color.yellow));
+                        }
+                        deletePromoOption = false;
+                    } else {
+                        Log.e("АКЦИЯ_ТОВАРА", "WHITE " + list.getiD());
+                        if (background instanceof ShapeDrawable) {
+                            ((ShapeDrawable) background).getPaint().setColor(ContextCompat.getColor(mContext, R.color.white));
+                        } else if (background instanceof GradientDrawable) {
+                            ((GradientDrawable) background).setColor(ContextCompat.getColor(mContext, R.color.white));
+                        } else if (background instanceof ColorDrawable) {
+                            ((ColorDrawable) background).setColor(ContextCompat.getColor(mContext, R.color.white));
+                        }
+                        deletePromoOption = true;
                     }
-                    deletePromoOption = false;
-                } else {
-                    Log.e("АКЦИЯ_ТОВАРА", "WHITE " + list.getiD());
-                    if (background instanceof ShapeDrawable) {
-                        ((ShapeDrawable) background).getPaint().setColor(ContextCompat.getColor(mContext, R.color.white));
-                    } else if (background instanceof GradientDrawable) {
-                        ((GradientDrawable) background).setColor(ContextCompat.getColor(mContext, R.color.white));
-                    } else if (background instanceof ColorDrawable) {
-                        ((ColorDrawable) background).setColor(ContextCompat.getColor(mContext, R.color.white));
-                    }
-                    deletePromoOption = true;
+                } catch (Exception e) {
+                    Log.e("АКЦИЯ_ТОВАРА", "Exception e: " + e);
                 }
-            } catch (Exception e) {
-                Log.e("АКЦИЯ_ТОВАРА", "Exception e: " + e);
-            }
 
 
 //            if ()
 //            RealmManager.getNmById(list.getManufacturerId()) != null ? RealmManager.getNmById(tovar.getManufacturerId()).getNm() : "";
 
-            try {
-                Log.e("ПРОИЗВОДИТЕЛЬ", "ШТО ТУТ?:" + RealmManager.getNmById(list.getManufacturerId()) != null ? RealmManager.getNmById(list.getManufacturerId()).getNm() : "");
-                tradeMark.setText(RealmManager.getNmById(list.getManufacturerId()) != null ? RealmManager.getNmById(list.getManufacturerId()).getNm() : "");
-            } catch (Exception e) {
-                // todo обработать исключение
-                Globals.writeToMLOG("ERROR", "RecycleViewDRAdapterTovar.bind_1", "Exception e: " + e);
-            }
+                try {
+                    Log.e("ПРОИЗВОДИТЕЛЬ", "ШТО ТУТ?:" + RealmManager.getNmById(list.getManufacturerId()) != null ? RealmManager.getNmById(list.getManufacturerId()).getNm() : "");
+                    tradeMark.setText(RealmManager.getNmById(list.getManufacturerId()) != null ? RealmManager.getNmById(list.getManufacturerId()).getNm() : "");
+                } catch (Exception e) {
+                    // todo обработать исключение
+                    Globals.writeToMLOG("ERROR", "RecycleViewDRAdapterTovar.bind_1", "Exception e: " + e);
+                }
 
-            //================================================
-            try {
-                // Когда сюда вернусь - обратить внимание что в ЗИР нет код ИЗА
+                //================================================
+                try {
+                    // Когда сюда вернусь - обратить внимание что в ЗИР нет код ИЗА
 //                PPADB ppadbList = getPPAIZA(wpDataDB.getCode_iza(), wpDataDB.getClient_id(), String.valueOf(wpDataDB.getAddr_id()), list.getiD());
 
 //                String ostatok = ppadbList.getOstatok();
 //                Long ostatokDate = Long.parseLong(ppadbList.getDtUpdate());
 
 
-                // Получение RP
-                ReportPrepareDB rp = ReportPrepareRealm.getReportPrepareByTov(String.valueOf(codeDad2), list.getiD());
-                String ostatok = rp.getOborotvedNum();
-                Long ostatokDate = Long.parseLong(rp.oborotved_num_date);
+                    // Получение RP
+                    ReportPrepareDB rp = ReportPrepareRealm.getReportPrepareByTov(String.valueOf(codeDad2), list.getiD());
+                    String ostatok = rp.getOborotvedNum();
+                    Long ostatokDate = Long.parseLong(rp.oborotved_num_date);
 
 
-                // 30 дней в миллисекундах == 2592000000
-                // Дата старше 30 дней или нет
+                    // 30 дней в миллисекундах == 2592000000
+                    // Дата старше 30 дней или нет
 
 
-                // --------------------------
+                    // --------------------------
 
-                // Остаток
-                try {
-                    if (ostatok != null) {
-                        balanceData = ostatok;
-                    }
-                } catch (Exception e) {
-                    Globals.writeToMLOG("ERROR", "RecycleViewDRAdapterTovar.bind_2", "Exception e: " + e);
-                }
-
-                // Дата
-                try {
-                    if (ostatokDate != null && ostatokDate != 0) {
-                        Log.e("ПОЛУЧАЮ_ОСТАТКИ", "l: " + ostatokDate);
-                        java.util.Date df = new java.util.Date(ostatokDate * 1000);
-                        balanceDate = new SimpleDateFormat("dd-MM").format(df);
-                    }
-                } catch (Exception e) {
-                    Globals.writeToMLOG("ERROR", "RecycleViewDRAdapterTovar.bind_3", "Exception e: " + e);
-                }
-
-                OldDateOstatok isOld = isOldOstatokDate(ostatokDate);
-
-                String balanceTxt = String.format("Ост: %s / %s", balanceData, balanceDate);
-
-                CharSequence text = Html.fromHtml("<u>" + balanceTxt + "</u>");
-
-                // Разукрашивание строки в Зелёный цвет если на не старая
-                if (isOld.equals(OldDateOstatok.NEW)) {
-                    text = Html.fromHtml("<u><font color='#00FF00'>" + balanceTxt + "</font></u>");
-                }
-
-                if (isOld.equals(OldDateOstatok.OLD)) {
-                    text = Html.fromHtml("<u><font color='#e6e6e6'>" + balanceTxt + "</font></u>");
-                }
-
-                if (ostatok != null && !ostatok.equals("0") && (isOld.equals(OldDateOstatok.NEW) || isOld.equals(OldDateOstatok.OLD))) {
-                    balance.setText(text);
-                } else if (ostatok == null) {
-
-                } else {
-                    balance.setText(text);
-                }
-
-
-                // Возможность кликать по тексту. Вызывает описание того что это.
-                String finalBalanceData = balanceData;
-                String finalBalanceDate = balanceDate;
-                balance.setOnClickListener(v -> {
-
-                    SpannableStringBuilder oborotVed = new SpannableStringBuilder();
-
+                    // Остаток
                     try {
-                        List<OborotVedSDB> data = SQL_DB.oborotVedDao().getOborotData(Clock.today, Clock.today_7, Integer.parseInt(list.getiD()), addressId);
+                        if (ostatok != null) {
+                            balanceData = ostatok;
+                        }
+                    } catch (Exception e) {
+                        Globals.writeToMLOG("ERROR", "RecycleViewDRAdapterTovar.bind_2", "Exception e: " + e);
+                    }
 
-                        Log.e("OBOROT_VED", "data: " + data);
+                    // Дата
+                    try {
+                        if (ostatokDate != null && ostatokDate != 0) {
+                            Log.e("ПОЛУЧАЮ_ОСТАТКИ", "l: " + ostatokDate);
+                            java.util.Date df = new java.util.Date(ostatokDate * 1000);
+                            balanceDate = new SimpleDateFormat("dd-MM").format(df);
+                        }
+                    } catch (Exception e) {
+                        Globals.writeToMLOG("ERROR", "RecycleViewDRAdapterTovar.bind_3", "Exception e: " + e);
+                    }
+
+                    OldDateOstatok isOld = isOldOstatokDate(ostatokDate);
+
+                    String balanceTxt = String.format("Ост: %s / %s", balanceData, balanceDate);
+
+                    CharSequence text = Html.fromHtml("<u>" + balanceTxt + "</u>");
+
+                    // Разукрашивание строки в Зелёный цвет если на не старая
+                    if (isOld.equals(OldDateOstatok.NEW)) {
+                        text = Html.fromHtml("<u><font color='#00FF00'>" + balanceTxt + "</font></u>");
+                    }
+
+                    if (isOld.equals(OldDateOstatok.OLD)) {
+                        text = Html.fromHtml("<u><font color='#e6e6e6'>" + balanceTxt + "</font></u>");
+                    }
+
+                    if (ostatok != null && !ostatok.equals("0") && (isOld.equals(OldDateOstatok.NEW) || isOld.equals(OldDateOstatok.OLD))) {
+                        balance.setText(text);
+                    } else if (ostatok == null) {
+
+                    } else {
+                        balance.setText(text);
+                    }
+
+
+                    // Возможность кликать по тексту. Вызывает описание того что это.
+                    String finalBalanceData = balanceData;
+                    String finalBalanceDate = balanceDate;
+                    balance.setOnClickListener(v -> {
+
+                        SpannableStringBuilder oborotVed = new SpannableStringBuilder();
+
+                        try {
+                            List<OborotVedSDB> data = SQL_DB.oborotVedDao().getOborotData(Clock.today, Clock.today_7, Integer.parseInt(list.getiD()), addressId);
+
+                            Log.e("OBOROT_VED", "data: " + data);
 
 
 //                        for (OborotVedSDB test : data) {
@@ -486,325 +486,328 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
 //                        CharSequence startBalance = Html.fromHtml("<b>Нач. Ост.("+data.get(0).dat+"): </b>" + data.get(0).kolOst + "<br>");
 //                        oborotVed.append(startBalance);
 
-                        CharSequence col1 = Html.fromHtml("<b>Приход:</b>");
-                        CharSequence col2 = Html.fromHtml("<b>Расход:</b><br>");
+                            CharSequence col1 = Html.fromHtml("<b>Приход:</b>");
+                            CharSequence col2 = Html.fromHtml("<b>Расход:</b><br>");
 
-                        oborotVed.append("_______________Приход");
-                        oborotVed.append("__|___Расход\n");
+                            oborotVed.append("_______________Приход");
+                            oborotVed.append("__|___Расход\n");
 
-                        int kolPostSum = 0;
-                        int kolProdSum = 0;
-                        for (OborotVedSDB item : data) {
+                            int kolPostSum = 0;
+                            int kolProdSum = 0;
+                            for (OborotVedSDB item : data) {
 
-                            CharSequence coming = Html.fromHtml("(" + item.dat + ")___" + item.kolPost + "________|");
-                            CharSequence consumption = Html.fromHtml("___" + item.kolProd + "<br>");
+                                CharSequence coming = Html.fromHtml("(" + item.dat + ")___" + item.kolPost + "________|");
+                                CharSequence consumption = Html.fromHtml("___" + item.kolProd + "<br>");
 
-                            kolPostSum += item.kolPost;
-                            kolProdSum += item.kolProd;
+                                kolPostSum += item.kolPost;
+                                kolProdSum += item.kolProd;
 
-                            oborotVed.append(coming);
-                            oborotVed.append(consumption);
-                        }
+                                oborotVed.append(coming);
+                                oborotVed.append(consumption);
+                            }
 
-                        CharSequence kolPostSumCHAR = Html.fromHtml("<b>ИТОГ: _________</b>" + kolPostSum + "________|___");
-                        CharSequence kolProdSumCHAR = Html.fromHtml("" + kolProdSum + "<br>");
+                            CharSequence kolPostSumCHAR = Html.fromHtml("<b>ИТОГ: _________</b>" + kolPostSum + "________|___");
+                            CharSequence kolProdSumCHAR = Html.fromHtml("" + kolProdSum + "<br>");
 
-                        oborotVed.append(kolPostSumCHAR);
-                        oborotVed.append(kolProdSumCHAR);
+                            oborotVed.append(kolPostSumCHAR);
+                            oborotVed.append(kolProdSumCHAR);
 
 //                        CharSequence endBalance = Html.fromHtml("<b>Кон. Ост.: </b>" + data.get(data.size()-1).kolOst + "<br><br>");
 //                        oborotVed.append(endBalance);
 
-                        CharSequence finalBalance = Html.fromHtml("<b>Кон. Ост. </b>(" + data.get(data.size() - 1).dat + "): " + data.get(data.size() - 1).kolOst + "<br>");
-                        oborotVed.append(finalBalance);
+                            CharSequence finalBalance = Html.fromHtml("<b>Кон. Ост. </b>(" + data.get(data.size() - 1).dat + "): " + data.get(data.size() - 1).kolOst + "<br>");
+                            oborotVed.append(finalBalance);
 
-                    } catch (Exception e) {
-                        Log.e("OBOROT_VED", "Exception e: " + e);
-                        Globals.writeToMLOG("ERROR", "RecycleViewDRAdapterTovar.bind_4.клик по балансу", "Exception e: " + e);
-                    }
+                        } catch (Exception e) {
+                            Log.e("OBOROT_VED", "Exception e: " + e);
+                            Globals.writeToMLOG("ERROR", "RecycleViewDRAdapterTovar.bind_4.клик по балансу", "Exception e: " + e);
+                        }
 
 
-                    try {
-                        Log.e("TAG_REALM_LOG", "ЗАПИСЬ 4");
+                        try {
+                            Log.e("TAG_REALM_LOG", "ЗАПИСЬ 4");
 //                        RealmManager.setRowToLog(Collections.singletonList(new LogDB(RealmManager.getLastIdLogDB() + 1, System.currentTimeMillis() / 1000, "Нажатие на Остатки", 1169, null, null, null, null, null, Globals.session, null)));
-                    } catch (Exception e) {
-                        Log.e("TAG_REALM_LOG", "Ошибка(4): " + e);
-                        Globals.writeToMLOG("ERROR", "RecycleViewDRAdapterTovar.bind_5", "Exception e: " + e);
-                    }
+                        } catch (Exception e) {
+                            Log.e("TAG_REALM_LOG", "Ошибка(4): " + e);
+                            Globals.writeToMLOG("ERROR", "RecycleViewDRAdapterTovar.bind_5", "Exception e: " + e);
+                        }
 
-                    SpannableStringBuilder stringBuilder = new SpannableStringBuilder();
+                        SpannableStringBuilder stringBuilder = new SpannableStringBuilder();
 
-                    CharSequence addres = Html.fromHtml("<b>Адрес: </b>" + SQL_DB.addressDao().getById(addressId).nm + "<br>");
-                    CharSequence client = Html.fromHtml("<b>Клиент: </b>" + SQL_DB.customerDao().getById(clientId).nm + "<br>");
+                        CharSequence addres = Html.fromHtml("<b>Адрес: </b>" + SQL_DB.addressDao().getById(addressId).nm + "<br>");
+                        CharSequence client = Html.fromHtml("<b>Клиент: </b>" + SQL_DB.customerDao().getById(clientId).nm + "<br>");
 
-                    CharSequence tovarCode = Html.fromHtml("<b>Код товара: </b>" + list.getiD() + "<br>");
-                    CharSequence tovar = Html.fromHtml("<b>Товар: </b>" + list.getNm() + "<br>");
-                    CharSequence barcode = Html.fromHtml("<b>Штрихкод: </b>" + list.getBarcode() + "<br>");
+                        CharSequence tovarCode = Html.fromHtml("<b>Код товара: </b>" + list.getiD() + "<br>");
+                        CharSequence tovar = Html.fromHtml("<b>Товар: </b>" + list.getNm() + "<br>");
+                        CharSequence barcode = Html.fromHtml("<b>Штрихкод: </b>" + list.getBarcode() + "<br>");
 
-                    CharSequence articul;
-                    String articulStr = getArticle(list, 0);
-                    if (articulStr != null && !articulStr.equals("")) {
-                        articul = Html.fromHtml("<b>Артикул: </b>" + articulStr + "<br>");
-                    } else {
-                        articul = Html.fromHtml("<b>Артикул: </b>(нет данных) <br>");
-                    }
+                        CharSequence articul;
+                        String articulStr = getArticle(list, 0);
+                        if (articulStr != null && !articulStr.equals("")) {
+                            articul = Html.fromHtml("<b>Артикул: </b>" + articulStr + "<br>");
+                        } else {
+                            articul = Html.fromHtml("<b>Артикул: </b>(нет данных) <br>");
+                        }
 
-                    stringBuilder.append(addres);   // Адрес
-                    stringBuilder.append(client);   // Клиент
+                        stringBuilder.append(addres);   // Адрес
+                        stringBuilder.append(client);   // Клиент
 
-                    stringBuilder.append(tovarCode);    // ID Товара
-                    stringBuilder.append(tovar);    // Товар
-                    stringBuilder.append(barcode);    // Штрихкод товара
-                    stringBuilder.append(articul);    // Артикул товара
+                        stringBuilder.append(tovarCode);    // ID Товара
+                        stringBuilder.append(tovar);    // Товар
+                        stringBuilder.append(barcode);    // Штрихкод товара
+                        stringBuilder.append(articul);    // Артикул товара
 
-                    if (isOld.equals(OldDateOstatok.OLD) || isOld.equals(OldDateOstatok.ELDEST)) {
-                        CharSequence date = Html.fromHtml("<strong>Дата остатков: </strong><font color='#e6e6e6'>" + finalBalanceDate + "</font><br>");
-                        stringBuilder.append(date);     // Дата остатков
+                        if (isOld.equals(OldDateOstatok.OLD) || isOld.equals(OldDateOstatok.ELDEST)) {
+                            CharSequence date = Html.fromHtml("<strong>Дата остатков: </strong><font color='#e6e6e6'>" + finalBalanceDate + "</font><br>");
+                            stringBuilder.append(date);     // Дата остатков
 
-                        CharSequence ostatokChar = Html.fromHtml("<b>Остаток: </b><font color='#e6e6e6'>Устарел</font>" + "<br><br>");
-                        stringBuilder.append(ostatokChar);       // Остаток
-                        stringBuilder.append(Html.fromHtml("Данные об остатке <font color='#e6e6e6'>устарели</font>"));
-                    } else {
-                        CharSequence date = Html.fromHtml("<strong>Дата остатков: </strong><font color='#00A800'>" + finalBalanceDate + "</font><br>");
-                        stringBuilder.append(date);     // Дата остатков
+                            CharSequence ostatokChar = Html.fromHtml("<b>Остаток: </b><font color='#e6e6e6'>Устарел</font>" + "<br><br>");
+                            stringBuilder.append(ostatokChar);       // Остаток
+                            stringBuilder.append(Html.fromHtml("Данные об остатке <font color='#e6e6e6'>устарели</font>"));
+                        } else {
+                            CharSequence date = Html.fromHtml("<strong>Дата остатков: </strong><font color='#00A800'>" + finalBalanceDate + "</font><br>");
+                            stringBuilder.append(date);     // Дата остатков
 
-                        CharSequence ostatokChar = Html.fromHtml("<b>Остаток: </b><font color='#00A800'>" + finalBalanceData + "</font> <b>шт</b>" + "<br><br>");
-                        stringBuilder.append(ostatokChar);       // Остаток
-                        stringBuilder.append(Html.fromHtml("Данные об остатке <b><font color='#00A800'>актуальны</font></b>"));
-                    }
+                            CharSequence ostatokChar = Html.fromHtml("<b>Остаток: </b><font color='#00A800'>" + finalBalanceData + "</font> <b>шт</b>" + "<br><br>");
+                            stringBuilder.append(ostatokChar);       // Остаток
+                            stringBuilder.append(Html.fromHtml("Данные об остатке <b><font color='#00A800'>актуальны</font></b>"));
+                        }
 
-                    // Додаємо пробільчики, для того щоб не поряд була вся інфа
-                    stringBuilder.append("\n\n\n");
+                        // Додаємо пробільчики, для того щоб не поряд була вся інфа
+                        stringBuilder.append("\n\n\n");
 
-                    // Додавання "таблички"
-                    stringBuilder.append(oborotVed);
+                        // Додавання "таблички"
+                        stringBuilder.append(oborotVed);
 
-                    DialogData dialog = new DialogData(mContext);
-                    dialog.setTitle("Остатки товара в ТТ");
-                    dialog.setText(stringBuilder);
+                        DialogData dialog = new DialogData(mContext);
+                        dialog.setTitle("Остатки товара в ТТ");
+                        dialog.setText(stringBuilder);
 //                    dialog.setText(stringBuilder + "\n\n\n" + oborotVed);
-                    dialog.show();
+                        dialog.show();
+                    });
+
+                    showFacePlan(rp);
+
+                } catch (Exception err) {
+                    Globals.writeToMLOG("ERROR", "RecycleViewDRAdapterTovar.bind_6", "Exception e: " + err);
+                }
+
+                //================================================
+
+
+                WorkPlan workPlan = new WorkPlan();
+
+                Log.e("OPTIONS_TPL", "TOV_ID: " + list.getiD());
+
+                dName.setText(list.getNm());
+                dWeight.setText(weightString);
+                closeDialog.setOnClickListener(v -> dialog.cancel());
+
+                ReportPrepareDB reportPrepareTovar = RealmManager.getTovarReportPrepare(String.valueOf(codeDad2), list.getiD());
+                ReportPrepareDB reportPrepareTovar2 = null;
+                List<OptionsDB> optionsList2 = RealmManager.getTovarOptionInReportPrepare(String.valueOf(codeDad2), list.getiD());
+                if (reportPrepareTovar != null) {
+                    reportPrepareTovar2 = INSTANCE.copyFromRealm(reportPrepareTovar);
+                }
+
+
+                String s = options.getOptionString(optionsList2, reportPrepareTovar2, deletePromoOption);
+
+                Log.e("onBindViewHolder", "s: " + s);
+
+
+                try {
+                    if (openType.equals(OpenType.DEFAULT)) {
+                        ReportPrepareDB finalReportPrepareTovar1 = reportPrepareTovar2;
+
+                        List<TovarOptions> requiredOptionsTPL = options.getRequiredOptionsTPL(optionsList2, deletePromoOption);
+                        // Тут должно быть условие. Я его пока не добавляю. (если фейс = 0 и есть ОК 159707)
+                        requiredOptionsTPL.add(new TovarOptions().createTovarOptionPhoto());
+                        RecyclerViewTPLAdapter recyclerViewTPLAdapter = new RecyclerViewTPLAdapter(
+                                requiredOptionsTPL,
+                                finalReportPrepareTovar1,
+                                (tpl, data, data2) -> operetionSaveRPToDB(tpl, finalReportPrepareTovar1, data, data2, list)
+                        );
+                        recyclerView.setAdapter(recyclerViewTPLAdapter);
+                        recyclerView.setLayoutManager(new LinearLayoutManager(mContext, LinearLayoutManager.VERTICAL, false));
+                    }
+                } catch (Exception e) {
+                    Globals.writeToMLOG("ERR", "RecyclerViewTPLAdapter", "Exception e: " + e);
+                }
+
+                if (tplType.equals(DRAdapterTovarTPLTypeView.FULL)) {
+                    recyclerView.setVisibility(View.VISIBLE);
+                } else {
+                    recyclerView.setVisibility(View.GONE);
+                }
+
+
+                textViewItemTovarOptLine.setText(Html.fromHtml("<u>" + s + "</u>"));
+                textViewItemTovarOptLine.setOnClickListener(v -> {
+                    click.click();
                 });
 
-                showFacePlan(rp);
 
-            } catch (Exception err) {
-                Globals.writeToMLOG("ERROR", "RecycleViewDRAdapterTovar.bind_6", "Exception e: " + err);
-            }
+                if (reportPrepareTovar != null) {
+                    ReportPrepareDB finalReportPrepareTovar = reportPrepareTovar2; // TODO Тест, надо будет убрать
 
-            //================================================
+                    String finalBalanceData1 = balanceData;
+                    String finalBalanceDate1 = balanceDate;
+                    boolean finalDeletePromoOption = deletePromoOption;
+                    constraintLayout.setOnClickListener(v -> {
+                        Log.e("DRAdapterTovar", "ClickListener");
+                        if (openType.equals(OpenType.DEFAULT)) {
+                            try {
+                                // На всякий случай зачищаю модальные окна.
+                                dialogList = new ArrayList<>();
 
-
-            WorkPlan workPlan = new WorkPlan();
-
-            Log.e("OPTIONS_TPL", "TOV_ID: " + list.getiD());
-
-            dName.setText(list.getNm());
-            dWeight.setText(weightString);
-            closeDialog.setOnClickListener(v -> dialog.cancel());
-
-            ReportPrepareDB reportPrepareTovar = RealmManager.getTovarReportPrepare(String.valueOf(codeDad2), list.getiD());
-            ReportPrepareDB reportPrepareTovar2 = null;
-            List<OptionsDB> optionsList2 = RealmManager.getTovarOptionInReportPrepare(String.valueOf(codeDad2), list.getiD());
-            if (reportPrepareTovar != null) {
-                reportPrepareTovar2 = INSTANCE.copyFromRealm(reportPrepareTovar);
-            }
-
-
-            String s = options.getOptionString(optionsList2, reportPrepareTovar2, deletePromoOption);
-
-            Log.e("onBindViewHolder", "s: " + s);
-
-
-            try {
-                if (openType.equals(OpenType.DEFAULT)) {
-                    ReportPrepareDB finalReportPrepareTovar1 = reportPrepareTovar2;
-
-                    List<TovarOptions> requiredOptionsTPL = options.getRequiredOptionsTPL(optionsList2, deletePromoOption);
-                    // Тут должно быть условие. Я его пока не добавляю. (если фейс = 0 и есть ОК 159707)
-                    requiredOptionsTPL.add(new TovarOptions().createTovarOptionPhoto());
-                    RecyclerViewTPLAdapter recyclerViewTPLAdapter = new RecyclerViewTPLAdapter(
-                            requiredOptionsTPL,
-                            finalReportPrepareTovar1,
-                            (tpl, data, data2) -> operetionSaveRPToDB(tpl, finalReportPrepareTovar1, data, data2, list)
-                    );
-                    recyclerView.setAdapter(recyclerViewTPLAdapter);
-                    recyclerView.setLayoutManager(new LinearLayoutManager(mContext, LinearLayoutManager.VERTICAL, false));
-                }
-            } catch (Exception e) {
-                Globals.writeToMLOG("ERR", "RecyclerViewTPLAdapter", "Exception e: " + e);
-            }
-
-            if (tplType.equals(DRAdapterTovarTPLTypeView.FULL)) {
-                recyclerView.setVisibility(View.VISIBLE);
-            } else {
-                recyclerView.setVisibility(View.GONE);
-            }
-
-
-            textViewItemTovarOptLine.setText(Html.fromHtml("<u>" + s + "</u>"));
-            textViewItemTovarOptLine.setOnClickListener(v -> {
-                click.click();
-            });
-
-
-            if (reportPrepareTovar != null) {
-                ReportPrepareDB finalReportPrepareTovar = reportPrepareTovar2; // TODO Тест, надо будет убрать
-
-                String finalBalanceData1 = balanceData;
-                String finalBalanceDate1 = balanceDate;
-                boolean finalDeletePromoOption = deletePromoOption;
-                constraintLayout.setOnClickListener(v -> {
-                    Log.e("DRAdapterTovar", "ClickListener");
-                    if (openType.equals(OpenType.DEFAULT)) {
-                        try {
-                            // На всякий случай зачищаю модальные окна.
-                            dialogList = new ArrayList<>();
-
-                            // Получаем инфу об обязательных опциях
+                                // Получаем инфу об обязательных опциях
 //                            List<TovarOptions> tovOptTplList;
-                            tovOptTplList = options.getRequiredOptionsTPL(optionsList2, finalDeletePromoOption);
+                                tovOptTplList = options.getRequiredOptionsTPL(optionsList2, finalDeletePromoOption);
 
-                            Log.e("DRAdapterTovar", "Кол-во. обязательных опций: " + tovOptTplList.size());
+                                Log.e("DRAdapterTovar", "Кол-во. обязательных опций: " + tovOptTplList.size());
 
-                            if (tovOptTplList.size() > 0) {
+                                if (tovOptTplList.size() > 0) {
+                                    // В Цикле открываем Н количество инфы
+                                    for (int i = tovOptTplList.size() - 1; i >= 0; i--) {
+                                        if (tovOptTplList.get(i).getOptionControlName() != Globals.OptionControlName.AKCIYA) {
+                                            if (tovOptTplList.get(i).getOptionControlName().equals(AKCIYA_ID) && finalDeletePromoOption) {
+                                                // втыкаю
+                                                showDialog(list, tovOptTplList.get(i), finalReportPrepareTovar, tovarId, String.valueOf(codeDad2), clientId, finalBalanceData1, finalBalanceDate1, true);
+                                            } else {
+                                                showDialog(list, tovOptTplList.get(i), finalReportPrepareTovar, tovarId, String.valueOf(codeDad2), clientId, finalBalanceData1, finalBalanceDate1, true);
+                                            }
+                                        }
+                                    }
+
+
+                                    Collections.reverse(dialogList);
+
+                                    boolean optionExists = false;
+                                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+                                        String opt = "159707";
+                                        optionExists = optionsList2.stream().anyMatch(
+                                                optionsDB -> optionsDB.getOptionId().equals(opt)  ||
+                                                        optionsDB.getOptionControlId().equals(opt));
+
+                                        if (optionExists) {
+                                            dialogList.add(new TovarRequisites(list, finalReportPrepareTovar).createDialog(mContext, wpDataDB));
+                                        }
+                                    }
+
+
+                                    dialogList.get(0).show();
+                                } else {
+                                    DialogData dialog = new DialogData(mContext);
+                                    dialog.setTitle("Внимание!");
+                                    dialog.setText("Для данного товара не определены реквизиты обязательные для заполнения. Для принудительного вызова списка реквизитов выполните длинный клик по товару. ");
+                                    dialog.setClose(dialog::dismiss);
+                                    dialog.show();
+                                }
+
+
+                            } catch (Exception e) {
+                                Globals.writeToMLOG("ERROR", "RecycleViewDRAdapterTovar.bind_7", "Exception e: " + e);
+                                globals.alertDialogMsg(mContext, "Не удалось открыть Опцию. Если ошибка повторяется - обратитесь к своему руководителю.\n\nОшибка: " + e);
+                            }
+                        } else {
+                            clickTovar.click(list);
+                        }
+                    });
+
+                    constraintLayout.setOnLongClickListener(v -> {
+                        if (openType.equals(OpenType.DEFAULT)) {
+                            try {
+                                // Получаем инфу о всех опциях
+                                List<TovarOptions> tovOptTplList = options.getAllOptionsTPL();
                                 // В Цикле открываем Н количество инфы
                                 for (int i = tovOptTplList.size() - 1; i >= 0; i--) {
                                     if (tovOptTplList.get(i).getOptionControlName() != Globals.OptionControlName.AKCIYA) {
-                                        if (tovOptTplList.get(i).getOptionControlName().equals(AKCIYA_ID) && finalDeletePromoOption) {
-                                            // втыкаю
-                                            showDialog(list, tovOptTplList.get(i), finalReportPrepareTovar, tovarId, String.valueOf(codeDad2), clientId, finalBalanceData1, finalBalanceDate1, true);
-                                        } else {
-                                            showDialog(list, tovOptTplList.get(i), finalReportPrepareTovar, tovarId, String.valueOf(codeDad2), clientId, finalBalanceData1, finalBalanceDate1, true);
-                                        }
+                                        showDialog(list, tovOptTplList.get(i), finalReportPrepareTovar, tovarId, String.valueOf(codeDad2), clientId, finalBalanceData1, finalBalanceDate1, false);
                                     }
                                 }
-
-
                                 Collections.reverse(dialogList);
+                                dialogList.get(0).show();
+                            } catch (Exception e) {
+                                Globals.writeToMLOG("ERROR", "RecycleViewDRAdapterTovar.bind_7.1", "Exception e: " + e);
+                            }
+                        }
+                        return true;
+                    });
+                } else {// Если такого товара НЕТ
 
-                                boolean optionExists = false;
-                                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
-                                    String opt = "159707";
-                                    optionExists = optionsList2.stream().anyMatch(
-                                            optionsDB -> optionsDB.getOptionId().equals(opt)  ||
-                                                    optionsDB.getOptionControlId().equals(opt));
+                    boolean finalDeletePromoOption1 = deletePromoOption;
+                    constraintLayout.setOnClickListener(v -> {
+                        if (openType.equals(OpenType.DEFAULT)) {
+                            ReportPrepareDB rp = createNewRPRow(list);
+                            Log.e("DRAdapterTovar", "ClickListenerТовара нет");
+                            try {
+                                // Получаем инфу об обязательных опциях
+                                List<TovarOptions> tovOptTplList = options.getRequiredOptionsTPL(optionsList2, finalDeletePromoOption1);
 
-                                    if (optionExists) {
-                                        dialogList.add(new TovarRequisites(list, finalReportPrepareTovar).createDialog(mContext, wpDataDB));
+                                // В Цикле открываем Н количество инфы
+                                Collections.reverse(tovOptTplList); // Реверснул что б отображалось более менее адекватно пользователю (в естественном порядке)
+                                for (TovarOptions tpl : tovOptTplList) {
+                                    if (tpl.getOptionControlName() != Globals.OptionControlName.AKCIYA) {
+                                        showDialog(list, tpl, rp, tovarId, String.valueOf(codeDad2), clientId, "", "", false);
                                     }
                                 }
-
-
+                                Collections.reverse(dialogList);
                                 dialogList.get(0).show();
-                            } else {
-                                DialogData dialog = new DialogData(mContext);
-                                dialog.setTitle("Внимание!");
-                                dialog.setText("Для данного товара не определены реквизиты обязательные для заполнения. Для принудительного вызова списка реквизитов выполните длинный клик по товару. ");
-                                dialog.setClose(dialog::dismiss);
-                                dialog.show();
+                            } catch (Exception e) {
+                                Globals.writeToMLOG("ERROR", "RecycleViewDRAdapterTovar.bind_8", "Exception e: " + e);
+                                globals.alertDialogMsg(mContext, "Не удалось открыть Опцию. Если ошибка повторяется - обратитесь к своему руководителю.\n\nОшибка: " + e);
                             }
-
-
-                        } catch (Exception e) {
-                            Globals.writeToMLOG("ERROR", "RecycleViewDRAdapterTovar.bind_7", "Exception e: " + e);
-                            globals.alertDialogMsg(mContext, "Не удалось открыть Опцию. Если ошибка повторяется - обратитесь к своему руководителю.\n\nОшибка: " + e);
-                        }
-                    } else {
-                        clickTovar.click(list);
-                    }
-                });
-
-                constraintLayout.setOnLongClickListener(v -> {
-                    if (openType.equals(OpenType.DEFAULT)) {
-                        try {
-                            // Получаем инфу о всех опциях
-                            List<TovarOptions> tovOptTplList = options.getAllOptionsTPL();
-                            // В Цикле открываем Н количество инфы
-                            for (int i = tovOptTplList.size() - 1; i >= 0; i--) {
-                                if (tovOptTplList.get(i).getOptionControlName() != Globals.OptionControlName.AKCIYA) {
-                                    showDialog(list, tovOptTplList.get(i), finalReportPrepareTovar, tovarId, String.valueOf(codeDad2), clientId, finalBalanceData1, finalBalanceDate1, false);
-                                }
-                            }
-                            Collections.reverse(dialogList);
-                            dialogList.get(0).show();
-                        } catch (Exception e) {
-                            Globals.writeToMLOG("ERROR", "RecycleViewDRAdapterTovar.bind_7.1", "Exception e: " + e);
-                        }
-                    }
-                    return true;
-                });
-            } else {// Если такого товара НЕТ
-
-                boolean finalDeletePromoOption1 = deletePromoOption;
-                constraintLayout.setOnClickListener(v -> {
-                    if (openType.equals(OpenType.DEFAULT)) {
-                        ReportPrepareDB rp = createNewRPRow(list);
-                        Log.e("DRAdapterTovar", "ClickListenerТовара нет");
-                        try {
-                            // Получаем инфу об обязательных опциях
-                            List<TovarOptions> tovOptTplList = options.getRequiredOptionsTPL(optionsList2, finalDeletePromoOption1);
-
-                            // В Цикле открываем Н количество инфы
-                            Collections.reverse(tovOptTplList); // Реверснул что б отображалось более менее адекватно пользователю (в естественном порядке)
-                            for (TovarOptions tpl : tovOptTplList) {
-                                if (tpl.getOptionControlName() != Globals.OptionControlName.AKCIYA) {
-                                    showDialog(list, tpl, rp, tovarId, String.valueOf(codeDad2), clientId, "", "", false);
-                                }
-                            }
-                            Collections.reverse(dialogList);
-                            dialogList.get(0).show();
-                        } catch (Exception e) {
-                            Globals.writeToMLOG("ERROR", "RecycleViewDRAdapterTovar.bind_8", "Exception e: " + e);
-                            globals.alertDialogMsg(mContext, "Не удалось открыть Опцию. Если ошибка повторяется - обратитесь к своему руководителю.\n\nОшибка: " + e);
-                        }
-                    } else {
-                        clickTovar.click(list);
-                    }
-                });
-            }
-
-
-            boolean b = setTovPhoto(list);
-            if (b) {
-                imageView.setOnClickListener(v -> {
-                    Log.e("ФОТО_ТОВАРОВ", "Click");
-                    Exchange exchange = new Exchange();
-                    exchange.getTovarImg(Collections.singletonList(list), "full", new Globals.OperationResult() {
-                        @Override
-                        public void onSuccess() {
-                            Log.e("ФОТО_ТОВАРОВ", "onSuccess");
-                            displayFullSizeTovarPhotoDialog(list);
-                        }
-
-                        @Override
-                        public void onFailure(String error) {
-                            Log.e("ФОТО_ТОВАРОВ", "onFailure");
-                            displayFullSizeTovarPhotoDialog(list);
+                        } else {
+                            clickTovar.click(list);
                         }
                     });
+                }
 
-                });
-            } else {
-                imageView.setOnClickListener(v -> {
-                    Toast.makeText(mContext, "Фото товара не обнаружено", Toast.LENGTH_LONG).show();
-                });
 
-                imageView.setOnLongClickListener(view -> {
-                    PhotoDownload.getPhotoURLFromServer(Collections.singletonList(list), new Clicks.clickStatusMsg() {
-                        @Override
-                        public void onSuccess(String data) {
-                            Log.d("t", "t:" + data);
-                        }
+                boolean b = setTovPhoto(list);
+                if (b) {
+                    imageView.setOnClickListener(v -> {
+                        Log.e("ФОТО_ТОВАРОВ", "Click");
+                        Exchange exchange = new Exchange();
+                        exchange.getTovarImg(Collections.singletonList(list), "full", new Globals.OperationResult() {
+                            @Override
+                            public void onSuccess() {
+                                Log.e("ФОТО_ТОВАРОВ", "onSuccess");
+                                displayFullSizeTovarPhotoDialog(list);
+                            }
 
-                        @Override
-                        public void onFailure(String error) {
-                            Log.d("t", "te:" + error);
-                        }
+                            @Override
+                            public void onFailure(String error) {
+                                Log.e("ФОТО_ТОВАРОВ", "onFailure");
+                                displayFullSizeTovarPhotoDialog(list);
+                            }
+                        });
+
+                    });
+                } else {
+                    imageView.setOnClickListener(v -> {
+                        Toast.makeText(mContext, "Фото товара не обнаружено", Toast.LENGTH_LONG).show();
                     });
 
-                    return false;
-                });
+                    imageView.setOnLongClickListener(view -> {
+                        PhotoDownload.getPhotoURLFromServer(Collections.singletonList(list), new Clicks.clickStatusMsg() {
+                            @Override
+                            public void onSuccess(String data) {
+                                Log.d("t", "t:" + data);
+                            }
+
+                            @Override
+                            public void onFailure(String error) {
+                                Log.d("t", "te:" + error);
+                            }
+                        });
+
+                        return false;
+                    });
+                }
+            }catch (Exception e){
+                Globals.writeToMLOG("ERROR", "RecycleViewDRAdapterTovar/bind", "Exception e: " + e);
             }
         }
 
