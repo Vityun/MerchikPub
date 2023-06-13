@@ -1111,12 +1111,6 @@ public class DialogEKL {
                 }
             });
 
-            tel.setOnLongClickListener(v -> {
-                if (!telephone.equals("")){
-                    Globals.telephoneCall(context, telephone);
-                }
-                return false;
-            });
 
         } else if (!res.tel.equals("") || !res.tel2.equals("")) {
             // Должен написать НЕ пустое значение
@@ -1124,16 +1118,28 @@ public class DialogEKL {
             if (!res.tel.equals("")) {
                 tel.setText(hideTelephone(res.tel));
                 telType = "tel1";
+                telephone = res.tel;
             } else {
                 tel.setText(hideTelephone(res.tel2));
                 telType = "tel2";
+                telephone = res.tel2;
             }
-
         } else {
             // Написать что у ПТТ НЕТ телефонов
             Log.e("DialogEKL", "set text when data equals null");
             tel.setHint("У ПТТ нет телефонов");
         }
+
+        callPTT();
+    }
+
+    private void callPTT(){
+        tel.setOnLongClickListener(v -> {
+            if (!telephone.equals("")){
+                Globals.telephoneCall(context, telephone, "Звонок ПТТ");
+            }
+            return true;
+        });
     }
 
 

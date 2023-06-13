@@ -1128,6 +1128,28 @@ public class Globals {
         d.show();
     }
 
+    /**
+     * 08.02.2021
+     * Звонок по номеру.
+     */
+    public static void telephoneCall(Context context, String tel, String title) {
+        DialogData d = new DialogData(context);
+        d.setTitle(title);
+        d.setText("Сейчас будет набран номер: " + tel);
+        d.setOk("Позвонить", () -> {
+            Intent intent = new Intent(Intent.ACTION_CALL);
+            intent.setData(Uri.parse("tel:" + tel));
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                if (context.checkSelfPermission(Manifest.permission.CALL_PHONE) != PackageManager.PERMISSION_GRANTED) {
+                    // TODO запросить разрешение
+                    return;
+                }
+            }
+            context.startActivity(intent);
+        });
+        d.show();
+    }
+
     public static List<String> findTelephones(CharSequence telephoneString) {
         Log.e("findTelephones", "================================================================");
         Log.e("findTelephones", "telephoneString: " + telephoneString);
