@@ -229,12 +229,6 @@ public class PhotoDownload {
             public void onResponse(Call<TovarImgResponse> call, Response<TovarImgResponse> response) {
                 int photoListUrlSize;
 
-                Gson gson = new Gson();
-                String json = gson.toJson(response);
-                JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
-
-                Globals.writeToMLOG("INFO", "getPhotoURLFromServer.onResponse", "convertedObject: " + convertedObject);
-
                 if (response.isSuccessful()) {
                     if (response.body() != null) {
                         if (response.body().getState()) {

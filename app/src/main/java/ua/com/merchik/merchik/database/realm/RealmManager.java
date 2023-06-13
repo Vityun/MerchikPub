@@ -764,7 +764,6 @@ public class RealmManager {
             query.equalTo("object_id", id)
                     .equalTo("photo_type", type)
                     .equalTo("comment", photoSize)
-//                    .equalTo("approve", 1)
                     .sort("approve", Sort.DESCENDING, "photoServerId", Sort.DESCENDING);
         }
 
