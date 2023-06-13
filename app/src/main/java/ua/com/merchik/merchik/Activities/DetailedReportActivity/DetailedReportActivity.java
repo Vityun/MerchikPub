@@ -868,7 +868,7 @@ public class DetailedReportActivity extends toolbar_menus {
 
             stackPhotoDB.setCreate_time(System.currentTimeMillis());
 
-            stackPhotoDB.setPhoto_hash(globals.getHashMD5FromFile2(photoFile, null));
+            stackPhotoDB.setPhoto_hash(globals.getHashMD5FromFile2(photoFile, this));
             stackPhotoDB.setPhoto_num(photoFile.getAbsolutePath());
 
 
@@ -916,7 +916,7 @@ public class DetailedReportActivity extends toolbar_menus {
 
             stackPhotoDB.setCreate_time(System.currentTimeMillis());
 
-            stackPhotoDB.setPhoto_hash(globals.getHashMD5FromFile2(photoFile, null));
+            stackPhotoDB.setPhoto_hash(globals.getHashMD5FromFile2(photoFile, this));
             stackPhotoDB.setPhoto_num(photoFile.getAbsolutePath());
 
 

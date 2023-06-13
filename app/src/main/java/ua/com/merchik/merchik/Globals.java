@@ -1070,6 +1070,23 @@ public class Globals {
 
             String fname = "M_LOG.txt";
             File file = new File(root, fname);
+/*
+            // Проверка количества записей
+            int maxEntries = 100000; // Максимальное количество записей
+            List<String> lines = new ArrayList<>();
+
+            if (file.exists()) {
+                BufferedReader reader = new BufferedReader(new FileReader(file));
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    lines.add(line);
+                }
+                reader.close();
+
+                if (lines.size() >= maxEntries) {
+                    lines.subList(0, lines.size() - maxEntries).clear(); // Удалить старые записи
+                }
+            }*/
 
             FileOutputStream stream = new FileOutputStream(file, true);
             try {
@@ -1083,44 +1100,6 @@ public class Globals {
             } finally {
                 stream.close();
             }
-
-            // --------------------------------
-            long filesize = file.length();
-            long fileSizeInKB = filesize / 1024;
-            long fileSizeInMB = fileSizeInKB / 1024;
-
-/*            if (fileSizeInKB > 200){
-                String tempFileName = "TEMP_M_LOG.txt";
-                File tempFile = new File(root, tempFileName);
-
-                StringBuilder text = new StringBuilder();
-                try {
-                    BufferedReader br = new BufferedReader(new FileReader(file));
-                    String line;
-
-                    while ((line = br.readLine()) != null) {
-                        text.append(line);
-//                        text.append('\n');
-                    }
-                    br.close();
-                }
-                catch (IOException e) {
-                    //You'll need to add proper error handling here
-                }
-
-                FileOutputStream stream2 = new FileOutputStream(tempFile, true);
-                try {
-                    stream2.write(text.toString().getBytes());
-                } finally {
-                    stream2.close();
-                }
-
-                Log.e("writeToMLOG", "testing data: " + text);
-
-            }*/
-            // --------------------------------
-
-            Log.e("writeToMLOG", "ENTER_DATA");
         } catch (IOException e) {
             e.printStackTrace();
         }

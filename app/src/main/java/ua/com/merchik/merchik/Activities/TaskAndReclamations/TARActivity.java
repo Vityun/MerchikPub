@@ -426,7 +426,7 @@ public class TARActivity extends toolbar_menus implements TARFragmentHome.OnFrag
 
             stackPhotoDB.setCreate_time(System.currentTimeMillis());
 
-            stackPhotoDB.setPhoto_hash(globals.getHashMD5FromFile2(photoFile, null));
+            stackPhotoDB.setPhoto_hash(globals.getHashMD5FromFile2(photoFile, this));
             stackPhotoDB.setPhoto_num(photoFile.getAbsolutePath());
 
 
@@ -471,7 +471,7 @@ public class TARActivity extends toolbar_menus implements TARFragmentHome.OnFrag
 
             stackPhotoDB.setCreate_time(System.currentTimeMillis());
 
-            stackPhotoDB.setPhoto_hash(globals.getHashMD5FromFile2(photoFile, null));
+            stackPhotoDB.setPhoto_hash(globals.getHashMD5FromFile2(photoFile, this));
             stackPhotoDB.setPhoto_num(photoFile.getAbsolutePath());
 
 
