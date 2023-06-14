@@ -357,14 +357,6 @@ public class TablesLoadingUnloading {
             call.enqueue(new retrofit2.Callback<WpDataServer>() {
                 @Override
                 public void onResponse(retrofit2.Call<WpDataServer> call, retrofit2.Response<WpDataServer> response) {
-
-                    Gson gson = new Gson();
-                    String json = gson.toJson(response.body());
-                    JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
-
-//                    Log.e("SERVER_REALM_DB_UPDATE", "convertedObject: " + convertedObject);
-
-
                     if (response.isSuccessful() && response.body() != null) {
                         Log.e("SERVER_REALM_DB_UPDATE", "===================================downloadWPData_:" + response.body().getState() + "/" + response.body().getError());
                         if (response.body().getList() != null) {
@@ -566,12 +558,6 @@ public class TablesLoadingUnloading {
             @Override
             public void onResponse(Call<OptionsServer> call, Response<OptionsServer> response) {
                 try {
-                    // TODO Нужно будет удалить как всё отдебажим
-                    Gson gson = new Gson();
-                    String json = gson.toJson(response.body());
-                    JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
-                    Globals.writeToMLOG("INFO", "downloadOptionsByDAD2/onResponse", "response.body(): " + convertedObject);
-
                     if (response.isSuccessful() && response.body() != null) {
                         if (response.body().getState()) {
                             RealmManager.saveDownloadedOptions(response.body().getList());
@@ -870,41 +856,10 @@ public class TablesLoadingUnloading {
         call.enqueue(new retrofit2.Callback<AddressTableResponse>() {
             @Override
             public void onResponse(retrofit2.Call<AddressTableResponse> call, retrofit2.Response<AddressTableResponse> response) {
-
-                Gson gson = new Gson();
-                String json = gson.toJson(response.body());
-                JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
-
-//                Log.e("SERVER_REALM_DB_UPDATE", "ADDR_convertedObject: " + convertedObject);
-
                 if (response.isSuccessful() && response.body() != null) {
                     Log.e("TAG_TABLE", "RESPONSEAddressTable: " + response.body());
-
                     if (response.body().getState()) {
                         if (!response.body().getList().isEmpty()) {
-                            Log.e("TAG_TABLE", "ListA: 200");
-
-//                            ArrayList<AddressDB> list = new ArrayList<AddressDB>();
-//                            List<AddressTableList> responseList = response.body().getList();
-
-//                            for (int i = 0; i < responseList.size(); i++) {
-//                                list.add(i, new AddressDB(
-//                                        responseList.get(i).getAddrId(),
-//                                        responseList.get(i).getNm(),
-//                                        null,
-//                                        null,
-//                                        responseList.get(i).getCityId()
-//                                ));
-//                            }
-
-//
-//                            if (list != null) {
-//                                Log.e("SERVER_REALM_DB_UPDATE", "===================================.AddressTable.SIZE: " + list.size());
-//                            } else {
-//                                Log.e("SERVER_REALM_DB_UPDATE", "===================================.AddressTable.SIZE: NuLL");
-//                            }
-
-
                             // Запись в БД
                             if (RealmManager.setRowToAddress(response.body().getList())) {
                                 if (pg != null)
@@ -2171,13 +2126,6 @@ public class TablesLoadingUnloading {
                 call.enqueue(new Callback<ReportPrepareUpdateResponse>() {
                     @Override
                     public void onResponse(Call<ReportPrepareUpdateResponse> call, Response<ReportPrepareUpdateResponse> response) {
-
-                        Gson gson = new Gson();
-                        String json = gson.toJson(response);
-                        JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
-
-                        Log.e("uploadRP", "response: " + convertedObject);
-
                         if (response.isSuccessful() && response.body() != null) {
                             if (response.body().data != null && response.body().data.size() > 0) {
                                 exchange.onSuccess(response.body().data);
@@ -2217,22 +2165,11 @@ public class TablesLoadingUnloading {
             String json = gson.toJson(standartData);
             JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
 
-            Log.e("UPLOAD_DATA", "REPORT_PREPARE.gson (" + gson + ")");
-            Log.e("UPLOAD_DATA", "REPORT_PREPARE.json (" + json + ")");
-            Log.e("UPLOAD_DATA", "REPORT_PREPARE.convertedObject (" + convertedObject + ")");
-            Globals.writeToMLOG("INFO", "onResponse/convertedObject", "convertedObject: " + convertedObject);
-
-
             retrofit2.Call<ReportPrepareUploadResponse> call = RetrofitBuilder.getRetrofitInterface().SEND_RP(RetrofitBuilder.contentType, convertedObject);
-//            retrofit2.Call<JsonObject> call = RetrofitBuilder.getRetrofitInterface().UPLOAD_REPORT_PREPARE(modText, actText, data);
             call.enqueue(new retrofit2.Callback<ReportPrepareUploadResponse>() {
                 @Override
                 public void onResponse(retrofit2.Call<ReportPrepareUploadResponse> call, retrofit2.Response<ReportPrepareUploadResponse> response) {
-                    Log.e("REPORT_PREPARE_SEND", "RESPONSE: " + response.body());
-
-                    Globals.writeToMLOG("INFO", "onResponse/uploadReportPrepareToServer", "DATA/response.body(): " + response.body());
                     long currentTime = System.currentTimeMillis() / 1000;
-
                     try {
                         if (response.isSuccessful()) {
                             if (response.body() != null) {
@@ -2261,48 +2198,11 @@ public class TablesLoadingUnloading {
                     } catch (Exception e) {
                         Globals.writeToMLOG("ERROR", "onResponse/uploadReportPrepareToServer", "Resp not successful. response.code(): " + response.code());
                     }
-
-
-/*                    String json = String.valueOf(response.body());
-                    int maxLogSize = 1000;
-                    for (int i = 0; i <= json.length() / maxLogSize; i++) {
-                        int start = i * maxLogSize;
-                        int end = (i + 1) * maxLogSize;
-                        end = end > json.length() ? json.length() : end;
-                        Log.e("REPORT_PREPARE_SEND", json.substring(start, end));
-                    }
-
-                    JsonObject obj = response.body();
-                    // TODO каждые 10 секунд тут может вылетать ошибка при попытке перезаписать выгруженные на сервер данные
-                    try {
-                        JsonObject dataArray = obj.getAsJsonObject("data");
-                        String currentTime = "" + System.currentTimeMillis() / 1000;
-                        for (ReportPrepareServ el : data) {
-
-                            if (dataArray.getAsJsonObject(el.getElement_id()).get("state").getAsBoolean()) {
-                                ReportPrepareDB reportPrepareDB = RealmManager.getReportPrepareRowById(el.getElement_id());
-                                RealmManager.INSTANCE.executeTransaction(realm -> {
-                                    reportPrepareDB.setUploadStatus(0);
-                                    reportPrepareDB.setDtChange(currentTime);
-                                    RealmManager.setReportPrepareRow(reportPrepareDB);
-                                });
-                            } else {
-                                // data don't save on server
-                            }
-                        }
-                        Log.e("REPORT_PREPARE_SEND", "ARRAY: " + dataArray);
-                    } catch (Exception e) {
-                        Globals.writeToMLOG("ERROR", "onResponse/uploadReportPrepareToServer", "Exception e: " + e);
-                        // TODO -- JsonObject dataArray = obj.getAsJsonObject("data"); -- иногда с сервера приходит не обьект, а array
-                    }*/
-
                 }
 
                 @Override
                 public void onFailure(retrofit2.Call<ReportPrepareUploadResponse> call, Throwable t) {
                     Globals.writeToMLOG("ERROR", "onFailure/uploadReportPrepareToServer", "Throwable t: " + t);
-                    Log.e("REPORT_PREPARE_SEND", "FAILURE_E: " + t.getMessage());
-                    Log.e("REPORT_PREPARE_SEND", "FAILURE_E2: " + t);
                 }
             });
 
@@ -2799,16 +2699,7 @@ public class TablesLoadingUnloading {
                 public void onResponse(retrofit2.Call<AdditionalRequirementsServerData> call, retrofit2.Response<AdditionalRequirementsServerData> response) {
                     try {
                         AdditionalRequirementsRealm.setDataToDB(response.body().getList());
-
-                        Gson gson = new Gson();
-                        String json = gson.toJson(response.body());
-                        JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
-
-                        Log.e("AdditionalRequirements", "data: " + convertedObject);
-
-                        Globals.writeToMLOG("ERR", "downloadAdditionalRequirements/onResponse", "convertedObject: " + convertedObject);
                         Globals.writeToMLOG("ERR", "downloadAdditionalRequirements/onResponse", "response.body().getList(): " + response.body().getList().size());
-
                     } catch (Exception e) {
                         Globals.writeToMLOG("ERR", "downloadAdditionalRequirements/onResponse", "Exception e: " + e);
                     }
@@ -2958,12 +2849,6 @@ public class TablesLoadingUnloading {
         call.enqueue(new retrofit2.Callback<OborotVedResponse>() {
             @Override
             public void onResponse(retrofit2.Call<OborotVedResponse> call, retrofit2.Response<OborotVedResponse> response) {
-
-//                Gson gson = new Gson();
-//                String json = gson.toJson(response.body());
-//                JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
-
-//                Log.e("downloadOborotVed", "Response: " + convertedObject);
                 try {
                     SQL_DB.oborotVedDao().insertData(response.body().list);
                 } catch (Exception e) {
@@ -3000,13 +2885,6 @@ public class TablesLoadingUnloading {
             @Override
             public void onResponse(retrofit2.Call<TovarGroupClientResponse> call, retrofit2.Response<TovarGroupClientResponse> response) {
                 try {
-                    Gson gson = new Gson();
-                    String json = gson.toJson(response.body());
-                    JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
-
-//                    Log.e("downloadCustomerD", "Response: " + convertedObject);
-
-//                    Log.e("downloadCustomerD", "response.body().list: " + response.body().list.size());
                     SQL_DB.tovarGroupClientDao().insertData(response.body().list).subscribe(new DisposableCompletableObserver() {
                         @Override
                         public void onComplete() {

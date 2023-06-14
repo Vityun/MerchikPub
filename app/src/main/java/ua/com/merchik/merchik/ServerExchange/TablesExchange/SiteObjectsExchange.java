@@ -1,5 +1,7 @@
 package ua.com.merchik.merchik.ServerExchange.TablesExchange;
 
+import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
+
 import android.util.Log;
 
 import com.google.gson.Gson;
@@ -13,8 +15,6 @@ import ua.com.merchik.merchik.data.Database.Room.SiteObjectsSDB;
 import ua.com.merchik.merchik.data.RetrofitResponse.SiteObjectsResponse;
 import ua.com.merchik.merchik.data.TestJsonUpload.StandartData;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
-
-import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
 /**
  * 05.05.2021
@@ -67,22 +67,6 @@ public class SiteObjectsExchange {
                                 // Нормальный функционал
                                 if (response.body().objectSQLList != null) {
                                     try {
-                                        //==========================================================
-                                        int i = 0;
-                                        for (SiteObjectsSDB item : dataList) {
-
-                                            Log.e("SiteObjectsExchangeITEM", "item(" + i + "): " + item.id);
-
-                                            Gson gson = new Gson();
-                                            String json = gson.toJson(item);
-                                            JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
-
-                                            Log.e("SiteObjectsExchangeROW", "ROW(" + i + "): " + convertedObject);
-                                            i++;
-                                        }
-                                        //==========================================================
-
-
                                         SQL_DB.siteObjectsDao().insertAll(response.body().objectSQLList);
                                         Log.e("SiteObjectsExchange", "Ok");
                                         exchangeInterface.onSuccess("Загрузило: " + response.body().objectSQLList.size() + " ОбьектовСайта.");

@@ -754,14 +754,7 @@ public class Exchange {
                 @Override
                 public void onResponse(retrofit2.Call<JsonObject> call, retrofit2.Response<JsonObject> response) {
                     try {
-                        Gson gson = new Gson();
-                        String json = gson.toJson(response.body());
-                        JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
-
-                        Log.e("sendTAR", "convertedObjectResponse: " + convertedObject);
                         globals.writeToMLOG(Clock.getHumanTime() + "_INFO.Exchange.class.sendTAR.onResponse.response: " + convertedObject + "\n");
-
-
                     } catch (Exception e) {
                         Log.e("sendTAR", "e: " + e);
                         globals.writeToMLOG(Clock.getHumanTime() + "_INFO.Exchange.class.sendTAR.onResponse.ERROR_1: " + e + "\n");
@@ -1349,14 +1342,6 @@ public class Exchange {
             call.enqueue(new retrofit2.Callback<TARCommentsServerData>() {
                 @Override
                 public void onResponse(retrofit2.Call<TARCommentsServerData> call, retrofit2.Response<TARCommentsServerData> response) {
-                    Log.e("uploadTARComments", "response: " + response);
-                    Log.e("uploadTARComments", "response.body(): " + response.body());
-
-                    JsonObject convertedObject = new Gson().fromJson(new Gson().toJson(response.body()), JsonObject.class);
-                    Log.e("uploadTARComments", "response.body().json: " + convertedObject);
-
-                    Globals.writeToMLOG("INFO", "uploadTARComments/onResponse", "convertedObject: " + convertedObject);
-
                     try {
                         List<TARCommentsDB> saveToDb = new ArrayList<>();
                         List<TARCommentsDB> deleteFromDb = new ArrayList<>();
@@ -1465,7 +1450,6 @@ public class Exchange {
         standartData.data = Collections.singletonList(data);
 
         JsonObject convertedObject = new Gson().fromJson(new Gson().toJson(standartData), JsonObject.class);
-        Log.e("updateTAR", "convertedObject:" + convertedObject);
         Globals.writeToMLOG("INGO", "updateTAR", "convertedObject:" + convertedObject);
 
         retrofit2.Call<JsonObject> call = RetrofitBuilder.getRetrofitInterface().TEST_JSON_UPLOAD(RetrofitBuilder.contentType, convertedObject);
@@ -1510,9 +1494,6 @@ public class Exchange {
                     try {
                         Globals.writeToMLOG("INFO", "Exchange.sendWpData2.onResponse", "response" + response);
                         if (response.isSuccessful() && response.body() != null) {
-                            JsonObject convertedObject = new Gson().fromJson(new Gson().toJson(response.body()), JsonObject.class);
-                            Globals.writeToMLOG("INFO", "Exchange.sendWpData2.onResponse", "convertedObject: " + convertedObject);
-
                             if (response.body().state) {
                                 if (response.body().data != null && response.body().data.size() > 0) {
                                     // TODO Вынести это в нормальную функцию и отдельный вызов.
@@ -1580,9 +1561,6 @@ public class Exchange {
                         Globals.writeToMLOG("INFO", "Exchange.sendWpDataToServer.onResponse", "response" + response);
                         if (response.isSuccessful()) {
                             if (response.body() != null) {
-                                JsonObject convertedObject = new Gson().fromJson(new Gson().toJson(response.body()), JsonObject.class);
-                                Globals.writeToMLOG("INFO", "Exchange.sendWpDataToServer.onResponse", "convertedObject: " + convertedObject);
-
                                 if (response.body().state) {
                                     if (response.body().data != null && response.body().data.size() > 0) {
                                         saveWpDataResult(response.body().data);
@@ -1716,13 +1694,6 @@ public class Exchange {
             @Override
             public void onResponse(retrofit2.Call<AdditionalRequirementsSendMarksServerData> call, retrofit2.Response<AdditionalRequirementsSendMarksServerData> response) {
                 try {
-                    Gson gson = new Gson();
-                    String json = gson.toJson(response.body());
-                    JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
-
-                    Globals.writeToMLOG("INFO", "Exchange.class.sendARMark.onResponse", "response: " + convertedObject);
-
-//                    List<AdditionalRequirementsMarksListServerData> info = response.body().getList();
                     try {
 
                         if (response.body().getList() != null && response.body().getList().size() > 0) {
@@ -1738,12 +1709,6 @@ public class Exchange {
                                 }
                             }
                             AdditionalRequirementsMarkRealm.setDataToDB(list);
-
-//                            if (info.get(0).state){
-//                                markDB.setUploadStatus(String.valueOf(System.currentTimeMillis()));
-//                                AdditionalRequirementsMarkRealm.setNewMark(markDB);
-//                                sendARMark();
-//                            }
                         }
 
                     } catch (Exception e) {
@@ -1980,11 +1945,6 @@ public class Exchange {
                 try {
                     if (response.isSuccessful() && response.code() == 200) {
                         if (response.body() != null && response.body().state) {
-
-                            Gson gson = new Gson();
-                            String json = gson.toJson(response.body());
-                            JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
-
                             RealmManager.INSTANCE.executeTransaction(realm -> {
                                 synchronizationTimetableDB.setVpi_app(System.currentTimeMillis() / 1000);
                                 realm.copyToRealmOrUpdate(synchronizationTimetableDB);
@@ -2153,10 +2113,6 @@ public class Exchange {
                 }catch (Exception e){
 
                 }
-
-
-                /*{"state":true,"list":[{"ID":"5","file_id":"9393","group_id":"346","author_id":"19653","dt_update":null},
-                    {"ID":"6","file_id":"9393","group_id":"857","author_id":"19653","dt_update":null}]}*/
             }
 
             @Override
@@ -2542,8 +2498,6 @@ public class Exchange {
                 Log.e("conductingOnServer", "response: " + response.body());
                 if (response.isSuccessful()) {
                     if (response.body() != null) {
-                        JsonObject convertedObject = new Gson().fromJson(new Gson().toJson(response.body()), JsonObject.class);
-                        Globals.writeToMLOG("INFO", "conductingOnServerWpData/onResponse", "response.body(): " + convertedObject);
                         if (response.body().state) {
                             // Пока пусть будет, я не знаю что им там в голову бахнет
                             if (response.body().document_complete && wp.getClient_id().equals(wp.getIsp())) {

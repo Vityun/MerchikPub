@@ -221,8 +221,6 @@ public class PhotoDownload {
         // Отладочная инфа
         long start = System.currentTimeMillis() / 1000;
 
-        Globals.writeToMLOG("INFO", "getPhotoURLFromServer", "convertedObject: " + convertedObject);
-
         retrofit2.Call<TovarImgResponse> call = RetrofitBuilder.getRetrofitInterface().GET_TOVAR_PHOTO_INFO_JSON(RetrofitBuilder.contentType, convertedObject);
         call.enqueue(new Callback<TovarImgResponse>() {
             @Override
@@ -380,35 +378,11 @@ public class PhotoDownload {
         String contentType = "application/json";
         JsonObject convertedObject = new Gson().fromJson(new Gson().toJson(data), JsonObject.class);
 
-//        Log.e("getPhotoFromServer", "convertedObject: " + convertedObject);
-//        Globals.writeToMLOG("INFO", getClass().getName() + "getPhotoFromServer", "convertedObject: " + convertedObject);
-
-
-/*        retrofit2.Call<JsonObject> callTest = RetrofitBuilder.getRetrofitInterface().TEST_JSON_UPLOAD(contentType, convertedObject);
-        callTest.enqueue(new Callback<JsonObject>() {
-            @Override
-            public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
-                Log.e("test", "response: " + response.body());
-            }
-
-            @Override
-            public void onFailure(Call<JsonObject> call, Throwable t) {
-
-            }
-        });*/
-
-
         retrofit2.Call<ModImagesView> call = RetrofitBuilder.getRetrofitInterface().MOD_IMAGES_VIEW_CALL(contentType, convertedObject);
         call.enqueue(new retrofit2.Callback<ModImagesView>() {
             @Override
             public void onResponse(retrofit2.Call<ModImagesView> call, retrofit2.Response<ModImagesView> response) {
                 try {
-//                    JsonObject JS = new Gson().fromJson(new Gson().toJson(response.body()), JsonObject.class);
-
-//                    Log.e("getPhotoFromServer", "JS: " + JS);
-//                    Log.e("getPhotoFromServer", "response.body().getList().size(): " + response.body().getList().size());
-
-//                    Globals.writeToMLOG("INFO", "" + getClass().getName() + "/getPhotoFromServer/onResponse", "JS: " + JS);
                     int size = 0;
                     if (response.body() != null && response.body().getState() && response.body().getList() != null){
                         size = response.body().getList().size();
@@ -421,7 +395,6 @@ public class PhotoDownload {
                 } catch (Exception e) {
                     Globals.writeToMLOG("ERROR", "" + getClass().getName() + "/getPhotoFromServer/onResponse", "Exception e: " + e);
                 }
-
             }
 
             @Override
@@ -597,25 +570,10 @@ public class PhotoDownload {
     public void getPhotoInfoAndSaveItToDB(PhotoTableRequest data, Clicks.clickObjectAndStatus<StackPhotoDB> clickUpdatePhoto) {
         Log.e("getPhotoInfo2", "HERE");
         JsonObject object = new Gson().fromJson(new Gson().toJson(data), JsonObject.class);
-
-//        Log.e("getPhotoInfo2", "DATA: " + object);
-
         retrofit2.Call<ModImagesView> call = RetrofitBuilder.getRetrofitInterface().MOD_IMAGES_VIEW_CALL(RetrofitBuilder.contentType, object);
         call.enqueue(new retrofit2.Callback<ModImagesView>() {
             @Override
             public void onResponse(retrofit2.Call<ModImagesView> call, retrofit2.Response<ModImagesView> response) {
-
-/*                Gson gson = new Gson();
-                String json = gson.toJson(response.body());
-                JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
-
-                Log.e("getPhotoInfo2", "convertedObject: " + convertedObject);
-
-                Log.e("getPhotoInfo2", "size: " + response.body().getList().size());
-                for (ModImagesViewList item : response.body().getList()) {
-                    Log.e("getPhotoInfo2", "item.ID: " + item.getID());
-                }*/
-
                 try {
                     if (response.isSuccessful()) {
                         if (response.body() != null) {

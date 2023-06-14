@@ -108,8 +108,6 @@ public class ShelfSizeExchange {
 
         Globals.writeToMLOG("INFO", "downloadShelfSizeData", "convertedObject: " + convertedObject);
 
-        Log.e("ShelfSizeExchange", "convertedObject: " + convertedObject);
-
         retrofit2.Call<ShelfSizeResponse> call = RetrofitBuilder.getRetrofitInterface().ShelfSize_DOWNLOAD_TABLE(RetrofitBuilder.contentType, convertedObject);
         call.enqueue(new Callback<ShelfSizeResponse>() {
             @Override

@@ -1,7 +1,5 @@
 package ua.com.merchik.merchik.ServerExchange.TablesExchange;
 
-import android.util.Log;
-
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 
@@ -48,12 +46,6 @@ public class UsersExchange {
                                 synchronizationTimetableDB.setVpi_app(System.currentTimeMillis()/1000);
                                 realm.copyToRealmOrUpdate(synchronizationTimetableDB);
                             });
-
-                            Gson gson = new Gson();
-                            String json = gson.toJson(response.body());
-                            JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
-
-                            Log.e("downloadUsersTable", "response.body(): " + convertedObject);
                             exchange.onSuccess(response.body().list);
                         }else {
                             Globals.writeToMLOG("INFO", "downloadUsersTable/call.enqueue/onResponse/response.body()", "response.body(): NULL");

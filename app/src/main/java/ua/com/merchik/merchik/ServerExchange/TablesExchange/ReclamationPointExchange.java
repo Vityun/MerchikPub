@@ -62,13 +62,6 @@ public class ReclamationPointExchange {
                 public void onResponse(Call<TasksAndReclamationsSDBResponce> call, Response<TasksAndReclamationsSDBResponce> response) {
                     try {
                         if (response.isSuccessful() && response.body() != null){
-
-                            Gson gson = new Gson();
-                            String json = gson.toJson(response.body());
-                            JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
-
-                            Globals.writeToMLOG("INFO", "ReclamationPointExchange/downloadTaR/onResponse", "convertedObject: " + convertedObject);
-
                             if (response.body().list != null && response.body().list.size()>0){
                                 RealmManager.INSTANCE.executeTransaction(realm -> {
                                     if (synchronizationTimetableDB != null) {
