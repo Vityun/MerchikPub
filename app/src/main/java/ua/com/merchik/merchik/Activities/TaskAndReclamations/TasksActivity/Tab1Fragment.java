@@ -99,10 +99,14 @@ public class Tab1Fragment extends Fragment {
 
         if (TARActivity.TARType == 1) {
             toolbar_menus.textLesson = 1183;
-            toolbar_menus.videoLesson = 3528;
+//            toolbar_menus.videoLesson = 3528;   // 4208
+            toolbar_menus.videoLessons = new Integer[]{3528, 4208};
+            Log.e("SET_TAR_FAB", "Tab1Fragment 1");
         } else {
             toolbar_menus.textLesson = 1185;
-            toolbar_menus.videoLesson = 3528;
+//            toolbar_menus.videoLesson = 3528;   // 4208
+            toolbar_menus.videoLessons = new Integer[]{3528, 4208};
+            Log.e("SET_TAR_FAB", "Tab1Fragment 0");
         }
 
         toolbar_menus.setFab(v.getContext(), TARActivity.fab); // ГЛАВНАЯ

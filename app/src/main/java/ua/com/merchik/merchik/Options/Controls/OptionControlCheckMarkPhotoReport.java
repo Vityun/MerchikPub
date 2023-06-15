@@ -28,15 +28,8 @@ import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 
-
-/**
- * 12.06.23.
- * Выполняется проверка УРОВНЯ ОЦЕНКИ ДетОтчета по данному посещению. Для начисления снижения исполнителю, если есть низкие оценки по его ДетОтчету
- * Кроме данной функции есть еще проверка НАЛИЧИЯ ОЦЕНКИ ДетОтчетов исполнителем. ПровНаличОценДетОтч
- * Задумана для ОС так, чтобы старший не мог провести свой ОС не ОЦЕНИВ ДетОтчеты исполнителя. Но, можно применять и в других случаях
- */
-public class OptionControlCheckMarkDetailedReport<T> extends OptionControl {
-    public int OPTION_CONTROL_CheckMarkDetailedReport_ID = 135708;
+public class OptionControlCheckMarkPhotoReport<T> extends OptionControl {
+    public int OPTION_CONTROL_CheckMarkPhotoReport_ID = 135595;
 
     private boolean signal = true;
 
@@ -49,11 +42,12 @@ public class OptionControlCheckMarkDetailedReport<T> extends OptionControl {
     private Long dateFrom = 0L;
     private Long dateTo = 0L;
 
+    private int maxRating = 5;
     private int averageRating;
     private int averageRatingMin = 6;   // минимальная СРЕДНЯЯ оценка, ниже которой, операторы начинают "страдать"
     private int averageRatingMax = 8;   // максимальная СРЕДНЯЯ оценка, выше которой, операторы начинают "страдать"
 
-    public OptionControlCheckMarkDetailedReport(Context context, T document, OptionsDB optionDB, OptionMassageType msgType, Options.NNKMode nnkMode) {
+    public OptionControlCheckMarkPhotoReport(Context context, T document, OptionsDB optionDB, OptionMassageType msgType, Options.NNKMode nnkMode) {
         this.context = context;
         this.document = document;
         this.optionDB = optionDB;
@@ -80,14 +74,14 @@ public class OptionControlCheckMarkDetailedReport<T> extends OptionControl {
             }
 
         } catch (Exception e) {
-            Globals.writeToMLOG("ERROR", "OptionControlCheckMarkDetailedReport/getDocumentVar", "Exception e: " + e);
+            Globals.writeToMLOG("ERROR", "OptionControlCheckMarkPhotoReport/getDocumentVar", "Exception e: " + e);
         }
     }
 
     @RequiresApi(api = Build.VERSION_CODES.N)
     private void executeOption() {
         try {
-            List<VoteSDB> votes = SQL_DB.votesDao().getAll(dateFrom, dateTo, 5, wpDataDB.getCode_dad2());   // ДатаС, ДатаПо, Оценка < 5, dad2
+            List<VoteSDB> votes = SQL_DB.votesDao().getAll(dateFrom, dateTo, maxRating, wpDataDB.getCode_dad2(), wpDataDB.getClient_id(), wpDataDB.getAddr_id());
 
             VoteSDB vote = null;
             if (votes != null && votes.size() > 0) {
@@ -104,12 +98,23 @@ public class OptionControlCheckMarkDetailedReport<T> extends OptionControl {
                 }
             }
 
-            if (votes == null) {
+            if ((votes == null || votes.size() == 0) && wpDataDB.getTheme_id() == 95) {
+                signal = true;
+                spannableStringBuilder.append("Низких оценок по ФотоОтчетам исполнителя ").append(usersSDBDocument.fio).append(" нет.");
+            } else if (votes.size() == 0 && wpDataDB.getTheme_id() == 95) {
                 signal = false;
-                spannableStringBuilder.append("Не могу определить документ для проверки оценок Дет.Отчетов");
+                spannableStringBuilder.append("Нарушений в оценивании ФО за период с ")
+                        .append(Clock.getHumanTimeSecPattern(dateFrom, "dd.MM.yy")).append(" по ")
+                        .append(Clock.getHumanTimeSecPattern(dateTo, "dd.MM.yy")).append(" нет.");
+            } else if (votes.size() == 0) {
+                signal = false;
+                spannableStringBuilder.append("Низких оценок по ФотоОтчетам исполнителя ").append(usersSDBDocument.fio).append(" нет.");
             } else if (vote == null) {
                 signal = false;
-                spannableStringBuilder.append("Низких оценок по ДетОтчету нет.");
+                spannableStringBuilder.append("Низких оценок по ФотоОтчетам исполнителя ").append(usersSDBDocument.fio).append(" нет.");
+            } else if (wpDataDB.getTheme_id() == 1147) {
+                signal = true;
+                spannableStringBuilder.append("Обнаружено ").append(String.valueOf(votes.size())).append(" нарушение в оценивании ФотоОтчетов (подробности см. в таблице)");
             } else {
                 signal = true;
                 spannableStringBuilder.append("Обнаружено ").append(String.valueOf(votes.size()))
@@ -142,11 +147,12 @@ public class OptionControlCheckMarkDetailedReport<T> extends OptionControl {
                 }
             }
 
+            spannableStringBuilder.append("У Вас ").append(String.valueOf(votes.size())).append(" плохих оценок. По фото.");
+
         } catch (Exception e) {
-            Globals.writeToMLOG("ERROR", "OptionControlCheckMarkDetailedReport/executeOption", "Exception e: " + e);
+            Globals.writeToMLOG("ERROR", "OptionControlCheckMarkPhotoReport/executeOption", "Exception e: " + e);
         }
     }
-
 
     private SpannableString createLinkedString(String msg, VoteSDB vote) {
         SpannableString res = new SpannableString(msg);
@@ -165,6 +171,4 @@ public class OptionControlCheckMarkDetailedReport<T> extends OptionControl {
         res.setSpan(clickableSpan, 0, msg.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         return res;
     }
-
-
 }

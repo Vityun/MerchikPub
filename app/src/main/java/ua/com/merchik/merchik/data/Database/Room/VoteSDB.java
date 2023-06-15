@@ -3,6 +3,7 @@ package ua.com.merchik.merchik.data.Database.Room;
 import androidx.annotation.NonNull;
 import androidx.room.ColumnInfo;
 import androidx.room.Entity;
+import androidx.room.Ignore;
 import androidx.room.Index;
 import androidx.room.PrimaryKey;
 
@@ -127,4 +128,14 @@ public class VoteSDB {
     @Expose
     @ColumnInfo(name = "comments")
     public String comments;
+
+    // Поля для опций
+    @Ignore
+    public int error;
+
+    @Ignore
+    public String note;
+
+    @Ignore
+    public String authorVote;
 }

@@ -196,9 +196,12 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
     public static int textLesson;
     public static int videoLesson;
 
+    public static Integer[] videoLessons;
+
     public static void setFab(Context context, FloatingActionButton fab) {
         Log.e("setFab", "textLesson: " + textLesson);
         Log.e("setFab", "videoLesson: " + videoLesson);
+        Log.e("setFab", "videoLessons: " + Arrays.toString(videoLessons));
 
         try {
             String str = "";
@@ -208,7 +211,7 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                 Log.e("setFab", "REALvideoLesson: " + videoLesson);
                 str = object.getComments();
                 str = str.replace("&quot;", "\"");
-            }catch (Exception e){
+            } catch (Exception e) {
                 str = "";
             }
 
@@ -219,8 +222,11 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                 dialog.setText(finalStr);
                 dialog.setMerchikIco(context);
                 dialog.setImgBtnCall(context);
-                dialog.setVideoLesson(context, true, videoLesson, null);
-//                dialog.setVideoLesson(context, true, new Integer[]{1, 2}, null);
+                if (videoLessons != null && videoLessons.length > 0) {
+                    dialog.setVideoLesson(context, true, videoLessons, null);
+                } else {
+                    dialog.setVideoLesson(context, true, videoLesson, null);
+                }
                 dialog.show();
             });
         } catch (Exception e) {
@@ -640,7 +646,7 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                 sb.append("Build.MODEL: ").append(Build.MODEL).append(" ");
 
                 Globals.writeToMLOG("INFO", "USER_INFO", "appUsersDB: " + sb);
-            }catch (Exception e){
+            } catch (Exception e) {
                 Globals.writeToMLOG("INFO", "USER_INFO", "Exception e: " + e);
             }
 
@@ -1102,7 +1108,7 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
         }
 
 
-        if (photoDB.tovar_id != null && !photoDB.tovar_id.equals("")){
+        if (photoDB.tovar_id != null && !photoDB.tovar_id.equals("")) {
             tovar_id = photoDB.tovar_id;
         }
 

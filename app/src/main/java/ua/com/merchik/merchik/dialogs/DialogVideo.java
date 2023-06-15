@@ -24,7 +24,6 @@ import ua.com.merchik.merchik.Adapters.ButtonAdapter;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteHintsDB;
-import ua.com.merchik.merchik.database.realm.RealmManager;
 
 public class DialogVideo extends DialogData {
 
@@ -120,10 +119,10 @@ public class DialogVideo extends DialogData {
         displayYoutubeVideo.loadData(url, "text/html", "utf-8");
     }
 
-    public void setVideos(List<SiteHintsDB> dat){
+    public void setVideos(List<SiteHintsDB> data){
         webView.setVisibility(View.GONE);
         imgBtnVideoLesson.setVisibility(View.GONE);
-        List<SiteHintsDB> data = RealmManager.getAllVideoLessons();
+//        List<SiteHintsDB> data = RealmManager.getAllVideoLessons();
         recyclerView.setAdapter(new ButtonAdapter(data, new Clicks.click() {
             @Override
             public <T> void click(T data) {

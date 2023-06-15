@@ -314,26 +314,23 @@ public class DialogData {
 
             SiteHintsDB finalData = data;
             imgBtnVideoLesson.setOnClickListener(v -> {
-
                 Log.e("setVideoLesson", "click");
-
-                long obj = finalData.getID();
-
-                RealmManager.setRowToLog(Collections.singletonList(
-                        new LogDB(
-                                RealmManager.getLastIdLogDB() + 1,
-                                System.currentTimeMillis() / 1000,
-                                "Факт перегляду відео-урока. " + finalData.getTitle(),
-                                1261,
-                                null,
-                                null,
-                                obj,
-                                null,
-                                null,
-                                Globals.session,
-                                null)));
-
                 if (finalData != null) {
+                    long obj = finalData.getID();
+                    RealmManager.setRowToLog(Collections.singletonList(
+                            new LogDB(
+                                    RealmManager.getLastIdLogDB() + 1,
+                                    System.currentTimeMillis() / 1000,
+                                    "Факт перегляду відео-урока. " + finalData.getTitle(),
+                                    1261,
+                                    null,
+                                    null,
+                                    obj,
+                                    null,
+                                    null,
+                                    Globals.session,
+                                    null)));
+
                     Log.e("setVideoLesson", "click1");
                     if (clickListener == null) {
 
