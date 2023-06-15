@@ -24,6 +24,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Color;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -502,6 +503,9 @@ public class DetailedReportActivity extends toolbar_menus {
                     toolbar_menus.textLesson = 818;
                     toolbar_menus.videoLesson = 819;
                     toolbar_menus.setFab(DetailedReportActivity.this, DetailedReportActivity.fab); // ГЛАВНАЯ
+
+                    Drawable circleIcon = getResources().getDrawable(R.drawable.shape_notification); // Подставьте имя вашего изображения
+                    fab.setImageDrawable(circleIcon);
 
                 } else if (tab.getPosition() == 1) {
                     Log.e("onTabSelected", "ОПЦИИ");
