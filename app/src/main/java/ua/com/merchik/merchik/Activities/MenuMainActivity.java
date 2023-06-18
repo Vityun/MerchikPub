@@ -15,6 +15,7 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 import ua.com.merchik.merchik.R;
+import ua.com.merchik.merchik.data.RetrofitResponse.ViewListResponse;
 import ua.com.merchik.merchik.data.TestJsonUpload.StandartData;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
 import ua.com.merchik.merchik.toolbar_menus;
@@ -52,10 +53,38 @@ public class MenuMainActivity extends toolbar_menus {
     }
 
     private void test() {
-        planogram();    // PlanogramSDB
-        planogramAddr();
-        planogramGrp(); // PlanogramGroupListSDB
-        planogramImg(); // PlanogramImgListSDB
+//        planogram();    // PlanogramSDB
+//        planogramAddr();
+//        planogramGrp(); // PlanogramGroupListSDB
+//        planogramImg(); // PlanogramImgListSDB
+
+        checkVideoView();
+    }
+
+    public void checkVideoView(){
+        StandartData data = new StandartData();
+        data.mod = "lesson";
+        data.act = "view_list";
+
+        Gson gson = new Gson();
+        String json = gson.toJson(data);
+        JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
+
+        Log.e("checkVideoView", "checkVideoView: " + convertedObject);
+
+        retrofit2.Call<ViewListResponse> call = RetrofitBuilder.getRetrofitInterface().View_List_RESPONSE(RetrofitBuilder.contentType, convertedObject);
+        call.enqueue(new Callback<ViewListResponse>() {
+            @Override
+            public void onResponse(Call<ViewListResponse> call, Response<ViewListResponse> response) {
+                Log.e("checkVideoView", "response: " + response);
+                Log.e("checkVideoView", "response.body(): " + response.body());
+            }
+
+            @Override
+            public void onFailure(Call<ViewListResponse> call, Throwable t) {
+                Log.e("checkVideoView", "Throwable t: " + t);
+            }
+        });
     }
 
     private void planogram() {

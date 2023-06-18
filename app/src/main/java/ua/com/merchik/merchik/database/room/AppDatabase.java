@@ -37,6 +37,7 @@ import ua.com.merchik.merchik.data.Database.Room.TovarGroupClientSDB;
 import ua.com.merchik.merchik.data.Database.Room.TovarGroupSDB;
 import ua.com.merchik.merchik.data.Database.Room.TranslatesSDB;
 import ua.com.merchik.merchik.data.Database.Room.UsersSDB;
+import ua.com.merchik.merchik.data.Database.Room.ViewListSDB;
 import ua.com.merchik.merchik.data.Database.Room.VoteSDB;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.AchievementsDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.AdditionalMaterialsAddressDao;
@@ -67,6 +68,7 @@ import ua.com.merchik.merchik.database.room.DaoInterfaces.TovarGroupClientDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.TovarGroupDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.TranslatesDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.UsersDao;
+import ua.com.merchik.merchik.database.room.DaoInterfaces.VideoViewDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.VotesDao;
 
 @SuppressLint("RestrictedApi")
@@ -102,10 +104,11 @@ import ua.com.merchik.merchik.database.room.DaoInterfaces.VotesDao;
                 ChatGrpTEMPSDB.class,        // Временная таблица
                 ReclamationPercentageSDB.class,  // Процент рекламаций
                 ShelfSizeSDB.class,      // Доля полочного пространства
-                FragmentSDB.class           // Таблица Фрагментов (полей на фото)
+                FragmentSDB.class,           // Таблица Фрагментов (полей на фото)
+                ViewListSDB.class       // Знак видео просмотрено или нет
 
         },
-        version = 35
+        version = 36
 )
 
 
@@ -171,6 +174,8 @@ public abstract class AppDatabase extends RoomDatabase {
     public abstract ShelfSizeDao shelfSizeDao();
 
     public abstract FragmentDao fragmentDao();
+
+    public abstract VideoViewDao videoViewDao();
 
     public class MyAutoMigration {
     }

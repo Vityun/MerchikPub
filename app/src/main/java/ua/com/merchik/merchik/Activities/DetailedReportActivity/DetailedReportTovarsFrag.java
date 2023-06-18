@@ -387,7 +387,17 @@ public class DetailedReportTovarsFrag extends Fragment {
 
                 for (AdditionalRequirementsDB item : data) {
                     if (item.getTovarId() != null && !item.getTovarId().equals("0") && !item.getTovarId().equals("")) {
-                        promotionalTov.add(Integer.valueOf(item.getTovarId()));
+
+                        long startDt = Clock.dateConvertToLong(item.getDtStart()) / 1000;
+                        long endDt = Clock.dateConvertToLong(item.getDtEnd()) / 1000;
+
+                        long docDt = wpDataDB.getDt().getTime() / 1000;
+                        long docDtMinus2 = Clock.getDatePeriodLong(docDt, -2);
+                        long docDtPlus1 = Clock.getDatePeriodLong(docDt, 1);
+
+                        if ((startDt > 0 && endDt > 0 && docDt < endDt) || (startDt > 0 && endDt == 0)){
+                            promotionalTov.add(Integer.valueOf(item.getTovarId()));
+                        }
                     }
                 }
                 Globals.writeToMLOG("INFO", "DetailedReportTovarsFrag/addRecycleView/AdditionalRequirementsDB", "promotionalTov: " + promotionalTov);

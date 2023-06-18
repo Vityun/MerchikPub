@@ -18,7 +18,7 @@ public class RoomManager {
                 .fallbackToDestructiveMigration()
                 .enableMultiInstanceInvalidation()
                 .allowMainThreadQueries()
-                .addMigrations(MIGRATION_34_35)
+                .addMigrations(MIGRATION_35_36)
 
                 .build();
     }
@@ -210,6 +210,23 @@ public class RoomManager {
         @Override
         public void migrate(@NonNull SupportSQLiteDatabase database) {
             database.execSQL(CREATE_ADDITIONAL_MATERIALS_GROUPS_TABLE);
+        }
+    };
+
+
+    private static final String CREATE_Video_View_List_TABLE =
+            "CREATE TABLE IF NOT EXISTS view_list (" +
+                    "id INTEGER PRIMARY KEY NOT NULL," +
+                    "lessonId INTEGER," +
+                    "merchikId INTEGER," +
+                    "dt INTEGER" +
+                    ")";
+
+
+    static final Migration MIGRATION_35_36 = new Migration(35, 36) {
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase database) {
+            database.execSQL(CREATE_Video_View_List_TABLE);
         }
     };
 

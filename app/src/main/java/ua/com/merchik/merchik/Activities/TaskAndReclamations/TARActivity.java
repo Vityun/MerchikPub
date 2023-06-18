@@ -98,11 +98,13 @@ public class TARActivity extends toolbar_menus implements TARFragmentHome.OnFrag
             if (TARType == 1) {
                 textLesson = 1179;
                 videoLesson = 1180;
+                videoLessons = null;
                 setFab(this, fab);
                 Log.e("SET_TAR_FAB", "ACTIVITY task");
             } else if (TARType == 0) {
                 textLesson = 1181;
                 videoLesson = 1182;
+                videoLessons = null;
                 setFab(this, fab);
                 Log.e("SET_TAR_FAB", "ACTIVITY report");
             }
@@ -200,12 +202,14 @@ public class TARActivity extends toolbar_menus implements TARFragmentHome.OnFrag
                 TARActivity.activity_title.setText("Задачи");
                 textLesson = 1179;
                 videoLesson = 1180;
+                videoLessons = null;
                 setFab(this, fab);
                 Log.e("SET_TAR_FAB", "task");
             } else if (TARType == 0) {
                 TARActivity.activity_title.setText("Рекламации");
                 textLesson = 1181;
                 videoLesson = 1182;
+                videoLessons = null;
                 setFab(this, fab);
                 Log.e("SET_TAR_FAB", "report");
             }

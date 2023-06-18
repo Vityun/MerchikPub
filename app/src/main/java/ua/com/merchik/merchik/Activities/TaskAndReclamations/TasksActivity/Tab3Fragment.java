@@ -109,10 +109,12 @@ public class Tab3Fragment extends Fragment {
         if (TARActivity.TARType == 1) {
             toolbar_menus.textLesson = 1183;
             toolbar_menus.videoLesson = 3623;
+            toolbar_menus.videoLessons = null;
             Log.e("SET_TAR_FAB", "Tab3Fragment 1");
         } else {
             toolbar_menus.textLesson = 1185;
             toolbar_menus.videoLesson = 3623;
+            toolbar_menus.videoLessons = null;
             Log.e("SET_TAR_FAB", "Tab3Fragment 0");
         }
         toolbar_menus.setFab(v.getContext(), TARActivity.fab); // ГЛАВНАЯ

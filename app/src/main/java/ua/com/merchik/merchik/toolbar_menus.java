@@ -195,7 +195,6 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
 
     public static int textLesson;
     public static int videoLesson;
-
     public static Integer[] videoLessons;
 
     public static void setFab(Context context, FloatingActionButton fab) {

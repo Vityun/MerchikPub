@@ -24,7 +24,6 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Color;
-import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -33,8 +32,10 @@ import android.provider.MediaStore;
 import android.provider.Settings;
 import android.text.Html;
 import android.util.Log;
+import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -49,6 +50,7 @@ import androidx.viewpager.widget.ViewPager;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.navigation.NavigationView;
+import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.tabs.TabLayout;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
@@ -76,6 +78,9 @@ import ua.com.merchik.merchik.data.Database.Room.AddressSDB;
 import ua.com.merchik.merchik.data.Database.Room.CustomerSDB;
 import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
 import ua.com.merchik.merchik.data.Database.Room.TranslatesSDB;
+import ua.com.merchik.merchik.data.Database.Room.ViewListSDB;
+import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteHintsDB;
+import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteObjects.SiteObjectsDB;
 import ua.com.merchik.merchik.data.RealmModels.ReportPrepareDB;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
 import ua.com.merchik.merchik.data.RealmModels.TovarDB;
@@ -130,6 +135,7 @@ public class DetailedReportActivity extends toolbar_menus {
     TextView textDRDateV, textDRAddrV, textDRCustV, textDRMercV;
     Button buttonTakeKPSfromDR;
     LinearLayout option_signal_layout2;
+    ImageView imageView;
 
     public ArrayList<Data> list = new ArrayList<Data>();
 
@@ -180,6 +186,8 @@ public class DetailedReportActivity extends toolbar_menus {
 
         tabLayout = findViewById(R.id.tabLayout);
         viewPager = findViewById(R.id.viewPager);
+
+        imageView = findViewById(R.id.red_dot);
 
 
         Log.e("TRANSLATES_DEBUG", "Globals.langId: " + Globals.langId);
@@ -236,7 +244,10 @@ public class DetailedReportActivity extends toolbar_menus {
 
             toolbar_menus.textLesson = 818;
             toolbar_menus.videoLesson = 819;
+            toolbar_menus.videoLessons = null;
             toolbar_menus.setFab(DetailedReportActivity.this, DetailedReportActivity.fab); // ГЛАВНАЯ
+
+            checkVideo(new Integer[videoLesson]);
 
             Log.e("ЧТО_ПРОИСХОДИТ", "DetailedReportActivity");
 
@@ -264,7 +275,8 @@ public class DetailedReportActivity extends toolbar_menus {
 
 
     ActivityResultLauncher<String> requestPermissionLauncher;
-    private void registrationPermission(){
+
+    private void registrationPermission() {
         // Регистрация ActivityResultLauncher
         requestPermissionLauncher = registerForActivityResult(
                 new ActivityResultContracts.RequestPermission(), isGranted -> {
@@ -365,8 +377,6 @@ public class DetailedReportActivity extends toolbar_menus {
             Log.e("deleteFile", "Файл не найден в MediaStore");
         }
     }
-
-
 
 
     /*Получаю строчку с Пална работ и храню её для Отчёта*/
@@ -478,6 +488,47 @@ public class DetailedReportActivity extends toolbar_menus {
 
     DetailedReportTab adapter;
 
+    public void checkVideo(Integer[] ids) {
+        List<ViewListSDB> viewListSDB = null;
+        List<SiteObjectsDB> object = RealmManager.getLesson(ids);
+        List<SiteHintsDB> data = null;
+        List<Integer> objectLessonIds = new ArrayList<>();
+        StringBuilder sb = new StringBuilder();
+
+        if (object != null && !object.isEmpty()) {
+            for (SiteObjectsDB item : object) {
+                String lessonId = item.getLessonId();
+                if (lessonId != null && !lessonId.isEmpty()) {
+                    objectLessonIds.add(Integer.valueOf(lessonId));
+                }
+            }
+
+            if (!objectLessonIds.isEmpty()) {
+                Integer[] lessonIds = objectLessonIds.toArray(new Integer[0]);
+                data = RealmManager.getVideoLesson(lessonIds);
+            }
+        }
+
+        if (data != null) {
+            for (SiteHintsDB item : data){
+                sb.append(item.getNm()).append("\n");
+            }
+            viewListSDB = SQL_DB.videoViewDao().getByLessonId(data.get(0).getID());
+        }
+
+
+        if (viewListSDB != null && viewListSDB.size() != 0) {
+            imageView.setVisibility(View.GONE);
+            Snackbar.make(imageView.getRootView(), "Все ролики просмотрены", Snackbar.LENGTH_LONG).show();
+
+//            Toast.makeText(imageView.getContext(), "Все ролики просмотрены", Toast.LENGTH_SHORT).show();
+        } else {
+            imageView.setVisibility(View.VISIBLE);
+            Snackbar.make(imageView.getRootView(), "Вы просмотрели ещё не все ролики: " + sb, Snackbar.LENGTH_LONG).show();
+//            Toast.makeText(imageView.getContext(), "Вы просмотрели ещё не все ролики: " + sb, Toast.LENGTH_SHORT).show();
+        }
+    }
+
     private void setTab() {
         List<TovarDB> dataTovar = RealmManager.getTovarListFromReportPrepareByDad2(wpDataDB.getCode_dad2());
         if (dataTovar != null) {
@@ -502,31 +553,41 @@ public class DetailedReportActivity extends toolbar_menus {
 
                     toolbar_menus.textLesson = 818;
                     toolbar_menus.videoLesson = 819;
+                    toolbar_menus.videoLessons = null;
                     toolbar_menus.setFab(DetailedReportActivity.this, DetailedReportActivity.fab); // ГЛАВНАЯ
 
-                    Drawable circleIcon = getResources().getDrawable(R.drawable.shape_notification); // Подставьте имя вашего изображения
-                    fab.setImageDrawable(circleIcon);
+
+                    checkVideo(new Integer[]{videoLesson});
 
                 } else if (tab.getPosition() == 1) {
                     Log.e("onTabSelected", "ОПЦИИ");
 
                     toolbar_menus.textLesson = 820;
                     toolbar_menus.videoLesson = 821;
+                    toolbar_menus.videoLessons = null;
                     toolbar_menus.setFab(DetailedReportActivity.this, DetailedReportActivity.fab); // ОПЦИИ
+
+                    checkVideo(new Integer[]{videoLesson});
 
                 } else if (tab.getPosition() == 2) {
                     Log.e("onTabSelected", "ТОВАРЫ");
 
                     toolbar_menus.textLesson = 822;
                     toolbar_menus.videoLesson = 823;
+                    toolbar_menus.videoLessons = null;
                     toolbar_menus.setFab(DetailedReportActivity.this, DetailedReportActivity.fab); // ТОВАР
+
+                    checkVideo(new Integer[]{videoLesson});
 
                 } else if (tab.getPosition() == 3) {
                     Log.e("onTabSelected", "ЗИР");
 
 //                    toolbar_menus.textLesson = 822;
-                    toolbar_menus.videoLesson = 3527;
+//                    toolbar_menus.videoLesson = 3527;
+                    toolbar_menus.videoLessons = new Integer[]{3527, 4208};
                     toolbar_menus.setFab(DetailedReportActivity.this, DetailedReportActivity.fab); // ЗИР
+
+                    checkVideo(videoLessons);
                 }
 
                 viewPager.setCurrentItem(tab.getPosition());
@@ -564,6 +625,7 @@ public class DetailedReportActivity extends toolbar_menus {
 
 
     private static final int READ_EXTERNAL_STORAGE_REQUEST_CODE = 123;
+
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
@@ -583,12 +645,10 @@ public class DetailedReportActivity extends toolbar_menus {
     private boolean checkManageExternalStoragePermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             return Environment.isExternalStorageManager();
-        }else {
+        } else {
             return true;
         }
     }
-
-
 
 
     // Размещение фотки по URI адрессу для пользователя, отображение фотографии загрузки
@@ -603,8 +663,8 @@ public class DetailedReportActivity extends toolbar_menus {
             try {
 
 //                if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
-                    // У вас есть доступ к чтению файлов
-                    // Можете выполнять необходимые операции с файлами
+                // У вас есть доступ к чтению файлов
+                // Можете выполнять необходимые операции с файлами
 //                    Uri uri = data.getData();
 //                    Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST", "Uri uri: " + uri);
 //                    String filePath = getRealPathFromURI(uri);
@@ -613,8 +673,8 @@ public class DetailedReportActivity extends toolbar_menus {
 //                    Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST", "file: " + file.length());
 //                    savePhoto(uri, MakePhotoFromGaleryWpDataDB, MakePhotoFromGalery.tovarId, getApplicationContext());
 //                } else {
-                    // У вас нет доступа к чтению файлов
-                    // Можете запросить разрешение у пользователя//
+                // У вас нет доступа к чтению файлов
+                // Можете запросить разрешение у пользователя//
 //                     Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST", "Нет доступов");
 //                    ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, 123);
 //                }
@@ -636,9 +696,6 @@ public class DetailedReportActivity extends toolbar_menus {
                 }
 
 
-
-
-
 //                if (checkManageExternalStoragePermission()) {
 //                    Uri uri = data.getData();
 //                    Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST", "Uri uri: " + uri);
@@ -651,7 +708,7 @@ public class DetailedReportActivity extends toolbar_menus {
 //                    Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST", "Нет доступов");
 //                    requestManageExternalStoragePermission(this);
 //                }
-            }catch (Exception e){
+            } catch (Exception e) {
                 Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST", "Exception e: " + e);
             }
         }
@@ -969,9 +1026,9 @@ public class DetailedReportActivity extends toolbar_menus {
 
             stackPhotoDB.setPhoto_hash(hash);
 
-            if (Build.VERSION.SDK_INT == Build.VERSION_CODES.Q){
+            if (Build.VERSION.SDK_INT == Build.VERSION_CODES.Q) {
                 stackPhotoDB.setPhoto_num(String.valueOf(uri));
-            }else {
+            } else {
                 stackPhotoDB.setPhoto_num(getRealPathFromURI(uri));
             }
 

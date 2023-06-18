@@ -8,7 +8,7 @@
 
 
     <ImageView
-        android:id="@+id/imageView10"
+        android:id="@+id/red_dot"
         android:layout_width="15dp"
         android:layout_height="15dp"
         android:elevation="25dp"

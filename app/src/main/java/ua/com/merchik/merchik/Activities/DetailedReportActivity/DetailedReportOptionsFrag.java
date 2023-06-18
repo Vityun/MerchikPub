@@ -197,6 +197,8 @@ public class DetailedReportOptionsFrag extends Fragment {
                 rvContacts.setAdapter(recycleViewDRAdapter);
                 rvContacts.setLayoutManager(new LinearLayoutManager(mContext, LinearLayoutManager.VERTICAL, false));
             } else {
+                clickDownload(mContext);
+
                 // TODO Написать текст или в Обьект или в Ресурсы
                 String msg = "По данному посещению не обнаружено ни одной опции. Попробуйте перезайти в отчёт или нажать на кнопку 'Загрузить'. При этом у Вас должен быть включён интернет и обеспеченна связь с сервером.";
                 rvContacts.setVisibility(View.GONE);
@@ -204,7 +206,7 @@ public class DetailedReportOptionsFrag extends Fragment {
                 information.setVisibility(View.VISIBLE);
 
                 information.setText(msg);
-                download.setOnClickListener(this::clickDownload);
+                download.setOnClickListener(v1 -> clickDownload(v1.getContext()));
             }
 
         } catch (Exception e) {
@@ -216,8 +218,8 @@ public class DetailedReportOptionsFrag extends Fragment {
     }
 
 
-    private void clickDownload(View view) {
-        Toast.makeText(view.getContext(), "Начинаю загрузку Опций", Toast.LENGTH_SHORT).show();
+    private void clickDownload(Context context) {
+        Toast.makeText(context, "Начинаю загрузку Опций", Toast.LENGTH_SHORT).show();
 
         TablesLoadingUnloading tlu = new TablesLoadingUnloading();
         tlu.downloadOptionsByDAD2(wpDataDB.getCode_dad2(), new Clicks.click() {
@@ -225,7 +227,7 @@ public class DetailedReportOptionsFrag extends Fragment {
             public <T> void click(T data) {
                 String msg = (String) data;
                 Globals.writeToMLOG("INFO", "downloadOptionsByDAD2/clickDownload/clickRESULT", "msg: " + msg);
-                Toast.makeText(view.getContext(), msg, Toast.LENGTH_LONG).show();
+                Toast.makeText(context, msg, Toast.LENGTH_LONG).show();
             }
         });
     }

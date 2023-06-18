@@ -1,5 +1,7 @@
 package ua.com.merchik.merchik.dialogs;
 
+import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
+
 import android.app.DatePickerDialog;
 import android.app.Dialog;
 import android.content.Context;
@@ -51,6 +53,7 @@ import ua.com.merchik.merchik.TelephoneMask;
 import ua.com.merchik.merchik.Utils.MySimpleExpandableListAdapter;
 import ua.com.merchik.merchik.Utils.Test.ClickableMovementMethod;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
+import ua.com.merchik.merchik.data.Database.Room.ViewListSDB;
 import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteHintsDB;
 import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteObjects.SiteObjectsDB;
 import ua.com.merchik.merchik.data.PhotoDescriptionText;
@@ -330,6 +333,19 @@ public class DialogData {
                                     null,
                                     Globals.session,
                                     null)));
+
+                    try {
+                        // Записываю в ЛОГ инфу о том что видео просмотрено.
+                        ViewListSDB viewListSDB = new ViewListSDB();
+                        viewListSDB.lessonId = finalData.getID();
+                        viewListSDB.merchikId = Globals.userId;
+                        viewListSDB.dt = System.currentTimeMillis()/1000;
+                        SQL_DB.videoViewDao().insertAll(Collections.singletonList(viewListSDB));
+                        Globals.writeToMLOG("ERROR", "DialogData/setVideoLesson/videoViewDao().insertAll", "Успешно посмотрел ролик: " + finalData.getID());
+                    }catch (Exception e){
+                        Globals.writeToMLOG("ERROR", "DialogData/setVideoLesson/videoViewDao().insertAll", "Exception e: " + e);
+                    }
+
 
                     Log.e("setVideoLesson", "click1");
                     if (clickListener == null) {

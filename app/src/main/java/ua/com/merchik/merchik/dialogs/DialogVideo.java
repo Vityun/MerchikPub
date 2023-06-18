@@ -1,5 +1,7 @@
 package ua.com.merchik.merchik.dialogs;
 
+import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
+
 import android.annotation.SuppressLint;
 import android.app.Dialog;
 import android.content.Context;
@@ -18,12 +20,17 @@ import android.widget.Toast;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import java.util.Collections;
 import java.util.List;
 
 import ua.com.merchik.merchik.Adapters.ButtonAdapter;
+import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
+import ua.com.merchik.merchik.data.Database.Room.ViewListSDB;
 import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteHintsDB;
+import ua.com.merchik.merchik.data.RealmModels.LogDB;
+import ua.com.merchik.merchik.database.realm.RealmManager;
 
 public class DialogVideo extends DialogData {
 
@@ -128,6 +135,35 @@ public class DialogVideo extends DialogData {
             public <T> void click(T data) {
                 try {
                     SiteHintsDB vidLesson = (SiteHintsDB) data;
+
+                    if (vidLesson != null) {
+                        long obj = vidLesson.getID();
+                        RealmManager.setRowToLog(Collections.singletonList(
+                                new LogDB(
+                                        RealmManager.getLastIdLogDB() + 1,
+                                        System.currentTimeMillis() / 1000,
+                                        "Факт перегляду відео-урока. " + vidLesson.getTitle(),
+                                        1261,
+                                        null,
+                                        null,
+                                        obj,
+                                        null,
+                                        null,
+                                        Globals.session,
+                                        null)));
+
+                        try {
+                            // Записываю в ЛОГ инфу о том что видео просмотрено.
+                            ViewListSDB viewListSDB = new ViewListSDB();
+                            viewListSDB.lessonId = vidLesson.getID();
+                            viewListSDB.merchikId = Globals.userId;
+                            viewListSDB.dt = System.currentTimeMillis() / 1000;
+                            SQL_DB.videoViewDao().insertAll(Collections.singletonList(viewListSDB));
+                            Globals.writeToMLOG("ERROR", "DialogData/setVideoLesson/videoViewDao().insertAll", "Успешно посмотрел ролик: " + vidLesson.getID());
+                        } catch (Exception e) {
+                            Globals.writeToMLOG("ERROR", "DialogData/setVideoLesson/videoViewDao().insertAll", "Exception e: " + e);
+                        }
+                    }
 
                     String s = vidLesson.getUrl();
                     s = s.replace("http://www.youtube.com/", "http://www.youtube.com/embed/");

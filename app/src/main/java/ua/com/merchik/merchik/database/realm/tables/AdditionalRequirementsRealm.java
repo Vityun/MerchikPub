@@ -221,14 +221,10 @@ public class AdditionalRequirementsRealm {
                     .equalTo("addrTTId", ttCategory)
                     .or()
                     .equalTo("addrTTId", 0)
+                    .or()
+                    .isNull("addrTTId")
                     .findAll();
         }
-
-//        if (themeId != 998) {
-//            realmResults = realmResults.where()
-//                    .equalTo("themeId", String.valueOf(themeId))
-//                    .findAll();
-//        }
         return realmResults;
     }
 

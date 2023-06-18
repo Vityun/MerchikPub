@@ -59,6 +59,7 @@ import ua.com.merchik.merchik.data.RetrofitResponse.ThemeTableRespose;
 import ua.com.merchik.merchik.data.RetrofitResponse.TovarImgResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.TovarTableResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.TradeMarkResponse;
+import ua.com.merchik.merchik.data.RetrofitResponse.ViewListResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.WpDataServer;
 import ua.com.merchik.merchik.data.RetrofitResponse.photos.ImagesViewListImageResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.photos.PhotoInfoResponse;
@@ -605,6 +606,16 @@ public interface RetrofitInterface {
             @Body JsonObject json);
 
     // -------------------------------------------------------
+
+
+    /**
+     * 18.06.23
+     * Просмотры. Это контроль просмотренности роликов. Видео.
+     * */
+    @POST("mobile_app.php?")
+    Call<ViewListResponse> View_List_RESPONSE(
+            @Header("ContentType") String content,
+            @Body JsonObject json);
 
     /**
      * 12.06.23.
