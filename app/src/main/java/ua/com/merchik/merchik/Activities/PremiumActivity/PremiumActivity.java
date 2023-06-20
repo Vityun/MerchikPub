@@ -321,13 +321,14 @@ public class PremiumActivity extends toolbar_menus {
     private void makeTableDataSecondWeek() {
         ProgressDialog progressDialog = ProgressDialog.show(this, "Преміальні", "Завантажую поточний тиждень.", true, true);
 
-        downloadPremium(Clock.getCurrentMonday(), Calendar.getInstance(), new PremiumRespListener() {
+        downloadPremium(Clock.getCurrentMonday(), Clock.getCurrentSunday(), new PremiumRespListener() {
+//        downloadPremium(Clock.getCurrentMonday(), Calendar.getInstance(), new PremiumRespListener() {
             @Override
             public void onSuccess(PremiumPremiumList res) {
                 if (progressDialog != null && progressDialog.isShowing()) {
                     progressDialog.dismiss();
                 }
-                prepareTableData(getPeriodString(Clock.getCurrentMonday(), Calendar.getInstance()), res);
+                prepareTableData(getPeriodString(Clock.getCurrentMonday(), Clock.getCurrentSunday()), res);
             }
 
             @Override
@@ -533,7 +534,7 @@ public class PremiumActivity extends toolbar_menus {
         List<ViewHolderTypeList.TablePremiumLayoutData.PremiumTableRow> table = new ArrayList();
 
         table.add(createRow(Clock.getLastMonday(), Clock.getLastSunday()));
-        table.add(createRow(Clock.getCurrentMonday(), Calendar.getInstance()));
+        table.add(createRow(Clock.getCurrentMonday(), Clock.getCurrentSunday()));
 
         // ----------------------------
 

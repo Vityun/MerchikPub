@@ -224,5 +224,30 @@ public class Clock {
         return cal;
     }
 
+    /*Получение текущего конца недели*/
+    public static Calendar getCurrentSunday(){
+        Calendar cal = Calendar.getInstance();
+        cal.set(Calendar.DAY_OF_WEEK, Calendar.SUNDAY);
+        return cal;
+    }
+
+    public static String getDatePremium(String inputDate){
+        SimpleDateFormat inputFormat = new SimpleDateFormat("yyyyMMdd");
+        SimpleDateFormat outputFormat = new SimpleDateFormat("dd.MM.yy");
+
+        String outputDate = "";
+
+        try {
+            Date date = inputFormat.parse(inputDate);
+
+            outputDate = outputFormat.format(date);
+            System.out.println(outputDate);
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+
+        return outputDate;
+    }
+
 
 }

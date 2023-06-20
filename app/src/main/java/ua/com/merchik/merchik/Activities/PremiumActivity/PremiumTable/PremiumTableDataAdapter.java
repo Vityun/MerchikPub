@@ -111,7 +111,7 @@ public class PremiumTableDataAdapter extends RecyclerView.Adapter<PremiumTableDa
             CharSequence prihodChar = (int) detailed.prihod < 0 ? Html.fromHtml("<font color=red>" + (int) detailed.prihod + "</font>") : "" + (int) detailed.prihod;
             CharSequence rashodChar = (int) detailed.rashod < 0 ? Html.fromHtml("<font color=red>" + (int) detailed.rashod + "</font>") : "" + (int) detailed.rashod;
 
-            name.setText(detailed.docNom + " (" + Globals.reverseString(detailed.docDat) + ")");
+            name.setText(detailed.docNom + " (" + Clock.getDatePremium(detailed.docDat) + ")");
             column1.setText("");
             column1.setVisibility(View.GONE);
             column5.setText("" + (int) detailed.sumPlan);
