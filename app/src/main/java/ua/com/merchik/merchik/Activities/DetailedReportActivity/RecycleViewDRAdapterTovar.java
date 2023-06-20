@@ -53,6 +53,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import io.realm.RealmResults;
 import retrofit2.Call;
@@ -73,6 +74,7 @@ import ua.com.merchik.merchik.data.Database.Room.ArticleSDB;
 import ua.com.merchik.merchik.data.Database.Room.OborotVedSDB;
 import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
 import ua.com.merchik.merchik.data.PhotoDescriptionText;
+import ua.com.merchik.merchik.data.RealmModels.AdditionalRequirementsDB;
 import ua.com.merchik.merchik.data.RealmModels.ErrorDB;
 import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
 import ua.com.merchik.merchik.data.RealmModels.PromoDB;
@@ -101,6 +103,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
     private OpenType openType;
 
     private List<Integer> tovIdList;
+    private List<AdditionalRequirementsDB> adList;
 
     private Clicks.clickVoid click;
     private Clicks.click clickTovar;
@@ -170,8 +173,9 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
         this.dataList = data;
     }
 
-    public void setAkciyaTovList(List<Integer> tovIdList) {
+    public void setAkciyaTovList(List<Integer> tovIdList, List<AdditionalRequirementsDB> adList) {
         this.tovIdList = tovIdList;
+        this.adList = adList;
         Log.e("АКЦИЯ_ТОВАРА", "tovIdList: " + tovIdList);
     }
 
@@ -655,11 +659,35 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                         Log.e("DRAdapterTovar", "ClickListener");
                         if (openType.equals(OpenType.DEFAULT)) {
                             try {
+
+                                // Отображаем инфу по особенному Товару.
+                                String tovId = list.getiD(); // Идентификатор Товара
+                                Optional<AdditionalRequirementsDB> result = null;
+                                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+                                    result = adList.stream()
+                                            .filter(obj -> obj.getTovarId().equals(tovId) && obj.getOptionId().isEmpty())
+                                            .findFirst();
+
+                                    if (result.isPresent()) {
+                                        AdditionalRequirementsDB foundObject = result.get();
+                                        // Выполняйте операции с найденным объектом
+                                        DialogData dialogMsg = new DialogData(mContext);
+                                        dialogMsg.setTitle("Додаткова вимога до товару.");
+                                        dialogMsg.setText(foundObject.getNm());
+                                        dialogMsg.setClose(dialogMsg::dismiss);
+                                        dialogMsg.show();
+                                    } else {
+                                        // Обработка случая, когда объект не найден
+                                    }
+                                }
+
+
+                                //------------------------------------------------------------------
+
                                 // На всякий случай зачищаю модальные окна.
                                 dialogList = new ArrayList<>();
 
                                 // Получаем инфу об обязательных опциях
-//                            List<TovarOptions> tovOptTplList;
                                 tovOptTplList = options.getRequiredOptionsTPL(optionsList2, finalDeletePromoOption);
 
                                 Log.e("DRAdapterTovar", "Кол-во. обязательных опций: " + tovOptTplList.size());
@@ -1128,6 +1156,29 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                     if (dialogList.size() > 0) {
                         dialogList.get(0).show();
                     }
+                } else if (clickType && (
+                        dialogList.get(0).tovarOptions.getOptionControlName().equals(AKCIYA_ID) ||
+                                dialogList.get(0).tovarOptions.getOptionControlName().equals(AKCIYA)
+                )
+                ) {
+                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+                        Optional<AdditionalRequirementsDB> result;
+                        result = adList.stream()
+                                .filter(obj -> obj.getOptionId().equals("80977"))
+                                .findFirst();
+
+//                        AdditionalRequirementsDB foundObject = result.get();
+
+                        if (result.isPresent()) {
+                            // Делайте что-то с найденным объектом
+                            dialogList.remove(0);
+                        } else {
+                            // Обработка случая, когда объект не найден
+                        }
+                    }
+
+
+
                 } else {
                     dialogList.get(0).show();
                 }

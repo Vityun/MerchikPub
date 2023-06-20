@@ -55,6 +55,7 @@ import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsRealm;
 import ua.com.merchik.merchik.database.realm.tables.PPADBRealm;
 import ua.com.merchik.merchik.database.realm.tables.ReportPrepareRealm;
+import ua.com.merchik.merchik.database.realm.tables.TovarRealm;
 import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
 
@@ -374,9 +375,9 @@ public class DetailedReportTovarsFrag extends Fragment {
 
             Log.e("АКЦИЯ_ТОВАРА", "START");
             List<Integer> promotionalTov = new ArrayList<>();
+            List<AdditionalRequirementsDB> data = null;
+
             try {
-                // TODO OH SHIT
-                List<AdditionalRequirementsDB> data;
                 if (wpDataDB != null) {
                     data = AdditionalRequirementsRealm.getData3(wpDataDB, DEFAULT, null);
                 } else {
@@ -394,6 +395,13 @@ public class DetailedReportTovarsFrag extends Fragment {
                         long docDt = wpDataDB.getDt().getTime() / 1000;
                         long docDtMinus2 = Clock.getDatePeriodLong(docDt, -2);
                         long docDtPlus1 = Clock.getDatePeriodLong(docDt, 1);
+
+                        Log.e("AR_DATE", "item.getId(): " + item.getId());
+                        Log.e("AR_DATE", "item.getDtStart(): " + item.getDtStart());
+                        Log.e("AR_DATE", "item.getDtEnd(): " + item.getDtEnd());
+                        Log.e("AR_DATE", "item.getTovarId(): " + item.getTovarId());
+                        Log.e("AR_DATE", "Tovar: " + TovarRealm.getById(item.getTovarId()).getNm());
+
 
                         if ((startDt > 0 && endDt > 0 && docDt < endDt) || (startDt > 0 && endDt == 0)){
                             promotionalTov.add(Integer.valueOf(item.getTovarId()));
@@ -413,7 +421,7 @@ public class DetailedReportTovarsFrag extends Fragment {
             } else {
                 adapter = new RecycleViewDRAdapterTovar(mContext, list, tasksAndReclamationsSDB, RecycleViewDRAdapterTovar.OpenType.DEFAULT);
             }
-            adapter.setAkciyaTovList(promotionalTov);
+            adapter.setAkciyaTovList(promotionalTov, data);
 
             adapter.setTplType(RecycleViewDRAdapterTovar.DRAdapterTovarTPLTypeView.GONE);
 
