@@ -72,6 +72,7 @@ import ua.com.merchik.merchik.PhotoReportActivity;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.ServerExchange.TablesLoadingUnloading;
 import ua.com.merchik.merchik.Translate;
+import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.WorkPlan;
 import ua.com.merchik.merchik.data.Data;
 import ua.com.merchik.merchik.data.Database.Room.AddressSDB;
@@ -135,7 +136,8 @@ public class DetailedReportActivity extends toolbar_menus {
     TextView textDRDateV, textDRAddrV, textDRCustV, textDRMercV;
     Button buttonTakeKPSfromDR;
     LinearLayout option_signal_layout2;
-    ImageView imageView;
+    public static ImageView imageView;
+//    public static ImageView imageViewVideoRedDot;
 
     public ArrayList<Data> list = new ArrayList<Data>();
 
@@ -276,6 +278,36 @@ public class DetailedReportActivity extends toolbar_menus {
 
     }//--------------------------------------------------------------------- /ON CREATE ---------------------------------------------------------------------
 
+    public static List<ViewListSDB> checkVideos(Integer[] ids, Clicks.clickVoid click) {
+        List<ViewListSDB> viewListSDB = null;
+        List<SiteObjectsDB> object = RealmManager.getLesson(ids);
+        List<SiteHintsDB> data = null;
+        List<Integer> objectLessonIds = new ArrayList<>();
+        StringBuilder sb = new StringBuilder();
+
+        if (object != null && !object.isEmpty()) {
+            for (SiteObjectsDB item : object) {
+                String lessonId = item.getLessonId();
+                if (lessonId != null && !lessonId.isEmpty()) {
+                    objectLessonIds.add(Integer.valueOf(lessonId));
+                }
+            }
+
+            if (!objectLessonIds.isEmpty()) {
+                Integer[] lessonIds = objectLessonIds.toArray(new Integer[0]);
+                data = RealmManager.getVideoLesson(lessonIds);
+            }
+        }
+
+        if (data != null) {
+            for (SiteHintsDB item : data){
+                sb.append(item.getNm()).append("\n");
+            }
+            viewListSDB = SQL_DB.videoViewDao().getByLessonId(data.get(0).getID());
+        }
+
+        return viewListSDB;
+    }
 
     ActivityResultLauncher<String> requestPermissionLauncher;
 
@@ -522,13 +554,9 @@ public class DetailedReportActivity extends toolbar_menus {
 
         if (viewListSDB != null && viewListSDB.size() != 0) {
             imageView.setVisibility(View.GONE);
-//            Snackbar.make(imageView.getRootView(), "Все ролики просмотрены", Snackbar.LENGTH_LONG).show();
-
-//            Toast.makeText(imageView.getContext(), "Все ролики просмотрены", Toast.LENGTH_SHORT).show();
         } else {
             imageView.setVisibility(View.VISIBLE);
             Snackbar.make(imageView.getRootView(), "Вы просмотрели ещё не все ролики: " + sb, Snackbar.LENGTH_LONG).show();
-//            Toast.makeText(imageView.getContext(), "Вы просмотрели ещё не все ролики: " + sb, Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -592,7 +620,7 @@ public class DetailedReportActivity extends toolbar_menus {
 //                    toolbar_menus.videoLesson = 3527;
                     toolbar_menus.videoLessons = new Integer[]{4208, 3527};
                     toolbar_menus.setFab(DetailedReportActivity.this, DetailedReportActivity.fab, ()->{
-                        checkVideo(new Integer[]{videoLesson});
+                        checkVideo(videoLessons);
                     }); // ЗИР
                     checkVideo(videoLessons);
                 }

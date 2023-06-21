@@ -129,62 +129,73 @@ public class DialogVideo extends DialogData {
     public void setVideos(List<SiteHintsDB> data, Clicks.clickVoid click){
         webView.setVisibility(View.GONE);
         imgBtnVideoLesson.setVisibility(View.GONE);
-//        List<SiteHintsDB> data = RealmManager.getAllVideoLessons();
-        recyclerView.setAdapter(new ButtonAdapter(data, new Clicks.click() {
-            @Override
-            public <T> void click(T data) {
-                try {
-                    SiteHintsDB vidLesson = (SiteHintsDB) data;
-
-                    if (vidLesson != null) {
-                        long obj = vidLesson.getID();
-                        RealmManager.setRowToLog(Collections.singletonList(
-                                new LogDB(
-                                        RealmManager.getLastIdLogDB() + 1,
-                                        System.currentTimeMillis() / 1000,
-                                        "Факт перегляду відео-урока. " + vidLesson.getTitle(),
-                                        1261,
-                                        null,
-                                        null,
-                                        obj,
-                                        null,
-                                        null,
-                                        Globals.session,
-                                        null)));
-
-                        try {
-                            // Записываю в ЛОГ инфу о том что видео просмотрено.
-                            ViewListSDB viewListSDB = new ViewListSDB();
-                            viewListSDB.lessonId = vidLesson.getID();
-                            viewListSDB.merchikId = Globals.userId;
-                            viewListSDB.dt = System.currentTimeMillis() / 1000;
-                            SQL_DB.videoViewDao().insertAll(Collections.singletonList(viewListSDB));
-                            Globals.writeToMLOG("ERROR", "DialogData/setVideoLesson/videoViewDao().insertAll", "Успешно посмотрел ролик: " + vidLesson.getID());
-                            click.click();
-                        } catch (Exception e) {
-                            Globals.writeToMLOG("ERROR", "DialogData/setVideoLesson/videoViewDao().insertAll", "Exception e: " + e);
-                        }
-                    }
-
-                    String s = vidLesson.getUrl();
-                    s = s.replace("http://www.youtube.com/", "http://www.youtube.com/embed/");
-                    s = s.replace("watch?v=", "");
-
-
-                    DialogVideo dialogVideo = new DialogVideo(dialog.getContext());
-                    dialogVideo.setTitle(vidLesson.getNm());
-                    dialogVideo.setVideo("<html><body><iframe width=\"700\" height=\"600\" src=\"" + s + "\"></iframe></body></html>");
-                    dialogVideo.setVideoLesson(context, true, 0, () -> context.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(vidLesson.getUrl()))), null);
-                    dialogVideo.setClose(dialogVideo::dismiss);
-                    dialogVideo.show();
-                }catch (Exception e){
-                    Toast.makeText(dialog.getContext(), "Exception e: " + e, Toast.LENGTH_LONG).show();
-                }
-            }
-        }));
+        RecyclerView.Adapter adapter = getAdapter(data, click);
+        recyclerView.setAdapter(adapter);
         recyclerView.setLayoutManager(new LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false));
     }
 
+    private RecyclerView.Adapter getAdapter(List<SiteHintsDB> data, Clicks.clickVoid click){
+        final ButtonAdapter buttonAdapter = new ButtonAdapter(data, new Clicks.click() {
+            @Override
+            public <T> void click(T data) {
+                adapterClick((SiteHintsDB) data, click);
+                recyclerView.getAdapter().notifyDataSetChanged(); // Обновление внешнего вида адаптера
+            }
+        });
+        return buttonAdapter;
+    }
+
+    private void adapterClick(SiteHintsDB data, Clicks.clickVoid click){
+        try {
+            SiteHintsDB vidLesson = (SiteHintsDB) data;
+
+            if (vidLesson != null) {
+                long obj = vidLesson.getID();
+                RealmManager.setRowToLog(Collections.singletonList(
+                        new LogDB(
+                                RealmManager.getLastIdLogDB() + 1,
+                                System.currentTimeMillis() / 1000,
+                                "Факт перегляду відео-урока. " + vidLesson.getTitle(),
+                                1261,
+                                null,
+                                null,
+                                obj,
+                                null,
+                                null,
+                                Globals.session,
+                                null)));
+
+                try {
+                    // Записываю в ЛОГ инфу о том что видео просмотрено.
+                    ViewListSDB viewListSDB = new ViewListSDB();
+                    viewListSDB.lessonId = vidLesson.getID();
+                    viewListSDB.merchikId = Globals.userId;
+                    viewListSDB.dt = System.currentTimeMillis() / 1000;
+                    SQL_DB.videoViewDao().insertAll(Collections.singletonList(viewListSDB));
+                    Globals.writeToMLOG("ERROR", "DialogData/setVideoLesson/videoViewDao().insertAll", "Успешно посмотрел ролик: " + vidLesson.getID());
+                    click.click();
+                } catch (Exception e) {
+                    Globals.writeToMLOG("ERROR", "DialogData/setVideoLesson/videoViewDao().insertAll", "Exception e: " + e);
+                }
+            }
+
+            String s = vidLesson.getUrl();
+            s = s.replace("http://www.youtube.com/", "http://www.youtube.com/embed/");
+            s = s.replace("watch?v=", "");
+
+
+            DialogVideo dialogVideo = new DialogVideo(dialog.getContext());
+            dialogVideo.setTitle(vidLesson.getNm());
+            dialogVideo.setVideo("<html><body><iframe width=\"700\" height=\"600\" src=\"" + s + "\"></iframe></body></html>");
+            dialogVideo.setVideoLesson(context, true, 0, () -> context.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(vidLesson.getUrl()))), null);
+            dialogVideo.setClose(dialogVideo::dismiss);
+            dialogVideo.show();
+
+
+        }catch (Exception e){
+            Toast.makeText(dialog.getContext(), "Exception e: " + e, Toast.LENGTH_LONG).show();
+        }
+    }
 
 
 

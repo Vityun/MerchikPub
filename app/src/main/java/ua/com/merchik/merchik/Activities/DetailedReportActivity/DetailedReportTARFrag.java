@@ -1,10 +1,12 @@
 package ua.com.merchik.merchik.Activities.DetailedReportActivity;
 
+import static ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity.checkVideos;
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -16,6 +18,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
+import java.util.Collections;
 import java.util.List;
 
 import ua.com.merchik.merchik.Activities.PhotoLogActivity.PhotoLogActivity;
@@ -27,14 +30,21 @@ import ua.com.merchik.merchik.MakePhoto.MakePhoto;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
+import ua.com.merchik.merchik.data.Database.Room.ViewListSDB;
+import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteHintsDB;
+import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteObjects.SiteObjectsDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
+import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.AddressRealm;
 import ua.com.merchik.merchik.database.realm.tables.CustomerRealm;
 import ua.com.merchik.merchik.database.realm.tables.UsersRealm;
 import ua.com.merchik.merchik.dialogs.DialodTAR.DialogCreateTAR;
 import ua.com.merchik.merchik.dialogs.DialogData;
+import ua.com.merchik.merchik.dialogs.DialogVideo;
 
 public class DetailedReportTARFrag extends Fragment {
+
+    private static Integer[] DETAILED_REPORT_FRAGMENT_TAR_VIDEO_LESSONS = new Integer[]{4208, 3527};
 
     private Context mContext;
     private WpDataDB wpDataDB;
@@ -42,6 +52,9 @@ public class DetailedReportTARFrag extends Fragment {
 
     private FragmentManager fragmentManager;
     private TARSecondFrag secondFrag;
+
+    private FloatingActionButton fab;
+
 
     public DetailedReportTARFrag(Context mContext, WpDataDB wpDataDB) {
         this.mContext = mContext;
@@ -59,6 +72,7 @@ public class DetailedReportTARFrag extends Fragment {
 
         try {
             FloatingActionButton fabAdd = v.findViewById(R.id.fabAdd);
+            fab = v.findViewById(R.id.fab);
             RecyclerView recycler = v.findViewById(R.id.recycler);
 
             try {
@@ -139,6 +153,17 @@ public class DetailedReportTARFrag extends Fragment {
                 dialog.show();
             });
 
+            setFabVideo(v.getContext(), ()->{
+                List<ViewListSDB> videos = checkVideos(DETAILED_REPORT_FRAGMENT_TAR_VIDEO_LESSONS, ()->{});
+
+//                if (videos != null && videos.size() != 0) {
+//                    DetailedReportActivity.imageView.setVisibility(View.GONE);
+//                } else {
+//                    DetailedReportActivity.imageView.setVisibility(View.VISIBLE);
+//                    Snackbar.make(DetailedReportActivity.imageView.getRootView(), "Вы просмотрели ещё не все ролики", Snackbar.LENGTH_LONG).show();
+//                }
+            });
+
         } catch (Exception e) {
             Globals.writeToMLOG("ERROR", "DetailedReportTARFrag/onCreateView", "Exception e: " + e);
         }
@@ -150,9 +175,36 @@ public class DetailedReportTARFrag extends Fragment {
     /**
      * 21.06.23.
      * Добавление иконочки для прямого просмотра видео-уроков.
-     * */
-    private void setFabVideo(){
+     *
+     * @param context*/
+    private void setFabVideo(Context context, Clicks.clickVoid click){
+        fab.setOnClickListener(view -> {
+            DialogVideo dialogVideo = new DialogVideo(context);
+            dialogVideo.setTitle("Перелік відео уроків");
+            dialogVideo.setVideos(getSiteHints(DETAILED_REPORT_FRAGMENT_TAR_VIDEO_LESSONS), click);
+            dialogVideo.setClose(dialogVideo::dismiss);
+            dialogVideo.show();
+        });
+    }
 
+    private List<SiteHintsDB> getSiteHints(Integer[] integers){
+        List<SiteObjectsDB> siteObjects = RealmManager.getLesson(integers);
+        List<SiteHintsDB> data = null;
+        try {
+            if (siteObjects != null) {
+                Integer[] siteObjectIds = new Integer[siteObjects.size()];
+                for (int i = 0; i < siteObjects.size(); i++) {
+                    int lessId = Integer.parseInt(siteObjects.get(i).getLessonId());
+                    if (lessId != 0) siteObjectIds[i] = lessId;
+                }
+                data = RealmManager.getVideoLesson(siteObjectIds);
+                if (data != null) Collections.reverse(data);
+            }
+        } catch (Exception e) {
+            Log.e("setVideoLesson", "Exception e: " + e);
+        }
+
+        return data;
     }
 
 }

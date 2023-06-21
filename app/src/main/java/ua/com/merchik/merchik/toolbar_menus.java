@@ -319,17 +319,25 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                 break;
 
             case 164:
-                MenuItemFromWebDB menuItem164 = RealmManager.getSiteMenuItem(164);
-                String menuItem164format = menuItem164.getUrl();
-                Intent menuItem164browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(menuItem164format));
-                this.startActivity(menuItem164browserIntent);
+                try {
+                    MenuItemFromWebDB menuItem164 = RealmManager.getSiteMenuItem(164);
+                    String menuItem164format = menuItem164.getUrl();
+                    Intent menuItem164browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(menuItem164format));
+                    this.startActivity(menuItem164browserIntent);
+                }catch (Exception e){
+                    Globals.writeToMLOG("ERROR", "menu/164", "Exception e: " + e);
+                }
                 break;
 
             case 165:
-                MenuItemFromWebDB menuItem165 = RealmManager.getSiteMenuItem(165);
-                String menuItem165format = menuItem165.getUrl();
-                Intent menuItem165browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(menuItem165format));
-                this.startActivity(menuItem165browserIntent);
+                try {
+                    MenuItemFromWebDB menuItem165 = RealmManager.getSiteMenuItem(165);
+                    String menuItem165format = menuItem165.getUrl();
+                    Intent menuItem165browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(menuItem165format));
+                    this.startActivity(menuItem165browserIntent);
+                }catch (Exception e){
+                    Globals.writeToMLOG("ERROR", "menu/165", "Exception e: " + e);
+                }
                 break;
 
             case 169:
