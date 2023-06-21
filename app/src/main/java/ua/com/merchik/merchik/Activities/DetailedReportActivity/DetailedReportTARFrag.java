@@ -145,4 +145,14 @@ public class DetailedReportTARFrag extends Fragment {
 
         return v;
     }
+
+
+    /**
+     * 21.06.23.
+     * Добавление иконочки для прямого просмотра видео-уроков.
+     * */
+    private void setFabVideo(){
+
+    }
+
 }

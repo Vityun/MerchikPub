@@ -588,6 +588,7 @@ public class DetailedReportActivity extends toolbar_menus {
                     Log.e("onTabSelected", "ЗИР");
 
                     toolbar_menus.textLesson = 822;
+                    toolbar_menus.textLesson = 4225;
 //                    toolbar_menus.videoLesson = 3527;
                     toolbar_menus.videoLessons = new Integer[]{4208, 3527};
                     toolbar_menus.setFab(DetailedReportActivity.this, DetailedReportActivity.fab, ()->{
