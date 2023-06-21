@@ -287,7 +287,7 @@ public class DialogData {
         });
     }
 
-    public void setVideoLesson(Context context, boolean visualise, int objectId, DialogClickListener clickListener) {
+    public void setVideoLesson(Context context, boolean visualise, int objectId, DialogClickListener clickListener, Clicks.clickVoid click) {
         Log.e("setVideoLesson", "click0 Oid: " + objectId);
         try {
             if (visualise) {
@@ -342,6 +342,7 @@ public class DialogData {
                         viewListSDB.dt = System.currentTimeMillis()/1000;
                         SQL_DB.videoViewDao().insertAll(Collections.singletonList(viewListSDB));
                         Globals.writeToMLOG("ERROR", "DialogData/setVideoLesson/videoViewDao().insertAll", "Успешно посмотрел ролик: " + finalData.getID());
+                        click.click();
                     }catch (Exception e){
                         Globals.writeToMLOG("ERROR", "DialogData/setVideoLesson/videoViewDao().insertAll", "Exception e: " + e);
                     }
@@ -368,7 +369,7 @@ public class DialogData {
                         video.setVideoLesson(context, true, 0, () -> {
                             Log.e("DialogVideo", "click Video");
                             context.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(finalData.getUrl())));
-                        });
+                        }, null);
                         video.setVideo("<html><body><iframe width=\"700\" height=\"600\" src=\"" + s + "\"></iframe></body></html>");
 
                         video.show();
@@ -401,7 +402,7 @@ public class DialogData {
         }
     }
 
-    public void setVideoLesson(Context context, boolean visualise, Integer[] objectIds, DialogClickListener clickListener) {
+    public void setVideoLesson(Context context, boolean visualise, Integer[] objectIds, DialogClickListener clickListener, Clicks.clickVoid click) {
         try {
             if (visualise) {
                 imgBtnVideoLesson.setVisibility(View.VISIBLE);
@@ -424,6 +425,7 @@ public class DialogData {
                         if (lessId != 0) siteObjectIds[i] = lessId;
                     }
                     data = RealmManager.getVideoLesson(siteObjectIds);
+                    if (data != null) Collections.reverse(data);
                 }
             } catch (Exception e) {
                 Log.e("setVideoLesson", "Exception e: " + e);
@@ -436,7 +438,7 @@ public class DialogData {
                     if (clickListener == null) {
                         DialogVideo dialogVideo = new DialogVideo(context);
                         dialogVideo.setTitle("Перелік відео уроків");
-                        dialogVideo.setVideos(finalData);
+                        dialogVideo.setVideos(finalData, click);
                         dialogVideo.setClose(dialogVideo::dismiss);
                         dialogVideo.show();
                     }

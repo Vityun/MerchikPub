@@ -109,7 +109,7 @@ public class Tab1Fragment extends Fragment {
             Log.e("SET_TAR_FAB", "Tab1Fragment 0");
         }
 
-        toolbar_menus.setFab(v.getContext(), TARActivity.fab); // ГЛАВНАЯ
+        toolbar_menus.setFab(v.getContext(), TARActivity.fab, ()->{}); // ГЛАВНАЯ
 
         return v;
     }

@@ -245,8 +245,9 @@ public class DetailedReportActivity extends toolbar_menus {
             toolbar_menus.textLesson = 818;
             toolbar_menus.videoLesson = 819;
             toolbar_menus.videoLessons = null;
-            toolbar_menus.setFab(DetailedReportActivity.this, DetailedReportActivity.fab); // ГЛАВНАЯ
-
+            toolbar_menus.setFab(DetailedReportActivity.this, DetailedReportActivity.fab, ()->{
+                checkVideo(new Integer[videoLesson]);
+            }); // ГЛАВНАЯ
             checkVideo(new Integer[videoLesson]);
 
             Log.e("ЧТО_ПРОИСХОДИТ", "DetailedReportActivity");
@@ -270,6 +271,8 @@ public class DetailedReportActivity extends toolbar_menus {
         } else {
             Log.e("test", "test");
         }
+
+        checkVideo(new Integer[]{819});
 
     }//--------------------------------------------------------------------- /ON CREATE ---------------------------------------------------------------------
 
@@ -519,7 +522,7 @@ public class DetailedReportActivity extends toolbar_menus {
 
         if (viewListSDB != null && viewListSDB.size() != 0) {
             imageView.setVisibility(View.GONE);
-            Snackbar.make(imageView.getRootView(), "Все ролики просмотрены", Snackbar.LENGTH_LONG).show();
+//            Snackbar.make(imageView.getRootView(), "Все ролики просмотрены", Snackbar.LENGTH_LONG).show();
 
 //            Toast.makeText(imageView.getContext(), "Все ролики просмотрены", Toast.LENGTH_SHORT).show();
         } else {
@@ -554,9 +557,9 @@ public class DetailedReportActivity extends toolbar_menus {
                     toolbar_menus.textLesson = 818;
                     toolbar_menus.videoLesson = 819;
                     toolbar_menus.videoLessons = null;
-                    toolbar_menus.setFab(DetailedReportActivity.this, DetailedReportActivity.fab); // ГЛАВНАЯ
-
-
+                    toolbar_menus.setFab(DetailedReportActivity.this, DetailedReportActivity.fab, ()->{
+                        checkVideo(new Integer[]{videoLesson});
+                    }); // ГЛАВНАЯ
                     checkVideo(new Integer[]{videoLesson});
 
                 } else if (tab.getPosition() == 1) {
@@ -565,8 +568,9 @@ public class DetailedReportActivity extends toolbar_menus {
                     toolbar_menus.textLesson = 820;
                     toolbar_menus.videoLesson = 821;
                     toolbar_menus.videoLessons = null;
-                    toolbar_menus.setFab(DetailedReportActivity.this, DetailedReportActivity.fab); // ОПЦИИ
-
+                    toolbar_menus.setFab(DetailedReportActivity.this, DetailedReportActivity.fab, ()->{
+                        checkVideo(new Integer[]{videoLesson});
+                    }); // ОПЦИИ
                     checkVideo(new Integer[]{videoLesson});
 
                 } else if (tab.getPosition() == 2) {
@@ -575,18 +579,20 @@ public class DetailedReportActivity extends toolbar_menus {
                     toolbar_menus.textLesson = 822;
                     toolbar_menus.videoLesson = 823;
                     toolbar_menus.videoLessons = null;
-                    toolbar_menus.setFab(DetailedReportActivity.this, DetailedReportActivity.fab); // ТОВАР
-
+                    toolbar_menus.setFab(DetailedReportActivity.this, DetailedReportActivity.fab, ()->{
+                        checkVideo(new Integer[]{videoLesson});
+                    }); // ТОВАР
                     checkVideo(new Integer[]{videoLesson});
 
                 } else if (tab.getPosition() == 3) {
                     Log.e("onTabSelected", "ЗИР");
 
-//                    toolbar_menus.textLesson = 822;
+                    toolbar_menus.textLesson = 822;
 //                    toolbar_menus.videoLesson = 3527;
-                    toolbar_menus.videoLessons = new Integer[]{3527, 4208};
-                    toolbar_menus.setFab(DetailedReportActivity.this, DetailedReportActivity.fab); // ЗИР
-
+                    toolbar_menus.videoLessons = new Integer[]{4208, 3527};
+                    toolbar_menus.setFab(DetailedReportActivity.this, DetailedReportActivity.fab, ()->{
+                        checkVideo(new Integer[]{videoLesson});
+                    }); // ЗИР
                     checkVideo(videoLessons);
                 }
 

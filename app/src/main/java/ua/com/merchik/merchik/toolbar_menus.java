@@ -197,7 +197,7 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
     public static int videoLesson;
     public static Integer[] videoLessons;
 
-    public static void setFab(Context context, FloatingActionButton fab) {
+    public static void setFab(Context context, FloatingActionButton fab, Clicks.clickVoid click) {
         Log.e("setFab", "textLesson: " + textLesson);
         Log.e("setFab", "videoLesson: " + videoLesson);
         Log.e("setFab", "videoLessons: " + Arrays.toString(videoLessons));
@@ -222,9 +222,9 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                 dialog.setMerchikIco(context);
                 dialog.setImgBtnCall(context);
                 if (videoLessons != null && videoLessons.length > 0) {
-                    dialog.setVideoLesson(context, true, videoLessons, null);
+                    dialog.setVideoLesson(context, true, videoLessons, null, click);
                 } else {
-                    dialog.setVideoLesson(context, true, videoLesson, null);
+                    dialog.setVideoLesson(context, true, videoLesson, null, click);
                 }
                 dialog.show();
             });

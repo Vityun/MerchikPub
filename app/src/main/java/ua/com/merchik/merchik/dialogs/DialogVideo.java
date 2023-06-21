@@ -79,7 +79,7 @@ public class DialogVideo extends DialogData {
     }
 
     @Override
-    public void setVideoLesson(Context context, boolean visualise, int objectId, DialogClickListener clickListener) {
+    public void setVideoLesson(Context context, boolean visualise, int objectId, DialogClickListener clickListener, Clicks.clickVoid click) {
         if (visualise) {
             imgBtnVideoLesson.setVisibility(View.VISIBLE);
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
@@ -126,7 +126,7 @@ public class DialogVideo extends DialogData {
         displayYoutubeVideo.loadData(url, "text/html", "utf-8");
     }
 
-    public void setVideos(List<SiteHintsDB> data){
+    public void setVideos(List<SiteHintsDB> data, Clicks.clickVoid click){
         webView.setVisibility(View.GONE);
         imgBtnVideoLesson.setVisibility(View.GONE);
 //        List<SiteHintsDB> data = RealmManager.getAllVideoLessons();
@@ -160,6 +160,7 @@ public class DialogVideo extends DialogData {
                             viewListSDB.dt = System.currentTimeMillis() / 1000;
                             SQL_DB.videoViewDao().insertAll(Collections.singletonList(viewListSDB));
                             Globals.writeToMLOG("ERROR", "DialogData/setVideoLesson/videoViewDao().insertAll", "Успешно посмотрел ролик: " + vidLesson.getID());
+                            click.click();
                         } catch (Exception e) {
                             Globals.writeToMLOG("ERROR", "DialogData/setVideoLesson/videoViewDao().insertAll", "Exception e: " + e);
                         }
@@ -173,7 +174,7 @@ public class DialogVideo extends DialogData {
                     DialogVideo dialogVideo = new DialogVideo(dialog.getContext());
                     dialogVideo.setTitle(vidLesson.getNm());
                     dialogVideo.setVideo("<html><body><iframe width=\"700\" height=\"600\" src=\"" + s + "\"></iframe></body></html>");
-                    dialogVideo.setVideoLesson(context, true, 0, () -> context.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(vidLesson.getUrl()))));
+                    dialogVideo.setVideoLesson(context, true, 0, () -> context.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(vidLesson.getUrl()))), null);
                     dialogVideo.setClose(dialogVideo::dismiss);
                     dialogVideo.show();
                 }catch (Exception e){

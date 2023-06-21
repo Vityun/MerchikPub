@@ -165,7 +165,7 @@ public class DialogAdditionalRequirements {
                         video.setVideoLesson(context, true, 0, () -> {
                             Log.e("DialogVideo", "click Video");
                             context.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(finalData.getUrl())));
-                        });
+                        }, null);
                         video.setVideo("<html><body><iframe width=\"700\" height=\"600\" src=\"" + s + "\"></iframe></body></html>");
 
                         video.show();

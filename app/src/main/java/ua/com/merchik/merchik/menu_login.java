@@ -1,5 +1,7 @@
 package ua.com.merchik.merchik;
 
+import static ua.com.merchik.merchik.database.realm.RealmManager.INSTANCE;
+
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
@@ -47,7 +49,6 @@ import org.apache.commons.lang3.StringUtils;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 
@@ -61,7 +62,6 @@ import ua.com.merchik.merchik.ServerExchange.TablesExchange.SiteObjectsExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesLoadingUnloading;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.RealmModels.AppUsersDB;
-import ua.com.merchik.merchik.data.RealmModels.LogDB;
 import ua.com.merchik.merchik.data.RetrofitResponse.EDRPOUResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.Login;
 import ua.com.merchik.merchik.data.RetrofitResponse.Logout;
@@ -83,8 +83,6 @@ import ua.com.merchik.merchik.dialogs.DialogsRecyclerViewAdapter.DialogAdapter;
 import ua.com.merchik.merchik.dialogs.DialogsRecyclerViewAdapter.ViewHolderTypeList;
 import ua.com.merchik.merchik.retrofit.MyCookieJar;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
-
-import static ua.com.merchik.merchik.database.realm.RealmManager.INSTANCE;
 
 
 public class menu_login extends AppCompatActivity {
@@ -1157,7 +1155,7 @@ public class menu_login extends AppCompatActivity {
 
         dialogRegistration.setLesson(this, true, 633);
         dialogRegistration.setVideoLesson(this, true, 630, () -> {
-        });
+        }, null);
 
         dialogRegistration.setTitle("Регистрация");
         dialogRegistration.setMerchikIco(this);

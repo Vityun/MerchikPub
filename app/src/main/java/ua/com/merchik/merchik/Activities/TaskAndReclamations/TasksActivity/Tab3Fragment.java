@@ -117,7 +117,7 @@ public class Tab3Fragment extends Fragment {
             toolbar_menus.videoLessons = null;
             Log.e("SET_TAR_FAB", "Tab3Fragment 0");
         }
-        toolbar_menus.setFab(v.getContext(), TARActivity.fab); // ГЛАВНАЯ
+        toolbar_menus.setFab(v.getContext(), TARActivity.fab, ()->{}); // ГЛАВНАЯ
 
         return v;
     }

@@ -1,5 +1,7 @@
 package ua.com.merchik.merchik;
 
+import static ua.com.merchik.merchik.menu_main.getBatteryPercentage;
+
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -47,7 +49,6 @@ import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.text.SimpleDateFormat;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -65,15 +66,12 @@ import ua.com.merchik.merchik.data.PhotoGP.Coords;
 import ua.com.merchik.merchik.data.PhotoGP.PhotoGP;
 import ua.com.merchik.merchik.data.PhotoGP.ScreenInfo;
 import ua.com.merchik.merchik.data.RealmModels.ImagesTypeListDB;
-import ua.com.merchik.merchik.data.RealmModels.LogDB;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.data.URLData.URLData;
 import ua.com.merchik.merchik.data.WPDataObj;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
-
-import static ua.com.merchik.merchik.menu_main.getBatteryPercentage;
 
 
 public class PhotoReportActivity extends toolbar_menus {
@@ -110,7 +108,7 @@ public class PhotoReportActivity extends toolbar_menus {
         dataFromPreferenceManager();
         setActivityContent();
 
-        setFab(this, findViewById(R.id.fab));
+        setFab(this, findViewById(R.id.fab), ()->{});
 
         initDrawerStuff(findViewById(R.id.drawer_layout), findViewById(R.id.my_toolbar), findViewById(R.id.nav_view));
         NavigationView navigationView;

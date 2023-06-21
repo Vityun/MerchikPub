@@ -66,7 +66,7 @@ public class WPDataActivity extends toolbar_menus {
         textLesson = 816;
         videoLesson = 817;
         videoLessons = null;
-        setFab(this, findViewById(R.id.fab));
+        setFab(this, findViewById(R.id.fab), ()->{});
 
         initDrawerStuff(findViewById(R.id.drawer_layout), findViewById(R.id.my_toolbar), findViewById(R.id.nav_view));
         NavigationView navigationView = findViewById(R.id.nav_view);

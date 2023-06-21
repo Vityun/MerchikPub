@@ -1003,7 +1003,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                     closeDialogRule(dialog, dialog::dismiss);    // Особенное правило закрытия для модального окна с Акцией
                 });
                 dialog.setLesson(mContext, true, 802);
-                dialog.setVideoLesson(mContext, true, 803, null);
+                dialog.setVideoLesson(mContext, true, 803, null, null);
                 dialog.setImage(true, getPhotoFromDB(list));
                 dialog.setAdditionalText(setPhotoInfo(reportPrepareDB, tpl, list, finalBalanceData1, finalBalanceDate1));
 

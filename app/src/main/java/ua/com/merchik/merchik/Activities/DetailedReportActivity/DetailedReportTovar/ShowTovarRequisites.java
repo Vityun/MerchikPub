@@ -110,7 +110,7 @@ public class ShowTovarRequisites {
                 closeDialogRule(dialog, dialog::dismiss);    // Особенное правило закрытия для модального окна с Акцией
             });
             dialog.setLesson(context, true, 802);
-            dialog.setVideoLesson(context, true, 803, null);
+            dialog.setVideoLesson(context, true, 803, null, null);
             dialog.setImage(true, tovarRequisites.getPhotoFromDB(list));
             dialog.setAdditionalText(tovarRequisites.setPhotoInfo(reportPrepareDB, tpl, list, finalBalanceData1, finalBalanceDate1));
 

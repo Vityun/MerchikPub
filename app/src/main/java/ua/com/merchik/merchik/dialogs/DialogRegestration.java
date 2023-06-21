@@ -12,6 +12,7 @@ import android.widget.ImageButton;
 import android.widget.Toast;
 
 import ua.com.merchik.merchik.R;
+import ua.com.merchik.merchik.ViewHolders.Clicks;
 
 public class DialogRegestration extends DialogData{
 
@@ -57,7 +58,7 @@ public class DialogRegestration extends DialogData{
     }
 
     @Override
-    public void setVideoLesson(Context context, boolean visualise, int objectId, DialogClickListener clickListener) {
+    public void setVideoLesson(Context context, boolean visualise, int objectId, DialogClickListener clickListener, Clicks.clickVoid click) {
         if (visualise) {
             imgBtnVideoLesson.setVisibility(View.VISIBLE);
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {

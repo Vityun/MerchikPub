@@ -45,7 +45,7 @@ public class DialogRetingOperatorSuppr extends DialogData {
 
     public void setVideoLesson(Context context, boolean visualise, int objectId, DialogClickListener clickListener) {
         try {
-            super.setVideoLesson(context, visualise, objectId, clickListener);
+            super.setVideoLesson(context, visualise, objectId, clickListener, null);
         }catch (Exception e){
 
         }

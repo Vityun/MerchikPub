@@ -52,7 +52,7 @@ public class TovarRequisites {
         res.setText("");
         res.setClose(res::dismiss);
         res.setLesson(context, true, 802);
-        res.setVideoLesson(context, true, 803, null);
+        res.setVideoLesson(context, true, 803, null, null);
         res.setImage(true, getPhotoFromDB(tovar));
         res.setAdditionalText(setPhotoInfo(reportPrepareDB, new TovarOptions().createTovarOptionPhoto(), tovar, "", ""));
 
