@@ -1274,10 +1274,10 @@ public class Options {
 
         if (data != null && data.size() > 0) {
             dialogAdditionalRequirements.setTitle("Доп. материалы (" + data.size() + ")");
-            dialogAdditionalRequirements.setRecyclerAM((WpDataDB)dataDB, data);
+            dialogAdditionalRequirements.setRecyclerAM((WpDataDB) dataDB, data);
         } else if (data1 != null && data1.size() > 0) {
             dialogAdditionalRequirements.setTitle("Доп. материалы (" + data1.size() + ")");
-            dialogAdditionalRequirements.setRecyclerAM((WpDataDB)dataDB, amToAma(data1));
+            dialogAdditionalRequirements.setRecyclerAM((WpDataDB) dataDB, amToAma(data1));
         }
 
 
@@ -2605,6 +2605,23 @@ public class Options {
 
         res = tplRequired + "/" + tplOptional;
 
+        return res;
+    }
+
+    /***/
+    public static boolean optionConstraintTPL(List<OptionsDB> optionsDB) {
+        boolean res = false;
+        for (OptionsDB option : optionsDB) {
+            int optionId = Integer.parseInt(option.getOptionId()); // Получаем ID опции
+            int optionControlId = Integer.parseInt(option.getOptionControlId()); // Получаем ID опции
+            if (ids.contains(optionId)) {
+                res = true;
+            }
+
+            if (ids.contains(optionControlId)) {
+                res = true;
+            }
+        }
         return res;
     }
 
