@@ -153,22 +153,24 @@ public class DetailedReportTARFrag extends Fragment {
                 dialog.show();
             });
 
-            setFabVideo(v.getContext(), ()->{
-                List<ViewListSDB> videos = checkVideos(DETAILED_REPORT_FRAGMENT_TAR_VIDEO_LESSONS, ()->{});
+            setFabVideo(v.getContext(), this::showYouTubeFab);
+            showYouTubeFab();
 
-//                if (videos != null && videos.size() != 0) {
-//                    DetailedReportActivity.imageView.setVisibility(View.GONE);
-//                } else {
-//                    DetailedReportActivity.imageView.setVisibility(View.VISIBLE);
-//                    Snackbar.make(DetailedReportActivity.imageView.getRootView(), "Вы просмотрели ещё не все ролики", Snackbar.LENGTH_LONG).show();
-//                }
-            });
 
         } catch (Exception e) {
             Globals.writeToMLOG("ERROR", "DetailedReportTARFrag/onCreateView", "Exception e: " + e);
         }
 
         return v;
+    }
+
+    private void showYouTubeFab(){
+        List<ViewListSDB> videos = checkVideos(DETAILED_REPORT_FRAGMENT_TAR_VIDEO_LESSONS, ()->{});
+        if (videos.size() >= DETAILED_REPORT_FRAGMENT_TAR_VIDEO_LESSONS.length){
+            fab.setVisibility(View.GONE);
+        }else {
+            fab.setVisibility(View.VISIBLE);
+        }
     }
 
 

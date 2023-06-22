@@ -279,7 +279,7 @@ public class DetailedReportActivity extends toolbar_menus {
     }//--------------------------------------------------------------------- /ON CREATE ---------------------------------------------------------------------
 
     public static List<ViewListSDB> checkVideos(Integer[] ids, Clicks.clickVoid click) {
-        List<ViewListSDB> viewListSDB = null;
+        List<ViewListSDB> viewListSDB = new ArrayList<>();
         List<SiteObjectsDB> object = RealmManager.getLesson(ids);
         List<SiteHintsDB> data = null;
         List<Integer> objectLessonIds = new ArrayList<>();
@@ -301,9 +301,11 @@ public class DetailedReportActivity extends toolbar_menus {
 
         if (data != null) {
             for (SiteHintsDB item : data){
-                sb.append(item.getNm()).append("\n");
+                ViewListSDB view = SQL_DB.videoViewDao().getOneByLessonId(item.getID());
+                if (view != null){
+                    viewListSDB.add(view);
+                }
             }
-            viewListSDB = SQL_DB.videoViewDao().getByLessonId(data.get(0).getID());
         }
 
         return viewListSDB;

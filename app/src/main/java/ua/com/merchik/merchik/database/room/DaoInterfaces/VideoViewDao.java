@@ -23,6 +23,9 @@ public interface VideoViewDao {
     @Query("SELECT * FROM view_list WHERE lessonId = :id")
     List<ViewListSDB> getByLessonId(int id);
 
+    @Query("SELECT * FROM view_list WHERE lessonId = :id")
+    ViewListSDB getOneByLessonId(int id);
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     void insertAll(List<ViewListSDB> data);
 }
