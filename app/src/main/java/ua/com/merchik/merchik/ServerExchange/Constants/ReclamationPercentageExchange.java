@@ -50,7 +50,7 @@ public class ReclamationPercentageExchange {
     private void saveReclamationPercentage(ReclamationPercentageResponse data) {
 
 //        Log.e("ReclamationPercentage", "data: " + new Gson().toJson(data));
-        Log.e("ReclamationPercentage", "dataS: " + data.list.size());
+//        Log.e("ReclamationPercentage", "dataS: " + data.list.size());
 
         if (data != null && data.state && data.list != null && data.list.size() > 0) {
             SQL_DB.reclamationPercentageDao().insertAll(data.list)
@@ -68,6 +68,8 @@ public class ReclamationPercentageExchange {
                             Globals.writeToMLOG("ERROR", "ReclamationPercentage/onResponse/onError", "Throwable e: " + e);
                         }
                     });
+        }else {
+            Globals.writeToMLOG("ERROR", "ReclamationPercentage/onResponse/data_is_null", "data is empty: " + data);
         }
     }
 
