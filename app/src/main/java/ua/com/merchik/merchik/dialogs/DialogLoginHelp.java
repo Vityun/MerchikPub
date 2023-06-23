@@ -52,8 +52,8 @@ public class DialogLoginHelp extends DialogData{
     }
 
 
-    public void setVideoLesson(Context context, boolean visualise, int objectId, DialogClickListener clickListener) {
-        super.setVideoLesson(context, visualise, objectId, clickListener, null);
+    public void setVideoLesson(Context context, boolean visualise, int objectIds, DialogClickListener clickListener) {
+        super.setVideoLesson(context, visualise, objectIds, null, null);
     }
 
 

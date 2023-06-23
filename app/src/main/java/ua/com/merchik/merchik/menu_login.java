@@ -1718,15 +1718,11 @@ public class menu_login extends AppCompatActivity {
         try {
             fab.setOnClickListener(view -> {
                 DialogLoginHelp dialog = new DialogLoginHelp(this);
-//                dialog.setHelpMsg(SpannableString.valueOf(help));
                 dialog.setTitle(obj890);
                 dialog.setHelpMsg(help2);
                 dialog.setClose(dialog::dismiss);
                 dialog.setLesson(this, true, 812);
-                dialog.setVideoLesson(this, true, 813, () -> {
-//                    Toast.makeText(this, "НУ КАК ТЫ НОЛЬ ЕСЛИ НЕ НОЛЬ", Toast.LENGTH_LONG).show();
-                });
-//                dialog.setImgBtnCall(this);
+                dialog.setVideoLesson(this, true, 813, () -> {});
                 dialog.show();
             });
         } catch (Exception e) {
