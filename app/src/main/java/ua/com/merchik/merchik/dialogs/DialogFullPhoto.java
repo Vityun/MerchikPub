@@ -1,5 +1,8 @@
 package ua.com.merchik.merchik.dialogs;
 
+import static android.graphics.Color.BLACK;
+import static android.graphics.Color.GREEN;
+import static android.graphics.Color.YELLOW;
 import static ua.com.merchik.merchik.menu_main.decodeSampledBitmapFromResource;
 
 import android.app.Dialog;
@@ -232,7 +235,23 @@ public class DialogFullPhoto {
 //                    View v = manager.findViewByPosition(visiblePosition);
 
                     //update ui
+
+
                     comment.setText(photoLogData.get(visiblePosition).getComment());
+
+                    try {
+                        StackPhotoDB stackPhotoDB = photoLogData.get(visiblePosition);
+                        if (!stackPhotoDB.getComment().isEmpty() && stackPhotoDB.commentUpload){
+                            comment.setTextColor(GREEN);
+                        }else if (!stackPhotoDB.getComment().isEmpty() && !stackPhotoDB.commentUpload) {
+                            comment.setTextColor(YELLOW);
+                        }else {
+                            comment.setTextColor(BLACK);
+                        }
+                    }catch (Exception e){
+
+                    }
+
                     photoInfo.setText(PhotoLogAdapter.photoData(photoLogData.get(visiblePosition)));
 
 
