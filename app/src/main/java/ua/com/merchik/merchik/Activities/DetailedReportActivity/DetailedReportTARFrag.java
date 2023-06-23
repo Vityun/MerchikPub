@@ -1,6 +1,7 @@
 package ua.com.merchik.merchik.Activities.DetailedReportActivity;
 
 import static ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity.checkVideos;
+import static ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity.imageView;
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
 import android.content.Context;
@@ -44,7 +45,7 @@ import ua.com.merchik.merchik.dialogs.DialogVideo;
 
 public class DetailedReportTARFrag extends Fragment {
 
-    private static Integer[] DETAILED_REPORT_FRAGMENT_TAR_VIDEO_LESSONS = new Integer[]{4208, 3527};
+    public static final Integer[] DETAILED_REPORT_FRAGMENT_TAR_VIDEO_LESSONS = new Integer[]{4208, 3527};
 
     private Context mContext;
     private WpDataDB wpDataDB;
@@ -168,8 +169,10 @@ public class DetailedReportTARFrag extends Fragment {
         List<ViewListSDB> videos = checkVideos(DETAILED_REPORT_FRAGMENT_TAR_VIDEO_LESSONS, ()->{});
         if (videos.size() >= DETAILED_REPORT_FRAGMENT_TAR_VIDEO_LESSONS.length){
             fab.setVisibility(View.GONE);
+            imageView.setVisibility(View.GONE);
         }else {
             fab.setVisibility(View.VISIBLE);
+            imageView.setVisibility(View.VISIBLE);
         }
     }
 

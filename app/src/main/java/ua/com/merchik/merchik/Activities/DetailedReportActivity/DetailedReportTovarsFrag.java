@@ -1,5 +1,7 @@
 package ua.com.merchik.merchik.Activities.DetailedReportActivity;
 
+import static ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity.checkVideos;
+import static ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity.imageView;
 import static ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsRealm.AdditionalRequirementsModENUM.DEFAULT;
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
@@ -23,6 +25,7 @@ import androidx.appcompat.widget.PopupMenu;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 
@@ -45,6 +48,9 @@ import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.Data;
 import ua.com.merchik.merchik.data.Database.Room.CustomerSDB;
 import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
+import ua.com.merchik.merchik.data.Database.Room.ViewListSDB;
+import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteHintsDB;
+import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteObjects.SiteObjectsDB;
 import ua.com.merchik.merchik.data.RealmModels.AdditionalRequirementsDB;
 import ua.com.merchik.merchik.data.RealmModels.TovarDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
@@ -57,10 +63,13 @@ import ua.com.merchik.merchik.database.realm.tables.PPADBRealm;
 import ua.com.merchik.merchik.database.realm.tables.ReportPrepareRealm;
 import ua.com.merchik.merchik.database.realm.tables.TovarRealm;
 import ua.com.merchik.merchik.dialogs.DialogData;
+import ua.com.merchik.merchik.dialogs.DialogVideo;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
 
 @SuppressLint("ValidFragment")
 public class DetailedReportTovarsFrag extends Fragment {
+
+    public static final Integer[] DETAILED_REPORT_FRAGMENT_TOVAR_VIDEO_LESSONS = new Integer[]{823, 815};
 
     private Context mContext;
     private ArrayList<Data> list;
@@ -75,6 +84,7 @@ public class DetailedReportTovarsFrag extends Fragment {
     //    private RecyclerView recyclerView;
     private CustomRecyclerView recyclerView;
     private ImageView fullTovList, filter;
+    private FloatingActionButton fab;
 
     RecycleViewDRAdapterTovar adapter;
 
@@ -104,6 +114,7 @@ public class DetailedReportTovarsFrag extends Fragment {
         View v = inflater.inflate(R.layout.fragment_dr_tovar, container, false);
 
         try {
+            fab = v.findViewById(R.id.fab);
             editText = (EditText) v.findViewById(R.id.drEditTextFindTovar);
             fullTovList = v.findViewById(R.id.full_tov_list);
             filter = v.findViewById(R.id.filter);
@@ -116,10 +127,55 @@ public class DetailedReportTovarsFrag extends Fragment {
             setPopup();
 //            addRecycleView(getTovList());
             addRecycleView(getTovListNew(TovarDisplayType.DETAILED_REPORT));
+
+            setFabVideo(v.getContext(), this::showYouTubeFab);
+            showYouTubeFab();
+
         } catch (Exception e) {
             Globals.writeToMLOG("ERROR", "DetailedReportTovarsFrag/onCreateView", "Exception e: " + e);
         }
         return v;
+    }
+
+    private void setFabVideo(Context context, Clicks.clickVoid click){
+        fab.setOnClickListener(view -> {
+            DialogVideo dialogVideo = new DialogVideo(context);
+            dialogVideo.setTitle("Перелік відео уроків");
+            dialogVideo.setVideos(getSiteHints(DETAILED_REPORT_FRAGMENT_TOVAR_VIDEO_LESSONS), click);
+            dialogVideo.setClose(dialogVideo::dismiss);
+            dialogVideo.show();
+        });
+    }
+
+    private void showYouTubeFab(){
+        List<ViewListSDB> videos = checkVideos(DETAILED_REPORT_FRAGMENT_TOVAR_VIDEO_LESSONS, ()->{});
+        if (videos.size() >= DETAILED_REPORT_FRAGMENT_TOVAR_VIDEO_LESSONS.length){
+            fab.setVisibility(View.GONE);
+            imageView.setVisibility(View.GONE);
+        }else {
+            fab.setVisibility(View.VISIBLE);
+            imageView.setVisibility(View.VISIBLE);
+        }
+    }
+
+    private List<SiteHintsDB> getSiteHints(Integer[] integers){
+        List<SiteObjectsDB> siteObjects = RealmManager.getLesson(integers);
+        List<SiteHintsDB> data = null;
+        try {
+            if (siteObjects != null) {
+                Integer[] siteObjectIds = new Integer[siteObjects.size()];
+                for (int i = 0; i < siteObjects.size(); i++) {
+                    int lessId = Integer.parseInt(siteObjects.get(i).getLessonId());
+                    if (lessId != 0) siteObjectIds[i] = lessId;
+                }
+                data = RealmManager.getVideoLesson(siteObjectIds);
+                if (data != null) Collections.reverse(data);
+            }
+        } catch (Exception e) {
+            Log.e("setVideoLesson", "Exception e: " + e);
+        }
+
+        return data;
     }
 
 

@@ -1,5 +1,7 @@
 package ua.com.merchik.merchik.Activities.DetailedReportActivity;
 
+import static ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportTARFrag.DETAILED_REPORT_FRAGMENT_TAR_VIDEO_LESSONS;
+import static ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportTovarsFrag.DETAILED_REPORT_FRAGMENT_TOVAR_VIDEO_LESSONS;
 import static ua.com.merchik.merchik.Activities.TaskAndReclamations.TasksActivity.Tab3Fragment.TARCommentIndex;
 import static ua.com.merchik.merchik.MakePhoto.MakePhoto.CAMERA_REQUEST_PROMOTION_TOV_PHOTO;
 import static ua.com.merchik.merchik.MakePhoto.MakePhoto.CAMERA_REQUEST_TAR_COMMENT_PHOTO;
@@ -607,8 +609,8 @@ public class DetailedReportActivity extends toolbar_menus {
                     Log.e("onTabSelected", "ТОВАРЫ");
 
                     toolbar_menus.textLesson = 822;
-                    toolbar_menus.videoLesson = 823;
-                    toolbar_menus.videoLessons = null;
+//                    toolbar_menus.videoLesson = 823;
+                    toolbar_menus.videoLessons = DETAILED_REPORT_FRAGMENT_TOVAR_VIDEO_LESSONS;
                     toolbar_menus.setFab(DetailedReportActivity.this, DetailedReportActivity.fab, ()->{
                         checkVideo(new Integer[]{videoLesson});
                     }); // ТОВАР
@@ -620,7 +622,7 @@ public class DetailedReportActivity extends toolbar_menus {
                     toolbar_menus.textLesson = 822;
                     toolbar_menus.textLesson = 4225;
 //                    toolbar_menus.videoLesson = 3527;
-                    toolbar_menus.videoLessons = new Integer[]{4208, 3527};
+                    toolbar_menus.videoLessons = DETAILED_REPORT_FRAGMENT_TAR_VIDEO_LESSONS;
                     toolbar_menus.setFab(DetailedReportActivity.this, DetailedReportActivity.fab, ()->{
                         checkVideo(videoLessons);
                     }); // ЗИР
