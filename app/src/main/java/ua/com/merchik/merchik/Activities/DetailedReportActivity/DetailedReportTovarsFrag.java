@@ -85,6 +85,7 @@ public class DetailedReportTovarsFrag extends Fragment {
     private CustomRecyclerView recyclerView;
     private ImageView fullTovList, filter;
     private FloatingActionButton fab;
+    private TextView badgeTextView;
 
     RecycleViewDRAdapterTovar adapter;
 
@@ -114,6 +115,7 @@ public class DetailedReportTovarsFrag extends Fragment {
         View v = inflater.inflate(R.layout.fragment_dr_tovar, container, false);
 
         try {
+            badgeTextView = v.findViewById(R.id.badge_text_view);
             fab = v.findViewById(R.id.fab);
             editText = (EditText) v.findViewById(R.id.drEditTextFindTovar);
             fullTovList = v.findViewById(R.id.full_tov_list);
@@ -152,9 +154,14 @@ public class DetailedReportTovarsFrag extends Fragment {
         if (videos.size() >= DETAILED_REPORT_FRAGMENT_TOVAR_VIDEO_LESSONS.length){
             fab.setVisibility(View.GONE);
             imageView.setVisibility(View.GONE);
+            badgeTextView.setVisibility(View.GONE);
         }else {
             fab.setVisibility(View.VISIBLE);
             imageView.setVisibility(View.VISIBLE);
+            int must = DETAILED_REPORT_FRAGMENT_TOVAR_VIDEO_LESSONS.length;
+            int have = videos.size();
+            int res = must - have;
+            badgeTextView.setText("" + res);
         }
     }
 

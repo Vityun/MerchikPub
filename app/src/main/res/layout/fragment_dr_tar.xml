@@ -54,10 +54,30 @@
         android:layout_marginRight="16dp"
         android:layout_marginBottom="16dp"
         android:scaleType="center"
-        app:maxImageSize="57dp"
         app:backgroundTint="#FFFFFF"
-        app:elevation="20dp"
+        app:elevation="5dp"
         app:layout_constraintBottom_toTopOf="@+id/fabAdd"
         app:layout_constraintEnd_toEndOf="parent"
+        app:maxImageSize="57dp"
+        android:translationZ="8dp"
         app:srcCompat="@drawable/ic_play_circle_solid" />
+
+    <TextView
+        android:id="@+id/badge_text_view_tar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:alpha="0.8"
+        android:background="@drawable/badge_background"
+        android:gravity="center"
+        android:minWidth="18dp"
+        android:minHeight="18dp"
+        android:padding="2dp"
+        android:text="0"
+        android:textColor="#FFFFFF"
+        android:textSize="12sp"
+        android:visibility="visible"
+        app:layout_constraintEnd_toEndOf="@+id/fab"
+        app:layout_constraintTop_toTopOf="@+id/fab"
+        android:translationZ="8dp"
+        />
 </androidx.constraintlayout.widget.ConstraintLayout>

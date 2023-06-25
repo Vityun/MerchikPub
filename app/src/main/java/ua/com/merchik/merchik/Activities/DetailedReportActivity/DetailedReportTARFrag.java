@@ -11,6 +11,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
@@ -55,6 +56,7 @@ public class DetailedReportTARFrag extends Fragment {
     private TARSecondFrag secondFrag;
 
     private FloatingActionButton fab;
+    private TextView badgeTextView;
 
 
     public DetailedReportTARFrag(Context mContext, WpDataDB wpDataDB) {
@@ -74,6 +76,7 @@ public class DetailedReportTARFrag extends Fragment {
         try {
             FloatingActionButton fabAdd = v.findViewById(R.id.fabAdd);
             fab = v.findViewById(R.id.fab);
+            badgeTextView = v.findViewById(R.id.badge_text_view_tar);
             RecyclerView recycler = v.findViewById(R.id.recycler);
 
             try {
@@ -170,9 +173,14 @@ public class DetailedReportTARFrag extends Fragment {
         if (videos.size() >= DETAILED_REPORT_FRAGMENT_TAR_VIDEO_LESSONS.length){
             fab.setVisibility(View.GONE);
             imageView.setVisibility(View.GONE);
+            badgeTextView.setVisibility(View.GONE);
         }else {
             fab.setVisibility(View.VISIBLE);
             imageView.setVisibility(View.VISIBLE);
+            int must = DETAILED_REPORT_FRAGMENT_TAR_VIDEO_LESSONS.length;
+            int have = videos.size();
+            int res = must - have;
+            badgeTextView.setText("" + res);
         }
     }
 
