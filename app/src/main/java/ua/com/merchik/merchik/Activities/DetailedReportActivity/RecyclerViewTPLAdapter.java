@@ -652,6 +652,9 @@ public class RecyclerViewTPLAdapter extends RecyclerView.Adapter<RecyclerView.Vi
                 if (TPL.getOptionId().contains(135591)){
                     groupPos = "22";
                 }
+                if (TPL.getOptionId().contains(157241)){
+                    groupPos = "13";
+                }
                 dialog.setExpandableListView(createExpandableAdapter(dialog.context, groupPos), () -> {
                     if (dialog.getOperationResult() != null) {
                         operetionSaveRPToDB(TPL, dataRp, dialog.getOperationResult(), dialog.getOperationResult2(), null, dialog.context);

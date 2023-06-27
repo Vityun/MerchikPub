@@ -156,11 +156,17 @@ public class ShowTovarRequisites {
             if (tpl.getOptionControlName() != null && tpl.getOptionControlName().equals(ERROR_ID)) {    // Работа с ошибками
                 String groupPos = null;
                 boolean containsOptionId = false;
+                boolean containsOptionId2 = false;
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                     containsOptionId = tovOptTplList.stream().anyMatch(tovarOptions -> tovarOptions.getOptionId().contains(135591));
+                    containsOptionId2 = tovOptTplList.stream().anyMatch(tovarOptions -> tovarOptions.getOptionId().contains(157241));
                 }
                 if (containsOptionId) {
                     groupPos = "22";
+                }
+
+                if (containsOptionId2) {
+                    groupPos = "13";
                 }
                 dialog.setExpandableListView(createExpandableAdapter(dialog.context, groupPos), () -> {
                     if (dialog.getOperationResult() != null) {
