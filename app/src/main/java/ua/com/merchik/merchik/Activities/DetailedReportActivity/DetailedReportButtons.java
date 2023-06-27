@@ -111,7 +111,7 @@ public class DetailedReportButtons {
 //                    intentPhotoReport.putExtra("dataFromWPObj", wpDataObj);
 //                    MakePhoto.startToMakePhoto(context, wpDataObj);
                     MakePhoto makePhoto = new MakePhoto();
-                    makePhoto.pressedMakePhotoOldStyle((Activity) context, wpDataObj, wpDataDB);
+                    makePhoto.pressedMakePhotoOldStyle((Activity) context, wpDataObj, wpDataDB, optionsDB);
                 }
                 break;
 
@@ -126,7 +126,7 @@ public class DetailedReportButtons {
 //                    intentPhotoReport.putExtra("dataFromWPObj", wpDataObj);
 //                    MakePhoto.startToMakePhoto(context, wpDataObj);
                     MakePhoto makePhoto = new MakePhoto();
-                    makePhoto.pressedMakePhotoOldStyle((Activity) context, wpDataObj, wpDataDB);
+                    makePhoto.pressedMakePhotoOldStyle((Activity) context, wpDataObj, wpDataDB, optionsDB);
                 }
                 break;
 
@@ -140,7 +140,7 @@ public class DetailedReportButtons {
 //                    intentPhotoReport.putExtra("dataFromWPObj", wpDataObj);
 //                    MakePhoto.startToMakePhoto(context, wpDataObj);
                     MakePhoto makePhoto = new MakePhoto();
-                    makePhoto.pressedMakePhotoOldStyle((Activity) context, wpDataObj, wpDataDB);
+                    makePhoto.pressedMakePhotoOldStyle((Activity) context, wpDataObj, wpDataDB, optionsDB);
                 }
                 break;
 

@@ -5,21 +5,21 @@ import java.util.Map;
 
 public class WPDataObj implements Serializable {
 
-    private Long id;
-    private String date;
-    private String customerId;
-    private Integer addressId;
-    private String photoType;
-    private Map<Integer, String> customerTypeGrp;
-    private String customerTypeGrpS;
-    private String docNum;
-    private Integer themeId;
-    private String photoUserId;
-    private Long dad2;
-    private String customerIdTxt;
-    private String addressIdTxt;
-    private Float latitude;
-    private Float longitude;
+    public Long id;
+    public String date;
+    public String customerId;
+    public Integer addressId;
+    public String photoType;
+    public Map<Integer, String> customerTypeGrp;
+    public String customerTypeGrpS;
+    public String docNum;
+    public Integer themeId;
+    public String photoUserId;
+    public Long dad2;
+    public String customerIdTxt;
+    public String addressIdTxt;
+    public Float latitude;
+    public Float longitude;
 
     public WPDataObj() {
     }

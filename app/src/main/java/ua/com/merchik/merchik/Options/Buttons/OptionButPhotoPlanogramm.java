@@ -44,7 +44,7 @@ public class OptionButPhotoPlanogramm<T> extends OptionControl {
             wpDataObj.setPhotoType("5");
 
             MakePhoto makePhoto = new MakePhoto();
-            makePhoto.pressedMakePhotoOldStyle((Activity) context, wpDataObj, wpDataDB);
+            makePhoto.pressedMakePhotoOldStyle((Activity) context, wpDataObj, wpDataDB, optionDB);
         }catch (Exception e){
             Globals.writeToMLOG("ERROR", "OptionButPhotoPlanogramm/executeOption/Exception", "Exception e: " + e);
         }

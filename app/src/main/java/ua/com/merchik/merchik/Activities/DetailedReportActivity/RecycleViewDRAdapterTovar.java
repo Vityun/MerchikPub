@@ -733,7 +733,22 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                                                         optionsDB.getOptionControlId().equals(opt));
 
                                         if (optionExists) {
-                                            dialogList.add(new TovarRequisites(list, finalReportPrepareTovar).createDialog(mContext, wpDataDB));
+                                            Optional<OptionsDB> matchingOption = optionsList2.stream()
+                                                    .filter(optionsDB ->
+                                                            optionsDB.getOptionId().equals(opt) ||
+                                                                    optionsDB.getOptionControlId().equals(opt))
+                                                    .findFirst();
+
+                                            if (matchingOption.isPresent()) {
+                                                OptionsDB optionsDB = matchingOption.get();
+                                                // Делайте что-то с объектом OptionsDB
+                                                System.out.println(optionsDB);
+                                                dialogList.add(new TovarRequisites(list, finalReportPrepareTovar).createDialog(mContext, wpDataDB, optionsDB));
+
+                                            } else {
+                                                // Обработка случая, когда объект OptionsDB не найден
+                                                System.out.println("Объект OptionsDB не найден");
+                                            }
                                         }
                                     }
 

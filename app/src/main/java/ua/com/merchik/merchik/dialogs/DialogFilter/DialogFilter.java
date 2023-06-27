@@ -1,5 +1,7 @@
 package ua.com.merchik.merchik.dialogs.DialogFilter;
 
+import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
+
 import android.app.Dialog;
 import android.content.Context;
 import android.text.Editable;
@@ -28,8 +30,6 @@ import ua.com.merchik.merchik.data.Database.Room.CustomerSDB;
 import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.dialogs.DialogsRecyclerViewAdapter.DialogAdapter;
 import ua.com.merchik.merchik.dialogs.DialogsRecyclerViewAdapter.ViewHolderTypeList;
-
-import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
 public class DialogFilter {
 

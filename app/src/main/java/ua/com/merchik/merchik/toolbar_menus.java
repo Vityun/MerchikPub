@@ -150,7 +150,7 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
         Log.e("MIGRATION_2_3", "SQL_DB" + SQL_DB.oborotVedDao().toString());
 
 
-        Globals.translatesList = SQL_DB.translatesDao().getAll();
+//        Globals.translatesList = SQL_DB.translatesDao().getAll();
 
         Log.e("takePhoto", "takePhotoToool: " + ua.com.merchik.merchik.trecker.enabledGPS);
         if (ua.com.merchik.merchik.trecker.switchedOff) {

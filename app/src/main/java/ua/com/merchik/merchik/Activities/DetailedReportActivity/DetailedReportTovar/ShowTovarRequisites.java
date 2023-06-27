@@ -23,6 +23,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import io.realm.RealmResults;
 import ua.com.merchik.merchik.Globals;
@@ -91,7 +92,22 @@ public class ShowTovarRequisites {
                                 optionsDB.getOptionControlId().equals(opt));
 
                 if (optionExists) {
-                    dialogList.add(new TovarRequisites(tovarDB, reportPrepareTovar).createDialog(context, wpDataDB));
+
+                    Optional<OptionsDB> matchingOption = optionsList2.stream()
+                            .filter(optionsDB ->
+                                    optionsDB.getOptionId().equals(opt) ||
+                                            optionsDB.getOptionControlId().equals(opt))
+                            .findFirst();
+
+                    if (matchingOption.isPresent()) {
+                        OptionsDB optionsDB = matchingOption.get();
+                        // Делайте что-то с объектом OptionsDB
+                        System.out.println(optionsDB);
+                        dialogList.add(new TovarRequisites(tovarDB, reportPrepareTovar).createDialog(context, wpDataDB, optionsDB));
+                    } else {
+                        // Обработка случая, когда объект OptionsDB не найден
+                        System.out.println("Объект OptionsDB не найден");
+                    }
                 }
             }
         }

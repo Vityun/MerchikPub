@@ -1,5 +1,7 @@
 package ua.com.merchik.merchik;
 
+import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
+
 import android.content.Context;
 import android.preference.PreferenceManager;
 import android.util.Log;
@@ -22,8 +24,6 @@ import ua.com.merchik.merchik.data.Database.Room.LanguagesSDB;
 import ua.com.merchik.merchik.data.Database.Room.TranslatesSDB;
 import ua.com.merchik.merchik.data.Translation.AddTranslation;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
-
-import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
 public class Translate {
 
@@ -217,26 +217,23 @@ public class Translate {
             public void onSuccess(List<TranslatesSDB> data) {
                 SQL_DB.translatesDao().insertAll(data);
 
-                Globals.translatesList = SQL_DB.translatesDao().getAll();
+//                Globals.translatesList = SQL_DB.translatesDao().getAll();
             }
 
             @Override
             public void onFailure(String error) {
 
                 try {
-                    List<TranslatesSDB> list = SQL_DB.translatesDao().getAll();
+//                    List<TranslatesSDB> list = SQL_DB.translatesDao().getAll();
 
-                    if (list != null) {
-                        Globals.translatesList = list;
-                    } else {
+//                    if (list != null) {
+//                        Globals.translatesList = list;
+//                    } else {
                         Globals.writeToMLOG("INFO", "Translate.getTranslates.onFailure", "String error: " + error);
-                    }
+//                    }
                 }catch (Exception e){
                     // todo DB is locked
                 }
-
-
-
             }
         });
     }

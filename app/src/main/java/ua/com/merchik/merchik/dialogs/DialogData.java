@@ -1173,6 +1173,16 @@ public class DialogData {
         });
     }
 
+    public void setOkNotClose(CharSequence setButtonText, DialogClickListener clickListener) {
+        ok.setVisibility(View.VISIBLE);
+        if (setButtonText != null) {
+            ok.setText(setButtonText);
+        }
+        ok.setOnClickListener(v -> {
+            if (clickListener != null) clickListener.clicked();
+        });
+    }
+
     public void setTxtLinkOk(CharSequence setButtonText, DialogClickListener clickListener) {
         txtLinkOk.setVisibility(View.VISIBLE);
         txtLinkOk.setPaintFlags(txtLinkOk.getPaintFlags() | Paint.UNDERLINE_TEXT_FLAG);

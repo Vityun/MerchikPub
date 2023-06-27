@@ -1,5 +1,7 @@
 package ua.com.merchik.merchik.Activities.TaskAndReclamations;
 
+import static ua.com.merchik.merchik.Activities.TaskAndReclamations.TARActivity.TARType;
+
 import android.content.Context;
 import android.os.Bundle;
 import android.util.Log;
@@ -16,8 +18,6 @@ import ua.com.merchik.merchik.Activities.TaskAndReclamations.TasksActivity.TARSe
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
-
-import static ua.com.merchik.merchik.Activities.TaskAndReclamations.TARActivity.TARType;
 
 public class TARFragmentHome extends Fragment {
 

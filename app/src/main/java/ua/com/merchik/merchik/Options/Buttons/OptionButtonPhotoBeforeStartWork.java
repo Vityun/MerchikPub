@@ -37,20 +37,8 @@ public class OptionButtonPhotoBeforeStartWork<T> extends OptionControl {
     private void executeOption() {
         new Globals().fixMP();// Фиксация Местоположения в таблице ЛогМп
         try {
-/*            WPDataObj wpDataObj = workPlan.getKPS(wpDataDB.getId());
-            wpDataObj.setPhotoType("14");
-
             MakePhoto makePhoto = new MakePhoto();
-            makePhoto.pressedMakePhotoOldStyle((Activity) context, wpDataObj, wpDataDB);*/
-
-/*            WorkPlan workPlan = new WorkPlan();
-            WPDataObj wpDataObj = workPlan.getKPS(wpDataDB.getId());
-            Intent intentPhotoReport = new Intent(context, PhotoReportActivity.class);
-            intentPhotoReport.putExtra("dataFromWPObj", wpDataObj);
-            context.startActivity(intentPhotoReport);*/
-
-            MakePhoto makePhoto = new MakePhoto();
-            makePhoto.pressedMakePhoto((Activity) context, wpDataDB, "14"); // Фото До начала Работ
+            makePhoto.pressedMakePhoto((Activity) context, wpDataDB, optionDB, "14"); // Фото До начала Работ
 
         }catch (Exception e){
             Globals.writeToMLOG("ERROR", "OptionButtonPhotoBeforeStartWork/executeOption/Exception", "Exception e: " + e);

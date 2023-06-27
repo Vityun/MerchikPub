@@ -15,6 +15,7 @@ import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.MakePhoto.MakePhoto;
 import ua.com.merchik.merchik.MakePhoto.MakePhotoFromGalery;
 import ua.com.merchik.merchik.data.PhotoDescriptionText;
+import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
 import ua.com.merchik.merchik.data.RealmModels.ReportPrepareDB;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
 import ua.com.merchik.merchik.data.RealmModels.TovarDB;
@@ -45,7 +46,7 @@ public class TovarRequisites {
      * 05.05.23
      * Создание и отображение модального окна для выполнения фото остатков Товаров
      */
-    public DialogData createDialog(Context context, WpDataDB wpDataDB) {
+    public DialogData createDialog(Context context, WpDataDB wpDataDB, OptionsDB optionsDB) {
         DialogData res = new DialogData(context);
 
         res.setTitle("");
@@ -63,7 +64,7 @@ public class TovarRequisites {
         res.setOperationButtons(
                 "Зробити фото",
                 () -> {
-                    new MakePhoto().pressedMakePhoto((Activity) context, wpDataDB, "4", reportPrepareDB.tovarId);
+                    new MakePhoto().pressedMakePhoto((Activity) context, wpDataDB, optionsDB,"4", reportPrepareDB.tovarId);
                 },
                 "Вибрати з галереї",
                 () -> {

@@ -1,5 +1,8 @@
 package ua.com.merchik.merchik.MakePhoto;
 
+import static ua.com.merchik.merchik.Global.UnlockCode.UnlockCodeMode.CODE_DAD_2_AND_OPTION;
+import static ua.com.merchik.merchik.Global.UnlockCode.UnlockCodeMode.DATE_AND_USER;
+import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 import static ua.com.merchik.merchik.trecker.enabledGPS;
 
 import android.app.Activity;
@@ -24,13 +27,18 @@ import java.util.Date;
 
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity;
 import ua.com.merchik.merchik.Clock;
+import ua.com.merchik.merchik.Global.UnlockCode;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.PhotoReportActivity;
 import ua.com.merchik.merchik.R;
+import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.WorkPlan;
 import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
+import ua.com.merchik.merchik.data.Database.Room.UsersSDB;
+import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.data.WPDataObj;
+import ua.com.merchik.merchik.database.realm.tables.WpDataRealm;
 import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
 import ua.com.merchik.merchik.trecker;
@@ -90,7 +98,7 @@ public class MakePhoto {
                 Toast.makeText(mContext, "Выбрана группа товара: " + result[0], Toast.LENGTH_LONG).show();
                 takePhoto();
             } else {
-                if (!wp.getPhotoType().equals("5")){
+                if (!wp.getPhotoType().equals("5")) {
                     globals.alertDialogMsg(mContext, "Не обнаружено ни одной группы товаров по данному клиенту. Сообщите об этом Администратору!");
                 }
                 wp.setCustomerTypeGrpS("");
@@ -421,14 +429,15 @@ public class MakePhoto {
     public static String photoNum; // URI фотографии
     public static String photoType = "0";
     public static String tovarId = "";
+
     public <T> void makePhoto(Activity activity, T data) {
         try {
             final WorkPlan workPlan = new WorkPlan();
             WPDataObj wpDataObj;
 
-            if (data instanceof TasksAndReclamationsSDB){
+            if (data instanceof TasksAndReclamationsSDB) {
                 wpDataObj = workPlan.getKPS((TasksAndReclamationsSDB) data);
-            }else {
+            } else {
                 WpDataDB wpDataDB = (WpDataDB) data;
                 wpDataObj = workPlan.getKPS(wpDataDB.getId());
             }
@@ -451,7 +460,7 @@ public class MakePhoto {
             if (intent.resolveActivity(activity.getPackageManager()) != null) {
                 Globals.writeToMLOG("INFO", "makePhoto", "resolveActivity != null: " + activity.getPackageManager());
                 activity.startActivityForResult(intent, CAMERA_REQUEST_TAKE_PHOTO_TEST);
-            }else {
+            } else {
                 Globals.writeToMLOG("INFO", "makePhoto", "resolveActivity = null: " + activity.getPackageManager());
                 activity.startActivityForResult(intent, CAMERA_REQUEST_TAKE_PHOTO_TEST);
             }
@@ -479,49 +488,49 @@ public class MakePhoto {
     }
 
 
-    public <T> void pressedMakePhoto(Activity activity, T data, String photoType) {
+    public <T> void pressedMakePhoto(Activity activity, T data, OptionsDB optionsDB, String photoType) {
         try {
             final WorkPlan workPlan = new WorkPlan();
             WPDataObj wpDataObj;
-            if (data instanceof TasksAndReclamationsSDB){
+            if (data instanceof TasksAndReclamationsSDB) {
                 wpDataObj = workPlan.getKPS((TasksAndReclamationsSDB) data);
-            }else {
+            } else {
                 WpDataDB wpDataDB = (WpDataDB) data;
                 wpDataObj = workPlan.getKPS(wpDataDB.getId());
             }
             MakePhoto.photoType = photoType;
             Globals.writeToMLOG("INFO", "pressedMakePhoto", "photoType: " + photoType);
-            choiceCustomerGroupAndPhoto2(activity, wpDataObj, data);
+            choiceCustomerGroupAndPhoto2(activity, wpDataObj, data, optionsDB);
         } catch (Exception e) {
             Globals.writeToMLOG("ERROR", "pressedMakePhoto", "Exception e: " + e);
         }
     }
 
-    public <T> void pressedMakePhoto(Activity activity, T data, String photoType, String tovarId) {
+    public <T> void pressedMakePhoto(Activity activity, T data, OptionsDB optionsDB, String photoType, String tovarId) {
         try {
             final WorkPlan workPlan = new WorkPlan();
             WPDataObj wpDataObj;
-            if (data instanceof TasksAndReclamationsSDB){
+            if (data instanceof TasksAndReclamationsSDB) {
                 wpDataObj = workPlan.getKPS((TasksAndReclamationsSDB) data);
-            }else {
+            } else {
                 WpDataDB wpDataDB = (WpDataDB) data;
                 wpDataObj = workPlan.getKPS(wpDataDB.getId());
             }
             MakePhoto.photoType = photoType;
             MakePhoto.tovarId = tovarId;
             Globals.writeToMLOG("INFO", "pressedMakePhoto", "photoType: " + photoType);
-            choiceCustomerGroupAndPhoto2(activity, wpDataObj, data);
+            choiceCustomerGroupAndPhoto2(activity, wpDataObj, data, optionsDB);
         } catch (Exception e) {
             Globals.writeToMLOG("ERROR", "pressedMakePhoto", "Exception e: " + e);
         }
     }
 
-    public <T> void pressedMakePhotoOldStyle(Activity activity, WPDataObj wp, T data){
+    public <T> void pressedMakePhotoOldStyle(Activity activity, WPDataObj wp, T data, OptionsDB optionsDB) {
         photoType = wp.getPhotoType();
-        choiceCustomerGroupAndPhoto2(activity, wp, data);
+        choiceCustomerGroupAndPhoto2(activity, wp, data, optionsDB);
     }
 
-    private <T> void choiceCustomerGroupAndPhoto2(Activity activity, WPDataObj wp, T data) {
+    private <T> void choiceCustomerGroupAndPhoto2(Activity activity, WPDataObj wp, T data, OptionsDB optionsDB) {
         if (wp.getCustomerTypeGrp() != null) {
             final String[] result = wp.getCustomerTypeGrp().values().toArray(new String[0]);
             if (wp.getCustomerTypeGrp().size() > 1 && !wp.getPhotoType().equals("5")) {
@@ -531,26 +540,26 @@ public class MakePhoto {
                             Toast t = Toast.makeText(activity, "Выбрана группа товара: " + result[which], Toast.LENGTH_LONG);
                             t.show();
                             wp.setCustomerTypeGrpS(Globals.getKeyForValue(result[which], wp.getCustomerTypeGrp()));
-                            photoDialogs(activity, wp, data);
+                            photoDialogs(activity, wp, data, optionsDB);
                         })
                         .show();
             } else if (wp.getCustomerTypeGrp().size() == 1 && !wp.getPhotoType().equals("5")) {
                 wp.setCustomerTypeGrpS(Globals.getKeyForValue(result[0], wp.getCustomerTypeGrp()));
                 Toast.makeText(activity, "Выбрана группа товара: " + result[0], Toast.LENGTH_LONG).show();
-                photoDialogs(activity, wp, data);
+                photoDialogs(activity, wp, data, optionsDB);
             } else {
-                if (!wp.getPhotoType().equals("5")){
+                if (!wp.getPhotoType().equals("5")) {
                     globals.alertDialogMsg(activity, "Не обнаружено ни одной группы товаров по данному клиенту. Сообщите об этом Администратору!");
                 }
                 wp.setCustomerTypeGrpS("");
-                photoDialogs(activity, wp, data);
+                photoDialogs(activity, wp, data, optionsDB);
             }
         } else {
             globals.alertDialogMsg(activity, "Не выбрано посещение\n\nЗайдите в раздел План работ, выберите посещение и повторите попытку.");
         }
     }
 
-    private <T> void photoDialogs(Activity activity, WPDataObj wpDataObj, T data){
+    private <T> void photoDialogs(Activity activity, WPDataObj wpDataObj, T data, OptionsDB optionsDB) {
         if (enabledGPS) {
             if (wpDataObj != null) {
                 if (wpDataObj.getLatitude() > 0 && wpDataObj.getLongitude() > 0) {
@@ -574,7 +583,9 @@ public class MakePhoto {
                                 dialogData2.setCancel(Html.fromHtml("<font color='#000000'>Нет</font>"), () -> {
                                     dialog1.dismiss();
                                     dialogData2.dismiss();
-                                    makePhoto(activity, data); // Метод который запускает камеру и создаёт файл фото.
+                                    showDialogPass(activity, wpDataObj, optionsDB, ()->{
+                                        makePhoto(activity, data); // Метод который запускает камеру и создаёт файл фото.
+                                    });
                                 });
                                 dialogData2.setClose(dialogData2::dismiss);
                                 dialogData2.show();
@@ -584,16 +595,6 @@ public class MakePhoto {
                             dialog1.setImgBtnCall(activity);
                             dialog1.setClose(dialog1::dismiss);
                             dialog1.show();
-
-
-                            String title = "Нарушение по Местоположению.";
-                            String msg = String.format("По данным системы вы находитесь на расстоянии %.1f метров от ТТ %s, что больше допустимых 500 метров.\n\nВы не сможете использовать фото которые выполните в таком состоянии системы.\n\nЕсли в действительности Вы находитесь в ТТ - обратитесь к своему руководителю за помощью.", d, wpDataObj.getAddressIdTxt());
-                            String trueButton = "<font color='#000000'>Всё равно сделать фото</font>";
-                            String falseButton = "<font color='#000000'>Отказаться от изготовления фото</font>";
-                            String title2 = "ВНИМАНИЕ!";
-                            String msg2 = "Система не обнаружила вас в ТТ. \n\nФотографии выполненные в этом режиме могут быть признаны не действительными.\n\nОтказаться от изготовления фото?";
-                            String trueButton2 = "<font color='#000000'>Да</font>";
-                            String falseButton2 = "<font color='#000000'>Нет</font>";
 
                         } else if (serverTimeControl()) {
                             String timeStamp = new SimpleDateFormat("HH:mm:ss").format(System.currentTimeMillis());
@@ -632,7 +633,7 @@ public class MakePhoto {
                         alertMassageMP(activity, 2, t1, m1, bt1, bf1, "", "", "", "");
 //                            makePhoto(activity, data); // Метод который запускает камеру и создаёт файл фото.
                     }
-                }else {
+                } else {
                     Toast.makeText(activity, "Координаты магазина не обнаружены. Выполнение фото невозможно, обратитесь к Вашему руководителю.", Toast.LENGTH_SHORT).show();
                     makePhoto(activity, data); // Метод который запускает камеру и создаёт файл фото.
                 }
@@ -668,7 +669,9 @@ public class MakePhoto {
                 dialogData2.setCancel2(Html.fromHtml(falseButton2), () -> {
                     dialogData1.dismiss();
                     dialogData2.dismiss();
-                    makePhoto(activity, data); // Метод который запускает камеру и создаёт файл фото.
+                    showDialogPass(activity, wpDataObj, optionsDB, ()->{
+                        makePhoto(activity, data); // Метод который запускает камеру и создаёт файл фото.
+                    });
                 });
                 dialogData2.setClose(dialogData2::dismiss);
                 dialogData2.show();
@@ -678,5 +681,45 @@ public class MakePhoto {
             dialogData1.setImgBtnCall(activity);
             dialogData1.show();
         }
+    }
+
+    public void showDialogPass(Context context, WPDataObj wpDataObj, OptionsDB option, Clicks.clickVoid click) {
+
+        WpDataDB wp = WpDataRealm.getWpDataRowByDad2Id(wpDataObj.dad2);
+
+        DialogData dialog = new DialogData(context);
+        dialog.setTitle("Внесіть пароль!");
+        dialog.setText("Для продовження внесіть пароль: ");
+        dialog.setClose(dialog::dismiss);
+        dialog.setOperation(DialogData.Operations.TEXT, "", null, () -> {
+        });
+        dialog.setOkNotClose("Ok", () -> {
+//            Toast.makeText(dialog.context, "Внесли: " + dialog.getOperationResult(), Toast.LENGTH_SHORT).show();
+            String res = dialog.getOperationResult();
+
+            long date = wp.getDt().getTime() / 1000;
+            UsersSDB user = SQL_DB.usersDao().getUserById(wp.getUser_id());
+            long dad2 = wp.getCode_dad2();
+
+            Log.e("UnlockCode", "date: " + Clock.getHumanTimeYYYYMMDD(date));
+            Log.e("UnlockCode", "user: " + user.id);
+            Log.e("UnlockCode", "dad2: " + dad2);
+            Log.e("UnlockCode", "option: " + option.getOptionId());
+
+            String unlockCode = new UnlockCode().unlockCode(date, user, dad2, option, CODE_DAD_2_AND_OPTION);
+            String unlockCode2 = new UnlockCode().unlockCode(date, user, dad2, option, DATE_AND_USER);
+
+            Log.e("UnlockCode", "unlockCode: " + unlockCode);
+            Log.e("UnlockCode", "unlockCode2: " + unlockCode2);
+
+            if (res.equals(unlockCode)){
+                Toast.makeText(context, "Код прийнято", Toast.LENGTH_LONG).show();
+                click.click();
+                dialog.dismiss();
+            }else {
+                Toast.makeText(context, "Код не вірний!", Toast.LENGTH_LONG).show();
+            }
+        });
+        dialog.show();
     }
 }

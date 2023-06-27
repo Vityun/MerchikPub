@@ -655,7 +655,7 @@ public class RecyclerViewTPLAdapter extends RecyclerView.Adapter<RecyclerView.Vi
 
         public void bind() {
             button.setOnClickListener(v -> {
-                new TovarRequisites(TovarRealm.getById(dataRp.tovarId), dataRp).createDialog(itemView.getContext(), WpDataRealm.getWpDataRowByDad2Id(Long.parseLong(dataRp.codeDad2))).show();
+                new TovarRequisites(TovarRealm.getById(dataRp.tovarId), dataRp).createDialog(itemView.getContext(), WpDataRealm.getWpDataRowByDad2Id(Long.parseLong(dataRp.codeDad2)), null).show();
             });
         }
 
