@@ -187,7 +187,15 @@ public class RecyclerViewTPLAdapter extends RecyclerView.Adapter<RecyclerView.Vi
                     click.getData(item, editable.toString(), null);
                     if (item.getOptionControlName().equals(Globals.OptionControlName.FACE) ||
                             item.getOptionControlName().equals(Globals.OptionControlName.UP) && !editText.getText().toString().equals("")) {
-                        if (Integer.parseInt(editText.getText().toString()) > 0) {
+
+                        int text;
+                        try {
+                            text = Integer.parseInt(editText.getText().toString());
+                        }catch (Exception e){
+                            text = 0;
+                        }
+
+                        if (text > 0) {
                             subtraction.getBackground().mutate().setColorFilter(new PorterDuffColorFilter(subtraction.getContext().getResources().getColor(R.color.active), PorterDuff.Mode.SRC));
                             subtraction.setClickable(true);
                         } else {
