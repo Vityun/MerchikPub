@@ -373,7 +373,7 @@ public class DetailedReportTovarsFrag extends Fragment {
                     res = RealmManager.INSTANCE.copyFromRealm(Objects.requireNonNull(RealmManager.getTovarListFromReportPrepareByDad2(codeDad2)));
 
                     if (res.size() == 0) {
-                        downloadDetailedReportTovarsData(new Clicks.clickStatusMsg() {
+                        downloadDetailedReportTovarsData(type, new Clicks.clickStatusMsg() {
                             @Override
                             public void onSuccess(String data) {
                                 Toast.makeText(mContext, data, Toast.LENGTH_SHORT).show();
@@ -549,7 +549,7 @@ public class DetailedReportTovarsFrag extends Fragment {
                 if (updateTov && codeDad2 != 0) {
                     Log.d("test", "tovars is empty");
                     Globals.writeToMLOG("INFO", "DetailedReportTovarsFrag/getTovList", "tovars is empty");
-                    downloadDetailedReportTovarsData(new Clicks.clickStatusMsg() {
+/*                    downloadDetailedReportTovarsData(new Clicks.clickStatusMsg() {
                         @Override
                         public void onSuccess(String data) {
                             Toast.makeText(mContext, data, Toast.LENGTH_SHORT).show();
@@ -565,7 +565,7 @@ public class DetailedReportTovarsFrag extends Fragment {
                             Globals.writeToMLOG("INFO", "DetailedReportTovarsFrag/getTovList.onSuccess", "String error: " + error);
                             updateTov = false;
                         }
-                    });
+                    });*/
                 }
 
             }
@@ -578,15 +578,15 @@ public class DetailedReportTovarsFrag extends Fragment {
         return list;
     }
 
-    private void downloadDetailedReportTovarsData(Clicks.clickStatusMsg click) {
+    private void downloadDetailedReportTovarsData(TovarDisplayType type, Clicks.clickStatusMsg click) {
         try {
-//            ProgressDialog pg = ProgressDialog.show(mContext, "Загрузка списка товаров", "Подождите окончания загрузки. Это может занять время.", true, true);
-//            downloadReportPrepareByDad2(pg, click);
-//
-//            ProgressDialog pg2 = ProgressDialog.show(mContext, "Загрузка списка опций", "Подождите окончания загрузки. Это может занять время.", true, true);
-//            downloadOptionByDad2(pg2, click);
-        } catch (Exception e) {
+            ProgressDialog pg = ProgressDialog.show(mContext, "Загрузка списка товаров", "Подождите окончания загрузки. Это может занять время.", true, true);
+            downloadReportPrepareByDad2(pg, click);
 
+            ProgressDialog pg2 = ProgressDialog.show(mContext, "Загрузка списка опций", "Подождите окончания загрузки. Это может занять время.", true, true);
+            downloadOptionByDad2(pg2, click);
+        } catch (Exception e) {
+            Globals.writeToMLOG("INFO", "DetailedReportTovarsFrag/getTovList/downloadDetailedReportTovarsData", "Exception e: " + e);
         }
     }
 
