@@ -139,6 +139,7 @@ android:theme="@style/Theme.AppCompat.Light.NoActionBar"
         <activity
             android:name=".Activities.TaskAndReclamations.ReclamationsActivity.ReclamationsActivity"
             android:theme="@style/AppTheme.NoActionBar"
+            android:screenOrientation="portrait"
             >
         </activity>
 
