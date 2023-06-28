@@ -1182,6 +1182,7 @@ public class RealmManager {
 
         RealmResults<TovarDB> realmResults2 = INSTANCE.where(TovarDB.class)
                 .in("iD", list)
+                .equalTo("deleted", 0)      // Не показывать удалённые Товары
                 .findAll();
 
         try {
@@ -1276,6 +1277,7 @@ public class RealmManager {
                 .or()
                 .equalTo("clientId2", id)
                 .sort("manufacturerId", Sort.ASCENDING, "weight", Sort.DESCENDING)
+                .equalTo("deleted", 0)      // Не показывать удалённые Товары
                 .findAll();
 
         res = res.sort("sortcol", Sort.ASCENDING);

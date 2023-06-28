@@ -46,6 +46,7 @@ public class PPADBRealm {
 
             RealmResults<TovarDB> realmResults2 = INSTANCE.where(TovarDB.class)
                     .in("iD", list)
+                    .equalTo("deleted", 0)      // Не показывать удалённые Товары
                     .findAll();
 
             if (realmResults2 != null && realmResults2.size() > 0) {
