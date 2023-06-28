@@ -175,7 +175,7 @@ public class DialogFullPhoto {
         Log.e("setPhotos", "photoLogData: " + photoLogData.get(position).getId());
 
         openFullSize.setOnClickListener(view -> {
-            mOnPhotoClickListener.onPhotoClicked(data.get(pos));
+            mOnPhotoClickListener.onPhotoClicked(view.getContext(), data.get(pos));
             dialog.dismiss();
         });
 

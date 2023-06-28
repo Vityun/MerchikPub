@@ -2,6 +2,7 @@ package ua.com.merchik.merchik.Activities.PhotoLogActivity;
 
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -40,7 +41,7 @@ public class PhotoLogPhotoAdapter extends RecyclerView.Adapter<PhotoLogPhotoAdap
     private Clicks.clickVoid clickVoid;
 
     public interface OnPhotoClickListener {
-        void onPhotoClicked(StackPhotoDB photoDB);
+        void onPhotoClicked(Context context, StackPhotoDB photoDB);
     }
 
     public PhotoLogPhotoAdapter(List<StackPhotoDB> data, View.OnTouchListener onTouchListener, OnPhotoClickListener mOnPhotoClickListener, Clicks.clickVoid clickVoid) {
@@ -212,7 +213,7 @@ public class PhotoLogPhotoAdapter extends RecyclerView.Adapter<PhotoLogPhotoAdap
         private void openFullScreenPhoto(View view, StackPhotoDB photo) {
             Toast.makeText(view.getContext(), "Открыл фулл фото", Toast.LENGTH_SHORT).show();
             clickVoid.click();
-            mOnPhotoClickListener.onPhotoClicked(photo);
+            mOnPhotoClickListener.onPhotoClicked(view.getContext(), photo);
         }
 
 

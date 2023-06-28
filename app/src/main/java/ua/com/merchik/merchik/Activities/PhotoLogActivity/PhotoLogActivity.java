@@ -3,6 +3,7 @@ package ua.com.merchik.merchik.Activities.PhotoLogActivity;
 import static ua.com.merchik.merchik.MakePhoto.MakePhoto.CAMERA_REQUEST_TAKE_PHOTO;
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.Editable;
@@ -270,25 +271,12 @@ public class PhotoLogActivity extends toolbar_menus {
             }
         }, new PhotoLogPhotoAdapter.OnPhotoClickListener() {
             @Override
-            public void onPhotoClicked(StackPhotoDB photoDB) {
-
-                DialogFullPhotoR dialog = new DialogFullPhotoR(getApplicationContext());
+            public void onPhotoClicked(Context context, StackPhotoDB photoDB) {
+//                DialogFullPhotoR dialog = new DialogFullPhotoR(getApplicationContext());
+                DialogFullPhotoR dialog = new DialogFullPhotoR(context);
                 dialog.setPhoto(photoDB);
                 dialog.setClose(dialog::dismiss);
                 dialog.show();
-
-                // создаем фрагмент PhotoFullScreenFragment и передаем ему позицию нажатого элемента
-//                PhotoFullScreenFragment fragment = new PhotoFullScreenFragment(photoDB);
-////                Bundle args = new Bundle();
-////                args.putInt("position", 0);
-////                fragment.setArguments(args);
-//
-//                // открываем фрагмент
-//                FragmentManager fragmentManager = getSupportFragmentManager();
-//                fragmentManager.beginTransaction()
-//                        .replace(R.id.actitity_photo_log, fragment)
-//                        .addToBackStack(null)
-//                        .commit();
             }
         });
         recycleViewPLAdapter.setPhotoLogMode(photoLogMode);
