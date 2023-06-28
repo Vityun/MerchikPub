@@ -78,6 +78,7 @@ public class DetailedReportTovarsFrag extends Fragment {
 
     private long codeDad2;
     private String clientId;
+    private int addressId;
 
     private EditText editText;
     private TextView allTov;
@@ -99,6 +100,7 @@ public class DetailedReportTovarsFrag extends Fragment {
 
         this.codeDad2 = wpDataDB.getCode_dad2();
         this.clientId = wpDataDB.getClient_id();
+        this.addressId = wpDataDB.getAddr_id();
     }
 
     public DetailedReportTovarsFrag(Context context, TasksAndReclamationsSDB tasksAndReclamationsSDB) {
@@ -397,7 +399,7 @@ public class DetailedReportTovarsFrag extends Fragment {
                 return res;
 
             case PPA:
-                res = PPADBRealm.getTovarListByPPA(clientId, null, null);
+                res = PPADBRealm.getTovarListByPPA(clientId, addressId, null);
                 return res;
 
             case ONE:
