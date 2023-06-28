@@ -5,5 +5,6 @@ public enum PhotoLogMode {
     CHOICE,
     PLANOGRAM,
     REPORT_PREPARE,
-    SAMPLE_PHOTO
+    SAMPLE_PHOTO,
+    SAMPLE_PHOTO_ACTIVITY
 }

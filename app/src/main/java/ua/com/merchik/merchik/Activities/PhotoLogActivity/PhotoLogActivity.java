@@ -172,7 +172,12 @@ public class PhotoLogActivity extends toolbar_menus {
                     Toast.makeText(this, "По данному отчёту фото не найдено", Toast.LENGTH_SHORT).show();
                 }
             } else if (this.getIntent().getBooleanExtra("SamplePhoto", false)) {
-                photoLogMode = PhotoLogMode.SAMPLE_PHOTO;   // Тип откуда открыли Журнал Фото
+
+                if (this.getIntent().getBooleanExtra("SamplePhotoActivity", false)){
+                    photoLogMode = PhotoLogMode.SAMPLE_PHOTO_ACTIVITY;   // Тип откуда открыли Журнал Фото
+                }else {
+                    photoLogMode = PhotoLogMode.SAMPLE_PHOTO;   // Тип откуда открыли Журнал Фото
+                }
 
                 int photoTp = this.getIntent().getIntExtra("photoTp", 999);     // Если открыли Журнал фото с каким-то типом = он тут
 

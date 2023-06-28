@@ -32,7 +32,6 @@ import com.google.gson.Gson;
 
 import java.io.File;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -462,77 +461,9 @@ public class PhotoLogAdapter extends RecyclerView.Adapter<PhotoLogAdapter.ViewHo
             @Override
             protected void publishResults(CharSequence constraint, FilterResults results) {
                 photoLogData = (List<StackPhotoDB>) results.values;
-
-//                Toast toast = Toast.makeText(mContext, "Отобрано: " + photoLogData.size() + " фото", Toast.LENGTH_SHORT);
-//                toast.setGravity(Gravity.CENTER, 0, 0);
-//                toast.show();
-
                 notifyDataSetChanged();
             }
         };
-//        return new Filter() {
-//            @SuppressWarnings("unchecked")
-//            @Override
-//            protected void publishResults(CharSequence constraint, FilterResults results) {
-//
-//                Log.e("TAG_SEARCH", "SEARCH(constraint): " + constraint);
-//                Log.e("TAG_SEARCH", "SEARCH(results): " + results.values);
-//
-//                photoLogData = (List<StackPhotoDB>) results.values;
-//                Log.e("TAG_SEARCH", "SEARCH(7): " + photoLogData);
-//
-//                notifyDataSetChanged();
-//            }
-//
-//            @Override
-//            protected FilterResults performFiltering(CharSequence constraint) {
-//                List<StackPhotoDB> filteredResults = null;
-//                Log.e("TAG_SEARCH", "SEARCH(performFiltering): " + constraint);
-//
-//                if (constraint.length() == 0) {
-//                    Log.e("TAG_SEARCH", "SEARCH(constraint.length() == 0): " + constraint);
-//                    filteredResults = photoLogDataList;
-//                } else {
-//                    Log.e("TAG_SEARCH", "SEARCH(constraint.length() == ): " + constraint.length());
-//                    filteredResults = getFilteredResults(constraint.toString().toLowerCase());
-//                    Log.e("TAG_SEARCH", "SEARCH(filteredResults): " + filteredResults);
-//                }
-//
-//                FilterResults results = new FilterResults();
-//                results.values = filteredResults;
-//
-//                Log.e("TAG_SEARCH", "SEARCH(6): " + results);
-//
-//
-//                return results;
-//            }
-//        };
-    }
-
-    private List<StackPhotoDB> getFilteredResults(String constraint) {
-        List<StackPhotoDB> results = new ArrayList<>();
-
-        Log.e("TAG_SEARCH", "SEARCH(2): " + constraint);
-        Log.e("TAG_SEARCH", "SEARCH(2.workPlanList): " + photoLogDataList.size());
-        Log.e("TAG_SEARCH", "SEARCH(2): " + constraint);
-
-        for (StackPhotoDB item : photoLogDataList) {
-            Log.e("TAG_SEARCH", "SEARCH(2) USERTXT: " + item.getUserTxt());
-            if (item.getUserTxt().toLowerCase().contains(constraint)) {
-                Log.e("TAG_SEARCH", "SEARCH(4.0): " + item.getUserTxt().toLowerCase());
-                results.add(item);
-            } else if (item.getAddressTxt().toLowerCase().contains(constraint)) {
-                Log.e("TAG_SEARCH", "SEARCH(4.1): " + item.getAddressTxt().toLowerCase());
-                results.add(item);
-            } else if (item.getCustomerTxt().toLowerCase().contains(constraint)) {
-                Log.e("TAG_SEARCH", "SEARCH(4.2): " + item.getCustomerTxt().toLowerCase());
-                results.add(item);
-            }
-        }
-
-        Log.e("TAG_SEARCH", "SEARCH(5): " + results);
-
-        return results;
     }
 
     //----------------------------------------------------------------------------------------------

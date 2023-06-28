@@ -315,6 +315,7 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                 Toast.makeText(this, "Образцы ФотоОтчетов", Toast.LENGTH_SHORT).show();
                 Intent intent = new Intent(this, PhotoLogActivity.class);
                 intent.putExtra("SamplePhoto", true);
+                intent.putExtra("SamplePhotoActivity", true);
                 startActivity(intent);
                 break;
 
@@ -342,7 +343,16 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                 try {
                     MenuItemFromWebDB menuItem165 = RealmManager.getSiteMenuItem(165);
                     String menuItem165format = "mobile.php" + menuItem165.getUrl();
-                    Intent menuItem165browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(menuItem165format));
+
+                    AppUsersDB appUser = AppUserRealm.getAppUserById(userId);
+                    String hash = String.format("%s%s%s", appUser.getUserId(), appUser.getPassword(), "AvgrgsYihSHp6Ok9yQXfSHp6Ok9nXdXr3OSHp6Ok9UPBTzTjrF20Nsz3");
+                    hash = Globals.getSha1Hex(hash);
+
+                    menuItem165format = menuItem165format.replace("&", "**");
+
+                    String format = String.format("https://merchik.com.ua/sa.php?&u=%s&s=%s&l=/%s", userId, hash, menuItem165format);
+
+                    Intent menuItem165browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(format));
                     this.startActivity(menuItem165browserIntent);
                 }catch (Exception e){
                     Globals.writeToMLOG("ERROR", "menu/165", "Exception e: " + e);

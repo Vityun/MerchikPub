@@ -834,6 +834,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                     Toast.makeText(context, "Показать образец фото", Toast.LENGTH_SHORT).show();
                     Intent intent = new Intent(context, PhotoLogActivity.class);
                     intent.putExtra("SamplePhoto", true);
+                    intent.putExtra("SamplePhotoActivity", false);
                     intent.putExtra("photoTp", photoType);
                     context.startActivity(intent);
                 } catch (Exception e) {
