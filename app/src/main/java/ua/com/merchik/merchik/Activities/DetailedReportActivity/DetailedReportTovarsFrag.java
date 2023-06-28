@@ -121,13 +121,12 @@ public class DetailedReportTovarsFrag extends Fragment {
             fullTovList = v.findViewById(R.id.full_tov_list);
             filter = v.findViewById(R.id.filter);
 
-//            rvTovar = (RecyclerView) v.findViewById(R.id.DRRecyclerViewTovar);
             recyclerView = v.findViewById(R.id.DRRecyclerViewTovar);
             allTov = v.findViewById(R.id.textLikeLink);
 
-//            setTextLikeLink();
             setPopup();
-//            addRecycleView(getTovList());
+
+            downloadData();
             addRecycleView(getTovListNew(TovarDisplayType.DETAILED_REPORT));
 
             setFabVideo(v.getContext(), this::showYouTubeFab);
@@ -137,6 +136,29 @@ public class DetailedReportTovarsFrag extends Fragment {
             Globals.writeToMLOG("ERROR", "DetailedReportTovarsFrag/onCreateView", "Exception e: " + e);
         }
         return v;
+    }
+
+    private void downloadData(){
+        List<TovarDB> res = new ArrayList<>();
+        res = RealmManager.INSTANCE.copyFromRealm(Objects.requireNonNull(RealmManager.getTovarListFromReportPrepareByDad2(codeDad2)));
+        if (res.size() == 0) {
+            downloadDetailedReportTovarsData(TovarDisplayType.DETAILED_REPORT, new Clicks.clickStatusMsg() {
+                @Override
+                public void onSuccess(String data) {
+                    Toast.makeText(mContext, data, Toast.LENGTH_SHORT).show();
+                    Globals.writeToMLOG("INFO", "DetailedReportTovarsFrag/getTovList.onSuccess", "String data: " + data);
+                    addRecycleView(getTovListNew(TovarDisplayType.DETAILED_REPORT));
+                    updateTov = false;
+                }
+
+                @Override
+                public void onFailure(String error) {
+                    Toast.makeText(mContext, error, Toast.LENGTH_SHORT).show();
+                    Globals.writeToMLOG("INFO", "DetailedReportTovarsFrag/getTovList.onSuccess", "String error: " + error);
+                    updateTov = false;
+                }
+            });
+        }
     }
 
     private void setFabVideo(Context context, Clicks.clickVoid click){
@@ -371,25 +393,6 @@ public class DetailedReportTovarsFrag extends Fragment {
             case DETAILED_REPORT:
                 if (RealmManager.getTovarListFromReportPrepareByDad2(codeDad2) != null) {
                     res = RealmManager.INSTANCE.copyFromRealm(Objects.requireNonNull(RealmManager.getTovarListFromReportPrepareByDad2(codeDad2)));
-
-                    if (res.size() == 0) {
-                        downloadDetailedReportTovarsData(type, new Clicks.clickStatusMsg() {
-                            @Override
-                            public void onSuccess(String data) {
-                                Toast.makeText(mContext, data, Toast.LENGTH_SHORT).show();
-                                Globals.writeToMLOG("INFO", "DetailedReportTovarsFrag/getTovList.onSuccess", "String data: " + data);
-                                addRecycleView(getTovListNew(TovarDisplayType.DETAILED_REPORT));
-                                updateTov = false;
-                            }
-
-                            @Override
-                            public void onFailure(String error) {
-                                Toast.makeText(mContext, error, Toast.LENGTH_SHORT).show();
-                                Globals.writeToMLOG("INFO", "DetailedReportTovarsFrag/getTovList.onSuccess", "String error: " + error);
-                                updateTov = false;
-                            }
-                        });
-                    }
                 }
                 return res;
 
