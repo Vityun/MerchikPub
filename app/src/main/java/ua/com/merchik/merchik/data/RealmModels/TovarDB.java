@@ -65,6 +65,10 @@ public class TovarDB extends RealmObject {
     @Expose
     public Double depth;    // Глубина полки
 
+    @SerializedName("deleted")
+    @Expose
+    public Integer deleted;    // Поставлен ли товар на удаление
+
     @Ignore
     public Long article;    // Артикул
 
