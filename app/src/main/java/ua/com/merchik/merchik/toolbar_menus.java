@@ -321,8 +321,17 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
             case 164:
                 try {
                     MenuItemFromWebDB menuItem164 = RealmManager.getSiteMenuItem(164);
-                    String menuItem164format = menuItem164.getUrl();
-                    Intent menuItem164browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(menuItem164format));
+                    String menuItem164format = "mobile.php" + menuItem164.getUrl();
+
+                    AppUsersDB appUser = AppUserRealm.getAppUserById(userId);
+                    String hash = String.format("%s%s%s", appUser.getUserId(), appUser.getPassword(), "AvgrgsYihSHp6Ok9yQXfSHp6Ok9nXdXr3OSHp6Ok9UPBTzTjrF20Nsz3");
+                    hash = Globals.getSha1Hex(hash);
+
+                    menuItem164format = menuItem164format.replace("&", "**");
+
+                    String format = String.format("https://merchik.com.ua/sa.php?&u=%s&s=%s&l=/%s", userId, hash, menuItem164format);
+
+                    Intent menuItem164browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(format));
                     this.startActivity(menuItem164browserIntent);
                 }catch (Exception e){
                     Globals.writeToMLOG("ERROR", "menu/164", "Exception e: " + e);
@@ -332,7 +341,7 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
             case 165:
                 try {
                     MenuItemFromWebDB menuItem165 = RealmManager.getSiteMenuItem(165);
-                    String menuItem165format = menuItem165.getUrl();
+                    String menuItem165format = "mobile.php" + menuItem165.getUrl();
                     Intent menuItem165browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(menuItem165format));
                     this.startActivity(menuItem165browserIntent);
                 }catch (Exception e){
