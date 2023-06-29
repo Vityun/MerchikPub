@@ -546,6 +546,8 @@ public class RealmManager {
                 .equalTo("docId", sOtchetId)
                 .and()
                 .notEqualTo("optionGroup", "3161")
+                .and()
+                .equalTo("deleted", "0")
                 .findAll();
     }
 
@@ -555,6 +557,8 @@ public class RealmManager {
                 .equalTo("docId", sOtchetId)
                 .and()
                 .equalTo("optionGroup", "3161")
+                .and()
+                .equalTo("deleted", "0")
                 .findAll();
     }
 
