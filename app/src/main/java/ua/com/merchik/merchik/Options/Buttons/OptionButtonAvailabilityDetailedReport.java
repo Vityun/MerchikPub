@@ -22,6 +22,6 @@ public class OptionButtonAvailabilityDetailedReport<T> extends OptionControl {
 
     private void executeOption() {
         OptionControlAvailabilityDetailedReport optionControl = new OptionControlAvailabilityDetailedReport(context, document, optionDB, msgType, nnkMode);
-        optionControl.showOptionMassage();
+        optionControl.showOptionMassage("");
     }
 }

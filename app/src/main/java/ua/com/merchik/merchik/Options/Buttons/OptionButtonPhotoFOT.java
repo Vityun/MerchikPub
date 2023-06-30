@@ -42,7 +42,7 @@ public class OptionButtonPhotoFOT<T> extends OptionControl {
         try {
             if (optionDB.getOptionControlId().equals("159707")) {
                 OptionControlAvailabilityControlPhotoRemainingGoods<?> optionControlAvailabilityControlPhotoRemainingGoods = new OptionControlAvailabilityControlPhotoRemainingGoods<>(context, document, optionDB, msgType, nnkMode);
-                optionControlAvailabilityControlPhotoRemainingGoods.showOptionMassage();
+                optionControlAvailabilityControlPhotoRemainingGoods.showOptionMassage("");
             } else {
                 WPDataObj wpDataObj = workPlan.getKPS(wpDataDB.getId());
                 wpDataObj.setPhotoType("4");

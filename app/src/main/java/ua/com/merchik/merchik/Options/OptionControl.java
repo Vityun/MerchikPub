@@ -31,7 +31,7 @@ public class OptionControl <T>{
     public boolean notCloseSpannableStringBuilderDialog = false;    // Делает так что при клике на текст диалог не будет закрываться
     private boolean block;
 
-    public void showOptionMassage(){
+    public void showOptionMassage(String msg){
         try {
             if (msgType != null && msgType.type != null){
                 switch (msgType.type){
@@ -52,7 +52,7 @@ public class OptionControl <T>{
                         if (stringBuilderMsg.toString().length() > 1){
                             DialogData dialog = new DialogData(context);
                             dialog.setTitle(optionTitle);
-                            dialog.setText(stringBuilderMsg);
+                            dialog.setText(msg + stringBuilderMsg);
                             if (isBlockOption()){
                                 dialog.setDialogIco();
                             }
@@ -64,10 +64,12 @@ public class OptionControl <T>{
                             if (isBlockOption()){
                                 dialog.setDialogIco();
                             }
+                            SpannableStringBuilder text = new SpannableStringBuilder();
+                            text.append(msg).append(spannableStringBuilder);
                             if (notCloseSpannableStringBuilderDialog){
-                                dialog.setText(spannableStringBuilder, ()->{});
+                                dialog.setText(text, ()->{});
                             }else {
-                                dialog.setText(spannableStringBuilder, dialog::dismiss);
+                                dialog.setText(text, dialog::dismiss);
                             }
                             dialog.setClose(dialog::dismiss);
                             dialog.show();

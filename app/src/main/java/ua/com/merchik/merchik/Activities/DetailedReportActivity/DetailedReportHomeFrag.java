@@ -254,7 +254,7 @@ public class DetailedReportHomeFrag extends Fragment {
                 OptionsDB optionsDB = (OptionsDB) data;
                 OptionMassageType msgType = new OptionMassageType();
                 msgType.type = OptionMassageType.Type.DIALOG;
-                new Options().optControl(getContext(), wp, optionsDB, Integer.parseInt(optionsDB.getOptionControlId()), msgType, Options.NNKMode.CHECK);
+                new Options().optControl(getContext(), wp, optionsDB, Integer.parseInt(optionsDB.getOptionControlId()), null, msgType, Options.NNKMode.CHECK);
             }
         });
     }

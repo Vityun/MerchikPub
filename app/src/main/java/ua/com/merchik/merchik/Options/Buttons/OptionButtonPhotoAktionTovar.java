@@ -44,7 +44,7 @@ public class OptionButtonPhotoAktionTovar<T> extends OptionControl {
 //            MakePhoto makePhoto = new MakePhoto();
 //            makePhoto.pressedMakePhotoOldStyle((Activity) context, wpDataObj, wpDataDB);
 
-            new OptionControlPhotoPromotion<>(context, document, optionDB, msgType, nnkMode).showOptionMassage();
+            new OptionControlPhotoPromotion<>(context, document, optionDB, msgType, nnkMode).showOptionMassage("");
 
         } catch (Exception e) {
             Globals.writeToMLOG("ERROR", "OptionButtonPhotoAktionTovar/executeOption/Exception", "Exception e: " + e);

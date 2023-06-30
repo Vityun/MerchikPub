@@ -130,7 +130,7 @@ public class DetailedReportOptionsFrag extends Fragment {
                             int scrollPosition = recycleViewDRAdapter.getItemPosition(optionsDB);
                             OptionMassageType msgType = new OptionMassageType();
                             msgType.type = OptionMassageType.Type.DIALOG;
-                            new Options().optControl(getContext(), wp, optionsDB, Integer.parseInt(optionsDB.getOptionControlId()), msgType, Options.NNKMode.CHECK);
+                            new Options().optControl(getContext(), wp, optionsDB, Integer.parseInt(optionsDB.getOptionControlId()), null, msgType, Options.NNKMode.CHECK);
                             rvContacts.smoothScrollToPosition(scrollPosition);
                         }
                     });

@@ -28,6 +28,6 @@ public class OptionButtonTaskAnswer<T> extends OptionControl {
 
     private void executeOption() {
         OptionControlTaskAnswer<?> optionControlTaskAnswer = new OptionControlTaskAnswer<>(context, document, optionDB, msgType, nnkMode);
-        optionControlTaskAnswer.showOptionMassage();
+        optionControlTaskAnswer.showOptionMassage("");
     }
 }

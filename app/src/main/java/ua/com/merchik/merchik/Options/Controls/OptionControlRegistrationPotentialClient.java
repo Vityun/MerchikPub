@@ -1,5 +1,7 @@
 package ua.com.merchik.merchik.Options.Controls;
 
+import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
+
 import android.content.Context;
 
 import java.util.List;
@@ -13,8 +15,6 @@ import ua.com.merchik.merchik.data.OptionMassageType;
 import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.database.realm.RealmManager;
-
-import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
 public class OptionControlRegistrationPotentialClient<T> extends OptionControl {
     public int OPTION_CONTROL_REGISTRATION_POTENTIAL_CLIENT_ID = 133381;
@@ -100,7 +100,7 @@ public class OptionControlRegistrationPotentialClient<T> extends OptionControl {
             }
         });
 
-        showOptionMassage();
+        showOptionMassage("");
     }
 
     private void formatMsg(List<PotentialClientSDB> potentialClients) {

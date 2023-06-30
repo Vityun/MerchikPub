@@ -28,6 +28,6 @@ public class OptionButtonReclamationAnswer<T> extends OptionControl {
 
     private void executeOption() {
         OptionControlReclamationAnswer<?> optionControlReclamationAnswer = new OptionControlReclamationAnswer<>(context, document, optionDB, msgType, nnkMode);
-        optionControlReclamationAnswer.showOptionMassage();
+        optionControlReclamationAnswer.showOptionMassage("");
     }
 }
