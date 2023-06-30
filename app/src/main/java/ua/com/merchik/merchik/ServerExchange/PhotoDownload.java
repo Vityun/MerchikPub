@@ -299,7 +299,7 @@ public class PhotoDownload {
 
             if (photoTP == 18) {
                 count++;
-                Globals.writeToMLOG("INFO", "getPhotoURLFromServer.onResponse.downloadPhoto", "convertedObject: " + new Gson().toJson(item));
+//                Globals.writeToMLOG("INFO", "getPhotoURLFromServer.onResponse.downloadPhoto", "convertedObject: " + new Gson().toJson(item));
                 retrofit2.Call<ResponseBody> call = RetrofitBuilder.getRetrofitInterface().DOWNLOAD_PHOTO_BY_URL(item.getPhotoUrl());
                 int finalCount = count;
                 call.enqueue(new Callback<ResponseBody>() {
