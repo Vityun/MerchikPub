@@ -89,6 +89,11 @@ public class menu_login extends AppCompatActivity {
 
     private final TablesLoadingUnloading tablesLoadingUnloading = new TablesLoadingUnloading();
 
+    private FabYoutube fabYoutube = new FabYoutube();
+    private FloatingActionButton fabYouTube;
+    private TextView badgeTextView;
+    public static final Integer[]  menu_login_VIDEO_LESSONS = new Integer[]{813};
+
     private Progress progress;
     private static final int PERMISSION_FINE_LOCATION = 0;
     private static final int PERMISSION_CAMERA = 1;
@@ -164,6 +169,9 @@ public class menu_login extends AppCompatActivity {
 //        MenuMainActivity.test();
 
         try {
+            fabYouTube = findViewById(R.id.fab3);
+            badgeTextView = findViewById(R.id.badge_text_view_tar);
+
             globals = new Globals();
 
 //            intent = new Intent(menu_login.this, MenuMainActivity.class);
@@ -190,7 +198,8 @@ public class menu_login extends AppCompatActivity {
 //            toolbar_menus.setFab(this, findViewById(R.id.fab));
 
             setFab(findViewById(R.id.fab));
-
+            fabYoutube.setFabVideo(fabYouTube, menu_login_VIDEO_LESSONS, () -> fabYoutube.showYouTubeFab(fabYouTube, badgeTextView, menu_login_VIDEO_LESSONS));
+            fabYoutube.showYouTubeFab(fabYouTube, badgeTextView, menu_login_VIDEO_LESSONS);
 
             if (checkPermission()) {
                 // all right
@@ -430,6 +439,7 @@ public class menu_login extends AppCompatActivity {
 
     @Override
     public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         try {
             switch (requestCode) {
                 case PERMISSION_REQUEST_CODE:

@@ -24,6 +24,8 @@ import android.widget.Toast;
 
 import androidx.fragment.app.Fragment;
 
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
+
 import java.io.File;
 import java.util.Collections;
 import java.util.List;
@@ -33,6 +35,7 @@ import io.reactivex.rxjava3.schedulers.Schedulers;
 import ua.com.merchik.merchik.Activities.FullScreenPhotoActivity.PhotoFragments;
 import ua.com.merchik.merchik.Activities.TaskAndReclamations.TARActivity;
 import ua.com.merchik.merchik.Clock;
+import ua.com.merchik.merchik.FabYoutube;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.ServerExchange.Exchange;
@@ -57,6 +60,11 @@ import ua.com.merchik.merchik.toolbar_menus;
 public class Tab1Fragment extends Fragment {
 
     private Context mContext;
+
+    private FabYoutube fabYoutube = new FabYoutube();
+    private FloatingActionButton fabYouTube;
+    private TextView badgeTextView;
+    public static final Integer[] Tab1Fragment_VIDEO_LESSONS = new Integer[]{3528, 4208};
 
     private TextView textViewData, goToWpData;
     private ImageView imageView, imageView2;
@@ -86,6 +94,12 @@ public class Tab1Fragment extends Fragment {
         imageView2 = v.findViewById(R.id.TARPhoto2);
         ratingBar1 = v.findViewById(R.id.ratingBar2);
         ratingBar2 = v.findViewById(R.id.ratingBar4);
+
+        fabYouTube = v.findViewById(R.id.fab3);
+        badgeTextView = v.findViewById(R.id.badge_text_view_tar);
+
+        fabYoutube.setFabVideo(fabYouTube, Tab1Fragment_VIDEO_LESSONS, () -> fabYoutube.showYouTubeFab(fabYouTube, badgeTextView, Tab1Fragment_VIDEO_LESSONS));
+        fabYoutube.showYouTubeFab(fabYouTube, badgeTextView, Tab1Fragment_VIDEO_LESSONS);
 
         SpannableString spannableString = new SpannableString("Перейти в Отчёт Исполнителя..");
         spannableString.setSpan(new URLSpan(""), 0, spannableString.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);

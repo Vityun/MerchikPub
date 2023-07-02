@@ -19,6 +19,7 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.gson.Gson;
 
 import java.util.Collections;
@@ -28,6 +29,7 @@ import io.reactivex.rxjava3.observers.DisposableCompletableObserver;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 import ua.com.merchik.merchik.Activities.PhotoLogActivity.PhotoLogActivity;
 import ua.com.merchik.merchik.Activities.TaskAndReclamations.TARActivity;
+import ua.com.merchik.merchik.FabYoutube;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.MakePhoto.MakePhoto;
 import ua.com.merchik.merchik.R;
@@ -46,6 +48,11 @@ import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.toolbar_menus;
 
 public class Tab3Fragment extends Fragment {
+
+    private FabYoutube fabYoutube = new FabYoutube();
+    private FloatingActionButton fabYouTube;
+    private TextView badgeTextView;
+    public static final Integer[]  Tab3Fragment_VIDEO_LESSONS = new Integer[]{3623};
 
     private Context mContext;
     private TasksAndReclamationsSDB tarData;
@@ -102,8 +109,13 @@ public class Tab3Fragment extends Fragment {
         textView = v.findViewById(R.id.text_data);
         recyclerView = v.findViewById(R.id.RecyclerView);
         add = v.findViewById(R.id.constraintLayoutAdd);
+        fabYouTube = v.findViewById(R.id.fab3);
+        badgeTextView = v.findViewById(R.id.badge_text_view_tar);
 
         setFragmentData();  // Установка наполнения фрагмента
+
+        fabYoutube.setFabVideo(fabYouTube, Tab3Fragment_VIDEO_LESSONS, () -> fabYoutube.showYouTubeFab(fabYouTube, badgeTextView, Tab3Fragment_VIDEO_LESSONS));
+        fabYoutube.showYouTubeFab(fabYouTube, badgeTextView, Tab3Fragment_VIDEO_LESSONS);
 
 
         if (TARActivity.TARType == 1) {

@@ -16,11 +16,13 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.viewpager.widget.ViewPager;
 
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.navigation.NavigationView;
 import com.google.android.material.tabs.TabLayout;
 
 import io.realm.RealmResults;
 import ua.com.merchik.merchik.Clock;
+import ua.com.merchik.merchik.FabYoutube;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.RecycleViewWPAdapter;
@@ -30,6 +32,11 @@ import ua.com.merchik.merchik.toolbar_menus;
 public class WPDataActivity extends toolbar_menus {
 
     private RealmResults<WpDataDB> workPlan;
+
+    private FabYoutube fabYoutube = new FabYoutube();
+    private FloatingActionButton fabYouTube;
+    private TextView badgeTextView;
+    public static final Integer[]  WPDataActivity_VIDEO_LESSONS = new Integer[]{817};
 
     private TabLayout tabLayout;
     private ViewPager viewPager;
@@ -58,6 +65,8 @@ public class WPDataActivity extends toolbar_menus {
         filter = findViewById(R.id.filter);
         tabLayout = findViewById(R.id.tabLayout);
         viewPager = findViewById(R.id.viewPager);
+        fabYouTube = findViewById(R.id.fab3);
+        badgeTextView = findViewById(R.id.badge_text_view_tar);
         this.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN); //Убирает фокус с полей ввода
 
         // Установка закладок
@@ -67,6 +76,8 @@ public class WPDataActivity extends toolbar_menus {
         videoLesson = 817;
         videoLessons = null;
         setFab(this, findViewById(R.id.fab), ()->{});
+        fabYoutube.setFabVideo(fabYouTube, WPDataActivity_VIDEO_LESSONS, () -> fabYoutube.showYouTubeFab(fabYouTube, badgeTextView, WPDataActivity_VIDEO_LESSONS));
+        fabYoutube.showYouTubeFab(fabYouTube, badgeTextView, WPDataActivity_VIDEO_LESSONS);
 
         initDrawerStuff(findViewById(R.id.drawer_layout), findViewById(R.id.my_toolbar), findViewById(R.id.nav_view));
         NavigationView navigationView = findViewById(R.id.nav_view);
