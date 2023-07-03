@@ -382,6 +382,11 @@ public class MakePhoto {
             File photo = null;
             Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
 
+            Globals.writeToMLOG("INFO", "MakePhoto.openCamera.Intent", "intent: " + intent);
+            Globals.writeToMLOG("INFO", "MakePhoto.openCamera.Activity", "activity: " + activity);
+            Globals.writeToMLOG("INFO", "MakePhoto.openCamera.Activity", "activity.getPackageManager(): " + activity.getPackageManager());
+            Globals.writeToMLOG("INFO", "MakePhoto.openCamera.Intent", "intent.resolveActivity(activity.getPackageManager()): " + intent.resolveActivity(activity.getPackageManager()));
+
             if (intent.resolveActivity(activity.getPackageManager()) != null) {
                 String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
                 String imageFileName = "JPG_" + timeStamp + "_";
@@ -418,7 +423,7 @@ public class MakePhoto {
 
         } catch (Exception e) {
             globals.alertDialogMsg(activity, "Ошибка при создании фото: " + e);
-            globals.writeToMLOG(Clock.getHumanTime() + "MakePhoto.dispatchTakePictureIntent.Error: " + Arrays.toString(e.getStackTrace()) + "\n");
+                globals.writeToMLOG(Clock.getHumanTime() + "MakePhoto.dispatchTakePictureIntent.Error: " + Arrays.toString(e.getStackTrace()) + "\n");
         }
     }
 
