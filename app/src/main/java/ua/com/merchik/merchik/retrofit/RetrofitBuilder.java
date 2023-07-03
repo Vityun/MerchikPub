@@ -65,7 +65,7 @@ public class RetrofitBuilder{
     HttpLoggingInterceptor loggingInterceptor = new HttpLoggingInterceptor(new HttpLoggingInterceptor.Logger() {
         @Override
         public void log(String message) {
-            Log.e("M_UPLOAD_GALLERY", "RETROFIT: " + message); // Здесь можно использовать другой уровень логирования по вашему усмотрению
+            Log.e("M_UPLOAD_GALLERY", "RETROFIT: " + message.substring(0, Math.min(message.length(), 200))); // Здесь можно использовать другой уровень логирования по вашему усмотрению
         }
     });
 
