@@ -607,6 +607,16 @@ public interface RetrofitInterface {
 
     // -------------------------------------------------------
 
+    /**
+     * 03.07.23
+     * Витрины. Точка входа для получение таблички БД Витрин.
+     * Витрины не путать с полками и другими шнягами.
+     * */
+    @POST("mobile_app.php?")
+    Call<JsonObject> SHOWCASE_UPLOAD(
+            @Header("ContentType") String content,
+            @Body JsonObject json);
+
 
     /**
      * 18.06.23

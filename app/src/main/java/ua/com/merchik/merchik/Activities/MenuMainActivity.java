@@ -15,7 +15,6 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 import ua.com.merchik.merchik.R;
-import ua.com.merchik.merchik.data.RetrofitResponse.ViewListResponse;
 import ua.com.merchik.merchik.data.TestJsonUpload.StandartData;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
 import ua.com.merchik.merchik.toolbar_menus;
@@ -58,31 +57,34 @@ public class MenuMainActivity extends toolbar_menus {
 //        planogramGrp(); // PlanogramGroupListSDB
 //        planogramImg(); // PlanogramImgListSDB
 
-        checkVideoView();
+        checkRequest();
     }
 
-    public void checkVideoView(){
+    public void checkRequest(){
         StandartData data = new StandartData();
-        data.mod = "lesson";
-        data.act = "view_list";
+        data.mod = "rack";
+        data.act = "list";
+
+//        data.dt_change_from = "";
+//        data.dt_change_to = "";
 
         Gson gson = new Gson();
         String json = gson.toJson(data);
         JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
 
-        Log.e("checkVideoView", "checkVideoView: " + convertedObject);
+        Log.e("checkRequest", "checkRequest: " + convertedObject);
 
-        retrofit2.Call<ViewListResponse> call = RetrofitBuilder.getRetrofitInterface().View_List_RESPONSE(RetrofitBuilder.contentType, convertedObject);
-        call.enqueue(new Callback<ViewListResponse>() {
+        retrofit2.Call<JsonObject> call = RetrofitBuilder.getRetrofitInterface().TEST_JSON_UPLOAD(RetrofitBuilder.contentType, convertedObject);
+        call.enqueue(new Callback<JsonObject>() {
             @Override
-            public void onResponse(Call<ViewListResponse> call, Response<ViewListResponse> response) {
-                Log.e("checkVideoView", "response: " + response);
-                Log.e("checkVideoView", "response.body(): " + response.body());
+            public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
+                Log.e("checkRequest", "response: " + response);
+                Log.e("checkRequest", "response.body(): " + response.body());
             }
 
             @Override
-            public void onFailure(Call<ViewListResponse> call, Throwable t) {
-                Log.e("checkVideoView", "Throwable t: " + t);
+            public void onFailure(Call<JsonObject> call, Throwable t) {
+                Log.e("checkRequest", "Throwable t: " + t);
             }
         });
     }
