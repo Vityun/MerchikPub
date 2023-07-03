@@ -780,7 +780,7 @@ public class Options {
 
         String block = "";
         if (mode.equals(NNKMode.BLOCK)) {
-            block = "Ви не можете зробити " + optionCurrent.getOptionTxt() + " поки не виконеєте наступну вимогу: \n\n";
+            block = "Ви не можете натиснути на кнопку [" + optionCurrent.getOptionTxt().replace("Кнопка ", "") + "] поки не виконеєте наступну вимогу: \n\n";
             option = optionBlock;   // Мой стыд, где я для того что б всё работало подменяю текущую опцию по которой кликнули - на опцию блокировки
         }
 
