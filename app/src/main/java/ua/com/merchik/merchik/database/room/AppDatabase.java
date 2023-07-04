@@ -30,6 +30,7 @@ import ua.com.merchik.merchik.data.Database.Room.PotentialClientSDB;
 import ua.com.merchik.merchik.data.Database.Room.ReclamationPercentageSDB;
 import ua.com.merchik.merchik.data.Database.Room.SamplePhotoSDB;
 import ua.com.merchik.merchik.data.Database.Room.ShelfSizeSDB;
+import ua.com.merchik.merchik.data.Database.Room.ShowcaseSDB;
 import ua.com.merchik.merchik.data.Database.Room.SiteObjectsSDB;
 import ua.com.merchik.merchik.data.Database.Room.StandartSDB;
 import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
@@ -61,6 +62,7 @@ import ua.com.merchik.merchik.database.room.DaoInterfaces.PotentialClientDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.ReclamationPercentageDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.SamplePhotoDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.ShelfSizeDao;
+import ua.com.merchik.merchik.database.room.DaoInterfaces.ShowcaseDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.SiteObjectsDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.StandartDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.TarDao;
@@ -105,10 +107,11 @@ import ua.com.merchik.merchik.database.room.DaoInterfaces.VotesDao;
                 ReclamationPercentageSDB.class,  // Процент рекламаций
                 ShelfSizeSDB.class,      // Доля полочного пространства
                 FragmentSDB.class,           // Таблица Фрагментов (полей на фото)
-                ViewListSDB.class       // Знак видео просмотрено или нет
+                ViewListSDB.class,       // Знак видео просмотрено или нет
+                ShowcaseSDB.class       // Витрины, не путать с полками и тп
 
         },
-        version = 36
+        version = 37
 )
 
 
@@ -176,6 +179,8 @@ public abstract class AppDatabase extends RoomDatabase {
     public abstract FragmentDao fragmentDao();
 
     public abstract VideoViewDao videoViewDao();
+
+    public abstract ShowcaseDao showcaseDao();
 
     public class MyAutoMigration {
     }

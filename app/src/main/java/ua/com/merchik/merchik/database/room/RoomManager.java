@@ -18,7 +18,7 @@ public class RoomManager {
                 .fallbackToDestructiveMigration()
                 .enableMultiInstanceInvalidation()
                 .allowMainThreadQueries()
-                .addMigrations(MIGRATION_35_36)
+                .addMigrations(MIGRATION_36_37)
 
                 .build();
     }
@@ -214,19 +214,47 @@ public class RoomManager {
     };
 
 
-    private static final String CREATE_Video_View_List_TABLE =
-            "CREATE TABLE IF NOT EXISTS view_list (" +
-                    "id INTEGER PRIMARY KEY NOT NULL," +
-                    "lessonId INTEGER," +
-                    "merchikId INTEGER," +
-                    "dt INTEGER" +
+    private static final String CREATE_showcase_TABLE =
+            "CREATE TABLE IF NOT EXISTS `showcase` (" +
+                    "`ID` INTEGER PRIMARY KEY NOT NULL, " +
+                    "`select_id` TEXT, " +
+                    "`select_name` TEXT, " +
+                    "`photo` TEXT, " +
+                    "`photo_id` INTEGER, " +
+                    "`photo_big` TEXT, " +
+                    "`photo_planogram_id` INTEGER, " +
+                    "`photo_planogram_txt` TEXT, " +
+                    "`photo_planogram_author_id` TEXT, " +
+                    "`photo_planogram_author_txt` TEXT, " +
+                    "`photo_planogram_dt_update` TEXT, " +
+                    "`isp_id` TEXT, " +
+                    "`isp_txt` TEXT, " +
+                    "`client_id` TEXT, " +
+                    "`client_txt` TEXT, " +
+                    "`addr_id` TEXT, " +
+                    "`addr_addr` TEXT, " +
+                    "`line` TEXT, " +
+                    "`rack` TEXT, " +
+                    "`status` INTEGER, " +
+                    "`status_author_id` TEXT, " +
+                    "`status_author_txt` TEXT, " +
+                    "`status_dt_update` TEXT, " +
+                    "`author_id` TEXT, " +
+                    "`author_txt` TEXT, " +
+                    "`dt_update` TEXT, " +
+                    "`nm` TEXT, " +
+                    "`tovar_grp` INTEGER, " +
+                    "`isp` TEXT, " +
+                    "`photo_planogram_id_author` INTEGER, " +
+                    "`photo_planogram_id_dt_update` INTEGER, " +
+                    "`status_author` INTEGER" +
                     ")";
 
 
-    static final Migration MIGRATION_35_36 = new Migration(35, 36) {
+    static final Migration MIGRATION_36_37 = new Migration(36, 37) {
         @Override
         public void migrate(@NonNull SupportSQLiteDatabase database) {
-            database.execSQL(CREATE_Video_View_List_TABLE);
+            database.execSQL(CREATE_showcase_TABLE);
         }
     };
 

@@ -1,5 +1,7 @@
 package ua.com.merchik.merchik.Activities;
 
+import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
+
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.TextView;
@@ -15,6 +17,7 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 import ua.com.merchik.merchik.R;
+import ua.com.merchik.merchik.data.RetrofitResponse.tables.ShowcaseResponse;
 import ua.com.merchik.merchik.data.TestJsonUpload.StandartData;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
 import ua.com.merchik.merchik.toolbar_menus;
@@ -74,16 +77,21 @@ public class MenuMainActivity extends toolbar_menus {
 
         Log.e("checkRequest", "checkRequest: " + convertedObject);
 
-        retrofit2.Call<JsonObject> call = RetrofitBuilder.getRetrofitInterface().TEST_JSON_UPLOAD(RetrofitBuilder.contentType, convertedObject);
-        call.enqueue(new Callback<JsonObject>() {
+        retrofit2.Call<ShowcaseResponse> call = RetrofitBuilder.getRetrofitInterface().SHOWCASE_UPLOAD(RetrofitBuilder.contentType, convertedObject);
+        call.enqueue(new Callback<ShowcaseResponse>() {
             @Override
-            public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
+            public void onResponse(Call<ShowcaseResponse> call, Response<ShowcaseResponse> response) {
                 Log.e("checkRequest", "response: " + response);
                 Log.e("checkRequest", "response.body(): " + response.body());
+                if (response.isSuccessful()){
+                    if (response.body() != null && response.body().state && response.body().list != null && response.body().list.size() > 0){
+                        SQL_DB.showcaseDao().insertAll(response.body().list);
+                    }
+                }
             }
 
             @Override
-            public void onFailure(Call<JsonObject> call, Throwable t) {
+            public void onFailure(Call<ShowcaseResponse> call, Throwable t) {
                 Log.e("checkRequest", "Throwable t: " + t);
             }
         });

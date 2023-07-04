@@ -82,6 +82,7 @@ import ua.com.merchik.merchik.data.RetrofitResponse.tables.Premial.PremiumPremiu
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.ReclamationPercentage.ReclamationPercentageResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.ReportPrepare.ReportPrepareUploadResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.ShelfSizeResponse;
+import ua.com.merchik.merchik.data.RetrofitResponse.tables.ShowcaseResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.StandartResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.TasksAndReclamationsSDBResponce;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.TovarGroupClientResponse;
@@ -613,7 +614,7 @@ public interface RetrofitInterface {
      * Витрины не путать с полками и другими шнягами.
      * */
     @POST("mobile_app.php?")
-    Call<JsonObject> SHOWCASE_UPLOAD(
+    Call<ShowcaseResponse> SHOWCASE_UPLOAD(
             @Header("ContentType") String content,
             @Body JsonObject json);
 
