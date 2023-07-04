@@ -17,6 +17,7 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 import ua.com.merchik.merchik.R;
+import ua.com.merchik.merchik.ServerExchange.TablesLoadingUnloading;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.ShowcaseResponse;
 import ua.com.merchik.merchik.data.TestJsonUpload.StandartData;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
@@ -60,7 +61,10 @@ public class MenuMainActivity extends toolbar_menus {
 //        planogramGrp(); // PlanogramGroupListSDB
 //        planogramImg(); // PlanogramImgListSDB
 
-        checkRequest();
+
+        new TablesLoadingUnloading().downloadReportPrepare(this, 0);
+
+//        checkRequest();
     }
 
     public void checkRequest(){
