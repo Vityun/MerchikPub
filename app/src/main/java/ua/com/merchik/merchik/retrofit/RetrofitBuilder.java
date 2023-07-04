@@ -86,9 +86,9 @@ public class RetrofitBuilder{
                 .setDateFormat("yyyy-MM-dd")
                 .create();
 
-        loggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
+//        loggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
         OkHttpClient.Builder httpClientBuilder = new OkHttpClient.Builder();
-        httpClientBuilder.addInterceptor(loggingInterceptor);
+//        httpClientBuilder.addInterceptor(loggingInterceptor);
         httpClientBuilder.cookieJar(cookie)
                 .connectTimeout(10, TimeUnit.SECONDS)
                 .readTimeout(40, TimeUnit.SECONDS)

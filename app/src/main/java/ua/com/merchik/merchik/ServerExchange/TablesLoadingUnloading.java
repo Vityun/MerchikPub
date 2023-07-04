@@ -709,18 +709,6 @@ public class TablesLoadingUnloading {
                         if (response.body().getList() != null) {
                             Log.e("SERVER_REALM_DB_UPDATE", "===================================.ReportPrepare.SIZE: " + response.body().getList().size());
                             Globals.writeToMLOG("INFO", "downloadReportPrepare/onResponse", "response.body().getList().size(): " + response.body().getList().size());
-
-/*                            // TODO only for debug
-                            try {
-                                String dates = "";
-                                for (ReportPrepareDB rp : response.body().getList()) {
-                                    dates += rp.getDtReport() + "/";
-                                }
-                                Globals.writeToMLOG("INFO", "downloadReportPrepare/onResponse", "response.body().getList().dates: " + dates);
-                            } catch (Exception e) {
-                                Globals.writeToMLOG("ERROR", "downloadReportPrepare/onResponse", "response.body().getList().dates.Exception e: " + e);
-                            }*/
-
                         } else {
                             Log.e("SERVER_REALM_DB_UPDATE", "===================================.ReportPrepare.SIZE: NuLL");
                         }
@@ -2422,16 +2410,10 @@ public class TablesLoadingUnloading {
                 @Override
                 public void onResponse(retrofit2.Call<SiteObjects> call, retrofit2.Response<SiteObjects> response) {
                     try {
-                        Log.e("downloadSiteHints", "RESPONSE: " + response);
-                        Log.e("downloadSiteHints", "RESPONSE.BODY: " + response.body());
-
-                        Log.e("downloadSiteHints", "response.body().getObjectList(): " + response.body().getObjectList().size());
-                        for (SiteObjectsDB item : response.body().getObjectList()) {
-                            Log.e("downloadSiteHints", "item: " + item.getID());
-                        }
-
-                        if (response.body() != null) {
-                            saveSiteObjectsDB(response.body().getObjectList());
+                        if (response.isSuccessful()){
+                            if (response.body() != null && response.body().getState() && response.body().getObjectList() != null && response.body().getObjectList().size() > 0) {
+                                saveSiteObjectsDB(response.body().getObjectList());
+                            }
                         }
                     } catch (Exception e) {
                         Log.e("downloadSiteHints", "Exception e: " + e);
