@@ -143,6 +143,10 @@ public class Clock {
     }
 
     public static long dateConvertToLong(String str) {
+        // Это понадобилось в момент работы с Доп.Требованиями. Мне надо получить с 0000-00-00 нормальную дату
+        if (str.equals("0000-00-00")) {
+            return 0;
+        }
         DateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
         try {
             Date date = formatter.parse(str);

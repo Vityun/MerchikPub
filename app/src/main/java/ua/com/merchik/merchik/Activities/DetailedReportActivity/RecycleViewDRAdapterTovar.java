@@ -1,5 +1,6 @@
 package ua.com.merchik.merchik.Activities.DetailedReportActivity;
 
+import static java.lang.System.out;
 import static ua.com.merchik.merchik.Globals.OptionControlName.AKCIYA;
 import static ua.com.merchik.merchik.Globals.OptionControlName.AKCIYA_ID;
 import static ua.com.merchik.merchik.Globals.OptionControlName.DT_EXPIRE;
@@ -82,6 +83,7 @@ import ua.com.merchik.merchik.data.RealmModels.PromoDB;
 import ua.com.merchik.merchik.data.RealmModels.ReportPrepareDB;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
 import ua.com.merchik.merchik.data.RealmModels.TovarDB;
+import ua.com.merchik.merchik.data.RealmModels.TradeMarkDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.data.RetrofitResponse.RecentItem;
 import ua.com.merchik.merchik.data.RetrofitResponse.ReportHint;
@@ -90,6 +92,8 @@ import ua.com.merchik.merchik.data.TovarOptions;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.PromoRealm;
 import ua.com.merchik.merchik.database.realm.tables.ReportPrepareRealm;
+import ua.com.merchik.merchik.database.realm.tables.TradeMarkRealm;
+import ua.com.merchik.merchik.dialogs.DialogAdditionalRequirements.AdditionalRequirementsAdapter;
 import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.dialogs.DialogPhotoTovar;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
@@ -383,10 +387,12 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                             result = adList.stream()
                                     .filter(obj -> obj.getOptionId().equals("80977"))
                                     .findFirst();
-                            //  AdditionalRequirementsDB foundObject = result.get();
-                            if (!result.isPresent() && Options.optionConstraintTPL(optionsList2)) deletePromoOption = true;
+                            if (!result.isPresent() && Options.optionConstraintTPL(optionsList2))
+                                deletePromoOption = true;
                             else deletePromoOption = false;
-                        }else {
+
+//                            showTovarAdditionalRequirement(mContext, list);
+                        } else {
                             deletePromoOption = false;
                         }
 
@@ -404,10 +410,6 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                 } catch (Exception e) {
                     Log.e("АКЦИЯ_ТОВАРА", "Exception e: " + e);
                 }
-
-
-//            if ()
-//            RealmManager.getNmById(list.getManufacturerId()) != null ? RealmManager.getNmById(tovar.getManufacturerId()).getNm() : "";
 
                 try {
                     Log.e("ПРОИЗВОДИТЕЛЬ", "ШТО ТУТ?:" + RealmManager.getNmById(list.getManufacturerId()) != null ? RealmManager.getNmById(list.getManufacturerId()).getNm() : "");
@@ -494,18 +496,6 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
 
                             Log.e("OBOROT_VED", "data: " + data);
 
-
-//                        for (OborotVedSDB test : data) {
-//                            Gson gson = new Gson();
-//                            String json = gson.toJson(test);
-//                            JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
-//                            Log.e("OBOROT_VED", "test(" + test.tovId + "): " + convertedObject);
-//                        }
-
-
-//                        CharSequence startBalance = Html.fromHtml("<b>Нач. Ост.("+data.get(0).dat+"): </b>" + data.get(0).kolOst + "<br>");
-//                        oborotVed.append(startBalance);
-
                             CharSequence col1 = Html.fromHtml("<b>Приход:</b>");
                             CharSequence col2 = Html.fromHtml("<b>Расход:</b><br>");
 
@@ -532,9 +522,6 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                             oborotVed.append(kolPostSumCHAR);
                             oborotVed.append(kolProdSumCHAR);
 
-//                        CharSequence endBalance = Html.fromHtml("<b>Кон. Ост.: </b>" + data.get(data.size()-1).kolOst + "<br><br>");
-//                        oborotVed.append(endBalance);
-
                             CharSequence finalBalance = Html.fromHtml("<b>Кон. Ост. </b>(" + data.get(data.size() - 1).dat + "): " + data.get(data.size() - 1).kolOst + "<br>");
                             oborotVed.append(finalBalance);
 
@@ -543,14 +530,6 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                             Globals.writeToMLOG("ERROR", "RecycleViewDRAdapterTovar.bind_4.клик по балансу", "Exception e: " + e);
                         }
 
-
-                        try {
-                            Log.e("TAG_REALM_LOG", "ЗАПИСЬ 4");
-//                        RealmManager.setRowToLog(Collections.singletonList(new LogDB(RealmManager.getLastIdLogDB() + 1, System.currentTimeMillis() / 1000, "Нажатие на Остатки", 1169, null, null, null, null, null, Globals.session, null)));
-                        } catch (Exception e) {
-                            Log.e("TAG_REALM_LOG", "Ошибка(4): " + e);
-                            Globals.writeToMLOG("ERROR", "RecycleViewDRAdapterTovar.bind_5", "Exception e: " + e);
-                        }
 
                         SpannableStringBuilder stringBuilder = new SpannableStringBuilder();
 
@@ -602,7 +581,6 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                         DialogData dialog = new DialogData(mContext);
                         dialog.setTitle("Остатки товара в ТТ");
                         dialog.setText(stringBuilder);
-//                    dialog.setText(stringBuilder + "\n\n\n" + oborotVed);
                         dialog.show();
                     });
 
@@ -676,7 +654,6 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                         Log.e("DRAdapterTovar", "ClickListener");
                         if (openType.equals(OpenType.DEFAULT)) {
                             try {
-
                                 // Отображаем инфу по особенному Товару.
                                 String tovId = list.getiD(); // Идентификатор Товара
                                 Optional<AdditionalRequirementsDB> result = null;
@@ -742,12 +719,12 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                                             if (matchingOption.isPresent()) {
                                                 OptionsDB optionsDB = matchingOption.get();
                                                 // Делайте что-то с объектом OptionsDB
-                                                System.out.println(optionsDB);
+                                                out.println(optionsDB);
                                                 dialogList.add(new TovarRequisites(list, finalReportPrepareTovar).createDialog(mContext, wpDataDB, optionsDB));
 
                                             } else {
                                                 // Обработка случая, когда объект OptionsDB не найден
-                                                System.out.println("Объект OptionsDB не найден");
+                                                out.println("Объект OptionsDB не найден");
                                             }
                                         }
                                     }
@@ -761,6 +738,8 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                                     dialog.setClose(dialog::dismiss);
                                     dialog.show();
                                 }
+
+                                showTovarAdditionalRequirement(mContext, list);
 
 
                             } catch (Exception e) {
@@ -868,6 +847,24 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
             }
         }
 
+        private void showTovarAdditionalRequirement(Context context, TovarDB tovar) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                Optional<AdditionalRequirementsDB> result;
+                result = adList.stream()
+                        .filter(obj -> obj.getTovarId().equals(tovar.getiD()))
+                        .findFirst();
+                result.ifPresent(currentAR -> {
+                    currentAR = RealmManager.INSTANCE.copyFromRealm(result.get());
+                    // если опция контроля не указана
+                    if (currentAR.getOptionId() != null && currentAR.getOptionId().equals("0")){
+                        TradeMarkDB tradeMarkDB = TradeMarkRealm.getTradeMarkRowById(tovar.getManufacturerId());
+                        new AdditionalRequirementsAdapter().click(context, currentAR, tovar, tradeMarkDB);
+                    }else {
+                        out.println();
+                    }
+                });
+            }
+        }
 
         /*
          * 15.09.2022.
@@ -1219,7 +1216,6 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                             }
                         }
                     }
-
 
 
                 } else {
