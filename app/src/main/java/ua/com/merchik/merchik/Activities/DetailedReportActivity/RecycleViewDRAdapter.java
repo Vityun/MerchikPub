@@ -31,22 +31,27 @@ import java.util.List;
 
 import ua.com.merchik.merchik.Activities.PhotoLogActivity.PhotoLogActivity;
 import ua.com.merchik.merchik.Clock;
+import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.Options.Controls.OptionControlReclamationAnswer;
 import ua.com.merchik.merchik.Options.Controls.OptionControlTaskAnswer;
 import ua.com.merchik.merchik.Options.Options;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.Database.Room.AddressSDB;
+import ua.com.merchik.merchik.data.Database.Room.SamplePhotoSDB;
 import ua.com.merchik.merchik.data.Database.Room.SiteObjectsSDB;
 import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
 import ua.com.merchik.merchik.data.OptionMassageType;
 import ua.com.merchik.merchik.data.OptionsButtons;
 import ua.com.merchik.merchik.data.RealmModels.AdditionalRequirementsDB;
 import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
+import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsRealm;
+import ua.com.merchik.merchik.database.realm.tables.StackPhotoRealm;
 import ua.com.merchik.merchik.dialogs.DialogData;
+import ua.com.merchik.merchik.dialogs.DialogFullPhotoR;
 
 public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRAdapter.ViewHolder> {
 
@@ -427,9 +432,9 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                     case 138339:    // Доп Требования
                         // Устанавливаю в счётчик доп. требований их количество
                         Integer ttCategory = null;
-                        WpDataDB wp = (WpDataDB)dataDB;
+                        WpDataDB wp = (WpDataDB) dataDB;
                         AddressSDB addressSDB = SQL_DB.addressDao().getById(wp.getAddr_id());
-                        if (addressSDB != null){
+                        if (addressSDB != null) {
                             ttCategory = addressSDB.ttId;
                         }
                         textInteger.setText("" + AdditionalRequirementsRealm.getData3(dataDB, HIDE_FOR_USER, ttCategory).size());
@@ -784,7 +789,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
             ss.append("\n\n");
             switch (option.getOptionId()) {
                 case "135158":  // - 4  - Фото остатков товаров
-                    ss.append(createLinkedStringGal(mContext, "Завантажити фото з галереї", photoType, ()->{
+                    ss.append(createLinkedStringGal(mContext, "Завантажити фото з галереї", photoType, () -> {
                         // В данном случае надо открыть галерею и выбрать фото остатков
 //                        WpDataDB wp = (WpDataDB) dataDB;
 //                        new MakePhotoFromGalery().openGalleryToPeakPhoto(mContext.getApplicationContext(), wp);
@@ -831,14 +836,28 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
             @Override
             public void onClick(View textView) {
                 try {
-                    Toast.makeText(context, "Показать образец фото", Toast.LENGTH_SHORT).show();
-                    Intent intent = new Intent(context, PhotoLogActivity.class);
-                    intent.putExtra("SamplePhoto", true);
-                    intent.putExtra("SamplePhotoActivity", false);
-                    intent.putExtra("photoTp", photoType);
-                    context.startActivity(intent);
+                    List<SamplePhotoSDB> samplePhotoSDBList = SQL_DB.samplePhotoDao().getPhotoLogActiveAndTp(1, photoType);
+                    if (samplePhotoSDBList != null && samplePhotoSDBList.size() > 1) {
+                        Intent intent = new Intent(context, PhotoLogActivity.class);
+                        intent.putExtra("SamplePhoto", true);
+                        intent.putExtra("SamplePhotoActivity", false);
+                        intent.putExtra("photoTp", photoType);
+                        context.startActivity(intent);
+                    } else if (samplePhotoSDBList != null && samplePhotoSDBList.size() == 1){
+                        // Тут должен отобразить фото на весь экран
+                        StackPhotoDB photo = StackPhotoRealm.stackPhotoDBGetPhotoBySiteId(String.valueOf(samplePhotoSDBList.get(0).photoId));
+
+                        DialogFullPhotoR dialog = new DialogFullPhotoR(context);
+                        dialog.setPhoto(photo);
+                        dialog.setClose(dialog::dismiss);
+                        dialog.show();
+                    }else {
+                        Toast.makeText(context, "Не могу найти образцы фото", Toast.LENGTH_SHORT).show();
+                        Globals.writeToMLOG("ERROR", "Не могу найти образцы фото", "");
+                    }
                 } catch (Exception e) {
-                    Toast.makeText(context, "Показать образец фото error: " + e, Toast.LENGTH_SHORT).show();
+                    Toast.makeText(context, "Не могу отоброзить образец фото по причине: " + e, Toast.LENGTH_SHORT).show();
+                    Globals.writeToMLOG("ERROR", "Не могу отоброзить образец фото по причине", "Exception e: " + e);
                 }
             }
 
@@ -852,7 +871,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
         return res;
     }
 
-    private SpannableString createLinkedStringGal(Context context, String msg, int photoType, Clicks.clickVoid click){
+    private SpannableString createLinkedStringGal(Context context, String msg, int photoType, Clicks.clickVoid click) {
         SpannableString res = new SpannableString(msg);
         ClickableSpan clickableSpan = new ClickableSpan() {
             @Override
@@ -887,13 +906,13 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
 
             if (option.getOptionId().equals("141360")) min = "1";
             try {
-                if (option.getOptionId().equals("157277")){
+                if (option.getOptionId().equals("157277")) {
                     List<AdditionalRequirementsDB> ad = AdditionalRequirementsRealm.getDocumentAdditionalRequirements(dataDB, true, 157278, null, null, null);
-                    if (ad != null && ad.size() > 0){
+                    if (ad != null && ad.size() > 0) {
                         min = String.valueOf(ad.size());
                     }
                 }
-            }catch (Exception e){
+            } catch (Exception e) {
 
             }
         }
