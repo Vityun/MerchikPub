@@ -2558,7 +2558,7 @@ public class Options {
                 // Должен добавить в 'temps' элемент + записывать в опцию её символ
                 // todo должен написать функцию.
                 if (!containsName(temps, temp.getOrderField())) {
-                    if (temp.getOptionControlName().equals(AKCIYA_ID) && promotion) {
+                    if ((temp.getOptionControlName().equals(AKCIYA_ID) || temp.getOptionControlName().equals(AKCIYA)) && promotion) {
                         // ничего не делаю
                     } else {
                         Globals.Triple uploaded = checkUploadedTPL(reportPrepareTovar, getTPLData(temp, reportPrepareTovar));
@@ -2571,7 +2571,7 @@ public class Options {
             if (ids.contains(optionControlId)) {
                 TovarOptions temp = listTovOpt.get(listTovOpt.indexOf(new TovarOptions(optionControlId)));
                 if (!containsName(temps, temp.getOrderField())) {
-                    if (temp.getOptionControlName().equals(AKCIYA_ID) && promotion) {
+                    if ((temp.getOptionControlName().equals(AKCIYA_ID) || temp.getOptionControlName().equals(AKCIYA)) && promotion) {
                         // ничего не делаю
                     } else {
                         Globals.Triple uploaded = checkUploadedTPL(reportPrepareTovar, getTPLData(temp, reportPrepareTovar));
@@ -2610,14 +2610,23 @@ public class Options {
     /***/
     public static boolean optionConstraintTPL(List<OptionsDB> optionsDB) {
         boolean res = false;
+        List<TovarOptions> listTovOpt = getTovarOptins();
         for (OptionsDB option : optionsDB) {
             int optionId = Integer.parseInt(option.getOptionId()); // Получаем ID опции
             int optionControlId = Integer.parseInt(option.getOptionControlId()); // Получаем ID опции
+
+            Log.e("optionConstraintTPL", "optionId: " + optionId);
+            Log.e("optionConstraintTPL", "optionControlId: " + optionControlId);
+
+            Log.e("optionConstraintTPL", "ids: " + ids);
+
             if (ids.contains(optionId)) {
+                Log.e("optionConstraintTPL", "НАШЕЛ: optionId: " + optionId);
                 res = true;
             }
 
             if (ids.contains(optionControlId)) {
+                Log.e("optionConstraintTPL", "НАШЕЛ: optionControlId: " + optionControlId);
                 res = true;
             }
         }
@@ -2783,7 +2792,7 @@ public class Options {
     таблички ReportPrepare (дет. отчёт)) она будет себя вести по разному. Разный текст ил разное
     поведение. На данный момент это зависит от ТЕМЫ данного посещения (вроде из WPData)
     */
-    private List<TovarOptions> getTovarOptins() {
+    private static List<TovarOptions> getTovarOptins() {
         if (list == null || list.isEmpty()) {
             list = new ArrayList<>();
             list.add(new TovarOptions(PRICE, "Ц", "Цена товара", "price", "main", 579));

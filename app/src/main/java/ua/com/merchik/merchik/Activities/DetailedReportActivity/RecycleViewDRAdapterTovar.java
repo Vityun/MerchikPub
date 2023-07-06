@@ -387,11 +387,11 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                             result = adList.stream()
                                     .filter(obj -> obj.getOptionId().equals("80977"))
                                     .findFirst();
-                            if (!result.isPresent() && Options.optionConstraintTPL(optionsList2))
+                            if (!result.isPresent() && !Options.optionConstraintTPL(optionsList2)){
                                 deletePromoOption = true;
-                            else deletePromoOption = false;
-
-//                            showTovarAdditionalRequirement(mContext, list);
+                            } else {
+                                deletePromoOption = false;
+                            }
                         } else {
                             deletePromoOption = false;
                         }
@@ -601,16 +601,11 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                 dWeight.setText(weightString);
                 closeDialog.setOnClickListener(v -> dialog.cancel());
 
-
                 if (reportPrepareTovar != null) {
                     reportPrepareTovar2 = INSTANCE.copyFromRealm(reportPrepareTovar);
                 }
 
-
                 String s = options.getOptionString(optionsList2, reportPrepareTovar2, deletePromoOption);
-
-                Log.e("onBindViewHolder", "s: " + s);
-
 
                 try {
                     if (openType.equals(OpenType.DEFAULT)) {
