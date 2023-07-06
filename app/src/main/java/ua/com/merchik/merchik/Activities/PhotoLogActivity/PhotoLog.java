@@ -112,6 +112,11 @@ public class PhotoLog {
         String dvi = "";
         String gp = "";
 
+        String img_src_id = "0";
+        String showcase_id = "0";
+        String planogram_id = "0";
+        String planogram_img_id = "0";
+
         if (photoDB.getClient_id() != null) {
             client_id = String.valueOf(photoDB.getClient_id());
         }
@@ -184,6 +189,11 @@ public class PhotoLog {
         RequestBody gp2 = RequestBody.create(MediaType.parse("text/plain"), gp);
         RequestBody tov2 = RequestBody.create(MediaType.parse("text/plain"), tovar_id);
 
+        RequestBody img_src_id2 = RequestBody.create(MediaType.parse("text/plain"), img_src_id);
+        RequestBody showcase_id2 = RequestBody.create(MediaType.parse("text/plain"), showcase_id);
+        RequestBody planogram_id2 = RequestBody.create(MediaType.parse("text/plain"), planogram_id);
+        RequestBody planogram_img_id2 = RequestBody.create(MediaType.parse("text/plain"), planogram_img_id);
+
         //pass it like this
         File file = new File(photoDB.getPhoto_num());
 
@@ -217,7 +227,7 @@ public class PhotoLog {
         globals.writeToMLOG(Clock.getHumanTime() + info + data + "\n");
 
         retrofit2.Call<JsonObject> call = RetrofitBuilder.getRetrofitInterface()
-                .SEND_PHOTO_2_BODY(mod2, act2, client_id2, addr_id2, date2, img_type_id2, photo_user_id2, client_tovar_group2, doc_num2, theme_id2, comment2, dvi2, codeDad2, gp2, tov2, photo);
+                .SEND_PHOTO_2_BODY(mod2, act2, client_id2, addr_id2, date2, img_type_id2, photo_user_id2, client_tovar_group2, doc_num2, theme_id2, comment2, dvi2, codeDad2, gp2, tov2, img_src_id2, showcase_id2, planogram_id2, planogram_img_id2, photo);
 
         try {
             call.enqueue(new retrofit2.Callback<JsonObject>() {

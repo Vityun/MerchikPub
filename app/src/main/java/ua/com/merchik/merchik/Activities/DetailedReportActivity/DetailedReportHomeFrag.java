@@ -32,11 +32,13 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import ua.com.merchik.merchik.Clock;
+import ua.com.merchik.merchik.FabYoutube;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.Options.Options;
 import ua.com.merchik.merchik.R;
@@ -63,6 +65,11 @@ public class DetailedReportHomeFrag extends Fragment {
 
     private Float spotLat;
     private Float spotLon;
+
+    private FabYoutube fabYoutube = new FabYoutube();
+    private FloatingActionButton fabYouTube;
+    private TextView badgeTextView;
+    public static final Integer[]  DetailedReportHomeFrag_VIDEO_LESSONS = new Integer[]{819};
 
     // Интерфейс
     TextView activity_title;
@@ -93,6 +100,9 @@ public class DetailedReportHomeFrag extends Fragment {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                 drawable.setTint(mContext.getResources().getColor(R.color.colotSelectedTab2));
             }
+
+            fabYouTube = v.findViewById(R.id.fab);
+            badgeTextView = v.findViewById(R.id.badge_text_view_tar);
 
             textDRDateV = v.findViewById(R.id.textDRDateVal);
             textDRAddrV = v.findViewById(R.id.textDRAddrVal);
@@ -141,6 +151,9 @@ public class DetailedReportHomeFrag extends Fragment {
                     updateMap();
                 });
             }
+
+            fabYoutube.setFabVideo(fabYouTube, DetailedReportHomeFrag_VIDEO_LESSONS, () -> fabYoutube.showYouTubeFab(fabYouTube, badgeTextView, DetailedReportHomeFrag_VIDEO_LESSONS));
+            fabYoutube.showYouTubeFab(fabYouTube, badgeTextView, DetailedReportHomeFrag_VIDEO_LESSONS);
 
         } catch (Exception e) {
 

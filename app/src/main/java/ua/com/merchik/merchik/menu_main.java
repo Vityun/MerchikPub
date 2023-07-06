@@ -2235,7 +2235,7 @@ public class menu_main extends AppCompatActivity {
         // РУЧНАЯ ВЫГРУЗКА
         if (mode == 1) {
             retrofit2.Call<JsonObject> call = RetrofitBuilder.getRetrofitInterface()
-                    .SEND_PHOTO_2_BODY(mod2, act2, client_id2, addr_id2, date2, img_type_id2, photo_user_id2, client_tovar_group2, doc_num2, theme_id2, comment2, dvi2, codeDad2, gp2, tov2, photo);
+                    .SEND_PHOTO_2_BODY(mod2, act2, client_id2, addr_id2, date2, img_type_id2, photo_user_id2, client_tovar_group2, doc_num2, theme_id2, comment2, dvi2, codeDad2, gp2, tov2, null, null, null, null, photo);
 
             String finalDate = date;
             String finalDate1 = date;

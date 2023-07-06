@@ -26,6 +26,53 @@
                 app:layout_constraintVertical_bias="0.0"
                 tools:ignore="MissingConstraints">
 
+                <com.google.android.material.floatingactionbutton.FloatingActionButton
+                    android:id="@+id/fab"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="16dp"
+                    android:layout_marginRight="16dp"
+                    android:layout_marginBottom="16dp"
+                    android:scaleType="center"
+                    android:translationZ="8dp"
+                    app:backgroundTint="#FFFFFF"
+                    app:elevation="5dp"
+                    app:layout_constraintBottom_toTopOf="@+id/fabAdd3"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:maxImageSize="57dp"
+                    app:srcCompat="@drawable/ic_play_circle_solid" />
+
+                <TextView
+                    android:id="@+id/badge_text_view_tar"
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:alpha="0.8"
+                    android:background="@drawable/badge_background"
+                    android:gravity="center"
+                    android:minWidth="18dp"
+                    android:minHeight="18dp"
+                    android:padding="2dp"
+                    android:text="0"
+                    android:textColor="#FFFFFF"
+                    android:textSize="12sp"
+                    android:translationZ="8dp"
+                    android:visibility="visible"
+                    app:layout_constraintEnd_toEndOf="@+id/fab"
+                    app:layout_constraintTop_toTopOf="@+id/fab" />
+
+                <com.google.android.material.floatingactionbutton.FloatingActionButton
+                    android:id="@+id/fabAdd3"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="16dp"
+                    android:layout_marginRight="16dp"
+                    android:layout_marginBottom="16dp"
+                    android:clickable="true"
+                    android:visibility="invisible"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:srcCompat="@drawable/ic_add" />
+
                 <TextView
                     android:id="@+id/textDRDate"
                     android:layout_width="wrap_content"
