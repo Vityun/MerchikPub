@@ -199,11 +199,11 @@ public class Tab1Fragment extends Fragment {
             String title;
 
             title = "<b>Сумма штрафа: </b>";
-            if (data.state == 1 || data.state == 3) {
-                money = "0";
-            } else {
+//            if (data.state == 1 || data.state == 3) {
+//                money = "0";
+//            } else {
                 money = "<font color='red'> -" + data.sumPenalty + " (виновнику)</font>";
-            }
+//            }
 
 
             CharSequence penalty = Html.fromHtml(title + money + "<br>");
