@@ -129,6 +129,10 @@ public class OptionControlAchievements<T> extends OptionControl {
                 SPIS.append(customerSDBDocument.nm).append(", ");
             } else {
                 for (AchievementsSDB item : achievementsSDBList) {
+                    if (optionDB.getOptionId().equals("160209")){
+                        item.note = new StringBuilder().append("для опції перевіряем лише наявність досягнень");
+                        continue;
+                    }
                     if (item.dvi == 1) { // значение достижения не утверждено супервайзером
                         item.error = 1;
                         item.note = new StringBuilder().append("у достижения ").append(item.serverId).append(" установлен признак ДВИ=1");
@@ -197,6 +201,13 @@ public class OptionControlAchievements<T> extends OptionControl {
 //                        .append(minScore).append(" и более) ").append("???"/*TODO Тут указано ТекПос, откуда я его беру?*/).append(" по ").append(customerSDBDocument.nm)
 //                        .append(". И переданы клиенту для начисления премии.").append(SPIS);
                 signal = false;
+
+            } else if (optionDB.getOptionId().equals("160209") && achievementsSDBList.size() == 0){
+                stringBuilderMsg.append(period).append(" нема жодного досягнення. ");
+                signal = false;
+            }else if (optionDB.getOptionId().equals("160209") && achievementsSDBList.size() > 0){
+                stringBuilderMsg.append(period).append(" створено ").append(achievementsSDBList.size()).append(" досягнень.");
+                signal = true;
             } else if (traineeSignal > 0) {
                 stringBuilderMsg.append(trainee).append(period).append(" НЕМА досягнень (з оцінкою ")
                         .append(minScore).append(" чи більш) по ").append(SPIS).append(".");
