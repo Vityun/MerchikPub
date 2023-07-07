@@ -9,8 +9,14 @@ import android.content.Context;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffColorFilter;
+import android.graphics.Typeface;
 import android.text.Editable;
+import android.text.SpannableString;
+import android.text.Spanned;
+import android.text.TextPaint;
 import android.text.TextWatcher;
+import android.text.style.ClickableSpan;
+import android.text.style.StyleSpan;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -42,7 +48,9 @@ import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportTo
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.Utils.MySimpleExpandableListAdapter;
+import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.PhotoDescriptionText;
+import ua.com.merchik.merchik.data.RealmModels.AdditionalRequirementsDB;
 import ua.com.merchik.merchik.data.RealmModels.ErrorDB;
 import ua.com.merchik.merchik.data.RealmModels.PromoDB;
 import ua.com.merchik.merchik.data.RealmModels.ReportPrepareDB;
@@ -61,6 +69,9 @@ public class RecyclerViewTPLAdapter extends RecyclerView.Adapter<RecyclerView.Vi
     private ReportPrepareDB dataRp;
     private ClickTPL click;
 
+    private AdditionalRequirementsDB additionalRequirementsDB;
+    private Clicks.clickVoid clickAR;
+
     public interface ClickTPL {
         void getData(TovarOptions tpl, String data, String data2);
     }
@@ -71,9 +82,16 @@ public class RecyclerViewTPLAdapter extends RecyclerView.Adapter<RecyclerView.Vi
         this.click = click;
     }
 
+    public void setAddReq(AdditionalRequirementsDB additionalRequirementsDB, Clicks.clickVoid clickVoid){
+        this.additionalRequirementsDB = additionalRequirementsDB;
+        this.clickAR = clickVoid;
+    }
+
     @Override
     public int getItemViewType(int position) {
         switch (dataTpl.get(position).getOptionControlName()) {
+            case LINK_TEXT:
+                return 4;
             case PHOTO:
             case ERROR_ID:
                 return 3;
@@ -102,6 +120,8 @@ public class RecyclerViewTPLAdapter extends RecyclerView.Adapter<RecyclerView.Vi
                 return new ViewHolderUniversal(LayoutInflater.from(parent.getContext()).inflate(R.layout.item_rv_tpl_universal, parent, false));
             case 3:
                 return new ViewHolderButton(LayoutInflater.from(parent.getContext()).inflate(R.layout.item_rv_tpl_button, parent, false));
+            case 4:
+                return new ViewHolderLinkedString(LayoutInflater.from(parent.getContext()).inflate(R.layout.item_rv_tpl_linktext, parent, false));
         }
 
         return null;
@@ -138,7 +158,11 @@ public class RecyclerViewTPLAdapter extends RecyclerView.Adapter<RecyclerView.Vi
                         viewHolderButton.bind(dataTpl.get(position));
                         break;
                 }
+                break;
 
+            case 4:
+                ViewHolderLinkedString viewHolderLinkedString = (ViewHolderLinkedString) holder;
+                viewHolderLinkedString.bind(dataTpl.get(position));
                 break;
         }
     }
@@ -798,6 +822,49 @@ public class RecyclerViewTPLAdapter extends RecyclerView.Adapter<RecyclerView.Vi
                     RealmManager.setReportPrepareRow(rp);
                 });
             }
+        }
+    }
+
+    class ViewHolderLinkedString extends RecyclerView.ViewHolder {
+
+        private TextView textView;
+
+        public ViewHolderLinkedString(@NonNull View itemView) {
+            super(itemView);
+            textView = itemView.findViewById(R.id.link_text);
+        }
+
+        public void bind(TovarOptions tovarOptions) {
+            SpannableString spannableString = new SpannableString(tovarOptions.getOptionLong());
+
+            // Создаем ClickableSpan для ссылки
+            ClickableSpan clickableSpan = new ClickableSpan() {
+                @Override
+                public void onClick(View widget) {
+                    // Обработка нажатия на ссылку
+                }
+
+                @Override
+                public void updateDrawState(TextPaint ds) {
+                    // Устанавливаем цвета для ссылки и ее состояний
+                    ds.setColor(Color.BLUE); // Цвет ссылки
+                    ds.setUnderlineText(true); // Подчеркивание ссылки
+                }
+            };
+
+// Применяем ClickableSpan к тексту
+            spannableString.setSpan(clickableSpan, 0, spannableString.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+
+
+//            spannableString.setSpan(new UnderlineSpan(), 0, spannableString.length(), 0);
+            spannableString.setSpan(new StyleSpan(Typeface.BOLD), 0, spannableString.length(), 0);
+
+            textView.setText(spannableString);
+            textView.setMovementMethod(null);
+            textView.setClickable(false);
+            textView.setOnClickListener(v -> {
+                clickAR.click();
+            });
         }
     }
 }

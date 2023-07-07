@@ -138,7 +138,8 @@ public class Globals {
     }
 
     public enum OptionControlName {
-        PRICE, FACE, EXPIRE_LEFT, AMOUNT, OBOROTVED_NUM, UP, DT_EXPIRE, ERROR_ID, AKCIYA_ID, AKCIYA, NOTES, PHOTO
+        PRICE, FACE, EXPIRE_LEFT, AMOUNT, OBOROTVED_NUM, UP, DT_EXPIRE, ERROR_ID, AKCIYA_ID, AKCIYA, NOTES, PHOTO,
+        LINK_TEXT   // 06.07.23. Добавлен такой тип для выпадающего списка реквизитов. Возможно изза него будут проблемы
     }
 
     public enum SourceAct {

@@ -1,5 +1,6 @@
 package ua.com.merchik.merchik.data;
 
+import static ua.com.merchik.merchik.Globals.OptionControlName.LINK_TEXT;
 import static ua.com.merchik.merchik.Globals.OptionControlName.PHOTO;
 
 import java.util.ArrayList;
@@ -68,6 +69,10 @@ public class TovarOptions {
 
     public TovarOptions createTovarOptionPhoto(){
         return new TovarOptions(PHOTO, "P", "Фото залишків товару", "photo", "main", 0);
+    }
+
+    public TovarOptions createLinkText(){
+        return new TovarOptions(LINK_TEXT, "L", "Додаткові вимоги", "link_text", "main", 0);
     }
 
     public List<Integer> getOptionId() {

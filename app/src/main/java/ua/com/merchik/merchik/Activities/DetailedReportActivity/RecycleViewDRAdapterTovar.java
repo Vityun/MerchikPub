@@ -387,10 +387,12 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                             result = adList.stream()
                                     .filter(obj -> obj.getOptionId().equals("80977"))
                                     .findFirst();
-                            if (!result.isPresent() && !Options.optionConstraintTPL(optionsList2)){
-                                deletePromoOption = true;
-                            } else {
+                            if (result.isPresent()/* && !Options.optionConstraintTPL(optionsList2)*/){
                                 deletePromoOption = false;
+
+                            } else {
+
+                                deletePromoOption = true;
                             }
                         } else {
                             deletePromoOption = false;
@@ -614,11 +616,20 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                         List<TovarOptions> requiredOptionsTPL = options.getRequiredOptionsTPL(optionsList2, deletePromoOption);
                         // Тут должно быть условие. Я его пока не добавляю. (если фейс = 0 и есть ОК 159707)
                         requiredOptionsTPL.add(new TovarOptions().createTovarOptionPhoto());
+                        AdditionalRequirementsDB ar = showTovarAdditionalRequirement(list);
+                        if (ar != null){
+                            requiredOptionsTPL.add(0, new TovarOptions().createLinkText());
+                        }
+
                         RecyclerViewTPLAdapter recyclerViewTPLAdapter = new RecyclerViewTPLAdapter(
                                 requiredOptionsTPL,
                                 finalReportPrepareTovar1,
                                 (tpl, data, data2) -> operetionSaveRPToDB(tpl, finalReportPrepareTovar1, data, data2, list)
                         );
+                        recyclerViewTPLAdapter.setAddReq(ar, ()->{
+                            showTovarAdditionalRequirementDialog(mContext, list, ar);
+                        });
+
                         recyclerView.setAdapter(recyclerViewTPLAdapter);
                         recyclerView.setLayoutManager(new LinearLayoutManager(mContext, LinearLayoutManager.VERTICAL, false));
                     }
@@ -734,7 +745,10 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                                     dialog.show();
                                 }
 
-                                showTovarAdditionalRequirement(mContext, list);
+                                AdditionalRequirementsDB ar = showTovarAdditionalRequirement(list);
+                                if (ar != null){
+                                    showTovarAdditionalRequirementDialog(mContext, list, ar);
+                                }
 
 
                             } catch (Exception e) {
@@ -842,7 +856,8 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
             }
         }
 
-        private void showTovarAdditionalRequirement(Context context, TovarDB tovar) {
+        private AdditionalRequirementsDB showTovarAdditionalRequirement(TovarDB tovar) {
+            final AdditionalRequirementsDB[] res = {null};
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                 Optional<AdditionalRequirementsDB> result;
                 result = adList.stream()
@@ -852,13 +867,19 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                     currentAR = RealmManager.INSTANCE.copyFromRealm(result.get());
                     // если опция контроля не указана
                     if (currentAR.getOptionId() != null && currentAR.getOptionId().equals("0")){
-                        TradeMarkDB tradeMarkDB = TradeMarkRealm.getTradeMarkRowById(tovar.getManufacturerId());
-                        new AdditionalRequirementsAdapter().click(context, currentAR, tovar, tradeMarkDB);
+                        res[0] = currentAR;
                     }else {
                         out.println();
+                        res[0] = null;
                     }
                 });
             }
+            return res[0];
+        }
+
+        public void showTovarAdditionalRequirementDialog(Context context, TovarDB tovar, AdditionalRequirementsDB additionalRequirementsDB){
+            TradeMarkDB tradeMarkDB = TradeMarkRealm.getTradeMarkRowById(tovar.getManufacturerId());
+            new AdditionalRequirementsAdapter().click(context, additionalRequirementsDB, tovar, tradeMarkDB);
         }
 
         /*
