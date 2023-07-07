@@ -434,6 +434,7 @@ public class MakePhoto {
     public static String photoNum; // URI фотографии
     public static String photoType = "0";
     public static String tovarId = "";
+    public static String photoCustomerGroup = "";
 
     public <T> void makePhoto(Activity activity, T data) {
         try {
@@ -447,6 +448,7 @@ public class MakePhoto {
                 wpDataObj = workPlan.getKPS(wpDataDB.getId());
             }
             wpDataObj.setPhotoType(photoType);
+            wpDataObj.setCustomerTypeGrpS(photoCustomerGroup);
 
             Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
 
@@ -545,6 +547,15 @@ public class MakePhoto {
                             Toast t = Toast.makeText(activity, "Выбрана группа товара: " + result[which], Toast.LENGTH_LONG);
                             t.show();
                             wp.setCustomerTypeGrpS(Globals.getKeyForValue(result[which], wp.getCustomerTypeGrp()));
+
+                            Log.e("choiceCustomerGroup", "Globals.getKeyForValue(result[which]: " + Globals.getKeyForValue(result[which], wp.getCustomerTypeGrp()));
+                            Log.e("choiceCustomerGroup", "result[which]: " + result[which]);
+                            Log.e("choiceCustomerGroup", "wp.getCustomerTypeGrp(): " + wp.getCustomerTypeGrp());
+                            Log.e("choiceCustomerGroup", "which: " + which);
+
+                            /*07.07.23. Возможно в будущем изза этой Группы Товаров будут проблемы.*/
+                            photoCustomerGroup = Globals.getKeyForValue(result[which], wp.getCustomerTypeGrp());
+
                             photoDialogs(activity, wp, data, optionsDB);
                         })
                         .show();
