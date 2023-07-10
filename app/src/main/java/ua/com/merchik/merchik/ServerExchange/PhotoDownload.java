@@ -143,7 +143,7 @@ public class PhotoDownload {
                                 stackPhotoDB.setId(id);
                                 stackPhotoDB.setPhotoServerId(item.getID());
                                 stackPhotoDB.setVpi(0);
-                                stackPhotoDB.setCreate_time(System.currentTimeMillis());
+                                stackPhotoDB.setCreate_time(Long.parseLong(item.getDt())*1000);
                                 stackPhotoDB.setUpload_to_server(System.currentTimeMillis());
                                 stackPhotoDB.setGet_on_server(System.currentTimeMillis());
                                 stackPhotoDB.setPhoto_num(path);
@@ -324,7 +324,7 @@ public class PhotoDownload {
                                     stackPhotoDB.dvi = Integer.valueOf(item.getDvi());
 
                                     stackPhotoDB.setVpi(0);
-                                    stackPhotoDB.setCreate_time(System.currentTimeMillis());
+                                    stackPhotoDB.setCreate_time(Long.parseLong(item.getDt())*1000);
                                     stackPhotoDB.setUpload_to_server(0);
                                     stackPhotoDB.setGet_on_server(0);
                                     stackPhotoDB.setPhoto_num(path);
@@ -631,9 +631,9 @@ public class PhotoDownload {
                 StackPhotoDB stackPhotoDB = new StackPhotoDB();
                 stackPhotoDB.setId(id);
 
-                stackPhotoDB.setCreate_time(System.currentTimeMillis());// реквизиты что б фотки не выгружались обратно на сервер
-                stackPhotoDB.setUpload_to_server(System.currentTimeMillis());// реквизиты что б фотки не выгружались обратно на сервер
-                stackPhotoDB.setGet_on_server(System.currentTimeMillis());// реквизиты что б фотки не выгружались обратно на сервер
+                stackPhotoDB.setCreate_time(item.getDt()*1000);// реквизиты что б фотки не выгружались обратно на сервер
+                stackPhotoDB.setUpload_to_server(item.getDt()*1000);// реквизиты что б фотки не выгружались обратно на сервер
+                stackPhotoDB.setGet_on_server(item.getDt()*1000);// реквизиты что б фотки не выгружались обратно на сервер
 
                 stackPhotoDB.setPhotoServerId(item.getID());
                 stackPhotoDB.setPhotoServerURL(item.getPhotoUrl());
@@ -780,9 +780,9 @@ public class PhotoDownload {
                         photoDB.setUser_id(item.merchikId);
                         photoDB.setPhoto_type(item.photoTp);
 
-                        photoDB.setCreate_time(System.currentTimeMillis());// реквизиты что б фотки не выгружались обратно на сервер
-                        photoDB.setUpload_to_server(System.currentTimeMillis());// реквизиты что б фотки не выгружались обратно на сервер
-                        photoDB.setGet_on_server(System.currentTimeMillis());// реквизиты что б фотки не выгружались обратно на сервер
+                        photoDB.setCreate_time(item.dt*1000);// реквизиты что б фотки не выгружались обратно на сервер
+                        photoDB.setUpload_to_server(item.dt);// реквизиты что б фотки не выгружались обратно на сервер
+                        photoDB.setGet_on_server(item.dt);// реквизиты что б фотки не выгружались обратно на сервер
 
                         photoDB.setPhoto_num(Globals.savePhotoToPhoneMemory("/Planogram", "" + item.id, bitmap));
                         photoDB.setApprove(item.approve);

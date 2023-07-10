@@ -17,9 +17,9 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 import ua.com.merchik.merchik.R;
-import ua.com.merchik.merchik.ServerExchange.TablesLoadingUnloading;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.ShowcaseResponse;
 import ua.com.merchik.merchik.data.TestJsonUpload.StandartData;
+import ua.com.merchik.merchik.dialogs.DialogShowcase.DialogShowcase;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
 import ua.com.merchik.merchik.toolbar_menus;
 
@@ -45,7 +45,6 @@ public class MenuMainActivity extends toolbar_menus {
                 return true;
             });
 
-
             initDrawerStuff(findViewById(R.id.drawer_layout), findViewById(R.id.my_toolbar), findViewById(R.id.nav_view));
 
             NavigationView navigationView = findViewById(R.id.nav_view);
@@ -56,15 +55,12 @@ public class MenuMainActivity extends toolbar_menus {
     }
 
     private void test() {
-//        planogram();    // PlanogramSDB
-//        planogramAddr();
-//        planogramGrp(); // PlanogramGroupListSDB
-//        planogramImg(); // PlanogramImgListSDB
+        swoeDialogSW();
+    }
 
-
-        new TablesLoadingUnloading().downloadReportPrepare(this, 0);
-
-//        checkRequest();
+    public void swoeDialogSW (){
+        DialogShowcase dialog = new DialogShowcase(this);
+        dialog.show();
     }
 
     public void checkRequest(){

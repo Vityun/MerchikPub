@@ -214,19 +214,19 @@ public class WpDataRealm {
 
         if (addressId != null) {
             result = result.where()
-                    .equalTo("status", addressId)
+                    .equalTo("addr_id", addressId)
                     .findAll();
         }
 
         if (customerId != null) {
             result = result.where()
-                    .equalTo("status", customerId)
+                    .equalTo("client_id", customerId)
                     .findAll();
         }
 
         if (userId != null) {
             result = result.where()
-                    .equalTo("status", userId)
+                    .equalTo("user_id", userId)
                     .findAll();
         }
 

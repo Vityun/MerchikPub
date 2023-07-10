@@ -77,7 +77,7 @@ public class OptionControlAchievements<T> extends OptionControl {
                 addressSDBDocument = SQL_DB.addressDao().getById(wpDataDB.getAddr_id());
                 dateDocument = wpDataDB.getDt().getTime() / 1000;
 
-                if (System.currentTimeMillis() > 1681603200000L){
+                if (System.currentTimeMillis() > 1681603200000L) {
                     themeId = 595;
                 }
 
@@ -120,6 +120,9 @@ public class OptionControlAchievements<T> extends OptionControl {
             if (usersSDBDocument.reportDate20 == null || dateDocument < usersSDBDocument.reportDate20.getTime() / 1000) {
                 traineeSignal = 1;
                 trainee = "Исполнитель ещё НЕ провёл своего 20-го отчёта. Наличие Достижений не проверяем!";
+            } else if (optionDB.getOptionId().equals("160209") && (usersSDBDocument.reportDate40 == null || dateDocument < usersSDBDocument.reportDate40.getTime() / 1000)) {
+                traineeSignal = 1;
+                trainee = "Исполнитель ещё НЕ провёл своего 40-го отчёта. Наличие Достижений не проверяем!";
             }
 
             // 3.4.
@@ -129,7 +132,7 @@ public class OptionControlAchievements<T> extends OptionControl {
                 SPIS.append(customerSDBDocument.nm).append(", ");
             } else {
                 for (AchievementsSDB item : achievementsSDBList) {
-                    if (optionDB.getOptionId().equals("160209")){
+                    if (optionDB.getOptionId().equals("160209")) {
                         item.note = new StringBuilder().append("для опції перевіряем лише наявність досягнень");
                         continue;
                     }
@@ -202,10 +205,14 @@ public class OptionControlAchievements<T> extends OptionControl {
 //                        .append(". И переданы клиенту для начисления премии.").append(SPIS);
                 signal = false;
 
-            } else if (optionDB.getOptionId().equals("160209") && achievementsSDBList.size() == 0){
+            } else if (optionDB.getOptionId().equals("160209") && achievementsSDBList.size() == 0 && traineeSignal > 0) {
+                stringBuilderMsg.append(period).append(" нема жодного досягнення. Але виконавець ще не провів свого 40-го звіту.");
+                signal = false;
+
+            } else if (optionDB.getOptionId().equals("160209") && achievementsSDBList.size() == 0) {
                 stringBuilderMsg.append(period).append(" нема жодного досягнення. ");
                 signal = false;
-            }else if (optionDB.getOptionId().equals("160209") && achievementsSDBList.size() > 0){
+            } else if (optionDB.getOptionId().equals("160209") && achievementsSDBList.size() > 0) {
                 stringBuilderMsg.append(period).append(" створено ").append(achievementsSDBList.size()).append(" досягнень.");
                 signal = true;
             } else if (traineeSignal > 0) {

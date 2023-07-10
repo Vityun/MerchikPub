@@ -244,6 +244,7 @@ public class Options {
                     break;
 
                 case 590:
+                case 160209:
                     OptionControlAchievements<?> optionControlAchievements = new OptionControlAchievements<>(context, dataDB, optionsDB, newOptionType, mode);
                     optionControlAchievements.showOptionMassage("");
                     break;
@@ -895,6 +896,7 @@ public class Options {
                 return optionControlCheckDetailedReport.isBlockOption() ? 1 : 0;
 
             case 590:
+            case 160209:
                 OptionControlAchievements<?> optionControlAchievements = new OptionControlAchievements<>(context, dataDB, option, type, mode);
                 if (mode.equals(NNKMode.MAKE) || (mode.equals(NNKMode.CHECK) || mode.equals(NNKMode.BLOCK) && optionControlAchievements.isBlockOption()))
                     optionControlAchievements.showOptionMassage(block);
