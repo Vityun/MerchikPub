@@ -60,6 +60,7 @@ public class MenuMainActivity extends toolbar_menus {
 
     public void swoeDialogSW (){
         DialogShowcase dialog = new DialogShowcase(this);
+        dialog.setClose(dialog::dismiss);
         dialog.show();
     }
 
