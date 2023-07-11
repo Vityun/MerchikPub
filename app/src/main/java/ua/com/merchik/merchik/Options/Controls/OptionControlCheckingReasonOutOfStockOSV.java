@@ -33,7 +33,7 @@ public class OptionControlCheckingReasonOutOfStockOSV<T> extends OptionControl {
     public int OPTION_CONTROL_CheckingReasonOutOfStockOSV_ID = 157243;
 
     private WpDataDB wpDataDB;
-    private boolean signal = false;
+    public boolean signal = false;
 
     public OptionControlCheckingReasonOutOfStockOSV(Context context, T document, OptionsDB optionDB, OptionMassageType msgType, Options.NNKMode nnkMode) {
         try {

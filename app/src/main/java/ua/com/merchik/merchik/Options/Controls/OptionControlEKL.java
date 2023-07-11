@@ -47,7 +47,7 @@ public class OptionControlEKL<T> extends OptionControl {
     private String PTT;
     private String controllerType = "ПТТ";   //по умолчанию ЭКЛ получаем у ПТТ, но для 132629 у ПРОВЕРЯЕМОГО
 
-    private boolean signal = false;
+    public boolean signal = false;
 
 
     public OptionControlEKL(Context context, T document, OptionsDB optionDB, OptionMassageType msgType, Options.NNKMode nnkMode) {

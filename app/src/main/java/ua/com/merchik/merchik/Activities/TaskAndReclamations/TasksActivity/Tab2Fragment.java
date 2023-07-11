@@ -59,6 +59,7 @@ public class Tab2Fragment extends Fragment {
      * */
     private void setRecycler(){
         List<OptionsDB> list = RealmManager.INSTANCE.copyFromRealm(OptionsRealm.getOptionsButtonByDAD2(String.valueOf(data.codeDad2)));
+        List<OptionsDB> allReportOption = RealmManager.INSTANCE.copyFromRealm(OptionsRealm.getOptionsByDAD2(String.valueOf(data.codeDad2)));
 
         Log.e("Tab2Fragment_L", "list: " + list.size());
 
@@ -79,7 +80,7 @@ public class Tab2Fragment extends Fragment {
 //            wp = RealmManager.INSTANCE.copyFromRealm(wp);
 //        }
 
-        RecycleViewDRAdapter recycleViewDRAdapter = new RecycleViewDRAdapter(mContext, data, list, listTr, ()->{});
+        RecycleViewDRAdapter recycleViewDRAdapter = new RecycleViewDRAdapter(mContext, data, list, allReportOption, listTr, ()->{});
         recyclerView.setAdapter(recycleViewDRAdapter);
         recyclerView.setLayoutManager(new LinearLayoutManager(mContext, LinearLayoutManager.VERTICAL, false));
     }

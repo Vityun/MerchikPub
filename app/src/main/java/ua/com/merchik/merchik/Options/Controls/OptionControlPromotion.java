@@ -56,6 +56,9 @@ public class OptionControlPromotion<T> extends OptionControl {
 
     public int OPTION_CONTROL_PROMOTION_ID = 80977;
 
+    public boolean signal = true;
+
+
     private String documentDate, clientId, optionId;
     private int addressId, userId;
     private long dad2;
@@ -88,7 +91,7 @@ public class OptionControlPromotion<T> extends OptionControl {
     private void executeOption() {
         // values
 //        int OSV = 0;            // ОсобоеВнимание
-        int signal = 0;         // Сигнал заблокированно или нет
+        int signalInt = 0;         // Сигнал заблокированно или нет
         int err = 0;
 
         // Получение RP по данному документу.
@@ -166,29 +169,50 @@ public class OptionControlPromotion<T> extends OptionControl {
         // Тут формируются более короткие соообшения касательно наличия акций у Товаров
         if (reportPrepare.size() == 0) {
             massageToUser = "Товаров, по которым надо проверять факт наличия Акции, не обнаружено.";
-            signal = 1;
+            signalInt = 1;
         }else if (totalOSV == 0){
             massageToUser = "Для данной ТТ, на текущий момент, нет товаров с ОСВ (Особым Вниманием). Контролировать нечего. Замечаний нет.";
-            signal = 2;
+            signalInt = 2;
         } else if (err > 0) {
             massageToUser = "Не предоставлена информация о типе и наличии Акции по товару (" + err + " шт.) (в т.ч. с ОСВ (Особым Вниманием)). См. таблицу.";
-            signal = 1;
+            signalInt = 1;
 //        } else if (find == 0) {
 //            massageToUser = "Ни у одного товара не указано тип, наличие (или отсутствие) Акции.";
-//            signal = 1;
+//            signalInt = 1;
         } else {
             massageToUser = "Замечаний по предоставлению информации о наличии Акций по товарам (в т.ч. с ОСВ (Особым Вниманием)) нет.";
-            signal = 2;
+            signalInt = 2;
         }
 
         // 7.0 сохраним сигнал
         if (optionDB.getIsSignal().equals("0")) {
-            saveOption(String.valueOf(signal));
+            saveOption(String.valueOf(signalInt));
         }
 
         // 8.0 Блокировка проведения
-        if (signal == 1) {
+        if (signalInt == 1) {
             setIsBlockOption(true);
+        }
+
+        // Сохранение
+        RealmManager.INSTANCE.executeTransaction(realm -> {
+            if (optionDB != null) {
+                if (signal) {
+                    optionDB.setIsSignal("1");
+                } else {
+                    optionDB.setIsSignal("2");
+                }
+                realm.insertOrUpdate(optionDB);
+            }
+        });
+
+        if (signal) {
+            if (optionDB.getBlockPns().equals("1")) {
+                setIsBlockOption(signal);
+                stringBuilderMsg.append("\n\n").append("Документ проведен не будет!");
+            } else {
+                stringBuilderMsg.append("\n\n").append("Вы можете получить Премиальные БОЛЬШЕ, если будете делать Достижения.");
+            }
         }
 
 

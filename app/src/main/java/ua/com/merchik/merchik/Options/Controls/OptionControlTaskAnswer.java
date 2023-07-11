@@ -56,7 +56,7 @@ public class OptionControlTaskAnswer<T> extends OptionControl {
     private String clientId, documentDate;
     private int userId, addressId, taskCount;
 
-    private boolean signal = false;
+    public boolean signal = false;
 
     public OptionControlTaskAnswer(Context context, T document, OptionsDB optionDB, OptionMassageType msgType, Options.NNKMode nnkMode) {
         this.context = context;

@@ -29,7 +29,7 @@ public class OptionControlCheckDetailedReport<T> extends OptionControl {
     public int OPTION_CONTROL_CHECK_DR_ID = 157352;
 
     // option data
-    private boolean signal = false;
+    public boolean signal = false;
     private long time = 0;
     private int correctionPercentage = 0;
     private int min = 10;    // Минимальное значение из опции, по умолчанию 10

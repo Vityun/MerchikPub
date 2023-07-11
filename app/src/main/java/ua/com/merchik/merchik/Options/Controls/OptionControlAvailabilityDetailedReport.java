@@ -43,7 +43,7 @@ public class OptionControlAvailabilityDetailedReport<T> extends OptionControl {
     private String comment;
     private WpDataDB wp;
 
-    private boolean signal = false;
+    public boolean signal = false;
     private int find = 0;
 
 

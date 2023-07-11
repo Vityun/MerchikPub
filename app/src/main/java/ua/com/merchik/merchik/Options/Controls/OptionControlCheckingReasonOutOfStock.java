@@ -27,7 +27,7 @@ public class OptionControlCheckingReasonOutOfStock<T> extends OptionControl {
     public int OPTION_CONTROL_CheckingReasonOutOfStock_ID = 157241;
 
     private WpDataDB wpDataDB;
-    private boolean signal = false;
+    public boolean signal = false;
 
     public OptionControlCheckingReasonOutOfStock(Context context, T document, OptionsDB optionDB, OptionMassageType msgType, Options.NNKMode nnkMode) {
         this.context = context;

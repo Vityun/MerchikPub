@@ -30,7 +30,7 @@ import ua.com.merchik.merchik.database.realm.tables.WpDataRealm;
 public class OptionControlPhotoCartWithGoods<T> extends OptionControl {
     public int OPTION_CONTROL_PhotoCartWithGoods_ID = 132971;
 
-    private boolean signal = true;
+    public boolean signal = true;
 
     private WpDataDB wp;
     private CustomerSDB customerSDBDocument;

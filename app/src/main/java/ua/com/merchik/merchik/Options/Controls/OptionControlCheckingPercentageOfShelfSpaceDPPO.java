@@ -44,7 +44,7 @@ public class OptionControlCheckingPercentageOfShelfSpaceDPPO<T> extends OptionCo
     public int OPTION_CONTROL_CHECK_PERCENTAGE_OF_SHELF_SPACE_ID = 1455;
 
     // data option
-    private boolean signal = false;
+    public boolean signal = false;
     private StringBuilder noteOC1455 = new StringBuilder();
 
     // document data

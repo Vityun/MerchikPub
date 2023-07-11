@@ -35,7 +35,7 @@ public class OptionControlPercentageOfThePrize<T> extends OptionControl {
     public int OPTION_CONTROL_PERCENTAGE_OF_THE_PRIZE_ID = 135061;
 
     // option data
-    private boolean signal = false;
+    public boolean signal = false;
     private String strReg = "";
     private float rez = 0.75f;
     private int percent;

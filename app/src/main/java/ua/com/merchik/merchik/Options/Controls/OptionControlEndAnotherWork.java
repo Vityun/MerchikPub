@@ -32,7 +32,7 @@ import ua.com.merchik.merchik.database.realm.tables.WpDataRealm;
 public class OptionControlEndAnotherWork<T> extends OptionControl {
     public int OPTION_CONTROL_TASK_ANSWER_ID = 156928;
 
-    private boolean signal = true;
+    public boolean signal = true;
 
     private Date date;
     private int userId;

@@ -26,7 +26,7 @@ public class OptionControlAddComment<T> extends OptionControl {
     private int optionAmountMin;
 
     private String massageComment;
-    private boolean signal = false;
+    public boolean signal = false;
 
     public OptionControlAddComment(Context context, T document, OptionsDB optionDB, OptionMassageType msgType, Options.NNKMode nnkMode) {
         this.context = context;

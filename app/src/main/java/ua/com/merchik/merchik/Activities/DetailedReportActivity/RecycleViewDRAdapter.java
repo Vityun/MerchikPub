@@ -56,6 +56,7 @@ import ua.com.merchik.merchik.dialogs.DialogFullPhotoR;
 public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRAdapter.ViewHolder> {
 
     private List<OptionsDB> butt;
+    private List<OptionsDB> allReportOption;
     private List<SiteObjectsSDB> translate;
     private Context mContext;
     private Clicks.clickVoid click;
@@ -491,6 +492,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                     // Обработка нажатия на кнопку
                     OptionMassageType msgType = new OptionMassageType();
                     msgType.type = OptionMassageType.Type.DIALOG;
+                    options.setOptionFromDetailedReport(allReportOption);
                     msgType = options.NNK(mContext, dataDB, optionsButtons, butt, msgType, Options.NNKMode.MAKE, () -> {
                         if (dataDB instanceof WpDataDB) {
                             detailedReportButtons.buttonClick(mContext, (WpDataDB) dataDB, butt.get(getAdapterPosition()), 0);
@@ -606,12 +608,13 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
 
 
     /*Определяем конструктор*/
-    public RecycleViewDRAdapter(Context context, T dataDB, List<OptionsDB> dataButtons, List<SiteObjectsSDB> list, Clicks.clickVoid click) {
+    public RecycleViewDRAdapter(Context context, T dataDB, List<OptionsDB> dataButtons, List<OptionsDB> allReportOption, List<SiteObjectsSDB> list, Clicks.clickVoid click) {
         this.click = click;
         this.dataDB = dataDB;
         this.butt = dataButtons;
         this.translate = list;
         this.mContext = context;
+        this.allReportOption = allReportOption;
 
         if (dataDB instanceof WpDataDB) {
             WpDataDB wp = (WpDataDB) dataDB;

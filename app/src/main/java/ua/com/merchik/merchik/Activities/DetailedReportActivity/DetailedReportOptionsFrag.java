@@ -38,6 +38,8 @@ import ua.com.merchik.merchik.data.Database.Room.SiteObjectsSDB;
 import ua.com.merchik.merchik.data.OptionMassageType;
 import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
+import ua.com.merchik.merchik.database.realm.RealmManager;
+import ua.com.merchik.merchik.database.realm.tables.OptionsRealm;
 import ua.com.merchik.merchik.database.realm.tables.WpDataRealm;
 import ua.com.merchik.merchik.dialogs.DialogFilter.Click;
 
@@ -176,6 +178,9 @@ public class DetailedReportOptionsFrag extends Fragment {
             // Запрос к SQL БДшке. Получаем список обьектов сайта
             List<SiteObjectsSDB> list = SQL_DB.siteObjectsDao().getObjectsById(ids);
 
+            // Получаю все опции по данному отчёту.
+            List<OptionsDB> allReportOption = RealmManager.INSTANCE.copyFromRealm(OptionsRealm.getOptionsByDAD2(String.valueOf(wpDataDB.getCode_dad2())));
+
             Log.e("R_TRANSLATES", "item: " + list.size());
 
             for (SiteObjectsSDB item : list) {
@@ -188,7 +193,7 @@ public class DetailedReportOptionsFrag extends Fragment {
             }
 
             if (optionsButtons != null && optionsButtons.size() > 0) {
-                recycleViewDRAdapter = new RecycleViewDRAdapter(mContext, wpDataDB, optionsButtons, list, ()->{
+                recycleViewDRAdapter = new RecycleViewDRAdapter(mContext, wpDataDB, optionsButtons, allReportOption, list, ()->{
                     MakePhotoFromGaleryWpDataDB = wpDataDB;
                     Intent intent = new Intent(Intent.ACTION_PICK);
                     intent.setType("image/*");

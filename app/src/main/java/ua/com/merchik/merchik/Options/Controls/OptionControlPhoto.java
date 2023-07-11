@@ -17,7 +17,7 @@ import ua.com.merchik.merchik.database.realm.tables.StackPhotoRealm;
 
 public class OptionControlPhoto<T> extends OptionControl {
     public int OPTION_CONTROL_PHOTO_ID = 84932;
-    private boolean signal = true;
+    public boolean signal = true;
     private StringBuilder optionResultStr = new StringBuilder();
 
     private WpDataDB wpDataDB;

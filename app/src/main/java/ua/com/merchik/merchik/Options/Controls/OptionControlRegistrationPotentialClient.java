@@ -19,7 +19,7 @@ import ua.com.merchik.merchik.database.realm.RealmManager;
 public class OptionControlRegistrationPotentialClient<T> extends OptionControl {
     public int OPTION_CONTROL_REGISTRATION_POTENTIAL_CLIENT_ID = 133381;
 
-    private boolean signal = false;
+    public boolean signal = false;
     private boolean report200 = false;
     private int err = 0;
     private String type = "потенциальных клиентов (ПК)";

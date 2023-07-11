@@ -47,7 +47,7 @@ public class OptionControlReclamationAnswer<T> extends OptionControl {
     private String clientId, documentDate;
     private int userId, addressId, reclamationCount;
 
-    private boolean signal = false;
+    public boolean signal = false;
 
     public OptionControlReclamationAnswer(Context context, T document, OptionsDB optionDB, OptionMassageType msgType, Options.NNKMode nnkMode) {
         this.context = context;

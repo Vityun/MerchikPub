@@ -50,7 +50,7 @@ public class OptionControlAvailabilityControlPhotoRemainingGoods<T> extends Opti
 
     public int OPTION_CONTROL_AVAILABILITY_CONTROL_PHOTO_REMAINING_GOODS_ID = 159707;
 
-    private boolean signal = true;
+    public boolean signal = true;
 
     private int userId;
     private long dad2;

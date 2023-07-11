@@ -20,7 +20,7 @@ import static ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedR
 public class OptionControlFacePlan<T> extends OptionControl {
 
     public int OPTION_CONTROL_FACE_PLAN_ID = 157275;
-    private boolean signal = true;
+    public boolean signal = true;
     private StringBuilder optionResultStr = new StringBuilder();
 
     private WpDataDB wpDataDB;

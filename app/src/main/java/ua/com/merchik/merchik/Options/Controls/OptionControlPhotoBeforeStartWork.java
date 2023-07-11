@@ -21,7 +21,7 @@ public class OptionControlPhotoBeforeStartWork<T> extends OptionControl {
     private long dateTo;
     private Number DVI = 0;
 
-    private boolean signal = false;
+    public boolean signal = false;
 
     public OptionControlPhotoBeforeStartWork(Context context, T document, OptionsDB optionDB, OptionMassageType msgType, Options.NNKMode nnkMode) {
         this.context = context;

@@ -31,7 +31,7 @@ public class OptionControlCheckTovarUp<T> extends OptionControl {
     public static int OPTION_CONTROL_CHECK_TOVAR_UP_ID = 138644;
 
     // option data
-    private boolean signal = false;
+    public boolean signal = false;
     private int offset = 0;
     private StringBuilder note = new StringBuilder();
     private int sumNumberOfTovar = 0;

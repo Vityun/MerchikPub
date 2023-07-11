@@ -31,7 +31,7 @@ import ua.com.merchik.merchik.database.realm.tables.CustomerRealm;
 
 public class OptionControlAdditionalMaterialsMark<T> extends OptionControl {
     public int OPTION_CONTROL_ADD_COMMENT_ID = 138342;
-    private boolean signal = true;
+    public boolean signal = true;
 
     private WpDataDB wpDataDB;
     private long dateDocumentLong;

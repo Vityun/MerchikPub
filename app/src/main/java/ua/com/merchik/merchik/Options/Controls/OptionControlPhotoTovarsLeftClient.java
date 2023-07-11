@@ -35,7 +35,7 @@ public class OptionControlPhotoTovarsLeftClient<T> extends OptionControl {
     private static final int COL_MIN = 1;  // Минимальное кол-во фоток которое нужно для работы опции
 
     // option data
-    private boolean signal = false;
+    public boolean signal = false;
     private Integer[] groups = {346, 434};  // исключаем из отчетов: 346-Сильпо, 434-АТБ
     private Integer[] groupsNew = {434};  // исключаем из отчетов: 434-АТБ
 

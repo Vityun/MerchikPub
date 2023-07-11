@@ -27,7 +27,7 @@ import ua.com.merchik.merchik.database.realm.RealmManager;
 public class OptionControlAchievements<T> extends OptionControl {
     public int OPTION_CONTROL_ACHIEVEMENTS_ID = 590;
 
-    private boolean signal = true;
+    public boolean signal = true;
 
     private int sumOptionError;
     private int minScore = 6;
@@ -207,14 +207,14 @@ public class OptionControlAchievements<T> extends OptionControl {
 
             } else if (optionDB.getOptionId().equals("160209") && achievementsSDBList.size() == 0 && traineeSignal > 0) {
                 stringBuilderMsg.append(period).append(" нема жодного досягнення. Але виконавець ще не провів свого 40-го звіту.");
-                signal = false;
+                signal = true;
 
             } else if (optionDB.getOptionId().equals("160209") && achievementsSDBList.size() == 0) {
                 stringBuilderMsg.append(period).append(" нема жодного досягнення. ");
-                signal = false;
+                signal = true;
             } else if (optionDB.getOptionId().equals("160209") && achievementsSDBList.size() > 0) {
                 stringBuilderMsg.append(period).append(" створено ").append(achievementsSDBList.size()).append(" досягнень.");
-                signal = true;
+                signal = false;
             } else if (traineeSignal > 0) {
                 stringBuilderMsg.append(trainee).append(period).append(" НЕМА досягнень (з оцінкою ")
                         .append(minScore).append(" чи більш) по ").append(SPIS).append(".");

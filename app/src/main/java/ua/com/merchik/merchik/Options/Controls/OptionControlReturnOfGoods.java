@@ -47,7 +47,7 @@ public class OptionControlReturnOfGoods<T> extends OptionControl {
     public int OPTION_CONTROL_ReturnOfGoods_ID = 135591;
 
     private WpDataDB wpDataDB;
-    private boolean signal = false;
+    public boolean signal = false;
 
     public OptionControlReturnOfGoods(Context context, T document, OptionsDB optionDB, OptionMassageType msgType, Options.NNKMode nnkMode) {
         try {
