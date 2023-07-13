@@ -1871,9 +1871,7 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                                                     Globals.writeToMLOG("ERROR", "TOOLBAR/startWebSocket/click/chat_message/catch", "Exception e: " + e);
                                                 }
                                             });
-
                                             Globals.writeToMLOG("INFO", "TOOLBAR/startWebSocket/click/chat_message", "wsData.chat.msg: " + wsData.chat.msg);
-
                                             new ChatSDB().saveChatFromWebSocket(wsData.chat);
                                             break;
                                         case "global_notice":

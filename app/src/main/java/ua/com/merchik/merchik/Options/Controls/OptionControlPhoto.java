@@ -51,7 +51,14 @@ public class OptionControlPhoto<T> extends OptionControl {
         }
         int photoType = 0;
 
-        switch (optionDB.getOptionControlId()){
+        String optionId;
+        if (nnkMode.equals(Options.NNKMode.BLOCK)){
+            optionId = optionDB.getOptionId();
+        }else {
+            optionId = optionDB.getOptionControlId();
+        }
+
+        switch (optionId){
             case "84932":
                 photoType = 0;
                 m = 3;

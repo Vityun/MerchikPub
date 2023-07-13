@@ -940,7 +940,7 @@ public class Options {
                 if (mode.equals(NNKMode.MAKE) || (mode.equals(NNKMode.CHECK)) && optionControlAchievements.isBlockOption()) {
                     optionControlAchievements.showOptionMassage(block);
                 }
-                if (mode.equals(NNKMode.BLOCK) && optionControlAchievements.signal) {
+                if (mode.equals(NNKMode.BLOCK) && optionControlAchievements.signal && optionControlAchievements.isBlockOption()) {
                     optionControlAchievements.showOptionMassage(block);
                 }
                 return optionControlAchievements.isBlockOption() ? 1 : 0;
