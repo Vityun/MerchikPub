@@ -157,6 +157,14 @@ public class OptionControlAvailabilityControlPhotoRemainingGoods<T> extends Opti
                 signal = false;
             }
 
+            // 7.0.
+            if (signal){
+                if (wpDataDB.getUser_id() == 198995 || wpDataDB.getUser_id() == 232545){
+                    spannableStringBuilder.append(", але для цього виконавця зроблено виключення.");
+                    signal = false;
+                }
+            }
+
             // Сохранение
             RealmManager.INSTANCE.executeTransaction(realm -> {
                 if (optionDB != null) {
