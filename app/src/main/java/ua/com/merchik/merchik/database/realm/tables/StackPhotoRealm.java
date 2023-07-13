@@ -47,6 +47,12 @@ public class StackPhotoRealm {
                 .findFirst();
     }
 
+    public static RealmResults<StackPhotoDB> getById(Integer[] id) {
+        return INSTANCE.where(StackPhotoDB.class)
+                .in("id", id)
+                .findAll();
+    }
+
     public static RealmResults<StackPhotoDB> getByIds(Integer[] id) {
         return INSTANCE.where(StackPhotoDB.class)
                 .in("photoServerId", id)

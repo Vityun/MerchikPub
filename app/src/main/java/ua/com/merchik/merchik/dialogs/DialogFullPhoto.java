@@ -241,9 +241,9 @@ public class DialogFullPhoto {
 
                     try {
                         StackPhotoDB stackPhotoDB = photoLogData.get(visiblePosition);
-                        if (!stackPhotoDB.getComment().isEmpty() && stackPhotoDB.commentUpload){
+                        if (!stackPhotoDB.getComment().isEmpty() && !stackPhotoDB.commentUpload){
                             comment.setTextColor(GREEN);
-                        }else if (!stackPhotoDB.getComment().isEmpty() && !stackPhotoDB.commentUpload) {
+                        }else if (!stackPhotoDB.getComment().isEmpty() && stackPhotoDB.commentUpload) {
                             comment.setTextColor(YELLOW);
                         }else {
                             comment.setTextColor(BLACK);

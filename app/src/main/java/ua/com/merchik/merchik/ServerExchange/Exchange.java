@@ -15,6 +15,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -446,17 +447,34 @@ public class Exchange {
                                         ids[count++] = item.elementId;
                                     }
 
-                                    List<StackPhotoDB> stackPhoto = RealmManager.INSTANCE.copyFromRealm(StackPhotoRealm.getByIds(ids));
+                                    Log.e("sendPhotoInformation", "photo.size(): " + photo.size());
+
+                                    // Формируем ID шники для Стэк Фото
+//                                    String[] photoIds = new String[photo.size()];
+//                                    for (int i = 0; i < photo.size(); i++) {
+//                                        String id = String.valueOf(photo.get(i).elementId);
+//                                        Log.e("sendPhotoInformation", "id: " + id);
+//                                        photoIds[i] = id;
+//                                    }
+
+                                    Log.e("sendPhotoInformation", "photoIds: " + Arrays.toString(ids));
+
+                                    List<StackPhotoDB> stackPhoto = RealmManager.INSTANCE.copyFromRealm(StackPhotoRealm.getById(ids));
+                                    Log.e("sendPhotoInformation", "stackPhoto: " + stackPhoto.size());
 
                                     for (StackPhotoDB item : stackPhoto) {
                                         for (PhotoInfoResponseList listItem : photo) {
                                             if (listItem.elementId.equals(item.getId())) {
                                                 if (listItem.state) {
                                                     item.setCommentUpload(false);
+                                                    Log.e("sendPhotoInformation", "listItem.state: " + listItem.state);
                                                 } else {
                                                     item.setCommentUpload(false);
                                                     item.setComment(listItem.error);
+                                                    Log.e("sendPhotoInformation", "listItem.state: " + listItem.state);
+                                                    Log.e("sendPhotoInformation", "listItem.error: " + listItem.error);
                                                 }
+                                                Log.e("sendPhotoInformation", "stackPhoto item save: " + item.photoServerId);
                                                 StackPhotoRealm.setAll(Collections.singletonList(item));
                                             }
                                         }
