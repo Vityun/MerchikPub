@@ -184,6 +184,12 @@ public class OptionControlPromotion<T> extends OptionControl {
             signalInt = 2;
         }
 
+        if (signalInt == 1){
+            signal = true;
+        }else {
+            signal = false;
+        }
+
         // 7.0 сохраним сигнал
         if (optionDB.getIsSignal().equals("0")) {
             saveOption(String.valueOf(signalInt));
@@ -192,6 +198,8 @@ public class OptionControlPromotion<T> extends OptionControl {
         // 8.0 Блокировка проведения
         if (signalInt == 1) {
             setIsBlockOption(true);
+        }else {
+            setIsBlockOption(false);
         }
 
         // Сохранение

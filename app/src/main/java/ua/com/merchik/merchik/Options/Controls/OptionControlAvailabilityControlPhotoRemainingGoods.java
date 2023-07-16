@@ -159,7 +159,7 @@ public class OptionControlAvailabilityControlPhotoRemainingGoods<T> extends Opti
 
             // 7.0.
             if (signal){
-                if (wpDataDB.getUser_id() == 198995 || wpDataDB.getUser_id() == 232545){
+                if (wpDataDB.getUser_id() == 232545 || wpDataDB.getUser_id() == 189955){
                     spannableStringBuilder.append(", але для цього виконавця зроблено виключення.");
                     signal = false;
                 }
