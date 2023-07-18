@@ -2143,7 +2143,7 @@ public class TablesLoadingUnloading {
         List<ReportPrepareServ> data = RealmManager.getReportPrepareToUpload();
         Log.e("UPLOAD_DATA", "REPORT_PREPARE. (" + data.size() + ")");
 
-        if (data != null && data.size() >= 0) {
+        if (data != null && data.size() > 0) {
             StandartData standartData = new StandartData();
             standartData.mod = "report_prepare";
             standartData.act = "set_report_data";
