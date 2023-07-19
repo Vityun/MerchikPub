@@ -217,9 +217,9 @@ public class OptionControlPromotion<T> extends OptionControl {
         if (signal) {
             if (optionDB.getBlockPns().equals("1")) {
                 setIsBlockOption(signal);
-                stringBuilderMsg.append("\n\n").append("Документ проведен не будет!");
+                spannableStringBuilder.append("\n\n").append("Документ проведен не будет!");
             } else {
-                stringBuilderMsg.append("\n\n").append("Вы можете получить Премиальные БОЛЬШЕ, если будете делать Достижения.");
+                spannableStringBuilder.append("\n\n").append("Вы можете получить Премиальные БОЛЬШЕ, если будете делать Достижения.");
             }
         }
 

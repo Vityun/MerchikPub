@@ -68,6 +68,7 @@ import retrofit2.Response;
 import ua.com.merchik.merchik.Activities.TaskAndReclamations.TARFragmentHome;
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
+import ua.com.merchik.merchik.MakePhoto.CreatePhotoFile;
 import ua.com.merchik.merchik.MakePhoto.MakePhoto;
 import ua.com.merchik.merchik.MakePhoto.MakePhotoFromGalery;
 import ua.com.merchik.merchik.PhotoReportActivity;
@@ -249,7 +250,7 @@ public class DetailedReportActivity extends toolbar_menus {
             toolbar_menus.textLesson = 818;
             toolbar_menus.videoLesson = 819;
             toolbar_menus.videoLessons = null;
-            toolbar_menus.setFab(DetailedReportActivity.this, DetailedReportActivity.fab, ()->{
+            toolbar_menus.setFab(DetailedReportActivity.this, DetailedReportActivity.fab, () -> {
                 checkVideo(new Integer[videoLesson]);
             }); // ГЛАВНАЯ
             checkVideo(new Integer[videoLesson]);
@@ -302,9 +303,9 @@ public class DetailedReportActivity extends toolbar_menus {
         }
 
         if (data != null) {
-            for (SiteHintsDB item : data){
+            for (SiteHintsDB item : data) {
                 ViewListSDB view = SQL_DB.videoViewDao().getOneByLessonId(item.getID());
-                if (view != null){
+                if (view != null) {
                     viewListSDB.add(view);
                 }
             }
@@ -549,7 +550,7 @@ public class DetailedReportActivity extends toolbar_menus {
         }
 
         if (data != null) {
-            for (SiteHintsDB item : data){
+            for (SiteHintsDB item : data) {
                 sb.append(item.getNm()).append("\n");
             }
             viewListSDB = SQL_DB.videoViewDao().getByLessonId(data.get(0).getID());
@@ -589,7 +590,7 @@ public class DetailedReportActivity extends toolbar_menus {
                     toolbar_menus.textLesson = 818;
                     toolbar_menus.videoLesson = 819;
                     toolbar_menus.videoLessons = null;
-                    toolbar_menus.setFab(DetailedReportActivity.this, DetailedReportActivity.fab, ()->{
+                    toolbar_menus.setFab(DetailedReportActivity.this, DetailedReportActivity.fab, () -> {
                         checkVideo(new Integer[]{videoLesson});
                     }); // ГЛАВНАЯ
                     checkVideo(new Integer[]{videoLesson});
@@ -600,7 +601,7 @@ public class DetailedReportActivity extends toolbar_menus {
                     toolbar_menus.textLesson = 820;
                     toolbar_menus.videoLesson = 821;
                     toolbar_menus.videoLessons = null;
-                    toolbar_menus.setFab(DetailedReportActivity.this, DetailedReportActivity.fab, ()->{
+                    toolbar_menus.setFab(DetailedReportActivity.this, DetailedReportActivity.fab, () -> {
                         checkVideo(new Integer[]{videoLesson});
                     }); // ОПЦИИ
                     checkVideo(new Integer[]{videoLesson});
@@ -611,7 +612,7 @@ public class DetailedReportActivity extends toolbar_menus {
                     toolbar_menus.textLesson = 822;
 //                    toolbar_menus.videoLesson = 823;
                     toolbar_menus.videoLessons = DETAILED_REPORT_FRAGMENT_TOVAR_VIDEO_LESSONS;
-                    toolbar_menus.setFab(DetailedReportActivity.this, DetailedReportActivity.fab, ()->{
+                    toolbar_menus.setFab(DetailedReportActivity.this, DetailedReportActivity.fab, () -> {
                         checkVideo(new Integer[]{videoLesson});
                     }); // ТОВАР
                     checkVideo(new Integer[]{videoLesson});
@@ -623,7 +624,7 @@ public class DetailedReportActivity extends toolbar_menus {
                     toolbar_menus.textLesson = 4225;
 //                    toolbar_menus.videoLesson = 3527;
                     toolbar_menus.videoLessons = DETAILED_REPORT_FRAGMENT_TAR_VIDEO_LESSONS;
-                    toolbar_menus.setFab(DetailedReportActivity.this, DetailedReportActivity.fab, ()->{
+                    toolbar_menus.setFab(DetailedReportActivity.this, DetailedReportActivity.fab, () -> {
                         checkVideo(videoLessons);
                     }); // ЗИР
                     checkVideo(videoLessons);
@@ -726,12 +727,17 @@ public class DetailedReportActivity extends toolbar_menus {
                     // У вас уже есть разрешения на доступ к файлам
                     // Можете выполнять необходимые операции с файлами
                     Uri uri = data.getData();
-                    Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST", "Uri uri: " + uri);
-                    String filePath = getRealPathFromURI(uri);
-                    Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST", "filePath: " + filePath);
-                    File file = new File(filePath);
-                    Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST", "file: " + file.length());
-                    savePhoto(uri, MakePhotoFromGaleryWpDataDB, MakePhotoFromGalery.tovarId, getApplicationContext());
+                    File file = null;
+                    if (Build.VERSION.SDK_INT == Build.VERSION_CODES.Q) {
+                        file = new CreatePhotoFile().createDefaultPhotoFile(this, uri);
+                    } else {
+                        Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST", "Uri uri: " + uri);
+                        String filePath = getRealPathFromURI(uri);
+                        Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST", "filePath: " + filePath);
+                        file = new File(filePath);
+                        Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST", "file: " + file.length());
+                    }
+                    savePhoto(file, MakePhotoFromGaleryWpDataDB, MakePhotoFromGalery.tovarId, getApplicationContext());
                 }
 
 
@@ -1029,7 +1035,7 @@ public class DetailedReportActivity extends toolbar_menus {
     }
 
 
-    private StackPhotoDB savePhoto(Uri uri, WpDataDB wpDataDB, String tovarId, Context context) {
+    private StackPhotoDB savePhoto(File file, WpDataDB wpDataDB, String tovarId, Context context) {
         try {
 //            String pathFileAbsolute = photoFile.getAbsolutePath();
 //            String pathFilePath = photoFile.getPath();
@@ -1060,16 +1066,19 @@ public class DetailedReportActivity extends toolbar_menus {
 
             stackPhotoDB.setCreate_time(System.currentTimeMillis());
 
-            String hash = globals.getHashMD5FromFileTEST(uri, context);
+//            String hash = globals.getHashMD5FromFileTEST(uri, context);
+            String hash = globals.getHashMD5FromFile2(file, this);
             Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST", "hash: " + hash);
 
             stackPhotoDB.setPhoto_hash(hash);
 
-            if (Build.VERSION.SDK_INT == Build.VERSION_CODES.Q) {
-                stackPhotoDB.setPhoto_num(String.valueOf(uri));
-            } else {
-                stackPhotoDB.setPhoto_num(getRealPathFromURI(uri));
-            }
+            stackPhotoDB.setPhoto_num(file.getAbsolutePath());
+
+//            if (Build.VERSION.SDK_INT == Build.VERSION_CODES.Q) {
+//                stackPhotoDB.setPhoto_num(String.valueOf(uri));
+//            } else {
+//                stackPhotoDB.setPhoto_num(getRealPathFromURI(uri));
+//            }
 
             String jo = new Gson().toJson(stackPhotoDB);
             Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST", "stackPhotoDB: " + jo);

@@ -471,7 +471,7 @@ public class DetailedReportTovarsFrag extends Fragment {
                         Log.e("AR_DATE", "Tovar: " + TovarRealm.getById(item.getTovarId()).getNm());
 
 
-                        if ((startDt > 0 && endDt > 0 && docDt < endDt) || (startDt > 0 && endDt == 0)){
+                        if ((startDt > 0 && endDt > 0 && docDtMinus2 < endDt) || (startDt > 0 && endDt == 0)){
                             promotionalTov.add(Integer.valueOf(item.getTovarId()));
                         }
                     }

@@ -330,13 +330,16 @@ public class PhotoReports {
                 Log.e("M_UPLOAD_GALLERY", "uri: " + uri);
                 Log.e("M_UPLOAD_GALLERY", "mContext: " + mContext);
 
+                file = new File(uri.getPath());
+
+
                 // Проверяем версию Android и выполняем соответствующие действия
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                     // Версия Android 11 и выше
                     if (checkManageExternalStoragePermission()) {
                         try {
                             Log.e("M_UPLOAD_GALLERY", "2");
-                            file = new File(Globals.getRealPathFromURI(uri, mContext));
+                            file = new File(Globals.getRealPathFromURITEST(uri, mContext));
                             Log.e("M_UPLOAD_GALLERY", "uri_file.length()2.1: " + file.length());
                             Globals.writeToMLOG("INFO", "PhotoReports.buildCall", "uri_file.length()2.1: " + file.length());
                         } catch (Exception e) {
@@ -351,7 +354,7 @@ public class PhotoReports {
                     // Версия Android ниже 11
                     try {
                         Log.e("M_UPLOAD_GALLERY", "2");
-                        file = new File(Globals.getRealPathFromURI(uri, mContext));
+                        file = new File(Globals.getRealPathFromURITEST(uri, mContext));
                         Log.e("M_UPLOAD_GALLERY", "uri_file.length()2.1: " + file.length());
                         Globals.writeToMLOG("INFO", "PhotoReports.buildCall", "uri_file.length()2.1: " + file.length());
                     } catch (Exception e) {

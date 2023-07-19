@@ -427,6 +427,41 @@ public class Globals {
     }
 
 
+    public String getHashMD5FromFile2(Uri uri, Context context) {
+        InputStream inputStream = null;
+        try {
+            inputStream = context.getContentResolver().openInputStream(uri);
+
+            byte[] buffer = new byte[1024];
+            MessageDigest digest = MessageDigest.getInstance("MD5");
+            int numRead = 0;
+            while (numRead != -1) {
+                numRead = inputStream.read(buffer);
+                if (numRead > 0)
+                    digest.update(buffer, 0, numRead);
+            }
+            byte[] md5Bytes = digest.digest();
+            return convertHashToString(md5Bytes);
+        } catch (Exception e) {
+            Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST/getHashMD5FromFile2", "Exception(1) e: " + e);
+            if (context != null) {
+                alertDialogMsg(context, "photo: " + inputStream + "\nОшибка в подсчёте MD5: " + e);
+            }
+            return null;
+        } finally {
+            if (inputStream != null) {
+                try {
+                    inputStream.close();
+                } catch (Exception e) {
+                    Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST/getHashMD5FromFile2", "Exception(2) e: " + e);
+                    if (context != null) {
+                        alertDialogMsg(context, "Не вышло изза фото: " + e);
+                    }
+                }
+            }
+        }
+    }
+
     public String getHashMD5FromFile2(File file, Context context) {
         InputStream inputStream = null;
         try {
