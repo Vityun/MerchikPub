@@ -138,7 +138,7 @@ public class PremiumActivity extends toolbar_menus {
         col4.setText("Кін. Зал.");
 
         setUser();
-        makeTableDataFirstWeek();
+        makeTableDataSecondMonth();
         setNewRecycler();
 
         setButtonErr();
@@ -344,6 +344,34 @@ public class PremiumActivity extends toolbar_menus {
             }
         });
     }
+
+    private void makeTableDataSecondMonth() {
+        ProgressDialog progressDialog = ProgressDialog.show(this, "Преміальні", "Завантажую поточний місяць.", true, true);
+
+        downloadPremium(Clock.getStartOfMonth(), Clock.getEndOfMonth(), new PremiumRespListener() {
+            @Override
+            public void onSuccess(PremiumPremiumList res) {
+                if (progressDialog != null && progressDialog.isShowing()) {
+                    progressDialog.dismiss();
+                }
+                prepareTableData(getPeriodString(Clock.getStartOfMonth(), Clock.getEndOfMonth()), res);
+                makeTableDataFirstWeek();
+            }
+
+            @Override
+            public void onFailure(String err) {
+                if (progressDialog != null && progressDialog.isShowing()) {
+                    progressDialog.dismiss();
+                }
+                DialogData dialog = new DialogData(PremiumActivity.this);
+                dialog.setTitle("Помилка!");
+                dialog.setText(err);
+                dialog.setClose(dialog::dismiss);
+                dialog.show();
+            }
+        });
+    }
+
 
     private void downloadPremium(Calendar dateFrom, Calendar dateTo, PremiumRespListener listener) {
         DateFormat serverDF = new SimpleDateFormat("yyyy-MM-dd");

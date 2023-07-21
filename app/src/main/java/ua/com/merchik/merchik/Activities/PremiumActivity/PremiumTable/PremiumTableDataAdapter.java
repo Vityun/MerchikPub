@@ -2,6 +2,7 @@ package ua.com.merchik.merchik.Activities.PremiumActivity.PremiumTable;
 
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.graphics.Paint;
 import android.text.Html;
@@ -29,16 +30,23 @@ import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportAc
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.R;
+import ua.com.merchik.merchik.ServerExchange.ExchangeInterface;
+import ua.com.merchik.merchik.ServerExchange.TablesExchange.OptionsExchange;
+import ua.com.merchik.merchik.ServerExchange.TablesExchange.ReportPrepareExchange;
+import ua.com.merchik.merchik.ServerExchange.TablesExchange.WPDataExchange;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.WorkPlan;
 import ua.com.merchik.merchik.data.Data;
 import ua.com.merchik.merchik.data.Database.Room.AddressSDB;
+import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
+import ua.com.merchik.merchik.data.RealmModels.ReportPrepareDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.data.RetrofitResponse.PremiumResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.Premial.PremiumPremium.Detailed;
 import ua.com.merchik.merchik.data.TestJsonUpload.StandartData;
 import ua.com.merchik.merchik.data.WPDataObj;
 import ua.com.merchik.merchik.database.realm.RealmManager;
+import ua.com.merchik.merchik.database.realm.tables.ReportPrepareRealm;
 import ua.com.merchik.merchik.database.realm.tables.WpDataRealm;
 import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
@@ -74,6 +82,7 @@ public class PremiumTableDataAdapter extends RecyclerView.Adapter<PremiumTableDa
         private ConstraintLayout layout;
         private TextView name;
         private TextView column1, column5, column2, column3, column4;
+        private String dataDownload200, dataDownloadError, dataDownloadWait;
 
         public PremiumTableHeaderViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -85,13 +94,17 @@ public class PremiumTableDataAdapter extends RecyclerView.Adapter<PremiumTableDa
             column2 = itemView.findViewById(R.id.col2);
             column3 = itemView.findViewById(R.id.col3);
             column4 = itemView.findViewById(R.id.col4);
+
+            dataDownload200 = itemView.getContext().getString(R.string.data_download_200);
+            dataDownloadError = itemView.getContext().getString(R.string.data_download_error);
+            dataDownloadWait = itemView.getContext().getString(R.string.data_download_wait);
         }
 
         public void bind(Detailed detailed) {
             WpDataDB wpDataDB = findDocument(detailed.codeDad2);
-            if (wpDataDB != null){
+            if (wpDataDB != null) {
                 name.setTextColor(-10987432);
-            }else {
+            } else {
                 name.setTextColor(itemView.getContext().getResources().getColor(R.color.colorToolbar));
             }
 
@@ -121,7 +134,7 @@ public class PremiumTableDataAdapter extends RecyclerView.Adapter<PremiumTableDa
             column4.setText("");
 
             name.setOnClickListener(view -> {
-                openDoc(wpDataDB);
+                openDoc(wpDataDB, detailed.codeDad2, Clock.getDatePremiumDownloadFormat(detailed.docDat), true);
             });
 
             layout.setOnClickListener(v -> {
@@ -146,7 +159,7 @@ public class PremiumTableDataAdapter extends RecyclerView.Adapter<PremiumTableDa
             return null;
         }
 
-        private void openDoc(WpDataDB wpDataDB) {
+        private void openDoc(WpDataDB wpDataDB, Long codeDad2, String datePremiumDownloadFormat, boolean b) {
             if (wpDataDB != null) {
                 long otchetId;
                 int action = wpDataDB.getAction();
@@ -206,13 +219,132 @@ public class PremiumTableDataAdapter extends RecyclerView.Adapter<PremiumTableDa
                 });
                 dialog.show();
             } else {
-                DialogData dialog = new DialogData(itemView.getContext());
-                dialog.setTitle("Звіт на поточному приладі не знайдено.");
-                dialog.setText("Звіти на приладі зберігаються до тижня. Якщо вам все ж таки треба з'ясувати питання по цьому звіту - зверніться до свого керівника.");
-                dialog.setClose(dialog::dismiss);
-                dialog.show();
+
+                if (b){
+                    downloadDoc(codeDad2, datePremiumDownloadFormat);
+                }else {
+                    DialogData dialog = new DialogData(itemView.getContext());
+                    dialog.setTitle("Звіт на поточному приладі не знайдено.");
+                    dialog.setText("Звіти на приладі зберігаються до тижня. Якщо вам все ж таки треба з'ясувати питання по цьому звіту - зверніться до свого керівника.");
+                    dialog.setClose(dialog::dismiss);
+                    dialog.show();
+                }
+
+
+
             }
         }
+
+        /**
+         * 21.07.23.
+         * Тут я буду загружать не достающие данные с сервера, если есть такая возможность и
+         * отображать пользователю загруженный документ.
+         */
+        private void downloadDoc(Long codeDad2, String datePremiumDownloadFormat) {
+
+            wpDownload(codeDad2, datePremiumDownloadFormat, new Clicks.clickVoid() {
+                @Override
+                public void click() {
+                    optionDownload(codeDad2, datePremiumDownloadFormat, new Clicks.clickVoid() {
+                        @Override
+                        public void click() {
+                            reportDownload(codeDad2, datePremiumDownloadFormat, new Clicks.clickVoid() {
+                                @Override
+                                public void click() {
+                                    openDoc(findDocument(codeDad2), codeDad2, datePremiumDownloadFormat, false);
+                                }
+                            });
+                        }
+                    });
+                }
+            });
+        }
+
+        private void wpDownload(Long codeDad2, String datePremiumDownloadFormat, Clicks.clickVoid click){
+            // План робіт
+            ProgressDialog progressDialogWpData = ProgressDialog.show(itemView.getContext(),
+                    "Завантаження Плану робіт",
+                    dataDownloadWait, true, true);
+            WPDataExchange wpDataExchange = new WPDataExchange(datePremiumDownloadFormat, datePremiumDownloadFormat, "");
+            wpDataExchange.downloadWPData(new ExchangeInterface.ExchangeResponseInterface() {
+                @Override
+                public <T> void onSuccess(List<T> data) {
+                    if (data != null && data.size() > 0) {
+                        WpDataRealm.setWpData((List<WpDataDB>) data);
+                        Toast.makeText(itemView.getContext(), dataDownload200 + " План робіт", Toast.LENGTH_LONG).show();
+                    } else {
+                        Toast.makeText(itemView.getContext(), dataDownloadError + " План робіт", Toast.LENGTH_LONG).show();
+                    }
+                    progressDialogWpData.dismiss();
+                    click.click();
+                }
+
+                @Override
+                public void onFailure(String error) {
+                    Toast.makeText(itemView.getContext(), dataDownloadError + " План робіт " + error, Toast.LENGTH_LONG).show();
+                    progressDialogWpData.dismiss();
+                    click.click();
+                }
+            });
+        }
+
+        private void optionDownload(Long codeDad2, String datePremiumDownloadFormat, Clicks.clickVoid click){
+            // Опції
+            ProgressDialog progressDialogOption = ProgressDialog.show(itemView.getContext(),
+                    "Завантаження Опцій",
+                    dataDownloadWait, true, true);
+            OptionsExchange optionsExchange = new OptionsExchange(datePremiumDownloadFormat, datePremiumDownloadFormat, "");
+            optionsExchange.downloadOptions(new ExchangeInterface.ExchangeResponseInterface() {
+                @Override
+                public <T> void onSuccess(List<T> data) {
+                    if (data != null && data.size() > 0) {
+                        RealmManager.saveDownloadedOptions((List<OptionsDB>) data);
+                        Toast.makeText(itemView.getContext(), dataDownload200 + " Опції", Toast.LENGTH_LONG).show();
+                    } else {
+                        Toast.makeText(itemView.getContext(), dataDownloadError + " Опції", Toast.LENGTH_LONG).show();
+                    }
+                    progressDialogOption.dismiss();
+                    click.click();
+                }
+
+                @Override
+                public void onFailure(String error) {
+                    Toast.makeText(itemView.getContext(), dataDownloadError + " Опції " + error, Toast.LENGTH_LONG).show();
+                    progressDialogOption.dismiss();
+                    click.click();
+                }
+            });
+        }
+
+        private void reportDownload(Long codeDad2, String datePremiumDownloadFormat, Clicks.clickVoid click){
+            // Дет. отчёт
+            ProgressDialog progressDialogReportPrepare = ProgressDialog.show(itemView.getContext(),
+                    "Завантаження Деталізованого звіту",
+                    dataDownloadWait, true, true);
+            ReportPrepareExchange reportPrepareExchange = new ReportPrepareExchange(datePremiumDownloadFormat, datePremiumDownloadFormat, "");
+            reportPrepareExchange.downloadReportPrepare(new ExchangeInterface.ExchangeResponseInterface() {
+                @Override
+                public <T> void onSuccess(List<T> data) {
+                    if (data != null && data.size() > 0) {
+                        ReportPrepareRealm.setAll((List<ReportPrepareDB>) data);
+                        Toast.makeText(itemView.getContext(), dataDownload200 + " деталізований звіт", Toast.LENGTH_LONG).show();
+                    } else {
+                        Toast.makeText(itemView.getContext(), dataDownloadError + " деталізований звіт", Toast.LENGTH_LONG).show();
+                    }
+                    progressDialogReportPrepare.dismiss();
+                    click.click();
+                }
+
+                @Override
+                public void onFailure(String error) {
+                    Toast.makeText(itemView.getContext(), dataDownloadError + " деталізований звіт " + error, Toast.LENGTH_LONG).show();
+                    progressDialogReportPrepare.dismiss();
+                    click.click();
+                }
+            });
+        }
+
+
 
         private void openReportPrepare(WpDataDB wp, long otchetId) {
             try {
@@ -240,7 +372,7 @@ public class PremiumTableDataAdapter extends RecyclerView.Adapter<PremiumTableDa
         }
 
 
-        private void getPremiumText(String smeta, Clicks.clickText clickText){
+        private void getPremiumText(String smeta, Clicks.clickText clickText) {
             StandartData data = new StandartData();
             data.mod = "premium";
             data.act = "get_salary_basis";
@@ -254,13 +386,13 @@ public class PremiumTableDataAdapter extends RecyclerView.Adapter<PremiumTableDa
             call.enqueue(new Callback<PremiumResponse>() {
                 @Override
                 public void onResponse(Call<PremiumResponse> call, Response<PremiumResponse> response) {
-                    if (response.isSuccessful()){
-                        if (response.body() != null && response.body().state){
+                    if (response.isSuccessful()) {
+                        if (response.body() != null && response.body().state) {
                             clickText.click(response.body().basis);
-                        }else {
+                        } else {
                             clickText.click("Дані отримати не вийшло. Повторіть спробу або зверніться до вашого керівника.");
                         }
-                    }else {
+                    } else {
                         clickText.click("Проблема із зв'язком. Спробуйте пізніше.");
                     }
                 }

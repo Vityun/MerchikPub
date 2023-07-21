@@ -196,6 +196,11 @@
     <string name="description_calendar_imb_btn">Календар</string>
 
 
+    <string name="data_download_200">Данні успішно завантажено</string>
+    <string name="data_download_error">Не вийшло завантажити данні</string>
+    <string name="data_download_wait">Зачекайте, йде завантаження інформації</string>
+
+
 </resources>
 
     <!--

@@ -612,6 +612,27 @@ public interface RetrofitInterface {
 
     // -------------------------------------------------------
 
+
+    /**
+     * 21.07.23
+     * План Работ.
+     */
+    @POST("mobile_app.php?")
+    Call<WpDataServer> WpDataServer_RESPONSE(
+            @Header("ContentType") String content,
+            @Body JsonObject json);
+
+    /**
+     * 21.07.23
+     * Дет. отчёт.
+     * Обновил интерфейя для загрузки. Теперь надо использовать имено его и отказываться от старых
+     * интерпритаций. Или альтернативных
+     */
+    @POST("mobile_app.php?")
+    Call<ReportPrepareServer> ReportPrepareServer_RESPONSE(
+            @Header("ContentType") String content,
+            @Body JsonObject json);
+
     /**
      * 03.07.23
      * Витрины. Точка входа для получение таблички БД Витрин.

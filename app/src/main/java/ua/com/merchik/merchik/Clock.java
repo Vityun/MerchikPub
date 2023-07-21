@@ -235,9 +235,47 @@ public class Clock {
         return cal;
     }
 
+    public static Calendar getStartOfMonth() {
+        Calendar cal = Calendar.getInstance();
+        cal.set(Calendar.DAY_OF_MONTH, 1); // Устанавливаем день месяца на первый день
+        cal.set(Calendar.HOUR_OF_DAY, 0); // Устанавливаем часы на начало дня
+        cal.set(Calendar.MINUTE, 0);      // Устанавливаем минуты на 0
+        cal.set(Calendar.SECOND, 0);      // Устанавливаем секунды на 0
+        cal.set(Calendar.MILLISECOND, 0); // Устанавливаем миллисекунды на 0
+        return cal;
+    }
+
+    public static Calendar getEndOfMonth() {
+        Calendar cal = Calendar.getInstance();
+        cal.set(Calendar.DAY_OF_MONTH, cal.getActualMaximum(Calendar.DAY_OF_MONTH)); // Устанавливаем день месяца на последний день
+        cal.set(Calendar.HOUR_OF_DAY, 23); // Устанавливаем часы на конец дня
+        cal.set(Calendar.MINUTE, 59);      // Устанавливаем минуты на 59
+        cal.set(Calendar.SECOND, 59);      // Устанавливаем секунды на 59
+        cal.set(Calendar.MILLISECOND, 999); // Устанавливаем миллисекунды на 999
+        return cal;
+    }
+
     public static String getDatePremium(String inputDate){
         SimpleDateFormat inputFormat = new SimpleDateFormat("yyyyMMdd");
         SimpleDateFormat outputFormat = new SimpleDateFormat("dd.MM.yy");
+
+        String outputDate = "";
+
+        try {
+            Date date = inputFormat.parse(inputDate);
+
+            outputDate = outputFormat.format(date);
+            System.out.println(outputDate);
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+
+        return outputDate;
+    }
+
+    public static String getDatePremiumDownloadFormat(String inputDate){
+        SimpleDateFormat inputFormat = new SimpleDateFormat("yyyyMMdd");
+        SimpleDateFormat outputFormat = new SimpleDateFormat("yyyy-MM-dd");
 
         String outputDate = "";
 
