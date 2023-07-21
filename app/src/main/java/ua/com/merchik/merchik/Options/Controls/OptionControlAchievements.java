@@ -207,7 +207,7 @@ public class OptionControlAchievements<T> extends OptionControl {
 
             } else if (optionDB.getOptionId().equals("160209") && achievementsSDBList.size() == 0 && traineeSignal > 0) {
                 stringBuilderMsg.append(period).append(" нема жодного досягнення. Але виконавець ще не провів свого 40-го звіту.");
-                signal = true;
+                signal = false;
 
             } else if (optionDB.getOptionId().equals("160209") && achievementsSDBList.size() == 0) {
                 stringBuilderMsg.append(period).append(" нема жодного досягнення. ");
