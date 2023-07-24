@@ -41,14 +41,13 @@ public class OptionButtAchievements<T> extends OptionControl {
 
     private void executeOption() {
         try {
-            String link = String.format("/mobile.php?mod=images_achieve**act=new_achieve**code_dad2=%sclient_id=%s**addr_id=%s", wpDataDB.getCode_dad2(), wpDataDB.getClient_id(), wpDataDB.getAddr_id());
+            String link = String.format("/mobile.php?mod=images_achieve**act=new_achieve**code_dad2=%s**client_id=%s**addr_id=%s", wpDataDB.getCode_dad2(), wpDataDB.getClient_id(), wpDataDB.getAddr_id());
             AppUsersDB appUser = AppUserRealm.getAppUserById(userId);
 
             String hash = String.format("%s%s%s", appUser.getUserId(), appUser.getPassword(), "AvgrgsYihSHp6Ok9yQXfSHp6Ok9nXdXr3OSHp6Ok9UPBTzTjrF20Nsz3");
             hash = Globals.getSha1Hex(hash);
 
             String format = String.format("https://merchik.com.ua/sa.php?&u=%s&s=%s&l=%s", userId, hash, link);
-
 
             Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(format));
             context.startActivity(browserIntent);
