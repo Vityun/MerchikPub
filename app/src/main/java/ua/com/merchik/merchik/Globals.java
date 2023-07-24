@@ -114,6 +114,7 @@ public class Globals {
 
     //----------------------------------------------------------------------------------------------
     public static int userId;
+    public static boolean userOwnership;    // В этом признаке буду хранить значение "Свой/Чужой"
     public static String token;
     public static Integer userEKLId;
     public static int langId = 2;

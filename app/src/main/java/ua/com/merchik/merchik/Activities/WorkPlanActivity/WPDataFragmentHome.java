@@ -1,5 +1,6 @@
 package ua.com.merchik.merchik.Activities.WorkPlanActivity;
 
+import static ua.com.merchik.merchik.Globals.userOwnership;
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
 import android.graphics.Paint;
@@ -91,17 +92,17 @@ public class WPDataFragmentHome extends Fragment {
 
             workPlan = RealmManager.getAllWorkPlan();
             try {
-                if (workPlan != null){
+                if (workPlan != null) {
                     Globals.writeToMLOG("INFO", "WPDataFragmentHome", "workPlan: " + workPlan.size());
                     StringBuilder wpDebugData = new StringBuilder();
-                    for (WpDataDB item : workPlan){
+                    for (WpDataDB item : workPlan) {
                         wpDebugData.append("id:").append(item.getId()).append("/").append("dad2:").append(item.getCode_dad2()).append("\n");
                     }
                     Globals.writeToMLOG("INFO", "WPDataFragmentHome", "wpDebugData: " + wpDebugData);
-                }else {
+                } else {
                     Globals.writeToMLOG("INFO", "WPDataFragmentHome", "workPlan is null");
                 }
-            }catch (Exception e){
+            } catch (Exception e) {
                 Globals.writeToMLOG("ERROR", "WPDataFragmentHome", "Exception e: " + e);
             }
 //        workPlan = workPlan.where().between("dt", dateFrom, dateTo).sort("dt_start", Sort.ASCENDING, "addr_id", Sort.ASCENDING).findAll();
@@ -129,7 +130,7 @@ public class WPDataFragmentHome extends Fragment {
                     globals.alertDialogMsg(v.getContext(), "Возникла ошибка. Сообщите о ней своему администратору. Ошибка1: " + e);
                 }
             }
-        }catch (Exception e){
+        } catch (Exception e) {
             Globals.writeToMLOG("ERROR", "WPDataFragmentHome/onCreateView", "Exception e: " + e);
         }
 
@@ -192,9 +193,15 @@ public class WPDataFragmentHome extends Fragment {
         recyclerView.setAdapter(adapter);
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext(), LinearLayoutManager.VERTICAL, false));
 
-//        searchView.setText(Clock.today);
-        searchView.setText("");
-        searchView.clearFocus();
+        // Устанавливаю признай "Свой/Чужой"
+        userOwnership = checkUser(workPlan.get(0));
+
+        if (userOwnership){
+            searchView.setText("");
+            searchView.clearFocus();
+        }else {
+            searchView.setText(Clock.today);
+        }
 
         adapter.getFilter().filter(searchView.getText());
         recyclerView.scheduleLayoutAnimation();
@@ -325,5 +332,27 @@ public class WPDataFragmentHome extends Fragment {
         } else {
             filter.setImageDrawable(getResources().getDrawable(R.drawable.ic_filter));
         }
+    }
+
+    /**
+     * 24.07.23.
+     * Будет проверять пользователя. Свой(true)/Чужой(false)
+     * В данном контексте будет отображаться План работ в зависимости от его состояния.
+     * Для своих отображается по дефолтным правилам. Для чужих - будет подставляться Сегодняшняя Дата.
+     */
+    private boolean checkUser(WpDataDB wpDataDB) {
+        boolean res = true;
+
+        UsersSDB user = SQL_DB.usersDao().getUserById(wpDataDB.getUser_id());
+//        if (user.clientId.equals(wpDataDB.getClient_id())) {
+//            res = false;
+//        }
+
+        // Ласунка
+        if (user.clientId.equals("32246")) {
+            res = false;
+        }
+
+        return res;
     }
 }
