@@ -342,15 +342,18 @@ public class WPDataFragmentHome extends Fragment {
      */
     private boolean checkUser(WpDataDB wpDataDB) {
         boolean res = true;
-
-        UsersSDB user = SQL_DB.usersDao().getUserById(wpDataDB.getUser_id());
+        try {
+            UsersSDB user = SQL_DB.usersDao().getUserById(wpDataDB.getUser_id());
 //        if (user.clientId.equals(wpDataDB.getClient_id())) {
 //            res = false;
 //        }
 
-        // Ласунка
-        if (user.clientId.equals("32246")) {
-            res = false;
+            // Ласунка
+            if (user.clientId.equals("32246")) {
+                res = false;
+            }
+        }catch (Exception e){
+
         }
 
         return res;
