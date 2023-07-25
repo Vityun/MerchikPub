@@ -188,6 +188,7 @@ public class RetrofitBuilder{
             AppUsersDB appUsersDB = RealmManager.getAppUser();
             if (appUsersDB != null){
                 Globals.userId = appUsersDB.getUserId();
+                Globals.userOwnership = appUsersDB.user_work_plan_status.equals("our");
             }
         }
 

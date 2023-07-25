@@ -92,7 +92,7 @@ public class menu_login extends AppCompatActivity {
     private FabYoutube fabYoutube = new FabYoutube();
     private FloatingActionButton fabYouTube;
     private TextView badgeTextView;
-    public static final Integer[]  menu_login_VIDEO_LESSONS = new Integer[]{813};
+    public static final Integer[] menu_login_VIDEO_LESSONS = new Integer[]{813};
 
     private Progress progress;
     private static final int PERMISSION_FINE_LOCATION = 0;
@@ -892,7 +892,7 @@ public class menu_login extends AppCompatActivity {
         });
     }
 
-    private DialogAdapter specialCodeAdapter(EDRPOUResponse item){
+    private DialogAdapter specialCodeAdapter(EDRPOUResponse item) {
         List<ViewHolderTypeList> data = new ArrayList<>();
 
         data.add(specialCodeEditText());
@@ -901,7 +901,7 @@ public class menu_login extends AppCompatActivity {
         return new DialogAdapter(data);
     }
 
-    private ViewHolderTypeList specialCodeEditText(){
+    private ViewHolderTypeList specialCodeEditText() {
         ViewHolderTypeList res = new ViewHolderTypeList();
 
         ViewHolderTypeList.EditTextLayoutData editTextLayoutData = new ViewHolderTypeList.EditTextLayoutData();
@@ -926,7 +926,7 @@ public class menu_login extends AppCompatActivity {
         return res;
     }
 
-    private ViewHolderTypeList specialCodeButton(ViewHolderTypeList viewHolderTypeList, EDRPOUResponse item){
+    private ViewHolderTypeList specialCodeButton(ViewHolderTypeList viewHolderTypeList, EDRPOUResponse item) {
         ViewHolderTypeList res = new ViewHolderTypeList();
 
         ViewHolderTypeList.ButtonLayoutData buttonLayoutData = new ViewHolderTypeList.ButtonLayoutData();
@@ -1396,22 +1396,23 @@ public class menu_login extends AppCompatActivity {
                                         Toast.makeText(getApplicationContext(), "Вы зашли как " + resp.getUserInfo().getFio(), Toast.LENGTH_SHORT).show();
                                         Globals.userId = Integer.parseInt(resp.getUserInfo().getUserId());
                                         Globals.token = resp.websocketParam.token;
+                                        Globals.userOwnership = resp.getUserInfo().user_work_plan_status.equals("our");
 
-                                        if (System.currentTimeMillis() < 1666656000000L){   // отображать ДО 2022-10-25
+                                        if (System.currentTimeMillis() < 1666656000000L) {   // отображать ДО 2022-10-25
                                             DialogData dialog = new DialogData(menu_login.this);
                                             dialog.setTitle("ВАЖЛИВО!");
                                             dialog.setText("З 21.10.22 виконання робіт за вчора буде заблоковано! Рекомендовано роботу виконувати на 3дні на перед!");
-                                            dialog.setClose(()->{
+                                            dialog.setClose(() -> {
                                                 dialog.setDialogColorDefault();
                                                 dialog.dismiss();
                                             });
                                             dialog.setDialogIco();
                                             dialog.setDialogColorRed();
-                                            dialog.setOk("Зрозуміло", ()->{
+                                            dialog.setOk("Зрозуміло", () -> {
                                                 startActivity(intent); // ++
                                             });
                                             dialog.show();
-                                        }else {
+                                        } else {
                                             startActivity(intent); // ++
                                         }
                                         // ------------
@@ -1546,7 +1547,14 @@ public class menu_login extends AppCompatActivity {
 
                     if (resp.getAuth()) {
                         // Если залогинились - запись в БД
-                        RealmManager.setAppUser(new AppUsersDB(Integer.parseInt(resp.getUserInfo().getUserId()), resp.getUserInfo().getFio(), finalLogin, finalPassword));
+                        RealmManager.setAppUser(
+                                new AppUsersDB(
+                                        Integer.parseInt(resp.getUserInfo().getUserId()),
+                                        resp.getUserInfo().getFio(),
+                                        finalLogin,
+                                        finalPassword,
+                                        resp.getUserInfo().user_work_plan_status)
+                        );
 
                         AppUsersDB appUsersDB = RealmManager.getAppUserById(resp.getUserInfo().getUserId());
 
@@ -1576,6 +1584,7 @@ public class menu_login extends AppCompatActivity {
                         Toast.makeText(getApplicationContext(), "Вы зашли как " + resp.getUserInfo().getFio(), Toast.LENGTH_SHORT).show();
                         Globals.userId = Integer.parseInt(resp.getUserInfo().getUserId());
                         Globals.token = resp.websocketParam.token;
+                        Globals.userOwnership = resp.getUserInfo().user_work_plan_status.equals("our");
                         // ------------
 
                         progress.dissmiss();
@@ -1612,23 +1621,24 @@ public class menu_login extends AppCompatActivity {
 
                 new TablesLoadingUnloading().downloadMenu();
                 Globals.userId = appUsersDB.getUserId();
+                Globals.userOwnership = appUsersDB.user_work_plan_status.equals("our");
 
                 progress.dissmiss();
-                if (System.currentTimeMillis() < 1666656000000L){   // отображать ДО 2022-10-25
+                if (System.currentTimeMillis() < 1666656000000L) {   // отображать ДО 2022-10-25
                     DialogData dialog = new DialogData(menu_login.this);
                     dialog.setTitle("ВАЖЛИВО!");
                     dialog.setText("З 21.10.22 виконання робіт за вчора буде заблоковано! Рекомендовано роботу виконувати на 3дні на перед!");
-                    dialog.setClose(()->{
+                    dialog.setClose(() -> {
                         dialog.setDialogColorDefault();
                         dialog.dismiss();
                     });
                     dialog.setDialogIco();
                     dialog.setDialogColorRed();
-                    dialog.setOk("Зрозуміло", ()->{
+                    dialog.setOk("Зрозуміло", () -> {
                         startActivity(intent); // ++
                     });
                     dialog.show();
-                }else {
+                } else {
                     startActivity(intent); // ++
                 }
             } else {
@@ -1732,7 +1742,8 @@ public class menu_login extends AppCompatActivity {
                 dialog.setHelpMsg(help2);
                 dialog.setClose(dialog::dismiss);
                 dialog.setLesson(this, true, 812);
-                dialog.setVideoLesson(this, true, 813, () -> {});
+                dialog.setVideoLesson(this, true, 813, () -> {
+                });
                 dialog.show();
             });
         } catch (Exception e) {

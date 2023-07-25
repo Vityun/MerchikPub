@@ -25,6 +25,15 @@ public class UserInfo {
     @Expose
     public String token;
 
+    /**
+     * Статус мерчика. Типо нашей компаннии или чужой
+     * our  - свой
+     * foreign - чужой
+     * */
+    @SerializedName("user_work_plan_status")
+    @Expose
+    public String user_work_plan_status;
+
     @SerializedName("report_count")
     @Expose
     private String reportCount;

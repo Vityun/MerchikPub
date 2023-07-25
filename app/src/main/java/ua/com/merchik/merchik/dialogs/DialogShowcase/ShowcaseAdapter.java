@@ -14,18 +14,22 @@ import java.util.Collections;
 import java.util.List;
 
 import ua.com.merchik.merchik.R;
+import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.Database.Room.ShowcaseSDB;
 
 public class ShowcaseAdapter extends RecyclerView.Adapter<ShowcaseAdapter.ViewHolder> {
 
     private List<ShowcaseSDB> showcaseList;
+    private Clicks.click click;
 
-    public ShowcaseAdapter(List<ShowcaseSDB> showcaseList) {
+    public ShowcaseAdapter(List<ShowcaseSDB> showcaseList, Clicks.click click) {
         if (showcaseList != null && showcaseList.size() > 0){
             showcaseList.add(defaultShowcase());
             this.showcaseList = showcaseList;
+            this.click = click;
         }else {
             this.showcaseList = Collections.singletonList(defaultShowcase());
+            this.click = click;
         }
     }
 
@@ -64,8 +68,8 @@ public class ShowcaseAdapter extends RecyclerView.Adapter<ShowcaseAdapter.ViewHo
 
         public void bind(ShowcaseSDB showcase){
             textViewShowcaseId.setText("Ідентифікатор вітрини: " + showcase.id);
-            textViewClientGroup.setText("Група Товару: " + "група");
-            textViewPlanogramm.setText("Планограма: " + "планограма");
+            textViewClientGroup.setText("Група Товару: " + showcase.tovarGrp);
+            textViewPlanogramm.setText("Планограма: " + showcase.photoPlanogramId);
 
             if (showcase.id == 0){
                 textViewShowcaseId.setText("Створити нову вітрину");
@@ -77,6 +81,8 @@ public class ShowcaseAdapter extends RecyclerView.Adapter<ShowcaseAdapter.ViewHo
                 textViewPlanogramm.setVisibility(View.VISIBLE);
                 image.setImageDrawable(itemView.getContext().getResources().getDrawable(R.mipmap.merchik));
             }
+
+            constraintLayout.setOnClickListener(v-> click.click(showcase));
         }
     }
 

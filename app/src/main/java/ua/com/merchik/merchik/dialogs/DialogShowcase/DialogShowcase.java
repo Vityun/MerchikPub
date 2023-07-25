@@ -17,6 +17,7 @@ import java.util.List;
 
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.R;
+import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.Database.Room.ShowcaseSDB;
 import ua.com.merchik.merchik.dialogs.DialogData;
 
@@ -24,6 +25,7 @@ public class DialogShowcase extends DialogData {
 
     private Context context;
     private Dialog dialog;
+    public Clicks.click click;
 
     public ImageButton close, help, videoHelp, call, addSotr;
     private TextView title;
@@ -34,7 +36,7 @@ public class DialogShowcase extends DialogData {
         this.context = context;
         try {
             initializeDialog();
-            populateDialogData();
+//            populateDialogData();
         } catch (Exception e) {
             Globals.writeToMLOG("ERROR", "DialogShowcase", "Exception e: " + e);
         }
@@ -74,25 +76,30 @@ public class DialogShowcase extends DialogData {
         recyclerView = dialog.findViewById(R.id.recyclerView);
     }
 
-    private void populateDialogData() {
+    public void populateDialogData(Clicks.click click) {
+        this.click = click;
         setRecyclerView();
+    }
+
+    public void result(Clicks.click click){
+        this.click = click;
     }
 
     private void setRecyclerView() {
         try {
             List<ShowcaseSDB> showcaseDataList = SQL_DB.showcaseDao().getAll();
-            showcaseDataList.add(newTestShowcase(1));
-            showcaseDataList.add(newTestShowcase(2));
-            showcaseDataList.add(newTestShowcase(3));
-            showcaseDataList.add(newTestShowcase(4));
-            showcaseDataList.add(newTestShowcase(5));
-            showcaseDataList.add(newTestShowcase(6));
-            showcaseDataList.add(newTestShowcase(7));
-            showcaseDataList.add(newTestShowcase(8));
-            showcaseDataList.add(newTestShowcase(9));
-            showcaseDataList.add(newTestShowcase(10));
+//            showcaseDataList.add(newTestShowcase(1));
+//            showcaseDataList.add(newTestShowcase(2));
+//            showcaseDataList.add(newTestShowcase(3));
+//            showcaseDataList.add(newTestShowcase(4));
+//            showcaseDataList.add(newTestShowcase(5));
+//            showcaseDataList.add(newTestShowcase(6));
+//            showcaseDataList.add(newTestShowcase(7));
+//            showcaseDataList.add(newTestShowcase(8));
+//            showcaseDataList.add(newTestShowcase(9));
+//            showcaseDataList.add(newTestShowcase(10));
 
-            ShowcaseAdapter adapter = new ShowcaseAdapter(showcaseDataList);
+            ShowcaseAdapter adapter = new ShowcaseAdapter(showcaseDataList, click);
             recyclerView.setAdapter(adapter);
             recyclerView.setLayoutManager(new LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false));
         } catch (Exception e) {
@@ -103,6 +110,8 @@ public class DialogShowcase extends DialogData {
     private ShowcaseSDB newTestShowcase(int id) {
         ShowcaseSDB res = new ShowcaseSDB();
         res.id = id;
+        res.tovarGrp = id;
+        res.photoPlanogramId = id;
         return res;
     }
 

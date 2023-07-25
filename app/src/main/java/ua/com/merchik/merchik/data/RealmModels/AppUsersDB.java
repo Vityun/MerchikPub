@@ -10,15 +10,17 @@ public class AppUsersDB extends RealmObject {
     private String userTxt;
     private String login;
     private String password;
+    public String user_work_plan_status;
 
     public AppUsersDB() {
     }
 
-    public AppUsersDB(int userId, String userTxt, String login, String password) {
+    public AppUsersDB(int userId, String userTxt, String login, String password, String user_work_plan_status) {
         this.userId = userId;
         this.userTxt = userTxt;
         this.login = login;
         this.password = password;
+        this.user_work_plan_status = user_work_plan_status;
     }
 
     public int getUserId() {

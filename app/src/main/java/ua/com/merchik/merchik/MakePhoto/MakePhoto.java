@@ -33,6 +33,7 @@ import ua.com.merchik.merchik.PhotoReportActivity;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.WorkPlan;
+import ua.com.merchik.merchik.data.Database.Room.ShowcaseSDB;
 import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
 import ua.com.merchik.merchik.data.Database.Room.UsersSDB;
 import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
@@ -40,6 +41,7 @@ import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.data.WPDataObj;
 import ua.com.merchik.merchik.database.realm.tables.WpDataRealm;
 import ua.com.merchik.merchik.dialogs.DialogData;
+import ua.com.merchik.merchik.dialogs.DialogShowcase.DialogShowcase;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
 import ua.com.merchik.merchik.trecker;
 
@@ -423,7 +425,7 @@ public class MakePhoto {
 
         } catch (Exception e) {
             globals.alertDialogMsg(activity, "Ошибка при создании фото: " + e);
-                globals.writeToMLOG(Clock.getHumanTime() + "MakePhoto.dispatchTakePictureIntent.Error: " + Arrays.toString(e.getStackTrace()) + "\n");
+            globals.writeToMLOG(Clock.getHumanTime() + "MakePhoto.dispatchTakePictureIntent.Error: " + Arrays.toString(e.getStackTrace()) + "\n");
         }
     }
 
@@ -507,7 +509,12 @@ public class MakePhoto {
             }
             MakePhoto.photoType = photoType;
             Globals.writeToMLOG("INFO", "pressedMakePhoto", "photoType: " + photoType);
-            choiceCustomerGroupAndPhoto2(activity, wpDataObj, data, optionsDB);
+
+
+            // Тут должна открываться инфа про Витрины
+            showDialogSW(activity, wpDataObj, data, optionsDB);
+
+//            choiceCustomerGroupAndPhoto2(activity, wpDataObj, data, optionsDB);
         } catch (Exception e) {
             Globals.writeToMLOG("ERROR", "pressedMakePhoto", "Exception e: " + e);
         }
@@ -526,7 +533,7 @@ public class MakePhoto {
             MakePhoto.photoType = photoType;
             MakePhoto.tovarId = tovarId;
             Globals.writeToMLOG("INFO", "pressedMakePhoto", "photoType: " + photoType);
-            choiceCustomerGroupAndPhoto2(activity, wpDataObj, data, optionsDB);
+//            choiceCustomerGroupAndPhoto2(activity, wpDataObj, data, optionsDB);
         } catch (Exception e) {
             Globals.writeToMLOG("ERROR", "pressedMakePhoto", "Exception e: " + e);
         }
@@ -599,7 +606,7 @@ public class MakePhoto {
                                 dialogData2.setCancel(Html.fromHtml("<font color='#000000'>Нет</font>"), () -> {
                                     dialog1.dismiss();
                                     dialogData2.dismiss();
-                                    showDialogPass(activity, wpDataObj, optionsDB, ()->{
+                                    showDialogPass(activity, wpDataObj, optionsDB, () -> {
                                         makePhoto(activity, data); // Метод который запускает камеру и создаёт файл фото.
                                     });
                                 });
@@ -685,7 +692,7 @@ public class MakePhoto {
                 dialogData2.setCancel2(Html.fromHtml(falseButton2), () -> {
                     dialogData1.dismiss();
                     dialogData2.dismiss();
-                    showDialogPass(activity, wpDataObj, optionsDB, ()->{
+                    showDialogPass(activity, wpDataObj, optionsDB, () -> {
                         makePhoto(activity, data); // Метод который запускает камеру и создаёт файл фото.
                     });
                 });
@@ -728,14 +735,40 @@ public class MakePhoto {
             Log.e("UnlockCode", "unlockCode: " + unlockCode);
             Log.e("UnlockCode", "unlockCode2: " + unlockCode2);
 
-            if (res.equals(unlockCode)){
+            if (res.equals(unlockCode)) {
                 Toast.makeText(context, "Код прийнято", Toast.LENGTH_LONG).show();
                 click.click();
                 dialog.dismiss();
-            }else {
+            } else {
                 Toast.makeText(context, "Код не вірний!", Toast.LENGTH_LONG).show();
             }
         });
+        dialog.show();
+    }
+
+
+    /**
+     * 24.07.23.
+     * Открытие модального окна для выбора Витрин
+     *
+     * @param activity
+     */
+    public <T> void showDialogSW(Activity activity, WPDataObj wp, T dataT, OptionsDB optionsDB) {
+        DialogShowcase dialog = new DialogShowcase(activity);
+        dialog.populateDialogData(new Clicks.click() {
+            @Override
+            public <T> void click(T data) {
+                try {
+                    ShowcaseSDB showcase = (ShowcaseSDB) data;
+                    Toast.makeText(activity, "Ідентифікатор обраної вітрини: " + showcase.id, Toast.LENGTH_LONG).show();
+                    choiceCustomerGroupAndPhoto2(activity, wp, dataT, optionsDB);
+                    dialog.dismiss();
+                } catch (Exception e) {
+                    Log.e("", "Exception e: " + e);
+                }
+            }
+        });
+        dialog.setClose(dialog::dismiss);
         dialog.show();
     }
 }
