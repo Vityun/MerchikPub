@@ -109,6 +109,11 @@ public class UsersSDB {
     @ColumnInfo(name = "fired_dt")
     public Long firedDt;
 
+    @SerializedName("flag")
+    @Expose
+    @ColumnInfo(name = "flag")
+    public String flag;
+
     @SerializedName("report_count")
     @Expose
     @ColumnInfo(name = "report_count")
