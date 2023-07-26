@@ -512,9 +512,9 @@ public class MakePhoto {
 
 
             // Тут должна открываться инфа про Витрины
-            showDialogSW(activity, wpDataObj, data, optionsDB);
+//            showDialogSW(activity, wpDataObj, data, optionsDB);
 
-//            choiceCustomerGroupAndPhoto2(activity, wpDataObj, data, optionsDB);
+            choiceCustomerGroupAndPhoto2(activity, wpDataObj, data, optionsDB);
         } catch (Exception e) {
             Globals.writeToMLOG("ERROR", "pressedMakePhoto", "Exception e: " + e);
         }
@@ -533,7 +533,7 @@ public class MakePhoto {
             MakePhoto.photoType = photoType;
             MakePhoto.tovarId = tovarId;
             Globals.writeToMLOG("INFO", "pressedMakePhoto", "photoType: " + photoType);
-//            choiceCustomerGroupAndPhoto2(activity, wpDataObj, data, optionsDB);
+            choiceCustomerGroupAndPhoto2(activity, wpDataObj, data, optionsDB);
         } catch (Exception e) {
             Globals.writeToMLOG("ERROR", "pressedMakePhoto", "Exception e: " + e);
         }

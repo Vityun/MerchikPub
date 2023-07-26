@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.net.Uri;
 import android.util.Log;
 
+import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.Options.OptionControl;
 import ua.com.merchik.merchik.Options.Options;
@@ -41,7 +42,12 @@ public class OptionButtAchievements<T> extends OptionControl {
 
     private void executeOption() {
         try {
-            String link = String.format("/mobile.php?mod=images_achieve**act=new_achieve**code_dad2=%s**client_id=%s**addr_id=%s", wpDataDB.getCode_dad2(), wpDataDB.getClient_id(), wpDataDB.getAddr_id());
+
+            String dateFrom = Clock.getHumanTimeSecPattern(Clock.getDatePeriodLong(wpDataDB.getDt().getTime(), -31)/1000, "yyyy-MM-dd");
+            String dateTo = Clock.getHumanTimeSecPattern(Clock.getDatePeriodLong(wpDataDB.getDt().getTime(), +2)/1000, "yyyy-MM-dd");
+
+//            String link = String.format("/mobile.php?mod=images_achieve**act=new_achieve**code_dad2=%s**client_id=%s**addr_id=%s", wpDataDB.getCode_dad2(), wpDataDB.getClient_id(), wpDataDB.getAddr_id());
+            String link = String.format("/mobile.php?mod=images_achieve**act=list_achieve**code_dad2_create=%s**client_id=%s**addr_id=%s**date_from=%s**date_to=%s", wpDataDB.getCode_dad2(), wpDataDB.getClient_id(), wpDataDB.getAddr_id(), dateFrom, dateTo);
             AppUsersDB appUser = AppUserRealm.getAppUserById(userId);
 
             String hash = String.format("%s%s%s", appUser.getUserId(), appUser.getPassword(), "AvgrgsYihSHp6Ok9yQXfSHp6Ok9nXdXr3OSHp6Ok9UPBTzTjrF20Nsz3");
