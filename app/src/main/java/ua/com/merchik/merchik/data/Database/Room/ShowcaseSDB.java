@@ -3,6 +3,7 @@ package ua.com.merchik.merchik.data.Database.Room;
 import androidx.annotation.NonNull;
 import androidx.room.ColumnInfo;
 import androidx.room.Entity;
+import androidx.room.Ignore;
 import androidx.room.PrimaryKey;
 
 import com.google.gson.annotations.Expose;
@@ -47,6 +48,11 @@ public class ShowcaseSDB {
     @Expose
     @ColumnInfo(name = "photo_big")
     public String photoBig;
+
+    @SerializedName("planogram_id")
+    @Expose
+    @ColumnInfo(name = "planogram_id")
+    public Long planogramId;
 
     @SerializedName("photo_planogram_id")
     @Expose
@@ -179,4 +185,8 @@ public class ShowcaseSDB {
     @Expose
     @ColumnInfo(name = "status_author")
     public Integer statusAuthor;
+
+    @Ignore
+    @ColumnInfo(name = "tovarGrpTxt")
+    public String tovarGrpTxt;
 }

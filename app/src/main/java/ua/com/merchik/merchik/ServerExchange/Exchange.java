@@ -39,6 +39,7 @@ import ua.com.merchik.merchik.ServerExchange.TablesExchange.OblastExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.PotentialClientTableExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.SamplePhotoExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.ShelfSizeExchange;
+import ua.com.merchik.merchik.ServerExchange.TablesExchange.ShowcaseExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.SiteObjectsExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.StandartExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.TranslationsExchange;
@@ -52,6 +53,7 @@ import ua.com.merchik.merchik.data.Database.Room.CustomerSDB;
 import ua.com.merchik.merchik.data.Database.Room.LanguagesSDB;
 import ua.com.merchik.merchik.data.Database.Room.OblastSDB;
 import ua.com.merchik.merchik.data.Database.Room.SamplePhotoSDB;
+import ua.com.merchik.merchik.data.Database.Room.ShowcaseSDB;
 import ua.com.merchik.merchik.data.Database.Room.SiteObjectsSDB;
 import ua.com.merchik.merchik.data.Database.Room.StandartSDB;
 import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
@@ -702,14 +704,14 @@ public class Exchange {
 
                         }
                     });
-                }catch (Exception e){
+                } catch (Exception e) {
                     Globals.writeToMLOG("ERROR", "FragmentsExchange/downloadFragmentsTable", "Exception e: " + e);
                 }
 
                 try {
                     downloadSiteHints("2");
                     downloadVideoLessons();
-                }catch (Exception e){
+                } catch (Exception e) {
                     Globals.writeToMLOG("ERROR", "startExchange/downloadSiteHints/downloadVideoLessons", "Exception e: " + e);
                 }
 
@@ -717,7 +719,7 @@ public class Exchange {
                     new VideoViewExchange().downloadVideoViewTable(new ExchangeInterface.ExchangeResponseInterface() {
                         @Override
                         public <T> void onSuccess(List<T> data) {
-                            SQL_DB.videoViewDao().insertAll((List<ViewListSDB>)data);
+                            SQL_DB.videoViewDao().insertAll((List<ViewListSDB>) data);
                         }
 
                         @Override
@@ -725,8 +727,39 @@ public class Exchange {
 
                         }
                     });
-                }catch (Exception e){
+                } catch (Exception e) {
                     Globals.writeToMLOG("ERROR", "startExchange/VideoViewExchange/downloadVideoLessons", "Exception e: " + e);
+                }
+
+
+                try {
+                    new ShowcaseExchange().downloadShowcaseTable(new ExchangeInterface.ExchangeResponseInterface() {
+                        @Override
+                        public <T> void onSuccess(List<T> data) {
+                            SQL_DB.showcaseDao().insertAll((List<ShowcaseSDB>) data)
+                                    .subscribeOn(Schedulers.io())
+                                    .subscribe(new DisposableCompletableObserver() {
+                                        @Override
+                                        public void onComplete() {
+                                            Log.e("ShowcaseExchange", "OK");
+                                            new ShowcaseExchange().downloadShowcasePhoto((List<ShowcaseSDB>) data);
+                                        }
+
+                                        @Override
+                                        public void onError(@io.reactivex.rxjava3.annotations.NonNull Throwable e) {
+                                            Log.e("ShowcaseExchange", "Throwable e: " + e);
+                                        }
+                                    });
+                            Globals.writeToMLOG("ERROR", "startExchange/ShowcaseExchange/downloadShowcaseTable/onSuccess", "data: " + data.size());
+                        }
+
+                        @Override
+                        public void onFailure(String error) {
+                            Globals.writeToMLOG("ERROR", "startExchange/ShowcaseExchange/downloadShowcaseTable/onFailure", "error: " + error);
+                        }
+                    });
+                } catch (Exception e) {
+                    Globals.writeToMLOG("ERROR", "startExchange/ShowcaseExchange/downloadShowcaseTable", "Exception e: " + e);
                 }
 
                 // --------------------------------------------------------------
@@ -1134,7 +1167,7 @@ public class Exchange {
         data.date_to = Clock.today;
 
         // Типо говорю что я уже обновился, что б мне постоянно не прилетали фотки и я не задалбівал сервер
-        synchronizationTimetableDB.setVpi_app(System.currentTimeMillis()/1000);
+        synchronizationTimetableDB.setVpi_app(System.currentTimeMillis() / 1000);
         RealmManager.setToSynchronizationTimetableDB(synchronizationTimetableDB);
 
         WpDataRealm.UserPostRes info = WpDataRealm.userPost(Globals.userId);
@@ -1350,7 +1383,7 @@ public class Exchange {
                 dataItem.id = item.getRId();
                 dataItem.comment = item.getComment();
 
-                if (item.commentId != null && item.dtUpdate != null && item.dtUpdate != 0){
+                if (item.commentId != null && item.dtUpdate != null && item.dtUpdate != 0) {
                     dataItem.comment_id = String.valueOf(item.commentId);
                 }
 
@@ -2146,7 +2179,7 @@ public class Exchange {
 
                 try {
                     SQL_DB.additionalMaterialsGroupsDao().insertAll(response.body().list);
-                }catch (Exception e){
+                } catch (Exception e) {
 
                 }
             }

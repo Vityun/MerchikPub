@@ -825,6 +825,12 @@ public class DetailedReportActivity extends toolbar_menus {
                 photo.setPhoto_hash(hash);
                 photo.setPhoto_num(photoFile.getAbsolutePath());
                 photo.setPhoto_type(Integer.valueOf(MakePhoto.photoType));
+
+                photo.img_src_id = MakePhoto.img_src_id;
+                photo.showcase_id = MakePhoto.showcase_id;
+                photo.planogram_id = MakePhoto.planogram_id;
+                photo.planogram_img_id = MakePhoto.planogram_img_id;
+
                 if (MakePhoto.photoType.equals("4")) {
                     photo.tovar_id = MakePhoto.tovarId;
                     Globals.writeToMLOG("INFO", "requestCode == 201 && resultCode == RESULT_OK/photo_save", "MakePhoto.tovarId: " + MakePhoto.tovarId);

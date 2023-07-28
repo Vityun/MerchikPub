@@ -13,10 +13,18 @@ import com.google.android.material.navigation.NavigationView;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 
+import java.util.List;
+
+import io.reactivex.rxjava3.observers.DisposableCompletableObserver;
+import io.reactivex.rxjava3.schedulers.Schedulers;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
+import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.R;
+import ua.com.merchik.merchik.ServerExchange.ExchangeInterface;
+import ua.com.merchik.merchik.ServerExchange.TablesExchange.ShowcaseExchange;
+import ua.com.merchik.merchik.data.Database.Room.ShowcaseSDB;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.ShowcaseResponse;
 import ua.com.merchik.merchik.data.TestJsonUpload.StandartData;
 import ua.com.merchik.merchik.dialogs.DialogShowcase.DialogShowcase;
@@ -55,16 +63,44 @@ public class MenuMainActivity extends toolbar_menus {
     }
 
     private void test() {
-        swoeDialogSW();
+        try {
+            new ShowcaseExchange().downloadShowcaseTable(new ExchangeInterface.ExchangeResponseInterface() {
+                @Override
+                public <T> void onSuccess(List<T> data) {
+                    SQL_DB.showcaseDao().insertAll((List<ShowcaseSDB>) data)
+                            .subscribeOn(Schedulers.io())
+                            .subscribe(new DisposableCompletableObserver() {
+                                @Override
+                                public void onComplete() {
+                                    Log.e("ShowcaseExchange", "OK");
+                                    new ShowcaseExchange().downloadShowcasePhoto((List<ShowcaseSDB>) data);
+                                }
+
+                                @Override
+                                public void onError(@io.reactivex.rxjava3.annotations.NonNull Throwable e) {
+                                    Log.e("ShowcaseExchange", "Throwable e: " + e);
+                                }
+                            });
+                    Globals.writeToMLOG("ERROR", "startExchange/ShowcaseExchange/downloadShowcaseTable/onSuccess", "data: " + data.size());
+                }
+
+                @Override
+                public void onFailure(String error) {
+                    Globals.writeToMLOG("ERROR", "startExchange/ShowcaseExchange/downloadShowcaseTable/onFailure", "error: " + error);
+                }
+            });
+        } catch (Exception e) {
+            Globals.writeToMLOG("ERROR", "startExchange/ShowcaseExchange/downloadShowcaseTable", "Exception e: " + e);
+        }
     }
 
-    public void swoeDialogSW (){
+    public void swoeDialogSW() {
         DialogShowcase dialog = new DialogShowcase(this);
         dialog.setClose(dialog::dismiss);
         dialog.show();
     }
 
-    public void checkRequest(){
+    public void checkRequest() {
         StandartData data = new StandartData();
         data.mod = "rack";
         data.act = "list";
@@ -84,8 +120,8 @@ public class MenuMainActivity extends toolbar_menus {
             public void onResponse(Call<ShowcaseResponse> call, Response<ShowcaseResponse> response) {
                 Log.e("checkRequest", "response: " + response);
                 Log.e("checkRequest", "response.body(): " + response.body());
-                if (response.isSuccessful()){
-                    if (response.body() != null && response.body().state && response.body().list != null && response.body().list.size() > 0){
+                if (response.isSuccessful()) {
+                    if (response.body() != null && response.body().state && response.body().list != null && response.body().list.size() > 0) {
                         SQL_DB.showcaseDao().insertAll(response.body().list);
                     }
                 }
@@ -125,7 +161,7 @@ public class MenuMainActivity extends toolbar_menus {
         });
     }
 
-    private void planogramAddr(){
+    private void planogramAddr() {
         StandartData data = new StandartData();
         data.mod = "planogram";
         data.act = "addr_list";
@@ -151,7 +187,7 @@ public class MenuMainActivity extends toolbar_menus {
         });
     }
 
-    private void planogramGrp(){
+    private void planogramGrp() {
         StandartData data = new StandartData();
         data.mod = "planogram";
         data.act = "group_list";
@@ -177,7 +213,7 @@ public class MenuMainActivity extends toolbar_menus {
         });
     }
 
-    private void planogramImg(){
+    private void planogramImg() {
         StandartData data = new StandartData();
         data.mod = "planogram";
         data.act = "img_list";

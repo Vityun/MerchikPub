@@ -72,7 +72,7 @@ public class PhotoReports {
      */
     public void uploadPhotoReports(UploadType type) {
 //        if (realmResults != null && realmResults.size() == 0){
-            getDataToUpload();  // Подготовка данных к выгрузке
+        getDataToUpload();  // Подготовка данных к выгрузке
 //        }
 
         Globals.writeToMLOG("INFO", "PhotoReports/upload_photo/uploadPhotoReports", "START. Upload type: " + type);
@@ -286,7 +286,7 @@ public class PhotoReports {
             dvi = String.valueOf(photoDB.getDvi());
         }
 
-        if (photoDB.tovar_id != null && !photoDB.tovar_id.equals("")){
+        if (photoDB.tovar_id != null && !photoDB.tovar_id.equals("")) {
             tovar_id = photoDB.tovar_id;
         }
         code_dad2 = String.valueOf(photoDB.getCode_dad2()); // todo какая-то странная дичь с этой строчкой.
@@ -294,6 +294,21 @@ public class PhotoReports {
             gp = photoDB.getGp();
         }
 
+        if (photoDB.img_src_id != null && !photoDB.img_src_id.equals("") && !photoDB.img_src_id.equals("null")) {
+            img_src_id = photoDB.img_src_id;
+        }
+
+        if (photoDB.showcase_id != null && !photoDB.showcase_id.equals("") && !photoDB.showcase_id.equals("null")) {
+            showcase_id = photoDB.showcase_id;
+        }
+
+        if (photoDB.planogram_id != null && !photoDB.planogram_id.equals("") && !photoDB.planogram_id.equals("null")) {
+            planogram_id = photoDB.planogram_id;
+        }
+
+        if (photoDB.planogram_img_id != null && !photoDB.planogram_img_id.equals("") && !photoDB.planogram_img_id.equals("null")) {
+            planogram_img_id = photoDB.planogram_img_id;
+        }
 
 
         // Запаковка данных для сервера
@@ -378,7 +393,6 @@ public class PhotoReports {
         }
 
 
-
         Log.e("M_UPLOAD_GALLERY", "FILE RES: " + file.length());
 
         // MultipartBody.Part is used to send also the actual file name
@@ -416,7 +430,7 @@ public class PhotoReports {
                                 } else {
                                     if (data.errorType.equals("photo_already_exist")) {
                                         callback.onSuccess(photoDB, "Фото уже было загружено");
-                                    }else {
+                                    } else {
                                         callback.onFailure(photoDB, "Ошибка при обработке фото: " + data.error);
                                     }
                                 }
@@ -470,7 +484,7 @@ public class PhotoReports {
     private boolean checkManageExternalStoragePermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             return Environment.isExternalStorageManager();
-        }else {
+        } else {
             return false;
         }
     }

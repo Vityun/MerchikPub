@@ -437,6 +437,10 @@ public class MakePhoto {
     public static String photoType = "0";
     public static String tovarId = "";
     public static String photoCustomerGroup = "";
+    public static String img_src_id = "";
+    public static String showcase_id = "";
+    public static String planogram_id = "";
+    public static String planogram_img_id = "";
 
     public <T> void makePhoto(Activity activity, T data) {
         try {
@@ -512,9 +516,9 @@ public class MakePhoto {
 
 
             // Тут должна открываться инфа про Витрины
-//            showDialogSW(activity, wpDataObj, data, optionsDB);
+            showDialogSW(activity, wpDataObj, data, optionsDB);
 
-            choiceCustomerGroupAndPhoto2(activity, wpDataObj, data, optionsDB);
+//            choiceCustomerGroupAndPhoto2(activity, wpDataObj, data, optionsDB);
         } catch (Exception e) {
             Globals.writeToMLOG("ERROR", "pressedMakePhoto", "Exception e: " + e);
         }
@@ -755,13 +759,27 @@ public class MakePhoto {
      */
     public <T> void showDialogSW(Activity activity, WPDataObj wp, T dataT, OptionsDB optionsDB) {
         DialogShowcase dialog = new DialogShowcase(activity);
+        dialog.wpDataDB = (WpDataDB) dataT;
         dialog.populateDialogData(new Clicks.click() {
             @Override
             public <T> void click(T data) {
                 try {
                     ShowcaseSDB showcase = (ShowcaseSDB) data;
-                    Toast.makeText(activity, "Ідентифікатор обраної вітрини: " + showcase.id, Toast.LENGTH_LONG).show();
-                    choiceCustomerGroupAndPhoto2(activity, wp, dataT, optionsDB);
+                    Toast.makeText(activity, "Обрана вітрина: " + showcase.nm + " (" + showcase.id + ")", Toast.LENGTH_LONG).show();
+
+                    MakePhoto.img_src_id = String.valueOf(showcase.photoId);
+                    MakePhoto.showcase_id = String.valueOf(showcase.id);
+                    MakePhoto.planogram_id = String.valueOf(showcase.photoPlanogramId);
+                    MakePhoto.planogram_img_id = String.valueOf(showcase.photoPlanogramId);
+
+                    if (showcase.tovarGrp != null && showcase.tovarGrp > 0) {
+                        wp.setCustomerTypeGrpS(String.valueOf(showcase.tovarGrp));
+                        Toast.makeText(activity, "Обрана група товару: " + showcase.tovarGrpTxt, Toast.LENGTH_LONG).show();
+                        photoDialogs(activity, wp, dataT, optionsDB);
+                    } else {
+                        choiceCustomerGroupAndPhoto2(activity, wp, dataT, optionsDB);
+                    }
+
                     dialog.dismiss();
                 } catch (Exception e) {
                     Log.e("", "Exception e: " + e);

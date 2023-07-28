@@ -18,7 +18,7 @@ public class RoomManager {
                 .fallbackToDestructiveMigration()
                 .enableMultiInstanceInvalidation()
                 .allowMainThreadQueries()
-                .addMigrations(MIGRATION_37_38)
+                .addMigrations(MIGRATION_38_39)
 
                 .build();
     }
@@ -262,6 +262,14 @@ public class RoomManager {
         @Override
         public void migrate(@NonNull SupportSQLiteDatabase database) {
             database.execSQL("ALTER TABLE sotr ADD COLUMN flag TEXT");
+        }
+    };
+
+
+    static final Migration MIGRATION_38_39 = new Migration(38, 39) {
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase database) {
+            database.execSQL("ALTER TABLE showcase ADD COLUMN planogram_id INTEGER");
         }
     };
 

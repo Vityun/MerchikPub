@@ -65,6 +65,11 @@ public class StackPhotoDB extends RealmObject {
     public boolean markUpload;
     public boolean premiyaUpload;
 
+    public String img_src_id;
+    public String showcase_id;
+    public String planogram_id;
+    public String planogram_img_id;
+
     public StackPhotoDB() {
     }
 

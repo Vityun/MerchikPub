@@ -1,5 +1,7 @@
 package ua.com.merchik.merchik.dialogs.DialogShowcase;
 
+import android.net.Uri;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -16,6 +18,11 @@ import java.util.List;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.Database.Room.ShowcaseSDB;
+import ua.com.merchik.merchik.data.RealmModels.GroupTypeDB;
+import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
+import ua.com.merchik.merchik.database.realm.tables.GroupTypeRealm;
+import ua.com.merchik.merchik.database.realm.tables.StackPhotoRealm;
+import ua.com.merchik.merchik.dialogs.DialogFullPhotoR;
 
 public class ShowcaseAdapter extends RecyclerView.Adapter<ShowcaseAdapter.ViewHolder> {
 
@@ -23,11 +30,11 @@ public class ShowcaseAdapter extends RecyclerView.Adapter<ShowcaseAdapter.ViewHo
     private Clicks.click click;
 
     public ShowcaseAdapter(List<ShowcaseSDB> showcaseList, Clicks.click click) {
-        if (showcaseList != null && showcaseList.size() > 0){
+        if (showcaseList != null && showcaseList.size() > 0) {
             showcaseList.add(defaultShowcase());
             this.showcaseList = showcaseList;
             this.click = click;
-        }else {
+        } else {
             this.showcaseList = Collections.singletonList(defaultShowcase());
             this.click = click;
         }
@@ -66,23 +73,56 @@ public class ShowcaseAdapter extends RecyclerView.Adapter<ShowcaseAdapter.ViewHo
             image = v.findViewById(R.id.image);
         }
 
-        public void bind(ShowcaseSDB showcase){
-            textViewShowcaseId.setText("Ідентифікатор вітрини: " + showcase.id);
-            textViewClientGroup.setText("Група Товару: " + showcase.tovarGrp);
-            textViewPlanogramm.setText("Планограма: " + showcase.photoPlanogramId);
+        public void bind(ShowcaseSDB showcase) {
 
-            if (showcase.id == 0){
-                textViewShowcaseId.setText("Створити нову вітрину");
+            String groupName = "не встановлена";
+            String planogram = "не встановлена";
+
+            if (showcase.tovarGrp != null) {
+                GroupTypeDB group = GroupTypeRealm.getGroupTypeById(showcase.tovarGrp);
+                if (group != null && group.getNm() != null){
+                    groupName = group.getNm();
+                }
+
+                showcase.tovarGrpTxt = groupName;
+            }
+
+            if (showcase.photoPlanogramTxt != null) {
+                planogram = showcase.photoPlanogramTxt;
+            }
+
+            StackPhotoDB stackPhotoDB = StackPhotoRealm.stackPhotoDBGetPhotoBySiteId(String.valueOf(showcase.photoId));
+
+            textViewShowcaseId.setText("Назва: " + showcase.nm);
+            textViewClientGroup.setText("Група тов.: " + groupName);
+            textViewPlanogramm.setText("Планограма: " + planogram);
+
+            if (showcase.id == 0) {
+                textViewShowcaseId.setText("Створити фото без зазначення вітрини");
                 textViewClientGroup.setVisibility(View.GONE);
                 textViewPlanogramm.setVisibility(View.GONE);
-                image.setImageDrawable(itemView.getContext().getResources().getDrawable(R.drawable.ic_plus));
-            }else {
+                image.setImageDrawable(itemView.getContext().getResources().getDrawable(R.drawable.ic_menu_camera));
+            } else if (stackPhotoDB != null) {
+                textViewClientGroup.setVisibility(View.VISIBLE);
+                textViewPlanogramm.setVisibility(View.VISIBLE);
+                image.setImageURI(Uri.parse(stackPhotoDB.photo_num));
+                image.setOnClickListener(v -> {
+                    try {
+                        DialogFullPhotoR dialogFullPhoto = new DialogFullPhotoR(image.getContext());
+                        dialogFullPhoto.setPhoto(stackPhotoDB);
+                        dialogFullPhoto.setClose(dialogFullPhoto::dismiss);
+                        dialogFullPhoto.show();
+                    } catch (Exception e) {
+                        Log.e("ShowcaseAdapter", "Exception e: " + e);
+                    }
+                });
+            } else {
                 textViewClientGroup.setVisibility(View.VISIBLE);
                 textViewPlanogramm.setVisibility(View.VISIBLE);
                 image.setImageDrawable(itemView.getContext().getResources().getDrawable(R.mipmap.merchik));
             }
 
-            constraintLayout.setOnClickListener(v-> click.click(showcase));
+            constraintLayout.setOnClickListener(v -> click.click(showcase));
         }
     }
 
@@ -91,15 +131,15 @@ public class ShowcaseAdapter extends RecyclerView.Adapter<ShowcaseAdapter.ViewHo
      * В случае если у меня нет ни одной Витрины (или в самый конец - надо добавить новую) я создаю
      * дефолтный элемент типа "Создать новую Витрину" после чего я буду указывать нулевой идентификатор
      * для фотографии, что б она в будущем могда сохраниться как новая фотка для Витрины.
-     *
+     * <p>
      * (т.е. я в других случаях говорю что "некст фото выполнены по Этой витрине", а в случае с дефолтом
      * "нект фото будет продвигаться как Новая Витрина")
-     * */
+     */
     private ShowcaseSDB defaultShowcase() {
         ShowcaseSDB res = new ShowcaseSDB();
 
         res.id = 0;
 
-        return  res;
+        return res;
     }
 }
