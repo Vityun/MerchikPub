@@ -529,39 +529,43 @@ public class DetailedReportActivity extends toolbar_menus {
     DetailedReportTab adapter;
 
     public void checkVideo(Integer[] ids) {
-        List<ViewListSDB> viewListSDB = null;
-        List<SiteObjectsDB> object = RealmManager.getLesson(ids);
-        List<SiteHintsDB> data = null;
-        List<Integer> objectLessonIds = new ArrayList<>();
-        StringBuilder sb = new StringBuilder();
+        try {
+            List<ViewListSDB> viewListSDB = null;
+            List<SiteObjectsDB> object = RealmManager.getLesson(ids);
+            List<SiteHintsDB> data = null;
+            List<Integer> objectLessonIds = new ArrayList<>();
+            StringBuilder sb = new StringBuilder();
 
-        if (object != null && !object.isEmpty()) {
-            for (SiteObjectsDB item : object) {
-                String lessonId = item.getLessonId();
-                if (lessonId != null && !lessonId.isEmpty()) {
-                    objectLessonIds.add(Integer.valueOf(lessonId));
+            if (object != null && !object.isEmpty()) {
+                for (SiteObjectsDB item : object) {
+                    String lessonId = item.getLessonId();
+                    if (lessonId != null && !lessonId.isEmpty()) {
+                        objectLessonIds.add(Integer.valueOf(lessonId));
+                    }
+                }
+
+                if (!objectLessonIds.isEmpty()) {
+                    Integer[] lessonIds = objectLessonIds.toArray(new Integer[0]);
+                    data = RealmManager.getVideoLesson(lessonIds);
                 }
             }
 
-            if (!objectLessonIds.isEmpty()) {
-                Integer[] lessonIds = objectLessonIds.toArray(new Integer[0]);
-                data = RealmManager.getVideoLesson(lessonIds);
+            if (data != null && data.size() > 0) {
+                for (SiteHintsDB item : data) {
+                    sb.append(item.getNm()).append("\n");
+                }
+                viewListSDB = SQL_DB.videoViewDao().getByLessonId(data.get(0).getID());
             }
-        }
 
-        if (data != null) {
-            for (SiteHintsDB item : data) {
-                sb.append(item.getNm()).append("\n");
+
+            if (viewListSDB != null && viewListSDB.size() != 0) {
+                imageView.setVisibility(View.GONE);
+            } else {
+                imageView.setVisibility(View.VISIBLE);
+                Snackbar.make(imageView.getRootView(), "Вы просмотрели ещё не все ролики: " + sb, Snackbar.LENGTH_LONG).show();
             }
-            viewListSDB = SQL_DB.videoViewDao().getByLessonId(data.get(0).getID());
-        }
-
-
-        if (viewListSDB != null && viewListSDB.size() != 0) {
-            imageView.setVisibility(View.GONE);
-        } else {
-            imageView.setVisibility(View.VISIBLE);
-            Snackbar.make(imageView.getRootView(), "Вы просмотрели ещё не все ролики: " + sb, Snackbar.LENGTH_LONG).show();
+        }catch (Exception e){
+            Globals.writeToMLOG("ERROR", "DetailedReportActivity/checkVideo", "Exception e: " + e);
         }
     }
 

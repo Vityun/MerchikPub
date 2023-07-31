@@ -69,7 +69,7 @@ public class DetailedReportHomeFrag extends Fragment {
     private FabYoutube fabYoutube = new FabYoutube();
     private FloatingActionButton fabYouTube;
     private TextView badgeTextView;
-    public static final Integer[]  DetailedReportHomeFrag_VIDEO_LESSONS = new Integer[]{819};
+    public static final Integer[]  DetailedReportHomeFrag_VIDEO_LESSONS = new Integer[]{819, 4456};
 
     // Интерфейс
     TextView activity_title;
@@ -123,15 +123,15 @@ public class DetailedReportHomeFrag extends Fragment {
 
 
 //            textTheme = v.findViewById(R.id.theme);
-
-            int themeId = wpDataDB.getTheme_id();
-            ThemeDB themeDB = ThemeRealm.getByID(String.valueOf(themeId));
-            if (themeId == 998) {
-                textTheme.append(themeDB.getNm());
-            } else {
-                CharSequence chsr = Html.fromHtml("<font color=red>" + themeDB.getNm() + "</font>");
-                textTheme.append(chsr);
-            }
+//
+//            int themeId = wpDataDB.getTheme_id();
+//            ThemeDB themeDB = ThemeRealm.getByID(String.valueOf(themeId));
+//            if (themeId == 998) {
+//                textTheme.append(themeDB.getNm());
+//            } else {
+//                CharSequence chsr = Html.fromHtml("<font color=red>" + themeDB.getNm() + "</font>");
+//                textTheme.append(chsr);
+//            }
 
 
             spotLat = Float.valueOf(wpDataDB.getAddr_location_xd());
@@ -156,7 +156,7 @@ public class DetailedReportHomeFrag extends Fragment {
             fabYoutube.showYouTubeFab(fabYouTube, badgeTextView, DetailedReportHomeFrag_VIDEO_LESSONS);
 
         } catch (Exception e) {
-
+            Log.e("DetailedReportHomeFrag", "Exception e: " + e);
         }
 
         return v;

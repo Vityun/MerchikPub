@@ -26,27 +26,11 @@
                 app:layout_constraintVertical_bias="0.0"
                 tools:ignore="MissingConstraints">
 
-                <com.google.android.material.floatingactionbutton.FloatingActionButton
-                    android:id="@+id/fab"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginEnd="16dp"
-                    android:layout_marginRight="16dp"
-                    android:layout_marginBottom="16dp"
-                    android:scaleType="center"
-                    android:translationZ="8dp"
-                    app:backgroundTint="#FFFFFF"
-                    app:elevation="5dp"
-                    app:layout_constraintBottom_toTopOf="@+id/fabAdd3"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:maxImageSize="57dp"
-                    app:srcCompat="@drawable/ic_play_circle_solid" />
-
                 <TextView
                     android:id="@+id/badge_text_view_tar"
                     android:layout_width="20dp"
                     android:layout_height="20dp"
-                    android:alpha="0.8"
+                    android:alpha="1"
                     android:background="@drawable/badge_background"
                     android:gravity="center"
                     android:minWidth="18dp"
@@ -57,8 +41,27 @@
                     android:textSize="12sp"
                     android:translationZ="8dp"
                     android:visibility="visible"
+                    app:elevation="10dp"
                     app:layout_constraintEnd_toEndOf="@+id/fab"
                     app:layout_constraintTop_toTopOf="@+id/fab" />
+
+                <com.google.android.material.floatingactionbutton.FloatingActionButton
+                    android:id="@+id/fab"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="16dp"
+                    android:layout_marginRight="16dp"
+                    android:layout_marginBottom="16dp"
+                    android:scaleType="center"
+                    android:translationZ="8dp"
+                    app:backgroundTint="#FFFFFF"
+                    app:elevation="4dp"
+                    app:layout_constraintBottom_toTopOf="@+id/fabAdd3"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:maxImageSize="57dp"
+                    app:srcCompat="@drawable/ic_play_circle_solid" />
+
+
 
                 <com.google.android.material.floatingactionbutton.FloatingActionButton
                     android:id="@+id/fabAdd3"
@@ -237,7 +240,7 @@
                     android:layout_marginRight="32dp"
                     android:layout_marginBottom="32dp"
                     android:background="@drawable/border_map"
-                    android:elevation="8dp"
+                    android:elevation="3dp"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"

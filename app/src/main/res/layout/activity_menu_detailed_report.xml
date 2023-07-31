@@ -12,6 +12,7 @@
         android:layout_width="15dp"
         android:layout_height="15dp"
         android:elevation="25dp"
+        android:visibility="gone"
         app:layout_constraintEnd_toEndOf="@+id/fab"
         app:layout_constraintTop_toTopOf="@+id/fab"
         app:srcCompat="@drawable/selector_rounded_button_red" />
