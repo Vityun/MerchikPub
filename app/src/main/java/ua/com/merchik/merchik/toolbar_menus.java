@@ -360,7 +360,17 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                 break;
 
             case 169:
-                Intent menuItem169browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://merchik.com.ua/sa.php?&u=222388&s=4600a1857c7008ab0ebfa8d1a168f26ebe7315b8&l=/mobile.php?mod=lessons**act=list**platform_id=5"));
+
+                AppUsersDB appUser = AppUserRealm.getAppUserById(userId);
+                String hash = String.format("%s%s%s", appUser.getUserId(), appUser.getPassword(), "AvgrgsYihSHp6Ok9yQXfSHp6Ok9nXdXr3OSHp6Ok9UPBTzTjrF20Nsz3");
+                hash = Globals.getSha1Hex(hash);
+
+                String str = "mobile.php?mod=lessons**act=list**platform_id=5";
+
+                String format = String.format("https://merchik.com.ua/sa.php?&u=%s&s=%s&l=/%s", userId, hash, str);
+
+                Intent menuItem169browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(format));
+//                Intent menuItem169browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://merchik.com.ua/sa.php?&u=" + userId + "&s=4600a1857c7008ab0ebfa8d1a168f26ebe7315b8&l="));
                 this.startActivity(menuItem169browserIntent);
                 break;
 
@@ -368,17 +378,16 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                 String link = String.format("/mobile.php?mod=ticket**act=create**theme_id=611**client_id**addr_id");
                 link = link.replace("&", "**");
 
-                AppUsersDB appUser = AppUserRealm.getAppUserById(userId);
+                AppUsersDB appUser173 = AppUserRealm.getAppUserById(userId);
 
-                String hash = String.format("%s%s%s", appUser.getUserId(), appUser.getPassword(), "AvgrgsYihSHp6Ok9yQXfSHp6Ok9nXdXr3OSHp6Ok9UPBTzTjrF20Nsz3");
-                hash = Globals.getSha1Hex(hash);
+                String hash173 = String.format("%s%s%s", appUser173.getUserId(), appUser173.getPassword(), "AvgrgsYihSHp6Ok9yQXfSHp6Ok9nXdXr3OSHp6Ok9UPBTzTjrF20Nsz3");
+                hash = Globals.getSha1Hex(hash173);
 
-                String format = String.format("https://merchik.com.ua/sa.php?&u=%s&s=%s&l=%s", userId, hash, link);
+                String format173 = String.format("https://merchik.com.ua/sa.php?&u=%s&s=%s&l=%s", userId, hash, link);
 
-                Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(format));
+                Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(format173));
                 this.startActivity(browserIntent);
                 break;
-
         }
 
 
