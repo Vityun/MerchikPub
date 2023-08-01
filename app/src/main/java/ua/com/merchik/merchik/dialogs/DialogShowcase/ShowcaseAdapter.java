@@ -1,10 +1,13 @@
 package ua.com.merchik.merchik.dialogs.DialogShowcase;
 
 import android.net.Uri;
+import android.text.Html;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Filter;
+import android.widget.Filterable;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -15,6 +18,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import java.util.Collections;
 import java.util.List;
 
+import ua.com.merchik.merchik.Filter.MyFilter;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.Database.Room.ShowcaseSDB;
@@ -24,18 +28,21 @@ import ua.com.merchik.merchik.database.realm.tables.GroupTypeRealm;
 import ua.com.merchik.merchik.database.realm.tables.StackPhotoRealm;
 import ua.com.merchik.merchik.dialogs.DialogFullPhotoR;
 
-public class ShowcaseAdapter extends RecyclerView.Adapter<ShowcaseAdapter.ViewHolder> {
+public class ShowcaseAdapter extends RecyclerView.Adapter<ShowcaseAdapter.ViewHolder> implements Filterable {
 
     private List<ShowcaseSDB> showcaseList;
+    private List<ShowcaseSDB> showcaseListFilterable;
     private Clicks.click click;
 
     public ShowcaseAdapter(List<ShowcaseSDB> showcaseList, Clicks.click click) {
         if (showcaseList != null && showcaseList.size() > 0) {
             showcaseList.add(defaultShowcase());
             this.showcaseList = showcaseList;
+            this.showcaseListFilterable = showcaseList;
             this.click = click;
         } else {
             this.showcaseList = Collections.singletonList(defaultShowcase());
+            this.showcaseListFilterable = Collections.singletonList(defaultShowcase());
             this.click = click;
         }
     }
@@ -61,13 +68,14 @@ public class ShowcaseAdapter extends RecyclerView.Adapter<ShowcaseAdapter.ViewHo
     /*Определяем ViewHolder*/
     class ViewHolder extends RecyclerView.ViewHolder {
         ConstraintLayout constraintLayout;
-        TextView textViewShowcaseId, textViewClientGroup, textViewPlanogramm;
+        TextView textViewShowcaseId, textViewShowcaseNm, textViewClientGroup, textViewPlanogramm;
         ImageView image;
 
         ViewHolder(View v) {
             super(v);
             constraintLayout = v.findViewById(R.id.constraintLayout);
             textViewShowcaseId = v.findViewById(R.id.textViewShowcaseId);
+            textViewShowcaseNm = v.findViewById(R.id.textViewShowcaseNm);
             textViewClientGroup = v.findViewById(R.id.textViewClientGroup);
             textViewPlanogramm = v.findViewById(R.id.textViewPlanogramm);
             image = v.findViewById(R.id.image);
@@ -93,9 +101,10 @@ public class ShowcaseAdapter extends RecyclerView.Adapter<ShowcaseAdapter.ViewHo
 
             StackPhotoDB stackPhotoDB = StackPhotoRealm.stackPhotoDBGetPhotoBySiteId(String.valueOf(showcase.photoId));
 
-            textViewShowcaseId.setText("Назва: " + showcase.nm);
-            textViewClientGroup.setText("Група тов.: " + groupName);
-            textViewPlanogramm.setText("Планограма: " + planogram);
+            textViewShowcaseId.setText(Html.fromHtml("<b>Ідентифікатор:</b> " + showcase.id));
+            textViewShowcaseNm.setText(Html.fromHtml("<b>Назва:</b> " + showcase.nm));
+            textViewClientGroup.setText(Html.fromHtml("<b>Група тов.:</b> " + groupName));
+            textViewPlanogramm.setText(Html.fromHtml("<b>Планограма:</b> " + planogram));
 
             if (showcase.id == 0) {
                 textViewShowcaseId.setText("Створити фото без зазначення вітрини");
@@ -141,5 +150,44 @@ public class ShowcaseAdapter extends RecyclerView.Adapter<ShowcaseAdapter.ViewHo
         res.id = 0;
 
         return res;
+    }
+
+
+    @Override
+    public Filter getFilter() {
+        return new Filter() {
+
+            @Override
+            protected FilterResults performFiltering(CharSequence constraint) {
+                List<ShowcaseSDB> filteredResults = null;
+
+                Log.e("FilterShowcase", "constraint: " + constraint);
+
+                if (constraint.length() == 0) {
+                    Log.e("FilterShowcase", "constraint(1): " + constraint);
+                    filteredResults = showcaseList;
+                } else {
+                    Log.e("FilterShowcase", "constraint(2): " + constraint);
+                    String[] splited = constraint.toString().split("\\s+");
+                    for (String item : splited) {
+                        if (item != null && !item.equals("")) {
+                            filteredResults = new MyFilter().getFilteredResultsShowcaseSDB(item, filteredResults, showcaseListFilterable);
+                        }
+                    }
+                }
+
+                FilterResults results = new FilterResults();
+                results.values = filteredResults;
+                return results;
+            }
+
+            @Override
+            protected void publishResults(CharSequence constraint, FilterResults results) {
+                if (constraint.length() != 0){
+                    showcaseList = (List<ShowcaseSDB>) results.values;
+                }
+                notifyDataSetChanged();
+            }
+        };
     }
 }

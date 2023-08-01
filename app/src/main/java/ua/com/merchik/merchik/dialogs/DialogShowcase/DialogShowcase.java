@@ -8,10 +8,13 @@ import android.content.Intent;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Build;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -42,6 +45,7 @@ public class DialogShowcase extends DialogData {
     private TextView title;
     private Button cancel;
     private RecyclerView recyclerView;
+    private EditText searchView;
 
     public WpDataDB wpDataDB;
 
@@ -228,6 +232,7 @@ public class DialogShowcase extends DialogData {
         title = dialog.findViewById(R.id.title);
         cancel = dialog.findViewById(R.id.button);
         recyclerView = dialog.findViewById(R.id.recyclerView);
+        searchView = dialog.findViewById(R.id.filterEditText);
 
         merchikIco = dialog.findViewById(R.id.merchik_ico);
         merchikIco.setImageDrawable(context.getResources().getDrawable(R.drawable.ic_caution));
@@ -257,6 +262,7 @@ public class DialogShowcase extends DialogData {
 //            showcaseDataList.add(newTestShowcase(10));
 
             ShowcaseAdapter adapter = new ShowcaseAdapter(showcaseDataList, click);
+            setFilter(adapter);
             recyclerView.setAdapter(adapter);
             recyclerView.setLayoutManager(new LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false));
         } catch (Exception e) {
@@ -270,6 +276,32 @@ public class DialogShowcase extends DialogData {
         res.tovarGrp = id;
         res.photoPlanogramId = id;
         return res;
+    }
+
+    private void setFilter(ShowcaseAdapter adapter){
+        searchView.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void afterTextChanged(Editable s) {
+                if (s.length() != 0) {
+                    adapter.getFilter().filter(s);
+                    recyclerView.scheduleLayoutAnimation();
+                }else {
+                    adapter.getFilter().filter("");
+                    recyclerView.scheduleLayoutAnimation();
+                }
+            }
+
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+            }
+        });
+//
+//        adapter.notifyDataSetChanged();
     }
 
 

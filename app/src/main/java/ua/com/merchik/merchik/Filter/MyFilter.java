@@ -15,6 +15,7 @@ import ua.com.merchik.merchik.data.Database.Room.AddressSDB;
 import ua.com.merchik.merchik.data.Database.Room.ArticleSDB;
 import ua.com.merchik.merchik.data.Database.Room.CustomerSDB;
 import ua.com.merchik.merchik.data.Database.Room.OpinionSDB;
+import ua.com.merchik.merchik.data.Database.Room.ShowcaseSDB;
 import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
 import ua.com.merchik.merchik.data.Database.Room.UsersSDB;
 import ua.com.merchik.merchik.data.Database.Room.UsersSDBDat.UserSDBJoin;
@@ -159,7 +160,7 @@ public class MyFilter {
 
             for (TovarDB item : orig) {
                 ArticleSDB article = SQL_DB.articleDao().getByTovId(Integer.parseInt(item.getiD()));
-                if (article != null){
+                if (article != null) {
                     item.article = article.vendorCode;
                 }
             }
@@ -418,6 +419,40 @@ public class MyFilter {
             }
         }
 
+        return results;
+    }
+
+
+    /**
+     * Получение отфильтрованных ответов
+     * Их у меня должно быть на каждый случай что ли?
+     * Ну для говнокода - изи, а как нормально?
+     */
+    // Для ВИТРИН
+    public List<ShowcaseSDB> getFilteredResultsShowcaseSDB(String constraint, List<ShowcaseSDB> sorted, List<ShowcaseSDB> orig) {
+        Log.e("FilterShowcase", "----------------start----------------");
+
+        constraint = constraint.toLowerCase();
+
+        List<ShowcaseSDB> results = new ArrayList<>();
+        if (sorted == null) {
+            sorted = orig;
+        }
+
+        for (ShowcaseSDB item : sorted) {
+            try {
+                // Название
+                if (item.nm != null && !item.nm.equals("") && item.nm.toLowerCase().contains(constraint)) {
+                    Log.e("FilterShowcase", "constraint: " + constraint);
+                    Log.e("FilterShowcase", "item.nm: " + item.nm);
+                    results.add(item);
+                }
+
+            } catch (Exception e) {
+                Log.e("FilterShowcase", "Exception e: " + e);
+            }
+        }
+        Log.e("FilterShowcase", "results: " + results.size());
         return results;
     }
 }
