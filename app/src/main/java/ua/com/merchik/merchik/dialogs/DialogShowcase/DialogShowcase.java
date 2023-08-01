@@ -30,8 +30,10 @@ import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.Database.Room.ShowcaseSDB;
 import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteHintsDB;
 import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteObjects.SiteObjectsDB;
+import ua.com.merchik.merchik.data.RealmModels.GroupTypeDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.database.realm.RealmManager;
+import ua.com.merchik.merchik.database.realm.tables.GroupTypeRealm;
 import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.dialogs.DialogVideo;
 
@@ -243,7 +245,7 @@ public class DialogShowcase extends DialogData {
         setRecyclerView();
     }
 
-    public void result(Clicks.click click){
+    public void result(Clicks.click click) {
         this.click = click;
     }
 
@@ -260,6 +262,18 @@ public class DialogShowcase extends DialogData {
 //            showcaseDataList.add(newTestShowcase(8));
 //            showcaseDataList.add(newTestShowcase(9));
 //            showcaseDataList.add(newTestShowcase(10));
+
+            try {
+                for (ShowcaseSDB item : showcaseDataList) {
+                    if (item.tovarGrp != null) {
+                        GroupTypeDB group = GroupTypeRealm.getGroupTypeById(item.tovarGrp);
+                        if (group != null && group.getNm() != null) {
+                            item.tovarGrpTxt = group.getNm();
+                        }
+                    }
+                }
+            } catch (Exception e) {
+            }
 
             ShowcaseAdapter adapter = new ShowcaseAdapter(showcaseDataList, click);
             setFilter(adapter);
@@ -278,17 +292,11 @@ public class DialogShowcase extends DialogData {
         return res;
     }
 
-    private void setFilter(ShowcaseAdapter adapter){
+    private void setFilter(ShowcaseAdapter adapter) {
         searchView.addTextChangedListener(new TextWatcher() {
             @Override
             public void afterTextChanged(Editable s) {
-                if (s.length() != 0) {
-                    adapter.getFilter().filter(s);
-                    recyclerView.scheduleLayoutAnimation();
-                }else {
-                    adapter.getFilter().filter("");
-                    recyclerView.scheduleLayoutAnimation();
-                }
+
             }
 
             @Override
@@ -298,6 +306,16 @@ public class DialogShowcase extends DialogData {
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
+                Log.e("ShowcaseAdapter", "onTextChanged s: " + s);
+                if (s.length() != 0) {
+                    Log.e("FilterShowcase", "onTextChanged HAVE");
+                    adapter.getFilter().filter(s);
+                    recyclerView.scheduleLayoutAnimation();
+                } else {
+                    Log.e("FilterShowcase", "onTextChanged ZERO");
+                    adapter.getFilter().filter(s);
+                    recyclerView.scheduleLayoutAnimation();
+                }
             }
         });
 //

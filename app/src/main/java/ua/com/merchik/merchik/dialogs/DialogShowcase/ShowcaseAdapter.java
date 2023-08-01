@@ -22,9 +22,7 @@ import ua.com.merchik.merchik.Filter.MyFilter;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.Database.Room.ShowcaseSDB;
-import ua.com.merchik.merchik.data.RealmModels.GroupTypeDB;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
-import ua.com.merchik.merchik.database.realm.tables.GroupTypeRealm;
 import ua.com.merchik.merchik.database.realm.tables.StackPhotoRealm;
 import ua.com.merchik.merchik.dialogs.DialogFullPhotoR;
 
@@ -32,6 +30,7 @@ public class ShowcaseAdapter extends RecyclerView.Adapter<ShowcaseAdapter.ViewHo
 
     private List<ShowcaseSDB> showcaseList;
     private List<ShowcaseSDB> showcaseListFilterable;
+    private List<ShowcaseSDB> showcaseListOrig;
     private Clicks.click click;
 
     public ShowcaseAdapter(List<ShowcaseSDB> showcaseList, Clicks.click click) {
@@ -39,10 +38,12 @@ public class ShowcaseAdapter extends RecyclerView.Adapter<ShowcaseAdapter.ViewHo
             showcaseList.add(defaultShowcase());
             this.showcaseList = showcaseList;
             this.showcaseListFilterable = showcaseList;
+            this.showcaseListOrig = showcaseList;
             this.click = click;
         } else {
             this.showcaseList = Collections.singletonList(defaultShowcase());
             this.showcaseListFilterable = Collections.singletonList(defaultShowcase());
+            this.showcaseListOrig = Collections.singletonList(defaultShowcase());
             this.click = click;
         }
     }
@@ -61,8 +62,11 @@ public class ShowcaseAdapter extends RecyclerView.Adapter<ShowcaseAdapter.ViewHo
 
     @Override
     public int getItemCount() {
-        return showcaseList.size();
-//        return Math.min(showcaseList.size(), 4);
+        if (showcaseList != null){
+            return showcaseList.size();
+        }else {
+            return 0;
+        }
     }
 
     /*Определяем ViewHolder*/
@@ -86,13 +90,8 @@ public class ShowcaseAdapter extends RecyclerView.Adapter<ShowcaseAdapter.ViewHo
             String groupName = "не встановлена";
             String planogram = "не встановлена";
 
-            if (showcase.tovarGrp != null) {
-                GroupTypeDB group = GroupTypeRealm.getGroupTypeById(showcase.tovarGrp);
-                if (group != null && group.getNm() != null){
-                    groupName = group.getNm();
-                }
-
-                showcase.tovarGrpTxt = groupName;
+            if (showcase.tovarGrp != null && showcase.tovarGrpTxt != null){
+                groupName = showcase.tovarGrpTxt;
             }
 
             if (showcase.photoPlanogramTxt != null) {
@@ -161,13 +160,9 @@ public class ShowcaseAdapter extends RecyclerView.Adapter<ShowcaseAdapter.ViewHo
             protected FilterResults performFiltering(CharSequence constraint) {
                 List<ShowcaseSDB> filteredResults = null;
 
-                Log.e("FilterShowcase", "constraint: " + constraint);
-
                 if (constraint.length() == 0) {
-                    Log.e("FilterShowcase", "constraint(1): " + constraint);
-                    filteredResults = showcaseList;
+                    filteredResults = showcaseListOrig;
                 } else {
-                    Log.e("FilterShowcase", "constraint(2): " + constraint);
                     String[] splited = constraint.toString().split("\\s+");
                     for (String item : splited) {
                         if (item != null && !item.equals("")) {
@@ -183,9 +178,7 @@ public class ShowcaseAdapter extends RecyclerView.Adapter<ShowcaseAdapter.ViewHo
 
             @Override
             protected void publishResults(CharSequence constraint, FilterResults results) {
-                if (constraint.length() != 0){
-                    showcaseList = (List<ShowcaseSDB>) results.values;
-                }
+                showcaseList = (List<ShowcaseSDB>) results.values;
                 notifyDataSetChanged();
             }
         };

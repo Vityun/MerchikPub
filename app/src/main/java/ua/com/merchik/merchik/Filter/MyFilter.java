@@ -430,12 +430,11 @@ public class MyFilter {
      */
     // Для ВИТРИН
     public List<ShowcaseSDB> getFilteredResultsShowcaseSDB(String constraint, List<ShowcaseSDB> sorted, List<ShowcaseSDB> orig) {
-        Log.e("FilterShowcase", "----------------start----------------");
 
         constraint = constraint.toLowerCase();
 
         List<ShowcaseSDB> results = new ArrayList<>();
-        if (sorted == null) {
+        if (sorted == null || constraint.equals("")) {
             sorted = orig;
         }
 
@@ -443,8 +442,8 @@ public class MyFilter {
             try {
                 // Название
                 if (item.nm != null && !item.nm.equals("") && item.nm.toLowerCase().contains(constraint)) {
-                    Log.e("FilterShowcase", "constraint: " + constraint);
-                    Log.e("FilterShowcase", "item.nm: " + item.nm);
+                    results.add(item);
+                } else if (item.tovarGrpTxt != null && !item.tovarGrpTxt.equals("") && item.tovarGrpTxt.toLowerCase().contains(constraint)) {
                     results.add(item);
                 }
 
@@ -452,7 +451,6 @@ public class MyFilter {
                 Log.e("FilterShowcase", "Exception e: " + e);
             }
         }
-        Log.e("FilterShowcase", "results: " + results.size());
         return results;
     }
 }
