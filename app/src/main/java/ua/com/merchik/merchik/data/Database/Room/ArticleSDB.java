@@ -21,7 +21,7 @@ public class ArticleSDB {
     @SerializedName("vendor_code")
     @Expose
     @ColumnInfo(name = "vendor_code")
-    public Long vendorCode;
+    public String vendorCode;
 
     @SerializedName("tovar_id")
     @Expose

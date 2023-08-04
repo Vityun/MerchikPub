@@ -70,7 +70,7 @@ public class TovarDB extends RealmObject {
     public Integer deleted;    // Поставлен ли товар на удаление
 
     @Ignore
-    public Long article;    // Артикул
+    public String article;    // Артикул
 
 
     public TovarDB() {

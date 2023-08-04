@@ -139,7 +139,7 @@ public class PremiumTableDataAdapter extends RecyclerView.Adapter<PremiumTableDa
 
             layout.setOnClickListener(v -> {
                 Toast.makeText(v.getContext(), "Завантажуються данні...", Toast.LENGTH_SHORT).show();
-                getPremiumText(detailed.docNom, data -> {
+                getPremiumText(detailed, data -> {
                     DialogData dialogData = new DialogData(v.getContext());
                     dialogData.setTitle("");
                     dialogData.setText(data);
@@ -372,11 +372,12 @@ public class PremiumTableDataAdapter extends RecyclerView.Adapter<PremiumTableDa
         }
 
 
-        private void getPremiumText(String smeta, Clicks.clickText clickText) {
+        private void getPremiumText(Detailed detailed, Clicks.clickText clickText) {
             StandartData data = new StandartData();
             data.mod = "premium";
             data.act = "get_salary_basis";
-            data.smeta = smeta;
+            data.smeta = detailed.docNom;
+            data.doc_type_id = detailed.docDef;
 
             Gson gson = new Gson();
             String json = gson.toJson(data);

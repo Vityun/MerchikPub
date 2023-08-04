@@ -181,6 +181,7 @@ public class DialogVideo extends DialogData {
 
             String s = vidLesson.getUrl();
             s = s.replace("http://www.youtube.com/", "http://www.youtube.com/embed/");
+            s = s.replace("https://www.youtube.com/", "http://www.youtube.com/embed/");
             s = s.replace("watch?v=", "");
 
 

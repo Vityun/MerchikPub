@@ -273,4 +273,28 @@ public class RoomManager {
         }
     };
 
+    static final Migration MIGRATION_39_40 = new Migration(39, 40) {
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase database) {
+            database.execSQL("CREATE TABLE article_temp AS SELECT * FROM article");
+
+            // Drop the old table
+            database.execSQL("DROP TABLE article");
+
+            // Create the new table with the updated schema
+            database.execSQL("CREATE TABLE article (" +
+                    "id INTEGER PRIMARY KEY NOT NULL, " +
+                    "vendor_code TEXT, " + // Changed data type from INTEGER to TEXT
+                    "tovar_id INTEGER, " +
+                    "addr_tp_id INTEGER, " +
+                    "dt_update INTEGER)");
+
+            // Restore the data from the temporary table into the new table
+            database.execSQL("INSERT INTO article (id, vendor_code, tovar_id, addr_tp_id, dt_update) " +
+                    "SELECT id, CAST(vendor_code AS TEXT), tovar_id, addr_tp_id, dt_update FROM article_temp");
+
+            // Drop the temporary table
+            database.execSQL("DROP TABLE article_temp");
+        }
+    };
 }

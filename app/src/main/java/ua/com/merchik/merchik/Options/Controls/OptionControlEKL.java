@@ -1,5 +1,6 @@
 package ua.com.merchik.merchik.Options.Controls;
 
+import static ua.com.merchik.merchik.Global.UnlockCode.UnlockCodeMode.CODE_DAD_2_AND_OPTION;
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
 import android.content.Context;
@@ -14,9 +15,11 @@ import java.util.Collections;
 import java.util.List;
 
 import ua.com.merchik.merchik.Clock;
+import ua.com.merchik.merchik.Global.UnlockCode;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.Options.OptionControl;
 import ua.com.merchik.merchik.Options.Options;
+import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.Database.Room.AddressSDB;
 import ua.com.merchik.merchik.data.Database.Room.CustomerSDB;
 import ua.com.merchik.merchik.data.Database.Room.EKL_SDB;
@@ -311,9 +314,20 @@ public class OptionControlEKL<T> extends OptionControl {
 
         // Установка блокирует ли опция работу приложения или нет
         if (signal) {
-            if (optionDB.getBlockPns().equals("1")) {
-                setIsBlockOption(signal);
-                stringBuilderMsg.append("\n\n").append("Документ проведен не будет!");
+            if (optionDB.getBlockPns().equals("1") && (nnkMode.equals(Options.NNKMode.MAKE) || nnkMode.equals(Options.NNKMode.BLOCK))) {
+                new UnlockCode().showDialogUnlockCode(context, wpDataDB, optionDB, CODE_DAD_2_AND_OPTION, new Clicks.clickStatusMsg() {
+                    @Override
+                    public void onSuccess(String data) {
+                        signal = false;
+                        setIsBlockOption(signal);
+                    }
+
+                    @Override
+                    public void onFailure(String error) {
+                        setIsBlockOption(signal);
+                        stringBuilderMsg.append("\n\n").append("Документ проведен не будет!");
+                    }
+                });
             } else {
                 stringBuilderMsg.append("\n\n").append("Вы можете получить Премиальные БОЛЬШЕ, если будете получать ЭКЛ у ПТТ.");
             }

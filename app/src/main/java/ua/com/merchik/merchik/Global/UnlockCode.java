@@ -1,8 +1,17 @@
 package ua.com.merchik.merchik.Global;
 
+import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
+
+import android.content.Context;
+import android.util.Log;
+import android.widget.Toast;
+
 import ua.com.merchik.merchik.Clock;
+import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.Database.Room.UsersSDB;
 import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
+import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
+import ua.com.merchik.merchik.dialogs.DialogData;
 
 /**
  * Код для разблокировки
@@ -61,6 +70,46 @@ public class UnlockCode {
         res = hashMD5.getMD5fromString(code).substring(0, 4).toLowerCase();
 
         return res;
+    }
+
+
+    public void showDialogUnlockCode(Context context, WpDataDB wp, OptionsDB option, UnlockCodeMode mode, Clicks.clickStatusMsg click) {
+        DialogData dialog = new DialogData(context);
+        dialog.setTitle("Внесіть пароль!");
+        dialog.setText("Для продовження внесіть пароль: ");
+        dialog.setClose(dialog::dismiss);
+        dialog.setOperation(DialogData.Operations.TEXT, "", null, () -> {
+        });
+        dialog.setOkNotClose("Ok", () -> {
+            String res = dialog.getOperationResult();
+
+            long date = wp.getDt().getTime() / 1000;
+            UsersSDB user = SQL_DB.usersDao().getUserById(wp.getUser_id());
+            long dad2 = wp.getCode_dad2();
+
+            Log.e("UnlockCode", "date: " + Clock.getHumanTimeYYYYMMDD(date));
+            Log.e("UnlockCode", "user: " + user.id);
+            Log.e("UnlockCode", "dad2: " + dad2);
+            Log.e("UnlockCode", "option: " + option.getOptionId());
+
+            String unlockCode = new UnlockCode().unlockCode(date, user, dad2, option, mode);
+
+//            String unlockCode = new UnlockCode().unlockCode(date, user, dad2, option, CODE_DAD_2_AND_OPTION);
+//            String unlockCode2 = new UnlockCode().unlockCode(date, user, dad2, option, DATE_AND_USER);
+//
+//            Log.e("UnlockCode", "unlockCode: " + unlockCode);
+//            Log.e("UnlockCode", "unlockCode2: " + unlockCode2);
+
+            if (res.equals(unlockCode)) {
+                Toast.makeText(context, "Код прийнято", Toast.LENGTH_LONG).show();
+                click.onSuccess("");
+                dialog.dismiss();
+            } else {
+                Toast.makeText(context, "Код не вірний!", Toast.LENGTH_LONG).show();
+                click.onFailure("");
+            }
+        });
+        dialog.show();
     }
 
 }
