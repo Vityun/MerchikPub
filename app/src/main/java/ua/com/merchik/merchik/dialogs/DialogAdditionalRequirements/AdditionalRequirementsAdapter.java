@@ -1,6 +1,9 @@
 package ua.com.merchik.merchik.dialogs.DialogAdditionalRequirements;
 
 import android.content.Context;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
+import android.graphics.drawable.Drawable;
 import android.text.Html;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -67,6 +70,12 @@ public class AdditionalRequirementsAdapter extends RecyclerView.Adapter<Addition
         public void bind(AdditionalRequirementsDB elementDB) {
             try {
                 Log.e("AdditionalRequirements", "elementDB: " + elementDB.getId());
+
+                if (elementDB.color != null && !elementDB.color.equals("")) {
+                    int color = Color.parseColor("#" + elementDB.color);
+                    Drawable coloredBackground = new ColorDrawable(color);
+                    layout.setBackground(coloredBackground);
+                }
 
                 TradeMarkDB tradeMarkDB = null;
                 TovarDB tovarDB = TovarRealm.getById(elementDB.getTovarId());

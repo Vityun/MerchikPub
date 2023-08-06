@@ -22,6 +22,7 @@ import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
@@ -398,12 +399,21 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
 
                     if (tovIdList.contains(id)) {
                         Log.e("АКЦИЯ_ТОВАРА", "YELLOW " + list.getiD());
-                        if (background instanceof ShapeDrawable) {
-                            ((ShapeDrawable) background).getPaint().setColor(ContextCompat.getColor(mContext, R.color.yellow));
-                        } else if (background instanceof GradientDrawable) {
-                            ((GradientDrawable) background).setColor(ContextCompat.getColor(mContext, R.color.yellow));
-                        } else if (background instanceof ColorDrawable) {
-                            ((ColorDrawable) background).setColor(ContextCompat.getColor(mContext, R.color.yellow));
+
+                        AdditionalRequirementsDB ad = showTovarAdditionalRequirement(list);
+
+                        if (ad != null && ad.color != null && !ad.color.equals("")){
+                            int color = Color.parseColor("#" + ad.color);
+                            Drawable coloredBackground = new ColorDrawable(color);
+                            constraintLayout.setBackground(coloredBackground);
+                        }else {
+                            if (background instanceof ShapeDrawable) {
+                                ((ShapeDrawable) background).getPaint().setColor(ContextCompat.getColor(mContext, R.color.yellow));
+                            } else if (background instanceof GradientDrawable) {
+                                ((GradientDrawable) background).setColor(ContextCompat.getColor(mContext, R.color.yellow));
+                            } else if (background instanceof ColorDrawable) {
+                                ((ColorDrawable) background).setColor(ContextCompat.getColor(mContext, R.color.yellow));
+                            }
                         }
 
 
