@@ -1,5 +1,8 @@
 package ua.com.merchik.merchik.Options.Controls;
 
+import static ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity.detailedReportRPList;
+import static ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity.detailedReportTovList;
+
 import android.content.Context;
 
 import java.util.ArrayList;
@@ -14,9 +17,6 @@ import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.ReportPrepareRealm;
 
-import static ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity.detailedReportRPList;
-import static ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity.detailedReportTovList;
-
 public class OptionControlFacePlan<T> extends OptionControl {
 
     public int OPTION_CONTROL_FACE_PLAN_ID = 157275;
@@ -28,12 +28,13 @@ public class OptionControlFacePlan<T> extends OptionControl {
 
     private int facePlanCount = 0;
 
-    public OptionControlFacePlan(Context context, T document, OptionsDB optionDB, OptionMassageType msgType, Options.NNKMode nnkMode) {
+    public OptionControlFacePlan(Context context, T document, OptionsDB optionDB, OptionMassageType msgType, Options.NNKMode nnkMode, UnlockCodeResultListener unlockCodeResultListener) {
         this.context = context;
         this.document = document;
         this.optionDB = optionDB;
         this.msgType = msgType;
         this.nnkMode = nnkMode;
+        this.unlockCodeResultListener = unlockCodeResultListener;
 
         getDocumentVar();
         executeOption();

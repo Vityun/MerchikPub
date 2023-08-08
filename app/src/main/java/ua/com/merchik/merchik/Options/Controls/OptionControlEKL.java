@@ -34,6 +34,9 @@ import ua.com.merchik.merchik.database.realm.RealmManager;
 public class OptionControlEKL<T> extends OptionControl {
     public int OPTION_CONTROL_EKL_ID = 84006;
 
+    private int resultCode = 0; // Переменная для хранения результата
+
+
     private WpDataDB wpDataDB;
     private AddressSDB addressSDB;
     private UsersSDB usersSDBPTT, documentUser;
@@ -52,13 +55,17 @@ public class OptionControlEKL<T> extends OptionControl {
 
     public boolean signal = false;
 
+    public int getResultCode() {
+        return resultCode;
+    }
 
-    public OptionControlEKL(Context context, T document, OptionsDB optionDB, OptionMassageType msgType, Options.NNKMode nnkMode) {
+    public OptionControlEKL(Context context, T document, OptionsDB optionDB, OptionMassageType msgType, Options.NNKMode nnkMode, OptionControl.UnlockCodeResultListener unlockCodeResultListener) {
         this.context = context;
         this.document = document;
         this.optionDB = optionDB;
         this.msgType = msgType;
         this.nnkMode = nnkMode;
+        this.unlockCodeResultListener = unlockCodeResultListener;
 
         getDocumentVar();
         executeOption();
@@ -80,8 +87,6 @@ public class OptionControlEKL<T> extends OptionControl {
     private void executeOption() {
         try {
             createTZN();
-
-
         } catch (Exception e) {
             Globals.writeToMLOG("ERROR", "OptionControlEKL/executeOption/Exception", "Exception: " + e);
         }
@@ -109,41 +114,6 @@ public class OptionControlEKL<T> extends OptionControl {
         }
         // -----------------------
 
-
-        /*{"addr_id":24655,"client_id":"14017","code":"16842","code_dad2":1141122024655052581,"department":0,
-        "eklCode":"978c85c545aae3921776fb787e9375cc1ab684f5","code_check":"978c85c545aae3921776fb787e9375cc1ab684f5",
-        "ID":626756,"user_id_verify":214355,"state":true,"upload":true,"user_id":204206,"vpi":1668422008860}
-
-        {"addr_id":24655,"client_id":"14176","code":"45805","code_dad2":1141122024655052636,"department":0,
-        "eklCode":"77dc5b4fe7c610c62660c13934298ff9c17cedf1","code_check":"77dc5b4fe7c610c62660c13934298ff9c17cedf1",
-        "ID":626774,"user_id_verify":206833,"state":true,"upload":true,"user_id":204206,"vpi":1668424414808}
-
-        dateFrom: 1668204000000/dateTo: 1668808800000/ids: [148]/addr: 24655/user: 204206/ptt: 0
-        */
-
-
-        // TODO Это на будущее. Пока это не надо. Можно закоментить.
-        // Индивидуальный-ЭКЛ (это заглушка, пока на стороне 1С нормально эт не реализовано)
-        /*if (optionDB.getOptionControlId().equals("151140")) {
-            Globals.writeToMLOG("INFO", "OptionControlEKL.executeOption.optionDB.getOptionControlId().equals(\"151140\")", "Вы попали в Заглушку");
-
-            if (wpDataDB.ptt_user_id != 0) {    //если в ОИ явно указан интересующий нас ПТТ (для данной опции заполняется в момент создания ОИ ... и у ДАННОГО ПТТ и надо брать ИЭКЛ)
-                // TODO !!! --- Не понимаю откуда брать признак уволенности сотрудника.
-                // Проверка уволен/ не уволен ли этот ПТТ. Пока что не могу ответить на этот вопрос.
-                //Если ДокИст.ПТТ.Уволен=0 Тогда //если в ОИ данный ПТТ НЕ уволен то можно его использовать для проверки наличия ИЭКЛ
-                //        ПТТ=ДокИст.ПТТ;
-                //КонецЕсли;
-
-                PTT = String.valueOf(wpDataDB.ptt_user_id);
-            }
-
-            if (PTT.equals("") || PTT.equals("0")) {    //если ПТТ не определен то заглянем в ДТ ... там должен храниться "свежий" ПТТ для данного адреса
-                //ПТТ=ТзнДопТребований(,,ДокИст.Заказ,,Адр,,,,,глОпция151140,,3); //=3-вернуть Сотрудника (ПТТ для ИЭКЛ)
-                RealmResults<AdditionalRequirementsDB> additionalRequirementsDB = AdditionalRequirementsRealm.getAdditionalRequirementsDBTest(wpDataDB.getClient_id(), String.valueOf(wpDataDB.getAddr_id()), optionDB.getOptionControlId());
-                PTT = Objects.requireNonNull(additionalRequirementsDB.where().findFirst()).userId;
-            }
-        }*/
-
         int userId = wpDataDB.getUser_id();
         String ptt = PTT;
         long dateFrom = Clock.getDatePeriodLong(documentDt * 1000, -3);
@@ -162,7 +132,7 @@ public class OptionControlEKL<T> extends OptionControl {
             } else if (optionDB.getOptionControlId().equals("151140") && (ptt.equals("") || ptt.equals("0"))) {
                 //для 151140-Контроль ЭКЛ между исполнителем и КОНКРЕТНЫМ ПТТ (ИНДИВИДУАЛЬНЫЙ электронный контрольный лист) НЕ имеет значения в каком отделе ПТТ. Отдел НЕ важен, если ПТТ для подписания ИЭКЛ определен, а если НЕТ то все-таки нужно определить отдел
                 //ГрупТов.ДобавитьЗначение(ПТТ.Отдел); //если мы уже определились с ПТТ в этом режиме то и отдел получим из ПТТ ... клиент сам решил использовать ЭТОГО ПТТ независимо от отдела
-            } else if (optionDB.getOptionControlId().equals("84006")) {
+            } else if (optionDB.getOptionControlId().equals("84006") || (nnkMode.equals(Options.NNKMode.BLOCK) && optionDB.getOptionId().equals("84006"))) {
                 tovarGroupClientSDB = SQL_DB.tovarGroupClientDao().getAllBy(wpDataDB.getClient_id(), addressSDB.tpId);  // Получаю ГруппыТоваров по Адресу и Сети!
                 if (tovarGroupClientSDB != null && tovarGroupClientSDB.size() > 0) {
                     List<Integer> ids = new ArrayList<>();
@@ -314,20 +284,8 @@ public class OptionControlEKL<T> extends OptionControl {
 
         // Установка блокирует ли опция работу приложения или нет
         if (signal) {
-            if (optionDB.getBlockPns().equals("1") && (nnkMode.equals(Options.NNKMode.MAKE) || nnkMode.equals(Options.NNKMode.BLOCK))) {
-                new UnlockCode().showDialogUnlockCode(context, wpDataDB, optionDB, CODE_DAD_2_AND_OPTION, new Clicks.clickStatusMsg() {
-                    @Override
-                    public void onSuccess(String data) {
-                        signal = false;
-                        setIsBlockOption(signal);
-                    }
-
-                    @Override
-                    public void onFailure(String error) {
-                        setIsBlockOption(signal);
-                        stringBuilderMsg.append("\n\n").append("Документ проведен не будет!");
-                    }
-                });
+            if (optionDB.getBlockPns().equals("1") && (nnkMode.equals(Options.NNKMode.MAKE) || nnkMode.equals(Options.NNKMode.BLOCK)) || nnkMode.equals(Options.NNKMode.BLOCK)) {
+                showUnlockCodeDialogInMainThread();
             } else {
                 stringBuilderMsg.append("\n\n").append("Вы можете получить Премиальные БОЛЬШЕ, если будете получать ЭКЛ у ПТТ.");
             }
@@ -345,6 +303,30 @@ public class OptionControlEKL<T> extends OptionControl {
                 realm.insertOrUpdate(optionDB);
             }
         });
+        setIsBlockOption(signal);
+    }
+
+
+    public void showUnlockCodeDialogInMainThread() {
+
+            new UnlockCode().showDialogUnlockCode(context, wpDataDB, optionDB, CODE_DAD_2_AND_OPTION, new Clicks.clickStatusMsg() {
+                @Override
+                public void onSuccess(String data) {
+                    signal = false;
+                    setIsBlockOption(signal);
+                    unlockCodeResultListener.onUnlockCodeSuccess();
+                }
+
+                @Override
+                public void onFailure(String error) {
+                    setIsBlockOption(signal);
+                    stringBuilderMsg.append("\n\n").append("Документ проведен не будет!");
+                    spannableStringBuilder.append(stringBuilderMsg);
+                    showOptionMassage("");
+                    unlockCodeResultListener.onUnlockCodeFailure();
+                }
+            });
+
     }
 
 

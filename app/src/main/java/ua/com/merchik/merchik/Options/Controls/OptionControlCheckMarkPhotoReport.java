@@ -47,12 +47,13 @@ public class OptionControlCheckMarkPhotoReport<T> extends OptionControl {
     private int averageRatingMin = 6;   // минимальная СРЕДНЯЯ оценка, ниже которой, операторы начинают "страдать"
     private int averageRatingMax = 8;   // максимальная СРЕДНЯЯ оценка, выше которой, операторы начинают "страдать"
 
-    public OptionControlCheckMarkPhotoReport(Context context, T document, OptionsDB optionDB, OptionMassageType msgType, Options.NNKMode nnkMode) {
+    public OptionControlCheckMarkPhotoReport(Context context, T document, OptionsDB optionDB, OptionMassageType msgType, Options.NNKMode nnkMode, UnlockCodeResultListener unlockCodeResultListener) {
         this.context = context;
         this.document = document;
         this.optionDB = optionDB;
         this.msgType = msgType;
         this.nnkMode = nnkMode;
+        this.unlockCodeResultListener = unlockCodeResultListener;
         getDocumentVar();
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             executeOption();

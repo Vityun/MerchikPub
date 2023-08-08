@@ -174,7 +174,7 @@ public class Options {
 
     // =============================================================================================
     // КОНТРОЛЬ ОПЦИЙ
-    public <T> void optionControl(Context context, T dataDB, OptionsDB optionsDB, OptionMassageType type, NNKMode mode) {
+    public <T> void optionControl(Context context, T dataDB, OptionsDB optionsDB, OptionMassageType type, NNKMode mode, OptionControl.UnlockCodeResultListener unlockCodeResultListener) {
 
         try {
             Log.e("OPTION_CONTROL", "HERE(0): " + optionsDB.getOptionControlId());
@@ -194,83 +194,83 @@ public class Options {
             switch (optionControlId) {
 
                 case 135708:
-                    OptionControlCheckMarkDetailedReport<?> optionControlCheckMarkDetailedReport = new OptionControlCheckMarkDetailedReport<>(context, dataDB, optionsDB, newOptionType, mode);
+                    OptionControlCheckMarkDetailedReport<?> optionControlCheckMarkDetailedReport = new OptionControlCheckMarkDetailedReport<>(context, dataDB, optionsDB, newOptionType, mode, unlockCodeResultListener);
                     optionControlCheckMarkDetailedReport.showOptionMassage("");
                     break;
 
                 case 135595:
-                    OptionControlCheckMarkPhotoReport<?> optionControlCheckMarkPhotoReport = new OptionControlCheckMarkPhotoReport<>(context, dataDB, optionsDB, newOptionType, mode);
+                    OptionControlCheckMarkPhotoReport<?> optionControlCheckMarkPhotoReport = new OptionControlCheckMarkPhotoReport<>(context, dataDB, optionsDB, newOptionType, mode, unlockCodeResultListener);
                     optionControlCheckMarkPhotoReport.showOptionMassage("");
                     break;
 
                 case 135591:
-                    OptionControlReturnOfGoods<?> optionControlReturnOfGoods = new OptionControlReturnOfGoods<>(context, dataDB, optionsDB, newOptionType, mode);
+                    OptionControlReturnOfGoods<?> optionControlReturnOfGoods = new OptionControlReturnOfGoods<>(context, dataDB, optionsDB, newOptionType, mode, unlockCodeResultListener);
                     optionControlReturnOfGoods.showOptionMassage("");
                     break;
 
                 case 159707:
-                    OptionControlAvailabilityControlPhotoRemainingGoods<?> optionControlAvailabilityControlPhotoRemainingGoods = new OptionControlAvailabilityControlPhotoRemainingGoods<>(context, dataDB, optionsDB, newOptionType, mode);
+                    OptionControlAvailabilityControlPhotoRemainingGoods<?> optionControlAvailabilityControlPhotoRemainingGoods = new OptionControlAvailabilityControlPhotoRemainingGoods<>(context, dataDB, optionsDB, newOptionType, mode, unlockCodeResultListener);
                     optionControlAvailabilityControlPhotoRemainingGoods.showOptionMassage("");
                     break;
 
                 case 1455:
-                    OptionControlCheckingPercentageOfShelfSpaceDPPO<?> optionControlCheckingPercentageOfShelfSpaceDPPO = new OptionControlCheckingPercentageOfShelfSpaceDPPO<>(context, dataDB, optionsDB, newOptionType, mode);
+                    OptionControlCheckingPercentageOfShelfSpaceDPPO<?> optionControlCheckingPercentageOfShelfSpaceDPPO = new OptionControlCheckingPercentageOfShelfSpaceDPPO<>(context, dataDB, optionsDB, newOptionType, mode, unlockCodeResultListener);
                     optionControlCheckingPercentageOfShelfSpaceDPPO.showOptionMassage("");
                     break;
 
                 case 135061:
-                    OptionControlPercentageOfThePrize<?> optionControlPercentageOfThePrize = new OptionControlPercentageOfThePrize<>(context, dataDB, optionsDB, newOptionType, mode);
+                    OptionControlPercentageOfThePrize<?> optionControlPercentageOfThePrize = new OptionControlPercentageOfThePrize<>(context, dataDB, optionsDB, newOptionType, mode, unlockCodeResultListener);
                     optionControlPercentageOfThePrize.showOptionMassage("");
                     break;
 
                 case 1470:
-                    OptionControlPhotoTovarsLeft<?> optionControlPhotoTovarsLeft = new OptionControlPhotoTovarsLeft<>(context, dataDB, optionsDB, newOptionType, mode);
+                    OptionControlPhotoTovarsLeft<?> optionControlPhotoTovarsLeft = new OptionControlPhotoTovarsLeft<>(context, dataDB, optionsDB, newOptionType, mode, unlockCodeResultListener);
                     optionControlPhotoTovarsLeft.showOptionMassage("");
                     break;
 
                 case 158361:
-                    OptionControlPhotoTovarsLeftClient<?> optionControlPhotoTovarsLeftClient = new OptionControlPhotoTovarsLeftClient<>(context, dataDB, optionsDB, newOptionType, mode);
+                    OptionControlPhotoTovarsLeftClient<?> optionControlPhotoTovarsLeftClient = new OptionControlPhotoTovarsLeftClient<>(context, dataDB, optionsDB, newOptionType, mode, unlockCodeResultListener);
                     optionControlPhotoTovarsLeftClient.showOptionMassage("");
                     break;
 
                 case 138644:
-                    OptionControlCheckTovarUp<?> optionControlCheckTovarUp = new OptionControlCheckTovarUp<>(context, dataDB, optionsDB, newOptionType, mode);
+                    OptionControlCheckTovarUp<?> optionControlCheckTovarUp = new OptionControlCheckTovarUp<>(context, dataDB, optionsDB, newOptionType, mode, unlockCodeResultListener);
                     optionControlCheckTovarUp.showOptionMassage("");
                     break;
 
                 case 157352:
-                    OptionControlCheckDetailedReport<?> optionControlCheckDetailedReport = new OptionControlCheckDetailedReport<>(context, dataDB, optionsDB, newOptionType, mode);
+                    OptionControlCheckDetailedReport<?> optionControlCheckDetailedReport = new OptionControlCheckDetailedReport<>(context, dataDB, optionsDB, newOptionType, mode, unlockCodeResultListener);
                     optionControlCheckDetailedReport.showOptionMassage("");
                     break;
 
                 case 590:
                 case 160209:
-                    OptionControlAchievements<?> optionControlAchievements = new OptionControlAchievements<>(context, dataDB, optionsDB, newOptionType, mode);
+                    OptionControlAchievements<?> optionControlAchievements = new OptionControlAchievements<>(context, dataDB, optionsDB, newOptionType, mode, unlockCodeResultListener);
                     optionControlAchievements.showOptionMassage("");
                     break;
 
                 case 157275:
-                    OptionControlFacePlan<?> optionControlFacePlan = new OptionControlFacePlan<>(context, dataDB, optionsDB, newOptionType, mode);
+                    OptionControlFacePlan<?> optionControlFacePlan = new OptionControlFacePlan<>(context, dataDB, optionsDB, newOptionType, mode, unlockCodeResultListener);
                     optionControlFacePlan.showOptionMassage("");
                     break;
 
                 case 84006:
-                    OptionControlEKL<?> optionControlEKL = new OptionControlEKL<>(context, dataDB, optionsDB, newOptionType, mode);
+                    OptionControlEKL<?> optionControlEKL = new OptionControlEKL<>(context, dataDB, optionsDB, newOptionType, mode, unlockCodeResultListener);
                     optionControlEKL.showOptionMassage("");
                     break;
 
                 case 133381:
-                    OptionControlRegistrationPotentialClient<?> optionControlRegistrationPotentialClient = new OptionControlRegistrationPotentialClient<>(context, dataDB, optionsDB, newOptionType, mode);
+                    OptionControlRegistrationPotentialClient<?> optionControlRegistrationPotentialClient = new OptionControlRegistrationPotentialClient<>(context, dataDB, optionsDB, newOptionType, mode, unlockCodeResultListener);
                     optionControlRegistrationPotentialClient.showOptionMassage("");
                     break;
 
                 case 151594:
-                    OptionControlPhotoBeforeStartWork<?> optionControlPhotoBeforeStartWork = new OptionControlPhotoBeforeStartWork<>(context, dataDB, optionsDB, newOptionType, mode);
+                    OptionControlPhotoBeforeStartWork<?> optionControlPhotoBeforeStartWork = new OptionControlPhotoBeforeStartWork<>(context, dataDB, optionsDB, newOptionType, mode, unlockCodeResultListener);
                     optionControlPhotoBeforeStartWork.showOptionMassage("");
                     break;
 
                 case 132624:
-                    OptionControlAddComment<?> optionControlAddComment = new OptionControlAddComment<>(context, dataDB, optionsDB, newOptionType, mode);
+                    OptionControlAddComment<?> optionControlAddComment = new OptionControlAddComment<>(context, dataDB, optionsDB, newOptionType, mode, unlockCodeResultListener);
                     optionControlAddComment.showOptionMassage("");
                     break;
 
@@ -285,12 +285,12 @@ public class Options {
                             break;
                     }
 
-                    OptionControlPromotion optionControlPromotion = new OptionControlPromotion(context, dataDB, optionsDB, type1, mode);
+                    OptionControlPromotion optionControlPromotion = new OptionControlPromotion(context, dataDB, optionsDB, type1, mode, unlockCodeResultListener);
                     optionControlPromotion.showOptionMassage("");
                     break;
 
                 case 157278:
-                    OptionControlPhotoPromotion<?> optionControlPhotoPromotion = new OptionControlPhotoPromotion<>(context, dataDB, optionsDB, newOptionType, mode);
+                    OptionControlPhotoPromotion<?> optionControlPhotoPromotion = new OptionControlPhotoPromotion<>(context, dataDB, optionsDB, newOptionType, mode, unlockCodeResultListener);
                     optionControlPhotoPromotion.showOptionMassage("");
                     break;
 
@@ -305,7 +305,7 @@ public class Options {
                 case 159726:    // Фото торговой точки
                 case 159725:    // Кнопка "Фото Торговой Точки (ФТТ)"
                     //                    checkPhotoReport(context, dataDB, optionsDB, type, mode);
-                    OptionControlPhoto<?> optionControlPhoto = new OptionControlPhoto<>(context, dataDB, optionsDB, newOptionType, mode);
+                    OptionControlPhoto<?> optionControlPhoto = new OptionControlPhoto<>(context, dataDB, optionsDB, newOptionType, mode, unlockCodeResultListener);
                     optionControlPhoto.showOptionMassage("");
                     break;
 //
@@ -319,7 +319,7 @@ public class Options {
 //                    break;
 
                 case 132971:  // Проверка наличия Фото тележка с товаром (тип 10)
-                    OptionControlPhotoCartWithGoods<?> optionControlPhotoCartWithGoods = new OptionControlPhotoCartWithGoods<>(context, dataDB, optionsDB, newOptionType, mode);
+                    OptionControlPhotoCartWithGoods<?> optionControlPhotoCartWithGoods = new OptionControlPhotoCartWithGoods<>(context, dataDB, optionsDB, newOptionType, mode, unlockCodeResultListener);
                     optionControlPhotoCartWithGoods.showOptionMassage("");
                     break;
 
@@ -343,19 +343,19 @@ public class Options {
                             type2.type = DIALOG;
                             break;
                     }
-                    OptionControlAvailabilityDetailedReport optionControlAvailabilityDetailedReport = new OptionControlAvailabilityDetailedReport(context, dataDB, optionsDB, type2, mode);
+                    OptionControlAvailabilityDetailedReport optionControlAvailabilityDetailedReport = new OptionControlAvailabilityDetailedReport(context, dataDB, optionsDB, type2, mode, unlockCodeResultListener);
                     break;
 
                 case 138519:
                     Log.e("OPTION_CONTROL", "checkStartWork: " + optionsDB.getOptionControlId());
 //                checkStartWork(context, dataDB, optionsDB, type, mode);
-                    optionControlStartWork_138519(context, dataDB, optionsDB, type, mode);
+                    optionControlStartWork_138519(context, dataDB, optionsDB, type, mode, unlockCodeResultListener);
                     break;
 
                 case 138521:
                     Log.e("OPTION_CONTROL", "checkEndWork: " + optionsDB.getOptionControlId());
 //                checkEndWork(context, dataDB, optionsDB, type, mode);
-                    optionControlEndWork_138521(context, dataDB, optionsDB, type, mode);
+                    optionControlEndWork_138521(context, dataDB, optionsDB, type, mode, unlockCodeResultListener);
                     break;
 
                 case 8299:
@@ -380,12 +380,12 @@ public class Options {
 //                    break;
 
                 case 587:
-                    optionControlReceivingAnOrder_587(context, dataDB, optionsDB, null, NNKMode.CHECK);
+                    optionControlReceivingAnOrder_587(context, dataDB, optionsDB, null, NNKMode.CHECK, unlockCodeResultListener);
                     break;
 
                 case 138341:
                     try {
-                        OptionControlAdditionalRequirementsMark<?> optionControlAdditionalRequirementsMark = new OptionControlAdditionalRequirementsMark<>(context, dataDB, optionsDB, newOptionType, mode);
+                        OptionControlAdditionalRequirementsMark<?> optionControlAdditionalRequirementsMark = new OptionControlAdditionalRequirementsMark<>(context, dataDB, optionsDB, newOptionType, mode, unlockCodeResultListener);
                         optionControlAdditionalRequirementsMark.showOptionMassage("");
                     } catch (Exception e) {
                         Globals.writeToMLOG("ERROR", "OptionControlAdditionalRequirementsMark", "Exception e: " + e);
@@ -395,7 +395,7 @@ public class Options {
 
                 case 138342:
                     try {
-                        OptionControlAdditionalMaterialsMark<?> optionControlAdditionalMaterialsMark = new OptionControlAdditionalMaterialsMark<>(context, dataDB, optionsDB, newOptionType, mode);
+                        OptionControlAdditionalMaterialsMark<?> optionControlAdditionalMaterialsMark = new OptionControlAdditionalMaterialsMark<>(context, dataDB, optionsDB, newOptionType, mode, unlockCodeResultListener);
                         optionControlAdditionalMaterialsMark.showOptionMassage("");
                     } catch (Exception e) {
                         Globals.writeToMLOG("ERROR", "OptionControlAdditionalMaterialsMark", "Exception e: " + e);
@@ -404,7 +404,7 @@ public class Options {
                     break;
 
                 case 139577:
-                    optionControlVersion_139577(context, dataDB, optionsDB, null, mode);
+                    optionControlVersion_139577(context, dataDB, optionsDB, null, mode, unlockCodeResultListener);
                     break;
 
 
@@ -472,21 +472,6 @@ public class Options {
      * Контроль опций.
      */
     private <T> void executeOption(Context context, T document, OptionsDB option, int optionId, OptionMassageType massageType, NNKMode nnkMode) {
-        String msg = "";
-        switch (optionId) {
-            case 135329:
-                new OptionControlTaskAnswer(context, document, option, massageType, nnkMode);
-                break;
-
-            case 80977:
-                new OptionControlPromotion(context, document, option, massageType, nnkMode);
-                break;
-
-            default:
-                msg = "Данная опция находится в разработке.";
-                break;
-        }
-
     }
 
     public List<OptionsDB> optionFromDetailedReport;
@@ -500,14 +485,13 @@ public class Options {
      * Нажатие На Кнопку (ННК) -- абстрактное название. На самом деле в принципе обработка
      * состояний опций
      * */
+    private int res = 0;    // Счётчик для накапливания "блокировок" у данной опции
     public <T> OptionMassageType NNK(Context context, T dataDB, OptionsDB option, List<OptionsDB> optionList, OptionMassageType type, NNKMode mode, Clicks.clickVoid click) {
         OptionMassageType result = new OptionMassageType();
-        int res = 0;    // Счётчик для накапливания "блокировок" у данной опции
-
         //
         option.setIsSignal("0");
 
-        Log.e("NNK", "--------------------------------");
+        Log.e("NNK", "---------------START-----------------");
         Log.e("NNK", "option.option_id: " + option.getOptionId());
         Log.e("NNK", "option.getCodeDad2: " + option.getCodeDad2());
         Log.e("NNK", "option.getOptionTxt: " + option.getOptionTxt());
@@ -518,9 +502,274 @@ public class Options {
         Log.e("NNK", "option.getOptionBlock1(): " + option.getOptionBlock1());
         Log.e("NNK", "option.getOptionBlock2(): " + option.getOptionBlock2());
 
-        Log.e("NNK", "option.getOptionBlock2(): " + optionList);
+        Log.e("NNK", "option.optionList(): " + optionList);
+
+        Log.e("NNK", "-------------BLOCK-------------------");
 
         // Проход по второй опции блокировки
+        if (!option.getOptionBlock2().equals("0")) {
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+                OptionsDB optionsDB = optionFromDetailedReport.stream().filter(optionListItem -> Objects.equals(optionListItem.getOptionId(), option.getOptionBlock2()))
+                        .findAny()
+                        .orElse(null);
+                if (optionsDB != null) {
+                    res += optControl(context, dataDB, option, Integer.parseInt(option.getOptionBlock2()), optionsDB, type, NNKMode.BLOCK, new OptionControl.UnlockCodeResultListener() {
+                        @Override
+                        public void onUnlockCodeSuccess() {
+//                             Проход по первой опции блокировки
+                            if (!option.getOptionBlock1().equals("0")) {
+                                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+                                    OptionsDB optionsDB = optionFromDetailedReport.stream().filter(optionListItem -> Objects.equals(optionListItem.getOptionId(), option.getOptionBlock1()))
+                                            .findAny()
+                                            .orElse(null);
+                                    if (optionsDB != null) {
+                                        res += optControl(context, dataDB, option, Integer.parseInt(option.getOptionBlock1()), optionsDB, type, NNKMode.BLOCK, new OptionControl.UnlockCodeResultListener() {
+                                            @Override
+                                            public void onUnlockCodeSuccess() {
+                                                Log.e("NNK", "Успешный Успех. Первая и вторая ОК прошли проверку и должно разрешить работу.");
+
+                                                if (res > 0) {
+                                                    // Ну хреново и чо
+                                                } else {
+                                                    switch (mode) {
+                                                        case MAKE:
+                                                            optControl(context, dataDB, option, Integer.parseInt(option.getOptionId()), null, type, mode, new OptionControl.UnlockCodeResultListener() {
+                                                                @Override
+                                                                public void onUnlockCodeSuccess() {
+
+                                                                }
+
+                                                                @Override
+                                                                public void onUnlockCodeFailure() {
+
+                                                                }
+                                                            });
+                                                            click.click();
+                                                            break;
+                                                    }
+                                                }
+                                            }
+
+                                            @Override
+                                            public void onUnlockCodeFailure() {
+                                                Log.e("NNK", "Успешный НЕ Успех. Первая проверку прошла, вторая не прошла, значит не даю делать опцию на которую нажали.");
+                                            }
+                                        });
+                                        Log.e("NNK", "res OK 1: " + res);
+                                    }else {
+                                        switch (mode) {
+                                            case MAKE:
+                                                optControl(context, dataDB, option, Integer.parseInt(option.getOptionId()), null, type, mode, new OptionControl.UnlockCodeResultListener() {
+                                                    @Override
+                                                    public void onUnlockCodeSuccess() {
+
+                                                    }
+
+                                                    @Override
+                                                    public void onUnlockCodeFailure() {
+
+                                                    }
+                                                });
+                                                click.click();
+                                                break;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        @Override
+                        public void onUnlockCodeFailure() {
+//                             Проход по первой опции блокировки
+                            if (!option.getOptionBlock1().equals("0")) {
+                                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+                                    OptionsDB optionsDB = optionFromDetailedReport.stream().filter(optionListItem -> Objects.equals(optionListItem.getOptionId(), option.getOptionBlock1()))
+                                            .findAny()
+                                            .orElse(null);
+                                    if (optionsDB != null) {
+                                        res += optControl(context, dataDB, option, Integer.parseInt(option.getOptionBlock1()), optionsDB, type, NNKMode.BLOCK, new OptionControl.UnlockCodeResultListener() {
+                                            @Override
+                                            public void onUnlockCodeSuccess() {
+                                                Log.e("NNK", "НЕ Успешный Успех. Первая проверку НЕ прошла, вторая прошла, значит не даю делать опцию на которую нажали.");
+                                            }
+
+                                            @Override
+                                            public void onUnlockCodeFailure() {
+                                                Log.e("NNK", "НЕ Успешный НЕ Успех. Первая проверку НЕ прошла, вторая НЕ прошла, значит не даю делать опцию на которую нажали.");
+                                            }
+                                        });
+                                        Log.e("NNK", "res OK 1: " + res);
+                                    }else {
+                                        switch (mode) {
+                                            case MAKE:
+                                                optControl(context, dataDB, option, Integer.parseInt(option.getOptionId()), null, type, mode, new OptionControl.UnlockCodeResultListener() {
+                                                    @Override
+                                                    public void onUnlockCodeSuccess() {
+
+                                                    }
+
+                                                    @Override
+                                                    public void onUnlockCodeFailure() {
+
+                                                    }
+                                                });
+                                                click.click();
+                                                break;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
+                    Log.e("NNK", "res OK 2: " + res);
+                }else {
+                    if (!option.getOptionBlock1().equals("0")) {
+                        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+                            OptionsDB optionsDBELSE = optionFromDetailedReport.stream().filter(optionListItem -> Objects.equals(optionListItem.getOptionId(), option.getOptionBlock1()))
+                                    .findAny()
+                                    .orElse(null);
+                            if (optionsDBELSE != null) {
+                                res += optControl(context, dataDB, option, Integer.parseInt(option.getOptionBlock1()), optionsDBELSE, type, NNKMode.BLOCK, new OptionControl.UnlockCodeResultListener() {
+                                    @Override
+                                    public void onUnlockCodeSuccess() {
+                                        Log.e("NNK", "Успешный Успех. Если первая опция пустая Первая и вторая ОК прошли проверку и должно разрешить работу.");
+
+                                        if (res > 0) {
+                                            // Ну хреново и чо
+                                        } else {
+                                            switch (mode) {
+                                                case MAKE:
+                                                    optControl(context, dataDB, option, Integer.parseInt(option.getOptionId()), null, type, mode, new OptionControl.UnlockCodeResultListener() {
+                                                        @Override
+                                                        public void onUnlockCodeSuccess() {
+
+                                                        }
+
+                                                        @Override
+                                                        public void onUnlockCodeFailure() {
+
+                                                        }
+                                                    });
+                                                    click.click();
+                                                    break;
+                                            }
+                                        }
+                                    }
+
+                                    @Override
+                                    public void onUnlockCodeFailure() {
+                                        Log.e("NNK", "Успешный НЕ Успех. Первая проверку прошла, вторая не прошла, значит не даю делать опцию на которую нажали.");
+                                    }
+                                });
+                                Log.e("NNK", "res OK 1: " + res);
+                            }else {
+                                switch (mode) {
+                                    case MAKE:
+                                        optControl(context, dataDB, option, Integer.parseInt(option.getOptionId()), null, type, mode, new OptionControl.UnlockCodeResultListener() {
+                                            @Override
+                                            public void onUnlockCodeSuccess() {
+
+                                            }
+
+                                            @Override
+                                            public void onUnlockCodeFailure() {
+
+                                            }
+                                        });
+                                        click.click();
+                                        break;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }else if (!option.getOptionBlock1().equals("0")){
+            //Проход по первой опции блокировки если второй нет
+            if (!option.getOptionBlock1().equals("0")) {
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+                    OptionsDB optionsDB = optionFromDetailedReport.stream().filter(optionListItem -> Objects.equals(optionListItem.getOptionId(), option.getOptionBlock1()))
+                            .findAny()
+                            .orElse(null);
+                    if (optionsDB != null) {
+                        res += optControl(context, dataDB, option, Integer.parseInt(option.getOptionBlock1()), optionsDB, type, NNKMode.BLOCK, new OptionControl.UnlockCodeResultListener() {
+                            @Override
+                            public void onUnlockCodeSuccess() {
+                                Log.e("NNK", "Успешный Успех. Если первая опция пустая Первая и вторая ОК прошли проверку и должно разрешить работу.");
+
+                                if (res > 0) {
+                                    // Ну хреново и чо
+                                } else {
+                                    switch (mode) {
+                                        case MAKE:
+                                            optControl(context, dataDB, option, Integer.parseInt(option.getOptionId()), null, type, mode, new OptionControl.UnlockCodeResultListener() {
+                                                @Override
+                                                public void onUnlockCodeSuccess() {
+
+                                                }
+
+                                                @Override
+                                                public void onUnlockCodeFailure() {
+
+                                                }
+                                            });
+                                            click.click();
+                                            break;
+                                    }
+                                }
+                            }
+
+                            @Override
+                            public void onUnlockCodeFailure() {
+                                Log.e("NNK", "Успешный НЕ Успех. Первая проверку прошла, вторая не прошла, значит не даю делать опцию на которую нажали.");
+                            }
+                        });
+                        Log.e("NNK", "res OK 1: " + res);
+                    }else {
+                        switch (mode) {
+                            case MAKE:
+                                optControl(context, dataDB, option, Integer.parseInt(option.getOptionId()), null, type, mode, new OptionControl.UnlockCodeResultListener() {
+                                    @Override
+                                    public void onUnlockCodeSuccess() {
+
+                                    }
+
+                                    @Override
+                                    public void onUnlockCodeFailure() {
+
+                                    }
+                                });
+                                click.click();
+                                break;
+                        }
+                    }
+                }
+            }
+        }
+
+        if (option.getOptionBlock2().equals("0") && option.getOptionBlock1().equals("0")){
+            switch (mode) {
+                case MAKE:
+                    optControl(context, dataDB, option, Integer.parseInt(option.getOptionId()), null, type, mode, new OptionControl.UnlockCodeResultListener() {
+                        @Override
+                        public void onUnlockCodeSuccess() {
+
+                        }
+
+                        @Override
+                        public void onUnlockCodeFailure() {
+
+                        }
+                    });
+                    click.click();
+                    break;
+            }
+        }
+
+        Log.e("NNK", "-------------END-------------------");
+
+        /// ---------------------------------------------------------------------------------------
+/*        // Проход по второй опции блокировки
         if (!option.getOptionBlock2().equals("0")) {
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
 //                OptionsDB optionsDB = optionList.stream().filter(optionListItem -> Objects.equals(optionListItem.getOptionControlId(), option.getOptionBlock2()))
@@ -528,7 +777,17 @@ public class Options {
                         .findAny()
                         .orElse(null);
                 if (optionsDB != null) {
-                    res += optControl(context, dataDB, option, Integer.parseInt(option.getOptionBlock2()), optionsDB, type, NNKMode.BLOCK);
+                    res += optControl(context, dataDB, option, Integer.parseInt(option.getOptionBlock2()), optionsDB, type, NNKMode.BLOCK, new OptionControl.UnlockCodeResultListener() {
+                        @Override
+                        public void onUnlockCodeSuccess() {
+
+                        }
+
+                        @Override
+                        public void onUnlockCodeFailure() {
+
+                        }
+                    });
                     Log.e("NNK", "res OK 2: " + res);
                 }
             }
@@ -542,7 +801,17 @@ public class Options {
                         .findAny()
                         .orElse(null);
                 if (optionsDB != null) {
-                    res += optControl(context, dataDB, option, Integer.parseInt(option.getOptionBlock1()), optionsDB, type, NNKMode.BLOCK);
+                    res += optControl(context, dataDB, option, Integer.parseInt(option.getOptionBlock1()), optionsDB, type, NNKMode.BLOCK, new OptionControl.UnlockCodeResultListener() {
+                        @Override
+                        public void onUnlockCodeSuccess() {
+
+                        }
+
+                        @Override
+                        public void onUnlockCodeFailure() {
+
+                        }
+                    });
                     Log.e("NNK", "res OK 1: " + res);
                 }
             }
@@ -559,19 +828,10 @@ public class Options {
 
                 case MAKE:
                 case CHECK:
-                    // TODO надо прочекать этот момент
-//                    DialogData dialogData2 = new DialogData(context);
-//                    dialogData2.setTitle("Блокировка");
-//                    dialogData2.setText("Данная Опция заблокированна ОПЦИЕЙ: " + option.getOptionBlock1() + "/" + option.getOptionBlock2());
-//                    dialogData2.setClose(dialogData2::dismiss);
-//
-//                    result.dialog = dialogData2;
-
                     return result;
 
             }
         } else {
-
             switch (mode) {
                 case NULL:
                     break;
@@ -580,20 +840,49 @@ public class Options {
                     break;
 
                 case MAKE:
-                    optControl(context, dataDB, option, Integer.parseInt(option.getOptionId()), null, type, mode);
+                    optControl(context, dataDB, option, Integer.parseInt(option.getOptionId()), null, type, mode, null);
                     click.click();
                     result = type;
                     break;
             }
-
-
             return result;
-        }
+        }*/
 
+        result = type;
+        return result;
 
-        return null;
+//        return null;
     }
 
+
+
+
+    /**
+     * 07.08.23.
+     * Проверяю первую Опцию блокировки.
+     * */
+    private <T> int checkBlockOption(Context context, T dataDB, OptionsDB option, int parseInt, OptionMassageType type, NNKMode block) {
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+            OptionsDB optionsDB = optionFromDetailedReport.stream().filter(optionListItem -> Objects.equals(optionListItem.getOptionId(), option.getOptionBlock2()))
+                    .findAny()
+                    .orElse(null);
+            if (optionsDB != null) {
+                return optControl(context, dataDB, option, Integer.parseInt(option.getOptionBlock2()), optionsDB, type, NNKMode.BLOCK, new OptionControl.UnlockCodeResultListener() {
+                    @Override
+                    public void onUnlockCodeSuccess() {
+
+                    }
+
+                    @Override
+                    public void onUnlockCodeFailure() {
+
+                    }
+                });
+            }
+        }
+
+        return 0;
+    }
 
     /**
      * 15.03.23
@@ -640,7 +929,17 @@ public class Options {
                 Log.e("conduct", "OptionsDB item.getOptionControlId(): " + item.getOptionControlId());
 
                 // Блокирует опция или нет
-                int controlResult = optControl(context, wp, item, Integer.parseInt(item.getOptionControlId()), null, type, NNKMode.CHECK);
+                int controlResult = optControl(context, wp, item, Integer.parseInt(item.getOptionControlId()), null, type, NNKMode.CHECK, new OptionControl.UnlockCodeResultListener() {
+                    @Override
+                    public void onUnlockCodeSuccess() {
+
+                    }
+
+                    @Override
+                    public void onUnlockCodeFailure() {
+
+                    }
+                });
 
                 // Создаю список опций который блокирует
                 if (controlResult == 0) {
@@ -784,7 +1083,7 @@ public class Options {
     }
 
     /*Проверка Опции*/
-    public <T> int optControl(Context context, T dataDB, OptionsDB optionCurrent, int optionId, OptionsDB optionBlock, OptionMassageType type, NNKMode mode) {
+    public <T> int optControl(Context context, T dataDB, OptionsDB optionCurrent, int optionId, OptionsDB optionBlock, OptionMassageType type, NNKMode mode, OptionControl.UnlockCodeResultListener unlockCodeResultListener) {
         OptionsDB option = optionCurrent;   // Текущая Опция на которую нажали
 
         String block = "";
@@ -799,52 +1098,57 @@ public class Options {
 
             case 135719:    // КНОПКА "Дет.Отчет" (оценка)
             case 135708:    // КОНТРОЛЬ
-                OptionControlCheckMarkDetailedReport<?> optionControlCheckMarkDetailedReport = new OptionControlCheckMarkDetailedReport<>(context, dataDB, option, type, mode);
+                OptionControlCheckMarkDetailedReport<?> optionControlCheckMarkDetailedReport =
+                        new OptionControlCheckMarkDetailedReport<>(context, dataDB, option, type, mode, unlockCodeResultListener);
                 optionControlCheckMarkDetailedReport.showOptionMassage(block);
                 break;
 
             case 135413:    // КНОПКА "Фото Витрины (Оценка)"
             case 135595:    // КОНТРОЛЬ
-                OptionControlCheckMarkPhotoReport<?> optionControlCheckMarkPhotoReport = new OptionControlCheckMarkPhotoReport<>(context, dataDB, option, type, mode);
+                OptionControlCheckMarkPhotoReport<?> optionControlCheckMarkPhotoReport =
+                        new OptionControlCheckMarkPhotoReport<>(context, dataDB, option, type, mode, unlockCodeResultListener);
                 optionControlCheckMarkPhotoReport.showOptionMassage(block);
                 break;
 
             case 159799:    // Кнопка "Возврат"
             case 135591:// Выполняется проверка НАЛИЧИЯ данных о количестве ВОЗВРАТА товара или запись в поле "ошибка" о том, что его "возвращать НЕ нужно".
-                OptionControlReturnOfGoods<?> optionControlReturnOfGoods = new OptionControlReturnOfGoods<>(context, dataDB, option, type, mode);
+                OptionControlReturnOfGoods<?> optionControlReturnOfGoods =
+                        new OptionControlReturnOfGoods<>(context, dataDB, option, type, mode, unlockCodeResultListener);
                 if (mode.equals(NNKMode.MAKE) || (mode.equals(NNKMode.CHECK) && optionControlReturnOfGoods.isBlockOption()))
                     optionControlReturnOfGoods.showOptionMassage(block);
 
-                if (mode.equals(NNKMode.BLOCK) && optionControlReturnOfGoods.signal && optionControlReturnOfGoods.isBlockOption()){
+                if (mode.equals(NNKMode.BLOCK) && optionControlReturnOfGoods.signal && optionControlReturnOfGoods.isBlockOption()) {
                     optionControlReturnOfGoods.showOptionMassage(block);
                 }
-                return optionControlReturnOfGoods.isBlockOption() ? 1 : 0;
+                return optionControlReturnOfGoods.isBlockOption2() ? 1 : 0;
 
             case 132971:  // Проверка наличия Фото тележка с товаром (тип 10)
-                OptionControlPhotoCartWithGoods<?> optionControlPhotoCartWithGoods = new OptionControlPhotoCartWithGoods<>(context, dataDB, option, type, mode);
+                OptionControlPhotoCartWithGoods<?> optionControlPhotoCartWithGoods =
+                        new OptionControlPhotoCartWithGoods<>(context, dataDB, option, type, mode, unlockCodeResultListener);
                 if (mode.equals(NNKMode.MAKE) || (mode.equals(NNKMode.CHECK) && optionControlPhotoCartWithGoods.isBlockOption()))
                     optionControlPhotoCartWithGoods.showOptionMassage(block);
-                if (mode.equals(NNKMode.BLOCK) && optionControlPhotoCartWithGoods.signal && optionControlPhotoCartWithGoods.isBlockOption()){
+                if (mode.equals(NNKMode.BLOCK) && optionControlPhotoCartWithGoods.signal && optionControlPhotoCartWithGoods.isBlockOption()) {
                     optionControlPhotoCartWithGoods.showOptionMassage(block);
                 }
-                return optionControlPhotoCartWithGoods.isBlockOption() ? 1 : 0;
+                return optionControlPhotoCartWithGoods.isBlockOption2() ? 1 : 0;
 
             case 135158:
-                OptionButtonPhotoFOT<?> optionButtonPhotoFOT = new OptionButtonPhotoFOT<>(context, dataDB, option, type, mode);
+                OptionButtonPhotoFOT<?> optionButtonPhotoFOT = new OptionButtonPhotoFOT<>(context, dataDB, option, type, mode, unlockCodeResultListener);
                 break;
 
             case 159725:
-                OptionButtonPhotoTT<?> optionButtonPhotoTT = new OptionButtonPhotoTT<>(context, dataDB, option, type, mode);
+                OptionButtonPhotoTT<?> optionButtonPhotoTT = new OptionButtonPhotoTT<>(context, dataDB, option, type, mode, unlockCodeResultListener);
                 break;
 
             case 159707:
-                OptionControlAvailabilityControlPhotoRemainingGoods<?> optionControlAvailabilityControlPhotoRemainingGoods = new OptionControlAvailabilityControlPhotoRemainingGoods<>(context, dataDB, option, type, mode);
+                OptionControlAvailabilityControlPhotoRemainingGoods<?> optionControlAvailabilityControlPhotoRemainingGoods =
+                        new OptionControlAvailabilityControlPhotoRemainingGoods<>(context, dataDB, option, type, mode, unlockCodeResultListener);
                 if (mode.equals(NNKMode.MAKE) || (mode.equals(NNKMode.CHECK) && optionControlAvailabilityControlPhotoRemainingGoods.isBlockOption()))
                     optionControlAvailabilityControlPhotoRemainingGoods.showOptionMassage(block);
-                if (mode.equals(NNKMode.BLOCK) && optionControlAvailabilityControlPhotoRemainingGoods.signal && optionControlAvailabilityControlPhotoRemainingGoods.isBlockOption()){
+                if (mode.equals(NNKMode.BLOCK) && optionControlAvailabilityControlPhotoRemainingGoods.signal && optionControlAvailabilityControlPhotoRemainingGoods.isBlockOption()) {
                     optionControlAvailabilityControlPhotoRemainingGoods.showOptionMassage(block);
                 }
-                return optionControlAvailabilityControlPhotoRemainingGoods.isBlockOption() ? 1 : 0;
+                return optionControlAvailabilityControlPhotoRemainingGoods.isBlockOption2() ? 1 : 0;
 
             case 135412:
 //                new OptionButtonPercentageOfThePrize<>(context, dataDB, option, type, mode);
@@ -858,10 +1162,11 @@ public class Options {
                 break;
 
             case 1455:
-                OptionControlCheckingPercentageOfShelfSpaceDPPO<?> optionControlCheckingPercentageOfShelfSpaceDPPO = new OptionControlCheckingPercentageOfShelfSpaceDPPO<>(context, dataDB, option, type, mode);
+                OptionControlCheckingPercentageOfShelfSpaceDPPO<?> optionControlCheckingPercentageOfShelfSpaceDPPO =
+                        new OptionControlCheckingPercentageOfShelfSpaceDPPO<>(context, dataDB, option, type, mode, unlockCodeResultListener);
                 if (mode.equals(NNKMode.MAKE) || (mode.equals(NNKMode.CHECK) && optionControlCheckingPercentageOfShelfSpaceDPPO.isBlockOption()))
                     optionControlCheckingPercentageOfShelfSpaceDPPO.showOptionMassage(block);
-                if (mode.equals(NNKMode.BLOCK) && optionControlCheckingPercentageOfShelfSpaceDPPO.signal && optionControlCheckingPercentageOfShelfSpaceDPPO.isBlockOption()){
+                if (mode.equals(NNKMode.BLOCK) && optionControlCheckingPercentageOfShelfSpaceDPPO.signal && optionControlCheckingPercentageOfShelfSpaceDPPO.isBlockOption()) {
                     optionControlCheckingPercentageOfShelfSpaceDPPO.showOptionMassage(block);
                 }
                 break;
@@ -871,10 +1176,11 @@ public class Options {
 //                OptionControlCheckingPercentageOfShelfSpaceDPPO<?> test = new OptionControlCheckingPercentageOfShelfSpaceDPPO<>(context, dataDB, option, type, mode);
 //                test.showOptionMassage();
 
-                OptionControlPercentageOfThePrize<?> optionControlPercentageOfThePrize = new OptionControlPercentageOfThePrize<>(context, dataDB, option, type, mode);
+                OptionControlPercentageOfThePrize<?> optionControlPercentageOfThePrize =
+                        new OptionControlPercentageOfThePrize<>(context, dataDB, option, type, mode, unlockCodeResultListener);
                 if (mode.equals(NNKMode.MAKE) || (mode.equals(NNKMode.CHECK) && optionControlPercentageOfThePrize.isBlockOption()))
                     optionControlPercentageOfThePrize.showOptionMassage(block);
-                if (mode.equals(NNKMode.BLOCK) && optionControlPercentageOfThePrize.signal && optionControlPercentageOfThePrize.isBlockOption()){
+                if (mode.equals(NNKMode.BLOCK) && optionControlPercentageOfThePrize.signal && optionControlPercentageOfThePrize.isBlockOption()) {
                     optionControlPercentageOfThePrize.showOptionMassage(block);
                 }
                 break;
@@ -890,102 +1196,115 @@ public class Options {
             case 84932:     // Проверка наличия ФотоОтчётов (id мне дали из 1С) (тип 0)
             case 159726:    // Фото торговой точки
 //            case 159725:    // Кнопка "Фото Торговой Точки (ФТТ)"
-                OptionControlPhoto<?> optionControlPhoto = new OptionControlPhoto<>(context, dataDB, option, type, mode);
+                OptionControlPhoto<?> optionControlPhoto = new OptionControlPhoto<>(context, dataDB, option, type, mode, unlockCodeResultListener);
                 if (mode.equals(NNKMode.MAKE) || (mode.equals(NNKMode.CHECK) && optionControlPhoto.isBlockOption()))
                     optionControlPhoto.showOptionMassage(block);
-                if (mode.equals(NNKMode.BLOCK) && optionControlPhoto.signal && optionControlPhoto.isBlockOption()){
+                if (mode.equals(NNKMode.BLOCK) && optionControlPhoto.signal && optionControlPhoto.isBlockOption()) {
                     optionControlPhoto.showOptionMassage(block);
                 }
-                return optionControlPhoto.isBlockOption() ? 1 : 0;
+                return optionControlPhoto.isBlockOption2() ? 1 : 0;
 
             case 1470:
-                OptionControlPhotoTovarsLeft<?> optionControlPhotoTovarsLeft = new OptionControlPhotoTovarsLeft<>(context, dataDB, option, type, mode);
+                OptionControlPhotoTovarsLeft<?> optionControlPhotoTovarsLeft =
+                        new OptionControlPhotoTovarsLeft<>(context, dataDB, option, type, mode, unlockCodeResultListener);
                 if (mode.equals(NNKMode.MAKE) || (mode.equals(NNKMode.CHECK) && optionControlPhotoTovarsLeft.isBlockOption()))
                     optionControlPhotoTovarsLeft.showOptionMassage(block);
-                if (mode.equals(NNKMode.BLOCK) && optionControlPhotoTovarsLeft.signal && optionControlPhotoTovarsLeft.isBlockOption()){
+                if (mode.equals(NNKMode.BLOCK) && optionControlPhotoTovarsLeft.signal && optionControlPhotoTovarsLeft.isBlockOption()) {
                     optionControlPhotoTovarsLeft.showOptionMassage(block);
                 }
-                return optionControlPhotoTovarsLeft.isBlockOption() ? 1 : 0;
+                return optionControlPhotoTovarsLeft.isBlockOption2() ? 1 : 0;
 
             case 158361:
-                OptionControlPhotoTovarsLeftClient<?> optionControlPhotoTovarsLeftClient = new OptionControlPhotoTovarsLeftClient<>(context, dataDB, option, type, mode);
+                OptionControlPhotoTovarsLeftClient<?> optionControlPhotoTovarsLeftClient =
+                        new OptionControlPhotoTovarsLeftClient<>(context, dataDB, option, type, mode, unlockCodeResultListener);
                 if (mode.equals(NNKMode.MAKE) || (mode.equals(NNKMode.CHECK) && optionControlPhotoTovarsLeftClient.isBlockOption()))
                     optionControlPhotoTovarsLeftClient.showOptionMassage(block);
-                if (mode.equals(NNKMode.BLOCK) && optionControlPhotoTovarsLeftClient.signal && optionControlPhotoTovarsLeftClient.isBlockOption()){
+                if (mode.equals(NNKMode.BLOCK) && optionControlPhotoTovarsLeftClient.signal && optionControlPhotoTovarsLeftClient.isBlockOption()) {
                     optionControlPhotoTovarsLeftClient.showOptionMassage(block);
                 }
-                return optionControlPhotoTovarsLeftClient.isBlockOption() ? 1 : 0;
+                return optionControlPhotoTovarsLeftClient.isBlockOption2() ? 1 : 0;
 
             case 138644:
-                OptionControlCheckTovarUp<?> optionControlCheckTovarUp = new OptionControlCheckTovarUp<>(context, dataDB, option, type, mode);
+                OptionControlCheckTovarUp<?> optionControlCheckTovarUp = new OptionControlCheckTovarUp<>(context, dataDB, option, type, mode, unlockCodeResultListener);
                 if (mode.equals(NNKMode.MAKE) || (mode.equals(NNKMode.CHECK) && optionControlCheckTovarUp.isBlockOption()))
                     optionControlCheckTovarUp.showOptionMassage(block);
-                if (mode.equals(NNKMode.BLOCK) && optionControlCheckTovarUp.signal && optionControlCheckTovarUp.isBlockOption()){
+                if (mode.equals(NNKMode.BLOCK) && optionControlCheckTovarUp.signal && optionControlCheckTovarUp.isBlockOption()) {
                     optionControlCheckTovarUp.showOptionMassage(block);
                 }
-                return optionControlCheckTovarUp.isBlockOption() ? 1 : 0;
+                return optionControlCheckTovarUp.isBlockOption2() ? 1 : 0;
 
             case 157352:
-                OptionControlCheckDetailedReport<?> optionControlCheckDetailedReport = new OptionControlCheckDetailedReport<>(context, dataDB, option, type, mode);
+                OptionControlCheckDetailedReport<?> optionControlCheckDetailedReport =
+                        new OptionControlCheckDetailedReport<>(context, dataDB, option, type, mode, unlockCodeResultListener);
                 if (mode.equals(NNKMode.MAKE) || (mode.equals(NNKMode.CHECK) && optionControlCheckDetailedReport.isBlockOption()))
                     optionControlCheckDetailedReport.showOptionMassage(block);
                 if (mode.equals(NNKMode.BLOCK) && optionControlCheckDetailedReport.signal && optionControlCheckDetailedReport.isBlockOption()) {
                     optionControlCheckDetailedReport.showOptionMassage(block);
                 }
-                return optionControlCheckDetailedReport.isBlockOption() ? 1 : 0;
+                return optionControlCheckDetailedReport.isBlockOption2() ? 1 : 0;
 
             case 590:
             case 160209:
-                OptionControlAchievements<?> optionControlAchievements = new OptionControlAchievements<>(context, dataDB, option, type, mode);
+                OptionControlAchievements<?> optionControlAchievements = new OptionControlAchievements<>(context, dataDB, option, type, mode, unlockCodeResultListener);
                 if (mode.equals(NNKMode.MAKE) || (mode.equals(NNKMode.CHECK)) && optionControlAchievements.isBlockOption()) {
                     optionControlAchievements.showOptionMassage(block);
                 }
                 if (mode.equals(NNKMode.BLOCK) && optionControlAchievements.signal && optionControlAchievements.isBlockOption()) {
                     optionControlAchievements.showOptionMassage(block);
                 }
-                return optionControlAchievements.isBlockOption() ? 1 : 0;
+                return optionControlAchievements.isBlockOption2() ? 1 : 0;
 
             case 135159:
-                OptionButtAchievements<?> optionButtAchievements = new OptionButtAchievements<>(context, dataDB, option, type, mode);
+                OptionButtAchievements<?> optionButtAchievements = new OptionButtAchievements<>(context, dataDB, option, type, mode, unlockCodeResultListener);
                 break;
 
             case 157274:
             case 157275:
-                OptionControlFacePlan<?> optionControlFacePlan = new OptionControlFacePlan<>(context, dataDB, option, type, mode);
+                OptionControlFacePlan<?> optionControlFacePlan = new OptionControlFacePlan<>(context, dataDB, option, type, mode, unlockCodeResultListener);
                 if (mode.equals(NNKMode.MAKE) || (mode.equals(NNKMode.CHECK) && optionControlFacePlan.isBlockOption()))
                     optionControlFacePlan.showOptionMassage(block);
                 if (mode.equals(NNKMode.BLOCK) && optionControlFacePlan.signal && optionControlFacePlan.isBlockOption()) {
                     optionControlFacePlan.showOptionMassage(block);
                 }
-                return optionControlFacePlan.isBlockOption() ? 1 : 0;
+                return optionControlFacePlan.isBlockOption2() ? 1 : 0;
 
             case 84006:
-                OptionControlEKL<?> optionControlEKL = new OptionControlEKL<>(context, dataDB, option, type, mode);
-                if (mode.equals(NNKMode.MAKE) || (mode.equals(NNKMode.CHECK) && optionControlEKL.isBlockOption()))
+                OptionControlEKL<?> optionControlEKL = new OptionControlEKL<>(context, dataDB, option, type, mode, unlockCodeResultListener);
+                if (mode.equals(NNKMode.MAKE) || (mode.equals(NNKMode.CHECK) && optionControlEKL.isBlockOption())) {
                     optionControlEKL.showOptionMassage(block);
-                if (mode.equals(NNKMode.BLOCK) && optionControlEKL.signal && optionControlEKL.isBlockOption()) {
-                    optionControlEKL.showOptionMassage(block);
+                    return optionControlEKL.isBlockOption2() ? 1 : 0;
                 }
-                return optionControlEKL.isBlockOption() ? 1 : 0;
+
+
+                if (mode.equals(NNKMode.BLOCK)/* && optionControlEKL.signal && optionControlEKL.isBlockOption()*/) {
+                    optionControlEKL.showOptionMassage(block);
+//                    return optionControlEKL.getResultCode();
+
+                    return optionControlEKL.isBlockOption2() ? 1 : 0;
+                }
+                break;
+
 
             case 133381:
-                OptionControlRegistrationPotentialClient<?> optionControlRegistrationPotentialClient = new OptionControlRegistrationPotentialClient<>(context, dataDB, option, type, mode);
+                OptionControlRegistrationPotentialClient<?> optionControlRegistrationPotentialClient =
+                        new OptionControlRegistrationPotentialClient<>(context, dataDB, option, type, mode, unlockCodeResultListener);
                 if (mode.equals(NNKMode.MAKE) || (mode.equals(NNKMode.CHECK) && optionControlRegistrationPotentialClient.isBlockOption()))
                     optionControlRegistrationPotentialClient.showOptionMassage(block);
                 if (mode.equals(NNKMode.BLOCK) && optionControlRegistrationPotentialClient.signal && optionControlRegistrationPotentialClient.isBlockOption()) {
                     optionControlRegistrationPotentialClient.showOptionMassage(block);
                 }
-                return optionControlRegistrationPotentialClient.isBlockOption() ? 1 : 0;
+                return optionControlRegistrationPotentialClient.isBlockOption2() ? 1 : 0;
 
 
             // Потенциальный клиент
             case 133382:
-                OptionButtonAddNewClient<?> optionButtonAddNewClient = new OptionButtonAddNewClient<>(context, dataDB, option, type, mode);
+                OptionButtonAddNewClient<?> optionButtonAddNewClient = new OptionButtonAddNewClient<>(context, dataDB, option, type, mode, unlockCodeResultListener);
                 break;
 
 
             case 157243:
-                OptionControlCheckingReasonOutOfStockOSV<?> optionControlCheckingReasonOutOfStockOSV = new OptionControlCheckingReasonOutOfStockOSV<>(context, dataDB, option, type, mode);
+                OptionControlCheckingReasonOutOfStockOSV<?> optionControlCheckingReasonOutOfStockOSV =
+                        new OptionControlCheckingReasonOutOfStockOSV<>(context, dataDB, option, type, mode, unlockCodeResultListener);
                 if (optionControlCheckingReasonOutOfStockOSV.isBlockOption()) {
                     if (mode.equals(NNKMode.MAKE) || (mode.equals(NNKMode.CHECK) && optionControlCheckingReasonOutOfStockOSV.isBlockOption()))
                         optionControlCheckingReasonOutOfStockOSV.showOptionMassage(block);
@@ -993,24 +1312,26 @@ public class Options {
                         optionControlCheckingReasonOutOfStockOSV.showOptionMassage(block);
                     }
                 }
-                return optionControlCheckingReasonOutOfStockOSV.isBlockOption() ? 1 : 0;
+                return optionControlCheckingReasonOutOfStockOSV.isBlockOption2() ? 1 : 0;
 
             case 157242:
             case 157241:
-                OptionControlCheckingReasonOutOfStock<?> optionControlCheckingReasonOutOfStock = new OptionControlCheckingReasonOutOfStock<>(context, dataDB, option, type, mode);
+                OptionControlCheckingReasonOutOfStock<?> optionControlCheckingReasonOutOfStock =
+                        new OptionControlCheckingReasonOutOfStock<>(context, dataDB, option, type, mode, unlockCodeResultListener);
                 if (mode.equals(NNKMode.MAKE) || (mode.equals(NNKMode.CHECK) && optionControlCheckingReasonOutOfStock.isBlockOption()))
                     optionControlCheckingReasonOutOfStock.showOptionMassage(block);
                 if (mode.equals(NNKMode.BLOCK) && optionControlCheckingReasonOutOfStock.signal && optionControlCheckingReasonOutOfStock.isBlockOption()) {
                     optionControlCheckingReasonOutOfStock.showOptionMassage(block);
                 }
-                return optionControlCheckingReasonOutOfStock.isBlockOption() ? 1 : 0;
+                return optionControlCheckingReasonOutOfStock.isBlockOption2() ? 1 : 0;
 
             case 135809:
-                new OptionButtonPhotoBeforeStartWork<>(context, dataDB, option, type, mode);
+                new OptionButtonPhotoBeforeStartWork<>(context, dataDB, option, type, mode, unlockCodeResultListener);
                 break;
 
             case 151594:
-                OptionControlPhotoBeforeStartWork<?> optionControlPhotoBeforeStartWork = new OptionControlPhotoBeforeStartWork<>(context, dataDB, option, type, mode);
+                OptionControlPhotoBeforeStartWork<?> optionControlPhotoBeforeStartWork =
+                        new OptionControlPhotoBeforeStartWork<>(context, dataDB, option, type, mode, unlockCodeResultListener);
                 if (optionControlPhotoBeforeStartWork.isBlockOption()) {
                     if (mode.equals(NNKMode.MAKE) || (mode.equals(NNKMode.CHECK) && optionControlPhotoBeforeStartWork.isBlockOption()))
                         optionControlPhotoBeforeStartWork.showOptionMassage(block);
@@ -1018,36 +1339,39 @@ public class Options {
                         optionControlPhotoBeforeStartWork.showOptionMassage(block);
                     }
                 }
-                return optionControlPhotoBeforeStartWork.isBlockOption() ? 1 : 0;
+                return optionControlPhotoBeforeStartWork.isBlockOption2() ? 1 : 0;
 
             case 135328:
-                OptionButtonReclamationAnswer<?> optionButtonReclamationAnswer = new OptionButtonReclamationAnswer<>(context, dataDB, option, type, mode);
+                OptionButtonReclamationAnswer<?> optionButtonReclamationAnswer =
+                        new OptionButtonReclamationAnswer<>(context, dataDB, option, type, mode, unlockCodeResultListener);
                 break;
 
             case 135330:
-                OptionControlReclamationAnswer<?> optionControlReclamationAnswer = new OptionControlReclamationAnswer<>(context, dataDB, option, type, mode);
+                OptionControlReclamationAnswer<?> optionControlReclamationAnswer =
+                        new OptionControlReclamationAnswer<>(context, dataDB, option, type, mode, unlockCodeResultListener);
                 if (mode.equals(NNKMode.MAKE) || (mode.equals(NNKMode.CHECK) && optionControlReclamationAnswer.isBlockOption()))
                     optionControlReclamationAnswer.showOptionMassage(block);
                 if (mode.equals(NNKMode.BLOCK) && optionControlReclamationAnswer.signal && optionControlReclamationAnswer.isBlockOption()) {
                     optionControlReclamationAnswer.showOptionMassage(block);
                 }
-                return optionControlReclamationAnswer.isBlockOption() ? 1 : 0;
+                return optionControlReclamationAnswer.isBlockOption2() ? 1 : 0;
 
             case 132624:
-                OptionControlAddComment<?> optionControlAddComment = new OptionControlAddComment<>(context, dataDB, option, type, mode);
+                OptionControlAddComment<?> optionControlAddComment = new OptionControlAddComment<>(context, dataDB, option, type, mode, unlockCodeResultListener);
                 if (mode.equals(NNKMode.MAKE) || (mode.equals(NNKMode.CHECK) && optionControlAddComment.isBlockOption()))
                     optionControlAddComment.showOptionMassage(block);
                 if (mode.equals(NNKMode.BLOCK) && optionControlAddComment.signal && optionControlAddComment.isBlockOption()) {
                     optionControlAddComment.showOptionMassage(block);
                 }
-                return optionControlAddComment.isBlockOption() ? 1 : 0;
+                return optionControlAddComment.isBlockOption2() ? 1 : 0;
 
             case 132623:
-                OptionButtonAddComment<?> optionButtonAddComment = new OptionButtonAddComment<>(context, dataDB, option, type, mode);
+                OptionButtonAddComment<?> optionButtonAddComment = new OptionButtonAddComment<>(context, dataDB, option, type, mode, unlockCodeResultListener);
                 break;
 
             case 76815:
-                OptionControlAvailabilityDetailedReport optionControlAvailabilityDetailedReport = new OptionControlAvailabilityDetailedReport(context, dataDB, option, type, mode);
+                OptionControlAvailabilityDetailedReport optionControlAvailabilityDetailedReport =
+                        new OptionControlAvailabilityDetailedReport(context, dataDB, option, type, mode, unlockCodeResultListener);
                 if (optionControlAvailabilityDetailedReport.isBlockOption()) {
                     if (mode.equals(NNKMode.MAKE) || (mode.equals(NNKMode.CHECK) && optionControlAvailabilityDetailedReport.isBlockOption()))
                         optionControlAvailabilityDetailedReport.showOptionMassage(block);
@@ -1055,84 +1379,86 @@ public class Options {
                         optionControlAvailabilityDetailedReport.showOptionMassage(block);
                     }
                 }
-                return optionControlAvailabilityDetailedReport.isBlockOption() ? 1 : 0;
+                return optionControlAvailabilityDetailedReport.isBlockOption2() ? 1 : 0;
 
             case 151139:
-                new OptionButPhotoPlanogramm<>(context, dataDB, option, type, mode);
+                new OptionButPhotoPlanogramm<>(context, dataDB, option, type, mode, unlockCodeResultListener);
                 break;
 
             case 158309:
-                new OptionButtonPhotoShowcaseNear<>(context, dataDB, option, type, mode);
+                new OptionButtonPhotoShowcaseNear<>(context, dataDB, option, type, mode, unlockCodeResultListener);
                 break;
 
             case 158604:
-                new OptionButtonPhotoShowcaseCorporateBlock<>(context, dataDB, option, type, mode);
+                new OptionButtonPhotoShowcaseCorporateBlock<>(context, dataDB, option, type, mode, unlockCodeResultListener);
                 break;
 
             case 158605:
-                new OptionButtonPhotoShowcaseFullness<>(context, dataDB, option, type, mode);
+                new OptionButtonPhotoShowcaseFullness<>(context, dataDB, option, type, mode, unlockCodeResultListener);
                 break;
 
             case 157277:
-                new OptionButtonPhotoAktionTovar<>(context, dataDB, option, type, mode);
+                new OptionButtonPhotoAktionTovar<>(context, dataDB, option, type, mode, unlockCodeResultListener);
                 break;
 
             case 157354:
-                new OptionButtonPhotoDMP<>(context, dataDB, option, type, mode);
+                new OptionButtonPhotoDMP<>(context, dataDB, option, type, mode, unlockCodeResultListener);
                 break;
 
             case 80977:     // Контроль Акций
 
             case 156882:    // Кнопка Акций
-                OptionControlPromotion<?> optionControlPromotion = new OptionControlPromotion<>(context, dataDB, option, type, mode);
+                OptionControlPromotion<?> optionControlPromotion = new OptionControlPromotion<>(context, dataDB, option, type, mode, unlockCodeResultListener);
                 if (mode.equals(NNKMode.MAKE) || (mode.equals(NNKMode.CHECK) && optionControlPromotion.isBlockOption()))
                     optionControlPromotion.showOptionMassage(block);
                 if (mode.equals(NNKMode.BLOCK) && optionControlPromotion.signal && optionControlPromotion.isBlockOption()) {
                     optionControlPromotion.showOptionMassage(block);
                 }
 
-                return optionControlPromotion.isBlockOption() ? 1 : 0;
+                return optionControlPromotion.isBlockOption2() ? 1 : 0;
 
             case 157278:
-                OptionControlPhotoPromotion<?> optionControlPhotoPromotion = new OptionControlPhotoPromotion<>(context, dataDB, option, type, mode);
+                OptionControlPhotoPromotion<?> optionControlPhotoPromotion =
+                        new OptionControlPhotoPromotion<>(context, dataDB, option, type, mode, unlockCodeResultListener);
                 optionControlPhotoPromotion.showOptionMassage(block);
-                return optionControlPhotoPromotion.isBlockOption() ? 1 : 0;
+                return optionControlPhotoPromotion.isBlockOption2() ? 1 : 0;
 
             case 156928:
-                OptionControlEndAnotherWork optionControlEndAnotherWork = new OptionControlEndAnotherWork(context, dataDB, option, type, mode);
+                OptionControlEndAnotherWork optionControlEndAnotherWork =
+                        new OptionControlEndAnotherWork(context, dataDB, option, type, mode, unlockCodeResultListener);
                 if (mode.equals(NNKMode.MAKE) || (mode.equals(NNKMode.CHECK) && optionControlEndAnotherWork.isBlockOption()))
                     optionControlEndAnotherWork.showOptionMassage(block);
                 if (mode.equals(NNKMode.BLOCK) && optionControlEndAnotherWork.signal && optionControlEndAnotherWork.isBlockOption()) {
                     optionControlEndAnotherWork.showOptionMassage(block);
                 }
-                return optionControlEndAnotherWork.isBlockOption() ? 1 : 0;
+                return optionControlEndAnotherWork.isBlockOption2() ? 1 : 0;
 
             case 135327: // Задача
-                OptionButtonTaskAnswer<?> optionButtonTaskAnswer = new OptionButtonTaskAnswer<>(context, dataDB, option, type, mode);
+                new OptionButtonTaskAnswer<>(context, dataDB, option, type, mode, unlockCodeResultListener);
                 break;
 
             case 135329:
-                OptionControlTaskAnswer optionControlTask = new OptionControlTaskAnswer(context, dataDB, option, type, mode);
+                OptionControlTaskAnswer optionControlTask = new OptionControlTaskAnswer(context, dataDB, option, type, mode, unlockCodeResultListener);
                 if (mode.equals(NNKMode.MAKE) || (mode.equals(NNKMode.CHECK) && optionControlTask.isBlockOption()))
                     optionControlTask.showOptionMassage(block);
                 if (mode.equals(NNKMode.BLOCK) && optionControlTask.signal && optionControlTask.isBlockOption()) {
                     optionControlTask.showOptionMassage(block);
                 }
-                return optionControlTask.isBlockOption() ? 1 : 0;
+                return optionControlTask.isBlockOption2() ? 1 : 0;
 
             // Эти 2 в принципе разные, но для меня на данный момент они занимаются одним и тем же
             case 135742:// Дет. Отчёт по КлиентоАдресу
             case 137797:// Дет. Отчёт по Дад2
 //                option135742(context, dataDB, option, type, mode);
-                new OptionButtonAvailabilityDetailedReport(context, dataDB, option, type, mode);
+                new OptionButtonAvailabilityDetailedReport(context, dataDB, option, type, mode, unlockCodeResultListener);
                 break;
 
             case 132621:   // Оценка
-                option132621(context, dataDB, option, type, mode);
+                option132621(context, dataDB, option, type, mode, unlockCodeResultListener);
                 break;
 
             case 84003:     // Мнение о сотруднике
-                option84003(context, dataDB, option, type, mode);
+                option84003(context, dataDB, option, type, mode, unlockCodeResultListener);
                 break;
 
             case 138339:
@@ -1140,14 +1466,14 @@ public class Options {
                     // Пока что пусто
                 } else if (dataDB instanceof TasksAndReclamationsSDB) {
                     // Надо чем-то заполнить
-                    option138339(context, dataDB, option, type, mode);
+                    option138339(context, dataDB, option, type, mode, unlockCodeResultListener);
                 }
                 break;
 
             // ---
 
             case 138773:
-                optionMP_138773(context, dataDB, option, type, mode);
+                optionMP_138773(context, dataDB, option, type, mode, unlockCodeResultListener);
                 break;
 
 //                case 8299:
@@ -1158,78 +1484,80 @@ public class Options {
             case 138518:
                 Log.e("NNK", "F/optControl/138518");
                 if (dataDB instanceof WpDataDB) {
-                    optionStartWork_138518(context, (WpDataDB) dataDB, option, type, mode);
+                    optionStartWork_138518(context, (WpDataDB) dataDB, option, type, mode, unlockCodeResultListener);
 //                        sendWpData2();
                 } else if (dataDB instanceof TasksAndReclamationsSDB) {
-                    optionStartWork_138518(context, (TasksAndReclamationsSDB) dataDB, option, type, mode);
+                    optionStartWork_138518(context, (TasksAndReclamationsSDB) dataDB, option, type, mode, unlockCodeResultListener);
                 }
                 break;
 
             case 138519:
-                return optionControlStartWork_138519(context, dataDB, option, type, mode) ? 0 : 1;
+                return optionControlStartWork_138519(context, dataDB, option, type, mode, unlockCodeResultListener) ? 0 : 1;
 
 
             case 138520:
                 if (dataDB instanceof WpDataDB) {
-                    optionEndWork_138520(context, (WpDataDB) dataDB, option, type, mode);
+                    optionEndWork_138520(context, (WpDataDB) dataDB, option, type, mode, unlockCodeResultListener);
 //                        sendWpData2();
                 } else if (dataDB instanceof TasksAndReclamationsSDB) {
-                    optionEndWork_138520(context, (TasksAndReclamationsSDB) dataDB, option, type, mode);
+                    optionEndWork_138520(context, (TasksAndReclamationsSDB) dataDB, option, type, mode, unlockCodeResultListener);
                 }
                 break;
 
             case 138521:
-                return optionControlEndWork_138521(context, dataDB, option, type, mode) ? 0 : 1;
+                return optionControlEndWork_138521(context, dataDB, option, type, mode, unlockCodeResultListener) ? 0 : 1;
 
             case 158308:
             case 132968:
                 if (dataDB instanceof WpDataDB) {
-                    optionMakePhoto0_132968(context, (WpDataDB) dataDB, option, type, mode);
+                    optionMakePhoto0_132968(context, (WpDataDB) dataDB, option, type, mode, unlockCodeResultListener);
                 } else if (dataDB instanceof TasksAndReclamationsSDB) {
-                    optionMakePhoto0_132968(context, dataDB, option, type, mode);
+                    optionMakePhoto0_132968(context, dataDB, option, type, mode, unlockCodeResultListener);
                 }
                 break;
 
             // --- Опция контроля на Получение заказа в ТТ
             case 587:
-                return optionControlReceivingAnOrder_587(context, dataDB, option, type, mode) ? 1 : 0;
+                return optionControlReceivingAnOrder_587(context, dataDB, option, type, mode, unlockCodeResultListener) ? 1 : 0;
 
 
             // Контроль Опции Доп. Требований
             case 138341:
                 try {
-                    OptionControlAdditionalRequirementsMark<?> optionControlAdditionalRequirementsMark = new OptionControlAdditionalRequirementsMark<>(context, dataDB, option, type, mode);
+                    OptionControlAdditionalRequirementsMark<?> optionControlAdditionalRequirementsMark =
+                            new OptionControlAdditionalRequirementsMark<>(context, dataDB, option, type, mode, unlockCodeResultListener);
                     if (mode.equals(NNKMode.MAKE) || (mode.equals(NNKMode.CHECK) && optionControlAdditionalRequirementsMark.isBlockOption()))
                         optionControlAdditionalRequirementsMark.showOptionMassage(block);
                     if (mode.equals(NNKMode.BLOCK) && optionControlAdditionalRequirementsMark.signal && optionControlAdditionalRequirementsMark.isBlockOption()) {
                         optionControlAdditionalRequirementsMark.showOptionMassage(block);
                     }
-                    return optionControlAdditionalRequirementsMark.isBlockOption() ? 1 : 0;
+                    return optionControlAdditionalRequirementsMark.isBlockOption2() ? 1 : 0;
                 } catch (Exception e) {
+                    return 0;
                 }
-                break;
 
             case 138342:
                 try {
-                    OptionControlAdditionalMaterialsMark<?> optionControlAdditionalMaterialsMark = new OptionControlAdditionalMaterialsMark<>(context, dataDB, option, type, mode);
+                    OptionControlAdditionalMaterialsMark<?> optionControlAdditionalMaterialsMark =
+                            new OptionControlAdditionalMaterialsMark<>(context, dataDB, option, type, mode, unlockCodeResultListener);
                     if (mode.equals(NNKMode.MAKE) || (mode.equals(NNKMode.CHECK) && optionControlAdditionalMaterialsMark.isBlockOption()))
                         optionControlAdditionalMaterialsMark.showOptionMassage(block);
                     if (mode.equals(NNKMode.BLOCK) && optionControlAdditionalMaterialsMark.signal && optionControlAdditionalMaterialsMark.isBlockOption()) {
                         optionControlAdditionalMaterialsMark.showOptionMassage(block);
                     }
-                    return optionControlAdditionalMaterialsMark.isBlockOption() ? 1 : 0;
+                    return optionControlAdditionalMaterialsMark.isBlockOption2() ? 1 : 0;
                 } catch (Exception e) {
                 }
                 break;
 
             case 139577:
-                optionControlVersion_139577(context, dataDB, option, null, NNKMode.CHECK_CLICK);
+                optionControlVersion_139577(context, dataDB, option, null, NNKMode.CHECK_CLICK, unlockCodeResultListener);
                 break;
 
 
             // Доп. Материалы
             case 138340:
-                option138340(context, dataDB, option, type, mode);
+                option138340(context, dataDB, option, type, mode, unlockCodeResultListener);
                 break;
 
             default:
@@ -1252,7 +1580,7 @@ public class Options {
 
 
     //#когда не знаешь что такое полиморфизм
-    private <T> void option84003(Context context, T dataDB, OptionsDB option, OptionMassageType type, NNKMode mode) {
+    private <T> void option84003(Context context, T dataDB, OptionsDB option, OptionMassageType type, NNKMode mode, OptionControl.UnlockCodeResultListener unlockCodeResultListener) {
         if (dataDB instanceof TasksAndReclamationsSDB) {
 
             TasksAndReclamationsSDB tarDB = (TasksAndReclamationsSDB) dataDB;
@@ -1295,7 +1623,7 @@ public class Options {
     }
 
     // Установка оценки для Задачи
-    private <T> void option132621(Context context, T dataDB, OptionsDB option, OptionMassageType type, NNKMode mode) {
+    private <T> void option132621(Context context, T dataDB, OptionsDB option, OptionMassageType type, NNKMode mode, OptionControl.UnlockCodeResultListener unlockCodeResultListener) {
 
         float rating = 0;
         if (dataDB instanceof TasksAndReclamationsSDB) {
@@ -1331,7 +1659,7 @@ public class Options {
         }
     }
 
-    private <T> void option138339(Context context, T dataDB, OptionsDB option, OptionMassageType type, NNKMode mode) {
+    private <T> void option138339(Context context, T dataDB, OptionsDB option, OptionMassageType type, NNKMode mode, OptionControl.UnlockCodeResultListener unlockCodeResultListener) {
         List<AdditionalRequirementsDB> data = AdditionalRequirementsRealm.getData3(dataDB, HIDE_FOR_USER, null);
 
         DialogAdditionalRequirements dialogAdditionalRequirements = new DialogAdditionalRequirements(context);
@@ -1346,7 +1674,7 @@ public class Options {
         dialogAdditionalRequirements.show();
     }
 
-    private <T> void option138340(Context context, T dataDB, OptionsDB option, OptionMassageType type, NNKMode mode) {
+    private <T> void option138340(Context context, T dataDB, OptionsDB option, OptionMassageType type, NNKMode mode, OptionControl.UnlockCodeResultListener unlockCodeResultListener) {
         String expire = Clock.getHumanTimeYYYYMMDD(System.currentTimeMillis() / 1000);
         List<AdditionalMaterialsSDB> data1 = SQL_DB.additionalMaterialsDao().getAllForOption(option.getClientId(), "1", "0", expire);
 //        List<AdditionalMaterialsJOINAdditionalMaterialsAddressSDB> data = SQL_DB.additionalMaterialsDao().getAllForOptionTEST(option.getClientId(), Integer.parseInt(option.getAddrId()), "1", "0");
@@ -1501,7 +1829,7 @@ public class Options {
      * Опция
      * Нажатие на кнопку моего местоположения ( 138773 )
      */
-    private <T> void optionMP_138773(Context context, T dataDB, OptionsDB optionsDB, OptionMassageType type, NNKMode mode) {
+    private <T> void optionMP_138773(Context context, T dataDB, OptionsDB optionsDB, OptionMassageType type, NNKMode mode, OptionControl.UnlockCodeResultListener unlockCodeResultListener) {
 
         WpDataDB wpDataDB;
         if (dataDB instanceof WpDataDB) {
@@ -1562,7 +1890,7 @@ public class Options {
      * Опция контроля
      * Проверка на Начало работы ( 138519 )
      */
-    private <T> boolean optionControlStartWork_138519(Context context, T dataDB, OptionsDB optionsDB, OptionMassageType type, NNKMode mode) {
+    private <T> boolean optionControlStartWork_138519(Context context, T dataDB, OptionsDB optionsDB, OptionMassageType type, NNKMode mode, OptionControl.UnlockCodeResultListener unlockCodeResultListener) {
         boolean res;
 
         long dad2, startWork, endWork;
@@ -1573,6 +1901,7 @@ public class Options {
             dad2 = ((TasksAndReclamationsSDB) dataDB).codeDad2;
             startWork = ((TasksAndReclamationsSDB) dataDB).dt_start_fact;
         } else {
+            unlockCodeResultListener.onUnlockCodeFailure();
             return res = false;
         }
 
@@ -1584,6 +1913,7 @@ public class Options {
                     realm.insertOrUpdate(optionsDB);
                 }
             });
+            unlockCodeResultListener.onUnlockCodeSuccess();
             res = true;
         } else {
             RealmManager.INSTANCE.executeTransaction(realm -> {
@@ -1592,6 +1922,7 @@ public class Options {
                     realm.insertOrUpdate(optionsDB);
                 }
             });
+            unlockCodeResultListener.onUnlockCodeFailure();
             res = false;
         }
 
@@ -1640,12 +1971,13 @@ public class Options {
      * Опция
      * Нажатие на кнопку Для установки начала рабочего дня ( 138518 )
      */
-    private boolean optionStartWork_138518(Context context, WpDataDB wpDataDB, OptionsDB optionsDB, OptionMassageType type, NNKMode mode) {
+    private boolean optionStartWork_138518(Context context, WpDataDB wpDataDB, OptionsDB optionsDB, OptionMassageType type, NNKMode mode, OptionControl.UnlockCodeResultListener unlockCodeResultListener) {
         boolean result;
         Globals.writeToMLOG("INFO", "DetailedReportButtons.class.pressStartWork", "ENTER. wpDataDB.codeDAD2: " + wpDataDB.getCode_dad2());
         if (wpDataDB.getVisit_start_dt() > 0) {
             Toast.makeText(context, "Работа уже начата!", Toast.LENGTH_SHORT).show();
             globals.writeToMLOG(Clock.getHumanTime() + "_INFO.DetailedReportButtons.class.pressStartWork: " + "Работа уже начата!" + "\n");
+            unlockCodeResultListener.onUnlockCodeSuccess();
             result = true;
         } else {
             try {
@@ -1676,11 +2008,13 @@ public class Options {
                 Globals.writeToMLOG("INFO", "DetailedReportButtons.class.pressStartWork", "Вы начали работу в: " + startTime + " / отчёт: " + wpDataDB.getDoc_num_otchet() + " wpDataDB.getCode_dad2(): " + wpDataDB.getCode_dad2());
 
                 Toast.makeText(context, "Вы начали работу в: " + Clock.getHumanTimeOpt(startTime * 1000), Toast.LENGTH_SHORT).show();
+                unlockCodeResultListener.onUnlockCodeSuccess();
                 result = true;
             } catch (Exception e) {
                 // Set to log error
                 Toast.makeText(context, "Возникла ошибка: " + e, Toast.LENGTH_SHORT).show();
                 Globals.writeToMLOG("ERROR", "DetailedReportButtons.class.pressStartWork", "wpDataDB.getCode_dad2(): " + wpDataDB.getCode_dad2() + "Exception e: " + e);
+                unlockCodeResultListener.onUnlockCodeFailure();
                 result = false;
             }
         }
@@ -1689,7 +2023,7 @@ public class Options {
         return result;
     }
 
-    private void optionStartWork_138518(Context context, TasksAndReclamationsSDB dataDB, OptionsDB optionsDB, OptionMassageType type, NNKMode mode) {
+    private void optionStartWork_138518(Context context, TasksAndReclamationsSDB dataDB, OptionsDB optionsDB, OptionMassageType type, NNKMode mode, OptionControl.UnlockCodeResultListener unlockCodeResultListener) {
         globals.writeToMLOG(Clock.getHumanTime() + "_INFO.DetailedReportButtons.class.pressStartWork: " + "ENTER" + "\n");
         if (dataDB.dt_start_fact > 0) {
             Toast.makeText(context, "Работа уже начата!", Toast.LENGTH_SHORT).show();
@@ -1726,7 +2060,7 @@ public class Options {
      * Опция контроля
      * Проверка на Окончание работы( 138521 )
      */
-    private <T> boolean optionControlEndWork_138521(Context context, T dataDB, OptionsDB optionsDB, OptionMassageType type, NNKMode mode) {
+    private <T> boolean optionControlEndWork_138521(Context context, T dataDB, OptionsDB optionsDB, OptionMassageType type, NNKMode mode, OptionControl.UnlockCodeResultListener unlockCodeResultListener) {
 
         boolean res;
 
@@ -1740,6 +2074,7 @@ public class Options {
             startWork = ((TasksAndReclamationsSDB) dataDB).dt_start_fact;
             endWork = ((TasksAndReclamationsSDB) dataDB).dt_end_fact;
         } else {
+            unlockCodeResultListener.onUnlockCodeFailure();
             return res = false;
         }
 
@@ -1750,6 +2085,7 @@ public class Options {
                     realm.insertOrUpdate(optionsDB);
                 }
             });
+            unlockCodeResultListener.onUnlockCodeSuccess();
             res = true;
         } else {
             RealmManager.INSTANCE.executeTransaction(realm -> {
@@ -1758,6 +2094,7 @@ public class Options {
                     realm.insertOrUpdate(optionsDB);
                 }
             });
+            unlockCodeResultListener.onUnlockCodeFailure();
             res = false;
         }
 
@@ -1783,12 +2120,13 @@ public class Options {
      * Опция
      * Нажатие на кнопку Для установки окончания рабочего дня ( 138520 )
      */
-    private boolean optionEndWork_138520(Context context, WpDataDB wpDataDB, OptionsDB optionsDB, OptionMassageType type, NNKMode mode) {
+    private boolean optionEndWork_138520(Context context, WpDataDB wpDataDB, OptionsDB optionsDB, OptionMassageType type, NNKMode mode, OptionControl.UnlockCodeResultListener unlockCodeResultListener) {
         boolean result;
         Globals.writeToMLOG("INFO", "DetailedReportButtons.class.pressEndWork", "ENTER. wpDataDB.codeDAD2: " + wpDataDB.getCode_dad2());
         if (wpDataDB.getVisit_end_dt() > 0) {
             Toast.makeText(context, "Работа уже окончена!", Toast.LENGTH_SHORT).show();
             Globals.writeToMLOG("INFO", "DetailedReportButtons.class.pressEndWork", "Работа уже окончена!. wpDataDB.codeDAD2: " + wpDataDB.getCode_dad2());
+            unlockCodeResultListener.onUnlockCodeSuccess();
             result = true;
         } else {
             if (wpDataDB.getVisit_start_dt() > 0) {
@@ -1821,16 +2159,19 @@ public class Options {
 //                    globals.writeToMLOG(Clock.getHumanTime() + "_INFO.DetailedReportButtons.class.pressEndWork: " + "Вы закончили работу в: " + endTime + " / отчёт: " + wpDataDB.getDoc_num_otchet() + "\n");
                     Globals.writeToMLOG("INFO", "_INFO.DetailedReportButtons.class.pressEndWork", "Вы закончили работу в: " + endTime + " / отчёт: " + wpDataDB.getDoc_num_otchet());
                     Toast.makeText(context, "Вы окончили работу в: " + Clock.getHumanTimeOpt(endTime * 1000) + "\n\nНе забудьте нажать 'Провести', что б система проверила текущий документ и начислила Вам премиальные", Toast.LENGTH_SHORT).show();
+                    unlockCodeResultListener.onUnlockCodeSuccess();
                     result = true;
                 } catch (Exception e) {
                     // Set to log error
                     Toast.makeText(context, "Возникла ошибка: " + e, Toast.LENGTH_SHORT).show();
                     Globals.writeToMLOG("ERROR", "DetailedReportButtons.class.pressEndWork", "wpDataDB.codeDAD2: " + wpDataDB.getCode_dad2() + "Exception e: " + e);
+                    unlockCodeResultListener.onUnlockCodeFailure();
                     result = false;
                 }
             } else {
                 Toast.makeText(context, "Вы не можете закончить работу не начав её", Toast.LENGTH_SHORT).show();
                 Globals.writeToMLOG("INFO", "DetailedReportButtons.class.pressEndWork", "Вы не можете закончить работу не начав её. wpDataDB.codeDAD2: " + wpDataDB.getCode_dad2());
+                unlockCodeResultListener.onUnlockCodeFailure();
                 result = false;
             }
         }
@@ -1845,7 +2186,17 @@ public class Options {
                 OptionsDB optionsDB = (OptionsDB) data;
                 OptionMassageType msgType = new OptionMassageType();
                 msgType.type = OptionMassageType.Type.DIALOG;
-                new Options().optControl(context, wpDataDB, optionsDB, Integer.parseInt(optionsDB.getOptionControlId()), null, msgType, Options.NNKMode.CHECK);
+                new Options().optControl(context, wpDataDB, optionsDB, Integer.parseInt(optionsDB.getOptionControlId()), null, msgType, Options.NNKMode.CHECK, new OptionControl.UnlockCodeResultListener() {
+                    @Override
+                    public void onUnlockCodeSuccess() {
+
+                    }
+
+                    @Override
+                    public void onUnlockCodeFailure() {
+
+                    }
+                });
             }
         });
 
@@ -1853,7 +2204,7 @@ public class Options {
         return result;
     }
 
-    private void optionEndWork_138520(Context context, TasksAndReclamationsSDB dataDB, OptionsDB optionsDB, OptionMassageType type, NNKMode mode) {
+    private void optionEndWork_138520(Context context, TasksAndReclamationsSDB dataDB, OptionsDB optionsDB, OptionMassageType type, NNKMode mode, OptionControl.UnlockCodeResultListener unlockCodeResultListener) {
         globals.writeToMLOG(Clock.getHumanTime() + "_INFO.DetailedReportButtons.class.pressEndWork: " + "ENTER" + "\n");
         if (dataDB.dt_end_fact > 0) {
             Toast.makeText(context, "Работа уже окончена!", Toast.LENGTH_SHORT).show();
@@ -1893,7 +2244,7 @@ public class Options {
      * Опция
      * Выполнение фотоотчёта
      */
-    private <T> void optionMakePhoto0_132968(Context context, T dataDB, OptionsDB optionsDB, OptionMassageType type, NNKMode mode) {
+    private <T> void optionMakePhoto0_132968(Context context, T dataDB, OptionsDB optionsDB, OptionMassageType type, NNKMode mode, OptionControl.UnlockCodeResultListener unlockCodeResultListener) {
         if (dataDB instanceof TasksAndReclamationsSDB) {
             TARSecondFrag.TaRID = ((TasksAndReclamationsSDB) dataDB).id;
         }
@@ -1913,7 +2264,7 @@ public class Options {
     /**
      * Опция контроля (587)
      */
-    private <T> boolean optionControlReceivingAnOrder_587(Context context, T dataDB, OptionsDB optionsDB, OptionMassageType type, NNKMode mode) {
+    private <T> boolean optionControlReceivingAnOrder_587(Context context, T dataDB, OptionsDB optionsDB, OptionMassageType type, NNKMode mode, OptionControl.UnlockCodeResultListener unlockCodeResultListener) {
         boolean res;
 
         long dad2, startWork, endWork;
@@ -1922,6 +2273,7 @@ public class Options {
         } else if (dataDB instanceof TasksAndReclamationsSDB) {
             dad2 = ((TasksAndReclamationsSDB) dataDB).codeDad2;
         } else {
+            unlockCodeResultListener.onUnlockCodeFailure();
             return res = false;
         }
 
@@ -1949,6 +2301,7 @@ public class Options {
                     realm.insertOrUpdate(optionsDB);
                 }
             });
+            unlockCodeResultListener.onUnlockCodeSuccess();
             res = true;
         } else {
             RealmManager.INSTANCE.executeTransaction(realm -> {
@@ -1957,6 +2310,7 @@ public class Options {
                     realm.insertOrUpdate(optionsDB);
                 }
             });
+            unlockCodeResultListener.onUnlockCodeFailure();
             res = false;
         }
 
@@ -2224,7 +2578,7 @@ public class Options {
     /**
      * Опция нажатие на номер версии приложения 139577
      */
-    public <T> void optionControlVersion_139577(Context context, T dataDB, OptionsDB optionsDB, OptionMassageType type, NNKMode mode) {
+    public <T> void optionControlVersion_139577(Context context, T dataDB, OptionsDB optionsDB, OptionMassageType type, NNKMode mode, OptionControl.UnlockCodeResultListener unlockCodeResultListener) {
         Long currentVer = Long.valueOf(BuildConfig.VERSION_NAME);
         Long minimalVer = VersionApp.VERSION_APP;
 

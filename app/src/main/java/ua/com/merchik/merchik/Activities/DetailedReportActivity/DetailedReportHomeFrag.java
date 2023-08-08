@@ -40,6 +40,7 @@ import java.util.List;
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.FabYoutube;
 import ua.com.merchik.merchik.Globals;
+import ua.com.merchik.merchik.Options.OptionControl;
 import ua.com.merchik.merchik.Options.Options;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.Recyclers.KeyValueData;
@@ -267,7 +268,17 @@ public class DetailedReportHomeFrag extends Fragment {
                 OptionsDB optionsDB = (OptionsDB) data;
                 OptionMassageType msgType = new OptionMassageType();
                 msgType.type = OptionMassageType.Type.DIALOG;
-                new Options().optControl(getContext(), wp, optionsDB, Integer.parseInt(optionsDB.getOptionControlId()), null, msgType, Options.NNKMode.CHECK);
+                new Options().optControl(getContext(), wp, optionsDB, Integer.parseInt(optionsDB.getOptionControlId()), null, msgType, Options.NNKMode.CHECK, new OptionControl.UnlockCodeResultListener() {
+                    @Override
+                    public void onUnlockCodeSuccess() {
+
+                    }
+
+                    @Override
+                    public void onUnlockCodeFailure() {
+
+                    }
+                });
             }
         });
     }

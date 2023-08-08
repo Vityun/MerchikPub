@@ -12,6 +12,10 @@ public interface Clicks<T> {
         void click();
     }
 
+    public interface CodeInputListener {
+        void onCodeEntered(boolean success);
+    }
+
     interface click{
         <T> void click(T data);
     }

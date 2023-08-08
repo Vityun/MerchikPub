@@ -12,12 +12,13 @@ public class OptionButtonReclamationAnswer<T> extends OptionControl {
 
     public int OPTION_BUTTON_RECLAMATION_ANSWER_ID = 135328;
 
-    public OptionButtonReclamationAnswer(Context context, T document, OptionsDB optionDB, OptionMassageType msgType, Options.NNKMode nnkMode) {
+    public OptionButtonReclamationAnswer(Context context, T document, OptionsDB optionDB, OptionMassageType msgType, Options.NNKMode nnkMode, UnlockCodeResultListener unlockCodeResultListener) {
         this.context = context;
         this.document = document;
         this.optionDB = optionDB;
         this.msgType = msgType;
         this.nnkMode = nnkMode;
+        this.unlockCodeResultListener = unlockCodeResultListener;
 
         getDocumentVar();
         executeOption();
@@ -27,7 +28,7 @@ public class OptionButtonReclamationAnswer<T> extends OptionControl {
     }
 
     private void executeOption() {
-        OptionControlReclamationAnswer<?> optionControlReclamationAnswer = new OptionControlReclamationAnswer<>(context, document, optionDB, msgType, nnkMode);
+        OptionControlReclamationAnswer<?> optionControlReclamationAnswer = new OptionControlReclamationAnswer<>(context, document, optionDB, msgType, nnkMode, unlockCodeResultListener);
         optionControlReclamationAnswer.showOptionMassage("");
     }
 }

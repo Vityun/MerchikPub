@@ -54,13 +54,14 @@ public class OptionControlPercentageOfThePrize<T> extends OptionControl {
 
     private UsersSDB usersSDB;
 
-    public OptionControlPercentageOfThePrize(Context context, T document, OptionsDB optionDB, OptionMassageType msgType, Options.NNKMode nnkMode) {
+    public OptionControlPercentageOfThePrize(Context context, T document, OptionsDB optionDB, OptionMassageType msgType, Options.NNKMode nnkMode, UnlockCodeResultListener unlockCodeResultListener) {
         try {
             this.context = context;
             this.document = document;
             this.optionDB = optionDB;
             this.msgType = msgType;
             this.nnkMode = nnkMode;
+            this.unlockCodeResultListener = unlockCodeResultListener;
             getDocumentVar();
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                 executeOption();

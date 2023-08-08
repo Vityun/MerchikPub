@@ -49,13 +49,14 @@ public class OptionControlReturnOfGoods<T> extends OptionControl {
     private WpDataDB wpDataDB;
     public boolean signal = false;
 
-    public OptionControlReturnOfGoods(Context context, T document, OptionsDB optionDB, OptionMassageType msgType, Options.NNKMode nnkMode) {
+    public OptionControlReturnOfGoods(Context context, T document, OptionsDB optionDB, OptionMassageType msgType, Options.NNKMode nnkMode, UnlockCodeResultListener unlockCodeResultListener) {
         try {
             this.context = context;
             this.document = document;
             this.optionDB = optionDB;
             this.msgType = msgType;
             this.nnkMode = nnkMode;
+            this.unlockCodeResultListener = unlockCodeResultListener;
 
             getDocumentVar();
             executeOption();

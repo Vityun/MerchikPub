@@ -1,5 +1,7 @@
 package ua.com.merchik.merchik.Options.Buttons;
 
+import static ua.com.merchik.merchik.Globals.userId;
+
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
@@ -15,23 +17,18 @@ import ua.com.merchik.merchik.database.realm.tables.AppUserRealm;
 import ua.com.merchik.merchik.database.realm.tables.WpDataRealm;
 import ua.com.merchik.merchik.dialogs.DialogData;
 
-import static ua.com.merchik.merchik.Globals.userId;
-
 public class OptionButtonAddNewClient<T> extends OptionControl {
     public int OPTION_BUTTON_ADD_NEW_CLIENT_ID = 133382;
 
     private WpDataDB wpDataDB;
 
-    public OptionButtonAddNewClient(){
-
-    }
-
-    public OptionButtonAddNewClient(Context context, T document, OptionsDB optionDB, OptionMassageType msgType, Options.NNKMode nnkMode) {
+    public OptionButtonAddNewClient(Context context, T document, OptionsDB optionDB, OptionMassageType msgType, Options.NNKMode nnkMode, UnlockCodeResultListener unlockCodeResultListener) {
         this.context = context;
         this.document = document;
         this.optionDB = optionDB;
         this.msgType = msgType;
         this.nnkMode = nnkMode;
+        this.unlockCodeResultListener = unlockCodeResultListener;
         getDocumentVar();
         executeOption();
     }

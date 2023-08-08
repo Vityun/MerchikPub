@@ -18,12 +18,13 @@ public class OptionButtonPhotoBeforeStartWork<T> extends OptionControl {
     private WpDataDB wpDataDB;
     private final WorkPlan workPlan = new WorkPlan();
 
-    public OptionButtonPhotoBeforeStartWork(Context context, T document, OptionsDB optionDB, OptionMassageType msgType, Options.NNKMode nnkMode) {
+    public OptionButtonPhotoBeforeStartWork(Context context, T document, OptionsDB optionDB, OptionMassageType msgType, Options.NNKMode nnkMode, UnlockCodeResultListener unlockCodeResultListener) {
         this.context = context;
         this.document = document;
         this.optionDB = optionDB;
         this.msgType = msgType;
         this.nnkMode = nnkMode;
+        this.unlockCodeResultListener = unlockCodeResultListener;
         getDocumentVar();
         executeOption();
     }

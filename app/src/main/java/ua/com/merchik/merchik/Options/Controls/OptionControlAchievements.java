@@ -50,12 +50,13 @@ public class OptionControlAchievements<T> extends OptionControl {
     private Long dateTo = 0L;
 
 
-    public OptionControlAchievements(Context context, T document, OptionsDB optionDB, OptionMassageType msgType, Options.NNKMode nnkMode) {
+    public OptionControlAchievements(Context context, T document, OptionsDB optionDB, OptionMassageType msgType, Options.NNKMode nnkMode, UnlockCodeResultListener unlockCodeResultListener) {
         this.context = context;
         this.document = document;
         this.optionDB = optionDB;
         this.msgType = msgType;
         this.nnkMode = nnkMode;
+        this.unlockCodeResultListener = unlockCodeResultListener;
         getDocumentVar();
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             executeOption();

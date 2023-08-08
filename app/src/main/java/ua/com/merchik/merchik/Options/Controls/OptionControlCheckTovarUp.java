@@ -49,13 +49,14 @@ public class OptionControlCheckTovarUp<T> extends OptionControl {
     private long documentDate;  // На данный момент в миллисекундах
     private Integer tpId; // идентификатор сети (сильпо, атб..)
 
-    public OptionControlCheckTovarUp(Context context, T document, OptionsDB optionDB, OptionMassageType msgType, Options.NNKMode nnkMode) {
+    public OptionControlCheckTovarUp(Context context, T document, OptionsDB optionDB, OptionMassageType msgType, Options.NNKMode nnkMode, UnlockCodeResultListener unlockCodeResultListener) {
         try {
             this.context = context;
             this.document = document;
             this.optionDB = optionDB;
             this.msgType = msgType;
             this.nnkMode = nnkMode;
+            this.unlockCodeResultListener = unlockCodeResultListener;
             getDocumentVar();
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                 executeOption();

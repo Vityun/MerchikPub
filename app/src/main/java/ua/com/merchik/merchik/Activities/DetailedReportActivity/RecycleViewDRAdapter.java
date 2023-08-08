@@ -452,7 +452,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                     case 135328:    // Рекламация
                         OptionMassageType type = new OptionMassageType();
                         type.type = OptionMassageType.Type.STRING;
-                        OptionControlReclamationAnswer<?> optionControlReclamationAnswer = new OptionControlReclamationAnswer<>(itemView.getContext(), dataDB, optionsButtons, type, Options.NNKMode.NULL);
+                        OptionControlReclamationAnswer<?> optionControlReclamationAnswer = new OptionControlReclamationAnswer<>(itemView.getContext(), dataDB, optionsButtons, type, Options.NNKMode.NULL, null);
 
                         textInteger.setText("" + optionControlReclamationAnswer.problemReclamationCount());
                         break;
@@ -460,7 +460,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                     case 135327:    // Задачи
                         type = new OptionMassageType();
                         type.type = OptionMassageType.Type.STRING;
-                        OptionControlTaskAnswer<?> optionControlTask = new OptionControlTaskAnswer<>(itemView.getContext(), dataDB, optionsButtons, type, Options.NNKMode.NULL);
+                        OptionControlTaskAnswer<?> optionControlTask = new OptionControlTaskAnswer<>(itemView.getContext(), dataDB, optionsButtons, type, Options.NNKMode.NULL, null);
 
                         textInteger.setText("" + optionControlTask.problemTaskCount());
                         break;
@@ -495,10 +495,27 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                     msgType.type = OptionMassageType.Type.DIALOG;
                     options.setOptionFromDetailedReport(allReportOption);
                     msgType = options.NNK(mContext, dataDB, optionsButtons, butt, msgType, Options.NNKMode.MAKE, () -> {
-                        if (dataDB instanceof WpDataDB) {
-                            detailedReportButtons.buttonClick(mContext, (WpDataDB) dataDB, butt.get(getAdapterPosition()), 0);
-                            setCheck(POS, optionsButtons, Options.NNKMode.NULL);
+                        try {
+                            int test1 = getAdapterPosition();
+                            int test2 = getBindingAdapterPosition();
+                            int test3 = getAbsoluteAdapterPosition();
+
+                            Log.e("NNK", "test1: " + test1);
+                            Log.e("NNK", "test2: " + test2);
+                            Log.e("NNK", "test3: " + test3);
+
+                            if (dataDB instanceof WpDataDB) {
+                                detailedReportButtons.buttonClick(
+                                        mContext,
+                                        (WpDataDB) dataDB,
+                                        butt.get(getBindingAdapterPosition()),
+                                        0);
+                                setCheck(POS, optionsButtons, Options.NNKMode.NULL);
+                            }
+                        }catch (Exception e){
+
                         }
+
                         notifyDataSetChanged();
                     });
 
@@ -590,7 +607,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
     /*Нажатие на проверку статуса опции. Нажатие на сигнал*/
     private void setCheck(int POS, OptionsDB optionsButtons, Options.NNKMode mode) {
         Options options = new Options();
-        options.optionControl(mContext, dataDB, optionsButtons, null, mode);
+        options.optionControl(mContext, dataDB, optionsButtons, null, mode, null);
 
         RealmManager.INSTANCE.executeTransaction(realm -> {
             realm.insertOrUpdate(optionsButtons);

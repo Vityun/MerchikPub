@@ -27,6 +27,7 @@ import java.util.List;
 
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
+import ua.com.merchik.merchik.Options.OptionControl;
 import ua.com.merchik.merchik.Options.Options;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.ServerExchange.Exchange;
@@ -132,7 +133,17 @@ public class DetailedReportOptionsFrag extends Fragment {
                             int scrollPosition = recycleViewDRAdapter.getItemPosition(optionsDB);
                             OptionMassageType msgType = new OptionMassageType();
                             msgType.type = OptionMassageType.Type.DIALOG;
-                            new Options().optControl(getContext(), wp, optionsDB, Integer.parseInt(optionsDB.getOptionControlId()), null, msgType, Options.NNKMode.CHECK);
+                            new Options().optControl(getContext(), wp, optionsDB, Integer.parseInt(optionsDB.getOptionControlId()), null, msgType, Options.NNKMode.CHECK, new OptionControl.UnlockCodeResultListener() {
+                                @Override
+                                public void onUnlockCodeSuccess() {
+
+                                }
+
+                                @Override
+                                public void onUnlockCodeFailure() {
+
+                                }
+                            });
                             rvContacts.smoothScrollToPosition(scrollPosition);
                         }
                     });
@@ -189,7 +200,7 @@ public class DetailedReportOptionsFrag extends Fragment {
 
             Log.e("TEST_OPTIONS", "optionsButtons SIZE: " + optionsButtons.size());
             for (OptionsDB item : optionsButtons) {
-                options.optionControl(mContext, wpDataDB, item, null, Options.NNKMode.NULL);
+                options.optionControl(mContext, wpDataDB, item, null, Options.NNKMode.NULL, null);
             }
 
             if (optionsButtons != null && optionsButtons.size() > 0) {

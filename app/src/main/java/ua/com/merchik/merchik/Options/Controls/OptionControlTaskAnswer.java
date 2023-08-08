@@ -58,12 +58,13 @@ public class OptionControlTaskAnswer<T> extends OptionControl {
 
     public boolean signal = false;
 
-    public OptionControlTaskAnswer(Context context, T document, OptionsDB optionDB, OptionMassageType msgType, Options.NNKMode nnkMode) {
+    public OptionControlTaskAnswer(Context context, T document, OptionsDB optionDB, OptionMassageType msgType, Options.NNKMode nnkMode, UnlockCodeResultListener unlockCodeResultListener) {
         this.context = context;
         this.document = document;
         this.optionDB = optionDB;
         this.msgType = msgType;
         this.nnkMode = nnkMode;
+        this.unlockCodeResultListener = unlockCodeResultListener;
 
         getDocumentVar();
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {

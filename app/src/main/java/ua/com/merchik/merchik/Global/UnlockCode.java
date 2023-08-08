@@ -77,7 +77,10 @@ public class UnlockCode {
         DialogData dialog = new DialogData(context);
         dialog.setTitle("Внесіть пароль!");
         dialog.setText("Для продовження внесіть пароль: ");
-        dialog.setClose(dialog::dismiss);
+        dialog.setClose(()->{
+            click.onFailure("");
+            dialog.dismiss();
+        });
         dialog.setOperation(DialogData.Operations.TEXT, "", null, () -> {
         });
         dialog.setOkNotClose("Ok", () -> {
@@ -97,7 +100,7 @@ public class UnlockCode {
 //            String unlockCode = new UnlockCode().unlockCode(date, user, dad2, option, CODE_DAD_2_AND_OPTION);
 //            String unlockCode2 = new UnlockCode().unlockCode(date, user, dad2, option, DATE_AND_USER);
 //
-//            Log.e("UnlockCode", "unlockCode: " + unlockCode);
+            Log.e("UnlockCode", "unlockCode: " + unlockCode);
 //            Log.e("UnlockCode", "unlockCode2: " + unlockCode2);
 
             if (res.equals(unlockCode)) {
@@ -107,6 +110,7 @@ public class UnlockCode {
             } else {
                 Toast.makeText(context, "Код не вірний!", Toast.LENGTH_LONG).show();
                 click.onFailure("");
+                dialog.dismiss();
             }
         });
         dialog.show();

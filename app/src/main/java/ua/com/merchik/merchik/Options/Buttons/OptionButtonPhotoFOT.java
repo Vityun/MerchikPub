@@ -21,12 +21,13 @@ public class OptionButtonPhotoFOT<T> extends OptionControl {
     private WpDataDB wpDataDB;
     private final WorkPlan workPlan = new WorkPlan();
 
-    public OptionButtonPhotoFOT(Context context, T document, OptionsDB optionDB, OptionMassageType msgType, Options.NNKMode nnkMode) {
+    public OptionButtonPhotoFOT(Context context, T document, OptionsDB optionDB, OptionMassageType msgType, Options.NNKMode nnkMode, UnlockCodeResultListener unlockCodeResultListener) {
         this.context = context;
         this.document = document;
         this.optionDB = optionDB;
         this.msgType = msgType;
         this.nnkMode = nnkMode;
+        this.unlockCodeResultListener = unlockCodeResultListener;
         getDocumentVar();
         executeOption();
     }
@@ -41,7 +42,7 @@ public class OptionButtonPhotoFOT<T> extends OptionControl {
         new Globals().fixMP();// Фиксация Местоположения в таблице ЛогМп
         try {
             if (optionDB.getOptionControlId().equals("159707")) {
-                OptionControlAvailabilityControlPhotoRemainingGoods<?> optionControlAvailabilityControlPhotoRemainingGoods = new OptionControlAvailabilityControlPhotoRemainingGoods<>(context, document, optionDB, msgType, nnkMode);
+                OptionControlAvailabilityControlPhotoRemainingGoods<?> optionControlAvailabilityControlPhotoRemainingGoods = new OptionControlAvailabilityControlPhotoRemainingGoods<>(context, document, optionDB, msgType, nnkMode, unlockCodeResultListener);
                 optionControlAvailabilityControlPhotoRemainingGoods.showOptionMassage("");
             } else {
                 WPDataObj wpDataObj = workPlan.getKPS(wpDataDB.getId());

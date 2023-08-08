@@ -18,12 +18,13 @@ public class OptionButtonPhotoAktionTovar<T> extends OptionControl {
     private WpDataDB wpDataDB;
     private final WorkPlan workPlan = new WorkPlan();
 
-    public OptionButtonPhotoAktionTovar(Context context, T document, OptionsDB optionDB, OptionMassageType msgType, Options.NNKMode nnkMode) {
+    public OptionButtonPhotoAktionTovar(Context context, T document, OptionsDB optionDB, OptionMassageType msgType, Options.NNKMode nnkMode, UnlockCodeResultListener unlockCodeResultListener) {
         this.context = context;
         this.document = document;
         this.optionDB = optionDB;
         this.msgType = msgType;
         this.nnkMode = nnkMode;
+        this.unlockCodeResultListener = unlockCodeResultListener;
         getDocumentVar();
         executeOption();
     }
@@ -44,7 +45,7 @@ public class OptionButtonPhotoAktionTovar<T> extends OptionControl {
 //            MakePhoto makePhoto = new MakePhoto();
 //            makePhoto.pressedMakePhotoOldStyle((Activity) context, wpDataObj, wpDataDB);
 
-            new OptionControlPhotoPromotion<>(context, document, optionDB, msgType, nnkMode).showOptionMassage("");
+            new OptionControlPhotoPromotion<>(context, document, optionDB, msgType, nnkMode, unlockCodeResultListener).showOptionMassage("");
 
         } catch (Exception e) {
             Globals.writeToMLOG("ERROR", "OptionButtonPhotoAktionTovar/executeOption/Exception", "Exception e: " + e);

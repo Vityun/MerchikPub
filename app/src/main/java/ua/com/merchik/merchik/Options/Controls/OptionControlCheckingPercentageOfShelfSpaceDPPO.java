@@ -59,7 +59,7 @@ public class OptionControlCheckingPercentageOfShelfSpaceDPPO<T> extends OptionCo
     private TovarGroupSDB tovarGroupSDB;
     private TovarGroupClientSDB tovarGroupClientSDB;
 
-    public OptionControlCheckingPercentageOfShelfSpaceDPPO(Context context, T document, OptionsDB optionDB, OptionMassageType msgType, Options.NNKMode nnkMode) {
+    public OptionControlCheckingPercentageOfShelfSpaceDPPO(Context context, T document, OptionsDB optionDB, OptionMassageType msgType, Options.NNKMode nnkMode, UnlockCodeResultListener unlockCodeResultListener) {
         try {
             Log.e("OPTION_CONTROL_1455", "OptionControlCheckingPercentageOfShelfSpaceDPPO");
             Globals.writeToMLOG("INFO", "OPTION_CONTROL_1455", "OptionControlCheckingPercentageOfShelfSpaceDPPO");
@@ -68,6 +68,7 @@ public class OptionControlCheckingPercentageOfShelfSpaceDPPO<T> extends OptionCo
             this.optionDB = optionDB;
             this.msgType = msgType;
             this.nnkMode = nnkMode;
+            this.unlockCodeResultListener = unlockCodeResultListener;
             getDocumentVar();
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                 executeOption();
