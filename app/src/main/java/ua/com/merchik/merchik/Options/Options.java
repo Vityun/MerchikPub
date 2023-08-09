@@ -361,7 +361,7 @@ public class Options {
                 case 8299:
                     Log.e("OPTION_CONTROL", "checkMP: " + optionsDB.getOptionControlId());
 //                checkMP(context, dataDB, optionsDB, type, mode);
-                    optionControlMP_8299(context, dataDB, optionsDB, type, mode);
+                    optionControlMP_8299(context, dataDB, optionsDB, type, mode, unlockCodeResultListener);
                     break;
 
                 case 141911:
@@ -1520,6 +1520,10 @@ public class Options {
             case 587:
                 return optionControlReceivingAnOrder_587(context, dataDB, option, type, mode, unlockCodeResultListener) ? 1 : 0;
 
+            case 8299:
+                optionControlMP_8299(context, dataDB, option, type, mode, unlockCodeResultListener);
+                break;
+
 
             // Контроль Опции Доп. Требований
             case 138341:
@@ -1561,6 +1565,7 @@ public class Options {
                 break;
 
             default:
+                unlockCodeResultListener.onUnlockCodeSuccess();
 
                 switch (mode) {
                     case NULL:
@@ -1780,7 +1785,7 @@ public class Options {
      * Опция Контроля
      * Проверка местоположения ( 8299 )
      */
-    private <T> boolean optionControlMP_8299(Context context, T dataDB, OptionsDB optionsDB, OptionMassageType type, NNKMode mode) {
+    private <T> boolean optionControlMP_8299(Context context, T dataDB, OptionsDB optionsDB, OptionMassageType type, NNKMode mode, OptionControl.UnlockCodeResultListener unlockCodeResultListener) {
         boolean res;
 
         int visitStartGeoDistance = 0;
@@ -1796,6 +1801,7 @@ public class Options {
                     realm.insertOrUpdate(optionsDB);
                 }
             });
+            unlockCodeResultListener.onUnlockCodeSuccess();
             res = true;
         } else {
             RealmManager.INSTANCE.executeTransaction(realm -> {
@@ -1804,6 +1810,7 @@ public class Options {
                     realm.insertOrUpdate(optionsDB);
                 }
             });
+            unlockCodeResultListener.onUnlockCodeFailure();
             res = false;
         }
 
