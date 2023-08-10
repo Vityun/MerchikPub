@@ -23,12 +23,18 @@ public class UsersExchange {
             data.mod = "data_list";
             data.act = "sotr_list";
             SynchronizationTimetableDB synchronizationTimetableDB = RealmManager.getSynchronizationTimetableRowByTable("users_sql");
-            String dt_change_from = String.valueOf(synchronizationTimetableDB.getVpi_app());
-            if (dt_change_from.equals("0")){
+            try {
+                String dt_change_from = String.valueOf(synchronizationTimetableDB.getVpi_app());
+                if (dt_change_from.equals("0")){
+                    data.dt_change_from = "0";
+                }else {
+                    data.dt_change_from = String.valueOf(synchronizationTimetableDB.getVpi_app()-120);  // минус 2 минуты для "синхрона". Это надо поменять.
+                }
+            }catch (Exception e){
                 data.dt_change_from = "0";
-            }else {
-                data.dt_change_from = String.valueOf(synchronizationTimetableDB.getVpi_app()-120);  // минус 2 минуты для "синхрона". Это надо поменять.
+                Globals.writeToMLOG("ERR", "downloadUsersTable/SynchronizationTimetableDB", "Exception e: " + e);
             }
+
 
             Gson gson = new Gson();
             String json = gson.toJson(data);
@@ -42,10 +48,15 @@ public class UsersExchange {
                         if (response.body() != null){
                             Globals.writeToMLOG("INFO", "downloadUsersTable/call.enqueue/onResponse/response.body()", "response.body(): " + response.body().list.size());
 
-                            RealmManager.INSTANCE.executeTransaction(realm -> {
-                                synchronizationTimetableDB.setVpi_app(System.currentTimeMillis()/1000);
-                                realm.copyToRealmOrUpdate(synchronizationTimetableDB);
-                            });
+                            try {
+                                RealmManager.INSTANCE.executeTransaction(realm -> {
+                                    synchronizationTimetableDB.setVpi_app(System.currentTimeMillis()/1000);
+                                    realm.copyToRealmOrUpdate(synchronizationTimetableDB);
+                                });
+                            }catch (Exception e){
+                                Globals.writeToMLOG("ERR", "downloadUsersTable/call.enqueue/onResponse/RealmManager.INSTANCE.executeTransaction", "Exception e: " + e);
+                            }
+
                             exchange.onSuccess(response.body().list);
                         }else {
                             Globals.writeToMLOG("INFO", "downloadUsersTable/call.enqueue/onResponse/response.body()", "response.body(): NULL");
