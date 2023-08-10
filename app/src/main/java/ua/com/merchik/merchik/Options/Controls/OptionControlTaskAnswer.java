@@ -271,8 +271,6 @@ public class OptionControlTaskAnswer<T> extends OptionControl {
                 spannableStringBuilder.append("Исполнитель ").append(usersSDB.fio).append(" еще не провел своего 20-го отчета.");
                 signal = false;
             } else {
-//                spannableStringBuilder.append("\n").append(context.getString(R.string.option_control_135329_msg_what_must_do));
-//                spannableStringBuilder.append("Отсутствует ответ на ").append("!!!!!!!!!!!!!!!!").append(" активных задач. Вы должны сперва исправить замечания, затем написать ответ на указанные задачи, а потом проводить данный документ!");
                 spannableStringBuilder.append("\n").append("Отсутствует ответ на ").append(String.valueOf(result.size())).append(" активных задач. Вы должны сперва исправить " +
                         "замечания, затем написать ответ на указанные задачи, а потом проводить данный документ!");
                 signal = true;

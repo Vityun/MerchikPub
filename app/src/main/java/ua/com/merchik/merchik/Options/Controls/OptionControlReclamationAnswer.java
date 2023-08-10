@@ -26,6 +26,7 @@ import ua.com.merchik.merchik.Options.Options;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.data.Database.Room.CustomerSDB;
 import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
+import ua.com.merchik.merchik.data.Database.Room.UsersSDB;
 import ua.com.merchik.merchik.data.OptionMassageType;
 import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
 import ua.com.merchik.merchik.data.RealmModels.ReportPrepareDB;
@@ -43,6 +44,7 @@ public class OptionControlReclamationAnswer<T> extends OptionControl {
 
     private WpDataDB wpDataDB;
     private CustomerSDB customerSDB;
+    private UsersSDB usersSDB;
 
     private String clientId, documentDate;
     private int userId, addressId, reclamationCount;
@@ -72,6 +74,7 @@ public class OptionControlReclamationAnswer<T> extends OptionControl {
             userId = wpDataDB.getUser_id();
 
             customerSDB = SQL_DB.customerDao().getById(clientId);
+            usersSDB = SQL_DB.usersDao().getById(userId);
         }
     }
 
@@ -229,13 +232,27 @@ public class OptionControlReclamationAnswer<T> extends OptionControl {
             Globals.writeToMLOG("INFO", "OptionControlTaskAnswer/executeOption/List<TasksAndReclamationsSDB>", "result: " + result);
 
             reclamationCount = result.size(); // Число задач по которым возникли проблемы.
-            if (reclamationCount > 0) {
-                spannableStringBuilder.append("\n").append(context.getString(R.string.option_control_135330_msg_what_must_do));
+//            if (reclamationCount > 0) {
+//                spannableStringBuilder.append("\n").append(context.getString(R.string.option_control_135330_msg_what_must_do));
+//            }
+            if (tarList.size() == 0) {
+                spannableStringBuilder.append("Активных рекламаций по клиенту(ам) нет.");
+                signal = false;
+            } else if (result.size() == 0) {
+                spannableStringBuilder.append("Обнаружено ").append(String.valueOf(result.size())).append(" активных рекламаций с ответами. Замечаний нет.");
+                signal = false;
+            } else if (usersSDB.reportDate20 == null && usersSDB.reportCount < 20) {
+                spannableStringBuilder.append("Исполнитель ").append(usersSDB.fio).append(" еще не провел своего 20-го отчета.");
+                signal = false;
+            } else {
+                spannableStringBuilder.append("\n").append("Отсутствует ответ на ").append(String.valueOf(result.size())).append(" активных рекламаций. Вы должны сперва исправить " +
+                        "замечания, затем написать ответ на указанные рекламации, а потом проводить данный документ!");
+                signal = true;
             }
 
 
             // Блокировка
-            signal = reclamationCount > 0;
+//            signal = reclamationCount > 0;
             RealmManager.INSTANCE.executeTransaction(realm -> {
                 if (optionDB != null) {
                     if (signal) {
