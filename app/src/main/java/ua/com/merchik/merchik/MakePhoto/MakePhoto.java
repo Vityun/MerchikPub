@@ -66,6 +66,7 @@ public class MakePhoto {
     public static Uri contentUri;
 
 
+    // TODO Устарело
     public static void startToMakePhoto(Context context, WPDataObj wpDataObj) {
         globals.writeToMLOG(Clock.getHumanTime() + "MakePhoto.startToMakePhoto: " + "ENTER" + "\n");
         mContext = context;
@@ -82,6 +83,7 @@ public class MakePhoto {
      * Alert dialog для выбора групы товара клиента
      * Когда группа выбрана - открываем фотоаппарат
      */
+    // TODO Устарело
     private static void choiceCustomerGroupAndPhoto() {
         if (wp.getCustomerTypeGrp() != null) {
             final String[] result = wp.getCustomerTypeGrp().values().toArray(new String[0]);
@@ -113,6 +115,7 @@ public class MakePhoto {
 
 
     // Выполнить проверку включённости GPS, МП и запустить фотоаппарат для фотографирования
+    // TODO Устарело
     private static void takePhoto() {
         try {
             Log.e("takePhoto", "takePhoto1: " + enabledGPS);
@@ -590,8 +593,8 @@ public class MakePhoto {
         if (enabledGPS) {
             if (wpDataObj != null) {
                 if (wpDataObj.getLatitude() > 0 && wpDataObj.getLongitude() > 0) {
+                    ua.com.merchik.merchik.trecker.Coordinates((WpDataDB) data);
                     if (Globals.CoordX != 0 && Globals.CoordY != 0) {
-
                         double d = ua.com.merchik.merchik.trecker.coordinatesDistanse(wpDataObj.getLatitude(), wpDataObj.getLongitude(), Globals.CoordX, Globals.CoordY);
                         if (d > 500) {
                             String settext1 = String.format("По данным системы вы находитесь на расстоянии %s метров от ТТ %s, что больше допустимых 500 метров.\n\nВы не сможете выполнить фото пока, Ваше местоположение не определено.\n\nЕсли в действительности Вы находитесь в ТТ - обратитесь за помощью к своему руководителю или в службу поддержки merchik.", (int) d, wpDataObj.getAddressIdTxt());

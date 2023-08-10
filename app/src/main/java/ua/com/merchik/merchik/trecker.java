@@ -1,6 +1,9 @@
 package ua.com.merchik.merchik;
 
 import static android.content.Context.LOCATION_SERVICE;
+import static ua.com.merchik.merchik.Globals.dalayMaxTimeGPS;
+import static ua.com.merchik.merchik.Globals.provider;
+import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
 import android.content.Context;
 import android.content.pm.PackageManager;
@@ -13,6 +16,9 @@ import android.provider.Settings;
 import android.util.Log;
 
 import androidx.core.content.ContextCompat;
+
+import ua.com.merchik.merchik.data.Database.Room.UsersSDB;
+import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 
 
 public class trecker implements LocationListener {
@@ -28,16 +34,17 @@ public class trecker implements LocationListener {
 
     public static boolean switchedOff = true; // Выключен
 
-    static void SetUpLocationListener(Context context){
+    static void SetUpLocationListener(Context context) {
 
         try {
             Log.e("GPS_LISTENER", "HERE");
 
             // Запрашивает доступы если API больше 23
-            if ( Build.VERSION.SDK_INT >= 23 &&
-                    ContextCompat.checkSelfPermission( context, android.Manifest.permission.ACCESS_FINE_LOCATION ) != PackageManager.PERMISSION_GRANTED &&
-                    ContextCompat.checkSelfPermission( context, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                return  ;}
+            if (Build.VERSION.SDK_INT >= 23 &&
+                    ContextCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+                    ContextCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                return;
+            }
 
             // Создание гео-менеджера
             LocationManager locationManager = (LocationManager)
@@ -76,7 +83,7 @@ public class trecker implements LocationListener {
 
             switchedOff = false;
 
-        }catch (Exception e){
+        } catch (Exception e) {
             // todo запись в лог
         }
     }
@@ -86,14 +93,19 @@ public class trecker implements LocationListener {
         System.out.println("TEST.GPS_LOCATION: " + loc.getTime());
         showLocation(loc);
     }
+
     @Override
     public void onProviderDisabled(String provider) {
 //        checkConnection();
     }
+
     @Override
-    public void onProviderEnabled(String provider) {}
+    public void onProviderEnabled(String provider) {
+    }
+
     @Override
-    public void onStatusChanged(String provider, int status, Bundle extras) {}
+    public void onStatusChanged(String provider, int status, Bundle extras) {
+    }
 
     // Отображение и запись координат
     private void showLocation(Location location) {
@@ -101,25 +113,29 @@ public class trecker implements LocationListener {
             imHereGPS = location;
             Log.e("TEST.GPS_LOCATION", "GPS: " + imHereGPS + " GPStime: " + imHereGPS.getTime());
 
-        }else if (location.getProvider().equals(LocationManager.NETWORK_PROVIDER)) {
-            imHereNET = location;}
+        } else if (location.getProvider().equals(LocationManager.NETWORK_PROVIDER)) {
+            imHereNET = location;
+        }
     }
 
     // Проверка: включён ли мокинг
     static void isMockSettingsON() {
         if (android.os.Build.VERSION.SDK_INT >= 18) {
             if (imHereGPS != null) {
-                isMockGPS = imHereGPS.isFromMockProvider();}
-            if (imHereNET != null){
-                isMockNET = imHereNET.isFromMockProvider();}
+                isMockGPS = imHereGPS.isFromMockProvider();
+            }
+            if (imHereNET != null) {
+                isMockNET = imHereNET.isFromMockProvider();
+            }
         }
     }
 
-    public boolean isMockGPS(Context context){
+    public boolean isMockGPS(Context context) {
         boolean mock = true;
         if (android.os.Build.VERSION.SDK_INT >= 18) {
             if (imHereGPS != null) {
-                mock = imHereGPS.isFromMockProvider();}
+                mock = imHereGPS.isFromMockProvider();
+            }
         } else {
             mock = !Settings.Secure.getString(context.getContentResolver(), Settings.Secure.ALLOW_MOCK_LOCATION).equals("0");
         }
@@ -127,7 +143,7 @@ public class trecker implements LocationListener {
     }
 
 
-    public static float coordinatesDistanse(double latA, double lngA, double latB, double lngB){
+    public static float coordinatesDistanse(double latA, double lngA, double latB, double lngB) {
 
         float res;
 
@@ -149,28 +165,32 @@ public class trecker implements LocationListener {
     }
 
 
-    /** Метод для получения геоданных сети в случае если GPS-данные не доступны
-     * */
-    public static int Coordinates(){
+    /**
+     * Метод для получения геоданных сети в случае если GPS-данные не доступны
+     * <p>
+     * Это дефолтная реализация.
+     */
+    public static int Coordinates() {
         Globals globals = new Globals();
         Log.e("КООРДИНАТЫ", "tracker: " + trecker.imHereGPS);
 
         int provider;// 0=NULL; 1=GPS; 2=NET.
 
         // Передача параметра с подделкой координат
-        if(trecker.isMockGPS || trecker.isMockNET){
+        if (trecker.isMockGPS || trecker.isMockNET) {
             Globals.mocking = 0;
-        }else{Globals.mocking = 1;}
+        } else {
+            Globals.mocking = 1;
+        }
 
-        globals.writeToMLOG(Clock.getHumanTime() + " Coordinates.trecker.imHereGPS: " + trecker.imHereGPS +"\n");
-        globals.writeToMLOG(Clock.getHumanTime() + " Coordinates.trecker.imHereNET: " + trecker.imHereNET +"\n");
+        globals.writeToMLOG(Clock.getHumanTime() + " Coordinates.trecker.imHereGPS: " + trecker.imHereGPS + "\n");
+        globals.writeToMLOG(Clock.getHumanTime() + " Coordinates.trecker.imHereNET: " + trecker.imHereNET + "\n");
 
 
         // Сохранение текущего состояния GPS
-        if (trecker.imHereGPS != null && outOfDayCoordinates(System.currentTimeMillis(), trecker.imHereGPS.getTime())){
+        if (trecker.imHereGPS != null && outOfDayCoordinates(System.currentTimeMillis(), trecker.imHereGPS.getTime())) {
             provider = 1;
             Globals.providerType = 1;
-//            Globals.provider = 1;
             Globals.locationGPS = imHereGPS;
 
             Globals.CoordX = imHereGPS.getLatitude();
@@ -181,10 +201,10 @@ public class trecker implements LocationListener {
             Globals.CoordAccuracy = imHereGPS.getAccuracy();
             Globals.provider = provider;
 
-            globals.writeToMLOG(Clock.getHumanTime() + " Coordinates.provider: " + provider +"\n");
+            globals.writeToMLOG(Clock.getHumanTime() + " Coordinates.provider: " + provider + "\n");
 
             return provider;
-        }else if (trecker.imHereNET != null){
+        } else if (trecker.imHereNET != null) {
             provider = 2;
             Globals.providerType = 2;
 //            Globals.provider = 2;
@@ -197,28 +217,94 @@ public class trecker implements LocationListener {
             Globals.CoordAltitude = imHereNET.getAltitude();
             Globals.CoordAccuracy = imHereNET.getAccuracy();
 
-            globals.writeToMLOG(Clock.getHumanTime() + " Coordinates.provider: " + provider +"\n");
+            globals.writeToMLOG(Clock.getHumanTime() + " Coordinates.provider: " + provider + "\n");
             return provider;
-        }else {
+        } else {
             // Никаких координат нет
 //            Globals.provider = 0;
             provider = 0;
 
-            globals.writeToMLOG(Clock.getHumanTime() + " Coordinates.provider: " + provider +"\n");
+            globals.writeToMLOG(Clock.getHumanTime() + " Coordinates.provider: " + provider + "\n");
             return provider;
         }
     }
 
 
-    public static boolean outOfDayCoordinates(long deviceTime, long coordTime){
+    public static boolean outOfDayCoordinates(long deviceTime, long coordTime) {
         try {
             long res = Math.abs(deviceTime - coordTime) / 1000 / 60;    // /1000 - переводим в секунды /60 - Переводим в минуты
-            if (res < 30){
+            if (res < 30) {
                 return true;
-            }else {
+            } else {
                 return false;
             }
-        }catch (Exception e){
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    /**
+     * 10.08.23.
+     * Специальная функция для переписывания координат, если надо для кого-то отредактировать
+     * время устаревания
+     */
+    public static void Coordinates(WpDataDB wpDataDB) {
+        // Передача параметра с подделкой координат
+        if (trecker.isMockGPS || trecker.isMockNET) {
+            Globals.mocking = 0;
+        } else {
+            Globals.mocking = 1;
+        }
+
+        if (trecker.imHereGPS != null && outOfDayCoordinates(System.currentTimeMillis(), trecker.imHereGPS.getTime(), calculateMinutes(wpDataDB))) {
+            provider = 1;
+            Globals.providerType = 1;
+            Globals.locationGPS = imHereGPS;
+
+            Globals.CoordX = imHereGPS.getLatitude();
+            Globals.CoordY = imHereGPS.getLongitude();
+            Globals.CoordTime = imHereGPS.getTime();
+            Globals.CoordSpeed = imHereGPS.getSpeed();
+            Globals.CoordAltitude = imHereGPS.getAltitude();
+            Globals.CoordAccuracy = imHereGPS.getAccuracy();
+        }
+    }
+
+    /**
+     * 10.08.23.
+     * То самое место, где будет решаться сколько время будет актуальны координаты. Все условия тут.
+     * */
+    private static int calculateMinutes(WpDataDB wpDataDB) {
+        int res = 30; // Минуты по умолчанию
+
+        UsersSDB usersSDB = SQL_DB.usersDao().getById(wpDataDB.getUser_id());
+
+        // 1. Первое условие.
+        if (usersSDB.clientId.equals(wpDataDB.getClient_id()) && wpDataDB.getClient_id().equals("32246")){
+            res = 45;   // Для мерчей Ласунки(32246) можно просрочить координаты на 45 минут.
+            dalayMaxTimeGPS = res;
+        }
+
+        return res;
+    }
+
+    /**
+     * 10.08.23.
+     *
+     * @param deviceTime время устройства в миллисекундах. Или время от которого будем расчитывать
+     *                   "устарелость" координат.
+     * @param coordTime  Время когда получены последние координаты.
+     * @param minutes    Минуты которые разрешены для того что б координаты считать устаревшими.
+     */
+    public static boolean outOfDayCoordinates(long deviceTime, long coordTime, int minutes) {
+        try {
+            long res = Math.abs(deviceTime - coordTime) / 1000 / 60;    // /1000 - переводим в секунды /60 - Переводим в минуты
+            if (res < minutes) {
+                return true;
+            } else {
+                return false;
+            }
+        } catch (Exception e) {
             return false;
         }
     }
