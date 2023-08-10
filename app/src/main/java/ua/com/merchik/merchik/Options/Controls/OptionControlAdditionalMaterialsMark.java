@@ -82,7 +82,8 @@ public class OptionControlAdditionalMaterialsMark<T> extends OptionControl {
 
             // Получаем Доп.материалы.
 //            List<AdditionalMaterialsJOINAdditionalMaterialsAddressSDB> data = SQL_DB.additionalMaterialsDao().getAllForOptionTEST(optionDB.getClientId(), Integer.parseInt(optionDB.getAddrId()), "1", "0");
-            List<AdditionalMaterialsJOINAdditionalMaterialsAddressSDB> data = SQL_DB.additionalMaterialsDao().getAllForOptionTEST(optionDB.getClientId(), Integer.parseInt(optionDB.getAddrId()), "0");
+//            List<AdditionalMaterialsJOINAdditionalMaterialsAddressSDB> data = SQL_DB.additionalMaterialsDao().getAllForOptionTEST(optionDB.getClientId(), Integer.parseInt(optionDB.getAddrId()), "0");
+            List<AdditionalMaterialsJOINAdditionalMaterialsAddressSDB> data = SQL_DB.additionalMaterialsDao().getAllForOptionTEST2(optionDB.getClientId(), "0");
 
             // Проверяем, есть ли вообще данные
             if (data != null && data.size() > 0) {

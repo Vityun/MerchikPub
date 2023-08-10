@@ -1683,7 +1683,8 @@ public class Options {
         String expire = Clock.getHumanTimeYYYYMMDD(System.currentTimeMillis() / 1000);
         List<AdditionalMaterialsSDB> data1 = SQL_DB.additionalMaterialsDao().getAllForOption(option.getClientId(), "1", "0", expire);
 //        List<AdditionalMaterialsJOINAdditionalMaterialsAddressSDB> data = SQL_DB.additionalMaterialsDao().getAllForOptionTEST(option.getClientId(), Integer.parseInt(option.getAddrId()), "1", "0");
-        List<AdditionalMaterialsJOINAdditionalMaterialsAddressSDB> data = SQL_DB.additionalMaterialsDao().getAllForOptionTEST(option.getClientId(), Integer.parseInt(option.getAddrId()), "0");
+//        List<AdditionalMaterialsJOINAdditionalMaterialsAddressSDB> data = SQL_DB.additionalMaterialsDao().getAllForOptionTEST(option.getClientId(), Integer.parseInt(option.getAddrId()), "0");
+        List<AdditionalMaterialsJOINAdditionalMaterialsAddressSDB> data = SQL_DB.additionalMaterialsDao().getAllForOptionTEST2(option.getClientId(), "0");
 
         DialogAdditionalRequirements dialogAdditionalRequirements = new DialogAdditionalRequirements(context);
 

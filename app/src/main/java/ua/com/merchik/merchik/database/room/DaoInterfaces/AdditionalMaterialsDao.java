@@ -38,6 +38,19 @@ public interface AdditionalMaterialsDao {
             "HAVING  (count(amaAddrId)>0)")
     List<AdditionalMaterialsJOINAdditionalMaterialsAddressSDB> getAllForOptionTEST(String clientId, int addrId, String state);
 
+    // TEST2
+    @Query("SELECT ad.id AS id, ad.client AS client, ad.expire AS expire, ad.state AS state, " +
+            "ad.approve AS approve, ad.user_id AS user_id, ad.dt AS dt, ad.file_archive AS file_archive, " +
+            "ad.file_ext AS file_ext, ad.file_size AS file_size, ad.score AS score, ad.score_cnt AS score_cnt, " +
+            "ad.score_sum AS score_sum, ad.txt AS txt, ama.id AS amaId, ama.file_id AS amaFileId, " +
+            "ama.addr_id AS amaAddrId, ama.author_id AS amaAuthorId, ama.dt_update AS amaDtUpdate FROM additional_materials AS ad " +
+            "LEFT JOIN additional_materials_address AS ama ON ad.id = ama.file_id " +
+            "LEFT JOIN additional_materials_groups on additional_materials_groups.file_id=ad.id " +
+            "LEFT JOIN address as adresa_addr on adresa_addr.ID=ama.addr_id " +
+            "WHERE client = :clientId AND approve = 1 AND state = :state " +
+            "GROUP BY ad.id ")
+    List<AdditionalMaterialsJOINAdditionalMaterialsAddressSDB> getAllForOptionTEST2(String clientId, String state);
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     void insertAll(List<AdditionalMaterialsSDB> data);
 

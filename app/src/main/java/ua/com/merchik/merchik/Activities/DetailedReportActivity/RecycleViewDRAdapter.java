@@ -446,7 +446,8 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                         // Устанавливаю в счётчик доп. требований их количество
 //                        String expire = Clock.getHumanTimeYYYYMMDD(System.currentTimeMillis() / 1000);
 //                        textInteger.setText("" + SQL_DB.additionalMaterialsDao().getAllForOptionTEST(optionsButtons.getClientId(), Integer.parseInt(optionsButtons.getAddrId()), "1", "0").size());
-                        textInteger.setText("" + SQL_DB.additionalMaterialsDao().getAllForOptionTEST(optionsButtons.getClientId(), Integer.parseInt(optionsButtons.getAddrId()), "0").size());
+//                        textInteger.setText("" + SQL_DB.additionalMaterialsDao().getAllForOptionTEST(optionsButtons.getClientId(), Integer.parseInt(optionsButtons.getAddrId()), "0").size());
+                        textInteger.setText("" + SQL_DB.additionalMaterialsDao().getAllForOptionTEST2(optionsButtons.getClientId(), "0").size());
                         break;
 
                     case 135328:    // Рекламация
