@@ -566,7 +566,7 @@ public class DetailedReportActivity extends toolbar_menus {
                 imageView.setVisibility(View.VISIBLE);
                 Snackbar.make(imageView.getRootView(), "Вы просмотрели ещё не все ролики: " + sb, Snackbar.LENGTH_LONG).show();
             }
-        }catch (Exception e){
+        } catch (Exception e) {
             Globals.writeToMLOG("ERROR", "DetailedReportActivity/checkVideo", "Exception e: " + e);
         }
     }
@@ -704,14 +704,15 @@ public class DetailedReportActivity extends toolbar_menus {
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
-        Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult", "requestCode / resultCode / data: " + requestCode + "/" + resultCode + "/" + data);
+        try {
+            Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult", "requestCode / resultCode / data: " + requestCode + "/" + resultCode + "/" + data);
 
-        if (requestCode == PICK_GALLERY_IMAGE_REQUEST && resultCode == RESULT_OK && data != null && data.getData() != null) {
-            try {
+            if (requestCode == PICK_GALLERY_IMAGE_REQUEST && resultCode == RESULT_OK && data != null && data.getData() != null) {
+                try {
 
 //                if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
-                // У вас есть доступ к чтению файлов
-                // Можете выполнять необходимые операции с файлами
+                    // У вас есть доступ к чтению файлов
+                    // Можете выполнять необходимые операции с файлами
 //                    Uri uri = data.getData();
 //                    Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST", "Uri uri: " + uri);
 //                    String filePath = getRealPathFromURI(uri);
@@ -720,32 +721,32 @@ public class DetailedReportActivity extends toolbar_menus {
 //                    Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST", "file: " + file.length());
 //                    savePhoto(uri, MakePhotoFromGaleryWpDataDB, MakePhotoFromGalery.tovarId, getApplicationContext());
 //                } else {
-                // У вас нет доступа к чтению файлов
-                // Можете запросить разрешение у пользователя//
+                    // У вас нет доступа к чтению файлов
+                    // Можете запросить разрешение у пользователя//
 //                     Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST", "Нет доступов");
 //                    ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, 123);
 //                }
 
 
-                if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED
-                        || ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-                    ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1);
-                } else {
-                    // У вас уже есть разрешения на доступ к файлам
-                    // Можете выполнять необходимые операции с файлами
-                    Uri uri = data.getData();
-                    File file = null;
-                    if (Build.VERSION.SDK_INT == Build.VERSION_CODES.Q) {
-                        file = new CreatePhotoFile().createDefaultPhotoFile(this, uri);
+                    if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED
+                            || ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+                        ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1);
                     } else {
-                        Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST", "Uri uri: " + uri);
-                        String filePath = getRealPathFromURI(uri);
-                        Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST", "filePath: " + filePath);
-                        file = new File(filePath);
-                        Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST", "file: " + file.length());
+                        // У вас уже есть разрешения на доступ к файлам
+                        // Можете выполнять необходимые операции с файлами
+                        Uri uri = data.getData();
+                        File file = null;
+                        if (Build.VERSION.SDK_INT == Build.VERSION_CODES.Q) {
+                            file = new CreatePhotoFile().createDefaultPhotoFile(this, uri);
+                        } else {
+                            Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST", "Uri uri: " + uri);
+                            String filePath = getRealPathFromURI(uri);
+                            Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST", "filePath: " + filePath);
+                            file = new File(filePath);
+                            Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST", "file: " + file.length());
+                        }
+                        savePhoto(file, MakePhotoFromGaleryWpDataDB, MakePhotoFromGalery.tovarId, getApplicationContext());
                     }
-                    savePhoto(file, MakePhotoFromGaleryWpDataDB, MakePhotoFromGalery.tovarId, getApplicationContext());
-                }
 
 
 //                if (checkManageExternalStoragePermission()) {
@@ -760,167 +761,171 @@ public class DetailedReportActivity extends toolbar_menus {
 //                    Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST", "Нет доступов");
 //                    requestManageExternalStoragePermission(this);
 //                }
-            } catch (Exception e) {
-                Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST", "Exception e: " + e);
+                } catch (Exception e) {
+                    Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST", "Exception e: " + e);
+                }
             }
-        }
 
-        switch (requestCode) {
-            case 101:
+            switch (requestCode) {
+                case 101:
+                    try {
+                        globals.writeToMLOG(Clock.getHumanTime() + "DETAILED_REPORT_ACT.onActivityResult: " + "ENTER" + "\n");
+                        image = MakePhoto.image;
+                        globals.writeToMLOG(Clock.getHumanTime() + "DETAILED_REPORT_ACT.onActivityResult.image: " + image + "\n");
+
+                        Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/101", "Image: " + image);
+
+                        Log.e("dispatchTakePicture", "image: " + image);
+                        Log.e("dispatchTakePicture", "imagelength: " + image.length());
+                        Log.e("dispatchTakePicture", "imagegetAbsolutePath: " + image.getAbsolutePath());
+
+                        String msg = "";
+                        msg = String.format("image: %s \nimagelength: %s\nimagegetAbsolutePath: %s\nresultCode: %s\nrequestCode: %s", image, image.length(), image.getAbsolutePath(), resultCode, requestCode);
+
+                        globals.writeToMLOG(Clock.getHumanTime() + "DETAILED_REPORT_ACT.onActivityResult.image.data: " + msg + "\n");
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        Globals.writeToMLOG("ERROR", ".DetailedReportActivity.DetailedReportActivity.onActivityResult (DetailedReportActivity.java:238)", "Exception e: " + e);
+
+                        DialogData dialog = new DialogData(DetailedReportActivity.this);
+                        dialog.setTitle("Ошибка при выполнении фото.");
+                        dialog.setText("Возникла ошибка при выполнении фото, передайте это сообщение своему руководителю и повторите попытку выполнения фото. \nОшибка: " + e);
+                        dialog.setClose(dialog::dismiss);
+                        dialog.show();
+                    }
+                    break;
+            }
+
+
+            if (requestCode == 201 && resultCode == RESULT_OK) {
+                Toast.makeText(this, "Фото сохранено", Toast.LENGTH_SHORT).show();
                 try {
-                    globals.writeToMLOG(Clock.getHumanTime() + "DETAILED_REPORT_ACT.onActivityResult: " + "ENTER" + "\n");
-                    image = MakePhoto.image;
-                    globals.writeToMLOG(Clock.getHumanTime() + "DETAILED_REPORT_ACT.onActivityResult.image: " + image + "\n");
+                    Globals.writeToMLOG("INFO", "requestCode == 201 && resultCode == RESULT_OK/MakePhoto_photoNum", "MakePhoto.photoNum: " + MakePhoto.photoNum);
 
-                    Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/101", "Image: " + image);
+                    StackPhotoDB photo = RealmManager.INSTANCE.copyFromRealm(StackPhotoRealm.getByPhotoNum(MakePhoto.photoNum));
+                    File photoFile = new File(MakePhoto.photoNum);
 
-                    Log.e("dispatchTakePicture", "image: " + image);
-                    Log.e("dispatchTakePicture", "imagelength: " + image.length());
-                    Log.e("dispatchTakePicture", "imagegetAbsolutePath: " + image.getAbsolutePath());
+                    JsonObject jsonObject = new Gson().fromJson(new Gson().toJson(photo), JsonObject.class);
 
-                    String msg = "";
-                    msg = String.format("image: %s \nimagelength: %s\nimagegetAbsolutePath: %s\nresultCode: %s\nrequestCode: %s", image, image.length(), image.getAbsolutePath(), resultCode, requestCode);
+                    Globals.writeToMLOG("INFO", "requestCode == 201 && resultCode == RESULT_OK/photo", "photo: " + jsonObject);
+                    Globals.writeToMLOG("INFO", "requestCode == 201 && resultCode == RESULT_OK/photoFile", "photoFile: " + photoFile);
 
-                    globals.writeToMLOG(Clock.getHumanTime() + "DETAILED_REPORT_ACT.onActivityResult.image.data: " + msg + "\n");
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    Globals.writeToMLOG("ERROR", ".DetailedReportActivity.DetailedReportActivity.onActivityResult (DetailedReportActivity.java:238)", "Exception e: " + e);
+                    final int rotation = getImageOrientation(photoFile.getPath()); //Проверка на сколько градусов повёрнуто изображение
+                    if (rotation > 0) {
+                        photoFile = resaveBitmap(photoFile, rotation);  // ДляСамсунгов и тп.. Разворачиваем как надо.
+                    }
 
-                    DialogData dialog = new DialogData(DetailedReportActivity.this);
-                    dialog.setTitle("Ошибка при выполнении фото.");
-                    dialog.setText("Возникла ошибка при выполнении фото, передайте это сообщение своему руководителю и повторите попытку выполнения фото. \nОшибка: " + e);
-                    dialog.setClose(dialog::dismiss);
-                    dialog.show();
-                }
-                break;
-        }
+                    try {
+                        photoFile = resizeImageFile(this, photoFile);
+                    } catch (Exception e) {
+                        globals.alertDialogMsg(this, "Ошибка В ужатии: " + e);
+                    }
 
+                    exifPhotoData(photoFile);
 
-        if (requestCode == 201 && resultCode == RESULT_OK) {
-            Toast.makeText(this, "Фото сохранено", Toast.LENGTH_SHORT).show();
-            try {
-                Globals.writeToMLOG("INFO", "requestCode == 201 && resultCode == RESULT_OK/MakePhoto_photoNum", "MakePhoto.photoNum: " + MakePhoto.photoNum);
+                    String hash;
+                    hash = globals.getHashMD5FromFile2(photoFile, this);
 
-                StackPhotoDB photo = RealmManager.INSTANCE.copyFromRealm(StackPhotoRealm.getByPhotoNum(MakePhoto.photoNum));
-                File photoFile = new File(MakePhoto.photoNum);
+                    if (hash == null || hash.equals("")) {
+                        hash = globals.getHashMD5FromFile(photoFile, this);
+                    }
 
-                JsonObject jsonObject = new Gson().fromJson(new Gson().toJson(photo), JsonObject.class);
+                    photo.setPhoto_hash(hash);
+                    photo.setPhoto_num(photoFile.getAbsolutePath());
+                    photo.setPhoto_type(Integer.valueOf(MakePhoto.photoType));
 
-                Globals.writeToMLOG("INFO", "requestCode == 201 && resultCode == RESULT_OK/photo", "photo: " + jsonObject);
-                Globals.writeToMLOG("INFO", "requestCode == 201 && resultCode == RESULT_OK/photoFile", "photoFile: " + photoFile);
+                    photo.img_src_id = MakePhoto.img_src_id;
+                    photo.showcase_id = MakePhoto.showcase_id;
+                    photo.planogram_id = MakePhoto.planogram_id;
+                    photo.planogram_img_id = MakePhoto.planogram_img_id;
 
-                final int rotation = getImageOrientation(photoFile.getPath()); //Проверка на сколько градусов повёрнуто изображение
-                if (rotation > 0) {
-                    photoFile = resaveBitmap(photoFile, rotation);  // ДляСамсунгов и тп.. Разворачиваем как надо.
-                }
+                    if (MakePhoto.photoType.equals("4")) {
+                        photo.tovar_id = MakePhoto.tovarId;
+                        Globals.writeToMLOG("INFO", "requestCode == 201 && resultCode == RESULT_OK/photo_save", "MakePhoto.tovarId: " + MakePhoto.tovarId);
+                    }
 
-                try {
-                    photoFile = resizeImageFile(this, photoFile);
-                } catch (Exception e) {
-                    globals.alertDialogMsg(this, "Ошибка В ужатии: " + e);
-                }
+                    JsonObject jsonObject2 = new Gson().fromJson(new Gson().toJson(photo), JsonObject.class);
 
-                exifPhotoData(photoFile);
-
-                String hash;
-                hash = globals.getHashMD5FromFile2(photoFile, this);
-
-                if (hash == null || hash.equals("")) {
-                    hash = globals.getHashMD5FromFile(photoFile, this);
-                }
-
-                photo.setPhoto_hash(hash);
-                photo.setPhoto_num(photoFile.getAbsolutePath());
-                photo.setPhoto_type(Integer.valueOf(MakePhoto.photoType));
-
-                photo.img_src_id = MakePhoto.img_src_id;
-                photo.showcase_id = MakePhoto.showcase_id;
-                photo.planogram_id = MakePhoto.planogram_id;
-                photo.planogram_img_id = MakePhoto.planogram_img_id;
-
-                if (MakePhoto.photoType.equals("4")) {
-                    photo.tovar_id = MakePhoto.tovarId;
-                    Globals.writeToMLOG("INFO", "requestCode == 201 && resultCode == RESULT_OK/photo_save", "MakePhoto.tovarId: " + MakePhoto.tovarId);
-                }
-
-                JsonObject jsonObject2 = new Gson().fromJson(new Gson().toJson(photo), JsonObject.class);
-
-                Globals.writeToMLOG("INFO", "requestCode == 201 && resultCode == RESULT_OK/photo_save", "photoSave: " + jsonObject2);
+                    Globals.writeToMLOG("INFO", "requestCode == 201 && resultCode == RESULT_OK/photo_save", "photoSave: " + jsonObject2);
 
 //                Globals.writeToMLOG("INFO", "requestCode == 201 && resultCode == RESULT_OK/photo_save", "photoSave: " + photo);
 
-                StackPhotoRealm.setAll(Collections.singletonList(photo));
-            } catch (Exception e) {
-                Globals.writeToMLOG("ERROR", "requestCode == 201 && resultCode == RESULT_OK", "Exception e: " + e);
+                    StackPhotoRealm.setAll(Collections.singletonList(photo));
+                } catch (Exception e) {
+                    Globals.writeToMLOG("ERROR", "requestCode == 201 && resultCode == RESULT_OK", "Exception e: " + e);
+                }
+            } else if (requestCode == 201 && resultCode == RESULT_CANCELED) {
+                StackPhotoRealm.deleteByPhotoNum(MakePhoto.photoNum);
             }
-        } else if (requestCode == 201 && resultCode == RESULT_CANCELED) {
-            StackPhotoRealm.deleteByPhotoNum(MakePhoto.photoNum);
-        }
 
-        if (requestCode == CAMERA_REQUEST_TAR_COMMENT_PHOTO) {
-            try {
-                FragmentManager fragmentManager = getSupportFragmentManager();
-                List<Fragment> fragments = fragmentManager.getFragments();
-                TARFragmentHome fragmentHome = (TARFragmentHome) fragments.get(0);
+            if (requestCode == CAMERA_REQUEST_TAR_COMMENT_PHOTO) {
+                try {
+                    FragmentManager fragmentManager = getSupportFragmentManager();
+                    List<Fragment> fragments = fragmentManager.getFragments();
+                    TARFragmentHome fragmentHome = (TARFragmentHome) fragments.get(0);
 
-                AddressSDB addr = SQL_DB.addressDao().getById(fragmentHome.secondFrag.data.addr);
-                CustomerSDB client = SQL_DB.customerDao().getById(fragmentHome.secondFrag.data.client);
+                    AddressSDB addr = SQL_DB.addressDao().getById(fragmentHome.secondFrag.data.addr);
+                    CustomerSDB client = SQL_DB.customerDao().getById(fragmentHome.secondFrag.data.client);
 
-                StackPhotoDB stackPhotoDB = saveTestPhoto(new File(MakePhoto.openCameraPhotoUri), addr, client);
-                MakePhoto.openCameraPhotoUri = null;
+                    StackPhotoDB stackPhotoDB = saveTestPhoto(new File(MakePhoto.openCameraPhotoUri), addr, client);
+                    MakePhoto.openCameraPhotoUri = null;
 
-                fragmentHome.secondFrag.setPhotoComment(stackPhotoDB.getId(), TARCommentIndex);
-            } catch (Exception e) {
-                Globals.writeToMLOG("ERROR", "DR/CAMERA_REQUEST_TAR_COMMENT_PHOTO", "Exception e: " + e);
-            }
-        } else if (requestCode == CAMERA_REQUEST_PROMOTION_TOV_PHOTO && resultCode == RESULT_OK) {
-            try {
-                savePhotoPromotionTov(new File(MakePhoto.openCameraPhotoUri), wpDataDBOPTION_CONTROL_PROMOTION_ID, tovarDBOPTION_CONTROL_PROMOTION_ID);
-                // Концептуально тут нужно эту фотку как-то обработать.
-            } catch (Exception e) {
-                Globals.writeToMLOG("ERROR", "DR/CAMERA_REQUEST_PROMOTION_TOV_PHOTO", "Exception e: " + e);
-            }
-        }
-
-        try {
-            // Если отменили сьемку:
-            if (resultCode == Activity.RESULT_CANCELED && requestCode == 101) image.delete();
-
-            // Если сьемка успешная:
-            if (requestCode == 101 && resultCode == Activity.RESULT_OK) {
-                if (image != null && image.exists()) {
-                    if (image.length() > 0) {       //
-
-                        final int rotation = getImageOrientation(image.getPath()); //Проверка на сколько градусов повёрнуто изображение
-                        if (rotation > 0) {
-                            image = resaveBitmap(image, rotation);  // ДляСамсунгов и тп.. Разворачиваем как надо.
-                        }
-
-                        wpDataObj = MakePhoto.wp;
-                        Log.e("getPhotoType", "wpDataObj.getPhotoType(): " + wpDataObj.getPhotoType());
-
-                        PhotoReportActivity.savePhoto(this, wpDataObj, image);
-
-                        refreshAdapterFragmentB();
-
-                        Toast.makeText(this, "Фото сделано, и сохранено", Toast.LENGTH_LONG).show();
-
-
-                    } else { // Если фото получилось нулевым - файлик удаляется
-                        try {
-                            image.delete();
-                        } catch (Exception e) {
-                            e.printStackTrace();
-
-                        }
-                    }
-                } else {
-                    globals.alertDialogMsg(this, "Фото не было создано, повторите попытку");
+                    fragmentHome.secondFrag.setPhotoComment(stackPhotoDB.getId(), TARCommentIndex);
+                } catch (Exception e) {
+                    Globals.writeToMLOG("ERROR", "DR/CAMERA_REQUEST_TAR_COMMENT_PHOTO", "Exception e: " + e);
+                }
+            } else if (requestCode == CAMERA_REQUEST_PROMOTION_TOV_PHOTO && resultCode == RESULT_OK) {
+                try {
+                    savePhotoPromotionTov(new File(MakePhoto.openCameraPhotoUri), wpDataDBOPTION_CONTROL_PROMOTION_ID, tovarDBOPTION_CONTROL_PROMOTION_ID);
+                    // Концептуально тут нужно эту фотку как-то обработать.
+                } catch (Exception e) {
+                    Globals.writeToMLOG("ERROR", "DR/CAMERA_REQUEST_PROMOTION_TOV_PHOTO", "Exception e: " + e);
                 }
             }
+
+            try {
+                // Если отменили сьемку:
+                if (resultCode == Activity.RESULT_CANCELED && requestCode == 101) image.delete();
+
+                // Если сьемка успешная:
+                if (requestCode == 101 && resultCode == Activity.RESULT_OK) {
+                    if (image != null && image.exists()) {
+                        if (image.length() > 0) {       //
+
+                            final int rotation = getImageOrientation(image.getPath()); //Проверка на сколько градусов повёрнуто изображение
+                            if (rotation > 0) {
+                                image = resaveBitmap(image, rotation);  // ДляСамсунгов и тп.. Разворачиваем как надо.
+                            }
+
+                            wpDataObj = MakePhoto.wp;
+                            Log.e("getPhotoType", "wpDataObj.getPhotoType(): " + wpDataObj.getPhotoType());
+
+                            PhotoReportActivity.savePhoto(this, wpDataObj, image);
+
+                            refreshAdapterFragmentB();
+
+                            Toast.makeText(this, "Фото сделано, и сохранено", Toast.LENGTH_LONG).show();
+
+
+                        } else { // Если фото получилось нулевым - файлик удаляется
+                            try {
+                                image.delete();
+                            } catch (Exception e) {
+                                e.printStackTrace();
+
+                            }
+                        }
+                    } else {
+                        globals.alertDialogMsg(this, "Фото не было создано, повторите попытку");
+                    }
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+                globals.alertDialogMsg(this, "Ошибка при выполнении фото: " + e);
+            }
+
         } catch (Exception e) {
-            e.printStackTrace();
-            globals.alertDialogMsg(this, "Ошибка при выполнении фото: " + e);
+            Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult", "Exception e: " + e);
         }
     }
 
