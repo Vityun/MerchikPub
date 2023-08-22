@@ -208,7 +208,11 @@ public interface RetrofitInterface {
             @Body JsonObject json);
 
     @POST("mobile_app.php?")
-    Call<ReportPrepareServer> REPORT_PREPARE_CALL_ALL(@Query("mod") String mod, @Query("act") String act, @Query("date_from") String date_from, @Query("date_to") String date_to);
+    Call<ReportPrepareServer> REPORT_PREPARE_CALL_ALL(
+            @Query("mod") String mod,
+            @Query("act") String act,
+            @Query("date_from") String date_from,
+            @Query("date_to") String date_to);
 
     @POST("mobile_app.php?")
     Call<ReportPrepareServer> REPORT_PREPARE_CALL_PIECE(

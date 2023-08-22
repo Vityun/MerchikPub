@@ -492,7 +492,7 @@ public class DetailedReportActivity extends toolbar_menus {
                     standartData.mod = "data_list";
                     standartData.act = "set_addr_geo";
 
-                    standartData.addr_id = wpDataDB.getAddr_id();
+                    standartData.addr_id = Collections.singletonList(wpDataDB.getAddr_id());
                     standartData.x = Globals.CoordX;
                     standartData.y = Globals.CoordY;
 

@@ -14,7 +14,7 @@ public class StandartData<T> {
     public String login;
     public String term;
 
-    public Integer addr_id;
+    public List<Integer> addr_id;
     public Double x;    // Координата Х
     public Double y;    // Координата Y
 
@@ -67,6 +67,7 @@ public class StandartData<T> {
     public String messenger_type;
     public String smeta;        // 12.06.23. Для Премиальны. Передаю смету для того что б потом по смете получить подробную информацию (в моём случае текст снижения)
     public long doc_type_id;    // 03.08.23 Добавлено для того что б открівалась подробная инфа о смете.
+    public long vpo;
     // ------------------------------------
 
     public static class Filter {

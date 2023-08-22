@@ -3,6 +3,7 @@ package ua.com.merchik.merchik.ServerExchange;
 import static ua.com.merchik.merchik.database.realm.RealmManager.INSTANCE;
 import static ua.com.merchik.merchik.database.realm.RealmManager.getSynchronizationTimetable;
 import static ua.com.merchik.merchik.database.realm.tables.PPARealm.setPPA;
+import static ua.com.merchik.merchik.database.realm.tables.WpDataRealm.getWpDataAddresses;
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
 import android.app.ProgressDialog;
@@ -682,13 +683,33 @@ public class TablesLoadingUnloading {
         SynchronizationTimetableDB realmResults = RealmManager.getSynchronizationTimetableRowByTable("report_prepare");
         if (realmResults != null) lastUpdate = realmResults.getVpo_export();
 
+        // 22.08.23. Получаю с Плана Работ список Адресов так что б они не повторялись.
+        List<Integer> addressIds = getWpDataAddresses();
 
-        retrofit2.Call<ReportPrepareServer> call;
-        if (lastUpdate == 0) {
-            call = RetrofitBuilder.getRetrofitInterface().REPORT_PREPARE_CALL_ALL(mod, act, date_from, date_to);
-        } else {
-            call = RetrofitBuilder.getRetrofitInterface().REPORT_PREPARE_CALL_PIECE(mod, act, date_from, date_to, lastUpdate);
-        }
+        Log.e("downloadReportPrepare", "addressIds size: " + addressIds.size());
+        Log.e("downloadReportPrepare", "addressIds: " + addressIds);
+
+        // 22.08.23. Перепиал запрос на получение RP
+        StandartData data = new StandartData();
+        data.mod = "report_prepare";
+        data.act = "list_data";
+        data.date_from = date_from;
+        data.date_to = date_to;
+        if (lastUpdate != 0) data.vpo = lastUpdate;
+        if (addressIds != null && addressIds.size() > 0) data.addr_id = addressIds;
+
+        Gson gson = new Gson();
+        String json = gson.toJson(data);
+        JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
+
+        retrofit2.Call<ReportPrepareServer> call = RetrofitBuilder.getRetrofitInterface().ReportPrepareServer_RESPONSE(RetrofitBuilder.contentType, convertedObject);
+
+//        retrofit2.Call<ReportPrepareServer> call;
+//        if (lastUpdate == 0) {
+//            call = RetrofitBuilder.getRetrofitInterface().REPORT_PREPARE_CALL_ALL(mod, act, date_from, date_to);
+//        } else {
+//            call = RetrofitBuilder.getRetrofitInterface().REPORT_PREPARE_CALL_PIECE(mod, act, date_from, date_to, lastUpdate);
+//        }
 
         ProgressDialog pg = ProgressDialog.show(context, "Обмен данными с сервером.", "Обновление таблицы: " + "Дет. отчёт", true, true);
 

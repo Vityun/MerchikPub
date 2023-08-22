@@ -6,6 +6,7 @@ import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 
 import io.realm.RealmResults;
@@ -174,19 +175,19 @@ public class WpDataRealm {
                     .findAll();
         }
 
-        if (customerId != null && customerId != 0){
+        if (customerId != null && customerId != 0) {
             result = result.where()
                     .equalTo("client_id", String.valueOf(customerId))
                     .findAll();
         }
 
-        if (userId != null && userId != 0){
+        if (userId != null && userId != 0) {
             result = result.where()
                     .equalTo("user_id", userId)
                     .findAll();
         }
 
-        if (themeId != null && themeId != 0){
+        if (themeId != null && themeId != 0) {
             result = result.where()
                     .equalTo("theme_id", themeId)
                     .findAll();
@@ -196,7 +197,7 @@ public class WpDataRealm {
     }
 
 
-    public static List<WpDataDB> getWpDataBy(Date dateFrom, Date dateTo, Integer status, Integer addressId, String customerId, Integer userId){
+    public static List<WpDataDB> getWpDataBy(Date dateFrom, Date dateTo, Integer status, Integer addressId, String customerId, Integer userId) {
         RealmResults<WpDataDB> result = INSTANCE.where(WpDataDB.class)
                 .findAll();
 
@@ -231,5 +232,33 @@ public class WpDataRealm {
         }
 
         return RealmManager.INSTANCE.copyFromRealm(result);
+    }
+
+
+    /**
+     * 22.08.23.
+     * Получаю список адресов из Плана работ.
+     * <p>
+     * На данный момент надо для того что б по этим адресам получать отфильтрованный ReportPrepare
+     */
+    public static List<Integer> getWpDataAddresses() {
+        try {
+            // Получение списка всех WpDataDB объектов
+            RealmResults<WpDataDB> wpData = INSTANCE.where(WpDataDB.class).findAll();
+
+            // Создание множества для хранения уникальных идентификаторов
+            HashSet<Integer> uniqueAddrIds = new HashSet<>();
+
+            // Перебор всех объектов и добавление их идентификаторов в множество
+            for (WpDataDB wpDataItem : wpData) {
+                uniqueAddrIds.add(wpDataItem.getAddr_id());
+            }
+
+            // Создание списка из множества уникальных идентификаторов
+            return new ArrayList<>(uniqueAddrIds);
+        } catch (Exception e) {
+            return null;
+        }
+
     }
 }
