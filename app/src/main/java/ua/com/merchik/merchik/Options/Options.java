@@ -120,7 +120,6 @@ import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
 import ua.com.merchik.merchik.data.OptionMassageType;
 import ua.com.merchik.merchik.data.RealmModels.AdditionalRequirementsDB;
 import ua.com.merchik.merchik.data.RealmModels.AdditionalRequirementsMarkDB;
-import ua.com.merchik.merchik.data.RealmModels.LogMPDB;
 import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
 import ua.com.merchik.merchik.data.RealmModels.ReportPrepareDB;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
@@ -574,6 +573,23 @@ public class Options {
                                                 break;
                                         }
                                     }
+                                }
+                            }else {
+                                switch (mode) {
+                                    case MAKE:
+                                        optControl(context, dataDB, option, Integer.parseInt(option.getOptionId()), null, type, mode, new OptionControl.UnlockCodeResultListener() {
+                                            @Override
+                                            public void onUnlockCodeSuccess() {
+
+                                            }
+
+                                            @Override
+                                            public void onUnlockCodeFailure() {
+
+                                            }
+                                        });
+                                        click.click();
+                                        break;
                                 }
                             }
                         }
@@ -1841,6 +1857,7 @@ public class Options {
 
         WpDataDB wpDataDB;
         if (dataDB instanceof WpDataDB) {
+            globals.fixMP();
             wpDataDB = ((WpDataDB) dataDB);
         } else if (dataDB instanceof TasksAndReclamationsSDB) {
             globals.fixMP();
@@ -1850,9 +1867,9 @@ public class Options {
             return;
         }
 
-        // Запись в таблицу Местоположений
-        LogMPDB log = new LogMPDB(RealmManager.logMPGetLastId() + 1, globals.POST_10());
-        RealmManager.setLogMpRow(log);
+//        // Запись в таблицу Местоположений
+//        LogMPDB log = new LogMPDB(RealmManager.logMPGetLastId() + 1, globals.POST_10());
+//        RealmManager.setLogMpRow(log);
 
 
         // Вывод диалога с МП
@@ -2258,7 +2275,6 @@ public class Options {
         }
 
         MakePhoto makePhoto = new MakePhoto();
-//        makePhoto.openCamera((Activity) context);
         makePhoto.pressedMakePhoto((Activity) context, dataDB, optionsDB, "0");    // Фото Витрины
     }
 

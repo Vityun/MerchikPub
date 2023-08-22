@@ -966,8 +966,14 @@ public class Globals {
      * Запись в лог местоположений
      */
     public void fixMP() {
-        LogMPDB log = new LogMPDB(RealmManager.logMPGetLastId() + 1, POST_10());
-        RealmManager.setLogMpRow(log);
+        try {
+            int id = RealmManager.logMPGetLastId() + 1;
+            Globals.writeToMLOG("INFO", "fixMP", "create new logMP id: " + id);
+            LogMPDB log = new LogMPDB(id, POST_10());
+            RealmManager.setLogMpRow(log);
+        }catch (Exception e){
+            Globals.writeToMLOG("ERROR", "fixMP", "Exception e: " + e);
+        }
     }
 
     public static String getAppInfoToSession(Context context) {

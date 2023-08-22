@@ -249,24 +249,32 @@ public class trecker implements LocationListener {
      * время устаревания
      */
     public static void Coordinates(WpDataDB wpDataDB) {
-        // Передача параметра с подделкой координат
-        if (trecker.isMockGPS || trecker.isMockNET) {
-            Globals.mocking = 0;
-        } else {
-            Globals.mocking = 1;
-        }
+        try {
+            // Передача параметра с подделкой координат
+            if (trecker.isMockGPS || trecker.isMockNET) {
+                Globals.mocking = 0;
+            } else {
+                Globals.mocking = 1;
+            }
 
-        if (trecker.imHereGPS != null && outOfDayCoordinates(System.currentTimeMillis(), trecker.imHereGPS.getTime(), calculateMinutes(wpDataDB))) {
-            provider = 1;
-            Globals.providerType = 1;
-            Globals.locationGPS = imHereGPS;
+            if (trecker.imHereGPS != null && outOfDayCoordinates(System.currentTimeMillis(), trecker.imHereGPS.getTime(), calculateMinutes(wpDataDB))) {
+                provider = 1;
+                Globals.providerType = 1;
+                Globals.locationGPS = imHereGPS;
 
-            Globals.CoordX = imHereGPS.getLatitude();
-            Globals.CoordY = imHereGPS.getLongitude();
-            Globals.CoordTime = imHereGPS.getTime();
-            Globals.CoordSpeed = imHereGPS.getSpeed();
-            Globals.CoordAltitude = imHereGPS.getAltitude();
-            Globals.CoordAccuracy = imHereGPS.getAccuracy();
+                Globals.CoordX = imHereGPS.getLatitude();
+                Globals.CoordY = imHereGPS.getLongitude();
+                Globals.CoordTime = imHereGPS.getTime();
+                Globals.CoordSpeed = imHereGPS.getSpeed();
+                Globals.CoordAltitude = imHereGPS.getAltitude();
+                Globals.CoordAccuracy = imHereGPS.getAccuracy();
+
+                Globals.writeToMLOG("INFO", "Coordinates/NEW", "imHereGPS: " + imHereGPS);
+            }else {
+                Globals.writeToMLOG("INFO", "Coordinates/NEW/else", "imHereGPS: " + imHereGPS);
+            }
+        }catch (Exception e){
+            Globals.writeToMLOG("INFO", "Coordinates/NEW", "Exception e: " + e);
         }
     }
 
@@ -299,12 +307,14 @@ public class trecker implements LocationListener {
     public static boolean outOfDayCoordinates(long deviceTime, long coordTime, int minutes) {
         try {
             long res = Math.abs(deviceTime - coordTime) / 1000 / 60;    // /1000 - переводим в секунды /60 - Переводим в минуты
+            Globals.writeToMLOG("INFO", "outOfDayCoordinates", "res: " + res + " minutes: " + minutes + " coordTime: " + coordTime);
             if (res < minutes) {
                 return true;
             } else {
                 return false;
             }
         } catch (Exception e) {
+            Globals.writeToMLOG("INFO", "outOfDayCoordinates", "Exception e: " + e);
             return false;
         }
     }

@@ -13,7 +13,6 @@ import static ua.com.merchik.merchik.Options.Controls.OptionControlPhotoPromotio
 import static ua.com.merchik.merchik.PhotoReportActivity.exifPhotoData;
 import static ua.com.merchik.merchik.PhotoReportActivity.getImageOrientation;
 import static ua.com.merchik.merchik.PhotoReportActivity.resaveBitmap;
-import static ua.com.merchik.merchik.PhotoReportActivity.resizeImageFile;
 import static ua.com.merchik.merchik.data.RealmModels.StackPhotoDB.PHOTO_PROMOTION_TOV;
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
@@ -815,11 +814,11 @@ public class DetailedReportActivity extends toolbar_menus {
                         photoFile = resaveBitmap(photoFile, rotation);  // ДляСамсунгов и тп.. Разворачиваем как надо.
                     }
 
-                    try {
-                        photoFile = resizeImageFile(this, photoFile);
-                    } catch (Exception e) {
-                        globals.alertDialogMsg(this, "Ошибка В ужатии: " + e);
-                    }
+//                    try {
+//                        photoFile = resizeImageFile(this, photoFile);
+//                    } catch (Exception e) {
+//                        globals.alertDialogMsg(this, "Ошибка В ужатии: " + e);
+//                    }
 
                     exifPhotoData(photoFile);
 

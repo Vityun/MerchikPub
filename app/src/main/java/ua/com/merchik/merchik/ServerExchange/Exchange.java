@@ -119,11 +119,11 @@ import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
  */
 public class Exchange {
 
-    private Globals globals = new Globals();
+    private final Globals globals = new Globals();
     public Context context;
     private static long exchange = 0;
     //    private int retryTime = 120000;   // 2
-    private int retryTime = 600000;     // 10
+    private final int retryTime = 600000;     // 10
 //    private int retryTime = 60000;     // 1
 
     /**
@@ -155,7 +155,12 @@ public class Exchange {
                 Log.e("startExchange", "start/Время обновлять наступило");
                 exchange = System.currentTimeMillis();
 
-                globals.fixMP();    //
+                try {
+                    globals.fixMP();    //
+                    Globals.writeToMLOG("ERROR", "startExchange/globals.fixMP();", "locationGPS: " + Globals.locationGPS);
+                }catch (Exception e){
+                    Globals.writeToMLOG("ERROR", "startExchange/globals.fixMP();", "Exception e: " + e);
+                }
 
 
                 try {
@@ -1297,7 +1302,7 @@ public class Exchange {
                         if (response.isSuccessful() && response.body() != null) {
                             Log.e("TAG_TABLE", "PHOTO_TOVAR_URL_res: " + response.body().byteStream());
                             Bitmap bmp = BitmapFactory.decodeStream(response.body().byteStream());
-                            String path = globals.saveImage1(bmp, imageType + "-" + list.get(finalI).getTovarId());
+                            String path = Globals.saveImage1(bmp, imageType + "-" + list.get(finalI).getTovarId());
 
                             Log.e("TESTING", "1_SAVE PHOTO");
                             Log.e("TESTING", "1_SAVE PHOTO/path: " + path);
@@ -2589,7 +2594,7 @@ public class Exchange {
             @Override
             public void onFailure(Call<ConductWpDataResponse> call, Throwable t) {
                 Log.e("conductingOnServer", "Throwable t: " + t);
-                click.onFailure("Нема зв'язку. Помилка: " + t.toString());
+                click.onFailure("Нема зв'язку. Помилка: " + t);
             }
         });
     }
