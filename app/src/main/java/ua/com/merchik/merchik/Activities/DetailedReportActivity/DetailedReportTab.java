@@ -7,6 +7,7 @@ import androidx.fragment.app.FragmentPagerAdapter;
 
 import java.util.ArrayList;
 
+import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.data.Data;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 
@@ -28,24 +29,34 @@ public class DetailedReportTab extends FragmentPagerAdapter {
     }
 
     public static void refreshAdapter(){
-        detailedReportOptionsFrag.recycleViewDRAdapter.notifyDataSetChanged();
+        try {
+            detailedReportOptionsFrag.recycleViewDRAdapter.notifyDataSetChanged();
+        }catch (Exception e){
+            Globals.writeToMLOG("ERROR", "DetailedReportTab/refreshAdapter", "Exception e: " + e);
+        }
     }
 
     // this is for fragment tabs
     @Override
     public Fragment getItem(int position) {
-        switch (position) {
-            case 0:
-                return new DetailedReportHomeFrag(myContext, list, wpDataDB);
-            case 1:
-                detailedReportOptionsFrag = new DetailedReportOptionsFrag(myContext, list, wpDataDB);
-                return detailedReportOptionsFrag;
-            case 2:
-                return new DetailedReportTovarsFrag(myContext, list, wpDataDB);
-            case 3:
-                return new DetailedReportTARFrag(myContext, wpDataDB);
-            default:
-                return null;
+        try {
+            switch (position) {
+                case 0:
+                    return new DetailedReportHomeFrag(myContext, list, wpDataDB);
+                case 1:
+                    detailedReportOptionsFrag = new DetailedReportOptionsFrag(myContext, list, wpDataDB);
+                    return detailedReportOptionsFrag;
+                case 2:
+                    return new DetailedReportTovarsFrag(myContext, list, wpDataDB);
+                case 3:
+                    return new DetailedReportTARFrag(myContext, wpDataDB);
+                default:
+                    Globals.writeToMLOG("ERROR", "DetailedReportTab/getItem", "default/ Fragment == NULL");
+                    return null;
+            }
+        }catch (Exception e){
+            Globals.writeToMLOG("ERROR", "DetailedReportTab/getItem", "catch/ Fragment == NULL Exception e: " + e);
+            return null;
         }
     }
     // this counts total number of tabs

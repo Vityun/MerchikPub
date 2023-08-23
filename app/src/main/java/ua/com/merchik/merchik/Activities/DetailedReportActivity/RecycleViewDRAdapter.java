@@ -133,6 +133,8 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
             Log.e("bindRPA", "optionsButtons.getOptionControlId(): " + optionsButtons.getOptionControlId());
             Log.e("bindRPA", "optionsButtons.getIsSignal(): " + optionsButtons.getIsSignal());
             Log.e("bindRPA", "optionsButtons.getBlockPns(): " + optionsButtons.getBlockPns());
+            Log.e("bindRPA", "optionsButtons.getAmountMin(): " + optionsButtons.getAmountMin());
+            Log.e("bindRPA", "optionsButtons.getAmountMax(): " + optionsButtons.getAmountMax());
 
             // Подсвечивает Кнопки Опций с блоком ПНС() КРАСНЫМ цветом
             if (optionsButtons.getIsSignal().equals("1") && optionsButtons.getBlockPns().equals("1")) {
