@@ -645,7 +645,6 @@ public class RealmManager {
         RealmResults<StackPhotoDB> realmResults = INSTANCE.where(StackPhotoDB.class)
                 .equalTo("code_dad2", codeDad2)
                 .equalTo("photo_type", photoType)
-//                .isNotNull("photo_hash")
                 .findAll();
         return realmResults.size();
     }

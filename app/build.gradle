@@ -2,14 +2,14 @@ apply plugin: 'com.android.application'
 apply plugin: 'realm-android'
 
 android {
-    compileSdkVersion 31
+    compileSdkVersion 33
     defaultConfig {
         applicationId "ua.com.merchik.merchik"
         minSdkVersion 16
-        targetSdkVersion 31
+        targetSdkVersion 33
         //noinspection HighAppVersionCode
-        versionCode  2023082200
-        versionName "2023082200"
+        versionCode  2023082201
+        versionName "2023082201"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
         multiDexEnabled true

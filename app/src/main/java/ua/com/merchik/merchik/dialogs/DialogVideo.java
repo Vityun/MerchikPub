@@ -109,7 +109,7 @@ public class DialogVideo extends DialogData {
 
         displayYoutubeVideo.getSettings().setJavaScriptEnabled(true);
         displayYoutubeVideo.getSettings().setAllowFileAccess(true);
-        displayYoutubeVideo.getSettings().setAppCacheEnabled(true);
+//        displayYoutubeVideo.getSettings().setAppCacheEnabled(true);
         displayYoutubeVideo.setInitialScale(90);
 //        displayYoutubeVideo.getSettings().setUseWideViewPort(true);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
