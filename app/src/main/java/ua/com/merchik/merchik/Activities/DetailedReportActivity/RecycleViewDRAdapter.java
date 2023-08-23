@@ -402,7 +402,11 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                         break;
 
                     case (135809):  // Вставляем количество выполненных Фото витрины ДО начала работ
-                        textInteger.setText("" + RealmManager.stackPhotoShowcasePhotoCount(dad2, 14));
+//                        textInteger.setText("" + RealmManager.stackPhotoShowcasePhotoCount(dad2, 14));
+                        textInteger.setText(
+                                setPhotoCountsMakeAndMust(optionsButtons, RealmManager.stackPhotoShowcasePhotoCount(dad2, 14)),
+                                TextView.BufferType.SPANNABLE
+                        );
                         break;
                     case (135158):  // Вставляем количество выполненных Фото Остатков Товаров (ФОТ)
                         textInteger.setText("" + RealmManager.stackPhotoShowcasePhotoCount(dad2, 4));
