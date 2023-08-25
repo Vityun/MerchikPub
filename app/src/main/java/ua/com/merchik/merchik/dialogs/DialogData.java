@@ -191,6 +191,15 @@ public class DialogData {
         }
     }
 
+    public void setTitle(StringBuilder title) {
+        this.title.setVisibility(View.VISIBLE);
+        if (title != null) {
+            this.title.setText(title);
+        } else {
+            this.title.setVisibility(View.GONE);
+        }
+    }
+
     public void setText(CharSequence text) {
         this.text.setVisibility(View.VISIBLE);
         if (text != null && !text.equals("")) {
@@ -199,6 +208,7 @@ public class DialogData {
             this.text.setVisibility(View.GONE);
         }
     }
+
 
     public void setEditTextSearch(RecycleViewDRAdapterTovar adapter) {
         this.editTextSearch.setVisibility(View.VISIBLE);

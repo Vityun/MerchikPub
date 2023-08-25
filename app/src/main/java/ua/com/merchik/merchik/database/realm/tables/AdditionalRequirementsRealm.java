@@ -188,6 +188,7 @@ public class AdditionalRequirementsRealm {
             case HIDE_FOR_USER:
                 realmResults = realmResults.where()
                         .equalTo("hideUser", "0")
+                        .equalTo("disableScore", "1")
                         .findAll();
                 break;
 

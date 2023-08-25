@@ -45,6 +45,11 @@ public class AdditionalRequirementsDB extends RealmObject {
     @SerializedName("hide_user")
     @Expose
     private String hideUser;
+
+    @SerializedName("disable_score")
+    @Expose
+    public String disableScore;
+
     @SerializedName("not_approve")
     @Expose
     private String not_approve;

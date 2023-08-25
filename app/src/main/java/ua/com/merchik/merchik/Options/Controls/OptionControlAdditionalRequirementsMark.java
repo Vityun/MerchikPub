@@ -180,7 +180,7 @@ public class OptionControlAdditionalRequirementsMark<T> extends OptionControl {
                     nedotochSum = virtualTable.stream().map(table -> table.nedotoch).reduce(0, Integer::sum);
                     offsetSum = virtualTable.stream().map(table -> table.offset).reduce(0, Integer::sum);
 
-                    averageRating = markSum / (virtualTable.size() - nedotochSum);
+                    averageRating = (double) markSum / (virtualTable.size() - nedotochSum);
                 } catch (Exception e) {
                     averageRating = 0;
                 }
@@ -191,7 +191,12 @@ public class OptionControlAdditionalRequirementsMark<T> extends OptionControl {
                 }
 
                 // Подсчёт суммы отклонения от среднего
-                deviationFromTheMeanSum = virtualTable.stream().map(table -> table.deviationFromTheMean).reduce(0.0d, Double::sum);
+//                deviationFromTheMeanSum = virtualTable.stream().map(table -> table.deviationFromTheMean).reduce(0.0d, Double::sum);
+
+                deviationFromTheMeanSum = virtualTable.stream()
+                        .mapToDouble(table -> table.deviationFromTheMean)
+                        .min()
+                        .orElse(0.0d); // Значение по умолчанию, если коллекция пуста
             }
 
 //            // DEBUG DATA-------------

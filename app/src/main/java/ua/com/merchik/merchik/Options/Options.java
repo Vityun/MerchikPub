@@ -15,11 +15,15 @@ import static ua.com.merchik.merchik.Globals.OptionControlName.NOTES;
 import static ua.com.merchik.merchik.Globals.OptionControlName.OBOROTVED_NUM;
 import static ua.com.merchik.merchik.Globals.OptionControlName.PRICE;
 import static ua.com.merchik.merchik.Globals.OptionControlName.UP;
+import static ua.com.merchik.merchik.Globals.distanceMin;
 import static ua.com.merchik.merchik.Options.Options.ConductMode.DEFAULT_CONDUCT;
 import static ua.com.merchik.merchik.data.OptionMassageType.Type.DIALOG;
 import static ua.com.merchik.merchik.data.OptionMassageType.Type.STRING;
 import static ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsRealm.AdditionalRequirementsModENUM.HIDE_FOR_USER;
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
+import static ua.com.merchik.merchik.trecker.Coordinates;
+import static ua.com.merchik.merchik.trecker.coordinatesDistanse;
+import static ua.com.merchik.merchik.trecker.enabledGPS;
 
 import android.app.Activity;
 import android.content.Context;
@@ -113,6 +117,7 @@ import ua.com.merchik.merchik.data.Data;
 import ua.com.merchik.merchik.data.Database.Realm.VirtualAdditionalRequirementsDB;
 import ua.com.merchik.merchik.data.Database.Room.AdditionalMaterialsJOIN.AdditionalMaterialsJOINAdditionalMaterialsAddressSDB;
 import ua.com.merchik.merchik.data.Database.Room.AdditionalMaterialsSDB;
+import ua.com.merchik.merchik.data.Database.Room.AddressSDB;
 import ua.com.merchik.merchik.data.Database.Room.EKL_SDB;
 import ua.com.merchik.merchik.data.Database.Room.OpinionSDB;
 import ua.com.merchik.merchik.data.Database.Room.OpinionThemeSDB;
@@ -1861,10 +1866,15 @@ public class Options {
             wpDataDB = ((WpDataDB) dataDB);
         } else if (dataDB instanceof TasksAndReclamationsSDB) {
             globals.fixMP();
-            Toast.makeText(context, "Местоположение зафиксированно", Toast.LENGTH_SHORT).show();
+//            Toast.makeText(context, "Местоположение зафиксированно", Toast.LENGTH_SHORT).show();
             return;
         } else {
             return;
+        }
+
+        // Вывод диалога с МП
+        if (context instanceof toolbar_menus) {
+            ((toolbar_menus) context).dialogMap();
         }
 
 //        // Запись в таблицу Местоположений
@@ -1872,10 +1882,52 @@ public class Options {
 //        RealmManager.setLogMpRow(log);
 
 
-        // Вывод диалога с МП
-        if (context instanceof toolbar_menus) {
-            ((toolbar_menus) context).dialogMap();
+
+        DialogData dialog = new DialogData(context);
+        StringBuilder title = new StringBuilder();
+        StringBuilder text = new StringBuilder();
+
+        // 24.08.23. "Обновляем данные ГПС"
+        Coordinates(wpDataDB);
+        AddressSDB addressSDB = SQL_DB.addressDao().getById(wpDataDB.getAddr_id());
+
+        // 24.08.23. Проверяем включён ли ГПС.
+        title.append("Місцеположення");
+        boolean okMP = false;
+        if (enabledGPS){
+            if (addressSDB != null && addressSDB.locationXd > 0 && addressSDB.locationYd > 0){
+                if (Globals.CoordX != 0 && Globals.CoordY != 0){
+                    double distance = coordinatesDistanse(addressSDB.locationXd, addressSDB.locationYd, Globals.CoordX, Globals.CoordY);
+                    if (distance < distanceMin){
+                        text.append("Проблем із місцеположенню немає!");
+                        okMP = true;
+                    }else {
+                        //"По данным системы вы находитесь на расстоянии %s метров от ТТ %s, что больше допустимых 500 метров.
+                        // \n\nВы не сможете выполнить фото пока, Ваше местоположение не определено.\n\nЕсли в действительности
+                        // Вы находитесь в ТТ - обратитесь за помощью к своему руководителю или в службу поддержки merchik."
+                        text.append("Ви знаходитесь задалеко від торгівельної точки!").append("\n")
+                                .append("За даними системи ви знаходитесь на відстані ").append(distance).append(" метрів від ТТ ").append(addressSDB.nm)
+                                .append(", що більше допустимих ").append(distanceMin).append("\n\n")
+                                .append("Якщо ви в дійсності знаходитесь на ТТ - зверніться за допомогою до свого керівника або в службу підтримки merchik.");
+                    }
+                }else {
+                    text.append("Не можу визначити ваше місцезнаходження!").append("\n").append("Спробуйте підійти до вікна або вийти на вулицю. Через хвилину місцеположення буде визначене і можна продовжувати виконувати роботу.");
+                }
+            }else {
+                text.append("У магазині в якому Ви працюєте не встановлені координати!").append("\n").append("Зверніться до Вашого керівника для виправлення цієї проблеми.");
+            }
+        }else {
+            text.append("У вас ввимкнено GPS!").append("\n").append("Будь-ласка увімкніть GPS, почекайте поки з`явиться Ваше місцеположення та продовжуйте роботу.");
         }
+
+        if (!okMP){
+            dialog.setTitle(title);
+            dialog.setText(text);
+            dialog.setDialogIco();
+            dialog.setClose(dialog::dismiss);
+            dialog.show();
+        }
+
 
         // Запись в План работ
         int distance;
@@ -1891,7 +1943,7 @@ public class Options {
             if (wpDataDB != null) {
                 wpDataDB.setVisit_start_geo_distance(distance);
                 realm.insertOrUpdate(wpDataDB);
-                Toast.makeText(context, "Данные о местоположении внесены.", Toast.LENGTH_LONG).show();
+//                Toast.makeText(context, "Данные о местоположении внесены.", Toast.LENGTH_LONG).show();
             }
         });
     }

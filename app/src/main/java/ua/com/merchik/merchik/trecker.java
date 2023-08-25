@@ -270,8 +270,27 @@ public class trecker implements LocationListener {
                 Globals.CoordAccuracy = imHereGPS.getAccuracy();
 
                 Globals.writeToMLOG("INFO", "Coordinates/NEW", "imHereGPS: " + imHereGPS);
+            }else if (outOfDayCoordinates(System.currentTimeMillis(), trecker.imHereGPS.getTime(), calculateMinutes(wpDataDB))){
+                provider = 1;
+                Globals.providerType = 1;
+                Globals.locationGPS = imHereGPS;
+
+                Globals.CoordX = imHereGPS.getLatitude();
+                Globals.CoordY = imHereGPS.getLongitude();
+                Globals.CoordTime = imHereGPS.getTime();
+                Globals.CoordSpeed = imHereGPS.getSpeed();
+                Globals.CoordAltitude = imHereGPS.getAltitude();
+                Globals.CoordAccuracy = imHereGPS.getAccuracy();
             }else {
                 Globals.writeToMLOG("INFO", "Coordinates/NEW/else", "imHereGPS: " + imHereGPS);
+
+                Globals.CoordX = 0;
+                Globals.CoordY = 0;
+                Globals.CoordTime = 0;
+                Globals.CoordSpeed = 0;
+                Globals.CoordAltitude = 0;
+                Globals.CoordAccuracy = 0;
+                Globals.provider = 0;
             }
         }catch (Exception e){
             Globals.writeToMLOG("INFO", "Coordinates/NEW", "Exception e: " + e);
@@ -316,6 +335,22 @@ public class trecker implements LocationListener {
         } catch (Exception e) {
             Globals.writeToMLOG("INFO", "outOfDayCoordinates", "Exception e: " + e);
             return false;
+        }
+    }
+
+    /**
+     * 24.08.23.
+     *
+     * @param deviceTime время устройства в миллисекундах. Или время от которого будем расчитывать
+     *                   "устарелость" координат.
+     * @param coordTime  Время когда получены последние координаты.
+     * @param minutes    Минуты которые разрешены для того что б координаты считать устаревшими.
+     */
+    public static long howOldCoordinates(long deviceTime, long coordTime, int minutes){
+        try {
+            return Math.abs(deviceTime - coordTime) / 1000 / 60;    // /1000 - переводим в секунды /60 - Переводим в минуты
+        }catch (Exception e){
+            return 0L;
         }
     }
 
