@@ -39,7 +39,7 @@ public class OptionButtonPhotoFOT<T> extends OptionControl {
     }
 
     private void executeOption() {
-        new Globals().fixMP();// Фиксация Местоположения в таблице ЛогМп
+        new Globals().fixMP(wpDataDB);// Фиксация Местоположения в таблице ЛогМп
         try {
             if (optionDB.getOptionControlId().equals("159707")) {
                 OptionControlAvailabilityControlPhotoRemainingGoods<?> optionControlAvailabilityControlPhotoRemainingGoods = new OptionControlAvailabilityControlPhotoRemainingGoods<>(context, document, optionDB, msgType, nnkMode, unlockCodeResultListener);

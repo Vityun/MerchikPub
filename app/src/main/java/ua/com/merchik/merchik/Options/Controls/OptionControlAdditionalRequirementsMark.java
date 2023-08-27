@@ -191,12 +191,12 @@ public class OptionControlAdditionalRequirementsMark<T> extends OptionControl {
                 }
 
                 // Подсчёт суммы отклонения от среднего
-//                deviationFromTheMeanSum = virtualTable.stream().map(table -> table.deviationFromTheMean).reduce(0.0d, Double::sum);
+                deviationFromTheMeanSum = virtualTable.stream().map(table -> table.deviationFromTheMean).reduce(0.0d, Double::sum);
 
-                deviationFromTheMeanSum = virtualTable.stream()
-                        .mapToDouble(table -> table.deviationFromTheMean)
-                        .min()
-                        .orElse(0.0d); // Значение по умолчанию, если коллекция пуста
+//                deviationFromTheMeanSum = virtualTable.stream()
+//                        .mapToDouble(table -> table.deviationFromTheMean)
+//                        .min()
+//                        .orElse(0.0d); // Значение по умолчанию, если коллекция пуста
             }
 
 //            // DEBUG DATA-------------

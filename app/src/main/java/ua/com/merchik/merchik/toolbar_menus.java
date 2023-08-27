@@ -823,6 +823,8 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
             try {
                 Log.e("КРОНЧИК", "Time: " + Clock.getHumanTime());
 
+//                globals.fixMP(null);
+
 //            Log.e("КРОНЧИК", "stackPhotoDBAll: " + StackPhotoRealm.getAll().size());
 
                 // 22.04.2021 Ужасная хрень. Если нет данных от GPS -- оно начинает его слушать.

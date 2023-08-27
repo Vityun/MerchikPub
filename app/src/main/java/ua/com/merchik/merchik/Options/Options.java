@@ -1862,10 +1862,10 @@ public class Options {
 
         WpDataDB wpDataDB;
         if (dataDB instanceof WpDataDB) {
-            globals.fixMP();
             wpDataDB = ((WpDataDB) dataDB);
+            globals.fixMP(wpDataDB);
         } else if (dataDB instanceof TasksAndReclamationsSDB) {
-            globals.fixMP();
+            globals.fixMP(null);
 //            Toast.makeText(context, "Местоположение зафиксированно", Toast.LENGTH_SHORT).show();
             return;
         } else {
@@ -1902,9 +1902,6 @@ public class Options {
                         text.append("Проблем із місцеположенню немає!");
                         okMP = true;
                     }else {
-                        //"По данным системы вы находитесь на расстоянии %s метров от ТТ %s, что больше допустимых 500 метров.
-                        // \n\nВы не сможете выполнить фото пока, Ваше местоположение не определено.\n\nЕсли в действительности
-                        // Вы находитесь в ТТ - обратитесь за помощью к своему руководителю или в службу поддержки merchik."
                         text.append("Ви знаходитесь задалеко від торгівельної точки!").append("\n")
                                 .append("За даними системи ви знаходитесь на відстані ").append(distance).append(" метрів від ТТ ").append(addressSDB.nm)
                                 .append(", що більше допустимих ").append(distanceMin).append("\n\n")
@@ -1969,11 +1966,11 @@ public class Options {
      */
     private <T> boolean optionControlStartWork_138519(Context context, T dataDB, OptionsDB optionsDB, OptionMassageType type, NNKMode mode, OptionControl.UnlockCodeResultListener unlockCodeResultListener) {
         boolean res;
-
         long dad2, startWork, endWork;
         if (dataDB instanceof WpDataDB) {
             dad2 = ((WpDataDB) dataDB).getCode_dad2();
             startWork = ((WpDataDB) dataDB).getVisit_start_dt();
+            globals.fixMP((WpDataDB) dataDB);
         } else if (dataDB instanceof TasksAndReclamationsSDB) {
             dad2 = ((TasksAndReclamationsSDB) dataDB).codeDad2;
             startWork = ((TasksAndReclamationsSDB) dataDB).dt_start_fact;
@@ -2050,6 +2047,7 @@ public class Options {
      */
     private boolean optionStartWork_138518(Context context, WpDataDB wpDataDB, OptionsDB optionsDB, OptionMassageType type, NNKMode mode, OptionControl.UnlockCodeResultListener unlockCodeResultListener) {
         boolean result;
+        globals.fixMP(wpDataDB);
         Globals.writeToMLOG("INFO", "DetailedReportButtons.class.pressStartWork", "ENTER. wpDataDB.codeDAD2: " + wpDataDB.getCode_dad2());
         if (wpDataDB.getVisit_start_dt() > 0) {
             Toast.makeText(context, "Работа уже начата!", Toast.LENGTH_SHORT).show();
@@ -2225,15 +2223,56 @@ public class Options {
                         public <T> void onSuccess(T data) {
                             String msg = (String) data;
                             Globals.writeToMLOG("INFO", "DetailedReportButtons.class.pressStartWork.onSuccess", "msg: " + msg);
+                            WorkPlan workPlan = new WorkPlan();
+                            List<OptionsDB> opt = workPlan.getOptionButtons2(workPlan.getWpOpchetId(wpDataDB), wpDataDB.getId());
+                            new Options().conduct(context, wpDataDB, opt, DEFAULT_CONDUCT, new Clicks.click() {
+                                @Override
+                                public <T> void click(T data) {
+                                    OptionsDB optionsDB = (OptionsDB) data;
+                                    OptionMassageType msgType = new OptionMassageType();
+                                    msgType.type = OptionMassageType.Type.DIALOG;
+                                    new Options().optControl(context, wpDataDB, optionsDB, Integer.parseInt(optionsDB.getOptionControlId()), null, msgType, Options.NNKMode.CHECK, new OptionControl.UnlockCodeResultListener() {
+                                        @Override
+                                        public void onUnlockCodeSuccess() {
+
+                                        }
+
+                                        @Override
+                                        public void onUnlockCodeFailure() {
+
+                                        }
+                                    });
+                                }
+                            });
                         }
 
                         @Override
                         public void onFailure(String error) {
                             Globals.writeToMLOG("INFO", "DetailedReportButtons.class.pressStartWork.onFailure", "error: " + error);
+                            WorkPlan workPlan = new WorkPlan();
+                            List<OptionsDB> opt = workPlan.getOptionButtons2(workPlan.getWpOpchetId(wpDataDB), wpDataDB.getId());
+                            new Options().conduct(context, wpDataDB, opt, DEFAULT_CONDUCT, new Clicks.click() {
+                                @Override
+                                public <T> void click(T data) {
+                                    OptionsDB optionsDB = (OptionsDB) data;
+                                    OptionMassageType msgType = new OptionMassageType();
+                                    msgType.type = OptionMassageType.Type.DIALOG;
+                                    new Options().optControl(context, wpDataDB, optionsDB, Integer.parseInt(optionsDB.getOptionControlId()), null, msgType, Options.NNKMode.CHECK, new OptionControl.UnlockCodeResultListener() {
+                                        @Override
+                                        public void onUnlockCodeSuccess() {
+
+                                        }
+
+                                        @Override
+                                        public void onUnlockCodeFailure() {
+
+                                        }
+                                    });
+                                }
+                            });
                         }
                     });
 
-//                    globals.writeToMLOG(Clock.getHumanTime() + "_INFO.DetailedReportButtons.class.pressEndWork: " + "Вы закончили работу в: " + endTime + " / отчёт: " + wpDataDB.getDoc_num_otchet() + "\n");
                     Globals.writeToMLOG("INFO", "_INFO.DetailedReportButtons.class.pressEndWork", "Вы закончили работу в: " + endTime + " / отчёт: " + wpDataDB.getDoc_num_otchet());
                     Toast.makeText(context, "Вы окончили работу в: " + Clock.getHumanTimeOpt(endTime * 1000) + "\n\nНе забудьте нажать 'Провести', что б система проверила текущий документ и начислила Вам премиальные", Toast.LENGTH_SHORT).show();
                     unlockCodeResultListener.onUnlockCodeSuccess();
@@ -2254,28 +2293,6 @@ public class Options {
         }
         Globals.writeToMLOG("INFO", "DetailedReportButtons.class.pressEndWork", "OUT. wpDataDB.codeDAD2: " + wpDataDB.getCode_dad2());
 
-
-        WorkPlan workPlan = new WorkPlan();
-        List<OptionsDB> opt = workPlan.getOptionButtons2(workPlan.getWpOpchetId(wpDataDB), wpDataDB.getId());
-        new Options().conduct(context, wpDataDB, opt, DEFAULT_CONDUCT, new Clicks.click() {
-            @Override
-            public <T> void click(T data) {
-                OptionsDB optionsDB = (OptionsDB) data;
-                OptionMassageType msgType = new OptionMassageType();
-                msgType.type = OptionMassageType.Type.DIALOG;
-                new Options().optControl(context, wpDataDB, optionsDB, Integer.parseInt(optionsDB.getOptionControlId()), null, msgType, Options.NNKMode.CHECK, new OptionControl.UnlockCodeResultListener() {
-                    @Override
-                    public void onUnlockCodeSuccess() {
-
-                    }
-
-                    @Override
-                    public void onUnlockCodeFailure() {
-
-                    }
-                });
-            }
-        });
 
 //        conductOptCheck(mode, result, optionsDB);
         return result;

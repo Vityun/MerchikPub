@@ -2233,7 +2233,7 @@ public class TablesLoadingUnloading {
         String mod = "location";
         String act = "track";
 
-        List<LogMPDB> logMp = RealmManager.getAllLogMPDB();
+        List<LogMPDB> logMp = RealmManager.getNOTUploadLogMPDB();
         if (logMp != null && logMp.size() > 0) {
             Log.e("LogMp", "LogMpUploadText. LogSize: " + logMp.size());
 
@@ -2265,7 +2265,8 @@ public class TablesLoadingUnloading {
                                         if (geoInfo != null && geoInfo.get("state").getAsBoolean()) {
                                             try {
                                                 RealmManager.INSTANCE.executeTransaction(realm -> {
-                                                    list.deleteFromRealm();
+//                                                    list.deleteFromRealm();
+                                                    list.upload = System.currentTimeMillis()/1000;  // 27.08.23 Вместо удаления, пишу воемя когда координаты были выгружены
                                                 });
 
                                                 res.onSuccess("ОК");

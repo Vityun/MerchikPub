@@ -1419,11 +1419,10 @@ public class RealmManager {
      * Получаем последнюю запись
      */
     public static int logMPGetLastId() {
-        RealmResults<LogMPDB> realmResults = INSTANCE.where(LogMPDB.class)
-                .findAll();
-        try {
-            return Objects.requireNonNull(realmResults.last()).getId();
-        } catch (Exception e) {
+        Number maxId = INSTANCE.where(LogMPDB.class).max("id");
+        if (maxId != null) {
+            return maxId.intValue();
+        } else {
             return 0;
         }
     }
@@ -1434,8 +1433,13 @@ public class RealmManager {
      */
     public static void setLogMpRow(LogMPDB row) {
         INSTANCE.beginTransaction();
-        INSTANCE.copyToRealmOrUpdate(row);
-        INSTANCE.commitTransaction();
+        try {
+            INSTANCE.copyToRealmOrUpdate(row);
+            INSTANCE.commitTransaction();
+        } catch (Exception e) {
+            INSTANCE.cancelTransaction();
+            e.printStackTrace();
+        }
     }
 
     /**
@@ -1444,6 +1448,12 @@ public class RealmManager {
      */
     public static RealmResults<LogMPDB> getAllLogMPDB() {
         return INSTANCE.where(LogMPDB.class)
+                .findAll();
+    }
+
+    public static RealmResults<LogMPDB> getNOTUploadLogMPDB() {
+        return INSTANCE.where(LogMPDB.class)
+                .equalTo("upload", 0)
                 .findAll();
     }
 

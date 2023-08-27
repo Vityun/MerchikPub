@@ -156,7 +156,7 @@ public class Exchange {
                 exchange = System.currentTimeMillis();
 
                 try {
-                    globals.fixMP();    //
+                    globals.fixMP(null);    //
                     Globals.writeToMLOG("ERROR", "startExchange/globals.fixMP();", "locationGPS: " + Globals.locationGPS);
                 }catch (Exception e){
                     Globals.writeToMLOG("ERROR", "startExchange/globals.fixMP();", "Exception e: " + e);
@@ -1806,7 +1806,7 @@ public class Exchange {
      * 20.05.2021
      * Отправка ЛОГА местоположения
      */
-    public void sendLogMp() {
+/*    public void sendLogMp() {
         String mod = "location";
         String act = "track";
 
@@ -1861,7 +1861,7 @@ public class Exchange {
             Log.e("LogMp", "LogMpUploadText. LogSize: " + null);
         }
 
-    }
+    }*/
 
 
     /**

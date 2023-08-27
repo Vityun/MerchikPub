@@ -1,6 +1,7 @@
 package ua.com.merchik.merchik;
 
 import static ua.com.merchik.merchik.toolbar_menus.internetStatus;
+import static ua.com.merchik.merchik.trecker.imHereGPS;
 
 import android.Manifest;
 import android.app.Activity;
@@ -61,6 +62,7 @@ import ua.com.merchik.merchik.data.AppData.Os;
 import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
 import ua.com.merchik.merchik.data.Database.Room.TranslatesSDB;
 import ua.com.merchik.merchik.data.RealmModels.LogMPDB;
+import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.dialogs.DialogData;
 
@@ -965,13 +967,37 @@ public class Globals {
      * 22.10.21.
      * Запись в лог местоположений
      */
-    public void fixMP() {
+    public void fixMP(WpDataDB wpDataDB) {
         try {
             int id = RealmManager.logMPGetLastId() + 1;
             Globals.writeToMLOG("INFO", "fixMP", "create new logMP id: " + id);
-            LogMPDB log = new LogMPDB(id, POST_10());
+//            LogMPDB log = new LogMPDB(id, POST_10());
+            LogMPDB log = new LogMPDB();
+
+            log.id = id;
+            log.gp = POST_10();
+
+            try {
+                log.CoordX = imHereGPS.getLatitude();
+                log.CoordY = imHereGPS.getLongitude();
+                log.CoordAltitude = imHereGPS.getAltitude();
+                log.CoordTime = imHereGPS.getTime();
+                log.CoordSpeed = imHereGPS.getSpeed();
+                log.CoordAccuracy = imHereGPS.getAccuracy();
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
+                    log.mocking = imHereGPS.isFromMockProvider();
+                }
+            }catch (Exception e){
+                Globals.writeToMLOG("ERROR", "fixMP/imHereGPS is null?", "Exception e: " + e);
+            }
+
+            if (wpDataDB != null){
+                log.codeDad2 = wpDataDB.getCode_dad2();
+            }
+
+            log.vpi = System.currentTimeMillis() / 1000;
             RealmManager.setLogMpRow(log);
-        }catch (Exception e){
+        } catch (Exception e) {
             Globals.writeToMLOG("ERROR", "fixMP", "Exception e: " + e);
         }
     }

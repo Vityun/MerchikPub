@@ -27,6 +27,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
@@ -141,17 +142,17 @@ public class DetailedReportHomeFrag extends Fragment {
             Log.e("DetailedReportHomeFrag", "onCreateView.spotLon: " + spotLon);
 
             // 23.08.23 Видаляю згадування про мапу для того щоб перевірити чи не ізза неї ідуть проблеми
-//            SupportMapFragment mapFragment = (SupportMapFragment) getChildFragmentManager()
-//                    .findFragmentById(R.id.mapView2);
+            SupportMapFragment mapFragment = (SupportMapFragment) getChildFragmentManager()
+                    .findFragmentById(R.id.mapView2);
 
-//            Log.e("DetailedReportHomeFrag", "SupportMapFragment: " + mapFragment);
-//
-//            if (mapFragment != null) {
-//                mapFragment.getMapAsync(googleMap -> {
-//                    map = googleMap;
-//                    updateMap();
-//                });
-//            }
+            Log.e("DetailedReportHomeFrag", "SupportMapFragment: " + mapFragment);
+
+            if (mapFragment != null) {
+                mapFragment.getMapAsync(googleMap -> {
+                    map = googleMap;
+                    updateMap();
+                });
+            }
 
             fabYoutube.setFabVideo(fabYouTube, DetailedReportHomeFrag_VIDEO_LESSONS, () -> fabYoutube.showYouTubeFab(fabYouTube, badgeTextView, DetailedReportHomeFrag_VIDEO_LESSONS));
             fabYoutube.showYouTubeFab(fabYouTube, badgeTextView, DetailedReportHomeFrag_VIDEO_LESSONS);

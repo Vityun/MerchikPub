@@ -39,7 +39,7 @@ public class OptionButtonPhotoShowcaseNear<T> extends OptionControl {
     }
 
     private void executeOption() {
-        new Globals().fixMP();// Фиксация Местоположения в таблице ЛогМп
+        new Globals().fixMP(wpDataDB);// Фиксация Местоположения в таблице ЛогМп
         try {
             WPDataObj wpDataObj = workPlan.getKPS(wpDataDB.getId());
             wpDataObj.setPhotoType("39");
