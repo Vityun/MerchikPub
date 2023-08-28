@@ -29,6 +29,7 @@ import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportAc
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Global.UnlockCode;
 import ua.com.merchik.merchik.Globals;
+import ua.com.merchik.merchik.Options.Controls.OptionControlMP;
 import ua.com.merchik.merchik.PhotoReportActivity;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
@@ -39,6 +40,7 @@ import ua.com.merchik.merchik.data.Database.Room.UsersSDB;
 import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.data.WPDataObj;
+import ua.com.merchik.merchik.database.realm.tables.AppUserRealm;
 import ua.com.merchik.merchik.database.realm.tables.WpDataRealm;
 import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.dialogs.DialogShowcase.DialogShowcase;
@@ -506,20 +508,27 @@ public class MakePhoto {
 
     public <T> void pressedMakePhoto(Activity activity, T data, OptionsDB optionsDB, String photoType) {
         try {
+            int userId = 0;
             final WorkPlan workPlan = new WorkPlan();
             WPDataObj wpDataObj;
             if (data instanceof TasksAndReclamationsSDB) {
                 wpDataObj = workPlan.getKPS((TasksAndReclamationsSDB) data);
+                userId = ((TasksAndReclamationsSDB) data).vinovnik;
             } else {
                 WpDataDB wpDataDB = (WpDataDB) data;
                 wpDataObj = workPlan.getKPS(wpDataDB.getId());
+                userId = wpDataDB.getUser_id();
             }
             MakePhoto.photoType = photoType;
             Globals.writeToMLOG("INFO", "pressedMakePhoto", "photoType: " + photoType);
 
 
-            // Тут должна открываться инфа про Витрины
-            showDialogSW(activity, wpDataObj, data, optionsDB);
+            if (AppUserRealm.getAppUserById(userId).user_work_plan_status.equals("our")){
+                // Тут должна открываться инфа про Витрины
+                showDialogSW(activity, wpDataObj, data, optionsDB);
+            }else {
+                photoDialogsNEW(activity, wpDataObj, data, optionsDB);
+            }
 
 //            choiceCustomerGroupAndPhoto2(activity, wpDataObj, data, optionsDB);
         } catch (Exception e) {
@@ -570,23 +579,71 @@ public class MakePhoto {
                             /*07.07.23. Возможно в будущем изза этой Группы Товаров будут проблемы.*/
                             photoCustomerGroup = Globals.getKeyForValue(result[which], wp.getCustomerTypeGrp());
 
-                            photoDialogs(activity, wp, data, optionsDB);
+//                            photoDialogs(activity, wp, data, optionsDB);
+                            photoDialogsNEW(activity, wp, data, optionsDB);
                         })
                         .show();
             } else if (wp.getCustomerTypeGrp().size() == 1 && !wp.getPhotoType().equals("5")) {
                 wp.setCustomerTypeGrpS(Globals.getKeyForValue(result[0], wp.getCustomerTypeGrp()));
                 Toast.makeText(activity, "Выбрана группа товара: " + result[0], Toast.LENGTH_LONG).show();
-                photoDialogs(activity, wp, data, optionsDB);
+//                photoDialogs(activity, wp, data, optionsDB);
+                photoDialogsNEW(activity, wp, data, optionsDB);
             } else {
                 if (!wp.getPhotoType().equals("5")) {
                     globals.alertDialogMsg(activity, "Не обнаружено ни одной группы товаров по данному клиенту. Сообщите об этом Администратору!");
                 }
                 wp.setCustomerTypeGrpS("");
-                photoDialogs(activity, wp, data, optionsDB);
+//                photoDialogs(activity, wp, data, optionsDB);
+                photoDialogsNEW(activity, wp, data, optionsDB);
             }
         } else {
             globals.alertDialogMsg(activity, "Не выбрано посещение\n\nЗайдите в раздел План работ, выберите посещение и повторите попытку.");
         }
+    }
+
+    /**
+     * 28.08.23
+     *
+     * */
+    private <T> void photoDialogsNEW(Activity activity, WPDataObj wpDataObj, T data, OptionsDB optionsDB) {
+        OptionControlMP optionControlMP = new OptionControlMP(activity.getBaseContext(), (WpDataDB) data, optionsDB, null, null, null);
+        optionControlMP.showMassage(new Clicks.clickStatusMsg() {
+            @Override
+            public void onSuccess(String data) {
+                makePhoto(activity, data); // Метод который запускает камеру и создаёт файл фото.
+            }
+
+            @Override
+            public void onFailure(String error) {
+                String settext2 = "Система не обнаружила вас в ТТ. \n\nФотографии выполненные в этом режиме могут быть признаны не действительными.\n\nОтказаться от изготовления фото?";
+
+                DialogData dialog1 = new DialogData(activity);
+                dialog1.setTitle("Нарушение по Местоположению.");
+                dialog1.setText(error);
+                dialog1.setDialogIco();
+                dialog1.setOk(Html.fromHtml("<font color='#000000'>Всё равно сделать фото</font>"), () -> {
+                    DialogData dialogData2 = new DialogData(activity);
+                    dialogData2.setTitle("ВНИМАНИЕ!");
+                    dialogData2.setText(settext2);
+                    dialogData2.setDialogIco();
+                    dialogData2.setOk(Html.fromHtml("<font color='#000000'>Да</font>"), dialogData2::dismiss);
+                    dialogData2.setCancel(Html.fromHtml("<font color='#000000'>Нет</font>"), () -> {
+                        dialog1.dismiss();
+                        dialogData2.dismiss();
+                        showDialogPass(activity, wpDataObj, optionsDB, () -> {
+                            makePhoto(activity, data); // Метод который запускает камеру и создаёт файл фото.
+                        });
+                    });
+                    dialogData2.setClose(dialogData2::dismiss);
+                    dialogData2.show();
+                });
+                dialog1.setCancel2(Html.fromHtml("<font color='#000000'>Отказаться от изготовления фото</font>"), dialog1::dismiss);
+
+                dialog1.setImgBtnCall(activity);
+                dialog1.setClose(dialog1::dismiss);
+                dialog1.show();
+            }
+        });
     }
 
     private <T> void photoDialogs(Activity activity, WPDataObj wpDataObj, T data, OptionsDB optionsDB) {
@@ -778,7 +835,8 @@ public class MakePhoto {
                     if (showcase.tovarGrp != null && showcase.tovarGrp > 0) {
                         wp.setCustomerTypeGrpS(String.valueOf(showcase.tovarGrp));
                         Toast.makeText(activity, "Обрана група товару: " + showcase.tovarGrpTxt, Toast.LENGTH_LONG).show();
-                        photoDialogs(activity, wp, dataT, optionsDB);
+//                        photoDialogs(activity, wp, dataT, optionsDB);
+                        photoDialogsNEW(activity, wp, dataT, optionsDB);
                     } else {
                         choiceCustomerGroupAndPhoto2(activity, wp, dataT, optionsDB);
                     }

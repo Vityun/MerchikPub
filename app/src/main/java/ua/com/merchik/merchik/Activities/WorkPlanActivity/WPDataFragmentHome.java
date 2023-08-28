@@ -32,8 +32,10 @@ import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.RecycleViewWPAdapter;
 import ua.com.merchik.merchik.data.Database.Room.UsersSDB;
+import ua.com.merchik.merchik.data.RealmModels.AppUsersDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.database.realm.RealmManager;
+import ua.com.merchik.merchik.database.realm.tables.AppUserRealm;
 import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.dialogs.DialogFilter.DialogFilter;
 
@@ -108,13 +110,17 @@ public class WPDataFragmentHome extends Fragment {
 //        workPlan = workPlan.where().between("dt", dateFrom, dateTo).sort("dt_start", Sort.ASCENDING, "addr_id", Sort.ASCENDING).findAll();
 
             UsersSDB usersSDB = SQL_DB.usersDao().getById(Globals.userId);
-            if (System.currentTimeMillis() / 1000 < 1668124799) {
-                showAlertMsg();
-            } else if (usersSDB != null && usersSDB.reportCount <= 10) {
-                showAlertMsg();
-            } else {
-                // nothing to do
+            AppUsersDB appUsersDB = AppUserRealm.getAppUserById(Globals.userId);
+            if (appUsersDB.user_work_plan_status.equals("our")){
+                if (System.currentTimeMillis() / 1000 < 1668124799) {
+                    showAlertMsg();
+                } else if (usersSDB != null && usersSDB.reportCount <= 10) {
+                    showAlertMsg();
+                } else {
+                    // nothing to do
+                }
             }
+
 
 
             if (workPlan == null || workPlan.size() == 0) {
