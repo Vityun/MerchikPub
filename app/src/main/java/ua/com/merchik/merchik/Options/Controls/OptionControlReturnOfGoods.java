@@ -84,7 +84,7 @@ public class OptionControlReturnOfGoods<T> extends OptionControl {
         List<ReportPrepareDB> detailedReportRPList = ReportPrepareRealm.getReportPrepareByDad2(wpDataDB.getCode_dad2());
 
         // Получаем Товары с особым вниманием
-        List<AdditionalRequirementsDB> additionalRequirementsDBS = AdditionalRequirementsRealm.getData3(document, DEFAULT, null);
+        List<AdditionalRequirementsDB> additionalRequirementsDBS = AdditionalRequirementsRealm.getData3(document, DEFAULT, null, 0);
         for (AdditionalRequirementsDB item : additionalRequirementsDBS) {
             if (item.getTovarId() != null && !item.getTovarId().equals("") && !item.getTovarId().equals("0")) {
                 tovarIds.add(Integer.valueOf(item.getTovarId()));

@@ -118,7 +118,7 @@ public class AdditionalRequirementsRealm {
         HIDE_FOR_CLIENT     // Скрывать для клиента. Добавил просто потому что в БД есть такое поле и может в будущем пригодиться.
     }
 
-    public static <T> RealmResults<AdditionalRequirementsDB> getData3(T data, AdditionalRequirementsModENUM mod, Integer ttCategory) {
+    public static <T> RealmResults<AdditionalRequirementsDB> getData3(T data, AdditionalRequirementsModENUM mod, Integer ttCategory, int mode) {
 
         Log.e("getData3", "mod: " + mod);
 
@@ -188,7 +188,7 @@ public class AdditionalRequirementsRealm {
             case HIDE_FOR_USER:
                 realmResults = realmResults.where()
                         .equalTo("hideUser", "0")
-                        .equalTo("disableScore", "1")
+//                        .equalTo("disableScore", "1")
                         .findAll();
                 break;
 
@@ -205,6 +205,11 @@ public class AdditionalRequirementsRealm {
                 break;
         }
 
+        if (mode == 1) {
+            realmResults = realmResults.where()
+                    .notEqualTo("disableScore", "1")
+                    .findAll();
+        }
 
         if (themeId == 998) {
             realmResults = realmResults.where()

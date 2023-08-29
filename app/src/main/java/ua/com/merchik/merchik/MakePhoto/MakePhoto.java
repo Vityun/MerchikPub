@@ -609,7 +609,7 @@ public class MakePhoto {
         OptionControlMP optionControlMP = new OptionControlMP(activity.getBaseContext(), (WpDataDB) data, optionsDB, null, null, null);
         optionControlMP.showMassage(new Clicks.clickStatusMsg() {
             @Override
-            public void onSuccess(String data) {
+            public void onSuccess(String string) {
                 makePhoto(activity, data); // Метод который запускает камеру и создаёт файл фото.
             }
 

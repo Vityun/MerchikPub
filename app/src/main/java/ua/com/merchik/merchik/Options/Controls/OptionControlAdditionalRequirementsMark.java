@@ -93,7 +93,7 @@ public class OptionControlAdditionalRequirementsMark<T> extends OptionControl {
             }
 
             // Получаем Доп.Требования.
-            RealmResults<AdditionalRequirementsDB> realmResults = AdditionalRequirementsRealm.getData3(document, HIDE_FOR_USER, ttCategory);
+            RealmResults<AdditionalRequirementsDB> realmResults = AdditionalRequirementsRealm.getData3(document, HIDE_FOR_USER, ttCategory, 1);
             List<AdditionalRequirementsDB> data = RealmManager.INSTANCE.copyFromRealm(realmResults);
 
 //            // DEBUG DATA-------------

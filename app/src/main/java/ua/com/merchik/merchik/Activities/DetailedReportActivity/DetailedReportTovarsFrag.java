@@ -447,9 +447,9 @@ public class DetailedReportTovarsFrag extends Fragment {
 
             try {
                 if (wpDataDB != null) {
-                    data = AdditionalRequirementsRealm.getData3(wpDataDB, DEFAULT, null);
+                    data = AdditionalRequirementsRealm.getData3(wpDataDB, DEFAULT, null, 0);
                 } else {
-                    data = AdditionalRequirementsRealm.getData3(tasksAndReclamationsSDB, DEFAULT, null);
+                    data = AdditionalRequirementsRealm.getData3(tasksAndReclamationsSDB, DEFAULT, null, 0);
                 }
 
                 Globals.writeToMLOG("INFO", "DetailedReportTovarsFrag/addRecycleView/AdditionalRequirementsDB", "data: " + data);

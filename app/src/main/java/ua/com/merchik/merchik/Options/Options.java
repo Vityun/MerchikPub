@@ -1686,7 +1686,7 @@ public class Options {
     }
 
     private <T> void option138339(Context context, T dataDB, OptionsDB option, OptionMassageType type, NNKMode mode, OptionControl.UnlockCodeResultListener unlockCodeResultListener) {
-        List<AdditionalRequirementsDB> data = AdditionalRequirementsRealm.getData3(dataDB, HIDE_FOR_USER, null);
+        List<AdditionalRequirementsDB> data = AdditionalRequirementsRealm.getData3(dataDB, HIDE_FOR_USER, null, 0);
 
         DialogAdditionalRequirements dialogAdditionalRequirements = new DialogAdditionalRequirements(context);
 
@@ -2484,7 +2484,7 @@ public class Options {
             long dateTo = Clock.getDatePeriodLong(date, +3) / 1000;     // Дата документа +3 дня
 
             // Получаем Доп.Требования.
-            RealmResults<AdditionalRequirementsDB> realmResults = AdditionalRequirementsRealm.getData3(dataDB, HIDE_FOR_USER, null);
+            RealmResults<AdditionalRequirementsDB> realmResults = AdditionalRequirementsRealm.getData3(dataDB, HIDE_FOR_USER, null, 0);
             List<AdditionalRequirementsDB> data = RealmManager.INSTANCE.copyFromRealm(realmResults);
 
             // Получаем Оценки этих Доп. требований.
