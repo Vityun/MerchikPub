@@ -1,6 +1,5 @@
 package ua.com.merchik.merchik.Options.Controls;
 
-import static ua.com.merchik.merchik.Globals.distanceMin;
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 import static ua.com.merchik.merchik.trecker.coordinatesDistanse;
 import static ua.com.merchik.merchik.trecker.enabledGPS;
@@ -19,9 +18,11 @@ import ua.com.merchik.merchik.Options.Options;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.Database.Room.AddressSDB;
 import ua.com.merchik.merchik.data.OptionMassageType;
+import ua.com.merchik.merchik.data.RealmModels.AppUsersDB;
 import ua.com.merchik.merchik.data.RealmModels.LogMPDB;
 import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
+import ua.com.merchik.merchik.database.realm.tables.AppUserRealm;
 import ua.com.merchik.merchik.database.realm.tables.LogMPRealm;
 import ua.com.merchik.merchik.dialogs.DialogData;
 
@@ -31,6 +32,8 @@ public class OptionControlMP<T> extends OptionControl {
 
     private WpDataDB wpDataDB;
     private AddressSDB addressSDB;
+
+    public int distanceMin = Globals.distanceMin;
 
     private int validTime = 1800;   // 30 (1800сек) минут допустимого времени.
     private float coordAddrX, coordAddrY;
@@ -55,6 +58,11 @@ public class OptionControlMP<T> extends OptionControl {
             if (document instanceof WpDataDB) {
                 wpDataDB = (WpDataDB) document;
                 addressSDB = SQL_DB.addressDao().getById(wpDataDB.getAddr_id());
+
+                AppUsersDB appUsersDB = AppUserRealm.getAppUserById(wpDataDB.getUser_id());
+                if (appUsersDB != null && appUsersDB.user_work_plan_status != null && !appUsersDB.user_work_plan_status.equals("our")){
+                    distanceMin = 800;
+                }
 
                 if (addressSDB != null){
                     coordAddrX = addressSDB.locationXd;

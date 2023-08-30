@@ -527,7 +527,8 @@ public class MakePhoto {
                 // Тут должна открываться инфа про Витрины
                 showDialogSW(activity, wpDataObj, data, optionsDB);
             }else {
-                photoDialogsNEW(activity, wpDataObj, data, optionsDB);
+//                photoDialogsNEW(activity, wpDataObj, data, optionsDB);
+                choiceCustomerGroupAndPhoto2(activity, wpDataObj, data, optionsDB);
             }
 
 //            choiceCustomerGroupAndPhoto2(activity, wpDataObj, data, optionsDB);

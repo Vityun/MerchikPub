@@ -146,34 +146,38 @@ public class WPDataFragmentHome extends Fragment {
     private SpannableStringBuilder createTitleMsg(RealmResults<WpDataDB> wp, TitleMode mode) {
         SpannableStringBuilder res = new SpannableStringBuilder();
 
-        if (wp != null && wp.size() > 0) {
-            // Запланированные работы
-            int wpSum = wp.sum("cash_ispolnitel").intValue();
+        try {
+            if (wp != null && wp.size() > 0) {
+                // Запланированные работы
+                int wpSum = wp.sum("cash_ispolnitel").intValue();
 
-            // Выполненные работы
-            RealmResults<WpDataDB> wpStatus = wp.where().equalTo("status", 1).findAll();
-            int wpStatus1Size = wpStatus.size();    // Количество проведённых отчётов
-            int wpStatus1Sum = wpStatus.sum("cash_ispolnitel").intValue();  // Сумма полученная за проведенные отчёты
-            int percentWpStatus1 = (wpStatus1Size * 100) / wp.size(); // Процент выполненных работ
+                // Выполненные работы
+                RealmResults<WpDataDB> wpStatus = wp.where().equalTo("status", 1).findAll();
+                int wpStatus1Size = wpStatus.size();    // Количество проведённых отчётов
+                int wpStatus1Sum = wpStatus.sum("cash_ispolnitel").intValue();  // Сумма полученная за проведенные отчёты
+                int percentWpStatus1 = (wpStatus1Size * 100) / wp.size(); // Процент выполненных работ
 
-            // Не Віполненные
-            RealmResults<WpDataDB> wpStatus0 = wp.where().equalTo("status", 0).findAll();
-            int wpStatus0Size = wpStatus0.size();
-            int wpStatus0Sum = wpStatus0.sum("cash_ispolnitel").intValue();
-            int percentWpStatus0 = (wpStatus0Size * 100) / wp.size();
+                // Не Віполненные
+                RealmResults<WpDataDB> wpStatus0 = wp.where().equalTo("status", 0).findAll();
+                int wpStatus0Size = wpStatus0.size();
+                int wpStatus0Sum = wpStatus0.sum("cash_ispolnitel").intValue();
+                int percentWpStatus0 = (wpStatus0Size * 100) / wp.size();
 
-            if (mode.equals(TitleMode.FULL)) {
-                res.append(Html.fromHtml("<b>За період: </b> з ")).append(Clock.getHumanTimeYYYYMMDD(wp.get(0).getDt().getTime() / 1000)).append(" по ").append(Clock.getHumanTimeYYYYMMDD(wp.get(wp.size() - 1).getDt().getTime() / 1000)).append("\n\n");
-                res.append(Html.fromHtml("<b>Заплановано робіт (Пр): </b>")).append("" + wp.size()).append(" (100%),").append(" на суму ").append("" + wpSum).append(" грн.").append("\n\n");
-                res.append(Html.fromHtml("<b>Виконано робіт (Вр): </b>")).append("" + wpStatus1Size).append(" (").append("" + percentWpStatus1).append("%), на суму ").append("" + wpStatus1Sum).append(" грн.").append("\n\n");
-                res.append(Html.fromHtml("<b>Не виконано робіт (Нр): </b>")).append("" + wpStatus0Size).append(" (").append("" + percentWpStatus0).append("%), на суму ").append("" + wpStatus0Sum).append(" грн.");
-            } else if (mode.equals(TitleMode.SHORT)) {
-                res.append("Пр: ").append("" + wp.size()).append(" (").append("" + wpSum).append("гр) / ").append("Вр: ").append("" + wpStatus1Size).append(" (").append("" + wpStatus1Sum).append("гр) / ").append("Нр: ").append("" + wpStatus0Size).append(" (").append("" + wpStatus0Sum).append("гр)");
+                if (mode.equals(TitleMode.FULL)) {
+                    res.append(Html.fromHtml("<b>За період: </b> з ")).append(Clock.getHumanTimeYYYYMMDD(wp.get(0).getDt().getTime() / 1000)).append(" по ").append(Clock.getHumanTimeYYYYMMDD(wp.get(wp.size() - 1).getDt().getTime() / 1000)).append("\n\n");
+                    res.append(Html.fromHtml("<b>Заплановано робіт (Пр): </b>")).append("" + wp.size()).append(" (100%),").append(" на суму ").append("" + wpSum).append(" грн.").append("\n\n");
+                    res.append(Html.fromHtml("<b>Виконано робіт (Вр): </b>")).append("" + wpStatus1Size).append(" (").append("" + percentWpStatus1).append("%), на суму ").append("" + wpStatus1Sum).append(" грн.").append("\n\n");
+                    res.append(Html.fromHtml("<b>Не виконано робіт (Нр): </b>")).append("" + wpStatus0Size).append(" (").append("" + percentWpStatus0).append("%), на суму ").append("" + wpStatus0Sum).append(" грн.");
+                } else if (mode.equals(TitleMode.SHORT)) {
+                    res.append("Пр: ").append("" + wp.size()).append(" (").append("" + wpSum).append("гр) / ").append("Вр: ").append("" + wpStatus1Size).append(" (").append("" + wpStatus1Sum).append("гр) / ").append("Нр: ").append("" + wpStatus0Size).append(" (").append("" + wpStatus0Sum).append("гр)");
+                }
+            } else {
+                res.append("План робіт пустий.");
             }
-        } else {
-            res.append("План робіт пустий.");
+        }catch (Exception e){
+            Globals.writeToMLOG("ERROR", "WPDataFragmentHome/createTitleMsg", "Exception e: " + e);
+            res.append("");
         }
-
         return res;
     }
 
@@ -310,7 +314,7 @@ public class WPDataFragmentHome extends Fragment {
         }
 
 
-        adapter.updateData(wp);
+        adapter.updateData(RealmManager.INSTANCE.copyFromRealm(wp));
 
         title.setText(createTitleMsg(wp, TitleMode.SHORT));
         RealmResults<WpDataDB> finalWp = wp;
