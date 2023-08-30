@@ -30,12 +30,22 @@ public class AddressExchange {
             data.mod = "data_list";
             data.act = "addr_list";
             SynchronizationTimetableDB synchronizationTimetableDB = RealmManager.getSynchronizationTimetableRowByTable("address_sql");
-            String dt_change_from = String.valueOf(synchronizationTimetableDB.getVpi_app());
-            if (dt_change_from.equals("0")){
+            try {
+                if (synchronizationTimetableDB != null){
+                    String dt_change_from = String.valueOf(synchronizationTimetableDB.getVpi_app());
+                    if (dt_change_from.equals("0")){
+                        data.dt_change_from = "0";
+                    }else {
+                        data.dt_change_from = String.valueOf(synchronizationTimetableDB.getVpi_app()-120);  // минус 2 минуты для "синхрона". Это надо поменять.
+                    }
+                }else {
+                    data.dt_change_from = "0";
+                }
+            }catch (Exception e){
                 data.dt_change_from = "0";
-            }else {
-                data.dt_change_from = String.valueOf(synchronizationTimetableDB.getVpi_app()-120);  // минус 2 минуты для "синхрона". Это надо поменять.
             }
+
+
 
             Gson gson = new Gson();
             String json = gson.toJson(data);
@@ -50,8 +60,11 @@ public class AddressExchange {
                             Log.e("downloadAddressTable", "response.body(): " + response.body());
                             Globals.writeToMLOG("INFO", "downloadAddressTable/call.enqueue/onResponse/response.body()", "response.body(): " + response.body().list.size());
                             RealmManager.INSTANCE.executeTransaction(realm -> {
-                                synchronizationTimetableDB.setVpi_app(System.currentTimeMillis()/1000);
-                                realm.copyToRealmOrUpdate(synchronizationTimetableDB);
+                                if (synchronizationTimetableDB != null){
+                                    synchronizationTimetableDB.setVpi_app(System.currentTimeMillis()/1000);
+                                    realm.copyToRealmOrUpdate(synchronizationTimetableDB);
+                                }
+
                             });
                             exchange.onSuccess(response.body().list);
                         }else {

@@ -2,6 +2,7 @@ package ua.com.merchik.merchik;
 
 import static ua.com.merchik.merchik.toolbar_menus.internetStatus;
 import static ua.com.merchik.merchik.trecker.imHereGPS;
+import static ua.com.merchik.merchik.trecker.imHereNET;
 
 import android.Manifest;
 import android.app.Activity;
@@ -978,6 +979,7 @@ public class Globals {
             log.gp = POST_10();
 
             try {
+                log.provider = 1;
                 log.CoordX = imHereGPS.getLatitude();
                 log.CoordY = imHereGPS.getLongitude();
                 log.CoordAltitude = imHereGPS.getAltitude();
@@ -987,16 +989,43 @@ public class Globals {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
                     log.mocking = imHereGPS.isFromMockProvider();
                 }
-            }catch (Exception e){
+            } catch (Exception e) {
                 Globals.writeToMLOG("ERROR", "fixMP/imHereGPS is null?", "Exception e: " + e);
             }
 
-            if (wpDataDB != null){
+            if (wpDataDB != null) {
                 log.codeDad2 = wpDataDB.getCode_dad2();
             }
 
             log.vpi = System.currentTimeMillis() / 1000;
             RealmManager.setLogMpRow(log);
+
+
+            try {
+                int idNET = RealmManager.logMPGetLastId() + 1;
+                LogMPDB logNET = new LogMPDB();
+
+                logNET.id = idNET;
+                logNET.gp = POST_10();
+
+                logNET.provider = 2;
+                logNET.CoordX = imHereNET.getLatitude();
+                logNET.CoordY = imHereNET.getLongitude();
+                logNET.CoordAltitude = imHereNET.getAltitude();
+                logNET.CoordTime = imHereNET.getTime();
+                logNET.CoordSpeed = imHereNET.getSpeed();
+                logNET.CoordAccuracy = imHereNET.getAccuracy();
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
+                    logNET.mocking = imHereNET.isFromMockProvider();
+                }
+                if (wpDataDB != null) {
+                    logNET.codeDad2 = wpDataDB.getCode_dad2();
+                }
+                logNET.vpi = System.currentTimeMillis() / 1000;
+                RealmManager.setLogMpRow(logNET);
+            }catch (Exception e){
+                Globals.writeToMLOG("ERROR", "fixMP/imHereNET is null?", "Exception e: " + e);
+            }
         } catch (Exception e) {
             Globals.writeToMLOG("ERROR", "fixMP", "Exception e: " + e);
         }

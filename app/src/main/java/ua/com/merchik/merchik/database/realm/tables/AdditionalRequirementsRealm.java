@@ -212,8 +212,14 @@ public class AdditionalRequirementsRealm {
         }
 
         if (themeId == 998) {
+//            realmResults = realmResults.where()
+//                    .notEqualTo("themeId", "1182")
+//                    .findAll();
+
             realmResults = realmResults.where()
-                    .notEqualTo("themeId", "1182")
+                    .equalTo("themeId", "998")
+                    .or()
+                    .equalTo("themeId", "977")
                     .findAll();
         } else {
             realmResults = realmResults.where()

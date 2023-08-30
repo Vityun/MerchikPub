@@ -33,6 +33,7 @@ public class OptionControlMP<T> extends OptionControl {
     private AddressSDB addressSDB;
 
     private int validTime = 1800;   // 30 (1800сек) минут допустимого времени.
+    private float coordAddrX, coordAddrY;
 
     private StringBuilder stringBuilder = new StringBuilder();
     private String period = "";
@@ -54,6 +55,18 @@ public class OptionControlMP<T> extends OptionControl {
             if (document instanceof WpDataDB) {
                 wpDataDB = (WpDataDB) document;
                 addressSDB = SQL_DB.addressDao().getById(wpDataDB.getAddr_id());
+
+                if (addressSDB != null){
+                    coordAddrX = addressSDB.locationXd;
+                    coordAddrY = addressSDB.locationYd;
+                }else {
+                    try {
+                        if (wpDataDB != null){
+                            coordAddrX = Float.parseFloat(wpDataDB.getAddr_location_xd());
+                            coordAddrY = Float.parseFloat(wpDataDB.getAddr_location_yd());
+                        }
+                    }catch (Exception e){}
+                }
             }
 
             long startTime = (wpDataDB.getVisit_start_dt() > 0)
@@ -66,7 +79,7 @@ public class OptionControlMP<T> extends OptionControl {
 
             if (logMPList != null && logMPList.size() > 0){
                 for (LogMPDB item : logMPList){
-                    double distance = coordinatesDistanse(addressSDB.locationXd, addressSDB.locationYd, item.CoordX, item.CoordY);
+                    double distance = coordinatesDistanse(coordAddrX, coordAddrY, item.CoordX, item.CoordY);
                     item.distance = (int) distance;
                 }
 
@@ -110,7 +123,7 @@ public class OptionControlMP<T> extends OptionControl {
             boolean okMP = false;
             title.append("Місцеположення");
             if (enabledGPS) {
-                if (addressSDB != null && addressSDB.locationXd > 0 && addressSDB.locationYd > 0) {
+                if (coordAddrX != 0 && coordAddrY != 0) {
                     if (logMPList == null || logMPList.size() == 0) {
                         stringBuilder.append("Нема жодного запиту на визначення місцезнаходження. ").append("Перевірте чи увімкнений у Вас GPS ").append("Спробуйте підійти до вікна або вийти на вулицю. Через хвилину місцеположення буде визначене і можна продовжувати виконувати роботу.");
                         click.onFailure(stringBuilder.toString());

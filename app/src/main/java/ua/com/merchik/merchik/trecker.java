@@ -115,6 +115,7 @@ public class trecker implements LocationListener {
 
         } else if (location.getProvider().equals(LocationManager.NETWORK_PROVIDER)) {
             imHereNET = location;
+            Log.e("TEST.GPS_LOCATION", "NET: " + imHereNET + " NETtime: " + imHereNET.getTime());
         }
     }
 
@@ -172,7 +173,8 @@ public class trecker implements LocationListener {
      */
     public static int Coordinates() {
         Globals globals = new Globals();
-        Log.e("КООРДИНАТЫ", "tracker: " + trecker.imHereGPS);
+        Log.e("КООРДИНАТЫ", "tracker/imHereGPS: " + trecker.imHereGPS);
+        Log.e("КООРДИНАТЫ", "tracker/imHereNET: " + trecker.imHereNET);
 
         int provider;// 0=NULL; 1=GPS; 2=NET.
 

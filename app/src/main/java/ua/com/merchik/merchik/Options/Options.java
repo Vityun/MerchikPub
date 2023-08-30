@@ -950,31 +950,32 @@ public class Options {
                 Log.e("conduct", "OptionsDB item.getOptionControlId(): " + item.getOptionControlId());
 
                 // Блокирует опция или нет
-                int controlResult = optControl(context, wp, item, Integer.parseInt(item.getOptionControlId()), null, type, NNKMode.CHECK, new OptionControl.UnlockCodeResultListener() {
+                final int[] controlResult = {0};
+                optControl(context, wp, item, Integer.parseInt(item.getOptionControlId()), null, type, NNKMode.CHECK, new OptionControl.UnlockCodeResultListener() {
                     @Override
                     public void onUnlockCodeSuccess() {
-
+                        controlResult[0] = 0;
                     }
 
                     @Override
                     public void onUnlockCodeFailure() {
-
+                        controlResult[0] = 1;
                     }
                 });
 
                 // Создаю список опций который блокирует
-                if (controlResult == 0) {
-                    Log.e("conduct", "Опция контроля выполнена: " + controlResult);
-                } else if (controlResult == 1 && item.getBlockPns().equals("1")) {
-                    Log.e("conduct", "Опция контроля НЕ выполнена: " + controlResult);
+                if (controlResult[0] == 0) {
+                    Log.e("conduct", "Опция контроля выполнена: " + controlResult[0]);
+                } else if (controlResult[0] == 1 && item.getBlockPns().equals("1")) {
+                    Log.e("conduct", "Опция контроля НЕ выполнена: " + controlResult[0]);
                     Log.e("conduct", "Я добавил опцию: " + item.getOptionTxt());
                     optionNotConduct.add(item);
                 } else {
-                    Log.e("conduct", "Что-то пошло не так: " + controlResult);
+                    Log.e("conduct", "Что-то пошло не так: " + controlResult[0]);
                 }
 
                 // Если опция описана - добавляю ещё и ДЕНЬГИ в скобочку и считаю итоговую сумму
-                if (ArrayUtils.contains(describedOptions, Integer.parseInt(item.getOptionControlId())) && controlResult != 1) {
+                if (ArrayUtils.contains(describedOptions, Integer.parseInt(item.getOptionControlId())) && controlResult[0] != 1) {
                     if (item.getIsSignal().equals("1")) {
                         StringBuffer msg = new StringBuffer();
                         optionsSum.append(createLinkedString(dialog,
