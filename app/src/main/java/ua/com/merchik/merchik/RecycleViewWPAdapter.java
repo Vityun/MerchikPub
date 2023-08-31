@@ -295,14 +295,13 @@ public class RecycleViewWPAdapter extends RecyclerView.Adapter<RecycleViewWPAdap
     }
 
     public void updateData(List<WpDataDB> wp) {
-
         this.WP.clear();
         this.workPlanList.clear();
         this.workPlanList2.clear();
 
-        this.WP = RealmManager.INSTANCE.copyFromRealm(wp);
-        this.workPlanList = RealmManager.INSTANCE.copyFromRealm(wp);
-        this.workPlanList2 = RealmManager.INSTANCE.copyFromRealm(wp);
+        this.WP = wp;
+        this.workPlanList = wp;
+        this.workPlanList2 = wp;
     }
 
 

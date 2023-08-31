@@ -50,6 +50,7 @@ import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsRealm;
 import ua.com.merchik.merchik.database.realm.tables.StackPhotoRealm;
+import ua.com.merchik.merchik.database.realm.tables.WpDataRealm;
 import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.dialogs.DialogFullPhotoR;
 
@@ -272,20 +273,22 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                     // Start Work
                     case (138518):
                         long startTime;
-                        if (dataDB instanceof WpDataDB) {
+/*                        if (dataDB instanceof WpDataDB) {
                             startTime = ((WpDataDB) dataDB).getVisit_start_dt();
                         } else {
                             startTime = ((TasksAndReclamationsSDB) dataDB).dt_start_fact;
-                        }
+                        }*/
+                        startTime = WpDataRealm.getWpDataRowByDad2Id(Long.parseLong(optionsButtons.getCodeDad2())).getVisit_start_dt();
                         textInteger.setText("" + Clock.getHumanTimeOpt(startTime * 1000));
                         break;
                     case (138520):
                         long endTime;
-                        if (dataDB instanceof WpDataDB) {
+/*                        if (dataDB instanceof WpDataDB) {
                             endTime = ((WpDataDB) dataDB).getVisit_end_dt();
                         } else {
                             endTime = ((TasksAndReclamationsSDB) dataDB).dt_end_fact;
-                        }
+                        }*/
+                        endTime = WpDataRealm.getWpDataRowByDad2Id(Long.parseLong(optionsButtons.getCodeDad2())).getVisit_end_dt();
                         textInteger.setText("" + Clock.getHumanTimeOpt(endTime * 1000));
                         break;
 

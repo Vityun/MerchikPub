@@ -532,26 +532,41 @@ public class Options {
                                             public void onUnlockCodeSuccess() {
                                                 Log.e("NNK", "Успешный Успех. Первая и вторая ОК прошли проверку и должно разрешить работу.");
 
-                                                if (res > 0) {
-                                                    // Ну хреново и чо
-                                                } else {
-                                                    switch (mode) {
-                                                        case MAKE:
-                                                            optControl(context, dataDB, option, Integer.parseInt(option.getOptionId()), null, type, mode, new OptionControl.UnlockCodeResultListener() {
-                                                                @Override
-                                                                public void onUnlockCodeSuccess() {
 
-                                                                }
+                                                optControl(context, dataDB, option, Integer.parseInt(option.getOptionId()), null, type, mode, new OptionControl.UnlockCodeResultListener() {
+                                                    @Override
+                                                    public void onUnlockCodeSuccess() {
 
-                                                                @Override
-                                                                public void onUnlockCodeFailure() {
-
-                                                                }
-                                                            });
-                                                            click.click();
-                                                            break;
                                                     }
-                                                }
+
+                                                    @Override
+                                                    public void onUnlockCodeFailure() {
+
+                                                    }
+                                                });
+                                                click.click();
+
+
+//                                                if (res > 0) {
+//                                                    // Ну хреново и чо
+//                                                } else {
+//                                                    switch (mode) {
+//                                                        case MAKE:
+//                                                            optControl(context, dataDB, option, Integer.parseInt(option.getOptionId()), null, type, mode, new OptionControl.UnlockCodeResultListener() {
+//                                                                @Override
+//                                                                public void onUnlockCodeSuccess() {
+//
+//                                                                }
+//
+//                                                                @Override
+//                                                                public void onUnlockCodeFailure() {
+//
+//                                                                }
+//                                                            });
+//                                                            click.click();
+//                                                            break;
+//                                                    }
+//                                                }
                                             }
 
                                             @Override
@@ -1450,7 +1465,7 @@ public class Options {
                         new OptionControlEndAnotherWork(context, dataDB, option, type, mode, unlockCodeResultListener);
                 if (mode.equals(NNKMode.MAKE) || (mode.equals(NNKMode.CHECK) && optionControlEndAnotherWork.isBlockOption()))
                     optionControlEndAnotherWork.showOptionMassage(block);
-                if (mode.equals(NNKMode.BLOCK) && optionControlEndAnotherWork.signal && optionControlEndAnotherWork.isBlockOption()) {
+                if (mode.equals(NNKMode.BLOCK)) {
                     optionControlEndAnotherWork.showOptionMassage(block);
                 }
                 return optionControlEndAnotherWork.isBlockOption2() ? 1 : 0;
