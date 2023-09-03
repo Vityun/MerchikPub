@@ -1457,6 +1457,15 @@ public class RealmManager {
                 .findAll();
     }
 
+    public static RealmResults<LogMPDB> getNOTUploadLogMPDBTEST(int a, int b) {
+
+        Integer[] ids = {31, 32};
+
+        return INSTANCE.where(LogMPDB.class)
+                .in("id", ids)
+                .findAll();
+    }
+
     public static RealmResults<MenuItemFromWebDB> getSiteMenu() {
         return INSTANCE.where(MenuItemFromWebDB.class)
                 .findAll();

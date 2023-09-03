@@ -70,6 +70,7 @@ import ua.com.merchik.merchik.Options.Buttons.OptionButtAchievements;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonAddComment;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonAddNewClient;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonAvailabilityDetailedReport;
+import ua.com.merchik.merchik.Options.Buttons.OptionButtonHistoryMP;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonPhotoAktionTovar;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonPhotoBeforeStartWork;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonPhotoDMP;
@@ -1510,7 +1511,8 @@ public class Options {
             // ---
 
             case 138773:
-                optionMP_138773(context, dataDB, option, type, mode, unlockCodeResultListener);
+//                optionMP_138773(context, dataDB, option, type, mode, unlockCodeResultListener);
+                new OptionButtonHistoryMP<>(context, dataDB, option, type, mode, unlockCodeResultListener);
                 break;
 
 //                case 8299:

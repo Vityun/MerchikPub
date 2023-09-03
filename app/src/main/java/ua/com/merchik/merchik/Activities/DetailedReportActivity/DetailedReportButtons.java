@@ -26,7 +26,6 @@ import ua.com.merchik.merchik.data.Database.Room.AddressSDB;
 import ua.com.merchik.merchik.data.Database.Room.ContentSDB;
 import ua.com.merchik.merchik.data.Database.Room.StandartSDB;
 import ua.com.merchik.merchik.data.RealmModels.AdditionalRequirementsDB;
-import ua.com.merchik.merchik.data.RealmModels.LogMPDB;
 import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
 import ua.com.merchik.merchik.data.RealmModels.ReportPrepareDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
@@ -164,8 +163,8 @@ public class DetailedReportButtons {
 
             case 138773: // 18.08.2020. Button ЗАФИКСИРОВАТЬ МЕСТОПОЛОЖЕНИЕ
                 // Фиксация местоположения
-                Log.e("OPTION_BUTTON", "Местоположение");
-                pressMP(context, wpDataDB);
+//                Log.e("OPTION_BUTTON", "Местоположение");
+//                pressMP(context, wpDataDB);
                 break;
 
             case 137797:
@@ -310,10 +309,11 @@ public class DetailedReportButtons {
     private void pressMP(Context context, WpDataDB wp) {
 
         // Запись в таблицу Местоположений
-        LogMPDB log = new LogMPDB(RealmManager.logMPGetLastId() + 1, globals.POST_10());
-        RealmManager.setLogMpRow(log);
+        globals.fixMP(wp);
+//        LogMPDB log = new LogMPDB(RealmManager.logMPGetLastId() + 1, globals.POST_10());
+//        RealmManager.setLogMpRow(log);
+//        Log.e("LogMp", "LogMpUploadText. LogLASTId: " + RealmManager.logMPGetLastId());
 
-        Log.e("LogMp", "LogMpUploadText. LogLASTId: " + RealmManager.logMPGetLastId());
 
         // Вывод диалога с МП
         if (context instanceof toolbar_menus) {

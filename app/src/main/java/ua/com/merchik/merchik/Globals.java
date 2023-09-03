@@ -897,7 +897,7 @@ public class Globals {
 
 
     // Костыль для выгрузки МП
-    public String POST_10() {
+    public String POST_10(LogMPDB logMP) {
         String M_to_URL; //
         String sURL;
         String base64 = null; // Строка для гранения закодированного пакета переменных на сервер
@@ -914,7 +914,7 @@ public class Globals {
         battery.put("battery_level", "");                           // Уровень зар¤да батареи в процентах или -1 если данных нет
         DataMap.put("battery", battery);
 
-        DataMap.put("device_time", (CoordTime + 86400000) / 1000);                           // unixtime момента получения данных геокоординат
+        DataMap.put("device_time", logMP.CoordTime / 1000);                           // unixtime момента получения данных геокоординат
 
         connection_info.put("downlink", "");                                                  // скорость соединени¤ в мегабитах
         connection_info.put("downlinkMax", "");
@@ -938,18 +938,18 @@ public class Globals {
         screen_info.put("orientation_type", "");
         DataMap.put("screen_info", screen_info);                                                    // информаци¤ об экране
 
-        coords.put("latitude", CoordX);
-        coords.put("longitude", CoordY);
-        coords.put("altitude", CoordAltitude);                                             // высота над уровнем моря
-        coords.put("accuracy", CoordAccuracy);                                             // точность обязательно
+        coords.put("latitude", logMP.CoordX);
+        coords.put("longitude", logMP.CoordY);
+        coords.put("altitude", logMP.CoordAltitude);                                             // высота над уровнем моря
+        coords.put("accuracy", logMP.CoordAccuracy);                                             // точность обязательно
         coords.put("altitudeAccuracy", "");
         coords.put("heading", "");
-        coords.put("speed", CoordSpeed);
-        coords.put("trusted_location", mocking);
-        coords.put("source_id", providerType);
+        coords.put("speed", logMP.CoordSpeed);
+        coords.put("trusted_location", logMP.mocking);
+        coords.put("source_id", logMP.provider);
         DataMap.put("coords", coords);                                                              // географические координаты
 
-        DataMap.put("timestamp", System.currentTimeMillis() + 86400000); // unixtime текущего времени, когда был отправлен запрос с данными с точностью до тысячных (если не сможешь настолько точное врем¤ получить, бери текущий unixtime и умножай на 1000)
+        DataMap.put("timestamp", System.currentTimeMillis()); // unixtime текущего времени, когда был отправлен запрос с данными с точностью до тысячных (если не сможешь настолько точное врем¤ получить, бери текущий unixtime и умножай на 1000)
 
         M_to_URL = URL.httpBuildQuery(DataMap, "UTF-8");
 
@@ -976,7 +976,6 @@ public class Globals {
             LogMPDB log = new LogMPDB();
 
             log.id = id;
-            log.gp = POST_10();
 
             try {
                 log.provider = 1;
@@ -989,6 +988,7 @@ public class Globals {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
                     log.mocking = imHereGPS.isFromMockProvider();
                 }
+                log.gp = POST_10(log);
             } catch (Exception e) {
                 Globals.writeToMLOG("ERROR", "fixMP/imHereGPS is null?", "Exception e: " + e);
             }
@@ -1006,7 +1006,6 @@ public class Globals {
                 LogMPDB logNET = new LogMPDB();
 
                 logNET.id = idNET;
-                logNET.gp = POST_10();
 
                 logNET.provider = 2;
                 logNET.CoordX = imHereNET.getLatitude();
@@ -1018,6 +1017,7 @@ public class Globals {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
                     logNET.mocking = imHereNET.isFromMockProvider();
                 }
+                logNET.gp = POST_10(logNET);
                 if (wpDataDB != null) {
                     logNET.codeDad2 = wpDataDB.getCode_dad2();
                 }

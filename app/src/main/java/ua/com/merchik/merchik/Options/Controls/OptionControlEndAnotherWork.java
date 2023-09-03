@@ -51,12 +51,16 @@ public class OptionControlEndAnotherWork<T> extends OptionControl {
     }
 
     private void getDocumentVar() {
-        if (document instanceof WpDataDB) {
-            WpDataDB wpDataDB = (WpDataDB) document;
+        try {
+            if (document instanceof WpDataDB) {
+                WpDataDB wpDataDB = (WpDataDB) document;
 
-            date = wpDataDB.getDt();
-            userId = wpDataDB.getUser_id();
-            codeDad2 = wpDataDB.getCode_dad2();
+                date = wpDataDB.getDt();
+                userId = wpDataDB.getUser_id();
+                codeDad2 = wpDataDB.getCode_dad2();
+            }
+        }catch (Exception e){
+            Globals.writeToMLOG("ERROR", "OptionControlEndAnotherWork/getDocumentVar", "Exception e: " + e);
         }
     }
 
@@ -91,12 +95,15 @@ public class OptionControlEndAnotherWork<T> extends OptionControl {
         if (wpDataDB.size() == 0) {
             massageToUser = "Нет данных для анализа окончания ПРЕДЫДУЩИХ работ.";
             signal = false;
+            unlockCodeResultListener.onUnlockCodeFailure();
         } else if (result.size() == 0) {
             massageToUser = "Замечаний по указанию времени начала/окончания ПРЕДЫДУЩИХ работ нет.";
             signal = false;
+            unlockCodeResultListener.onUnlockCodeFailure();
         } else {
             massageToUser = "Вы еще не закончили (не указали время окончания) ПРЕДЫДУЩУЮ работу!";
             signal = true;
+            unlockCodeResultListener.onUnlockCodeSuccess();
         }
 
         setIsBlockOption(signal);

@@ -190,7 +190,7 @@ public class trecker implements LocationListener {
 
 
         // Сохранение текущего состояния GPS
-        if (trecker.imHereGPS != null && outOfDayCoordinates(System.currentTimeMillis(), trecker.imHereGPS.getTime())) {
+        if (trecker.imHereGPS != null /*&& outOfDayCoordinates(System.currentTimeMillis(), trecker.imHereGPS.getTime())*/) {
             provider = 1;
             Globals.providerType = 1;
             Globals.locationGPS = imHereGPS;

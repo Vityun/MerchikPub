@@ -13,13 +13,19 @@ import com.google.android.material.navigation.NavigationView;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 
+import java.util.HashMap;
+import java.util.List;
+
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.R;
+import ua.com.merchik.merchik.ServerExchange.ExchangeInterface;
+import ua.com.merchik.merchik.data.RealmModels.LogMPDB;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.ShowcaseResponse;
 import ua.com.merchik.merchik.data.TestJsonUpload.StandartData;
+import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.dialogs.DialogShowcase.DialogShowcase;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
 import ua.com.merchik.merchik.toolbar_menus;
@@ -37,7 +43,17 @@ public class MenuMainActivity extends toolbar_menus {
 
             findViewById(R.id.fab).setOnClickListener(v -> {
                 Toast.makeText(this, "Подсказка к данному разделу не готова", Toast.LENGTH_SHORT).show();
-                test();
+                test(new ExchangeInterface.ExchangeRes() {
+                    @Override
+                    public void onSuccess(String ok) {
+
+                    }
+
+                    @Override
+                    public void onFailure(String error) {
+
+                    }
+                });
             });
 
             findViewById(R.id.fab).setOnLongClickListener(v -> {
@@ -55,35 +71,101 @@ public class MenuMainActivity extends toolbar_menus {
         }
     }
 
-    private void test() {
-        try {
-            StandartData data = new StandartData();
-            data.mod = "data_list";
-            data.act = "tovar_vendor_code_list";
+    private void test(ExchangeInterface.ExchangeRes res) {
+        String mod = "location";
+        String act = "track";
 
-            Gson gson = new Gson();
-            String json = gson.toJson(data);
-            JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
+        List<LogMPDB> logMp = RealmManager.getNOTUploadLogMPDBTEST(31, 32);
 
-            retrofit2.Call<JsonObject> call = RetrofitBuilder.getRetrofitInterface().TEST_JSON_UPLOAD(RetrofitBuilder.contentType, convertedObject);
-            call.enqueue(new Callback<JsonObject>() {
+            Log.e("LogMp", "LogMpUploadText. LogSize: " + logMp.size());
+
+            HashMap<String, String> map = new HashMap<>();
+            for (LogMPDB list : logMp) {
+                map.put("gp[" + list.getId() + "]", list.getGp());
+            }
+
+            Globals.writeToMLOG("INFO", "uploadLodMp", "Количество ЛОГ МП на выгрузку: " + logMp.size());
+
+            retrofit2.Call<JsonObject> call = RetrofitBuilder.getRetrofitInterface().UPLOAD_LOG_MP(mod, act, map);
+            call.enqueue(new retrofit2.Callback<JsonObject>() {
                 @Override
-                public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
-                    Log.e("test", "response" + response.body());
+                public void onResponse(retrofit2.Call<JsonObject> call, retrofit2.Response<JsonObject> response) {
+                    Log.e("LogMp", "RESPONSE: " + response.body());
+
+                    // TODO Тут очень много раз в минуту дёргаю это место. Нужно проверить - нужно ли в таком количестве.
+//                    Globals.writeToMLOG("INFO", "uploadLodMp/onResponse", "response.body(): " + response.body());
+
+                    try {
+                        JsonObject resp = response.body();
+                        if (resp != null) {
+                            if (!resp.get("state").isJsonNull() && resp.get("state").getAsBoolean()) {
+                                JsonObject arr = resp.get("geo_result").getAsJsonObject();
+                                if (arr != null) {
+                                    for (LogMPDB list : logMp) {
+                                        JsonObject geoInfo = arr.getAsJsonObject(String.valueOf(list.getId()));
+                                        if (geoInfo != null && geoInfo.get("state").getAsBoolean()) {
+                                            try {
+                                                RealmManager.INSTANCE.executeTransaction(realm -> {
+//                                                    list.deleteFromRealm();
+                                                    list.upload = System.currentTimeMillis()/1000;  // 27.08.23 Вместо удаления, пишу воемя когда координаты были выгружены
+                                                });
+
+                                                res.onSuccess("ОК");
+                                            } catch (Exception e) {
+                                                Globals.writeToMLOG("ERROR", "uploadLodMp/onResponse/executeTransaction", "Exception e: " + e);
+                                                res.onFailure("Exception e: " + e);
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    } catch (Exception e) {
+                        Globals.writeToMLOG("ERROR", "uploadLodMp/onResponse/onResponse", "Exception e: " + e);
+                        res.onFailure("2_Exception e: " + e);
+                    }
+
                 }
 
                 @Override
-                public void onFailure(Call<JsonObject> call, Throwable t) {
-                    Log.e("test", "test" + t);
+                public void onFailure(retrofit2.Call<JsonObject> call, Throwable t) {
+                    Globals.writeToMLOG("ERROR", "uploadLodMp/onFailure", "Throwable t: " + t);
+                    Log.e("LogMp", "FAILURE_E: " + t.getMessage());
+                    Log.e("LogMp", "FAILURE_E2: " + t);
+                    res.onFailure("onFailure: " + t);
                 }
             });
 
-
-        } catch (Exception e) {
-            Globals.writeToMLOG("ERROR", "startExchange/ShowcaseExchange/downloadShowcaseTable", "Exception e: " + e);
-        }
     }
 
+
+
+    /*        try {
+                StandartData data = new StandartData();
+                data.mod = "data_list";
+                data.act = "tovar_vendor_code_list";
+
+                Gson gson = new Gson();
+                String json = gson.toJson(data);
+                JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
+
+                retrofit2.Call<JsonObject> call = RetrofitBuilder.getRetrofitInterface().TEST_JSON_UPLOAD(RetrofitBuilder.contentType, convertedObject);
+                call.enqueue(new Callback<JsonObject>() {
+                    @Override
+                    public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
+                        Log.e("test", "response" + response.body());
+                    }
+
+                    @Override
+                    public void onFailure(Call<JsonObject> call, Throwable t) {
+                        Log.e("test", "test" + t);
+                    }
+                });
+
+
+            } catch (Exception e) {
+                Globals.writeToMLOG("ERROR", "startExchange/ShowcaseExchange/downloadShowcaseTable", "Exception e: " + e);
+            }*/
     public void swoeDialogSW() {
         DialogShowcase dialog = new DialogShowcase(this);
         dialog.setClose(dialog::dismiss);
