@@ -12,6 +12,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.content.res.Resources;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.location.Location;
@@ -926,7 +927,7 @@ public class Globals {
         browser_info.put("hardwareConcurrency", Runtime.getRuntime().availableProcessors());        // количество ¤дер
         browser_info.put("maxTouchPoints", "");                                                // количество одновременно обрабатываемых точек касания
         browser_info.put("platform", Build.VERSION.SDK_INT);                             // платформа
-        browser_info.put("version_app", "");
+        browser_info.put("version_app", Resources.getSystem().getString(R.string.ver));
         DataMap.put("browser_info", browser_info);                                      // информаци¤ о браузере и железе
 
         screen_info.put("availHeight", "");
