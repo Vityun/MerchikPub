@@ -237,12 +237,12 @@ public class OptionControlEKL<T> extends OptionControl {
                 } else if (usersSDBPTT.otdelId == null || usersSDBPTT.otdelId == 0) {
                     signal = false;
                     optionMsg.append(", но ").append("у ПТТ ").append(usersSDBPTT.fio).append(" не указан отдел в котором он работает!");
-                } else if (usersSDBPTT.otdelId != null && SQL_DB.tovarGroupDao().getById(usersSDBPTT.otdelId).parent != 0) {    // нет у меня понятия УРОВЕНЬ
+                } else if (usersSDBPTT.otdelId != null && SQL_DB.tovarGroupDao().getById(usersSDBPTT.otdelId).parent == 0) {    // нет у меня понятия УРОВЕНЬ
                     signal = false;
                     // TODO otdel lvl
                     Globals.writeToMLOG("INFO", "OptionControlEKL/else if /01.09.23./Sheva", "usersSDBPTT.otdelId: " + usersSDBPTT.otdelId);
                     Globals.writeToMLOG("INFO", "OptionControlEKL/else if /01.09.23./Sheva", "SQL_DB.tovarGroupDao().getById(usersSDBPTT.otdelId).parent: " + SQL_DB.tovarGroupDao().getById(usersSDBPTT.otdelId).parent);
-                    optionMsg.append(", но ").append("у ПТТ указан отдел ").append(SQL_DB.tovarGroupDao().getById(usersSDBPTT.otdelId).nm)
+                    optionMsg.append(", но ").append("у ПТТ указан отдел ").append(SQL_DB.tovarGroupDao().getById(usersSDBPTT.otdelId).nm).append(" c нарушением уровня вложенности.")
                     /*.append(" (").append("-- otdel lvl --").append(" из уровня  вложенности!)")*/;
                 } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                     if (tovarGroupSDB.stream().filter(item -> item.id.equals(usersSDBPTT.otdelId)).findFirst().orElse(null) != null
