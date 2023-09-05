@@ -378,6 +378,8 @@ public class PhotoDownload {
         String contentType = "application/json";
         JsonObject convertedObject = new Gson().fromJson(new Gson().toJson(data), JsonObject.class);
 
+        Globals.writeToMLOG("INFO", "" + getClass().getName() + "/getPhotoFromServer/convertedObject", "convertedObject: " + convertedObject);
+
         retrofit2.Call<ModImagesView> call = RetrofitBuilder.getRetrofitInterface().MOD_IMAGES_VIEW_CALL(contentType, convertedObject);
         call.enqueue(new retrofit2.Callback<ModImagesView>() {
             @Override
@@ -388,6 +390,7 @@ public class PhotoDownload {
                         size = response.body().getList().size();
                     }
                     Globals.writeToMLOG("INFO", "" + getClass().getName() + "/getPhotoFromServer/onResponse", "size: " + size);
+//                    Globals.writeToMLOG("INFO", "" + getClass().getName() + "/getPhotoFromServer/onResponse", "Gson: " + new Gson().toJson(response.body().getList()));
 
                     savePhotoToDB(response.body().getList());
 
@@ -415,7 +418,6 @@ public class PhotoDownload {
             for (ModImagesViewList item : list) {
                 if (StackPhotoRealm.stackPhotoDBGetPhotoBySiteId(item.getID()) == null) {
                     try {
-
                         downloadPhoto(item.getPhotoUrl(), new ExchangeInterface.ExchangePhoto() {
                             @Override
                             public void onSuccess(Bitmap bitmap) {

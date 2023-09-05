@@ -17,7 +17,6 @@ import com.google.gson.JsonObject;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 
 import io.reactivex.rxjava3.observers.DisposableCompletableObserver;
@@ -62,7 +61,6 @@ import ua.com.merchik.merchik.data.Database.Room.UsersSDB;
 import ua.com.merchik.merchik.data.Database.Room.ViewListSDB;
 import ua.com.merchik.merchik.data.Database.Room.VoteSDB;
 import ua.com.merchik.merchik.data.RealmModels.AdditionalRequirementsMarkDB;
-import ua.com.merchik.merchik.data.RealmModels.LogMPDB;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
 import ua.com.merchik.merchik.data.RealmModels.SynchronizationTimetableDB;
 import ua.com.merchik.merchik.data.RealmModels.TARCommentsDB;
@@ -1185,7 +1183,7 @@ public class Exchange {
             case SUBORDINATE:
                 Log.e("getPhotoFromSite", "SUBORDINATE");
                 data.sotr_id = String.valueOf(Globals.userId);
-                globals.writeToMLOG(Clock.getHumanTime() + "_INFO.Exchange.class.getPhotoFromSite: " + "SUBORDINATE" + "\n");
+                globals.writeToMLOG(Clock.getHumanTime() + "_INFO.Exchange.class.getPhotoFromSite: " + "SUBORDINATE: " + data.sotr_id + "\n");
                 server.getPhotoFromServer(data);
                 break;
 
