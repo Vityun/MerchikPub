@@ -46,7 +46,7 @@ import ua.com.merchik.merchik.dialogs.DialogVideo;
 
 public class DetailedReportTARFrag extends Fragment {
 
-    public static final Integer[] DETAILED_REPORT_FRAGMENT_TAR_VIDEO_LESSONS = new Integer[]{4208, 3527};
+    public static final Integer[] DETAILED_REPORT_FRAGMENT_TAR_VIDEO_LESSONS = new Integer[]{4208, 3527, 3623, 3528};
 
     private Context mContext;
     private WpDataDB wpDataDB;

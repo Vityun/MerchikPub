@@ -1497,6 +1497,7 @@ public class RealmManager {
     public static List<SiteObjectsDB> getLesson(Integer[] ids) {
         RealmResults<SiteObjectsDB> res = INSTANCE.where(SiteObjectsDB.class)
                 .in("id", ids)
+//                .sort("lesson_id", Sort.ASCENDING)
                 .findAll();
         if (res != null) {
             return RealmManager.INSTANCE.copyFromRealm(res);

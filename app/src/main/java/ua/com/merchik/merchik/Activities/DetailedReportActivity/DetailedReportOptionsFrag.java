@@ -51,6 +51,8 @@ public class DetailedReportOptionsFrag extends Fragment {
     private ArrayList<Data> list;
     private WpDataDB wpDataDB;
 
+    public static final Integer[]  DetailedReportOptionsFrag_VIDEO_LESSONS = new Integer[]{821, 4540};
+
     RecycleViewDRAdapter recycleViewDRAdapter;
 
     public DetailedReportOptionsFrag(Context context, ArrayList<Data> list, WpDataDB wpDataDB) {
