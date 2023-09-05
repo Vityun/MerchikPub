@@ -254,7 +254,9 @@ public class WPDataFragmentHome extends Fragment {
                 dialog.setCancel(() -> {
                     searchView.setText("");
                     setFilterIco(dialog);
-                    adapter.updateData(workPlan);
+                    RealmResults<WpDataDB> workPlan = RealmManager.getAllWorkPlan();
+                    Globals.writeToMLOG("INFO", "RecycleViewWPAdapter/updateData/1", "workPlan: " + workPlan);
+                    adapter.updateData(RealmManager.INSTANCE.copyFromRealm(workPlan));
                     title.setText(createTitleMsg(workPlan, TitleMode.SHORT));
                     title.setOnClickListener(view -> {
                         DialogData dialogData = new DialogData(getContext());
@@ -313,7 +315,7 @@ public class WPDataFragmentHome extends Fragment {
             }
         }
 
-
+        Globals.writeToMLOG("INFO", "RecycleViewWPAdapter/updateData/2", "wp: " + wp);
         adapter.updateData(RealmManager.INSTANCE.copyFromRealm(wp));
 
         title.setText(createTitleMsg(wp, TitleMode.SHORT));

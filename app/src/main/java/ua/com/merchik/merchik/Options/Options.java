@@ -671,7 +671,21 @@ public class Options {
                                     public void onUnlockCodeSuccess() {
                                         Log.e("NNK", "Успешный Успех. Если первая опция пустая Первая и вторая ОК прошли проверку и должно разрешить работу.");
 
-                                        if (res > 0) {
+                                        optControl(context, dataDB, option, Integer.parseInt(option.getOptionId()), null, type, mode, new OptionControl.UnlockCodeResultListener() {
+                                            @Override
+                                            public void onUnlockCodeSuccess() {
+
+                                            }
+
+                                            @Override
+                                            public void onUnlockCodeFailure() {
+
+                                            }
+                                        });
+                                        click.click();
+
+
+/*                                        if (res > 0) {
                                             // Ну хреново и чо
                                         } else {
                                             switch (mode) {
@@ -690,7 +704,7 @@ public class Options {
                                                     click.click();
                                                     break;
                                             }
-                                        }
+                                        }*/
                                     }
 
                                     @Override
@@ -734,7 +748,21 @@ public class Options {
                             public void onUnlockCodeSuccess() {
                                 Log.e("NNK", "Успешный Успех. Если первая опция пустая Первая и вторая ОК прошли проверку и должно разрешить работу.");
 
-                                if (res > 0) {
+
+                                optControl(context, dataDB, option, Integer.parseInt(option.getOptionId()), null, type, mode, new OptionControl.UnlockCodeResultListener() {
+                                    @Override
+                                    public void onUnlockCodeSuccess() {
+
+                                    }
+
+                                    @Override
+                                    public void onUnlockCodeFailure() {
+
+                                    }
+                                });
+                                click.click();
+
+/*                                if (res > 0) {
                                     // Ну хреново и чо
                                 } else {
                                     switch (mode) {
@@ -753,7 +781,7 @@ public class Options {
                                             click.click();
                                             break;
                                     }
-                                }
+                                }*/
                             }
 
                             @Override

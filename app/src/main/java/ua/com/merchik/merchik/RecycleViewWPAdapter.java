@@ -228,6 +228,7 @@ public class RecycleViewWPAdapter extends RecyclerView.Adapter<RecycleViewWPAdap
             dialog.setTitle("Открыть посещение?");
             dialog.setText(msg);
             dialog.setOk(null, () -> {
+                Globals.writeToMLOG("INFO", "RecycleViewWPAdapter/openReportPrepare/CLICK_KPS", "wpDataDB: " + wpDataDB);
                 if (wpDataDB.getTheme_id() == 1182){
                     DialogData dialogQuestionOne = new DialogData(mContext);
                     dialogQuestionOne.setTitle("");
@@ -299,6 +300,7 @@ public class RecycleViewWPAdapter extends RecyclerView.Adapter<RecycleViewWPAdap
         this.workPlanList.clear();
         this.workPlanList2.clear();
 
+        Globals.writeToMLOG("INFO", "RecycleViewWPAdapter/updateData", "wp: " + wp);
         this.WP = wp;
         this.workPlanList = wp;
         this.workPlanList2 = wp;
