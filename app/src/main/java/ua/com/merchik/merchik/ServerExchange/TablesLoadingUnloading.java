@@ -2239,7 +2239,9 @@ public class TablesLoadingUnloading {
 
             HashMap<String, String> map = new HashMap<>();
             for (LogMPDB list : logMp) {
-                map.put("gp[" + list.getId() + "]", list.getGp());
+                if (list.getGp() != null){
+                    map.put("gp[" + list.getId() + "]", list.getGp());
+                }
             }
 
             Globals.writeToMLOG("INFO", "uploadLodMp", "Количество ЛОГ МП на выгрузку: " + logMp.size());

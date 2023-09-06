@@ -86,7 +86,6 @@ import ua.com.merchik.merchik.Activities.WorkPlanActivity.WPDataActivity;
 import ua.com.merchik.merchik.Activities.navigationMenu.MenuHeader;
 import ua.com.merchik.merchik.Activities.navigationMenu.MenuHeaderAdapter;
 import ua.com.merchik.merchik.ServerExchange.Exchange;
-import ua.com.merchik.merchik.ServerExchange.ExchangeInterface;
 import ua.com.merchik.merchik.ServerExchange.TablesLoadingUnloading;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.Database.Room.Chat.ChatSDB;
@@ -864,21 +863,6 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
 
                     try {
                         tablesLoadingUnloading.sendAndUpdateLog();
-
-                        Globals.writeToMLOG("INFO", "CRON LOG MP", "Попытка выгрузить ЛОГ_Местоположения");
-                        tablesLoadingUnloading.uploadLodMp(new ExchangeInterface.ExchangeRes() {
-                            @Override
-                            public void onSuccess(String ok) {
-                                // todo log
-//                                Toast.makeText(toolbar_menus.this, ok, Toast.LENGTH_SHORT).show();
-                            }
-
-                            @Override
-                            public void onFailure(String error) {
-                                // todo log
-//                                Toast.makeText(toolbar_menus.this, error, Toast.LENGTH_SHORT).show();
-                            }
-                        });
                     } catch (Exception e) {
                         Globals.writeToMLOG("ERROR", "CRON LOG MP", "Exception e: " + e);
                     }

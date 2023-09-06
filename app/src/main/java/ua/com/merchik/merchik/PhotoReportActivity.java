@@ -71,6 +71,7 @@ import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.data.URLData.URLData;
 import ua.com.merchik.merchik.data.WPDataObj;
 import ua.com.merchik.merchik.database.realm.RealmManager;
+import ua.com.merchik.merchik.database.realm.tables.WpDataRealm;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
 
 
@@ -1252,7 +1253,9 @@ public class PhotoReportActivity extends toolbar_menus {
         Globals globals = new Globals();
         try {
             // mod 1 = "Устаревший" вариант для сбора информации об устройстве и координатах
-            String GP = POST_10(context, 1);// Запись пост данных в переменную для БД для последущей отправки на сервер
+//            String GP = POST_10(context, 1);// Запись пост данных в переменную для БД для последущей отправки на сервер
+
+            String GP = Objects.requireNonNull(Globals.fixMP(WpDataRealm.getWpDataRowByDad2Id(wpDataObj.dad2))).gp;
 
 
             if (RealmManager.chechPhotoExist(image.getAbsolutePath())) {
@@ -1425,7 +1428,8 @@ public class PhotoReportActivity extends toolbar_menus {
             browser_info.put("hardwareConcurrency", Runtime.getRuntime().availableProcessors());        // количество ¤дер
             browser_info.put("maxTouchPoints", "");                                                // количество одновременно обрабатываемых точек касания
             browser_info.put("platform", Build.VERSION.SDK_INT);                             // платформа
-            browser_info.put("version_app", currentVersion);
+//            browser_info.put("version_app", currentVersion);
+            browser_info.put("version_app", "");
             DataMap.put("browser_info", browser_info);                                      // информаци¤ о браузере и железе
 
             screen_info.put("availHeight", "");

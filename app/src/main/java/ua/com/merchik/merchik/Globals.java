@@ -12,7 +12,6 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.content.res.Resources;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.location.Location;
@@ -898,7 +897,7 @@ public class Globals {
 
 
     // Костыль для выгрузки МП
-    public String POST_10(LogMPDB logMP) {
+    public static String POST_10(LogMPDB logMP) {
         String M_to_URL; //
         String sURL;
         String base64 = null; // Строка для гранения закодированного пакета переменных на сервер
@@ -927,7 +926,8 @@ public class Globals {
         browser_info.put("hardwareConcurrency", Runtime.getRuntime().availableProcessors());        // количество ¤дер
         browser_info.put("maxTouchPoints", "");                                                // количество одновременно обрабатываемых точек касания
         browser_info.put("platform", Build.VERSION.SDK_INT);                             // платформа
-        browser_info.put("version_app", Resources.getSystem().getString(R.string.ver));
+//        browser_info.put("version_app", Resources.getSystem().getString(R.string.ver));
+        browser_info.put("version_app", "");
         DataMap.put("browser_info", browser_info);                                      // информаци¤ о браузере и железе
 
         screen_info.put("availHeight", "");
@@ -968,17 +968,15 @@ public class Globals {
     /**
      * 22.10.21.
      * Запись в лог местоположений
+     * @return
      */
-    public void fixMP(WpDataDB wpDataDB) {
+    public static LogMPDB fixMP(WpDataDB wpDataDB) {
         try {
-            int id = RealmManager.logMPGetLastId() + 1;
-            Globals.writeToMLOG("INFO", "fixMP", "create new logMP id: " + id);
-//            LogMPDB log = new LogMPDB(id, POST_10());
-            LogMPDB log = new LogMPDB();
-
-            log.id = id;
-
             try {
+                int id = RealmManager.logMPGetLastId() + 1;
+                Globals.writeToMLOG("INFO", "fixMP", "create new logMP id: " + id);
+                LogMPDB log = new LogMPDB();
+                log.id = id;
                 log.provider = 1;
                 log.CoordX = imHereGPS.getLatitude();
                 log.CoordY = imHereGPS.getLongitude();
@@ -990,16 +988,18 @@ public class Globals {
                     log.mocking = imHereGPS.isFromMockProvider();
                 }
                 log.gp = POST_10(log);
+
+                if (wpDataDB != null) {
+                    log.codeDad2 = wpDataDB.getCode_dad2();
+                }
+
+                log.vpi = System.currentTimeMillis() / 1000;
+
+                RealmManager.setLogMpRow(log);
+                return log;
             } catch (Exception e) {
                 Globals.writeToMLOG("ERROR", "fixMP/imHereGPS is null?", "Exception e: " + e);
             }
-
-            if (wpDataDB != null) {
-                log.codeDad2 = wpDataDB.getCode_dad2();
-            }
-
-            log.vpi = System.currentTimeMillis() / 1000;
-            RealmManager.setLogMpRow(log);
 
 
             try {
@@ -1024,12 +1024,14 @@ public class Globals {
                 }
                 logNET.vpi = System.currentTimeMillis() / 1000;
                 RealmManager.setLogMpRow(logNET);
+                return logNET;
             }catch (Exception e){
                 Globals.writeToMLOG("ERROR", "fixMP/imHereNET is null?", "Exception e: " + e);
             }
         } catch (Exception e) {
             Globals.writeToMLOG("ERROR", "fixMP", "Exception e: " + e);
         }
+        return null;
     }
 
     public static String getAppInfoToSession(Context context) {
