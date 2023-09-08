@@ -1,8 +1,8 @@
 package ua.com.merchik.merchik.Options.Buttons;
 
-import android.app.Activity;
 import android.content.Context;
 
+import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.MakePhoto.MakePhoto;
 import ua.com.merchik.merchik.Options.OptionControl;
@@ -39,7 +39,7 @@ public class OptionButtonPhotoBeforeStartWork<T> extends OptionControl {
         new Globals().fixMP(wpDataDB);// Фиксация Местоположения в таблице ЛогМп
         try {
             MakePhoto makePhoto = new MakePhoto();
-            makePhoto.pressedMakePhoto((Activity) context, wpDataDB, optionDB, "14"); // Фото До начала Работ
+            makePhoto.pressedMakePhoto((DetailedReportActivity) context, wpDataDB, optionDB, "14"); // Фото До начала Работ
 
         }catch (Exception e){
             Globals.writeToMLOG("ERROR", "OptionButtonPhotoBeforeStartWork/executeOption/Exception", "Exception e: " + e);

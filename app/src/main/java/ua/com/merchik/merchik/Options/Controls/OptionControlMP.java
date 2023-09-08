@@ -61,7 +61,7 @@ public class OptionControlMP<T> extends OptionControl {
 
                 AppUsersDB appUsersDB = AppUserRealm.getAppUserById(wpDataDB.getUser_id());
                 if (appUsersDB != null && appUsersDB.user_work_plan_status != null && !appUsersDB.user_work_plan_status.equals("our")){
-                    distanceMin = 800;
+                    distanceMin = 1800;
                 }
 
                 if (addressSDB != null){
@@ -161,7 +161,7 @@ public class OptionControlMP<T> extends OptionControl {
                             }
 
                             stringBuilder.append("Ви знаходитесь задалеко від торгівельної точки!").append("\n")
-                                    .append("За даними системи ви знаходитесь на відстані ").append((int)distance).append("").append(distanceType).append("від ТТ ").append(addressSDB.nm)
+                                    .append("За даними системи(").append(Clock.getHumanTimeSecPattern(logMPDB.CoordTime, "HH:mm")).append(")").append(" ви знаходитесь на відстані ").append((int)distance).append("").append(distanceType).append("від ТТ ").append(addressSDB.nm)
                                     .append(", що більше допустимих ").append(distanceMin).append(" метрів.").append("\n\n")
                                     .append("Якщо ви в дійсності знаходитесь на ТТ - зверніться за допомогою до свого керівника або в службу підтримки merchik.");
                             click.onFailure(stringBuilder.toString());

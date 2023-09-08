@@ -114,7 +114,7 @@ public class StackPhotoRealm {
                     .notEqualTo("photo_type", 18)
                     .notEqualTo("photo_type", 29)
                     .notEqualTo("photo_type", 35)
-                    .isNull("showcase_id")  // Показываем мерчу в ЖФ фото НЕ "ВИТРИН"
+//                    .isNull("showcase_id")  // Показываем мерчу в ЖФ фото НЕ "ВИТРИН"
                     .findAll();
         } else if (addr != 0 && customer.equals("")) {
             return INSTANCE.where(StackPhotoDB.class)
@@ -123,7 +123,7 @@ public class StackPhotoRealm {
                     .notEqualTo("photo_type", 18)
                     .notEqualTo("photo_type", 29)
                     .notEqualTo("photo_type", 35)
-                    .isNull("showcase_id")  // Показываем мерчу в ЖФ фото НЕ "ВИТРИН"
+//                    .isNull("showcase_id")  // Показываем мерчу в ЖФ фото НЕ "ВИТРИН"
                     .findAll();
         } else if (addr == 0 && !customer.equals("")) {
             return INSTANCE.where(StackPhotoDB.class)
@@ -132,7 +132,7 @@ public class StackPhotoRealm {
                     .notEqualTo("photo_type", 18)
                     .notEqualTo("photo_type", 29)
                     .notEqualTo("photo_type", 35)
-                    .isNull("showcase_id")  // Показываем мерчу в ЖФ фото НЕ "ВИТРИН"
+//                    .isNull("showcase_id")  // Показываем мерчу в ЖФ фото НЕ "ВИТРИН"
                     .findAll();
         } else {
             return INSTANCE.where(StackPhotoDB.class)
@@ -140,7 +140,7 @@ public class StackPhotoRealm {
                     .notEqualTo("photo_type", 18)
                     .notEqualTo("photo_type", 29)
                     .notEqualTo("photo_type", 35)
-                    .isNull("showcase_id")  // Показываем мерчу в ЖФ фото НЕ "ВИТРИН"
+//                    .isNull("showcase_id")  // Показываем мерчу в ЖФ фото НЕ "ВИТРИН"
                     .findAll();
         }
     }
@@ -154,7 +154,7 @@ public class StackPhotoRealm {
                     .equalTo("client_id", customer)
                     .equalTo("photo_type", 5)
                     .sort("dt", Sort.DESCENDING)
-                    .isNull("showcase_id")  // Показываем мерчу в ЖФ фото НЕ "ВИТРИН"
+//                    .isNull("showcase_id")  // Показываем мерчу в ЖФ фото НЕ "ВИТРИН"
                     .limit(25)
                     .findAll();
             if (query != null && query.size() > 0) {
@@ -167,7 +167,7 @@ public class StackPhotoRealm {
                     .isNotNull("photoServerId")
                     .equalTo("client_id", customer)
                     .equalTo("photo_type", 5)
-                    .isNull("showcase_id")  // Показываем мерчу в ЖФ фото НЕ "ВИТРИН"
+//                    .isNull("showcase_id")  // Показываем мерчу в ЖФ фото НЕ "ВИТРИН"
                     .findAll();
             if (query != null && query.size() > 0) {
                 return query;
@@ -227,7 +227,7 @@ public class StackPhotoRealm {
                 .between("create_time", dtFrom, dtTo)
                 .equalTo("code_dad2", dad2)
                 .equalTo("photo_type", photoType)
-                .isNull("showcase_id")  // Показываем мерчу в ЖФ фото НЕ "ВИТРИН"
+//                .isNull("showcase_id")  // Показываем мерчу в ЖФ фото НЕ "ВИТРИН"
                 .findAll();
     }
 
@@ -235,7 +235,7 @@ public class StackPhotoRealm {
         return INSTANCE.where(StackPhotoDB.class)
                 .equalTo("code_dad2", dad2)
                 .equalTo("photo_type", photoType)
-                .isNull("showcase_id")  // Показываем мерчу в ЖФ фото НЕ "ВИТРИН"
+//                .isNull("showcase_id")  // Показываем мерчу в ЖФ фото НЕ "ВИТРИН"
                 .findAll();
     }
 
@@ -247,7 +247,7 @@ public class StackPhotoRealm {
     public static RealmResults<StackPhotoDB> getPhoto(Long dtFrom, Long dtTo, Integer userId, Integer addrId, String clientId, Long dad2, Integer photoType, String[] tovIds) {
         RealmResults<StackPhotoDB> res = INSTANCE.where(StackPhotoDB.class).findAll();
 
-        res = res.where().isNull("showcase_id").findAll();  // Показываем мерчу в ЖФ фото НЕ "ВИТРИН"
+//        res = res.where().isNull("showcase_id").findAll();  // Показываем мерчу в ЖФ фото НЕ "ВИТРИН"
 
         if (res != null){
             Globals.writeToMLOG("INFO", "StackPhotoRealm.getPhoto.res", "res: " + res.size());

@@ -25,7 +25,6 @@ import static ua.com.merchik.merchik.trecker.Coordinates;
 import static ua.com.merchik.merchik.trecker.coordinatesDistanse;
 import static ua.com.merchik.merchik.trecker.enabledGPS;
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.text.Html;
@@ -2390,13 +2389,13 @@ public class Options {
         }
 
         MakePhoto makePhoto = new MakePhoto();
-        makePhoto.pressedMakePhoto((Activity) context, dataDB, optionsDB, "0");    // Фото Витрины
+        makePhoto.pressedMakePhoto((DetailedReportActivity) context, dataDB, optionsDB, "0");    // Фото Витрины
     }
 
 
     private void optionMakePhoto0_132968(Context context, WpDataDB dataDB, OptionsDB optionsDB, OptionMassageType type, NNKMode mode) {
         MakePhoto makePhoto = new MakePhoto();
-        makePhoto.pressedMakePhoto((Activity) context, dataDB, optionsDB, "0");
+        makePhoto.pressedMakePhoto((DetailedReportActivity) context, dataDB, optionsDB, "0");
     }
 
 

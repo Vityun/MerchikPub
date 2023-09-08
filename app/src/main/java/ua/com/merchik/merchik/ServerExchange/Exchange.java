@@ -160,6 +160,23 @@ public class Exchange {
                     Globals.writeToMLOG("ERROR", "startExchange/globals.fixMP();", "Exception e: " + e);
                 }
 
+                try {
+                    TablesLoadingUnloading tablesLoadingUnloading = new TablesLoadingUnloading();
+                    tablesLoadingUnloading.uploadLodMp(new ExchangeInterface.ExchangeRes() {
+                        @Override
+                        public void onSuccess(String ok) {
+
+                        }
+
+                        @Override
+                        public void onFailure(String error) {
+
+                        }
+                    });
+                }catch (Exception e){
+
+                }
+
 
                 try {
                     downloadAdditionalMaterials();
