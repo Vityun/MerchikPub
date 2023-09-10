@@ -9,7 +9,6 @@ import android.text.style.ClickableSpan;
 import android.util.Log;
 import android.view.View;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -146,7 +145,7 @@ public class OptionControlEndAnotherWork<T> extends OptionControl {
                 public void onClick(View textView) {
                     Intent intent = new Intent(context, DetailedReportActivity.class);
                     intent.putExtra("dataFromWP", D);
-                    intent.putExtra("rowWP", (Serializable) wpDataDB);
+                    intent.putExtra("rowWP", wpDataDB);
                     intent.putExtra("dataFromWPObj", wpDataObj);
                     context.startActivity(intent);
                 }

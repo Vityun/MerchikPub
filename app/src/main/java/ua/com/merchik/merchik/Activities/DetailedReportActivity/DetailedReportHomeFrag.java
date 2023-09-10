@@ -3,9 +3,11 @@ package ua.com.merchik.merchik.Activities.DetailedReportActivity;
 import static ua.com.merchik.merchik.Options.Options.ConductMode.SALARY_CUT;
 
 import android.annotation.SuppressLint;
+import android.content.Context;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Parcelable;
 import android.text.Html;
 import android.text.SpannableString;
 import android.text.Spanned;
@@ -19,6 +21,7 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -58,7 +61,7 @@ import ua.com.merchik.merchik.database.realm.tables.WpDataRealm;
 @SuppressLint("ValidFragment")
 public class DetailedReportHomeFrag extends Fragment {
 
-    private AppCompatActivity mContext;
+    private static AppCompatActivity mContext;
     private ArrayList<Data> list;
     private WpDataDB wpDataDB;
 
@@ -80,17 +83,142 @@ public class DetailedReportHomeFrag extends Fragment {
 
     private ImageView merchikImg;
 
+    public DetailedReportHomeFrag() {
+        Globals.writeToMLOG("INFO", "DetailedReportHomeFrag/1", "create");
+    }
+
     public DetailedReportHomeFrag(AppCompatActivity context, ArrayList<Data> list, WpDataDB wpDataDB) {
+        Globals.writeToMLOG("INFO", "DetailedReportHomeFrag/2", "create");
         // Required empty public constructor
         this.mContext = context;
         this.list = list;
         this.wpDataDB = wpDataDB;
     }
 
+    public static DetailedReportHomeFrag newInstance(AppCompatActivity context, ArrayList<Data> list, WpDataDB wpDataDB) {
+        DetailedReportHomeFrag fragment = new DetailedReportHomeFrag();
+        Bundle args = new Bundle();
+        args.putParcelableArrayList("list", list);
+        args.putParcelable("wpDataDB", wpDataDB);
+//        args.putSerializable("appCompatActivity", (Serializable) context);// Передача AppCompatActivity в аргументах
+        mContext = context;
+        fragment.setArguments(args);
+        return fragment;
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        Globals.writeToMLOG("INFO", "DetailedReportHomeFrag/onSaveInstanceState", "outState: " + outState);
+        ArrayList<Parcelable> parcelableList = new ArrayList<>();
+        for (Data data : list) {
+            parcelableList.add(data);
+        }
+        outState.putParcelableArrayList("list", parcelableList);
+        outState.putParcelable("wpDataDB", wpDataDB);
+//        outState.putSerializable("appCompatActivity", (Serializable) mContext);
+    }
+
+    @Override
+    public void onViewStateRestored(Bundle savedInstanceState) {
+        super.onViewStateRestored(savedInstanceState);
+        Globals.writeToMLOG("INFO", "DetailedReportHomeFrag/onViewStateRestored", "savedInstanceState: " + savedInstanceState);
+        if (savedInstanceState != null) {
+            ArrayList<Parcelable> parcelableList = savedInstanceState.getParcelableArrayList("list");
+            if (parcelableList != null) {
+                list = new ArrayList<>();
+                for (Parcelable parcelable : parcelableList) {
+                    if (parcelable instanceof Data) {
+                        list.add((Data) parcelable);
+                    }
+                }
+            }
+            wpDataDB = savedInstanceState.getParcelable("wpDataDB");
+//            mContext = (AppCompatActivity) savedInstanceState.getSerializable("appCompatActivity");
+        }
+    }
+
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        Globals.writeToMLOG("INFO", "DetailedReportHomeFrag", "onAttach");
+    }
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        Globals.writeToMLOG("INFO", "DetailedReportHomeFrag", "onCreate");
+
+        Bundle args = getArguments();
+        if (args != null) {
+//            mContext = (AppCompatActivity) args.getSerializable("appCompatActivity");
+//            Globals.writeToMLOG("INFO", "DetailedReportHomeFrag", "onCreate/mContext: " + mContext);
+            list = args.getParcelableArrayList("list");
+            Globals.writeToMLOG("INFO", "DetailedReportHomeFrag", "onCreate/list: " + list);
+            wpDataDB = args.getParcelable("wpDataDB");
+            Globals.writeToMLOG("INFO", "DetailedReportHomeFrag", "onCreate/wpDataDB: " + wpDataDB);
+        }
+    }
+
+    @Override
+    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+        Globals.writeToMLOG("INFO", "DetailedReportHomeFrag", "onActivityCreated");
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        Globals.writeToMLOG("INFO", "DetailedReportHomeFrag", "onStart");
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        Globals.writeToMLOG("INFO", "DetailedReportHomeFrag", "onResume");
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        Globals.writeToMLOG("INFO", "DetailedReportHomeFrag", "onPause");
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        Globals.writeToMLOG("INFO", "DetailedReportHomeFrag", "onStop");
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        Globals.writeToMLOG("INFO", "DetailedReportHomeFrag", "onDestroyView");
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        Globals.writeToMLOG("INFO", "DetailedReportHomeFrag", "onDestroy");
+    }
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        Globals.writeToMLOG("INFO", "DetailedReportHomeFrag", "onDetach");
+    }
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+
+        Globals.writeToMLOG("INFO", "DetailedReportHomeFrag/onCreateView", "inflater: " + inflater);
+        Globals.writeToMLOG("INFO", "DetailedReportHomeFrag/onCreateView", "container: " + container);
+        Globals.writeToMLOG("INFO", "DetailedReportHomeFrag/onCreateView", "create: " + savedInstanceState);
+
         View v = inflater.inflate(R.layout.fragment_dr_home, container, false);
+
+        Globals.writeToMLOG("INFO", "DetailedReportHomeFrag/onCreateView", "v: " + v);
 
         try {
             WorkPlan workPlan = new WorkPlan();

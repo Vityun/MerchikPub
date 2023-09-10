@@ -66,6 +66,7 @@ import ua.com.merchik.merchik.data.PhotoGP.Coords;
 import ua.com.merchik.merchik.data.PhotoGP.PhotoGP;
 import ua.com.merchik.merchik.data.PhotoGP.ScreenInfo;
 import ua.com.merchik.merchik.data.RealmModels.ImagesTypeListDB;
+import ua.com.merchik.merchik.data.RealmModels.LogMPDB;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.data.URLData.URLData;
@@ -1252,11 +1253,22 @@ public class PhotoReportActivity extends toolbar_menus {
 
         Globals globals = new Globals();
         try {
-            // mod 1 = "Устаревший" вариант для сбора информации об устройстве и координатах
-//            String GP = POST_10(context, 1);// Запись пост данных в переменную для БД для последущей отправки на сервер
+            Globals.writeToMLOG("INFO", "savePhoto", "wpDataObj 1: " + wpDataObj);
+            Globals.writeToMLOG("INFO", "savePhoto", "wpDataObj 2: " + new Gson().toJson(wpDataObj));
+            WpDataDB wp = RealmManager.INSTANCE.copyFromRealm(WpDataRealm.getWpDataRowByDad2Id(wpDataObj.dad2));
 
-            String GP = Objects.requireNonNull(Globals.fixMP(WpDataRealm.getWpDataRowByDad2Id(wpDataObj.dad2))).gp;
+            Globals.writeToMLOG("INFO", "savePhoto", "wp 1: " + wp);
+            Globals.writeToMLOG("INFO", "savePhoto", "wp 2: " + new Gson().toJson(wp));
+            LogMPDB log = Globals.fixMP(wp);
 
+
+            Globals.writeToMLOG("INFO", "savePhoto", "log 1: " + log);
+            Globals.writeToMLOG("INFO", "savePhoto", "log 2: " + new Gson().toJson(log));
+            String GP = log != null ? log.gp : "";
+
+            Globals.writeToMLOG("INFO", "savePhoto", "GP: " + GP);
+
+//            String GP = Objects.requireNonNull(Globals.fixMP(WpDataRealm.getWpDataRowByDad2Id(wpDataObj.dad2))).gp;
 
             if (RealmManager.chechPhotoExist(image.getAbsolutePath())) {
                 File file = null;

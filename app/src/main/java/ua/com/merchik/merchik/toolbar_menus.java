@@ -144,44 +144,44 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-//        try {
-        Log.e("MIGRATION_2_3", "TOOLBAR");
-        Log.e("MIGRATION_2_3", "SQL_DB" + SQL_DB.oborotVedDao().toString());
+        try {
+            Log.e("MIGRATION_2_3", "TOOLBAR");
+            Log.e("MIGRATION_2_3", "SQL_DB" + SQL_DB.oborotVedDao().toString());
 
 
 //        Globals.translatesList = SQL_DB.translatesDao().getAll();
 
-        Log.e("takePhoto", "takePhotoToool: " + ua.com.merchik.merchik.trecker.enabledGPS);
-        if (ua.com.merchik.merchik.trecker.switchedOff) {
-            ua.com.merchik.merchik.trecker.SetUpLocationListener(this);
+            Log.e("takePhoto", "takePhotoToool: " + ua.com.merchik.merchik.trecker.enabledGPS);
+            if (ua.com.merchik.merchik.trecker.switchedOff) {
+                ua.com.merchik.merchik.trecker.SetUpLocationListener(this);
+            }
+
+            globals.handlerCount.postDelayed(runnableCron10, 100);
+
+            globals.getDate();
+
+            logFromOffline = PreferenceManager.getDefaultSharedPreferences(this)
+                    .getBoolean("logFromOffline", false);
+
+            address = PreferenceManager.getDefaultSharedPreferences(this)
+                    .getString("address", "");
+
+            login = PreferenceManager.getDefaultSharedPreferences(this)
+                    .getString("login", "");
+
+            password = PreferenceManager.getDefaultSharedPreferences(this)
+                    .getString("password", "");
+
+            startWebSocket(getApplicationContext());
+
+
+            Log.e("PreferenceManager", "TOOLBAR" + PreferenceManager.getDefaultSharedPreferences(this)
+                    .getString("login", ""));
+
+
+        } catch (Exception e) {
+            Globals.writeToMLOG("ERROR", "toolbar_menus/onCreate", "Exception e: " + e);
         }
-
-        globals.handlerCount.postDelayed(runnableCron10, 100);
-
-        globals.getDate();
-
-        logFromOffline = PreferenceManager.getDefaultSharedPreferences(this)
-                .getBoolean("logFromOffline", false);
-
-        address = PreferenceManager.getDefaultSharedPreferences(this)
-                .getString("address", "");
-
-        login = PreferenceManager.getDefaultSharedPreferences(this)
-                .getString("login", "");
-
-        password = PreferenceManager.getDefaultSharedPreferences(this)
-                .getString("password", "");
-
-        startWebSocket(getApplicationContext());
-
-
-        Log.e("PreferenceManager", "TOOLBAR" + PreferenceManager.getDefaultSharedPreferences(this)
-                .getString("login", ""));
-
-
-//        } catch (Exception e) {
-//            globals.alertDialogMsg(this, "ОшибкаToolbars: " + e);
-//        }
 
     }
 
@@ -189,6 +189,8 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         Log.d("test", "" + requestCode + resultCode + data);
+
+        Globals.writeToMLOG("ERROR", "toolbar_menus/onActivityResult", "info: " + requestCode + "___" + resultCode + "___" + data);
     }
 
 
@@ -333,7 +335,7 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
 
                     Intent menuItem164browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(format));
                     this.startActivity(menuItem164browserIntent);
-                }catch (Exception e){
+                } catch (Exception e) {
                     Globals.writeToMLOG("ERROR", "menu/164", "Exception e: " + e);
                 }
                 break;
@@ -353,7 +355,7 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
 
                     Intent menuItem165browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(format));
                     this.startActivity(menuItem165browserIntent);
-                }catch (Exception e){
+                } catch (Exception e) {
                     Globals.writeToMLOG("ERROR", "menu/165", "Exception e: " + e);
                 }
                 break;

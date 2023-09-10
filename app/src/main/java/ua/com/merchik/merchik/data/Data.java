@@ -1,11 +1,12 @@
 package ua.com.merchik.merchik.data;
 
+import android.os.Parcel;
+import android.os.Parcelable;
 import android.view.View;
 
-import java.io.Serializable;
 import java.util.Date;
 
-public class Data implements Serializable{
+public class Data implements Parcelable {
 
     private long id;
     private String addr;
@@ -19,7 +20,6 @@ public class Data implements Serializable{
     private String s;
 
     private int images;
-
 
     public Data(long id, String addr, String cust, String merc,
                 Date date, long otchetId, View options, int images) {
@@ -43,6 +43,46 @@ public class Data implements Serializable{
         this.s = s;
         this.images = images;
     }
+
+    protected Data(Parcel in) {
+        id = in.readLong();
+        addr = in.readString();
+        cust = in.readString();
+        merc = in.readString();
+        date = new Date(in.readLong());
+        otchetId = in.readLong();
+        s = in.readString();
+        images = in.readInt();
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeLong(id);
+        dest.writeString(addr);
+        dest.writeString(cust);
+        dest.writeString(merc);
+        dest.writeLong(date.getTime());
+        dest.writeLong(otchetId);
+        dest.writeString(s);
+        dest.writeInt(images);
+    }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    public static final Creator<Data> CREATOR = new Creator<Data>() {
+        @Override
+        public Data createFromParcel(Parcel in) {
+            return new Data(in);
+        }
+
+        @Override
+        public Data[] newArray(int size) {
+            return new Data[size];
+        }
+    };
 
     public Long getId() {
         return this.id;
@@ -79,5 +119,4 @@ public class Data implements Serializable{
     public int getImages() {
         return this.images;
     }
-
 }

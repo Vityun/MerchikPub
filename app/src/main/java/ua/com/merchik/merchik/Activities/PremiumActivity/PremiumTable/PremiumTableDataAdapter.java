@@ -19,7 +19,6 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 
-import java.io.Serializable;
 import java.util.Collections;
 import java.util.List;
 
@@ -363,7 +362,7 @@ public class PremiumTableDataAdapter extends RecyclerView.Adapter<PremiumTableDa
 
                 Intent intent = new Intent(itemView.getContext(), DetailedReportActivity.class);
                 intent.putExtra("dataFromWP", D);
-                intent.putExtra("rowWP", (Serializable) wp);
+                intent.putExtra("rowWP", wp);
                 intent.putExtra("dataFromWPObj", wpDataObj);
                 itemView.getContext().startActivity(intent);
             } catch (Exception e) {

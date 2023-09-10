@@ -63,7 +63,7 @@ public class OptionControlCheckDetailedReport<T> extends OptionControl {
             dad2 = wp.getCode_dad2();
             date = wp.getDt();
 
-            time = Clock.getDatePeriodLong(date.getTime(), -2) / 1000;    // работает в миллисекундах, по этому перевёл в секунды
+            time = Clock.getDatePeriodLong(date.getTime(), -4) / 1000;    // работает в миллисекундах, по этому перевёл в секунды
 
             try {
                 if (!optionDB.getAmountMin().equals("0")) {

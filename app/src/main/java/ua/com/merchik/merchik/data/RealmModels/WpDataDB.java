@@ -1,12 +1,16 @@
 package ua.com.merchik.merchik.data.RealmModels;
 
-import java.io.Serializable;
+import android.os.Parcel;
+import android.os.Parcelable;
+
+import androidx.annotation.NonNull;
+
 import java.util.Date;
 
 import io.realm.RealmObject;
 import io.realm.annotations.PrimaryKey;
 
-public class WpDataDB extends RealmObject implements Serializable {
+public class WpDataDB extends RealmObject implements Parcelable {
 
     @PrimaryKey
     private long ID;
@@ -1023,4 +1027,253 @@ public class WpDataDB extends RealmObject implements Serializable {
     public void setCode_iza(String code_iza) {
         this.code_iza = code_iza;
     }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+
+
+
+    protected WpDataDB(Parcel in) {
+        ID = in.readLong();
+        dt = new Date(in.readLong());
+        client_id = in.readString();
+        isp = in.readString();
+        isp_fact = in.readString();
+        tech_sup_active = in.readInt();
+        addr_id = in.readInt();
+        user_id = in.readInt();
+        dt_start = in.readLong();
+        dt_stop = in.readLong();
+        action = in.readInt();
+        action_type = in.readInt();
+        stajirovka_stage = in.readString();
+        one_time_work = in.readInt();
+        theme_grp = in.readInt();
+        theme_id = in.readInt();
+        code_dda = in.readLong();
+        code_ddas = in.readString();
+        codedad = in.readLong();
+        code_dad2 = in.readLong();
+        smeta = in.readString();
+        smeta_1c = in.readString();
+        doc_num = in.readString();
+        doc_num_grp = in.readInt();
+        doc_type = in.readInt();
+        doc_num_1c = in.readString();
+        doc_num_1c_id = in.readLong();
+        doc_num_otchet = in.readString();
+        signal_cnt = in.readInt();
+        doc_num_otchet_id = in.readLong();
+        smeta_active = in.readString();
+        super_id = in.readInt();
+        territorial_id = in.readInt();
+        regional_id = in.readInt();
+        nop_id = in.readInt();
+        starsh_tt_id = in.readInt();
+        contacter_id = in.readInt();
+        fot_user_id = in.readInt();
+        dot_user_id = in.readInt();
+        visit_start_dt = in.readLong();
+        visit_start_dt_receive = (in.readLong() == -1) ? null : in.readLong();
+        visit_start_geo_distance = in.readInt();
+        visit_start_geo_accuracy = in.readInt();
+        visit_start_geo_id = in.readInt();
+        visit_end_dt = in.readLong();
+        visit_end_dt_receive = (in.readLong() == -1) ? null : in.readLong();
+        visit_end_geo_distance = in.readInt();
+        visit_end_geo_accuracy = in.readInt();
+        visit_end_geo_id = in.readInt();
+        visit_arrive_dt = in.readInt();
+        visit_arrive_geo_distance = in.readInt();
+        visit_arrive_geo_accuracy = in.readInt();
+        visit_arrive_geo_id = in.readInt();
+        visit_report_starsh = in.readInt();
+        visit_report_starsh_quality = in.readInt();
+        client_start_dt = in.readLong();
+        client_start_dt_receive = (in.readLong() == -1) ? null : in.readLong();
+        client_start_geo_distance = in.readInt();
+        client_start_geo_accuracy = in.readInt();
+        client_start_geo_id = in.readInt();
+        client_start_anybody = in.readInt();
+        client_end_dt = in.readLong();
+        client_end_dt_receive = (in.readLong() == -1) ? null : in.readLong();
+        client_end_geo_distance = in.readInt();
+        client_end_geo_accuracy = in.readInt();
+        client_end_geo_id = in.readInt();
+        client_end_anybody = in.readInt();
+        client_report_starsh = in.readInt();
+        priority = in.readInt();
+        import_type = in.readInt();
+        dt_update = in.readLong();
+        code_aadd = in.readString();
+        work_stop_reason = in.readString();
+        simple_report = in.readInt();
+        copy_price_days = in.readInt();
+        cash_zakaz = in.readDouble();
+        cash_sum_30 = in.readDouble();
+        cash_sum_addr_30 = in.readDouble();
+        cash_ispolnitel = in.readDouble();
+        visit_per_week = in.readInt();
+        sku = in.readInt();
+        duration = in.readLong();
+        mon = in.readInt();
+        tue = in.readInt();
+        wed = in.readInt();
+        thu = in.readInt();
+        fri = in.readInt();
+        sat = in.readInt();
+        sun = in.readInt();
+        source_change = in.readString();
+        status = in.readInt();
+        premiya_total = in.readString();
+        addr_location_xd = in.readString();
+        addr_location_yd = in.readString();
+        addr_txt = in.readString();
+        client_txt = in.readString();
+        user_txt = in.readString();
+        action_txt = in.readString();
+        action_short_txt = in.readString();
+        code_iza = in.readString();
+        user_comment = in.readString();
+        user_comment_author_id = in.readInt();
+        user_comment_dt_update = in.readLong();
+        ptt_user_id = in.readInt();
+        sku_plan = in.readDouble();
+        sku_fact = in.readDouble();
+        oos = in.readDouble();
+        kp = in.readByte() != 0;
+        startUpdate = in.readByte() != 0;
+        cash_fact = in.readDouble();
+        cash_penalty = in.readDouble();
+    }
+
+    @Override
+    public void writeToParcel(@NonNull Parcel dest, int flags) {
+        dest.writeLong(ID);
+        dest.writeLong(dt.getTime());
+        dest.writeString(client_id);
+        dest.writeString(isp);
+        dest.writeString(isp_fact);
+        dest.writeInt(tech_sup_active);
+        dest.writeInt(addr_id);
+        dest.writeInt(user_id);
+        dest.writeLong(dt_start);
+        dest.writeLong(dt_stop);
+        dest.writeInt(action);
+        dest.writeInt(action_type);
+        dest.writeString(stajirovka_stage);
+        dest.writeInt(one_time_work);
+        dest.writeInt(theme_grp);
+        dest.writeInt(theme_id);
+        dest.writeLong(code_dda);
+        dest.writeString(code_ddas);
+        dest.writeLong(codedad);
+        dest.writeLong(code_dad2);
+        dest.writeString(smeta);
+        dest.writeString(smeta_1c);
+        dest.writeString(doc_num);
+        dest.writeInt(doc_num_grp);
+        dest.writeInt(doc_type);
+        dest.writeString(doc_num_1c);
+        dest.writeLong(doc_num_1c_id);
+        dest.writeString(doc_num_otchet);
+        dest.writeInt(signal_cnt);
+        dest.writeLong(doc_num_otchet_id);
+        dest.writeString(smeta_active);
+        dest.writeInt(super_id);
+        dest.writeInt(territorial_id);
+        dest.writeInt(regional_id);
+        dest.writeInt(nop_id);
+        dest.writeInt(starsh_tt_id);
+        dest.writeInt(contacter_id);
+        dest.writeInt(fot_user_id);
+        dest.writeInt(dot_user_id);
+        dest.writeLong(visit_start_dt);
+        dest.writeLong((visit_start_dt_receive != null) ? visit_start_dt_receive : -1);
+        dest.writeInt(visit_start_geo_distance);
+        dest.writeInt(visit_start_geo_accuracy);
+        dest.writeInt(visit_start_geo_id);
+        dest.writeLong(visit_end_dt);
+        dest.writeLong((visit_end_dt_receive != null) ? visit_end_dt_receive : -1);
+        dest.writeInt(visit_end_geo_distance);
+        dest.writeInt(visit_end_geo_accuracy);
+        dest.writeInt(visit_end_geo_id);
+        dest.writeInt(visit_arrive_dt);
+        dest.writeInt(visit_arrive_geo_distance);
+        dest.writeInt(visit_arrive_geo_accuracy);
+        dest.writeInt(visit_arrive_geo_id);
+        dest.writeInt(visit_report_starsh);
+        dest.writeInt(visit_report_starsh_quality);
+        dest.writeLong(client_start_dt);
+        dest.writeLong((client_start_dt_receive != null) ? client_start_dt_receive : -1);
+        dest.writeInt(client_start_geo_distance);
+        dest.writeInt(client_start_geo_accuracy);
+        dest.writeInt(client_start_geo_id);
+        dest.writeInt(client_start_anybody);
+        dest.writeLong(client_end_dt);
+        dest.writeLong((client_end_dt_receive != null) ? client_end_dt_receive : -1);
+        dest.writeInt(client_end_geo_distance);
+        dest.writeInt(client_end_geo_accuracy);
+        dest.writeInt(client_end_geo_id);
+        dest.writeInt(client_end_anybody);
+        dest.writeInt(client_report_starsh);
+        dest.writeInt(priority);
+        dest.writeInt(import_type);
+        dest.writeLong(dt_update);
+        dest.writeString(code_aadd);
+        dest.writeString(work_stop_reason);
+        dest.writeInt(simple_report);
+        dest.writeInt(copy_price_days);
+        dest.writeDouble(cash_zakaz);
+        dest.writeDouble(cash_sum_30);
+        dest.writeDouble(cash_sum_addr_30);
+        dest.writeDouble(cash_ispolnitel);
+        dest.writeInt(visit_per_week);
+        dest.writeInt(sku);
+        dest.writeLong(duration);
+        dest.writeInt(mon);
+        dest.writeInt(tue);
+        dest.writeInt(wed);
+        dest.writeInt(thu);
+        dest.writeInt(fri);
+        dest.writeInt(sat);
+        dest.writeInt(sun);
+        dest.writeString(source_change);
+        dest.writeInt(status);
+        dest.writeString(premiya_total);
+        dest.writeString(addr_location_xd);
+        dest.writeString(addr_location_yd);
+        dest.writeString(addr_txt);
+        dest.writeString(client_txt);
+        dest.writeString(user_txt);
+        dest.writeString(action_txt);
+        dest.writeString(action_short_txt);
+        dest.writeString(code_iza);
+        dest.writeString(user_comment);
+        dest.writeInt(user_comment_author_id);
+        dest.writeLong(user_comment_dt_update);
+        dest.writeInt(ptt_user_id);
+        dest.writeDouble(sku_plan);
+        dest.writeDouble(sku_fact);
+        dest.writeDouble(oos);
+        dest.writeByte((byte) (kp ? 1 : 0));
+        dest.writeByte((byte) (startUpdate ? 1 : 0));
+        dest.writeDouble(cash_fact);
+        dest.writeDouble(cash_penalty);
+    }
+
+    public static final Parcelable.Creator<WpDataDB> CREATOR = new Parcelable.Creator<WpDataDB>() {
+        @Override
+        public WpDataDB createFromParcel(Parcel in) {
+            return new WpDataDB(in);
+        }
+
+        @Override
+        public WpDataDB[] newArray(int size) {
+            return new WpDataDB[size];
+        }
+    };
 }

@@ -44,7 +44,6 @@ import com.google.gson.reflect.TypeToken;
 
 import org.apache.commons.lang3.ArrayUtils;
 
-import java.io.Serializable;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -1828,7 +1827,7 @@ public class Options {
 
                 Intent intent = new Intent(context, DetailedReportActivity.class);
                 intent.putExtra("dataFromWP", D);
-                intent.putExtra("rowWP", (Serializable) wp);
+                intent.putExtra("rowWP", wp);
                 intent.putExtra("dataFromWPObj", wpDataObj);
 
                 type.msg = "Открыт проверяемый документ. \nНомер: " + wp.getDoc_num_otchet();

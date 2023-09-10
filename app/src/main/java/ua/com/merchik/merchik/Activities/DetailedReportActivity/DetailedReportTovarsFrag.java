@@ -9,6 +9,7 @@ import android.annotation.SuppressLint;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.os.Bundle;
+import android.os.Parcelable;
 import android.text.Editable;
 import android.text.Html;
 import android.text.TextWatcher;
@@ -21,6 +22,8 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.PopupMenu;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -71,7 +74,7 @@ public class DetailedReportTovarsFrag extends Fragment {
 
     public static final Integer[] DETAILED_REPORT_FRAGMENT_TOVAR_VIDEO_LESSONS = new Integer[]{823, 815};
 
-    private Context mContext;
+    private static Context mContext;
     private ArrayList<Data> list;
     private WpDataDB wpDataDB;
     private TasksAndReclamationsSDB tasksAndReclamationsSDB;
@@ -92,8 +95,13 @@ public class DetailedReportTovarsFrag extends Fragment {
 
     private boolean flag = true;
 
+    public DetailedReportTovarsFrag() {
+        Globals.writeToMLOG("INFO", "DetailedReportTovarsFrag/1", "create");
+    }
+
     public DetailedReportTovarsFrag(Context context, ArrayList<Data> list, WpDataDB wpDataDB) {
         // Required empty public constructor
+        Globals.writeToMLOG("INFO", "DetailedReportTovarsFrag/2", "create");
         this.mContext = context;
         this.list = list;
         this.wpDataDB = wpDataDB;
@@ -103,7 +111,19 @@ public class DetailedReportTovarsFrag extends Fragment {
         this.addressId = wpDataDB.getAddr_id();
     }
 
+    public static DetailedReportTovarsFrag newInstance(AppCompatActivity context, ArrayList<Data> list, WpDataDB wpDataDB) {
+        DetailedReportTovarsFrag fragment = new DetailedReportTovarsFrag();
+        Bundle args = new Bundle();
+        args.putParcelableArrayList("list", list);
+        args.putParcelable("wpDataDB", wpDataDB);
+//        args.putSerializable("appCompatActivity", (Serializable) context);// Передача AppCompatActivity в аргументах
+        mContext = context;
+        fragment.setArguments(args);
+        return fragment;
+    }
+
     public DetailedReportTovarsFrag(Context context, TasksAndReclamationsSDB tasksAndReclamationsSDB) {
+        Globals.writeToMLOG("INFO", "DetailedReportTovarsFrag/3", "create");
         this.mContext = context;
         this.tasksAndReclamationsSDB = tasksAndReclamationsSDB;
         this.codeDad2 = tasksAndReclamationsSDB.codeDad2SrcDoc;
@@ -111,12 +131,129 @@ public class DetailedReportTovarsFrag extends Fragment {
     }
 
     @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        Globals.writeToMLOG("INFO", "DetailedReportTovarsFrag/onSaveInstanceState", "outState: " + outState);
+        ArrayList<Parcelable> parcelableList = new ArrayList<>();
+        for (Data data : list) {
+            parcelableList.add(data);
+        }
+        outState.putParcelableArrayList("list", parcelableList);
+        outState.putParcelable("wpDataDB", wpDataDB);
+//        outState.putSerializable("appCompatActivity", (Serializable) mContext);
+    }
+
+    @Override
+    public void onViewStateRestored(Bundle savedInstanceState) {
+        super.onViewStateRestored(savedInstanceState);
+        Globals.writeToMLOG("INFO", "DetailedReportTovarsFrag/onViewStateRestored", "savedInstanceState: " + savedInstanceState);
+        if (savedInstanceState != null) {
+            ArrayList<Parcelable> parcelableList = savedInstanceState.getParcelableArrayList("list");
+            if (parcelableList != null) {
+                list = new ArrayList<>();
+                for (Parcelable parcelable : parcelableList) {
+                    if (parcelable instanceof Data) {
+                        list.add((Data) parcelable);
+                    }
+                }
+            }
+            wpDataDB = savedInstanceState.getParcelable("wpDataDB");
+//            mContext = (AppCompatActivity) savedInstanceState.getSerializable("appCompatActivity");
+        }
+    }
+
+
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        Globals.writeToMLOG("INFO", "DetailedReportTovarsFrag", "onAttach");
+    }
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        Globals.writeToMLOG("INFO", "DetailedReportTovarsFrag", "onCreate");
+        Bundle args = getArguments();
+        if (args != null) {
+//            mContext = (AppCompatActivity) args.getSerializable("appCompatActivity");
+//            Globals.writeToMLOG("INFO", "DetailedReportTovarsFrag", "onCreate/mContext: " + mContext);
+            list = args.getParcelableArrayList("list");
+            Globals.writeToMLOG("INFO", "DetailedReportTovarsFrag", "onCreate/list: " + list);
+            wpDataDB = args.getParcelable("wpDataDB");
+            Globals.writeToMLOG("INFO", "DetailedReportTovarsFrag", "onCreate/wpDataDB: " + wpDataDB);
+        }
+    }
+
+    @Override
+    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+        Globals.writeToMLOG("INFO", "DetailedReportTovarsFrag", "onActivityCreated");
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        Globals.writeToMLOG("INFO", "DetailedReportTovarsFrag", "onStart");
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        Globals.writeToMLOG("INFO", "DetailedReportTovarsFrag", "onResume");
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        Globals.writeToMLOG("INFO", "DetailedReportTovarsFrag", "onPause");
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        Globals.writeToMLOG("INFO", "DetailedReportTovarsFrag", "onStop");
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        Globals.writeToMLOG("INFO", "DetailedReportTovarsFrag", "onDestroyView");
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        Globals.writeToMLOG("INFO", "DetailedReportTovarsFrag", "onDestroy");
+    }
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        Globals.writeToMLOG("INFO", "DetailedReportTovarsFrag", "onDetach");
+    }
+
+    @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
 
+        Globals.writeToMLOG("INFO", "DetailedReportTovarsFrag/onCreateView", "inflater: " + inflater);
+        Globals.writeToMLOG("INFO", "DetailedReportTovarsFrag/onCreateView", "container: " + container);
+        Globals.writeToMLOG("INFO", "DetailedReportTovarsFrag/onCreateView", "create: " + savedInstanceState);
+
         View v = inflater.inflate(R.layout.fragment_dr_tovar, container, false);
 
+        Globals.writeToMLOG("INFO", "DetailedReportTovarsFrag/onCreateView", "v: " + v);
+
         try {
+
+            // TODO 10.09.23. могут быть проблемы с Товарами в ЗИР изза этого. Проблемы будущего меня
+            if (wpDataDB != null){
+                this.codeDad2 = wpDataDB.getCode_dad2();
+                this.clientId = wpDataDB.getClient_id();
+                this.addressId = wpDataDB.getAddr_id();
+            }
+
+
             badgeTextView = v.findViewById(R.id.badge_text_view);
             fab = v.findViewById(R.id.fab);
             editText = (EditText) v.findViewById(R.id.drEditTextFindTovar);

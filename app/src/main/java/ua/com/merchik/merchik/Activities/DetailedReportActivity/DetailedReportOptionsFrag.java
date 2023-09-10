@@ -8,6 +8,7 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Parcelable;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -17,6 +18,8 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -47,7 +50,7 @@ import ua.com.merchik.merchik.dialogs.DialogFilter.Click;
 @SuppressLint("ValidFragment")
 public class DetailedReportOptionsFrag extends Fragment {
 
-    private Context mContext;
+    private static Context mContext;
     private ArrayList<Data> list;
     private WpDataDB wpDataDB;
 
@@ -55,18 +58,36 @@ public class DetailedReportOptionsFrag extends Fragment {
 
     RecycleViewDRAdapter recycleViewDRAdapter;
 
+    public DetailedReportOptionsFrag() {
+        Globals.writeToMLOG("INFO", "DetailedReportOptionsFrag/1", "create");
+    }
+
     public DetailedReportOptionsFrag(Context context, ArrayList<Data> list, WpDataDB wpDataDB) {
+        Globals.writeToMLOG("INFO", "DetailedReportOptionsFrag/2", "create");
         // Required empty public constructor
         this.mContext = context;
         this.list = list;
         this.wpDataDB = wpDataDB;
     }
 
+    public static DetailedReportOptionsFrag newInstance(AppCompatActivity context, ArrayList<Data> list, WpDataDB wpDataDB) {
+        DetailedReportOptionsFrag fragment = new DetailedReportOptionsFrag();
+        Bundle args = new Bundle();
+        args.putParcelableArrayList("list", list);
+        args.putParcelable("wpDataDB", wpDataDB);
+//        args.putSerializable("appCompatActivity", (Serializable) context);// Передача AppCompatActivity в аргументах
+        mContext = context;
+        fragment.setArguments(args);
+        return fragment;
+    }
+
     @Override
     public void onResume() {
+        Globals.writeToMLOG("INFO", "DetailedReportOptionsFrag", "onResume");
         try {
             recycleViewDRAdapter.notifyDataSetChanged();
         } catch (Exception e) {
+            Globals.writeToMLOG("INFO", "DetailedReportOptionsFrag", "Exception e: " + e);
             Log.e("test", "test: " + e);
             /*    java.lang.NullPointerException: Attempt to invoke virtual method 'void ua.com.merchik.merchik.Activities.DetailedReportActivity.RecycleViewDRAdapter.notifyDataSetChanged()' on a null object reference
         at ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportOptionsFrag.onResume(DetailedReportOptionsFrag.java:64)*/
@@ -75,8 +96,112 @@ public class DetailedReportOptionsFrag extends Fragment {
     }
 
     @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        Globals.writeToMLOG("INFO", "DetailedReportOptionsFrag/onSaveInstanceState", "outState: " + outState);
+        ArrayList<Parcelable> parcelableList = new ArrayList<>();
+        for (Data data : list) {
+            parcelableList.add(data);
+        }
+        outState.putParcelableArrayList("list", parcelableList);
+        outState.putParcelable("wpDataDB", wpDataDB);
+//        outState.putSerializable("appCompatActivity", (Serializable) mContext);
+    }
+
+    @Override
+    public void onViewStateRestored(Bundle savedInstanceState) {
+        super.onViewStateRestored(savedInstanceState);
+        Globals.writeToMLOG("INFO", "DetailedReportOptionsFrag/onViewStateRestored", "savedInstanceState: " + savedInstanceState);
+        if (savedInstanceState != null) {
+            ArrayList<Parcelable> parcelableList = savedInstanceState.getParcelableArrayList("list");
+            if (parcelableList != null) {
+                list = new ArrayList<>();
+                for (Parcelable parcelable : parcelableList) {
+                    if (parcelable instanceof Data) {
+                        list.add((Data) parcelable);
+                    }
+                }
+            }
+            wpDataDB = savedInstanceState.getParcelable("wpDataDB");
+//            mContext = (AppCompatActivity) savedInstanceState.getSerializable("appCompatActivity");
+        }
+    }
+
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        Globals.writeToMLOG("INFO", "DetailedReportOptionsFrag", "onAttach");
+    }
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        Globals.writeToMLOG("INFO", "DetailedReportOptionsFrag", "onCreate");
+
+        Bundle args = getArguments();
+        if (args != null) {
+//            mContext = (AppCompatActivity) args.getSerializable("appCompatActivity");
+//            Globals.writeToMLOG("INFO", "DetailedReportOptionsFrag", "onCreate/mContext: " + mContext);
+            list = args.getParcelableArrayList("list");
+            Globals.writeToMLOG("INFO", "DetailedReportOptionsFrag", "onCreate/list: " + list);
+            wpDataDB = args.getParcelable("wpDataDB");
+            Globals.writeToMLOG("INFO", "DetailedReportOptionsFrag", "onCreate/wpDataDB: " + wpDataDB);
+        }
+    }
+
+    @Override
+    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+        Globals.writeToMLOG("INFO", "DetailedReportOptionsFrag", "onActivityCreated");
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        Globals.writeToMLOG("INFO", "DetailedReportOptionsFrag", "onStart");
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        Globals.writeToMLOG("INFO", "DetailedReportOptionsFrag", "onPause");
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        Globals.writeToMLOG("INFO", "DetailedReportOptionsFrag", "onStop");
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        Globals.writeToMLOG("INFO", "DetailedReportOptionsFrag", "onDestroyView");
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        Globals.writeToMLOG("INFO", "DetailedReportOptionsFrag", "onDestroy");
+    }
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        Globals.writeToMLOG("INFO", "DetailedReportOptionsFrag", "onDetach");
+    }
+
+    @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+
+        Globals.writeToMLOG("INFO", "DetailedReportOptionsFrag/onCreateView", "inflater: " + inflater);
+        Globals.writeToMLOG("INFO", "DetailedReportOptionsFrag/onCreateView", "container: " + container);
+        Globals.writeToMLOG("INFO", "DetailedReportOptionsFrag/onCreateView", "create: " + savedInstanceState);
+
         View v = inflater.inflate(R.layout.fragment_dr_option, container, false);
+
+        Globals.writeToMLOG("INFO", "DetailedReportOptionsFrag/onCreateView", "v: " + v);
+
         try {
             Button buttonSave = (Button) v.findViewById(R.id.button);
             Button buttonMakeAReport = (Button) v.findViewById(R.id.button3);

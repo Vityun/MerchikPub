@@ -45,7 +45,6 @@ import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
-import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
@@ -86,6 +85,7 @@ import ua.com.merchik.merchik.data.Database.Room.TranslatesSDB;
 import ua.com.merchik.merchik.data.Database.Room.ViewListSDB;
 import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteHintsDB;
 import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteObjects.SiteObjectsDB;
+import ua.com.merchik.merchik.data.RealmModels.LogMPDB;
 import ua.com.merchik.merchik.data.RealmModels.ReportPrepareDB;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
 import ua.com.merchik.merchik.data.RealmModels.TovarDB;
@@ -95,6 +95,7 @@ import ua.com.merchik.merchik.data.WPDataObj;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.ReportPrepareRealm;
 import ua.com.merchik.merchik.database.realm.tables.StackPhotoRealm;
+import ua.com.merchik.merchik.database.realm.tables.WpDataRealm;
 import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
 import ua.com.merchik.merchik.toolbar_menus;
@@ -143,6 +144,8 @@ public class DetailedReportActivity extends toolbar_menus {
     public static ImageView imageView;
 //    public static ImageView imageViewVideoRedDot;
 
+
+    //    public Data wp;
     public ArrayList<Data> list = new ArrayList<Data>();
 
     //----------------------------------------------------------------------------------------------
@@ -150,137 +153,142 @@ public class DetailedReportActivity extends toolbar_menus {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // Регистрация ActivityResultLauncher
-        requestPermissionLauncher = registerForActivityResult(
-                new ActivityResultContracts.RequestPermission(), isGranted -> {
-                    if (isGranted) {
-                        // Разрешение получено, продолжайте удаление файла
-                        Log.e("deleteFile", "Разрешение получено, продолжайте удаление файла");
-                    } else {
-                        // Разрешение не получено, обработайте соответствующим образом
-                        Log.e("deleteFile", "Например, выведите сообщение пользователю или выполните альтернативные действия");
+        try {
+            Globals.writeToMLOG("INFO", "DetailedReportActivity/ON CREATE", "onCreate");
+
+            // Регистрация ActivityResultLauncher
+            requestPermissionLauncher = registerForActivityResult(
+                    new ActivityResultContracts.RequestPermission(), isGranted -> {
+                        if (isGranted) {
+                            // Разрешение получено, продолжайте удаление файла
+                            Log.e("deleteFile", "Разрешение получено, продолжайте удаление файла");
+                        } else {
+                            // Разрешение не получено, обработайте соответствующим образом
+                            Log.e("deleteFile", "Например, выведите сообщение пользователю или выполните альтернативные действия");
+                        }
                     }
-                }
-        );
+            );
 
 
-        Globals.writeToMLOG("INFO", "DetailedReportActivity/onCreate", "Открыли по новой активность. Смотри Выше лог - после чего именно.");
+            Globals.writeToMLOG("INFO", "DetailedReportActivity/onCreate", "Открыли по новой активность. Смотри Выше лог - после чего именно.");
 
-        setActivityData();
+            setActivityData();
 
-        registrationPermission();
+            registrationPermission();
 
-        SKUPlan = 0;
-        SKUFact = 0;
-        OFS = 0;   // % сколько нет товаров
-        OOS = 0;   // Представленность %
+            SKUPlan = 0;
+            SKUFact = 0;
+            OFS = 0;   // % сколько нет товаров
+            OOS = 0;   // Представленность %
 
-        detailedReportTovList = null;   // Обнуляю переменные для свеже открытого отчёта.
-        detailedReportRPList = null;    // Обнуляю переменные для свеже открытого отчёта.
+            detailedReportTovList = null;   // Обнуляю переменные для свеже открытого отчёта.
+            detailedReportRPList = null;    // Обнуляю переменные для свеже открытого отчёта.
 
-        // Задачи для Закладочки "ЗИР"
-        tarList = SQL_DB.tarDao().getAllByInfo(1, wpDataDB.getClient_id(), wpDataDB.getAddr_id(), (System.currentTimeMillis() / 1000 - 5184000), 0);
-        tasksAndReclamationsSDBList = SQL_DB.tarDao().getAllByInfo(0, wpDataDB.getAddr_id());
+            // Задачи для Закладочки "ЗИР"
+            tarList = SQL_DB.tarDao().getAllByInfo(1, wpDataDB.getClient_id(), wpDataDB.getAddr_id(), (System.currentTimeMillis() / 1000 - 5184000), 0);
+            tasksAndReclamationsSDBList = SQL_DB.tarDao().getAllByInfo(0, wpDataDB.getAddr_id());
 
-        globals.writeToMLOG(Clock.getHumanTime() + "DetailedReportActivity.onCreate: " + "ENTER" + "\n");
+            globals.writeToMLOG(Clock.getHumanTime() + "DetailedReportActivity.onCreate: " + "ENTER" + "\n");
 
-        setContentView(R.layout.drawler_dr);
+            setContentView(R.layout.drawler_dr);
 
-        setSupportActionBar(findViewById(R.id.my_toolbar));
-        getSupportActionBar().setDisplayShowTitleEnabled(false);
-        activity_title = findViewById(R.id.activity_title);
+            setSupportActionBar(findViewById(R.id.my_toolbar));
+            getSupportActionBar().setDisplayShowTitleEnabled(false);
+            activity_title = findViewById(R.id.activity_title);
 
-        tabLayout = findViewById(R.id.tabLayout);
-        viewPager = findViewById(R.id.viewPager);
+            tabLayout = findViewById(R.id.tabLayout);
+            viewPager = findViewById(R.id.viewPager);
 
-        imageView = findViewById(R.id.red_dot);
+            imageView = findViewById(R.id.red_dot);
 
 
-        Log.e("TRANSLATES_DEBUG", "Globals.langId: " + Globals.langId);
+            Log.e("TRANSLATES_DEBUG", "Globals.langId: " + Globals.langId);
 
-        TranslatesSDB home = translate.getTranslationText("DetailedReportHomeFrag_Title");
-        if (home != null) {
-            tabLayout.getTabAt(0).setText(home.nm);
-        }
-
-        TranslatesSDB option = translate.getTranslationText("DetailedReportOptionsFrag_Title");
-        if (option != null) {
-            tabLayout.getTabAt(1).setText(option.nm);
-        }
-
-        TranslatesSDB tovars = translate.getTranslationText("DetailedReportTovarsFrag_Title");
-        if (tovars != null) {
-            tabLayout.getTabAt(2).setText(tovars.nm);
-        }
-
-        // Установка Заголовка в закладочку "ЗИР". В скобочках нужно написать кол-во самих задач
-        StringBuffer tarTabTitle = new StringBuffer();
-        tarTabTitle.append("ЗИР");
-        if (tarList != null && tarList.size() > 0) {
-            tarTabTitle.append("(");
-            if (tasksAndReclamationsSDBList != null && tasksAndReclamationsSDBList.size() > 0) {
-                tarTabTitle.append("<font color='red'>").append(tasksAndReclamationsSDBList.size()).append("</font>").append("/");
+            TranslatesSDB home = translate.getTranslationText("DetailedReportHomeFrag_Title");
+            if (home != null) {
+                tabLayout.getTabAt(0).setText(home.nm);
             }
-            tarTabTitle.append("<font color='red'>").append(tarList.size()).append("</font>");
-            tarTabTitle.append(")");
-        }
-        tabLayout.getTabAt(3).setText(Html.fromHtml(String.valueOf(tarTabTitle)));
+
+            TranslatesSDB option = translate.getTranslationText("DetailedReportOptionsFrag_Title");
+            if (option != null) {
+                tabLayout.getTabAt(1).setText(option.nm);
+            }
+
+            TranslatesSDB tovars = translate.getTranslationText("DetailedReportTovarsFrag_Title");
+            if (tovars != null) {
+                tabLayout.getTabAt(2).setText(tovars.nm);
+            }
+
+            // Установка Заголовка в закладочку "ЗИР". В скобочках нужно написать кол-во самих задач
+            StringBuffer tarTabTitle = new StringBuffer();
+            tarTabTitle.append("ЗИР");
+            if (tarList != null && tarList.size() > 0) {
+                tarTabTitle.append("(");
+                if (tasksAndReclamationsSDBList != null && tasksAndReclamationsSDBList.size() > 0) {
+                    tarTabTitle.append("<font color='red'>").append(tasksAndReclamationsSDBList.size()).append("</font>").append("/");
+                }
+                tarTabTitle.append("<font color='red'>").append(tarList.size()).append("</font>");
+                tarTabTitle.append(")");
+            }
+            tabLayout.getTabAt(3).setText(Html.fromHtml(String.valueOf(tarTabTitle)));
 
 
-        StringBuilder stringBuilder = new StringBuilder();
-        try {
-            stringBuilder.append(Clock.getHumanTimeYYYYMMDD(wpDataDB.getDt().getTime() / 1000).substring(5)).append(".. ").append(wpDataDB.getAddr_txt().substring(0, 25)).append(".. ").append("\n");    //+TODO CHANGE DATE
-            stringBuilder.append(wpDataDB.getClient_txt().substring(0, 12)).append(".. ").append(wpDataDB.getUser_txt().substring(0, 12)).append(".. ");
-        } catch (Exception e) {
-            stringBuilder.append("Дет. Отчёт №: ").append(wpDataDB.getCode_dad2());
-        }
+            StringBuilder stringBuilder = new StringBuilder();
+            try {
+                stringBuilder.append(Clock.getHumanTimeYYYYMMDD(wpDataDB.getDt().getTime() / 1000).substring(5)).append(".. ").append(wpDataDB.getAddr_txt().substring(0, 25)).append(".. ").append("\n");    //+TODO CHANGE DATE
+                stringBuilder.append(wpDataDB.getClient_txt().substring(0, 12)).append(".. ").append(wpDataDB.getUser_txt().substring(0, 12)).append(".. ");
+            } catch (Exception e) {
+                stringBuilder.append("Дет. Отчёт №: ").append(wpDataDB.getCode_dad2());
+            }
 
 
-        activity_title.setText(stringBuilder);
-        activity_title.setBackgroundColor(Color.parseColor("#B1B1B1"));
+            activity_title.setText(stringBuilder);
+            activity_title.setBackgroundColor(Color.parseColor("#B1B1B1"));
 
-        setTab();
+            setTab();
 
-        this.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN); //Убирает фокус с полей ввода
+            this.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN); //Убирает фокус с полей ввода
 
 
-        try {
-            globals.writeToMLOG(Clock.getHumanTime() + "DetailedReportActivity.onCreate.fab: " + "ENTER" + "\n");
-            fab = findViewById(R.id.fab);
+            try {
+                globals.writeToMLOG(Clock.getHumanTime() + "DetailedReportActivity.onCreate.fab: " + "ENTER" + "\n");
+                fab = findViewById(R.id.fab);
 
-            toolbar_menus.textLesson = 818;
+                toolbar_menus.textLesson = 818;
 //            toolbar_menus.videoLesson = 819;
 //            toolbar_menus.videoLessons = null;
-            toolbar_menus.videoLessons = DetailedReportHomeFrag_VIDEO_LESSONS;
-            toolbar_menus.setFab(DetailedReportActivity.this, DetailedReportActivity.fab, () -> {
+                toolbar_menus.videoLessons = DetailedReportHomeFrag_VIDEO_LESSONS;
+                toolbar_menus.setFab(DetailedReportActivity.this, DetailedReportActivity.fab, () -> {
+                    checkVideo(new Integer[videoLesson]);
+                }); // ГЛАВНАЯ
                 checkVideo(new Integer[videoLesson]);
-            }); // ГЛАВНАЯ
-            checkVideo(new Integer[videoLesson]);
 
-            Log.e("ЧТО_ПРОИСХОДИТ", "DetailedReportActivity");
+                Log.e("ЧТО_ПРОИСХОДИТ", "DetailedReportActivity");
 
-            initDrawerStuff(findViewById(R.id.drawer_layout), findViewById(R.id.my_toolbar), findViewById(R.id.nav_view));
-            NavigationView navigationView;
-            navigationView = findViewById(R.id.nav_view);
-            navigationView.setCheckedItem(R.id.nav_dr);
+                initDrawerStuff(findViewById(R.id.drawer_layout), findViewById(R.id.my_toolbar), findViewById(R.id.nav_view));
+                NavigationView navigationView;
+                navigationView = findViewById(R.id.nav_view);
+                navigationView.setCheckedItem(R.id.nav_dr);
+            } catch (Exception e) {
+                globals.writeToMLOG(Clock.getHumanTime() + "DetailedReportActivity.onCreate.fab.e: " + e + "\n");
+                e.printStackTrace();
+            }
+
+            // функционал для работы модуля
+            RENAME(wpDataDB);   // подсчёт данных для Выкупа и заказа товаров
+            rpThemeId = wpDataDB.getTheme_id();
+
+            // Если у Магазина пустые координаты - запускаем
+            if (wpDataDB.getAddr_location_xd() == null || wpDataDB.getAddr_location_xd().isEmpty() || wpDataDB.getAddr_location_xd().equals("0")) {
+                setDialogAddCoordinate();
+            } else {
+                Log.e("test", "test");
+            }
+
+            checkVideo(new Integer[]{819});
         } catch (Exception e) {
-            globals.writeToMLOG(Clock.getHumanTime() + "DetailedReportActivity.onCreate.fab.e: " + e + "\n");
-            e.printStackTrace();
+            Globals.writeToMLOG("INFO", "DetailedReportActivity/ON CREATE", "Exception e: " + e);
         }
-
-        // функционал для работы модуля
-        RENAME(wpDataDB);   // подсчёт данных для Выкупа и заказа товаров
-        rpThemeId = wpDataDB.getTheme_id();
-
-        // Если у Магазина пустые координаты - запускаем
-        if (wpDataDB.getAddr_location_xd() == null || wpDataDB.getAddr_location_xd().isEmpty() || wpDataDB.getAddr_location_xd().equals("0")) {
-            setDialogAddCoordinate();
-        } else {
-            Log.e("test", "test");
-        }
-
-        checkVideo(new Integer[]{819});
-
     }//--------------------------------------------------------------------- /ON CREATE ---------------------------------------------------------------------
 
     public static List<ViewListSDB> checkVideos(Integer[] ids, Clicks.clickVoid click) {
@@ -422,12 +430,44 @@ public class DetailedReportActivity extends toolbar_menus {
 
 
     /*Получаю строчку с Пална работ и храню её для Отчёта*/
-    private void setActivityData() {
+/*    private void setActivityData() {
         Intent i = getIntent();
         rowWP = (WpDataDB) i.getSerializableExtra("rowWP");
         Data wp = (Data) i.getSerializableExtra("dataFromWP");
 
         list.addAll(Collections.singleton(wp));
+
+        wpDataDB = RealmManager.getWorkPlanRowById(list.get(0).getId());
+    }*/
+
+    private void setActivityData() {
+        Intent i = getIntent();
+
+        rowWP = RealmManager.INSTANCE.copyFromRealm(WpDataRealm.getWpDataRowById(i.getLongExtra("WpDataDB_ID", 0)));
+
+//        rowWP = i.getParcelableExtra("rowWP");
+//        wp = i.getParcelableExtra("dataFromWP");
+//        WPDataObj test = i.getParcelableExtra("dataFromWPObj");
+
+        long otchetId;
+        int action = rowWP.getAction();
+        if (action == 1 || action == 94) {
+            otchetId = rowWP.getDoc_num_otchet_id();
+        } else {
+            otchetId = rowWP.getDoc_num_1c_id();
+        }
+
+        Data D = new Data(
+                rowWP.getId(),
+                rowWP.getAddr_txt(),
+                rowWP.getClient_txt(),
+                rowWP.getUser_txt(),
+                rowWP.getDt(),  //+TODO CHANGE DATE
+                otchetId,
+                "",
+                R.mipmap.merchik);
+
+        list.add(D);
 
         wpDataDB = RealmManager.getWorkPlanRowById(list.get(0).getId());
     }
@@ -572,84 +612,90 @@ public class DetailedReportActivity extends toolbar_menus {
     }
 
     private void setTab() {
-        List<TovarDB> dataTovar = RealmManager.getTovarListFromReportPrepareByDad2(wpDataDB.getCode_dad2());
-        if (dataTovar != null) {
-            List<TovarDB> dataTovarDownloadList = RealmManager.getTovarListPhotoToDownload(dataTovar, "small");
-            TablesLoadingUnloading tablesLoadingUnloading = new TablesLoadingUnloading();
-            tablesLoadingUnloading.getTovarImg(dataTovar, "small");
-        }
+        try {
+            Globals.writeToMLOG("INFO", "DetailedReportActivity/setTab", "setTab");
+            List<TovarDB> dataTovar = RealmManager.getTovarListFromReportPrepareByDad2(wpDataDB.getCode_dad2());
+            if (dataTovar != null) {
+                List<TovarDB> dataTovarDownloadList = RealmManager.getTovarListPhotoToDownload(dataTovar, "small");
+                TablesLoadingUnloading tablesLoadingUnloading = new TablesLoadingUnloading();
+                tablesLoadingUnloading.getTovarImg(dataTovar, "small");
+            }
 
-        adapter = new DetailedReportTab(this, getSupportFragmentManager(), tabLayout.getTabCount(), list, rowWP);
-        viewPager.setAdapter(adapter);
+            Globals.writeToMLOG("INFO", "DetailedReportTab/0", "setTab create");
+            adapter = new DetailedReportTab(this, getSupportFragmentManager(), tabLayout.getTabCount(), list, rowWP);
+            viewPager.setAdapter(adapter);
 
-        viewPager.addOnPageChangeListener(new TabLayout.TabLayoutOnPageChangeListener(tabLayout));
+            viewPager.addOnPageChangeListener(new TabLayout.TabLayoutOnPageChangeListener(tabLayout));
 
-        tabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
-            @Override
-            public void onTabSelected(TabLayout.Tab tab) {
-                Log.e("onTabSelected", "tabLayout.getTabCount(): " + tabLayout.getTabCount());
-                Log.e("onTabSelected", "tab.getPosition(): " + tab.getPosition());
+            tabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
+                @Override
+                public void onTabSelected(TabLayout.Tab tab) {
+                    Log.e("onTabSelected", "tabLayout.getTabCount(): " + tabLayout.getTabCount());
+                    Log.e("onTabSelected", "tab.getPosition(): " + tab.getPosition());
 
-                if (tab.getPosition() == 0) {
-                    Log.e("onTabSelected", "ГЛАВНАЯ");
+                    if (tab.getPosition() == 0) {
+                        Log.e("onTabSelected", "ГЛАВНАЯ");
 
-                    toolbar_menus.textLesson = 818;
+                        toolbar_menus.textLesson = 818;
 //                    toolbar_menus.videoLesson = 819;
 //                    toolbar_menus.videoLessons = null;
-                    toolbar_menus.videoLessons = DetailedReportHomeFrag_VIDEO_LESSONS;
-                    toolbar_menus.setFab(DetailedReportActivity.this, DetailedReportActivity.fab, () -> {
+                        toolbar_menus.videoLessons = DetailedReportHomeFrag_VIDEO_LESSONS;
+                        toolbar_menus.setFab(DetailedReportActivity.this, DetailedReportActivity.fab, () -> {
+                            checkVideo(new Integer[]{videoLesson});
+                        }); // ГЛАВНАЯ
                         checkVideo(new Integer[]{videoLesson});
-                    }); // ГЛАВНАЯ
-                    checkVideo(new Integer[]{videoLesson});
 
-                } else if (tab.getPosition() == 1) {
-                    Log.e("onTabSelected", "ОПЦИИ");
+                    } else if (tab.getPosition() == 1) {
+                        Log.e("onTabSelected", "ОПЦИИ");
 
-                    toolbar_menus.textLesson = 820;
+                        toolbar_menus.textLesson = 820;
 //                    toolbar_menus.videoLesson = 821;
-                    toolbar_menus.videoLessons = DetailedReportOptionsFrag_VIDEO_LESSONS;
-                    toolbar_menus.setFab(DetailedReportActivity.this, DetailedReportActivity.fab, () -> {
+                        toolbar_menus.videoLessons = DetailedReportOptionsFrag_VIDEO_LESSONS;
+                        toolbar_menus.setFab(DetailedReportActivity.this, DetailedReportActivity.fab, () -> {
+                            checkVideo(new Integer[]{videoLesson});
+                        }); // ОПЦИИ
                         checkVideo(new Integer[]{videoLesson});
-                    }); // ОПЦИИ
-                    checkVideo(new Integer[]{videoLesson});
 
-                } else if (tab.getPosition() == 2) {
-                    Log.e("onTabSelected", "ТОВАРЫ");
+                    } else if (tab.getPosition() == 2) {
+                        Log.e("onTabSelected", "ТОВАРЫ");
 
-                    toolbar_menus.textLesson = 822;
+                        toolbar_menus.textLesson = 822;
 //                    toolbar_menus.videoLesson = 823;
-                    toolbar_menus.videoLessons = DETAILED_REPORT_FRAGMENT_TOVAR_VIDEO_LESSONS;
-                    toolbar_menus.setFab(DetailedReportActivity.this, DetailedReportActivity.fab, () -> {
+                        toolbar_menus.videoLessons = DETAILED_REPORT_FRAGMENT_TOVAR_VIDEO_LESSONS;
+                        toolbar_menus.setFab(DetailedReportActivity.this, DetailedReportActivity.fab, () -> {
+                            checkVideo(new Integer[]{videoLesson});
+                        }); // ТОВАР
                         checkVideo(new Integer[]{videoLesson});
-                    }); // ТОВАР
-                    checkVideo(new Integer[]{videoLesson});
 
-                } else if (tab.getPosition() == 3) {
-                    Log.e("onTabSelected", "ЗИР");
+                    } else if (tab.getPosition() == 3) {
+                        Log.e("onTabSelected", "ЗИР");
 
-                    toolbar_menus.textLesson = 822;
-                    toolbar_menus.textLesson = 4225;
+                        toolbar_menus.textLesson = 822;
+                        toolbar_menus.textLesson = 4225;
 //                    toolbar_menus.videoLesson = 3527;
-                    toolbar_menus.videoLessons = DETAILED_REPORT_FRAGMENT_TAR_VIDEO_LESSONS;
-                    toolbar_menus.setFab(DetailedReportActivity.this, DetailedReportActivity.fab, () -> {
+                        toolbar_menus.videoLessons = DETAILED_REPORT_FRAGMENT_TAR_VIDEO_LESSONS;
+                        toolbar_menus.setFab(DetailedReportActivity.this, DetailedReportActivity.fab, () -> {
+                            checkVideo(videoLessons);
+                        }); // ЗИР
                         checkVideo(videoLessons);
-                    }); // ЗИР
-                    checkVideo(videoLessons);
+                    }
+
+                    viewPager.setCurrentItem(tab.getPosition());
                 }
 
-                viewPager.setCurrentItem(tab.getPosition());
-            }
+                @Override
+                public void onTabUnselected(TabLayout.Tab tab) {
 
-            @Override
-            public void onTabUnselected(TabLayout.Tab tab) {
+                }
 
-            }
+                @Override
+                public void onTabReselected(TabLayout.Tab tab) {
 
-            @Override
-            public void onTabReselected(TabLayout.Tab tab) {
-
-            }
-        });
+                }
+            });
+        } catch (Exception e) {
+            Globals.writeToMLOG("ERROR", "DetailedReportActivity/setTab", "Exception e: " + e);
+        }
     }
 
 
@@ -728,25 +774,26 @@ public class DetailedReportActivity extends toolbar_menus {
 //                }
 
 
-                    if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED
-                            || ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-                        ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1);
+//                    if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED
+//                            || ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+//                        Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST", "requestPermissions");
+//                        ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1);
+//                    } else {
+                    // У вас уже есть разрешения на доступ к файлам
+                    // Можете выполнять необходимые операции с файлами
+                    Uri uri = data.getData();
+                    File file = null;
+                    if (Build.VERSION.SDK_INT == Build.VERSION_CODES.Q) {
+                        file = new CreatePhotoFile().createDefaultPhotoFile(this, uri);
                     } else {
-                        // У вас уже есть разрешения на доступ к файлам
-                        // Можете выполнять необходимые операции с файлами
-                        Uri uri = data.getData();
-                        File file = null;
-                        if (Build.VERSION.SDK_INT == Build.VERSION_CODES.Q) {
-                            file = new CreatePhotoFile().createDefaultPhotoFile(this, uri);
-                        } else {
-                            Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST", "Uri uri: " + uri);
-                            String filePath = getRealPathFromURI(uri);
-                            Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST", "filePath: " + filePath);
-                            file = new File(filePath);
-                            Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST", "file: " + file.length());
-                        }
-                        savePhoto(file, MakePhotoFromGaleryWpDataDB, MakePhotoFromGalery.tovarId, getApplicationContext());
+                        Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST", "Uri uri: " + uri);
+                        String filePath = getRealPathFromURI(uri);
+                        Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST", "filePath: " + filePath);
+                        file = new File(filePath);
+                        Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST", "file: " + file.length());
                     }
+                    savePhoto(file, MakePhotoFromGaleryWpDataDB, MakePhotoFromGalery.tovarId, getApplicationContext());
+//                    }
 
 
 //                if (checkManageExternalStoragePermission()) {
@@ -1076,6 +1123,11 @@ public class DetailedReportActivity extends toolbar_menus {
             stackPhotoDB.setCustomerTxt(wpDataDB.getClient_txt());
 
             stackPhotoDB.code_dad2 = wpDataDB.getCode_dad2();
+
+            // 10.09.23. Походу Сервер без этого не воспринимает фотографии (сейчас касается это // Тип фото Остатков из ГАЛЕРЕИ)
+            LogMPDB log = Globals.fixMP(wpDataDB);
+            String GP = log != null ? log.gp : "";
+            stackPhotoDB.gp = GP;
 
             stackPhotoDB.setUser_id(Globals.userId);
             stackPhotoDB.setUserTxt(SQL_DB.usersDao().getUserName(Globals.userId));

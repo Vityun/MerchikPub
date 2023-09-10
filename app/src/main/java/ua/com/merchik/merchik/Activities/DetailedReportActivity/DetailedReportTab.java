@@ -22,16 +22,21 @@ public class DetailedReportTab extends FragmentPagerAdapter {
 
     public DetailedReportTab(AppCompatActivity context, FragmentManager fm, int totalTabs, ArrayList<Data> dataArrayList, WpDataDB wpDataDBList) {
         super(fm, BEHAVIOR_RESUME_ONLY_CURRENT_FRAGMENT);
+        Globals.writeToMLOG("INFO", "DetailedReportTab/1", "create");
+        Globals.writeToMLOG("INFO", "DetailedReportTab/1", "context: " + context);
+        Globals.writeToMLOG("INFO", "DetailedReportTab/1", "totalTabs: " + totalTabs);
+        Globals.writeToMLOG("INFO", "DetailedReportTab/1", "fm: " + fm);
         myContext = context;
         this.totalTabs = totalTabs;
         this.list = dataArrayList;
         this.wpDataDB = wpDataDBList;
     }
 
-    public static void refreshAdapter(){
+    public static void refreshAdapter() {
         try {
+            Globals.writeToMLOG("ERROR", "DetailedReportTab/refreshAdapter", "HERE");
             detailedReportOptionsFrag.recycleViewDRAdapter.notifyDataSetChanged();
-        }catch (Exception e){
+        } catch (Exception e) {
             Globals.writeToMLOG("ERROR", "DetailedReportTab/refreshAdapter", "Exception e: " + e);
         }
     }
@@ -40,25 +45,31 @@ public class DetailedReportTab extends FragmentPagerAdapter {
     @Override
     public Fragment getItem(int position) {
         try {
+            Globals.writeToMLOG("INFO", "DetailedReportTab/getItem", "position: " + position);
             switch (position) {
                 case 0:
-                    return new DetailedReportHomeFrag(myContext, list, wpDataDB);
+//                    return new DetailedReportHomeFrag(myContext, list, wpDataDB);
+                    return DetailedReportHomeFrag.newInstance(myContext, list, wpDataDB);
                 case 1:
-                    detailedReportOptionsFrag = new DetailedReportOptionsFrag(myContext, list, wpDataDB);
+//                    detailedReportOptionsFrag = new DetailedReportOptionsFrag(myContext, list, wpDataDB);
+                    detailedReportOptionsFrag = DetailedReportOptionsFrag.newInstance(myContext, list, wpDataDB);
                     return detailedReportOptionsFrag;
                 case 2:
-                    return new DetailedReportTovarsFrag(myContext, list, wpDataDB);
+//                    return new DetailedReportTovarsFrag(myContext, list, wpDataDB);
+                    return DetailedReportTovarsFrag.newInstance(myContext, list, wpDataDB);
                 case 3:
-                    return new DetailedReportTARFrag(myContext, wpDataDB);
+//                    return new DetailedReportTARFrag(myContext, wpDataDB);
+                    return DetailedReportTARFrag.newInstance(myContext, list, wpDataDB);
                 default:
                     Globals.writeToMLOG("ERROR", "DetailedReportTab/getItem", "default/ Fragment == NULL");
                     return null;
             }
-        }catch (Exception e){
+        } catch (Exception e) {
             Globals.writeToMLOG("ERROR", "DetailedReportTab/getItem", "catch/ Fragment == NULL Exception e: " + e);
             return null;
         }
     }
+
     // this counts total number of tabs
     @Override
     public int getCount() {

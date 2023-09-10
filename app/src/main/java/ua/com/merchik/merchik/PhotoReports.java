@@ -364,6 +364,11 @@ public class PhotoReports {
                         // Запрос разрешения MANAGE_EXTERNAL_STORAGE
 //                        requestManageExternalStoragePermission();
                         Globals.writeToMLOG("INFO", "PhotoReports.buildCall", "Запрос разрешения MANAGE_EXTERNAL_STORAGE: Нет доступа");
+
+                        Log.e("M_UPLOAD_GALLERY", "2");
+                        file = new File(Globals.getRealPathFromURITEST(uri, mContext));
+                        Log.e("M_UPLOAD_GALLERY", "uri_file.length()2.1: " + file.length());
+                        Globals.writeToMLOG("INFO", "PhotoReports.buildCall", "uri_file.length()2.1.11111: " + file.length());
                     }
                 } else {
                     // Версия Android ниже 11

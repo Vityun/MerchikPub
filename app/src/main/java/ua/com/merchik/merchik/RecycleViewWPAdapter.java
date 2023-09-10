@@ -20,7 +20,6 @@ import androidx.annotation.NonNull;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.recyclerview.widget.RecyclerView;
 
-import java.io.Serializable;
 import java.util.Collections;
 import java.util.List;
 
@@ -266,9 +265,17 @@ public class RecycleViewWPAdapter extends RecyclerView.Adapter<RecycleViewWPAdap
                 WPDataObj wpDataObj = workPlan.getKPS(wp.getId());
 
                 Intent intent = new Intent(mContext, DetailedReportActivity.class);
-                intent.putExtra("dataFromWP", D);
-                intent.putExtra("rowWP", (Serializable) wp);
-                intent.putExtra("dataFromWPObj", wpDataObj);
+
+                intent.putExtra("WpDataDB_ID", wp.getId());
+
+//                intent.putExtra("dataFromWP", D);
+//                intent.putExtra("rowWP", wp);
+//                intent.putExtra("dataFromWPObj", wpDataObj);
+//
+//                WpDataDB rowWP = intent.getParcelableExtra("rowWP");
+//                Data dataFromWP = intent.getParcelableExtra("dataFromWP");
+
+
                 mContext.startActivity(intent);
             } catch (Exception e) {
 //                globals.alertDialogMsg(mContext, "Возникла ошибка. Сообщите о ней своему администратору. Ошибка2: " + e);

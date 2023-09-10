@@ -129,139 +129,139 @@ public class PhotoLogAdapter extends RecyclerView.Adapter<PhotoLogAdapter.ViewHo
 
         @SuppressLint("SimpleDateFormat")
         public void bind(StackPhotoDB photoLogDat) {
-//            try {
-            POS = getAdapterPosition();
-
-            if (photoLogDat.getError() != null) {
-                layout.setBackgroundColor(mContext.getResources().getColor(R.color.errorLightColor));
-                ((GradientDrawable) imageView.getBackground()).setStroke(5, Color.RED);
-            } else {
-                // ВЕРНУТЬ К ИЗНАЧАЛЬНОМУ СОСТОЯНИЮ
-                ((GradientDrawable) imageView.getBackground()).setStroke(5, Color.LTGRAY);
-            }
-
-            if (photoLogDat.getUpload_to_server() > 0) {
-                layout.setBackgroundColor(Color.WHITE);
-            }
-
-            if (photoLogDat.getUpload_to_server() > 0) {
-                ((GradientDrawable) imageView.getBackground()).setStroke(5, Color.parseColor("#FFBB1F"));
-                if (photoLogDat.getGet_on_server() > 0) {
-                    ((GradientDrawable) imageView.getBackground()).setStroke(5, Color.GREEN);
-                }
-            } else {
-                ((GradientDrawable) imageView.getBackground()).setStroke(5, Color.LTGRAY);
-            }
-
-            Log.e("PhotoLogAdapter", "Id: " + photoLogDat.getId() + "  CodeDad2: " + photoLogDat.getCode_dad2());
-
-            String sd = String.valueOf(photoLogDat.getTime_event());
-            String sa = String.valueOf(photoLogDat.getAddr_id());
-            String sc = String.valueOf(photoLogDat.getClient_id());
-
-            String s9 = String.valueOf(photoLogDat.getId());
-            String s10 = String.format("(%s) %s", s9, photoLogDat.getPhoto_num());
-
-            String userId = String.valueOf(photoLogDat.getUser_id());
-
-
-            // Нормальное заполнение КЛИЕНТОВ
-            StringBuilder customer = new StringBuilder();
             try {
-                customer.append("(").append(sc).append(") ");
-                if (photoLogDat.getCustomerTxt() != null) {
-                    customer.append(photoLogDat.getCustomerTxt());
+                POS = getAdapterPosition();
+
+                if (photoLogDat.getError() != null) {
+                    layout.setBackgroundColor(mContext.getResources().getColor(R.color.errorLightColor));
+                    ((GradientDrawable) imageView.getBackground()).setStroke(5, Color.RED);
                 } else {
-                    customer.append(CustomerRealm.getCustomerById(sc).getNm());
+                    // ВЕРНУТЬ К ИЗНАЧАЛЬНОМУ СОСТОЯНИЮ
+                    ((GradientDrawable) imageView.getBackground()).setStroke(5, Color.LTGRAY);
                 }
-            } catch (Exception e) {
-                Globals.writeToMLOG("ERROR", "PhotoLogAdapter.bind.Нормальное заполнение КЛИЕНТОВ", "Exception e: " + e);
-                customer.append("Не удалось определить");
-            }
 
+                if (photoLogDat.getUpload_to_server() > 0) {
+                    layout.setBackgroundColor(Color.WHITE);
+                }
 
-            // Нормальное заполенние АДРЕСОВ
-            StringBuilder address = new StringBuilder();
-            try {
-                address.append("(").append(sa).append(") ");
-                if (photoLogDat.getAddressTxt() != null) {
-                    address.append(photoLogDat.getAddressTxt());
+                if (photoLogDat.getUpload_to_server() > 0) {
+                    ((GradientDrawable) imageView.getBackground()).setStroke(5, Color.parseColor("#FFBB1F"));
+                    if (photoLogDat.getGet_on_server() > 0) {
+                        ((GradientDrawable) imageView.getBackground()).setStroke(5, Color.GREEN);
+                    }
                 } else {
-                    address.append(AddressRealm.getAddressById(photoLogDat.getAddr_id()).getNm());
+                    ((GradientDrawable) imageView.getBackground()).setStroke(5, Color.LTGRAY);
                 }
-            } catch (Exception e) {
-                Globals.writeToMLOG("ERROR", "PhotoLogAdapter.bind.Нормальное заполенние АДРЕСОВ", "Exception e: " + e);
-                address.append("Не удалось определить");
-            }
+
+                Log.e("PhotoLogAdapter", "Id: " + photoLogDat.getId() + "  CodeDad2: " + photoLogDat.getCode_dad2());
+
+                String sd = String.valueOf(photoLogDat.getTime_event());
+                String sa = String.valueOf(photoLogDat.getAddr_id());
+                String sc = String.valueOf(photoLogDat.getClient_id());
+
+                String s9 = String.valueOf(photoLogDat.getId());
+                String s10 = String.format("(%s) %s", s9, photoLogDat.getPhoto_num());
+
+                String userId = String.valueOf(photoLogDat.getUser_id());
 
 
-            // Нормальное заполенние ПОЛЬЗОВАТЕЛЕЙ
-            StringBuilder merch = new StringBuilder();
-            try {
-                merch.append("(").append(userId).append(") ");
-                if (photoLogDat.getUserTxt() != null) {
-                    merch.append(photoLogDat.getUserTxt());
-                } else {
-                    merch.append(UsersRealm.getUsersDBById(Integer.parseInt(userId)).getNm());
-                }
-            } catch (Exception e) {
-                Globals.writeToMLOG("ERROR", "PhotoLogAdapter.bind.Нормальное заполенние ПОЛЬЗОВАТЕЛЕЙ", "Exception e: " + e);
-                merch.append("Не удалось определить");
-            }
-
-
-            // Нормальное заполенние ТИПОВ ФОТО
-            StringBuilder phototype = new StringBuilder();
-            try {
-                phototype.append("(").append(photoLogDat.getPhoto_type()).append(") ");
-                if (photoLogDat.getPhoto_typeTxt() != null) {
-                    phototype.append(photoLogDat.getPhoto_typeTxt());
-                } else {
-                    phototype.append(ImagesTypeListRealm.getByID(photoLogDat.getPhoto_type()).getNm());
-                }
-            } catch (Exception e) {
-                Globals.writeToMLOG("ERROR", "PhotoLogAdapter.bind.Нормальное заполенние ПОЛЬЗОВАТЕЛЕЙ", "Exception e: " + e);
-                phototype.append("Не удалось определить");
-            }
-
-
-            if (sd.equals("null")) {
-                if (photoLogDat.getDt() != null) {
-                    sd = Clock.getHumanTime3(photoLogDat.getDt());
-                } else {
-                    sd = "Не могу определить";
-                }
-            }
-            if (sd == null) {
-                sd = "Не могу определить";
-            }
-            date.setText(sd);
-            addr.setText(address);
-            cust.setText(customer);
-            user.setText(merch);
-//                typePhoto.setText("(" + photoLogDat.getPhoto_type() + ") " + photoLogDat.getPhoto_typeTxt());
-            typePhoto.setText(phototype);
-
-
-            try {
-                File file = new File(photoLogDat.getPhoto_num());
-                Uri uriFileProvider = FileProvider.getUriForFile(mContext, mContext.getPackageName() + ".provider", file);
-                imageView.setImageURI(uriFileProvider);
-            }catch (Exception e){
-                Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST/PHOTO_LOG", "Exception e: " + e);
+                // Нормальное заполнение КЛИЕНТОВ
+                StringBuilder customer = new StringBuilder();
                 try {
-                    imageView.setImageURI(Uri.parse(photoLogDat.getPhoto_num()));
-                }catch (Exception e1){
-                    Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST/PHOTO_LOG", "Exception e1: " + e1);
-                    try {
-                        File file = new File(photoLogDat.getPhoto_num());
-                        Bitmap b = decodeSampledBitmapFromResource(file, 200, 200);
-                        imageView.setImageBitmap(b);
-                    }catch (Exception e2){
-                        Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST/PHOTO_LOG", "Exception e2: " + e2);
+                    customer.append("(").append(sc).append(") ");
+                    if (photoLogDat.getCustomerTxt() != null) {
+                        customer.append(photoLogDat.getCustomerTxt());
+                    } else {
+                        customer.append(CustomerRealm.getCustomerById(sc).getNm());
+                    }
+                } catch (Exception e) {
+                    Globals.writeToMLOG("ERROR", "PhotoLogAdapter.bind.Нормальное заполнение КЛИЕНТОВ", "Exception e: " + e);
+                    customer.append("Не удалось определить");
+                }
+
+
+                // Нормальное заполенние АДРЕСОВ
+                StringBuilder address = new StringBuilder();
+                try {
+                    address.append("(").append(sa).append(") ");
+                    if (photoLogDat.getAddressTxt() != null) {
+                        address.append(photoLogDat.getAddressTxt());
+                    } else {
+                        address.append(AddressRealm.getAddressById(photoLogDat.getAddr_id()).getNm());
+                    }
+                } catch (Exception e) {
+                    Globals.writeToMLOG("ERROR", "PhotoLogAdapter.bind.Нормальное заполенние АДРЕСОВ", "Exception e: " + e);
+                    address.append("Не удалось определить");
+                }
+
+
+                // Нормальное заполенние ПОЛЬЗОВАТЕЛЕЙ
+                StringBuilder merch = new StringBuilder();
+                try {
+                    merch.append("(").append(userId).append(") ");
+                    if (photoLogDat.getUserTxt() != null) {
+                        merch.append(photoLogDat.getUserTxt());
+                    } else {
+                        merch.append(UsersRealm.getUsersDBById(Integer.parseInt(userId)).getNm());
+                    }
+                } catch (Exception e) {
+                    Globals.writeToMLOG("ERROR", "PhotoLogAdapter.bind.Нормальное заполенние ПОЛЬЗОВАТЕЛЕЙ", "Exception e: " + e);
+                    merch.append("Не удалось определить");
+                }
+
+
+                // Нормальное заполенние ТИПОВ ФОТО
+                StringBuilder phototype = new StringBuilder();
+                try {
+                    phototype.append("(").append(photoLogDat.getPhoto_type()).append(") ");
+                    if (photoLogDat.getPhoto_typeTxt() != null) {
+                        phototype.append(photoLogDat.getPhoto_typeTxt());
+                    } else {
+                        phototype.append(ImagesTypeListRealm.getByID(photoLogDat.getPhoto_type()).getNm());
+                    }
+                } catch (Exception e) {
+                    Globals.writeToMLOG("ERROR", "PhotoLogAdapter.bind.Нормальное заполенние ПОЛЬЗОВАТЕЛЕЙ", "Exception e: " + e);
+                    phototype.append("Не удалось определить");
+                }
+
+
+                if (sd.equals("null")) {
+                    if (photoLogDat.getDt() != null) {
+                        sd = Clock.getHumanTime3(photoLogDat.getDt());
+                    } else {
+                        sd = "Не могу определить";
                     }
                 }
-            }
+                if (sd == null) {
+                    sd = "Не могу определить";
+                }
+                date.setText(sd);
+                addr.setText(address);
+                cust.setText(customer);
+                user.setText(merch);
+//                typePhoto.setText("(" + photoLogDat.getPhoto_type() + ") " + photoLogDat.getPhoto_typeTxt());
+                typePhoto.setText(phototype);
+
+
+                try {
+                    File file = new File(photoLogDat.getPhoto_num());
+                    Uri uriFileProvider = FileProvider.getUriForFile(mContext, mContext.getPackageName() + ".provider", file);
+                    imageView.setImageURI(uriFileProvider);
+                } catch (Exception e) {
+                    Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST/PHOTO_LOG", "Exception e: " + e);
+                    try {
+                        imageView.setImageURI(Uri.parse(photoLogDat.getPhoto_num()));
+                    } catch (Exception e1) {
+                        Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST/PHOTO_LOG", "Exception e1: " + e1);
+                        try {
+                            File file = new File(photoLogDat.getPhoto_num());
+                            Bitmap b = decodeSampledBitmapFromResource(file, 200, 200);
+                            imageView.setImageBitmap(b);
+                        } catch (Exception e2) {
+                            Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST/PHOTO_LOG", "Exception e2: " + e2);
+                        }
+                    }
+                }
 
 
 
@@ -292,70 +292,70 @@ public class PhotoLogAdapter extends RecyclerView.Adapter<PhotoLogAdapter.ViewHo
             }*/
 
 
-            if (photoLogMode.equals(PhotoLogMode.SAMPLE_PHOTO)) {
-                openDialog(photoLogMode, photoLogDat, mOnPhotoClickListener);
-            }
-
-
-            // 13/08/2020 Выгрузка фоток из Журнала фото
-            imageView.setOnClickListener(v -> {
-                openDialog(photoLogMode, photoLogDat, mOnPhotoClickListener);
-            });
-
-            //04.01.2021 Долгое нажатие - выгрузка фото
-            imageView.setOnLongClickListener(v -> {
-                new PhotoLog().sendPhotoOnServer(mContext, photoLogDat);
-                Toast.makeText(mContext, "Начинаю выгрузку фото.", Toast.LENGTH_SHORT).show();
-                return true;
-            });
-
-            // Работа Журнала фото в зависимости от переданного "photoLogMode"
-            if (photoLogMode != null) {
-                switch (photoLogMode) {
-                    case PLANOGRAM:
-                        if (photoLogDat.getApprove() != null && photoLogDat.getApprove() == 1) {
-                            check.setVisibility(View.VISIBLE);
-
-                            check.setImageDrawable(mContext.getResources().getDrawable(R.drawable.ic_check));
-                            check.setColorFilter(mContext.getResources().getColor(R.color.greenCol));
-                        } else if (photoLogDat.getApprove() != null && photoLogDat.getApprove() == 0) {
-                            check.setVisibility(View.VISIBLE);
-
-                            check.setImageDrawable(mContext.getResources().getDrawable(R.drawable.ic_question_circle_regular)); //"?"
-                            check.setColorFilter(mContext.getResources().getColor(R.color.red_error));
-                        } else {
-                            check.setVisibility(View.INVISIBLE);
-                        }
-                        break;
-
-
-                    default:
-                        check.setVisibility(View.GONE);
-                        break;
+                if (photoLogMode.equals(PhotoLogMode.SAMPLE_PHOTO)) {
+                    openDialog(photoLogMode, photoLogDat, mOnPhotoClickListener);
                 }
-            }
 
 
-            try {
-                if (mod) {
-                    layout.setOnClickListener(l -> {
-                        if (click != null) {
-                            click.click(photoLogDat);
-                        }
-                    });
-                } else {
-                    layout.setOnClickListener(l -> {
-                        alertOnlyMassage(mContext, photoData(photoLogDat));
-                    });
+                // 13/08/2020 Выгрузка фоток из Журнала фото
+                imageView.setOnClickListener(v -> {
+                    openDialog(photoLogMode, photoLogDat, mOnPhotoClickListener);
+                });
+
+                //04.01.2021 Долгое нажатие - выгрузка фото
+                imageView.setOnLongClickListener(v -> {
+                    new PhotoLog().sendPhotoOnServer(mContext, photoLogDat);
+                    Toast.makeText(mContext, "Начинаю выгрузку фото.", Toast.LENGTH_SHORT).show();
+                    return true;
+                });
+
+                // Работа Журнала фото в зависимости от переданного "photoLogMode"
+                if (photoLogMode != null) {
+                    switch (photoLogMode) {
+                        case PLANOGRAM:
+                            if (photoLogDat.getApprove() != null && photoLogDat.getApprove() == 1) {
+                                check.setVisibility(View.VISIBLE);
+
+                                check.setImageDrawable(mContext.getResources().getDrawable(R.drawable.ic_check));
+                                check.setColorFilter(mContext.getResources().getColor(R.color.greenCol));
+                            } else if (photoLogDat.getApprove() != null && photoLogDat.getApprove() == 0) {
+                                check.setVisibility(View.VISIBLE);
+
+                                check.setImageDrawable(mContext.getResources().getDrawable(R.drawable.ic_question_circle_regular)); //"?"
+                                check.setColorFilter(mContext.getResources().getColor(R.color.red_error));
+                            } else {
+                                check.setVisibility(View.INVISIBLE);
+                            }
+                            break;
+
+
+                        default:
+                            check.setVisibility(View.GONE);
+                            break;
+                    }
                 }
+
+
+                try {
+                    if (mod) {
+                        layout.setOnClickListener(l -> {
+                            if (click != null) {
+                                click.click(photoLogDat);
+                            }
+                        });
+                    } else {
+                        layout.setOnClickListener(l -> {
+                            alertOnlyMassage(mContext, photoData(photoLogDat));
+                        });
+                    }
+                } catch (Exception e) {
+                    Toast.makeText(mContext, "ERROR: " + e, Toast.LENGTH_SHORT).show();
+                }
+
+
             } catch (Exception e) {
-                Toast.makeText(mContext, "ERROR: " + e, Toast.LENGTH_SHORT).show();
+                globals.writeToMLOG(Clock.getHumanTime() + "PhotoLogAdapter.bind.ErrorException e: " + e + "\n");
             }
-
-
-//            } catch (Exception e) {
-//                globals.writeToMLOG(Clock.getHumanTime() + "PhotoLogAdapter.bind.Error: " + Arrays.toString(e.getStackTrace()) + "\n");
-//            }
         }
 
         public void openDialog(PhotoLogMode photoLogMode, StackPhotoDB photoLogDat, PhotoLogPhotoAdapter.OnPhotoClickListener mOnPhotoClickListener) {
@@ -516,7 +516,7 @@ public class PhotoLogAdapter extends RecyclerView.Adapter<PhotoLogAdapter.ViewHo
 
         try {
             Globals.writeToMLOG("INFO", "PhotoLogAdapter.photoData", "StackPhotoDB data: " + new Gson().toJson(data));
-        }catch (Exception e){
+        } catch (Exception e) {
             Globals.writeToMLOG("ERROR", "PhotoLogAdapter.photoData", "Exception e: " + e);
         }
 

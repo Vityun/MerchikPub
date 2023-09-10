@@ -50,7 +50,7 @@ public class WpDataRealm {
      * 03.03.2021
      * Получение строки с Плана работ по её id
      */
-    public static WpDataDB getWpDataRowById(int id) {
+    public static WpDataDB getWpDataRowById(long id) {
         return INSTANCE.where(WpDataDB.class)
                 .equalTo("ID", id)
                 .findFirst();

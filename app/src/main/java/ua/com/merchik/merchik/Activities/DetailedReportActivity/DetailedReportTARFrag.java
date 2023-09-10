@@ -13,6 +13,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -20,6 +22,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -31,6 +34,7 @@ import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.MakePhoto.MakePhoto;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
+import ua.com.merchik.merchik.data.Data;
 import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
 import ua.com.merchik.merchik.data.Database.Room.ViewListSDB;
 import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteHintsDB;
@@ -48,7 +52,7 @@ public class DetailedReportTARFrag extends Fragment {
 
     public static final Integer[] DETAILED_REPORT_FRAGMENT_TAR_VIDEO_LESSONS = new Integer[]{4208, 3527, 3623, 3528};
 
-    private Context mContext;
+    private static Context mContext;
     private WpDataDB wpDataDB;
     private List<TasksAndReclamationsSDB> tasksAndReclamationsSDBList;
 
@@ -58,22 +62,129 @@ public class DetailedReportTARFrag extends Fragment {
     private FloatingActionButton fab;
     private TextView badgeTextView;
 
+    public DetailedReportTARFrag() {
+        Globals.writeToMLOG("INFO", "DetailedReportTARFrag/1", "create");
+    }
 
     public DetailedReportTARFrag(Context mContext, WpDataDB wpDataDB) {
+        Globals.writeToMLOG("INFO", "DetailedReportTARFrag/2", "create");
         this.mContext = mContext;
         this.wpDataDB = wpDataDB;
+    }
+
+    public static DetailedReportTARFrag newInstance(AppCompatActivity context, ArrayList<Data> list, WpDataDB wpDataDB) {
+        DetailedReportTARFrag fragment = new DetailedReportTARFrag();
+        Bundle args = new Bundle();
+        args.putParcelable("wpDataDB", wpDataDB);
+//        args.putSerializable("appCompatActivity", (Serializable) context);// Передача AppCompatActivity в аргументах
+        mContext = context;
+
+        fragment.setArguments(args);
+        return fragment;
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        Globals.writeToMLOG("INFO", "DetailedReportTARFrag/onSaveInstanceState", "outState: " + outState);
+        outState.putParcelable("wpDataDB", wpDataDB);
+//        outState.putSerializable("appCompatActivity", (Serializable) mContext);
+    }
+
+    @Override
+    public void onViewStateRestored(Bundle savedInstanceState) {
+        super.onViewStateRestored(savedInstanceState);
+        Globals.writeToMLOG("INFO", "DetailedReportTARFrag/onViewStateRestored", "savedInstanceState: " + savedInstanceState);
+        if (savedInstanceState != null) {
+            wpDataDB = savedInstanceState.getParcelable("wpDataDB");
+//            mContext = (AppCompatActivity) savedInstanceState.getSerializable("appCompatActivity");
+        }
+    }
+
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        Globals.writeToMLOG("INFO", "DetailedReportTARFrag", "onAttach");
+    }
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        Globals.writeToMLOG("INFO", "DetailedReportTARFrag", "onCreate");
+        Bundle args = getArguments();
+        if (args != null) {
+//            mContext = (AppCompatActivity) args.getSerializable("appCompatActivity");
+//            Globals.writeToMLOG("INFO", "DetailedReportTARFrag", "onCreate/mContext: " + mContext);
+            wpDataDB = args.getParcelable("wpDataDB");
+            Globals.writeToMLOG("INFO", "DetailedReportTARFrag", "onCreate/wpDataDB: " + wpDataDB);
+        }
+    }
+
+    @Override
+    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+        Globals.writeToMLOG("INFO", "DetailedReportTARFrag", "onActivityCreated");
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        Globals.writeToMLOG("INFO", "DetailedReportTARFrag", "onStart");
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        Globals.writeToMLOG("INFO", "DetailedReportTARFrag", "onResume");
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        Globals.writeToMLOG("INFO", "DetailedReportTARFrag", "onPause");
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        Globals.writeToMLOG("INFO", "DetailedReportTARFrag", "onStop");
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        Globals.writeToMLOG("INFO", "DetailedReportTARFrag", "onDestroyView");
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        Globals.writeToMLOG("INFO", "DetailedReportTARFrag", "onDestroy");
+    }
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        Globals.writeToMLOG("INFO", "DetailedReportTARFrag", "onDetach");
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 
+        Globals.writeToMLOG("INFO", "DetailedReportTARFrag/onCreateView", "inflater: " + inflater);
+        Globals.writeToMLOG("INFO", "DetailedReportTARFrag/onCreateView", "container: " + container);
+        Globals.writeToMLOG("INFO", "DetailedReportTARFrag/onCreateView", "create: " + savedInstanceState);
+
         View v = inflater.inflate(R.layout.fragment_dr_tar, container, false);
 
-        fragmentManager = getParentFragmentManager();
-//        tasksAndReclamationsSDBList = SQL_DB.tarDao().getAllByInfo(1, wpDataDB.getClient_id(), wpDataDB.getAddr_id(), (System.currentTimeMillis() / 1000 - 5184000));
-        tasksAndReclamationsSDBList = SQL_DB.tarDao().getAllByInfo(0, wpDataDB.getAddr_id());
+        Globals.writeToMLOG("INFO", "DetailedReportTARFrag/onCreateView", "v: " + v);
 
         try {
+            fragmentManager = getParentFragmentManager();
+//        tasksAndReclamationsSDBList = SQL_DB.tarDao().getAllByInfo(1, wpDataDB.getClient_id(), wpDataDB.getAddr_id(), (System.currentTimeMillis() / 1000 - 5184000));
+            tasksAndReclamationsSDBList = SQL_DB.tarDao().getAllByInfo(0, wpDataDB.getAddr_id());
+
+
             FloatingActionButton fabAdd = v.findViewById(R.id.fabAdd);
             fab = v.findViewById(R.id.fab);
             badgeTextView = v.findViewById(R.id.badge_text_view_tar);
@@ -119,7 +230,7 @@ public class DetailedReportTARFrag extends Fragment {
                     @Override
                     public <T> void click(T data) {
 
-                        switch ((Integer) data){
+                        switch ((Integer) data) {
                             case 1:
                                 intent.putExtra("choise", true);
                                 intent.putExtra("resultCode", 100);
@@ -140,7 +251,7 @@ public class DetailedReportTARFrag extends Fragment {
                                 try {
                                     MakePhoto makePhoto = new MakePhoto();
                                     makePhoto.openCamera(getActivity(), 202);
-                                }catch (Exception e){
+                                } catch (Exception e) {
                                     Globals.writeToMLOG("ERROR", "Tab3Fragment.setAddButton.case2", "Exception e: " + e);
                                 }
                                 break;
@@ -168,13 +279,14 @@ public class DetailedReportTARFrag extends Fragment {
         return v;
     }
 
-    private void showYouTubeFab(){
-        List<ViewListSDB> videos = checkVideos(DETAILED_REPORT_FRAGMENT_TAR_VIDEO_LESSONS, ()->{});
-        if (videos.size() >= DETAILED_REPORT_FRAGMENT_TAR_VIDEO_LESSONS.length){
+    private void showYouTubeFab() {
+        List<ViewListSDB> videos = checkVideos(DETAILED_REPORT_FRAGMENT_TAR_VIDEO_LESSONS, () -> {
+        });
+        if (videos.size() >= DETAILED_REPORT_FRAGMENT_TAR_VIDEO_LESSONS.length) {
             fab.setVisibility(View.GONE);
             imageView.setVisibility(View.GONE);
             badgeTextView.setVisibility(View.GONE);
-        }else {
+        } else {
             fab.setVisibility(View.VISIBLE);
             imageView.setVisibility(View.VISIBLE);
             int must = DETAILED_REPORT_FRAGMENT_TAR_VIDEO_LESSONS.length;
@@ -189,8 +301,9 @@ public class DetailedReportTARFrag extends Fragment {
      * 21.06.23.
      * Добавление иконочки для прямого просмотра видео-уроков.
      *
-     * @param context*/
-    private void setFabVideo(Context context, Clicks.clickVoid click){
+     * @param context
+     */
+    private void setFabVideo(Context context, Clicks.clickVoid click) {
         fab.setOnClickListener(view -> {
             DialogVideo dialogVideo = new DialogVideo(context);
             dialogVideo.setTitle("Перелік відео уроків");
@@ -200,7 +313,7 @@ public class DetailedReportTARFrag extends Fragment {
         });
     }
 
-    private List<SiteHintsDB> getSiteHints(Integer[] integers){
+    private List<SiteHintsDB> getSiteHints(Integer[] integers) {
         List<SiteObjectsDB> siteObjects = RealmManager.getLesson(integers);
         List<SiteHintsDB> data = null;
         try {
