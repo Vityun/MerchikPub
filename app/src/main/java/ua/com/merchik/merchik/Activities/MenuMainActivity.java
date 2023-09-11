@@ -13,19 +13,12 @@ import com.google.android.material.navigation.NavigationView;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 
-import java.util.HashMap;
-import java.util.List;
-
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
-import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.R;
-import ua.com.merchik.merchik.ServerExchange.ExchangeInterface;
-import ua.com.merchik.merchik.data.RealmModels.LogMPDB;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.ShowcaseResponse;
 import ua.com.merchik.merchik.data.TestJsonUpload.StandartData;
-import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.dialogs.DialogShowcase.DialogShowcase;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
 import ua.com.merchik.merchik.toolbar_menus;
@@ -43,17 +36,7 @@ public class MenuMainActivity extends toolbar_menus {
 
             findViewById(R.id.fab).setOnClickListener(v -> {
                 Toast.makeText(this, "Подсказка к данному разделу не готова", Toast.LENGTH_SHORT).show();
-                test(new ExchangeInterface.ExchangeRes() {
-                    @Override
-                    public void onSuccess(String ok) {
-
-                    }
-
-                    @Override
-                    public void onFailure(String error) {
-
-                    }
-                });
+                test();
             });
 
             findViewById(R.id.fab).setOnLongClickListener(v -> {
@@ -71,8 +54,34 @@ public class MenuMainActivity extends toolbar_menus {
         }
     }
 
-    private void test(ExchangeInterface.ExchangeRes res) {
-        String mod = "location";
+    private void test() {
+        StandartData data = new StandartData();
+        data.mod = "sms_verification";
+        data.act = "list";
+
+        Gson gson = new Gson();
+        String json = gson.toJson(data);
+        JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
+
+        Log.e("MenuMainActivity", "convertedObject: " + convertedObject);
+
+        retrofit2.Call<JsonObject> call = RetrofitBuilder.getRetrofitInterface().TEST_JSON_UPLOAD(RetrofitBuilder.contentType, convertedObject);
+        call.enqueue(new Callback<JsonObject>() {
+            @Override
+            public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
+                Log.e("MenuMainActivity", "response" + response.body());
+                Log.e("MenuMainActivity", "response" + new Gson().toJson(response.body()));
+            }
+
+            @Override
+            public void onFailure(Call<JsonObject> call, Throwable t) {
+                Log.e("MenuMainActivity", "test" + t);
+            }
+        });
+    }
+
+
+    /*        String mod = "location";
         String act = "track";
 
         List<LogMPDB> logMp = RealmManager.getNOTUploadLogMPDBTEST(31, 32);
@@ -134,10 +143,7 @@ public class MenuMainActivity extends toolbar_menus {
                     Log.e("LogMp", "FAILURE_E2: " + t);
                     res.onFailure("onFailure: " + t);
                 }
-            });
-
-    }
-
+            });*/
 
 
     /*        try {

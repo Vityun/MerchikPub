@@ -42,7 +42,7 @@ android:theme="@style/Theme.AppCompat.Light.NoActionBar"
 
 
     <application
-        android:name=".Activities.MyApplication"
+        android:name="ua.com.merchik.merchik.Activities.MyApplication"
         android:allowBackup="false"
         android:fullBackupContent="false"
         android:hardwareAccelerated="true"
@@ -67,7 +67,7 @@ android:theme="@style/Theme.AppCompat.Light.NoActionBar"
             android:value="AIzaSyA4UcwsE62Rvn2SlJAy9ha3Lz0-x4lkdOg"/>
 
         <activity
-            android:name=".menu_login"
+            android:name="ua.com.merchik.merchik.menu_login"
             android:exported="true"
             android:theme="@style/AppTheme.NoActionBar">
 
@@ -89,14 +89,14 @@ android:theme="@style/Theme.AppCompat.Light.NoActionBar"
         <!--</activity>-->
 
         <activity
-            android:name=".Activities.MenuMainActivity"
+            android:name="ua.com.merchik.merchik.Activities.MenuMainActivity"
             android:theme="@style/AppTheme.NoActionBar"
             android:screenOrientation="fullSensor"
             >
         </activity>
 
         <activity
-            android:name=".menu_main"
+            android:name="ua.com.merchik.merchik.menu_main"
             android:theme="@style/AppTheme.NoActionBar"
             >
 
@@ -106,19 +106,19 @@ android:theme="@style/Theme.AppCompat.Light.NoActionBar"
         </activity>
 
         <activity
-            android:name=".menu_wp_data"
+            android:name="ua.com.merchik.merchik.menu_wp_data"
             android:theme="@style/AppTheme.NoActionBar"
             >
         </activity>
 
         <activity
-            android:name=".Activities.WorkPlanActivity.WPDataActivity"
+            android:name="ua.com.merchik.merchik.Activities.WorkPlanActivity.WPDataActivity"
             android:theme="@style/AppTheme.NoActionBar"
             >
         </activity>
 
         <activity
-            android:name=".Activities.DetailedReportActivity.DetailedReportActivity"
+            android:name="ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity"
             android:theme="@style/AppTheme.NoActionBar"
             android:screenOrientation="portrait"
             android:configChanges="keyboardHidden|orientation|screenSize|screenLayout"
@@ -126,39 +126,39 @@ android:theme="@style/Theme.AppCompat.Light.NoActionBar"
         </activity>
 
         <activity
-            android:name=".PhotoReportActivity"
+            android:name="ua.com.merchik.merchik.PhotoReportActivity"
             android:theme="@style/AppTheme.NoActionBar"
             >
         </activity>
 
         <activity
-            android:name=".Activities.PhotoLogActivity.PhotoLogActivity"
+            android:name="ua.com.merchik.merchik.Activities.PhotoLogActivity.PhotoLogActivity"
             android:theme="@style/AppTheme.NoActionBar"
             >
         </activity>
 
         <activity
-            android:name=".Activities.TaskAndReclamations.ReclamationsActivity.ReclamationsActivity"
-            android:theme="@style/AppTheme.NoActionBar"
-            android:screenOrientation="portrait"
-            >
-        </activity>
-
-        <activity
-            android:name=".Activities.TaskAndReclamations.TARActivity"
+            android:name="ua.com.merchik.merchik.Activities.TaskAndReclamations.ReclamationsActivity.ReclamationsActivity"
             android:theme="@style/AppTheme.NoActionBar"
             android:screenOrientation="portrait"
             >
         </activity>
 
         <activity
-            android:name=".Activities.ReferencesActivity.ReferencesActivity"
+            android:name="ua.com.merchik.merchik.Activities.TaskAndReclamations.TARActivity"
+            android:theme="@style/AppTheme.NoActionBar"
+            android:screenOrientation="portrait"
+            >
+        </activity>
+
+        <activity
+            android:name="ua.com.merchik.merchik.Activities.ReferencesActivity.ReferencesActivity"
             android:theme="@style/AppTheme.NoActionBar"
             >
         </activity>
 
         <activity
-            android:name=".Activities.PremiumActivity.PremiumActivity"
+            android:name="ua.com.merchik.merchik.Activities.PremiumActivity.PremiumActivity"
             android:theme="@style/AppTheme.NoActionBar"
             >
         </activity>
@@ -173,7 +173,7 @@ android:theme="@style/Theme.AppCompat.Light.NoActionBar"
                 android:resource="@xml/file_paths"/>
         </provider>
 
-        <service android:name=".WorkPlan"
+        <service android:name="ua.com.merchik.merchik.WorkPlan"
             tools:ignore="Instantiatable" />
 
         <!--Раскоментить когда тестить карту буду-->

@@ -154,16 +154,23 @@ public class OptionControlMP<T> extends OptionControl {
                             okMP = true;
                             click.onSuccess("");
                         } else {
-                            String distanceType = "м ";
+                            String distanceType = " м ";
                             if (distance > 1000) {
                                 distance = distance / 1000;
-                                distanceType = "км ";
+                                distanceType = " км ";
                             }
 
-                            stringBuilder.append("Ви знаходитесь задалеко від торгівельної точки!").append("\n")
-                                    .append("За даними системи(").append(Clock.getHumanTimeSecPattern(logMPDB.CoordTime, "HH:mm")).append(")").append(" ви знаходитесь на відстані ").append((int)distance).append("").append(distanceType).append("від ТТ ").append(addressSDB.nm)
-                                    .append(", що більше допустимих ").append(distanceMin).append(" метрів.").append("\n\n")
-                                    .append("Якщо ви в дійсності знаходитесь на ТТ - зверніться за допомогою до свого керівника або в службу підтримки merchik.");
+                            stringBuilder
+                                    .append("За визначенням системи, ")
+//                                    .append("ви знаходитесь задалеко від торгівельної точки (ТТ)!").append("\n\n")
+                                    .append("станом на ").append(Clock.getHumanTimeSecPattern(logMPDB.CoordTime/1000, "HH:mm")).append("").append(", ви знаходились на відстані ").append((int)distance).append("").append(distanceType).append("від ТТ ").append(addressSDB.nm)
+                                    .append(", що більше допустимих ").append(distanceMin).append(" метрів. ")
+                                    .append("Це може бути помилковим визначенням.")
+                                    .append("\n\n")
+                                    .append("Якщо ви в дійсності знаходитесь на ТТ").append("\n")
+                                    .append("- вийдіть на подвір'я, відкрийте форму відвідування, та натисніть кнопку \"Запит МП\" чи \"Історія МП\".").append("\n")
+                                    .append("- якщо це не допомогло зверніться до свого керівника або в службу підтримки merchik.").append("\n");
+//                                    .append("Ваше поточне розташування не відповідає адресі, для якої призначено фото. Визначте місце розташування повторно.");
                             click.onFailure(stringBuilder.toString());
                         }
                     }
@@ -178,6 +185,7 @@ public class OptionControlMP<T> extends OptionControl {
 
 
             if (!okMP) {
+                dialog.setImgBtnCall(context);
                 dialog.setTitle(title);
                 dialog.setText(stringBuilder);
                 dialog.setDialogIco();

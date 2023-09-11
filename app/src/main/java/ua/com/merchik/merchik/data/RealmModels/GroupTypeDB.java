@@ -1,7 +1,6 @@
 package ua.com.merchik.merchik.data.RealmModels;
 
 import io.realm.RealmObject;
-import io.realm.annotations.PrimaryKey;
 
 public class GroupTypeDB extends RealmObject {
 

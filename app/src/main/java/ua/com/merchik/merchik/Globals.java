@@ -298,7 +298,7 @@ public class Globals {
             return convertHashToString(md5Bytes);
         } catch (Exception e) {
             if (context != null) {
-                alertDialogMsg(context, "photo: " + inputStream + "\nОшибка в подсчёте MD5: " + e);
+                alertDialogMsg(context, "photo: " + inputStream + "\nОшибка в подсчёте MD5 1: " + e);
             }
             return null;
         } finally {
@@ -380,7 +380,7 @@ public class Globals {
             return convertHashToString(md5Bytes);
         } catch (Exception e) {
             Globals.writeToMLOG("INFO",
-                    "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST/getHashMD5FromFile2",
+                    "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST/getHashMD5FromFile2/1",
                     "Exception(1) e: " + e);
 //            if (context != null) {
 //                alertDialogMsg(context, "photo: " + inputStream + "\nОшибка в подсчёте MD5: " + e);
@@ -392,7 +392,7 @@ public class Globals {
                     inputStream.close();
                 } catch (Exception e) {
                     Globals.writeToMLOG("INFO",
-                            "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST/getHashMD5FromFile2",
+                            "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST/getHashMD5FromFile2/1",
                             "Exception(2) e: " + e);
 //                    if (context != null) {
 //                        alertDialogMsg(context, "Не вышло изза фото: " + e);
@@ -447,9 +447,9 @@ public class Globals {
             byte[] md5Bytes = digest.digest();
             return convertHashToString(md5Bytes);
         } catch (Exception e) {
-            Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST/getHashMD5FromFile2", "Exception(1) e: " + e);
+            Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST/getHashMD5FromFile2/2", "Exception(1) e: " + e);
             if (context != null) {
-                alertDialogMsg(context, "photo: " + inputStream + "\nОшибка в подсчёте MD5: " + e);
+//                alertDialogMsg(context, "photo: " + inputStream + "\nОшибка в подсчёте MD5 2: " + e);
             }
             return null;
         } finally {
@@ -457,9 +457,9 @@ public class Globals {
                 try {
                     inputStream.close();
                 } catch (Exception e) {
-                    Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST/getHashMD5FromFile2", "Exception(2) e: " + e);
+                    Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST/getHashMD5FromFile2/2", "Exception(2) e: " + e);
                     if (context != null) {
-                        alertDialogMsg(context, "Не вышло изза фото: " + e);
+//                        alertDialogMsg(context, "Не вышло изза фото: " + e);
                     }
                 }
             }
@@ -536,9 +536,9 @@ public class Globals {
             byte[] md5Bytes = digest.digest();
             return convertHashToString(md5Bytes);
         } catch (Exception e) {
-            Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST/getHashMD5FromFile2", "Exception(1) e: " + e);
+            Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST/getHashMD5FromFile2/3", "Exception(1) e: " + e);
             if (context != null) {
-                alertDialogMsg(context, "photo: " + inputStream + "\nОшибка в подсчёте MD5: " + e);
+//                alertDialogMsg(context, "photo: " + inputStream + "\nОшибка в подсчёте MD5 3: " + e);
             }
             return null;
         } finally {
@@ -546,9 +546,9 @@ public class Globals {
                 try {
                     inputStream.close();
                 } catch (Exception e) {
-                    Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST/getHashMD5FromFile2", "Exception(2) e: " + e);
+                    Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST/getHashMD5FromFile2/3", "Exception(2) e: " + e);
                     if (context != null) {
-                        alertDialogMsg(context, "Не вышло изза фото: " + e);
+//                        alertDialogMsg(context, "Не вышло изза фото: " + e);
                     }
                 }
             }

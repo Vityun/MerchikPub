@@ -18,7 +18,7 @@ public class RoomManager {
                 .fallbackToDestructiveMigration()
                 .enableMultiInstanceInvalidation()
                 .allowMainThreadQueries()
-                .addMigrations(MIGRATION_38_39)
+                .addMigrations(MIGRATION_40_41)
 
                 .build();
     }
@@ -295,6 +295,38 @@ public class RoomManager {
 
             // Drop the temporary table
             database.execSQL("DROP TABLE article_temp");
+        }
+    };
+
+    static final Migration MIGRATION_40_41 = new Migration(40, 41) {
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase database) {
+            // Удаляем существующую таблицу ekl
+            database.execSQL("DROP TABLE IF EXISTS ekl");
+
+            // Создаем новую таблицу ekl с вашей структурой
+            database.execSQL("CREATE TABLE IF NOT EXISTS ekl (" +
+                    "id INTEGER PRIMARY KEY, " +
+                    "dt INTEGER, " +
+                    "dt_verify INTEGER, " +
+                    "user_id INTEGER, " +
+                    "sotr_id INTEGER, " +
+                    "client_id TEXT, " +
+                    "address_id INTEGER, " +
+                    "department INTEGER, " +
+                    "dad2 INTEGER, " +
+                    "code TEXT, " +
+                    "ekl_code TEXT, " +
+                    "ekl_hash_code TEXT, " +
+                    "state INTEGER, " +
+                    "doc_type INTEGER, " +
+                    "doc_num INTEGER, " +
+                    "doc_num_1c TEXT, " +
+                    "vpi INTEGER, " +
+                    "vpiSend INTEGER, " +
+                    "upload INTEGER, " +
+                    "comment TEXT, " +
+                    "code_verify INTEGER)");
         }
     };
 }

@@ -1,7 +1,5 @@
 package ua.com.merchik.merchik.ServerExchange.TablesExchange;
 
-import android.util.Log;
-
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 

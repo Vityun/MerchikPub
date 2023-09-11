@@ -58,6 +58,8 @@ public class EKL_SDB {
     @ColumnInfo(name = "code")
     public String code; // экл
 
+    @SerializedName("ekl_code")
+    @Expose
     @ColumnInfo(name = "ekl_code")
     public String eklCode; // код ЭКЛ-а
 
@@ -95,6 +97,11 @@ public class EKL_SDB {
 
     @ColumnInfo(name = "comment")
     public String comment;  // Комментарий к записи.
+
+    @SerializedName("code_verify")
+    @Expose
+    @ColumnInfo(name = "code_verify")
+    public Integer codeVerify;
 }
 
 /*
