@@ -423,17 +423,21 @@ public class PhotoReports {
                 Globals.writeToMLOG("INFO", "PhotoReports/buildCall/CALL/onResponse/responseBody", "HERE IN call: " + call);
 
                 Globals.writeToMLOG("INFO", "PhotoReports/buildCall/CALL/onResponse/responseBody", "HERE IN response: " + response);
+
+                //{"state":false,"list":[{"state":false,"error":"Файл CAMERA_PHOTO_20230911_113446723_5273240251302389927.jpg вже був завантажений раніше","error_type":"photo_already_exist","nm":"CAMERA_PHOTO_20230911_113446723_5273240251302389927.jpg"}]}
                 try {
                     if (response.isSuccessful()) {
                         if (response.body() != null) {
                             Globals.writeToMLOG("INFO", "PhotoReports/buildCall/CALL/onResponse/responseBody", "" + response.body());
                             ImagesPrepareUploadPhoto info = new Gson().fromJson(new Gson().toJson(response.body()), ImagesPrepareUploadPhoto.class);
+                            Globals.writeToMLOG("INFO", "PhotoReports/buildCall/CALL/onResponse/responseBody/info", "" + new Gson().toJson(info));
                             if (info.state) {
                                 ImagesPrepareUploadPhoto.DataList data = info.list.get(0);
                                 if (data.state) {
                                     callback.onSuccess(photoDB, "test");
                                 } else {
                                     if (data.errorType.equals("photo_already_exist")) {
+                                        Globals.writeToMLOG("INFO", "PhotoReports/buildCall/CALL/onResponse/responseBody/info/photo_already_exist", "photo_already_exist");
                                         callback.onSuccess(photoDB, "Фото уже было загружено");
                                     } else {
                                         callback.onFailure(photoDB, "Ошибка при обработке фото: " + data.error);
@@ -443,10 +447,12 @@ public class PhotoReports {
                                 try {
                                     if (info.list != null && info.list.size() > 0) {
                                         ImagesPrepareUploadPhoto.DataList data = info.list.get(0);
+                                        Globals.writeToMLOG("INFO", "PhotoReports/buildCall/CALL/onResponse/responseBody/info/data", "" + new Gson().toJson(data));
                                         if (data.state) {
-                                            callback.onFailure(photoDB, "При выгрузке фото произошла ошибка1: " + data.error);
+                                            callback.onSuccess(photoDB, "При выгрузке фото произошла ошибка1: " + data.error);
                                         } else {
                                             if (data.errorType.equals("photo_already_exist")) {
+                                                Globals.writeToMLOG("INFO", "PhotoReports/buildCall/CALL/onResponse/responseBody/info/photo_already_exist", "photo_already_exist");
                                                 callback.onSuccess(photoDB, "Фото уже было загружено");
                                             } else {
                                                 callback.onFailure(photoDB, "Ошибка при обработке фото: " + data.error);

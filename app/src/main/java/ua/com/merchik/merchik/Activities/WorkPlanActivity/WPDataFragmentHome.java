@@ -315,7 +315,7 @@ public class WPDataFragmentHome extends Fragment {
             }
         }
 
-        Globals.writeToMLOG("INFO", "RecycleViewWPAdapter/updateData/2", "wp: " + wp);
+//        Globals.writeToMLOG("INFO", "RecycleViewWPAdapter/updateData/2", "wp: " + wp);
         adapter.updateData(RealmManager.INSTANCE.copyFromRealm(wp));
 
         title.setText(createTitleMsg(wp, TitleMode.SHORT));
