@@ -124,6 +124,7 @@ import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
 import ua.com.merchik.merchik.data.OptionMassageType;
 import ua.com.merchik.merchik.data.RealmModels.AdditionalRequirementsDB;
 import ua.com.merchik.merchik.data.RealmModels.AdditionalRequirementsMarkDB;
+import ua.com.merchik.merchik.data.RealmModels.LogMPDB;
 import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
 import ua.com.merchik.merchik.data.RealmModels.ReportPrepareDB;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
@@ -136,6 +137,7 @@ import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsMarkRealm;
 import ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsRealm;
 import ua.com.merchik.merchik.database.realm.tables.CustomerRealm;
+import ua.com.merchik.merchik.database.realm.tables.LogMPRealm;
 import ua.com.merchik.merchik.database.realm.tables.ReportPrepareRealm;
 import ua.com.merchik.merchik.database.realm.tables.WpDataRealm;
 import ua.com.merchik.merchik.dialogs.DialogAdditionalRequirements.DialogARMark.DialogARMark;
@@ -1852,49 +1854,78 @@ public class Options {
      * Проверка местоположения ( 8299 )
      */
     private <T> boolean optionControlMP_8299(Context context, T dataDB, OptionsDB optionsDB, OptionMassageType type, NNKMode mode, OptionControl.UnlockCodeResultListener unlockCodeResultListener) {
-        boolean res;
+        boolean res = false;
 
         int visitStartGeoDistance = 0;
+        WpDataDB wpDataDB = null;
         if (dataDB instanceof WpDataDB) {
+            wpDataDB = (WpDataDB) dataDB;
             visitStartGeoDistance = ((WpDataDB) dataDB).getVisit_start_geo_distance();
         }
 
-        // Проверка Опции и запись в БД результата
-        if (visitStartGeoDistance < 500 && visitStartGeoDistance > 0) {
-            RealmManager.INSTANCE.executeTransaction(realm -> {
-                if (optionsDB != null) {
-                    optionsDB.setIsSignal("2");
-                    realm.insertOrUpdate(optionsDB);
-                }
-            });
-            unlockCodeResultListener.onUnlockCodeSuccess();
-            res = true;
-        } else {
-            RealmManager.INSTANCE.executeTransaction(realm -> {
-                if (optionsDB != null) {
-                    optionsDB.setIsSignal("1");
-                    realm.insertOrUpdate(optionsDB);
-                }
-            });
+        try {
+            List<LogMPDB> logs = LogMPRealm.getLogMPByDad2Distance(wpDataDB.getCode_dad2(), 500);
+            if (logs != null && logs.size() > 0){
+                RealmManager.INSTANCE.executeTransaction(realm -> {
+                    if (optionsDB != null) {
+                        optionsDB.setIsSignal("2");
+                        realm.insertOrUpdate(optionsDB);
+                    }
+                });
+                unlockCodeResultListener.onUnlockCodeSuccess();
+            }else {
+                RealmManager.INSTANCE.executeTransaction(realm -> {
+                    if (optionsDB != null) {
+                        optionsDB.setIsSignal("1");
+                        realm.insertOrUpdate(optionsDB);
+                    }
+                });
+                unlockCodeResultListener.onUnlockCodeFailure();
+            }
+            return true;
+        }catch (Exception e){
+            Globals.writeToMLOG("ERROR", "optionControlMP_8299", "Exception e: " + e);
             unlockCodeResultListener.onUnlockCodeFailure();
-            res = false;
-        }
-
-        // Обработка режима который вернулся
-        switch (mode) {
-            case CHECK:
-                if (!res && optionsDB.getBlockPns().equals("1")) {
-//                    optionNotConduct.add(optionsDB);
-                }
-                break;
-
-            case NULL:
-                // Ничего делать не буду
-                break;
+            return true;
         }
 
 
-        return res;
+        // Проверка Опции и запись в БД результата
+//        if (visitStartGeoDistance < 500 && visitStartGeoDistance > 0) {
+//            RealmManager.INSTANCE.executeTransaction(realm -> {
+//                if (optionsDB != null) {
+//                    optionsDB.setIsSignal("2");
+//                    realm.insertOrUpdate(optionsDB);
+//                }
+//            });
+//            unlockCodeResultListener.onUnlockCodeSuccess();
+//            res = true;
+//        } else {
+//            RealmManager.INSTANCE.executeTransaction(realm -> {
+//                if (optionsDB != null) {
+//                    optionsDB.setIsSignal("1");
+//                    realm.insertOrUpdate(optionsDB);
+//                }
+//            });
+//            unlockCodeResultListener.onUnlockCodeFailure();
+//            res = false;
+//        }
+//
+//        // Обработка режима который вернулся
+//        switch (mode) {
+//            case CHECK:
+//                if (!res && optionsDB.getBlockPns().equals("1")) {
+////                    optionNotConduct.add(optionsDB);
+//                }
+//                break;
+//
+//            case NULL:
+//                // Ничего делать не буду
+//                break;
+//        }
+
+
+//        return res;
     }
 
 
