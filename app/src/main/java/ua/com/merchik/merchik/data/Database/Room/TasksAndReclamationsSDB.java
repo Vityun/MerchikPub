@@ -1,5 +1,8 @@
 package ua.com.merchik.merchik.data.Database.Room;
 
+import android.os.Parcel;
+import android.os.Parcelable;
+
 import androidx.annotation.NonNull;
 import androidx.room.ColumnInfo;
 import androidx.room.Entity;
@@ -9,7 +12,11 @@ import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
 @Entity(tableName = "tasks_and_reclamations")
-public class TasksAndReclamationsSDB {
+public class TasksAndReclamationsSDB implements Parcelable {
+
+    public TasksAndReclamationsSDB() {
+
+    }
 
     /**
      * 17.03.2021
@@ -372,4 +379,168 @@ public class TasksAndReclamationsSDB {
 
     @ColumnInfo(name = "coord_Y")
     public String coordY;
+
+    public TasksAndReclamationsSDB(Parcel in) {
+        id = in.readInt();
+        tp = in.readInt();
+        dt = in.readLong();
+        dtRealPost = in.readLong();
+        dtChange = in.readLong();
+        author = in.readInt();
+        addr = in.readInt();
+        client = in.readString();
+        state = in.readInt();
+        photo = in.readInt();
+        photo2 = in.readInt();
+        photoHash = in.readString();
+        comment = in.readString();
+        vinovnik = in.readInt();
+        vinovnik2 = in.readInt();
+        vinovnikReadDt = in.readLong();
+        zamenaUserId = in.readInt();
+        zamenaDt = in.readLong();
+        zamenaWho = in.readInt();
+        contacterId = in.readInt();
+        superId = in.readInt();
+        territorialId = in.readInt();
+        regionalId = in.readInt();
+        nopId = in.readInt();
+        dvi = in.readInt();
+        zakazchik = in.readInt();
+        id1c = in.readString();
+        docNum1cId = in.readLong();
+        codeDad2 = in.readLong();
+        codeDad2SrcDoc = in.readLong();
+        telNum = in.readString();
+        lastAnswer = in.readString();
+        lastAnswerUserId = in.readInt();
+        lastAnswerDtChange = in.readString();
+        respond = in.readInt();
+        reportId = in.readLong();
+        discount = in.readInt();
+        discountSmeta = in.readString();
+        voteScore = in.readInt();
+        voterId = in.readInt();
+        vinovnikScore = in.readInt();
+        vinovnikScoreUserId = in.readInt();
+        vinovnikScoreComment = in.readString();
+        vinovnikScoreDt = in.readLong();
+        themeGrpId = in.readInt();
+        themeId = in.readInt();
+        sumPremiya = in.readString();
+        sumPenalty = in.readString();
+        duration = in.readInt();
+        refId = in.readInt();
+        summaZp = in.readString();
+        budget = in.readString();
+        complete = in.readString();
+        sotrOpinionId = in.readInt();
+        sotrOpinionAuthorId = in.readInt();
+        sotrOpinionDt = in.readLong();
+        noNeedReply = in.readInt();
+        audioId = in.readInt();
+        potentialClientId = in.readInt();
+        dt_start_plan = in.readLong();
+        dt_end_plan = in.readLong();
+        dt_start_fact = in.readLong();
+        dt_end_fact = in.readLong();
+        uploadStatus = in.readInt();
+        addrNm = in.readString();
+        clientNm = in.readString();
+        sortNm = in.readString();
+        coordX = in.readString();
+        coordY = in.readString();
+    }
+
+    @Override
+    public void writeToParcel(@NonNull Parcel dest, int flags) {
+        dest.writeInt(id);
+        dest.writeInt(tp);
+        dest.writeLong(dt);
+        dest.writeLong(dtRealPost);
+        dest.writeLong(dtChange);
+        dest.writeInt(author);
+        dest.writeInt(addr);
+        dest.writeString(client);
+        dest.writeInt(state);
+        dest.writeInt(photo);
+        dest.writeInt(photo2);
+        dest.writeString(photoHash);
+        dest.writeString(comment);
+        dest.writeInt(vinovnik);
+        dest.writeInt(vinovnik2);
+        dest.writeLong(vinovnikReadDt);
+        dest.writeInt(zamenaUserId);
+        dest.writeLong(zamenaDt);
+        dest.writeInt(zamenaWho);
+        dest.writeInt(contacterId);
+        dest.writeInt(superId);
+        dest.writeInt(territorialId);
+        dest.writeInt(regionalId);
+        dest.writeInt(nopId);
+        dest.writeInt(dvi);
+        dest.writeInt(zakazchik);
+        dest.writeString(id1c);
+        dest.writeLong(docNum1cId);
+        dest.writeLong(codeDad2);
+        dest.writeLong(codeDad2SrcDoc);
+        dest.writeString(telNum);
+        dest.writeString(lastAnswer);
+        dest.writeInt(lastAnswerUserId);
+        dest.writeString(lastAnswerDtChange);
+        dest.writeInt(respond);
+        dest.writeLong(reportId);
+        dest.writeInt(discount);
+        dest.writeString(discountSmeta);
+        dest.writeInt(voteScore);
+        dest.writeInt(voterId);
+        dest.writeInt(vinovnikScore);
+        dest.writeInt(vinovnikScoreUserId);
+        dest.writeString(vinovnikScoreComment);
+        dest.writeLong(vinovnikScoreDt);
+        dest.writeInt(themeGrpId);
+        dest.writeInt(themeId);
+        dest.writeString(sumPremiya);
+        dest.writeString(sumPenalty);
+        dest.writeInt(duration);
+        dest.writeInt(refId);
+        dest.writeString(summaZp);
+        dest.writeString(budget);
+        dest.writeString(complete);
+        dest.writeInt(sotrOpinionId);
+        dest.writeInt(sotrOpinionAuthorId);
+        dest.writeLong(sotrOpinionDt);
+        dest.writeInt(noNeedReply);
+        dest.writeInt(audioId);
+        dest.writeInt(potentialClientId);
+        dest.writeLong(dt_start_plan);
+        dest.writeLong(dt_end_plan);
+        dest.writeLong(dt_start_fact);
+        dest.writeLong(dt_end_fact);
+        dest.writeInt(uploadStatus != null ? uploadStatus : 0);//dest.writeInt(uploadStatus);
+        dest.writeString(addrNm);
+        dest.writeString(clientNm);
+        dest.writeString(sortNm);
+        dest.writeString(coordX);
+        dest.writeString(coordY);
+    }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    public static final Parcelable.Creator<TasksAndReclamationsSDB> CREATOR = new Parcelable.Creator<TasksAndReclamationsSDB>() {
+        @Override
+        public TasksAndReclamationsSDB createFromParcel(Parcel in) {
+            return new TasksAndReclamationsSDB(in);
+        }
+
+        @Override
+        public TasksAndReclamationsSDB[] newArray(int size) {
+            return new TasksAndReclamationsSDB[size];
+        }
+    };
+
+
 }

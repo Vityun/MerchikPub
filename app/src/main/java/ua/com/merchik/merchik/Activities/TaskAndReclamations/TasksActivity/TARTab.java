@@ -36,17 +36,18 @@ public class TARTab extends FragmentPagerAdapter {
             case 3:
                 return tab3Fragment = new Tab3Fragment(data);
             case 2:
-                return new DetailedReportTovarsFrag(myContext, data);
+//                return new DetailedReportTovarsFrag(myContext, data);
+                return DetailedReportTovarsFrag.newInstance(myContext, data);
             default:
                 return null;
         }
     }
 
-    public void setDataToFrag3(Integer id){
+    public void setDataToFrag3(Integer id) {
         tab3Fragment.setPhoto(id);
     }
 
-    public void setDataToFrag3(Integer id, int tarCommentIndex){
+    public void setDataToFrag3(Integer id, int tarCommentIndex) {
         tab3Fragment.setPhotoTARComment(id, tarCommentIndex);
     }
 

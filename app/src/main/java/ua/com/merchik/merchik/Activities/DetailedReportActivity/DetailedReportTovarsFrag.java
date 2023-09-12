@@ -123,6 +123,16 @@ public class DetailedReportTovarsFrag extends Fragment {
         return fragment;
     }
 
+    public static DetailedReportTovarsFrag newInstance(Context context, TasksAndReclamationsSDB tasksAndReclamationsSDB) {
+        Globals.writeToMLOG("INFO", "DetailedReportTovarsFrag/newInstance", "DetailedReportTovarsFrag newInstance");
+        DetailedReportTovarsFrag fragment = new DetailedReportTovarsFrag();
+        Bundle args = new Bundle();
+        args.putParcelable("tasksAndReclamationsSDB", tasksAndReclamationsSDB);
+        mContext = context;
+        fragment.setArguments(args);
+        return fragment;
+    }
+
     public DetailedReportTovarsFrag(Context context, TasksAndReclamationsSDB tasksAndReclamationsSDB) {
         Globals.writeToMLOG("INFO", "DetailedReportTovarsFrag/3", "create");
         this.mContext = context;
@@ -135,13 +145,17 @@ public class DetailedReportTovarsFrag extends Fragment {
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
         Globals.writeToMLOG("INFO", "DetailedReportTovarsFrag/onSaveInstanceState", "outState: " + outState);
-        ArrayList<Parcelable> parcelableList = new ArrayList<>();
-        for (Data data : list) {
-            parcelableList.add(data);
+        try {
+            ArrayList<Parcelable> parcelableList = new ArrayList<>();
+            for (Data data : list) {
+                parcelableList.add(data);
+            }
+            outState.putParcelableArrayList("list", parcelableList);
+            outState.putParcelable("wpDataDB", wpDataDB);
+            outState.putParcelable("tasksAndReclamationsSDB", tasksAndReclamationsSDB);
+        }catch (Exception e){
+            Globals.writeToMLOG("ERROR", "DetailedReportTovarsFrag/onSaveInstanceState", "Exception e: " + e);
         }
-        outState.putParcelableArrayList("list", parcelableList);
-        outState.putParcelable("wpDataDB", wpDataDB);
-//        outState.putSerializable("appCompatActivity", (Serializable) mContext);
     }
 
     @Override
@@ -159,6 +173,7 @@ public class DetailedReportTovarsFrag extends Fragment {
                 }
             }
             wpDataDB = savedInstanceState.getParcelable("wpDataDB");
+            tasksAndReclamationsSDB = savedInstanceState.getParcelable("tasksAndReclamationsSDB");
 //            mContext = (AppCompatActivity) savedInstanceState.getSerializable("appCompatActivity");
         }
     }
