@@ -192,7 +192,8 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
 
     @Override
     public RecycleViewDRAdapterTovar.ViewHolder onCreateViewHolder(ViewGroup parent, int i) {
-        View v = LayoutInflater.from(mContext).inflate(R.layout.dr_tovar_item_tovar, parent, false);
+        View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.dr_tovar_item_tovar, parent, false);
+        mContext = parent.getContext();
         return new RecycleViewDRAdapterTovar.ViewHolder(v);
     }
 

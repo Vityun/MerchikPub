@@ -112,6 +112,7 @@ public class DetailedReportTovarsFrag extends Fragment {
     }
 
     public static DetailedReportTovarsFrag newInstance(AppCompatActivity context, ArrayList<Data> list, WpDataDB wpDataDB) {
+        Globals.writeToMLOG("INFO", "DetailedReportTovarsFrag/newInstance", "DetailedReportTovarsFrag newInstance");
         DetailedReportTovarsFrag fragment = new DetailedReportTovarsFrag();
         Bundle args = new Bundle();
         args.putParcelableArrayList("list", list);
@@ -615,12 +616,13 @@ public class DetailedReportTovarsFrag extends Fragment {
                 }
                 Globals.writeToMLOG("INFO", "DetailedReportTovarsFrag/addRecycleView/AdditionalRequirementsDB", "promotionalTov: " + promotionalTov);
             } catch (Exception e) {
-                Globals.writeToMLOG("INFO", "DetailedReportTovarsFrag/addRecycleView/AdditionalRequirementsDB", "Exception e: " + e);
+                Globals.writeToMLOG("ERROR", "DetailedReportTovarsFrag/addRecycleView/AdditionalRequirementsDB", "Exception e: " + e);
             }
 
 
             // TODO OH SHIT
 //            RecycleViewDRAdapterTovar recycleViewDRAdapter;
+            Globals.writeToMLOG("INFO", "DetailedReportTovarsFrag/addRecycleView/RecycleViewDRAdapterTovar", "mContext: " + mContext);
             if (wpDataDB != null) {
                 adapter = new RecycleViewDRAdapterTovar(mContext, list, wpDataDB, RecycleViewDRAdapterTovar.OpenType.DEFAULT);
             } else {
