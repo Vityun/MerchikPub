@@ -20,6 +20,7 @@ import retrofit2.http.POST;
 import retrofit2.http.Part;
 import retrofit2.http.Query;
 import retrofit2.http.Url;
+import ua.com.merchik.merchik.ServerExchange.TablesExchange.EKLExchange;
 import ua.com.merchik.merchik.data.AppData.AppData;
 import ua.com.merchik.merchik.data.DataFromServer.PhotoData.PhotoData;
 import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteHints;
@@ -945,6 +946,12 @@ public interface RetrofitInterface {
 
     @POST("mobile_app.php?")
     Call<AddressResponse> GET_ADDRESS_ROOM(
+            @Header("ContentType") String content,
+            @Body JsonObject json);
+
+    /**12.09.23. ЄКЛ*/
+    @POST("mobile_app.php?")
+    Call<EKLExchange.EKLResponse> GET_EKL_ROOM(
             @Header("ContentType") String content,
             @Body JsonObject json);
 

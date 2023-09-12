@@ -7,6 +7,7 @@ import androidx.room.Query;
 
 import java.util.List;
 
+import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Flowable;
 import ua.com.merchik.merchik.data.Database.Room.EKL_SDB;
 
@@ -44,6 +45,9 @@ public interface EKLDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     void insertAll(List<EKL_SDB> data);
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    public Completable insertData(List<EKL_SDB> data);
 
     /*пока юзаю только в ЭКЛах*/
     @Query("SELECT * FROM ekl WHERE client_id = :client_id AND address_id = :addr_id AND user_id = :user_id AND (vpi IS NOT NULL AND vpi BETWEEN :l AND :l1 OR dt BETWEEN :l AND :l1)")

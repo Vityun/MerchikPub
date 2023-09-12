@@ -32,6 +32,7 @@ import ua.com.merchik.merchik.ServerExchange.Constants.ReclamationPercentageExch
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.AddressExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.CityExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.CustomerExchange;
+import ua.com.merchik.merchik.ServerExchange.TablesExchange.EKLExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.FragmentsExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.LanguagesExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.OblastExchange;
@@ -49,6 +50,7 @@ import ua.com.merchik.merchik.data.Database.Room.AddressSDB;
 import ua.com.merchik.merchik.data.Database.Room.CitySDB;
 import ua.com.merchik.merchik.data.Database.Room.ContentSDB;
 import ua.com.merchik.merchik.data.Database.Room.CustomerSDB;
+import ua.com.merchik.merchik.data.Database.Room.EKL_SDB;
 import ua.com.merchik.merchik.data.Database.Room.LanguagesSDB;
 import ua.com.merchik.merchik.data.Database.Room.OblastSDB;
 import ua.com.merchik.merchik.data.Database.Room.SamplePhotoSDB;
@@ -156,7 +158,7 @@ public class Exchange {
                 try {
                     globals.fixMP(null);    //
                     Globals.writeToMLOG("ERROR", "startExchange/globals.fixMP();", "locationGPS: " + Globals.locationGPS);
-                }catch (Exception e){
+                } catch (Exception e) {
                     Globals.writeToMLOG("ERROR", "startExchange/globals.fixMP();", "Exception e: " + e);
                 }
 
@@ -173,7 +175,7 @@ public class Exchange {
 
                         }
                     });
-                }catch (Exception e){
+                } catch (Exception e) {
 
                 }
 
@@ -349,6 +351,39 @@ public class Exchange {
                     });
                 } catch (Exception e) {
                     Globals.writeToMLOG("ERROR", "startExchange/AddressExchange,CustomerExchange,UsersExchange,CityExchange,OblastExchange", "Exception e: " + e);
+                }
+
+                try {
+                    new EKLExchange().downloadEKLTable(new ExchangeInterface.ExchangeResponseInterface() {
+                        @Override
+                        public <T> void onSuccess(List<T> data) {
+                            try {
+                                Log.e("AddressExchange", "START");
+                                SQL_DB.eklDao().insertData((List<EKL_SDB>) data)
+                                        .subscribeOn(Schedulers.io())
+                                        .subscribe(new DisposableCompletableObserver() {
+                                            @Override
+                                            public void onComplete() {
+                                                Globals.writeToMLOG("ERROR", "Exchange/new EKLExchange().downloadEKLTable/onSuccess/onComplete", "OK");
+                                            }
+
+                                            @Override
+                                            public void onError(@io.reactivex.rxjava3.annotations.NonNull Throwable e) {
+                                                Globals.writeToMLOG("ERROR", "Exchange/new EKLExchange().downloadEKLTable/onSuccess/onError", "Throwable e: " + e);
+                                            }
+                                        });
+                            } catch (Exception e) {
+                                Globals.writeToMLOG("ERROR", "Exchange/new EKLExchange().downloadEKLTable/onSuccess", "Exception e: " + e);
+                            }
+                        }
+
+                        @Override
+                        public void onFailure(String error) {
+                            Globals.writeToMLOG("ERROR", "Exchange/new EKLExchange().downloadEKLTable/onFailure", "error: " + error);
+                        }
+                    });
+                } catch (Exception e) {
+                    Globals.writeToMLOG("ERROR", "Exchange/new EKLExchange().downloadEKLTable", "Exception e: " + e);
                 }
 
 
