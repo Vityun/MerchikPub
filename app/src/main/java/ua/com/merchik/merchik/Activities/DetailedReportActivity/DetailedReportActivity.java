@@ -1158,6 +1158,7 @@ public class DetailedReportActivity extends toolbar_menus {
             Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST", "stackPhotoDB: " + jo);
 
             RealmManager.stackPhotoSavePhoto(stackPhotoDB);
+            Toast.makeText(context, "Фото (" + id + ") з Галереї успішно збережено!", Toast.LENGTH_LONG).show();
             return stackPhotoDB;
         } catch (Exception e) {
             Globals.writeToMLOG("ERROR", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST", "Exception e: " + e);

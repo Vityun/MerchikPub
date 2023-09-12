@@ -604,7 +604,7 @@ public class Globals {
         try {
             is = new FileInputStream(updateFile);
         } catch (FileNotFoundException e) {
-            alertDialogMsg(context, "Не вышло получить файл: " + e);
+//            alertDialogMsg(context, "Не вышло получить файл: " + e);
             return null;
         }
 

@@ -9,6 +9,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Parcelable;
+import android.provider.MediaStore;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -332,10 +333,16 @@ public class DetailedReportOptionsFrag extends Fragment {
 
             if (optionsButtons != null && optionsButtons.size() > 0) {
                 recycleViewDRAdapter = new RecycleViewDRAdapter(mContext, wpDataDB, optionsButtons, allReportOption, list, ()->{
-                    MakePhotoFromGaleryWpDataDB = wpDataDB;
-                    Intent intent = new Intent(Intent.ACTION_PICK);
-                    intent.setType("image/*");
-                    ((DetailedReportActivity) mContext).startActivityForResult(Intent.createChooser(intent, "Select Picture"), 500);
+                    try {
+                        MakePhotoFromGaleryWpDataDB = wpDataDB;
+//                    Intent intent = new Intent(Intent.ACTION_PICK);
+                        Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+                        intent.setType("image/*");
+                        Globals.writeToMLOG("INFO", "DetailedReportOptionsFrag/Intent.ACTION_PICK", "intent: " + intent);
+                        ((DetailedReportActivity) mContext).startActivityForResult(Intent.createChooser(intent, "Select Picture"), 500);
+                    }catch (Exception e){
+                        Globals.writeToMLOG("ERROR", "DetailedReportOptionsFrag/Intent.ACTION_PICK", "Exception e: " + e);
+                    }
                 });
                 rvContacts.setAdapter(recycleViewDRAdapter);
                 rvContacts.setLayoutManager(new LinearLayoutManager(mContext, LinearLayoutManager.VERTICAL, false));
