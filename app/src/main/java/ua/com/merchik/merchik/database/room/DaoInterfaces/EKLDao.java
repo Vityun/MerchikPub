@@ -50,7 +50,11 @@ public interface EKLDao {
     public Completable insertData(List<EKL_SDB> data);
 
     /*пока юзаю только в ЭКЛах*/
-    @Query("SELECT * FROM ekl WHERE client_id = :client_id AND address_id = :addr_id AND user_id = :user_id AND (vpi IS NOT NULL AND vpi BETWEEN :l AND :l1 OR dt BETWEEN :l AND :l1)")
+//    @Query("SELECT * FROM ekl WHERE client_id = :client_id AND address_id = :addr_id AND user_id = :user_id AND (vpi IS NOT NULL AND vpi BETWEEN :l AND :l1 OR dt BETWEEN :l AND :l1)")
+//    List<EKL_SDB> getBy(long l, long l1, String client_id, int addr_id, int user_id);
+
+    /*пока юзаю только в ЭКЛах*/
+    @Query("SELECT * FROM ekl WHERE client_id = :client_id AND address_id = :addr_id AND user_id = :user_id AND dt BETWEEN :l AND :l1")
     List<EKL_SDB> getBy(long l, long l1, String client_id, int addr_id, int user_id);
 
     @Query("SELECT * FROM ekl WHERE client_id = :client_id AND address_id = :addr_id AND user_id = :user_id AND sotr_id = :ptt_user_id AND (vpi IS NOT NULL AND vpi BETWEEN :l AND :l1 OR dt BETWEEN :l AND :l1)")

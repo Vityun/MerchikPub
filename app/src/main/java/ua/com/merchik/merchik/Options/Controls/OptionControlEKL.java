@@ -156,7 +156,8 @@ public class OptionControlEKL<T> extends OptionControl {
 
 
             // лезем в таблицу ЭКЛ и проверяем, еслть ли ПОДПИСАННЫЙ ЭКЛ по данным условиям
-            eklSDB = SQL_DB.eklDao().getBy(dateFrom, dateTo, wpDataDB.getClient_id(), wpDataDB.getAddr_id(), wpDataDB.getUser_id());
+            eklSDB = SQL_DB.eklDao().getBy(dateFrom/1000, dateTo/1000, wpDataDB.getClient_id(), wpDataDB.getAddr_id(), wpDataDB.getUser_id());
+//            eklSDB = SQL_DB.eklDao().getBy(dateFrom, dateTo, wpDataDB.getClient_id(), wpDataDB.getAddr_id(), wpDataDB.getUser_id());
 //        eklSDB = SQL_DB.eklDao().getBy(dateFrom, dateTo, wpDataDB.getClient_id(), wpDataDB.getAddr_id(), wpDataDB.getUser_id(), wpDataDB.ptt_user_id);
             if (eklSDB == null || eklSDB.size() == 0) {
                 List<Integer> ids = new ArrayList<>();
