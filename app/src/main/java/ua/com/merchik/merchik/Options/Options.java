@@ -1864,7 +1864,8 @@ public class Options {
         }
 
         try {
-            List<LogMPDB> logs = LogMPRealm.getLogMPByDad2Distance(wpDataDB.getCode_dad2(), 500);
+//            List<LogMPDB> logs = LogMPRealm.getLogMPByDad2Distance(wpDataDB.getCode_dad2(), 500);
+            List<LogMPDB> logs = LogMPRealm.getLogMPByDad2(wpDataDB.getCode_dad2());
             if (logs != null && logs.size() > 0){
                 RealmManager.INSTANCE.executeTransaction(realm -> {
                     if (optionsDB != null) {
