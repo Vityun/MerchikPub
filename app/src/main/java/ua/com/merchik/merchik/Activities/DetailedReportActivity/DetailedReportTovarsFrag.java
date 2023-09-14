@@ -267,6 +267,9 @@ public class DetailedReportTovarsFrag extends Fragment {
                 this.codeDad2 = wpDataDB.getCode_dad2();
                 this.clientId = wpDataDB.getClient_id();
                 this.addressId = wpDataDB.getAddr_id();
+            }else if (tasksAndReclamationsSDB != null) {
+                this.codeDad2 = tasksAndReclamationsSDB.codeDad2SrcDoc;
+                this.clientId = tasksAndReclamationsSDB.client;
             }
 
 
