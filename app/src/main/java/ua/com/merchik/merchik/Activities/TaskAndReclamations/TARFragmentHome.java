@@ -36,11 +36,41 @@ public class TARFragmentHome extends Fragment {
         Log.d("test", "test");
     }
 
+    public static TARFragmentHome newInstance(FragmentManager fragmentManager) {
+        TARFragmentHome fragment = new TARFragmentHome(fragmentManager);
+        fragment.setFragmentManager(fragmentManager);
+        return fragment;
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        Globals.writeToMLOG("INFO", "TARFragmentHome/onSaveInstanceState", "outState: " + outState);
+        try {
+
+        }catch (Exception e){
+            Globals.writeToMLOG("ERROR", "TARFragmentHome/onSaveInstanceState", "Exception e: " + e);
+        }
+    }
+
+    @Override
+    public void onViewStateRestored(Bundle savedInstanceState) {
+        super.onViewStateRestored(savedInstanceState);
+        Globals.writeToMLOG("INFO", "TARFragmentHome/onViewStateRestored", "savedInstanceState: " + savedInstanceState);
+        if (savedInstanceState != null) {
+
+        }
+    }
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View v = inflater.inflate(R.layout.fragment_tab_tar_home, container, false);
         return v;
     }//------------------------------- /ON CREATE --------------------------------------------------
+
+    public void setFragmentManager(FragmentManager fragmentManager) {
+        this.fragmentManager = fragmentManager;
+    }
 
     @Override
     public void onViewCreated(View view, Bundle savedInstanceState) {

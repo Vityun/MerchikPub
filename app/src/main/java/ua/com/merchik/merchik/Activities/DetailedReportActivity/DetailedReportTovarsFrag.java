@@ -117,7 +117,6 @@ public class DetailedReportTovarsFrag extends Fragment {
         Bundle args = new Bundle();
         args.putParcelableArrayList("list", list);
         args.putParcelable("wpDataDB", wpDataDB);
-//        args.putSerializable("appCompatActivity", (Serializable) context);// Передача AppCompatActivity в аргументах
         mContext = context;
         fragment.setArguments(args);
         return fragment;
@@ -174,7 +173,6 @@ public class DetailedReportTovarsFrag extends Fragment {
             }
             wpDataDB = savedInstanceState.getParcelable("wpDataDB");
             tasksAndReclamationsSDB = savedInstanceState.getParcelable("tasksAndReclamationsSDB");
-//            mContext = (AppCompatActivity) savedInstanceState.getSerializable("appCompatActivity");
         }
     }
 
@@ -197,6 +195,8 @@ public class DetailedReportTovarsFrag extends Fragment {
             Globals.writeToMLOG("INFO", "DetailedReportTovarsFrag", "onCreate/list: " + list);
             wpDataDB = args.getParcelable("wpDataDB");
             Globals.writeToMLOG("INFO", "DetailedReportTovarsFrag", "onCreate/wpDataDB: " + wpDataDB);
+            tasksAndReclamationsSDB = args.getParcelable("tasksAndReclamationsSDB");
+            Globals.writeToMLOG("INFO", "DetailedReportTovarsFrag", "onCreate/tasksAndReclamationsSDB: " + tasksAndReclamationsSDB);
         }
     }
 

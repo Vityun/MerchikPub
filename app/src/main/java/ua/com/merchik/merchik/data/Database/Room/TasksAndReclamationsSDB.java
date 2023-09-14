@@ -481,7 +481,7 @@ public class TasksAndReclamationsSDB implements Parcelable {
         dest.writeInt(dvi);
         dest.writeInt(zakazchik);
         dest.writeString(id1c);
-        dest.writeLong(docNum1cId);
+        dest.writeLong(docNum1cId != null ? docNum1cId : 0);
         dest.writeLong(codeDad2);
         dest.writeLong(codeDad2SrcDoc);
         dest.writeString(telNum);
