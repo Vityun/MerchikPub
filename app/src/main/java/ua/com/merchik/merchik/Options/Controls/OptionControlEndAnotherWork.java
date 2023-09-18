@@ -144,9 +144,10 @@ public class OptionControlEndAnotherWork<T> extends OptionControl {
                 @Override
                 public void onClick(View textView) {
                     Intent intent = new Intent(context, DetailedReportActivity.class);
-                    intent.putExtra("dataFromWP", D);
-                    intent.putExtra("rowWP", wpDataDB);
-                    intent.putExtra("dataFromWPObj", wpDataObj);
+                    intent.putExtra("WpDataDB_ID", wpDataDB.getId());
+//                    intent.putExtra("dataFromWP", D);
+//                    intent.putExtra("rowWP", wpDataDB);
+//                    intent.putExtra("dataFromWPObj", wpDataObj);
                     context.startActivity(intent);
                 }
 

@@ -1828,9 +1828,11 @@ public class Options {
                 WPDataObj wpDataObj = workPlan.getKPS(wp.getId());
 
                 Intent intent = new Intent(context, DetailedReportActivity.class);
-                intent.putExtra("dataFromWP", D);
-                intent.putExtra("rowWP", wp);
-                intent.putExtra("dataFromWPObj", wpDataObj);
+                intent.putExtra("WpDataDB_ID", wp.getId());
+
+//                intent.putExtra("dataFromWP", D);
+//                intent.putExtra("rowWP", wp);
+//                intent.putExtra("dataFromWPObj", wpDataObj);
 
                 type.msg = "Открыт проверяемый документ. \nНомер: " + wp.getDoc_num_otchet();
 
