@@ -1555,44 +1555,47 @@ public class Exchange {
      * (время, мнение, комменты)
      */
     public static void updateTAR(TasksAndReclamationsSDB uploadData) {
-        StandartData standartData = new StandartData();
-        standartData.mod = "reclamation";
-        standartData.act = "update_data";
+        try {
+            StandartData standartData = new StandartData();
+            standartData.mod = "reclamation";
+            standartData.act = "update_data";
 
-        StandartData.StandartDataTARUpload data = new StandartData.StandartDataTARUpload();
+            StandartData.StandartDataTARUpload data = new StandartData.StandartDataTARUpload();
 
-        data.element_id = 1;
-        data.code_dad2 = uploadData.codeDad2;
-        data.vote_score = uploadData.voteScore;
-        data.vinovnik_score = uploadData.vinovnikScore;
-        data.vinovnik_score_comment = uploadData.vinovnikScoreComment;
-        data.sotr_opinion_id = uploadData.sotrOpinionId;
+            data.element_id = 1;
+            data.code_dad2 = uploadData.codeDad2;
+            data.vote_score = uploadData.voteScore;
+            data.vinovnik_score = uploadData.vinovnikScore;
+            data.vinovnik_score_comment = uploadData.vinovnikScoreComment;
+            data.sotr_opinion_id = uploadData.sotrOpinionId;
 
-        data.dt_start_fact = uploadData.dt_start_fact;
-        data.dt_end_fact = uploadData.dt_end_fact;
+            data.dt_start_fact = uploadData.dt_start_fact;
+            data.dt_end_fact = uploadData.dt_end_fact;
 
-        standartData.data = Collections.singletonList(data);
+            standartData.data = Collections.singletonList(data);
 
-        JsonObject convertedObject = new Gson().fromJson(new Gson().toJson(standartData), JsonObject.class);
-        Globals.writeToMLOG("INGO", "updateTAR", "convertedObject:" + convertedObject);
+            JsonObject convertedObject = new Gson().fromJson(new Gson().toJson(standartData), JsonObject.class);
+            Globals.writeToMLOG("INGO", "updateTAR", "convertedObject:" + convertedObject);
 
-        retrofit2.Call<JsonObject> call = RetrofitBuilder.getRetrofitInterface().TEST_JSON_UPLOAD(RetrofitBuilder.contentType, convertedObject);
-        call.enqueue(new Callback<JsonObject>() {
-            @Override
-            public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
-                Log.e("updateTAR", "response:" + response.body());
-                Globals.writeToMLOG("INGO", "updateTAR", "response.body():" + response.body());
-                uploadData.uploadStatus = 0;
-                SQL_DB.tarDao().insertData(Collections.singletonList(uploadData));
-            }
+            retrofit2.Call<JsonObject> call = RetrofitBuilder.getRetrofitInterface().TEST_JSON_UPLOAD(RetrofitBuilder.contentType, convertedObject);
+            call.enqueue(new Callback<JsonObject>() {
+                @Override
+                public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
+                    Log.e("updateTAR", "response:" + response.body());
+                    Globals.writeToMLOG("INGO", "updateTAR", "response.body():" + response.body());
+                    uploadData.uploadStatus = 0;
+                    SQL_DB.tarDao().insertData(Collections.singletonList(uploadData));
+                }
 
-            @Override
-            public void onFailure(Call<JsonObject> call, Throwable t) {
-                Log.e("updateTAR", "t:" + t);
-                Globals.writeToMLOG("INGO", "updateTAR", "t:" + t);
-            }
-        });
-
+                @Override
+                public void onFailure(Call<JsonObject> call, Throwable t) {
+                    Log.e("updateTAR", "t:" + t);
+                    Globals.writeToMLOG("INGO", "updateTAR", "t:" + t);
+                }
+            });
+        }catch (Exception e){
+            Globals.writeToMLOG("ERROR", "updateTAR", "Exception e:" + e);
+        }
     }
 
 
