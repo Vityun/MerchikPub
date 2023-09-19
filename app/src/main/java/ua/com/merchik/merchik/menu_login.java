@@ -74,6 +74,7 @@ import ua.com.merchik.merchik.data.Translation.SiteLanguages;
 import ua.com.merchik.merchik.data.Translation.SiteTranslations;
 import ua.com.merchik.merchik.data.Translation.SiteTranslationsList;
 import ua.com.merchik.merchik.database.realm.RealmManager;
+import ua.com.merchik.merchik.dialogs.BlockingProgressDialog;
 import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.dialogs.DialogLoginHelp;
 import ua.com.merchik.merchik.dialogs.DialogRetingOperatorSuppr;
@@ -94,7 +95,7 @@ public class menu_login extends AppCompatActivity {
     private TextView badgeTextView;
     public static final Integer[] menu_login_VIDEO_LESSONS = new Integer[]{813};
 
-    private Progress progress;
+    private BlockingProgressDialog progress;
     private static final int PERMISSION_FINE_LOCATION = 0;
     private static final int PERMISSION_CAMERA = 1;
     private static final int PERMISSION_REQUEST_CODE = 200;
@@ -176,7 +177,7 @@ public class menu_login extends AppCompatActivity {
 
 //            intent = new Intent(menu_login.this, MenuMainActivity.class);
             intent = new Intent(menu_login.this, WPDataActivity.class);
-            progress = new Progress(this, "Вход", "Вход в систему", false);
+            progress = new BlockingProgressDialog(this, "Вход", "Вход в систему");
 
 
             Log.e("ПОСЛЕДОВАТЕЛЬНОСТЬ", "3_obj893: " + obj893);
@@ -1341,7 +1342,7 @@ public class menu_login extends AppCompatActivity {
 
             Log.e("APP_LOGIN", "LOGIN(0): " + login + " pass: " + password);
 
-            progress = new Progress(this, "Вход", "Вход в систему", false);
+            progress = new BlockingProgressDialog(this, "Вход", "Вход в систему");
             progress.show();
 
             // Проверка - есть ли сессия на сервере(залогинились ли мы)
@@ -1391,7 +1392,7 @@ public class menu_login extends AppCompatActivity {
                                         }
 
                                         // ------------
-                                        progress.dissmiss();
+                                        progress.dismiss();
                                         new TablesLoadingUnloading().downloadMenu();
                                         Toast.makeText(getApplicationContext(), "Вы зашли как " + resp.getUserInfo().getFio(), Toast.LENGTH_SHORT).show();
                                         Globals.userId = Integer.parseInt(resp.getUserInfo().getUserId());
@@ -1431,7 +1432,7 @@ public class menu_login extends AppCompatActivity {
                         }
                     } catch (Exception e) {
                         globals.alertDialogMsg(menu_login.this, "Ошибка во время логина(1). Обратитесь к Вашему руководителю. Ошибка: " + e);
-                        progress.dissmiss();
+                        progress.dismiss();
                     }
                 }
 
@@ -1497,7 +1498,7 @@ public class menu_login extends AppCompatActivity {
                                 }
                             } else {
                                 globals.alertDialogMsg(menu_login.this, response.body().getError());
-                                progress.dissmiss();
+                                progress.dismiss();
                             }
                         }
                     }
@@ -1511,7 +1512,7 @@ public class menu_login extends AppCompatActivity {
 
             } else {
                 Toast.makeText(getApplicationContext(), "Проверьте внесённые данные.", Toast.LENGTH_SHORT).show();
-                progress.dissmiss();
+                progress.dismiss();
             }
 
         } catch (Exception e) {
@@ -1587,7 +1588,7 @@ public class menu_login extends AppCompatActivity {
                         Globals.userOwnership = resp.getUserInfo().user_work_plan_status.equals("our");
                         // ------------
 
-                        progress.dissmiss();
+                        progress.dismiss();
                         startActivity(intent);  //++
                     } else {
                         appLogin();
@@ -1623,7 +1624,7 @@ public class menu_login extends AppCompatActivity {
                 Globals.userId = appUsersDB.getUserId();
                 Globals.userOwnership = appUsersDB.user_work_plan_status.equals("our");
 
-                progress.dissmiss();
+                progress.dismiss();
                 if (System.currentTimeMillis() < 1666656000000L) {   // отображать ДО 2022-10-25
                     DialogData dialog = new DialogData(menu_login.this);
                     dialog.setTitle("ВАЖЛИВО!");
@@ -1643,7 +1644,7 @@ public class menu_login extends AppCompatActivity {
                 }
             } else {
                 // Не получилось залогиниться БЕЗ инета или при ошибке. БД пустая.
-                progress.dissmiss();
+                progress.dismiss();
                 globals.alertDialogMsg(menu_login.this, "Не удалось войти. \n\nПроверьте состояние интернета и повторите попытку входа.");
             }
 

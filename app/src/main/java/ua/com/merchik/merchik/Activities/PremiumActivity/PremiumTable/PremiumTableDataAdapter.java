@@ -2,7 +2,6 @@ package ua.com.merchik.merchik.Activities.PremiumActivity.PremiumTable;
 
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
-import android.app.ProgressDialog;
 import android.content.Intent;
 import android.graphics.Paint;
 import android.text.Html;
@@ -47,6 +46,7 @@ import ua.com.merchik.merchik.data.WPDataObj;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.ReportPrepareRealm;
 import ua.com.merchik.merchik.database.realm.tables.WpDataRealm;
+import ua.com.merchik.merchik.dialogs.BlockingProgressDialog;
 import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
 
@@ -261,9 +261,9 @@ public class PremiumTableDataAdapter extends RecyclerView.Adapter<PremiumTableDa
 
         private void wpDownload(Long codeDad2, String datePremiumDownloadFormat, Clicks.clickVoid click){
             // План робіт
-            ProgressDialog progressDialogWpData = ProgressDialog.show(itemView.getContext(),
+            BlockingProgressDialog progressDialogWpData = BlockingProgressDialog.show(itemView.getContext(),
                     "Завантаження Плану робіт",
-                    dataDownloadWait, true, true);
+                    dataDownloadWait);
             WPDataExchange wpDataExchange = new WPDataExchange(datePremiumDownloadFormat, datePremiumDownloadFormat, "");
             wpDataExchange.downloadWPData(new ExchangeInterface.ExchangeResponseInterface() {
                 @Override
@@ -289,9 +289,9 @@ public class PremiumTableDataAdapter extends RecyclerView.Adapter<PremiumTableDa
 
         private void optionDownload(Long codeDad2, String datePremiumDownloadFormat, Clicks.clickVoid click){
             // Опції
-            ProgressDialog progressDialogOption = ProgressDialog.show(itemView.getContext(),
+            BlockingProgressDialog progressDialogOption = BlockingProgressDialog.show(itemView.getContext(),
                     "Завантаження Опцій",
-                    dataDownloadWait, true, true);
+                    dataDownloadWait);
             OptionsExchange optionsExchange = new OptionsExchange(datePremiumDownloadFormat, datePremiumDownloadFormat, "");
             optionsExchange.downloadOptions(new ExchangeInterface.ExchangeResponseInterface() {
                 @Override
@@ -317,9 +317,9 @@ public class PremiumTableDataAdapter extends RecyclerView.Adapter<PremiumTableDa
 
         private void reportDownload(Long codeDad2, String datePremiumDownloadFormat, Clicks.clickVoid click){
             // Дет. отчёт
-            ProgressDialog progressDialogReportPrepare = ProgressDialog.show(itemView.getContext(),
+            BlockingProgressDialog progressDialogReportPrepare = BlockingProgressDialog.show(itemView.getContext(),
                     "Завантаження Деталізованого звіту",
-                    dataDownloadWait, true, true);
+                    dataDownloadWait);
             ReportPrepareExchange reportPrepareExchange = new ReportPrepareExchange(datePremiumDownloadFormat, datePremiumDownloadFormat, "");
             reportPrepareExchange.downloadReportPrepare(new ExchangeInterface.ExchangeResponseInterface() {
                 @Override
