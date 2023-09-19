@@ -56,8 +56,8 @@ public class MenuMainActivity extends toolbar_menus {
 
     private void test() {
         StandartData data = new StandartData();
-        data.mod = "sms_verification";
-        data.act = "list";
+        data.mod = "planogram";
+        data.act = "img_list";
 
         Gson gson = new Gson();
         String json = gson.toJson(data);
