@@ -1092,8 +1092,9 @@ public class Options {
 
                             @Override
                             public void onFailure(String error) {
+                                Globals.writeToMLOG("ERROR", "Exchange.conductingOnServerWpData", "error: " + error);
                                 dialogData.setTitle("Проведення звіту...");
-                                dialogData.setText("Зараз передати команду на проведення звіту на сервер не вдалося. Але ця команда збережена на вашому пристрої та буде передана на сервер під час наступного обміну данними.\n\n Відповідь серверу: " + error);
+                                dialogData.setText("Зараз передати команду на проведення звіту на сервер не вдалося. Але ця команда збережена на вашому пристрої та буде передана на сервер під час наступного обміну данними.");
                                 dialogData.show();
 
                                 RealmManager.INSTANCE.executeTransaction(realm -> {
