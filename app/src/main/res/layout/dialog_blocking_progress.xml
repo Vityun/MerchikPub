@@ -14,16 +14,17 @@
 
         <TextView
             android:id="@+id/dialog_blocking_progress_title"
-            android:layout_width="0dp"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_margin="16dp"
             android:gravity="start"
             android:textStyle="bold"
-            android:textSize="20sp"
+            android:textSize="18sp"
+            android:maxLines="4"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            tools:text="Преміальні" />
+            tools:text="Обмен данными с сервером." />
 
         <ProgressBar
             android:id="@+id/dialog_blocking_progress_progress"
@@ -41,7 +42,7 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@id/dialog_blocking_progress_progress"
             app:layout_constraintTop_toBottomOf="@id/dialog_blocking_progress_title"
-            tools:text="Завантажую поточний тиждень." />
+            tools:text="Обновление таблицы: Групы товаров" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
