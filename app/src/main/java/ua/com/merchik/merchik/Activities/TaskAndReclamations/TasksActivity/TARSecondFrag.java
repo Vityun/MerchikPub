@@ -9,7 +9,7 @@ import android.view.ViewGroup;
 
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
-import androidx.viewpager.widget.ViewPager;
+import androidx.viewpager2.widget.ViewPager2;
 
 import com.google.android.material.tabs.TabLayout;
 
@@ -20,7 +20,7 @@ import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
 public class TARSecondFrag extends Fragment {
 
     private TabLayout tabLayout;
-    private ViewPager viewPager;
+    private ViewPager2 viewPager;
 
     public TasksAndReclamationsSDB data;
     private FragmentManager fragmentManager;
@@ -58,9 +58,9 @@ public class TARSecondFrag extends Fragment {
         tabLayout.getTabAt(2).setText("Товары");
 
 
-        adapter = new TARTab(context, fragmentManager, tabLayout.getTabCount(), data);
+        adapter = new TARTab(context, fragmentManager, getLifecycle(), tabLayout.getTabCount(), data);
         viewPager.setAdapter(adapter);
-        viewPager.addOnPageChangeListener(new TabLayout.TabLayoutOnPageChangeListener(tabLayout));
+//        viewPager.addOnPageChangeListener(new TabLayout.TabLayoutOnPageChangeListener(tabLayout));
         tabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
             @Override
             public void onTabSelected(TabLayout.Tab tab) {

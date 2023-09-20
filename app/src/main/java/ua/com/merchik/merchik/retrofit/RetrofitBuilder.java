@@ -66,6 +66,7 @@ public class RetrofitBuilder{
         @Override
         public void log(String message) {
             Log.e("M_UPLOAD_GALLERY", "RETROFIT: " + truncateString(message, 200));
+            Globals.writeToMLOG("INFO", "HttpLoggingInterceptor", "RETROFIT: " + truncateString(message, 200));
         }
     });
 
