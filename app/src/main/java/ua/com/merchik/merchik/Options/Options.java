@@ -37,6 +37,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
+import androidx.multidex.BuildConfig;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
 import com.google.gson.Gson;
@@ -59,7 +60,7 @@ import io.realm.RealmResults;
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity;
 import ua.com.merchik.merchik.Activities.TaskAndReclamations.TasksActivity.TARSecondFrag;
 import ua.com.merchik.merchik.Adapters.TextAdapter;
-import ua.com.merchik.merchik.BuildConfig;
+//import ua.com.merchik.merchik.BuildConfig; TODO
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.MakePhoto.MakePhoto;
