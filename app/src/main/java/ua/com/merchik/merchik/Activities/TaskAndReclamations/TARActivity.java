@@ -13,7 +13,7 @@ import android.widget.TextView;
 import androidx.appcompat.widget.Toolbar;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
-import androidx.viewpager.widget.ViewPager;
+import androidx.viewpager2.widget.ViewPager2;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.tabs.TabLayout;
@@ -51,7 +51,7 @@ public class TARActivity extends toolbar_menus implements TARFragmentHome.OnFrag
     private TARSecondFrag secondFrag;
 
     private TabLayout tabLayout;
-    private ViewPager viewPager;
+    private ViewPager2 viewPager;
 
     private FragmentManager fragmentManager;
 
@@ -346,9 +346,9 @@ public class TARActivity extends toolbar_menus implements TARFragmentHome.OnFrag
         tabLayout.getTabAt(1).setText("Карта");
 
         fragmentManager = getSupportFragmentManager();
-        TARHomeTab tabAdapter = new TARHomeTab(fragmentManager, tabLayout.getTabCount());
+        TARHomeTab tabAdapter = new TARHomeTab(fragmentManager, getLifecycle(), tabLayout.getTabCount());
         viewPager.setAdapter(tabAdapter);
-        viewPager.addOnPageChangeListener(new TabLayout.TabLayoutOnPageChangeListener(tabLayout));
+//        viewPager.addOnPageChangeListener(new TabLayout.TabLayoutOnPageChangeListener(tabLayout));
         tabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
             @Override
             public void onTabSelected(TabLayout.Tab tab) {

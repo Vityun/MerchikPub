@@ -14,7 +14,7 @@ import androidx.appcompat.widget.Toolbar;
 import androidx.fragment.app.FragmentManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-import androidx.viewpager.widget.ViewPager;
+import androidx.viewpager2.widget.ViewPager2;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.navigation.NavigationView;
@@ -39,7 +39,7 @@ public class WPDataActivity extends toolbar_menus {
     public static final Integer[]  WPDataActivity_VIDEO_LESSONS = new Integer[]{817};
 
     private TabLayout tabLayout;
-    private ViewPager viewPager;
+    private ViewPager2 viewPager;
 
     private FragmentManager fragmentManager;
     private WPDataFragmentHome homeFrag;
@@ -128,9 +128,9 @@ public class WPDataActivity extends toolbar_menus {
         tabLayout.getTabAt(1).setText("Карта");
 
         fragmentManager = getSupportFragmentManager();
-        WPDataTab tabAdapter = new WPDataTab(fragmentManager, tabLayout.getTabCount());
+        WPDataTab tabAdapter = new WPDataTab(fragmentManager, getLifecycle(), tabLayout.getTabCount());
         viewPager.setAdapter(tabAdapter);
-        viewPager.addOnPageChangeListener(new TabLayout.TabLayoutOnPageChangeListener(tabLayout));
+//        viewPager.addOnPageChangeListener(new TabLayout.TabLayoutOnPageChangeListener(tabLayout));
         tabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
             @Override
             public void onTabSelected(TabLayout.Tab tab) {

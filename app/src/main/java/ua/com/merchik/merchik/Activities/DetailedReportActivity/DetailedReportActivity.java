@@ -48,7 +48,7 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
-import androidx.viewpager.widget.ViewPager;
+import androidx.viewpager2.widget.ViewPager2;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.navigation.NavigationView;
@@ -134,7 +134,7 @@ public class DetailedReportActivity extends toolbar_menus {
 
 
     TabLayout tabLayout;
-    ViewPager viewPager;
+    ViewPager2 viewPager;
 
     // Интерфейс
     TextView activity_title;
@@ -622,10 +622,10 @@ public class DetailedReportActivity extends toolbar_menus {
             }
 
             Globals.writeToMLOG("INFO", "DetailedReportTab/0", "setTab create");
-            adapter = new DetailedReportTab(this, getSupportFragmentManager(), tabLayout.getTabCount(), list, rowWP);
+            adapter = new DetailedReportTab(this, getSupportFragmentManager(), getLifecycle(), tabLayout.getTabCount(), list, rowWP);
             viewPager.setAdapter(adapter);
 
-            viewPager.addOnPageChangeListener(new TabLayout.TabLayoutOnPageChangeListener(tabLayout));
+//            viewPager.addOnPageChangeListener(new TabLayout.TabLayoutOnPageChangeListener(tabLayout));
 
             tabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
                 @Override

@@ -1,6 +1,8 @@
 package ua.com.merchik.merchik;
 
+import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 import static ua.com.merchik.merchik.toolbar_menus.internetStatus;
+import static ua.com.merchik.merchik.trecker.coordinatesDistanse;
 import static ua.com.merchik.merchik.trecker.imHereGPS;
 import static ua.com.merchik.merchik.trecker.imHereNET;
 
@@ -60,6 +62,7 @@ import ua.com.merchik.merchik.data.AppData.AppData;
 import ua.com.merchik.merchik.data.AppData.Browser;
 import ua.com.merchik.merchik.data.AppData.Device;
 import ua.com.merchik.merchik.data.AppData.Os;
+import ua.com.merchik.merchik.data.Database.Room.AddressSDB;
 import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
 import ua.com.merchik.merchik.data.Database.Room.TranslatesSDB;
 import ua.com.merchik.merchik.data.RealmModels.LogMPDB;
@@ -991,6 +994,22 @@ public class Globals {
 
                 if (wpDataDB != null) {
                     log.codeDad2 = wpDataDB.getCode_dad2();
+
+                    AddressSDB addressSDB = SQL_DB.addressDao().getById(wpDataDB.getAddr_id());
+                    float coordAddrX = 0, coordAddrY = 0;
+                    if (addressSDB != null){
+                        coordAddrX = addressSDB.locationXd;
+                        coordAddrY = addressSDB.locationYd;
+                    }else {
+                        try {
+                            if (wpDataDB != null){
+                                coordAddrX = Float.parseFloat(wpDataDB.getAddr_location_xd());
+                                coordAddrY = Float.parseFloat(wpDataDB.getAddr_location_yd());
+                            }
+                        }catch (Exception e){}
+                    }
+                    double distance = coordinatesDistanse(coordAddrX, coordAddrY, log.CoordX, log.CoordY);
+                    log.distance = (int) distance;
                 }
 
                 log.vpi = System.currentTimeMillis() / 1000;
@@ -1021,6 +1040,22 @@ public class Globals {
                 logNET.gp = POST_10(logNET);
                 if (wpDataDB != null) {
                     logNET.codeDad2 = wpDataDB.getCode_dad2();
+
+                    AddressSDB addressSDB = SQL_DB.addressDao().getById(wpDataDB.getAddr_id());
+                    float coordAddrX = 0, coordAddrY = 0;
+                    if (addressSDB != null){
+                        coordAddrX = addressSDB.locationXd;
+                        coordAddrY = addressSDB.locationYd;
+                    }else {
+                        try {
+                            if (wpDataDB != null){
+                                coordAddrX = Float.parseFloat(wpDataDB.getAddr_location_xd());
+                                coordAddrY = Float.parseFloat(wpDataDB.getAddr_location_yd());
+                            }
+                        }catch (Exception e){}
+                    }
+                    double distance = coordinatesDistanse(coordAddrX, coordAddrY, logNET.CoordX, logNET.CoordY);
+                    logNET.distance = (int) distance;
                 }
                 logNET.vpi = System.currentTimeMillis() / 1000;
                 RealmManager.setLogMpRow(logNET);

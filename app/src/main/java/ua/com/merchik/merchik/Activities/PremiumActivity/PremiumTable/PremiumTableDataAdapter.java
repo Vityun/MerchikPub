@@ -361,9 +361,12 @@ public class PremiumTableDataAdapter extends RecyclerView.Adapter<PremiumTableDa
                 WPDataObj wpDataObj = workPlan.getKPS(wp.getId());
 
                 Intent intent = new Intent(itemView.getContext(), DetailedReportActivity.class);
-                intent.putExtra("dataFromWP", D);
-                intent.putExtra("rowWP", wp);
-                intent.putExtra("dataFromWPObj", wpDataObj);
+
+                intent.putExtra("WpDataDB_ID", wp.getId());
+
+//                intent.putExtra("dataFromWP", D);
+//                intent.putExtra("rowWP", wp);
+//                intent.putExtra("dataFromWPObj", wpDataObj);
                 itemView.getContext().startActivity(intent);
             } catch (Exception e) {
                 Toast.makeText(itemView.getContext(), "Помилка: " + e, Toast.LENGTH_SHORT).show();

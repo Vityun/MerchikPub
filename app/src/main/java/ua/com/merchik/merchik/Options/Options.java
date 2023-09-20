@@ -1828,9 +1828,11 @@ public class Options {
                 WPDataObj wpDataObj = workPlan.getKPS(wp.getId());
 
                 Intent intent = new Intent(context, DetailedReportActivity.class);
-                intent.putExtra("dataFromWP", D);
-                intent.putExtra("rowWP", wp);
-                intent.putExtra("dataFromWPObj", wpDataObj);
+                intent.putExtra("WpDataDB_ID", wp.getId());
+
+//                intent.putExtra("dataFromWP", D);
+//                intent.putExtra("rowWP", wp);
+//                intent.putExtra("dataFromWPObj", wpDataObj);
 
                 type.msg = "Открыт проверяемый документ. \nНомер: " + wp.getDoc_num_otchet();
 
@@ -1864,8 +1866,8 @@ public class Options {
         }
 
         try {
-//            List<LogMPDB> logs = LogMPRealm.getLogMPByDad2Distance(wpDataDB.getCode_dad2(), 500);
-            List<LogMPDB> logs = LogMPRealm.getLogMPByDad2(wpDataDB.getCode_dad2());
+            List<LogMPDB> logs = LogMPRealm.getLogMPByDad2Distance(wpDataDB.getCode_dad2(), 500);
+//            List<LogMPDB> logs = LogMPRealm.getLogMPByDad2(wpDataDB.getCode_dad2());
             if (logs != null && logs.size() > 0){
                 RealmManager.INSTANCE.executeTransaction(realm -> {
                     if (optionsDB != null) {

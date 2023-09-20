@@ -434,6 +434,8 @@ public class Tab1Fragment extends Fragment {
             int rate = (int) rating;
             ratingBar.setRating(rate);
 
+            Globals.writeToMLOG("INFO", "Tab1Fragment/ratingBar2.setOnRatingBarChangeListener", "rate: " + rate);
+
             if (rate > 5) {
                 saveRatingTARVote(rate, null);
                 Toast.makeText(ratingBar.getContext(), "Оценка: " + rate + " установлена.", Toast.LENGTH_SHORT).show();
@@ -502,11 +504,13 @@ public class Tab1Fragment extends Fragment {
                     @Override
                     public void onComplete() {
                         Log.d("test", "test");
+                        Globals.writeToMLOG("INFO", "Tab1Fragment/ratingBar2.setOnRatingBarChangeListener/saveRatingTARVote", "onComplete");
                     }
 
                     @Override
                     public void onError(@io.reactivex.rxjava3.annotations.NonNull Throwable e) {
                         Log.d("test", "test");
+                        Globals.writeToMLOG("INFO", "Tab1Fragment/ratingBar2.setOnRatingBarChangeListener/saveRatingTARVote", "onError Throwable e: " + e);
                     }
                 });
 
