@@ -1,5 +1,7 @@
 package ua.com.merchik.merchik.dialogs.DialogAdditionalRequirements;
 
+import static ua.com.merchik.merchik.Globals.HELPDESK_PHONE_NUMBER;
+
 import android.app.Dialog;
 import android.content.Context;
 import android.content.Intent;
@@ -212,13 +214,7 @@ public class DialogAdditionalRequirements {
         }
         call.setColorFilter(Color.WHITE);
         call.setOnClickListener((v -> {
-
-            Log.e("setImgBtnCall", "pressed?");
-
-            String telephone = "+380674484493";
-
-            Globals.telephoneCall(context, telephone);
-
+            Globals.telephoneCall(context, HELPDESK_PHONE_NUMBER);
         }));
 
         Log.e("setImgBtnCall", "and here");

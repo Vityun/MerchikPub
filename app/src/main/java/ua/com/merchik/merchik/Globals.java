@@ -76,6 +76,7 @@ public class Globals {
      * Код телефонного региона Украина
      */
     public static final String TELEPHONE_REGION_UA = "+38";
+    public static final String HELPDESK_PHONE_NUMBER = "+380674491265"; // Телефон поддержки
     public static final String APP_DIR = "/Merchik"; // Место где приложение в открытом доступе хранит свои данные
 
 

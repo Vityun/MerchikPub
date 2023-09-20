@@ -1,5 +1,6 @@
 package ua.com.merchik.merchik.dialogs;
 
+import static ua.com.merchik.merchik.Globals.HELPDESK_PHONE_NUMBER;
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
 import android.app.DatePickerDialog;
@@ -476,13 +477,7 @@ public class DialogData {
         }
         imgBtnCall.setColorFilter(Color.WHITE);
         imgBtnCall.setOnClickListener((v -> {
-
-            Log.e("setImgBtnCall", "pressed?");
-
-            String telephone = "+380674484493";
-
-            Globals.telephoneCall(context, telephone);
-
+            Globals.telephoneCall(context, HELPDESK_PHONE_NUMBER);
         }));
 
         Log.e("setImgBtnCall", "and here");
