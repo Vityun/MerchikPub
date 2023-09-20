@@ -1,7 +1,10 @@
 apply plugin: 'com.android.application'
 apply plugin: 'realm-android'
+apply plugin: 'org.jetbrains.kotlin.android'
 
 android {
+    namespace "ua.com.merchik.merchik"
+
     compileSdkVersion 33
     defaultConfig {
         applicationId "ua.com.merchik.merchik_test"
@@ -16,8 +19,16 @@ android {
         multiDexEnabled true
     }
     buildTypes {
-        release {
+        debug {
+            debuggable true
             minifyEnabled false
+            shrinkResources false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+        release {
+            debuggable false
+            minifyEnabled true
+            shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
@@ -39,6 +50,10 @@ android {
     repositories {
         mavenCentral()
     }
+
+    buildFeatures {
+        buildConfig true
+    }
 }
 
 dependencies {
@@ -50,6 +65,8 @@ dependencies {
 
     implementation 'androidx.exifinterface:exifinterface:1.0.0'
 
+    implementation "androidx.preference:preference:1.2.1"
+
     implementation 'androidx.appcompat:appcompat:1.0.2'
     implementation 'androidx.legacy:legacy-support-v4:1.0.0'
     implementation 'com.google.android.material:material:1.2.1'
@@ -60,15 +77,15 @@ dependencies {
 
     implementation 'com.google.code.gson:gson:2.8.5'
     implementation "com.squareup.okhttp3:okhttp:4.9.1"
-    compile 'com.squareup.okhttp3:logging-interceptor:3.6.0'
+    implementation 'com.squareup.okhttp3:logging-interceptor:3.6.0'
     implementation 'com.squareup.retrofit2:retrofit:2.3.0'
     implementation 'com.squareup.retrofit2:converter-gson:2.1.0'
 
-    compile 'ru.egslava:MaskedEditText:1.0.5'
+    implementation 'ru.egslava:MaskedEditText:1.0.5'
 
-    compile 'org.jsoup:jsoup:1.8.3'
-    compile 'com.googlecode.libphonenumber:libphonenumber:8.12.17'
-    compile group: 'org.apache.commons', name: 'commons-lang3', version: '3.4'
+    implementation 'org.jsoup:jsoup:1.8.3'
+    implementation 'com.googlecode.libphonenumber:libphonenumber:8.12.17'
+    implementation group: 'org.apache.commons', name: 'commons-lang3', version: '3.4'
     implementation 'com.google.android.gms:play-services-maps:15.0.0'
     implementation 'com.google.android.gms:play-services-location:15.0.0'
     implementation 'com.googlecode.libphonenumber:libphonenumber:8.12.18'
@@ -82,9 +99,9 @@ dependencies {
     implementation 'com.journeyapps:zxing-android-embedded:3.2.0@aar'
 
     // Подключение Room
-    def room_version = "2.3.0"
+    def room_version = "2.5.2"
     implementation "androidx.room:room-runtime:$room_version"
-    implementation "androidx.room:room-rxjava3:2.3.0"
+    implementation "androidx.room:room-rxjava3:$room_version"
     annotationProcessor "androidx.room:room-compiler:$room_version"
 
     // Rx Java
@@ -96,7 +113,7 @@ dependencies {
 //    implementation 'androidx.work:work-runtime:2.7.1'
 
     // Multi State Toggle Button
-    compile 'org.honorato.multistatetogglebutton:multistatetogglebutton:0.2.2'
+    implementation 'org.honorato.multistatetogglebutton:multistatetogglebutton:0.2.2'
 
     implementation 'androidx.recyclerview:recyclerview:1.2.1'
 

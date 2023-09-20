@@ -6,7 +6,6 @@ import static ua.com.merchik.merchik.database.realm.tables.AdditionalRequirement
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
 import android.annotation.SuppressLint;
-import android.app.ProgressDialog;
 import android.content.Context;
 import android.os.Bundle;
 import android.os.Parcelable;
@@ -65,6 +64,7 @@ import ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsRealm;
 import ua.com.merchik.merchik.database.realm.tables.PPADBRealm;
 import ua.com.merchik.merchik.database.realm.tables.ReportPrepareRealm;
 import ua.com.merchik.merchik.database.realm.tables.TovarRealm;
+import ua.com.merchik.merchik.dialogs.BlockingProgressDialog;
 import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.dialogs.DialogVideo;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
@@ -446,14 +446,14 @@ public class DetailedReportTovarsFrag extends Fragment {
 
 
             List<TovarDB> tovarDBList;
-            switch (item.getItemId()) {
-                case R.id.popup_dr:
+            switch (item.getOrder()) {
+                case 3:
                     tovarDBList = getTovListNew(TovarDisplayType.DETAILED_REPORT);
                     Toast.makeText(getContext(), "Видалено зайві товари.(" + tovarDBList.size() + ")", Toast.LENGTH_SHORT).show();
                     addRecycleView(tovarDBList);
                     return true;
 
-                case R.id.popup_ppa:
+                case 1:
                     tovarDBList = getTovListNew(TovarDisplayType.PPA);
 
                     if (customerSDB != null && customerSDB.ppaAuto == 1 && !customerSDB.id.equals("9382") && !customerSDB.id.equals("32246")) { // 9382 - Витмарк, 32246 - Ласунка
@@ -470,7 +470,7 @@ public class DetailedReportTovarsFrag extends Fragment {
                     }
                     return true;
 
-                case R.id.popup_all:
+                case 2:
                     tovarDBList = getTovListNew(TovarDisplayType.ALL);
 
                     if (customerSDB != null && customerSDB.ppaAuto == 1 && !customerSDB.id.equals("9382") && !customerSDB.id.equals("32246")) {
@@ -485,7 +485,7 @@ public class DetailedReportTovarsFrag extends Fragment {
                     }
                     return true;
 
-                case R.id.popup_tov:
+                case 0:
                     if (customerSDB != null && customerSDB.ppaAuto == 1 && !customerSDB.id.equals("9382") && !customerSDB.id.equals("32246")) {
                         dialogData.setCancel("Ні", () -> {
                             openOneTov();
@@ -742,17 +742,17 @@ public class DetailedReportTovarsFrag extends Fragment {
 
     private void downloadDetailedReportTovarsData(TovarDisplayType type, Clicks.clickStatusMsg click) {
         try {
-            ProgressDialog pg = ProgressDialog.show(mContext, "Загрузка списка товаров", "Подождите окончания загрузки. Это может занять время.", true, true);
+            BlockingProgressDialog pg = BlockingProgressDialog.show(mContext, "Загрузка списка товаров", "Подождите окончания загрузки. Это может занять время.");
             downloadReportPrepareByDad2(pg, click);
 
-            ProgressDialog pg2 = ProgressDialog.show(mContext, "Загрузка списка опций", "Подождите окончания загрузки. Это может занять время.", true, true);
+            BlockingProgressDialog pg2 = BlockingProgressDialog.show(mContext, "Загрузка списка опций", "Подождите окончания загрузки. Это может занять время.");
             downloadOptionByDad2(pg2, click);
         } catch (Exception e) {
             Globals.writeToMLOG("INFO", "DetailedReportTovarsFrag/getTovList/downloadDetailedReportTovarsData", "Exception e: " + e);
         }
     }
 
-    private void downloadReportPrepareByDad2(ProgressDialog pg, Clicks.clickStatusMsg click) {
+    private void downloadReportPrepareByDad2(BlockingProgressDialog pg, Clicks.clickStatusMsg click) {
         StandartData standartData = new StandartData();
         standartData.mod = "report_prepare";
         standartData.act = "list_data";
@@ -808,7 +808,7 @@ public class DetailedReportTovarsFrag extends Fragment {
         });
     }
 
-    private void downloadOptionByDad2(ProgressDialog pg, Clicks.clickStatusMsg click) {
+    private void downloadOptionByDad2(BlockingProgressDialog pg, Clicks.clickStatusMsg click) {
         StandartData standartData = new StandartData();
         standartData.mod = "plan";
         standartData.act = "options_list";

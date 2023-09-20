@@ -6,7 +6,7 @@ import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
-import android.preference.PreferenceManager;
+import androidx.preference.PreferenceManager;
 import android.util.Log;
 import android.widget.Toast;
 

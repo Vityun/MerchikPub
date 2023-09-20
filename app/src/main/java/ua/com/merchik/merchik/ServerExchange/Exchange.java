@@ -5,7 +5,6 @@ import static ua.com.merchik.merchik.ServerExchange.TablesLoadingUnloading.downl
 import static ua.com.merchik.merchik.ServerExchange.TablesLoadingUnloading.downloadVideoLessons;
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
-import android.app.ProgressDialog;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -104,6 +103,7 @@ import ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsMarkRe
 import ua.com.merchik.merchik.database.realm.tables.StackPhotoRealm;
 import ua.com.merchik.merchik.database.realm.tables.TARCommentsRealm;
 import ua.com.merchik.merchik.database.realm.tables.WpDataRealm;
+import ua.com.merchik.merchik.dialogs.BlockingProgressDialog;
 import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.dialogs.DialogEKL;
 import ua.com.merchik.merchik.dialogs.DialogFilter.Click;
@@ -907,7 +907,7 @@ public class Exchange {
         try {
             Log.e("updateLanguages", "OK");
             // Отображение прогресса обена таблиц.
-            ProgressDialog progressDialog = ProgressDialog.show(context, "Обмен данными с сервером.", "Обновление таблицы: " + "Языки", true, true);
+            BlockingProgressDialog progressDialog = BlockingProgressDialog.show(context, "Обмен данными с сервером.", "Обновление таблицы: " + "Языки");
             new LanguagesExchange().downloadLanguages(new ExchangeInterface.Languages() {
                 @Override
                 public void onSuccess(List<LanguagesSDB> data) {
@@ -963,7 +963,7 @@ public class Exchange {
         List<SiteObjectsSDB> data = SQL_DB.siteObjectsDao().getAll();
 
         // Отобрадение прогресса
-        ProgressDialog progressDialog = ProgressDialog.show(context, "Обмен данными с сервером.", "Обновление таблицы: " + "ОбьектыСайта", true, true);
+        BlockingProgressDialog progressDialog = BlockingProgressDialog.show(context, "Обмен данными с сервером.", "Обновление таблицы: " + "ОбьектыСайта");
 
         new SiteObjectsExchange().downloadSiteObjects(new ExchangeInt() {
             @Override
@@ -1015,7 +1015,7 @@ public class Exchange {
             Log.e("updateTranslates", "OK");
 
             // Отображение прогресса обена таблиц.
-            ProgressDialog progressDialog = ProgressDialog.show(context, "Обмен данными с сервером.", "Обновление таблицы: " + "Переводы", true, true);
+            BlockingProgressDialog progressDialog = BlockingProgressDialog.show(context, "Обмен данными с сервером.", "Обновление таблицы: " + "Переводы");
 
             new TranslationsExchange().downloadTranslations(new ExchangeInterface.Translates() {
                 @Override

@@ -151,12 +151,6 @@ public class DetailedReportOptionsFrag extends Fragment {
     }
 
     @Override
-    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
-        super.onActivityCreated(savedInstanceState);
-        Globals.writeToMLOG("INFO", "DetailedReportOptionsFrag", "onActivityCreated");
-    }
-
-    @Override
     public void onStart() {
         super.onStart();
         Globals.writeToMLOG("INFO", "DetailedReportOptionsFrag", "onStart");

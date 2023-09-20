@@ -5,7 +5,6 @@ import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
-import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -22,7 +21,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
-import android.preference.PreferenceManager;
+import androidx.preference.PreferenceManager;
 import android.provider.MediaStore;
 import android.text.Html;
 import android.text.SpannableString;
@@ -109,8 +108,6 @@ public class menu_main extends AppCompatActivity {
     File photoToDB; // Буфер для сохранения фото в БД (был баг где записывается не та фотка)
     JsonObject JSON;
     Uri photo_uri_test;
-
-    ProgressDialog progressDialogWPData = null;
 
     TextView activity_title;
     TextView textView_comment, textViewInfoCustomerAddress;

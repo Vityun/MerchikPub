@@ -3,7 +3,6 @@ package ua.com.merchik.merchik.Activities.PremiumActivity;
 import static ua.com.merchik.merchik.Globals.userId;
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
-import android.app.ProgressDialog;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
@@ -48,6 +47,7 @@ import ua.com.merchik.merchik.data.RetrofitResponse.tables.Premial.PremiumPremiu
 import ua.com.merchik.merchik.data.TestJsonUpload.StandartData;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.AppUserRealm;
+import ua.com.merchik.merchik.dialogs.BlockingProgressDialog;
 import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.dialogs.DialogsRecyclerViewAdapter.DialogAdapter;
 import ua.com.merchik.merchik.dialogs.DialogsRecyclerViewAdapter.ViewHolderTypeList;
@@ -292,12 +292,12 @@ public class PremiumActivity extends toolbar_menus {
         // Clock.getLastMonday(), Clock.getLastSunday();
         // Clock.getCurrentMonday(), Calendar.getInstance();
 
-        ProgressDialog progressDialog = ProgressDialog.show(this, "Преміальні", "Завантажую минулий тиждень.", true, true);
+        BlockingProgressDialog progressDialog = BlockingProgressDialog.show(this, "Преміальні", "Завантажую минулий тиждень.");
 
         downloadPremium(Clock.getLastMonday(), Clock.getLastSunday(), new PremiumRespListener() {
             @Override
             public void onSuccess(PremiumPremiumList res) {
-                if (progressDialog != null && progressDialog.isShowing()) {
+                if (progressDialog.isShowing()) {
                     progressDialog.dismiss();
                 }
                 prepareTableData(getPeriodString(Clock.getLastMonday(), Clock.getLastSunday()), res);
@@ -306,7 +306,7 @@ public class PremiumActivity extends toolbar_menus {
 
             @Override
             public void onFailure(String err) {
-                if (progressDialog != null && progressDialog.isShowing()) {
+                if (progressDialog.isShowing()) {
                     progressDialog.dismiss();
                 }
                 DialogData dialog = new DialogData(PremiumActivity.this);
@@ -319,13 +319,13 @@ public class PremiumActivity extends toolbar_menus {
     }
 
     private void makeTableDataSecondWeek() {
-        ProgressDialog progressDialog = ProgressDialog.show(this, "Преміальні", "Завантажую поточний тиждень.", true, true);
+        BlockingProgressDialog progressDialog = BlockingProgressDialog.show(this, "Преміальні", "Завантажую поточний тиждень.");
 
         downloadPremium(Clock.getCurrentMonday(), Clock.getCurrentSunday(), new PremiumRespListener() {
 //        downloadPremium(Clock.getCurrentMonday(), Calendar.getInstance(), new PremiumRespListener() {
             @Override
             public void onSuccess(PremiumPremiumList res) {
-                if (progressDialog != null && progressDialog.isShowing()) {
+                if (progressDialog.isShowing()) {
                     progressDialog.dismiss();
                 }
                 prepareTableData(getPeriodString(Clock.getCurrentMonday(), Clock.getCurrentSunday()), res);
@@ -333,7 +333,7 @@ public class PremiumActivity extends toolbar_menus {
 
             @Override
             public void onFailure(String err) {
-                if (progressDialog != null && progressDialog.isShowing()) {
+                if (progressDialog.isShowing()) {
                     progressDialog.dismiss();
                 }
                 DialogData dialog = new DialogData(PremiumActivity.this);
@@ -346,12 +346,12 @@ public class PremiumActivity extends toolbar_menus {
     }
 
     private void makeTableDataSecondMonth() {
-        ProgressDialog progressDialog = ProgressDialog.show(this, "Преміальні", "Завантажую поточний місяць.", true, true);
+        BlockingProgressDialog progressDialog = BlockingProgressDialog.show(this, "Преміальні", "Завантажую поточний місяць.");
 
         downloadPremium(Clock.getStartOfMonth(), Clock.getEndOfMonth(), new PremiumRespListener() {
             @Override
             public void onSuccess(PremiumPremiumList res) {
-                if (progressDialog != null && progressDialog.isShowing()) {
+                if (progressDialog.isShowing()) {
                     progressDialog.dismiss();
                 }
                 prepareTableData(getPeriodString(Clock.getStartOfMonth(), Clock.getEndOfMonth()), res);
@@ -360,7 +360,7 @@ public class PremiumActivity extends toolbar_menus {
 
             @Override
             public void onFailure(String err) {
-                if (progressDialog != null && progressDialog.isShowing()) {
+                if (progressDialog.isShowing()) {
                     progressDialog.dismiss();
                 }
                 DialogData dialog = new DialogData(PremiumActivity.this);
