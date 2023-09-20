@@ -12,6 +12,12 @@
 #   public *;
 #}
 
+# Keep all classes in Bouncy Castle
+-keep class org.bouncycastle.** { *; }
+
+# Keep all classes in Conscrypt
+-keep class org.conscrypt.** { *; }
+
 # Uncomment this to preserve the line number information for
 # debugging stack traces.
 #-keepattributes SourceFile,LineNumberTable

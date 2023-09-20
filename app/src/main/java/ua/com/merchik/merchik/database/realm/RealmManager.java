@@ -697,7 +697,7 @@ public class RealmManager {
                 .notEqualTo("photo_type", 29)
                 .notEqualTo("photo_type", 5)
                 .notEqualTo("photo_type", 35)
-//                .isNull("showcase_id")  // Показываем мерчу в ЖФ фото НЕ "ВИТРИН"
+                .isNull("showcase_id")  // Показываем мерчу в ЖФ фото НЕ "ВИТРИН"
                 .findAll();
     }
 
@@ -708,7 +708,7 @@ public class RealmManager {
                 .notEqualTo("photo_type", 5)
                 .notEqualTo("photo_type", 35)
                 .equalTo("code_dad2", dad2)
-//                .isNull("showcase_id")  // Показываем мерчу в ЖФ фото НЕ "ВИТРИН"
+                .isNull("showcase_id")  // Показываем мерчу в ЖФ фото НЕ "ВИТРИН"
                 .findAll();
     }
 
