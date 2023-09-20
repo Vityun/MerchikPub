@@ -2,7 +2,6 @@ package ua.com.merchik.merchik.Activities.ReferencesActivity;
 
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
-import android.app.ProgressDialog;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.TextView;
@@ -24,6 +23,7 @@ import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.Utils.UniversalAdapter.AdapterUtil;
 import ua.com.merchik.merchik.Utils.UniversalAdapter.UniversalAdapterData;
 import ua.com.merchik.merchik.data.Database.Room.UsersSDB;
+import ua.com.merchik.merchik.dialogs.BlockingProgressDialog;
 import ua.com.merchik.merchik.toolbar_menus;
 
 public class ReferencesActivity extends toolbar_menus {
@@ -89,7 +89,7 @@ public class ReferencesActivity extends toolbar_menus {
 
                 case USERS:
                     CompositeDisposable disposable = new CompositeDisposable();
-                    ProgressDialog pg = ProgressDialog.show(this, "Отображение данных", "Подождите пока данные подготовятся", true, true);
+                    BlockingProgressDialog pg = BlockingProgressDialog.show(this, "Отображение данных", "Подождите пока данные подготовятся");
                     disposable.add(SQL_DB.usersDao().getAllSortedFIO(Globals.userId)
                             .observeOn(AndroidSchedulers.mainThread())
                             .subscribe(new Consumer<List<UsersSDB>>() {
@@ -176,9 +176,7 @@ public class ReferencesActivity extends toolbar_menus {
 
     private void setChatData() {
 
-        ProgressDialog pg = new ProgressDialog(this);
-        pg.setMessage("Почекайте");
-        pg.show();
+        BlockingProgressDialog pg = BlockingProgressDialog.show(this, "Почекайте");
 
         try {
             Log.d("chat_grp_time", "insertInTemp time start");

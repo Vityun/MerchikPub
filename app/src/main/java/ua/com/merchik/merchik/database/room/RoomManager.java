@@ -18,7 +18,10 @@ public class RoomManager {
                 .fallbackToDestructiveMigration()
                 .enableMultiInstanceInvalidation()
                 .allowMainThreadQueries()
-                .addMigrations(MIGRATION_40_41)
+                .addMigrations(
+                    MIGRATION_12_13,
+                    MIGRATION_40_41
+                )
 
                 .build();
     }

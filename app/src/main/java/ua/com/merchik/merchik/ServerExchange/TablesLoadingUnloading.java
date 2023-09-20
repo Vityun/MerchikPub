@@ -6,7 +6,6 @@ import static ua.com.merchik.merchik.database.realm.tables.PPARealm.setPPA;
 import static ua.com.merchik.merchik.database.realm.tables.WpDataRealm.getWpDataAddresses;
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
-import android.app.ProgressDialog;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -105,6 +104,7 @@ import ua.com.merchik.merchik.database.realm.tables.ReportPrepareRealm;
 import ua.com.merchik.merchik.database.realm.tables.TARCommentsRealm;
 import ua.com.merchik.merchik.database.realm.tables.TasksAndReclamationsRealm;
 import ua.com.merchik.merchik.database.realm.tables.ThemeRealm;
+import ua.com.merchik.merchik.dialogs.BlockingProgressDialog;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
 
 
@@ -350,7 +350,7 @@ public class TablesLoadingUnloading {
 //        String date_from = timeYesterday7;
         String date_to = timeTomorrow;
 
-        ProgressDialog pg = ProgressDialog.show(context, "Обмен данными с сервером.", "Обновление таблицы: " + "План работ", true, true);
+        BlockingProgressDialog pg = BlockingProgressDialog.show(context, "Обмен данными с сервером.", "Обновление таблицы: " + "План работ");
 
         try {
             Log.e("TAG_TEST_WP", "RESPONSE_0 T");
@@ -421,7 +421,7 @@ public class TablesLoadingUnloading {
         String act = "menu_list";
         String images_type_list = "";
 
-        ProgressDialog pg = ProgressDialog.show(context, "Обмен данными с сервером.", "Обновление таблицы: " + "Тип фото", true, true);
+        BlockingProgressDialog pg = BlockingProgressDialog.show(context, "Обмен данными с сервером.", "Обновление таблицы: Тип фото");
 
         retrofit2.Call<ImageTypes> call = RetrofitBuilder.getRetrofitInterface().IMAGE_TYPES_CALL(mod, act, images_type_list);
         call.enqueue(new retrofit2.Callback<ImageTypes>() {
@@ -487,7 +487,7 @@ public class TablesLoadingUnloading {
         String act = "client_group_list_plain";
 //        String act = "client_group_list";
 
-        ProgressDialog pg = ProgressDialog.show(context, "Обмен данными с сервером.", "Обновление таблицы: " + "Групы товаров", true, true);
+        BlockingProgressDialog pg = BlockingProgressDialog.show(context, "Обмен данными с сервером.", "Обновление таблицы: Групы товаров");
 
         retrofit2.Call<CustomerGroups> call = RetrofitBuilder.getRetrofitInterface().GROUP_TYPE(mod, act);
         call.enqueue(new retrofit2.Callback<CustomerGroups>() {
@@ -595,7 +595,7 @@ public class TablesLoadingUnloading {
 //        String date_from = Clock.getDatePeriod(-14);
         String date_to = timeTomorrow;
 
-        ProgressDialog pg = ProgressDialog.show(context, "Обмен данными с сервером.", "Обновление таблицы: " + "Опции", true, true);
+        BlockingProgressDialog pg = BlockingProgressDialog.show(context, "Обмен данными с сервером.", "Обновление таблицы: Опции");
 
         retrofit2.Call<OptionsServer> call = RetrofitBuilder.getRetrofitInterface().OPTIONS_CALL(mod, act, date_from, date_to);
         call.enqueue(new retrofit2.Callback<OptionsServer>() {
@@ -711,7 +711,7 @@ public class TablesLoadingUnloading {
 //            call = RetrofitBuilder.getRetrofitInterface().REPORT_PREPARE_CALL_PIECE(mod, act, date_from, date_to, lastUpdate);
 //        }
 
-        ProgressDialog pg = ProgressDialog.show(context, "Обмен данными с сервером.", "Обновление таблицы: " + "Дет. отчёт", true, true);
+        BlockingProgressDialog pg = BlockingProgressDialog.show(context, "Обмен данными с сервером.", "Обновление таблицы: Дет. отчёт");
 
 
         call.enqueue(new retrofit2.Callback<ReportPrepareServer>() {
@@ -782,7 +782,7 @@ public class TablesLoadingUnloading {
 
 //        RealmManager.setRowToLog(Collections.singletonList(new LogDB(RealmManager.getLastIdLogDB() + 1, System.currentTimeMillis() / 1000, "Обновление таблицы Клиенты", 1094, null, null, null, null, null, Globals.session, null)));
 
-        ProgressDialog pg = ProgressDialog.show(context, "Обмен данными с сервером.", "Обновление таблицы: " + "Клиенты", true, true);
+        BlockingProgressDialog pg = BlockingProgressDialog.show(context, "Обмен данными с сервером.", "Обновление таблицы: Клиенты");
 
         retrofit2.Call<CustomerTableResponse> call = RetrofitBuilder.getRetrofitInterface().GET_CUSTOMER_T(mod, act);
         call.enqueue(new retrofit2.Callback<CustomerTableResponse>() {
@@ -859,7 +859,7 @@ public class TablesLoadingUnloading {
         String mod = "data_list";
         String act = "addr_list";
 
-        ProgressDialog pg = ProgressDialog.show(context, "Обмен данными с сервером.", "Обновление таблицы: " + "Адреса", true, true);
+        BlockingProgressDialog pg = BlockingProgressDialog.show(context, "Обмен данными с сервером.", "Обновление таблицы: Адреса");
 
         retrofit2.Call<AddressTableResponse> call = RetrofitBuilder.getRetrofitInterface().GET_ADDRESS_T(mod, act);
         call.enqueue(new retrofit2.Callback<AddressTableResponse>() {
@@ -922,7 +922,7 @@ public class TablesLoadingUnloading {
 
 //        RealmManager.setRowToLog(Collections.singletonList(new LogDB(RealmManager.getLastIdLogDB() + 1, System.currentTimeMillis() / 1000, "Обмен таблицы Сотрудники", 1095, null, null, null, null, null, Globals.session, null)));
 
-        ProgressDialog pg = ProgressDialog.show(context, "Обмен данными с сервером.", "Обновление таблицы: " + "Сотрудники", true, true);
+        BlockingProgressDialog pg = BlockingProgressDialog.show(context, "Обмен данными с сервером.", "Обновление таблицы: Сотрудники");
 
         retrofit2.Call<SotrTable> call = RetrofitBuilder.getRetrofitInterface().GET_SOTR_T(mod, act);
         call.enqueue(new retrofit2.Callback<SotrTable>() {
@@ -1087,11 +1087,11 @@ public class TablesLoadingUnloading {
         String mod = "data_list";
         String act = "tovar_list";
 
-        ProgressDialog tovarProgressDialog = null;
-        ProgressDialog pg = null;
+        BlockingProgressDialog tovarProgressDialog = null;
+        BlockingProgressDialog pg = null;
         if (context != null) {
-//            tovarProgressDialog = ProgressDialog.show(context, "Обмен данными с сервером.", "Загрузка фотографий Товаров.", true, true);
-//            pg = ProgressDialog.show(context, "Обмен данными с сервером.", "Обновление таблицы: " + "Товаров", true, true);
+//            tovarProgressDialog = BlockingProgressDialog.show(context, "Обмен данными с сервером.", "Загрузка фотографий Товаров.");
+//            pg = BlockingProgressDialog.show(context, "Обмен данными с сервером.", "Обновление таблицы: " + "Товаров");
         }
 
         retrofit2.Call<TovarTableResponse> call;
@@ -1101,8 +1101,8 @@ public class TablesLoadingUnloading {
             call = RetrofitBuilder.getRetrofitInterface().GET_TOVAR_T(mod, act);
         }
 
-//        ProgressDialog finalPg = pg;
-//        ProgressDialog finalTovarProgressDialog = tovarProgressDialog;
+//        BlockingProgressDialog finalPg = pg;
+//        BlockingProgressDialog finalTovarProgressDialog = tovarProgressDialog;
         call.enqueue(new retrofit2.Callback<TovarTableResponse>() {
             @Override
             public void onResponse(retrofit2.Call<TovarTableResponse> call, retrofit2.Response<TovarTableResponse> response) {
@@ -1237,7 +1237,7 @@ public class TablesLoadingUnloading {
         String mod = "data_list";
         String act = "tovar_manufacturer_list";
 
-        ProgressDialog pg = ProgressDialog.show(context, "Обмен данными с сервером.", "Обновление таблицы: " + "Торговые Марки", true, true);
+        BlockingProgressDialog pg = BlockingProgressDialog.show(context, "Обмен данными с сервером.", "Обновление таблицы: Торговые Марки");
 
         retrofit2.Call<TradeMarkResponse> call = RetrofitBuilder.getRetrofitInterface().GET_TRADE_MARKS_T(mod, act);
         call.enqueue(new retrofit2.Callback<TradeMarkResponse>() {
@@ -1345,7 +1345,7 @@ public class TablesLoadingUnloading {
         String mod = "data_list";
         String act = "report_error_list";
 
-        ProgressDialog pg = ProgressDialog.show(context, "Обмен данными с сервером.", "Обновление таблицы: " + "Ошибки", true, true);
+        BlockingProgressDialog pg = BlockingProgressDialog.show(context, "Обмен данными с сервером.", "Обновление таблицы: Ошибки");
 
         StandartData data = new StandartData();
         data.mod = "data_list";
@@ -1412,7 +1412,7 @@ public class TablesLoadingUnloading {
         String mod = "data_list";
         String act = "report_promo_list";
 
-        ProgressDialog pg = ProgressDialog.show(context, "Обмен данными с сервером.", "Обновление таблицы: " + "Акции", true, true);
+        BlockingProgressDialog pg = BlockingProgressDialog.show(context, "Обмен данными с сервером.", "Обновление таблицы: Акции");
 
         retrofit2.Call<PromoTableResponce> call = RetrofitBuilder.getRetrofitInterface().GET_PROMO_LIST(mod, act);
         call.enqueue(new retrofit2.Callback<PromoTableResponce>() {

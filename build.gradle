@@ -7,19 +7,18 @@ buildscript {
         jcenter()
         maven {
             url 'http://oss.jfrog.org/artifactory/oss-snapshot-local'
+            allowInsecureProtocol = true
         }
         maven {
             url 'https://jitpack.io'
+            allowInsecureProtocol = true
         }
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:4.2.1'
-        classpath "io.realm:realm-gradle-plugin:10.0.1"
+        classpath 'com.android.tools.build:gradle:8.1.1'
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.8.10"
 
-//        classpath "io.realm:realm-gradle-plugin:6.0.2"
-
-        // NOTE: Do not place your application dependencies here; they belong
-        // in the individual module build.gradle files
+        classpath "io.realm:realm-gradle-plugin:10.16.1"
     }
 }
 
@@ -29,9 +28,11 @@ allprojects {
         jcenter()
         maven {
             url 'http://oss.jfrog.org/artifactory/oss-snapshot-local'
+            allowInsecureProtocol = true
         }
         maven {
              url 'https://jitpack.io'
+            allowInsecureProtocol = true
         }
     }
     gradle.projectsEvaluated {
