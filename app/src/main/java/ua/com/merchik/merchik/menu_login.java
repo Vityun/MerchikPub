@@ -2244,8 +2244,8 @@ public class menu_login extends AppCompatActivity {
 
 
         popupMenu.setOnMenuItemClickListener(item -> {
-            switch (item.getItemId()) {
-                case R.id.lang1:
+            switch (item.getOrder()) {
+                case 0:
                     Toast.makeText(this, "Вы сменили язык. Дождитесь сообщения о загрузке нового языка", Toast.LENGTH_SHORT).show();
                     Translate.setLanguage(getApplicationContext(), 2);
 
@@ -2268,7 +2268,7 @@ public class menu_login extends AppCompatActivity {
                     });
                     return true;
 
-                case R.id.lang2:
+                case 1:
                     Toast.makeText(this, "Вы сменили язык. Дождитесь сообщения о загрузке нового языка", Toast.LENGTH_SHORT).show();
                     Translate.setLanguage(getApplicationContext(), 1);
 
@@ -2291,7 +2291,7 @@ public class menu_login extends AppCompatActivity {
                     });
                     return true;
 
-                case R.id.lang3:
+                case 2:
                     Toast.makeText(this, "Вы сменили язык. Дождитесь сообщения о загрузке нового языка", Toast.LENGTH_SHORT).show();
                     Translate.setLanguage(getApplicationContext(), 3);
 
@@ -2314,7 +2314,7 @@ public class menu_login extends AppCompatActivity {
                     });
                     return true;
 
-                case R.id.lang4:
+                case 3:
                     Toast.makeText(this, "Вы сменили язык. Дождитесь сообщения о загрузке нового языка", Toast.LENGTH_SHORT).show();
                     Translate.setLanguage(getApplicationContext(), 7);
 

@@ -86,8 +86,8 @@ public class Translate {
         popupMenu.inflate(R.menu.popup_language);
 
         popupMenu.setOnMenuItemClickListener(item -> {
-            switch (item.getItemId()) {
-                case R.id.lang1:
+            switch (item.getOrder()) {
+                case 0:
                     setAppLanguage(context, "UA");
                     Toast.makeText(context, "Вы сменили язык. Дождитесь сообщения о загрузке нового языка", Toast.LENGTH_SHORT).show();
                     Translate.setLanguage(context, 2);
@@ -107,7 +107,7 @@ public class Translate {
                     Globals.refreshActivity(context);
                     return true;
 
-                case R.id.lang2:
+                case 1:
                     setAppLanguage(context, "RU");
                     Toast.makeText(context, "Вы сменили язык. Дождитесь сообщения о загрузке нового языка", Toast.LENGTH_SHORT).show();
                     Translate.setLanguage(context, 1);
@@ -128,7 +128,7 @@ public class Translate {
                     Globals.refreshActivity(context);
                     return true;
 
-                case R.id.lang3:
+                case 2:
                     setAppLanguage(context, "GB");
                     Toast.makeText(context, "Вы сменили язык. Дождитесь сообщения о загрузке нового языка", Toast.LENGTH_SHORT).show();
                     Translate.setLanguage(context, 3);
@@ -149,7 +149,7 @@ public class Translate {
                     Globals.refreshActivity(context);
                     return true;
 
-                case R.id.lang4:
+                case 3:
                     setAppLanguage(context, "PL");
                     Toast.makeText(context, "Вы сменили язык. Дождитесь сообщения о загрузке нового языка", Toast.LENGTH_SHORT).show();
                     Translate.setLanguage(context, 7);

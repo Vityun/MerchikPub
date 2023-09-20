@@ -1,8 +1,10 @@
 apply plugin: 'com.android.application'
 apply plugin: 'realm-android'
+apply plugin: 'org.jetbrains.kotlin.android'
 
 android {
     namespace "ua.com.merchik.merchik"
+
     compileSdkVersion 33
     defaultConfig {
         applicationId "ua.com.merchik.merchik_test"
@@ -17,8 +19,16 @@ android {
         multiDexEnabled true
     }
     buildTypes {
-        release {
+        debug {
+            debuggable true
             minifyEnabled false
+            shrinkResources false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+        release {
+            debuggable false
+            minifyEnabled true
+            shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
@@ -39,6 +49,10 @@ android {
     }
     repositories {
         mavenCentral()
+    }
+
+    buildFeatures {
+        buildConfig true
     }
 }
 
