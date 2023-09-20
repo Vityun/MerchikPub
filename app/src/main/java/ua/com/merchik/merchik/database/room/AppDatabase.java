@@ -26,6 +26,7 @@ import ua.com.merchik.merchik.data.Database.Room.OblastSDB;
 import ua.com.merchik.merchik.data.Database.Room.OborotVedSDB;
 import ua.com.merchik.merchik.data.Database.Room.OpinionSDB;
 import ua.com.merchik.merchik.data.Database.Room.OpinionThemeSDB;
+import ua.com.merchik.merchik.data.Database.Room.PlanogrammSDB;
 import ua.com.merchik.merchik.data.Database.Room.PotentialClientSDB;
 import ua.com.merchik.merchik.data.Database.Room.ReclamationPercentageSDB;
 import ua.com.merchik.merchik.data.Database.Room.SamplePhotoSDB;
@@ -58,6 +59,7 @@ import ua.com.merchik.merchik.database.room.DaoInterfaces.OblastDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.OborotVedDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.OpinionDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.OpinionThemeDao;
+import ua.com.merchik.merchik.database.room.DaoInterfaces.PlanogrammDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.PotentialClientDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.ReclamationPercentageDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.SamplePhotoDao;
@@ -108,10 +110,10 @@ import ua.com.merchik.merchik.database.room.DaoInterfaces.VotesDao;
                 ShelfSizeSDB.class,      // Доля полочного пространства
                 FragmentSDB.class,           // Таблица Фрагментов (полей на фото)
                 ViewListSDB.class,       // Знак видео просмотрено или нет
-                ShowcaseSDB.class       // Витрины, не путать с полками и тп
-
+                ShowcaseSDB.class,       // Витрины, не путать с полками и тп
+                PlanogrammSDB.class      // Планограми
         },
-        version = 41
+        version = 42
 )
 
 
@@ -181,6 +183,8 @@ public abstract class AppDatabase extends RoomDatabase {
     public abstract VideoViewDao videoViewDao();
 
     public abstract ShowcaseDao showcaseDao();
+
+    public abstract PlanogrammDao planogrammDao();
 
     public class MyAutoMigration {
     }
