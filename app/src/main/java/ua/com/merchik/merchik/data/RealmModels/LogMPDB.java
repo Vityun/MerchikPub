@@ -12,7 +12,7 @@ public class LogMPDB extends RealmObject {
 
 //    public Location location;   // 25.08.23. Тут буде зберігатися інфа щодо координат
 
-    public int provider;        // 27.08.23. Провайдер.. // 0=NULL; 1=GPS; 2=NET.
+    public Integer provider;        // 27.08.23. Провайдер.. // 0=NULL; 1=GPS; 2=NET.
 
     public double CoordX, CoordY, CoordAltitude;
     public long CoordTime;

@@ -39,6 +39,7 @@ import ua.com.merchik.merchik.data.RetrofitResponse.EDRPOUResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.ErrorTableResponce;
 import ua.com.merchik.merchik.data.RetrofitResponse.FragmentsResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.ImageTypes;
+import ua.com.merchik.merchik.data.RetrofitResponse.Location.LocationResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.Login;
 import ua.com.merchik.merchik.data.RetrofitResponse.Logout;
 import ua.com.merchik.merchik.data.RetrofitResponse.ModImagesView;
@@ -616,6 +617,11 @@ public interface RetrofitInterface {
             @Body JsonObject json);
 
     // -------------------------------------------------------
+
+    @POST("mobile_app.php?")
+    Call<LocationResponse> LOCATION_RESPONSE_CALL(
+            @Header("ContentType") String content,
+            @Body JsonObject json);
 
 
     /**

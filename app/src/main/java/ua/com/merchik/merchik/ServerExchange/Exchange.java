@@ -34,6 +34,7 @@ import ua.com.merchik.merchik.ServerExchange.TablesExchange.CustomerExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.EKLExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.FragmentsExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.LanguagesExchange;
+import ua.com.merchik.merchik.ServerExchange.TablesExchange.LocationExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.OblastExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.PotentialClientTableExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.SamplePhotoExchange;
@@ -62,6 +63,7 @@ import ua.com.merchik.merchik.data.Database.Room.UsersSDB;
 import ua.com.merchik.merchik.data.Database.Room.ViewListSDB;
 import ua.com.merchik.merchik.data.Database.Room.VoteSDB;
 import ua.com.merchik.merchik.data.RealmModels.AdditionalRequirementsMarkDB;
+import ua.com.merchik.merchik.data.RealmModels.LogMPDB;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
 import ua.com.merchik.merchik.data.RealmModels.SynchronizationTimetableDB;
 import ua.com.merchik.merchik.data.RealmModels.TARCommentsDB;
@@ -72,6 +74,7 @@ import ua.com.merchik.merchik.data.RetrofitResponse.AdditionalMaterialsGroupsRes
 import ua.com.merchik.merchik.data.RetrofitResponse.AdditionalMaterialsLinksResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.AdditionalMaterialsResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.ConductWpDataResponse;
+import ua.com.merchik.merchik.data.RetrofitResponse.Location.LocationList;
 import ua.com.merchik.merchik.data.RetrofitResponse.TovarImgList;
 import ua.com.merchik.merchik.data.RetrofitResponse.TovarImgResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.photos.ImagesViewListImageList;
@@ -177,6 +180,47 @@ public class Exchange {
                     });
                 } catch (Exception e) {
                     Log.e("uploadLodMp", "uploadLodMp Exception e: " + e);
+                }
+
+                try {
+                    new LocationExchange().downloadLocationTable(new ExchangeInterface.ExchangeResponseInterface() {
+                        @Override
+                        public <T> void onSuccess(List<T> data) {
+                            List<LocationList> list = (List<LocationList>) data;
+                            List<LogMPDB> logList = new ArrayList<>();
+                            for (LocationList item : list) {
+                                int id = RealmManager.logMPGetLastId() + 1;
+                                LogMPDB logMPDB = new LogMPDB();
+
+                                logMPDB.id = id;
+                                logMPDB.serverId = item.id;
+                                logMPDB.provider = item.sourceId;
+                                logMPDB.CoordX = item.lat;
+                                logMPDB.CoordY = item.lon;
+                                logMPDB.CoordAltitude = item.altitude;
+                                logMPDB.CoordTime = item.dtDevice;
+                                logMPDB.CoordSpeed = item.speed;
+                                logMPDB.CoordAccuracy = item.accuracy;
+                                logMPDB.mocking = item.locationIsFake != 0;
+                                logMPDB.vpi = System.currentTimeMillis() / 1000;
+
+                                logList.add(logMPDB);
+                            }
+
+                            RealmManager.INSTANCE.executeTransaction(realm -> {
+                                realm.copyToRealmOrUpdate(logList);
+                            });
+
+                            Globals.writeToMLOG("INFO", "startExchange/downloadLocationTable/onFailure", "OK: ");
+                        }
+
+                        @Override
+                        public void onFailure(String error) {
+                            Globals.writeToMLOG("INFO", "startExchange/downloadLocationTable/onFailure", "String error: " + error);
+                        }
+                    });
+                } catch (Exception e) {
+                    Globals.writeToMLOG("ERROR", "startExchange/downloadLocationTable", "Exception e: " + e);
                 }
 
 
@@ -1593,7 +1637,7 @@ public class Exchange {
                     Globals.writeToMLOG("INGO", "updateTAR", "t:" + t);
                 }
             });
-        }catch (Exception e){
+        } catch (Exception e) {
             Globals.writeToMLOG("ERROR", "updateTAR", "Exception e:" + e);
         }
     }

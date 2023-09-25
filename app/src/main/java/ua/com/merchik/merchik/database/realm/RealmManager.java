@@ -111,6 +111,7 @@ public class RealmManager {
         INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(17, "oblast_sql", 36000, 0, 0, 0, 0));
         INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(18, "sample_photo", 604800, 0, 0, 0, 0));    // Образцы фото    604800с = 7 дней
         INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(19, "ekl_sql", 36000, 0, 0, 0, 0));
+        INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(20, "location", 86400, 0, 0, 0, 0));    // 86400 - 1 day
         INSTANCE.commitTransaction();
     }
 

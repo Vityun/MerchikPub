@@ -13,7 +13,6 @@ import android.graphics.Color;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import androidx.preference.PreferenceManager;
 import android.text.Editable;
 import android.text.SpannableString;
 import android.text.SpannableStringBuilder;
@@ -36,6 +35,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.PopupMenu;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.preference.PreferenceManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
@@ -1622,7 +1622,9 @@ public class menu_login extends AppCompatActivity {
 
                 new TablesLoadingUnloading().downloadMenu();
                 Globals.userId = appUsersDB.getUserId();
-                Globals.userOwnership = appUsersDB.user_work_plan_status.equals("our");
+                if (appUsersDB.user_work_plan_status != null){
+                    Globals.userOwnership = appUsersDB.user_work_plan_status.equals("our");
+                }
 
                 progress.dismiss();
                 if (System.currentTimeMillis() < 1666656000000L) {   // отображать ДО 2022-10-25
