@@ -2266,11 +2266,11 @@ public class TablesLoadingUnloading {
                                         JsonObject geoInfo = arr.getAsJsonObject(String.valueOf(list.getId()));
                                         if (geoInfo != null && geoInfo.get("state").getAsBoolean()) {
                                             try {
+                                                long id = geoInfo.get("geo_id").getAsLong();
                                                 RealmManager.INSTANCE.executeTransaction(realm -> {
-//                                                    list.deleteFromRealm();
-//                                                    RealmManager.INSTANCE.beginTransaction();
+                                                    list.serverId = id;
                                                     list.upload = System.currentTimeMillis()/1000;  // 27.08.23 Вместо удаления, пишу воемя когда координаты были выгружены
-//                                                    RealmManager.INSTANCE.commitTransaction();
+                                                    realm.insertOrUpdate(list);
                                                 });
 
                                                 res.onSuccess("ОК");

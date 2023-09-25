@@ -7,6 +7,7 @@ public class LogMPDB extends RealmObject {
 
     @PrimaryKey
     public int id;
+    public long serverId;
     public String gp;
 
 //    public Location location;   // 25.08.23. Тут буде зберігатися інфа щодо координат

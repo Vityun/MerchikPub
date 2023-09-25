@@ -1457,6 +1457,7 @@ public class RealmManager {
     public static RealmResults<LogMPDB> getNOTUploadLogMPDB() {
         return INSTANCE.where(LogMPDB.class)
                 .equalTo("upload", 0)
+                .equalTo("serverId", 0)
                 .findAll();
     }
 
