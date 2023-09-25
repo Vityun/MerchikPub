@@ -17,6 +17,30 @@
 
 # Keep all classes in Conscrypt
 -keep class org.conscrypt.** { *; }
+-keep class org.openjsse.** { *; }
+
+
+-keep class org.bouncycastle.jsse.**{ *; }
+-keep class org.bouncycastle.jsse.**{ *; }
+-keep class org.bouncycastle.jsse.provider.**{ *; }
+-keep class org.conscrypt.**{ *; }
+-keep class org.conscrypt.**{ *; }
+-keep class org.conscrypt.**{ *; }
+-keep class org.openjsse.javax.net.ssl.**{ *; }
+-keep class org.openjsse.javax.net.ssl.**{ *; }
+-keep class org.openjsse.net.ssl.**{ *; }
+
+-dontwarn org.bouncycastle.jsse.BCSSLParameters
+-dontwarn org.bouncycastle.jsse.BCSSLSocket
+-dontwarn org.bouncycastle.jsse.provider.BouncyCastleJsseProvider
+-dontwarn org.conscrypt.Conscrypt$Version
+-dontwarn org.conscrypt.Conscrypt
+-dontwarn org.conscrypt.ConscryptHostnameVerifier
+-dontwarn org.openjsse.javax.net.ssl.SSLParameters
+-dontwarn org.openjsse.javax.net.ssl.SSLSocket
+-dontwarn org.openjsse.net.ssl.OpenJSSE
+
+-keep class ua.com.merchik.merchik.** { *; }
 
 # Uncomment this to preserve the line number information for
 # debugging stack traces.

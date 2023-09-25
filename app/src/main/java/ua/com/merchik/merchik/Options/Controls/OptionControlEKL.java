@@ -120,8 +120,8 @@ public class OptionControlEKL<T> extends OptionControl {
         long dateTo = Clock.getDatePeriodLong(documentDt * 1000, 4);
 
 
-        if (addressSDB.tpId == 434 && !optionDB.getOptionControlId().equals("132629") && documentDt < 1693526400) { // 1693526400 == 01.09.2023 / 434 = АТБ
-            optionMsg.append("Не проверяем для АТБ до 01.09.2023");
+        if (addressSDB.tpId == 434 && !optionDB.getOptionControlId().equals("132629") && documentDt < 1725148800) { // 1725148800 == 01.09.2024 / 434 = АТБ
+            optionMsg.append("Не проверяем для АТБ до 01.09.2024");
             signal = false;
         } else {
             // Определем Группу Товаров

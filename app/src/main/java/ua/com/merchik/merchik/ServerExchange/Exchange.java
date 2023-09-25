@@ -167,16 +167,16 @@ public class Exchange {
                     tablesLoadingUnloading.uploadLodMp(new ExchangeInterface.ExchangeRes() {
                         @Override
                         public void onSuccess(String ok) {
-
+                            Log.e("uploadLodMp", "uploadLodMp: " + ok);
                         }
 
                         @Override
                         public void onFailure(String error) {
-
+                            Log.e("uploadLodMp", "uploadLodMp error: " + error);
                         }
                     });
                 } catch (Exception e) {
-
+                    Log.e("uploadLodMp", "uploadLodMp Exception e: " + e);
                 }
 
 

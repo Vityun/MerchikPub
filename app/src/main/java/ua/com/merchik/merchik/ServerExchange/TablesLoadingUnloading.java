@@ -2233,9 +2233,9 @@ public class TablesLoadingUnloading {
         String mod = "location";
         String act = "track";
 
-        List<LogMPDB> logMp = RealmManager.getNOTUploadLogMPDB();
+        List<LogMPDB> logMp = RealmManager.INSTANCE.copyFromRealm(RealmManager.getNOTUploadLogMPDB());
         if (logMp != null && logMp.size() > 0) {
-            Log.e("LogMp", "LogMpUploadText. LogSize: " + logMp.size());
+            Log.e("uploadLodMp", "LogMpUploadText. LogSize: " + logMp.size());
 
             HashMap<String, String> map = new HashMap<>();
             for (LogMPDB list : logMp) {
@@ -2251,7 +2251,7 @@ public class TablesLoadingUnloading {
             call.enqueue(new retrofit2.Callback<JsonObject>() {
                 @Override
                 public void onResponse(retrofit2.Call<JsonObject> call, retrofit2.Response<JsonObject> response) {
-                    Log.e("LogMp", "RESPONSE: " + response.body());
+                    Log.e("uploadLodMp", "RESPONSE: " + response.body());
 
                     // TODO Тут очень много раз в минуту дёргаю это место. Нужно проверить - нужно ли в таком количестве.
 //                    Globals.writeToMLOG("INFO", "uploadLodMp/onResponse", "response.body(): " + response.body());
@@ -2268,7 +2268,9 @@ public class TablesLoadingUnloading {
                                             try {
                                                 RealmManager.INSTANCE.executeTransaction(realm -> {
 //                                                    list.deleteFromRealm();
+//                                                    RealmManager.INSTANCE.beginTransaction();
                                                     list.upload = System.currentTimeMillis()/1000;  // 27.08.23 Вместо удаления, пишу воемя когда координаты были выгружены
+//                                                    RealmManager.INSTANCE.commitTransaction();
                                                 });
 
                                                 res.onSuccess("ОК");
@@ -2291,14 +2293,14 @@ public class TablesLoadingUnloading {
                 @Override
                 public void onFailure(retrofit2.Call<JsonObject> call, Throwable t) {
                     Globals.writeToMLOG("ERROR", "uploadLodMp/onFailure", "Throwable t: " + t);
-                    Log.e("LogMp", "FAILURE_E: " + t.getMessage());
-                    Log.e("LogMp", "FAILURE_E2: " + t);
+                    Log.e("uploadLodMp", "FAILURE_E: " + t.getMessage());
+                    Log.e("uploadLodMp", "FAILURE_E2: " + t);
                     res.onFailure("onFailure: " + t);
                 }
             });
         } else {
             Globals.writeToMLOG("INFO", "uploadLodMp", "Данных Лога МП на выгрузку нет");
-            Log.e("LogMp", "LogMpUploadText. LogSize: " + null);
+            Log.e("uploadLodMp", "LogMpUploadText. LogSize: " + null);
         }
     }
 

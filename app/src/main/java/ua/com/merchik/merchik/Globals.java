@@ -914,6 +914,7 @@ public class Globals {
         Map<String, Object> browser_info = new HashMap<String, Object>();
         Map<String, Object> screen_info = new HashMap<String, Object>();
         Map<String, Object> coords = new HashMap<String, Object>();
+        Map<String, Object> geo_debug = new HashMap<String, Object>();
 
         battery.put("battery_level", "");                           // Уровень зар¤да батареи в процентах или -1 если данных нет
         DataMap.put("battery", battery);
@@ -950,9 +951,13 @@ public class Globals {
         coords.put("altitudeAccuracy", "");
         coords.put("heading", "");
         coords.put("speed", logMP.CoordSpeed);
-        coords.put("trusted_location", logMP.mocking);
+        coords.put("trusted_location", logMP.mocking ? 0 : 1 );           // 1 - хорошая, если не 1 - плохая
+//        coords.put("trusted_location", logMP.mocking);           // 1 - хорошая, если не 1 - плохая
         coords.put("source_id", logMP.provider);
         DataMap.put("coords", coords);                                                              // географические координаты
+
+        geo_debug.put("app_id", logMP.id);
+        DataMap.put("geo_debug", geo_debug);
 
         DataMap.put("timestamp", System.currentTimeMillis()); // unixtime текущего времени, когда был отправлен запрос с данными с точностью до тысячных (если не сможешь настолько точное врем¤ получить, бери текущий unixtime и умножай на 1000)
 

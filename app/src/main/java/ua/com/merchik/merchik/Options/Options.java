@@ -1495,7 +1495,7 @@ public class Options {
                         new OptionControlEndAnotherWork(context, dataDB, option, type, mode, unlockCodeResultListener);
                 if (mode.equals(NNKMode.MAKE) || (mode.equals(NNKMode.CHECK) && optionControlEndAnotherWork.isBlockOption()))
                     optionControlEndAnotherWork.showOptionMassage(block);
-                if (mode.equals(NNKMode.BLOCK)) {
+                if (mode.equals(NNKMode.BLOCK) && optionControlEndAnotherWork.signal && optionControlEndAnotherWork.isBlockOption()) {
                     optionControlEndAnotherWork.showOptionMassage(block);
                 }
                 return optionControlEndAnotherWork.isBlockOption2() ? 1 : 0;

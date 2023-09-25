@@ -56,8 +56,10 @@ public class MenuMainActivity extends toolbar_menus {
 
     private void test() {
         StandartData data = new StandartData();
-        data.mod = "planogram";
-        data.act = "addr_list";
+        data.mod = "location";
+        data.act = "list";
+
+        data.dt_change_from = String.valueOf(System.currentTimeMillis()/1000 - 3600);
 
         Gson gson = new Gson();
         String json = gson.toJson(data);
@@ -69,8 +71,8 @@ public class MenuMainActivity extends toolbar_menus {
         call.enqueue(new Callback<JsonObject>() {
             @Override
             public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
-                Log.e("MenuMainActivity", "response" + response.body());
-                Log.e("MenuMainActivity", "response" + new Gson().toJson(response.body()));
+                Log.e("MenuMainActivity", "response" + response);
+//                Log.e("MenuMainActivity", "response" + new Gson().toJson(response.body()));
             }
 
             @Override

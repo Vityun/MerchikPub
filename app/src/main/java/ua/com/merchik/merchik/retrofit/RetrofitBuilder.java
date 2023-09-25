@@ -54,8 +54,10 @@ public class RetrofitBuilder{
 //            .certificatePinner(certificatePinner)
             .cookieJar(cookie)
             .connectTimeout(10, TimeUnit.SECONDS)
-            .readTimeout(40, TimeUnit.SECONDS)
-            .writeTimeout(30, TimeUnit.SECONDS)
+            .readTimeout(60, TimeUnit.SECONDS)
+            .writeTimeout(60, TimeUnit.SECONDS)
+//            .readTimeout(40, TimeUnit.SECONDS)
+//            .writeTimeout(30, TimeUnit.SECONDS)
 
 //            .connectTimeout(5, TimeUnit.SECONDS)
 //            .readTimeout(5, TimeUnit.SECONDS)
