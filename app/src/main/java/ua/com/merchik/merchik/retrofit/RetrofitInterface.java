@@ -1,5 +1,7 @@
 package ua.com.merchik.merchik.retrofit;
 
+import static ua.com.merchik.merchik.retrofit.TimeoutKt.UPLOAD_PHOTO_KEY;
+
 import com.google.gson.JsonObject;
 
 import java.util.HashMap;
@@ -243,6 +245,7 @@ public interface RetrofitInterface {
 
     @Multipart
     @POST("/mobile_app.php?")
+    @Timeout(key = UPLOAD_PHOTO_KEY)
     Call<JsonObject> SEND_PHOTO_2_BODY(@Part("mod") RequestBody mod,
                                        @Part("act") RequestBody act,
                                        @Part("client_id") RequestBody client_id,
