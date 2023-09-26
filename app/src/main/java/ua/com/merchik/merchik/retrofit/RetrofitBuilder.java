@@ -3,6 +3,7 @@ package ua.com.merchik.merchik.retrofit;
 import android.os.Build;
 import android.util.Log;
 
+import com.chuckerteam.chucker.api.ChuckerInterceptor;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
@@ -17,6 +18,7 @@ import okhttp3.WebSocketListener;
 import okio.ByteString;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
+import ua.com.merchik.merchik.Activities.MyApplication;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.RealmModels.AppUsersDB;
@@ -89,11 +91,14 @@ public class RetrofitBuilder{
 
 //        loggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
         OkHttpClient.Builder httpClientBuilder = new OkHttpClient.Builder();
+        httpClientBuilder.addInterceptor(new TimeoutInterceptor());
+        httpClientBuilder.addInterceptor(new ChuckerInterceptor(MyApplication.getAppContext()));
 //        httpClientBuilder.addInterceptor(loggingInterceptor);
+
         httpClientBuilder.cookieJar(cookie)
-                .connectTimeout(10, TimeUnit.SECONDS)
-                .readTimeout(40, TimeUnit.SECONDS)
-                .writeTimeout(30, TimeUnit.SECONDS);
+                .connectTimeout(20, TimeUnit.SECONDS)
+                .readTimeout(60, TimeUnit.SECONDS)
+                .writeTimeout(60, TimeUnit.SECONDS);
 
         OkHttpClient client = httpClientBuilder.build();
 
