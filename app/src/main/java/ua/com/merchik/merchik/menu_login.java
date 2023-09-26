@@ -1323,6 +1323,7 @@ public class menu_login extends AppCompatActivity {
             });
         } catch (Exception e) {
             globals.alertDialogMsg(this, "Ошибка_1: " + e);
+            Log.e("loginInfo", "Exception e: ", e);
         }
 
     }

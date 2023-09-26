@@ -28,7 +28,7 @@ import ua.com.merchik.merchik.data.WebSocketData.WebsocketParam;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import okhttp3.logging.HttpLoggingInterceptor;
 
-public class RetrofitBuilder{
+public class RetrofitBuilder {
 
     private static RetrofitBuilder INSTANCE = new RetrofitBuilder();
     private static final String BASE_URL = "https://merchik.net/";
@@ -83,8 +83,6 @@ public class RetrofitBuilder{
     }
 
 
-
-
     private RetrofitBuilder() {
         Gson gson = new GsonBuilder()
                 .setLenient()
@@ -104,34 +102,17 @@ public class RetrofitBuilder{
 
         OkHttpClient client = httpClientBuilder.build();
 
-
-        Retrofit retrofit;
-        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.N_MR1){
-            retrofit = new Retrofit.Builder()
-                    .baseUrl(BASE_URL)
-                    .addConverterFactory(GsonConverterFactory.create(gson))
-                    .client(client)
-                    .build();
-        }else {
-//            retrofit = new Retrofit.Builder()
-//                    .baseUrl(BASE_URL_OLD)
-//                    .addConverterFactory(GsonConverterFactory.create(gson))
-//                    .client(client)
-//                    .build();
-
-            retrofit = new Retrofit.Builder()
-                    .baseUrl(BASE_URL)
-                    .addConverterFactory(GsonConverterFactory.create(gson))
-                    .client(client)
-                    .build();
-        }
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl(BASE_URL)
+                .addConverterFactory(GsonConverterFactory.create(gson))
+                .client(client)
+                .build();
 
         interfaceAPI = retrofit.create(RetrofitInterface.class);
     }
 
 
-
-    public static WebSocket webSocket(){
+    public static WebSocket webSocket() {
         OkHttpClient client = new OkHttpClient.Builder()
                 .build();
 
@@ -181,7 +162,7 @@ public class RetrofitBuilder{
         return webSocket;
     }
 
-    public static WebSocket startWebSocket(Clicks.click click){
+    public static WebSocket startWebSocket(Clicks.click click) {
         WebSocket webSocket;
         OkHttpClient client;
 
@@ -192,9 +173,9 @@ public class RetrofitBuilder{
                 .build();
         Log.i("WebSockets", "Headers: " + request.headers().toString());
 
-        if (Globals.userId == 0){
+        if (Globals.userId == 0) {
             AppUsersDB appUsersDB = RealmManager.getAppUser();
-            if (appUsersDB != null){
+            if (appUsersDB != null) {
                 Globals.userId = appUsersDB.getUserId();
                 Globals.userOwnership = appUsersDB.user_work_plan_status.equals("our");
             }
@@ -204,6 +185,7 @@ public class RetrofitBuilder{
 
         webSocket = client.newWebSocket(request, new WebSocketListener() {
             private static final int NORMAL_CLOSURE_STATUS = 1000;
+
             @Override
             public void onOpen(WebSocket webSocket, Response response) {
                 WebsocketParam websocketParam = new WebsocketParam();
@@ -226,6 +208,7 @@ public class RetrofitBuilder{
                 Globals.writeToMLOG("INFO", "WebSocket/onOpen/Connection accepted!", "Connection accepted!");
                 Log.i("WebSockets", "Connection accepted!");
             }
+
             @Override
             public void onMessage(WebSocket webSocket, String text) {
                 Log.i("WebSockets", "Receiving : " + text);
@@ -236,54 +219,58 @@ public class RetrofitBuilder{
                 WebSocketData data = new Gson().fromJson(new Gson().toJson(convertedObject), WebSocketData.class);
                 click.click(data);
             }
+
             @Override
             public void onMessage(WebSocket webSocket, ByteString bytes) {
                 Log.i("WebSockets", "Receiving bytes : " + bytes.hex());
                 Globals.writeToMLOG("INFO", "WebSocket/onMessage/ByteString", "Receiving bytes : " + bytes.hex());
             }
+
             @Override
             public void onClosing(WebSocket webSocket, int code, String reason) {
                 webSocket.close(NORMAL_CLOSURE_STATUS, null);
                 Log.i("WebSockets", "Closing : " + code + " / " + reason);
                 Globals.writeToMLOG("INFO", "WebSocket/onClosing", "Closing : " + code + " / " + reason);
             }
+
             @Override
             public void onFailure(WebSocket webSocket, Throwable t, Response response) {
                 Log.i("WebSockets", "Error : " + t.getMessage());
                 Globals.writeToMLOG("INFO", "WebSocket/onFailure/Throwable", "Throwable t: " + t.getMessage());
-                if (response != null && response.body() != null){
+                if (response != null && response.body() != null) {
                     Globals.writeToMLOG("INFO", "WebSocket/onFailure/Response", "Response response: " + response.body());
                 }
                 click.click("error");
-            }});
+            }
+        });
         return webSocket;
     }
 
-    public static RetrofitInterface getRetrofitInterface(){
+    public static RetrofitInterface getRetrofitInterface() {
         return INSTANCE.interfaceAPI;
     }
 
 
-    public static RetrofitInterface getRetrofitInterfaceUploadPhoto(){
+    public static RetrofitInterface getRetrofitInterfaceUploadPhoto() {
         return INSTANCE.interfaceAPI;
     }
 
     //==============================================================================================
 
-    public static void setServerStatusUI(boolean status){
+    public static void setServerStatusUI(boolean status) {
 
         serverStatus = status;
     }
 
-    public static boolean getServerStatusUI(){
+    public static boolean getServerStatusUI() {
         return serverStatus;
     }
 
-    public static void setServerTime(long time){
-        serverTime = time*1000;
+    public static void setServerTime(long time) {
+        serverTime = time * 1000;
     }
 
-    public static long getServerTime(){
+    public static long getServerTime() {
         return serverTime;
     }
 
@@ -295,9 +282,6 @@ public class RetrofitBuilder{
      * Конвертация POJO в JSON для дальнейшей отправки на сервер
      * */
 //    new Gson().fromJson(new Gson().toJson(data), JsonObject.class);
-
-
-
 
 
 }

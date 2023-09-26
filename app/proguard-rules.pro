@@ -40,9 +40,51 @@
 -dontwarn org.openjsse.javax.net.ssl.SSLSocket
 -dontwarn org.openjsse.net.ssl.OpenJSSE
 
--keep class ua.com.merchik.merchik.** { *; }
 
--dontobfuscate
+-keep class com.google.gson.** { *; }
+-keep class com.google.inject.** { *; }
+-keep class org.apache.http.** { *; }
+-keep class org.apache.james.mime4j.** { *; }
+-keep class javax.inject.** { *; }
+-keep class retrofit.** { *; }
+-dontwarn rx.**
+-keep class sun.misc.Unsafe { *; }
+
+-keep class retrofit2.** { *; }
+-keep class okhttp3.** { *; }
+-keep class com.chuckerteam.chucker.** { *; }
+
+-keep class com.google.gson.** { *; }
+-keep class org.apache.** { *; }
+-keep class javax.inject.** { *; }
+-keep class retrofit.** { *; }
+
+-keep class ua.com.merchik.merchik.data.** { *; }
+#-keep class ua.com.merchik.merchik.menu_login { *; }
+
+# Keep GSON classes (Bluesnap module uses it too)
+
+# Gson uses generic type information stored in a class file when working with fields. Proguard
+# removes such information by default, so configure it to keep all of it.
+-keepattributes Signature
+
+# For using GSON @Expose annotation
+-keepattributes *Annotation*
+
+# Gson specific classes
+-dontwarn sun.misc.**
+#-keep class com.google.gson.stream.** { *; }
+
+# Application classes that will be serialized/deserialized over Gson
+-keep class com.google.gson.examples.android.model.** { *; }
+
+# Prevent proguard from stripping interface information from TypeAdapterFactory,
+# JsonSerializer, JsonDeserializer instances (so they can be used in @JsonAdapter)
+-keep class * implements com.google.gson.TypeAdapterFactory
+-keep class * implements com.google.gson.JsonSerializer
+-keep class * implements com.google.gson.JsonDeserializer
+
+-keep class ua.com.merchik.merchik.data.RetrofitResponse.** { *; }
 
 # Uncomment this to preserve the line number information for
 # debugging stack traces.
