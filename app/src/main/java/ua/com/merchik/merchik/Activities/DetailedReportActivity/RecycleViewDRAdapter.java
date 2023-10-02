@@ -3,9 +3,13 @@ package ua.com.merchik.merchik.Activities.DetailedReportActivity;
 import static ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsRealm.AdditionalRequirementsModENUM.HIDE_FOR_USER;
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
+import android.animation.ArgbEvaluator;
+import android.animation.ObjectAnimator;
+import android.animation.ValueAnimator;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
+import android.graphics.PorterDuff;
 import android.graphics.Typeface;
 import android.text.Html;
 import android.text.SpannableString;
@@ -94,21 +98,44 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
 
     /*Определяем ViewHolder*/
     class ViewHolder extends RecyclerView.ViewHolder {
-        ConstraintLayout constraintLayout;
-        TextView textDescription;
+        ConstraintLayout optionButton;
         TextView textTitle;
         TextView textInteger, textInteger2;
         ImageView setCheck;
 
+        private Context getCtx() {
+            return optionButton.getContext();
+        }
+
         ViewHolder(View v) {
             super(v);
-            constraintLayout = v.findViewById(R.id.constraintLayout2);
-            textDescription = v.findViewById(R.id.textViewDescription);
+            optionButton = v.findViewById(R.id.option_item_container);
             textTitle = v.findViewById(R.id.textViewTitle);
             textInteger = v.findViewById(R.id.textViewInteger);
             textInteger2 = v.findViewById(R.id.textViewInteger2);
             setCheck = v.findViewById(R.id.imageViewCheck);
             setCheck.setClickable(true);
+        }
+
+        public void animate() {
+            int colorFrom = getCtx().getResources().getColor(R.color.green_default);
+            int colorTo = getCtx().getResources().getColor(R.color.red_error);
+            ValueAnimator colorAnimation = ValueAnimator.ofObject(new ArgbEvaluator(), colorFrom, colorTo);
+            colorAnimation.setDuration(250); // milliseconds
+            colorAnimation.setRepeatMode(ValueAnimator.REVERSE);
+            colorAnimation.setRepeatCount(10);
+            colorAnimation.addUpdateListener(animator ->
+                optionButton.setBackgroundColor((int) animator.getAnimatedValue())
+            );
+            colorAnimation.start();
+        }
+
+        public int adjustAlpha(int color, float factor) {
+            int alpha = Math.round(Color.alpha(color) * factor);
+            int red = Color.red(color);
+            int green = Color.green(color);
+            int blue = Color.blue(color);
+            return Color.argb(alpha, red, green, blue);
         }
 
         public void bind(OptionsDB optionsButtons, SiteObjectsSDB siteObjectsSDB) {
@@ -211,7 +238,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                     || optionId == 135413   // "Фото Витрины (Оценка)"
                     || optionId == 135719   // "Дет.Отчет" (оценка)
             ) {
-                constraintLayout.setBackgroundResource(R.drawable.bg_temp);
+                optionButton.setBackgroundResource(R.drawable.bg_temp);
                 textInteger2.setVisibility(View.VISIBLE);
                 if (optionsButtons.getIsSignal().equals("1") && !optionsButtons.getBlockPns().equals("1")) {
                     textInteger2.setText(counter2Text());
@@ -226,7 +253,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
             } else {
                 describedOption = false;
                 textInteger2.setVisibility(View.GONE);
-                constraintLayout.setBackgroundResource(R.drawable.button_bg_inactive);
+                optionButton.setBackgroundResource(R.drawable.button_bg_inactive);
             }
 
 
@@ -495,8 +522,9 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
 
             // Кликаем по кнопке Опции
             boolean finalDescribedOption = describedOption;
-            constraintLayout.setOnClickListener(view -> {
+            optionButton.setOnClickListener(view -> {
                 Log.e("notifyItemChanged", "CLICK");
+                animate();
 
                 // Если эта кнопка НЕ активная - значит она находится в разработке
                 if (finalDescribedOption) {
@@ -551,7 +579,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
 
             // ДОЛГИЙ клик по Кнопке Опции
             OptionsDB test = optionsButtons;
-            constraintLayout.setOnLongClickListener(view -> {
+            optionButton.setOnLongClickListener(view -> {
                 if (optionId == 132968 || optionId == 158309 || optionId == 158308) {
                     optionDetailPhotos(test);
                     DialogData dialog = new DialogData(itemView.getContext());
