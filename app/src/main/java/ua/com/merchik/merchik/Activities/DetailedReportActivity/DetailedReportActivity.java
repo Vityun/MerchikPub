@@ -625,7 +625,15 @@ public class DetailedReportActivity extends toolbar_menus {
             adapter = new DetailedReportTab(this, getSupportFragmentManager(), getLifecycle(), tabLayout.getTabCount(), list, rowWP);
             viewPager.setAdapter(adapter);
 
-//            viewPager.addOnPageChangeListener(new TabLayout.TabLayoutOnPageChangeListener(tabLayout));
+            viewPager.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
+                @Override
+                public void onPageSelected(int position) {
+                   TabLayout.Tab tab =  tabLayout.getTabAt(position);
+                   if (tab != null) {
+                       tab.select();
+                   }
+                }
+            });
 
             tabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
                 @Override
