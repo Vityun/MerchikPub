@@ -48,11 +48,7 @@ import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.google.gson.Gson;
-import com.google.gson.stream.JsonWriter;
-
 import java.io.File;
-import java.io.StringWriter;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -368,9 +364,9 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                 List<OptionsDB> optionsList2 = RealmManager.getTovarOptionInReportPrepare(String.valueOf(codeDad2), list.getiD());
 
 
-                List<OptionsDB> test = RealmManager.INSTANCE.copyFromRealm(optionsList2);
+//                List<OptionsDB> test = RealmManager.INSTANCE.copyFromRealm(optionsList2);
 
-                StringBuilder sb = new StringBuilder();
+/*                StringBuilder sb = new StringBuilder();
                 for (OptionsDB item : test){
                     Gson gson = new Gson();
                     StringWriter stringWriter = new StringWriter();
@@ -384,7 +380,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
 //                    String debugOpt = new Gson().toJson(item);
                     Log.e("optionsList2", debugOpt);
                 }
-                Log.e("optionsList2", sb.toString());
+                Log.e("optionsList2", sb.toString());*/
 
 
 

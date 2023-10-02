@@ -73,11 +73,9 @@ import ua.com.merchik.merchik.MakePhoto.MakePhoto;
 import ua.com.merchik.merchik.MakePhoto.MakePhotoFromGalery;
 import ua.com.merchik.merchik.PhotoReportActivity;
 import ua.com.merchik.merchik.R;
-import ua.com.merchik.merchik.ServerExchange.TablesLoadingUnloading;
 import ua.com.merchik.merchik.Translate;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.WorkPlan;
-import ua.com.merchik.merchik.data.Data;
 import ua.com.merchik.merchik.data.Database.Room.AddressSDB;
 import ua.com.merchik.merchik.data.Database.Room.CustomerSDB;
 import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
@@ -146,7 +144,7 @@ public class DetailedReportActivity extends toolbar_menus {
 
 
     //    public Data wp;
-    public ArrayList<Data> list = new ArrayList<Data>();
+//    public ArrayList<Data> list = new ArrayList<Data>();
 
     //----------------------------------------------------------------------------------------------
     @Override
@@ -457,19 +455,20 @@ public class DetailedReportActivity extends toolbar_menus {
             otchetId = rowWP.getDoc_num_1c_id();
         }
 
-        Data D = new Data(
-                rowWP.getId(),
-                rowWP.getAddr_txt(),
-                rowWP.getClient_txt(),
-                rowWP.getUser_txt(),
-                rowWP.getDt(),  //+TODO CHANGE DATE
-                otchetId,
-                "",
-                R.mipmap.merchik);
+        wpDataDB = rowWP;
 
-        list.add(D);
-
-        wpDataDB = RealmManager.getWorkPlanRowById(list.get(0).getId());
+//        Data D = new Data(
+//                rowWP.getId(),
+//                rowWP.getAddr_txt(),
+//                rowWP.getClient_txt(),
+//                rowWP.getUser_txt(),
+//                rowWP.getDt(),  //+TODO CHANGE DATE
+//                otchetId,
+//                "",
+//                R.mipmap.merchik);
+//
+//        list.add(D);
+//        wpDataDB = RealmManager.getWorkPlanRowById(list.get(0).getId());
     }
 
     // Основное сообщение
@@ -614,22 +613,23 @@ public class DetailedReportActivity extends toolbar_menus {
     private void setTab() {
         try {
             Globals.writeToMLOG("INFO", "DetailedReportActivity/setTab", "setTab");
-            List<TovarDB> dataTovar = RealmManager.getTovarListFromReportPrepareByDad2(wpDataDB.getCode_dad2());
-            if (dataTovar != null) {
-                List<TovarDB> dataTovarDownloadList = RealmManager.getTovarListPhotoToDownload(dataTovar, "small");
-                TablesLoadingUnloading tablesLoadingUnloading = new TablesLoadingUnloading();
-                tablesLoadingUnloading.getTovarImg(dataTovar, "small");
-            }
+            // 02.10.23. Убрал вечную проверку фоток Товаров при входе в отчёт. У некоторых мерчей это занимает сильно много ресурсов.
+//            List<TovarDB> dataTovar = RealmManager.getTovarListFromReportPrepareByDad2(wpDataDB.getCode_dad2());
+//            if (dataTovar != null) {
+//                List<TovarDB> dataTovarDownloadList = RealmManager.getTovarListPhotoToDownload(dataTovar, "small");
+//                TablesLoadingUnloading tablesLoadingUnloading = new TablesLoadingUnloading();
+//                tablesLoadingUnloading.getTovarImg(dataTovar, "small");
+//            }
 
             Globals.writeToMLOG("INFO", "DetailedReportTab/0", "setTab create");
-            adapter = new DetailedReportTab(this, getSupportFragmentManager(), getLifecycle(), tabLayout.getTabCount(), list, rowWP);
+            adapter = new DetailedReportTab(this, getSupportFragmentManager(), getLifecycle(), tabLayout.getTabCount(), rowWP);
             viewPager.setAdapter(adapter);
 
             viewPager.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
                 @Override
                 public void onPageSelected(int position) {
                    TabLayout.Tab tab =  tabLayout.getTabAt(position);
-                   if (tab != null) {
+                   if (tab != null && !tab.isSelected()) {
                        tab.select();
                    }
                 }

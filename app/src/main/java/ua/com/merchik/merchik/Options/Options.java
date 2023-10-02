@@ -108,12 +108,10 @@ import ua.com.merchik.merchik.Options.Controls.OptionControlReclamationAnswer;
 import ua.com.merchik.merchik.Options.Controls.OptionControlRegistrationPotentialClient;
 import ua.com.merchik.merchik.Options.Controls.OptionControlReturnOfGoods;
 import ua.com.merchik.merchik.Options.Controls.OptionControlTaskAnswer;
-import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.ServerExchange.Exchange;
 import ua.com.merchik.merchik.VersionApp;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.WorkPlan;
-import ua.com.merchik.merchik.data.Data;
 import ua.com.merchik.merchik.data.Database.Realm.VirtualAdditionalRequirementsDB;
 import ua.com.merchik.merchik.data.Database.Room.AdditionalMaterialsJOIN.AdditionalMaterialsJOINAdditionalMaterialsAddressSDB;
 import ua.com.merchik.merchik.data.Database.Room.AdditionalMaterialsSDB;
@@ -133,7 +131,6 @@ import ua.com.merchik.merchik.data.RealmModels.TovarDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.data.RetrofitResponse.ReportHintList;
 import ua.com.merchik.merchik.data.TovarOptions;
-import ua.com.merchik.merchik.data.WPDataObj;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsMarkRealm;
 import ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsRealm;
@@ -1738,25 +1735,8 @@ public class Options {
                 Long dad2Wp = ((TasksAndReclamationsSDB) dataDB).codeDad2SrcDoc;
                 wp = RealmManager.INSTANCE.copyFromRealm(WpDataRealm.getWpDataRowByDad2Id(dad2Wp));
 
-                Data D = new Data(
-                        wp.getId(),
-                        wp.getAddr_txt(),
-                        wp.getClient_txt(),
-                        wp.getUser_txt(),
-                        wp.getDt(),  //+TODO CHANGE DATE
-                        0,
-                        "",
-                        R.mipmap.merchik);
-
-                WorkPlan workPlan = new WorkPlan();
-                WPDataObj wpDataObj = workPlan.getKPS(wp.getId());
-
                 Intent intent = new Intent(context, DetailedReportActivity.class);
                 intent.putExtra("WpDataDB_ID", wp.getId());
-
-//                intent.putExtra("dataFromWP", D);
-//                intent.putExtra("rowWP", wp);
-//                intent.putExtra("dataFromWPObj", wpDataObj);
 
                 type.msg = "Открыт проверяемый документ. \nНомер: " + wp.getDoc_num_otchet();
 

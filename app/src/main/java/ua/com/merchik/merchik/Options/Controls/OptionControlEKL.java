@@ -7,9 +7,6 @@ import android.content.Context;
 import android.os.Build;
 import android.util.Log;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonObject;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -60,6 +57,7 @@ public class OptionControlEKL<T> extends OptionControl {
     }
 
     public OptionControlEKL(Context context, T document, OptionsDB optionDB, OptionMassageType msgType, Options.NNKMode nnkMode, OptionControl.UnlockCodeResultListener unlockCodeResultListener) {
+        Log.e("OptionControlEKL", "HERE TEST OptionControlEKL START");
         this.context = context;
         this.document = document;
         this.optionDB = optionDB;
@@ -69,6 +67,7 @@ public class OptionControlEKL<T> extends OptionControl {
 
         getDocumentVar();
         executeOption();
+        Log.e("OptionControlEKL", "HERE TEST OptionControlEKL END");
     }
 
     private void getDocumentVar() {
@@ -96,29 +95,33 @@ public class OptionControlEKL<T> extends OptionControl {
     /*Тут в теории должен собираться ТЗН "с одной строки" для подальшей работы с ним. Пока сути для
     меня не вижу кроме как указать что ПТТшник может быть пустым настарте и мы его ПОТОМ переопределим*/
     private void createTZN() {
+        Log.e("OptionControlEKL", "HERE TEST OptionControlEKL 1");
         PTT = "";   // Сбрасываем ПТТшника в режим "любой"
         StringBuilder optionMsg = new StringBuilder(); //
 
         // DEBUG DATA-------------
-        try {
-            List<EKL_SDB> fullEkl = SQL_DB.eklDao().getAll();
-            StringBuilder stringBuilderDEBUG = new StringBuilder();
-            for (EKL_SDB item : fullEkl) {
-                JsonObject object = new Gson().fromJson(new Gson().toJson(item), JsonObject.class);
-                stringBuilderDEBUG.append(object);
-            }
-            Globals.writeToMLOG("INFO", "OptionControlEKL/createTZN", "fullEkl.size: " + fullEkl.size());
-            Globals.writeToMLOG("INFO", "OptionControlEKL/createTZN", "stringBuilderDEBUG: " + stringBuilderDEBUG);
-        } catch (Exception e) {
-            Globals.writeToMLOG("INFO", "OptionControlEKL/createTZN", "stringBuilderDEBUG/Exception e: " + e);
-        }
+//        try {
+//            List<EKL_SDB> fullEkl = SQL_DB.eklDao().getAll();
+//            StringBuilder stringBuilderDEBUG = new StringBuilder();
+//            for (EKL_SDB item : fullEkl) {
+//                JsonObject object = new Gson().fromJson(new Gson().toJson(item), JsonObject.class);
+//                stringBuilderDEBUG.append(object);
+//            }
+//            Globals.writeToMLOG("INFO", "OptionControlEKL/createTZN", "fullEkl.size: " + fullEkl.size());
+//            Globals.writeToMLOG("INFO", "OptionControlEKL/createTZN", "stringBuilderDEBUG: " + stringBuilderDEBUG);
+//        } catch (Exception e) {
+//            Globals.writeToMLOG("INFO", "OptionControlEKL/createTZN", "stringBuilderDEBUG/Exception e: " + e);
+//        }
         // -----------------------
+
+        Log.e("OptionControlEKL", "HERE TEST OptionControlEKL 2");
 
         int userId = wpDataDB.getUser_id();
         String ptt = PTT;
         long dateFrom = Clock.getDatePeriodLong(documentDt * 1000, -3);
         long dateTo = Clock.getDatePeriodLong(documentDt * 1000, 4);
 
+        Log.e("OptionControlEKL", "HERE TEST OptionControlEKL 3");
 
         if (addressSDB.tpId == 434 && !optionDB.getOptionControlId().equals("132629") && documentDt < 1725148800) { // 1725148800 == 01.09.2024 / 434 = АТБ
             optionMsg.append("Не проверяем для АТБ до 01.09.2024");
@@ -154,11 +157,15 @@ public class OptionControlEKL<T> extends OptionControl {
                 controllerType = "между сотрудником: (" + wpDataDB.getUser_txt() + ") и любым ПТТ по отделу(ам): " + TG.getNmFromList(tovarGroupSDB);
             }
 
+            Log.e("OptionControlEKL", "HERE TEST OptionControlEKL 4");
+
 
             // лезем в таблицу ЭКЛ и проверяем, еслть ли ПОДПИСАННЫЙ ЭКЛ по данным условиям
             eklSDB = SQL_DB.eklDao().getBy(dateFrom/1000, dateTo/1000, wpDataDB.getClient_id(), wpDataDB.getAddr_id(), wpDataDB.getUser_id());
 //            eklSDB = SQL_DB.eklDao().getBy(dateFrom, dateTo, wpDataDB.getClient_id(), wpDataDB.getAddr_id(), wpDataDB.getUser_id());
 //        eklSDB = SQL_DB.eklDao().getBy(dateFrom, dateTo, wpDataDB.getClient_id(), wpDataDB.getAddr_id(), wpDataDB.getUser_id(), wpDataDB.ptt_user_id);
+
+            Log.e("OptionControlEKL", "HERE TEST OptionControlEKL 5");
             if (eklSDB == null || eklSDB.size() == 0) {
                 List<Integer> ids = new ArrayList<>();
                 for (TovarGroupSDB item : tovarGroupSDB) {
@@ -189,6 +196,7 @@ public class OptionControlEKL<T> extends OptionControl {
                 Globals.writeToMLOG("INFO", "OptionControlEKL/createTZN", "eklSDB2: " + eklSDB.size());
             }
 
+            Log.e("OptionControlEKL", "HERE TEST OptionControlEKL 6");
 
             // Проверка ЭКЛов
             if (eklSDB == null || eklSDB.size() == 0) {
@@ -207,6 +215,8 @@ public class OptionControlEKL<T> extends OptionControl {
 						Тзн.Зачет=1;
 					КонецЕсли;
 				КонецЕсли;*/
+
+                Log.e("OptionControlEKL", "HERE TEST OptionControlEKL 7");
             } else {
                 if (usersSDBPTT == null) {
                     usersSDBPTT = SQL_DB.usersDao().getById(eklSDB.get(0).sotrId);
@@ -273,6 +283,8 @@ public class OptionControlEKL<T> extends OptionControl {
                     signal = true;
                 }
             }
+
+            Log.e("OptionControlEKL", "HERE TEST OptionControlEKL 8");
         }
 
         // "подводим итог"
@@ -282,7 +294,7 @@ public class OptionControlEKL<T> extends OptionControl {
             stringBuilderMsg.append("Исполнитель еще не провел свою пятую отчетность! ЭКЛ не подписан!").append("\n\n");
         }
 
-
+        Log.e("OptionControlEKL", "HERE TEST OptionControlEKL 9");
         stringBuilderMsg.append(optionMsg);
 
         // Установка блокирует ли опция работу приложения или нет

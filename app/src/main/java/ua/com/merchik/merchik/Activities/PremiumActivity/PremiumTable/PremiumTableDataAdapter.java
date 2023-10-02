@@ -33,8 +33,6 @@ import ua.com.merchik.merchik.ServerExchange.TablesExchange.OptionsExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.ReportPrepareExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.WPDataExchange;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
-import ua.com.merchik.merchik.WorkPlan;
-import ua.com.merchik.merchik.data.Data;
 import ua.com.merchik.merchik.data.Database.Room.AddressSDB;
 import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
 import ua.com.merchik.merchik.data.RealmModels.ReportPrepareDB;
@@ -42,7 +40,6 @@ import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.data.RetrofitResponse.PremiumResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.Premial.PremiumPremium.Detailed;
 import ua.com.merchik.merchik.data.TestJsonUpload.StandartData;
-import ua.com.merchik.merchik.data.WPDataObj;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.ReportPrepareRealm;
 import ua.com.merchik.merchik.database.realm.tables.WpDataRealm;
@@ -347,26 +344,8 @@ public class PremiumTableDataAdapter extends RecyclerView.Adapter<PremiumTableDa
 
         private void openReportPrepare(WpDataDB wp, long otchetId) {
             try {
-                WorkPlan workPlan = new WorkPlan();
-                Data D = new Data(
-                        wp.getId(),
-                        wp.getAddr_txt(),
-                        wp.getClient_txt(),
-                        wp.getUser_txt(),
-                        wp.getDt(),  //+TODO CHANGE DATE
-                        otchetId,
-                        "",
-                        R.mipmap.merchik);
-
-                WPDataObj wpDataObj = workPlan.getKPS(wp.getId());
-
                 Intent intent = new Intent(itemView.getContext(), DetailedReportActivity.class);
-
                 intent.putExtra("WpDataDB_ID", wp.getId());
-
-//                intent.putExtra("dataFromWP", D);
-//                intent.putExtra("rowWP", wp);
-//                intent.putExtra("dataFromWPObj", wpDataObj);
                 itemView.getContext().startActivity(intent);
             } catch (Exception e) {
                 Toast.makeText(itemView.getContext(), "Помилка: " + e, Toast.LENGTH_SHORT).show();

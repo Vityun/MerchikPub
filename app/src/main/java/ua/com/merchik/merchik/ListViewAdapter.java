@@ -113,6 +113,7 @@ public class ListViewAdapter extends BaseAdapter {
                                 workplan.get(position).getMerc(),
                                 workplan.get(position).getDate(),
                                 workplan.get(position).getOtchetId(),
+                                null,
                                 "",
                                 workplan.get(position).getImages());
 

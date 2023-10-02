@@ -7,23 +7,19 @@ import androidx.fragment.app.FragmentManager;
 import androidx.lifecycle.Lifecycle;
 import androidx.viewpager2.adapter.FragmentStateAdapter;
 
-import java.util.ArrayList;
-
 import ua.com.merchik.merchik.Globals;
-import ua.com.merchik.merchik.data.Data;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 
 //public class DetailedReportTab extends FragmentPagerAdapter {
 public class DetailedReportTab extends FragmentStateAdapter {
 
     private AppCompatActivity myContext;
-    private ArrayList<Data> list;
     private WpDataDB wpDataDB;
     int totalTabs;
 
     public static DetailedReportOptionsFrag detailedReportOptionsFrag;
 
-    public DetailedReportTab(AppCompatActivity context, FragmentManager fm, Lifecycle lifecycle, int totalTabs, ArrayList<Data> dataArrayList, WpDataDB wpDataDBList) {
+    public DetailedReportTab(AppCompatActivity context, FragmentManager fm, Lifecycle lifecycle, int totalTabs, WpDataDB wpDataDBList) {
         super(fm, lifecycle);
         Globals.writeToMLOG("INFO", "DetailedReportTab/1", "create");
         Globals.writeToMLOG("INFO", "DetailedReportTab/1", "context: " + context);
@@ -31,7 +27,6 @@ public class DetailedReportTab extends FragmentStateAdapter {
         Globals.writeToMLOG("INFO", "DetailedReportTab/1", "fm: " + fm);
         myContext = context;
         this.totalTabs = totalTabs;
-        this.list = dataArrayList;
         this.wpDataDB = wpDataDBList;
     }
 
@@ -98,18 +93,14 @@ public class DetailedReportTab extends FragmentStateAdapter {
             Globals.writeToMLOG("INFO", "DetailedReportTab/getItem", "position: " + position);
             switch (position) {
                 case 0:
-//                    return new DetailedReportHomeFrag(myContext, list, wpDataDB);
-                    return DetailedReportHomeFrag.newInstance(myContext, list, wpDataDB);
+                    return DetailedReportHomeFrag.newInstance(myContext, wpDataDB);
                 case 1:
-//                    detailedReportOptionsFrag = new DetailedReportOptionsFrag(myContext, list, wpDataDB);
-                    detailedReportOptionsFrag = DetailedReportOptionsFrag.newInstance(myContext, list, wpDataDB);
+                    detailedReportOptionsFrag = DetailedReportOptionsFrag.newInstance(myContext, wpDataDB);
                     return detailedReportOptionsFrag;
                 case 2:
-//                    return new DetailedReportTovarsFrag(myContext, list, wpDataDB);
-                    return DetailedReportTovarsFrag.newInstance(myContext, list, wpDataDB);
+                    return DetailedReportTovarsFrag.newInstance(myContext, wpDataDB);
                 case 3:
-//                    return new DetailedReportTARFrag(myContext, wpDataDB);
-                    return DetailedReportTARFrag.newInstance(myContext, list, wpDataDB);
+                    return DetailedReportTARFrag.newInstance(myContext, wpDataDB);
                 default:
                     Globals.writeToMLOG("ERROR", "DetailedReportTab/getItem", "default/ Fragment == NULL");
                     return null;

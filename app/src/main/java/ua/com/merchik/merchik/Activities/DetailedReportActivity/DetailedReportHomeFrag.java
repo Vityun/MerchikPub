@@ -7,7 +7,6 @@ import android.content.Context;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Parcelable;
 import android.text.Html;
 import android.text.SpannableString;
 import android.text.Spanned;
@@ -50,7 +49,6 @@ import ua.com.merchik.merchik.Recyclers.KeyValueData;
 import ua.com.merchik.merchik.Recyclers.KeyValueListAdapter;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.WorkPlan;
-import ua.com.merchik.merchik.data.Data;
 import ua.com.merchik.merchik.data.OptionMassageType;
 import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
 import ua.com.merchik.merchik.data.RealmModels.ThemeDB;
@@ -62,7 +60,6 @@ import ua.com.merchik.merchik.database.realm.tables.WpDataRealm;
 public class DetailedReportHomeFrag extends Fragment {
 
     private static AppCompatActivity mContext;
-    private ArrayList<Data> list;
     private WpDataDB wpDataDB;
 
     private GoogleMap map;
@@ -87,56 +84,15 @@ public class DetailedReportHomeFrag extends Fragment {
         Globals.writeToMLOG("INFO", "DetailedReportHomeFrag/1", "create");
     }
 
-    public DetailedReportHomeFrag(AppCompatActivity context, ArrayList<Data> list, WpDataDB wpDataDB) {
-        Globals.writeToMLOG("INFO", "DetailedReportHomeFrag/2", "create");
-        // Required empty public constructor
-        this.mContext = context;
-        this.list = list;
-        this.wpDataDB = wpDataDB;
-    }
-
-    public static DetailedReportHomeFrag newInstance(AppCompatActivity context, ArrayList<Data> list, WpDataDB wpDataDB) {
+    public static DetailedReportHomeFrag newInstance(AppCompatActivity context, WpDataDB wpDataDB) {
         DetailedReportHomeFrag fragment = new DetailedReportHomeFrag();
         Bundle args = new Bundle();
-        args.putParcelableArrayList("list", list);
         args.putParcelable("wpDataDB", wpDataDB);
-//        args.putSerializable("appCompatActivity", (Serializable) context);// Передача AppCompatActivity в аргументах
         mContext = context;
         fragment.setArguments(args);
         return fragment;
     }
 
-    @Override
-    public void onSaveInstanceState(Bundle outState) {
-        super.onSaveInstanceState(outState);
-        Globals.writeToMLOG("INFO", "DetailedReportHomeFrag/onSaveInstanceState", "outState: " + outState);
-        ArrayList<Parcelable> parcelableList = new ArrayList<>();
-        for (Data data : list) {
-            parcelableList.add(data);
-        }
-        outState.putParcelableArrayList("list", parcelableList);
-        outState.putParcelable("wpDataDB", wpDataDB);
-//        outState.putSerializable("appCompatActivity", (Serializable) mContext);
-    }
-
-    @Override
-    public void onViewStateRestored(Bundle savedInstanceState) {
-        super.onViewStateRestored(savedInstanceState);
-        Globals.writeToMLOG("INFO", "DetailedReportHomeFrag/onViewStateRestored", "savedInstanceState: " + savedInstanceState);
-        if (savedInstanceState != null) {
-            ArrayList<Parcelable> parcelableList = savedInstanceState.getParcelableArrayList("list");
-            if (parcelableList != null) {
-                list = new ArrayList<>();
-                for (Parcelable parcelable : parcelableList) {
-                    if (parcelable instanceof Data) {
-                        list.add((Data) parcelable);
-                    }
-                }
-            }
-            wpDataDB = savedInstanceState.getParcelable("wpDataDB");
-//            mContext = (AppCompatActivity) savedInstanceState.getSerializable("appCompatActivity");
-        }
-    }
 
     @Override
     public void onAttach(Context context) {
@@ -151,10 +107,6 @@ public class DetailedReportHomeFrag extends Fragment {
 
         Bundle args = getArguments();
         if (args != null) {
-//            mContext = (AppCompatActivity) args.getSerializable("appCompatActivity");
-//            Globals.writeToMLOG("INFO", "DetailedReportHomeFrag", "onCreate/mContext: " + mContext);
-            list = args.getParcelableArrayList("list");
-            Globals.writeToMLOG("INFO", "DetailedReportHomeFrag", "onCreate/list: " + list);
             wpDataDB = args.getParcelable("wpDataDB");
             Globals.writeToMLOG("INFO", "DetailedReportHomeFrag", "onCreate/wpDataDB: " + wpDataDB);
         }
@@ -241,10 +193,10 @@ public class DetailedReportHomeFrag extends Fragment {
             option_signal_layout2.setOnClickListener(view -> openConductDialog());
             recycler = v.findViewById(R.id.recycler);
 
-            textDRDateV.setText(Clock.getHumanTimeYYYYMMDD(list.get(0).getDate().getTime() / 1000));
-            textDRAddrV.setText(list.get(0).getAddr());
-            textDRCustV.setText(list.get(0).getCust());
-            textDRMercV.setText(list.get(0).getMerc());
+            textDRDateV.setText(Clock.getHumanTimeYYYYMMDD(wpDataDB.getDt().getTime() / 1000));
+            textDRAddrV.setText(wpDataDB.getAddr_txt());
+            textDRCustV.setText(wpDataDB.getClient_txt());
+            textDRMercV.setText(wpDataDB.getUser_txt());
             option_signal_layout2.addView(ll);
 
             recycler.setAdapter(new KeyValueListAdapter(createKeyValueData(wpDataDB)));

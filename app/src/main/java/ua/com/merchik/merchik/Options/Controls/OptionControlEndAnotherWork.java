@@ -19,9 +19,7 @@ import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportAc
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.Options.OptionControl;
 import ua.com.merchik.merchik.Options.Options;
-import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.WorkPlan;
-import ua.com.merchik.merchik.data.Data;
 import ua.com.merchik.merchik.data.OptionMassageType;
 import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
@@ -151,16 +149,6 @@ public class OptionControlEndAnotherWork<T> extends OptionControl {
             } else {
                 otchetId = wpDataDB.getDoc_num_1c_id();
             }
-
-            Data D = new Data(
-                    wpDataDB.getId(),
-                    wpDataDB.getAddr_txt(),
-                    wpDataDB.getClient_txt(),
-                    wpDataDB.getUser_txt(),
-                    wpDataDB.getDt(),  //+TODO CHANGE DATE
-                    otchetId,
-                    "",
-                    R.mipmap.merchik);
 
             WorkPlan workPlan = new WorkPlan();
             WPDataObj wpDataObj = workPlan.getKPS(wpDataDB.getId());

@@ -8,7 +8,6 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.os.Parcelable;
 import android.provider.MediaStore;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -37,7 +36,6 @@ import ua.com.merchik.merchik.ServerExchange.Exchange;
 import ua.com.merchik.merchik.ServerExchange.TablesLoadingUnloading;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.WorkPlan;
-import ua.com.merchik.merchik.data.Data;
 import ua.com.merchik.merchik.data.Database.Room.SiteObjectsSDB;
 import ua.com.merchik.merchik.data.OptionMassageType;
 import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
@@ -51,7 +49,6 @@ import ua.com.merchik.merchik.dialogs.DialogFilter.Click;
 public class DetailedReportOptionsFrag extends Fragment {
 
     private static Context mContext;
-    private ArrayList<Data> list;
     private WpDataDB wpDataDB;
 
     public static final Integer[]  DetailedReportOptionsFrag_VIDEO_LESSONS = new Integer[]{821, 4540};
@@ -62,20 +59,10 @@ public class DetailedReportOptionsFrag extends Fragment {
         Globals.writeToMLOG("INFO", "DetailedReportOptionsFrag/1", "create");
     }
 
-    public DetailedReportOptionsFrag(Context context, ArrayList<Data> list, WpDataDB wpDataDB) {
-        Globals.writeToMLOG("INFO", "DetailedReportOptionsFrag/2", "create");
-        // Required empty public constructor
-        this.mContext = context;
-        this.list = list;
-        this.wpDataDB = wpDataDB;
-    }
-
-    public static DetailedReportOptionsFrag newInstance(AppCompatActivity context, ArrayList<Data> list, WpDataDB wpDataDB) {
+    public static DetailedReportOptionsFrag newInstance(AppCompatActivity context, WpDataDB wpDataDB) {
         DetailedReportOptionsFrag fragment = new DetailedReportOptionsFrag();
         Bundle args = new Bundle();
-        args.putParcelableArrayList("list", list);
         args.putParcelable("wpDataDB", wpDataDB);
-//        args.putSerializable("appCompatActivity", (Serializable) context);// Передача AppCompatActivity в аргументах
         mContext = context;
         fragment.setArguments(args);
         return fragment;
@@ -95,7 +82,7 @@ public class DetailedReportOptionsFrag extends Fragment {
         super.onResume();
     }
 
-    @Override
+/*    @Override
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
         Globals.writeToMLOG("INFO", "DetailedReportOptionsFrag/onSaveInstanceState", "outState: " + outState);
@@ -125,7 +112,7 @@ public class DetailedReportOptionsFrag extends Fragment {
             wpDataDB = savedInstanceState.getParcelable("wpDataDB");
 //            mContext = (AppCompatActivity) savedInstanceState.getSerializable("appCompatActivity");
         }
-    }
+    }*/
 
     @Override
     public void onAttach(Context context) {
@@ -140,10 +127,6 @@ public class DetailedReportOptionsFrag extends Fragment {
 
         Bundle args = getArguments();
         if (args != null) {
-//            mContext = (AppCompatActivity) args.getSerializable("appCompatActivity");
-//            Globals.writeToMLOG("INFO", "DetailedReportOptionsFrag", "onCreate/mContext: " + mContext);
-            list = args.getParcelableArrayList("list");
-            Globals.writeToMLOG("INFO", "DetailedReportOptionsFrag", "onCreate/list: " + list);
             wpDataDB = args.getParcelable("wpDataDB");
             Globals.writeToMLOG("INFO", "DetailedReportOptionsFrag", "onCreate/wpDataDB: " + wpDataDB);
         }

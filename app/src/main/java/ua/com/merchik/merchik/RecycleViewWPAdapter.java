@@ -259,6 +259,7 @@ public class RecycleViewWPAdapter extends RecyclerView.Adapter<RecycleViewWPAdap
                         wp.getUser_txt(),
                         wp.getDt(),  //+TODO CHANGE DATE
                         otchetId,
+                        null,
                         "",
                         R.mipmap.merchik);
 

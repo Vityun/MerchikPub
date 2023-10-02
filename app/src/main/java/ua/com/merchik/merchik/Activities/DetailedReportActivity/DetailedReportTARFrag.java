@@ -22,7 +22,6 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -34,7 +33,6 @@ import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.MakePhoto.MakePhoto;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
-import ua.com.merchik.merchik.data.Data;
 import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
 import ua.com.merchik.merchik.data.Database.Room.ViewListSDB;
 import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteHintsDB;
@@ -66,19 +64,11 @@ public class DetailedReportTARFrag extends Fragment {
         Globals.writeToMLOG("INFO", "DetailedReportTARFrag/1", "create");
     }
 
-    public DetailedReportTARFrag(Context mContext, WpDataDB wpDataDB) {
-        Globals.writeToMLOG("INFO", "DetailedReportTARFrag/2", "create");
-        this.mContext = mContext;
-        this.wpDataDB = wpDataDB;
-    }
-
-    public static DetailedReportTARFrag newInstance(AppCompatActivity context, ArrayList<Data> list, WpDataDB wpDataDB) {
+    public static DetailedReportTARFrag newInstance(AppCompatActivity context, WpDataDB wpDataDB) {
         DetailedReportTARFrag fragment = new DetailedReportTARFrag();
         Bundle args = new Bundle();
         args.putParcelable("wpDataDB", wpDataDB);
-//        args.putSerializable("appCompatActivity", (Serializable) context);// Передача AppCompatActivity в аргументах
         mContext = context;
-
         fragment.setArguments(args);
         return fragment;
     }
@@ -88,7 +78,6 @@ public class DetailedReportTARFrag extends Fragment {
         super.onSaveInstanceState(outState);
         Globals.writeToMLOG("INFO", "DetailedReportTARFrag/onSaveInstanceState", "outState: " + outState);
         outState.putParcelable("wpDataDB", wpDataDB);
-//        outState.putSerializable("appCompatActivity", (Serializable) mContext);
     }
 
     @Override
@@ -97,7 +86,6 @@ public class DetailedReportTARFrag extends Fragment {
         Globals.writeToMLOG("INFO", "DetailedReportTARFrag/onViewStateRestored", "savedInstanceState: " + savedInstanceState);
         if (savedInstanceState != null) {
             wpDataDB = savedInstanceState.getParcelable("wpDataDB");
-//            mContext = (AppCompatActivity) savedInstanceState.getSerializable("appCompatActivity");
         }
     }
 
@@ -113,8 +101,6 @@ public class DetailedReportTARFrag extends Fragment {
         Globals.writeToMLOG("INFO", "DetailedReportTARFrag", "onCreate");
         Bundle args = getArguments();
         if (args != null) {
-//            mContext = (AppCompatActivity) args.getSerializable("appCompatActivity");
-//            Globals.writeToMLOG("INFO", "DetailedReportTARFrag", "onCreate/mContext: " + mContext);
             wpDataDB = args.getParcelable("wpDataDB");
             Globals.writeToMLOG("INFO", "DetailedReportTARFrag", "onCreate/wpDataDB: " + wpDataDB);
         }

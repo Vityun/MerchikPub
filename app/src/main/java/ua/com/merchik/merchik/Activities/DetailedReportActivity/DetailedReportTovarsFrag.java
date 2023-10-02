@@ -8,7 +8,6 @@ import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.os.Bundle;
-import android.os.Parcelable;
 import android.text.Editable;
 import android.text.Html;
 import android.text.TextWatcher;
@@ -47,7 +46,6 @@ import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.Utils.CustomRecyclerView;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
-import ua.com.merchik.merchik.data.Data;
 import ua.com.merchik.merchik.data.Database.Room.CustomerSDB;
 import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
 import ua.com.merchik.merchik.data.Database.Room.ViewListSDB;
@@ -75,7 +73,6 @@ public class DetailedReportTovarsFrag extends Fragment {
     public static final Integer[] DETAILED_REPORT_FRAGMENT_TOVAR_VIDEO_LESSONS = new Integer[]{823, 815};
 
     private static Context mContext;
-    private ArrayList<Data> list;
     private WpDataDB wpDataDB;
     private TasksAndReclamationsSDB tasksAndReclamationsSDB;
 
@@ -99,23 +96,10 @@ public class DetailedReportTovarsFrag extends Fragment {
         Globals.writeToMLOG("INFO", "DetailedReportTovarsFrag/1", "create");
     }
 
-    public DetailedReportTovarsFrag(Context context, ArrayList<Data> list, WpDataDB wpDataDB) {
-        // Required empty public constructor
-        Globals.writeToMLOG("INFO", "DetailedReportTovarsFrag/2", "create");
-        this.mContext = context;
-        this.list = list;
-        this.wpDataDB = wpDataDB;
-
-        this.codeDad2 = wpDataDB.getCode_dad2();
-        this.clientId = wpDataDB.getClient_id();
-        this.addressId = wpDataDB.getAddr_id();
-    }
-
-    public static DetailedReportTovarsFrag newInstance(AppCompatActivity context, ArrayList<Data> list, WpDataDB wpDataDB) {
+    public static DetailedReportTovarsFrag newInstance(AppCompatActivity context, WpDataDB wpDataDB) {
         Globals.writeToMLOG("INFO", "DetailedReportTovarsFrag/newInstance", "DetailedReportTovarsFrag newInstance");
         DetailedReportTovarsFrag fragment = new DetailedReportTovarsFrag();
         Bundle args = new Bundle();
-        args.putParcelableArrayList("list", list);
         args.putParcelable("wpDataDB", wpDataDB);
         mContext = context;
         fragment.setArguments(args);
@@ -141,43 +125,6 @@ public class DetailedReportTovarsFrag extends Fragment {
     }
 
     @Override
-    public void onSaveInstanceState(Bundle outState) {
-        super.onSaveInstanceState(outState);
-        Globals.writeToMLOG("INFO", "DetailedReportTovarsFrag/onSaveInstanceState", "outState: " + outState);
-        try {
-            ArrayList<Parcelable> parcelableList = new ArrayList<>();
-            for (Data data : list) {
-                parcelableList.add(data);
-            }
-            outState.putParcelableArrayList("list", parcelableList);
-            outState.putParcelable("wpDataDB", wpDataDB);
-            outState.putParcelable("tasksAndReclamationsSDB", tasksAndReclamationsSDB);
-        }catch (Exception e){
-            Globals.writeToMLOG("ERROR", "DetailedReportTovarsFrag/onSaveInstanceState", "Exception e: " + e);
-        }
-    }
-
-    @Override
-    public void onViewStateRestored(Bundle savedInstanceState) {
-        super.onViewStateRestored(savedInstanceState);
-        Globals.writeToMLOG("INFO", "DetailedReportTovarsFrag/onViewStateRestored", "savedInstanceState: " + savedInstanceState);
-        if (savedInstanceState != null) {
-            ArrayList<Parcelable> parcelableList = savedInstanceState.getParcelableArrayList("list");
-            if (parcelableList != null) {
-                list = new ArrayList<>();
-                for (Parcelable parcelable : parcelableList) {
-                    if (parcelable instanceof Data) {
-                        list.add((Data) parcelable);
-                    }
-                }
-            }
-            wpDataDB = savedInstanceState.getParcelable("wpDataDB");
-            tasksAndReclamationsSDB = savedInstanceState.getParcelable("tasksAndReclamationsSDB");
-        }
-    }
-
-
-    @Override
     public void onAttach(Context context) {
         super.onAttach(context);
         Globals.writeToMLOG("INFO", "DetailedReportTovarsFrag", "onAttach");
@@ -189,10 +136,6 @@ public class DetailedReportTovarsFrag extends Fragment {
         Globals.writeToMLOG("INFO", "DetailedReportTovarsFrag", "onCreate");
         Bundle args = getArguments();
         if (args != null) {
-//            mContext = (AppCompatActivity) args.getSerializable("appCompatActivity");
-//            Globals.writeToMLOG("INFO", "DetailedReportTovarsFrag", "onCreate/mContext: " + mContext);
-            list = args.getParcelableArrayList("list");
-            Globals.writeToMLOG("INFO", "DetailedReportTovarsFrag", "onCreate/list: " + list);
             wpDataDB = args.getParcelable("wpDataDB");
             Globals.writeToMLOG("INFO", "DetailedReportTovarsFrag", "onCreate/wpDataDB: " + wpDataDB);
             tasksAndReclamationsSDB = args.getParcelable("tasksAndReclamationsSDB");
