@@ -19,7 +19,6 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -322,7 +321,17 @@ public class DetailedReportOptionsFrag extends Fragment {
 
             Log.e("TEST_OPTIONS", "optionsButtons SIZE: " + optionsButtons.size());
             for (OptionsDB item : optionsButtons) {
-                options.optionControl(mContext, wpDataDB, item, null, Options.NNKMode.NULL, null);
+                options.optionControl(mContext, wpDataDB, item, null, Options.NNKMode.NULL, new OptionControl.UnlockCodeResultListener() {
+                    @Override
+                    public void onUnlockCodeSuccess() {
+
+                    }
+
+                    @Override
+                    public void onUnlockCodeFailure() {
+
+                    }
+                });
             }
 
             if (optionsButtons != null && optionsButtons.size() > 0) {

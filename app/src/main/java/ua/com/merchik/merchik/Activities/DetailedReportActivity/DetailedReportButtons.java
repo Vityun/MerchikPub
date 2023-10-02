@@ -6,10 +6,10 @@ import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
-import androidx.preference.PreferenceManager;
 import android.util.Log;
 import android.widget.Toast;
 
+import androidx.preference.PreferenceManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
 import java.util.List;
@@ -100,19 +100,17 @@ public class DetailedReportButtons {
 //                }
 //                break;
 
-            case 132969: // Фото тележка с товаром
-                globals.fixMP(wpDataDB); // Фиксация Местоположения в таблице ЛогМп
-                wpDataObj.setPhotoType("10");
-                if (mod == 1) {
-                    intentPhotoReport.putExtra("dataFromWPObj", wpDataObj);
-                    context.startActivity(intentPhotoReport);
-                } else {
+//            case 132969: // Фото тележка с товаром
+//                globals.fixMP(wpDataDB); // Фиксация Местоположения в таблице ЛогМп
+//                wpDataObj.setPhotoType("10");
+//                if (mod == 1) {
 //                    intentPhotoReport.putExtra("dataFromWPObj", wpDataObj);
-//                    MakePhoto.startToMakePhoto(context, wpDataObj);
-                    MakePhoto makePhoto = new MakePhoto();
-                    makePhoto.pressedMakePhotoOldStyle((Activity) context, wpDataObj, wpDataDB, optionsDB);
-                }
-                break;
+//                    context.startActivity(intentPhotoReport);
+//                } else {
+//                    MakePhoto makePhoto = new MakePhoto();
+//                    makePhoto.pressedMakePhotoOldStyle((Activity) context, wpDataObj, wpDataDB, optionsDB);
+//                }
+//                break;
 
 
             case 141360: // Фото товара на складе
@@ -122,8 +120,6 @@ public class DetailedReportButtons {
                     intentPhotoReport.putExtra("dataFromWPObj", wpDataObj);
                     context.startActivity(intentPhotoReport);
                 } else {
-//                    intentPhotoReport.putExtra("dataFromWPObj", wpDataObj);
-//                    MakePhoto.startToMakePhoto(context, wpDataObj);
                     MakePhoto makePhoto = new MakePhoto();
                     makePhoto.pressedMakePhotoOldStyle((Activity) context, wpDataObj, wpDataDB, optionsDB);
                 }

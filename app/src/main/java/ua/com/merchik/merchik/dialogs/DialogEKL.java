@@ -581,21 +581,31 @@ public class DialogEKL {
 
             @Override
             public void onFailure(String error) {
-                if (error.equals("register_messenger")){
-                    DialogData dialogData = new DialogData(context);
-                    dialogData.setTitle("Внимание! Получатель сообщения (ПТТ) ещё не подключён к нашему боту.");
-                    dialogData.setText("Для того, чтобы он подключился, нажмите кнопку ОК. На телефон ПТТ будет отправлена SMS с ссылкой, " +
-                            "перейдя по которой он автоматически подключится к нашему боту и Вы сможете отправлять сообщения ему через мессенджер.");
-                    dialogData.setOk("Ok", ()->{
-                        sendRegistrationInTelegram(telType);
-                    });
-                    dialogData.setCancel("Нет", dialogData::dismiss);
-                    dialogData.setClose(dialogData::dismiss);
-                    dialogData.show();
-                }else {
-                    Globals.writeToMLOG("FAIL", "DialogEKL.sendStartEKL/onFailure", "t: " + error);
-                    Log.e("DialogEKL", "sendStartEKL/onFailure: " + error);
-                    Toast.makeText(context, "При отправке кода ЭКЛ возникла ошибка, повторите попытку позже или обратитесь к Вашему руководителю. Ошибка: " + error, Toast.LENGTH_LONG).show();
+                try {
+                    if (error.equals("register_messenger")){
+                        DialogData dialogData = new DialogData(context);
+                        dialogData.setTitle("Внимание! Получатель сообщения (ПТТ) ещё не подключён к нашему боту.");
+                        dialogData.setText("Для того, чтобы он подключился, нажмите кнопку ОК. На телефон ПТТ будет отправлена SMS с ссылкой, " +
+                                "перейдя по которой он автоматически подключится к нашему боту и Вы сможете отправлять сообщения ему через мессенджер.");
+                        dialogData.setOk("Ok", ()->{
+                            sendRegistrationInTelegram(telType);
+                        });
+                        dialogData.setCancel("Нет", dialogData::dismiss);
+                        dialogData.setClose(dialogData::dismiss);
+                        dialogData.show();
+                    }else {
+                        Globals.writeToMLOG("FAIL", "DialogEKL.sendStartEKL/onFailure", "t: " + error);
+                        Log.e("DialogEKL", "sendStartEKL/onFailure: " + error);
+                        Toast.makeText(context, "При отправке кода ЭКЛ возникла ошибка, повторите попытку позже или обратитесь к Вашему руководителю. Ошибка: " + error, Toast.LENGTH_LONG).show();
+
+                        DialogData dialogData = new DialogData(context);
+                        dialogData.setTitle("Виникла помилка: ");
+                        dialogData.setText(error);
+                        dialogData.setClose(dialogData::dismiss);
+                        dialogData.show();
+                    }
+                }catch (Exception e){
+                    Globals.writeToMLOG("RESP", "DialogEKL.sendStartEKL/onResponse/onFailure/Exception", "Exception e: " + e);
                 }
             }
         });
@@ -839,18 +849,22 @@ public class DialogEKL {
         call.enqueue(new Callback<EKLRespData>() {
             @Override
             public void onResponse(Call<EKLRespData> call, Response<EKLRespData> response) {
-                if (response.body() != null) {
-                    Globals.writeToMLOG("INFO", "responseSendPTTEKLCode/TELEGRAM", "response.body(): " + new Gson().toJson(response.body()));
-                    if (response.body().state) {
-                        exchange.onSuccess(response.body());
-                    } else {
-                        if (response.body().additional_action.equals("register_messenger")){
-                            exchange.onFailure("register_messenger");
+                try {
+                    if (response.body() != null) {
+                        Globals.writeToMLOG("INFO", "responseSendPTTEKLCode/TELEGRAM", "response.body(): " + new Gson().toJson(response.body()));
+                        if (response.body().state) {
+                            exchange.onSuccess(response.body());
+                        } else {
+                            if (response.body().additional_action != null && response.body().additional_action.equals("register_messenger")){
+                                exchange.onFailure("register_messenger");
+                            }
+                            exchange.onFailure("Ошибка со стороны сервера: " + response.body().error);
                         }
-                        exchange.onFailure("Ошибка со стороны сервера: " + response.body().error);
+                    } else {
+                        exchange.onFailure("Ответ с сервера пустой. Повторите попытку позже.");
                     }
-                } else {
-                    exchange.onFailure("Ответ с сервера пустой. Повторите попытку позже.");
+                }catch (Exception e){
+                    Globals.writeToMLOG("INFO", "responseSendPTTEKLCode/TELEGRAM", "Exception e: " + e);
                 }
             }
 

@@ -73,6 +73,7 @@ import ua.com.merchik.merchik.Options.Buttons.OptionButtonPhotoAktionTovar;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonPhotoBeforeStartWork;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonPhotoDMP;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonPhotoFOT;
+import ua.com.merchik.merchik.Options.Buttons.OptionButtonPhotoOfACartWithGoods;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonPhotoShowcaseCorporateBlock;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonPhotoShowcaseFullness;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonPhotoShowcaseNear;
@@ -537,37 +538,15 @@ public class Options {
                                                 optControl(context, dataDB, option, Integer.parseInt(option.getOptionId()), null, type, mode, new OptionControl.UnlockCodeResultListener() {
                                                     @Override
                                                     public void onUnlockCodeSuccess() {
-
+                                                        Log.e("NNK", "Выполняю опцию");
                                                     }
 
                                                     @Override
                                                     public void onUnlockCodeFailure() {
-
+                                                        Log.e("NNK", "НЕ Выполняю опцию");
                                                     }
                                                 });
                                                 click.click();
-
-
-//                                                if (res > 0) {
-//                                                    // Ну хреново и чо
-//                                                } else {
-//                                                    switch (mode) {
-//                                                        case MAKE:
-//                                                            optControl(context, dataDB, option, Integer.parseInt(option.getOptionId()), null, type, mode, new OptionControl.UnlockCodeResultListener() {
-//                                                                @Override
-//                                                                public void onUnlockCodeSuccess() {
-//
-//                                                                }
-//
-//                                                                @Override
-//                                                                public void onUnlockCodeFailure() {
-//
-//                                                                }
-//                                                            });
-//                                                            click.click();
-//                                                            break;
-//                                                    }
-//                                                }
                                             }
 
                                             @Override
@@ -582,12 +561,12 @@ public class Options {
                                                 optControl(context, dataDB, option, Integer.parseInt(option.getOptionId()), null, type, mode, new OptionControl.UnlockCodeResultListener() {
                                                     @Override
                                                     public void onUnlockCodeSuccess() {
-
+                                                        Log.e("NNK", "Выполняю опцию. Если опция не найдена.");
                                                     }
 
                                                     @Override
                                                     public void onUnlockCodeFailure() {
-
+                                                        Log.e("NNK", "НЕ Выполняю опцию. Если опция не найдена.");
                                                     }
                                                 });
                                                 click.click();
@@ -601,12 +580,12 @@ public class Options {
                                         optControl(context, dataDB, option, Integer.parseInt(option.getOptionId()), null, type, mode, new OptionControl.UnlockCodeResultListener() {
                                             @Override
                                             public void onUnlockCodeSuccess() {
-
+                                                Log.e("NNK", "Success Вторая опция блокировки есть, а первой - нет. Вторая опция УСПЕШНО запершила работу, значит можно выполнять опцию изначальную");
                                             }
 
                                             @Override
                                             public void onUnlockCodeFailure() {
-
+                                                Log.e("NNK", "Failure Вторая опция блокировки есть, а первой - нет. Вторая опция УСПЕШНО запершила работу, значит можно выполнять опцию изначальную");
                                             }
                                         });
                                         click.click();
@@ -637,22 +616,7 @@ public class Options {
                                         });
                                         Log.e("NNK", "res OK 1: " + res);
                                     }else {
-                                        switch (mode) {
-                                            case MAKE:
-                                                optControl(context, dataDB, option, Integer.parseInt(option.getOptionId()), null, type, mode, new OptionControl.UnlockCodeResultListener() {
-                                                    @Override
-                                                    public void onUnlockCodeSuccess() {
-
-                                                    }
-
-                                                    @Override
-                                                    public void onUnlockCodeFailure() {
-
-                                                    }
-                                                });
-                                                click.click();
-                                                break;
-                                        }
+                                        Log.e("NNK", "Блок 2 не выполнен, а Блок 1 нет в отчёте - Ничего не делаю. (должно отрисовать сообщение Блока2)");
                                     }
                                 }
                             }
@@ -683,28 +647,6 @@ public class Options {
                                             }
                                         });
                                         click.click();
-
-
-/*                                        if (res > 0) {
-                                            // Ну хреново и чо
-                                        } else {
-                                            switch (mode) {
-                                                case MAKE:
-                                                    optControl(context, dataDB, option, Integer.parseInt(option.getOptionId()), null, type, mode, new OptionControl.UnlockCodeResultListener() {
-                                                        @Override
-                                                        public void onUnlockCodeSuccess() {
-
-                                                        }
-
-                                                        @Override
-                                                        public void onUnlockCodeFailure() {
-
-                                                        }
-                                                    });
-                                                    click.click();
-                                                    break;
-                                            }
-                                        }*/
                                     }
 
                                     @Override
@@ -719,12 +661,12 @@ public class Options {
                                         optControl(context, dataDB, option, Integer.parseInt(option.getOptionId()), null, type, mode, new OptionControl.UnlockCodeResultListener() {
                                             @Override
                                             public void onUnlockCodeSuccess() {
-
+                                                Log.e("NNK", "Блок2 - нет, Блок1 - нет. Success");
                                             }
 
                                             @Override
                                             public void onUnlockCodeFailure() {
-
+                                                Log.e("NNK", "Блок2 - нет, Блок1 - нет. Failure");
                                             }
                                         });
                                         click.click();
@@ -747,8 +689,6 @@ public class Options {
                             @Override
                             public void onUnlockCodeSuccess() {
                                 Log.e("NNK", "Успешный Успех. Если первая опция пустая Первая и вторая ОК прошли проверку и должно разрешить работу.");
-
-
                                 optControl(context, dataDB, option, Integer.parseInt(option.getOptionId()), null, type, mode, new OptionControl.UnlockCodeResultListener() {
                                     @Override
                                     public void onUnlockCodeSuccess() {
@@ -761,27 +701,6 @@ public class Options {
                                     }
                                 });
                                 click.click();
-
-/*                                if (res > 0) {
-                                    // Ну хреново и чо
-                                } else {
-                                    switch (mode) {
-                                        case MAKE:
-                                            optControl(context, dataDB, option, Integer.parseInt(option.getOptionId()), null, type, mode, new OptionControl.UnlockCodeResultListener() {
-                                                @Override
-                                                public void onUnlockCodeSuccess() {
-
-                                                }
-
-                                                @Override
-                                                public void onUnlockCodeFailure() {
-
-                                                }
-                                            });
-                                            click.click();
-                                            break;
-                                    }
-                                }*/
                             }
 
                             @Override
@@ -796,12 +715,12 @@ public class Options {
                                 optControl(context, dataDB, option, Integer.parseInt(option.getOptionId()), null, type, mode, new OptionControl.UnlockCodeResultListener() {
                                     @Override
                                     public void onUnlockCodeSuccess() {
-
+                                        Log.e("NNK", "Блок 2 не указан вообще, Блок 1 указан, но в отчёте нет, буду делать опцию.");
                                     }
 
                                     @Override
                                     public void onUnlockCodeFailure() {
-
+                                        Log.e("NNK", "Блок 2 не указан вообще, Блок 1 указан, но в отчёте нет, буду делать опцию.");
                                     }
                                 });
                                 click.click();
@@ -1394,6 +1313,10 @@ public class Options {
 
             case 135809:
                 new OptionButtonPhotoBeforeStartWork<>(context, dataDB, option, type, mode, unlockCodeResultListener);
+                break;
+
+            case 132969:
+                new OptionButtonPhotoOfACartWithGoods<>(context, dataDB, option, type, mode, unlockCodeResultListener);
                 break;
 
             case 151594:
@@ -2172,6 +2095,22 @@ public class Options {
                 result = false;
             }
         }
+
+
+
+        Exchange exchange = new Exchange();
+        exchange.sendWpDataToServer(new Click() {
+            @Override
+            public <T> void onSuccess(T data) {
+                String msg = (String) data;
+                Globals.writeToMLOG("INFO", "DetailedReportButtons.class.pressStartWork.onSuccess", "msg: " + msg);
+            }
+
+            @Override
+            public void onFailure(String error) {
+                Globals.writeToMLOG("INFO", "DetailedReportButtons.class.pressStartWork.onFailure", "error: " + error);
+            }
+        });
 
 //        conductOptCheck(mode, result, optionsDB);
         return result;

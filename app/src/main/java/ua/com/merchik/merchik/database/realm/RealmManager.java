@@ -698,7 +698,7 @@ public class RealmManager {
                 .notEqualTo("photo_type", 29)
                 .notEqualTo("photo_type", 5)
                 .notEqualTo("photo_type", 35)
-                .isNull("showcase_id")  // Показываем мерчу в ЖФ фото НЕ "ВИТРИН"
+//                .isNull("showcase_id")  // Показываем мерчу в ЖФ фото НЕ "ВИТРИН"
                 .findAll();
     }
 
@@ -709,7 +709,7 @@ public class RealmManager {
                 .notEqualTo("photo_type", 5)
                 .notEqualTo("photo_type", 35)
                 .equalTo("code_dad2", dad2)
-                .isNull("showcase_id")  // Показываем мерчу в ЖФ фото НЕ "ВИТРИН"
+//                .isNull("showcase_id")  // Показываем мерчу в ЖФ фото НЕ "ВИТРИН"
                 .findAll();
     }
 
@@ -994,7 +994,7 @@ public class RealmManager {
      * Это сделано сейчас для потому что переделываем выгрузку под новый стандарт
      */
     public static List<StartEndData> getWpDataStartEndWork() {
-        List<WpDataDB> list = WpDataRealm.getWpData();
+        List<WpDataDB> list = RealmManager.INSTANCE.copyFromRealm(WpDataRealm.getWpData());
         List<StartEndData> res = new ArrayList<>();
 
         if (list != null) {
@@ -1022,6 +1022,11 @@ public class RealmManager {
                     }
 
                     res.add(item);
+                } else {
+                    Log.e("getWpDataStartEndWork", "l.getId: " + l.getId());
+                    Log.e("getWpDataStartEndWork", "l.getCode_dad2: " + l.getCode_dad2());
+                    Log.e("getWpDataStartEndWork", "l.startUpdate: " + l.startUpdate);
+                    Log.e("getWpDataStartEndWork", "l.getSetStatus(): " + l.getSetStatus());
                 }
             }
         }

@@ -34,6 +34,7 @@ import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.Options.Controls.OptionControlReclamationAnswer;
 import ua.com.merchik.merchik.Options.Controls.OptionControlTaskAnswer;
+import ua.com.merchik.merchik.Options.OptionControl;
 import ua.com.merchik.merchik.Options.Options;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
@@ -617,7 +618,17 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
     /*Нажатие на проверку статуса опции. Нажатие на сигнал*/
     private void setCheck(int POS, OptionsDB optionsButtons, Options.NNKMode mode) {
         Options options = new Options();
-        options.optionControl(mContext, dataDB, optionsButtons, null, mode, null);
+        options.optionControl(mContext, dataDB, optionsButtons, null, mode, new OptionControl.UnlockCodeResultListener() {
+            @Override
+            public void onUnlockCodeSuccess() {
+
+            }
+
+            @Override
+            public void onUnlockCodeFailure() {
+
+            }
+        });
 
         RealmManager.INSTANCE.executeTransaction(realm -> {
             realm.insertOrUpdate(optionsButtons);

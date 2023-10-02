@@ -7,7 +7,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.List;
 
-import ua.com.merchik.merchik.Adapters.LogMPAdapter;
+import ua.com.merchik.merchik.Adapters.RecyclerAndPhotoAdapter;
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.Options.OptionControl;
@@ -83,8 +83,13 @@ public class OptionButtonHistoryMP<T> extends OptionControl {
      * Создание адаптера для отображения списка Истории местоположений
      *
      * @return*/
+//    private RecyclerView.Adapter createAdapter(Context context, List<LogMPDB> logMPDBList){
+//        LogMPAdapter adapter = new LogMPAdapter(context, logMPDBList);
+//        return adapter;
+//    }
+
     private RecyclerView.Adapter createAdapter(Context context, List<LogMPDB> logMPDBList){
-        LogMPAdapter adapter = new LogMPAdapter(context, logMPDBList);
+        RecyclerAndPhotoAdapter adapter = new RecyclerAndPhotoAdapter(context, logMPDBList);
         return adapter;
     }
 }

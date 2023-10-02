@@ -41,7 +41,7 @@ public class OptionControlAdditionalRequirementsMark<T> extends OptionControl {
     private WpDataDB wpDataDB;
     private long dateDocumentLong;
 
-    public OptionControlAdditionalRequirementsMark(Context context, T document, OptionsDB optionDB, OptionMassageType msgType, Options.NNKMode nnkMode, UnlockCodeResultListener unlockCodeResultListener) {
+    public OptionControlAdditionalRequirementsMark(Context context, T document, OptionsDB optionDB, OptionMassageType msgType, Options.NNKMode nnkMode, OptionControl.UnlockCodeResultListener unlockCodeResultListener) {
         this.context = context;
         this.document = document;
         this.optionDB = optionDB;
@@ -222,11 +222,12 @@ public class OptionControlAdditionalRequirementsMark<T> extends OptionControl {
                         .append(CustomerRealm.getCustomerById(wpDataDB.getClient_id()).getNm())
                         .append(" нет доп. требований по этому адресу");
                 signal = false;
-
+                unlockCodeResultListener.onUnlockCodeSuccess();
             } else if (offsetSum == virtualTable.size()) {
                 msg.append("Все доп.требования были изменены после текущего посещения, проверка не выполняется.");
 
                 signal = true;
+                unlockCodeResultListener.onUnlockCodeFailure();
             } else if (nedotochSum > 0) {
 
                 msg.append("За период с ")
@@ -240,6 +241,7 @@ public class OptionControlAdditionalRequirementsMark<T> extends OptionControl {
                         .append(" Доп.требованиям. ");
 
                 signal = true;
+                unlockCodeResultListener.onUnlockCodeFailure();
             } else if (virtualTable.size() > 1 && deviationFromTheMeanSum < 0.5) {
 
                 msg.append("Вы оценили Все (")
@@ -250,6 +252,7 @@ public class OptionControlAdditionalRequirementsMark<T> extends OptionControl {
                                 "Оценивайте эти требования ОБЬЕКТИВНО!");
 
                 signal = true;
+                unlockCodeResultListener.onUnlockCodeFailure();
             } else {
                 msg.append("За период с ")
                         .append(Clock.getHumanTime3(dateFrom))
@@ -262,6 +265,7 @@ public class OptionControlAdditionalRequirementsMark<T> extends OptionControl {
                         .append(" Доп.требованиям. Замечаний по выполнению опции нет.");
 
                 signal = false;
+                unlockCodeResultListener.onUnlockCodeSuccess();
             }
 
             // Установка сообщения

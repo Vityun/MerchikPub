@@ -60,6 +60,7 @@
 -keep class retrofit.** { *; }
 
 -keep class ua.com.merchik.merchik.data.** { *; }
+-keep class ua.com.merchik.merchik.dialogs.** { *; }
 #-keep class ua.com.merchik.merchik.menu_login { *; }
 
 # Keep GSON classes (Bluesnap module uses it too)

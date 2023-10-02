@@ -10,6 +10,7 @@ import android.util.Log;
 import android.view.View;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
@@ -34,6 +35,8 @@ public class OptionControlEndAnotherWork<T> extends OptionControl {
     public boolean signal = true;
 
     private Date date;
+    private Date oneDayBefore;
+    private Date oneDayAfter;
     private int userId;
     private long codeDad2;
 
@@ -57,6 +60,19 @@ public class OptionControlEndAnotherWork<T> extends OptionControl {
                 date = wpDataDB.getDt();
                 userId = wpDataDB.getUser_id();
                 codeDad2 = wpDataDB.getCode_dad2();
+
+                // Создаем объект Calendar для работы с датами
+                Calendar calendar = Calendar.getInstance();
+                calendar.setTime(date);
+
+                // Вычитаем один день из текущей даты
+                calendar.add(Calendar.DAY_OF_MONTH, -1);
+                oneDayBefore = calendar.getTime();
+
+                // Прибавляем один день к текущей дате
+                calendar.setTime(date);
+                calendar.add(Calendar.DAY_OF_MONTH, 1);
+                oneDayAfter = calendar.getTime();
             }
         }catch (Exception e){
             Globals.writeToMLOG("ERROR", "OptionControlEndAnotherWork/getDocumentVar", "Exception e: " + e);
@@ -66,8 +82,15 @@ public class OptionControlEndAnotherWork<T> extends OptionControl {
     private void executeOption() {
         // ---  Получаем данные с БД для подальшей обработке
         RealmResults<WpDataDB> wp = WpDataRealm.getWpData();
+//        wp = wp.where()
+//                .equalTo("dt", date)
+//                .equalTo("user_id", userId)
+//                .notEqualTo("code_dad2", codeDad2)
+//                .findAll();
+
         wp = wp.where()
-                .equalTo("dt", date)
+                .greaterThanOrEqualTo("dt", oneDayBefore)
+                .lessThanOrEqualTo("dt", oneDayAfter)
                 .equalTo("user_id", userId)
                 .notEqualTo("code_dad2", codeDad2)
                 .findAll();

@@ -102,9 +102,11 @@ public class OptionControlPhoto<T> extends OptionControl {
         if (stackPhotoDB != null && stackPhotoDB.size() < m){
             stringBuilderMsg.append("Вы должны сделать: ").append(m).append(" фото с типом: ").append(ImagesTypeListRealm.getByID(photoType).getNm()).append(", а сделали: ").append(stackPhotoDB.size()).append(" - доделайте фотографии.");
             signal = true;
+            unlockCodeResultListener.onUnlockCodeFailure();
         }else {
             stringBuilderMsg.append("Жалоб по фыполнению фото нет. Сделано: ").append(stackPhotoDB.size()).append(" фото.");
             signal = false;
+            unlockCodeResultListener.onUnlockCodeSuccess();
         }
 
         //7.0. сохраним сигнал
