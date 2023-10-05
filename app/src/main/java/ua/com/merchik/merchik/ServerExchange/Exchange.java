@@ -1620,6 +1620,7 @@ public class Exchange {
 
             JsonObject convertedObject = new Gson().fromJson(new Gson().toJson(standartData), JsonObject.class);
             Globals.writeToMLOG("INGO", "updateTAR", "convertedObject:" + convertedObject);
+            Log.e("updateTAR", "convertedObject:" + convertedObject);
 
             retrofit2.Call<JsonObject> call = RetrofitBuilder.getRetrofitInterface().TEST_JSON_UPLOAD(RetrofitBuilder.contentType, convertedObject);
             call.enqueue(new Callback<JsonObject>() {

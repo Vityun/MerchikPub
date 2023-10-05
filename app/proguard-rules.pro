@@ -87,6 +87,9 @@
 
 -keep class ua.com.merchik.merchik.data.RetrofitResponse.** { *; }
 
+# Для Доп. требований.
+-keep class ua.com.merchik.merchik.Options.Controls.** { *; }
+
 # Uncomment this to preserve the line number information for
 # debugging stack traces.
 #-keepattributes SourceFile,LineNumberTable

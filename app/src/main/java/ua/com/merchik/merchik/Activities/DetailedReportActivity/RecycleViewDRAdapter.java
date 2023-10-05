@@ -4,12 +4,10 @@ import static ua.com.merchik.merchik.database.realm.tables.AdditionalRequirement
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
 import android.animation.ArgbEvaluator;
-import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
-import android.graphics.PorterDuff;
 import android.graphics.Typeface;
 import android.text.Html;
 import android.text.SpannableString;
@@ -524,7 +522,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
             boolean finalDescribedOption = describedOption;
             optionButton.setOnClickListener(view -> {
                 Log.e("notifyItemChanged", "CLICK");
-                animate();
+//                animate();
 
                 // Если эта кнопка НЕ активная - значит она находится в разработке
                 if (finalDescribedOption) {

@@ -6,6 +6,7 @@ import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
 import android.content.Context;
 import android.os.Build;
+import android.util.Log;
 
 import androidx.annotation.RequiresApi;
 
@@ -97,16 +98,18 @@ public class OptionControlAdditionalRequirementsMark<T> extends OptionControl {
             List<AdditionalRequirementsDB> data = RealmManager.INSTANCE.copyFromRealm(realmResults);
 
 //            // DEBUG DATA-------------
-            try {
-                for (AdditionalRequirementsDB item : data) {
-                    JsonObject object = new Gson().fromJson(new Gson().toJson(item), JsonObject.class);
-                    Globals.writeToMLOG("INFO", "OptionControlAdditionalRequirementsMark/createTZN", "stringBuilderDEBUG: " + object);
-                }
-                Globals.writeToMLOG("INFO", "OptionControlAdditionalRequirementsMark/createTZN", "data.size: " + data.size());
-            } catch (Exception e) {
-                Globals.writeToMLOG("INFO", "OptionControlAdditionalRequirementsMark/createTZN", "stringBuilderDEBUG/Exception e: " + e);
-            }
+//            try {
+//                for (AdditionalRequirementsDB item : data) {
+//                    JsonObject object = new Gson().fromJson(new Gson().toJson(item), JsonObject.class);
+//                    Globals.writeToMLOG("INFO", "OptionControlAdditionalRequirementsMark/createTZN", "stringBuilderDEBUG: " + object);
+//                }
+//                Globals.writeToMLOG("INFO", "OptionControlAdditionalRequirementsMark/createTZN", "data.size: " + data.size());
+//            } catch (Exception e) {
+//                Globals.writeToMLOG("INFO", "OptionControlAdditionalRequirementsMark/createTZN", "stringBuilderDEBUG/Exception e: " + e);
+//            }
 //            // -----------------------
+
+            Log.e("OptionControlARMark", "1");
 
             // Проверяем, есть ли вообще данные
             if (data != null && data.size() > 0) {
@@ -115,26 +118,32 @@ public class OptionControlAdditionalRequirementsMark<T> extends OptionControl {
                 RealmResults<AdditionalRequirementsMarkDB> marks = AdditionalRequirementsMarkRealm.getAdditionalRequirementsMarks(dateFrom, dateTo, wpDataDB.getUser_id(), "1", data);
                 List<AdditionalRequirementsMarkDB> testMark = INSTANCE.copyFromRealm(marks);
 
+                Log.e("OptionControlARMark", "2");
+
 //                // DEBUG DATA-------------
-                try {
-                    Globals.writeToMLOG("INFO", "OptionControlAdditionalRequirementsMark/createTZN.AdditionalRequirementsMarkDB", "marks.size: " + testMark.size());
-                    for (AdditionalRequirementsMarkDB item : testMark) {
-                        JsonObject object = new Gson().fromJson(new Gson().toJson(item), JsonObject.class);
-                        Globals.writeToMLOG("INFO", "OptionControlAdditionalRequirementsMark/createTZN.AdditionalRequirementsMarkDB", "stringBuilderDEBUG: " + object);
-                    }
-                } catch (Exception e) {
-                    Globals.writeToMLOG("INFO", "OptionControlAdditionalRequirementsMark/createTZN.AdditionalRequirementsMarkDB", "stringBuilderDEBUG/Exception e: " + e);
-                }
+//                try {
+//                    Globals.writeToMLOG("INFO", "OptionControlAdditionalRequirementsMark/createTZN.AdditionalRequirementsMarkDB", "marks.size: " + testMark.size());
+//                    for (AdditionalRequirementsMarkDB item : testMark) {
+//                        JsonObject object = new Gson().fromJson(new Gson().toJson(item), JsonObject.class);
+//                        Globals.writeToMLOG("INFO", "OptionControlAdditionalRequirementsMark/createTZN.AdditionalRequirementsMarkDB", "stringBuilderDEBUG: " + object);
+//                    }
+//                } catch (Exception e) {
+//                    Globals.writeToMLOG("INFO", "OptionControlAdditionalRequirementsMark/createTZN.AdditionalRequirementsMarkDB", "stringBuilderDEBUG/Exception e: " + e);
+//                }
 //                // -----------------------
 
-                // Херачим "Виртуальную" таблицу, как в 1С
+                // "Виртуальную" таблицу, как в 1С
                 Gson gson = new Gson();
                 String json = gson.toJson(data);
                 Type listType = new TypeToken<ArrayList<VirtualAdditionalRequirementsDB>>() {
                 }.getType();
 
+                Log.e("OptionControlARMark", "3");
+
                 // Запись того что выше накопировани в виртуальную табличку
                 virtualTable = new Gson().fromJson(json, listType);
+
+                Log.e("OptionControlARMark", "4");
 
                 for (VirtualAdditionalRequirementsDB item : virtualTable) {
 
@@ -145,6 +154,9 @@ public class OptionControlAdditionalRequirementsMark<T> extends OptionControl {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                         if (marks.stream().filter(m -> m.getItemId().equals(item.id)).findFirst().orElse(null) != null) {
                             AdditionalRequirementsMarkDB currentMark = marks.where().equalTo("itemId", item.id).findFirst();
+
+                            Log.e("OptionControlARMark", "5");
+
                             if (currentMark != null) {
                                 item.mark = Integer.valueOf(currentMark.getScore());
                                 // Эту оценку никто нигде не использует, по этому я не буду лишний раз парсить тудой сюдой
@@ -174,6 +186,8 @@ public class OptionControlAdditionalRequirementsMark<T> extends OptionControl {
                     }
                 }
 
+                Log.e("OptionControlARMark", "6");
+
                 //подсчитаем отклонение от средней оценки (для того, чтобы ребята не ставили ОДНУ и ту-же оценку по всем ДТ)
                 try {
                     markSum = virtualTable.stream().map(table -> table.mark).reduce(0, Integer::sum);
@@ -184,6 +198,8 @@ public class OptionControlAdditionalRequirementsMark<T> extends OptionControl {
                 } catch (Exception e) {
                     averageRating = 0;
                 }
+
+                Log.e("OptionControlARMark", "7");
 
                 // Считаем отклонение от среднего, для каждого элемента
                 for (VirtualAdditionalRequirementsDB item : virtualTable) {
@@ -198,6 +214,8 @@ public class OptionControlAdditionalRequirementsMark<T> extends OptionControl {
 //                        .min()
 //                        .orElse(0.0d); // Значение по умолчанию, если коллекция пуста
             }
+
+            Log.e("OptionControlARMark", "8");
 
 //            // DEBUG DATA-------------
             try {
