@@ -90,6 +90,10 @@
 # Для Доп. требований.
 -keep class ua.com.merchik.merchik.Options.Controls.** { *; }
 
+# При синхронизации ЄКЛ я получил java.lang.ClassCastException я так понял что тут: exchange.onSuccess(response.body().list); а там типа генерик <T>
+-keep class ua.com.merchik.merchik.ServerExchange.** { *; }
+-keep class ua.com.merchik.merchik.dialogs.** { *; }
+
 # Uncomment this to preserve the line number information for
 # debugging stack traces.
 #-keepattributes SourceFile,LineNumberTable

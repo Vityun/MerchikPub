@@ -1,4 +1,4 @@
-package ua.com.merchik.merchik.dialogs;
+package ua.com.merchik.merchik.dialogs.EKL;
 
 import static android.view.MotionEvent.ACTION_UP;
 import static ua.com.merchik.merchik.Globals.HELPDESK_PHONE_NUMBER;
@@ -57,6 +57,8 @@ import ua.com.merchik.merchik.data.TestJsonUpload.StandartData;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsRealm;
 import ua.com.merchik.merchik.database.realm.tables.AppUserRealm;
+import ua.com.merchik.merchik.dialogs.DialogData;
+import ua.com.merchik.merchik.dialogs.DialogVideo;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
 
 public class DialogEKL {
@@ -654,7 +656,10 @@ public class DialogEKL {
         dialog.setTitle("");
         dialog.setText("Для відправлення ЄКЛ краще використовувати Вайбер чи Телеграмм. \n\nВідмовитись від відправлення ЄКЛ за допомогою СМС?");
         dialog.setOk("Так", dialog::dismiss);
-        dialog.setCancel("Ні", this::sendSMSToPTT);
+        dialog.setCancel("Ні", ()->{
+            sendSMSToPTT();
+            dialog.dismiss();
+        });
         dialog.setClose(dialog::dismiss);
         dialog.show();
     }

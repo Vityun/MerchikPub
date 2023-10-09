@@ -35,7 +35,7 @@ import ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsRealm;
 import ua.com.merchik.merchik.database.realm.tables.ReportPrepareRealm;
 import ua.com.merchik.merchik.dialogs.DialogAdditionalRequirements.DialogAdditionalRequirements;
 import ua.com.merchik.merchik.dialogs.DialogData;
-import ua.com.merchik.merchik.dialogs.DialogEKL;
+import ua.com.merchik.merchik.dialogs.EKL.DialogEKL;
 import ua.com.merchik.merchik.toolbar_menus;
 
 public class DetailedReportButtons {

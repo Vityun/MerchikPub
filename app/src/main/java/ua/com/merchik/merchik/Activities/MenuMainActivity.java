@@ -72,7 +72,6 @@ public class MenuMainActivity extends toolbar_menus {
             @Override
             public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
                 Log.e("MenuMainActivity", "response" + response);
-//                Log.e("MenuMainActivity", "response" + new Gson().toJson(response.body()));
             }
 
             @Override

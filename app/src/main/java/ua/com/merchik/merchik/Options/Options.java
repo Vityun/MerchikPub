@@ -489,6 +489,7 @@ public class Options {
      * состояний опций
      * */
     private int res = 0;    // Счётчик для накапливания "блокировок" у данной опции
+
     public <T> OptionMassageType NNK(Context context, T dataDB, OptionsDB option, List<OptionsDB> optionList, OptionMassageType type, NNKMode mode, Clicks.clickVoid click) {
         OptionMassageType result = new OptionMassageType();
         //
@@ -552,7 +553,7 @@ public class Options {
                                             }
                                         });
                                         Log.e("NNK", "res OK 1: " + res);
-                                    }else {
+                                    } else {
                                         switch (mode) {
                                             case MAKE:
                                                 optControl(context, dataDB, option, Integer.parseInt(option.getOptionId()), null, type, mode, new OptionControl.UnlockCodeResultListener() {
@@ -571,7 +572,7 @@ public class Options {
                                         }
                                     }
                                 }
-                            }else {
+                            } else {
                                 switch (mode) {
                                     case MAKE:
                                         optControl(context, dataDB, option, Integer.parseInt(option.getOptionId()), null, type, mode, new OptionControl.UnlockCodeResultListener() {
@@ -612,7 +613,7 @@ public class Options {
                                             }
                                         });
                                         Log.e("NNK", "res OK 1: " + res);
-                                    }else {
+                                    } else {
                                         Log.e("NNK", "Блок 2 не выполнен, а Блок 1 нет в отчёте - Ничего не делаю. (должно отрисовать сообщение Блока2)");
                                     }
                                 }
@@ -620,7 +621,7 @@ public class Options {
                         }
                     });
                     Log.e("NNK", "res OK 2: " + res);
-                }else {
+                } else {
                     if (!option.getOptionBlock1().equals("0")) {
                         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
                             OptionsDB optionsDBELSE = optionFromDetailedReport.stream().filter(optionListItem -> Objects.equals(optionListItem.getOptionId(), option.getOptionBlock1()))
@@ -652,7 +653,7 @@ public class Options {
                                     }
                                 });
                                 Log.e("NNK", "res OK 1: " + res);
-                            }else {
+                            } else {
                                 switch (mode) {
                                     case MAKE:
                                         optControl(context, dataDB, option, Integer.parseInt(option.getOptionId()), null, type, mode, new OptionControl.UnlockCodeResultListener() {
@@ -674,7 +675,7 @@ public class Options {
                     }
                 }
             }
-        }else if (!option.getOptionBlock1().equals("0")){
+        } else if (!option.getOptionBlock1().equals("0")) {
             //Проход по первой опции блокировки если второй нет
             if (!option.getOptionBlock1().equals("0")) {
                 if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
@@ -706,7 +707,7 @@ public class Options {
                             }
                         });
                         Log.e("NNK", "res OK 1: " + res);
-                    }else {
+                    } else {
                         switch (mode) {
                             case MAKE:
                                 optControl(context, dataDB, option, Integer.parseInt(option.getOptionId()), null, type, mode, new OptionControl.UnlockCodeResultListener() {
@@ -728,7 +729,7 @@ public class Options {
             }
         }
 
-        if (option.getOptionBlock2().equals("0") && option.getOptionBlock1().equals("0")){
+        if (option.getOptionBlock2().equals("0") && option.getOptionBlock1().equals("0")) {
             switch (mode) {
                 case MAKE:
                     optControl(context, dataDB, option, Integer.parseInt(option.getOptionId()), null, type, mode, new OptionControl.UnlockCodeResultListener() {
@@ -836,12 +837,10 @@ public class Options {
     }
 
 
-
-
     /**
      * 07.08.23.
      * Проверяю первую Опцию блокировки.
-     * */
+     */
     private <T> int checkBlockOption(Context context, T dataDB, OptionsDB option, int parseInt, OptionMassageType type, NNKMode block) {
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
             OptionsDB optionsDB = optionFromDetailedReport.stream().filter(optionListItem -> Objects.equals(optionListItem.getOptionId(), option.getOptionBlock2()))
@@ -1770,28 +1769,66 @@ public class Options {
         }
 
         try {
-            List<LogMPDB> logs = LogMPRealm.getLogMPByDad2Distance(wpDataDB.getCode_dad2(), 500);
+            long visitStart = wpDataDB.getVisit_start_dt();
+            long visitEnd = wpDataDB.getVisit_end_dt() > 0 ? wpDataDB.getVisit_end_dt() : System.currentTimeMillis() / 1000;
+            List<LogMPDB> logs = LogMPRealm.getLogMPByDtAndDistance(visitStart*1000, visitEnd*1000, 500);
+//            List<LogMPDB> logs = LogMPRealm.getLogMPByDad2Distance(wpDataDB.getCode_dad2(), 500);
 //            List<LogMPDB> logs = LogMPRealm.getLogMPByDad2(wpDataDB.getCode_dad2());
-            if (logs != null && logs.size() > 0){
+
+            List<LogMPDB> logsRes = new ArrayList<>();
+            float coordAddrX = 0f, coordAddrY = 0f;
+            AddressSDB addressSDB = SQL_DB.addressDao().getById(wpDataDB.getAddr_id());
+            if (addressSDB != null){
+                coordAddrX = addressSDB.locationXd;
+                coordAddrY = addressSDB.locationYd;
+            }else {
+                try {
+                    if (wpDataDB != null){
+                        coordAddrX = Float.parseFloat(wpDataDB.getAddr_location_xd());
+                        coordAddrY = Float.parseFloat(wpDataDB.getAddr_location_yd());
+                    }
+                }catch (Exception e){}
+            }
+
+            for (LogMPDB log : logs) {
+                if (log.distance == 0) {
+                    double distance = coordinatesDistanse(coordAddrX, coordAddrY, log.CoordX, log.CoordY);
+                    log.distance = (int) distance;
+                }
+
+                if (log.distance > 1 && log.distance < 500){
+                    logsRes.add(log);
+                }
+            }
+
+            LogMPRealm.setLogMP(logsRes);   // Сохраняю посчитанное расстояние в БД, если его не было. Скорее всего оно не посчитано для данных полученных с сайта
+
+
+            if (logs != null && logs.size() > 0) {
                 RealmManager.INSTANCE.executeTransaction(realm -> {
                     if (optionsDB != null) {
                         optionsDB.setIsSignal("2");
                         realm.insertOrUpdate(optionsDB);
                     }
                 });
+                Globals.writeToMLOG("ERROR", "optionControlMP_8299", "onUnlockCodeSuccess: " + logs.size());
                 unlockCodeResultListener.onUnlockCodeSuccess();
-            }else {
+            } else {
                 RealmManager.INSTANCE.executeTransaction(realm -> {
                     if (optionsDB != null) {
                         optionsDB.setIsSignal("1");
                         realm.insertOrUpdate(optionsDB);
                     }
                 });
+                Globals.writeToMLOG("ERROR", "optionControlMP_8299", "onUnlockCodeFailure");
+                Toast.makeText(context, "У Вас відсутня історія місцеположень", Toast.LENGTH_LONG).show();
                 unlockCodeResultListener.onUnlockCodeFailure();
             }
             return true;
-        }catch (Exception e){
+        } catch (Exception e) {
             Globals.writeToMLOG("ERROR", "optionControlMP_8299", "Exception e: " + e);
+            Globals.writeToMLOG("ERROR", "optionControlMP_8299", "onUnlockCodeFailure");
+            Toast.makeText(context, "Виникла помилка. Зверніться до керівника!", Toast.LENGTH_LONG).show();
             unlockCodeResultListener.onUnlockCodeFailure();
             return true;
         }
@@ -1864,7 +1901,6 @@ public class Options {
 //        RealmManager.setLogMpRow(log);
 
 
-
         DialogData dialog = new DialogData(context);
         StringBuilder title = new StringBuilder();
         StringBuilder text = new StringBuilder();
@@ -1876,30 +1912,30 @@ public class Options {
         // 24.08.23. Проверяем включён ли ГПС.
         title.append("Місцеположення");
         boolean okMP = false;
-        if (enabledGPS){
-            if (addressSDB != null && addressSDB.locationXd > 0 && addressSDB.locationYd > 0){
-                if (Globals.CoordX != 0 && Globals.CoordY != 0){
+        if (enabledGPS) {
+            if (addressSDB != null && addressSDB.locationXd > 0 && addressSDB.locationYd > 0) {
+                if (Globals.CoordX != 0 && Globals.CoordY != 0) {
                     double distance = coordinatesDistanse(addressSDB.locationXd, addressSDB.locationYd, Globals.CoordX, Globals.CoordY);
-                    if (distance < distanceMin){
+                    if (distance < distanceMin) {
                         text.append("Проблем із місцеположенню немає!");
                         okMP = true;
-                    }else {
+                    } else {
                         text.append("Ви знаходитесь задалеко від торгівельної точки!").append("\n")
                                 .append("За даними системи ви знаходитесь на відстані ").append(distance).append(" метрів від ТТ ").append(addressSDB.nm)
                                 .append(", що більше допустимих ").append(distanceMin).append("\n\n")
                                 .append("Якщо ви в дійсності знаходитесь на ТТ - зверніться за допомогою до свого керівника або в службу підтримки merchik.");
                     }
-                }else {
+                } else {
                     text.append("Не можу визначити ваше місцезнаходження!").append("\n").append("Спробуйте підійти до вікна або вийти на вулицю. Через хвилину місцеположення буде визначене і можна продовжувати виконувати роботу.");
                 }
-            }else {
+            } else {
                 text.append("У магазині в якому Ви працюєте не встановлені координати!").append("\n").append("Зверніться до Вашого керівника для виправлення цієї проблеми.");
             }
-        }else {
+        } else {
             text.append("У вас ввимкнено GPS!").append("\n").append("Будь-ласка увімкніть GPS, почекайте поки з`явиться Ваше місцеположення та продовжуйте роботу.");
         }
 
-        if (!okMP){
+        if (!okMP) {
             dialog.setTitle(title);
             dialog.setText(text);
             dialog.setDialogIco();
@@ -2075,7 +2111,6 @@ public class Options {
                 result = false;
             }
         }
-
 
 
         Exchange exchange = new Exchange();

@@ -35,6 +35,13 @@ public class LogMPRealm {
                 .findAll());
     }
 
+    public static List<LogMPDB> getLogMPByDtAndDistance(Long dtFrom, Long dtTo, Integer distance) {
+        return INSTANCE.copyFromRealm(INSTANCE.where(LogMPDB.class)
+                .between("CoordTime", dtFrom, dtTo)
+//                .between("distance", 1, distance)
+                .findAll());
+    }
+
     public static List<LogMPDB> getLogMPTime(long startTime, long endTime) {
         RealmQuery<LogMPDB> query = INSTANCE.where(LogMPDB.class);
         query = query.greaterThanOrEqualTo("vpi", startTime);

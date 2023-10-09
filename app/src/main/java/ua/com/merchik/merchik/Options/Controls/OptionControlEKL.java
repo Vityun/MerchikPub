@@ -7,6 +7,8 @@ import android.content.Context;
 import android.os.Build;
 import android.util.Log;
 
+import com.google.gson.Gson;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -87,6 +89,7 @@ public class OptionControlEKL<T> extends OptionControl {
         try {
             createTZN();
         } catch (Exception e) {
+            Log.e("OptionControlEKL", "HERE TEST OptionControlEKL executeOption Exception: " + e);
             Globals.writeToMLOG("ERROR", "OptionControlEKL/executeOption/Exception", "Exception: " + e);
         }
     }
@@ -164,6 +167,10 @@ public class OptionControlEKL<T> extends OptionControl {
             eklSDB = SQL_DB.eklDao().getBy(dateFrom/1000, dateTo/1000, wpDataDB.getClient_id(), wpDataDB.getAddr_id(), wpDataDB.getUser_id());
 //            eklSDB = SQL_DB.eklDao().getBy(dateFrom, dateTo, wpDataDB.getClient_id(), wpDataDB.getAddr_id(), wpDataDB.getUser_id());
 //        eklSDB = SQL_DB.eklDao().getBy(dateFrom, dateTo, wpDataDB.getClient_id(), wpDataDB.getAddr_id(), wpDataDB.getUser_id(), wpDataDB.ptt_user_id);
+
+            List<EKL_SDB> eklSDB2 = SQL_DB.eklDao().getAll();
+            Log.e("OptionControlEKL", "HERE TEST OptionControlEKL eklSDB: " + new Gson().toJson(eklSDB));
+            Log.e("OptionControlEKL", "HERE TEST OptionControlEKL eklSDB2: " + new Gson().toJson(eklSDB2));
 
             Log.e("OptionControlEKL", "HERE TEST OptionControlEKL 5");
             if (eklSDB == null || eklSDB.size() == 0) {

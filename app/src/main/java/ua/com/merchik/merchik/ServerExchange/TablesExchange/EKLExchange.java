@@ -56,14 +56,20 @@ public class EKLExchange {
                         if (response.body() != null){
                             Log.e("downloadEKLTable", "response.body(): " + response.body());
                             Globals.writeToMLOG("INFO", "downloadEKLTable/call.enqueue/onResponse/response.body()", "response.body(): " + response.body().list.size());
+                            Log.e("downloadEKLTable", "1");
                             RealmManager.INSTANCE.executeTransaction(realm -> {
+                                Log.e("downloadEKLTable", "2");
                                 if (synchronizationTimetableDB != null){
+                                    Log.e("downloadEKLTable", "3");
                                     synchronizationTimetableDB.setVpi_app(System.currentTimeMillis()/1000);
+                                    Log.e("downloadEKLTable", "4");
                                     realm.copyToRealmOrUpdate(synchronizationTimetableDB);
+                                    Log.e("downloadEKLTable", "5");
                                 }
-
                             });
+                            Log.e("downloadEKLTable", "6");
                             exchange.onSuccess(response.body().list);
+                            Log.e("downloadEKLTable", "7");
                         }else {
                             Globals.writeToMLOG("INFO", "downloadEKLTable/call.enqueue/onResponse/response.body()", "response.body(): NULL");
                             exchange.onFailure("Ошибка при обновлении ЄКЛ(разбор данных). Передайте код ошибки Вашему руководителю. Код ошибки: ");

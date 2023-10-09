@@ -108,7 +108,7 @@ import ua.com.merchik.merchik.data.Translation.SiteTranslations;
 import ua.com.merchik.merchik.data.UploadToServ.LogUploadToServ;
 import ua.com.merchik.merchik.data.UploadToServ.ReportPrepareServ;
 import ua.com.merchik.merchik.data.UploadToServ.WpDataUploadToServ;
-import ua.com.merchik.merchik.dialogs.DialogEKL;
+import ua.com.merchik.merchik.dialogs.EKL.DialogEKL;
 
 public interface RetrofitInterface {
 
