@@ -293,7 +293,7 @@ public class DialogEKL extends AutoTextUsersViewHolder.UpdateListener {
 
     @Override
     public void updatePTT() {
-
+        Log.d("PTT", "update PTT call");
     }
 
     private void showData() {
