@@ -61,7 +61,7 @@ import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.dialogs.DialogVideo;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
 
-public class DialogEKL extends AutoTextUsersViewHolder.UpdateListener {
+public class DialogEKL implements AutoTextUsersViewHolder.UpdateListener {
 
     private Context context;
     private Dialog dialog;

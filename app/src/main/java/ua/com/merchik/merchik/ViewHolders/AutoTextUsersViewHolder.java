@@ -75,7 +75,6 @@ public class AutoTextUsersViewHolder<T> extends ArrayAdapter<T> implements Filte
             TextView name = (TextView) convertView.findViewById(android.R.id.text1);
 
             String text = "";
-            Boolean addUpdateClick = false;
 
             switch (userEnum) {
                 case DEPARTMENT:
@@ -90,9 +89,16 @@ public class AutoTextUsersViewHolder<T> extends ArrayAdapter<T> implements Filte
                             e.printStackTrace();
                         }
 
-
-                        text = departmentItem.fio + " (" + departmentItem.nm + ") ";
-//                        text = departmentItem.fio + " (" +  + ")";
+                        if (departmentItem.id == -1111) {
+                            convertView.setOnClickListener(v -> {
+                                if (updateListener != null) {
+                                    updateListener.updatePTT();
+                                }
+                            });
+                            text = departmentItem.fio;
+                        } else {
+                            text = departmentItem.fio + " (" + departmentItem.nm + ") ";
+                        }
                     }
                     break;
 
@@ -100,24 +106,11 @@ public class AutoTextUsersViewHolder<T> extends ArrayAdapter<T> implements Filte
                     UsersSDB item = (UsersSDB) getItem(position);
                     if (item != null) {
                         text = item.fio;
-                        if (item.id == -1111) {
-                            addUpdateClick = true;
-                        }
                     }
                     break;
             }
 
             name.setText(text);
-            if (addUpdateClick) {
-                convertView.setOnClickListener(v -> {
-                    if (updateListener != null) {
-                        updateListener.updatePTT();
-                    }
-                });
-            } else {
-                convertView.setOnClickListener(null);
-            }
-
         } catch (Exception e) {
             e.printStackTrace();
         }
