@@ -110,7 +110,9 @@ public class AutoTextUsersViewHolder<T> extends ArrayAdapter<T> implements Filte
             name.setText(text);
             if (addUpdateClick) {
                 convertView.setOnClickListener(v -> {
-                    updateListener.updatePTT();
+                    if (updateListener != null) {
+                        updateListener.updatePTT();
+                    }
                 });
             } else {
                 convertView.setOnClickListener(null);
