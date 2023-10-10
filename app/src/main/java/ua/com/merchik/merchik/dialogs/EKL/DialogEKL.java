@@ -303,6 +303,8 @@ public class DialogEKL {
         Log.e("DialogEKL", "showData/data: " + data);
         Log.e("DialogEKL", "showData/data.size: " + data.size());
 
+//        data.add(null); // Заглушечка
+
 //        data.get(4).tel2 = "+380ХХХХХХХХХ";
 //        data.get(0).tel = "+380667472811";
 

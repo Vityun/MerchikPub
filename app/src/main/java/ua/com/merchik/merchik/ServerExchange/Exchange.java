@@ -1263,7 +1263,8 @@ public class Exchange {
         data.nolimit = "1";
         data.dt_upload = String.valueOf(synchronizationTimetableDB.getVpi_app());
         data.date_from = Clock.today_7;
-        data.date_to = Clock.today;
+        data.date_to = Clock.tomorrow7;
+//        data.date_to = Clock.today; 10.10.23. скрыл ибо им мешало.
 
         // Типо говорю что я уже обновился, что б мне постоянно не прилетали фотки и я не задалбівал сервер
         synchronizationTimetableDB.setVpi_app(System.currentTimeMillis() / 1000);

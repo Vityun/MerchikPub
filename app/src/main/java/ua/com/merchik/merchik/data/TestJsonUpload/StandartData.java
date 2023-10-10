@@ -15,6 +15,7 @@ public class StandartData<T> {
     public String term;
 
     public List<Integer> addr_id;
+    public String addressId;
     public Double x;    // Координата Х
     public Double y;    // Координата Y
 
