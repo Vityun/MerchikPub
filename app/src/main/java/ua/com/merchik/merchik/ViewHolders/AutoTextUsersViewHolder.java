@@ -23,15 +23,26 @@ public class AutoTextUsersViewHolder<T> extends ArrayAdapter<T> implements Filte
     private List<T> filterable;
     private AutoTextUserEnum userEnum;
 
-    public enum AutoTextUserEnum{
+    private UpdateListener updateListener;
+
+    public enum AutoTextUserEnum {
         DEFAULT,
         DEPARTMENT
     }
 
+    public interface UpdateListener {
+        void updatePTT();
+    }
 
-    public AutoTextUsersViewHolder(Context context, int resource, List<T> objects) {
-        super(context, resource, objects);
-        this.mLayoutResourceId = resource;
+    public AutoTextUsersViewHolder(
+        Context context,
+        int layoutResId,
+        UpdateListener updateListener,
+        List<T> objects
+    ) {
+        super(context, layoutResId, objects);
+        this.mLayoutResourceId = layoutResId;
+        this.updateListener = updateListener;
         list = objects;
         filterable = objects;
         userEnum = AutoTextUserEnum.DEFAULT;
@@ -64,8 +75,9 @@ public class AutoTextUsersViewHolder<T> extends ArrayAdapter<T> implements Filte
             TextView name = (TextView) convertView.findViewById(android.R.id.text1);
 
             String text = "";
+            Boolean addUpdateClick = false;
 
-            switch (userEnum){
+            switch (userEnum) {
                 case DEPARTMENT:
                     UserSDBJoin departmentItem = (UserSDBJoin) getItem(position);
                     if (departmentItem != null) {
@@ -74,7 +86,7 @@ public class AutoTextUsersViewHolder<T> extends ArrayAdapter<T> implements Filte
                             if (departmentItem.nm == null) {
                                 departmentItem.nm = "Отдел не определён";
                             }
-                        }catch (Exception e){
+                        } catch (Exception e) {
                             e.printStackTrace();
                         }
 
@@ -88,19 +100,30 @@ public class AutoTextUsersViewHolder<T> extends ArrayAdapter<T> implements Filte
                     UsersSDB item = (UsersSDB) getItem(position);
                     if (item != null) {
                         text = item.fio;
+                        if (item.id == -1111) {
+                            addUpdateClick = true;
+                        }
                     }
                     break;
             }
 
             name.setText(text);
+            if (addUpdateClick) {
+                convertView.setOnClickListener(v -> {
+                    updateListener.updatePTT();
+                });
+            } else {
+                convertView.setOnClickListener(null);
+            }
 
         } catch (Exception e) {
             e.printStackTrace();
         }
+
         return convertView;
     }
 
-    public void setAdditionalInformation(AutoTextUserEnum userEnum){
+    public void setAdditionalInformation(AutoTextUserEnum userEnum) {
         this.userEnum = userEnum;
     }
 

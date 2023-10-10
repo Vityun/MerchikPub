@@ -61,7 +61,7 @@ import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.dialogs.DialogVideo;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
 
-public class DialogEKL {
+public class DialogEKL extends AutoTextUsersViewHolder.UpdateListener {
 
     private Context context;
     private Dialog dialog;
@@ -291,6 +291,11 @@ public class DialogEKL {
         this.wp = wp;
     }
 
+    @Override
+    public void updatePTT() {
+
+    }
+
     private void showData() {
         setAddSotr();   // Установка иконочки добавления/редактирования сотрудника
 
@@ -303,12 +308,22 @@ public class DialogEKL {
         Log.e("DialogEKL", "showData/data: " + data);
         Log.e("DialogEKL", "showData/data.size: " + data.size());
 
+        UserSDBJoin lastItem = new UserSDBJoin();
+        lastItem.id = -1111;
+        lastItem.fio = "Оновити ПТТ";
+        data.add(lastItem);
+
 //        data.add(null); // Заглушечка
 
 //        data.get(4).tel2 = "+380ХХХХХХХХХ";
 //        data.get(0).tel = "+380667472811";
 
-        AutoTextUsersViewHolder adapterUser = new AutoTextUsersViewHolder(context, android.R.layout.simple_dropdown_item_1line, data);
+        AutoTextUsersViewHolder adapterUser = new AutoTextUsersViewHolder(
+            context,
+            android.R.layout.simple_dropdown_item_1line,
+            this,
+            data
+        );
         sotr.setDropDownHeight(9 * sotr.getLineHeight());
 
         adapterUser.setAdditionalInformation(AutoTextUsersViewHolder.AutoTextUserEnum.DEPARTMENT);
