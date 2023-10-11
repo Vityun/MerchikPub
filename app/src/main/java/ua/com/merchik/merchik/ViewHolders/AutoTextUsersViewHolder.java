@@ -23,26 +23,19 @@ public class AutoTextUsersViewHolder<T> extends ArrayAdapter<T> implements Filte
     private List<T> filterable;
     private AutoTextUserEnum userEnum;
 
-    private UpdateListener updateListener;
 
     public enum AutoTextUserEnum {
         DEFAULT,
         DEPARTMENT
     }
 
-    public interface UpdateListener {
-        void updatePTT();
-    }
-
     public AutoTextUsersViewHolder(
-        Context context,
-        int layoutResId,
-        UpdateListener updateListener,
-        List<T> objects
+            Context context,
+            int layoutResId,
+            List<T> objects
     ) {
         super(context, layoutResId, objects);
         this.mLayoutResourceId = layoutResId;
-        this.updateListener = updateListener;
         list = objects;
         filterable = objects;
         userEnum = AutoTextUserEnum.DEFAULT;
@@ -80,7 +73,6 @@ public class AutoTextUsersViewHolder<T> extends ArrayAdapter<T> implements Filte
                 case DEPARTMENT:
                     UserSDBJoin departmentItem = (UserSDBJoin) getItem(position);
                     if (departmentItem != null) {
-
                         try {
                             if (departmentItem.nm == null) {
                                 departmentItem.nm = "Отдел не определён";
@@ -88,17 +80,7 @@ public class AutoTextUsersViewHolder<T> extends ArrayAdapter<T> implements Filte
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
-
-                        if (departmentItem.id == -1111) {
-                            convertView.setOnClickListener(v -> {
-                                if (updateListener != null) {
-                                    updateListener.updatePTT();
-                                }
-                            });
-                            text = departmentItem.fio;
-                        } else {
-                            text = departmentItem.fio + " (" + departmentItem.nm + ") ";
-                        }
+                        text = departmentItem.fio + " (" + departmentItem.nm + ") ";
                     }
                     break;
 

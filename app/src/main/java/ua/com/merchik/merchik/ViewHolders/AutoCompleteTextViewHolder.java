@@ -83,7 +83,7 @@ public class AutoCompleteTextViewHolder extends RecyclerView.ViewHolder {
 
                 List<UsersSDB> usersSDBList = data.dataList;
 
-                AutoTextUsersViewHolder adapterUser = new AutoTextUsersViewHolder(context, android.R.layout.simple_dropdown_item_1line, null, usersSDBList);
+                AutoTextUsersViewHolder adapterUser = new AutoTextUsersViewHolder(context, android.R.layout.simple_dropdown_item_1line, usersSDBList);
 
                 Log.e("TEST_AUTO_HOLDER", "data.addressList.size(): " + data.addressList.size());
 
