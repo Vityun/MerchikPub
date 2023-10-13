@@ -1771,9 +1771,20 @@ public class Options {
         try {
             long visitStart = wpDataDB.getVisit_start_dt();
             long visitEnd = wpDataDB.getVisit_end_dt() > 0 ? wpDataDB.getVisit_end_dt() : System.currentTimeMillis() / 1000;
-            List<LogMPDB> logs = LogMPRealm.getLogMPByDtAndDistance(visitStart*1000, visitEnd*1000, 500);
+//            List<LogMPDB> logs = LogMPRealm.getLogMPByDtAndDistance(visitStart*1000, visitEnd*1000, 500);
 //            List<LogMPDB> logs = LogMPRealm.getLogMPByDad2Distance(wpDataDB.getCode_dad2(), 500);
 //            List<LogMPDB> logs = LogMPRealm.getLogMPByDad2(wpDataDB.getCode_dad2());
+
+
+            long startTime = (wpDataDB.getVisit_start_dt() > 0)
+                    ? wpDataDB.getVisit_start_dt() - 1800
+                    : (System.currentTimeMillis() / 1000) - 1800;
+
+            long endTime = System.currentTimeMillis() / 1000;
+
+            List<LogMPDB> logs = LogMPRealm.getLogMPTime(startTime, endTime);
+
+            Globals.writeToMLOG("ERROR", "optionControlMP_8299", "onUnlockCodeSuccess: " + logs.size());
 
             List<LogMPDB> logsRes = new ArrayList<>();
             float coordAddrX = 0f, coordAddrY = 0f;
@@ -1803,6 +1814,7 @@ public class Options {
 
             LogMPRealm.setLogMP(logsRes);   // Сохраняю посчитанное расстояние в БД, если его не было. Скорее всего оно не посчитано для данных полученных с сайта
 
+            Globals.writeToMLOG("ERROR", "optionControlMP_8299", "onUnlockCodeSuccess: " + logsRes.size());
 
             if (logs != null && logs.size() > 0) {
                 RealmManager.INSTANCE.executeTransaction(realm -> {

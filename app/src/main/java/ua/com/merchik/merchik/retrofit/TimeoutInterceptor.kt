@@ -24,7 +24,7 @@ class TimeoutInterceptor: Interceptor {
 
     private fun timeoutSeconds(key: String): Int? =
         when (key) {
-            UPLOAD_PHOTO_KEY -> 120
+            UPLOAD_PHOTO_KEY -> 180
             else -> null
         }
 }

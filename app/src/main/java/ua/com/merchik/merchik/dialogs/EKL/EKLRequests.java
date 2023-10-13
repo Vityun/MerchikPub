@@ -185,4 +185,48 @@ public class EKLRequests {
             Globals.writeToMLOG("RESP", "EKLRequests.updateEKLData/", "Exception e: " + e);
         }
     }
+
+
+
+    /**
+     * 14.07.2021
+     * Запрос на отправку СМСки ПТТшнику.
+     */
+//    public void responseSendPTTEKLCode(ExchangeInterface.ExchangeResponseInterfaceSingle exchange) {
+//        StandartData data = new StandartData();
+//        data.mod = "sms_verification";
+//        data.act = "verification_send";
+//
+//        data.option_id = 84007;
+//        data.sotr_id = String.valueOf(user.id);
+//        data.code_dad2 = String.valueOf(wp.getCode_dad2());
+//        data.tel_type = telType;
+//
+//        Gson gson = new Gson();
+//        String json = gson.toJson(data);
+//        JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
+//
+//        Log.e("DialogEKL", "sendStartEKL/dataSend: " + convertedObject);
+//
+//        retrofit2.Call<DialogEKL.EKLRespData> call = RetrofitBuilder.getRetrofitInterface().EKL_RESP_DATA_CALL(RetrofitBuilder.contentType, convertedObject);
+//        call.enqueue(new Callback<DialogEKL.EKLRespData>() {
+//            @Override
+//            public void onResponse(Call<DialogEKL.EKLRespData> call, Response<DialogEKL.EKLRespData> response) {
+//                if (response.body() != null) {
+//                    if (response.body().state) {
+//                        exchange.onSuccess(response.body());
+//                    } else {
+//                        exchange.onFailure("Ошибка со стороны сервера: " + response.body().error);
+//                    }
+//                } else {
+//                    exchange.onFailure("Ответ с сервера пустой. Повторите попытку позже.");
+//                }
+//            }
+//
+//            @Override
+//            public void onFailure(Call<DialogEKL.EKLRespData> call, Throwable t) {
+//                exchange.onFailure(t.toString());
+//            }
+//        });
+//    }
 }

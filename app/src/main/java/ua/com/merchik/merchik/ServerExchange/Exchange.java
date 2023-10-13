@@ -491,6 +491,7 @@ public class Exchange {
                 try {
                     // Чудо, что ты тут делаешь?
 //                    new DialogEKL(context, null).responseCheckEKLList();
+                    Globals.writeToMLOG("info", "startExchange/DialogEKL", "here");
                     new EKLRequests().responseCheckEKLList();
                 } catch (Exception e) {
                     Globals.writeToMLOG("ERROR", "startExchange/DialogEKL", "Exception e: " + e);
