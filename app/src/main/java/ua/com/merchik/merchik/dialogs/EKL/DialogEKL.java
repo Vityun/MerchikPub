@@ -1253,6 +1253,7 @@ public class DialogEKL {
                                         if (item.state) {
                                             ekl_sdb.eklCode = ekl_sdb.eklHashCode;
                                             ekl_sdb.upload = true;
+                                            ekl_sdb.codeVerify = 1;
                                         } else {
                                             ekl_sdb.comment = item.error;
                                         }

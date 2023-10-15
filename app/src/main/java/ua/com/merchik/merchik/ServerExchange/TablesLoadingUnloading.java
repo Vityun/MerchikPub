@@ -254,22 +254,20 @@ public class TablesLoadingUnloading {
                 public <T> void onSuccess(List<T> data) {
                     List<TovarGroupSDB> list = (List<TovarGroupSDB>) data;
 
-                    Log.e("TablesLoadUpload", "START_1");
+                    Globals.writeToMLOG("INFO", "downloadTovarGroupTable.onSuccess", "list: " + list);
                     SQL_DB.tovarGroupDao().insertData(list)
                             .subscribeOn(Schedulers.io())
                             .subscribe(new DisposableCompletableObserver() {
                                 @Override
                                 public void onComplete() {
-                                    Log.e("TablesLoadUpload", "END_2");
+                                    Globals.writeToMLOG("INFO", "downloadTovarGroupTable.onComplete", "OK");
                                 }
 
                                 @Override
                                 public void onError(@io.reactivex.rxjava3.annotations.NonNull Throwable e) {
-                                    Log.e("TablesLoadUpload", "END_2: " + e);
+                                    Globals.writeToMLOG("ERROR", "downloadTovarGroupTable.onError", "Throwable e: " + e);
                                 }
                             });
-                    Log.e("TablesLoadUpload", "END_1");
-
                 }
 
                 @Override
@@ -1197,7 +1195,7 @@ public class TablesLoadingUnloading {
         String json = gson.toJson(data);
         JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
 
-        Log.e("downloadTovarGroup", "convertedObject: " + convertedObject);
+        Globals.writeToMLOG("INFO", "downloadTovarGroupTable.convertedObject", "convertedObject: " + convertedObject);
 
         retrofit2.Call<TovarGroupResponse> call = RetrofitBuilder.getRetrofitInterface().GET_TABLE_TOVAR_GROUP(RetrofitBuilder.contentType, convertedObject);
         call.enqueue(new retrofit2.Callback<TovarGroupResponse>() {
@@ -2886,7 +2884,7 @@ public class TablesLoadingUnloading {
         String json = gson.toJson(data);
         JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
 
-//        Log.e("downloadCustomerD", "convertedObject: " + convertedObject);
+        Globals.writeToMLOG("INFO", "downloadtovar_grp_client", "convertedObject: " + convertedObject);
 
         retrofit2.Call<TovarGroupClientResponse> call = RetrofitBuilder.getRetrofitInterface().GET_TABLE_TOVAR_GROUP_CLIENT(RetrofitBuilder.contentType, convertedObject);
         call.enqueue(new retrofit2.Callback<TovarGroupClientResponse>() {
@@ -2896,12 +2894,12 @@ public class TablesLoadingUnloading {
                     SQL_DB.tovarGroupClientDao().insertData(response.body().list).subscribe(new DisposableCompletableObserver() {
                         @Override
                         public void onComplete() {
-                            Log.e("downloadCustomerD", "YEP");
+                            Globals.writeToMLOG("INFO", "downloadtovar_grp_client", "OK");
                         }
 
                         @Override
                         public void onError(@io.reactivex.rxjava3.annotations.NonNull Throwable e) {
-                            Log.e("downloadCustomerD", "e: " + e);
+                            Globals.writeToMLOG("ERR", "downloadtovar_grp_client", "Throwable e: " + e);
                         }
                     });
                 } catch (Exception e) {
@@ -2911,7 +2909,7 @@ public class TablesLoadingUnloading {
 
             @Override
             public void onFailure(retrofit2.Call<TovarGroupClientResponse> call, Throwable t) {
-                Log.e("downloadCustomerD", "Throwable t: " + t);
+                Globals.writeToMLOG("ERR", "downloadtovar_grp_client/onFailure", "Throwable t: " + t);
             }
         });
     }
