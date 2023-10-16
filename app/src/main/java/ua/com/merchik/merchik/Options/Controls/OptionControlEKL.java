@@ -196,6 +196,10 @@ public class OptionControlEKL<T> extends OptionControl {
 
                 eklSDB = SQL_DB.eklDao().getBy(dateFrom, dateTo, ids, wpDataDB.getAddr_id(), wpDataDB.getUser_id());
 
+                if (eklSDB.size() == 0 && addressSDB != null && addressSDB.kolKass != null && addressSDB.kolKass <= 5){
+                    eklSDB = SQL_DB.eklDao().getBy(dateFrom, dateTo, wpDataDB.getAddr_id(), wpDataDB.getUser_id());
+                }
+
                 if (eklSDB != null) {
                     Globals.writeToMLOG("INFO", "OptionControlEKL/createTZN", "eklSDB1: " + eklSDB.size());
                 } else {
@@ -282,7 +286,7 @@ public class OptionControlEKL<T> extends OptionControl {
                                     .append(TG.getNmFromList(tovarGroupSDB)).append(" (для магазина в котором более 5 касс и исполнитель провел 5-й отчет)");
                         }
                     } else if (tovarGroupSDB.stream().filter(item -> item.id.equals(usersSDBPTT.otdelId)).findFirst().orElse(null) != null
-                            && optionDB.getOptionControlId().equals("132629") && (addressSDB.kolKass > 0 || addressSDB.kolKass <= 5)) {
+                            && optionDB.getOptionControlId().equals("132629") && (addressSDB.kolKass > 0 && addressSDB.kolKass <= 5)) {
                         if (documentUser.reportDate05 != null && documentUser.reportDate05.getTime() >= wpDataDB.getDt().getTime()) {
                             signal = true;
                             optionMsg.append(", но ").append("ПТТ работает в отделе ").append(SQL_DB.tovarGroupDao().getById(usersSDBPTT.otdelId).nm).append(" и не может подписывать ЭКЛ для: ")
