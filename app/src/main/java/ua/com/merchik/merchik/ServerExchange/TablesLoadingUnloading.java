@@ -254,7 +254,12 @@ public class TablesLoadingUnloading {
                 public <T> void onSuccess(List<T> data) {
                     List<TovarGroupSDB> list = (List<TovarGroupSDB>) data;
 
-                    Globals.writeToMLOG("INFO", "downloadTovarGroupTable.onSuccess", "list: " + list);
+                    try {
+                        Globals.writeToMLOG("INFO", "downloadTovarGroupTable.onSuccess", "list: " + list.size());
+                    }catch (Exception e){
+                        Globals.writeToMLOG("ERROR", "downloadTovarGroupTable.onSuccess", "list Exception e: " + e);
+                    }
+
                     SQL_DB.tovarGroupDao().insertData(list)
                             .subscribeOn(Schedulers.io())
                             .subscribe(new DisposableCompletableObserver() {
@@ -2894,7 +2899,12 @@ public class TablesLoadingUnloading {
                     SQL_DB.tovarGroupClientDao().insertData(response.body().list).subscribe(new DisposableCompletableObserver() {
                         @Override
                         public void onComplete() {
-                            Globals.writeToMLOG("INFO", "downloadtovar_grp_client", "OK");
+                            try {
+                                Globals.writeToMLOG("INFO", "downloadtovar_grp_client", "OK");
+                                Globals.writeToMLOG("INFO", "downloadtovar_grp_client", "response.body().list: " + response.body().list.size());
+                            }catch (Exception e){
+                                Globals.writeToMLOG("ERROR", "downloadtovar_grp_client", "Exception e: " + e);
+                            }
                         }
 
                         @Override
