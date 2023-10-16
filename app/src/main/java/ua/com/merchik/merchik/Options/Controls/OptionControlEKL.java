@@ -168,9 +168,9 @@ public class OptionControlEKL<T> extends OptionControl {
 //            eklSDB = SQL_DB.eklDao().getBy(dateFrom, dateTo, wpDataDB.getClient_id(), wpDataDB.getAddr_id(), wpDataDB.getUser_id());
 //        eklSDB = SQL_DB.eklDao().getBy(dateFrom, dateTo, wpDataDB.getClient_id(), wpDataDB.getAddr_id(), wpDataDB.getUser_id(), wpDataDB.ptt_user_id);
 
-            List<EKL_SDB> eklSDB2 = SQL_DB.eklDao().getAll();
-            Log.e("OptionControlEKL", "HERE TEST OptionControlEKL eklSDB: " + new Gson().toJson(eklSDB));
-            Log.e("OptionControlEKL", "HERE TEST OptionControlEKL eklSDB2: " + new Gson().toJson(eklSDB2));
+//            List<EKL_SDB> eklSDB2 = SQL_DB.eklDao().getAll();
+//            Log.e("OptionControlEKL", "HERE TEST OptionControlEKL eklSDB: " + new Gson().toJson(eklSDB));
+//            Log.e("OptionControlEKL", "HERE TEST OptionControlEKL eklSDB2: " + new Gson().toJson(eklSDB2));
 
             Log.e("OptionControlEKL", "HERE TEST OptionControlEKL 5");
             if (eklSDB == null || eklSDB.size() == 0) {
@@ -178,6 +178,8 @@ public class OptionControlEKL<T> extends OptionControl {
                 for (TovarGroupSDB item : tovarGroupSDB) {
                     ids.add(item.id);
                 }
+
+                Globals.writeToMLOG("INFO", "OptionControlEKL/createTZN", "TovarGroupSDB ids: " + ids);
 
                 String msgDebug = String.format("dateFrom: %s/dateTo: %s/ids: %s/addr: %s/user: %s/ptt: %s", dateFrom, dateTo, ids, wpDataDB.getAddr_id(), wpDataDB.getUser_id(), wpDataDB.ptt_user_id);
                 Globals.writeToMLOG("INFO", "OptionControlEKL/createTZN", msgDebug);
@@ -263,6 +265,11 @@ public class OptionControlEKL<T> extends OptionControl {
                     optionMsg.append(", но ").append("у ПТТ указан отдел ").append(SQL_DB.tovarGroupDao().getById(usersSDBPTT.otdelId).nm).append(" c нарушением уровня вложенности.")
                     /*.append(" (").append("-- otdel lvl --").append(" из уровня  вложенности!)")*/;
                 } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                    try {
+                        Globals.writeToMLOG("INFO", "OptionControlEKL/Build.VERSION.SDK_INT", "tovarGroupSDB: " + new Gson().toJson(tovarGroupSDB));
+                    }catch (Exception e){
+                        Globals.writeToMLOG("INFO", "OptionControlEKL/Build.VERSION.SDK_INT", "Exception e: " + e);
+                    }
                     if (tovarGroupSDB.stream().filter(item -> item.id.equals(usersSDBPTT.otdelId)).findFirst().orElse(null) != null
                             && optionDB.getOptionControlId().equals("132629") && (addressSDB.kolKass > 5 || addressSDB.kolKass == 0)) {
                         if (documentUser.reportDate05 != null && documentUser.reportDate05.getTime() >= wpDataDB.getDt().getTime()) {
