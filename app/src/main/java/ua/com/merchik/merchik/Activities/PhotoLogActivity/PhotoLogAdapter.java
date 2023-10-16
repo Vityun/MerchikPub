@@ -132,7 +132,7 @@ public class PhotoLogAdapter extends RecyclerView.Adapter<PhotoLogAdapter.ViewHo
             try {
                 POS = getAdapterPosition();
 
-                if (photoLogDat.getError() != null) {
+                if (photoLogDat.getError() != null && photoLogDat.get_on_server == 0) {
                     layout.setBackgroundColor(mContext.getResources().getColor(R.color.errorLightColor));
                     ((GradientDrawable) imageView.getBackground()).setStroke(5, Color.RED);
                 } else {
