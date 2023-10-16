@@ -1256,6 +1256,8 @@ public class DialogEKL {
                                             ekl_sdb.codeVerify = 1;
                                         } else {
                                             ekl_sdb.comment = item.error;
+                                            // TODO Нужно нормально обрабатывать ответ от сервера когда "Заявка была уже обработана"
+                                            ekl_sdb.codeVerify = 1; // {"item":[{"error":"Ця заявка вже успішно перевірена раніше","ID":674132,"state":false}],"state":true} -- Изза вот таких случаев, надо поправить
                                         }
 
                                         SQL_DB.eklDao().insertAll(Collections.singletonList(ekl_sdb));
