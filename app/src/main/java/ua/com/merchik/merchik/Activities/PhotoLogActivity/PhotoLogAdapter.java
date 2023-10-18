@@ -60,6 +60,7 @@ public class PhotoLogAdapter extends RecyclerView.Adapter<PhotoLogAdapter.ViewHo
     private Globals globals = new Globals();
     private int POS;
     private boolean mod;
+    private boolean openDefaultStarDialog = true;
     private Clicks.click click;
     private PhotoLogMode photoLogMode;
 
@@ -292,10 +293,12 @@ public class PhotoLogAdapter extends RecyclerView.Adapter<PhotoLogAdapter.ViewHo
             }*/
 
 
-                if (photoLogMode.equals(PhotoLogMode.SAMPLE_PHOTO)) {
-                    openDialog(photoLogMode, photoLogDat, mOnPhotoClickListener);
+                if (photoLogMode.equals(PhotoLogMode.SAMPLE_PHOTO) && openDefaultStarDialog) {
+                    if (getBindingAdapterPosition() == 0){
+                        openDialog(photoLogMode, photoLogDat, mOnPhotoClickListener);
+                        openDefaultStarDialog = false;
+                    }
                 }
-
 
                 // 13/08/2020 Выгрузка фоток из Журнала фото
                 imageView.setOnClickListener(v -> {
@@ -389,6 +392,7 @@ public class PhotoLogAdapter extends RecyclerView.Adapter<PhotoLogAdapter.ViewHo
                     case SAMPLE_PHOTO:
                         dialog.setClose(() -> {
                             click.click(null);
+                            dialog.dismiss();
                         });
                         break;
 

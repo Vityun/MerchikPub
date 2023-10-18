@@ -232,7 +232,9 @@ public class PhotoLogActivity extends toolbar_menus {
                     // TODO тут есть косяк, у мерчиков по какой-то причине вылетало приложение. resultCode == 101 не срабатывал там где должен был. Вообще это лучше по другому делать.
                     switch (finalPhotoLogMode) {
                         case SAMPLE_PHOTO:
-                            finish();
+                            if (stackPhoto != null && stackPhoto.size() == 1){
+                                finish();
+                            }
                             break;
 
                         default:
