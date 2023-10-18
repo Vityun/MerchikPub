@@ -249,7 +249,7 @@ public class StackPhotoRealm {
 
 //        res = res.where().isNull("showcase_id").findAll();  // Показываем мерчу в ЖФ фото НЕ "ВИТРИН"
 
-        if (res != null){
+        if (res != null) {
             Globals.writeToMLOG("INFO", "StackPhotoRealm.getPhoto.res", "res: " + res.size());
         }
 
@@ -264,58 +264,75 @@ public class StackPhotoRealm {
 
         if (dtFrom != null && dtTo != null) {
             res = res.where().between("create_time", dtFrom, dtTo).findAll();
-            if (res != null){
+            if (res != null) {
                 Globals.writeToMLOG("INFO", "StackPhotoRealm.getPhoto.dtFromdtTo", "res: " + res.size());
             }
         }
 
         if (userId != null) {
             res = res.where().equalTo("user_id", userId).findAll();
-            if (res != null){
+            if (res != null) {
                 Globals.writeToMLOG("INFO", "StackPhotoRealm.getPhoto.userId", "res: " + res.size());
             }
         }
 
         if (addrId != null) {
             res = res.where().equalTo("addr_id", addrId).findAll();
-            if (res != null){
+            if (res != null) {
                 Globals.writeToMLOG("INFO", "StackPhotoRealm.getPhoto.addrId", "res: " + res.size());
             }
         }
 
         if (clientId != null) {
             res = res.where().equalTo("client_id", clientId).findAll();
-            if (res != null){
+            if (res != null) {
                 Globals.writeToMLOG("INFO", "StackPhotoRealm.getPhoto.clientId", "res: " + res.size());
             }
         }
 
         if (dad2 != null) {
             res = res.where().equalTo("code_dad2", dad2).findAll();
-            if (res != null){
+            if (res != null) {
                 Globals.writeToMLOG("INFO", "StackPhotoRealm.getPhoto.dad2", "res: " + res.size());
             }
         }
 
         if (photoType != null) {
             res = res.where().equalTo("photo_type", photoType).findAll();
-            if (res != null){
+            if (res != null) {
                 Globals.writeToMLOG("INFO", "StackPhotoRealm.getPhoto.photoType", "res: " + res.size());
             }
         }
 
         if (tovIds != null) {
             res = res.where().in("tovar_id", tovIds).findAll();
-            if (res != null){
+            if (res != null) {
                 Globals.writeToMLOG("INFO", "StackPhotoRealm.getPhoto.photoType", "res: " + res.size());
             }
         }
 
-        if (res != null){
+        if (res != null) {
             Globals.writeToMLOG("INFO", "StackPhotoRealm.getPhoto.all", "res: " + res.size());
         }
 
         return res;
+    }
+
+
+    /**
+     * 18.10.23.
+     * Получаем список фото по отчёту которые выгрузились уже на сайт
+     */
+    public static List<StackPhotoDB> getUploadedStackPhotoByDAD2(Long codeDad2) {
+        RealmResults<StackPhotoDB> res = INSTANCE.where(StackPhotoDB.class).findAll();
+
+        if (codeDad2 != null) {
+            res = res.where().equalTo("code_dad2", codeDad2).findAll();
+        }
+
+        res = res.where().greaterThan("get_on_server", 1).findAll();
+
+        return INSTANCE.copyFromRealm(res);
     }
 
 

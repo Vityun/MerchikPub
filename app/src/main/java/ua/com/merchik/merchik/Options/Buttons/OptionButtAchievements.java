@@ -8,6 +8,8 @@ import android.content.Intent;
 import android.net.Uri;
 import android.util.Log;
 
+import java.util.List;
+
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.Options.OptionControl;
@@ -16,8 +18,10 @@ import ua.com.merchik.merchik.WorkPlan;
 import ua.com.merchik.merchik.data.OptionMassageType;
 import ua.com.merchik.merchik.data.RealmModels.AppUsersDB;
 import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
+import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.database.realm.tables.AppUserRealm;
+import ua.com.merchik.merchik.database.realm.tables.StackPhotoRealm;
 import ua.com.merchik.merchik.dialogs.DialogData;
 
 public class OptionButtAchievements<T> extends OptionControl {
@@ -46,19 +50,31 @@ public class OptionButtAchievements<T> extends OptionControl {
     private void executeOption() {
         try {
             if (internetStatus == 1){
-                String dateFrom = Clock.getHumanTimeSecPattern(Clock.getDatePeriodLong(wpDataDB.getDt().getTime(), -31)/1000, "yyyy-MM-dd");
-                String dateTo = Clock.getHumanTimeSecPattern(Clock.getDatePeriodLong(wpDataDB.getDt().getTime(), +2)/1000, "yyyy-MM-dd");
+                // Получаю ВСЕ выгруженные фото по данному отчёту.
+                List<StackPhotoDB> stackPhotoDBS = StackPhotoRealm.getUploadedStackPhotoByDAD2(wpDataDB.getCode_dad2());
 
-                String link = String.format("/mobile.php?mod=images_achieve**act=list_achieve**code_dad2_create=%s**client_id=%s**addr_id=%s**date_from=%s**date_to=%s", wpDataDB.getCode_dad2(), wpDataDB.getClient_id(), wpDataDB.getAddr_id(), dateFrom, dateTo);
-                AppUsersDB appUser = AppUserRealm.getAppUserById(userId);
+                if (stackPhotoDBS != null && stackPhotoDBS.size() >= 2){
+                    String dateFrom = Clock.getHumanTimeSecPattern(Clock.getDatePeriodLong(wpDataDB.getDt().getTime(), -31)/1000, "yyyy-MM-dd");
+                    String dateTo = Clock.getHumanTimeSecPattern(Clock.getDatePeriodLong(wpDataDB.getDt().getTime(), +2)/1000, "yyyy-MM-dd");
 
-                String hash = String.format("%s%s%s", appUser.getUserId(), appUser.getPassword(), "AvgrgsYihSHp6Ok9yQXfSHp6Ok9nXdXr3OSHp6Ok9UPBTzTjrF20Nsz3");
-                hash = Globals.getSha1Hex(hash);
+                    String link = String.format("/mobile.php?mod=images_achieve**act=list_achieve**code_dad2_create=%s**client_id=%s**addr_id=%s**date_from=%s**date_to=%s", wpDataDB.getCode_dad2(), wpDataDB.getClient_id(), wpDataDB.getAddr_id(), dateFrom, dateTo);
+                    AppUsersDB appUser = AppUserRealm.getAppUserById(userId);
 
-                String format = String.format("https://merchik.com.ua/sa.php?&u=%s&s=%s&l=%s", userId, hash, link);
+                    String hash = String.format("%s%s%s", appUser.getUserId(), appUser.getPassword(), "AvgrgsYihSHp6Ok9yQXfSHp6Ok9nXdXr3OSHp6Ok9UPBTzTjrF20Nsz3");
+                    hash = Globals.getSha1Hex(hash);
 
-                Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(format));
-                context.startActivity(browserIntent);
+                    String format = String.format("https://merchik.com.ua/sa.php?&u=%s&s=%s&l=%s", userId, hash, link);
+
+                    Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(format));
+                    context.startActivity(browserIntent);
+                }else {
+                    DialogData dialogData = new DialogData(context);
+                    dialogData.setTitle("Не бачу фото");
+                    dialogData.setText("Не можу знайти фотографії для створення Досягнення.\n\nВи або не зробили фото або фото ще не потрапили на сторону серверу. " +
+                            "Треба дочекатися виватаження всіх фото по цьому звіту.");
+                    dialogData.setClose(dialogData::dismiss);
+                    dialogData.show();
+                }
             }else {
                 DialogData dialogData = new DialogData(context);
                 dialogData.setTitle("Помилка!");
