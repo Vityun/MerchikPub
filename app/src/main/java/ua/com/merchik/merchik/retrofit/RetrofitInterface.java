@@ -109,6 +109,7 @@ import ua.com.merchik.merchik.data.UploadToServ.LogUploadToServ;
 import ua.com.merchik.merchik.data.UploadToServ.ReportPrepareServ;
 import ua.com.merchik.merchik.data.UploadToServ.WpDataUploadToServ;
 import ua.com.merchik.merchik.dialogs.EKL.DialogEKL;
+import ua.com.merchik.merchik.dialogs.EKL.EKLRequests;
 
 public interface RetrofitInterface {
 
@@ -340,7 +341,8 @@ public interface RetrofitInterface {
     Call<TovarTableResponse> GET_TOVAR_T_ID(@Query("mod") String mod,
                                             @Query("act") String act,
                                             @Query("id[]") List<String> listId);
-            ;
+
+    ;
 
     @POST("mobile_app.php?")
     Call<JsonObject> GET_TOVAR_T_JSON(@Query("mod") String mod,
@@ -507,7 +509,6 @@ public interface RetrofitInterface {
             @Query("addr_id") String addr_id2);
 
 
-
     @Multipart
     @POST("test_data.php?")
     Call<String> TEST_API_DATA(
@@ -621,6 +622,13 @@ public interface RetrofitInterface {
 
     // -------------------------------------------------------
 
+    //    PTTRequest
+    @POST("mobile_app.php?")
+    Call<EKLRequests.PTTRequest> GET_PTT_LIST(
+            @Header("ContentType") String content,
+            @Body JsonObject json);
+
+
     @POST("mobile_app.php?")
     Call<LocationResponse> LOCATION_RESPONSE_CALL(
             @Header("ContentType") String content,
@@ -651,7 +659,7 @@ public interface RetrofitInterface {
      * 03.07.23
      * Витрины. Точка входа для получение таблички БД Витрин.
      * Витрины не путать с полками и другими шнягами.
-     * */
+     */
     @POST("mobile_app.php?")
     Call<ShowcaseResponse> SHOWCASE_UPLOAD(
             @Header("ContentType") String content,
@@ -661,7 +669,7 @@ public interface RetrofitInterface {
     /**
      * 18.06.23
      * Просмотры. Это контроль просмотренности роликов. Видео.
-     * */
+     */
     @POST("mobile_app.php?")
     Call<ViewListResponse> View_List_RESPONSE(
             @Header("ContentType") String content,
@@ -670,7 +678,7 @@ public interface RetrofitInterface {
     /**
      * 12.06.23.
      * Премиальные. Получение подробной информации о снижении и тп..
-     * */
+     */
     @POST("mobile_app.php?")
     Call<PremiumResponse> Premium_get_salary_basis_RESPONSE(
             @Header("ContentType") String content,
@@ -683,7 +691,7 @@ public interface RetrofitInterface {
 
     /**
      * 11.04.23.
-     * */
+     */
     @POST("mobile_app.php?")
     Call<FragmentsResponse> FRAGMENTS_TABLE_RESPONSE(
             @Header("ContentType") String content,
@@ -837,7 +845,6 @@ public interface RetrofitInterface {
             @Part MultipartBody.Part photo);
 
 
-
     // AdditionalRequirementsSendMarksServerData
     @POST("mobile_app.php?")
     Call<AdditionalRequirementsSendMarksServerData> SEND_ADDREP_MARKS(
@@ -845,9 +852,7 @@ public interface RetrofitInterface {
             @Body JsonObject json);
 
 
-
-
-//    ModImagesView
+    //    ModImagesView
     @POST("mobile_app.php?")
     Call<ModImagesView> MOD_IMAGES_VIEW_CALL(
             @Header("ContentType") String content,
@@ -958,7 +963,9 @@ public interface RetrofitInterface {
             @Header("ContentType") String content,
             @Body JsonObject json);
 
-    /**12.09.23. ЄКЛ*/
+    /**
+     * 12.09.23. ЄКЛ
+     */
     @POST("mobile_app.php?")
     Call<EKLExchange.EKLResponse> GET_EKL_ROOM(
             @Header("ContentType") String content,

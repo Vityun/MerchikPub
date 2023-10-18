@@ -6,6 +6,8 @@ import android.util.Log;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
+import com.google.gson.annotations.Expose;
+import com.google.gson.annotations.SerializedName;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -26,31 +28,125 @@ import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
 
 public class EKLRequests {
 
-    public void getPTTByAddress(int addressId, Clicks.clickText clickText) {
-        StandartData data = new StandartData();
+    class Test{
+        public String mod;
+        public String act;
+        public String addr_id;
+    }
+
+    public class PTTRequest {
+        @SerializedName("state")
+        @Expose
+        public Boolean state;
+
+        @SerializedName("list")
+        @Expose
+        public List<PTT> list;
+
+        @SerializedName("error")
+        @Expose
+        public String error;
+    }
+
+    public class PTT{
+        @SerializedName("user_id")
+        @Expose
+        public String userId;
+        @SerializedName("fio")
+        @Expose
+        public String fio;
+        @SerializedName("tel")
+        @Expose
+        public String tel;
+        @SerializedName("tel2")
+        @Expose
+        public String tel2;
+        @SerializedName("department")
+        @Expose
+        public Object department;
+        @SerializedName("otdel_id")
+        @Expose
+        public Object otdelId;
+        @SerializedName("client_id")
+        @Expose
+        public String clientId;
+        @SerializedName("fired")
+        @Expose
+        public Integer fired;
+        @SerializedName("fired_dt")
+        @Expose
+        public Integer firedDt;
+        @SerializedName("fired_reason")
+        @Expose
+        public Object firedReason;
+        @SerializedName("dt_update")
+        @Expose
+        public Object dtUpdate;
+        @SerializedName("author_id")
+        @Expose
+        public Object authorId;
+        @SerializedName("city_id")
+        @Expose
+        public Integer cityId;
+        @SerializedName("work_addr_id")
+        @Expose
+        public Object workAddrId;
+        @SerializedName("inn")
+        @Expose
+        public String inn;
+        @SerializedName("report_count")
+        @Expose
+        public String reportCount;
+        @SerializedName("report_date_01")
+        @Expose
+        public Object reportDate01;
+        @SerializedName("report_date_05")
+        @Expose
+        public Object reportDate05;
+        @SerializedName("report_date_20")
+        @Expose
+        public Object reportDate20;
+        @SerializedName("report_date_40")
+        @Expose
+        public Object reportDate40;
+        @SerializedName("img_personal_photo_thumb")
+        @Expose
+        public String imgPersonalPhotoThumb;
+        @SerializedName("img_personal_photo")
+        @Expose
+        public String imgPersonalPhoto;
+        @SerializedName("send_sms")
+        @Expose
+        public Integer sendSms;
+    }
+
+    public void getPTTByAddress(int addressId, Clicks.clickObjectAndStatus click) {
+        Test data = new Test();
         data.mod = "data_list";
         data.act = "ptt";
-        data.addressId = String.valueOf(addressId);
+        data.addr_id = String.valueOf(addressId);
 
         Gson gson = new Gson();
         String json = gson.toJson(data);
         JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
 
-        retrofit2.Call<JsonObject> call = RetrofitBuilder.getRetrofitInterface().TEST_JSON_UPLOAD(RetrofitBuilder.contentType, convertedObject);
-        call.enqueue(new Callback<JsonObject>() {
+        Log.e("EKLRequests", "convertedObject" + convertedObject);
+
+        retrofit2.Call<PTTRequest> call = RetrofitBuilder.getRetrofitInterface().GET_PTT_LIST(RetrofitBuilder.contentType, convertedObject);
+        call.enqueue(new Callback<PTTRequest>() {
             @Override
-            public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
+            public void onResponse(Call<PTTRequest> call, Response<PTTRequest> response) {
                 Log.e("EKLRequests", "response" + response);
                 Log.e("EKLRequests", "response" + response.body());
                 Globals.writeToMLOG("INFO", "EKLRequests/getPTTByAddress/onResponse", "response.body(): " + response.body());
-                clickText.click("Данні завантажились успішно.");
+                click.onSuccess(response.body());
             }
 
             @Override
-            public void onFailure(Call<JsonObject> call, Throwable t) {
+            public void onFailure(Call<PTTRequest> call, Throwable t) {
                 Log.e("EKLRequests", "test" + t);
                 Globals.writeToMLOG("INFO", "EKLRequests/getPTTByAddress/onFailure", "Throwable t: " + t);
-                clickText.click("При завантаженні данних виникла помилка: " + t);
+                click.onFailure("При завантаженні данних виникла помилка: " + t);
             }
         });
     }

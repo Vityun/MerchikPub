@@ -44,6 +44,7 @@ import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.ServerExchange.ExchangeInterface;
 import ua.com.merchik.merchik.ViewHolders.AutoTextUsersViewHolder;
+import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.Database.Room.EKL_SDB;
 import ua.com.merchik.merchik.data.Database.Room.UsersSDB;
 import ua.com.merchik.merchik.data.Database.Room.UsersSDBDat.UserSDBJoin;
@@ -416,12 +417,66 @@ public class DialogEKL {
                 if (item instanceof UserSDBJoin) {
                     UserSDBJoin res = (UserSDBJoin) item;
                     if (res.id == -1111) {
-                        new EKLRequests().getPTTByAddress(wp.getAddr_id(), data1 -> {
-                            DialogData dialogData = new DialogData(context);
-                            dialogData.setTitle("Оновлення списку ПТТ");
-                            dialogData.setText(data1);
-                            dialogData.setClose(dialogData::dismiss);
-                            dialogData.show();
+//                        new EKLRequests().getPTTByAddress(wp.getAddr_id(), data1 -> {
+//                            DialogData dialogData = new DialogData(context);
+//                            dialogData.setTitle("Оновлення списку ПТТ");
+//                            dialogData.setText(data1);
+//                            dialogData.setClose(dialogData::dismiss);
+//                            dialogData.show();
+//                        });
+
+                        new EKLRequests().getPTTByAddress(wp.getAddr_id(), new Clicks.clickObjectAndStatus() {
+                            @Override
+                            public void onSuccess(Object data) {
+                                try {
+                                    EKLRequests.PTTRequest pttRequest = (EKLRequests.PTTRequest) data;
+
+                                    if (pttRequest.state) {
+                                        if (pttRequest.list != null && pttRequest.list.size() > 0){
+                                            List<UserSDBJoin> newPttList = new ArrayList<>();
+
+                                            for (EKLRequests.PTT item : pttRequest.list){
+                                                UserSDBJoin userSDBJoin = new UserSDBJoin();
+
+                                                userSDBJoin.id = Integer.valueOf(item.userId);
+                                                userSDBJoin.fio = item.fio;
+                                                userSDBJoin.tel = item.tel;
+                                                userSDBJoin.tel2 = item.tel2;
+                                                userSDBJoin.authorId = (Integer) item.authorId;
+                                                userSDBJoin.clientId = Integer.valueOf(item.clientId);
+                                                userSDBJoin.otdelId = (Integer) item.otdelId;
+                                                userSDBJoin.department = (Integer) item.department;
+                                                userSDBJoin.workAddrId = (Integer) item.workAddrId;
+
+                                                newPttList.add(userSDBJoin);
+                                            }
+
+                                            AutoTextUsersViewHolder adapterUser = new AutoTextUsersViewHolder(
+                                                    context,
+                                                    android.R.layout.simple_dropdown_item_1line,
+                                                    newPttList
+                                            );
+                                            adapterUser.setAdditionalInformation(AutoTextUsersViewHolder.AutoTextUserEnum.DEPARTMENT);
+                                            sotr.setAdapter(adapterUser);
+
+                                            Toast.makeText(context, "Список ПТТ Оновлено!", Toast.LENGTH_SHORT).show();
+                                        }
+                                    }
+                                }catch (Exception e){
+                                    Log.e("EKLRequests", "Exception e: " + e);
+                                    e.printStackTrace();
+                                }
+                            }
+
+                            @Override
+                            public void onFailure(String error) {
+                                Globals.writeToMLOG("INFO", "getPTTByAddress/RES/onFailure", "String error: " + error);
+                                DialogData dialogData = new DialogData(context);
+                                dialogData.setTitle("Виникла помилка при отриманні переліку ПТТ");
+                                dialogData.setText(error);
+                                dialogData.setClose(dialogData::dismiss);
+                                dialogData.show();
+                            }
                         });
                         sotr.setText("");
                         DialogData dialogData = new DialogData(context);
@@ -1206,8 +1261,10 @@ public class DialogEKL {
         return res;
     }
 
-/*
-    *//**
+    /*
+     */
+
+    /**
      * Получение на выгрузку и выгрузка Кодов пользователя
      *//*
     public void responseCheckEKLList() {
@@ -1224,7 +1281,6 @@ public class DialogEKL {
             }
         }, Globals.AppWorkMode.OFFLINE, true);
     }*/
-
     private void updateEKLData(EKLCheckData data) {
         Log.e("DialogEKL", "LOOP.POS3");
 

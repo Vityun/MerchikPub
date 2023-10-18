@@ -94,6 +94,7 @@ public class AutoTextUsersViewHolder<T> extends ArrayAdapter<T> implements Filte
 
             name.setText(text);
         } catch (Exception e) {
+            Log.e("EKLRequests", "ADAPTER Exception e: " + e);
             e.printStackTrace();
         }
 
