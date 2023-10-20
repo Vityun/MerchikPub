@@ -447,6 +447,7 @@ public class DialogEKL {
                                                 userSDBJoin.otdelId = (Integer) item.otdelId;
                                                 userSDBJoin.department = (Integer) item.department;
                                                 userSDBJoin.workAddrId = (Integer) item.workAddrId;
+                                                userSDBJoin.sendSms = item.sendSms;
 
                                                 newPttList.add(userSDBJoin);
                                             }
