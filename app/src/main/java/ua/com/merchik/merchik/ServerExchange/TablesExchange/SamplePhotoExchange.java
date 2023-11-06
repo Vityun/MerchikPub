@@ -119,31 +119,36 @@ public class SamplePhotoExchange {
     }
 
     public void downloadSamplePhotos(List<SamplePhotoSDB> list, Clicks.clickStatusMsg click) {
-        List<Integer> dataList = new ArrayList<>();
-        for (SamplePhotoSDB item : list) {
-            dataList.add(item.photoId);
-        }
-
-        // Проверяем какие фотки у нас УЖЕ есть
-        List<StackPhotoDB> stack = StackPhotoRealm.getByServerIds(dataList);
-
-        for (StackPhotoDB item : stack) {
-            dataList.remove(item.getPhotoServerId());
-        }
-
-
-        new PhotoDownload().downloadPhotoByIds("/Sample", "SAMPLE_", dataList, new Clicks.clickStatusMsg() {
-            @Override
-            public void onSuccess(String data) {
-                Globals.writeToMLOG("INFO", "downloadSamplePhotos", "data: " + data);
-                click.onSuccess(data);
+        try {
+            List<Integer> dataList = new ArrayList<>();
+            for (SamplePhotoSDB item : list) {
+                dataList.add(item.photoId);
             }
 
-            @Override
-            public void onFailure(String error) {
-                Globals.writeToMLOG("ERROR", "downloadSamplePhotos", "data: " + error);
-                click.onFailure(error);
+            // Проверяем какие фотки у нас УЖЕ есть
+            List<StackPhotoDB> stack = StackPhotoRealm.getByServerIds(dataList);
+
+            for (StackPhotoDB item : stack) {
+                dataList.remove(item.getPhotoServerId());
             }
-        });
+
+            Globals.writeToMLOG("INFO", "downloadSamplePhotos", "start downloadPhotoByIds dataList: " + dataList.size());
+
+            new PhotoDownload().downloadPhotoByIds("/Sample", "SAMPLE_", dataList, new Clicks.clickStatusMsg() {
+                @Override
+                public void onSuccess(String data) {
+                    Globals.writeToMLOG("INFO", "downloadSamplePhotos", "data: " + data);
+                    click.onSuccess(data);
+                }
+
+                @Override
+                public void onFailure(String error) {
+                    Globals.writeToMLOG("ERROR", "downloadSamplePhotos", "data: " + error);
+                    click.onFailure(error);
+                }
+            });
+        }catch (Exception e){
+            Globals.writeToMLOG("ERROR", "downloadSamplePhotos", "Exception e: " + e);
+        }
     }
 }

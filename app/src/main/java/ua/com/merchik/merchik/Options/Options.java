@@ -142,6 +142,7 @@ import ua.com.merchik.merchik.dialogs.DialogAdditionalRequirements.DialogARMark.
 import ua.com.merchik.merchik.dialogs.DialogAdditionalRequirements.DialogAdditionalRequirements;
 import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.dialogs.DialogFilter.Click;
+import ua.com.merchik.merchik.dialogs.EKL.DialogEKL;
 import ua.com.merchik.merchik.toolbar_menus;
 
 public class Options {
@@ -152,14 +153,14 @@ public class Options {
             138520, 138773, 137797, 138339, 141360, 141910, 141888, 141885, 84007, 132666, 139576,
             138767, 135742, 132621, 84003, 138340, 135327, 135328, 156882, 151139, 132623, 133382,
             157275, 157276, 157274, 135159, 157277, 157353, 138643, 158243, 135412, 151748, 158309,
-            158308, 158604, 158605, 158606, 157354, 157242, 159725, 135413, 135719
+            158308, 158604, 158605, 158606, 157354, 157242, 159725, 135413, 135719, 143969
     };
 
 
     public static int[] describedOptions = new int[]{132624, 76815, 157241, 157243, 84006, 156928,
             151594, 80977, 135330, 133381, 135329, 138518, 151139, 132623, 133382, 137797, 135809,
             135328, 135327, 157275, 138341, 590, 84932, 134583, 157352, 1470, 138644, 1455, 135061,
-            158361, 159707, 575, 132971, 135591, 135708, 135595};
+            158361, 159707, 575, 132971, 135591, 135708, 135595, 143968};
 
     /*Сюда записываются Опции которые не прошли проверку, при особенном переданном MOD-e. Сделано
     для того что б потом можно было посмотреть название опций которые не прошли проверку и, возможно,
@@ -258,6 +259,7 @@ public class Options {
                     break;
 
                 case 84006:
+                case 143968:
                     OptionControlEKL<?> optionControlEKL = new OptionControlEKL<>(context, dataDB, optionsDB, newOptionType, mode, unlockCodeResultListener);
                     optionControlEKL.showOptionMassage("");
                     break;
@@ -1078,6 +1080,20 @@ public class Options {
         Log.e("NNK", "F/optControl/optionId: " + optionId);
         switch (optionId) {
 
+            case 143969:
+                Log.e("DR_BUTTON_CLICK", "optionId: " + optionId);
+                //  Взятие ЭКЛ-а
+                DialogEKL dialogEKL = new DialogEKL(context, (WpDataDB) dataDB);
+                dialogEKL.setTitle("Электронный Контрольный Лист (ЭКЛ)");
+
+                dialogEKL.setLesson(context, true, 1273);
+                dialogEKL.setVideoLesson(context, true, 1274, () -> {
+                });
+                dialogEKL.setImgBtnCall(context);
+                dialogEKL.setClose(dialogEKL::dismiss);
+                dialogEKL.show();
+                break;
+
             case 135719:    // КНОПКА "Дет.Отчет" (оценка)
             case 135708:    // КОНТРОЛЬ
                 OptionControlCheckMarkDetailedReport<?> optionControlCheckMarkDetailedReport =
@@ -1251,6 +1267,7 @@ public class Options {
                 return optionControlFacePlan.isBlockOption2() ? 1 : 0;
 
             case 84006:
+            case 143968:
                 OptionControlEKL<?> optionControlEKL = new OptionControlEKL<>(context, dataDB, option, type, mode, unlockCodeResultListener);
                 if (mode.equals(NNKMode.MAKE) || (mode.equals(NNKMode.CHECK) && optionControlEKL.isBlockOption())) {
                     optionControlEKL.showOptionMassage(block);

@@ -175,26 +175,19 @@ public class OptionControlEKL<T> extends OptionControl {
             Log.e("OptionControlEKL", "HERE TEST OptionControlEKL 5");
             if (eklSDB == null || eklSDB.size() == 0) {
                 List<Integer> ids = new ArrayList<>();
-                for (TovarGroupSDB item : tovarGroupSDB) {
-                    ids.add(item.id);
+                if (tovarGroupSDB != null){
+                    for (TovarGroupSDB item : tovarGroupSDB) {
+                        ids.add(item.id);
+                    }
+                    Globals.writeToMLOG("INFO", "OptionControlEKL/createTZN", "TovarGroupSDB ids: " + ids);
+                    String msgDebug = String.format("dateFrom: %s/dateTo: %s/ids: %s/addr: %s/user: %s/ptt: %s", dateFrom, dateTo, ids, wpDataDB.getAddr_id(), wpDataDB.getUser_id(), wpDataDB.ptt_user_id);
+                    Globals.writeToMLOG("INFO", "OptionControlEKL/createTZN", msgDebug);
+
+                    eklSDB = SQL_DB.eklDao().getBy(dateFrom, dateTo, ids, wpDataDB.getAddr_id(), wpDataDB.getUser_id());
+                }else {
+                    // TODO отсебятина, у меня у Эрики не было групп товаров изза чего проблема выникла, это может быть очень опасно
+                    eklSDB = SQL_DB.eklDao().getBy(dateFrom, dateTo, wpDataDB.getAddr_id(), wpDataDB.getUser_id());
                 }
-
-                Globals.writeToMLOG("INFO", "OptionControlEKL/createTZN", "TovarGroupSDB ids: " + ids);
-
-                String msgDebug = String.format("dateFrom: %s/dateTo: %s/ids: %s/addr: %s/user: %s/ptt: %s", dateFrom, dateTo, ids, wpDataDB.getAddr_id(), wpDataDB.getUser_id(), wpDataDB.ptt_user_id);
-                Globals.writeToMLOG("INFO", "OptionControlEKL/createTZN", msgDebug);
-
-                /*
-                {"addr_id":24655,"client_id":"14176","code":"61827","code_dad2":1261222024655052738,
-                "department":824,"eklCode":"56386ec2be278c6de8b1b05912b02458b56f31dc","code_check":"56386ec2be278c6de8b1b05912b02458b56f31dc",
-                "ID":630450,"user_id_verify":214355,"state":true,"upload":true,"user_id":204206,"vpi":1672046893656}
-
-                {"addr_id":24655,"client_id":"8169","code":"99257","code_dad2":1271222024655052833,
-                "department":1440,"eklCode":"03634c8d9adf70c88ecf40447c6517bb65f9ed85","code_check":"03634c8d9adf70c88ecf40447c6517bb65f9ed85",
-                "ID":630468,"user_id_verify":197055,"state":true,"upload":true,"user_id":204206,"vpi":1672049203918}
-                 */
-
-                eklSDB = SQL_DB.eklDao().getBy(dateFrom, dateTo, ids, wpDataDB.getAddr_id(), wpDataDB.getUser_id());
 
                 if (eklSDB.size() == 0 && addressSDB != null && addressSDB.kolKass != null && addressSDB.kolKass <= 5){
                     eklSDB = SQL_DB.eklDao().getBy(dateFrom, dateTo, wpDataDB.getAddr_id(), wpDataDB.getUser_id());

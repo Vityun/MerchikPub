@@ -45,6 +45,9 @@ public interface UsersDao {
     @Query("SELECT s.* FROM sotr s WHERE work_addr_id = :addrId AND fired = 0 ORDER BY fio")
     List<UserSDBJoin> getAllUsersLJoinTovGrps(int addrId);
 
+    @Query("SELECT s.* FROM sotr s WHERE id = :userId AND fired = 0 ORDER BY fio")
+    List<UserSDBJoin> getUserLJoinTovGrps(int userId);
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     void insertAll(List<UsersSDB> data);
 

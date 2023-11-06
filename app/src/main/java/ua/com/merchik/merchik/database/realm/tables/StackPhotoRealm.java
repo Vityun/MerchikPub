@@ -30,6 +30,22 @@ public class StackPhotoRealm {
                 .findFirst();
     }
 
+    public static StackPhotoDB stackPhotoDBGetPhotoBySiteId2(String id) {
+        if (id == null || id.equals("")) {
+            return null;
+        }
+        StackPhotoDB res = INSTANCE.where(StackPhotoDB.class)
+                .equalTo("photoServerId", id)
+                .findFirst();
+
+        if (res != null){
+            res = INSTANCE.copyFromRealm(res);
+        }else {
+            return null;
+        }
+        return res;
+    }
+
     public static List<StackPhotoDB> getAll() {
         return INSTANCE.where(StackPhotoDB.class)
                 .findAll();
@@ -336,4 +352,13 @@ public class StackPhotoRealm {
     }
 
 
+    public static List<StackPhotoDB> getShowcase(int showcase, long codeDad2, Integer photoType) {
+        RealmResults<StackPhotoDB> res = INSTANCE.where(StackPhotoDB.class)
+                .equalTo("showcase_id", String.valueOf(showcase))
+                .equalTo("code_dad2", codeDad2)
+                .equalTo("photo_type", photoType)
+                .findAll();
+
+        return INSTANCE.copyFromRealm(res);
+    }
 }

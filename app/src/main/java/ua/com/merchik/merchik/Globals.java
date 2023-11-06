@@ -5,6 +5,8 @@ import static ua.com.merchik.merchik.toolbar_menus.internetStatus;
 import static ua.com.merchik.merchik.trecker.coordinatesDistanse;
 import static ua.com.merchik.merchik.trecker.imHereGPS;
 import static ua.com.merchik.merchik.trecker.imHereNET;
+import static ua.com.merchik.merchik.trecker.locationUniqueStringGPS;
+import static ua.com.merchik.merchik.trecker.locationUniqueStringGSM;
 
 import android.Manifest;
 import android.app.Activity;
@@ -982,90 +984,98 @@ public class Globals {
     public static LogMPDB fixMP(WpDataDB wpDataDB) {
         try {
             try {
-                int id = RealmManager.logMPGetLastId() + 1;
-                Globals.writeToMLOG("INFO", "fixMP", "create new logMP id: " + id);
-                LogMPDB log = new LogMPDB();
-                log.id = id;
-                log.provider = 1;
-                log.CoordX = imHereGPS.getLatitude();
-                log.CoordY = imHereGPS.getLongitude();
-                log.CoordAltitude = imHereGPS.getAltitude();
-                log.CoordTime = imHereGPS.getTime();
-                log.CoordSpeed = imHereGPS.getSpeed();
-                log.CoordAccuracy = imHereGPS.getAccuracy();
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
-                    log.mocking = imHereGPS.isFromMockProvider();
-                }
-                log.gp = POST_10(log);
-
-                if (wpDataDB != null) {
-                    log.codeDad2 = wpDataDB.getCode_dad2();
-
-                    AddressSDB addressSDB = SQL_DB.addressDao().getById(wpDataDB.getAddr_id());
-                    float coordAddrX = 0, coordAddrY = 0;
-                    if (addressSDB != null){
-                        coordAddrX = addressSDB.locationXd;
-                        coordAddrY = addressSDB.locationYd;
-                    }else {
-                        try {
-                            if (wpDataDB != null){
-                                coordAddrX = Float.parseFloat(wpDataDB.getAddr_location_xd());
-                                coordAddrY = Float.parseFloat(wpDataDB.getAddr_location_yd());
-                            }
-                        }catch (Exception e){}
+                String locationUniqueStringGPSThis = "1" + imHereGPS.getLatitude() + imHereGPS.getLongitude() + imHereGPS.getTime();
+                if (!locationUniqueStringGPS.equals(locationUniqueStringGPSThis)){
+                    int id = RealmManager.logMPGetLastId() + 1;
+                    Globals.writeToMLOG("INFO", "fixMP", "create new logMP id: " + id);
+                    LogMPDB log = new LogMPDB();
+                    log.id = id;
+                    log.provider = 1;
+                    log.CoordX = imHereGPS.getLatitude();
+                    log.CoordY = imHereGPS.getLongitude();
+                    log.CoordAltitude = imHereGPS.getAltitude();
+                    log.CoordTime = imHereGPS.getTime();
+                    log.CoordSpeed = imHereGPS.getSpeed();
+                    log.CoordAccuracy = imHereGPS.getAccuracy();
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
+                        log.mocking = imHereGPS.isFromMockProvider();
                     }
-                    double distance = coordinatesDistanse(coordAddrX, coordAddrY, log.CoordX, log.CoordY);
-                    log.distance = (int) distance;
+                    log.gp = POST_10(log);
+
+                    if (wpDataDB != null) {
+                        log.codeDad2 = wpDataDB.getCode_dad2();
+
+                        AddressSDB addressSDB = SQL_DB.addressDao().getById(wpDataDB.getAddr_id());
+                        float coordAddrX = 0, coordAddrY = 0;
+                        if (addressSDB != null){
+                            coordAddrX = addressSDB.locationXd;
+                            coordAddrY = addressSDB.locationYd;
+                        }else {
+                            try {
+                                if (wpDataDB != null){
+                                    coordAddrX = Float.parseFloat(wpDataDB.getAddr_location_xd());
+                                    coordAddrY = Float.parseFloat(wpDataDB.getAddr_location_yd());
+                                }
+                            }catch (Exception e){}
+                        }
+                        double distance = coordinatesDistanse(coordAddrX, coordAddrY, log.CoordX, log.CoordY);
+                        log.distance = (int) distance;
+                    }
+
+                    log.vpi = System.currentTimeMillis() / 1000;
+
+                    RealmManager.setLogMpRow(log);
+
+                    locationUniqueStringGPS = locationUniqueStringGPSThis;
+                    return log;
                 }
-
-                log.vpi = System.currentTimeMillis() / 1000;
-
-                RealmManager.setLogMpRow(log);
-                return log;
             } catch (Exception e) {
                 Globals.writeToMLOG("ERROR", "fixMP/imHereGPS is null?", "Exception e: " + e);
             }
 
 
             try {
-                int idNET = RealmManager.logMPGetLastId() + 1;
-                LogMPDB logNET = new LogMPDB();
-
-                logNET.id = idNET;
-
-                logNET.provider = 2;
-                logNET.CoordX = imHereNET.getLatitude();
-                logNET.CoordY = imHereNET.getLongitude();
-                logNET.CoordAltitude = imHereNET.getAltitude();
-                logNET.CoordTime = imHereNET.getTime();
-                logNET.CoordSpeed = imHereNET.getSpeed();
-                logNET.CoordAccuracy = imHereNET.getAccuracy();
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
-                    logNET.mocking = imHereNET.isFromMockProvider();
-                }
-                logNET.gp = POST_10(logNET);
-                if (wpDataDB != null) {
-                    logNET.codeDad2 = wpDataDB.getCode_dad2();
-
-                    AddressSDB addressSDB = SQL_DB.addressDao().getById(wpDataDB.getAddr_id());
-                    float coordAddrX = 0, coordAddrY = 0;
-                    if (addressSDB != null){
-                        coordAddrX = addressSDB.locationXd;
-                        coordAddrY = addressSDB.locationYd;
-                    }else {
-                        try {
-                            if (wpDataDB != null){
-                                coordAddrX = Float.parseFloat(wpDataDB.getAddr_location_xd());
-                                coordAddrY = Float.parseFloat(wpDataDB.getAddr_location_yd());
-                            }
-                        }catch (Exception e){}
+                String locationUniqueStringNETThis = "" + imHereNET.getLatitude() + imHereNET.getLongitude() + imHereNET.getTime();
+                if (!locationUniqueStringGSM.equals(locationUniqueStringNETThis)){
+                    int idNET = RealmManager.logMPGetLastId() + 1;
+                    LogMPDB logNET = new LogMPDB();
+                    logNET.id = idNET;
+                    logNET.provider = 2;
+                    logNET.CoordX = imHereNET.getLatitude();
+                    logNET.CoordY = imHereNET.getLongitude();
+                    logNET.CoordAltitude = imHereNET.getAltitude();
+                    logNET.CoordTime = imHereNET.getTime();
+                    logNET.CoordSpeed = imHereNET.getSpeed();
+                    logNET.CoordAccuracy = imHereNET.getAccuracy();
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
+                        logNET.mocking = imHereNET.isFromMockProvider();
                     }
-                    double distance = coordinatesDistanse(coordAddrX, coordAddrY, logNET.CoordX, logNET.CoordY);
-                    logNET.distance = (int) distance;
+                    logNET.gp = POST_10(logNET);
+                    if (wpDataDB != null) {
+                        logNET.codeDad2 = wpDataDB.getCode_dad2();
+
+                        AddressSDB addressSDB = SQL_DB.addressDao().getById(wpDataDB.getAddr_id());
+                        float coordAddrX = 0, coordAddrY = 0;
+                        if (addressSDB != null){
+                            coordAddrX = addressSDB.locationXd;
+                            coordAddrY = addressSDB.locationYd;
+                        }else {
+                            try {
+                                if (wpDataDB != null){
+                                    coordAddrX = Float.parseFloat(wpDataDB.getAddr_location_xd());
+                                    coordAddrY = Float.parseFloat(wpDataDB.getAddr_location_yd());
+                                }
+                            }catch (Exception e){}
+                        }
+                        double distance = coordinatesDistanse(coordAddrX, coordAddrY, logNET.CoordX, logNET.CoordY);
+                        logNET.distance = (int) distance;
+                    }
+                    logNET.vpi = System.currentTimeMillis() / 1000;
+                    logNET.locationUniqueString = locationUniqueStringNETThis;
+                    RealmManager.setLogMpRow(logNET);
+                    locationUniqueStringGSM = locationUniqueStringNETThis;
+                    return logNET;
                 }
-                logNET.vpi = System.currentTimeMillis() / 1000;
-                RealmManager.setLogMpRow(logNET);
-                return logNET;
             }catch (Exception e){
                 Globals.writeToMLOG("ERROR", "fixMP/imHereNET is null?", "Exception e: " + e);
             }

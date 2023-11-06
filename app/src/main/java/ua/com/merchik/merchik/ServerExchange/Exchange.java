@@ -728,17 +728,22 @@ public class Exchange {
                                 Globals.writeToMLOG("ERROR", "SamplePhotoExchange/downloadSamplePhotoTable/onResponse/onComplete/synchronizationTimetableDB", "Exception e: " + e);
                             }
 
-                            samplePhotoExchange.downloadSamplePhotos(res, new Clicks.clickStatusMsg() {
-                                @Override
-                                public void onSuccess(String data) {
-                                    Globals.writeToMLOG("INFO", "2Exchange/SamplePhotoExchange()/onSuccess", "data: " + data);
-                                }
+                            try {
+                                Globals.writeToMLOG("INFO", "2Exchange/SamplePhotoExchange()/", "res: " + res.size());
+                                samplePhotoExchange.downloadSamplePhotos(res, new Clicks.clickStatusMsg() {
+                                    @Override
+                                    public void onSuccess(String data) {
+                                        Globals.writeToMLOG("INFO", "2Exchange/SamplePhotoExchange()/onSuccess", "data: " + data);
+                                    }
 
-                                @Override
-                                public void onFailure(String error) {
-                                    Globals.writeToMLOG("ERROR", "2Exchange/SamplePhotoExchange()/onFailure", "error: " + error);
-                                }
-                            });
+                                    @Override
+                                    public void onFailure(String error) {
+                                        Globals.writeToMLOG("ERROR", "2Exchange/SamplePhotoExchange()/onFailure", "error: " + error);
+                                    }
+                                });
+                            }catch (Exception e){
+                                Globals.writeToMLOG("ERROR", "2Exchange/SamplePhotoExchange()/try", "Exception e: " + e);
+                            }
                         }
 
                         @Override
@@ -1902,69 +1907,6 @@ public class Exchange {
         });
     }
 
-
-    /**
-     * 20.05.2021
-     * Отправка ЛОГА местоположения
-     */
-/*    public void sendLogMp() {
-        String mod = "location";
-        String act = "track";
-
-        List<LogMPDB> logMp = RealmManager.getAllLogMPDB();
-        if (logMp != null && logMp.size() > 0) {
-            Log.e("LogMp", "LogMpUploadText. LogSize: " + logMp.size());
-
-            HashMap<String, String> map = new HashMap<>();
-            for (LogMPDB list : logMp) {
-                map.put("gp[" + list.getId() + "]", list.getGp());
-            }
-
-
-            retrofit2.Call<JsonObject> call = RetrofitBuilder.getRetrofitInterface().UPLOAD_LOG_MP(mod, act, map);
-            call.enqueue(new retrofit2.Callback<JsonObject>() {
-                @Override
-                public void onResponse(retrofit2.Call<JsonObject> call, retrofit2.Response<JsonObject> response) {
-                    Log.e("LogMp", "RESPONSE: " + response.body());
-
-                    try {
-                        JsonObject resp = response.body();
-                        if (resp != null) {
-                            if (!resp.get("state").isJsonNull() && resp.get("state").getAsBoolean()) {
-                                JsonObject arr = resp.get("geo_result").getAsJsonObject();
-                                if (arr != null) {
-                                    for (LogMPDB list : logMp) {
-                                        JsonObject geoInfo = arr.getAsJsonObject(String.valueOf(list.getId()));
-                                        if (!geoInfo.isJsonNull() && geoInfo.get("state").getAsBoolean()) {
-                                            try {
-                                                RealmManager.INSTANCE.executeTransaction(realm -> {
-                                                    list.deleteFromRealm();
-                                                });
-                                            } catch (Exception e) {
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    } catch (Exception e) {
-                    }
-
-                }
-
-                @Override
-                public void onFailure(retrofit2.Call<JsonObject> call, Throwable t) {
-                    Log.e("LogMp", "FAILURE_E: " + t.getMessage());
-                    Log.e("LogMp", "FAILURE_E2: " + t);
-                }
-            });
-        } else {
-            Log.e("LogMp", "LogMpUploadText. LogSize: " + null);
-        }
-
-    }*/
-
-
     /**
      * 05.08.2021
      * Получение чатов и сообщений
@@ -2143,26 +2085,6 @@ public class Exchange {
                 Log.e("test", "Throwable t: " + t);
             }
         });
-    }
-
-
-    /**
-     * 09.11.2021
-     * Обновление Плана работ для Exchange
-     * <p>
-     * Сюда нужно воткнуть обработку (прогресс).
-     * Добавить профайлер
-     * Обработка результата
-     * Обновление Пинга
-     */
-    public List<String> exchangeListInfo;
-
-    public void exchangeTableWpData() {
-        Globals.setProfiler(); // Установка профайлера
-
-
-        // Должна быть сама Синхронизация Плана работ.
-
     }
 
 

@@ -28,6 +28,8 @@ public class LogMPDB extends RealmObject {
 
     public long upload;         // 27.08.23. Время выгрузки на сервер координат. Это для того что б не забить сервер.
 
+    public String locationUniqueString;
+
     public LogMPDB() {
     }
 

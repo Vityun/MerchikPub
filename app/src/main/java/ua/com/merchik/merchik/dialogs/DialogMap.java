@@ -29,7 +29,11 @@ public class DialogMap {
     private Float spotLat;
     private Float spotLon;
 
+    private SupportMapFragment mapFragment;
+    private AppCompatActivity context;
+
     public DialogMap(AppCompatActivity context) {
+        this.context = context;
         dialog = new Dialog(context);
         dialog.setContentView(R.layout.dialog_info_gps_map);
         systemText = dialog.findViewById(R.id.dialog_info_gps_map_textview_sys);
@@ -37,19 +41,46 @@ public class DialogMap {
         // Элементы диалога
         btn = dialog.findViewById(R.id.dialog_info_gps_map_button);
         btn.setOnClickListener(v -> {
-            dialog.dismiss();
+            dismiss();
             dialog.cancel();
         });
 
-        SupportMapFragment mapFragment = (SupportMapFragment) context.getSupportFragmentManager()
+
+        mapFragment = (SupportMapFragment) context.getSupportFragmentManager()
                 .findFragmentById(R.id.mapView);
 
         Log.e("DialogMap", "SupportMapFragment: " + mapFragment);
-        
+
         if (mapFragment != null) {
             mapFragment.getMapAsync(googleMap -> {
                 map = googleMap;
                 updateMap();
+            });
+        }
+    }
+
+    public DialogMap(AppCompatActivity context, String test, Float locationXd, Float locationYd, String s, double coordX, double coordY, String s1) {
+        this.context = context;
+        dialog = new Dialog(context);
+        dialog.setContentView(R.layout.dialog_info_gps_map);
+        systemText = dialog.findViewById(R.id.dialog_info_gps_map_textview_sys);
+        userText = dialog.findViewById(R.id.dialog_info_gps_map_textview_user);
+        // Элементы диалога
+        btn = dialog.findViewById(R.id.dialog_info_gps_map_button);
+        btn.setOnClickListener(v -> {
+            dismiss();
+            dialog.cancel();
+        });
+
+        mapFragment = (SupportMapFragment) context.getSupportFragmentManager()
+                .findFragmentById(R.id.mapView);
+
+        Log.e("DialogMap", "SupportMapFragment: " + mapFragment);
+
+        if (mapFragment != null) {
+            mapFragment.getMapAsync(googleMap -> {
+                map = googleMap;
+                updateMap2(locationXd, locationYd, s, coordX, coordY, s1);
             });
         }
     }
@@ -65,8 +96,8 @@ public class DialogMap {
     }
 
     public void updateMap() {
-        if(map == null) return;
-        if(spotLat != null && spotLon != null){
+        if (map == null) return;
+        if (spotLat != null && spotLon != null) {
             LatLng coord = new LatLng(spotLat, spotLon);
             map.addMarker(new MarkerOptions()
                     .position(coord)
@@ -89,6 +120,41 @@ public class DialogMap {
         map.animateCamera(camUpd3);
     }
 
-    public void show() {if(dialog != null) dialog.show();}
+    public void updateMap2(Float locationXd, Float locationYd, String s, double coordX, double coordY, String s1) {
+        if (map == null) return;
+
+        LatLng coord = new LatLng(locationXd, locationYd);
+        map.addMarker(new MarkerOptions()
+                .position(coord)
+                .title(s)
+                .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN))
+        );
+
+        LatLng coordUser = new LatLng(coordX, coordY);
+        map.addMarker(new MarkerOptions()
+                .position(coordUser)
+                .title(s1)
+                .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE)));
+
+        CameraPosition camPos = new CameraPosition.Builder()
+                .target(coordUser)
+                .zoom(14)
+                .build();
+        CameraUpdate camUpd3 = CameraUpdateFactory.newCameraPosition(camPos);
+        map.animateCamera(camUpd3);
+    }
+
+    public void show() {
+        if (dialog != null) dialog.show();
+    }
+
+    public void dismiss() {
+        if (dialog != null) {
+            dialog.dismiss();
+            if (mapFragment != null) {
+                context.getSupportFragmentManager().beginTransaction().remove(mapFragment).commit();
+            }
+        }
+    }
 
 }

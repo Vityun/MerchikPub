@@ -1,16 +1,23 @@
 package ua.com.merchik.merchik.Adapters;
 
+import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
+
 import android.content.Context;
+import android.graphics.ColorFilter;
+import android.graphics.PorterDuff;
+import android.graphics.PorterDuffColorFilter;
 import android.graphics.Typeface;
 import android.text.Spannable;
 import android.text.SpannableStringBuilder;
 import android.text.style.StyleSpan;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -21,16 +28,21 @@ import java.util.List;
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.R;
+import ua.com.merchik.merchik.data.Database.Room.AddressSDB;
 import ua.com.merchik.merchik.data.RealmModels.LogMPDB;
+import ua.com.merchik.merchik.dialogs.DialogMap;
 
 public class RecyclerAndPhotoAdapter extends RecyclerView.Adapter<RecyclerAndPhotoAdapter.ViewHolder> {
 
     private Context context;
     private List<LogMPDB> logMPDBList;
 
-    public RecyclerAndPhotoAdapter(Context context, List<LogMPDB> logMPDBList) {
+    private int address;
+
+    public RecyclerAndPhotoAdapter(Context context, List<LogMPDB> logMPDBList, int address) {
         this.context = context;
         this.logMPDBList = logMPDBList;
+        this.address = address;
     }
 
     @NonNull
@@ -71,24 +83,38 @@ public class RecyclerAndPhotoAdapter extends RecyclerView.Adapter<RecyclerAndPho
                 recyclerView.setAdapter(createStringAdapter(recyclerView.getContext(), getSpannableStringBuilderListFromLogMPDB(logMPDB)));
 
                 imageView.setImageResource(R.drawable.ic_3);
+
+                // Создайте ColorFilter с желаемым цветом
+                ColorFilter colorFilter = new PorterDuffColorFilter(context.getResources().getColor(R.color.centerColor), PorterDuff.Mode.SRC_IN);
+
+                // ColorFilter для ImageView
+                imageView.setColorFilter(colorFilter);
+
+//                imageView.setOnClickListener(v -> {
+//                    openMap(logMPDB);
+//                });
+
+                layout.setOnClickListener(v -> {
+                    openMap(logMPDB);
+                });
             } catch (Exception e) {
                 Globals.writeToMLOG("ERROR", "InfoTextAndPhotoAdapter/onBindViewHolder/bind", "Exception e: " + e);
             }
         }
 
-        private RecyclerView.Adapter createStringAdapter(Context context, List<SpannableStringBuilder> dataList){
+        private RecyclerView.Adapter createStringAdapter(Context context, List<SpannableStringBuilder> dataList) {
             StringAdapter adapter = new StringAdapter(context, dataList);
             return adapter;
         }
 
-        private List<SpannableStringBuilder> getSpannableStringBuilderListFromLogMPDB(LogMPDB logMPDB){
+        private List<SpannableStringBuilder> getSpannableStringBuilderListFromLogMPDB(LogMPDB logMPDB) {
             List<SpannableStringBuilder> res = new ArrayList<>();
 
             // Время
             SpannableStringBuilder time = new SpannableStringBuilder();
-            time.append("Время:");
+            time.append("Час:");
             time.setSpan(new StyleSpan(Typeface.BOLD), 0, time.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-            time.append(" ").append(Clock.getHumanTimeSecPattern(logMPDB.CoordTime/1000, "dd.MM HH:mm:ss"));
+            time.append(" ").append(Clock.getHumanTimeSecPattern(logMPDB.CoordTime / 1000, "dd.MM HH:mm:ss"));
             res.add(time);
 
             // Провайдер
@@ -100,14 +126,14 @@ public class RecyclerAndPhotoAdapter extends RecyclerView.Adapter<RecyclerAndPho
 
             // Точность
             SpannableStringBuilder accuracy = new SpannableStringBuilder();
-            accuracy.append("Точность:");
+            accuracy.append("Точність:");
             accuracy.setSpan(new StyleSpan(Typeface.BOLD), 0, accuracy.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
             accuracy.append(" ").append(String.valueOf(Math.round(logMPDB.CoordAccuracy)));
             res.add(accuracy);
 
             // Дистанция от ТТ
             SpannableStringBuilder distance = new SpannableStringBuilder();
-            distance.append("Дистанция от ТТ:");
+            distance.append("Дистанція від ТТ:");
             distance.setSpan(new StyleSpan(Typeface.BOLD), 0, distance.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
             distance.append(" ").append(String.valueOf(logMPDB.distance)).append("м.");
             res.add(distance);
@@ -115,5 +141,17 @@ public class RecyclerAndPhotoAdapter extends RecyclerView.Adapter<RecyclerAndPho
             return res;
         }
 
+        private void openMap(LogMPDB logMPDB) {
+            try {
+                AddressSDB addressSDB = SQL_DB.addressDao().getById(address);
+
+                DialogMap dialogMap = new DialogMap((AppCompatActivity) context, "", addressSDB.locationXd, addressSDB.locationYd, "Місцеположення ТТ", logMPDB.CoordX, logMPDB.CoordY, "Ваше місцеположення");
+//                dialogMap.updateMap2(addressSDB.locationXd, addressSDB.locationYd, "Місцеположення ТТ", logMPDB.CoordX, logMPDB.CoordY, "Ваше місцеположення");
+                dialogMap.setData("", "Місцеположення");
+                dialogMap.show();
+            } catch (Exception e) {
+                Log.e("RecyclerAndPhotoAdapter", "Exception e: " + e);
+            }
+        }
     }
 }

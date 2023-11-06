@@ -15,10 +15,12 @@ import androidx.annotation.NonNull;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.recyclerview.widget.RecyclerView;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 import ua.com.merchik.merchik.Filter.MyFilter;
+import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.Database.Room.ShowcaseSDB;
@@ -33,8 +35,8 @@ public class ShowcaseAdapter extends RecyclerView.Adapter<ShowcaseAdapter.ViewHo
     private List<ShowcaseSDB> showcaseListOrig;
     private Clicks.click click;
 
-    public ShowcaseAdapter(List<ShowcaseSDB> showcaseList, Clicks.click click) {
-        if (showcaseList != null && showcaseList.size() > 0) {
+    public ShowcaseAdapter(ArrayList<ShowcaseSDB> showcaseList, Clicks.click click) {
+        if (showcaseList != null && !showcaseList.isEmpty()) {
             showcaseList.add(defaultShowcase());
             this.showcaseList = showcaseList;
             this.showcaseListFilterable = showcaseList;
@@ -62,9 +64,9 @@ public class ShowcaseAdapter extends RecyclerView.Adapter<ShowcaseAdapter.ViewHo
 
     @Override
     public int getItemCount() {
-        if (showcaseList != null){
+        if (showcaseList != null) {
             return showcaseList.size();
-        }else {
+        } else {
             return 0;
         }
     }
@@ -86,51 +88,64 @@ public class ShowcaseAdapter extends RecyclerView.Adapter<ShowcaseAdapter.ViewHo
         }
 
         public void bind(ShowcaseSDB showcase) {
+            try {
 
-            String groupName = "не встановлена";
-            String planogram = "не встановлена";
+                if (showcase.showcasePhoto >= 1) {
+                    constraintLayout.setBackgroundColor(constraintLayout.getContext().getResources().getColor(R.color.green_default));
+                } else {
+                    constraintLayout.setBackgroundColor(constraintLayout.getContext().getResources().getColor(R.color.red_error));
+                }
 
-            if (showcase.tovarGrp != null && showcase.tovarGrpTxt != null){
-                groupName = showcase.tovarGrpTxt;
+                String groupName = "не встановлена";
+                String planogram = "не встановлена";
+
+                if (showcase.tovarGrp != null && showcase.tovarGrpTxt != null) {
+                    groupName = showcase.tovarGrpTxt;
+                }
+
+                if (showcase.photoPlanogramTxt != null) {
+                    planogram = showcase.photoPlanogramTxt;
+                }
+
+                StackPhotoDB stackPhotoDB = StackPhotoRealm.stackPhotoDBGetPhotoBySiteId2(String.valueOf(showcase.photoId));
+
+                textViewShowcaseId.setText(Html.fromHtml("<b>Ідентифікатор:</b> " + showcase.id));
+                textViewShowcaseNm.setText(Html.fromHtml("<b>Назва:</b> " + showcase.nm));
+                textViewClientGroup.setText(Html.fromHtml("<b>Група тов.:</b> " + groupName));
+                textViewPlanogramm.setText(Html.fromHtml("<b>Планограма:</b> " + planogram));
+
+                if (showcase.id == 0) {
+                    textViewShowcaseId.setText("Створити фото без зазначення вітрини");
+                    textViewClientGroup.setVisibility(View.GONE);
+                    textViewPlanogramm.setVisibility(View.GONE);
+                    image.setImageDrawable(itemView.getContext().getResources().getDrawable(R.drawable.ic_menu_camera));
+                } else if (stackPhotoDB != null) {
+                    textViewClientGroup.setVisibility(View.VISIBLE);
+                    textViewPlanogramm.setVisibility(View.VISIBLE);
+                    String uriStr = stackPhotoDB.photo_num;
+                    Uri uri = Uri.parse(uriStr);
+                    image.setImageURI(uri);
+                    image.setOnClickListener(v -> {
+                        try {
+                            DialogFullPhotoR dialogFullPhoto = new DialogFullPhotoR(image.getContext());
+                            dialogFullPhoto.setPhoto(stackPhotoDB);
+                            dialogFullPhoto.setClose(dialogFullPhoto::dismiss);
+                            dialogFullPhoto.show();
+                        } catch (Exception e) {
+                            Log.e("ShowcaseAdapter", "Exception e: " + e);
+                        }
+                    });
+                } else {
+                    textViewClientGroup.setVisibility(View.VISIBLE);
+                    textViewPlanogramm.setVisibility(View.VISIBLE);
+                    image.setImageDrawable(itemView.getContext().getResources().getDrawable(R.mipmap.merchik));
+                }
+
+                constraintLayout.setOnClickListener(v -> click.click(showcase));
+
+            } catch (Exception e) {
+                Globals.writeToMLOG("ERROR", "ShowcaseAdapter/bind", "Exception e: " + e);
             }
-
-            if (showcase.photoPlanogramTxt != null) {
-                planogram = showcase.photoPlanogramTxt;
-            }
-
-            StackPhotoDB stackPhotoDB = StackPhotoRealm.stackPhotoDBGetPhotoBySiteId(String.valueOf(showcase.photoId));
-
-            textViewShowcaseId.setText(Html.fromHtml("<b>Ідентифікатор:</b> " + showcase.id));
-            textViewShowcaseNm.setText(Html.fromHtml("<b>Назва:</b> " + showcase.nm));
-            textViewClientGroup.setText(Html.fromHtml("<b>Група тов.:</b> " + groupName));
-            textViewPlanogramm.setText(Html.fromHtml("<b>Планограма:</b> " + planogram));
-
-            if (showcase.id == 0) {
-                textViewShowcaseId.setText("Створити фото без зазначення вітрини");
-                textViewClientGroup.setVisibility(View.GONE);
-                textViewPlanogramm.setVisibility(View.GONE);
-                image.setImageDrawable(itemView.getContext().getResources().getDrawable(R.drawable.ic_menu_camera));
-            } else if (stackPhotoDB != null) {
-                textViewClientGroup.setVisibility(View.VISIBLE);
-                textViewPlanogramm.setVisibility(View.VISIBLE);
-                image.setImageURI(Uri.parse(stackPhotoDB.photo_num));
-                image.setOnClickListener(v -> {
-                    try {
-                        DialogFullPhotoR dialogFullPhoto = new DialogFullPhotoR(image.getContext());
-                        dialogFullPhoto.setPhoto(stackPhotoDB);
-                        dialogFullPhoto.setClose(dialogFullPhoto::dismiss);
-                        dialogFullPhoto.show();
-                    } catch (Exception e) {
-                        Log.e("ShowcaseAdapter", "Exception e: " + e);
-                    }
-                });
-            } else {
-                textViewClientGroup.setVisibility(View.VISIBLE);
-                textViewPlanogramm.setVisibility(View.VISIBLE);
-                image.setImageDrawable(itemView.getContext().getResources().getDrawable(R.mipmap.merchik));
-            }
-
-            constraintLayout.setOnClickListener(v -> click.click(showcase));
         }
     }
 

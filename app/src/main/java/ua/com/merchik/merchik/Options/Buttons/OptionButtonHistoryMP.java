@@ -1,6 +1,7 @@
 package ua.com.merchik.merchik.Options.Buttons;
 
 import android.content.Context;
+import android.widget.Toast;
 
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -70,8 +71,12 @@ public class OptionButtonHistoryMP<T> extends OptionControl {
             DialogData dialog = new DialogData(context);
             dialog.setTitle("Історія місцеположення");
             dialog.setText("Нижче зазначені данні із місцезнаходженням вашого пристрою за період: з " + Clock.getHumanTimeSecPattern(startTime, "dd.MM HH:mm:ss") + " по " + Clock.getHumanTimeSecPattern(endTime, "dd.MM HH:mm:ss"));
-            dialog.setRecycler(createAdapter(dialog.context, logMPDBList), new LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false));
+            dialog.setRecycler(createAdapter(dialog.context, logMPDBList, wpDataDB.getAddr_id()), new LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false));
             dialog.setClose(dialog::dismiss);
+            dialog.setOk("Запит МП", ()->{
+                Globals.fixMP(wpDataDB);
+                Toast.makeText(context, "Запит створено!", Toast.LENGTH_SHORT).show();
+            });
             dialog.show();
         }catch (Exception e){
             Globals.writeToMLOG("ERROR", "OptionButtonHistoryMP/executeOption", "Exception e: " + e);
@@ -88,8 +93,8 @@ public class OptionButtonHistoryMP<T> extends OptionControl {
 //        return adapter;
 //    }
 
-    private RecyclerView.Adapter createAdapter(Context context, List<LogMPDB> logMPDBList){
-        RecyclerAndPhotoAdapter adapter = new RecyclerAndPhotoAdapter(context, logMPDBList);
+    private RecyclerView.Adapter createAdapter(Context context, List<LogMPDB> logMPDBList, int addr){
+        RecyclerAndPhotoAdapter adapter = new RecyclerAndPhotoAdapter(context, logMPDBList, addr);
         return adapter;
     }
 }

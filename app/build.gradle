@@ -12,13 +12,13 @@ android {
 
     compileSdkVersion 33
     defaultConfig {
-//        applicationId "ua.com.merchik.merchik_test"
-        applicationId "ua.com.merchik.merchik"
+        applicationId "ua.com.merchik.merchik_test"
+//        applicationId "ua.com.merchik.merchik"
         minSdkVersion 21
         targetSdkVersion 33
         //noinspection HighAppVersionCode
-        versionCode  2023101800
-        versionName "2023101800"
+        versionCode  2023110300
+        versionName "2023110300"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
         multiDexEnabled true
@@ -106,8 +106,8 @@ dependencies {
     implementation 'org.jsoup:jsoup:1.8.3'
     implementation 'com.googlecode.libphonenumber:libphonenumber:8.12.17'
     implementation group: 'org.apache.commons', name: 'commons-lang3', version: '3.4'
-    implementation 'com.google.android.gms:play-services-maps:15.0.0'
-    implementation 'com.google.android.gms:play-services-location:15.0.0'
+    implementation 'com.google.android.gms:play-services-maps:18.2.0'
+    implementation 'com.google.android.gms:play-services-location:18.0.0'
     implementation 'com.googlecode.libphonenumber:libphonenumber:8.12.18'
 
     implementation "com.google.android.material:material:1.2.1"

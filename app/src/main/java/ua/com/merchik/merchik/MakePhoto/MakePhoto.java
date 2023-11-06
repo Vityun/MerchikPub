@@ -821,6 +821,7 @@ public class MakePhoto {
     public <T> void showDialogSW(Activity activity, WPDataObj wp, T dataT, OptionsDB optionsDB) {
         DialogShowcase dialog = new DialogShowcase(activity);
         dialog.wpDataDB = (WpDataDB) dataT;
+        dialog.photoType = Integer.valueOf(MakePhoto.photoType);
         dialog.populateDialogData(new Clicks.click() {
             @Override
             public <T> void click(T data) {

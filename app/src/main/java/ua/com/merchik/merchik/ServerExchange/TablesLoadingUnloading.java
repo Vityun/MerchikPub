@@ -2276,6 +2276,7 @@ public class TablesLoadingUnloading {
                                                     realm.insertOrUpdate(list);
                                                 });
 
+                                                Globals.writeToMLOG("INFO", "uploadLodMp/onResponse/executeTransaction.onSuccess", "OK: " + list.serverId);
                                                 res.onSuccess("ОК");
                                             } catch (Exception e) {
                                                 Globals.writeToMLOG("ERROR", "uploadLodMp/onResponse/executeTransaction", "Exception e: " + e);

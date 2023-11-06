@@ -81,10 +81,13 @@ public class PhotoDownload {
         String json = gson.toJson(data);
         JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
 
+        Globals.writeToMLOG("INFO", "downloadPhotoByIds", "convertedObject: " + convertedObject);
+
         retrofit2.Call<TovarImgResponse> call = RetrofitBuilder.getRetrofitInterface().GET_TOVAR_PHOTO_INFO_JSON(RetrofitBuilder.contentType, convertedObject);
         call.enqueue(new Callback<TovarImgResponse>() {
             @Override
             public void onResponse(Call<TovarImgResponse> call, Response<TovarImgResponse> response) {
+                Globals.writeToMLOG("INFO", "downloadPhotoByIds", "response: " + new Gson().toJson(response.body()));
                 if (response.isSuccessful()) {
                     if (response.body() != null) {
                         if (response.body().getState()) {
@@ -111,6 +114,7 @@ public class PhotoDownload {
 
             @Override
             public void onFailure(Call<TovarImgResponse> call, Throwable t) {
+                Globals.writeToMLOG("INFO", "downloadPhotoByIds", "Throwable t: " + t);
                 result.onFailure("Возникли проблемы с сетью. Проверьте интернет соединение, повторите попытку позже. Если проблема повторяется - обратитесь к Руководителю.\n\n(URL)Ошибка: " + t);
             }
         });
@@ -444,6 +448,8 @@ public class PhotoDownload {
                                 stackPhotoDB.setPhoto_type(Integer.valueOf(item.getPhotoTp()));
                                 stackPhotoDB.photo_hash = item.getHash();
                                 stackPhotoDB.tovar_id = item.getTovarId();
+
+                                stackPhotoDB.showcase_id = item.showcase_id;
 
                                 stackPhotoDB.setDvi(Integer.valueOf(item.getDvi()));
 

@@ -118,6 +118,11 @@ public class ModImagesViewList {
     @Expose
     public String codeDad2;
 
+    // 02.11.2023 Добавлен идентификатор Витрин
+    @SerializedName("showcase_id")
+    @Expose
+    public String showcase_id;
+
     public String getID() {
         return iD;
     }

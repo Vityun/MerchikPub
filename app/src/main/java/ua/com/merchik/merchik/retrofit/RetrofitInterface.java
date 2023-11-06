@@ -132,6 +132,7 @@ public interface RetrofitInterface {
 
     // mod=auth&act=sotr_auth&username=Фам Мария Чунговна&password=gwgm87789&app_data={"browser":{"date":"2020-10-08","name":"MerchikApp","test":"1","type":"mobile_app","VersionApp":"1.0.09.201006"},"device":{"brand":"xiaomi","model":"Redmi 5 Plus","type":"MerchikApp"},"os":{"api":"27","name":"Android","VersionApp":"8.1.0"}}
     @POST("mobile_app.php?")
+    @Timeout(key = UPLOAD_PHOTO_KEY)
     Call<Login> LOGIN(
             @Query("mod") String mod,
             @Query("act") String act,

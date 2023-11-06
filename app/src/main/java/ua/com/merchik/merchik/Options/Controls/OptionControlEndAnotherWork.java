@@ -64,12 +64,12 @@ public class OptionControlEndAnotherWork<T> extends OptionControl {
                 calendar.setTime(date);
 
                 // Вычитаем один день из текущей даты
-                calendar.add(Calendar.DAY_OF_MONTH, -1);
+                calendar.add(Calendar.DAY_OF_MONTH, -2);
                 oneDayBefore = calendar.getTime();
 
                 // Прибавляем один день к текущей дате
                 calendar.setTime(date);
-                calendar.add(Calendar.DAY_OF_MONTH, 1);
+                calendar.add(Calendar.DAY_OF_MONTH, 2);
                 oneDayAfter = calendar.getTime();
             }
         }catch (Exception e){

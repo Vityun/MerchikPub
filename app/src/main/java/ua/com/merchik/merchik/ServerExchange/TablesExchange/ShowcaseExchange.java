@@ -33,6 +33,7 @@ public class ShowcaseExchange {
             StandartData data = new StandartData();
             data.mod = "rack";
             data.act = "list";
+            data.active_only = "1";
 
             Gson gson = new Gson();
             String json = gson.toJson(data);
@@ -47,7 +48,9 @@ public class ShowcaseExchange {
                     Log.e("checkRequest", "response: " + response);
                     Log.e("checkRequest", "response.body(): " + response.body());
                     if (response.isSuccessful()) {
+                        Globals.writeToMLOG("INFO", "downloadShowcaseTable/onResponse/isSuccessful", "isSuccessful");
                         if (response.body() != null && response.body().state && response.body().list != null && response.body().list.size() > 0) {
+                            Globals.writeToMLOG("INFO", "downloadShowcaseTable/onResponse/isSuccessful", "response.body().list.size(): " + response.body().list.size());
                             List<ShowcaseSDB> serv = response.body().list;
                             List<ShowcaseSDB> db = SQL_DB.showcaseDao().getAll();
 
@@ -74,6 +77,7 @@ public class ShowcaseExchange {
                 @Override
                 public void onFailure(Call<ShowcaseResponse> call, Throwable t) {
                     Log.e("checkRequest", "Throwable t: " + t);
+                    Globals.writeToMLOG("ERR", "downloadShowcaseTable/onFailure", "Throwable t: " + t);
                 }
             });
 
@@ -118,6 +122,7 @@ public class ShowcaseExchange {
                         RealmManager.stackPhotoSavePhoto(photoDB);
 
                         Log.e("checkRequest", "downloadShowcasePhoto/photoDB: " + photoDB.getId());
+                        Globals.writeToMLOG("INFO", "savePhotoToDB2/downloadPhoto/ShowcaseSDB/photoDB", "photoDB.getId(): " + photoDB.getId());
                     } catch (Exception e) {
                         Globals.writeToMLOG("ERR", "savePhotoToDB2/downloadPhoto/ShowcaseSDB", "Exception e: " + e);
                         Log.e("checkRequest", "downloadShowcasePhoto/Exception e: " + e);

@@ -32,6 +32,9 @@ public class trecker implements LocationListener {
     static boolean isMockNET;
     //static boolean isMock;
 
+    public static String locationUniqueStringGPS = "";
+    public static String locationUniqueStringGSM = "";
+
     public static boolean switchedOff = true; // Выключен
 
     static void SetUpLocationListener(Context context) {

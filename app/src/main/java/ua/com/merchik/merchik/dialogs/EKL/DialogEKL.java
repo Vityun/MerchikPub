@@ -46,7 +46,6 @@ import ua.com.merchik.merchik.ServerExchange.ExchangeInterface;
 import ua.com.merchik.merchik.ViewHolders.AutoTextUsersViewHolder;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.Database.Room.EKL_SDB;
-import ua.com.merchik.merchik.data.Database.Room.UsersSDB;
 import ua.com.merchik.merchik.data.Database.Room.UsersSDBDat.UserSDBJoin;
 import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteHintsDB;
 import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteObjects.SiteObjectsDB;
@@ -299,7 +298,13 @@ public class DialogEKL {
             int id = wp.getAddr_id();
             List<UserSDBJoin> data = SQL_DB.usersDao().getAllUsersLJoinTovGrps(id);
 
-            AdditionalRequirementsDB additionalRequirementsDB = AdditionalRequirementsRealm.getADByClient(String.valueOf(wp.getAddr_id()), wp.getClient_id());
+            AdditionalRequirementsDB additionalRequirementsDB = AdditionalRequirementsRealm.getADByClientAdr(String.valueOf(wp.getAddr_id()), wp.getClient_id());
+
+            if (additionalRequirementsDB == null && wp.getClient_id().equals("9128")){
+                additionalRequirementsDB = RealmManager.INSTANCE.copyFromRealm(AdditionalRequirementsRealm.getADByClient(wp.getClient_id()));
+                int us = Integer.parseInt(additionalRequirementsDB.userId);
+                data = SQL_DB.usersDao().getUserLJoinTovGrps(us);
+            }
 
             Log.e("DialogEKL", "showData/data: " + data);
             Log.e("DialogEKL", "showData/data.size: " + data.size());
@@ -320,10 +325,10 @@ public class DialogEKL {
 
             sotr.setHint("Выберите ПТТ (Представителя Торговой Точки)");
 
-            if (additionalRequirementsDB != null) {
-                UsersSDB user = SQL_DB.usersDao().getUserById(Integer.parseInt(additionalRequirementsDB.userId));
-                sotr.setText("" + user.fio);
-            } else {
+//            if (additionalRequirementsDB != null) {
+//                UsersSDB user = SQL_DB.usersDao().getUserById(Integer.parseInt(additionalRequirementsDB.userId));
+//                sotr.setText("" + user.fio);
+//            } else {
                 if (Globals.userEKLId != null && Globals.userEKLId != 0) {
                     for (UserSDBJoin item : data) {
                         if (item.id.equals(Globals.userEKLId)) {
@@ -345,7 +350,7 @@ public class DialogEKL {
                         }
                     }
                 }
-            }
+//            }
 
             tel.setHint("Выберите телефон");
             tel.setInputType(0);    // Запрещаю изменять номер
@@ -609,7 +614,7 @@ public class DialogEKL {
             });
 
         } catch (Exception e) {
-
+            Log.e("EKL", "Exception e: " + e);
         }
     }
 

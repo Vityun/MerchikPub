@@ -241,10 +241,20 @@ public class AdditionalRequirementsRealm {
     }
 
 
-    public static AdditionalRequirementsDB getADByClient(String addrId, String clientId) {
+    public static AdditionalRequirementsDB getADByClientAdr(String addrId, String clientId) {
         AdditionalRequirementsDB res = INSTANCE.where(AdditionalRequirementsDB.class)
                 .equalTo("clientId", clientId)
                 .equalTo("addrId", addrId)
+                .equalTo("not_approve", "0")
+                .notEqualTo("userId", "0")
+                .findFirst();
+
+        return res;
+    }
+
+    public static AdditionalRequirementsDB getADByClient(String clientId) {
+        AdditionalRequirementsDB res = INSTANCE.where(AdditionalRequirementsDB.class)
+                .equalTo("clientId", clientId)
                 .equalTo("not_approve", "0")
                 .notEqualTo("userId", "0")
                 .findFirst();

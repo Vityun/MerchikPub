@@ -48,6 +48,8 @@ import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.gson.Gson;
+
 import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -730,8 +732,10 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                                         if (tovOptTplList.get(i).getOptionControlName() != AKCIYA) {
                                             if (tovOptTplList.get(i).getOptionControlName().equals(AKCIYA_ID) && finalDeletePromoOption) {
                                                 // втыкаю
+                                                Log.e("dialogShowRule", "1");
                                                 showDialog(list, tovOptTplList.get(i), finalReportPrepareTovar, tovarId, String.valueOf(codeDad2), clientId, finalBalanceData1, finalBalanceDate1, true);
                                             } else {
+                                                Log.e("dialogShowRule", "2");
                                                 showDialog(list, tovOptTplList.get(i), finalReportPrepareTovar, tovarId, String.valueOf(codeDad2), clientId, finalBalanceData1, finalBalanceDate1, true);
                                             }
                                         }
@@ -800,6 +804,8 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                                 // В Цикле открываем Н количество инфы
                                 for (int i = tovOptTplList.size() - 1; i >= 0; i--) {
                                     if (tovOptTplList.get(i).getOptionControlName() != AKCIYA) {
+                                        Log.e("dialogShowRule", "3");
+                                        Log.e("dialogShowRule", "tovOptTplList: " + new Gson().toJson(tovOptTplList));
                                         showDialog(list, tovOptTplList.get(i), finalReportPrepareTovar, tovarId, String.valueOf(codeDad2), clientId, finalBalanceData1, finalBalanceDate1, false);
                                     }
                                 }
@@ -826,6 +832,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                                 Collections.reverse(tovOptTplList); // Реверснул что б отображалось более менее адекватно пользователю (в естественном порядке)
                                 for (TovarOptions tpl : tovOptTplList) {
                                     if (tpl.getOptionControlName() != AKCIYA) {
+                                        Log.e("dialogShowRule", "4");
                                         showDialog(list, tpl, rp, tovarId, String.valueOf(codeDad2), clientId, "", "", false);
                                     }
                                 }
@@ -1119,17 +1126,22 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                     String groupPos = null;
                     boolean containsOptionId = false;
                     boolean containsOptionId2 = false;
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                        containsOptionId = tovOptTplList.stream().anyMatch(tovarOptions -> tovarOptions.getOptionId().contains(135591));
-                        containsOptionId2 = tovOptTplList.stream().anyMatch(tovarOptions -> tovarOptions.getOptionId().contains(157241));
-                    }
-                    if (containsOptionId) {
-                        groupPos = "22";
+                    try {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                            containsOptionId = tovOptTplList.stream().anyMatch(tovarOptions -> tovarOptions.getOptionId().contains(135591));
+                            containsOptionId2 = tovOptTplList.stream().anyMatch(tovarOptions -> tovarOptions.getOptionId().contains(157241));
+                        }
+                        if (containsOptionId) {
+                            groupPos = "22";
+                        }
+
+                        if (containsOptionId2) {
+                            groupPos = "13";
+                        }
+                    }catch (Exception e){
+                        Globals.writeToMLOG("ERROR", "dialog tovars error in stream", "Exception e: " + e);
                     }
 
-                    if (containsOptionId2) {
-                        groupPos = "13";
-                    }
                     dialog.setExpandableListView(createExpandableAdapter(dialog.context, groupPos), () -> {
                         if (dialog.getOperationResult() != null) {
                             operetionSaveRPToDB(tpl, reportPrepareDB, dialog.getOperationResult(), dialog.getOperationResult2(), null);
@@ -1206,6 +1218,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
          * списка dialogList.
          */
         private void dialogShowRule(boolean clickType) {
+            Log.e("dialogShowRule", "clickType: " + clickType);
             dialogList.remove(0);
             if (dialogList.size() > 0) {
                 int face = 0;

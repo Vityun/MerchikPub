@@ -186,7 +186,15 @@ public class ShowcaseSDB {
     @ColumnInfo(name = "status_author")
     public Integer statusAuthor;
 
+
+    @ColumnInfo(name = "so")
+    public Integer so;
+
     @Ignore
     @ColumnInfo(name = "tovarGrpTxt")
     public String tovarGrpTxt;
+
+    @Ignore
+    @ColumnInfo(name = "showcasePhoto")
+    public int showcasePhoto;
 }
