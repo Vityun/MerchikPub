@@ -158,6 +158,9 @@ public class PhotoDownload {
                                     stackPhotoDB.setStatus(false);
 
                                     RealmManager.stackPhotoSavePhoto(stackPhotoDB);
+                                    result.onSuccess("photo id = " + id +
+                                            ", PhotoServerId: " + item.getID() +
+                                            ", hash: " + item.getHash());
                                 }
                             } catch (Exception e) {
                                 result.onFailure("downloadPhotoTest/onResponse/Exception e: " + e);

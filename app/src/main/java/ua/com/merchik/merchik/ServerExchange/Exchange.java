@@ -735,7 +735,6 @@ public class Exchange {
                                     public void onSuccess(String data) {
                                         Globals.writeToMLOG("INFO", "2Exchange/SamplePhotoExchange()/onSuccess", "data: " + data);
                                     }
-
                                     @Override
                                     public void onFailure(String error) {
                                         Globals.writeToMLOG("ERROR", "2Exchange/SamplePhotoExchange()/onFailure", "error: " + error);

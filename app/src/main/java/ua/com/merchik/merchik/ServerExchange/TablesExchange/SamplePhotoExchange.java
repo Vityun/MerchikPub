@@ -151,4 +151,37 @@ public class SamplePhotoExchange {
             Globals.writeToMLOG("ERROR", "downloadSamplePhotos", "Exception e: " + e);
         }
     }
+
+    public void downloadSamplePhotosByPhotoIds(List<Integer> list, Clicks.clickStatusMsg click) {
+        try {
+            Globals.writeToMLOG("INFO", "downloadSamplePhotos", "Получил айдишек list: " + list.size());
+            // Проверяем какие фотки у нас УЖЕ есть
+            List<StackPhotoDB> stack = StackPhotoRealm.getByServerIds(list);
+
+            for (StackPhotoDB item : stack) {
+                list.remove(item.getPhotoServerId());
+            }
+
+            Globals.writeToMLOG("INFO", "downloadSamplePhotos", "вырезал лишние айдишники list: " + list.size());
+            new PhotoDownload().downloadPhotoByIds("/Sample", "SAMPLE_", list, new Clicks.clickStatusMsg() {
+                @Override
+                public void onSuccess(String data) {
+                    Globals.writeToMLOG("INFO", "downloadSamplePhotos", "data: " + data);
+                    click.onSuccess(data);
+                }
+
+                @Override
+                public void onFailure(String error) {
+                    Globals.writeToMLOG("ERROR", "downloadSamplePhotos", "data: " + error);
+                    click.onFailure(error);
+                }
+            });
+        }catch (Exception e){
+            Globals.writeToMLOG("ERROR", "downloadSamplePhotos", "Exception e: " + e);
+        }
+    }
+
+    public List<Integer> getSamplePhotosToDownload(){
+        return SQL_DB.samplePhotoDao().getAllPhotosIds();
+    }
 }

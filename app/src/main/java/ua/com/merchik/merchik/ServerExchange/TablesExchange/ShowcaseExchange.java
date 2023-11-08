@@ -24,6 +24,7 @@ import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.ShowcaseResponse;
 import ua.com.merchik.merchik.data.TestJsonUpload.StandartData;
 import ua.com.merchik.merchik.database.realm.RealmManager;
+import ua.com.merchik.merchik.database.realm.tables.StackPhotoRealm;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
 
 public class ShowcaseExchange {
@@ -132,8 +133,20 @@ public class ShowcaseExchange {
                 @Override
                 public void onFailure(String error) {
                     Log.e("checkRequest", "downloadShowcasePhoto/String error: " + error);
+                    Globals.writeToMLOG("ERR", "savePhotoToDB2/downloadPhoto/ShowcaseSDB/onFailure", "error: " + error);
                 }
             });
         }
     }
+
+    public List<ShowcaseSDB> getSamplePhotosToDownload(){
+        List<Integer> list = SQL_DB.showcaseDao().getAllPhotosIds();
+        List<StackPhotoDB> stack = StackPhotoRealm.getByServerIds(list);
+        for (StackPhotoDB item : stack) {
+            list.remove(item.getPhotoServerId());
+        }
+        List<ShowcaseSDB> res = SQL_DB.showcaseDao().getAllByPhotosIds(list);
+        return res;
+    }
+
 }

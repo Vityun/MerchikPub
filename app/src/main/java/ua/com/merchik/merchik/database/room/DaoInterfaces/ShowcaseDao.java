@@ -25,4 +25,10 @@ public interface ShowcaseDao {
     Completable insertAll(List<ShowcaseSDB> data);
 
     // ----------------------------------------------------
+    @Query("SELECT photo_id FROM showcase")
+    List<Integer> getAllPhotosIds();
+
+    @Query("SELECT * FROM showcase WHERE photo_id IN (:photoIds)")
+    List<ShowcaseSDB> getAllByPhotosIds(List<Integer> photoIds);
+
 }
