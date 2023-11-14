@@ -177,7 +177,9 @@ public class Globals {
         ADDRESS,
         CUSTOMER,
         USERS,
-        CHAT
+        CHAT,
+
+        ACHIEVEMENTS
     }
 
     // ----- shit data ------

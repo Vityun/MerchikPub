@@ -286,6 +286,11 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
         Intent intentRef = new Intent(this, ReferencesActivity.class);
 
         switch (id) {
+            case 181:
+                intentRef.putExtra("ReferencesEnum", Globals.ReferencesEnum.ACHIEVEMENTS);
+                startActivity(intentRef);
+                break;
+
             case 154:   // Справочники ГРУППА
                 Toast.makeText(this, "Справочники", Toast.LENGTH_SHORT).show();
                 break;

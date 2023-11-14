@@ -29,7 +29,7 @@ import ua.com.merchik.merchik.toolbar_menus;
 public class ReferencesActivity extends toolbar_menus {
     Globals globals = new Globals();
     AdapterUtil adapter;
-    UniversalAdapterData data = new UniversalAdapterData();
+    private UniversalAdapterData data = new UniversalAdapterData();
 
     TextView activity_title;
     RecyclerView recycler;
@@ -62,6 +62,8 @@ public class ReferencesActivity extends toolbar_menus {
 
     private void setData() {
         Log.e("navigationmenuclick", "setData1");
+        Log.e("navigationmenuclick", "activity_title: " + activity_title);
+        Log.e("navigationmenuclick", "adapter: " + adapter);
         activity_title.setText("Справочник: " + getModuleTitle());
         Log.e("navigationmenuclick", "setData2");
 
@@ -79,6 +81,12 @@ public class ReferencesActivity extends toolbar_menus {
         String res = "";
         if (referencesEnum != null) {
             switch (referencesEnum) {
+                case ACHIEVEMENTS:
+                    data.achievementsSDBS = SQL_DB.achievementsDao().getAll();
+                    Log.e("test", "data: " + data);
+                    Log.e("test", "data.achievementsSDBS: " + data.achievementsSDBS);
+                    Log.e("test", "data.achievementsSDBS.s: " + data.achievementsSDBS.size());
+                    return "Досягнення (" + data.achievementsSDBS.size() + ")";
                 case ADDRESS:
 //                    data.addressDBList = AddressRealm.getAll();
                     Log.e("navigationmenuclick", "getModuleTitle1");

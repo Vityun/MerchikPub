@@ -49,6 +49,8 @@ public class OptionControlPhotoPromotion<T> extends OptionControl {
     private int addressId, userId;
     private long dad2;
 
+    public boolean signal;
+
     public OptionControlPhotoPromotion(Context context, T document, OptionsDB optionDB, OptionMassageType msgType, Options.NNKMode nnkMode, UnlockCodeResultListener unlockCodeResultListener) {
         this.context = context;
         this.document = document;
@@ -86,7 +88,7 @@ public class OptionControlPhotoPromotion<T> extends OptionControl {
     private void executeOption() {
         // values
 //        int OSV = 0;            // ОсобоеВнимание
-        int signal = 0;         // Сигнал заблокированно или нет
+        int signalInt = 0;         // Сигнал заблокированно или нет
         int err = 0;
         String comment = "";
 
@@ -189,27 +191,35 @@ public class OptionControlPhotoPromotion<T> extends OptionControl {
         // Тут формируются более короткие соообшения касательно наличия акций у Товаров
         if (reportPrepare.size() == 0) {
             massageToUser = "Товарів, по котрим треба перевіряти наявність Акцції, не знайдено.";
-            signal = 1;
+            signalInt = 1;
+            signal = false;
+            unlockCodeResultListener.onUnlockCodeFailure();
         } else if (totalOSV == 0) {
-            massageToUser = "Товарів з ОСУ (Особливою увагою), по котрим треба виконати світлини 'Акцційного товару', не знайдено.";
-            signal = 2;
+            massageToUser = "Товарів з ОСУ (Особливою увагою), по котрим треба виконати світлини 'Акційного товару', не знайдено.";
+            signalInt = 2;
+            signal = true;
+            unlockCodeResultListener.onUnlockCodeSuccess();
         } else if (err > 0) {
             massageToUser = "Не виконані світлини по (" + errType1Cnt + " шт.) з " + totalOSV + " Акційних товарів, які присутні на полицях.";
-            signal = 1;
+            signalInt = 1;
+            signal = false;
+            unlockCodeResultListener.onUnlockCodeFailure();
         } else {
             massageToUser = "Зауважень по виготовленню світлин 'Акцційних товарів' нема. Виготовлено " + size + " світлин.";
-            signal = 2;
+            signalInt = 2;
+            signal = true;
+            unlockCodeResultListener.onUnlockCodeSuccess();
         }
 
         spannableStringBuilder.append("\n\n").append(massageToUser);
 
         // 7.0 сохраним сигнал
 //        if (optionDB.getIsSignal().equals("0")) {
-        saveOption(String.valueOf(signal));
+        saveOption(String.valueOf(signalInt));
 //        }
 
         // 8.0 Блокировка проведения
-        if (signal == 1) {
+        if (signalInt == 1) {
             setIsBlockOption(true);
         }
     }

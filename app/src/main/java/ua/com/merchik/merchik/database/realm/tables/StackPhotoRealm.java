@@ -92,6 +92,12 @@ public class StackPhotoRealm {
                 .findAll();
     }
 
+    public static StackPhotoDB getByServerId(String id) {
+        return INSTANCE.where(StackPhotoDB.class)
+                .equalTo("photoServerId", id)
+                .findFirst();
+    }
+
     public static StackPhotoDB getByHash(String hash) {
         return INSTANCE.where(StackPhotoDB.class)
                 .equalTo("photo_hash", hash)

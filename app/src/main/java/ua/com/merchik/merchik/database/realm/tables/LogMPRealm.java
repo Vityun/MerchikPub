@@ -44,10 +44,10 @@ public class LogMPRealm {
 
     public static List<LogMPDB> getLogMPTime(long startTime, long endTime) {
         RealmQuery<LogMPDB> query = INSTANCE.where(LogMPDB.class);
-        query = query.greaterThanOrEqualTo("vpi", startTime);
-        query = query.and().lessThanOrEqualTo("vpi", endTime);
+        query = query.greaterThanOrEqualTo("CoordTime", startTime);
+        query = query.and().lessThanOrEqualTo("CoordTime", endTime);
         RealmResults<LogMPDB> results = query
-                .sort("vpi", Sort.DESCENDING) // Сортировка по убыванию
+                .sort("CoordTime", Sort.DESCENDING) // Сортировка по убыванию
                 .notEqualTo("CoordX", 0d)
                 .notEqualTo("CoordY", 0d)
                 .findAll();
@@ -56,10 +56,10 @@ public class LogMPRealm {
 
     public static List<LogMPDB> getLogMPTimeDad2(long startTime, long endTime, long codeDad2) {
         RealmQuery<LogMPDB> query = INSTANCE.where(LogMPDB.class);
-        query = query.greaterThanOrEqualTo("vpi", startTime);
-        query = query.and().lessThanOrEqualTo("vpi", endTime);
+        query = query.greaterThanOrEqualTo("CoordTime", startTime);
+        query = query.and().lessThanOrEqualTo("CoordTime", endTime);
         RealmResults<LogMPDB> results = query
-                .sort("vpi", Sort.DESCENDING) // Сортировка по убыванию
+                .sort("CoordTime", Sort.DESCENDING) // Сортировка по убыванию
                 .equalTo("codeDad2", codeDad2)
                 .notEqualTo("CoordX", 0d)
                 .notEqualTo("CoordY", 0d)

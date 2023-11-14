@@ -1423,7 +1423,12 @@ public class Options {
             case 157278:
                 OptionControlPhotoPromotion<?> optionControlPhotoPromotion =
                         new OptionControlPhotoPromotion<>(context, dataDB, option, type, mode, unlockCodeResultListener);
-                optionControlPhotoPromotion.showOptionMassage(block);
+//                optionControlPhotoPromotion.showOptionMassage(block);
+                if (mode.equals(NNKMode.MAKE) || (mode.equals(NNKMode.CHECK) && optionControlPhotoPromotion.isBlockOption()))
+                    optionControlPhotoPromotion.showOptionMassage(block);
+                if (mode.equals(NNKMode.BLOCK) && optionControlPhotoPromotion.signal && optionControlPhotoPromotion.isBlockOption()) {
+                    optionControlPhotoPromotion.showOptionMassage(block);
+                }
                 return optionControlPhotoPromotion.isBlockOption2() ? 1 : 0;
 
             case 156928:
@@ -1801,7 +1806,7 @@ public class Options {
 
             List<LogMPDB> logs = LogMPRealm.getLogMPTime(startTime, endTime);
 
-            Globals.writeToMLOG("ERROR", "optionControlMP_8299", "onUnlockCodeSuccess: " + logs.size());
+            Globals.writeToMLOG("INFO", "optionControlMP_8299", "onUnlockCodeSuccess: " + logs.size());
 
             List<LogMPDB> logsRes = new ArrayList<>();
             float coordAddrX = 0f, coordAddrY = 0f;
@@ -1831,7 +1836,7 @@ public class Options {
 
             LogMPRealm.setLogMP(logsRes);   // Сохраняю посчитанное расстояние в БД, если его не было. Скорее всего оно не посчитано для данных полученных с сайта
 
-            Globals.writeToMLOG("ERROR", "optionControlMP_8299", "onUnlockCodeSuccess: " + logsRes.size());
+            Globals.writeToMLOG("INFO", "optionControlMP_8299", "onUnlockCodeSuccess: " + logsRes.size());
 
             if (logs != null && logs.size() > 0) {
                 RealmManager.INSTANCE.executeTransaction(realm -> {
@@ -1840,7 +1845,7 @@ public class Options {
                         realm.insertOrUpdate(optionsDB);
                     }
                 });
-                Globals.writeToMLOG("ERROR", "optionControlMP_8299", "onUnlockCodeSuccess: " + logs.size());
+                Globals.writeToMLOG("INFO", "optionControlMP_8299", "onUnlockCodeSuccess: " + logs.size());
                 unlockCodeResultListener.onUnlockCodeSuccess();
             } else {
                 RealmManager.INSTANCE.executeTransaction(realm -> {
@@ -1849,7 +1854,7 @@ public class Options {
                         realm.insertOrUpdate(optionsDB);
                     }
                 });
-                Globals.writeToMLOG("ERROR", "optionControlMP_8299", "onUnlockCodeFailure");
+                Globals.writeToMLOG("INFO", "optionControlMP_8299", "onUnlockCodeFailure");
                 Toast.makeText(context, "У Вас відсутня історія місцеположень", Toast.LENGTH_LONG).show();
                 unlockCodeResultListener.onUnlockCodeFailure();
             }

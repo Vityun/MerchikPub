@@ -2,6 +2,7 @@ package ua.com.merchik.merchik.Activities;
 
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.TextView;
@@ -16,12 +17,12 @@ import com.google.gson.JsonObject;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
+import ua.com.merchik.merchik.Activities.ReferencesActivity.ReferencesActivity;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.ShowcaseResponse;
 import ua.com.merchik.merchik.data.TestJsonUpload.StandartData;
 import ua.com.merchik.merchik.dialogs.DialogShowcase.DialogShowcase;
-import ua.com.merchik.merchik.dialogs.EKL.EKLRequests;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
 import ua.com.merchik.merchik.toolbar_menus;
 
@@ -57,38 +58,9 @@ public class MenuMainActivity extends toolbar_menus {
     }
 
     private void test() {
-        try {
-            // Чудо, что ты тут делаешь?
-//                    new DialogEKL(context, null).responseCheckEKLList();
-            Globals.writeToMLOG("info", "startExchange1111/DialogEKL", "here");
-            new EKLRequests().responseCheckEKLList();
-        } catch (Exception e) {
-            Globals.writeToMLOG("ERROR", "startExchange1111/DialogEKL", "Exception e: " + e);
-        }
-//        StandartData data = new StandartData();
-//        data.mod = "location";
-//        data.act = "list";
-//
-//        data.dt_change_from = String.valueOf(System.currentTimeMillis()/1000 - 3600);
-//
-//        Gson gson = new Gson();
-//        String json = gson.toJson(data);
-//        JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
-//
-//        Log.e("MenuMainActivity", "convertedObject: " + convertedObject);
-//
-//        retrofit2.Call<JsonObject> call = RetrofitBuilder.getRetrofitInterface().TEST_JSON_UPLOAD(RetrofitBuilder.contentType, convertedObject);
-//        call.enqueue(new Callback<JsonObject>() {
-//            @Override
-//            public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
-//                Log.e("MenuMainActivity", "response" + response);
-//            }
-//
-//            @Override
-//            public void onFailure(Call<JsonObject> call, Throwable t) {
-//                Log.e("MenuMainActivity", "test" + t);
-//            }
-//        });
+        Intent resultIntent = new Intent(this, ReferencesActivity.class);
+        resultIntent.putExtra("ReferencesEnum", Globals.ReferencesEnum.ACHIEVEMENTS);
+        startActivity(resultIntent);
     }
 
 

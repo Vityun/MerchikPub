@@ -40,6 +40,7 @@ import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.ServerExchange.Exchange;
 import ua.com.merchik.merchik.ServerExchange.ExchangeInterface;
 import ua.com.merchik.merchik.ServerExchange.PhotoDownload;
+import ua.com.merchik.merchik.data.Database.Room.AchievementsSDB;
 import ua.com.merchik.merchik.data.Database.Room.AddressSDB;
 import ua.com.merchik.merchik.data.Database.Room.Chat.ChatSDB;
 import ua.com.merchik.merchik.data.Database.Room.CustomerSDB;
@@ -88,7 +89,12 @@ public class AdapterUtil extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     @NonNull
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        return new DefaultViewHolder(LayoutInflater.from(parent.getContext()).inflate(R.layout.item_vh_default, parent, false));
+        switch (referencesEnum) {
+            case ACHIEVEMENTS:
+                return new DefaultViewHolder(LayoutInflater.from(parent.getContext()).inflate(R.layout.item_vh_default_achievements, parent, false));
+            default:
+                return new DefaultViewHolder(LayoutInflater.from(parent.getContext()).inflate(R.layout.item_vh_default, parent, false));
+        }
     }
 
     @Override
@@ -114,6 +120,10 @@ public class AdapterUtil extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             case CHAT:
                 viewHolder.bind(data.chats.get(position), referencesEnum);
                 break;
+
+            case ACHIEVEMENTS:
+                viewHolder.bind(data.achievementsSDBS.get(position), referencesEnum);
+                break;
         }
 
     }
@@ -137,6 +147,8 @@ public class AdapterUtil extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                 case CHAT:
                     return data.chats.size();
 
+                case ACHIEVEMENTS:
+                    return data.achievementsSDBS.size();
 
                 default:
                     return 0;
@@ -152,7 +164,7 @@ public class AdapterUtil extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     public class DefaultViewHolder extends RecyclerView.ViewHolder {
 
         ConstraintLayout layout;
-        ImageView image;
+        ImageView image, image2;
         TextView title1, title2, title3, title4, title5;
         TextView text1, text2, text3, text4, text5;
 
@@ -162,6 +174,7 @@ public class AdapterUtil extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             layout = itemView.findViewById(R.id.layout);
 
             image = itemView.findViewById(R.id.image);
+            image2 = itemView.findViewById(R.id.image2);
 
             title1 = itemView.findViewById(R.id.title1);
             title2 = itemView.findViewById(R.id.title2);
@@ -195,6 +208,10 @@ public class AdapterUtil extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
                 case CHAT:
                     bindChats((ChatSDB) data);
+                    break;
+
+                case ACHIEVEMENTS:
+                    bindACHIEVEMENTS((AchievementsSDB) data);
                     break;
             }
         }
@@ -415,6 +432,39 @@ public class AdapterUtil extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                     Globals.writeToMLOG("ERROR", "AdapterUtil/bindChats", "Exception e: " + e);
                 }
 
+            });
+        }
+
+        private void bindACHIEVEMENTS(AchievementsSDB data) {
+            title1.setText("ID:");
+            title2.setText("Кліент:");
+            title3.setText("Адреса:");
+            title4.setText("Виконавець:");
+            title5.setText("Коментар:");
+
+            text1.setText("" + data.serverId);
+            text2.setText("" + data.spiskliNm);
+            text3.setText("" + data.adresaNm);
+            text4.setText("" + data.sotrFio);
+            text5.setText("" + data.commentTxt);
+
+            try {
+                StackPhotoDB stackPhotoBefore = StackPhotoRealm.getByServerId(String.valueOf(data.imgBeforeId));
+                StackPhotoDB stackPhotoAfter = StackPhotoRealm.getByServerId(String.valueOf(data.imgAfterId));
+
+                image.setImageURI(Uri.parse(stackPhotoBefore.photo_num));
+                image2.setImageURI(Uri.parse(stackPhotoAfter.photo_num));
+            } catch (Exception e) {
+                Globals.writeToMLOG("ERROR", "bindACHIEVEMENTS", "Exception e: " + e);
+            }
+
+
+            layout.setOnClickListener(v -> {
+                DialogData dialog = new DialogData(v.getContext());
+                dialog.setTitle("Коментар");
+                dialog.setText(data.commentTxt);
+                dialog.setClose(dialog::dismiss);
+                dialog.show();
             });
         }
     }
