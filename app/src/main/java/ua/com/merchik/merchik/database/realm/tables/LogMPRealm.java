@@ -2,6 +2,8 @@ package ua.com.merchik.merchik.database.realm.tables;
 
 import static ua.com.merchik.merchik.database.realm.RealmManager.INSTANCE;
 
+import android.util.Log;
+
 import java.util.List;
 
 import io.realm.RealmQuery;
@@ -54,10 +56,25 @@ public class LogMPRealm {
         return INSTANCE.copyFromRealm(results);
     }
 
+    /**
+     * CoordTime в LogMPDB хранится в МИЛЛИСЕКУНДАХ, не тупить в будущем с этим, передавать В МИЛЛИСЕКУНДАХ!!
+     * */
     public static List<LogMPDB> getLogMPTimeDad2(long startTime, long endTime, long codeDad2) {
         RealmQuery<LogMPDB> query = INSTANCE.where(LogMPDB.class);
         query = query.greaterThanOrEqualTo("CoordTime", startTime);
-        query = query.and().lessThanOrEqualTo("CoordTime", endTime);
+
+        RealmResults<LogMPDB> res1 = query.findAll();
+        Log.e("getLogMPTimeDad2", "res1: " + res1.size());
+
+        query = query.lessThan("CoordTime", endTime);
+
+        RealmResults<LogMPDB> res2 = query.findAll();
+        Log.e("getLogMPTimeDad2", "res2: " + res2.size());
+
+
+        RealmResults<LogMPDB> res3 = query.equalTo("codeDad2", codeDad2).findAll();
+        Log.e("getLogMPTimeDad2", "res3: " + res3.size());
+
         RealmResults<LogMPDB> results = query
                 .sort("CoordTime", Sort.DESCENDING) // Сортировка по убыванию
                 .equalTo("codeDad2", codeDad2)

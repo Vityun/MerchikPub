@@ -53,14 +53,9 @@ public class OptionButtonHistoryMP<T> extends OptionControl {
                     ? wpDataDB.getVisit_start_dt() - validTime
                     : (System.currentTimeMillis() / 1000) - validTime;
 
-//            long endTime = (wpDataDB.getVisit_end_dt() > 0)
-//                    ? wpDataDB.getVisit_end_dt()
-//                    : (System.currentTimeMillis() / 1000);
-
-
             endTime = System.currentTimeMillis() / 1000;
 
-            logMPDBList = LogMPRealm.getLogMPTimeDad2(startTime, endTime, wpDataDB.getCode_dad2());
+            logMPDBList = LogMPRealm.getLogMPTimeDad2(startTime*1000, endTime*1000, wpDataDB.getCode_dad2());
         }catch (Exception e){
             Globals.writeToMLOG("ERROR", "OptionButtonHistoryMP/getDocumentVar", "Exception e: " + e);
         }

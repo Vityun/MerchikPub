@@ -3,9 +3,6 @@ package ua.com.merchik.merchik.Adapters;
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
 import android.content.Context;
-import android.graphics.ColorFilter;
-import android.graphics.PorterDuff;
-import android.graphics.PorterDuffColorFilter;
 import android.graphics.Typeface;
 import android.text.Spannable;
 import android.text.SpannableStringBuilder;
@@ -82,17 +79,7 @@ public class RecyclerAndPhotoAdapter extends RecyclerView.Adapter<RecyclerAndPho
                 recyclerView.setLayoutManager(new LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false));
                 recyclerView.setAdapter(createStringAdapter(recyclerView.getContext(), getSpannableStringBuilderListFromLogMPDB(logMPDB)));
 
-                imageView.setImageResource(R.drawable.ic_3);
-
-                // Создайте ColorFilter с желаемым цветом
-                ColorFilter colorFilter = new PorterDuffColorFilter(context.getResources().getColor(R.color.centerColor), PorterDuff.Mode.SRC_IN);
-
-                // ColorFilter для ImageView
-                imageView.setColorFilter(colorFilter);
-
-//                imageView.setOnClickListener(v -> {
-//                    openMap(logMPDB);
-//                });
+                imageView.setImageResource(R.drawable.icons8_google_maps_old);
 
                 layout.setOnClickListener(v -> {
                     openMap(logMPDB);
