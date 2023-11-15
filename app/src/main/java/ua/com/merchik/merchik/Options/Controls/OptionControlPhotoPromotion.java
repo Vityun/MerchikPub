@@ -49,7 +49,7 @@ public class OptionControlPhotoPromotion<T> extends OptionControl {
     private int addressId, userId;
     private long dad2;
 
-    public boolean signal;
+    public boolean signal = false;
 
     public OptionControlPhotoPromotion(Context context, T document, OptionsDB optionDB, OptionMassageType msgType, Options.NNKMode nnkMode, UnlockCodeResultListener unlockCodeResultListener) {
         this.context = context;
@@ -94,7 +94,7 @@ public class OptionControlPhotoPromotion<T> extends OptionControl {
 
         // Получение RP по данному документу.
         //2.0. получим данные о товарах в отчете
-        List<ReportPrepareDB> reportPrepare = ReportPrepareRealm.getReportPrepareByDad2(dad2);
+        List<ReportPrepareDB> reportPrepare = RealmManager.INSTANCE.copyFromRealm(ReportPrepareRealm.getReportPrepareByDad2(dad2));
 //        List<ReportPrepareDB> reportRes = new ArrayList<>();
 
         // Получение Доп. Требований с дополнительными фильтрами.
@@ -130,8 +130,9 @@ public class OptionControlPhotoPromotion<T> extends OptionControl {
         for (ReportPrepareDB item : reportPrepare) {
             int OSV = 0;
 
+            String akciya = item.akciyaId;
             // ЕСЛИ Аккии нет (2) - пропускаем
-            if (item.akciyaId == null || item.akciyaId.equals("")) continue;
+            if (akciya == null || akciya.equals("")) continue;
 
             if (Arrays.asList(tovIds).contains(item.getTovarId())) {
                 if (stackPhotoDBS != null && stackPhotoDBS.size() > 0) {
@@ -193,22 +194,22 @@ public class OptionControlPhotoPromotion<T> extends OptionControl {
             massageToUser = "Товарів, по котрим треба перевіряти наявність Акцції, не знайдено.";
             signalInt = 1;
             signal = false;
-            unlockCodeResultListener.onUnlockCodeFailure();
+//            unlockCodeResultListener.onUnlockCodeFailure();
         } else if (totalOSV == 0) {
             massageToUser = "Товарів з ОСУ (Особливою увагою), по котрим треба виконати світлини 'Акційного товару', не знайдено.";
             signalInt = 2;
             signal = true;
-            unlockCodeResultListener.onUnlockCodeSuccess();
+//            unlockCodeResultListener.onUnlockCodeSuccess();
         } else if (err > 0) {
             massageToUser = "Не виконані світлини по (" + errType1Cnt + " шт.) з " + totalOSV + " Акційних товарів, які присутні на полицях.";
             signalInt = 1;
             signal = false;
-            unlockCodeResultListener.onUnlockCodeFailure();
+//            unlockCodeResultListener.onUnlockCodeFailure();
         } else {
             massageToUser = "Зауважень по виготовленню світлин 'Акцційних товарів' нема. Виготовлено " + size + " світлин.";
             signalInt = 2;
             signal = true;
-            unlockCodeResultListener.onUnlockCodeSuccess();
+//            unlockCodeResultListener.onUnlockCodeSuccess();
         }
 
         spannableStringBuilder.append("\n\n").append(massageToUser);

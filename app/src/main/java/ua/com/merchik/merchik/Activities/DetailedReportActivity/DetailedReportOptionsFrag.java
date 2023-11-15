@@ -53,7 +53,7 @@ public class DetailedReportOptionsFrag extends Fragment {
 
     public static final Integer[]  DetailedReportOptionsFrag_VIDEO_LESSONS = new Integer[]{821, 4540};
 
-    RecycleViewDRAdapter recycleViewDRAdapter;
+    public static RecycleViewDRAdapter recycleViewDRAdapter;
 
     public DetailedReportOptionsFrag() {
         Globals.writeToMLOG("INFO", "DetailedReportOptionsFrag/1", "create");
