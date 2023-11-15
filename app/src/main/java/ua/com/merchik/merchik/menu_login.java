@@ -1523,19 +1523,6 @@ public class menu_login extends AppCompatActivity {
 
     private void sessionCheck(String mod, String finalLogin, String finalPassword) {
         // =================================================
-        retrofit2.Call<JsonObject> TEST_SESSION_CALL = RetrofitBuilder.getRetrofitInterface().CHECK_SESSION2(mod);
-        TEST_SESSION_CALL.enqueue(new retrofit2.Callback<JsonObject>() {
-            @Override
-            public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
-                Log.e("APP_LOGIN", "(2)TEST_SESSION_CALL: " + response.body());
-            }
-
-            @Override
-            public void onFailure(Call<JsonObject> call, Throwable t) {
-                Log.e("APP_LOGIN", "(2)TEST_SESSION_CALL_ERROR: " + t);
-            }
-        });
-
         Call<SessionCheck> callAUTH = RetrofitBuilder.getRetrofitInterface().CHECK_SESSION(mod, Globals.getAppInfoToSession(menu_login.this));
         callAUTH.enqueue(new retrofit2.Callback<SessionCheck>() {
             @Override

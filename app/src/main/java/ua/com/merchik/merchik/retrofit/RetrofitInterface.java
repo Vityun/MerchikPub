@@ -117,6 +117,7 @@ public interface RetrofitInterface {
     //testdata
 
     @POST("mobile_app.php?")
+    @Timeout(key = LOGIN_SYSTEM)
     Call<SessionCheck> CHECK_SESSION(
             @Query("mod") String mod,
             @Query("app_data") String app_data);

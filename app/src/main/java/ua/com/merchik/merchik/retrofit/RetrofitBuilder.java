@@ -1,6 +1,5 @@
 package ua.com.merchik.merchik.retrofit;
 
-import android.os.Build;
 import android.util.Log;
 
 import com.chuckerteam.chucker.api.ChuckerInterceptor;
@@ -26,7 +25,6 @@ import ua.com.merchik.merchik.data.WebSocketData.Selector;
 import ua.com.merchik.merchik.data.WebSocketData.WebSocketData;
 import ua.com.merchik.merchik.data.WebSocketData.WebsocketParam;
 import ua.com.merchik.merchik.database.realm.RealmManager;
-import okhttp3.logging.HttpLoggingInterceptor;
 
 public class RetrofitBuilder {
 
@@ -44,44 +42,6 @@ public class RetrofitBuilder {
 
     private static boolean serverStatus;//todo add int interConnection
     private static long serverTime;
-
-
-//    private  CertificatePinner certificatePinner = new CertificatePinner.Builder()
-//            .add("merchik.net", "sha256/qWqcoj9jnvn6/bXwFtZ64WLeikP+sikpS5z8HecfrKQ=")
-//            .add("merchik.net", "sha256/YLh1dUR9y6Kja30RrAn7JKnbQG/uEtLMkBgFF2Fuihg=")
-//            .add("merchik.net", "sha256/Vjs8r4z+80wjNcr1YKepWQboSIRi63WsWXhIMN+eWys=")
-//            .build();
-
-    private OkHttpClient client = new OkHttpClient.Builder()
-//            .certificatePinner(certificatePinner)
-            .cookieJar(cookie)
-            .connectTimeout(10, TimeUnit.SECONDS)
-            .readTimeout(60, TimeUnit.SECONDS)
-            .writeTimeout(60, TimeUnit.SECONDS)
-//            .readTimeout(40, TimeUnit.SECONDS)
-//            .writeTimeout(30, TimeUnit.SECONDS)
-
-//            .connectTimeout(5, TimeUnit.SECONDS)
-//            .readTimeout(5, TimeUnit.SECONDS)
-//            .writeTimeout(5, TimeUnit.SECONDS)
-            .build();
-
-    HttpLoggingInterceptor loggingInterceptor = new HttpLoggingInterceptor(new HttpLoggingInterceptor.Logger() {
-        @Override
-        public void log(String message) {
-            Log.e("M_UPLOAD_GALLERY", "RETROFIT: " + truncateString(message, 200));
-            Globals.writeToMLOG("INFO", "HttpLoggingInterceptor", "RETROFIT: " + truncateString(message, 200));
-        }
-    });
-
-    private static String truncateString(String string, int maxLength) {
-        if (string.length() <= maxLength) {
-            return string;
-        } else {
-            return string.substring(0, maxLength);
-        }
-    }
-
 
     private RetrofitBuilder() {
         Gson gson = new GsonBuilder()
