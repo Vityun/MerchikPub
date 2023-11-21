@@ -543,4 +543,23 @@ public class TasksAndReclamationsSDB implements Parcelable {
     };
 
 
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (!(obj instanceof TasksAndReclamationsSDB)) {
+            return false;
+        }
+        TasksAndReclamationsSDB other = (TasksAndReclamationsSDB) obj;
+
+        // Проверка на null
+        if (this.id == null || other.id == null) {
+            return false;
+        }
+
+        return this.id.equals(other.id);
+    }
+
+
 }

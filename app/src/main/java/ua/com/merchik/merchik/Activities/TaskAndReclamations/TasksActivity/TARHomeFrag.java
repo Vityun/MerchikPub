@@ -21,7 +21,10 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 
 import ua.com.merchik.merchik.Activities.PhotoLogActivity.PhotoLogActivity;
@@ -35,7 +38,9 @@ import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
 import ua.com.merchik.merchik.data.TestJsonUpload.PhotoFromSite.PhotoTableRequest;
+import ua.com.merchik.merchik.database.room.DaoInterfaces.TarDao;
 import ua.com.merchik.merchik.dialogs.DialodTAR.DialogCreateTAR;
+import ua.com.merchik.merchik.dialogs.DialogFilter.DialogFilter;
 
 public class TARHomeFrag extends Fragment implements TARFragmentHome.OnFragmentInteractionListener {
 
@@ -46,6 +51,8 @@ public class TARHomeFrag extends Fragment implements TARFragmentHome.OnFragmentI
     private RecyclerView recyclerView;
     private FloatingActionButton fabAdd;
 
+    private Date dateFrom;
+    private Date dateTo;
     private UniversalAdapter recyclerViewReclamations;
     public DialogCreateTAR dialog;
 
@@ -123,6 +130,7 @@ public class TARHomeFrag extends Fragment implements TARFragmentHome.OnFragmentI
         setFab();
         getPhoto(data);
         setRecycler(v.getContext());
+        setFilter();
 
         return v;
     }
@@ -215,7 +223,7 @@ public class TARHomeFrag extends Fragment implements TARFragmentHome.OnFragmentI
     private void setRecycler(Context context) {
         // FILTER
         filterImg.setOnClickListener(v -> {
-            // TODO ВСТАВИТЬ ДИАЛОГ С ФИЛЬТРОМ
+            setFilter();
         });
 
         recyclerViewReclamations = new UniversalAdapter(context, data, true, onClickListener);
@@ -269,6 +277,115 @@ public class TARHomeFrag extends Fragment implements TARFragmentHome.OnFragmentI
 
             }
         });
+    }
+
+
+    private void setFilter() {
+        try {
+            DialogFilter dialog = new DialogFilter(getContext(), Globals.SourceAct.WP_DATA);
+
+            try {
+                // Данные для фильтра даты
+                Calendar cal = Calendar.getInstance();
+                cal.setTimeInMillis(System.currentTimeMillis());
+                cal.set(Calendar.HOUR_OF_DAY, 0);
+                cal.set(Calendar.MINUTE, 0);
+                cal.set(Calendar.SECOND, 0);
+                cal.set(Calendar.MILLISECOND, 0);
+                dateFrom = cal.getTime();
+                dateTo = Clock.timeLongToDAte(Clock.getDatePeriodLong(cal.getTime().getTime(), +7) / 1000);
+
+                dialog.setDates(dateFrom, dateTo);
+                dialog.setRecyclerTAR();
+
+                dialog.setTextFilter(editText.getText().toString());
+                dialog.setClose(dialog::dismiss);
+
+                dialog.setCancel(() -> {
+                    editText.setText("");
+                    setFilterIco(dialog);
+                    recyclerViewReclamations.updateData(data);
+                    recyclerView.scheduleLayoutAnimation();
+                    recyclerViewReclamations.notifyDataSetChanged();
+                });
+                dialog.setApply(() -> {
+                    applyFilter(dialog);
+                });
+            } catch (Exception e) {
+                Globals.writeToMLOG("ERROR", "WPDataFragmentHome/setFilter/createDialog", "Exception e: " + e + "\n\n" + Arrays.toString(e.getStackTrace()));
+            }
+
+            try {
+                setFilterIco(dialog);
+            } catch (Exception e) {
+                Globals.writeToMLOG("ERROR", "WPDataFragmentHome/setFilter/setFilterIco", "Exception e: " + e + "\n\n" + Arrays.toString(e.getStackTrace()));
+            }
+            try {
+                filterImg.setOnClickListener((v) -> {
+                    dialog.show();
+                });
+            } catch (Exception e) {
+                Globals.writeToMLOG("ERROR", "WPDataFragmentHome/setFilter/setOnClickListener", "Exception e: " + e + "\n\n" + Arrays.toString(e.getStackTrace()));
+            }
+
+
+            applyFilter(dialog);
+        } catch (Exception e) {
+            Globals.writeToMLOG("ERROR", "WPDataFragmentHome/setFilter", "Exception e: " + e + "\n\n" + Arrays.toString(e.getStackTrace()));
+        }
+    }
+
+    private void applyFilter(DialogFilter dialog) {
+        List<TasksAndReclamationsSDB> filteredData = new ArrayList<>();
+
+        TarDao dao = SQL_DB.tarDao();
+
+//        List<TasksAndReclamationsSDB> tasksAndReclamationsSDBS = dao.getAll(); // Получение всех данных
+        List<TasksAndReclamationsSDB> tasksAndReclamationsSDBS = data; // Получение всех данных
+
+        if (dialog.clientId != null) {
+            filteredData.addAll(dao.getByClientIdFilter(dialog.clientId));
+        } else {
+            filteredData.addAll(tasksAndReclamationsSDBS);
+        }
+
+        if (dialog.addressId != null) {
+            List<TasksAndReclamationsSDB> addressFiltered = dao.getByAddressIdFilter(dialog.addressId);
+            filteredData.retainAll(addressFiltered);
+        }
+
+        if (dialog.tarType != null) {
+            List<TasksAndReclamationsSDB> tarTypeFiltered = dao.getByTarTypeFilter(dialog.tarType);
+            filteredData.retainAll(tarTypeFiltered);
+        }
+
+//        if (dialog.dateFrom != null && dialog.dateTo != null) {
+//            Date dt1 = Clock.stringDateConvertToDate(dialog.dateFrom);
+//            Date dt2 = Clock.stringDateConvertToDate(dialog.dateTo);
+//
+//            if (dt1 != null && dt2 != null) {
+//                List<TasksAndReclamationsSDB> dateFiltered = dao.getByDateRangeFilter(dt1.getTime() / 1000, dt2.getTime() / 1000);
+//                filteredData.retainAll(dateFiltered);
+//            }
+//        }
+
+        recyclerViewReclamations.updateData(filteredData);
+
+
+        if (dialog.textFilter != null && !dialog.textFilter.equals("")) {
+            editText.setText(dialog.textFilter);
+        }
+        recyclerViewReclamations.notifyDataSetChanged();
+        recyclerView.scheduleLayoutAnimation();
+        setFilterIco(dialog);
+    }
+
+    private void setFilterIco(DialogFilter dialog) {
+        if (dialog.isFiltered()) {
+            filterImg.setImageDrawable(getResources().getDrawable(R.drawable.ic_filterbold));
+        } else {
+            filterImg.setImageDrawable(getResources().getDrawable(R.drawable.ic_filter));
+        }
     }
 
 

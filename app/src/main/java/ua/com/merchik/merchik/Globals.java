@@ -1030,6 +1030,8 @@ public class Globals {
 
                     locationUniqueStringGPS = locationUniqueStringGPSThis;
                     return log;
+                }else {
+                    Globals.writeToMLOG("INFO", "fixMP/imHereGPS", "locationUniqueStringGPSThis: " + locationUniqueStringGPSThis + " locationUniqueStringGPS: " + locationUniqueStringGPS);
                 }
             } catch (Exception e) {
                 Globals.writeToMLOG("ERROR", "fixMP/imHereGPS is null?", "Exception e: " + e);

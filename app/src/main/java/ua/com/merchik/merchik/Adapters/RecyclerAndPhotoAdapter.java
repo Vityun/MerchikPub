@@ -79,8 +79,12 @@ public class RecyclerAndPhotoAdapter extends RecyclerView.Adapter<RecyclerAndPho
                 recyclerView.setLayoutManager(new LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false));
                 recyclerView.setAdapter(createStringAdapter(recyclerView.getContext(), getSpannableStringBuilderListFromLogMPDB(logMPDB)));
 
-                imageView.setImageResource(R.drawable.icons8_google_maps_old);
+//                imageView.setImageResource(R.drawable.icons8_google_maps_old);
+                imageView.setImageResource(R.drawable.gps);
 
+                recyclerView.setOnClickListener(v -> {
+                    openMap(logMPDB);
+                });
                 layout.setOnClickListener(v -> {
                     openMap(logMPDB);
                 });
@@ -122,7 +126,7 @@ public class RecyclerAndPhotoAdapter extends RecyclerView.Adapter<RecyclerAndPho
             SpannableStringBuilder distance = new SpannableStringBuilder();
             distance.append("Дистанція від ТТ:");
             distance.setSpan(new StyleSpan(Typeface.BOLD), 0, distance.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-            distance.append(" ").append(String.valueOf(logMPDB.distance)).append("м.");
+            distance.append(" ").append(logMPDB.distance > 1000 ? logMPDB.distance / 1000 + "км." : logMPDB.distance + "м.");
             res.add(distance);
 
             return res;

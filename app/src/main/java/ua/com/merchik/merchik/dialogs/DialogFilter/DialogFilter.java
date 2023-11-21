@@ -36,11 +36,12 @@ public class DialogFilter {
     private final Dialog dialog;
 
     // filtered data
-    public String   textFilter = null;
-    public String   clientId = null;
-    public Integer  addressId = null;
-    public String   dateFrom = null;
-    public String   dateTo = null;
+    public String textFilter = null;
+    public String clientId = null;
+    public Integer addressId = null;
+    public String dateFrom = null;
+    public String dateTo = null;
+    public Integer tarType = null;
 
     private Date dateFromF = null;
     private Date dateToF = null;
@@ -156,7 +157,13 @@ public class DialogFilter {
         recycler.setLayoutManager(new LinearLayoutManager(dialog.getContext(), LinearLayoutManager.VERTICAL, false));
     }
 
-    public void setDates(Date dtF, Date dtTo){
+    public void setRecyclerTAR() {
+        recycler.setVisibility(View.VISIBLE);
+        recycler.setAdapter(setAdapterTAR());
+        recycler.setLayoutManager(new LinearLayoutManager(dialog.getContext(), LinearLayoutManager.VERTICAL, false));
+    }
+
+    public void setDates(Date dtF, Date dtTo) {
         this.dateFromF = dtF;
         this.dateToF = dtTo;
 
@@ -175,28 +182,36 @@ public class DialogFilter {
         return new DialogAdapter(data);
     }
 
+    private DialogAdapter setAdapterTAR() {
+        List<ViewHolderTypeList> data = new ArrayList<>();
+        data.add(createChoiceDateBlockRV(dateFromF, dateToF)); // Блок с выбором дат.
+        data.add(createChoiceCustomerBlockRV()); // Блок с выбором Клиента.
+        data.add(createChoiceAddressBlockRV()); // Блок с выбором Адреса.
+        data.add(createChoiceTarTypeBlockRV()); // Блок с выбором Адреса.
+        return new DialogAdapter(data);
+    }
+
     private ViewHolderTypeList createChoiceDateBlockRV(Date dateFromF, Date dateToF) {
         ViewHolderTypeList res = new ViewHolderTypeList();
 
         ViewHolderTypeList.ChoiceDateLayoutData block = new ViewHolderTypeList.ChoiceDateLayoutData();
         block.dataTextTitle = "Дата с: ";
         block.dataTextTitle2 = "Дата по: ";
-        if (dateFromF != null){
+        if (dateFromF != null) {
             block.dateFrom = dateFromF;
             block.state = true;
-        }else {
+        } else {
             block.dateFrom = Calendar.getInstance().getTime();
             block.state = false;
         }
 
-        if (dateToF != null){
+        if (dateToF != null) {
             block.dateTo = dateToF;
             block.state = true;
-        }else {
+        } else {
             block.dateTo = Calendar.getInstance().getTime();
             block.state = false;
         }
-
 
 
         SimpleDateFormat simpleDateFormatDateFrom = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
@@ -299,6 +314,53 @@ public class DialogFilter {
             public void onFailure(String error) {
                 Toast.makeText(dialog.getContext(), error, Toast.LENGTH_SHORT).show();
                 addressId = null;
+            }
+        };
+
+        res.type = 5;
+        res.choiceSpinnerLayoutData = block;
+
+        return res;
+    }
+
+    private ViewHolderTypeList createChoiceTarTypeBlockRV() {
+        ViewHolderTypeList res = new ViewHolderTypeList();
+
+        ViewHolderTypeList.ChoiceSpinnerLayoutData block = new ViewHolderTypeList.ChoiceSpinnerLayoutData();
+        block.dataTextTitle = "Тип задачі: ";
+
+        List<Integer> tarTypeTxt = new ArrayList<>();
+        tarTypeTxt.add(0);    //0 - Активные
+        tarTypeTxt.add(1);    //1 - Выполненные
+        tarTypeTxt.add(2);    //2 - Не выполненные
+        tarTypeTxt.add(3);    //3 - Отмененные
+
+        List<String> dataSpinnerList = new ArrayList<>();
+        dataSpinnerList.add("Всі");
+        dataSpinnerList.add("Активні"); //0
+        dataSpinnerList.add("Виконані");//1
+        dataSpinnerList.add("Не виконані");//2
+        dataSpinnerList.add("Відмінені");//3
+
+
+        block.dataSpinner = null;
+        block.dataSpinnerList = dataSpinnerList;
+        block.click = new ViewHolderTypeList.ClickData() {
+            @Override
+            public <T> void onSuccess(T data) {
+                Toast.makeText(dialog.getContext(), "Обрані задачі: " + data, Toast.LENGTH_SHORT).show();
+
+                if ((int) block.resultData == 0) {
+                    tarType = null;
+                } else {
+                    tarType = tarTypeTxt.get((int) block.resultData - 1);  // -1 потому что выше мы добавляли в Список "Все"
+                }
+            }
+
+            @Override
+            public void onFailure(String error) {
+                Toast.makeText(dialog.getContext(), error, Toast.LENGTH_SHORT).show();
+                tarType = null;
             }
         };
 

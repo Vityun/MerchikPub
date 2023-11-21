@@ -30,4 +30,6 @@ public interface AchievementsDao {
     @Query("SELECT * FROM achievements WHERE theme_id = :themeId AND client_id = :clientId AND addr_id = :addressId AND (dt_ut IS NOT NULL AND dt_ut BETWEEN :dtFrom AND :dtTo) ORDER BY dt_ut DESC")
     List<AchievementsSDB> getForOptionControl(Long dtFrom, Long dtTo, String clientId, Integer addressId, Integer themeId);
 
+    @Query("SELECT * FROM achievements WHERE user_id = :userId AND (dt_ut IS NOT NULL AND dt_ut BETWEEN :dtFrom AND :dtTo) ORDER BY dt_ut DESC")
+    List<AchievementsSDB> getList(Long dtFrom, Long dtTo, Integer userId);
 }

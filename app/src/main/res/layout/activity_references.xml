@@ -7,6 +7,19 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
 
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fabReferences"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_margin="@dimen/fab_margin"
+        app:backgroundTint="#FFFFFF"
+        app:elevation="20dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:srcCompat="@drawable/ic_plus"
+        android:visibility="gone"/>
+
     <include
         android:id="@+id/include"
         layout="@layout/toolbar"

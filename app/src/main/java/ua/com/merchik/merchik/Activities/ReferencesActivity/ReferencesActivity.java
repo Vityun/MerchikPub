@@ -1,14 +1,20 @@
 package ua.com.merchik.merchik.Activities.ReferencesActivity;
 
+import static ua.com.merchik.merchik.Globals.userId;
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
 import android.widget.TextView;
 
 import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.util.List;
 
@@ -18,11 +24,14 @@ import io.reactivex.rxjava3.disposables.CompositeDisposable;
 import io.reactivex.rxjava3.functions.Consumer;
 import io.reactivex.rxjava3.observers.DisposableCompletableObserver;
 import ua.com.merchik.merchik.Activities.ReferencesActivity.Chat.ChatGrpAdapter;
+import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.Utils.UniversalAdapter.AdapterUtil;
 import ua.com.merchik.merchik.Utils.UniversalAdapter.UniversalAdapterData;
 import ua.com.merchik.merchik.data.Database.Room.UsersSDB;
+import ua.com.merchik.merchik.data.RealmModels.AppUsersDB;
+import ua.com.merchik.merchik.database.realm.tables.AppUserRealm;
 import ua.com.merchik.merchik.dialogs.BlockingProgressDialog;
 import ua.com.merchik.merchik.toolbar_menus;
 
@@ -33,6 +42,8 @@ public class ReferencesActivity extends toolbar_menus {
 
     TextView activity_title;
     RecyclerView recycler;
+
+    private FloatingActionButton floatingActionButtonReferences;
 
     Globals.ReferencesEnum referencesEnum;
 
@@ -48,6 +59,8 @@ public class ReferencesActivity extends toolbar_menus {
         getSupportActionBar().setDisplayShowTitleEnabled(false);
 
         referencesEnum = (Globals.ReferencesEnum) this.getIntent().getSerializableExtra("ReferencesEnum");
+
+        floatingActionButtonReferences = findViewById(R.id.fabReferences);
 
         recycler = findViewById(R.id.recycler);
         recycler.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false));
@@ -82,7 +95,24 @@ public class ReferencesActivity extends toolbar_menus {
         if (referencesEnum != null) {
             switch (referencesEnum) {
                 case ACHIEVEMENTS:
-                    data.achievementsSDBS = SQL_DB.achievementsDao().getAll();
+                    Long dateFrom = Clock.getDatePeriodLong(System.currentTimeMillis(), -30) / 1000;
+                    Long dateTo = Clock.getDatePeriodLong(System.currentTimeMillis(), 2) / 1000;
+
+                    data.achievementsSDBS = SQL_DB.achievementsDao().getList(dateFrom, dateTo, Globals.userId);
+
+                    floatingActionButtonReferences.setVisibility(View.VISIBLE);
+                    floatingActionButtonReferences.setOnClickListener(v->{
+                        String link = String.format("/mobile.php?mod=images_achieve**act=list_achieve**date_from=%s**date_to=%s", dateFrom, dateTo);
+                        AppUsersDB appUser = AppUserRealm.getAppUserById(userId);
+
+                        String hash = String.format("%s%s%s", appUser.getUserId(), appUser.getPassword(), "AvgrgsYihSHp6Ok9yQXfSHp6Ok9nXdXr3OSHp6Ok9UPBTzTjrF20Nsz3");
+                        hash = Globals.getSha1Hex(hash);
+
+                        String format = String.format("https://merchik.com.ua/sa.php?&u=%s&s=%s&l=%s", userId, hash, link);
+
+                        Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(format));
+                        this.startActivity(browserIntent);
+                    });
                     Log.e("test", "data: " + data);
                     Log.e("test", "data.achievementsSDBS: " + data.achievementsSDBS);
                     Log.e("test", "data.achievementsSDBS.s: " + data.achievementsSDBS.size());

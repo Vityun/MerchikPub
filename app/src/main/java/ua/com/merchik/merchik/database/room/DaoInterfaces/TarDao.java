@@ -98,6 +98,18 @@ public interface TarDao {
 
     @Query("SELECT * FROM tasks_and_reclamations WHERE tp = :tarType AND dt BETWEEN :dtFrom AND :dtTo")
     List<TasksAndReclamationsSDB> getTARForOptionControl135061(Integer tarType, Long dtFrom, Long dtTo);
+
+    @Query("SELECT * FROM tasks_and_reclamations WHERE client = :clientId")
+    List<TasksAndReclamationsSDB> getByClientIdFilter(String clientId);
+
+    @Query("SELECT * FROM tasks_and_reclamations WHERE addr = :addressId")
+    List<TasksAndReclamationsSDB> getByAddressIdFilter(int addressId);
+
+    @Query("SELECT * FROM tasks_and_reclamations WHERE state = :tarType")
+    List<TasksAndReclamationsSDB> getByTarTypeFilter(Integer tarType);
+
+    @Query("SELECT * FROM tasks_and_reclamations WHERE dt BETWEEN :fromDate AND :toDate")
+    List<TasksAndReclamationsSDB> getByDateRangeFilter(Long fromDate, Long toDate);
 }
 
 /*SELECT tar.*, addr.nm FROM tasks_and_reclamations tar

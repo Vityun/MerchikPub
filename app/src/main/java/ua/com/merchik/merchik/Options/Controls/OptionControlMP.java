@@ -83,7 +83,7 @@ public class OptionControlMP<T> extends OptionControl {
 
             long endTime = System.currentTimeMillis() / 1000;
 
-            logMPList = LogMPRealm.getLogMPTime(startTime, endTime);
+            logMPList = LogMPRealm.getLogMPTime(startTime*1000, endTime*1000);
 
             if (logMPList != null && logMPList.size() > 0){
                 for (LogMPDB item : logMPList){

@@ -1814,7 +1814,7 @@ public class Options {
 
             long endTime = System.currentTimeMillis() / 1000;
 
-            List<LogMPDB> logs = LogMPRealm.getLogMPTime(startTime, endTime);
+            List<LogMPDB> logs = LogMPRealm.getLogMPTime(startTime*1000, endTime*1000);
 
             Globals.writeToMLOG("INFO", "optionControlMP_8299", "onUnlockCodeSuccess: " + logs.size());
 
@@ -1839,7 +1839,7 @@ public class Options {
                     log.distance = (int) distance;
                 }
 
-                if (log.distance > 1 && log.distance < 500){
+                if (log.distance > 1 && log.distance < 1000){
                     logsRes.add(log);
                 }
             }
@@ -1848,7 +1848,7 @@ public class Options {
 
             Globals.writeToMLOG("INFO", "optionControlMP_8299", "onUnlockCodeSuccess: " + logsRes.size());
 
-            if (logs != null && logs.size() > 0) {
+            if (logsRes != null && logsRes.size() > 0) {
                 RealmManager.INSTANCE.executeTransaction(realm -> {
                     if (optionsDB != null) {
                         optionsDB.setIsSignal("2");

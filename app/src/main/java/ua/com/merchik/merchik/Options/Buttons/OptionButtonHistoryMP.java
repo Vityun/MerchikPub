@@ -63,6 +63,7 @@ public class OptionButtonHistoryMP<T> extends OptionControl {
 
     private void executeOption(){
         try {
+            Globals.fixMP(wpDataDB);
             DialogData dialog = new DialogData(context);
             dialog.setTitle("Історія місцеположення");
             dialog.setText("Нижче зазначені данні із місцезнаходженням вашого пристрою за період: з " + Clock.getHumanTimeSecPattern(startTime, "dd.MM HH:mm:ss") + " по " + Clock.getHumanTimeSecPattern(endTime, "dd.MM HH:mm:ss"));

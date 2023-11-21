@@ -51,8 +51,9 @@ public class DetailedReportOptionsFrag extends Fragment {
     private static Context mContext;
     private WpDataDB wpDataDB;
 
-    public static final Integer[]  DetailedReportOptionsFrag_VIDEO_LESSONS = new Integer[]{821, 4540};
+    public static final Integer[] DetailedReportOptionsFrag_VIDEO_LESSONS = new Integer[]{821, 4540};
 
+    public static RecyclerView rvContacts;
     public static RecycleViewDRAdapter recycleViewDRAdapter;
 
     public DetailedReportOptionsFrag() {
@@ -75,9 +76,14 @@ public class DetailedReportOptionsFrag extends Fragment {
             recycleViewDRAdapter.notifyDataSetChanged();
         } catch (Exception e) {
             Globals.writeToMLOG("INFO", "DetailedReportOptionsFrag", "Exception e: " + e);
-            Log.e("test", "test: " + e);
-            /*    java.lang.NullPointerException: Attempt to invoke virtual method 'void ua.com.merchik.merchik.Activities.DetailedReportActivity.RecycleViewDRAdapter.notifyDataSetChanged()' on a null object reference
-        at ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportOptionsFrag.onResume(DetailedReportOptionsFrag.java:64)*/
+            try {
+//                getActivity().recreate();
+                test();
+                rvContacts.setAdapter(recycleViewDRAdapter);
+                rvContacts.setLayoutManager(new LinearLayoutManager(mContext, LinearLayoutManager.VERTICAL, false));
+            }catch (Exception exception){
+                Globals.writeToMLOG("INFO", "DetailedReportOptionsFrag", "Exception exception: " + exception);
+            }
         }
         super.onResume();
     }
@@ -216,7 +222,7 @@ public class DetailedReportOptionsFrag extends Fragment {
             Options options = new Options();
 
             WorkPlan workPlan = new WorkPlan();
-            RecyclerView rvContacts = v.findViewById(R.id.DRRecycleView);
+            rvContacts = v.findViewById(R.id.DRRecycleView);
 
             List<OptionsDB> optionsButtons = workPlan.getOptionButtons2(workPlan.getWpOpchetId(wpDataDB), wpDataDB.getId());
 
@@ -271,7 +277,7 @@ public class DetailedReportOptionsFrag extends Fragment {
                             }
                         });
                     }
-                }catch (Exception e){
+                } catch (Exception e) {
                     Globals.writeToMLOG("ERROR", "DetailedReportOptionsFrag/buttonMakeAReport/setOnClickListener", "Exception e: " + e);
                 }
             });
@@ -318,7 +324,7 @@ public class DetailedReportOptionsFrag extends Fragment {
             }
 
             if (optionsButtons != null && optionsButtons.size() > 0) {
-                recycleViewDRAdapter = new RecycleViewDRAdapter(mContext, wpDataDB, optionsButtons, allReportOption, list, ()->{
+                recycleViewDRAdapter = new RecycleViewDRAdapter(mContext, wpDataDB, optionsButtons, allReportOption, list, () -> {
                     try {
                         MakePhotoFromGaleryWpDataDB = wpDataDB;
 //                    Intent intent = new Intent(Intent.ACTION_PICK);
@@ -326,7 +332,7 @@ public class DetailedReportOptionsFrag extends Fragment {
                         intent.setType("image/*");
                         Globals.writeToMLOG("INFO", "DetailedReportOptionsFrag/Intent.ACTION_PICK", "intent: " + intent);
                         ((DetailedReportActivity) mContext).startActivityForResult(Intent.createChooser(intent, "Select Picture"), 500);
-                    }catch (Exception e){
+                    } catch (Exception e) {
                         Globals.writeToMLOG("ERROR", "DetailedReportOptionsFrag/Intent.ACTION_PICK", "Exception e: " + e);
                     }
                 });
@@ -364,6 +370,33 @@ public class DetailedReportOptionsFrag extends Fragment {
                 String msg = (String) data;
                 Globals.writeToMLOG("INFO", "downloadOptionsByDAD2/clickDownload/clickRESULT", "msg: " + msg);
                 Toast.makeText(context, msg, Toast.LENGTH_LONG).show();
+            }
+        });
+    }
+
+    public void test(){
+        WorkPlan workPlan = new WorkPlan();
+        List<OptionsDB> optionsButtons = workPlan.getOptionButtons2(workPlan.getWpOpchetId(wpDataDB), wpDataDB.getId());
+
+        List<Integer> ids = new ArrayList<>();
+        for (OptionsDB item : optionsButtons) {
+            ids.add(Integer.parseInt(item.getOptionId()));
+        }
+        Collections.sort(optionsButtons, (o1, o2) -> o1.getSo().compareTo(o2.getSo()));
+        // Запрос к SQL БДшке. Получаем список обьектов сайта
+        List<SiteObjectsSDB> list = SQL_DB.siteObjectsDao().getObjectsById(ids);
+        // Получаю все опции по данному отчёту.
+        List<OptionsDB> allReportOption = RealmManager.INSTANCE.copyFromRealm(OptionsRealm.getOptionsByDAD2(String.valueOf(wpDataDB.getCode_dad2())));
+        recycleViewDRAdapter = new RecycleViewDRAdapter(mContext, wpDataDB, optionsButtons, allReportOption, list, () -> {
+            try {
+                MakePhotoFromGaleryWpDataDB = wpDataDB;
+//                    Intent intent = new Intent(Intent.ACTION_PICK);
+                Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+                intent.setType("image/*");
+                Globals.writeToMLOG("INFO", "DetailedReportOptionsFrag/Intent.ACTION_PICK", "intent: " + intent);
+                ((DetailedReportActivity) mContext).startActivityForResult(Intent.createChooser(intent, "Select Picture"), 500);
+            } catch (Exception e) {
+                Globals.writeToMLOG("ERROR", "DetailedReportOptionsFrag/Intent.ACTION_PICK", "Exception e: " + e);
             }
         });
     }
