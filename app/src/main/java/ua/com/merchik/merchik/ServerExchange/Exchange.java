@@ -159,7 +159,7 @@ public class Exchange {
                 exchange = System.currentTimeMillis();
 
                 try {
-                    globals.fixMP(null);    //
+                    globals.fixMP(null, null);    //
                     Globals.writeToMLOG("ERROR", "startExchange/globals.fixMP();", "locationGPS: " + Globals.locationGPS);
                 } catch (Exception e) {
                     Globals.writeToMLOG("ERROR", "startExchange/globals.fixMP();", "Exception e: " + e);

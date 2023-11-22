@@ -63,14 +63,14 @@ public class OptionButtonHistoryMP<T> extends OptionControl {
 
     private void executeOption(){
         try {
-            Globals.fixMP(wpDataDB);
+            Globals.fixMP(wpDataDB, null);
             DialogData dialog = new DialogData(context);
             dialog.setTitle("Історія місцеположення");
             dialog.setText("Нижче зазначені данні із місцезнаходженням вашого пристрою за період: з " + Clock.getHumanTimeSecPattern(startTime, "dd.MM HH:mm:ss") + " по " + Clock.getHumanTimeSecPattern(endTime, "dd.MM HH:mm:ss"));
             dialog.setRecycler(createAdapter(dialog.context, logMPDBList, wpDataDB.getAddr_id()), new LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false));
             dialog.setClose(dialog::dismiss);
             dialog.setOk("Запит МП", ()->{
-                Globals.fixMP(wpDataDB);
+                Globals.fixMP(wpDataDB, null);
                 Toast.makeText(context, "Запит створено!", Toast.LENGTH_SHORT).show();
             });
             dialog.show();

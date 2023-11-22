@@ -36,7 +36,7 @@ public class OptionButtonPhotoBeforeStartWork<T> extends OptionControl {
     }
 
     private void executeOption() {
-        new Globals().fixMP(wpDataDB);// Фиксация Местоположения в таблице ЛогМп
+        new Globals().fixMP(wpDataDB, null);// Фиксация Местоположения в таблице ЛогМп
         try {
             MakePhoto makePhoto = new MakePhoto();
             makePhoto.pressedMakePhoto((DetailedReportActivity) context, wpDataDB, optionDB, "14"); // Фото До начала Работ

@@ -38,7 +38,7 @@ public class OptionButtonPhotoOfACartWithGoods<T> extends OptionControl {
     }
 
     private void executeOption() {
-        new Globals().fixMP(wpDataDB);// Фиксация Местоположения в таблице ЛогМп
+        new Globals().fixMP(wpDataDB, null);// Фиксация Местоположения в таблице ЛогМп
         try {
 
             WPDataObj wpDataObj = workPlan.getKPS(wpDataDB.getId());

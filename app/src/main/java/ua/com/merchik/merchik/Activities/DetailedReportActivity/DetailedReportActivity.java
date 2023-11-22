@@ -1136,7 +1136,7 @@ public class DetailedReportActivity extends toolbar_menus {
             stackPhotoDB.code_dad2 = wpDataDB.getCode_dad2();
 
             // 10.09.23. Походу Сервер без этого не воспринимает фотографии (сейчас касается это // Тип фото Остатков из ГАЛЕРЕИ)
-            LogMPDB log = Globals.fixMP(wpDataDB);
+            LogMPDB log = Globals.fixMP(wpDataDB, null);
             String GP = log != null ? log.gp : "";
             stackPhotoDB.gp = GP;
 

@@ -16,7 +16,6 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
-import androidx.preference.PreferenceManager;
 import android.provider.MediaStore;
 import android.text.Html;
 import android.util.Base64;
@@ -35,6 +34,7 @@ import android.widget.Toast;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.content.FileProvider;
 import androidx.exifinterface.media.ExifInterface;
+import androidx.preference.PreferenceManager;
 
 import com.google.android.material.navigation.NavigationView;
 import com.google.gson.Gson;
@@ -1259,7 +1259,7 @@ public class PhotoReportActivity extends toolbar_menus {
 
             Globals.writeToMLOG("INFO", "savePhoto", "wp 1: " + wp);
             Globals.writeToMLOG("INFO", "savePhoto", "wp 2: " + new Gson().toJson(wp));
-            LogMPDB log = Globals.fixMP(wp);
+            LogMPDB log = Globals.fixMP(wp, null);
 
 
             Globals.writeToMLOG("INFO", "savePhoto", "log 1: " + log);

@@ -3,6 +3,7 @@ package ua.com.merchik.merchik;
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 import static ua.com.merchik.merchik.toolbar_menus.internetStatus;
 import static ua.com.merchik.merchik.trecker.coordinatesDistanse;
+import static ua.com.merchik.merchik.trecker.enabledGPS;
 import static ua.com.merchik.merchik.trecker.imHereGPS;
 import static ua.com.merchik.merchik.trecker.imHereNET;
 import static ua.com.merchik.merchik.trecker.locationUniqueStringGPS;
@@ -29,6 +30,7 @@ import android.util.Base64;
 import android.util.Log;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.core.content.FileProvider;
@@ -983,9 +985,32 @@ public class Globals {
      * Запись в лог местоположений
      * @return
      */
-    public static LogMPDB fixMP(WpDataDB wpDataDB) {
+    public static LogMPDB fixMP(WpDataDB wpDataDB, Context context) {
         try {
             try {
+
+                if (context != null){
+                    String problem = "Якщо ви виправили зауваження, а система все рівно не працює, зверніться за допомогою до свого керівника, або до оператора служби підтримки merchik \"+380674491265\"";
+                    if (!enabledGPS){
+                        DialogData dialogData = new DialogData(context);
+                        dialogData.setTitle("");
+                        dialogData.setText("У вас вимкнений модуль GPS. Увімкніть його та, через хвилину, повторіть спробу.\n\n" + problem);
+                        dialogData.setClose(dialogData::dismiss);
+                        dialogData.setImgBtnCall(context);
+                        dialogData.show();
+//                        Toast.makeText(context, "У вас вимкнений модуль GPS. Увімкніть його та, через хвилину, повторіть спробу.", Toast.LENGTH_LONG).show();
+                    }else {
+                        if (imHereGPS != null && imHereGPS.getLatitude() == 0){
+                            Toast.makeText(context, "Підійдіть до вікна (чи вийдіть з приміщення на подвір`я) та, через хвилину, повторіть спробу.", Toast.LENGTH_LONG).show();
+                        }
+
+                        if (imHereGPS != null && imHereGPS.isFromMockProvider()){
+                            Toast.makeText(context, "На вашому пристрої увімкнений режим отримання фіктивних координат. Вимкніть його та, через хвилину, повторіть спробу.", Toast.LENGTH_LONG).show();
+                        }
+                    }
+                }
+
+
                 String locationUniqueStringGPSThis = "1" + imHereGPS.getLatitude() + imHereGPS.getLongitude() + imHereGPS.getTime();
                 if (!locationUniqueStringGPS.equals(locationUniqueStringGPSThis)){
                     int id = RealmManager.logMPGetLastId() + 1;

@@ -30,4 +30,19 @@ public class WebSocketData {
     @SerializedName("text")
     @Expose
     public String text;
+
+    @SerializedName("data")
+    @Expose
+    public Data data;
+
+    public class Data {
+        @SerializedName("counter")
+        @Expose
+        public Integer counter;
+
+        @SerializedName("time")
+        @Expose
+        public Double time;
+
+    }
 }

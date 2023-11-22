@@ -163,7 +163,18 @@ public class RetrofitBuilder {
 
                 Globals.writeToMLOG("INFO", "WebSocket/onOpen/convertedObject", "convertedObject: " + convertedObject);
 
-                webSocket.send(convertedObject.toString());
+//                webSocket.send(convertedObject.toString());
+//                webSocket.send(convertedObject.toString() + "\\u0001"); // Добавили спецсимвол - разделитель, что б сервер нормально воспринимал меня.
+
+                String json = convertedObject.toString();
+                String spec = "\\u0001";
+                String messageToSend = json + spec;
+
+//                String json = convertedObject.toString();
+//                byte[] message = (json + "\u0001").getBytes(StandardCharsets.UTF_8);
+
+                Log.i("WebSockets", "Connection messageToSend: " + messageToSend);
+                webSocket.send(messageToSend);
 
                 Globals.writeToMLOG("INFO", "WebSocket/onOpen/Connection accepted!", "Connection accepted!");
                 Log.i("WebSockets", "Connection accepted!");

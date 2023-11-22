@@ -182,6 +182,7 @@ public class Options {
 
         try {
             Log.e("OPTION_CONTROL", "HERE(0): " + optionsDB.getOptionControlId());
+            Log.e("OPTION_CONTROL", "NNKMode mode: " + mode);
 
             int optionControlId = Integer.parseInt(optionsDB.getOptionControlId());
 
@@ -1087,6 +1088,7 @@ public class Options {
 
 //        try {
         Log.e("NNK", "F/optControl/optionId: " + optionId);
+        Log.e("NNK", "F/optControl/NNKMode mode: " + mode);
         switch (optionId) {
 
             case 143969:
@@ -1793,11 +1795,17 @@ public class Options {
     private <T> boolean optionControlMP_8299(Context context, T dataDB, OptionsDB optionsDB, OptionMassageType type, NNKMode mode, OptionControl.UnlockCodeResultListener unlockCodeResultListener) {
         boolean res = false;
 
+
+
         int visitStartGeoDistance = 0;
         WpDataDB wpDataDB = null;
         if (dataDB instanceof WpDataDB) {
             wpDataDB = (WpDataDB) dataDB;
             visitStartGeoDistance = ((WpDataDB) dataDB).getVisit_start_geo_distance();
+        }
+
+        if (mode != NNKMode.NULL){
+            Globals.fixMP(wpDataDB, context);
         }
 
         try {
@@ -1926,9 +1934,9 @@ public class Options {
         WpDataDB wpDataDB;
         if (dataDB instanceof WpDataDB) {
             wpDataDB = ((WpDataDB) dataDB);
-            globals.fixMP(wpDataDB);
+            globals.fixMP(wpDataDB, null);
         } else if (dataDB instanceof TasksAndReclamationsSDB) {
-            globals.fixMP(null);
+            globals.fixMP(null, null);
 //            Toast.makeText(context, "Местоположение зафиксированно", Toast.LENGTH_SHORT).show();
             return;
         } else {
@@ -2032,7 +2040,7 @@ public class Options {
         if (dataDB instanceof WpDataDB) {
             dad2 = ((WpDataDB) dataDB).getCode_dad2();
             startWork = ((WpDataDB) dataDB).getVisit_start_dt();
-            globals.fixMP((WpDataDB) dataDB);
+            globals.fixMP((WpDataDB) dataDB, null);
         } else if (dataDB instanceof TasksAndReclamationsSDB) {
             dad2 = ((TasksAndReclamationsSDB) dataDB).codeDad2;
             startWork = ((TasksAndReclamationsSDB) dataDB).dt_start_fact;
@@ -2109,7 +2117,7 @@ public class Options {
      */
     private boolean optionStartWork_138518(Context context, WpDataDB wpDataDB, OptionsDB optionsDB, OptionMassageType type, NNKMode mode, OptionControl.UnlockCodeResultListener unlockCodeResultListener) {
         boolean result;
-        globals.fixMP(wpDataDB);
+        globals.fixMP(wpDataDB, null);
         Globals.writeToMLOG("INFO", "DetailedReportButtons.class.pressStartWork", "ENTER. wpDataDB.codeDAD2: " + wpDataDB.getCode_dad2());
         if (wpDataDB.getVisit_start_dt() > 0) {
             Toast.makeText(context, "Работа уже начата!", Toast.LENGTH_SHORT).show();

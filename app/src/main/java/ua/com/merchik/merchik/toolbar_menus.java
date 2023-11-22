@@ -1876,18 +1876,22 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                 webSocket = RetrofitBuilder.startWebSocket(new Clicks.click() {
                     @Override
                     public <T> void click(T data) {
+                        Log.e("WEB_SOCKET_TEST", "data: " + data);
                         if (data != null) {
                             if (data instanceof WebSocketData) {
                                 WebSocketData wsData = (WebSocketData) data;
+                                Log.e("WEB_SOCKET_TEST", "new Gson().toJson(wsData): " + new Gson().toJson(wsData));
                                 Globals.writeToMLOG("INFO", "TOOLBAR/startWebSocket/click", "data: " + new Gson().fromJson(new Gson().toJson(wsData), JsonObject.class));
                                 if (wsData.action != null) {
                                     switch (wsData.action) {
+                                        case "test_message":
+                                            // {"action":"test_message","data":{"counter":38,"time":1700638368.072101}}
+                                            Log.e("WEB_SOCKET_TEST", "wsData.data.counter: " + wsData.data.counter);
+                                            break;
                                         case "chat_message":
                                             runOnUiThread(() -> {
 //                                                Toast.makeText(context, "Новое сообщение в чате: " + wsData.chat.msg, Toast.LENGTH_SHORT).show();
                                                 try {
-
-
                                                     if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
                                                         NotificationChannel channel = null;   // for heads-up notifications
                                                         channel = new NotificationChannel("channel01", "name",
@@ -1898,7 +1902,6 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                                                         NotificationManager notificationManager = getSystemService(NotificationManager.class);
                                                         notificationManager.createNotificationChannel(channel);
                                                     }
-
 
                                                     Intent resultIntent = new Intent(context, ReferencesActivity.class);
                                                     resultIntent.putExtra("ReferencesEnum", Globals.ReferencesEnum.CHAT);
@@ -1924,6 +1927,7 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                                                     Globals.writeToMLOG("ERROR", "TOOLBAR/startWebSocket/click/chat_message/catch", "Exception e: " + e);
                                                 }
                                             });
+                                            Log.e("WEB_SOCKET_TEST", "wsData.chat.msg: " + wsData.chat.msg);
                                             Globals.writeToMLOG("INFO", "TOOLBAR/startWebSocket/click/chat_message", "wsData.chat.msg: " + wsData.chat.msg);
                                             new ChatSDB().saveChatFromWebSocket(wsData.chat);
                                             break;
