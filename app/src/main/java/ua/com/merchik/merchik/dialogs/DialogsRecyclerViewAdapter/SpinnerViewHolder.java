@@ -34,6 +34,11 @@ public class SpinnerViewHolder extends RecyclerView.ViewHolder {
             text.setVisibility(View.GONE);
         }
 
+        // Выбор поля по умолчанию:
+        if (block.defaultPosition != null){
+            spinner.setSelection(block.defaultPosition);
+        }
+
         text.setOnClickListener((v)->{
             block.click.onSuccess("" + text.getText());
         });

@@ -94,7 +94,7 @@ public class LocationList {
 
     @SerializedName("connection_type")
     @Expose
-    public Integer connectionType;
+    public String connectionType;
 
     @SerializedName("platform_id")
     @Expose

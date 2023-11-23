@@ -2,7 +2,6 @@ package ua.com.merchik.merchik.Activities;
 
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
-import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.TextView;
@@ -14,14 +13,23 @@ import com.google.android.material.navigation.NavigationView;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
-import ua.com.merchik.merchik.Activities.ReferencesActivity.ReferencesActivity;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.R;
+import ua.com.merchik.merchik.ServerExchange.ExchangeInterface;
+import ua.com.merchik.merchik.ServerExchange.TablesExchange.LocationExchange;
+import ua.com.merchik.merchik.data.RealmModels.LogMPDB;
+import ua.com.merchik.merchik.data.RetrofitResponse.Location.LocationList;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.ShowcaseResponse;
 import ua.com.merchik.merchik.data.TestJsonUpload.StandartData;
+import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.dialogs.DialogShowcase.DialogShowcase;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
 import ua.com.merchik.merchik.toolbar_menus;
@@ -58,9 +66,83 @@ public class MenuMainActivity extends toolbar_menus {
     }
 
     private void test() {
-        Intent resultIntent = new Intent(this, ReferencesActivity.class);
-        resultIntent.putExtra("ReferencesEnum", Globals.ReferencesEnum.ACHIEVEMENTS);
-        startActivity(resultIntent);
+        try {
+            new LocationExchange().downloadLocationTable(new ExchangeInterface.ExchangeResponseInterface() {
+                @Override
+                public <T> void onSuccess(List<T> data) {
+                    try {
+                        List<LocationList> newDataList = (List<LocationList>) data;
+                        List<LogMPDB> allLogMPListDB = RealmManager.INSTANCE.copyFromRealm(RealmManager.getAllLogMPDB());
+
+                        // Создаем множество для быстрого поиска всех серверных ID из allLogMPListDB
+                        Set<Long> serverIdsInDB = new HashSet<>();
+                        for (LogMPDB log : allLogMPListDB) {
+                            serverIdsInDB.add(log.serverId);
+                        }
+
+                        List<LogMPDB> logList = new ArrayList<>();
+                        int id = RealmManager.logMPGetLastId();
+                        // Перебираем элементы newDataList и добавляем в newDataListToSave только те, которых нет в базе данных
+                        for (LocationList location : newDataList) {
+                            // Проверяем, есть ли текущий ID в списке серверных ID из базы данных
+                            if (!serverIdsInDB.contains(location.id)) {
+                                LogMPDB logMPDB = new LogMPDB();
+                                logMPDB.id = ++id;
+                                logMPDB.serverId = location.id;
+                                logMPDB.provider = location.sourceId;
+                                logMPDB.CoordX = location.lat;
+                                logMPDB.CoordY = location.lon;
+                                logMPDB.CoordAltitude = location.altitude;
+                                logMPDB.CoordTime = location.dtDevice;
+                                logMPDB.CoordSpeed = location.speed;
+                                logMPDB.CoordAccuracy = location.accuracy;
+                                logMPDB.mocking = location.locationIsFake != null && location.locationIsFake != 0;
+                                logMPDB.vpi = System.currentTimeMillis() / 1000;
+
+                                logList.add(logMPDB);
+                            }
+                        }
+
+
+//                        List<LogMPDB> logList = new ArrayList<>();
+//                        int id = RealmManager.logMPGetLastId();
+//                        for (LocationList item : newDataList) {
+//                            LogMPDB logMPDB = new LogMPDB();
+//                            logMPDB.id = ++id;
+//                            logMPDB.serverId = item.id;
+//                            logMPDB.provider = item.sourceId;
+//                            logMPDB.CoordX = item.lat;
+//                            logMPDB.CoordY = item.lon;
+//                            logMPDB.CoordAltitude = item.altitude;
+//                            logMPDB.CoordTime = item.dtDevice;
+//                            logMPDB.CoordSpeed = item.speed;
+//                            logMPDB.CoordAccuracy = item.accuracy;
+//                            logMPDB.mocking = item.locationIsFake != null && item.locationIsFake != 0;
+//                            logMPDB.vpi = System.currentTimeMillis() / 1000;
+//
+//                            logList.add(logMPDB);
+//                        }
+
+                        RealmManager.INSTANCE.executeTransaction(realm -> {
+                            List<LogMPDB> testList = realm.copyToRealmOrUpdate(logList);
+                            Log.e("downloadLocationTable", "testList: " + testList);
+                        });
+
+                        Globals.writeToMLOG("INFO", "startExchange/downloadLocationTable/onFailure", "OK: ");
+                    } catch (Exception e) {
+                        Log.e("downloadLocationTable", "Exception e: " + e);
+                        e.printStackTrace();
+                    }
+                }
+
+                @Override
+                public void onFailure(String error) {
+                    Globals.writeToMLOG("INFO", "startExchange/downloadLocationTable/onFailure", "String error: " + error);
+                }
+            });
+        } catch (Exception e) {
+            Globals.writeToMLOG("ERROR", "startExchange/downloadLocationTable", "Exception e: " + e);
+        }
     }
 
 

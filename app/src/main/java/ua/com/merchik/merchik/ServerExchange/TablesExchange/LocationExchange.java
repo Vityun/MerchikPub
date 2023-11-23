@@ -42,6 +42,8 @@ public class LocationExchange {
             String json = gson.toJson(data);
             JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
 
+            Log.e("downloadLocationTable", "convertedObject: " + convertedObject);
+
             retrofit2.Call<LocationResponse> call = RetrofitBuilder.getRetrofitInterface().LOCATION_RESPONSE_CALL(RetrofitBuilder.contentType, convertedObject);
             call.enqueue(new Callback<LocationResponse>() {
                 @Override
@@ -55,7 +57,6 @@ public class LocationExchange {
                                     synchronizationTimetableDB.setVpi_app(System.currentTimeMillis()/1000);
                                     realm.copyToRealmOrUpdate(synchronizationTimetableDB);
                                 }
-
                             });
                             exchange.onSuccess(response.body().list);
                         }else {
@@ -70,12 +71,14 @@ public class LocationExchange {
 
                 @Override
                 public void onFailure(Call<LocationResponse> call, Throwable t) {
+                    Log.e("downloadLocationTable", "Throwable t: " + t);
                     Globals.writeToMLOG("FAILURE", "downloadLocationTable/call.enqueue/onFailure", "Throwable t: " + t);
                     exchange.onFailure("Ошибка сети. Проверьте интернет или повторите попытку позже. Код ошибки: " + t);
                 }
             });
 
         }catch (Exception e){
+            Log.e("downloadLocationTable", "Exception e: " + e);
             Globals.writeToMLOG("ERR", "downloadLocationTable/catch", "Exception e: " + e);
             exchange.onFailure("Ошибка при обновлении Location. Передайте код ошибки Вашему руководителю. Код ошибки: " + e);
         }

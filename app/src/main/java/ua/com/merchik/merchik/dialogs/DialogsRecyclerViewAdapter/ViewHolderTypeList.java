@@ -127,6 +127,8 @@ public class ViewHolderTypeList {
         public String result;
         public T resultData;
         public ClickData click;
+
+        public Integer defaultPosition; // Если надо что б был предустановленный фильтр - я его пишу тут.
     }
 
     public static class ChoiceDateLayoutData<T> {

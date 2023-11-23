@@ -296,6 +296,7 @@ public class TARHomeFrag extends Fragment implements TARFragmentHome.OnFragmentI
                 dateTo = Clock.timeLongToDAte(Clock.getDatePeriodLong(cal.getTime().getTime(), +7) / 1000);
 
                 dialog.setDates(dateFrom, dateTo);
+                dialog.setDefaultTARType(1);    // 0 - Активные +1 ибо первый элеиент - Все
                 dialog.setRecyclerTAR();
 
                 dialog.setTextFilter(editText.getText().toString());
@@ -340,7 +341,6 @@ public class TARHomeFrag extends Fragment implements TARFragmentHome.OnFragmentI
 
         TarDao dao = SQL_DB.tarDao();
 
-//        List<TasksAndReclamationsSDB> tasksAndReclamationsSDBS = dao.getAll(); // Получение всех данных
         List<TasksAndReclamationsSDB> tasksAndReclamationsSDBS = data; // Получение всех данных
 
         if (dialog.clientId != null) {

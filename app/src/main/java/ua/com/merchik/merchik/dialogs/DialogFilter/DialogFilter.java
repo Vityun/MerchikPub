@@ -42,6 +42,7 @@ public class DialogFilter {
     public String dateFrom = null;
     public String dateTo = null;
     public Integer tarType = null;
+    public Integer tarTypeDefault = null;
 
     private Date dateFromF = null;
     private Date dateToF = null;
@@ -174,6 +175,10 @@ public class DialogFilter {
         this.dateTo = simpleDateFormatDateTo.format(dtTo);
     }
 
+    public void setDefaultTARType(int defaultTARType){
+        tarTypeDefault = defaultTARType;
+    }
+
     private DialogAdapter setAdapter() {
         List<ViewHolderTypeList> data = new ArrayList<>();
         data.add(createChoiceDateBlockRV(dateFromF, dateToF)); // Блок с выбором дат.
@@ -187,7 +192,7 @@ public class DialogFilter {
         data.add(createChoiceDateBlockRV(dateFromF, dateToF)); // Блок с выбором дат.
         data.add(createChoiceCustomerBlockRV()); // Блок с выбором Клиента.
         data.add(createChoiceAddressBlockRV()); // Блок с выбором Адреса.
-        data.add(createChoiceTarTypeBlockRV()); // Блок с выбором Адреса.
+        data.add(createChoiceTarTypeBlockRV()); // Блок с выбором Типа статуса ЗИР.
         return new DialogAdapter(data);
     }
 
@@ -342,6 +347,10 @@ public class DialogFilter {
         dataSpinnerList.add("Не виконані");//2
         dataSpinnerList.add("Відмінені");//3
 
+        // Установка значения по умолчанию
+        if (tarTypeDefault != null){
+            block.defaultPosition = tarTypeDefault;
+        }
 
         block.dataSpinner = null;
         block.dataSpinnerList = dataSpinnerList;

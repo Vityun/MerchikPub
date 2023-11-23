@@ -16,7 +16,9 @@ import com.google.gson.JsonObject;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import io.reactivex.rxjava3.observers.DisposableCompletableObserver;
 import io.reactivex.rxjava3.schedulers.Schedulers;
@@ -186,32 +188,69 @@ public class Exchange {
                     new LocationExchange().downloadLocationTable(new ExchangeInterface.ExchangeResponseInterface() {
                         @Override
                         public <T> void onSuccess(List<T> data) {
-                            List<LocationList> list = (List<LocationList>) data;
-                            List<LogMPDB> logList = new ArrayList<>();
-                            for (LocationList item : list) {
-                                int id = RealmManager.logMPGetLastId() + 1;
-                                LogMPDB logMPDB = new LogMPDB();
+                            try {
+                                List<LocationList> newDataList = (List<LocationList>) data;
+                                List<LogMPDB> allLogMPListDB = RealmManager.INSTANCE.copyFromRealm(RealmManager.getAllLogMPDB());
 
-                                logMPDB.id = id;
-                                logMPDB.serverId = item.id;
-                                logMPDB.provider = item.sourceId;
-                                logMPDB.CoordX = item.lat;
-                                logMPDB.CoordY = item.lon;
-                                logMPDB.CoordAltitude = item.altitude;
-                                logMPDB.CoordTime = item.dtDevice;
-                                logMPDB.CoordSpeed = item.speed;
-                                logMPDB.CoordAccuracy = item.accuracy;
-                                logMPDB.mocking = item.locationIsFake != 0;
-                                logMPDB.vpi = System.currentTimeMillis() / 1000;
+                                // Создаем множество для быстрого поиска всех серверных ID из allLogMPListDB
+                                Set<Long> serverIdsInDB = new HashSet<>();
+                                for (LogMPDB log : allLogMPListDB) {
+                                    serverIdsInDB.add(log.serverId);
+                                }
 
-                                logList.add(logMPDB);
+                                List<LogMPDB> logList = new ArrayList<>();
+                                int id = RealmManager.logMPGetLastId();
+                                // Перебираем элементы newDataList и добавляем в newDataListToSave только те, которых нет в базе данных
+                                for (LocationList location : newDataList) {
+                                    // Проверяем, есть ли текущий ID в списке серверных ID из базы данных
+                                    if (!serverIdsInDB.contains(location.id)) {
+                                        LogMPDB logMPDB = new LogMPDB();
+                                        logMPDB.id = ++id;
+                                        logMPDB.serverId = location.id;
+                                        logMPDB.provider = location.sourceId;
+                                        logMPDB.CoordX = location.lat;
+                                        logMPDB.CoordY = location.lon;
+                                        logMPDB.CoordAltitude = location.altitude;
+                                        logMPDB.CoordTime = location.dtDevice;
+                                        logMPDB.CoordSpeed = location.speed;
+                                        logMPDB.CoordAccuracy = location.accuracy;
+                                        logMPDB.mocking = location.locationIsFake != null && location.locationIsFake != 0;
+                                        logMPDB.vpi = System.currentTimeMillis() / 1000;
+
+                                        logList.add(logMPDB);
+                                    }
+                                }
+
+
+//                        List<LogMPDB> logList = new ArrayList<>();
+//                        int id = RealmManager.logMPGetLastId();
+//                        for (LocationList item : newDataList) {
+//                            LogMPDB logMPDB = new LogMPDB();
+//                            logMPDB.id = ++id;
+//                            logMPDB.serverId = item.id;
+//                            logMPDB.provider = item.sourceId;
+//                            logMPDB.CoordX = item.lat;
+//                            logMPDB.CoordY = item.lon;
+//                            logMPDB.CoordAltitude = item.altitude;
+//                            logMPDB.CoordTime = item.dtDevice;
+//                            logMPDB.CoordSpeed = item.speed;
+//                            logMPDB.CoordAccuracy = item.accuracy;
+//                            logMPDB.mocking = item.locationIsFake != null && item.locationIsFake != 0;
+//                            logMPDB.vpi = System.currentTimeMillis() / 1000;
+//
+//                            logList.add(logMPDB);
+//                        }
+
+                                RealmManager.INSTANCE.executeTransaction(realm -> {
+                                    List<LogMPDB> testList = realm.copyToRealmOrUpdate(logList);
+                                    Log.e("downloadLocationTable", "testList: " + testList);
+                                });
+
+                                Globals.writeToMLOG("INFO", "startExchange/downloadLocationTable/onFailure", "OK: ");
+                            } catch (Exception e) {
+                                Log.e("downloadLocationTable", "Exception e: " + e);
+                                e.printStackTrace();
                             }
-
-                            RealmManager.INSTANCE.executeTransaction(realm -> {
-                                realm.copyToRealmOrUpdate(logList);
-                            });
-
-                            Globals.writeToMLOG("INFO", "startExchange/downloadLocationTable/onFailure", "OK: ");
                         }
 
                         @Override
@@ -735,12 +774,13 @@ public class Exchange {
                                     public void onSuccess(String data) {
                                         Globals.writeToMLOG("INFO", "2Exchange/SamplePhotoExchange()/onSuccess", "data: " + data);
                                     }
+
                                     @Override
                                     public void onFailure(String error) {
                                         Globals.writeToMLOG("ERROR", "2Exchange/SamplePhotoExchange()/onFailure", "error: " + error);
                                     }
                                 });
-                            }catch (Exception e){
+                            } catch (Exception e) {
                                 Globals.writeToMLOG("ERROR", "2Exchange/SamplePhotoExchange()/try", "Exception e: " + e);
                             }
                         }
