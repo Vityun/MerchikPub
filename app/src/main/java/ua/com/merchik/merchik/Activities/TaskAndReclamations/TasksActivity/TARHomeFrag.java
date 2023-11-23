@@ -354,8 +354,14 @@ public class TARHomeFrag extends Fragment implements TARFragmentHome.OnFragmentI
             filteredData.retainAll(addressFiltered);
         }
 
-        if (dialog.tarType != null) {
+        if (dialog.tarType != null/* || dialog.tarTypeDefault != null*/) {
             List<TasksAndReclamationsSDB> tarTypeFiltered = dao.getByTarTypeFilter(dialog.tarType);
+            filteredData.retainAll(tarTypeFiltered);
+        }
+
+        // Установка фильтра по умолчанию
+        if (dialog.tarTypeDefault != null) {
+            List<TasksAndReclamationsSDB> tarTypeFiltered = dao.getByTarTypeFilter(dialog.tarTypeDefault);
             filteredData.retainAll(tarTypeFiltered);
         }
 

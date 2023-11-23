@@ -34,11 +34,6 @@ public class SpinnerViewHolder extends RecyclerView.ViewHolder {
             text.setVisibility(View.GONE);
         }
 
-        // Выбор поля по умолчанию:
-        if (block.defaultPosition != null){
-            spinner.setSelection(block.defaultPosition);
-        }
-
         text.setOnClickListener((v)->{
             block.click.onSuccess("" + text.getText());
         });
@@ -52,6 +47,11 @@ public class SpinnerViewHolder extends RecyclerView.ViewHolder {
 
         spinnerData.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinner.setAdapter(spinnerData);
+
+        // Выбор поля по умолчанию:
+        if (block.defaultPosition != null){
+            spinner.setSelection(block.defaultPosition);
+        }
         spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
