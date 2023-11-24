@@ -766,32 +766,6 @@ public class DetailedReportActivity extends toolbar_menus {
 
             if (requestCode == PICK_GALLERY_IMAGE_REQUEST && resultCode == RESULT_OK && data != null && data.getData() != null) {
                 try {
-
-//                if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
-                    // У вас есть доступ к чтению файлов
-                    // Можете выполнять необходимые операции с файлами
-//                    Uri uri = data.getData();
-//                    Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST", "Uri uri: " + uri);
-//                    String filePath = getRealPathFromURI(uri);
-//                    Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST", "filePath: " + filePath);
-//                    File file = new File(filePath);
-//                    Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST", "file: " + file.length());
-//                    savePhoto(uri, MakePhotoFromGaleryWpDataDB, MakePhotoFromGalery.tovarId, getApplicationContext());
-//                } else {
-                    // У вас нет доступа к чтению файлов
-                    // Можете запросить разрешение у пользователя//
-//                     Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST", "Нет доступов");
-//                    ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, 123);
-//                }
-
-
-//                    if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED
-//                            || ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-//                        Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST", "requestPermissions");
-//                        ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1);
-//                    } else {
-                    // У вас уже есть разрешения на доступ к файлам
-                    // Можете выполнять необходимые операции с файлами
                     Uri uri = data.getData();
                     File file = null;
                     if (Build.VERSION.SDK_INT == Build.VERSION_CODES.Q) {
@@ -804,21 +778,6 @@ public class DetailedReportActivity extends toolbar_menus {
                         Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST", "file: " + file.length());
                     }
                     savePhoto(file, MakePhotoFromGaleryWpDataDB, MakePhotoFromGalery.tovarId, getApplicationContext());
-//                    }
-
-
-//                if (checkManageExternalStoragePermission()) {
-//                    Uri uri = data.getData();
-//                    Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST", "Uri uri: " + uri);
-//                    String filePath = getRealPathFromURI(uri);
-//                    Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST", "filePath: " + filePath);
-//                    File file = new File(filePath);
-//                    Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST", "file: " + file.length());
-//                    savePhoto(uri, MakePhotoFromGaleryWpDataDB, MakePhotoFromGalery.tovarId, getApplicationContext());
-//                }else {
-//                    Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST", "Нет доступов");
-//                    requestManageExternalStoragePermission(this);
-//                }
                 } catch (Exception e) {
                     Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST", "Exception e: " + e);
                 }
@@ -1078,7 +1037,6 @@ public class DetailedReportActivity extends toolbar_menus {
             StackPhotoDB stackPhotoDB = new StackPhotoDB();
             stackPhotoDB.setId(id);
             stackPhotoDB.setDt(wpDataDB.getDt().getTime() / 1000);
-//            stackPhotoDB.setTime_event(Clock.getHumanTime2(System.currentTimeMillis() / 1000));
             stackPhotoDB.setTime_event(Clock.getHumanTimeSecPattern(wpDataDB.getDt().getTime() / 1000, "yyyy-MM-dd"));
 
             stackPhotoDB.setAddr_id(wpDataDB.getAddr_id());
@@ -1089,18 +1047,23 @@ public class DetailedReportActivity extends toolbar_menus {
 
             stackPhotoDB.code_dad2 = wpDataDB.getCode_dad2();
 
-            stackPhotoDB.setUser_id(Globals.userId);
-            stackPhotoDB.setPhoto_type(PHOTO_PROMOTION_TOV);
+            LogMPDB log = Globals.fixMP(wpDataDB, null);
+            String GP = log != null ? log.gp : "";
+            stackPhotoDB.gp = GP;
 
+            stackPhotoDB.setUser_id(Globals.userId);
+            stackPhotoDB.setUserTxt(SQL_DB.usersDao().getUserName(Globals.userId));
+            stackPhotoDB.setPhoto_type(PHOTO_PROMOTION_TOV);
             stackPhotoDB.tovar_id = tovarDB.getiD();
 
-//            stackPhotoDB.setDvi(1);
 
             stackPhotoDB.setCreate_time(System.currentTimeMillis());
 
-            stackPhotoDB.setPhoto_hash(globals.getHashMD5FromFile2(photoFile, this));
-            stackPhotoDB.setPhoto_num(photoFile.getAbsolutePath());
+            String hash = globals.getHashMD5FromFile2(photoFile, this);
+            if (hash == null || hash.equals("")) hash = globals.getHashMD5FromFile(photoFile, this);
+            stackPhotoDB.setPhoto_hash(hash);
 
+            stackPhotoDB.setPhoto_num(photoFile.getAbsolutePath());
 
             RealmManager.stackPhotoSavePhoto(stackPhotoDB);
             return stackPhotoDB;
@@ -1113,18 +1076,12 @@ public class DetailedReportActivity extends toolbar_menus {
 
     private StackPhotoDB savePhoto(File file, WpDataDB wpDataDB, String tovarId, Context context) {
         try {
-//            String pathFileAbsolute = photoFile.getAbsolutePath();
-//            String pathFilePath = photoFile.getPath();
-//
-//            Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST", "pathFileAbsolute: " + pathFileAbsolute);
-//            Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST", "pathFilePath: " + pathFilePath);
 
             int id = RealmManager.stackPhotoGetLastId();
             id++;
             StackPhotoDB stackPhotoDB = new StackPhotoDB();
             stackPhotoDB.setId(id);
             stackPhotoDB.setDt(wpDataDB.getDt().getTime() / 1000);
-//            stackPhotoDB.setTime_event(Clock.getHumanTime2(System.currentTimeMillis() / 1000));
             stackPhotoDB.setTime_event(Clock.getHumanTimeSecPattern(wpDataDB.getDt().getTime() / 1000, "yyyy-MM-dd"));
 
             stackPhotoDB.setAddr_id(wpDataDB.getAddr_id());
@@ -1156,14 +1113,7 @@ public class DetailedReportActivity extends toolbar_menus {
             }
 
             stackPhotoDB.setPhoto_hash(hash);
-
             stackPhotoDB.setPhoto_num(file.getAbsolutePath());
-
-//            if (Build.VERSION.SDK_INT == Build.VERSION_CODES.Q) {
-//                stackPhotoDB.setPhoto_num(String.valueOf(uri));
-//            } else {
-//                stackPhotoDB.setPhoto_num(getRealPathFromURI(uri));
-//            }
 
             String jo = new Gson().toJson(stackPhotoDB);
             Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST", "stackPhotoDB: " + jo);
