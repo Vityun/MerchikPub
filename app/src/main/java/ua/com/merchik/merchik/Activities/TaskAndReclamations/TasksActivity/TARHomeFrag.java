@@ -296,7 +296,7 @@ public class TARHomeFrag extends Fragment implements TARFragmentHome.OnFragmentI
                 dateTo = Clock.timeLongToDAte(Clock.getDatePeriodLong(cal.getTime().getTime(), +7) / 1000);
 
                 dialog.setDates(dateFrom, dateTo);
-                dialog.setDefaultTARType(1);    // 0 - Активные +1 ибо первый элеиент - Все
+                dialog.setDefaultTARType(0);    // 0 - Активные
                 dialog.setRecyclerTAR();
 
                 dialog.setTextFilter(editText.getText().toString());
@@ -310,6 +310,7 @@ public class TARHomeFrag extends Fragment implements TARFragmentHome.OnFragmentI
                     recyclerViewReclamations.notifyDataSetChanged();
                 });
                 dialog.setApply(() -> {
+                    dialog.tarTypeDefault = null;
                     applyFilter(dialog);
                 });
             } catch (Exception e) {
@@ -354,16 +355,18 @@ public class TARHomeFrag extends Fragment implements TARFragmentHome.OnFragmentI
             filteredData.retainAll(addressFiltered);
         }
 
-        if (dialog.tarType != null/* || dialog.tarTypeDefault != null*/) {
+        if (dialog.tarType != null) {
             List<TasksAndReclamationsSDB> tarTypeFiltered = dao.getByTarTypeFilter(dialog.tarType);
             filteredData.retainAll(tarTypeFiltered);
+        }else {
+            // Установка фильтра по умолчанию
+            if (dialog.tarTypeDefault != null) {
+                List<TasksAndReclamationsSDB> tarTypeFiltered = dao.getByTarTypeFilter(dialog.tarTypeDefault);
+                filteredData.retainAll(tarTypeFiltered);
+            }
         }
 
-        // Установка фильтра по умолчанию
-        if (dialog.tarTypeDefault != null) {
-            List<TasksAndReclamationsSDB> tarTypeFiltered = dao.getByTarTypeFilter(dialog.tarTypeDefault);
-            filteredData.retainAll(tarTypeFiltered);
-        }
+
 
 //        if (dialog.dateFrom != null && dialog.dateTo != null) {
 //            Date dt1 = Clock.stringDateConvertToDate(dialog.dateFrom);

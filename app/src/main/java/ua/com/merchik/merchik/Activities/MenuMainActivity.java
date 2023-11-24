@@ -93,7 +93,7 @@ public class MenuMainActivity extends toolbar_menus {
                                 logMPDB.CoordX = location.lat;
                                 logMPDB.CoordY = location.lon;
                                 logMPDB.CoordAltitude = location.altitude;
-                                logMPDB.CoordTime = location.dtDevice;
+                                logMPDB.CoordTime = location.dtDevice*1000;
                                 logMPDB.CoordSpeed = location.speed;
                                 logMPDB.CoordAccuracy = location.accuracy;
                                 logMPDB.mocking = location.locationIsFake != null && location.locationIsFake != 0;

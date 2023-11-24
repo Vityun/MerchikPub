@@ -27,21 +27,21 @@ public class SpinnerViewHolder extends RecyclerView.ViewHolder {
     }
 
     public void bind(ViewHolderTypeList.ChoiceSpinnerLayoutData block) {
-        if (block.dataTextTitle != null && !block.dataTextTitle.equals("")){
+        if (block.dataTextTitle != null && !block.dataTextTitle.equals("")) {
             text.setVisibility(View.VISIBLE);
             text.setText(block.dataTextTitle);
-        }else {
+        } else {
             text.setVisibility(View.GONE);
         }
 
-        text.setOnClickListener((v)->{
+        text.setOnClickListener((v) -> {
             block.click.onSuccess("" + text.getText());
         });
 
         ArrayAdapter spinnerData;
-        if (block.dataSpinner != null){
+        if (block.dataSpinner != null) {
             spinnerData = new ArrayAdapter(itemView.getContext(), android.R.layout.simple_spinner_item, block.dataSpinner);
-        }else {
+        } else {
             spinnerData = new ArrayAdapter(itemView.getContext(), android.R.layout.simple_spinner_item, block.dataSpinnerList);
         }
 
@@ -49,15 +49,15 @@ public class SpinnerViewHolder extends RecyclerView.ViewHolder {
         spinner.setAdapter(spinnerData);
 
         // Выбор поля по умолчанию:
-        if (block.defaultPosition != null){
-            spinner.setSelection(block.defaultPosition);
+        if (block.defaultPosition != null) {
+            spinner.setSelection(block.defaultPosition + 1);
         }
         spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
                 if (!initSpinner) {
                     initSpinner = true;
-                }else {
+                } else {
                     String data = adapterView.getItemAtPosition(i).toString();
                     block.resultData = i;
                     block.click.onSuccess(data);
