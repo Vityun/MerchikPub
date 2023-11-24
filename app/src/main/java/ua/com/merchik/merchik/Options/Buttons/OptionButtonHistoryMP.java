@@ -53,9 +53,9 @@ public class OptionButtonHistoryMP<T> extends OptionControl {
                     ? wpDataDB.getVisit_start_dt() - validTime
                     : (System.currentTimeMillis() / 1000) - validTime;
 
-            endTime = System.currentTimeMillis() / 1000;
+            endTime = wpDataDB.getVisit_end_dt() > 0 ? wpDataDB.getVisit_end_dt() : System.currentTimeMillis() / 1000;
 
-            logMPDBList = LogMPRealm.getLogMPTimeDad2(startTime*1000, endTime*1000, wpDataDB.getCode_dad2());
+            logMPDBList = LogMPRealm.getLogMPTime(startTime*1000, endTime*1000);
         }catch (Exception e){
             Globals.writeToMLOG("ERROR", "OptionButtonHistoryMP/getDocumentVar", "Exception e: " + e);
         }
@@ -63,7 +63,7 @@ public class OptionButtonHistoryMP<T> extends OptionControl {
 
     private void executeOption(){
         try {
-            Globals.fixMP(wpDataDB, null);
+            Globals.fixMP(wpDataDB, context);
             DialogData dialog = new DialogData(context);
             dialog.setTitle("Історія місцеположення");
             dialog.setText("Нижче зазначені данні із місцезнаходженням вашого пристрою за період: з " + Clock.getHumanTimeSecPattern(startTime, "dd.MM HH:mm:ss") + " по " + Clock.getHumanTimeSecPattern(endTime, "dd.MM HH:mm:ss"));

@@ -1820,7 +1820,7 @@ public class Options {
                     ? wpDataDB.getVisit_start_dt() - 1800
                     : (System.currentTimeMillis() / 1000) - 1800;
 
-            long endTime = System.currentTimeMillis() / 1000;
+            long endTime = wpDataDB.getVisit_end_dt() > 0 ? wpDataDB.getVisit_end_dt() : System.currentTimeMillis() / 1000;
 
             List<LogMPDB> logs = LogMPRealm.getLogMPTime(startTime*1000, endTime*1000);
 

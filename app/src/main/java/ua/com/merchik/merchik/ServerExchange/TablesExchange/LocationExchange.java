@@ -44,34 +44,34 @@ public class LocationExchange {
 
             Log.e("downloadLocationTable", "convertedObject: " + convertedObject);
 
-            retrofit2.Call<JsonObject> callT = RetrofitBuilder.getRetrofitInterface().TEST_JSON_UPLOAD(RetrofitBuilder.contentType, convertedObject);
-            callT.enqueue(new Callback<JsonObject>() {
-                /**
-                 * Invoked for a received HTTP response.
-                 *
-                 * <p>Note: An HTTP response may still indicate an application-level failure such as a 404 or 500.
-                 * Call {@link Response#isSuccessful()} to determine if the response indicates success.
-                 *
-                 * @param call
-                 * @param response
-                 */
-                @Override
-                public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
-                    Log.e("downloadLocationTable", "response t: " + response.body());
-                }
-
-                /**
-                 * Invoked when a network exception occurred talking to the server or when an unexpected exception
-                 * occurred creating the request or processing the response.
-                 *
-                 * @param call
-                 * @param t
-                 */
-                @Override
-                public void onFailure(Call<JsonObject> call, Throwable t) {
-                    Log.e("downloadLocationTable", "Throwable t: " + t);
-                }
-            });
+//            retrofit2.Call<JsonObject> callT = RetrofitBuilder.getRetrofitInterface().TEST_JSON_UPLOAD(RetrofitBuilder.contentType, convertedObject);
+//            callT.enqueue(new Callback<JsonObject>() {
+//                /**
+//                 * Invoked for a received HTTP response.
+//                 *
+//                 * <p>Note: An HTTP response may still indicate an application-level failure such as a 404 or 500.
+//                 * Call {@link Response#isSuccessful()} to determine if the response indicates success.
+//                 *
+//                 * @param call
+//                 * @param response
+//                 */
+//                @Override
+//                public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
+//                    Log.e("downloadLocationTable", "response t: " + response.body());
+//                }
+//
+//                /**
+//                 * Invoked when a network exception occurred talking to the server or when an unexpected exception
+//                 * occurred creating the request or processing the response.
+//                 *
+//                 * @param call
+//                 * @param t
+//                 */
+//                @Override
+//                public void onFailure(Call<JsonObject> call, Throwable t) {
+//                    Log.e("downloadLocationTable", "Throwable t: " + t);
+//                }
+//            });
 
             retrofit2.Call<LocationResponse> call = RetrofitBuilder.getRetrofitInterface().LOCATION_RESPONSE_CALL(RetrofitBuilder.contentType, convertedObject);
             call.enqueue(new Callback<LocationResponse>() {
