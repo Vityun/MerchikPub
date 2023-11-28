@@ -1,6 +1,7 @@
 package ua.com.merchik.merchik.Activities.WorkPlanActivity;
 
 import android.annotation.SuppressLint;
+import android.content.Intent;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -9,6 +10,7 @@ import android.view.WindowManager;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.appcompat.widget.Toolbar;
 import androidx.fragment.app.FragmentManager;
@@ -26,7 +28,10 @@ import ua.com.merchik.merchik.FabYoutube;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.RecycleViewWPAdapter;
+import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
+import ua.com.merchik.merchik.retrofit.CheckInternet.CheckServer;
+import ua.com.merchik.merchik.retrofit.CheckInternet.NetworkUtil;
 import ua.com.merchik.merchik.toolbar_menus;
 
 public class WPDataActivity extends toolbar_menus {
@@ -82,6 +87,8 @@ public class WPDataActivity extends toolbar_menus {
         initDrawerStuff(findViewById(R.id.drawer_layout), findViewById(R.id.my_toolbar), findViewById(R.id.nav_view));
         NavigationView navigationView = findViewById(R.id.nav_view);
         navigationView.setCheckedItem(129);
+
+        wpDataInfo();   // Сообщение какие-то.
 
     }//------------------------------- /ON CREATE --------------------------------------------------
 
@@ -147,5 +154,47 @@ public class WPDataActivity extends toolbar_menus {
 
             }
         });
+    }
+
+    /**
+     * 24.11.23.
+     *
+     * */
+    Globals.InternetStatus internetStatus;
+    private void wpDataInfo(){
+        try {
+            Intent intent = getIntent();
+            String extra = intent.getStringExtra("InternetStatusMassage");
+
+            if (NetworkUtil.isNetworkConnected(this)){
+                CheckServer.isServerConnected(this, CheckServer.ServerConnect.DEFAULT, null, new Clicks.clickStatusMsg() {
+                    @Override
+                    public void onSuccess(String data) {
+                        // Типо всё ок
+                        if (extra != null && extra.equals("SHOW_MASSAGE")){
+                            internetStatus = Globals.InternetStatus.INTERNET;
+//                            Globals.showInternetStatusMassage(WPDataActivity.this, internetStatus);
+                            Toast.makeText(WPDataActivity.this, "Все нормально, сервер онлайн", Toast.LENGTH_LONG).show();
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(String error) {
+                        if (extra != null && extra.equals("SHOW_MASSAGE")){
+                            internetStatus = Globals.InternetStatus.NO_SERVER;
+                            Globals.showInternetStatusMassage(WPDataActivity.this, internetStatus);
+                        }
+                    }
+                });
+            }else {
+                if (extra != null && extra.equals("SHOW_MASSAGE")){
+                    internetStatus = Globals.InternetStatus.NO_INTERNET;
+                    Globals.showInternetStatusMassage(this, internetStatus);
+                }
+            }
+        }catch (Exception e){
+            Log.e("wpDataInfo", "Exception e: " + e);
+            e.printStackTrace();
+        }
     }
 }

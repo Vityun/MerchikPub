@@ -40,6 +40,7 @@ import androidx.core.app.NotificationManagerCompat;
 import androidx.core.app.TaskStackBuilder;
 import androidx.core.content.ContextCompat;
 import androidx.core.content.FileProvider;
+import androidx.core.graphics.drawable.DrawableCompat;
 import androidx.core.view.GravityCompat;
 import androidx.core.view.MenuItemCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
@@ -108,6 +109,8 @@ import ua.com.merchik.merchik.database.realm.tables.AppUserRealm;
 import ua.com.merchik.merchik.dialogs.BlockingProgressDialog;
 import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.dialogs.DialogMap;
+import ua.com.merchik.merchik.retrofit.CheckInternet.CheckServer;
+import ua.com.merchik.merchik.retrofit.CheckInternet.NetworkUtil;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
 
 public class toolbar_menus extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
@@ -124,6 +127,7 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
 
     Menu menu;
     MenuItem light;
+    private Drawable drawable;
     private ImageButton ib;
 
     boolean logFromOffline; // Залогинились ли мы или нет
@@ -538,6 +542,7 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
         this.menu = menu;
 
         light = menu.findItem(R.id.action_check);
+        drawable = light.getIcon();
 
         MenuItem item = menu.findItem(R.id.menu_toolbar_exchange);
         View actionView = MenuItemCompat.getActionView(item);
@@ -546,19 +551,24 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
 
         ib = actionView.findViewById(R.id.imageViewExchange);
 
-        pingServer(1);
+//        pingServer(1);
+        synchronizationSignal("SIGNAL", null);
 
         item.getActionView().setOnLongClickListener(v -> {
-            Toast.makeText(toolbar_menus.this, "Начинаю Обмен. (Выгрузка фото и Синхронизация таблиц)", Toast.LENGTH_SHORT).show();
+            synchronizationSignal("SIGNAL", 1);
+            synchronizationSignal("SHOW_MASSAGE", 1);
 
+//            Toast.makeText(toolbar_menus.this, "Начинаю Обмен. (Выгрузка фото и Синхронизация таблиц)", Toast.LENGTH_SHORT).show();
 //            photoUpload();  // Выгрузка фото
-
-            tablesLoadingUnloading.uploadAllTables(toolbar_menus.this);     // Выгрузка таблиц
-            tablesLoadingUnloading.downloadAllTables(toolbar_menus.this);   // Скачивание таблиц
+//            tablesLoadingUnloading.uploadAllTables(toolbar_menus.this);     // Выгрузка таблиц
+//            tablesLoadingUnloading.downloadAllTables(toolbar_menus.this);   // Скачивание таблиц
             return false;
         });
 
         item.getActionView().setOnClickListener(v -> {
+            synchronizationSignal("SIGNAL", 2);
+            synchronizationSignal("SHOW_MASSAGE", 2);
+
             PopupMenu popup = new PopupMenu(toolbar_menus.this, v);
             MenuInflater inflater1 = popup.getMenuInflater();
             inflater1.inflate(R.menu.actions, popup.getMenu());
@@ -608,7 +618,7 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                     try {
                         SamplePhotoExchange samplePhotoExchange = new SamplePhotoExchange();
                         List<Integer> listPhotosToDownload = samplePhotoExchange.getSamplePhotosToDownload();
-                        if (listPhotosToDownload != null && listPhotosToDownload.size() > 0){
+                        if (listPhotosToDownload != null && listPhotosToDownload.size() > 0) {
                             Globals.writeToMLOG("INFO", "TOOBAR/CLICK_EXCHANGE/SamplePhotoExchange", "listPhotosToDownload: " + listPhotosToDownload.size());
                             BlockingProgressDialog progress = new BlockingProgressDialog(this, "Ідентифікатори фото", "Починаю завантажувати " + listPhotosToDownload.size() + " ідентифікаторів фото. Це може зайняти деякий час.");
                             progress.show();
@@ -627,10 +637,10 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                                     Toast.makeText(getApplicationContext(), "Виникла помилка при завантаженні Ідентифікаторів фото", Toast.LENGTH_SHORT).show();
                                 }
                             });
-                        }else {
+                        } else {
                             Toast.makeText(this, "Всі ідентифікатори вітрин вже завантажені!", Toast.LENGTH_SHORT).show();
                         }
-                    }catch (Exception e){
+                    } catch (Exception e) {
                         Globals.writeToMLOG("ERROR", "TOOBAR/CLICK_EXCHANGE/SamplePhotoExchange", "Exception e: " + e);
                         Globals.writeToMLOG("ERROR", "TOOBAR/CLICK_EXCHANGE/SamplePhotoExchange", "Exception e: " + Arrays.toString(e.getStackTrace()));
                     }
@@ -639,13 +649,13 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                     try {
                         ShowcaseExchange showcaseExchange = new ShowcaseExchange();
                         List<ShowcaseSDB> list = showcaseExchange.getSamplePhotosToDownload();
-                        if (list != null && list.size() > 0){
+                        if (list != null && list.size() > 0) {
                             Globals.writeToMLOG("INFO", "TOOBAR/CLICK_EXCHANGE/ShowcaseExchange", "list: " + list.size());
                             showcaseExchange.downloadShowcasePhoto(list);
-                        }else {
+                        } else {
                             Toast.makeText(this, "Всі вітрини вже завантажені!", Toast.LENGTH_SHORT).show();
                         }
-                    }catch (Exception e){
+                    } catch (Exception e) {
                         Globals.writeToMLOG("ERROR", "TOOBAR/CLICK_EXCHANGE/ShowcaseExchange", "Exception e: " + e);
                         Globals.writeToMLOG("ERROR", "TOOBAR/CLICK_EXCHANGE/ShowcaseExchange", "Exception e: " + Arrays.toString(e.getStackTrace()));
                     }
@@ -879,6 +889,8 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
         public void run() {
             try {
                 Log.e("КРОНЧИК", "Time: " + Clock.getHumanTime());
+
+                synchronizationSignal("SIGNAL", null);
 
 //                globals.fixMP(null);
 
@@ -1563,24 +1575,44 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
         switch (lightsStatusGPS()) {
             case (1):
                 if (menu != null)
-                    light.setIcon(ContextCompat.getDrawable(this, R.mipmap.light_green));
+//                    light.setIcon(ContextCompat.getDrawable(this, R.mipmap.light_green));
+                    if (drawable != null){
+                        drawable = DrawableCompat.wrap(drawable);
+                        DrawableCompat.setTint(drawable, ContextCompat.getColor(toolbar_menus.this, R.color.greenCol));
+                        light.setIcon(drawable);
+                    }
                 break;
 
             case (2):
                 if (menu != null)
-                    light.setIcon(ContextCompat.getDrawable(this, R.mipmap.light_yellow));
+//                    light.setIcon(ContextCompat.getDrawable(this, R.mipmap.light_yellow));
+                if (drawable != null){
+                    drawable = DrawableCompat.wrap(drawable);
+                    DrawableCompat.setTint(drawable, ContextCompat.getColor(toolbar_menus.this, R.color.colorInetYellow));
+                    light.setIcon(drawable);
+                }
                 break;
 
             case (3):
 
             case (4):
                 if (menu != null)
-                    light.setIcon(ContextCompat.getDrawable(this, R.mipmap.light_red));
+//                    light.setIcon(ContextCompat.getDrawable(this, R.mipmap.light_red));
+                if (drawable != null){
+                    drawable = DrawableCompat.wrap(drawable);
+                    DrawableCompat.setTint(drawable, ContextCompat.getColor(toolbar_menus.this, R.color.red_error));
+                    light.setIcon(drawable);
+                }
                 break;
 
             default:
                 if (menu != null)
-                    light.setIcon(ContextCompat.getDrawable(this, R.mipmap.light_gray));
+//                    light.setIcon(ContextCompat.getDrawable(this, R.mipmap.light_gray));
+                if (drawable != null){
+                    drawable = DrawableCompat.wrap(drawable);
+                    DrawableCompat.setTint(drawable, ContextCompat.getColor(toolbar_menus.this, R.color.colotSelectedTab));
+                    light.setIcon(drawable);
+                }
         }
 
 
@@ -1608,18 +1640,38 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
 
                 // нет определения (выкл/нули возвращает)
                 if (Globals.CoordX == 0 || Globals.CoordY == 0) {
-                    item.setIcon(ContextCompat.getDrawable(this, R.mipmap.light_red));
+//                    item.setIcon(ContextCompat.getDrawable(this, R.mipmap.light_red));
+                    if (drawable != null){
+                        drawable = DrawableCompat.wrap(drawable);
+                        DrawableCompat.setTint(drawable, ContextCompat.getColor(toolbar_menus.this, R.color.red_error));
+                        item.setIcon(drawable);
+                    }
                     return 3; // Не на месте/Данные устарели
                 } else if (!onTT() || Globals.delayGPS > Globals.dalayMaxTimeGPS) {
-                    item.setIcon(ContextCompat.getDrawable(this, R.mipmap.light_yellow));
+//                    item.setIcon(ContextCompat.getDrawable(this, R.mipmap.light_yellow));
+                    if (drawable != null){
+                        drawable = DrawableCompat.wrap(drawable);
+                        DrawableCompat.setTint(drawable, ContextCompat.getColor(toolbar_menus.this, R.color.colorInetYellow));
+                        item.setIcon(drawable);
+                    }
                     return 2; // Опознан не на месте/срок определения истёк
                 } else {
-                    item.setIcon(ContextCompat.getDrawable(this, R.mipmap.light_green));
+//                    item.setIcon(ContextCompat.getDrawable(this, R.mipmap.light_green));
+                    if (drawable != null){
+                        drawable = DrawableCompat.wrap(drawable);
+                        DrawableCompat.setTint(drawable, ContextCompat.getColor(toolbar_menus.this, R.color.greenCol));
+                        item.setIcon(drawable);
+                    }
                     return 1; // Всё окей
                 }
 
             } else {
-                item.setIcon(ContextCompat.getDrawable(this, R.mipmap.light_red));
+//                item.setIcon(ContextCompat.getDrawable(this, R.mipmap.light_red));
+                if (drawable != null){
+                    drawable = DrawableCompat.wrap(drawable);
+                    DrawableCompat.setTint(drawable, ContextCompat.getColor(toolbar_menus.this, R.color.red_error));
+                    item.setIcon(drawable);
+                }
                 return 4; // Данные GPS не доступны в принципе
             }
         }
@@ -1956,6 +2008,73 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
             }
         } catch (Exception e) {
             Globals.writeToMLOG("ERROR", "TOOLBAR/startWebSocket/catch", "Exception e: " + e);
+        }
+    }
+
+
+    /**
+     * 28.11.23.
+     * Смена сигналов Обмена.
+     */
+    private Globals.InternetStatus internetStatusG;
+    public void synchronizationSignal(String extra, Integer mode) {
+        try {
+            if (ib != null) {
+                Drawable background = ib.getBackground();
+                if (NetworkUtil.isNetworkConnected(this)) {
+                    CheckServer.isServerConnected(this, CheckServer.ServerConnect.DEFAULT, mode, new Clicks.clickStatusMsg() {
+                        @Override
+                        public void onSuccess(String data) {
+                            // Типо всё ок
+                            if (extra != null && extra.equals("SHOW_MASSAGE")) {
+                                internetStatusG = Globals.InternetStatus.INTERNET;
+//                                Globals.showInternetStatusMassage(toolbar_menus.this, internetStatusG);
+                                Toast.makeText(toolbar_menus.this, "Все нормально, сервер merchik онлайн", Toast.LENGTH_LONG).show();
+                            } else if (extra != null && extra.equals("SIGNAL")) {
+                                if (background instanceof ShapeDrawable) {
+                                    ((ShapeDrawable) background).getPaint().setColor(ContextCompat.getColor(toolbar_menus.this, R.color.greenCol));
+                                } else if (background instanceof GradientDrawable) {
+                                    ((GradientDrawable) background).setColor(ContextCompat.getColor(toolbar_menus.this, R.color.greenCol));
+                                } else if (background instanceof ColorDrawable) {
+                                    ((ColorDrawable) background).setColor(ContextCompat.getColor(toolbar_menus.this, R.color.greenCol));
+                                }
+                            }
+                        }
+
+                        @Override
+                        public void onFailure(String error) {
+                            if (extra != null && extra.equals("SHOW_MASSAGE")) {
+                                internetStatusG = Globals.InternetStatus.NO_SERVER;
+                                Globals.showInternetStatusMassage(toolbar_menus.this, internetStatusG);
+                            } else if (extra != null && extra.equals("SIGNAL")) {
+                                if (background instanceof ShapeDrawable) {
+                                    ((ShapeDrawable) background).getPaint().setColor(ContextCompat.getColor(toolbar_menus.this, R.color.colorInetYellow));
+                                } else if (background instanceof GradientDrawable) {
+                                    ((GradientDrawable) background).setColor(ContextCompat.getColor(toolbar_menus.this, R.color.colorInetYellow));
+                                } else if (background instanceof ColorDrawable) {
+                                    ((ColorDrawable) background).setColor(ContextCompat.getColor(toolbar_menus.this, R.color.colorInetYellow));
+                                }
+                            }
+                        }
+                    });
+                } else {
+                    if (extra != null && extra.equals("SHOW_MASSAGE")) {
+                        internetStatusG = Globals.InternetStatus.NO_INTERNET;
+                        Globals.showInternetStatusMassage(toolbar_menus.this, internetStatusG);
+                    } else if (extra != null && extra.equals("SIGNAL")) {
+                        if (background instanceof ShapeDrawable) {
+                            ((ShapeDrawable) background).getPaint().setColor(ContextCompat.getColor(toolbar_menus.this, R.color.red_error));
+                        } else if (background instanceof GradientDrawable) {
+                            ((GradientDrawable) background).setColor(ContextCompat.getColor(toolbar_menus.this, R.color.red_error));
+                        } else if (background instanceof ColorDrawable) {
+                            ((ColorDrawable) background).setColor(ContextCompat.getColor(toolbar_menus.this, R.color.red_error));
+                        }
+                    }
+                }
+            }
+        }catch (Exception e){
+            Log.e("toolbar", "Exception e: " + e);
+            e.printStackTrace();
         }
     }
 

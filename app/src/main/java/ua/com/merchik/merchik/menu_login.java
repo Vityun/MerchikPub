@@ -263,7 +263,6 @@ public class menu_login extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-//        Globals.restartActivity(this);
     }
 
     /**
@@ -1411,10 +1410,12 @@ public class menu_login extends AppCompatActivity {
                                             dialog.setDialogIco();
                                             dialog.setDialogColorRed();
                                             dialog.setOk("Зрозуміло", () -> {
+                                                intent.putExtra("InternetStatusMassage", "SHOW_MASSAGE");
                                                 startActivity(intent); // ++
                                             });
                                             dialog.show();
                                         } else {
+                                            intent.putExtra("InternetStatusMassage", "SHOW_MASSAGE");
                                             startActivity(intent); // ++
                                         }
                                         // ------------
@@ -1626,10 +1627,12 @@ public class menu_login extends AppCompatActivity {
                     dialog.setDialogIco();
                     dialog.setDialogColorRed();
                     dialog.setOk("Зрозуміло", () -> {
+                        intent.putExtra("InternetStatusMassage", "SHOW_MASSAGE");
                         startActivity(intent); // ++
                     });
                     dialog.show();
                 } else {
+                    intent.putExtra("InternetStatusMassage", "SHOW_MASSAGE"); // тут
                     startActivity(intent); // ++
                 }
             } else {

@@ -957,7 +957,7 @@ public class Globals {
         coords.put("altitudeAccuracy", "");
         coords.put("heading", "");
         coords.put("speed", logMP.CoordSpeed);
-        coords.put("trusted_location", logMP.mocking ? 0 : 1 );           // 1 - хорошая, если не 1 - плохая
+        coords.put("trusted_location", logMP.mocking ? 0 : 1);           // 1 - хорошая, если не 1 - плохая
 //        coords.put("trusted_location", logMP.mocking);           // 1 - хорошая, если не 1 - плохая
         coords.put("source_id", logMP.provider);
         DataMap.put("coords", coords);                                                              // географические координаты
@@ -983,15 +983,16 @@ public class Globals {
     /**
      * 22.10.21.
      * Запись в лог местоположений
+     *
      * @return
      */
     public static LogMPDB fixMP(WpDataDB wpDataDB, Context context) {
         try {
             try {
 
-                if (context != null){
+                if (context != null) {
                     String problem = "Якщо ви виправили зауваження, а система все рівно не працює, зверніться за допомогою до свого керівника, або до оператора служби підтримки merchik \"+380674491265\"";
-                    if (!enabledGPS){
+                    if (!enabledGPS) {
                         DialogData dialogData = new DialogData(context);
                         dialogData.setTitle("");
                         dialogData.setText("У вас вимкнений модуль GPS. Увімкніть його та, через хвилину, повторіть спробу.\n\n" + problem);
@@ -999,12 +1000,12 @@ public class Globals {
                         dialogData.setImgBtnCall(context);
                         dialogData.show();
 //                        Toast.makeText(context, "У вас вимкнений модуль GPS. Увімкніть його та, через хвилину, повторіть спробу.", Toast.LENGTH_LONG).show();
-                    }else {
-                        if (imHereGPS != null && imHereGPS.getLatitude() == 0){
+                    } else {
+                        if (imHereGPS != null && imHereGPS.getLatitude() == 0) {
                             Toast.makeText(context, "Підійдіть до вікна (чи вийдіть з приміщення на подвір`я) та, через хвилину, повторіть спробу.", Toast.LENGTH_LONG).show();
                         }
 
-                        if (imHereGPS != null && imHereGPS.isFromMockProvider()){
+                        if (imHereGPS != null && imHereGPS.isFromMockProvider()) {
                             Toast.makeText(context, "На вашому пристрої увімкнений режим отримання фіктивних координат. Вимкніть його та, через хвилину, повторіть спробу.", Toast.LENGTH_LONG).show();
                         }
                     }
@@ -1012,7 +1013,7 @@ public class Globals {
 
 
                 String locationUniqueStringGPSThis = "1" + imHereGPS.getLatitude() + imHereGPS.getLongitude() + imHereGPS.getTime();
-                if (!locationUniqueStringGPS.equals(locationUniqueStringGPSThis)){
+                if (!locationUniqueStringGPS.equals(locationUniqueStringGPSThis)) {
                     int id = RealmManager.logMPGetLastId() + 1;
                     Globals.writeToMLOG("INFO", "fixMP", "create new logMP id: " + id);
                     LogMPDB log = new LogMPDB();
@@ -1034,16 +1035,17 @@ public class Globals {
 
                         AddressSDB addressSDB = SQL_DB.addressDao().getById(wpDataDB.getAddr_id());
                         float coordAddrX = 0, coordAddrY = 0;
-                        if (addressSDB != null){
+                        if (addressSDB != null) {
                             coordAddrX = addressSDB.locationXd;
                             coordAddrY = addressSDB.locationYd;
-                        }else {
+                        } else {
                             try {
-                                if (wpDataDB != null){
+                                if (wpDataDB != null) {
                                     coordAddrX = Float.parseFloat(wpDataDB.getAddr_location_xd());
                                     coordAddrY = Float.parseFloat(wpDataDB.getAddr_location_yd());
                                 }
-                            }catch (Exception e){}
+                            } catch (Exception e) {
+                            }
                         }
                         double distance = coordinatesDistanse(coordAddrX, coordAddrY, log.CoordX, log.CoordY);
                         log.distance = (int) distance;
@@ -1055,7 +1057,7 @@ public class Globals {
 
                     locationUniqueStringGPS = locationUniqueStringGPSThis;
                     return log;
-                }else {
+                } else {
                     Globals.writeToMLOG("INFO", "fixMP/imHereGPS", "locationUniqueStringGPSThis: " + locationUniqueStringGPSThis + " locationUniqueStringGPS: " + locationUniqueStringGPS);
                 }
             } catch (Exception e) {
@@ -1065,7 +1067,7 @@ public class Globals {
 
             try {
                 String locationUniqueStringNETThis = "" + imHereNET.getLatitude() + imHereNET.getLongitude() + imHereNET.getTime();
-                if (!locationUniqueStringGSM.equals(locationUniqueStringNETThis)){
+                if (!locationUniqueStringGSM.equals(locationUniqueStringNETThis)) {
                     int idNET = RealmManager.logMPGetLastId() + 1;
                     LogMPDB logNET = new LogMPDB();
                     logNET.id = idNET;
@@ -1085,16 +1087,17 @@ public class Globals {
 
                         AddressSDB addressSDB = SQL_DB.addressDao().getById(wpDataDB.getAddr_id());
                         float coordAddrX = 0, coordAddrY = 0;
-                        if (addressSDB != null){
+                        if (addressSDB != null) {
                             coordAddrX = addressSDB.locationXd;
                             coordAddrY = addressSDB.locationYd;
-                        }else {
+                        } else {
                             try {
-                                if (wpDataDB != null){
+                                if (wpDataDB != null) {
                                     coordAddrX = Float.parseFloat(wpDataDB.getAddr_location_xd());
                                     coordAddrY = Float.parseFloat(wpDataDB.getAddr_location_yd());
                                 }
-                            }catch (Exception e){}
+                            } catch (Exception e) {
+                            }
                         }
                         double distance = coordinatesDistanse(coordAddrX, coordAddrY, logNET.CoordX, logNET.CoordY);
                         logNET.distance = (int) distance;
@@ -1105,7 +1108,7 @@ public class Globals {
                     locationUniqueStringGSM = locationUniqueStringNETThis;
                     return logNET;
                 }
-            }catch (Exception e){
+            } catch (Exception e) {
                 Globals.writeToMLOG("ERROR", "fixMP/imHereNET is null?", "Exception e: " + e);
             }
         } catch (Exception e) {
@@ -1414,7 +1417,42 @@ public class Globals {
         return new StringBuilder(str).reverse().toString();
     }
 
-    ;
+
+    public enum InternetStatus {
+        INTERNET,   // Инет есть, всё ок
+        NO_INTERNET,// Нет интернета
+        NO_SERVER,  // Нет сервера
+        NULL        // Не знаю, на всяк случай, будет дефолтом
+    }
+
+    /**
+     * 24.11.23
+     * Отображаю сообщение о состоянии интеренета, онлайн режима и тп...
+     */
+    public static void showInternetStatusMassage(Context context, InternetStatus status) {
+        DialogData dialog = new DialogData(context);
+        switch (status){
+            case INTERNET -> dialog.setTitle("Все нормально, сервер merchik онлайн");
+            case NO_INTERNET -> dialog.setTitle("Нема інтернет з'єднання");
+//            case NO_SERVER -> dialog.setTitle("Нема з'єднання із сервером");
+            case NO_SERVER -> dialog.setTitle("Інтернет з'єднання працює, але сервер merchik не відповідає");
+            case NULL -> dialog.setTitle("Не зрозуміла помилка зв'язку");
+        }
+        dialog.setText("Зв`язок з сервером на поточний момент встановити не вдалось! Додаток буде працювати у режимі off-line. " +
+                "У цьому режимі він не може отримувати від серверу дані та не може передавати свої дані у зворотньому напрямку але, " +
+                "якщо дані вже завантажені, то ви можете працювати майже без обмеження функціоналу. У випадку, якщо це ваш перший " +
+                "вхід у систему (після встановлення Додатку) то ви не зможете почати роботи, поки не відновите зв`язок з сервером. " +
+                "Система періодично (раз на 10 хвилин) буде автоматично намагатись відновити зв`язок з сервером і виконати обмін даними. " +
+                "Для того, щоб ініціювати цей процес власноруч, \n" +
+                "а) впевніться що у вас ввімкнений (і працює) і-нет, \n" +
+                "б) натисніть іконку 'обмін даними' у верхній частині додатку. \n\n" +
+                "Допомогу ви можете отримати у свого керівника чи у оператора служби підтримки merchik +380674491265");
+        dialog.setTextScroll();
+        dialog.setImgBtnCall(context);
+        dialog.setClose(dialog::dismiss);
+        dialog.setDialogIco();
+        dialog.show();
+    }
 
 
 }//--------------

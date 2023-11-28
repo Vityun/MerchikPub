@@ -115,6 +115,7 @@
             android:focusable="true"
             android:maxLines="25"
             android:scrollbars="vertical"
+            android:scrollbarStyle="insideOverlay"
             android:text="Основной текст блока"
             android:visibility="visible"
             app:layout_constraintBottom_toBottomOf="parent"

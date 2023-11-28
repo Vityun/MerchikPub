@@ -19,6 +19,7 @@ import android.text.Editable;
 import android.text.InputType;
 import android.text.SpannableStringBuilder;
 import android.text.TextWatcher;
+import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
@@ -207,6 +208,12 @@ public class DialogData {
             this.text.setText(text);
         } else {
             this.text.setVisibility(View.GONE);
+        }
+    }
+
+    public void setTextScroll(){
+        if (text != null && !text.equals("")){
+            text.setMovementMethod(new ScrollingMovementMethod());
         }
     }
 
