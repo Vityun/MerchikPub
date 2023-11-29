@@ -845,11 +845,6 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                 break;
         }
 
-/*        switch (option.getOptionId()) {
-            case "133382":  // Потенциальный клиент
-                additionalText += additionalText133382();
-                break;
-        }*/
 
         SpannableStringBuilder ss = new SpannableStringBuilder();
         ss.append(option.getOptionDescr());
@@ -905,12 +900,16 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
             @Override
             public void onClick(View textView) {
                 try {
-                    List<SamplePhotoSDB> samplePhotoSDBList = SQL_DB.samplePhotoDao().getPhotoLogActiveAndTp(1, photoType);
+                    WpDataDB wp = (WpDataDB) dataDB;
+                    AddressSDB addressSDB = SQL_DB.addressDao().getById(wp.getAddr_id());
+
+                    List<SamplePhotoSDB> samplePhotoSDBList = SQL_DB.samplePhotoDao().getPhotoLogActiveAndTp(1, photoType, addressSDB.tpId);
                     if (samplePhotoSDBList != null && samplePhotoSDBList.size() > 1) {
                         Intent intent = new Intent(context, PhotoLogActivity.class);
                         intent.putExtra("SamplePhoto", true);
                         intent.putExtra("SamplePhotoActivity", false);
                         intent.putExtra("photoTp", photoType);
+                        intent.putExtra("grpId", addressSDB.tpId);
                         context.startActivity(intent);
                     } else if (samplePhotoSDBList != null && samplePhotoSDBList.size() == 1){
                         // Тут должен отобразить фото на весь экран

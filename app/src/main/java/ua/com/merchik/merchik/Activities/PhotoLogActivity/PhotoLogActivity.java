@@ -181,6 +181,7 @@ public class PhotoLogActivity extends toolbar_menus {
                 }
 
                 int photoTp = this.getIntent().getIntExtra("photoTp", 999);     // Если открыли Журнал фото с каким-то типом = он тут
+                int grpId = this.getIntent().getIntExtra("grpId", 999);
 
                 Globals.writeToMLOG("INFO", "PhotoLogActivity/setRecycler/SamplePhoto", "SamplePhoto TP: " + photoTp);
 
@@ -189,7 +190,7 @@ public class PhotoLogActivity extends toolbar_menus {
                 if (photoTp == 999) {
                     samplePhotoSDBList = SQL_DB.samplePhotoDao().getPhotoLogActive(1);
                 } else {
-                    samplePhotoSDBList = SQL_DB.samplePhotoDao().getPhotoLogActiveAndTp(1, photoTp);
+                    samplePhotoSDBList = SQL_DB.samplePhotoDao().getPhotoLogActiveAndTp(1, photoTp, grpId);
                 }
 
                 // --- DEBUG ---
