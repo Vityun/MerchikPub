@@ -4,6 +4,7 @@ import static ua.com.merchik.merchik.database.realm.RealmManager.INSTANCE;
 
 import android.util.Log;
 
+import java.util.Date;
 import java.util.List;
 
 import io.realm.RealmResults;
@@ -237,6 +238,33 @@ public class AdditionalRequirementsRealm {
                     .isNull("addrTTId")
                     .findAll();
         }
+
+//        // Фильтрация по дате
+        Date currentDate = new Date(); // текущая дата
+
+        realmResults = realmResults.where()
+                .beginGroup()
+                .beginGroup()
+                .isNull("dtStart") // Проверка на NULL для неограниченной даты
+                .or()
+                .lessThanOrEqualTo("dtStart", currentDate)
+                .endGroup()
+                .or()
+                .isNull("dtStart") // Проверка на NULL для неограниченной даты
+                .endGroup()
+                .and()
+                .beginGroup()
+                .beginGroup()
+                .isNull("dtEnd") // Проверка на NULL для неограниченной даты
+                .or()
+                .greaterThan("dtEnd", currentDate)
+                .endGroup()
+                .or()
+                .isNull("dtEnd") // Проверка на NULL для неограниченной даты
+                .endGroup()
+                .findAll();
+
+
         return realmResults;
     }
 

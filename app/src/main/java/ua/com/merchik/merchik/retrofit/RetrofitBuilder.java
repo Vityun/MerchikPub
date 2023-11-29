@@ -7,6 +7,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 
+import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
 import okhttp3.OkHttpClient;
@@ -44,10 +45,21 @@ public class RetrofitBuilder {
     private static long serverTime;
 
     private RetrofitBuilder() {
-        Gson gson = new GsonBuilder()
+        // было 29.11.23.
+//        Gson gson = new GsonBuilder()
+//                .setLenient()
+//                .setDateFormat("yyyy-MM-dd")
+//                .create();
+
+        // стало
+        GsonBuilder gsonBuilder = new GsonBuilder()
                 .setLenient()
-                .setDateFormat("yyyy-MM-dd")
-                .create();
+                .setDateFormat("yyyy-MM-dd");
+
+        // Регистрация пользовательского адаптера для Date
+        gsonBuilder.registerTypeAdapter(Date.class, new CustomDateTypeAdapter());
+
+        Gson gson = gsonBuilder.create();
 
 //        loggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
         OkHttpClient.Builder httpClientBuilder = new OkHttpClient.Builder();

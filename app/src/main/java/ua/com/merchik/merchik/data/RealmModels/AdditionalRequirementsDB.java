@@ -3,6 +3,8 @@ package ua.com.merchik.merchik.data.RealmModels;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
+import java.util.Date;
+
 import io.realm.RealmObject;
 
 public class AdditionalRequirementsDB extends RealmObject {
@@ -53,12 +55,15 @@ public class AdditionalRequirementsDB extends RealmObject {
     @SerializedName("not_approve")
     @Expose
     private String not_approve;
+
     @SerializedName("dt_start")
     @Expose
-    private String dtStart;
+    public Date dtStart;
+
     @SerializedName("dt_end")
     @Expose
-    private String dtEnd;
+    public Date dtEnd;
+
     @SerializedName("author_id")
     @Expose
     private String authorId;
@@ -190,21 +195,21 @@ public class AdditionalRequirementsDB extends RealmObject {
         this.not_approve = not_approve;
     }
 
-    public String getDtStart() {
-        return dtStart;
-    }
-
-    public void setDtStart(String dtStart) {
-        this.dtStart = dtStart;
-    }
-
-    public String getDtEnd() {
-        return dtEnd;
-    }
-
-    public void setDtEnd(String dtEnd) {
-        this.dtEnd = dtEnd;
-    }
+//    public String getDtStart() {
+//        return dtStart;
+//    }
+//
+//    public void setDtStart(String dtStart) {
+//        this.dtStart = dtStart;
+//    }
+//
+//    public String getDtEnd() {
+//        return dtEnd;
+//    }
+//
+//    public void setDtEnd(String dtEnd) {
+//        this.dtEnd = dtEnd;
+//    }
 
     public String getAuthorId() {
         return authorId;

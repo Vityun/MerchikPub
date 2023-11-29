@@ -970,11 +970,12 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
 
 
                 // Пишет статус логина. Или режим работы приложения
-                if (Globals.onlineStatus) {
-                    toolbarMwnuItemServer = getResources().getString(R.string.txt_sever) + "(" + getResources().getString(R.string.txt_online) + ")";
-                } else {
-                    toolbarMwnuItemServer = getResources().getString(R.string.txt_sever) + "(" + getResources().getString(R.string.txt_offline) + ")";
-                }
+                toolbarMwnuItemServer = "Тест";
+//                if (Globals.onlineStatus) {
+//                    toolbarMwnuItemServer = getResources().getString(R.string.txt_sever) + "(" + getResources().getString(R.string.txt_online) + ")";
+//                } else {
+//                    toolbarMwnuItemServer = getResources().getString(R.string.txt_sever) + "(" + getResources().getString(R.string.txt_offline) + ")";
+//                }
                 Log.e("КРОНЧИК", "Globals.onlineStatus: " + toolbarMwnuItemServer);
             } catch (Exception e) {
                 Log.e("КРОНЧИК", "Exception" + e);

@@ -180,13 +180,13 @@ public class AdditionalRequirementsAdapter extends RecyclerView.Adapter<Addition
             String dStart = "<b>Дата начала: </b>";
             bStart.append(dStart);
             try {
-                Log.e("AdditionalRequirements", "Дата начала: " + data.getDtStart());
-                if (data.getDtStart().equals("0000-00-00")) {
-                    bStart.append("Не определена");
-                } else {
-                    String dStart2 = String.format("%s", data.getDtStart());
+//                Log.e("AdditionalRequirements", "Дата начала: " + data.getDtStart());
+//                if (data.getDtStart().equals("0000-00-00")) {
+//                    bStart.append("Не определена");
+//                } else {
+                    String dStart2 = String.format("%s", data.dtStart);
                     bStart.append(dStart2);
-                }
+//                }
             } catch (Exception e) {
                 bStart.append("Не определена");
             }
@@ -197,13 +197,13 @@ public class AdditionalRequirementsAdapter extends RecyclerView.Adapter<Addition
             String dEnd = "<b>Дата окончания: </b>";
             bEnd.append(dEnd);
             try {
-                Log.e("AdditionalRequirements", "Дата окончания: " + data.getDtEnd());
-                if (data.getDtEnd().equals("0000-00-00")) {
-                    bEnd.append("Не определена");
-                } else {
-                    String dEnd2 = String.format("%s", data.getDtEnd());
+//                Log.e("AdditionalRequirements", "Дата окончания: " + data.getDtEnd());
+//                if (data.getDtEnd().equals("0000-00-00")) {
+//                    bEnd.append("Не определена");
+//                } else {
+                    String dEnd2 = String.format("%s", data.dtEnd);
                     bEnd.append(dEnd2);
-                }
+//                }
             } catch (Exception e) {
                 bEnd.append("Не определена");
             }
@@ -327,13 +327,13 @@ public class AdditionalRequirementsAdapter extends RecyclerView.Adapter<Addition
             }
 
             try {
-                String dtStart = String.format("<b>Дата начала: </b>%s<br>", data.getDtStart());
+                String dtStart = String.format("<b>Дата начала: </b>%s<br>", data.dtStart);
                 builder.append(dtStart);
             } catch (Exception e) {
             }
 
             try {
-                String dtEnd = String.format("<b>Дата окончания: </b>%s<br>", data.getDtEnd());
+                String dtEnd = String.format("<b>Дата окончания: </b>%s<br>", data.dtEnd);
                 builder.append(dtEnd);
             } catch (Exception e) {
             }
@@ -455,13 +455,13 @@ public class AdditionalRequirementsAdapter extends RecyclerView.Adapter<Addition
         String dStart = "<b>Дата начала: </b>";
         bStart.append(dStart);
         try {
-            Log.e("AdditionalRequirements", "Дата начала: " + data.getDtStart());
-            if (data.getDtStart().equals("0000-00-00")) {
-                bStart.append("Не определена");
-            } else {
-                String dStart2 = String.format("%s", data.getDtStart());
+//            Log.e("AdditionalRequirements", "Дата начала: " + data.getDtStart());
+//            if (data.getDtStart().equals("0000-00-00")) {
+//                bStart.append("Не определена");
+//            } else {
+                String dStart2 = String.format("%s", data.dtStart);
                 bStart.append(dStart2);
-            }
+//            }
         } catch (Exception e) {
             bStart.append("Не определена");
         }
@@ -472,13 +472,13 @@ public class AdditionalRequirementsAdapter extends RecyclerView.Adapter<Addition
         String dEnd = "<b>Дата окончания: </b>";
         bEnd.append(dEnd);
         try {
-            Log.e("AdditionalRequirements", "Дата окончания: " + data.getDtEnd());
-            if (data.getDtEnd().equals("0000-00-00")) {
-                bEnd.append("Не определена");
-            } else {
-                String dEnd2 = String.format("%s", data.getDtEnd());
+//            Log.e("AdditionalRequirements", "Дата окончания: " + data.getDtEnd());
+//            if (data.getDtEnd().equals("0000-00-00")) {
+//                bEnd.append("Не определена");
+//            } else {
+                String dEnd2 = String.format("%s", data.dtEnd);
                 bEnd.append(dEnd2);
-            }
+//            }
         } catch (Exception e) {
             bEnd.append("Не определена");
         }

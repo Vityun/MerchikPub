@@ -61,7 +61,6 @@ import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsRealm;
 import ua.com.merchik.merchik.database.realm.tables.PPADBRealm;
 import ua.com.merchik.merchik.database.realm.tables.ReportPrepareRealm;
-import ua.com.merchik.merchik.database.realm.tables.TovarRealm;
 import ua.com.merchik.merchik.dialogs.BlockingProgressDialog;
 import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.dialogs.DialogVideo;
@@ -555,20 +554,16 @@ public class DetailedReportTovarsFrag extends Fragment {
 
                 for (AdditionalRequirementsDB item : data) {
                     if (item.getTovarId() != null && !item.getTovarId().equals("0") && !item.getTovarId().equals("")) {
+//                        long startDt = Clock.dateConvertToLong(item.getDtStart()) / 1000;
+//                        long endDt = Clock.dateConvertToLong(item.getDtEnd()) / 1000;
 
-                        long startDt = Clock.dateConvertToLong(item.getDtStart()) / 1000;
-                        long endDt = Clock.dateConvertToLong(item.getDtEnd()) / 1000;
+                        long startDt = item.dtStart.getTime() / 1000;
+                        long endDt = item.dtEnd.getTime() / 1000;
+
 
                         long docDt = wpDataDB.getDt().getTime() / 1000;
                         long docDtMinus2 = Clock.getDatePeriodLong(docDt, -2);
                         long docDtPlus1 = Clock.getDatePeriodLong(docDt, 1);
-
-                        Log.e("AR_DATE", "item.getId(): " + item.getId());
-                        Log.e("AR_DATE", "item.getDtStart(): " + item.getDtStart());
-                        Log.e("AR_DATE", "item.getDtEnd(): " + item.getDtEnd());
-                        Log.e("AR_DATE", "item.getTovarId(): " + item.getTovarId());
-                        Log.e("AR_DATE", "Tovar: " + TovarRealm.getById(item.getTovarId()).getNm());
-
 
                         if ((startDt > 0 && endDt > 0 && docDtMinus2 < endDt) || (startDt > 0 && endDt == 0)){
                             promotionalTov.add(Integer.valueOf(item.getTovarId()));

@@ -114,23 +114,11 @@ import ua.com.merchik.merchik.dialogs.EKL.EKLRequests;
 
 public interface RetrofitInterface {
 
-    //testdata
-
     @POST("mobile_app.php?")
     @Timeout(key = LOGIN_SYSTEM)
     Call<SessionCheck> CHECK_SESSION(
             @Query("mod") String mod,
             @Query("app_data") String app_data);
-
-    @POST("mobile_app.php?")
-    Call<JsonObject> CHECK_SESSION_JSON(
-            @Query("mod") String mod,
-            @Query("app_data") String app_data);
-
-    @POST("mobile_app.php?")
-    Call<JsonObject> CHECK_SESSION2(
-            @Query("mod") String mod);
-
 
     // mod=auth&act=sotr_auth&username=Фам Мария Чунговна&password=gwgm87789&app_data={"browser":{"date":"2020-10-08","name":"MerchikApp","test":"1","type":"mobile_app","VersionApp":"1.0.09.201006"},"device":{"brand":"xiaomi","model":"Redmi 5 Plus","type":"MerchikApp"},"os":{"api":"27","name":"Android","VersionApp":"8.1.0"}}
     @POST("mobile_app.php?")
@@ -143,13 +131,7 @@ public interface RetrofitInterface {
             @Query("app_data") String app_data);
 
     @POST("mobile_app.php?")
-    Call<JsonObject> LOGIN_TEST(
-            @Query("mod") String mod,
-            @Query("act") String act,
-            @Query("username") String login,
-            @Query("password") String password);
-
-    @POST("mobile_app.php?")
+    @Timeout(key = LOGIN_SYSTEM)
     Call<JsonObject> GET_LOGIN_HINT(
             @Query("mod") String mod,
             @Query("act") String act,
@@ -165,6 +147,7 @@ public interface RetrofitInterface {
 
     @Multipart
     @POST("mobile_app.php?")
+    @Timeout(key = LOGIN_SYSTEM)
     Call<ServerConnection> PING_SERVER(@Part("mod") RequestBody mod,
                                        @Part("t") RequestBody t,
                                        @Part MultipartBody.Part image);
