@@ -903,7 +903,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                         .filter(obj -> obj.getTovarId().equals(tovar.getiD()))
                         .findFirst();
                 result.ifPresent(currentAR -> {
-                    currentAR = RealmManager.INSTANCE.copyFromRealm(result.get());
+                    currentAR = result.get();
                     // если опция контроля не указана
                     if (currentAR.getOptionId() != null && currentAR.getOptionId().equals("0")){
                         res[0] = currentAR;

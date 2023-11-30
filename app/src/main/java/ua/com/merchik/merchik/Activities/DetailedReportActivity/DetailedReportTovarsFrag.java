@@ -557,8 +557,8 @@ public class DetailedReportTovarsFrag extends Fragment {
 //                        long startDt = Clock.dateConvertToLong(item.getDtStart()) / 1000;
 //                        long endDt = Clock.dateConvertToLong(item.getDtEnd()) / 1000;
 
-                        long startDt = item.dtStart.getTime() / 1000;
-                        long endDt = item.dtEnd.getTime() / 1000;
+                        long startDt = item.dtStart != null ? item.dtStart.getTime() / 1000 : 0;
+                        long endDt = item.dtEnd != null ? item.dtEnd.getTime() / 1000 : 0;
 
 
                         long docDt = wpDataDB.getDt().getTime() / 1000;
