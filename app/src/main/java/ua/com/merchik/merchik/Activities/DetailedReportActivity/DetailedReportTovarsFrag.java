@@ -552,7 +552,7 @@ public class DetailedReportTovarsFrag extends Fragment {
 
                 Globals.writeToMLOG("INFO", "DetailedReportTovarsFrag/addRecycleView/AdditionalRequirementsDB", "data: " + data);
 
-                for (AdditionalRequirementsDB item : data) {
+            for (AdditionalRequirementsDB item : data) {
                     if (item.getTovarId() != null && !item.getTovarId().equals("0") && !item.getTovarId().equals("")) {
 //                        long startDt = Clock.dateConvertToLong(item.getDtStart()) / 1000;
 //                        long endDt = Clock.dateConvertToLong(item.getDtEnd()) / 1000;

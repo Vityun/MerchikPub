@@ -94,8 +94,10 @@ public class OptionControlAdditionalRequirementsMark<T> extends OptionControl {
             }
 
             // Получаем Доп.Требования.
-            RealmResults<AdditionalRequirementsDB> realmResults = AdditionalRequirementsRealm.getData3(document, HIDE_FOR_USER, ttCategory, 1);
-            List<AdditionalRequirementsDB> data = RealmManager.INSTANCE.copyFromRealm(realmResults);
+//            RealmResults<AdditionalRequirementsDB> realmResults = AdditionalRequirementsRealm.getData3(document, HIDE_FOR_USER, ttCategory, 1);
+//            List<AdditionalRequirementsDB> data = RealmManager.INSTANCE.copyFromRealm(realmResults);
+
+            List<AdditionalRequirementsDB> data = AdditionalRequirementsRealm.getData3(document, HIDE_FOR_USER, ttCategory, 1);
 
 //            // DEBUG DATA-------------
 //            try {
@@ -117,6 +119,8 @@ public class OptionControlAdditionalRequirementsMark<T> extends OptionControl {
                 // Получаем Оценки этих Доп. требований.
                 RealmResults<AdditionalRequirementsMarkDB> marks = AdditionalRequirementsMarkRealm.getAdditionalRequirementsMarks(dateFrom, dateTo, wpDataDB.getUser_id(), "1", data);
                 List<AdditionalRequirementsMarkDB> testMark = INSTANCE.copyFromRealm(marks);
+
+//                List<AdditionalRequirementsMarkDB> marks = RealmManager.INSTANCE.copyFromRealm(AdditionalRequirementsMarkRealm.getAdditionalRequirementsMarks(dateFrom, dateTo, wpDataDB.getUser_id(), "1", data));
 
                 Log.e("OptionControlARMark", "2");
 
@@ -152,10 +156,11 @@ public class OptionControlAdditionalRequirementsMark<T> extends OptionControl {
                     item.note = "Нет ни одной оценки по этому Доп.требованию поставленной " + wpDataDB.getUser_txt();
 
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                        Log.e("OptionControlARMark", "5");
                         if (marks.stream().filter(m -> m.getItemId().equals(item.id)).findFirst().orElse(null) != null) {
-                            AdditionalRequirementsMarkDB currentMark = marks.where().equalTo("itemId", item.id).findFirst();
+                            AdditionalRequirementsMarkDB currentMark = INSTANCE.copyFromRealm(marks.where().equalTo("itemId", item.id).findFirst());
 
-                            Log.e("OptionControlARMark", "5");
+                            Log.e("OptionControlARMark", "5.1");
 
                             if (currentMark != null) {
                                 item.mark = Integer.valueOf(currentMark.getScore());
@@ -165,18 +170,22 @@ public class OptionControlAdditionalRequirementsMark<T> extends OptionControl {
                                 item.mark = 0;
                             }
 
+                            Log.e("OptionControlARMark", "5.2");
+
                             if (Long.parseLong(item.dtChange) >= dateDocumentLong) {
                                 item.nedotoch = 0;
                                 item.offset = 1;
                                 item.notes = "ДТ измененно ПОСЛЕ проведения работ и проверке не подлежит";
                                 continue;
-                            } else if (Clock.dateConvertToLong(item.dtEnd) == dateDocumentLong) {
+                            } else if (item.dtEnd != null && item.dtEnd.getTime() == dateDocumentLong) {
                                 item.nedotoch = 0;
                                 item.notes = "у ДТ заканчивается срок действия и голосование по нему проверке не подлежит";
                                 continue;
                             } else if (item.mark == 0) {
                                 continue;
                             }
+
+                            Log.e("OptionControlARMark", "5.3");
 
                             item.nedotoch = 0;
                             item.note = "";

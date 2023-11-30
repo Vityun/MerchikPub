@@ -14,6 +14,7 @@ import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
 import ua.com.merchik.merchik.data.RealmModels.AdditionalRequirementsDB;
 import ua.com.merchik.merchik.data.RealmModels.AddressDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
+import ua.com.merchik.merchik.database.realm.RealmManager;
 
 /**
  * 21.04.2021
@@ -119,7 +120,7 @@ public class AdditionalRequirementsRealm {
         HIDE_FOR_CLIENT     // Скрывать для клиента. Добавил просто потому что в БД есть такое поле и может в будущем пригодиться.
     }
 
-    public static <T> RealmResults<AdditionalRequirementsDB> getData3(T data, AdditionalRequirementsModENUM mod, Integer ttCategory, int mode) {
+    public static <T> List<AdditionalRequirementsDB> getData3(T data, AdditionalRequirementsModENUM mod, Integer ttCategory, int mode) {
 
         Log.e("getData3", "mod: " + mod);
 
@@ -265,7 +266,7 @@ public class AdditionalRequirementsRealm {
                 .findAll();
 
 
-        return realmResults;
+        return RealmManager.INSTANCE.copyFromRealm(realmResults);
     }
 
 

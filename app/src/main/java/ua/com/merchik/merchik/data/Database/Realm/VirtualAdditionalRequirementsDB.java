@@ -64,11 +64,11 @@ public class VirtualAdditionalRequirementsDB{
 
     @SerializedName("dt_start")
     @Expose
-    public String dtStart;
+    public Date dtStart;
 
     @SerializedName("dt_end")
     @Expose
-    public String dtEnd;
+    public Date dtEnd;
 
     @SerializedName("author_id")
     @Expose

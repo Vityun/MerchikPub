@@ -1685,6 +1685,7 @@ public class Options {
         }
     }
 
+    // Это вроде нигде не работает, некст раз прочитаешь - проверь. Работает с DetailedButtons
     private <T> void option138339(Context context, T dataDB, OptionsDB option, OptionMassageType type, NNKMode mode, OptionControl.UnlockCodeResultListener unlockCodeResultListener) {
         List<AdditionalRequirementsDB> data = AdditionalRequirementsRealm.getData3(dataDB, HIDE_FOR_USER, null, 0);
 
@@ -2569,10 +2570,12 @@ public class Options {
             long dateTo = Clock.getDatePeriodLong(date, +3) / 1000;     // Дата документа +3 дня
 
             // Получаем Доп.Требования.
-            RealmResults<AdditionalRequirementsDB> realmResults = AdditionalRequirementsRealm.getData3(dataDB, HIDE_FOR_USER, null, 0);
-            List<AdditionalRequirementsDB> data = RealmManager.INSTANCE.copyFromRealm(realmResults);
+//            RealmResults<AdditionalRequirementsDB> realmResults = AdditionalRequirementsRealm.getData3(dataDB, HIDE_FOR_USER, null, 0);
+//            List<AdditionalRequirementsDB> data = RealmManager.INSTANCE.copyFromRealm(realmResults);
 
-            // Получаем Оценки этих Доп. требований.
+            List<AdditionalRequirementsDB> data = AdditionalRequirementsRealm.getData3(dataDB, HIDE_FOR_USER, null, 0);
+
+                    // Получаем Оценки этих Доп. требований.
             RealmResults<AdditionalRequirementsMarkDB> marks = AdditionalRequirementsMarkRealm.getAdditionalRequirementsMarks(dateFrom, dateTo, userId, "1", data);
 
             Gson gson = new Gson();
@@ -2598,7 +2601,7 @@ public class Options {
                 if (Long.parseLong(item.dtChange) >= dt) {
                     item.nedotoch = 0;
                     item.notes = "ДТ измененно ПОСЛЕ проведения работ и проверке не подлежит";
-                } else if (Clock.dateConvertToLong(item.dtEnd) == dt) {
+                } else if (item.dtEnd != null && item.dtEnd.getTime() == dt) {
                     item.nedotoch = 0;
                     item.notes = "у ДТ заканчивается срок действия и голосование по нему проверке не подлежит";
                 } else if (item.mark == 0) {
