@@ -21,6 +21,9 @@ public interface ShowcaseDao {
     @Query("SELECT * FROM showcase WHERE client_id = :clientId AND addr_id = :addrId")
     List<ShowcaseSDB> getByDoc(String clientId, int addrId);
 
+//    @Query("SELECT * FROM showcase WHERE client_id = :clientId AND addr_id = :addrId")
+//    List<ShowcaseSDB> getByDocAndDate(String clientId, int addrId, );
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     Completable insertAll(List<ShowcaseSDB> data);
 

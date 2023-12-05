@@ -1792,9 +1792,7 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
         if (dialogMap == null) dialogMap = new DialogMap(this);
         if (wpDataObj != null) {
             if (wpDataObj.getLatitude() != null && wpDataObj.getLongitude() != null) {
-
                 Log.e("MANAGER_COORD", "wpDataObj.getLatitude()" + wpDataObj.getLatitude());
-
                 dialogMap.setSpot(wpDataObj.getLatitude(), wpDataObj.getLongitude());
                 dialogMap.updateMap();
             }
