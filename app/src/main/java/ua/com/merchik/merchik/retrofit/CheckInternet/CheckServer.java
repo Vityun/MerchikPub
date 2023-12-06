@@ -48,8 +48,8 @@ public class CheckServer {
         call.enqueue(new Callback<ServerConnection>() {
             @Override
             public void onResponse(Call<ServerConnection> call, Response<ServerConnection> response) {
-                blockingProgressDialog.dismiss();
                 try {
+                    blockingProgressDialog.dismiss();
                     if (response.isSuccessful()) {
                         if (response.body() != null){
                             if (response.body().getState()){
@@ -64,6 +64,7 @@ public class CheckServer {
                         click.onFailure("response.isSuccessful(): " + response.isSuccessful());
                     }
                 }catch (Exception e){
+                    blockingProgressDialog.dismiss();
                     click.onFailure("Exception e: " + e);
                 }
             }

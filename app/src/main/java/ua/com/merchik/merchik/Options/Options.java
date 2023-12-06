@@ -154,7 +154,7 @@ public class Options {
             138520, 138773, 137797, 138339, 141360, 141910, 141888, 141885, 84007, 132666, 139576,
             138767, 135742, 132621, 84003, 138340, 135327, 135328, 156882, 151139, 132623, 133382,
             157275, 157276, 157274, 135159, 157277, 157353, 138643, 158243, 135412, 151748, 158309,
-            158308, 158604, 158605, 158606, 157354, 157242, 159725, 135413, 135719, 143969
+            158308, 158604, 158605, 158606, 157354, 157242, 159725, 135413, 135719, 143969, 160567
     };
 
 
@@ -1097,6 +1097,7 @@ public class Options {
         Log.e("NNK", "F/optControl/NNKMode mode: " + mode);
         switch (optionId) {
 
+            case 160567:
             case 160568:
                 OptionControlPhotoShowcase<?> optionControlPhotoShowcase =
                         new OptionControlPhotoShowcase<>(context, dataDB, option, type, mode, unlockCodeResultListener);

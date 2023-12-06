@@ -236,6 +236,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                     || optionId == 135413   // "Фото Витрины (Оценка)"
                     || optionId == 135719   // "Дет.Отчет" (оценка)
                     || optionId == 143969   // "СМС-код Клиенту" (электронный контрольный лист ЭКЛ)
+                    || optionId == 160567   // Витрины
             ) {
                 optionButton.setBackgroundResource(R.drawable.bg_temp);
                 textInteger2.setVisibility(View.VISIBLE);
