@@ -76,7 +76,7 @@ public class OptionControlPhotoShowcase<T> extends OptionControl {
 
             // Тут ещё должен быть фильтр по Дате - 2 дня. Но у меня Дата в Date, а дата у Витрин - Строка
             showcaseSDBList = SQL_DB.showcaseDao().getByDoc(wpDataDB.getClient_id(), wpDataDB.getAddr_id());
-            stackPhotoDBSList = StackPhotoRealm.getPhotosByDAD2(dad2, 0); // 0 - Фото Витрины
+            stackPhotoDBSList = RealmManager.INSTANCE.copyFromRealm(StackPhotoRealm.getPhotosByDAD2(dad2, 0)); // 0 - Фото Витрины
         } catch (Exception e) {
             Globals.writeToMLOG("ERROR", "OptionControlPhotoShowcase/getDocumentVar", "Exception e: " + e);
         }
