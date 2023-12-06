@@ -555,7 +555,7 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
         synchronizationSignal("SIGNAL", null);
 
         item.getActionView().setOnLongClickListener(v -> {
-            synchronizationSignal("SIGNAL", 1);
+            synchronizationSignal("SIGNAL", null);
             synchronizationSignal("SHOW_MASSAGE", 1);
 
 //            Toast.makeText(toolbar_menus.this, "Начинаю Обмен. (Выгрузка фото и Синхронизация таблиц)", Toast.LENGTH_SHORT).show();
@@ -566,7 +566,7 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
         });
 
         item.getActionView().setOnClickListener(v -> {
-            synchronizationSignal("SIGNAL", 2);
+            synchronizationSignal("SIGNAL", null);
             synchronizationSignal("SHOW_MASSAGE", 2);
 
             PopupMenu popup = new PopupMenu(toolbar_menus.this, v);

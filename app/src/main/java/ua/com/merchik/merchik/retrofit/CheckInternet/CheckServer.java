@@ -29,6 +29,7 @@ public class CheckServer {
         DEFAULT, WITH_PHOTO
     }
 
+    private static BlockingProgressDialog blockingProgressDialog;
     public static void isServerConnected(Context context, ServerConnect serverConnect, Integer mode, Clicks.clickStatusMsg click) {
         RequestBody mod = RequestBody.create(MediaType.parse("text/plain"), "ping");
         RequestBody time = RequestBody.create(MediaType.parse("text/plain"), String.valueOf(System.currentTimeMillis()));
@@ -39,8 +40,9 @@ public class CheckServer {
             default -> body = null;
         }
 
-        BlockingProgressDialog blockingProgressDialog = new BlockingProgressDialog(context, "Перевіряю з'єднання із сервером", "Зачекайте будь-ласка, йде перевірка з'єднання із сервером");
+
         if (mode != null){
+            blockingProgressDialog = new BlockingProgressDialog(context, "Перевіряю з'єднання із сервером", "Зачекайте будь-ласка, йде перевірка з'єднання із сервером");
             blockingProgressDialog.show();
         }
 
@@ -49,7 +51,10 @@ public class CheckServer {
             @Override
             public void onResponse(Call<ServerConnection> call, Response<ServerConnection> response) {
                 try {
-                    blockingProgressDialog.dismiss();
+                    if (blockingProgressDialog != null && blockingProgressDialog.isShowing()){
+                        blockingProgressDialog.dismiss();
+                    }
+
                     if (response.isSuccessful()) {
                         if (response.body() != null){
                             if (response.body().getState()){
@@ -64,14 +69,18 @@ public class CheckServer {
                         click.onFailure("response.isSuccessful(): " + response.isSuccessful());
                     }
                 }catch (Exception e){
-                    blockingProgressDialog.dismiss();
+                    if (blockingProgressDialog != null && blockingProgressDialog.isShowing()){
+                        blockingProgressDialog.dismiss();
+                    }
                     click.onFailure("Exception e: " + e);
                 }
             }
 
             @Override
             public void onFailure(Call<ServerConnection> call, Throwable t) {
-                blockingProgressDialog.dismiss();
+                if (blockingProgressDialog != null && blockingProgressDialog.isShowing()){
+                    blockingProgressDialog.dismiss();
+                }
                 click.onFailure("Throwable t: " + t);
             }
         });
