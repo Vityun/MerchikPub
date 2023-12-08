@@ -1,14 +1,21 @@
 package ua.com.merchik.merchik.Activities.TaskAndReclamations;
 
 import static ua.com.merchik.merchik.Activities.TaskAndReclamations.TasksActivity.Tab3Fragment.TARCommentIndex;
+import static ua.com.merchik.merchik.Globals.getRealPathFromURI;
 import static ua.com.merchik.merchik.MakePhoto.MakePhoto.CAMERA_REQUEST_TAR_COMMENT_PHOTO;
+import static ua.com.merchik.merchik.MakePhoto.MakePhoto.PICK_GALLERY_IMAGE_REQUEST;
+import static ua.com.merchik.merchik.MakePhoto.MakePhotoFromGalery.MakePhotoFromGaleryTasksAndReclamationsSDB;
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
+import android.content.Context;
 import android.content.Intent;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.appcompat.widget.Toolbar;
 import androidx.fragment.app.Fragment;
@@ -27,7 +34,9 @@ import ua.com.merchik.merchik.Activities.TaskAndReclamations.TasksActivity.TARHo
 import ua.com.merchik.merchik.Activities.TaskAndReclamations.TasksActivity.TARSecondFrag;
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
+import ua.com.merchik.merchik.MakePhoto.CreatePhotoFile;
 import ua.com.merchik.merchik.MakePhoto.MakePhoto;
+import ua.com.merchik.merchik.MakePhoto.MakePhotoFromGalery;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.Database.Room.AddressSDB;
@@ -35,6 +44,7 @@ import ua.com.merchik.merchik.data.Database.Room.CustomerSDB;
 import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
 import ua.com.merchik.merchik.data.RealmModels.AddressDB;
 import ua.com.merchik.merchik.data.RealmModels.CustomerDB;
+import ua.com.merchik.merchik.data.RealmModels.LogMPDB;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.CustomerRealm;
@@ -304,6 +314,33 @@ public class TARActivity extends toolbar_menus implements TARFragmentHome.OnFrag
                 fragmentHome.homeFrag.dialog.refreshAdaper(stackPhotoDB);
             }
 
+            if (requestCode == PICK_GALLERY_IMAGE_REQUEST) {
+                List<Fragment> fragments = fragmentManager.getFragments();
+                TARFragmentHome fragmentHome = (TARFragmentHome) fragments.get(0);
+
+
+                Uri uri = data.getData();
+                File file = null;
+                if (Build.VERSION.SDK_INT == Build.VERSION_CODES.Q) {
+                    file = new CreatePhotoFile().createDefaultPhotoFile(this, uri);
+                } else {
+                    Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST", "Uri uri: " + uri);
+                    String filePath = getRealPathFromURI(uri);
+                    Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST", "filePath: " + filePath);
+                    file = new File(filePath);
+                    Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST", "file: " + file.length());
+                }
+                StackPhotoDB stackPhotoDB =  savePhoto(file, MakePhotoFromGaleryTasksAndReclamationsSDB, MakePhotoFromGalery.tovarId, getApplicationContext());
+
+//                StackPhotoDB stackPhotoDB = saveTestPhoto(new File(MakePhoto.openCameraPhotoUri), addr, client, fragmentHome.secondFrag.data);
+
+                try {
+                    fragmentHome.secondFrag.setPhoto(stackPhotoDB.getId());
+                }catch (Exception e){
+                    Log.e("test", "Exception e: " + e);
+                }
+            }
+
             if (requestCode == CAMERA_REQUEST_TAR_COMMENT_PHOTO) {
                 List<Fragment> fragments = fragmentManager.getFragments();
                 TARFragmentHome fragmentHome = (TARFragmentHome) fragments.get(0);
@@ -490,6 +527,62 @@ public class TARActivity extends toolbar_menus implements TARFragmentHome.OnFrag
         }
     }
 
+
+    /**
+     * 08.12.23. Сохраняю фото с галереи
+     * */
+    private StackPhotoDB savePhoto(File file, TasksAndReclamationsSDB tasksAndReclamationsSDB, String tovarId, Context context) {
+        try {
+            int id = RealmManager.stackPhotoGetLastId();
+            id++;
+            StackPhotoDB stackPhotoDB = new StackPhotoDB();
+            stackPhotoDB.setId(id);
+            stackPhotoDB.setDt(tasksAndReclamationsSDB.dt);
+            stackPhotoDB.setTime_event(Clock.getHumanTimeSecPattern(tasksAndReclamationsSDB.dt, "yyyy-MM-dd"));
+
+            stackPhotoDB.setAddr_id(tasksAndReclamationsSDB.addr);
+            stackPhotoDB.setAddressTxt(tasksAndReclamationsSDB.addrNm);
+
+            stackPhotoDB.setClient_id(tasksAndReclamationsSDB.client);
+            stackPhotoDB.setCustomerTxt(tasksAndReclamationsSDB.clientNm);
+
+            stackPhotoDB.code_dad2 = tasksAndReclamationsSDB.codeDad2;
+
+            // 10.09.23. Походу Сервер без этого не воспринимает фотографии (сейчас касается это // Тип фото Остатков из ГАЛЕРЕИ)
+            LogMPDB log = Globals.fixMP(null, null);
+            String GP = log != null ? log.gp : "";
+            stackPhotoDB.gp = GP;
+
+            stackPhotoDB.setUser_id(Globals.userId);
+            stackPhotoDB.setUserTxt(SQL_DB.usersDao().getUserName(Globals.userId));
+            stackPhotoDB.setPhoto_type(4);      // Тип фото Остатков
+            stackPhotoDB.tovar_id = tovarId;
+
+            stackPhotoDB.setCreate_time(System.currentTimeMillis());
+
+//            String hash = globals.getHashMD5FromFileTEST(uri, context);
+            String hash = globals.getHashMD5FromFile2(file, this);
+            if (hash == null || hash.equals("")) hash = globals.getHashMD5FromFile(file, this);
+            Globals.writeToMLOG("INFO", "TARActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST", "hash: " + hash);
+
+            if (hash == null || hash.equals("")) {
+                hash = globals.getHashMD5FromFile(file, this);
+            }
+
+            stackPhotoDB.setPhoto_hash(hash);
+            stackPhotoDB.setPhoto_num(file.getAbsolutePath());
+
+            String jo = new Gson().toJson(stackPhotoDB);
+            Globals.writeToMLOG("INFO", "TARActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST", "stackPhotoDB: " + jo);
+
+            RealmManager.stackPhotoSavePhoto(stackPhotoDB);
+            Toast.makeText(context, "Фото (" + id + ") з Галереї успішно збережено!", Toast.LENGTH_LONG).show();
+            return stackPhotoDB;
+        } catch (Exception e) {
+            Globals.writeToMLOG("ERROR", "TARActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST", "Exception e: " + e);
+            return null;
+        }
+    }
     @Override
     public void messageFromParentFragment(String msg) {
 
@@ -533,4 +626,20 @@ public class TARActivity extends toolbar_menus implements TARFragmentHome.OnFrag
 //        Log.e("TasksActivity_T", "4. Открыли БАЗОВЫЙ фрагмент. кол-во: " + fragmentManager.getBackStackEntryCount());
 //        Log.e("TasksActivity_T", "4. fragmentManager.getFragments(): " + fragmentManager.getFragments());
 //    }
+
+
+
+    /*
+                        case 3:
+                            try {
+                                MakePhotoFromGaleryTasksAndReclamationsSDB = ;
+                                Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+                                intent.setType("image/*");
+                                Globals.writeToMLOG("INFO", "TARActivity/Intent.ACTION_PICK", "intent: " + intent);
+                                ((TARActivity) v.getContext()).startActivityForResult(Intent.createChooser(intent, "Select Picture"), 500);
+                            } catch (Exception e) {
+                                Globals.writeToMLOG("ERROR", "TARActivity/Intent.ACTION_PICK", "Exception e: " + e);
+                            }
+                            break;
+*/
 }

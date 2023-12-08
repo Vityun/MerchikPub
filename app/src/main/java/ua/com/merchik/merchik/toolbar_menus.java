@@ -2074,6 +2074,8 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
         }catch (Exception e){
             Log.e("toolbar", "Exception e: " + e);
             e.printStackTrace();
+            Globals.writeToMLOG("ERROR", "synchronizationSignal", "Exception e: " + e);
+            Globals.writeToMLOG("ERROR", "synchronizationSignal", "Exception e..: " + Arrays.toString(e.getStackTrace()));
         }
     }
 

@@ -1,11 +1,13 @@
 package ua.com.merchik.merchik.Activities.TaskAndReclamations.TasksActivity;
 
 import static ua.com.merchik.merchik.MakePhoto.MakePhoto.CAMERA_REQUEST_TAR_COMMENT_PHOTO;
+import static ua.com.merchik.merchik.MakePhoto.MakePhotoFromGalery.MakePhotoFromGaleryTasksAndReclamationsSDB;
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.text.Html;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -214,7 +216,16 @@ public class Tab3Fragment extends Fragment {
                                     Globals.writeToMLOG("ERROR", "Tab3Fragment.setAddButton.case2", "Exception e: " + e);
                                 }
 
-//                                Toast.makeText(v.getContext(), "Долгий клик", Toast.LENGTH_SHORT).show();
+                            case 3:
+                                try {
+                                    MakePhotoFromGaleryTasksAndReclamationsSDB = tarData;
+                                    Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+                                    intent.setType("image/*");
+                                    Globals.writeToMLOG("INFO", "TARActivity/Intent.ACTION_PICK", "intent: " + intent);
+                                    ((TARActivity) v.getContext()).startActivityForResult(Intent.createChooser(intent, "Select Picture"), 500);
+                                } catch (Exception e) {
+                                    Globals.writeToMLOG("ERROR", "TARActivity/Intent.ACTION_PICK", "Exception e: " + e);
+                                }
                                 break;
                         }
                     }

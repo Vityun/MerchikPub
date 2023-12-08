@@ -1,5 +1,7 @@
 package ua.com.merchik.merchik.dialogs.DialodTAR;
 
+import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
+
 import android.app.Dialog;
 import android.content.Context;
 import android.util.Log;
@@ -39,8 +41,6 @@ import ua.com.merchik.merchik.database.realm.tables.ThemeRealm;
 import ua.com.merchik.merchik.database.realm.tables.WpDataRealm;
 import ua.com.merchik.merchik.dialogs.DialogData;
 
-import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
-
 public class DialogCreateTAR extends DialogData {
 
     private Context context;
@@ -68,7 +68,7 @@ public class DialogCreateTAR extends DialogData {
     private OpinionSDB opinion;
     public String comment;
     public String premiya;
-    private long dad2;
+    public long dad2;
 
     private int tarType;
     private Integer vinovnik;
@@ -140,6 +140,12 @@ public class DialogCreateTAR extends DialogData {
             Globals.writeToMLOG("INFO", "DialogCreateTAR.refreshAdaper", "stackJson: " + stackJson);
         }catch (Exception e){
             Globals.writeToMLOG("INFO", "DialogCreateTAR.refreshAdaper", "Exception e: " + e);
+
+            try {
+                StackPhotoDB testObj = photo;
+            }catch (Exception ex){
+                Globals.writeToMLOG("INFO", "DialogCreateTAR.refreshAdaper", "Exception ex: " + ex);
+            }
         }
     }
 
@@ -264,12 +270,17 @@ public class DialogCreateTAR extends DialogData {
             try {
                 if (data.type == 1) {
                     click.click(data.type);
-                    return;
+//                    return;
                 }
 
                 if (data.type == 2) {
                     click.click(data.type);
-                    return;
+//                    return;
+                }
+
+                if (data.type == 3) {
+                    click.click(data.type);
+//                    return;
                 }
             } catch (Exception e) {
                 // todo ПОПРАВИТЬ, ТАК НЕ ДОЛЖНО БЫТЬ

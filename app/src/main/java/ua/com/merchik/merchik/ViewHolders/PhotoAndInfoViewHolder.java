@@ -4,6 +4,7 @@ import android.content.Context;
 import android.net.Uri;
 import android.util.Log;
 import android.view.View;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -24,6 +25,8 @@ public class PhotoAndInfoViewHolder extends RecyclerView.ViewHolder {
     private ConstraintLayout layout;
     private TextView testText;
     public ImageView photo;
+    public ImageButton galleryPick;
+
 
     public PhotoAndInfoViewHolder(@NonNull View itemView) {
         super(itemView);
@@ -32,6 +35,8 @@ public class PhotoAndInfoViewHolder extends RecyclerView.ViewHolder {
         layout = itemView.findViewById(R.id.layout);
         testText = itemView.findViewById(R.id.testText);
         photo = itemView.findViewById(R.id.photo);
+        galleryPick = itemView.findViewById(R.id.galleryPick);
+        galleryPick.setVisibility(View.VISIBLE);
     }
 
     public void bind(TestViewHolderData data, Clicks.clickListener click) {
@@ -59,6 +64,13 @@ public class PhotoAndInfoViewHolder extends RecyclerView.ViewHolder {
             test.type = 1;
             click.click(test);
             return false;
+        });
+
+        galleryPick.setOnClickListener(view -> {
+            Log.e("DOUBLE_CLICK", "setOnLongClickListener");
+            TEST_DATA test = new TEST_DATA();
+            test.type = 3;
+            click.click(test);
         });
     }
 }

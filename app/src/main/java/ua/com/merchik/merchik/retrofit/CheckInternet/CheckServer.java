@@ -10,6 +10,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Arrays;
 
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
@@ -17,6 +18,7 @@ import okhttp3.RequestBody;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
+import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.RetrofitResponse.ServerConnection;
@@ -31,59 +33,87 @@ public class CheckServer {
 
     private static BlockingProgressDialog blockingProgressDialog;
     public static void isServerConnected(Context context, ServerConnect serverConnect, Integer mode, Clicks.clickStatusMsg click) {
-        RequestBody mod = RequestBody.create(MediaType.parse("text/plain"), "ping");
-        RequestBody time = RequestBody.create(MediaType.parse("text/plain"), String.valueOf(System.currentTimeMillis()));
-        MultipartBody.Part body;
+        try {
+            Globals.writeToMLOG("INFO", "synchronizationSignal/isServerConnected/", "mode: " + mode);
+            Globals.writeToMLOG("INFO", "synchronizationSignal/isServerConnected/", "serverConnect: " + serverConnect);
 
-        switch (serverConnect) {
-            case WITH_PHOTO -> body = getPhotoBody(context);
-            default -> body = null;
-        }
+            RequestBody mod = RequestBody.create(MediaType.parse("text/plain"), "ping");
+            RequestBody time = RequestBody.create(MediaType.parse("text/plain"), String.valueOf(System.currentTimeMillis()));
+            MultipartBody.Part body;
+
+            switch (serverConnect) {
+                case WITH_PHOTO -> body = getPhotoBody(context);
+                default -> body = null;
+            }
 
 
-        if (mode != null){
-            blockingProgressDialog = new BlockingProgressDialog(context, "Перевіряю з'єднання із сервером", "Зачекайте будь-ласка, йде перевірка з'єднання із сервером");
-            blockingProgressDialog.show();
-        }
+            if (mode != null){
+                blockingProgressDialog = new BlockingProgressDialog(context, "Перевіряю з'єднання із сервером", "Зачекайте будь-ласка, йде перевірка з'єднання із сервером");
+                blockingProgressDialog.show();
+                Globals.writeToMLOG("INFO", "synchronizationSignal/isServerConnected/", "blockingProgressDialog.show()");
+            }
 
-        retrofit2.Call<ServerConnection> call = RetrofitBuilder.getRetrofitInterface().PING_SERVER(mod, time, body);
-        call.enqueue(new Callback<ServerConnection>() {
-            @Override
-            public void onResponse(Call<ServerConnection> call, Response<ServerConnection> response) {
-                try {
-                    if (blockingProgressDialog != null && blockingProgressDialog.isShowing()){
-                        blockingProgressDialog.dismiss();
-                    }
+            retrofit2.Call<ServerConnection> call = RetrofitBuilder.getRetrofitInterface().PING_SERVER(mod, time, body);
+            call.enqueue(new Callback<ServerConnection>() {
+                @Override
+                public void onResponse(Call<ServerConnection> call, Response<ServerConnection> response) {
+                    try {
+                        if (blockingProgressDialog != null && blockingProgressDialog.isShowing()){
+                            Globals.writeToMLOG("INFO", "synchronizationSignal/isServerConnected/onResponse/", "blockingProgressDialog.dismiss()");
+                            blockingProgressDialog.dismiss();
+                        }
 
-                    if (response.isSuccessful()) {
-                        if (response.body() != null){
-                            if (response.body().getState()){
-                                click.onSuccess("OK");
+                        if (response.isSuccessful()) {
+                            if (response.body() != null){
+                                if (response.body().getState()){
+                                    click.onSuccess("OK");
+                                }else {
+                                    click.onFailure("response.body().getState(): " + response.body().getState());
+                                }
                             }else {
-                                click.onFailure("response.body().getState(): " + response.body().getState());
+                                click.onFailure("response.body(): " + response.body());
                             }
                         }else {
-                            click.onFailure("response.body(): " + response.body());
+                            click.onFailure("response.isSuccessful(): " + response.isSuccessful());
                         }
-                    }else {
-                        click.onFailure("response.isSuccessful(): " + response.isSuccessful());
-                    }
-                }catch (Exception e){
-                    if (blockingProgressDialog != null && blockingProgressDialog.isShowing()){
-                        blockingProgressDialog.dismiss();
-                    }
-                    click.onFailure("Exception e: " + e);
-                }
-            }
+                    }catch (Exception e){
+                        if (blockingProgressDialog != null && blockingProgressDialog.isShowing()){
+                            Globals.writeToMLOG("INFO", "synchronizationSignal/isServerConnected/onResponse/E", "blockingProgressDialog.dismiss()");
+                            blockingProgressDialog.dismiss();
+                        }
 
-            @Override
-            public void onFailure(Call<ServerConnection> call, Throwable t) {
-                if (blockingProgressDialog != null && blockingProgressDialog.isShowing()){
-                    blockingProgressDialog.dismiss();
+                        Globals.writeToMLOG("ERROR", "synchronizationSignal/isServerConnected/onResponse", "Exception e: " + e);
+                        Globals.writeToMLOG("ERROR", "synchronizationSignal/isServerConnected/onResponse", "Exception e..: " + Arrays.toString(e.getStackTrace()));
+
+                        click.onFailure("Exception e: " + e);
+                    }
                 }
-                click.onFailure("Throwable t: " + t);
-            }
-        });
+
+                @Override
+                public void onFailure(Call<ServerConnection> call, Throwable t) {
+                    try {
+                        if (blockingProgressDialog != null && blockingProgressDialog.isShowing()){
+                            Globals.writeToMLOG("INFO", "synchronizationSignal/isServerConnected/onFailure/", "blockingProgressDialog.dismiss()");
+                            blockingProgressDialog.dismiss();
+                        }
+                        click.onFailure("Throwable t: " + t);
+                    }catch (Exception e){
+                        if (blockingProgressDialog != null && blockingProgressDialog.isShowing()){
+                            Globals.writeToMLOG("INFO", "synchronizationSignal/isServerConnected/onFailure/E", "blockingProgressDialog.dismiss()");
+                            blockingProgressDialog.dismiss();
+                        }
+
+                        Globals.writeToMLOG("ERROR", "synchronizationSignal/isServerConnected/onFailure", "Exception e: " + e);
+                        Globals.writeToMLOG("ERROR", "synchronizationSignal/isServerConnected/onFailure", "Exception e..: " + Arrays.toString(e.getStackTrace()));
+
+                        click.onFailure("Exception e: " + e);
+                    }
+                }
+            });
+        }catch (Exception e){
+            Globals.writeToMLOG("ERROR", "synchronizationSignal/isServerConnected", "Exception e: " + e);
+            Globals.writeToMLOG("ERROR", "synchronizationSignal/isServerConnected", "Exception e..: " + Arrays.toString(e.getStackTrace()));
+        }
     }
 
     private static MultipartBody.Part getPhotoBody(Context context) {

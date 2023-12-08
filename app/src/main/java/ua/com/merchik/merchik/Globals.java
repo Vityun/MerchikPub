@@ -1,5 +1,6 @@
 package ua.com.merchik.merchik;
 
+import static io.realm.Realm.getApplicationContext;
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 import static ua.com.merchik.merchik.toolbar_menus.internetStatus;
 import static ua.com.merchik.merchik.trecker.coordinatesDistanse;
@@ -415,6 +416,19 @@ public class Globals {
     public static String getRealPathFromURI(Uri contentUri, Context context) {
         String[] projection = {MediaStore.Images.Media.DATA};
         Cursor cursor = context.getApplicationContext().getContentResolver().query(contentUri, projection, null, null, null);
+        if (cursor == null) {
+            return null;
+        }
+        int columnIndex = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
+        cursor.moveToFirst();
+        String path = cursor.getString(columnIndex);
+        cursor.close();
+        return path;
+    }
+
+    public static String getRealPathFromURI(Uri contentUri) {
+        String[] projection = {MediaStore.Images.Media.DATA};
+        Cursor cursor = getApplicationContext().getContentResolver().query(contentUri, projection, null, null, null);
         if (cursor == null) {
             return null;
         }

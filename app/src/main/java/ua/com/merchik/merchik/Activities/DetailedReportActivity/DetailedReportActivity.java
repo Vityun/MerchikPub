@@ -1106,6 +1106,7 @@ public class DetailedReportActivity extends toolbar_menus {
 
 //            String hash = globals.getHashMD5FromFileTEST(uri, context);
             String hash = globals.getHashMD5FromFile2(file, this);
+            if (hash == null || hash.equals("")) hash = globals.getHashMD5FromFile(file, this);
             Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST", "hash: " + hash);
 
             if (hash == null || hash.equals("")) {
