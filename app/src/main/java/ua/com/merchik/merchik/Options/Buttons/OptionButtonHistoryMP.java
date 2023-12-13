@@ -22,7 +22,7 @@ import ua.com.merchik.merchik.dialogs.DialogData;
 
 // 138773
 public class OptionButtonHistoryMP<T> extends OptionControl {
-    public int OPTION_BUTTON_ADD_COMMENT_ID = 132623;
+    public int OPTION_BUTTON_ADD_COMMENT_ID = 138773;
 
     private WpDataDB wpDataDB;
     private List<LogMPDB> logMPDBList;

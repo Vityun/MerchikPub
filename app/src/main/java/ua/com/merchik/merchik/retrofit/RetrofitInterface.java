@@ -95,6 +95,7 @@ import ua.com.merchik.merchik.data.RetrofitResponse.tables.TovarGroupResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.TranslatesResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.UsersResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.VoteResponse;
+import ua.com.merchik.merchik.data.RetrofitResponse.tables.planogramm.PlanogrammResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.update.reportprepare.ReportPrepareUpdateResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.update.wpdata.WpDataUpdateResponse;
 import ua.com.merchik.merchik.data.ServerData.TARCommentsData.AdditionalRequirements.AdditionalRequirementsServerData;
@@ -607,6 +608,12 @@ public interface RetrofitInterface {
             @Body JsonObject json);
 
     // -------------------------------------------------------
+
+    // PlanogrammResponse
+    @POST("mobile_app.php?")
+    Call<PlanogrammResponse> Planogramm_RESPONSE(
+            @Header("ContentType") String content,
+            @Body JsonObject json);
 
     //    PTTRequest
     @POST("mobile_app.php?")

@@ -13,15 +13,19 @@ import com.google.android.material.navigation.NavigationView;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 
+import java.util.List;
+
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.R;
+import ua.com.merchik.merchik.ServerExchange.Exchange;
+import ua.com.merchik.merchik.ServerExchange.ExchangeInterface;
+import ua.com.merchik.merchik.ServerExchange.PhotoDownload;
+import ua.com.merchik.merchik.data.RetrofitResponse.photos.ImagesViewListImageList;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.ShowcaseResponse;
-import ua.com.merchik.merchik.data.ServerData.TARCommentsData.AdditionalRequirements.AdditionalRequirementsServerData;
 import ua.com.merchik.merchik.data.TestJsonUpload.StandartData;
-import ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsRealm;
 import ua.com.merchik.merchik.dialogs.DialogShowcase.DialogShowcase;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
 import ua.com.merchik.merchik.toolbar_menus;
@@ -59,37 +63,97 @@ public class MenuMainActivity extends toolbar_menus {
 
     private void test() {
 
-            try {
-                StandartData data = new StandartData();
-                data.mod = "additional_requirements";
-                data.act = "list";
-
-                Gson gson = new Gson();
-                String json = gson.toJson(data);
-                JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
-
-                retrofit2.Call<AdditionalRequirementsServerData> call = RetrofitBuilder.getRetrofitInterface().GET_TABLE_AdditionalRequirementsDB(RetrofitBuilder.contentType, convertedObject);
-                call.enqueue(new retrofit2.Callback<AdditionalRequirementsServerData>() {
-                    @Override
-                    public void onResponse(retrofit2.Call<AdditionalRequirementsServerData> call, retrofit2.Response<AdditionalRequirementsServerData> response) {
-                        try {
-                            AdditionalRequirementsRealm.setDataToDB(response.body().getList());
-                            Globals.writeToMLOG("ERR", "downloadAdditionalRequirements/onResponse", "response.body().getList(): " + response.body().getList().size());
-                        } catch (Exception e) {
-                            Globals.writeToMLOG("ERR", "downloadAdditionalRequirements/onResponse", "Exception e: " + e);
-                        }
-                    }
-
-                    @Override
-                    public void onFailure(retrofit2.Call<AdditionalRequirementsServerData> call, Throwable t) {
-                        Globals.writeToMLOG("ERR", "downloadAdditionalRequirements/onFailure", "Throwable t: " + t);
-                    }
-                });
-            } catch (Exception e) {
-                Globals.writeToMLOG("ERR", "downloadAdditionalRequirements", "Exception e: " + e);
+        new Exchange().planogram(new ExchangeInterface.ExchangeResponseInterface() {
+            @Override
+            public <T> void onSuccess(List<T> data) {
+                try {
+                    List<ImagesViewListImageList> datalist = (List<ImagesViewListImageList>) data;
+                    PhotoDownload.savePhotoToDB2(datalist);
+                    Globals.writeToMLOG("INFO", "startExchange/planogram.onSuccess", "OK: " + datalist.size());
+                } catch (Exception e) {
+                    Globals.writeToMLOG("ERROR", "startExchange/planogram.onSuccess", "Exception e: " + e);
+                }
             }
 
+            @Override
+            public void onFailure(String error) {
+                Globals.writeToMLOG("FAIL", "startExchange/planogram/onFailure", error);
+            }
+        }); // Получение планограмм
+
+
     }
+
+/*        new PlanogrammTableExchange().planogramDownload(new Clicks.clickObjectAndStatus() {
+        @Override
+        public void onSuccess(Object data) {
+
+        }
+
+        @Override
+        public void onFailure(String error) {
+
+        }
+    });*/
+
+/*    // Просто планограммы
+    StandartData data = new StandartData();
+    data.mod = "planogram";
+    data.act = "list";
+    data.nolimit = "1";
+
+    Gson gson = new Gson();
+    String json = gson.toJson(data);
+    JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
+        Log.e("MAIN_test", "Просто планограммы convertedObject: " + convertedObject);
+
+    retrofit2.Call<JsonObject> call = RetrofitBuilder.getRetrofitInterface().TEST_JSON_UPLOAD(RetrofitBuilder.contentType, convertedObject);
+        call.enqueue(new Callback<JsonObject>() {
+        @Override
+        public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
+            Log.e("MAIN_test", "Просто планограммы: " + response);
+            Log.e("MAIN_test", "Просто планограммы body: " + response.body());
+        }
+
+        @Override
+        public void onFailure(Call<JsonObject> call, Throwable t) {
+            Log.e("MAIN_test", "Просто планограммы: " + t);
+        }
+    });*/
+
+
+
+
+/*                try {
+        StandartData data = new StandartData();
+        data.mod = "additional_requirements";
+        data.act = "list";
+
+        Gson gson = new Gson();
+        String json = gson.toJson(data);
+        JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
+
+        retrofit2.Call<AdditionalRequirementsServerData> call = RetrofitBuilder.getRetrofitInterface().GET_TABLE_AdditionalRequirementsDB(RetrofitBuilder.contentType, convertedObject);
+        call.enqueue(new retrofit2.Callback<AdditionalRequirementsServerData>() {
+            @Override
+            public void onResponse(retrofit2.Call<AdditionalRequirementsServerData> call, retrofit2.Response<AdditionalRequirementsServerData> response) {
+                try {
+                    AdditionalRequirementsRealm.setDataToDB(response.body().getList());
+                    Globals.writeToMLOG("ERR", "downloadAdditionalRequirements/onResponse", "response.body().getList(): " + response.body().getList().size());
+                } catch (Exception e) {
+                    Globals.writeToMLOG("ERR", "downloadAdditionalRequirements/onResponse", "Exception e: " + e);
+                }
+            }
+
+            @Override
+            public void onFailure(retrofit2.Call<AdditionalRequirementsServerData> call, Throwable t) {
+                Globals.writeToMLOG("ERR", "downloadAdditionalRequirements/onFailure", "Throwable t: " + t);
+            }
+        });
+    } catch (Exception e) {
+        Globals.writeToMLOG("ERR", "downloadAdditionalRequirements", "Exception e: " + e);
+    }*/
+
 
 
     /*        String mod = "location";
