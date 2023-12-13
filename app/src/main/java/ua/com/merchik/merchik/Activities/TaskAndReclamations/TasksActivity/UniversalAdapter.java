@@ -100,11 +100,11 @@ public class UniversalAdapter extends RecyclerView.Adapter<UniversalAdapter.View
         }
 
 
-        public void bind(TasksAndReclamationsSDB data) {
+        public void bind(TasksAndReclamationsSDB dataItem) {
 
             try {
-                int TARType = data.tp;
-                int state = data.state;
+                int TARType = dataItem.tp;
+                int state = dataItem.state;
 
                 try {
                     Drawable background = layoutWp.getBackground();
@@ -137,9 +137,15 @@ public class UniversalAdapter extends RecyclerView.Adapter<UniversalAdapter.View
                     Globals.writeToMLOG("ERROR", "UniversalAdapter.bind.Drawable", "Exception e: " + e);
                 }
 
-                if (TARType == 0) {
-
-                } else if (TARType == 1) {
+                if (TARType == 0) {     // Рекламации
+                    // Pika Для рекламаций (TARType == 0) (правда и других объектов передаваемых при отображении этим универсальным адаптером)
+                    // для статуса > 0 (а для рекламаций это исправленные, отмененные и т.д., но не активная - устанавливаю отображение)
+                    // кружочка на фото с умолчательного(установленого в ХМЛ-красный знак вопроса) на зеленый кружок типа ОК
+                    if (state > 0) {
+                        status.setImageDrawable(mContext.getResources().getDrawable(R.drawable.ic_check));
+                        status.setColorFilter(mContext.getResources().getColor(R.color.greenCol));
+                    }
+                } else if (TARType == 1) {  // Задачи
                     if (state == 0) {
                         status.setImageDrawable(mContext.getResources().getDrawable(R.drawable.ic_exclamation_mark_in_a_circle));
                         status.setColorFilter(mContext.getResources().getColor(R.color.red_error));
@@ -161,9 +167,9 @@ public class UniversalAdapter extends RecyclerView.Adapter<UniversalAdapter.View
 
                 SpannableStringBuilder line1 = new SpannableStringBuilder();
 
-                CharSequence date = new SimpleDateFormat("dd-MM-yyyy").format(Clock.timeLongToDAte(data.dt)) + " ";
-                CharSequence elementId = Html.fromHtml("<b>ID: </b>" + data.id + " ");
-                CharSequence icId = Html.fromHtml("<b>1cID: </b>" + data.id1c + " ");
+                CharSequence date = new SimpleDateFormat("dd-MM-yyyy").format(Clock.timeLongToDAte(dataItem.dt)) + " ";
+                CharSequence elementId = Html.fromHtml("<b>ID: </b>" + dataItem.id + " ");
+                CharSequence icId = Html.fromHtml("<b>1cID: </b>" + dataItem.id1c + " ");
                 CharSequence status = TasksAndReclamationsRealm.getStatusTxt(TARType, state);
 
                 line1.append(date);
@@ -176,21 +182,21 @@ public class UniversalAdapter extends RecyclerView.Adapter<UniversalAdapter.View
 
                 SpannableStringBuilder line2 = new SpannableStringBuilder();
                 line2.append(Html.fromHtml("<b>Адрес: </b>"));
-                if (data.addr != null && !data.addr.equals("")) {
+                if (dataItem.addr != null && !dataItem.addr.equals("")) {
                     try {
-                        Log.e("BUG_TAR", "S data.getAddr(): " + data.addr);
-                        AddressDB addressDB = AddressRealm.getAddressById(data.addr);
+                        Log.e("BUG_TAR", "S dataItem.getAddr(): " + dataItem.addr);
+                        AddressDB addressDB = AddressRealm.getAddressById(dataItem.addr);
                         CharSequence addr = addressDB.getNm();
                         line2.append(addr);
                         Log.e("BUG_TAR", "E addr: " + addr);
                     } catch (Exception e) {
-                        // TODO data is empty
-                        line2.append("" + data.addr);
-                        Log.e("BUG_TAR", "Exception e: " + data.addr);
+                        // TODO dataItem is empty
+                        line2.append("" + dataItem.addr);
+                        Log.e("BUG_TAR", "Exception e: " + dataItem.addr);
                     }
                 } else {
-                    Log.e("BUG_TAR", "data.getAddr(): " + data.addr);
-                    line2.append("" + data.addr);
+                    Log.e("BUG_TAR", "dataItem.getAddr(): " + dataItem.addr);
+                    line2.append("" + dataItem.addr);
                 }
                 Log.e("BUG_TAR", "line2: " + line2);
                 textLine2.setText(line2);
@@ -199,18 +205,18 @@ public class UniversalAdapter extends RecyclerView.Adapter<UniversalAdapter.View
                 SpannableStringBuilder line3 = new SpannableStringBuilder();
                 line3.append(Html.fromHtml("<b>Клиент: </b>"));
 
-                if (data.client != null && !data.client.equals("")) {
+                if (dataItem.client != null && !dataItem.client.equals("")) {
                     try {
-                        CustomerDB customerDB = CustomerRealm.getCustomerById(String.valueOf(data.client));
+                        CustomerDB customerDB = CustomerRealm.getCustomerById(String.valueOf(dataItem.client));
                         CharSequence str = customerDB.getNm();
                         line3.append(str);
                     } catch (Exception e) {
-                        // TODO data is empty
-                        line3.append("" + data.client);
+                        // TODO dataItem is empty
+                        line3.append("" + dataItem.client);
                     }
 
                 } else {
-                    line3.append("" + data.client);
+                    line3.append("" + dataItem.client);
                 }
 
                 textLine3.setText(line3);
@@ -219,18 +225,18 @@ public class UniversalAdapter extends RecyclerView.Adapter<UniversalAdapter.View
                 SpannableStringBuilder line4 = new SpannableStringBuilder();
                 line4.append(Html.fromHtml("<b>Ответственнный: </b>"));
 
-                if (data.vinovnik != null && !data.vinovnik.equals("")) {
+                if (dataItem.vinovnik != null && !dataItem.vinovnik.equals("")) {
                     try {
-                        UsersDB usersDB = UsersRealm.getUsersDBById(data.vinovnik);
+                        UsersDB usersDB = UsersRealm.getUsersDBById(dataItem.vinovnik);
                         CharSequence str = usersDB.getNm();
                         line4.append(str);
                     } catch (Exception e) {
-                        // TODO data is empty
-                        line4.append("" + data.vinovnik);
+                        // TODO dataItem is empty
+                        line4.append("" + dataItem.vinovnik);
                     }
 
                 } else {
-                    line4.append("" + data.vinovnik);
+                    line4.append("" + dataItem.vinovnik);
                 }
 
                 textLine4.setText(line4);
@@ -238,32 +244,32 @@ public class UniversalAdapter extends RecyclerView.Adapter<UniversalAdapter.View
                 SpannableStringBuilder line5 = new SpannableStringBuilder();
                 try {
 
-                    if (data.tp == 1) {
-                        line5.append(Html.fromHtml("<font color='red'>" + data.sumPenalty + "</font>"));
+                    if (dataItem.tp == 1) {
+                        line5.append(Html.fromHtml("<font color='red'>" + dataItem.sumPenalty + "</font>"));
                         line5.append("/");
-                        if (data.state == 0) {
-                            line5.append(Html.fromHtml("<font color='red'>" + data.sumPremiya + "</font>"));
+                        if (dataItem.state == 0) {
+                            line5.append(Html.fromHtml("<font color='red'>" + dataItem.sumPremiya + "</font>"));
                         } else {
                             line5.append(Html.fromHtml("<font color='red'>" + 0 + "</font>"));
                         }
                     } else {
 
-                        if (data.state == 0) {
-                            line5.append(Html.fromHtml("<font color='red'>" + data.sumPenalty + "</font>"));
+                        if (dataItem.state == 0) {
+                            line5.append(Html.fromHtml("<font color='red'>" + dataItem.sumPenalty + "</font>"));
                             line5.append("/");
-                            line5.append(Html.fromHtml("<font color='red'>-" + data.sumPenalty + "</font>"));
-                        } else if (data.state == 1) {
-                            line5.append(Html.fromHtml("<font color='red'>" + data.sumPenalty + "</font>"));
+                            line5.append(Html.fromHtml("<font color='red'>-" + dataItem.sumPenalty + "</font>"));
+                        } else if (dataItem.state == 1) {
+                            line5.append(Html.fromHtml("<font color='red'>" + dataItem.sumPenalty + "</font>"));
                             line5.append("/");
                             line5.append(Html.fromHtml("<font color='red'>" + 0 + "</font>"));
                         }
-//                        if (data.state == 1) {
-//                            line5.append(Html.fromHtml("<font color='red'>" + data.sumPenalty + "</font>"));
+//                        if (dataItem.state == 1) {
+//                            line5.append(Html.fromHtml("<font color='red'>" + dataItem.sumPenalty + "</font>"));
 //                        } else {
 //                            line5.append(Html.fromHtml("<font color='red'>" + 0 + "</font>"));
 //                        }
 //                        line5.append("/");
-//                        line5.append(Html.fromHtml("<font color='red'>" + data.sumPremiya + "</font>"));
+//                        line5.append(Html.fromHtml("<font color='red'>" + dataItem.sumPremiya + "</font>"));
                     }
 
 
@@ -273,20 +279,20 @@ public class UniversalAdapter extends RecyclerView.Adapter<UniversalAdapter.View
 
                 }
 
-                line5.append(data.comment);
+                line5.append(dataItem.comment);
                 textLine5.setText(line5);
 
                 layout.setOnClickListener(v -> {
-                    onClickListener.onSuccess(data);
+                    onClickListener.onSuccess(dataItem);
                 });
 
                 try {
-                    StackPhotoDB stackPhotoDB = StackPhotoRealm.stackPhotoDBGetPhotoBySiteId(String.valueOf(data.photo));
+                    StackPhotoDB stackPhotoDB = StackPhotoRealm.stackPhotoDBGetPhotoBySiteId(String.valueOf(dataItem.photo));
 
                     Log.e("UniversalAdapter", "stackPhotoDB_1: " + stackPhotoDB);
 
                     if (stackPhotoDB == null) {
-                        stackPhotoDB = StackPhotoRealm.getById(data.photo);
+                        stackPhotoDB = StackPhotoRealm.getById(dataItem.photo);
                     }
 
                     Log.e("UniversalAdapter", "stackPhotoDB_2: " + stackPhotoDB);
@@ -295,7 +301,7 @@ public class UniversalAdapter extends RecyclerView.Adapter<UniversalAdapter.View
                             photoDownloader.downloadPhoto(false, stackPhotoDB, "/TAR", new PhotoDownload.downloadPhotoInterface() {
                                 @Override
                                 public void onSuccess(StackPhotoDB data) {
-                                    Log.e("UniversalAdapter", "Загрузка фото. Успех. data: " + data);
+                                    Log.e("UniversalAdapter", "Загрузка фото. Успех. dataItem: " + data);
                                     photo.setImageURI(Uri.parse(data.getPhoto_num()));
                                 }
 
