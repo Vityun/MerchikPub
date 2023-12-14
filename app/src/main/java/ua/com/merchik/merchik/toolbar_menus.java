@@ -87,6 +87,7 @@ import ua.com.merchik.merchik.Activities.WorkPlanActivity.WPDataActivity;
 import ua.com.merchik.merchik.Activities.navigationMenu.MenuHeader;
 import ua.com.merchik.merchik.Activities.navigationMenu.MenuHeaderAdapter;
 import ua.com.merchik.merchik.ServerExchange.Exchange;
+import ua.com.merchik.merchik.ServerExchange.TablesExchange.PhotoMerchikExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.SamplePhotoExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.ShowcaseExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesLoadingUnloading;
@@ -659,6 +660,14 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                         Globals.writeToMLOG("ERROR", "TOOBAR/CLICK_EXCHANGE/ShowcaseExchange", "Exception e: " + e);
                         Globals.writeToMLOG("ERROR", "TOOBAR/CLICK_EXCHANGE/ShowcaseExchange", "Exception e: " + Arrays.toString(e.getStackTrace()));
                     }
+
+                    try {
+                        PhotoMerchikExchange photoMerchikExchange = new PhotoMerchikExchange();
+                        photoMerchikExchange.getPhotoFromSite();
+                    } catch (Exception e) {
+                        Globals.writeToMLOG("ERROR", "TOOBAR/CLICK_EXCHANGE/ShowcaseExchange", "Exception e: " + e);
+                        Globals.writeToMLOG("ERROR", "TOOBAR/CLICK_EXCHANGE/ShowcaseExchange", "Exception e: " + Arrays.toString(e.getStackTrace()));
+                    }
                 }
                 return true;
             });
@@ -1038,7 +1047,7 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                             globals.writeToMLOG(Clock.getHumanTime() + "TOOLBAR.UploadCallback.onSuccess. id фото выгрузки: " + finalId1 + "\n");
 
                             Log.e("startUploading", "onSuccess");
-                            Toast.makeText(toolbar_menus.this, "Фото: " + finalId1 + " успешно выгружено", Toast.LENGTH_LONG).show();
+                            Toast.makeText(toolbar_menus.this, "Фото номер: " + finalId1 + " успешно выгружено", Toast.LENGTH_LONG).show();
                             RealmManager.INSTANCE.executeTransaction(realm -> {
                                 current.setError(null);
                                 RealmManager.INSTANCE.insertOrUpdate(current);

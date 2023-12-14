@@ -70,6 +70,7 @@ public class StandartData<T> {
     public Long doc_type_id;    // 03.08.23 Добавлено для того что б открівалась подробная инфа о смете.
     public Long vpo;
     public String active_only;  // 30.10.23. ДЛя витрин. Что б отбирать по статусу.
+    public String planogram_only;
     // ------------------------------------
 
     public static class Filter {

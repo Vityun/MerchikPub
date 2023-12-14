@@ -31,7 +31,6 @@ import android.util.Base64;
 import android.util.Log;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.core.content.FileProvider;
@@ -1016,11 +1015,23 @@ public class Globals {
 //                        Toast.makeText(context, "У вас вимкнений модуль GPS. Увімкніть його та, через хвилину, повторіть спробу.", Toast.LENGTH_LONG).show();
                     } else {
                         if (imHereGPS != null && imHereGPS.getLatitude() == 0) {
-                            Toast.makeText(context, "Підійдіть до вікна (чи вийдіть з приміщення на подвір`я) та, через хвилину, повторіть спробу.", Toast.LENGTH_LONG).show();
+                            DialogData dialogData = new DialogData(context);
+                            dialogData.setTitle("");
+                            dialogData.setText("Підійдіть до вікна (чи вийдіть з приміщення на подвір`я) та, через хвилину, повторіть спробу.\n\n" + problem);
+                            dialogData.setClose(dialogData::dismiss);
+                            dialogData.setImgBtnCall(context);
+                            dialogData.show();
+//                            Toast.makeText(context, "Підійдіть до вікна (чи вийдіть з приміщення на подвір`я) та, через хвилину, повторіть спробу.", Toast.LENGTH_LONG).show();
                         }
 
                         if (imHereGPS != null && imHereGPS.isFromMockProvider()) {
-                            Toast.makeText(context, "На вашому пристрої увімкнений режим отримання фіктивних координат. Вимкніть його та, через хвилину, повторіть спробу.", Toast.LENGTH_LONG).show();
+                            DialogData dialogData = new DialogData(context);
+                            dialogData.setTitle("");
+                            dialogData.setText("На вашому пристрої увімкнений режим отримання фіктивних координат. Вимкніть його та, через хвилину, повторіть спробу.\n\n" + problem);
+                            dialogData.setClose(dialogData::dismiss);
+                            dialogData.setImgBtnCall(context);
+                            dialogData.show();
+//                            Toast.makeText(context, "На вашому пристрої увімкнений режим отримання фіктивних координат. Вимкніть його та, через хвилину, повторіть спробу.", Toast.LENGTH_LONG).show();
                         }
                     }
                 }

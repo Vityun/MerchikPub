@@ -1290,6 +1290,7 @@ public class Exchange {
 
 
     /**
+     * 11.12.2023 TODO Нужно доработать в PhotoMerchikExchange.
      * 03.03.2021 (ДОПОЛНИТЬ)
      * Получение со стороны сервера фотографий.
      * <p>
@@ -2067,7 +2068,7 @@ public class Exchange {
 
 //    private void
 
-    private void planogram(ExchangeInterface.ExchangeResponseInterface exchange) {
+    public void planogram(ExchangeInterface.ExchangeResponseInterface exchange) {
 //        if (StackPhotoRealm.checkByType5()) {
 //            exchange.onFailure("Все данные уже загружены");
 //            return;
@@ -2080,6 +2081,8 @@ public class Exchange {
         data.date_to = Clock.today;
         data.photo_type = "5";
         data.nolimit = "1";
+        data.planogram_only = "1";
+
 
         // ВПИ с таблички синхронизаций
         SynchronizationTimetableDB synchronizationTimetableDB = RealmManager.getSynchronizationTimetableRowByTable("planogram");
@@ -2093,6 +2096,8 @@ public class Exchange {
         Gson gson = new Gson();
         String json = gson.toJson(data);
         JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
+
+        Log.e("planogram", "convertedObject: " + convertedObject);
 
         retrofit2.Call<ImagesViewListImageResponse> call = RetrofitBuilder.getRetrofitInterface().GET_PHOTOS(RetrofitBuilder.contentType, convertedObject);
         call.enqueue(new Callback<ImagesViewListImageResponse>() {

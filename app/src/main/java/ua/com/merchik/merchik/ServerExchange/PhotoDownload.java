@@ -398,8 +398,6 @@ public class PhotoDownload {
                         size = response.body().getList().size();
                     }
                     Globals.writeToMLOG("INFO", "" + getClass().getName() + "/getPhotoFromServer/onResponse", "size: " + size);
-//                    Globals.writeToMLOG("INFO", "" + getClass().getName() + "/getPhotoFromServer/onResponse", "Gson: " + new Gson().toJson(response.body().getList()));
-
                     savePhotoToDB(response.body().getList());
 
                     Log.e("getPhotoFromServer", "response.body().getTotal(): " + response.body().getTotalPages());
@@ -455,6 +453,13 @@ public class PhotoDownload {
                                 stackPhotoDB.showcase_id = item.showcase_id;
 
                                 stackPhotoDB.setDvi(Integer.valueOf(item.getDvi()));
+
+                                try {
+                                    Globals.writeToMLOG("INFO", "PhotoMerchikExchange/getPhotoFromSite/savePhotoToDB", "stackPhotoDB: " + new Gson().toJson(stackPhotoDB));
+                                } catch (Exception e) {
+                                    Globals.writeToMLOG("INFO", "PhotoMerchikExchange/getPhotoFromSite/savePhotoToDB", "Exception e: " + e);
+                                }
+
 
                                 RealmManager.stackPhotoSavePhoto(stackPhotoDB);
 

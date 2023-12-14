@@ -140,7 +140,7 @@ public class PhotoReports {
             buildCall(current, new ExchangeInterface.UploadPhotoReports() {
                 @Override
                 public void onSuccess(StackPhotoDB photoDB, String s) {
-                    Toast.makeText(mContext, "Фото: " + photoDB.getId() + " успешно выгружено", Toast.LENGTH_LONG).show();
+                    Toast.makeText(mContext, "Фото номер: " + photoDB.getId() + " успешно выгружено", Toast.LENGTH_LONG).show();
                     realm.executeTransaction(realm -> {
                         photoDB.setError(null);
                         photoDB.setUpload_to_server(System.currentTimeMillis());
