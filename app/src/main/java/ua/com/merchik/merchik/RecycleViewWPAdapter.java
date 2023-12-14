@@ -29,6 +29,7 @@ import ua.com.merchik.merchik.Activities.WorkPlanActivity.WPDataActivity;
 import ua.com.merchik.merchik.Filter.MyFilter;
 import ua.com.merchik.merchik.data.Data;
 import ua.com.merchik.merchik.data.Database.Room.AddressSDB;
+import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
 import ua.com.merchik.merchik.data.RealmModels.TradeMarkDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.data.WPDataObj;
@@ -46,6 +47,9 @@ public class RecycleViewWPAdapter extends RecyclerView.Adapter<RecycleViewWPAdap
     private List<WpDataDB> WP;
     private List<WpDataDB> workPlanList;
     private List<WpDataDB> workPlanList2;
+
+    // Pika чтобы получать список нужных фото, анализируя который можно было нарисовать тот или иной чекбокс на элементе ресиклера
+    private List<StackPhotoDB> ListPhotos;
 
     /*Определяем ViewHolder*/
     class ViewHolder extends RecyclerView.ViewHolder {
@@ -99,12 +103,19 @@ public class RecycleViewWPAdapter extends RecyclerView.Adapter<RecycleViewWPAdap
                 check.setImageDrawable(mContext.getResources().getDrawable(R.drawable.ic_check));
                 check.setColorFilter(mContext.getResources().getColor(R.color.colorInetGreen));
             } else {
-                if (Clock.dateConvertToLong(Clock.getHumanTimeYYYYMMDD(wpDataDB.getDt().getTime()/1000)) < System.currentTimeMillis()) {    //+TODO CHANGE DATE
-                    check.setImageDrawable(mContext.getResources().getDrawable(R.drawable.ic_exclamation_mark_in_a_circle));
-                    check.setColorFilter(mContext.getResources().getColor(R.color.colorInetRed));
-                } else {
-                    check.setImageDrawable(mContext.getResources().getDrawable(R.drawable.ic_round));
-                    check.setColorFilter(mContext.getResources().getColor(R.color.shadow));
+                    // Pika Если есть паеорамное фото по этому ДАД2 то рисуем желтый кружок
+                    ListPhotos = RealmManager.stackPhotoByDad2AndType(wpDataDB.getCode_dad2(),0);
+                    if (ListPhotos.size()>0) {
+                        check.setImageDrawable(mContext.getResources().getDrawable(R.drawable.ic_exclamation_mark_in_a_circle));
+                        check.setColorFilter(mContext.getResources().getColor(R.color.colorInetYellow));
+                    } else {
+                    if (Clock.dateConvertToLong(Clock.getHumanTimeYYYYMMDD(wpDataDB.getDt().getTime()/1000)) < System.currentTimeMillis()) {    //+TODO CHANGE DATE
+                        check.setImageDrawable(mContext.getResources().getDrawable(R.drawable.ic_exclamation_mark_in_a_circle));
+                        check.setColorFilter(mContext.getResources().getColor(R.color.colorInetRed));
+                    } else {
+                        check.setImageDrawable(mContext.getResources().getDrawable(R.drawable.ic_round));
+                        check.setColorFilter(mContext.getResources().getColor(R.color.shadow));
+                    }
                 }
             }
 
