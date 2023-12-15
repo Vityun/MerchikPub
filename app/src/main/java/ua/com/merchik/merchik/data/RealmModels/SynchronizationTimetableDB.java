@@ -13,10 +13,13 @@ public class SynchronizationTimetableDB extends RealmObject {
     private long vpo_export;
     private long vpo_app;
 
+    public String tableTxt;
+    public int update;
+
     public SynchronizationTimetableDB() {
     }
 
-    public SynchronizationTimetableDB(int id, String table_name, int update_frequency, long vpiServer, long vpiApp, long vpoExport, long vpoApp) {
+    public SynchronizationTimetableDB(int id, String table_name, int update_frequency, long vpiServer, long vpiApp, long vpoExport, long vpoApp, String tableTxt, int update) {
         this.id = id;
         this.table_name = table_name;
         this.update_frequency = update_frequency;
@@ -24,6 +27,8 @@ public class SynchronizationTimetableDB extends RealmObject {
         this.vpi_app = vpiApp;
         this.vpo_export = vpoExport;
         this.vpo_app = vpoApp;
+        this.tableTxt = tableTxt;
+        this.update = update;
     }
 
     public int getId() {

@@ -11,6 +11,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
 import android.net.Uri;
@@ -104,7 +105,7 @@ public class DialogData {
     public ImageButton imgBtnVideoLesson;
     public ImageButton imgBtnCall;
 
-    private Button ok, cancel, cancel2;
+    private Button ok, okRecycler, cancel, cancel2;
     private Button operationButton1, operationButton2;
     // ---- UI end ----
 
@@ -162,6 +163,7 @@ public class DialogData {
 
         // ---------- buttons ----------
         ok = dialog.findViewById(R.id.ok);
+        okRecycler = dialog.findViewById(R.id.okRecycler);
         cancel = dialog.findViewById(R.id.cancel);
         cancel2 = dialog.findViewById(R.id.cancel2);
 
@@ -1171,6 +1173,14 @@ public class DialogData {
 
             recycler.setLayoutManager(layout);
             recycler.setAdapter(adapter);
+//            recycler.addItemDecoration(new DividerItemDecoration(recycler.getContext(), DividerItemDecoration.VERTICAL));
+            recycler.addItemDecoration(new RecyclerView.ItemDecoration() {
+                @Override
+                public void getItemOffsets(Rect outRect, View view, RecyclerView parent, RecyclerView.State state) {
+                    // Задаем отступ снизу
+                    outRect.bottom = 20; // Измените значение на ваше усмотрение
+                }
+            });
         }
     }
 
@@ -1191,6 +1201,16 @@ public class DialogData {
             ok.setText(setButtonText);
         }
         ok.setOnClickListener(v -> {
+            if (clickListener != null) clickListener.clicked();
+        });
+    }
+
+    public void setOkRecycler(CharSequence setButtonText, DialogClickListener clickListener) {
+        okRecycler.setVisibility(View.VISIBLE);
+        if (setButtonText != null) {
+            okRecycler.setText(setButtonText);
+        }
+        okRecycler.setOnClickListener(v -> {
             if (clickListener != null) clickListener.clicked();
         });
     }

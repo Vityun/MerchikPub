@@ -90,28 +90,38 @@ public class RealmManager {
 
     }
 
-    private static void addSynchronizationTimetable() {
+    public static void addSynchronizationTimetable() {
         INSTANCE.beginTransaction();
-        INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(1, "wp_data", 600, 0, 0, 0, 0));
-        INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(2, "image_tp", 36000, 0, 0, 0, 0));
-        INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(3, "client_group_tp", 36000, 0, 0, 0, 0));
-        INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(4, "log_mp", 600, 0, 0, 0, 0));
-        INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(5, "clients", 36000, 0, 0, 0, 0));
-        INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(6, "address", 36000, 0, 0, 0, 0));
-        INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(7, "users", 36000, 0, 0, 0, 0));
-        INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(8, "promoList", 3600000, 0, 0, 0, 0));     // Акции
-        INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(9, "errorsList", 3600000, 0, 0, 0, 0));     // Ошибки
-        INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(10, "stack_photo", 36000, 0, 0, 0, 0));     // стэк фото
-        INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(11, "task_and_reclamations", 600, 0, 0, 0, 0));     // ЗИР
-        INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(12, "planogram", 36000, 0, 0, 0, 0));     // Планограммы
-        INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(13, "address_sql", 36000, 0, 0, 0, 0));
-        INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(14, "clients_sql", 36000, 0, 0, 0, 0));
-        INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(15, "users_sql", 36000, 0, 0, 0, 0));
-        INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(16, "city_sql", 36000, 0, 0, 0, 0));
-        INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(17, "oblast_sql", 36000, 0, 0, 0, 0));
-        INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(18, "sample_photo", 604800, 0, 0, 0, 0));    // Образцы фото    604800с = 7 дней
-        INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(19, "ekl_sql", 36000, 0, 0, 0, 0));
-        INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(20, "location", 86400, 0, 0, 0, 0));    // 86400 - 1 day
+        INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(1, "wp_data",               600,    0, 0, 0, 0, "План робіт",       0));
+        INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(2, "image_tp",              36000,  0, 0, 0, 0, "Типи фото",         0));
+        INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(3, "client_group_tp",       36000,  0, 0, 0, 0, "Групи товарів",         0));
+        INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(4, "log_mp",                600,    0, 0, 0, 0, "Лог місцеположення",         0));
+        INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(5, "clients",               36000,  0, 0, 0, 0, "Кліенти",         0));
+        INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(6, "address",               36000,  0, 0, 0, 0, "Адреси",         0));
+        INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(7, "users",                 36000,  0, 0, 0, 0, "Користувачі",         0));
+        INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(8, "promoList",             3600000,0, 0, 0, 0, "Акії",         0));     // Акции
+        INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(9, "errorsList",            3600000,0, 0, 0, 0, "Помилки",         0));     // Ошибки
+        INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(10, "stack_photo",          36000,  0, 0, 0, 0, "Журнал фото",         0));     // стэк фото
+        INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(11, "task_and_reclamations",600,    0, 0, 0, 0, "Задачі та рекламації",         0));     // ЗИР
+        INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(12, "planogram",            36000,  0, 0, 0, 0, "Планограми",         0));     // Планограммы
+        INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(13, "address_sql",          36000,  0, 0, 0, 0, "Адреси",         0));
+        INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(14, "clients_sql",          36000,  0, 0, 0, 0, "Клієнти",         0));
+        INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(15, "users_sql",            36000,  0, 0, 0, 0, "Користувачі",         0));
+        INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(16, "city_sql",             36000,  0, 0, 0, 0, "Міста",         0));
+        INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(17, "oblast_sql",           36000,  0, 0, 0, 0, "Області",         0));
+        INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(18, "sample_photo",         604800, 0, 0, 0, 0, "Зразки фото",         0));    // Образцы фото    604800с = 7 дней
+        INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(19, "ekl_sql",              36000,  0, 0, 0, 0, "ЕКЛ",         0));
+        INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(20, "location",             86400,  0, 0, 0, 0, "Місцеположення",         0));    // 86400 - 1 day
+
+        INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(21, "photo_tovar",          86400,  0, 0, 0, 0, "Фото товара",                  1));
+        INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(22, "photo_sample",         86400,  0, 0, 0, 0, "Ідентифікатори фото",          1));
+        INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(23, "photo_planogram",      86400,  0, 0, 0, 0, "Фото планограм",               1));
+        INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(24, "photo_showcase",       86400,  0, 0, 0, 0, "Фото зразків",                  1));
+        INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(25, "coments_to_photo",     86400,  0, 0, 0, 0, "Коментарі до фото",            1));
+        INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(26, "photo_user_from_serv", 86400,  0, 0, 0, 0, "Завантажити мої старі фото",   1));
+        INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(27, "upload_ekl",           86400,  0, 0, 0, 0, "Вивантажити ЄКЛ",              1));
+        INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(28, "photo_tar",            86400,  0, 0, 0, 0, "Фото Задач та Рекламацій",     1));
+
         INSTANCE.commitTransaction();
     }
 

@@ -211,7 +211,26 @@ public class PhotoDownload {
      */
     public static void getPhotoURLFromServer(List<TovarDB> tovars, Clicks.clickStatusMsg result) {
         List<Integer> tovarIdsList = getTovarIds(tovars);
+
+        Globals.writeToMLOG("INFO", "getPhotoURLFromServer", "ЗАГРУЗКА ФОТО. ПОЛУЧЕНО ФОТО: " + tovars.size());
+
         List<Integer> tovarsPhotoToDownload = StackPhotoRealm.findTovarIds(tovarIdsList); // Записываю сюда список ID-шников которых ещё нет на моей сторне
+
+        Globals.writeToMLOG("INFO", "getPhotoURLFromServer", "ЗАГРУЗКА ФОТО. НУЖНО СКАЧАТЬ СТОЛЬКО ФОТО: " + tovarsPhotoToDownload.size());
+
+        result.onSuccess("Треба Дозавантажити " + tovarsPhotoToDownload.size() + " фото Товарів");
+
+
+        // Разбивка на группі
+        // Нужно для того что б не сразу все 8000 фоток загружалось на сторону приложения
+        int batchSize = 500; // Размер каждой группы
+        List<List<Integer>> batches = new ArrayList<>(); // Список, который будет содержать группы
+
+        for (int i = 0; i < tovarsPhotoToDownload.size(); i += batchSize) {
+            int end = Math.min(tovarsPhotoToDownload.size(), i + batchSize);
+            List<Integer> batch = tovarsPhotoToDownload.subList(i, end);
+            batches.add(batch);
+        }
 
         StandartData data = new StandartData();
         data.mod = "images_view";
@@ -219,7 +238,8 @@ public class PhotoDownload {
         data.tovar_only = "1";
         data.nolimit = "1";
         data.image_type = "small";
-        data.tovar_id = tovarsPhotoToDownload;    // Должен сюда записать список ID-шников Товаров которые я хочу загрузить на свою сторону.
+//        data.tovar_id = tovarsPhotoToDownload;    // Должен сюда записать список ID-шников Товаров которые я хочу загрузить на свою сторону.
+        data.tovar_id = batches.get(0);    // Должен сюда записать список ID-шников Товаров которые я хочу загрузить на свою сторону.
 
         // Формирование тела запроса
         Gson gson = new Gson();
