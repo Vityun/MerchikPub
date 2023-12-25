@@ -42,4 +42,10 @@ public class BlockingProgressDialog extends Dialog {
 
         return dialog;
     }
+
+    public void updateText(String newText) {
+        if (textView != null) {
+            textView.setText(newText);
+        }
+    }
 }

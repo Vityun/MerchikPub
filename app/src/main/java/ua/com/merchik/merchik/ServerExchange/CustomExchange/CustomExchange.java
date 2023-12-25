@@ -76,10 +76,20 @@ public class CustomExchange {
                 case "photo_tovar":
                     try {
                         Toast.makeText(context, "Починаю завантажувати фото Товарів", Toast.LENGTH_LONG).show();
+                        BlockingProgressDialog progress = new BlockingProgressDialog(context, "Завантаження фото Товарів", "Починаю завантажувати фотографії Товарів");
+                        progress.show();
                         PhotoDownload.getPhotoURLFromServer(TovarRealm.getAllTov(), new Clicks.clickStatusMsg() {
                             @Override
                             public void onSuccess(String data) {
                                 Toast.makeText(context, data, Toast.LENGTH_LONG).show();
+
+                                DialogData dialogData = new DialogData(context);
+                                dialogData.setTitle("Завантаження фото Товарів");
+                                dialogData.setText(data);
+                                dialogData.setClose(dialogData::dismiss);
+                                dialogData.show();
+
+
                                 Log.e("test", "String data: " + data);
                                 Globals.writeToMLOG("INFO", "CustomExchange/startExchangeBySyncTable/photo_tovar", "onSuccess String data: " + data);
                             }
@@ -87,8 +97,41 @@ public class CustomExchange {
                             @Override
                             public void onFailure(String error) {
                                 Toast.makeText(context, error, Toast.LENGTH_LONG).show();
+
+                                DialogData dialogData = new DialogData(context);
+                                dialogData.setTitle("Завантаження фото Товарів ПОМИЛКА!: ");
+                                dialogData.setText(error);
+                                dialogData.setClose(dialogData::dismiss);
+                                dialogData.show();
+
                                 Log.e("test", "String error: " + error);
                                 Globals.writeToMLOG("INFO", "CustomExchange/startExchangeBySyncTable/photo_tovar", "onFailure error: " + error);
+                            }
+                        }, new Clicks.clickStatusMsgMode() {
+                            @Override
+                            public void onSuccess(String data, Clicks.MassageMode mode) {
+                                switch (mode){
+                                    case SHOW -> progress.updateText(data);
+                                    case CLOSE -> {
+                                        progress.updateText(data);
+                                        progress.dismiss();
+
+//                                        DialogData dialogData = new DialogData(context);
+//                                        dialogData.setTitle("Оновлення фото Товарів");
+//                                        dialogData.setText(data);
+//                                        dialogData.setClose(dialogData::dismiss);
+//                                        dialogData.show();
+                                    }
+                                }
+                            }
+
+                            @Override
+                            public void onFailure(String error) {
+                                DialogData dialogData = new DialogData(context);
+                                dialogData.setTitle("Оновлення фото Товарів");
+                                dialogData.setText(error);
+                                dialogData.setClose(dialogData::dismiss);
+                                dialogData.show();
                             }
                         });
                     }catch (Exception e){

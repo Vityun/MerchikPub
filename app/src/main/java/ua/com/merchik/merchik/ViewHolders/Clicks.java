@@ -6,6 +6,16 @@ import ua.com.merchik.merchik.data.TEST_DATA;
 
 public interface Clicks<T> {
 
+    /**
+     * 15.12.23.
+     * MassageMode - существует для того что б описывать поведение Прогресса (на момент написания только для загрузки фото Товаров)
+     * */
+    enum MassageMode{
+        SHOW,                               // показываем сообщение/обновляем статус
+        CLOSE,                              // Закрываем сообщение/подводим итог
+        UNEXPECTED_SITUATION_OCCURRED       // Не придвиденная ситуация
+    }
+
     void click();
 
     interface clickVoid{
@@ -35,6 +45,14 @@ public interface Clicks<T> {
     interface clickStatusMsg{
         // Отработка успешного результата
          void onSuccess(String data);
+
+        // Отработка ошибки
+        void onFailure(String error);
+    }
+
+    interface clickStatusMsgMode{
+        // Отработка успешного результата
+        void onSuccess(String data, MassageMode mode);
 
         // Отработка ошибки
         void onFailure(String error);

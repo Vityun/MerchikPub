@@ -1146,6 +1146,16 @@ public class TablesLoadingUnloading {
                                     public void onFailure(String error) {
                                         Log.e("test", "String error: " + error);
                                     }
+                                }, new Clicks.clickStatusMsgMode() {
+                                    @Override
+                                    public void onSuccess(String data, Clicks.MassageMode mode) {
+
+                                    }
+
+                                    @Override
+                                    public void onFailure(String error) {
+
+                                    }
                                 });
 
 //                                if (finalPg != null)
