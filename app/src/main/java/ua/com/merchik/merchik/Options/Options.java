@@ -163,7 +163,7 @@ public class Options {
     public static int[] describedOptions = new int[]{132624, 76815, 157241, 157243, 84006, 156928,
             151594, 80977, 135330, 133381, 135329, 138518, 151139, 132623, 133382, 137797, 135809,
             135328, 135327, 157275, 138341, 590, 84932, 134583, 157352, 1470, 138644, 1455, 135061,
-            158361, 159707, 575, 132971, 135591, 135708, 135595, 143968, 160568, 164352};
+            158361, 159707, 575, 132971, 135591, 135708, 135595, 143968, 160568, 164352, 164354};
 
     /*Сюда записываются Опции которые не прошли проверку, при особенном переданном MOD-e. Сделано
     для того что б потом можно было посмотреть название опций которые не прошли проверку и, возможно,
@@ -319,6 +319,7 @@ public class Options {
                 case 159726:    // Фото торговой точки
                 case 159725:    // Кнопка "Фото Торговой Точки (ФТТ)"
                 case 164352:    // Контроль наявності світлини прикасової зони
+                case 164354:    // Фото Планограмми ТТ
                     //                    checkPhotoReport(context, dataDB, optionsDB, type, mode);
                     OptionControlPhoto<?> optionControlPhoto = new OptionControlPhoto<>(context, dataDB, optionsDB, newOptionType, mode, unlockCodeResultListener);
                     optionControlPhoto.showOptionMassage("");
@@ -1228,6 +1229,8 @@ public class Options {
             case 158609:
             case 84932:     // Проверка наличия ФотоОтчётов (id мне дали из 1С) (тип 0)
             case 159726:    // Фото торговой точки
+            case 164354:    // Фото Планограмми ТТ
+            case 164352:    // Контроль наявності світлини прикасової зони
 //            case 159725:    // Кнопка "Фото Торговой Точки (ФТТ)"
                 OptionControlPhoto<?> optionControlPhoto = new OptionControlPhoto<>(context, dataDB, option, type, mode, unlockCodeResultListener);
                 if (mode.equals(NNKMode.MAKE) || (mode.equals(NNKMode.CHECK) && optionControlPhoto.isBlockOption()))

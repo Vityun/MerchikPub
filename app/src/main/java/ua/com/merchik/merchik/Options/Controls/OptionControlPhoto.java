@@ -60,6 +60,11 @@ public class OptionControlPhoto<T> extends OptionControl {
         }
 
         switch (optionId){
+            case "164354":  // Фото Планограмми ТТ
+                photoType = 5;
+                m = 1;
+                break;
+
             case "164352":  // Контроль наявності світлини прикасової зони
                 photoType = 45;
                 m = 1;
