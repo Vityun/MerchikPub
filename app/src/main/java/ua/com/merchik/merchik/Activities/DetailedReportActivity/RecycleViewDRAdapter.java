@@ -123,7 +123,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
             colorAnimation.setRepeatMode(ValueAnimator.REVERSE);
             colorAnimation.setRepeatCount(10);
             colorAnimation.addUpdateListener(animator ->
-                optionButton.setBackgroundColor((int) animator.getAnimatedValue())
+                    optionButton.setBackgroundColor((int) animator.getAnimatedValue())
             );
             colorAnimation.start();
         }
@@ -582,7 +582,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                                         0);
                                 setCheck(POS, optionsButtons, Options.NNKMode.NULL);
                             }
-                        }catch (Exception e){
+                        } catch (Exception e) {
 
                         }
 
@@ -943,7 +943,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                         intent.putExtra("photoTp", photoType);
                         intent.putExtra("grpId", addressSDB.tpId);
                         context.startActivity(intent);
-                    } else if (samplePhotoSDBList != null && samplePhotoSDBList.size() == 1){
+                    } else if (samplePhotoSDBList != null && samplePhotoSDBList.size() == 1) {
                         // Тут должен отобразить фото на весь экран
                         StackPhotoDB photo = StackPhotoRealm.stackPhotoDBGetPhotoBySiteId(String.valueOf(samplePhotoSDBList.get(0).photoId));
 
@@ -951,7 +951,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                         dialog.setPhoto(photo);
                         dialog.setClose(dialog::dismiss);
                         dialog.show();
-                    }else {
+                    } else {
                         Toast.makeText(context, "Не могу найти образцы фото", Toast.LENGTH_SHORT).show();
                         Globals.writeToMLOG("ERROR", "Не могу найти образцы фото", "");
                     }
@@ -1004,7 +1004,11 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
         if (min.equals("0")) {
             min = "3";
 
-            if (option.getOptionId().equals("141360")) min = "1";
+            if (option.getOptionId().equals("141360")
+                    || option.getOptionId().equals("164355")
+                    || option.getOptionId().equals("151139")
+                    || option.getOptionId().equals("164351")
+            ) min = "1";
             try {
                 if (option.getOptionId().equals("157277")) {
                     List<AdditionalRequirementsDB> ad = AdditionalRequirementsRealm.getDocumentAdditionalRequirements(dataDB, true, 157278, null, null, null);
