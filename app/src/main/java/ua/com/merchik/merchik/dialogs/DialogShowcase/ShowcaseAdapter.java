@@ -89,10 +89,13 @@ public class ShowcaseAdapter extends RecyclerView.Adapter<ShowcaseAdapter.ViewHo
 
         public void bind(ShowcaseSDB showcase) {
             try {
-
-                if (showcase.showcasePhoto >= 1) {
+                if (showcase.id == 0) {
+                    constraintLayout.setBackgroundColor(constraintLayout.getContext().getResources().getColor(R.color.white));
+                } else if (showcase.showcasePhoto >= 1){
                     constraintLayout.setBackgroundColor(constraintLayout.getContext().getResources().getColor(R.color.green_default));
-                } else {
+                } else if (showcase.showcasePhoto == 0){
+                    constraintLayout.setBackgroundColor(constraintLayout.getContext().getResources().getColor(R.color.red_error));
+                }else {
                     constraintLayout.setBackgroundColor(constraintLayout.getContext().getResources().getColor(R.color.red_error));
                 }
 
