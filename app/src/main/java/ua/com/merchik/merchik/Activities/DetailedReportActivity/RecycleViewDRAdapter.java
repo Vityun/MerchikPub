@@ -420,6 +420,35 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                         });
                         break;
 
+                    case 164351:
+                        textInteger.setText(
+                                setPhotoCountsMakeAndMust(optionsButtons, RealmManager.stackPhotoShowcasePhotoCount(dad2, 45)),
+                                TextView.BufferType.SPANNABLE
+                        );
+
+                        textInteger.setOnClickListener(view -> {
+                            Intent intent = new Intent(view.getContext(), PhotoLogActivity.class);
+                            intent.putExtra("report_prepare", true);
+                            intent.putExtra("dad2", dad2);
+                            view.getContext().startActivity(intent);
+                        });
+                        break;
+
+                    case 151139:
+                    case 164355:
+                        textInteger.setText(
+                                setPhotoCountsMakeAndMust(optionsButtons, RealmManager.stackPhotoShowcasePhotoCount(dad2, 5)),
+                                TextView.BufferType.SPANNABLE
+                        );
+
+                        textInteger.setOnClickListener(view -> {
+                            Intent intent = new Intent(view.getContext(), PhotoLogActivity.class);
+                            intent.putExtra("report_prepare", true);
+                            intent.putExtra("dad2", dad2);
+                            view.getContext().startActivity(intent);
+                        });
+                        break;
+
                     case (158604):
                         textInteger.setText(
                                 setPhotoCountsMakeAndMust(optionsButtons, RealmManager.stackPhotoShowcasePhotoCount(dad2, 41)),
