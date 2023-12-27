@@ -8,6 +8,7 @@ import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.Options.OptionControl;
 import ua.com.merchik.merchik.Options.Options;
 import ua.com.merchik.merchik.data.OptionMassageType;
+import ua.com.merchik.merchik.data.RealmModels.ImagesTypeListDB;
 import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
@@ -33,7 +34,7 @@ public class OptionControlPhoto<T> extends OptionControl {
 
             getDocumentVar();
             executeOption();
-        }catch (Exception e){
+        } catch (Exception e) {
             Log.e("OptionControlPhoto", "Exception e: " + e);
             Globals.writeToMLOG("ERR", "OptionControlPhoto", "Exception e: " + e);
         }
@@ -46,6 +47,7 @@ public class OptionControlPhoto<T> extends OptionControl {
     }
 
     private void executeOption() {
+        String typeNm = "";
         int m = Integer.parseInt(optionDB.getAmountMin());
         if (m == 0) {
             m = 3;
@@ -53,13 +55,13 @@ public class OptionControlPhoto<T> extends OptionControl {
         int photoType = 0;
 
         String optionId;
-        if (nnkMode.equals(Options.NNKMode.BLOCK)){
+        if (nnkMode.equals(Options.NNKMode.BLOCK)) {
             optionId = optionDB.getOptionId();
-        }else {
+        } else {
             optionId = optionDB.getOptionControlId();
         }
 
-        switch (optionId){
+        switch (optionId) {
             case "164354":  // Фото Планограмми ТТ
                 photoType = 5;
                 m = 1;
@@ -68,6 +70,7 @@ public class OptionControlPhoto<T> extends OptionControl {
             case "164352":  // Контроль наявності світлини прикасової зони
                 photoType = 45;
                 m = 1;
+                typeNm = "світлина прикасової зони";
                 break;
 
             case "84932":
@@ -109,11 +112,12 @@ public class OptionControlPhoto<T> extends OptionControl {
         }
 
         RealmResults<StackPhotoDB> stackPhotoDB = StackPhotoRealm.getPhotosByDAD2(wpDataDB.getCode_dad2(), photoType);
-        if (stackPhotoDB != null && stackPhotoDB.size() < m){
-            stringBuilderMsg.append("Вы должны сделать: ").append(m).append(" фото с типом: ").append(ImagesTypeListRealm.getByID(photoType).getNm()).append(", а сделали: ").append(stackPhotoDB.size()).append(" - доделайте фотографии.");
+        if (stackPhotoDB != null && stackPhotoDB.size() < m) {
+            ImagesTypeListDB item = ImagesTypeListRealm.getByID(photoType);
+            stringBuilderMsg.append("Вы должны сделать: ").append(m).append(" фото с типом: ").append(item != null ? item.getNm() : typeNm).append(", а сделали: ").append(stackPhotoDB.size()).append(" - доделайте фотографии.");
             signal = true;
             unlockCodeResultListener.onUnlockCodeFailure();
-        }else {
+        } else {
             stringBuilderMsg.append("Жалоб по фыполнению фото нет. Сделано: ").append(stackPhotoDB.size()).append(" фото.");
             signal = false;
             unlockCodeResultListener.onUnlockCodeSuccess();
