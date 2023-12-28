@@ -129,6 +129,10 @@ public class ShowcaseAdapter extends RecyclerView.Adapter<ShowcaseAdapter.ViewHo
                         try {
                             DialogFullPhotoR dialogFullPhoto = new DialogFullPhotoR(image.getContext());
                             dialogFullPhoto.setPhoto(stackPhotoDB);
+
+                            // Pika
+                            dialogFullPhoto.setComment(stackPhotoDB.getComment());
+
                             dialogFullPhoto.setClose(dialogFullPhoto::dismiss);
                             dialogFullPhoto.show();
                         } catch (Exception e) {

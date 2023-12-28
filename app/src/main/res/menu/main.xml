@@ -9,6 +9,7 @@
         android:title="@string/test_001"
         app:showAsAction="ifRoom">
         <menu>
+
 <!--            <item   android:id="@+id/check_internet"
                 android:icon="@mipmap/gray2"
                 android:title="@string/t_check_internet" />-->
@@ -39,7 +40,6 @@
         </menu>
     </item>
 
-
     <item
         android:id="@+id/exchange"
         android:icon="@android:drawable/ic_popup_sync"
@@ -54,6 +54,8 @@
                 android:title="Синхронизация залупка 2" />
         </menu>
     </item>
+
+
 
     <item
         android:id="@+id/action_photo_count"

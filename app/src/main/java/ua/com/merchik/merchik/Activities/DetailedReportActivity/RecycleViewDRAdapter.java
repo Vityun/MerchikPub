@@ -915,9 +915,12 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                     } else if (samplePhotoSDBList != null && samplePhotoSDBList.size() == 1){
                         // Тут должен отобразить фото на весь экран
                         StackPhotoDB photo = StackPhotoRealm.stackPhotoDBGetPhotoBySiteId(String.valueOf(samplePhotoSDBList.get(0).photoId));
-
                         DialogFullPhotoR dialog = new DialogFullPhotoR(context);
                         dialog.setPhoto(photo);
+
+                        // Pika
+                        dialog.setComment(photo.getComment());
+
                         dialog.setClose(dialog::dismiss);
                         dialog.show();
                     }else {

@@ -77,6 +77,9 @@ public class DialogFullPhoto {
     // ------------------------
     private ImageButton close, help, videoHelp, call;
 
+    /**
+     * Длинная рука
+     * */
     public DialogFullPhoto(Context context) {
         this.context = context;
         dialog = new Dialog(context);

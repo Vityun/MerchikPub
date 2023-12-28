@@ -278,6 +278,10 @@ public class PhotoLogActivity extends toolbar_menus {
 //                DialogFullPhotoR dialog = new DialogFullPhotoR(getApplicationContext());
                 DialogFullPhotoR dialog = new DialogFullPhotoR(context);
                 dialog.setPhoto(photoDB);
+
+                // Pika
+                dialog.setComment(photoDB.getComment());
+
                 dialog.setClose(dialog::dismiss);
                 dialog.show();
             }

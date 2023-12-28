@@ -94,6 +94,7 @@ import ua.com.merchik.merchik.ServerExchange.TablesLoadingUnloading;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.Database.Room.Chat.ChatSDB;
 import ua.com.merchik.merchik.data.Database.Room.ShowcaseSDB;
+import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
 import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteObjects.SiteObjectsDB;
 import ua.com.merchik.merchik.data.RealmModels.AppUsersDB;
 import ua.com.merchik.merchik.data.RealmModels.MenuItemFromWebDB;
@@ -128,6 +129,12 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
 
     Menu menu;
     MenuItem light;
+
+//    // Pika
+//    MenuItem bell1;
+//    List<TasksAndReclamationsSDB> tarActListTask;
+//    List<TasksAndReclamationsSDB> tarActListRecl;
+
     private Drawable drawable;
     private ImageButton ib;
 
@@ -541,6 +548,52 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.toolbar_menu, menu);
         this.menu = menu;
+
+//        // Pika отображение колокольчика если есть активные задачи или рекламации
+//        bell1 = menu.findItem(R.id.menu_toolbar_bell);
+//        drawable = bell1.getIcon();
+//        drawable = DrawableCompat.wrap(drawable);
+//        long date1 = Clock.getDatePeriodLong(-30) / 1000;
+//        tarActListTask = SQL_DB.tarDao().getAllActiveByTp(userId, 1, date1);
+//        tarActListRecl = SQL_DB.tarDao().getAllActiveByTp(userId, 0, date1);
+//        if ((tarActListTask.size()+tarActListRecl.size())>0) {
+//            DrawableCompat.setTint(drawable, ContextCompat.getColor(toolbar_menus.this, R.color.colorInetRed));
+//            bell1.setIcon(drawable);
+//            bell1.setVisible(true);
+//            bell1.setEnabled(true);
+//        } else {
+//            bell1.setVisible(false);
+//            bell1.setEnabled(false);
+//        }
+//
+//        try {
+//            MenuItem item1 = menu.findItem(R.id.menu_toolbar_bell);
+//            item1.setOnMenuItemClickListener(v ->{
+//                Toast.makeText(this, "Zad", Toast.LENGTH_SHORT).show();
+//                return true;
+//            });
+////            item1.getActionView().setOnClickListener(v -> {
+//                //           Toast.makeText(this, "Zad", Toast.LENGTH_SHORT).show();
+///*            if (tarActListTask.size()>0) {
+//
+//                Intent intent = new Intent(this, TARActivity.class);
+//                intent.putExtra("TAR_type", 1);
+//                startActivity(intent);
+//
+//            } else if (tarActListRecl.size()>0) {
+//
+//                Intent intent = new Intent(this, TARActivity.class);
+//                intent.putExtra("TAR_type", 0);
+//                startActivity(intent);
+//
+//            }
+//*/
+////            });
+//        }catch (Exception e){
+//            e.printStackTrace();
+//            Log.e("test_bell", "Exception e: " + e);
+//        }
+//
 
         light = menu.findItem(R.id.action_check);
         drawable = light.getIcon();

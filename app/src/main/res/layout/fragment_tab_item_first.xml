@@ -82,15 +82,15 @@
         android:layout_marginStart="16dp"
         android:layout_marginLeft="16dp"
         android:layout_marginTop="16dp"
+        android:adjustViewBounds="true"
         android:background="@drawable/border_map"
         android:elevation="4dp"
-        android:maxHeight="200dp"
-        android:minHeight="100dp"
-        android:minWidth="100dp"
         android:maxWidth="200dp"
+        android:maxHeight="200dp"
+        android:minWidth="100dp"
+        android:minHeight="100dp"
         android:padding="8dp"
         android:scaleType="centerCrop"
-        android:adjustViewBounds="true"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:srcCompat="@mipmap/merchik_m" />
@@ -179,5 +179,21 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/textView61"
         app:layout_constraintVertical_bias="0.0" />
+
+    <TextView
+        android:id="@+id/lastComment"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginBottom="16dp"
+        android:background="#E6EDCB"
+        android:clickable="true"
+        android:text="TextView"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/wpLink"
+        app:layout_constraintVertical_bias="0.0" />
+         />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
