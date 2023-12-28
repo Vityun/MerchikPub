@@ -71,6 +71,7 @@ import ua.com.merchik.merchik.Options.Buttons.OptionButtonAvailabilityDetailedRe
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonHistoryMP;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonPhotoAktionTovar;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonPhotoBeforeStartWork;
+import ua.com.merchik.merchik.Options.Buttons.OptionButtonPhotoCassZone;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonPhotoDMP;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonPhotoFOT;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonPhotoOfACartWithGoods;
@@ -154,14 +155,15 @@ public class Options {
             138520, 138773, 137797, 138339, 141360, 141910, 141888, 141885, 84007, 132666, 139576,
             138767, 135742, 132621, 84003, 138340, 135327, 135328, 156882, 151139, 132623, 133382,
             157275, 157276, 157274, 135159, 157277, 157353, 138643, 158243, 135412, 151748, 158309,
-            158308, 158604, 158605, 158606, 157354, 157242, 159725, 135413, 135719, 143969, 160567
+            158308, 158604, 158605, 158606, 157354, 157242, 159725, 135413, 135719, 143969, 160567,
+            164351, 164355
     };
 
 
     public static int[] describedOptions = new int[]{132624, 76815, 157241, 157243, 84006, 156928,
             151594, 80977, 135330, 133381, 135329, 138518, 151139, 132623, 133382, 137797, 135809,
             135328, 135327, 157275, 138341, 590, 84932, 134583, 157352, 1470, 138644, 1455, 135061,
-            158361, 159707, 575, 132971, 135591, 135708, 135595, 143968, 160568};
+            158361, 159707, 575, 132971, 135591, 135708, 135595, 143968, 160568, 164352, 164354};
 
     /*Сюда записываются Опции которые не прошли проверку, при особенном переданном MOD-e. Сделано
     для того что б потом можно было посмотреть название опций которые не прошли проверку и, возможно,
@@ -316,6 +318,8 @@ public class Options {
                 case 158609:
                 case 159726:    // Фото торговой точки
                 case 159725:    // Кнопка "Фото Торговой Точки (ФТТ)"
+                case 164352:    // Контроль наявності світлини прикасової зони
+                case 164354:    // Фото Планограмми ТТ
                     //                    checkPhotoReport(context, dataDB, optionsDB, type, mode);
                     OptionControlPhoto<?> optionControlPhoto = new OptionControlPhoto<>(context, dataDB, optionsDB, newOptionType, mode, unlockCodeResultListener);
                     optionControlPhoto.showOptionMassage("");
@@ -1096,6 +1100,9 @@ public class Options {
         Log.e("NNK", "F/optControl/optionId: " + optionId);
         Log.e("NNK", "F/optControl/NNKMode mode: " + mode);
         switch (optionId) {
+            case 164351:
+                OptionButtonPhotoCassZone<?> optionButtonPhotoCassZone = new OptionButtonPhotoCassZone<>(context, dataDB, option, type, mode, unlockCodeResultListener);
+                break;
 
             case 160567:
             case 160568:
@@ -1222,6 +1229,8 @@ public class Options {
             case 158609:
             case 84932:     // Проверка наличия ФотоОтчётов (id мне дали из 1С) (тип 0)
             case 159726:    // Фото торговой точки
+            case 164354:    // Фото Планограмми ТТ
+            case 164352:    // Контроль наявності світлини прикасової зони
 //            case 159725:    // Кнопка "Фото Торговой Точки (ФТТ)"
                 OptionControlPhoto<?> optionControlPhoto = new OptionControlPhoto<>(context, dataDB, option, type, mode, unlockCodeResultListener);
                 if (mode.equals(NNKMode.MAKE) || (mode.equals(NNKMode.CHECK) && optionControlPhoto.isBlockOption()))
@@ -1414,6 +1423,7 @@ public class Options {
                 return optionControlAvailabilityDetailedReport.isBlockOption2() ? 1 : 0;
 
             case 151139:
+            case 164355:
                 new OptionButPhotoPlanogramm<>(context, dataDB, option, type, mode, unlockCodeResultListener);
                 break;
 
@@ -1815,7 +1825,6 @@ public class Options {
         boolean res = false;
 
 
-
         int visitStartGeoDistance = 0;
         WpDataDB wpDataDB = null;
         if (dataDB instanceof WpDataDB) {
@@ -1823,7 +1832,7 @@ public class Options {
             visitStartGeoDistance = ((WpDataDB) dataDB).getVisit_start_geo_distance();
         }
 
-        if (mode != NNKMode.NULL){
+        if (mode != NNKMode.NULL) {
             Globals.fixMP(wpDataDB, context);
         }
 
@@ -1841,23 +1850,24 @@ public class Options {
 
             long endTime = wpDataDB.getVisit_end_dt() > 0 ? wpDataDB.getVisit_end_dt() : System.currentTimeMillis() / 1000;
 
-            List<LogMPDB> logs = LogMPRealm.getLogMPTime(startTime*1000, endTime*1000);
+            List<LogMPDB> logs = LogMPRealm.getLogMPTime(startTime * 1000, endTime * 1000);
 
             Globals.writeToMLOG("INFO", "optionControlMP_8299", "onUnlockCodeSuccess: " + logs.size());
 
             List<LogMPDB> logsRes = new ArrayList<>();
             float coordAddrX = 0f, coordAddrY = 0f;
             AddressSDB addressSDB = SQL_DB.addressDao().getById(wpDataDB.getAddr_id());
-            if (addressSDB != null){
+            if (addressSDB != null) {
                 coordAddrX = addressSDB.locationXd;
                 coordAddrY = addressSDB.locationYd;
-            }else {
+            } else {
                 try {
-                    if (wpDataDB != null){
+                    if (wpDataDB != null) {
                         coordAddrX = Float.parseFloat(wpDataDB.getAddr_location_xd());
                         coordAddrY = Float.parseFloat(wpDataDB.getAddr_location_yd());
                     }
-                }catch (Exception e){}
+                } catch (Exception e) {
+                }
             }
 
             for (LogMPDB log : logs) {
@@ -1866,7 +1876,7 @@ public class Options {
                     log.distance = (int) distance;
                 }
 
-                if (log.distance > 1 && log.distance < 1000){
+                if (log.distance > 1 && log.distance < 1000) {
                     logsRes.add(log);
                 }
             }
@@ -2593,7 +2603,7 @@ public class Options {
 
             List<AdditionalRequirementsDB> data = AdditionalRequirementsRealm.getData3(dataDB, HIDE_FOR_USER, null, 0);
 
-                    // Получаем Оценки этих Доп. требований.
+            // Получаем Оценки этих Доп. требований.
             RealmResults<AdditionalRequirementsMarkDB> marks = AdditionalRequirementsMarkRealm.getAdditionalRequirementsMarks(dateFrom, dateTo, userId, "1", data);
 
             Gson gson = new Gson();

@@ -209,9 +209,28 @@ public class PhotoDownload {
      * 12.02.2022
      * Формирование запроса на получение ссылок для скачивания фотографий.
      */
-    public static void getPhotoURLFromServer(List<TovarDB> tovars, Clicks.clickStatusMsg result) {
+    public static void getPhotoURLFromServer(List<TovarDB> tovars, Clicks.clickStatusMsg result, Clicks.clickStatusMsgMode result2) {
         List<Integer> tovarIdsList = getTovarIds(tovars);
+
+        Globals.writeToMLOG("INFO", "getPhotoURLFromServer", "ЗАГРУЗКА ФОТО. ПОЛУЧЕНО ФОТО: " + tovars.size());
+
         List<Integer> tovarsPhotoToDownload = StackPhotoRealm.findTovarIds(tovarIdsList); // Записываю сюда список ID-шников которых ещё нет на моей сторне
+
+        Globals.writeToMLOG("INFO", "getPhotoURLFromServer", "ЗАГРУЗКА ФОТО. НУЖНО СКАЧАТЬ СТОЛЬКО ФОТО: " + tovarsPhotoToDownload.size());
+
+        result.onSuccess("Треба Дозавантажити " + tovarsPhotoToDownload.size() + " фото Товарів");
+
+
+        // Разбивка на группі
+        // Нужно для того что б не сразу все 8000 фоток загружалось на сторону приложения
+        int batchSize = 1000; // Размер каждой группы
+        List<List<Integer>> batches = new ArrayList<>(); // Список, который будет содержать группы
+
+        for (int i = 0; i < tovarsPhotoToDownload.size(); i += batchSize) {
+            int end = Math.min(tovarsPhotoToDownload.size(), i + batchSize);
+            List<Integer> batch = tovarsPhotoToDownload.subList(i, end);
+            batches.add(batch);
+        }
 
         StandartData data = new StandartData();
         data.mod = "images_view";
@@ -220,6 +239,7 @@ public class PhotoDownload {
         data.nolimit = "1";
         data.image_type = "small";
         data.tovar_id = tovarsPhotoToDownload;    // Должен сюда записать список ID-шников Товаров которые я хочу загрузить на свою сторону.
+//        data.tovar_id = batches.get(0);    // Должен сюда записать список ID-шников Товаров которые я хочу загрузить на свою сторону.
 
         // Формирование тела запроса
         Gson gson = new Gson();
@@ -247,7 +267,7 @@ public class PhotoDownload {
                             long end = System.currentTimeMillis() / 1000 - start;
                             result.onSuccess("Данные о фото товаров(" + photoListUrlSize + "шт) успешно получены. Это заняло " + end + " секунд! \nНачинаю загрузку фотографий.. \n\nЭТО МОЖЕТ ЗАНЯТЬ МНОГО ВРЕМЕНИ И ТРАФИКА!");
                             // TODO Начинаем загрузку + сохранение на телефон фоток Товаров.
-                            downloadPhoto(response.body().getList(), result);
+                            downloadPhoto(response.body().getList(), result, result2);
                         } else {
                             result.onFailure("Не получилось загрузить фото Товаров. Обратитесь к руководителю. Ошибка:\n\n(URL)state = false");
                         }
@@ -289,7 +309,7 @@ public class PhotoDownload {
     static int errorSaveTovarPhoto;
     static int internetError;
 
-    public static void downloadPhoto(List<TovarImgList> data, Clicks.clickStatusMsg result) {
+    public static void downloadPhoto(List<TovarImgList> data, Clicks.clickStatusMsg result, Clicks.clickStatusMsgMode result2) {
         long start = System.currentTimeMillis() / 1000;
         final int[] cnt = {0};
         int count = 0;
@@ -298,8 +318,22 @@ public class PhotoDownload {
         saveNewTovarPhoto = 0;
         errorSaveTovarPhoto = 0;
         internetError = 0;
-
+        long countTP = 0;
 //        notSuccessfulResponse + "(1)/" + bodyIsNull + "(2)/" + saveNewTovarPhoto + "(3)/" + errorSaveTovarPhoto + "(4)/" + internetError + "(5)/"
+
+        int desiredPhotoTP = 18; // Значение, которое вы хотите проверить
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+            countTP = data.stream()
+                    .filter(item -> {
+                        try {
+                            int photoTP = Integer.parseInt(item.getPhotoTp());
+                            return photoTP == desiredPhotoTP;
+                        } catch (NumberFormatException e) {
+                            return false; // В случае ошибки парсинга числа
+                        }
+                    })
+                    .count();
+        }
 
 
         for (TovarImgList item : data) {
@@ -310,6 +344,7 @@ public class PhotoDownload {
 //                Globals.writeToMLOG("INFO", "getPhotoURLFromServer.onResponse.downloadPhoto", "convertedObject: " + new Gson().toJson(item));
                 retrofit2.Call<ResponseBody> call = RetrofitBuilder.getRetrofitInterface().DOWNLOAD_PHOTO_BY_URL(item.getPhotoUrl());
                 int finalCount = count;
+                long finalCountTP = countTP;
                 call.enqueue(new Callback<ResponseBody>() {
                     @Override
                     public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
@@ -357,8 +392,11 @@ public class PhotoDownload {
 
                         if (cnt[0] < finalCount) {
                             cnt[0]++;
+                            result2.onSuccess("Завантажено " + cnt[0] + " фото з " + finalCountTP, Clicks.MassageMode.SHOW);
                         } else if (cnt[0] == finalCount) {
-                            result.onSuccess("S/Закончил работу, обработал(всего/с типом 18/загружено): " + data.size() + "/" + finalCount + "/" + cnt[0] + "\n\n(Код не 200(1)/Тело пустое(2)/Сохранило новую фотку товара(3)/Ошибка при сохранении фото(4)/Ошибка интернета(5))\n\n" + notSuccessfulResponse + "(1)/" + bodyIsNull + "(2)/" + saveNewTovarPhoto + "(3)/" + errorSaveTovarPhoto + "(4)/" + internetError + "(5)/");
+//                            result.onSuccess("S/Закончил работу, обработал(всего/с типом 18/загружено): " + data.size() + "/" + finalCount + "/" + cnt[0] + "\n\n(Код не 200(1)/Тело пустое(2)/Сохранило новую фотку товара(3)/Ошибка при сохранении фото(4)/Ошибка интернета(5))\n\n" + notSuccessfulResponse + "(1)/" + bodyIsNull + "(2)/" + saveNewTovarPhoto + "(3)/" + errorSaveTovarPhoto + "(4)/" + internetError + "(5)/");
+//                            result.onSuccess("Завантажено " + cnt[0] + " фото з " + data.size());
+                            result2.onSuccess("Закінчив завантаження, завантажено: " + cnt[0] + " фото.", Clicks.MassageMode.CLOSE);
                         }
                     }
 
@@ -367,8 +405,11 @@ public class PhotoDownload {
                         internetError++;
                         if (cnt[0] < finalCount) {
                             cnt[0]++;
+                            result2.onSuccess("Завантажено " + cnt[0] + " фото з " + finalCountTP + "\nПомилка: " + t, Clicks.MassageMode.SHOW);
                         } else if (cnt[0] == finalCount) {
-                            result.onSuccess("F/Закончил работу, обработал(всего/с типом 18/загружено): " + data.size() + "/" + finalCount + "/" + cnt[0]);
+//                            result.onSuccess("F/Закончил работу, обработал(всего/с типом 18/загружено): " + data.size() + "/" + finalCount + "/" + cnt[0]);
+//                            result.onSuccess("Завантажено " + cnt[0] + " фото з " + data.size());
+                            result2.onSuccess("Закінчив завантаження, завантажено: " + cnt[0] + " фото." + "\nПомилка: " + t, Clicks.MassageMode.CLOSE);
                         }
                     }
                 });

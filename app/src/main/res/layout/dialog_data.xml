@@ -106,16 +106,14 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
-            android:layout_marginLeft="16dp"
             android:layout_marginTop="8dp"
             android:layout_marginEnd="16dp"
-            android:layout_marginRight="16dp"
             android:layout_marginBottom="16dp"
             android:background="#FFFFFF"
             android:focusable="true"
             android:maxLines="25"
-            android:scrollbars="vertical"
             android:scrollbarStyle="insideOverlay"
+            android:scrollbars="vertical"
             android:text="Основной текст блока"
             android:visibility="visible"
             app:layout_constraintBottom_toBottomOf="parent"
@@ -170,7 +168,6 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
             android:layout_marginEnd="16dp"
-            android:layout_marginRight="16dp"
             android:layout_marginBottom="16dp"
             android:paddingLeft="20dp"
             android:paddingRight="20dp"
@@ -181,7 +178,25 @@
             app:layout_constraintBottom_toTopOf="@+id/cancel2"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/layout_additional_operation"
-            tools:visibility="visible" />
+            tools:visibility="gone" />
+
+        <Button
+            android:id="@+id/okRecycler"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:layout_marginEnd="16dp"
+            android:layout_marginBottom="16dp"
+            android:paddingLeft="20dp"
+            android:paddingRight="20dp"
+            android:text="Ок"
+            android:textAllCaps="false"
+            android:textSize="14sp"
+            android:visibility="gone"
+            app:layout_constraintBottom_toTopOf="@+id/cancel2"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/recycler"
+            tools:visibility="gone" />
 
         <Button
             android:id="@+id/cancel"
@@ -467,7 +482,7 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/layout_info"
-            tools:visibility="visible">
+            tools:visibility="gone">
 
             <Button
                 android:id="@+id/operationButton1"
@@ -623,7 +638,7 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/layout_operation"
             app:layout_constraintVertical_bias="1.0"
-            tools:visibility="visible">
+            tools:visibility="gone">
 
             <TextView
                 android:id="@+id/textView42"
@@ -722,18 +737,17 @@
             android:layout_width="0dp"
             android:layout_height="300dp"
             android:layout_marginStart="16dp"
-            android:layout_marginLeft="16dp"
             android:layout_marginTop="16dp"
             android:layout_marginEnd="16dp"
-            android:layout_marginRight="16dp"
             android:layout_marginBottom="16dp"
-            android:visibility="gone"
-            android:scrollbars="vertical"
             android:fadeScrollbars="false"
+            android:scrollbars="vertical"
+            android:visibility="gone"
             app:layout_constraintBottom_toTopOf="@+id/ok"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/text"
+            app:layout_constraintVertical_bias="0.0"
             tools:visibility="visible" />
 
         <androidx.constraintlayout.widget.Barrier

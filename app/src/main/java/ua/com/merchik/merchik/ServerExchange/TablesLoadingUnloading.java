@@ -383,15 +383,15 @@ public class TablesLoadingUnloading {
                             long currentTime = System.currentTimeMillis() / 1000;
 
                             // 19.08.2020. МЕГАКОСТЫЛЬ. УБРАТЬ.
-                            RealmManager.setToSynchronizationTimetableDB(new SynchronizationTimetableDB(1, "wp_data", 600, currentTime, currentTime, 0, 0));
-                            RealmManager.setToSynchronizationTimetableDB(new SynchronizationTimetableDB(2, "image_tp", 600, currentTime, currentTime, 0, 0));
-                            RealmManager.setToSynchronizationTimetableDB(new SynchronizationTimetableDB(3, "client_group_tp", 600, currentTime, currentTime, 0, 0));
-                            RealmManager.setToSynchronizationTimetableDB(new SynchronizationTimetableDB(4, "log_mp", 600, currentTime, currentTime, 0, 0));
-                            RealmManager.setToSynchronizationTimetableDB(new SynchronizationTimetableDB(5, "clients", 600, currentTime, currentTime, 0, 0));
-                            RealmManager.setToSynchronizationTimetableDB(new SynchronizationTimetableDB(6, "address", 600, currentTime, currentTime, 0, 0));
-                            RealmManager.setToSynchronizationTimetableDB(new SynchronizationTimetableDB(7, "users", 600, currentTime, currentTime, 0, 0));
-                            RealmManager.setToSynchronizationTimetableDB(new SynchronizationTimetableDB(8, "promoList", 600, currentTime, currentTime, 0, 0));
-                            RealmManager.setToSynchronizationTimetableDB(new SynchronizationTimetableDB(9, "errorsList", 600, currentTime, currentTime, 0, 0));
+//                            RealmManager.setToSynchronizationTimetableDB(new SynchronizationTimetableDB(1, "wp_data", 600, currentTime, currentTime, 0, 0));
+//                            RealmManager.setToSynchronizationTimetableDB(new SynchronizationTimetableDB(2, "image_tp", 600, currentTime, currentTime, 0, 0));
+//                            RealmManager.setToSynchronizationTimetableDB(new SynchronizationTimetableDB(3, "client_group_tp", 600, currentTime, currentTime, 0, 0));
+//                            RealmManager.setToSynchronizationTimetableDB(new SynchronizationTimetableDB(4, "log_mp", 600, currentTime, currentTime, 0, 0));
+//                            RealmManager.setToSynchronizationTimetableDB(new SynchronizationTimetableDB(5, "clients", 600, currentTime, currentTime, 0, 0));
+//                            RealmManager.setToSynchronizationTimetableDB(new SynchronizationTimetableDB(6, "address", 600, currentTime, currentTime, 0, 0));
+//                            RealmManager.setToSynchronizationTimetableDB(new SynchronizationTimetableDB(7, "users", 600, currentTime, currentTime, 0, 0));
+//                            RealmManager.setToSynchronizationTimetableDB(new SynchronizationTimetableDB(8, "promoList", 600, currentTime, currentTime, 0, 0));
+//                            RealmManager.setToSynchronizationTimetableDB(new SynchronizationTimetableDB(9, "errorsList", 600, currentTime, currentTime, 0, 0));
                         } else {
                             if (pg != null)
                                 if (pg.isShowing())
@@ -453,7 +453,7 @@ public class TablesLoadingUnloading {
                         }
 
                         long currentTime = System.currentTimeMillis() / 1000;
-                        RealmManager.setToSynchronizationTimetableDB(new SynchronizationTimetableDB(2, "image_tp", 36000, currentTime, currentTime, 0, 0));
+//                        RealmManager.setToSynchronizationTimetableDB(new SynchronizationTimetableDB(2, "image_tp", 36000, currentTime, currentTime, 0, 0));
 
                     } else {
                         Toast.makeText(context, "Типы фото обновить не получилось. Повторите попытку позже.", Toast.LENGTH_SHORT).show();
@@ -521,7 +521,7 @@ public class TablesLoadingUnloading {
 //                        RealmManager.setRowToLog(Collections.singletonList(new LogDB(RealmManager.getLastIdLogDB() + 1, System.currentTimeMillis() / 1000, "Группы товаров с сервера: " + response.body().getList(), 1097, null, null, null, Globals.userId, null, Globals.session, null)));
 
                         long currentTime = System.currentTimeMillis() / 1000;
-                        RealmManager.setToSynchronizationTimetableDB(new SynchronizationTimetableDB(3, "client_group_tp", 600, currentTime, currentTime, 0, 0));
+//                        RealmManager.setToSynchronizationTimetableDB(new SynchronizationTimetableDB(3, "client_group_tp", 600, currentTime, currentTime, 0, 0));
 
                     }
                 } catch (Exception e) {
@@ -1145,6 +1145,16 @@ public class TablesLoadingUnloading {
                                     @Override
                                     public void onFailure(String error) {
                                         Log.e("test", "String error: " + error);
+                                    }
+                                }, new Clicks.clickStatusMsgMode() {
+                                    @Override
+                                    public void onSuccess(String data, Clicks.MassageMode mode) {
+
+                                    }
+
+                                    @Override
+                                    public void onFailure(String error) {
+
                                     }
                                 });
 
@@ -2101,13 +2111,13 @@ public class TablesLoadingUnloading {
 //                        sendAndUpdateLog(context);
                         uploadReportPrepareToServer();
 
-                        RealmManager.setToSynchronizationTimetableDB(new SynchronizationTimetableDB(1, "wp_data", 600, currentTime, currentTime, 0, 0));
+//                        RealmManager.setToSynchronizationTimetableDB(new SynchronizationTimetableDB(1, "wp_data", 600, currentTime, currentTime, 0, 0));
                     case 2:
                         downloadImagesTp(context);
-                        RealmManager.setToSynchronizationTimetableDB(new SynchronizationTimetableDB(2, "image_tp", 36000, currentTime, currentTime, 0, 0));
+//                        RealmManager.setToSynchronizationTimetableDB(new SynchronizationTimetableDB(2, "image_tp", 36000, currentTime, currentTime, 0, 0));
                     case 3:
                         downloadTypeGrp(context);
-                        RealmManager.setToSynchronizationTimetableDB(new SynchronizationTimetableDB(3, "client_group_tp", 36000, currentTime, currentTime, 0, 0));
+//                        RealmManager.setToSynchronizationTimetableDB(new SynchronizationTimetableDB(3, "client_group_tp", 36000, currentTime, currentTime, 0, 0));
                     case 4:
                         // Пока делать нечего
                 }

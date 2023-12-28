@@ -8,6 +8,8 @@ import androidx.room.PrimaryKey;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
+import java.sql.Date;
+
 @Entity(tableName = "client")
 public class CustomerSDB {
     @SerializedName("client_id")
@@ -46,4 +48,14 @@ public class CustomerSDB {
     @Expose
     @ColumnInfo(name = "ppa_auto")
     public Integer ppaAuto;
+
+    @SerializedName("work_start_date")
+    @Expose
+    @ColumnInfo(name = "work_start_date")
+    public Date workStartDate;
+
+    @SerializedName("work_restart_date")
+    @Expose
+    @ColumnInfo(name = "work_restart_date")
+    public Date workRestartDate;
 }

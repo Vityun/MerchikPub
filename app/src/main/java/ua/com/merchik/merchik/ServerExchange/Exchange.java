@@ -135,7 +135,7 @@ public class Exchange {
      * 26.02.2021
      * Енум для опозначения какие данные мы будем отправлять на всервер.
      */
-    enum UploadPhotoInfo {
+    public enum UploadPhotoInfo {
         DVI, RATING, COMMENT, PRIZE
     }
 
@@ -590,14 +590,6 @@ public class Exchange {
                                     }
 
                                     Log.e("sendPhotoInformation", "photo.size(): " + photo.size());
-
-                                    // Формируем ID шники для Стэк Фото
-//                                    String[] photoIds = new String[photo.size()];
-//                                    for (int i = 0; i < photo.size(); i++) {
-//                                        String id = String.valueOf(photo.get(i).elementId);
-//                                        Log.e("sendPhotoInformation", "id: " + id);
-//                                        photoIds[i] = id;
-//                                    }
 
                                     Log.e("sendPhotoInformation", "photoIds: " + Arrays.toString(ids));
 

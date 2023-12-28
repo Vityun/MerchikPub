@@ -885,6 +885,16 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                             public void onFailure(String error) {
                                 Log.d("t", "te:" + error);
                             }
+                        }, new Clicks.clickStatusMsgMode() {
+                            @Override
+                            public void onSuccess(String data, Clicks.MassageMode mode) {
+
+                            }
+
+                            @Override
+                            public void onFailure(String error) {
+
+                            }
                         });
 
                         return false;

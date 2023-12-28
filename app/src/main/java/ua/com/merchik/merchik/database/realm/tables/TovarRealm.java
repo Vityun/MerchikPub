@@ -33,8 +33,8 @@ public class TovarRealm {
     }
 
     public static List<TovarDB> getAllTov(){
-        return INSTANCE.where(TovarDB.class)
-                .findAll();
+        return INSTANCE.copyFromRealm(INSTANCE.where(TovarDB.class)
+                .findAll());
     }
 
 }

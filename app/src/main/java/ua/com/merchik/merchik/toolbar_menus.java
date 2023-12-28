@@ -86,6 +86,7 @@ import ua.com.merchik.merchik.Activities.ToolbarActivity.WebSocketStatus;
 import ua.com.merchik.merchik.Activities.WorkPlanActivity.WPDataActivity;
 import ua.com.merchik.merchik.Activities.navigationMenu.MenuHeader;
 import ua.com.merchik.merchik.Activities.navigationMenu.MenuHeaderAdapter;
+import ua.com.merchik.merchik.ServerExchange.CustomExchange.CustomExchange;
 import ua.com.merchik.merchik.ServerExchange.Exchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.PhotoMerchikExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.SamplePhotoExchange;
@@ -611,6 +612,8 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
         item.getActionView().setOnLongClickListener(v -> {
             synchronizationSignal("SIGNAL", null);
             synchronizationSignal("SHOW_MASSAGE", 1);
+
+            new CustomExchange().showDialogExchange(this);
 
 //            Toast.makeText(toolbar_menus.this, "Начинаю Обмен. (Выгрузка фото и Синхронизация таблиц)", Toast.LENGTH_SHORT).show();
 //            photoUpload();  // Выгрузка фото
