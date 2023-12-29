@@ -653,6 +653,8 @@ public class DialogEKL {
                     Log.e("DialogEKL", "ekl_sdb: " + ekl_sdb.id);
                     Log.e("DialogEKL", "ekl_sdb: " + ekl_sdb.dad2);
 
+                    Globals.writeToMLOG("RESP", "DialogEKL.sendStartEKL/onResponse/onSuccess/Хочу_понимать_какой_экл_я_сохраняю", "ekl_sdb: " + new Gson().toJson(ekl_sdb));
+
                     // Запись ЭКЛ-а в базу данных
                     SQL_DB.eklDao().insertAll(Collections.singletonList(ekl_sdb));
 
