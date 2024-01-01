@@ -35,6 +35,15 @@ public interface TarDao {
             "ORDER BY dt DESC;")
     List<TasksAndReclamationsSDB> getAllByTp(int userId, int tp, long dt);
 
+    // Pika
+    @Query("SELECT tar.*, addr.nm AS addr_nm, cl.nm AS client_nm, sot.fio AS sotr_nm FROM tasks_and_reclamations tar \n" +
+            "LEFT JOIN address addr ON tar.addr = addr.id\n" +
+            "LEFT JOIN client cl ON tar.client = cl.id\n" +
+            "LEFT JOIN sotr sot ON tar.vinovnik = sot.id\n" +
+            "WHERE tp = :tp AND dt >:dt AND state=0 AND (vinovnik = :userId OR vinovnik2 = :userId OR zamena_user_id = :userId)\n" +
+            "ORDER BY dt DESC;")
+    List<TasksAndReclamationsSDB> getAllActiveByTp(int userId, int tp, long dt);
+
 
     @Query("SELECT tar.*, addr.nm AS addr_nm, cl.nm AS client_nm, sot.fio AS sotr_nm FROM tasks_and_reclamations tar \n" +
             "LEFT JOIN address addr ON tar.addr = addr.id\n" +

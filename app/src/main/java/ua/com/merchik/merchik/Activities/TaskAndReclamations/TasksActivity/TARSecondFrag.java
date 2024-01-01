@@ -7,6 +7,8 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.viewpager2.widget.ViewPager2;
@@ -48,7 +50,19 @@ public class TARSecondFrag extends Fragment {
         return v;
     }
 
+    // Pika установка ссылки на экземпляр этого класса в переменной внутри класса Tab1Fragment, чтоб можно было симитировать оттуда клик
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+        Tab1Fragment.secFrag = this;
+    }
 
+    // Pika сброс этого экземпляра класса в переменной внутри класса Tab1Fragment
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        Tab1Fragment.secFrag = null;
+    }
 
     TARTab adapter;
     private void setTab(Context context) {
@@ -89,6 +103,11 @@ public class TARSecondFrag extends Fragment {
         adapter.setDataToFrag3(id, tarCommentIndex);
     }
 
+    // Pika выполнение клика на комменте чтоб перейти в комментарии
+    public void clickOn3(){
+        tabLayout.selectTab(tabLayout.getTabAt(3));
+        tabLayout.performClick();
+    }
 
 
 }

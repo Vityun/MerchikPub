@@ -131,7 +131,7 @@ public class WorkPlan {
      * Получить данные о КПСе
      */
     public WPDataObj getKPS(long wpId) {
-        WpDataDB wpRow = RealmManager.getWorkPlanRowById(wpId);
+        WpDataDB wpRow = RealmManager.INSTANCE.copyFromRealm(RealmManager.getWorkPlanRowById(wpId));
 
         long id = wpRow.getId();
         String date = Clock.getHumanTimeYYYYMMDD(wpRow.getDt().getTime() / 1000);

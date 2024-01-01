@@ -2,14 +2,23 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
+    <!--  Bell
+    <item
+        android:id="@+id/menu_toolbar_bell"
+        android:title="Bell"
+        android:icon="@drawable/bell1"
+        app:showAsAction="always"></item>
+-->
+
     <!-- Светофор -->
     <item
         android:id="@+id/action_check"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:actionLayout="@layout/status_light_menu_item"
         android:icon="@drawable/ic_3"
         android:title="Карта"
-        app:showAsAction="ifRoom"></item>
-
+        app:showAsAction="always"></item>
 
     <!--  Обмен  -->
     <item

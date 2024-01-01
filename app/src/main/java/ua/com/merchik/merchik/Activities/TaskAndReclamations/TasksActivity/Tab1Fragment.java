@@ -67,6 +67,11 @@ public class Tab1Fragment extends Fragment {
     public static final Integer[] Tab1Fragment_VIDEO_LESSONS = new Integer[]{3528, 4208};
 
     private TextView textViewData, goToWpData;
+
+    // Pika создание блока для последнего комментария, кликнув на котором перейти в закладку комментариев
+    private TextView goToTab3;
+    public static TARSecondFrag secFrag;
+
     private ImageView imageView, imageView2;
     private RatingBar ratingBar1, ratingBar2;
 
@@ -94,6 +99,17 @@ public class Tab1Fragment extends Fragment {
         imageView2 = v.findViewById(R.id.TARPhoto2);
         ratingBar1 = v.findViewById(R.id.ratingBar2);
         ratingBar2 = v.findViewById(R.id.ratingBar4);
+        // Pika блок для последнего комментария, кликнув на котором перейти в закладку комментариев
+        goToTab3 = v.findViewById(R.id.lastComment);
+
+        // Pika - вопрос как сделать так чтоб моя переменная secFrag теперь ссылалась именно на тот
+        // экземпляр класса который создан и его меню уже отображено
+        // тогда я вот так вызову его публичный метод clickOn3(), который я там создал и он должен сымитировать клик на вкладке "Комментарии"
+        goToTab3.setOnClickListener(view -> {
+            if (secFrag != null) {
+                secFrag.clickOn3();
+            }
+        });
 
         fabYouTube = v.findViewById(R.id.fab3);
         badgeTextView = v.findViewById(R.id.badge_text_view_tar);
@@ -106,7 +122,6 @@ public class Tab1Fragment extends Fragment {
         goToWpData.setText(spannableString);
         goToWpData.setVisibility(View.GONE);
         goToWpData.setOnClickListener((view) -> {
-
         });
 
         setData();
@@ -122,6 +137,7 @@ public class Tab1Fragment extends Fragment {
             toolbar_menus.videoLessons = new Integer[]{3528, 4208};
             Log.e("SET_TAR_FAB", "Tab1Fragment 0");
         }
+
 
         toolbar_menus.setFab(v.getContext(), TARActivity.fab, ()->{}); // ГЛАВНАЯ
 
@@ -331,6 +347,15 @@ public class Tab1Fragment extends Fragment {
 
         textViewData.setText(stringData);
 
+        // Pika
+        if (data.lastAnswer != null) {
+            goToTab3.setVisibility(View.VISIBLE);
+            goToTab3.setText(data.lastAnswer);
+        }
+        else {
+            goToTab3.setVisibility(View.GONE);
+        }
+
         Uri photo1 = getPhotoPath(String.valueOf(data.photo));
         Uri photo2 = getPhotoPath(String.valueOf(data.photo2));
 
@@ -351,6 +376,10 @@ public class Tab1Fragment extends Fragment {
                     if (stackPhotoDB != null && fragmentSDB != null && fragmentSDB.size() > 0){
                         DialogFullPhotoR dialog = new DialogFullPhotoR(mContext);
                         dialog.setPhoto(stackPhotoDB);
+
+                        // Pika
+                        dialog.setComment(stackPhotoDB.getComment());
+
                         dialog.setClose(dialog::dismiss);
                         dialog.show();
                     }
@@ -586,6 +615,10 @@ public class Tab1Fragment extends Fragment {
 
                     DialogFullPhotoR dialog = new DialogFullPhotoR(mContext);
                     dialog.setPhoto(finalStackPhotoDB);
+
+                    // Pika
+                    dialog.setComment(data.getComment());
+
                     dialog.setClose(dialog::dismiss);
                     dialog.show();
                 }

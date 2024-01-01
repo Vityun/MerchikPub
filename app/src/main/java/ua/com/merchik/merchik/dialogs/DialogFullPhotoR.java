@@ -8,7 +8,9 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.view.WindowManager;
+import android.widget.Button;
 import android.widget.ImageButton;
+import android.widget.Toast;
 
 import com.ortiz.touchview.TouchImageView;
 
@@ -16,6 +18,7 @@ import java.io.File;
 import java.util.List;
 
 import ua.com.merchik.merchik.Activities.FullScreenPhotoActivity.PhotoFragments;
+import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.data.Database.Room.FragmentSDB;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
@@ -30,6 +33,11 @@ public class DialogFullPhotoR {
     // ------------------------
     private TouchImageView photo;
     private ImageButton camera;
+
+    // Pika
+    private Button comment1;
+    private String textComment1 = "";
+
     // ------------------------
     private ImageButton close, help, videoHelp, call;
 
@@ -51,6 +59,28 @@ public class DialogFullPhotoR {
         photo = dialog.findViewById(R.id.photo);
 //        photo.setAdjustViewBounds(true);
         camera = dialog.findViewById(R.id.camera);
+
+        // Pika
+        comment1 = dialog.findViewById(R.id.buttonComment);
+        comment1.setOnClickListener(v -> {
+
+        try {
+//            Toast.makeText(context, textComment1, Toast.LENGTH_LONG).show();
+            DialogData dialogData = new DialogData(context);
+            dialogData.setTitle("Комментарий");
+            dialogData.setText(textComment1);
+            dialogData.setClose(dialogData::dismiss);
+            dialogData.show();
+        }catch (Exception e){
+//            DialogData dialogData = new DialogData(context);
+//            dialogData.setTitle("Произошла ошибка");
+//            dialogData.setText(textComment1);
+//            dialogData.setClose(dialogData::dismiss);
+//            dialogData.show();
+        }
+
+        });
+
     }
 
     public void show() {
@@ -88,6 +118,16 @@ public class DialogFullPhotoR {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    // Pika
+    public void setComment(String txt) {
+        if (txt == null)
+            textComment1="Комментарий отсутствует";
+        else if (txt == "")
+            textComment1="Комментарий отсутствует";
+        else
+            textComment1=txt;
     }
 
 

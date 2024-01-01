@@ -18,7 +18,9 @@ import java.util.List;
 import java.util.Locale;
 
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity;
+import ua.com.merchik.merchik.Activities.WorkPlanActivity.WPDataActivity;
 import ua.com.merchik.merchik.data.Data;
+import ua.com.merchik.merchik.dialogs.DialogData;
 
 public class ListViewAdapter extends BaseAdapter {
 
@@ -120,14 +122,12 @@ public class ListViewAdapter extends BaseAdapter {
                         Intent intent = new Intent(mContext, DetailedReportActivity.class);
                         intent.putExtra("dataFromWP", D);
                         mContext.startActivity(intent);
-                    }catch (Exception e){
-
-                    }
-
-
+                    } catch (Exception e) {
+                   }
 
                 }
-            }).setNegativeButton("Закрыть", new DialogInterface.OnClickListener() {
+            });
+            builder.setNegativeButton("Закрыть", new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
                 }
