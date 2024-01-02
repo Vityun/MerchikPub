@@ -323,7 +323,7 @@ public class TasksAndReclamationsSDB implements Parcelable {
     @SerializedName("audio_id")
     @Expose
     @ColumnInfo(name = "audio_id")
-    public Integer audioId;
+    public Long audioId;
 
     @SerializedName("potential_client_id")
     @Expose
@@ -438,7 +438,7 @@ public class TasksAndReclamationsSDB implements Parcelable {
         sotrOpinionAuthorId = in.readInt();
         sotrOpinionDt = in.readLong();
         noNeedReply = in.readInt();
-        audioId = in.readInt();
+        audioId = in.readLong();
         potentialClientId = in.readInt();
         dt_start_plan = in.readLong();
         dt_end_plan = in.readLong();
@@ -511,7 +511,7 @@ public class TasksAndReclamationsSDB implements Parcelable {
         dest.writeInt(sotrOpinionAuthorId);
         dest.writeLong(sotrOpinionDt);
         dest.writeInt(noNeedReply);
-        dest.writeInt(audioId);
+        dest.writeLong(audioId);
         dest.writeInt(potentialClientId);
         dest.writeLong(dt_start_plan);
         dest.writeLong(dt_end_plan);
