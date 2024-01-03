@@ -300,11 +300,24 @@ public class DialogEKL {
 
             AdditionalRequirementsDB additionalRequirementsDB = AdditionalRequirementsRealm.getADByClientAdr(String.valueOf(wp.getAddr_id()), wp.getClient_id());
 
-            if (additionalRequirementsDB == null && wp.getClient_id().equals("9128") ){
+//            if (additionalRequirementsDB == null && wp.getClient_id().equals("9128")){
+//                additionalRequirementsDB = RealmManager.INSTANCE.copyFromRealm(AdditionalRequirementsRealm.getADByClient(wp.getClient_id()));
+//                int us = Integer.parseInt(additionalRequirementsDB.userId);
+//                data = SQL_DB.usersDao().getUserLJoinTovGrps(us);
+//            }
+
+//            if (additionalRequirementsDB == null && wp.getClient_id().equals("14156")){
+//                additionalRequirementsDB = RealmManager.INSTANCE.copyFromRealm(AdditionalRequirementsRealm.getADByClient(wp.getClient_id()));
+//                int us = Integer.parseInt(additionalRequirementsDB.userId);
+//                data = SQL_DB.usersDao().getUserLJoinTovGrps(us);
+//            }
+
+            if (additionalRequirementsDB == null){
                 additionalRequirementsDB = RealmManager.INSTANCE.copyFromRealm(AdditionalRequirementsRealm.getADByClient(wp.getClient_id()));
                 int us = Integer.parseInt(additionalRequirementsDB.userId);
                 data = SQL_DB.usersDao().getUserLJoinTovGrps(us);
             }
+
 
             Log.e("DialogEKL", "showData/data: " + data);
             Log.e("DialogEKL", "showData/data.size: " + data.size());
