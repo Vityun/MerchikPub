@@ -721,7 +721,8 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
             endDt = wp.getVisit_end_dt();
         } else {
             TasksAndReclamationsSDB tar = (TasksAndReclamationsSDB) dataDB;
-            dad2 = tar.codeDad2;
+//            dad2 = tar.codeDad2;
+            dad2 = tar.codeDad2SrcDoc;
             startDt = tar.dt_start_fact;
             endDt = tar.dt_end_fact;
         }
