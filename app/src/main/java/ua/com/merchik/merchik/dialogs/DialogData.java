@@ -21,6 +21,7 @@ import android.text.InputType;
 import android.text.SpannableStringBuilder;
 import android.text.TextWatcher;
 import android.text.method.ScrollingMovementMethod;
+import android.text.method.LinkMovementMethod;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
@@ -170,6 +171,7 @@ public class DialogData {
         textView42 = dialog.findViewById(R.id.textView42);
 
         imgBtnClose.setOnClickListener(v -> dialog.dismiss());
+
     }
 
 
@@ -206,6 +208,8 @@ public class DialogData {
 
     public void setText(CharSequence text) {
         this.text.setVisibility(View.VISIBLE);
+        // Pika
+        this.text.setMovementMethod(LinkMovementMethod.getInstance());
         if (text != null && !text.equals("")) {
             this.text.setText(text);
         } else {
@@ -262,7 +266,6 @@ public class DialogData {
     public void setText(SpannableStringBuilder text, DialogClickListener clickListener) {
         this.text.setVisibility(View.VISIBLE);
         this.text.setScrollbarFadingEnabled(false);
-
         this.text.setMovementMethod(ClickableMovementMethod.getInstance());// Делаю возможность скролить текст
         this.text.setClickable(false);
         this.text.setLongClickable(false);

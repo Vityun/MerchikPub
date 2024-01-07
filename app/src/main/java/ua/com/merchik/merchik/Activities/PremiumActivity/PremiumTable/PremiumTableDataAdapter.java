@@ -4,7 +4,12 @@ import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
 import android.content.Intent;
 import android.graphics.Paint;
+import android.graphics.Typeface;
 import android.text.Html;
+import android.text.Spannable;
+import android.text.SpannableStringBuilder;
+import android.text.style.StyleSpan;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -18,6 +23,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -46,6 +52,11 @@ import ua.com.merchik.merchik.database.realm.tables.WpDataRealm;
 import ua.com.merchik.merchik.dialogs.BlockingProgressDialog;
 import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
+
+// Pika
+import ua.com.merchik.merchik.database.realm.tables.AppUserRealm;
+import ua.com.merchik.merchik.data.RealmModels.AppUsersDB;
+import static ua.com.merchik.merchik.Globals.userId;
 
 public class PremiumTableDataAdapter extends RecyclerView.Adapter<PremiumTableDataAdapter.PremiumTableHeaderViewHolder> {
 
@@ -135,12 +146,24 @@ public class PremiumTableDataAdapter extends RecyclerView.Adapter<PremiumTableDa
 
             layout.setOnClickListener(v -> {
                 Toast.makeText(v.getContext(), "Завантажуються данні...", Toast.LENGTH_SHORT).show();
-                getPremiumText(detailed, data -> {
+                getPremiumTextList(detailed, data -> {
                     DialogData dialogData = new DialogData(v.getContext());
                     dialogData.setTitle("");
-                    dialogData.setText(data);
+
+                    // Pika
+                    // так было...
+//                    dialogData.setText(data);
+
+                    // так стало...
+                    // теперь строка с основанием data прогоняется через PrepareLinkedTextForMVS и если там есть структура
+                    // которую надр превратить в кликабельную ссылку для открытия в МВС, то это выполеяктся и возвращается строка в которой
+                    // эта структура заменена на текст HTML
+                    String newData=Globals.PrepareLinkedTextForMVS(data);
+                    dialogData.setText(Html.fromHtml(newData));
+
                     dialogData.setClose(dialogData::dismiss);
                     dialogData.show();
+
                 });
             });
         }
@@ -368,6 +391,7 @@ public class PremiumTableDataAdapter extends RecyclerView.Adapter<PremiumTableDa
             call.enqueue(new Callback<PremiumResponse>() {
                 @Override
                 public void onResponse(Call<PremiumResponse> call, Response<PremiumResponse> response) {
+
                     if (response.isSuccessful()) {
                         if (response.body() != null && response.body().state) {
                             clickText.click(response.body().basis);
@@ -386,6 +410,64 @@ public class PremiumTableDataAdapter extends RecyclerView.Adapter<PremiumTableDa
                 }
             });
         }
+
+        private void getPremiumTextList(Detailed detailed, Clicks.clickText clickText) {
+            StandartData data = new StandartData();
+            data.mod = "premium";
+            data.act = "get_salary_basis";
+            data.smeta = detailed.docNom;
+            data.doc_type_id = detailed.docDef;
+
+            Gson gson = new Gson();
+            String json = gson.toJson(data);
+            JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
+
+//            retrofit2.Call<JsonObject> test = RetrofitBuilder.getRetrofitInterface().TEST_JSON_UPLOAD(RetrofitBuilder.contentType, convertedObject);
+//            test.enqueue(new Callback<JsonObject>() {
+//                @Override
+//                public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
+//                    Log.e("test", "response: " + response);
+//                }
+//
+//                @Override
+//                public void onFailure(Call<JsonObject> call, Throwable t) {
+//
+//                }
+//            });
+
+            retrofit2.Call<PremiumResponse> call = RetrofitBuilder.getRetrofitInterface().Premium_get_salary_basis_RESPONSE(RetrofitBuilder.contentType, convertedObject);
+            call.enqueue(new Callback<PremiumResponse>() {
+                @Override
+                public void onResponse(Call<PremiumResponse> call, Response<PremiumResponse> response) {
+                    if (response.isSuccessful()) {
+                        if (response.body() != null && response.body().state) {
+
+                            // Pika
+                            // так было...
+//                            clickText.click(response.body().basis);
+
+                            // так стало...
+                            // (получаю текст основания премии для вывода в TextView из поля result_list, которое в салю очередь представлено массивом
+                            // JSON в котором один элемент и свои поля и нас интересует поле osnovanie)
+                            String res=response.body().result_list.get(0).osnovanie;
+
+                            clickText.click(res);
+                        } else {
+                            clickText.click("Дані отримати не вийшло. Повторіть спробу або зверніться до вашого керівника.");
+                        }
+                    } else {
+                        clickText.click("Проблема із зв'язком. Спробуйте пізніше.");
+                    }
+                }
+
+                @Override
+                public void onFailure(Call<PremiumResponse> call, Throwable t) {
+                    Globals.writeToMLOG("ERROR", "getPremiumText", "Throwable t: " + t);
+                    clickText.click("Отримати дані не вийшло. Зверніться до керівника за допомогою.");
+                }
+            });
+        }
+
     }
 
     /*Обработчик кликов по заголовку ПУНКТУ премии*/
