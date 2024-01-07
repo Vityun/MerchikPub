@@ -186,6 +186,11 @@ public class ShowcaseSDB {
     @ColumnInfo(name = "status_author")
     public Integer statusAuthor;
 
+    @SerializedName("tp_id")
+    @Expose
+    @ColumnInfo(name = "tp_id")
+    public Integer tpId;            // Тип фото Витрині
+
 
     @ColumnInfo(name = "so")
     public Integer so;

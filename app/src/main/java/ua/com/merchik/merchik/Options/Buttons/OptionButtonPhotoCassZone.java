@@ -9,10 +9,12 @@ import ua.com.merchik.merchik.MakePhoto.MakePhoto;
 import ua.com.merchik.merchik.Options.OptionControl;
 import ua.com.merchik.merchik.Options.Options;
 import ua.com.merchik.merchik.WorkPlan;
+import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
 import ua.com.merchik.merchik.data.OptionMassageType;
 import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.data.WPDataObj;
+import ua.com.merchik.merchik.database.realm.tables.WpDataRealm;
 
 public class OptionButtonPhotoCassZone <T> extends OptionControl {
     public int OPTION_BUTTON_PhotoCassZone_ID = 164351;
@@ -35,6 +37,11 @@ public class OptionButtonPhotoCassZone <T> extends OptionControl {
         Log.e("OptionControlTask", "here");
         if (document instanceof WpDataDB) {
             this.wpDataDB = (WpDataDB) document;
+        }
+
+        if (document instanceof TasksAndReclamationsSDB){
+            long codDad2 = ((TasksAndReclamationsSDB) document).codeDad2SrcDoc;
+            this.wpDataDB = WpDataRealm.getWpDataRowByDad2Id(codDad2);
         }
     }
 

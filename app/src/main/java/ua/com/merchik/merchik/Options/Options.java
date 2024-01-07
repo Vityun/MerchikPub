@@ -202,7 +202,7 @@ public class Options {
             switch (optionControlId) {
 
                 case 160568:
-                    OptionControlPhotoShowcase<?> optionControlPhotoShowcase = new OptionControlPhotoShowcase<>(context, dataDB, optionsDB, type, mode, unlockCodeResultListener);
+                    OptionControlPhotoShowcase<?> optionControlPhotoShowcase = new OptionControlPhotoShowcase<>(context, dataDB, optionsDB, newOptionType, mode, unlockCodeResultListener);
                     optionControlPhotoShowcase.showOptionMassage("");
                     break;
 

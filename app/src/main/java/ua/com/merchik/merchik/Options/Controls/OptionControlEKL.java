@@ -8,6 +8,7 @@ import android.os.Build;
 import android.util.Log;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -103,18 +104,18 @@ public class OptionControlEKL<T> extends OptionControl {
         StringBuilder optionMsg = new StringBuilder(); //
 
         // DEBUG DATA-------------
-//        try {
-//            List<EKL_SDB> fullEkl = SQL_DB.eklDao().getAll();
-//            StringBuilder stringBuilderDEBUG = new StringBuilder();
-//            for (EKL_SDB item : fullEkl) {
-//                JsonObject object = new Gson().fromJson(new Gson().toJson(item), JsonObject.class);
-//                stringBuilderDEBUG.append(object);
-//            }
-//            Globals.writeToMLOG("INFO", "OptionControlEKL/createTZN", "fullEkl.size: " + fullEkl.size());
-//            Globals.writeToMLOG("INFO", "OptionControlEKL/createTZN", "stringBuilderDEBUG: " + stringBuilderDEBUG);
-//        } catch (Exception e) {
-//            Globals.writeToMLOG("INFO", "OptionControlEKL/createTZN", "stringBuilderDEBUG/Exception e: " + e);
-//        }
+        try {
+            List<EKL_SDB> fullEkl = SQL_DB.eklDao().getAll();
+            StringBuilder stringBuilderDEBUG = new StringBuilder();
+            for (EKL_SDB item : fullEkl) {
+                JsonObject object = new Gson().fromJson(new Gson().toJson(item), JsonObject.class);
+                stringBuilderDEBUG.append(object);
+            }
+            Globals.writeToMLOG("INFO", "OptionControlEKL/createTZN", "fullEkl.size: " + fullEkl.size());
+            Globals.writeToMLOG("INFO", "OptionControlEKL/createTZN", "stringBuilderDEBUG: " + stringBuilderDEBUG);
+        } catch (Exception e) {
+            Globals.writeToMLOG("INFO", "OptionControlEKL/createTZN", "stringBuilderDEBUG/Exception e: " + e);
+        }
         // -----------------------
 
         Log.e("OptionControlEKL", "HERE TEST OptionControlEKL 2");
@@ -168,9 +169,7 @@ public class OptionControlEKL<T> extends OptionControl {
 //            eklSDB = SQL_DB.eklDao().getBy(dateFrom, dateTo, wpDataDB.getClient_id(), wpDataDB.getAddr_id(), wpDataDB.getUser_id());
 //        eklSDB = SQL_DB.eklDao().getBy(dateFrom, dateTo, wpDataDB.getClient_id(), wpDataDB.getAddr_id(), wpDataDB.getUser_id(), wpDataDB.ptt_user_id);
 
-//            List<EKL_SDB> eklSDB2 = SQL_DB.eklDao().getAll();
-//            Log.e("OptionControlEKL", "HERE TEST OptionControlEKL eklSDB: " + new Gson().toJson(eklSDB));
-//            Log.e("OptionControlEKL", "HERE TEST OptionControlEKL eklSDB2: " + new Gson().toJson(eklSDB2));
+            Globals.writeToMLOG("INFO", "OptionControlEKL/createTZN", "eklSDB(-1): " + new Gson().toJson(eklSDB));
 
             Log.e("OptionControlEKL", "HERE TEST OptionControlEKL 5");
             if (eklSDB == null || eklSDB.size() == 0) {
@@ -184,13 +183,17 @@ public class OptionControlEKL<T> extends OptionControl {
                     Globals.writeToMLOG("INFO", "OptionControlEKL/createTZN", msgDebug);
 
                     eklSDB = SQL_DB.eklDao().getBy(dateFrom, dateTo, ids, wpDataDB.getAddr_id(), wpDataDB.getUser_id());
+
+                    Globals.writeToMLOG("INFO", "OptionControlEKL/createTZN", "eklSDB(0): " + new Gson().toJson(eklSDB));
                 }else {
                     // TODO отсебятина, у меня у Эрики не было групп товаров изза чего проблема выникла, это может быть очень опасно
                     eklSDB = SQL_DB.eklDao().getBy(dateFrom, dateTo, wpDataDB.getAddr_id(), wpDataDB.getUser_id());
+                    Globals.writeToMLOG("INFO", "OptionControlEKL/createTZN", "eklSDB(1): " + new Gson().toJson(eklSDB));
                 }
 
                 if (eklSDB.size() == 0 && addressSDB != null && addressSDB.kolKass != null && addressSDB.kolKass <= 5){
                     eklSDB = SQL_DB.eklDao().getBy(dateFrom, dateTo, wpDataDB.getAddr_id(), wpDataDB.getUser_id());
+                    Globals.writeToMLOG("INFO", "OptionControlEKL/createTZN", "eklSDB(2): " + new Gson().toJson(eklSDB));
                 }
 
                 if (eklSDB != null) {
@@ -203,6 +206,7 @@ public class OptionControlEKL<T> extends OptionControl {
             }
 
             Log.e("OptionControlEKL", "HERE TEST OptionControlEKL 6");
+            Globals.writeToMLOG("INFO", "OptionControlEKL/createTZN", "eklSDB(3): " + new Gson().toJson(eklSDB));
 
             // Проверка ЭКЛов
             if (eklSDB == null || eklSDB.size() == 0) {

@@ -14,18 +14,18 @@ public class RoomManager {
 
     public static void init(Context context) {
         SQL_DB = Room.databaseBuilder(context,
-                AppDatabase.class, "merchik.db")
+                        AppDatabase.class, "merchik.db")
                 .fallbackToDestructiveMigration()
                 .enableMultiInstanceInvalidation()
                 .allowMainThreadQueries()
                 .addMigrations(
-                    MIGRATION_12_13,
-                    MIGRATION_40_41
+                        MIGRATION_12_13,
+                        MIGRATION_40_41,
+                        MIGRATION_41_42
                 )
 
                 .build();
     }
-
 
 
 //    ----------------------------------------------------------------------------------------------
@@ -330,6 +330,101 @@ public class RoomManager {
                     "upload INTEGER, " +
                     "comment TEXT, " +
                     "code_verify INTEGER)");
+        }
+    };
+
+    static final Migration MIGRATION_41_42 = new Migration(41, 42) {
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase database) {
+            database.execSQL("CREATE TABLE IF NOT EXISTS `tasks_and_reclamations_new` (" +
+                    "`id` INTEGER NOT NULL, " +
+                    "`tp` INTEGER, " +
+                    "`dt` INTEGER, " +
+                    "`dt_real_post` INTEGER, " +
+                    "`dt_change` INTEGER, " +
+                    "`author` INTEGER, " +
+                    "`addr` INTEGER, " +
+                    "`client` TEXT, " +
+                    "`state` INTEGER, " +
+                    "`photo` INTEGER, " +
+                    "`photo_2` INTEGER, " +
+                    "`photoHash` TEXT, " +
+                    "`comment` TEXT, " +
+                    "`vinovnik` INTEGER, " +
+                    "`vinovnik2` INTEGER, " +
+                    "`vinovnik_read_dt` INTEGER, " +
+                    "`zamena_user_id` INTEGER, " +
+                    "`zamena_dt` INTEGER, " +
+                    "`zamena_who` INTEGER, " +
+                    "`contacter_id` INTEGER, " +
+                    "`super_id` INTEGER, " +
+                    "`territorial_id` INTEGER, " +
+                    "`regional_id` INTEGER, " +
+                    "`nop_id` INTEGER, " +
+                    "`dvi` INTEGER, " +
+                    "`zakazchik` INTEGER, " +
+                    "`id_1c` TEXT, " +
+                    "`doc_num_1c_id` INTEGER, " +
+                    "`code_dad2` INTEGER, " +
+                    "`code_dad2_src_doc` INTEGER, " +
+                    "`tel_num` TEXT, " +
+                    "`last_answer` TEXT, " +
+                    "`last_answer_user_id` INTEGER, " +
+                    "`last_answer_dt_change` TEXT, " +
+                    "`respond` INTEGER, " +
+                    "`report_id` INTEGER, " +
+                    "`discount` INTEGER, " +
+                    "`discount_smeta` TEXT, " +
+                    "`vote_score` INTEGER, " +
+                    "`voter_id` INTEGER, " +
+                    "`vinovnik_score` INTEGER, " +
+                    "`vinovnik_score_user_id` INTEGER, " +
+                    "`vinovnik_score_comment` TEXT, " +
+                    "`vinovnik_score_dt` INTEGER, " +
+                    "`theme_grp_id` INTEGER, " +
+                    "`theme_id` INTEGER, " +
+                    "`sum_premiya` TEXT, " +
+                    "`sum_penalty` TEXT, " +
+                    "`duration` INTEGER, " +
+                    "`ref_id` INTEGER, " +
+                    "`summa_zp` TEXT, " +
+                    "`budget` TEXT, " +
+                    "`complete` TEXT, " +
+                    "`sotr_opinion_id` INTEGER, " +
+                    "`sotr_opinion_author_id` INTEGER, " +
+                    "`sotr_opinion_dt` INTEGER, " +
+                    "`no_need_reply` INTEGER, " +
+                    "`audioId` INTEGER, " + // Изменение типа на INTEGER
+                    "`potential_client_id` INTEGER, " +
+                    "`dt_start_plan` INTEGER, " +
+                    "`dt_end_plan` INTEGER, " +
+                    "`dt_start_fact` INTEGER, " +
+                    "`dt_end_fact` INTEGER, " +
+                    "`uploadStatus` INTEGER, " +
+                    "`addr_nm` TEXT, " +
+                    "`client_nm` TEXT, " +
+                    "`sotr_nm` TEXT, " +
+                    "`coord_X` TEXT, " +
+                    "`coord_Y` TEXT, " +
+                    "PRIMARY KEY(`id`))");
+
+            database.execSQL("INSERT INTO tasks_and_reclamations_new " +
+                    "SELECT id, tp, dt, dt_real_post, dt_change, author, addr, client, state, " +
+                    "photo, photo_2, photoHash, comment, vinovnik, vinovnik2, vinovnik_read_dt, " +
+                    "zamena_user_id, zamena_dt, zamena_who, contacter_id, super_id, territorial_id, " +
+                    "regional_id, nop_id, dvi, zakazchik, id_1c, doc_num_1c_id, code_dad2, " +
+                    "code_dad2_src_doc, tel_num, last_answer, last_answer_user_id, last_answer_dt_change, " +
+                    "respond, report_id, discount, discount_smeta, vote_score, voter_id, vinovnik_score, " +
+                    "vinovnik_score_user_id, vinovnik_score_comment, vinovnik_score_dt, theme_grp_id, " +
+                    "theme_id, sum_premiya, sum_penalty, duration, ref_id, summa_zp, budget, complete, " +
+                    "sotr_opinion_id, sotr_opinion_author_id, sotr_opinion_dt, no_need_reply, " +
+                    "CAST(audioId AS INTEGER) AS audioId, potential_client_id, dt_start_plan, dt_end_plan, " +
+                    "dt_start_fact, dt_end_fact, uploadStatus, addr_nm, client_nm, sotr_nm, coord_X, coord_Y " +
+                    "FROM tasks_and_reclamations");
+
+            database.execSQL("DROP TABLE tasks_and_reclamations");
+            database.execSQL("ALTER TABLE tasks_and_reclamations_new RENAME TO tasks_and_reclamations");
+
         }
     };
 }

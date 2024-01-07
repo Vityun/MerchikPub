@@ -7,6 +7,7 @@ import io.realm.RealmResults;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.Options.OptionControl;
 import ua.com.merchik.merchik.Options.Options;
+import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
 import ua.com.merchik.merchik.data.OptionMassageType;
 import ua.com.merchik.merchik.data.RealmModels.ImagesTypeListDB;
 import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
@@ -22,6 +23,7 @@ public class OptionControlPhoto<T> extends OptionControl {
     private StringBuilder optionResultStr = new StringBuilder();
 
     private WpDataDB wpDataDB;
+    private Long dad2;
 
     public OptionControlPhoto(Context context, T document, OptionsDB optionDB, OptionMassageType msgType, Options.NNKMode nnkMode, UnlockCodeResultListener unlockCodeResultListener) {
         try {
@@ -43,6 +45,9 @@ public class OptionControlPhoto<T> extends OptionControl {
     private void getDocumentVar() {
         if (document instanceof WpDataDB) {
             this.wpDataDB = (WpDataDB) document;
+            this.dad2 = wpDataDB.getCode_dad2();
+        }else if (document instanceof TasksAndReclamationsSDB){
+            this.dad2 = ((TasksAndReclamationsSDB) document).codeDad2SrcDoc;
         }
     }
 
@@ -111,7 +116,7 @@ public class OptionControlPhoto<T> extends OptionControl {
 
         }
 
-        RealmResults<StackPhotoDB> stackPhotoDB = StackPhotoRealm.getPhotosByDAD2(wpDataDB.getCode_dad2(), photoType);
+        RealmResults<StackPhotoDB> stackPhotoDB = StackPhotoRealm.getPhotosByDAD2(dad2, photoType);
         if (stackPhotoDB != null && stackPhotoDB.size() < m) {
             ImagesTypeListDB item = ImagesTypeListRealm.getByID(photoType);
             stringBuilderMsg.append("Вы должны сделать: ").append(m).append(" фото с типом: ").append(item != null ? item.getNm() : typeNm).append(", а сделали: ").append(stackPhotoDB.size()).append(" - доделайте фотографии.");

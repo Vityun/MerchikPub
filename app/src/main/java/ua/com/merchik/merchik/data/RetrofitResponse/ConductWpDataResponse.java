@@ -6,7 +6,7 @@ import com.google.gson.annotations.SerializedName;
 public class ConductWpDataResponse {
     @SerializedName("state")
     @Expose
-    public boolean state;
+    public boolean state;   // Поведён, Не проведен
 
     @SerializedName("error")
     @Expose

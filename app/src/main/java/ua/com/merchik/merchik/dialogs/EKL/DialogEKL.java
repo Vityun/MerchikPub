@@ -300,11 +300,27 @@ public class DialogEKL {
 
             AdditionalRequirementsDB additionalRequirementsDB = AdditionalRequirementsRealm.getADByClientAdr(String.valueOf(wp.getAddr_id()), wp.getClient_id());
 
-            if (additionalRequirementsDB == null && wp.getClient_id().equals("9128")){
-                additionalRequirementsDB = RealmManager.INSTANCE.copyFromRealm(AdditionalRequirementsRealm.getADByClient(wp.getClient_id()));
-                int us = Integer.parseInt(additionalRequirementsDB.userId);
-                data = SQL_DB.usersDao().getUserLJoinTovGrps(us);
+//            if (additionalRequirementsDB == null && wp.getClient_id().equals("9128")){
+//                additionalRequirementsDB = RealmManager.INSTANCE.copyFromRealm(AdditionalRequirementsRealm.getADByClient(wp.getClient_id()));
+//                int us = Integer.parseInt(additionalRequirementsDB.userId);
+//                data = SQL_DB.usersDao().getUserLJoinTovGrps(us);
+//            }
+
+//            if (additionalRequirementsDB == null && wp.getClient_id().equals("14156")){
+//                additionalRequirementsDB = RealmManager.INSTANCE.copyFromRealm(AdditionalRequirementsRealm.getADByClient(wp.getClient_id()));
+//                int us = Integer.parseInt(additionalRequirementsDB.userId);
+//                data = SQL_DB.usersDao().getUserLJoinTovGrps(us);
+//            }
+
+            if (additionalRequirementsDB == null) {
+                AdditionalRequirementsDB test = AdditionalRequirementsRealm.getADByClient(wp.getClient_id());
+                if (test != null) {
+                    additionalRequirementsDB = RealmManager.INSTANCE.copyFromRealm(test);
+                    int us = Integer.parseInt(additionalRequirementsDB.userId);
+                    data = SQL_DB.usersDao().getUserLJoinTovGrps(us);
+                }
             }
+
 
             Log.e("DialogEKL", "showData/data: " + data);
             Log.e("DialogEKL", "showData/data.size: " + data.size());
@@ -329,27 +345,27 @@ public class DialogEKL {
 //                UsersSDB user = SQL_DB.usersDao().getUserById(Integer.parseInt(additionalRequirementsDB.userId));
 //                sotr.setText("" + user.fio);
 //            } else {
-                if (Globals.userEKLId != null && Globals.userEKLId != 0) {
-                    for (UserSDBJoin item : data) {
-                        if (item.id.equals(Globals.userEKLId)) {
+            if (Globals.userEKLId != null && Globals.userEKLId != 0) {
+                for (UserSDBJoin item : data) {
+                    if (item.id.equals(Globals.userEKLId)) {
 
-                            Globals.writeToMLOG("INFO", "DialogEKL/showData/UserSDBJoin", "item.fio: " + item.fio);
-                            Globals.writeToMLOG("INFO", "DialogEKL/showData/UserSDBJoin", "item.nm: " + item.nm);
+                        Globals.writeToMLOG("INFO", "DialogEKL/showData/UserSDBJoin", "item.fio: " + item.fio);
+                        Globals.writeToMLOG("INFO", "DialogEKL/showData/UserSDBJoin", "item.nm: " + item.nm);
 
-                            try {
-                                if (item.nm == null) {
-                                    item.nm = "Отдел не определён";
-                                }
-
-                                sotr.setText(item.fio + "(" + item.nm + ")");
-                            } catch (Exception e) {
-                                e.printStackTrace();
-                                Globals.writeToMLOG("INFO", "DialogEKL/showData/UserSDBJoin", "Exception e: " + e);
-                                sotr.setText(item.fio);
+                        try {
+                            if (item.nm == null) {
+                                item.nm = "Отдел не определён";
                             }
+
+                            sotr.setText(item.fio + "(" + item.nm + ")");
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                            Globals.writeToMLOG("INFO", "DialogEKL/showData/UserSDBJoin", "Exception e: " + e);
+                            sotr.setText(item.fio);
                         }
                     }
                 }
+            }
 //            }
 
             tel.setHint("Выберите телефон");
@@ -437,10 +453,10 @@ public class DialogEKL {
                                     EKLRequests.PTTRequest pttRequest = (EKLRequests.PTTRequest) data;
 
                                     if (pttRequest.state) {
-                                        if (pttRequest.list != null && pttRequest.list.size() > 0){
+                                        if (pttRequest.list != null && pttRequest.list.size() > 0) {
                                             List<UserSDBJoin> newPttList = new ArrayList<>();
 
-                                            for (EKLRequests.PTT item : pttRequest.list){
+                                            for (EKLRequests.PTT item : pttRequest.list) {
                                                 UserSDBJoin userSDBJoin = new UserSDBJoin();
 
                                                 userSDBJoin.id = Integer.valueOf(item.userId);
@@ -468,7 +484,7 @@ public class DialogEKL {
                                             Toast.makeText(context, "Список ПТТ Оновлено!", Toast.LENGTH_SHORT).show();
                                         }
                                     }
-                                }catch (Exception e){
+                                } catch (Exception e) {
                                     Log.e("EKLRequests", "Exception e: " + e);
                                     e.printStackTrace();
                                 }
@@ -652,6 +668,8 @@ public class DialogEKL {
 
                     Log.e("DialogEKL", "ekl_sdb: " + ekl_sdb.id);
                     Log.e("DialogEKL", "ekl_sdb: " + ekl_sdb.dad2);
+
+                    Globals.writeToMLOG("RESP", "DialogEKL.sendStartEKL/onResponse/onSuccess/Хочу_понимать_какой_экл_я_сохраняю", "ekl_sdb: " + new Gson().toJson(ekl_sdb));
 
                     // Запись ЭКЛ-а в базу данных
                     SQL_DB.eklDao().insertAll(Collections.singletonList(ekl_sdb));
