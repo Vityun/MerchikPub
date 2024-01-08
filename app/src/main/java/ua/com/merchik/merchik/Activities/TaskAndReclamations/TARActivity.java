@@ -419,13 +419,13 @@ public class TARActivity extends toolbar_menus implements TARFragmentHome.OnFrag
             stackPhotoDB.setClient_id(tar.client);
             stackPhotoDB.setUser_id(tar.vinovnik);
 
-            // 14.09.23. В рамках отладки сделал все фото с типом 0
-//            if (tar.themeId == 150){
-//                stackPhotoDB.setPhoto_type(18);
-//            }else {
-//                stackPhotoDB.setPhoto_type(0);
-//            }
-            stackPhotoDB.setPhoto_type(0);
+
+            if (tar.themeId == 150){
+                stackPhotoDB.setPhoto_type(18);
+            }else {
+                stackPhotoDB.setPhoto_type(0);
+            }
+//            stackPhotoDB.setPhoto_type(0);// 14.09.23. В рамках отладки сделал все фото с типом 0
             stackPhotoDB.setCode_dad2(tar.codeDad2);
 
             if (tar.themeId == 1174) {
@@ -555,7 +555,7 @@ public class TARActivity extends toolbar_menus implements TARFragmentHome.OnFrag
 
             stackPhotoDB.setUser_id(Globals.userId);
             stackPhotoDB.setUserTxt(SQL_DB.usersDao().getUserName(Globals.userId));
-            stackPhotoDB.setPhoto_type(4);      // Тип фото Остатков
+            stackPhotoDB.setPhoto_type(18);      // Фото Товара
             stackPhotoDB.tovar_id = tovarId;
 
             stackPhotoDB.setCreate_time(System.currentTimeMillis());
