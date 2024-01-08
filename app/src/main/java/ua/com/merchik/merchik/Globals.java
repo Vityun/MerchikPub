@@ -69,9 +69,11 @@ import ua.com.merchik.merchik.data.AppData.Os;
 import ua.com.merchik.merchik.data.Database.Room.AddressSDB;
 import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
 import ua.com.merchik.merchik.data.Database.Room.TranslatesSDB;
+import ua.com.merchik.merchik.data.RealmModels.AppUsersDB;
 import ua.com.merchik.merchik.data.RealmModels.LogMPDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.database.realm.RealmManager;
+import ua.com.merchik.merchik.database.realm.tables.AppUserRealm;
 import ua.com.merchik.merchik.dialogs.DialogData;
 
 public class Globals {
@@ -1479,6 +1481,176 @@ public class Globals {
         dialog.show();
     }
 
+    // Pika
+    // Преобразовывает текст в котором есть ссылки на страницы МВС в текст с ссылками, которые при нажатии на них
+    // будут открывать страницы МВС без обязательной авторизации пользователя
+    // в строке есть ссылки представление их в виде HTML <a href=....> ......... </a>
+    public static String PrepareLinkedTextForMVSfromHTML(String str) {
+
+        String linkTit, hash, linktext, res;
+        int pos1, pos2, pos3, pos4, startpos;
+
+        if (str.contains("<a href=")) {
+            AppUsersDB appUser = AppUserRealm.getAppUserById(userId);
+            hash = String.format("%s%s%s", appUser.getUserId(), appUser.getPassword(), "AvgrgsYihSHp6Ok9yQXfSHp6Ok9nXdXr3OSHp6Ok9UPBTzTjrF20Nsz3");
+            hash = getSha1Hex(hash);
+
+            res="";
+            linkTit="";
+            startpos=0;
+            pos1=str.indexOf("<a href=", startpos);
+            pos2=0;
+            while (pos1>=0)
+            {
+                pos2=str.indexOf("</a>", pos1+8);
+                if (pos2>pos1)
+                {
+                    pos3=str.indexOf("\"",pos1+9);
+                    pos4=str.indexOf(">",pos3);
+                    linkTit=str.substring(pos4+1,pos2);
+                    linktext = str.substring(pos1,pos3)+">"+linkTit+"</a>";
+                    linktext = linktext.replace("/index.php", "index.php");
+                    linktext = linktext.replace("\"", "");
+                    linktext = linktext.replace("<a href=", "");
+
+                    //linktext="\"index.php?mod=photo&act=list_table&filter[id]=47328871\"> po fot 47328871</a>";
+                    //linktext="index.php?mod=photo&act=list_table&filter[id]=47328871> po fot 47328871</a>";
+
+                    linktext = linktext.replace("&", "**");
+                    linktext = String.format("https://merchik.com.ua/sa.php?&u=%s&s=%s&l=/%s", userId, hash, linktext);
+                    linktext = "<a href="+linktext;
+                    //linktext = linktext.replace("\"", "\\\"");
+                    res=res+str.substring(startpos,pos1)+linktext;
+                    startpos=pos2+4;
+                    pos1=str.indexOf("<a href=", startpos);
+                } else {
+                    startpos=pos1;
+                    pos1=-1;
+                }
+            }
+            res=res+str.substring(startpos);
+
+//            newData = data.replace("<a href=\"/index.php", "<a href=https://merchik.com.ua/index.php");
+        } else {res=str;}
+
+        return res;
+    }
+
+    // Pika
+    // Преобразовывает текст в котором есть ссылки на страницы МВС в текст с ссылками, которые при нажатии на них
+    // будут открывать страницы МВС без обязательной авторизации пользователя
+    // в строке есть ссылки представленные в виде такой структуры: {строка ИД типа объекта|строка самого ИД объекта|строка отображения обънета|ИД площадки}
+    public static String PrepareLinkedTextForMVS(String str) {
+
+        String linkTp, linkID, linkZg, linkPl, linkBlock, linkText, s, hash, res;
+        int pos1, pos2, startpos;
+
+        // делаю что-то только если нашел в строке начало такой структуры
+        if (str.contains("{")) {
+            // подготовка строки хеша для формирования результирующей ссылки
+            AppUsersDB appUser = AppUserRealm.getAppUserById(userId);
+            hash = String.format("%s%s%s", appUser.getUserId(), appUser.getPassword(), "AvgrgsYihSHp6Ok9yQXfSHp6Ok9nXdXr3OSHp6Ok9UPBTzTjrF20Nsz3");
+            hash = getSha1Hex(hash);
+
+            res=""; // результирующая строка в которой структура заменена на ссылку на МВС
+            startpos=0; // двигаться буду вперед по строке - и это текущая позиция в строке откуда начинать поиск
+            pos1=str.indexOf("{", startpos); // ищу начала блока, который надо превратить в ссылку
+            pos2=0; // позиция конца блока, который надо превратить в ссылку
+            // выполняю это для всех таких блоков в строке
+            while (pos1>=0)
+            {
+                pos2=str.indexOf("}", pos1); // ищу конец блока, который надо превратить в ссылку
+                if (pos2>(pos1+1)) {
+                    // вырезаю блок, который надо превратить в ссылку
+                    linkBlock=str.substring(pos1+1,pos2);
+                    // расщепляю его на составные части
+                    String[] el=linkBlock.split("\\|");
+                    linkTp=el[0].trim(); // текстовый тип ссылки
+                    linkTp=linkTp.toLowerCase(); // на всякий случай делаю его иаленькими буквами
+                    linkID=el[1].trim(); // ИД ссылки
+                    linkZg=el[2].trim(); // отображаемый текст (заголовок) ссылки
+                    linkPl=el[3].trim(); // платформа
+
+                    linkPl="4"; // пока все делаю для МВС
+
+                    // если текст который нужно вставить вместо блока не получится, тогда в результат пойдет то же что и было до этого
+                    linkText = linkBlock;
+
+                    // обрабатываю блок только если найден идентификатор типа ссылки и идентификатор ссылки
+                    if (linkTp!="" && linkID!="") {
+                        // перебираю варианты типа ссылки
+                        s="";
+                        switch (linkTp) {
+                            case ("фото"):
+                                s ="mobile.php?mod=images_view&act=image_rotate&id="+linkID;
+                                break;
+                            case ("достижение"):
+                                s ="mobile.php?mod=images_achieve&act=view&id="+linkID;
+                                break;
+                            case ("рекламация"):
+                                s ="mobile.php?mod=reclamation&act=view&id="+linkID;
+                                break;
+                            case ("рекламация_1с"):
+                                s ="mobile.php?mod=reclamation&act=reclamation_by_num&doc_num="+linkID;
+                                break;
+                            case ("задача"):
+                                s ="mobile.php?mod=reclamation&act=view&id="+linkID;
+                                break;
+                            case ("задача_1с"):
+                                s ="mobile.php?mod=reclamation&act=reclamation_by_num&doc_num="+linkID;
+                                break;
+                            case ("аудио_отчёт"):
+                                s ="mobile.php?mod=audio&act=audio_rotate&id="+linkID;
+                                break;
+                            case ("детализированный_отчёт"):
+                                s ="mobile.php?mod=report_prepare&act=report_by_num&doc_num="+linkID;
+                                break;
+                            case ("посещение_фильтр"):
+                                s ="mobile.php?mod=report_prepare&act=prepare_tovar&ppa_only=1&"+linkID;
+                                break;
+                        }
+                        // если текст ссылки сформирован, то делаю в нем модификации необходимыъ для того чтоб она работала
+                        if (s!="") {
+                            linkText = s.replace("&", "**");
+                            linkText = String.format("https://merchik.com.ua/sa.php?&u=%s&s=%s&l=/%s", userId, hash, linkText);
+                            linkText = "<a href="+linkText+">"+linkZg+"</a>";
+                        }
+                    }
+
+                    // добавляю в результат текст до начала найденного блока, а вместо блока, который надо превратить в ссылку - саму сформированную ссылку
+                    res=res+str.substring(startpos,pos1)+linkText;
+
+                    // проверяю где сейчас нахожусь в строке
+                    if (pos2<(str.length()-1)) {
+                        // перемещаю указатель движения по строке на позицию следующую за блоком, который надо превратить в ссылку
+                        startpos=pos2+1;
+                        // ищу следующее начало блока, который надо превратить в ссылку
+                        pos1=str.indexOf("{", startpos);
+                    } else {
+                        // дошел до конца строки - дальше ничего не надо делать
+                        startpos=-1;
+                        pos1=-1;
+                    }
+
+                } else {
+                    // если конца блока, который надо превратить в ссылку не найден, то прерываю поиск
+                    // и устанавливаю текущее положение в строке на начало последнего найденного начала блока
+                    // потом в конце к результату просто добавится весь остаток строки начиная от этой позиции
+                    startpos=pos1;
+                    pos1=-1;
+                }
+            }
+            // добавляю в результирующую строку остаток строки после обработанного блока, который надо превратить в ссылку
+            // ну или если такого блока нет, то просто получится та же самая строка что била изначально
+            if (startpos>=0) {res=res+str.substring(startpos);}
+        } else {
+            // если не нашел в строке структуры, которую надо превратить в ссылку, то возвращаю обратно эту строку
+            res=str;
+        }
+
+        return res;
+    }
+
 
 }//--------------
 
@@ -1491,3 +1663,5 @@ public class Globals {
                         end = end > msg.length() ? msg.length() : end;
                         Log.e("MY_TAG", msg.substring(start, end));
                     }*/
+
+
