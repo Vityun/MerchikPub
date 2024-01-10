@@ -2,6 +2,7 @@ package ua.com.merchik.merchik.Activities.DetailedReportActivity;
 
 import static ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsRealm.AdditionalRequirementsModENUM.HIDE_FOR_USER;
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
+import static ua.com.merchik.merchik.toolbar_menus.internetStatus;
 
 import android.animation.ArgbEvaluator;
 import android.animation.ValueAnimator;
@@ -9,6 +10,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.Typeface;
+import android.net.Uri;
+import android.os.Build;
 import android.text.Html;
 import android.text.SpannableString;
 import android.text.SpannableStringBuilder;
@@ -890,7 +893,22 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                         // В данном случае надо открыть галерею и выбрать фото остатков
 //                        WpDataDB wp = (WpDataDB) dataDB;
 //                        new MakePhotoFromGalery().openGalleryToPeakPhoto(mContext.getApplicationContext(), wp);
-                        click.click();
+
+                        if (Build.VERSION.SDK_INT == 28) {
+                            if (internetStatus == 1) {
+                                WpDataDB wp = (WpDataDB) dataDB;
+                                String date = Clock.getHumanTimeSecPattern(wp.getDt().getTime(), "yyyy-MM-dd");
+
+                                String link = String.format("/merchik.com.ua/mobile.php?mod=images_prepare&act=prepare_image&date=%s&client_id=%s&addr_id=%s&img_type_id=4&theme_id=%s&code_dad2=%s&option_control_id=1470&menu_close_only=1"
+                                        , date, wp.getClient_id(), wp.getAddr_id(), wp.getTheme_id(), wp.getCode_dad2());
+                                String res = Globals.PrepareLinkedTextForMVSfromHTML(link);
+
+                                Intent site = new Intent(Intent.ACTION_VIEW, Uri.parse(res));
+                                mContext.startActivity(site);
+                            }
+                        } else {
+                            click.click();
+                        }
                     }));
 
                     ss.append("\n\n");
