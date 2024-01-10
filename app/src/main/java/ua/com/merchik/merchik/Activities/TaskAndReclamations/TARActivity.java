@@ -422,6 +422,7 @@ public class TARActivity extends toolbar_menus implements TARFragmentHome.OnFrag
 
             if (tar.themeId == 150){
                 stackPhotoDB.setPhoto_type(18);
+                stackPhotoDB.tovar_id = String.valueOf(tar.refId);
             }else {
                 stackPhotoDB.setPhoto_type(0);
             }
@@ -462,6 +463,7 @@ public class TARActivity extends toolbar_menus implements TARFragmentHome.OnFrag
             stackPhotoDB.setUser_id(Globals.userId);
             if (tar.themeId == 150){
                 stackPhotoDB.setPhoto_type(18);
+                stackPhotoDB.tovar_id = String.valueOf(tar.refId);
             }else {
                 stackPhotoDB.setPhoto_type(0);
             }
@@ -507,6 +509,7 @@ public class TARActivity extends toolbar_menus implements TARFragmentHome.OnFrag
             stackPhotoDB.setUser_id(Globals.userId);
             if (tar.themeId == 150){
                 stackPhotoDB.setPhoto_type(18);
+                stackPhotoDB.tovar_id = String.valueOf(tar.refId);
             }else {
                 stackPhotoDB.setPhoto_type(0);
             }
@@ -556,7 +559,7 @@ public class TARActivity extends toolbar_menus implements TARFragmentHome.OnFrag
             stackPhotoDB.setUser_id(Globals.userId);
             stackPhotoDB.setUserTxt(SQL_DB.usersDao().getUserName(Globals.userId));
             stackPhotoDB.setPhoto_type(18);      // Фото Товара
-            stackPhotoDB.tovar_id = tovarId;
+            stackPhotoDB.tovar_id = String.valueOf(tasksAndReclamationsSDB.refId);
 
             stackPhotoDB.setCreate_time(System.currentTimeMillis());
 

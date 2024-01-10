@@ -769,7 +769,13 @@ public class RealmManager {
         // SELECT * FROM stack_photo WHERE get_on_server = '';
         return INSTANCE.where(StackPhotoDB.class)
                 .equalTo("get_on_server", 0)
-                .notEqualTo("photo_type", 18)
+//                .notEqualTo("photo_type", 18)
+
+                // 09.01.24. Ниже добавил что б Товары что я делаю в приложении фиксировались выгруенными
+                .isNotNull("client_id")
+                .isNotNull("addr_id")
+                .isNotNull("photo_hash")
+                .isNotNull("time_event")
                 .findAll();
     }
 
