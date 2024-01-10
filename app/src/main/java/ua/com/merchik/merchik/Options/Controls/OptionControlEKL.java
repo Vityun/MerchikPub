@@ -338,7 +338,6 @@ public class OptionControlEKL<T> extends OptionControl {
 
 
     public void showUnlockCodeDialogInMainThread() {
-
             new UnlockCode().showDialogUnlockCode(context, wpDataDB, optionDB, CODE_DAD_2_AND_OPTION, new Clicks.clickStatusMsg() {
                 @Override
                 public void onSuccess(String data) {
@@ -356,7 +355,6 @@ public class OptionControlEKL<T> extends OptionControl {
                     unlockCodeResultListener.onUnlockCodeFailure();
                 }
             });
-
     }
 
 
