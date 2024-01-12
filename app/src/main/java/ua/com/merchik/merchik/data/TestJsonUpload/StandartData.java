@@ -47,6 +47,7 @@ public class StandartData<T> {
 
     public List<T> data;
     public List<T> tovar_id;    // Тестовая хрень, надо поменять
+    public List<T> photo_tovar_id;    // Тестовая хрень, надо поменять
     public List<String> hash_list;
 
     public String list_type;
