@@ -223,7 +223,7 @@ public class PhotoDownload {
 
         // Разбивка на группі
         // Нужно для того что б не сразу все 8000 фоток загружалось на сторону приложения
-        int batchSize = 1000; // Размер каждой группы
+        int batchSize = 100; // Размер каждой группы
         List<List<Integer>> batches = new ArrayList<>(); // Список, который будет содержать группы
 
         for (int i = 0; i < tovarsPhotoToDownload.size(); i += batchSize) {
@@ -235,7 +235,6 @@ public class PhotoDownload {
         StandartData data = new StandartData();
         data.mod = "images_view";
         data.act = "list_image";
-        data.tovar_only = "1";
         data.nolimit = "1";
         data.image_type = "small";
         data.tovar_id = tovarsPhotoToDownload;    // Должен сюда записать список ID-шников Товаров которые я хочу загрузить на свою сторону.
@@ -289,6 +288,63 @@ public class PhotoDownload {
             }
         });
 
+
+/*        // test новых приколов с товарами
+        StandartData data1 = new StandartData();
+        data1.mod = "images_view";
+        data1.act = "list_image";
+        data1.nolimit = "1";
+        data1.image_type = "small";
+//        data1.photo_tovar_id = tovarsPhotoToDownload;    // Должен сюда записать список ID-шников Товаров которые я хочу загрузить на свою сторону.
+        data1.photo_tovar_id = batches.get(0);    // Должен сюда записать список ID-шников Товаров которые я хочу загрузить на свою сторону.
+
+        // Формирование тела запроса
+        Gson gson1 = new Gson();
+        String json1 = gson1.toJson(data1);
+        JsonObject convertedObject1 = new Gson().fromJson(json1, JsonObject.class);
+
+        // Отладочная инфа
+        long start1 = System.currentTimeMillis() / 1000;
+
+        retrofit2.Call<TovarImgResponse> call1 = RetrofitBuilder.getRetrofitInterface().GET_TOVAR_PHOTO_INFO_JSON(RetrofitBuilder.contentType, convertedObject1);
+        call1.enqueue(new Callback<TovarImgResponse>() {
+            @Override
+            public void onResponse(Call<TovarImgResponse> call, Response<TovarImgResponse> response) {
+                int photoListUrlSize;
+
+                if (response.isSuccessful()) {
+                    if (response.body() != null) {
+                        if (response.body().getState()) {
+                            try {
+                                photoListUrlSize = response.body().getList().size();
+                            } catch (Exception e) {
+                                photoListUrlSize = -1;
+                            }
+
+                            long end = System.currentTimeMillis() / 1000 - start1;
+                            result.onSuccess("Данные о фото товаров(" + photoListUrlSize + "шт) успешно получены. Это заняло " + end + " секунд! \nНачинаю загрузку фотографий.. \n\nЭТО МОЖЕТ ЗАНЯТЬ МНОГО ВРЕМЕНИ И ТРАФИКА!");
+                            // TODO Начинаем загрузку + сохранение на телефон фоток Товаров.
+//                            downloadPhoto(response.body().getList(), result, result2);
+                        } else {
+                            result.onFailure("Не получилось загрузить фото Товаров. Обратитесь к руководителю. Ошибка:\n\n(URL)state = false");
+                        }
+                    } else {
+                        result.onFailure("Не получилось загрузить фото Товаров. Обратитесь к руководителю. Ошибка:\n\n(URL)Тело запроса вернулось пустым.");
+                    }
+                } else {
+                    result.onFailure("Не получилось загрузить фото Товаров. Обратитесь к руководителю. Ошибка:\n\n(URL)Ошибка запроса: " + response.code());
+                }
+
+                Log.d("test", "test" + convertedObject);
+            }
+
+            @Override
+            public void onFailure(Call<TovarImgResponse> call, Throwable t) {
+                result.onFailure("Возникли проблемы с сетью. Проверьте интернет соединение, повторите попытку позже. Если проблема повторяется - обратитесь к Руководителю.\n\n(URL)Ошибка: " + t);
+
+                Log.d("test", "test");
+            }
+        });*/
     }
 
     private static List<Integer> getTovarIds(List<TovarDB> tovars) {

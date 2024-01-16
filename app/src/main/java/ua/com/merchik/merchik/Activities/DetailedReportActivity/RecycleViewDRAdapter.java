@@ -1,7 +1,9 @@
 package ua.com.merchik.merchik.Activities.DetailedReportActivity;
 
+import static ua.com.merchik.merchik.Globals.userId;
 import static ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsRealm.AdditionalRequirementsModENUM.HIDE_FOR_USER;
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
+import static ua.com.merchik.merchik.toolbar_menus.internetStatus;
 
 import android.animation.ArgbEvaluator;
 import android.animation.ValueAnimator;
@@ -9,6 +11,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.Typeface;
+import android.net.Uri;
+import android.os.Build;
 import android.text.Html;
 import android.text.SpannableString;
 import android.text.SpannableStringBuilder;
@@ -47,11 +51,13 @@ import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
 import ua.com.merchik.merchik.data.OptionMassageType;
 import ua.com.merchik.merchik.data.OptionsButtons;
 import ua.com.merchik.merchik.data.RealmModels.AdditionalRequirementsDB;
+import ua.com.merchik.merchik.data.RealmModels.AppUsersDB;
 import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsRealm;
+import ua.com.merchik.merchik.database.realm.tables.AppUserRealm;
 import ua.com.merchik.merchik.database.realm.tables.StackPhotoRealm;
 import ua.com.merchik.merchik.database.realm.tables.WpDataRealm;
 import ua.com.merchik.merchik.dialogs.DialogData;
@@ -612,7 +618,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
             OptionsDB test = optionsButtons;
             optionButton.setOnLongClickListener(view -> {
                 if (optionId == 132968 || optionId == 158309 || optionId == 158308) {
-                    optionDetailPhotos(test);
+                    optionDetailPhotos(test, view.getContext());
                     DialogData dialog = new DialogData(itemView.getContext());
                     dialog.setTitle("Внесите пароль!");
                     dialog.setText("Для продолжения внесите пароль: ");
@@ -631,7 +637,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                         int pass = day + dat2;
 
                         if (res == pass) {
-                            longClickButton(test, optionId, detailedReportButtons, optionsButtons);
+                            longClickButton(test, optionId, detailedReportButtons, optionsButtons, view.getContext());
                         } else {
                             Toast.makeText(dialog.context, "Внесите корректный пароль", Toast.LENGTH_SHORT).show();
                         }
@@ -639,7 +645,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                     dialog.show();
                 } else {
                     int optId = Integer.parseInt(butt.get(getAdapterPosition()).getOptionId());
-                    longClickButton(test, optId, detailedReportButtons, optionsButtons);
+                    longClickButton(test, optId, detailedReportButtons, optionsButtons, view.getContext());
                 }
                 return false;
             });
@@ -663,8 +669,8 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
         return res;
     }
 
-    private void longClickButton(OptionsDB test, int optId, DetailedReportButtons detailedReportButtons, OptionsDB optionsButtons) {
-        optionDetailPhotos(test);
+    private void longClickButton(OptionsDB test, int optId, DetailedReportButtons detailedReportButtons, OptionsDB optionsButtons, Context context) {
+        optionDetailPhotos(test, context);
 
         if (optId == 132968 || optId == 158309 || optId == 158308) {
             if (dataDB instanceof WpDataDB) {
@@ -785,7 +791,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
     }
 
 
-    private void optionDetailPhotos(OptionsDB option) {
+    private void optionDetailPhotos(OptionsDB option, Context context) {
         String additionalText = "\n\n";
 
         String buttText = option.getOptionTxt();
@@ -890,7 +896,32 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                         // В данном случае надо открыть галерею и выбрать фото остатков
 //                        WpDataDB wp = (WpDataDB) dataDB;
 //                        new MakePhotoFromGalery().openGalleryToPeakPhoto(mContext.getApplicationContext(), wp);
-                        click.click();
+
+                        if (Build.VERSION.SDK_INT == 28) {
+                            if (internetStatus == 1) {
+                                WpDataDB wp = (WpDataDB) dataDB;
+                                String date = Clock.getHumanTimeSecPattern(wp.getDt().getTime() / 1000, "yyyy-MM-dd");
+
+                                String link = String.format("/merchik.com.ua/mobile.php?mod=images_prepare&act=prepare_image&date=%s&client_id=%s&addr_id=%s&img_type_id=4&theme_id=%s&code_dad2=%s&option_control_id=1470&menu_close_only=1"
+                                        , date, wp.getClient_id(), wp.getAddr_id(), wp.getTheme_id(), wp.getCode_dad2());
+//                        String res = Globals.PrepareLinkedTextForMVSfromHTML(link);
+
+//                        String menuItem164format = "mobile.php" + menuItem164.getUrl();
+
+                                AppUsersDB appUser = AppUserRealm.getAppUserById(userId);
+                                String hash = String.format("%s%s%s", appUser.getUserId(), appUser.getPassword(), "AvgrgsYihSHp6Ok9yQXfSHp6Ok9nXdXr3OSHp6Ok9UPBTzTjrF20Nsz3");
+                                hash = Globals.getSha1Hex(hash);
+
+                                link = link.replace("&", "**");
+
+                                String format = String.format("https://merchik.com.ua/sa.php?&u=%s&s=%s&l=/%s", userId, hash, link);
+
+                                Intent site = new Intent(Intent.ACTION_VIEW, Uri.parse(format));
+                                context.startActivity(site);
+                            }
+                        } else {
+                            click.click();
+                        }
                     }));
 
                     ss.append("\n\n");

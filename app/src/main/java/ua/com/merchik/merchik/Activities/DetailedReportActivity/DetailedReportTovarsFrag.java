@@ -680,11 +680,13 @@ public class DetailedReportTovarsFrag extends Fragment {
 
     private void downloadDetailedReportTovarsData(TovarDisplayType type, Clicks.clickStatusMsg click) {
         try {
-            BlockingProgressDialog pg = BlockingProgressDialog.show(mContext, "Загрузка списка товаров", "Подождите окончания загрузки. Это может занять время.");
-            downloadReportPrepareByDad2(pg, click);
+            if (tasksAndReclamationsSDB == null){
+                BlockingProgressDialog pg = BlockingProgressDialog.show(mContext, "Загрузка списка товаров", "Подождите окончания загрузки. Это может занять время.");
+                downloadReportPrepareByDad2(pg, click);
 
-            BlockingProgressDialog pg2 = BlockingProgressDialog.show(mContext, "Загрузка списка опций", "Подождите окончания загрузки. Это может занять время.");
-            downloadOptionByDad2(pg2, click);
+                BlockingProgressDialog pg2 = BlockingProgressDialog.show(mContext, "Загрузка списка опций", "Подождите окончания загрузки. Это может занять время.");
+                downloadOptionByDad2(pg2, click);
+            }
         } catch (Exception e) {
             Globals.writeToMLOG("INFO", "DetailedReportTovarsFrag/getTovList/downloadDetailedReportTovarsData", "Exception e: " + e);
         }

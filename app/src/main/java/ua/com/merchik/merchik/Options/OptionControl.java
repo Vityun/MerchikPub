@@ -1,5 +1,7 @@
 package ua.com.merchik.merchik.Options;
 
+import static ua.com.merchik.merchik.Global.UnlockCode.UnlockCodeMode.CODE_DAD_2_AND_OPTION;
+
 import android.content.Context;
 import android.text.SpannableStringBuilder;
 import android.util.Log;
@@ -7,10 +9,12 @@ import android.widget.Toast;
 
 import java.util.Arrays;
 
+import ua.com.merchik.merchik.Global.UnlockCode;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.OptionMassageType;
 import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
+import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.dialogs.DialogData;
 
 /**
@@ -121,4 +125,23 @@ public class OptionControl<T> {
         return block;
     }
 
+
+    public void showUnlockCodeDialogInMainThread(WpDataDB wpDataDB, boolean signal) {
+        new UnlockCode().showDialogUnlockCode(context, wpDataDB, optionDB, CODE_DAD_2_AND_OPTION, new Clicks.clickStatusMsg() {
+            @Override
+            public void onSuccess(String data) {
+                setIsBlockOption(false);
+                unlockCodeResultListener.onUnlockCodeSuccess();
+            }
+
+            @Override
+            public void onFailure(String error) {
+                setIsBlockOption(signal);
+                stringBuilderMsg.append("\n\n").append("Документ проведен не будет!");
+                spannableStringBuilder.append(stringBuilderMsg);
+                showOptionMassage("");
+                unlockCodeResultListener.onUnlockCodeFailure();
+            }
+        });
+    }
 }

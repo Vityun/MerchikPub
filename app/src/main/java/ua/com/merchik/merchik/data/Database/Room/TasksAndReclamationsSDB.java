@@ -280,6 +280,7 @@ public class TasksAndReclamationsSDB implements Parcelable {
     @ColumnInfo(name = "duration")
     public Integer duration;
 
+    // ИД чего-то для конкретной задачи
     @SerializedName("ref_id")
     @Expose
     @ColumnInfo(name = "ref_id")

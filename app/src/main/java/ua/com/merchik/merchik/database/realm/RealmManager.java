@@ -645,8 +645,11 @@ public class RealmManager {
         RealmResults<StackPhotoDB> realmResults = INSTANCE.where(StackPhotoDB.class)
                 .equalTo("upload_to_server", 0)
                 .equalTo("get_on_server", 0)
-                .notEqualTo("photo_type", 18)
+//                .notEqualTo("photo_type", 18)     // 08.01.24 Надо на сервер выгружать фото Товаров сделанные с ЗИР, да и вообще
                 .isNotNull("photo_hash")
+                .isNotNull("client_id")
+                .isNotNull("addr_id")
+                .isNotNull("time_event")
                 .findAll();
         return realmResults.size();
     }
@@ -692,7 +695,7 @@ public class RealmManager {
         return INSTANCE.where(StackPhotoDB.class)
                 .equalTo("upload_to_server", 0)
                 .equalTo("get_on_server", 0)
-                .notEqualTo("photo_type", 18)
+//                .notEqualTo("photo_type", 18)// 08.01.24 Надо на сервер выгружать фото Товаров сделанные с ЗИР, да и вообще
                 .and()
                 .isNotNull("client_id")
                 .isNotNull("addr_id")
@@ -704,21 +707,25 @@ public class RealmManager {
 
     public static RealmResults<StackPhotoDB> getStackPhoto() {
         return INSTANCE.where(StackPhotoDB.class)
-                .notEqualTo("photo_type", 18)
+//                .notEqualTo("photo_type", 18)
                 .notEqualTo("photo_type", 29)
                 .notEqualTo("photo_type", 5)
                 .notEqualTo("photo_type", 35)
+                .isNotNull("client_id")
+                .isNotNull("addr_id")
 //                .isNull("showcase_id")  // Показываем мерчу в ЖФ фото НЕ "ВИТРИН"
                 .findAll();
     }
 
     public static RealmResults<StackPhotoDB> getStackPhotoLogByDad2(long dad2) {
         return INSTANCE.where(StackPhotoDB.class)
-                .notEqualTo("photo_type", 18)
+//                .notEqualTo("photo_type", 18)
                 .notEqualTo("photo_type", 29)
                 .notEqualTo("photo_type", 5)
                 .notEqualTo("photo_type", 35)
                 .equalTo("code_dad2", dad2)
+                .isNotNull("client_id")
+                .isNotNull("addr_id")
 //                .isNull("showcase_id")  // Показываем мерчу в ЖФ фото НЕ "ВИТРИН"
                 .findAll();
     }
@@ -762,7 +769,13 @@ public class RealmManager {
         // SELECT * FROM stack_photo WHERE get_on_server = '';
         return INSTANCE.where(StackPhotoDB.class)
                 .equalTo("get_on_server", 0)
-                .notEqualTo("photo_type", 18)
+//                .notEqualTo("photo_type", 18)
+
+                // 09.01.24. Ниже добавил что б Товары что я делаю в приложении фиксировались выгруенными
+                .isNotNull("client_id")
+                .isNotNull("addr_id")
+                .isNotNull("photo_hash")
+                .isNotNull("time_event")
                 .findAll();
     }
 
