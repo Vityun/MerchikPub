@@ -339,20 +339,23 @@ public class Exchange {
                                         .subscribe(new DisposableCompletableObserver() {
                                             @Override
                                             public void onComplete() {
+                                                Log.e("CustomerExchange", "onComplete OK");
                                             }
 
                                             @Override
                                             public void onError(@io.reactivex.rxjava3.annotations.NonNull Throwable e) {
+                                                Log.e("CustomerExchange", "Throwable e: " + e);
                                             }
                                         });
 
                             } catch (Exception e) {
+                                Log.e("CustomerExchange", "Exception e: " + e);
                             }
                         }
 
                         @Override
                         public void onFailure(String error) {
-                            Log.e("HEUTE", "2error." + error);
+                            Log.e("CustomerExchange", "2error." + error);
                         }
                     });
                     new UsersExchange().downloadUsersTable(new ExchangeInterface.ExchangeResponseInterface() {
