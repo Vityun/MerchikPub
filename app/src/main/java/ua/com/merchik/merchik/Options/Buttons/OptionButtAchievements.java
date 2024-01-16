@@ -8,7 +8,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.util.Log;
-import android.widget.Toast;
 
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -30,6 +29,7 @@ import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.database.realm.tables.AppUserRealm;
 import ua.com.merchik.merchik.database.realm.tables.StackPhotoRealm;
+import ua.com.merchik.merchik.dialogs.DialogAchievement.DialogAchievement;
 import ua.com.merchik.merchik.dialogs.DialogData;
 
 public class OptionButtAchievements<T> extends OptionControl {
@@ -115,9 +115,10 @@ public class OptionButtAchievements<T> extends OptionControl {
         dialog.setText("");
         dialog.setRecycler(createAdapter(dialog.context, achievements), new LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false));
         dialog.setClose(dialog::dismiss);
-        dialog.setOk("Запит МП", () -> {
-            Globals.fixMP(wpDataDB, null);
-            Toast.makeText(context, "Запит створено!", Toast.LENGTH_SHORT).show();
+        dialog.setOk("Нове досягнення", () -> {
+            DialogAchievement dialogAchievement = new DialogAchievement(context, wpDataDB);
+            dialogAchievement.setTitle("Створення нового Досягнення");
+            dialogAchievement.show();
         });
         dialog.show();
     }
