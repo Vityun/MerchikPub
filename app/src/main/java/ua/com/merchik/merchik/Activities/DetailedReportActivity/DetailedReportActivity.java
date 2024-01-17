@@ -1074,9 +1074,9 @@ public class DetailedReportActivity extends toolbar_menus {
     }
 
 
-    private StackPhotoDB savePhoto(File file, WpDataDB wpDataDB, String tovarId, Context context) {
+    public static StackPhotoDB savePhoto(File file, WpDataDB wpDataDB, String tovarId, Context context) {
         try {
-
+            file.exists();
             int id = RealmManager.stackPhotoGetLastId();
             id++;
             StackPhotoDB stackPhotoDB = new StackPhotoDB();
@@ -1104,13 +1104,17 @@ public class DetailedReportActivity extends toolbar_menus {
 
             stackPhotoDB.setCreate_time(System.currentTimeMillis());
 
+            Globals globals1 = new Globals();
 //            String hash = globals.getHashMD5FromFileTEST(uri, context);
-            String hash = globals.getHashMD5FromFile2(file, this);
-            if (hash == null || hash.equals("")) hash = globals.getHashMD5FromFile(file, this);
+
+            String hash = Globals.FileHashCalculator.calculateHash(file.getPath());
+
+//            String hash = globals1.getHashMD5FromFile2(file, context);
+            if (hash == null || hash.equals("")) hash = globals1.getHashMD5FromFile(file, context);
             Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST", "hash: " + hash);
 
             if (hash == null || hash.equals("")) {
-                hash = globals.getHashMD5FromFile(file, this);
+                hash = globals1.getHashMD5FromFile(file, context);
             }
 
             stackPhotoDB.setPhoto_hash(hash);

@@ -14,6 +14,7 @@ import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.content.ContentUris;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -25,6 +26,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
 import android.os.Handler;
+import android.provider.DocumentsContract;
 import android.provider.MediaStore;
 import android.text.Spanned;
 import android.util.Base64;
@@ -440,6 +442,100 @@ public class Globals {
         return path;
     }
 
+    /**17.01 test*/
+    public static String getPathFromURI(Context context, Uri contentURI) {
+        String result;
+        Cursor cursor = context.getContentResolver().query(contentURI,
+                null, null, null, null);
+        if (cursor == null) {
+            result = contentURI.getPath();
+        } else {
+            cursor.moveToFirst();
+            int idx = cursor.getColumnIndex(MediaStore.Images.Media.DATA);
+            result = cursor.getString(idx);
+            cursor.close();
+        }
+        return result;
+    }
+
+    /**test uri*/
+    public static class FileUtils {
+        public static String getRealPathFromUri(Context context, Uri uri) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT && DocumentsContract.isDocumentUri(context, uri)) {
+                if (isExternalStorageDocument(uri)) {
+                    String docId = DocumentsContract.getDocumentId(uri);
+                    String[] split = docId.split(":");
+                    String type = split[0];
+
+                    if ("primary".equalsIgnoreCase(type)) {
+                        return context.getExternalFilesDir(null) + "/" + split[1];
+                    }
+                } else if (isDownloadsDocument(uri)) {
+                    String id = DocumentsContract.getDocumentId(uri);
+                    Uri contentUri = ContentUris.withAppendedId(
+                            Uri.parse("content://downloads/public_downloads"), Long.parseLong(id));
+
+                    return getDataColumn(context, contentUri, null, null);
+                } else if (isMediaDocument(uri)) {
+                    String docId = DocumentsContract.getDocumentId(uri);
+                    String[] split = docId.split(":");
+                    String type = split[0];
+
+                    Uri contentUri = null;
+                    if ("image".equals(type)) {
+                        contentUri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
+                    } else if ("video".equals(type)) {
+                        contentUri = MediaStore.Video.Media.EXTERNAL_CONTENT_URI;
+                    } else if ("audio".equals(type)) {
+                        contentUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
+                    }
+
+                    String selection = "_id=?";
+                    String[] selectionArgs = new String[]{split[1]};
+
+                    return getDataColumn(context, contentUri, selection, selectionArgs);
+                }
+            } else if ("content".equalsIgnoreCase(uri.getScheme())) {
+                return getDataColumn(context, uri, null, null);
+            } else if ("file".equalsIgnoreCase(uri.getScheme())) {
+                return uri.getPath();
+            }
+
+            return null;
+        }
+
+        private static String getDataColumn(Context context, Uri uri, String selection, String[] selectionArgs) {
+            Cursor cursor = null;
+            final String column = "_data";
+            final String[] projection = {column};
+
+            try {
+                cursor = context.getContentResolver().query(uri, projection, selection, selectionArgs, null);
+                if (cursor != null && cursor.moveToFirst()) {
+                    int columnIndex = cursor.getColumnIndexOrThrow(column);
+                    return cursor.getString(columnIndex);
+                }
+            } finally {
+                if (cursor != null) {
+                    cursor.close();
+                }
+            }
+            return null;
+        }
+
+        private static boolean isExternalStorageDocument(Uri uri) {
+            return "com.android.externalstorage.documents".equals(uri.getAuthority());
+        }
+
+        private static boolean isDownloadsDocument(Uri uri) {
+            return "com.android.providers.downloads.documents".equals(uri.getAuthority());
+        }
+
+        private static boolean isMediaDocument(Uri uri) {
+            return "com.android.providers.media.documents".equals(uri.getAuthority());
+        }
+    }
+
     public static String getRealPathFromURITEST(Uri uri, Context context) {
         String filePath = null;
         if (uri.getScheme().equals("content")) {
@@ -576,6 +672,37 @@ public class Globals {
 //                        alertDialogMsg(context, "Не вышло изза фото: " + e);
                     }
                 }
+            }
+        }
+    }
+
+
+    /**test hash*/
+    public class FileHashCalculator {
+        public static String calculateHash(String filePath) {
+            try {
+                MessageDigest md = MessageDigest.getInstance("SHA-256");
+                FileInputStream fis = new FileInputStream(filePath);
+                byte[] dataBytes = new byte[1024];
+
+                int bytesRead;
+                while ((bytesRead = fis.read(dataBytes)) != -1) {
+                    md.update(dataBytes, 0, bytesRead);
+                }
+
+                byte[] hashBytes = md.digest();
+
+                // Convert the byte array to a hexadecimal string
+                StringBuilder stringBuilder = new StringBuilder();
+                for (byte hashByte : hashBytes) {
+                    stringBuilder.append(Integer.toString((hashByte & 0xff) + 0x100, 16).substring(1));
+                }
+
+                fis.close();
+                return stringBuilder.toString();
+            } catch (NoSuchAlgorithmException | IOException e) {
+                e.printStackTrace();
+                return null;
             }
         }
     }

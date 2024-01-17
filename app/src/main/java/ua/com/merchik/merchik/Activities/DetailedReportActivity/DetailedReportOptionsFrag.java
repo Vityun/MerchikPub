@@ -1,14 +1,19 @@
 package ua.com.merchik.merchik.Activities.DetailedReportActivity;
 
+import static io.realm.Realm.getApplicationContext;
+import static ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity.savePhoto;
 import static ua.com.merchik.merchik.MakePhoto.MakePhotoFromGalery.MakePhotoFromGaleryWpDataDB;
 import static ua.com.merchik.merchik.Options.Options.ConductMode.DEFAULT_CONDUCT;
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
+import android.Manifest;
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.content.Context;
-import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
-import android.provider.MediaStore;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -18,17 +23,26 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultCallback;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
+import ua.com.merchik.merchik.MakePhoto.MakePhotoFromGalery;
 import ua.com.merchik.merchik.Options.OptionControl;
 import ua.com.merchik.merchik.Options.Options;
 import ua.com.merchik.merchik.R;
@@ -47,6 +61,20 @@ import ua.com.merchik.merchik.dialogs.DialogFilter.Click;
 
 @SuppressLint("ValidFragment")
 public class DetailedReportOptionsFrag extends Fragment {
+
+    ActivityResultLauncher<String> mGetContent = registerForActivityResult(new ActivityResultContracts.GetContent(),
+            new ActivityResultCallback<Uri>() {
+                @Override
+                public void onActivityResult(Uri uri) {
+                    try {
+//                        File file = new File(getPathFromURI(getContext(), uri));
+                        File file = new File(Globals.FileUtils.getRealPathFromUri(getContext(), uri));
+                        savePhoto(file, MakePhotoFromGaleryWpDataDB, MakePhotoFromGalery.tovarId, getApplicationContext());
+                    } catch (Exception e) {
+                        Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST", "Exception e: " + e);
+                    }
+                }
+            });
 
     private static Context mContext;
     private WpDataDB wpDataDB;
@@ -81,7 +109,7 @@ public class DetailedReportOptionsFrag extends Fragment {
                 test();
                 rvContacts.setAdapter(recycleViewDRAdapter);
                 rvContacts.setLayoutManager(new LinearLayoutManager(mContext, LinearLayoutManager.VERTICAL, false));
-            }catch (Exception exception){
+            } catch (Exception exception) {
                 Globals.writeToMLOG("INFO", "DetailedReportOptionsFrag", "Exception exception: " + exception);
             }
         }
@@ -326,12 +354,32 @@ public class DetailedReportOptionsFrag extends Fragment {
             if (optionsButtons != null && optionsButtons.size() > 0) {
                 recycleViewDRAdapter = new RecycleViewDRAdapter(mContext, wpDataDB, optionsButtons, allReportOption, list, () -> {
                     try {
-                        MakePhotoFromGaleryWpDataDB = wpDataDB;
-//                    Intent intent = new Intent(Intent.ACTION_PICK);
-                        Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-                        intent.setType("image/*");
-                        Globals.writeToMLOG("INFO", "DetailedReportOptionsFrag/Intent.ACTION_PICK", "intent: " + intent);
-                        ((DetailedReportActivity) mContext).startActivityForResult(Intent.createChooser(intent, "Select Picture"), 500);
+
+                        if (PermissionUtils.checkReadExternalStoragePermission(getContext())) {
+                            MakePhotoFromGaleryWpDataDB = wpDataDB;
+                            mGetContent.launch("image/*");
+                        } else {
+                            PermissionUtils.requestReadExternalStoragePermission(getContext(), getActivity());
+                        }
+
+
+/*                        registerForActivityResult(new ActivityResultContracts.GetContent(), new ActivityResultCallback<Uri>() {
+                            @Override
+                            public void onActivityResult(Uri result) {
+                                try {
+                                    File file = new File(getRealPathFromURI(result));
+                                    savePhoto(file, MakePhotoFromGaleryWpDataDB, MakePhotoFromGalery.tovarId, getApplicationContext());
+                                } catch (Exception e) {
+                                    Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST", "Exception e: " + e);
+                                }
+                            }
+                        });*/
+
+//                        MakePhotoFromGaleryWpDataDB = wpDataDB;
+//                        Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+//                        intent.setType("image/*");
+//                        Globals.writeToMLOG("INFO", "DetailedReportOptionsFrag/Intent.ACTION_PICK", "intent: " + intent);
+//                        ((DetailedReportActivity) mContext).startActivityForResult(Intent.createChooser(intent, "Select Picture"), 500);
                     } catch (Exception e) {
                         Globals.writeToMLOG("ERROR", "DetailedReportOptionsFrag/Intent.ACTION_PICK", "Exception e: " + e);
                     }
@@ -374,7 +422,7 @@ public class DetailedReportOptionsFrag extends Fragment {
         });
     }
 
-    public void test(){
+    public void test() {
         WorkPlan workPlan = new WorkPlan();
         List<OptionsDB> optionsButtons = workPlan.getOptionButtons2(workPlan.getWpOpchetId(wpDataDB), wpDataDB.getId());
 
@@ -389,29 +437,81 @@ public class DetailedReportOptionsFrag extends Fragment {
         List<OptionsDB> allReportOption = RealmManager.INSTANCE.copyFromRealm(OptionsRealm.getOptionsByDAD2(String.valueOf(wpDataDB.getCode_dad2())));
         recycleViewDRAdapter = new RecycleViewDRAdapter(mContext, wpDataDB, optionsButtons, allReportOption, list, () -> {
             try {
-                MakePhotoFromGaleryWpDataDB = wpDataDB;
-//                    Intent intent = new Intent(Intent.ACTION_PICK);
-                Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-                intent.setType("image/*");
-                Globals.writeToMLOG("INFO", "DetailedReportOptionsFrag/Intent.ACTION_PICK", "intent: " + intent);
-                ((DetailedReportActivity) mContext).startActivityForResult(Intent.createChooser(intent, "Select Picture"), 500);
+
+                mGetContent.launch("image/*");
+
+//                MakePhotoFromGaleryWpDataDB = wpDataDB;
+//                Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+//                intent.setType("image/*");
+//                Globals.writeToMLOG("INFO", "DetailedReportOptionsFrag/Intent.ACTION_PICK", "intent: " + intent);
+//                ((DetailedReportActivity) mContext).startActivityForResult(Intent.createChooser(intent, "Select Picture"), 500);
             } catch (Exception e) {
                 Globals.writeToMLOG("ERROR", "DetailedReportOptionsFrag/Intent.ACTION_PICK", "Exception e: " + e);
             }
         });
     }
 
+    public class PermissionUtils {
+
+        @RequiresApi(api = Build.VERSION_CODES.TIRAMISU)
+        public static String[] storage_permissions_33 = {
+                Manifest.permission.READ_MEDIA_IMAGES,
+                Manifest.permission.READ_MEDIA_AUDIO,
+                Manifest.permission.READ_MEDIA_VIDEO
+        };
+
+        public static final int READ_EXTERNAL_STORAGE_PERMISSION_REQUEST_CODE = 1;
+
+        public static boolean checkReadExternalStoragePermission(Context context) {
+            int permissionStatus = -1;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU){
+                permissionStatus = ContextCompat.checkSelfPermission(context, Manifest.permission.READ_MEDIA_IMAGES);
+            }else {
+                permissionStatus = ContextCompat.checkSelfPermission(context, Manifest.permission.READ_EXTERNAL_STORAGE);
+            }
+            return permissionStatus == PackageManager.PERMISSION_GRANTED;
+        }
+
+        public static void requestReadExternalStoragePermission(Context context, Activity activity) {
+            try {
+
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    ActivityCompat.requestPermissions(
+                            activity,
+                            storage_permissions_33,
+                            1
+                    );
+                } else {
+                    ActivityCompat.requestPermissions(
+                            activity,
+                            new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
+                            READ_EXTERNAL_STORAGE_PERMISSION_REQUEST_CODE
+                    );
+                }
+
+//                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+//                    ActivityCompat.requestPermissions(
+//                            activity,
+//                            new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
+//                            READ_EXTERNAL_STORAGE_PERMISSION_REQUEST_CODE
+//                    );
+//                }
+            } catch (Exception e) {
+                Log.e("test", "Exception e: " + e);
+            }
+        }
+
+        // callback
+        public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+            if (requestCode == PermissionUtils.READ_EXTERNAL_STORAGE_PERMISSION_REQUEST_CODE) {
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    // Permission granted, you can now access external storage
+                } else {
+                    // Permission denied, handle accordingly
+                }
+            }
+        }
+    }
+
 
 }
-
-
-/*
- * Вова, Дай список стандартов
- *
- * Ограничить по коддад 2
- *
- * Вова, дай код которым показываешь мне стандарты
- *
- *
- *
- * */
