@@ -21,8 +21,13 @@ import androidx.annotation.NonNull;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.recyclerview.widget.RecyclerView;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
+
+// Pika
+import java.util.Comparator;
 
 import io.realm.RealmResults;
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity;
@@ -30,6 +35,7 @@ import ua.com.merchik.merchik.Activities.WorkPlanActivity.WPDataActivity;
 import ua.com.merchik.merchik.Filter.MyFilter;
 import ua.com.merchik.merchik.data.Data;
 import ua.com.merchik.merchik.data.Database.Room.AddressSDB;
+import ua.com.merchik.merchik.data.Database.Room.CustomerSDB;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
 import ua.com.merchik.merchik.data.RealmModels.TradeMarkDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
@@ -40,6 +46,7 @@ import ua.com.merchik.merchik.database.realm.tables.ThemeRealm;
 import ua.com.merchik.merchik.database.realm.tables.TradeMarkRealm;
 import ua.com.merchik.merchik.database.realm.tables.WpDataRealm;
 import ua.com.merchik.merchik.dialogs.DialogData;
+
 
 public class RecycleViewWPAdapter extends RecyclerView.Adapter<RecycleViewWPAdapter.ViewHolder> implements Filterable {
 
@@ -52,6 +59,144 @@ public class RecycleViewWPAdapter extends RecyclerView.Adapter<RecycleViewWPAdap
 
     // Pika чтобы получать список нужных фото, анализируя который можно было нарисовать тот или иной чекбокс на элементе ресиклера
     private List<StackPhotoDB> ListPhotos;
+
+    // Pika - создаю элемент, который будет использован для сортировки плана работ
+    private WpSortOrder WPSO;
+
+    // ---------------------- сортировка по свежести клиента ------------------------------
+    // Pika - создаю класс для определения сортированого порядка получения элементов плана работ
+    class WpSortOrder  {
+
+        // Pika - мини структура для элемента списка сортировки (возможно, будут и другие)
+        class OrderStruct1 {
+
+            private int Pos; // "сортированая" позиция исходного элемента - ее будем возвращать, когда будем брать элементы этого списка последовательно по порядку
+            private Date DataZap; // дата запуска
+            private Date DataPereZap; // дата перезапуска
+            private Date DataMax; // максимальная дата из двух - именно по ней будем сравнивать
+            private Date TekDate; // текущая дата работ
+
+            public OrderStruct1(int posi, Date dzap, Date dperezap, Date drab) {
+                this.Pos = posi;
+                this.DataZap = dzap;
+                this.DataPereZap = dperezap;
+                this.TekDate = drab;
+                if (dzap.compareTo(dperezap)>0) { this.DataMax = dzap; } else { this.DataMax = dperezap; }
+            }
+
+            public Date getDataMax() {
+                return DataMax;
+            }
+
+            public Date getTekDate() { return TekDate; }
+
+            public int getPos() {
+                return Pos;
+            }
+        }
+
+        // Pika - класс для сравнения элементов, используемый при сортировке (сортирует по "свежести" клиентов в пределах даты)
+        public class FreshClientComparator implements Comparator<OrderStruct1> {
+
+            @Override
+            public int compare(OrderStruct1 o1, OrderStruct1 o2) {
+                if (o1.getTekDate().compareTo(o2.getTekDate())>0) {
+                    return 1;
+                } else if (o1.getTekDate().compareTo(o2.getTekDate())<0) {
+                    return -1;
+                } else {
+                   if (o1.getDataMax().compareTo(o2.getDataMax()) > 0) {
+                        return -1;
+                    } else if (o1.getDataMax().compareTo(o2.getDataMax()) < 0) {
+                        return 1;
+                    } else {
+                        return 0;
+                    }
+                }
+            }
+        }
+
+        // это список который и будет сортироваться
+        public List<OrderStruct1> orderList1 = new ArrayList<>();
+
+        // конструктор класса WpSortOrder - заполняет список данными и сортирует
+        public WpSortOrder(List<WpDataDB> a1) {
+            WpDataDB elem;
+            OrderStruct1 os1;
+            String s;
+            int fillOk,foundId;
+            Date wsd,wrsd,tekd;
+
+            // список для строк - кодов клиентов
+            List<String> ids = new ArrayList<>();
+            // список для объектов - самих клиентов
+            List<CustomerSDB> customerSDBList = new ArrayList<>();
+
+            // получаю коды клиентов из списка работ плана работ
+            for (WpDataDB a:a1) {
+                s = a.getClient_id();
+                if (!ids.contains(s)) ids.add(s);
+            }
+
+            // получаю список самих клиентов по этим кодам из базы данных приложения
+            if (ids.size()>0) {
+                customerSDBList = SQL_DB.customerDao().getByIds(ids);
+            }
+
+            // устанавливаю флаг успешного заполнения сортировочного списка
+            // если что пойдет не так, то не нужно будет выполнять сортировку
+            fillOk=1;
+
+            // перебираю элементы плана работ
+            for (int i=0; i<a1.size(); i++) {
+                elem = a1.get(i);
+                s=elem.getClient_id();
+
+                // устанавливаю начальные значения для даты старта, даты рестарта и текущей даты работ
+                tekd=elem.getDt();
+                wsd=tekd;
+                wrsd=tekd;
+
+                // устанавливаю флаг успешного нахождения клиента.
+                // если не будет найден клиент по коду клиента, то при этом не нужно будет выполнять сортировку
+                foundId=0;
+
+                // Тут перебираю клиентов и нахожу того, который соответствует текущему коду клиента в плане работ
+                // и из него беру workStartDate и workRestartDate
+                for (CustomerSDB a:customerSDBList) {
+                    if (s.compareTo(a.id)==0) {
+                        foundId=1;
+                        wsd=a.workStartDate;
+                        wrsd=a.workRestartDate;
+                        break;
+                    }
+                }
+
+                // если клиент не был найден, то сбрасываю флаг успешности заполнения сортировочного списка, и сортировку не буду делать
+                if (foundId==0) { fillOk=0; }
+
+                // в любом случае добавляю элемент в сортировочный список, чтоб можно было потом получить позицию из него
+                // в случае если список не будет отсортирован, то возвращаться будет та же позиция, что и передана
+                os1=new OrderStruct1(i,wsd,wrsd,tekd);
+                orderList1.add(os1);
+            }
+
+            // теперь сортировка в нужном порядке с использованием нужного компаратора
+            if (fillOk==1) {
+                Comparator fComparator = new FreshClientComparator();
+                Collections.sort(orderList1, fComparator);
+            }
+        }
+
+        // возвращает позицию исходного элемента списка, для списка переданного на сортировку
+        // понятно, что предполагается, что передаваться сюда будут последовательные позиции,
+        // а возвращать он будет уже то что нужно
+        public int getOrderedPos(int pos) {
+            return orderList1.get(pos).getPos();
+        }
+    }
+    // ----------------------------------------------------
+
 
     /*Определяем ViewHolder*/
     class ViewHolder extends RecyclerView.ViewHolder {
@@ -314,6 +459,10 @@ public class RecycleViewWPAdapter extends RecyclerView.Adapter<RecycleViewWPAdap
         this.WP = RealmManager.INSTANCE.copyFromRealm(wp);
         this.workPlanList = RealmManager.INSTANCE.copyFromRealm(wp);
         this.workPlanList2 = RealmManager.INSTANCE.copyFromRealm(wp);
+        // Pika
+        // создаю класс для определения порядка сортировки
+        WPSO = new WpSortOrder(WP);
+
     }
 
     public void updateData(List<WpDataDB> wp) {
@@ -325,6 +474,10 @@ public class RecycleViewWPAdapter extends RecyclerView.Adapter<RecycleViewWPAdap
         this.WP = wp;
         this.workPlanList = wp;
         this.workPlanList2 = wp;
+
+        // Pika
+        // создаю класс для определения порядка сортировки
+        WPSO = new WpSortOrder(WP);
     }
 
 
@@ -338,7 +491,11 @@ public class RecycleViewWPAdapter extends RecyclerView.Adapter<RecycleViewWPAdap
     @Override
     public void onBindViewHolder(RecycleViewWPAdapter.ViewHolder viewHolder, int position) {
         try {
-            WpDataDB wpDataDB = WP.get(position);
+            // Pika - было:
+//            WpDataDB wpDataDB = WP.get(position);
+            // Pika - стало: (сортировка по свежести клиента)
+            WpDataDB wpDataDB = WP.get(WPSO.getOrderedPos(position));
+
             viewHolder.bind(wpDataDB);
         } catch (Exception e) {
             globals.alertDialogMsg(mContext, "Возникла ошибка. Сообщите о ней своему администратору. Ошибка: " + e);
