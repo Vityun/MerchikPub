@@ -488,14 +488,6 @@ public class DetailedReportOptionsFrag extends Fragment {
                             READ_EXTERNAL_STORAGE_PERMISSION_REQUEST_CODE
                     );
                 }
-
-//                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-//                    ActivityCompat.requestPermissions(
-//                            activity,
-//                            new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
-//                            READ_EXTERNAL_STORAGE_PERMISSION_REQUEST_CODE
-//                    );
-//                }
             } catch (Exception e) {
                 Log.e("test", "Exception e: " + e);
             }

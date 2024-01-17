@@ -11,6 +11,7 @@ import android.util.Log;
 import java.io.File;
 
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity;
+import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportOptionsFrag;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.MakePhoto.MakePhoto;
 import ua.com.merchik.merchik.MakePhoto.MakePhotoFromGalery;
@@ -68,11 +69,16 @@ public class TovarRequisites {
                 },
                 "Вибрати з галереї",
                 () -> {
-                    MakePhotoFromGaleryWpDataDB = wpDataDB;
-                    MakePhotoFromGalery.tovarId = reportPrepareDB.tovarId;
-                    Intent intent = new Intent(Intent.ACTION_PICK);
-                    intent.setType("image/*");
-                    ((DetailedReportActivity) context).startActivityForResult(Intent.createChooser(intent, "Select Picture"), 500);
+                    if (DetailedReportOptionsFrag.PermissionUtils.checkReadExternalStoragePermission(context)) {
+                        MakePhotoFromGaleryWpDataDB = wpDataDB;
+                        MakePhotoFromGalery.tovarId = reportPrepareDB.tovarId;
+                        Intent intent = new Intent(Intent.ACTION_PICK);
+                        intent.setType("image/*");
+                        ((DetailedReportActivity) context).startActivityForResult(Intent.createChooser(intent, "Select Picture"), 500);
+                    } else {
+                        DetailedReportOptionsFrag.PermissionUtils.requestReadExternalStoragePermission(context, (DetailedReportActivity) context);
+                    }
+
                 });
 
         res.setCancel("Закрити", res::dismiss);
