@@ -1090,6 +1090,9 @@ public class TablesLoadingUnloading {
         String mod = "data_list";
         String act = "tovar_list";
 
+        String date_from = Clock.getDatePeriod(-30);
+        String date_to = Clock.getDatePeriod(1);
+
         BlockingProgressDialog tovarProgressDialog = null;
         BlockingProgressDialog pg = null;
         if (context != null) {
@@ -1097,11 +1100,23 @@ public class TablesLoadingUnloading {
 //            pg = BlockingProgressDialog.show(context, "Обмен данными с сервером.", "Обновление таблицы: " + "Товаров");
         }
 
+
+        StandartData data = new StandartData();
+        data.mod = "data_list";
+        data.act = "tovar_list";
+        data.date_from = date_from;
+        data.date_to = date_to;
+
+        Gson gson = new Gson();
+        String json = gson.toJson(data);
+        JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
+
         retrofit2.Call<TovarTableResponse> call;
         if (listId != null) {
             call = RetrofitBuilder.getRetrofitInterface().GET_TOVAR_T_ID(mod, act, listId);
         } else {
-            call = RetrofitBuilder.getRetrofitInterface().GET_TOVAR_T(mod, act);
+//            call = RetrofitBuilder.getRetrofitInterface().GET_TOVAR_T(mod, act);
+            call = RetrofitBuilder.getRetrofitInterface().GET_TOVAR_TABLE(RetrofitBuilder.contentType, convertedObject);
         }
 
 //        BlockingProgressDialog finalPg = pg;

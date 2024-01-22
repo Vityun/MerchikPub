@@ -609,6 +609,11 @@ public interface RetrofitInterface {
 
     // -------------------------------------------------------
 
+    @POST("mobile_app.php?")
+    Call<TovarTableResponse> GET_TOVAR_TABLE(
+            @Header("ContentType") String content,
+            @Body JsonObject json);
+
     // PlanogrammResponse
     @POST("mobile_app.php?")
     Call<PlanogrammResponse> Planogramm_RESPONSE(
