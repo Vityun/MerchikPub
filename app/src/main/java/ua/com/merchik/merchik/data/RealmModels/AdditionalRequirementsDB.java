@@ -83,6 +83,11 @@ public class AdditionalRequirementsDB extends RealmObject {
     @Expose
     public String color;
 
+    // Pika сумма премии по доп.треб.
+    @SerializedName("summ")
+    @Expose
+    private String summ;
+
     public Integer getId() {
         return id;
     }
@@ -142,6 +147,10 @@ public class AdditionalRequirementsDB extends RealmObject {
     public String getThemeId() {
         return themeId;
     }
+
+    // Pika получение суммы премии по доп.треб.
+    public String getSumm() { return summ; }
+    public void setSumm(String sum) { this.summ=sum; }
 
     public void setThemeId(String themeId) {
         this.themeId = themeId;

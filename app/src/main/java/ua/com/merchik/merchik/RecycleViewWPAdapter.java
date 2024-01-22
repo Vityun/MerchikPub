@@ -75,12 +75,14 @@ public class RecycleViewWPAdapter extends RecyclerView.Adapter<RecycleViewWPAdap
             private Date DataPereZap; // дата перезапуска
             private Date DataMax; // максимальная дата из двух - именно по ней будем сравнивать
             private Date TekDate; // текущая дата работ
+            private int AdrKod; // адрес работ
 
-            public OrderStruct1(int posi, Date dzap, Date dperezap, Date drab) {
+            public OrderStruct1(int posi, Date dzap, Date dperezap, Date drab, int adrCode) {
                 this.Pos = posi;
                 this.DataZap = dzap;
                 this.DataPereZap = dperezap;
                 this.TekDate = drab;
+                this.AdrKod = adrCode;
                 if (dzap.compareTo(dperezap)>0) { this.DataMax = dzap; } else { this.DataMax = dperezap; }
             }
 
@@ -93,6 +95,8 @@ public class RecycleViewWPAdapter extends RecyclerView.Adapter<RecycleViewWPAdap
             public int getPos() {
                 return Pos;
             }
+
+            public int getAdrKod() { return AdrKod; }
         }
 
         // Pika - класс для сравнения элементов, используемый при сортировке (сортирует по "свежести" клиентов в пределах даты)
@@ -100,17 +104,23 @@ public class RecycleViewWPAdapter extends RecyclerView.Adapter<RecycleViewWPAdap
 
             @Override
             public int compare(OrderStruct1 o1, OrderStruct1 o2) {
-                if (o1.getTekDate().compareTo(o2.getTekDate())>0) {
-                    return 1;
-                } else if (o1.getTekDate().compareTo(o2.getTekDate())<0) {
+                if (o1.getTekDate().compareTo(o2.getTekDate())<0) {
                     return -1;
-                } else {
-                   if (o1.getDataMax().compareTo(o2.getDataMax()) > 0) {
+                    }
+                else if (o1.getTekDate().compareTo(o2.getTekDate())>0) {
+                    return 1;
+                    }
+                else {
+                    if (o1.getAdrKod()<o2.getAdrKod()) {
                         return -1;
-                    } else if (o1.getDataMax().compareTo(o2.getDataMax()) < 0) {
+                    } else if (o1.getAdrKod()>o2.getAdrKod()) {
                         return 1;
                     } else {
-                        return 0;
+                        if (o1.getDataMax().compareTo(o2.getDataMax()) > 0) {
+                           return -1;
+                        } else if (o1.getDataMax().compareTo(o2.getDataMax()) < 0) {
+                           return 1;
+                        } else { return 0; }
                     }
                 }
             }
@@ -126,6 +136,7 @@ public class RecycleViewWPAdapter extends RecyclerView.Adapter<RecycleViewWPAdap
             String s;
             int fillOk,foundId;
             Date wsd,wrsd,tekd;
+            int adrKod;
 
             // список для строк - кодов клиентов
             List<String> ids = new ArrayList<>();
@@ -156,6 +167,7 @@ public class RecycleViewWPAdapter extends RecyclerView.Adapter<RecycleViewWPAdap
                 tekd=elem.getDt();
                 wsd=tekd;
                 wrsd=tekd;
+                adrKod=elem.getAddr_id();
 
                 // устанавливаю флаг успешного нахождения клиента.
                 // если не будет найден клиент по коду клиента, то при этом не нужно будет выполнять сортировку
@@ -177,7 +189,7 @@ public class RecycleViewWPAdapter extends RecyclerView.Adapter<RecycleViewWPAdap
 
                 // в любом случае добавляю элемент в сортировочный список, чтоб можно было потом получить позицию из него
                 // в случае если список не будет отсортирован, то возвращаться будет та же позиция, что и передана
-                os1=new OrderStruct1(i,wsd,wrsd,tekd);
+                os1=new OrderStruct1(i,wsd,wrsd,tekd,adrKod);
                 orderList1.add(os1);
             }
 
