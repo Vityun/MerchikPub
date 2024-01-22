@@ -627,7 +627,6 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                         Calendar calendar = Calendar.getInstance();
                         int day = calendar.get(Calendar.DAY_OF_WEEK);
                         int dat2 = calendar.get(Calendar.DAY_OF_MONTH);
-
                         int pass = day + dat2;
 
                         if (res == pass) {

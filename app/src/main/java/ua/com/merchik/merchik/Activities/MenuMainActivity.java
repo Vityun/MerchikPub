@@ -13,6 +13,8 @@ import com.google.android.material.navigation.NavigationView;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 
+import java.util.Calendar;
+
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -41,8 +43,8 @@ public class MenuMainActivity extends toolbar_menus {
             });
 
             findViewById(R.id.fab).setOnLongClickListener(v -> {
-                Toast.makeText(this, "Отладочная информация!\nДолгий клик по подсказке.", Toast.LENGTH_SHORT).show();
-//                test2(v.getContext());
+//                Toast.makeText(this, "Отладочная информация!\nДолгий клик по подсказке.", Toast.LENGTH_SHORT).show();
+                testLong();
                 return true;
             });
 
@@ -52,6 +54,27 @@ public class MenuMainActivity extends toolbar_menus {
             navigationView.setCheckedItem(R.id.nav_home);
         } catch (Exception e) {
             globals.alertDialogMsg(this, "ОшибкаMain: " + e);
+        }
+    }
+
+    private void testLong() {
+        Calendar calendar = Calendar.getInstance();
+        int count = 1;
+
+        while (count < 365) {
+            Log.e("testLong", "calendar(" + count + "): " + calendar);
+            int year = calendar.get(Calendar.YEAR);
+            int dayOfYear = calendar.get(Calendar.DAY_OF_YEAR);
+            int dayOfWeek = calendar.get(Calendar.DAY_OF_WEEK);
+            int dayOfMonth = calendar.get(Calendar.DAY_OF_MONTH);
+
+            double pass = (double) year / (dayOfYear + dayOfWeek + dayOfMonth);
+
+            int res = Integer.parseInt(String.format("%03d", (int) (pass * 100)));
+
+            Log.e("testLong", "pass: " + res);
+            calendar.add(Calendar.DAY_OF_YEAR, count);
+            count++;
         }
     }
 
