@@ -2715,6 +2715,23 @@ public class TablesLoadingUnloading {
             String json = gson.toJson(data);
             JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
 
+            // Pika Пример того как получать сырой объект JSON точнее response чтоб понять что возвращается в результате запроса к Володе
+            // также потом можно этот текст обработать на https://www.jsonschema2pojo.org/
+            // Еще есть возможность после авторизации выполнить https://merchik.com.ua/mobile_app.php?mod=additional_requirements&act=list
+            // то есть получить все данные которые должны прийти этому пользователю (сам запрос еще можно донастроить командной строкой - это как обычный GET)
+//            retrofit2.Call<JsonObject> callTest = RetrofitBuilder.getRetrofitInterface().TEST_JSON_UPLOAD(RetrofitBuilder.contentType, convertedObject);
+//            callTest.enqueue(new Callback<JsonObject>() {
+//                @Override
+//                public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
+//                    Response<JsonObject> s = response;
+//                }
+//
+//                @Override
+//                public void onFailure(Call<JsonObject> call, Throwable t) {
+//
+//                }
+//            });
+
             retrofit2.Call<AdditionalRequirementsServerData> call = RetrofitBuilder.getRetrofitInterface().GET_TABLE_AdditionalRequirementsDB(RetrofitBuilder.contentType, convertedObject);
             call.enqueue(new retrofit2.Callback<AdditionalRequirementsServerData>() {
                 @Override

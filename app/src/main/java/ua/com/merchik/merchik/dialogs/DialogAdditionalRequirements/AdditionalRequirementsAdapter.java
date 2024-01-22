@@ -53,7 +53,7 @@ public class AdditionalRequirementsAdapter extends RecyclerView.Adapter<Addition
 
     public class ViewHolder extends RecyclerView.ViewHolder {
 
-        private TextView text, number;
+        private TextView text, number, tsumm;
         private ImageView signal;
         private ConstraintLayout layout;
 
@@ -65,6 +65,7 @@ public class AdditionalRequirementsAdapter extends RecyclerView.Adapter<Addition
             number = v.findViewById(R.id.number);
             signal = v.findViewById(R.id.signal);
             layout = v.findViewById(R.id.layout);
+            tsumm = v.findViewById(R.id.summ);
         }
 
         public void bind(AdditionalRequirementsDB elementDB) {
@@ -108,6 +109,13 @@ public class AdditionalRequirementsAdapter extends RecyclerView.Adapter<Addition
 
                 number.setText(score);
 
+                // Pika - показать сумму за доптребование
+                String sums = elementDB.getSumm();
+                if (sums.compareTo("0") != 0) {
+                    tsumm.setText(sums);
+                    tsumm.setTextColor(context.getResources().getColor(R.color.red_error));
+                } else { tsumm.setText(""); }
+                // ----
 
                 TradeMarkDB finalTradeMarkDB = tradeMarkDB;
                 layout.setOnClickListener(v -> {

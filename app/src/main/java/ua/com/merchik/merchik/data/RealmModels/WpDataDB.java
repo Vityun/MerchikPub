@@ -8,6 +8,7 @@ import androidx.annotation.NonNull;
 import java.util.Date;
 
 import io.realm.RealmObject;
+import io.realm.annotations.Ignore;
 import io.realm.annotations.PrimaryKey;
 
 public class WpDataDB extends RealmObject implements Parcelable {
