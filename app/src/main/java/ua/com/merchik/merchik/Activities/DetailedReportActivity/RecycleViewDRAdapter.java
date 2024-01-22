@@ -1,9 +1,7 @@
 package ua.com.merchik.merchik.Activities.DetailedReportActivity;
 
-import static ua.com.merchik.merchik.Globals.userId;
 import static ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsRealm.AdditionalRequirementsModENUM.HIDE_FOR_USER;
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
-import static ua.com.merchik.merchik.toolbar_menus.internetStatus;
 
 import android.animation.ArgbEvaluator;
 import android.animation.ValueAnimator;
@@ -11,8 +9,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.Typeface;
-import android.net.Uri;
-import android.os.Build;
 import android.text.Html;
 import android.text.SpannableString;
 import android.text.SpannableStringBuilder;
@@ -51,13 +47,11 @@ import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
 import ua.com.merchik.merchik.data.OptionMassageType;
 import ua.com.merchik.merchik.data.OptionsButtons;
 import ua.com.merchik.merchik.data.RealmModels.AdditionalRequirementsDB;
-import ua.com.merchik.merchik.data.RealmModels.AppUsersDB;
 import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsRealm;
-import ua.com.merchik.merchik.database.realm.tables.AppUserRealm;
 import ua.com.merchik.merchik.database.realm.tables.StackPhotoRealm;
 import ua.com.merchik.merchik.database.realm.tables.WpDataRealm;
 import ua.com.merchik.merchik.dialogs.DialogData;
@@ -897,7 +891,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
 //                        WpDataDB wp = (WpDataDB) dataDB;
 //                        new MakePhotoFromGalery().openGalleryToPeakPhoto(mContext.getApplicationContext(), wp);
 
-                        if (Build.VERSION.SDK_INT == 28) {
+/*                        if (Build.VERSION.SDK_INT == 28) {
                             if (internetStatus == 1) {
                                 WpDataDB wp = (WpDataDB) dataDB;
                                 String date = Clock.getHumanTimeSecPattern(wp.getDt().getTime() / 1000, "yyyy-MM-dd");
@@ -919,9 +913,9 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                                 Intent site = new Intent(Intent.ACTION_VIEW, Uri.parse(format));
                                 context.startActivity(site);
                             }
-                        } else {
+                        } else {*/
                             click.click();
-                        }
+/*                        }*/
                     }));
 
                     ss.append("\n\n");

@@ -16,10 +16,6 @@ public class MakePhotoFromGalery {
     public static String tovarId;
     public void openGalleryToPeakPhoto(Context context, WpDataDB wp){
         MakePhotoFromGaleryWpDataDB = wp;
-//        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-//        intent.setType("image/*");
-//        ((DetailedReportActivity) context).startActivityForResult(Intent.createChooser(intent, "Select Picture"), PICK_GALLERY_IMAGE_REQUEST);
-
         Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
         intent.setType("image/*");
         intent.addCategory(Intent.CATEGORY_OPENABLE);

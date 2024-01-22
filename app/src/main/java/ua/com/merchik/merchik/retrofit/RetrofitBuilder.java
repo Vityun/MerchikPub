@@ -63,14 +63,14 @@ public class RetrofitBuilder {
 
 //        loggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
         OkHttpClient.Builder httpClientBuilder = new OkHttpClient.Builder();
-        httpClientBuilder.addInterceptor(new TimeoutInterceptor());
+//        httpClientBuilder.addInterceptor(new TimeoutInterceptor());
         httpClientBuilder.addInterceptor(new ChuckerInterceptor(MyApplication.getAppContext()));
 //        httpClientBuilder.addInterceptor(loggingInterceptor);
 
         httpClientBuilder.cookieJar(cookie)
-                .connectTimeout(20, TimeUnit.SECONDS)
-                .readTimeout(60, TimeUnit.SECONDS)
-                .writeTimeout(60, TimeUnit.SECONDS);
+                .connectTimeout(5, TimeUnit.SECONDS)
+                .readTimeout(5, TimeUnit.SECONDS)
+                .writeTimeout(5, TimeUnit.SECONDS);
 
         OkHttpClient client = httpClientBuilder.build();
 

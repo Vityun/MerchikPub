@@ -69,7 +69,6 @@ import retrofit2.Response;
 import ua.com.merchik.merchik.Activities.TaskAndReclamations.TARFragmentHome;
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
-import ua.com.merchik.merchik.MakePhoto.CreatePhotoFile;
 import ua.com.merchik.merchik.MakePhoto.MakePhoto;
 import ua.com.merchik.merchik.MakePhoto.MakePhotoFromGalery;
 import ua.com.merchik.merchik.PhotoReportActivity;
@@ -767,16 +766,7 @@ public class DetailedReportActivity extends toolbar_menus {
             if (requestCode == PICK_GALLERY_IMAGE_REQUEST && resultCode == RESULT_OK && data != null && data.getData() != null) {
                 try {
                     Uri uri = data.getData();
-                    File file = null;
-                    if (Build.VERSION.SDK_INT == Build.VERSION_CODES.Q) {
-                        file = new CreatePhotoFile().createDefaultPhotoFile(this, uri);
-                    } else {
-                        Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST", "Uri uri: " + uri);
-                        String filePath = getRealPathFromURI(uri);
-                        Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST", "filePath: " + filePath);
-                        file = new File(filePath);
-                        Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST", "file: " + file.length());
-                    }
+                    File file = new File(Globals.FileUtils.getRealPathFromUri(getApplicationContext(), uri));
                     savePhoto(file, MakePhotoFromGaleryWpDataDB, MakePhotoFromGalery.tovarId, getApplicationContext());
                 } catch (Exception e) {
                     Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST", "Exception e: " + e);
@@ -1074,9 +1064,9 @@ public class DetailedReportActivity extends toolbar_menus {
     }
 
 
-    private StackPhotoDB savePhoto(File file, WpDataDB wpDataDB, String tovarId, Context context) {
+    public static StackPhotoDB savePhoto(File file, WpDataDB wpDataDB, String tovarId, Context context) {
         try {
-
+            file.exists();
             int id = RealmManager.stackPhotoGetLastId();
             id++;
             StackPhotoDB stackPhotoDB = new StackPhotoDB();
@@ -1104,13 +1094,17 @@ public class DetailedReportActivity extends toolbar_menus {
 
             stackPhotoDB.setCreate_time(System.currentTimeMillis());
 
+            Globals globals1 = new Globals();
 //            String hash = globals.getHashMD5FromFileTEST(uri, context);
-            String hash = globals.getHashMD5FromFile2(file, this);
-            if (hash == null || hash.equals("")) hash = globals.getHashMD5FromFile(file, this);
+
+            String hash = Globals.FileHashCalculator.calculateHash(file.getPath());
+
+//            String hash = globals1.getHashMD5FromFile2(file, context);
+            if (hash == null || hash.equals("")) hash = globals1.getHashMD5FromFile(file, context);
             Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST", "hash: " + hash);
 
             if (hash == null || hash.equals("")) {
-                hash = globals.getHashMD5FromFile(file, this);
+                hash = globals1.getHashMD5FromFile(file, context);
             }
 
             stackPhotoDB.setPhoto_hash(hash);

@@ -32,4 +32,30 @@ public interface AchievementsDao {
 
     @Query("SELECT * FROM achievements WHERE user_id = :userId AND (dt_ut IS NOT NULL AND dt_ut BETWEEN :dtFrom AND :dtTo) ORDER BY dt_ut DESC")
     List<AchievementsSDB> getList(Long dtFrom, Long dtTo, Integer userId);
+
+
+    /**
+     * Віктор
+     * 12.01.24.
+     * Это попытка - эксперемент собрать универсальный запрос в котором будут учитываться только те реквизиты,
+     * которые не равны пустоте (NULL).
+     * Реквизиты без этого учёта (обязательные):
+     * @param dtFrom    Дата С;
+     * @param dtTo      Дата По
+     * @param clientId  Клиент
+     * @param addressId Адрес
+     *
+     * Реквизиты НЕ обязательные, что б они не учитывались нужно их передавать как null
+     * @param themeId   Тема Достижения.
+     * */
+    @Query("SELECT * FROM achievements " +
+            "WHERE client_id = :clientId " +
+            "AND addr_id = :addressId " +
+            "AND (dt_ut IS NOT NULL AND dt_ut BETWEEN :dtFrom AND :dtTo) " +
+            "AND (:themeId IS NULL OR theme_id = :themeId) " +  // Не обязательный реквизит Тема, мы берём для запроса темы только со значениями
+            "AND theme_id IS NOT NULL " +   // Если у темы в БД тоже нет значения - мы не учитываем её и не берём такие данные
+            "ORDER BY dt_ut DESC")
+    List<AchievementsSDB> getAchievementsList(Long dtFrom, Long dtTo, String clientId, Integer addressId, Integer themeId);
+
+
 }
