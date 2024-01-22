@@ -7,9 +7,6 @@ import android.content.Context;
 import android.os.Build;
 import android.util.Log;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonObject;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -104,18 +101,18 @@ public class OptionControlEKL<T> extends OptionControl {
         StringBuilder optionMsg = new StringBuilder(); //
 
         // DEBUG DATA-------------
-        try {
-            List<EKL_SDB> fullEkl = SQL_DB.eklDao().getAll();
-            StringBuilder stringBuilderDEBUG = new StringBuilder();
-            for (EKL_SDB item : fullEkl) {
-                JsonObject object = new Gson().fromJson(new Gson().toJson(item), JsonObject.class);
-                stringBuilderDEBUG.append(object);
-            }
-            Globals.writeToMLOG("INFO", "OptionControlEKL/createTZN", "fullEkl.size: " + fullEkl.size());
-            Globals.writeToMLOG("INFO", "OptionControlEKL/createTZN", "stringBuilderDEBUG: " + stringBuilderDEBUG);
-        } catch (Exception e) {
-            Globals.writeToMLOG("INFO", "OptionControlEKL/createTZN", "stringBuilderDEBUG/Exception e: " + e);
-        }
+//        try {
+//            List<EKL_SDB> fullEkl = SQL_DB.eklDao().getAll();
+//            StringBuilder stringBuilderDEBUG = new StringBuilder();
+//            for (EKL_SDB item : fullEkl) {
+//                JsonObject object = new Gson().fromJson(new Gson().toJson(item), JsonObject.class);
+//                stringBuilderDEBUG.append(object);
+//            }
+//            Globals.writeToMLOG("INFO", "OptionControlEKL/createTZN", "fullEkl.size: " + fullEkl.size());
+//            Globals.writeToMLOG("INFO", "OptionControlEKL/createTZN", "stringBuilderDEBUG: " + stringBuilderDEBUG);
+//        } catch (Exception e) {
+//            Globals.writeToMLOG("INFO", "OptionControlEKL/createTZN", "stringBuilderDEBUG/Exception e: " + e);
+//        }
         // -----------------------
 
         Log.e("OptionControlEKL", "HERE TEST OptionControlEKL 2");
@@ -169,7 +166,7 @@ public class OptionControlEKL<T> extends OptionControl {
 //            eklSDB = SQL_DB.eklDao().getBy(dateFrom, dateTo, wpDataDB.getClient_id(), wpDataDB.getAddr_id(), wpDataDB.getUser_id());
 //        eklSDB = SQL_DB.eklDao().getBy(dateFrom, dateTo, wpDataDB.getClient_id(), wpDataDB.getAddr_id(), wpDataDB.getUser_id(), wpDataDB.ptt_user_id);
 
-            Globals.writeToMLOG("INFO", "OptionControlEKL/createTZN", "eklSDB(-1): " + new Gson().toJson(eklSDB));
+//            Globals.writeToMLOG("INFO", "OptionControlEKL/createTZN", "eklSDB(-1): " + new Gson().toJson(eklSDB));
 
             Log.e("OptionControlEKL", "HERE TEST OptionControlEKL 5");
             if (eklSDB == null || eklSDB.size() == 0) {
@@ -184,16 +181,16 @@ public class OptionControlEKL<T> extends OptionControl {
 
                     eklSDB = SQL_DB.eklDao().getBy(dateFrom, dateTo, ids, wpDataDB.getAddr_id(), wpDataDB.getUser_id());
 
-                    Globals.writeToMLOG("INFO", "OptionControlEKL/createTZN", "eklSDB(0): " + new Gson().toJson(eklSDB));
+//                    Globals.writeToMLOG("INFO", "OptionControlEKL/createTZN", "eklSDB(0): " + new Gson().toJson(eklSDB));
                 }else {
                     // TODO отсебятина, у меня у Эрики не было групп товаров изза чего проблема выникла, это может быть очень опасно
                     eklSDB = SQL_DB.eklDao().getBy(dateFrom, dateTo, wpDataDB.getAddr_id(), wpDataDB.getUser_id());
-                    Globals.writeToMLOG("INFO", "OptionControlEKL/createTZN", "eklSDB(1): " + new Gson().toJson(eklSDB));
+//                    Globals.writeToMLOG("INFO", "OptionControlEKL/createTZN", "eklSDB(1): " + new Gson().toJson(eklSDB));
                 }
 
                 if (eklSDB.size() == 0 && addressSDB != null && addressSDB.kolKass != null && addressSDB.kolKass <= 5){
                     eklSDB = SQL_DB.eklDao().getBy(dateFrom, dateTo, wpDataDB.getAddr_id(), wpDataDB.getUser_id());
-                    Globals.writeToMLOG("INFO", "OptionControlEKL/createTZN", "eklSDB(2): " + new Gson().toJson(eklSDB));
+//                    Globals.writeToMLOG("INFO", "OptionControlEKL/createTZN", "eklSDB(2): " + new Gson().toJson(eklSDB));
                 }
 
                 if (eklSDB != null) {
@@ -206,7 +203,7 @@ public class OptionControlEKL<T> extends OptionControl {
             }
 
             Log.e("OptionControlEKL", "HERE TEST OptionControlEKL 6");
-            Globals.writeToMLOG("INFO", "OptionControlEKL/createTZN", "eklSDB(3): " + new Gson().toJson(eklSDB));
+//            Globals.writeToMLOG("INFO", "OptionControlEKL/createTZN", "eklSDB(3): " + new Gson().toJson(eklSDB));
 
             // Проверка ЭКЛов
             if (eklSDB == null || eklSDB.size() == 0) {
@@ -241,14 +238,6 @@ public class OptionControlEKL<T> extends OptionControl {
 
                 //Если (ПТТ.Уволен=1) и (Опц=глОпция132629) и (ПустоеЗначение(ПТТ.ДатаУвол)=0) и (ПТТ.ДатаУвол<Дат) и (Тем<>Тема421) Тогда //для случая когда Контролер берет ЭКЛ у проверяеМОГО но это НЕ разбор з/п (в т.ч. с уволенным)
                 if (usersSDBPTT.fired == 1 && optionDB.getOptionControlId().equals("132629") && (usersSDBPTT.firedDt != null && usersSDBPTT.firedDt != 0) && wpDataDB.getTheme_id() != 421) {
-                    Log.d("test", "nosing to show");
-                /*  Тзн.Наруш=1;
-					Причина="ПТТ уволен! ("+СокрЛП(ПТТ.ПричинаУвольнения)+")";
-					Тзн.Прим=Прим+", но "+Причина;
-					Если Спис.НайтиЗначение(Причина)=0 Тогда
-						Спис.ДобавитьЗначение(Причина); //для передачи в чат
-					КонецЕсли;
-					*/
                 } else if (usersSDBPTT.fired == 1 && optionDB.getOptionControlId().equals("133317") && optionDB.getOptionControlId().equals("84006")) {   //для случая, когда берем ЭКЛ у ПТТ
                     signal = false;
                     optionMsg.append(", но ").append("ПТТ уволен! (").append(usersSDBPTT.firedReason).append(")");
@@ -266,11 +255,11 @@ public class OptionControlEKL<T> extends OptionControl {
                     optionMsg.append(", но ").append("у ПТТ указан отдел ").append(SQL_DB.tovarGroupDao().getById(usersSDBPTT.otdelId).nm).append(" c нарушением уровня вложенности.")
                     /*.append(" (").append("-- otdel lvl --").append(" из уровня  вложенности!)")*/;
                 } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                    try {
-                        Globals.writeToMLOG("INFO", "OptionControlEKL/Build.VERSION.SDK_INT", "tovarGroupSDB: " + new Gson().toJson(tovarGroupSDB));
-                    }catch (Exception e){
-                        Globals.writeToMLOG("INFO", "OptionControlEKL/Build.VERSION.SDK_INT", "Exception e: " + e);
-                    }
+//                    try {
+//                        Globals.writeToMLOG("INFO", "OptionControlEKL/Build.VERSION.SDK_INT", "tovarGroupSDB: " + new Gson().toJson(tovarGroupSDB));
+//                    }catch (Exception e){
+//                        Globals.writeToMLOG("INFO", "OptionControlEKL/Build.VERSION.SDK_INT", "Exception e: " + e);
+//                    }
                     if (tovarGroupSDB.stream().filter(item -> item.id.equals(usersSDBPTT.otdelId)).findFirst().orElse(null) != null
                             && optionDB.getOptionControlId().equals("132629") && (addressSDB.kolKass > 5 || addressSDB.kolKass == 0)) {
                         if (documentUser.reportDate05 != null && documentUser.reportDate05.getTime() >= wpDataDB.getDt().getTime()) {
