@@ -114,18 +114,17 @@ public class OptionControlPhotoShowcase<T> extends OptionControl {
 
                 // создание объекта для даты '01.01.2024'
                 Calendar calendar = Calendar.getInstance();
-                calendar.set(2024, Calendar.JANUARY, 1);
+                calendar.set(2024, Calendar.FEBRUARY, 1);
                 Date specificDate = calendar.getTime();
 
                 int comparisonResult = date.compareTo(specificDate);
 
+                // НОвого клиента запустили и у него нет витрин
+                // Дата - 40 (начала работ клиента)
+
                 if (comparisonResult < 0) {
-                    // Дат < '01.01.2024'
-                    // СигнКон=0;
                     signal = false;
                 } else {
-                    // Дат >= '01.01.2024'
-                    // СигнКон=1;
                     signal = true;
                 }
             } else if (showcaseSDBList.size() > 0 && filledShowcaseIdsCount == 0) {

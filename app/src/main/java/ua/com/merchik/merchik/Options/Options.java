@@ -16,6 +16,7 @@ import static ua.com.merchik.merchik.Globals.OptionControlName.OBOROTVED_NUM;
 import static ua.com.merchik.merchik.Globals.OptionControlName.PRICE;
 import static ua.com.merchik.merchik.Globals.OptionControlName.UP;
 import static ua.com.merchik.merchik.Globals.distanceMin;
+import static ua.com.merchik.merchik.Globals.userId;
 import static ua.com.merchik.merchik.Options.Options.ConductMode.DEFAULT_CONDUCT;
 import static ua.com.merchik.merchik.data.OptionMassageType.Type.DIALOG;
 import static ua.com.merchik.merchik.data.OptionMassageType.Type.STRING;
@@ -27,6 +28,7 @@ import static ua.com.merchik.merchik.trecker.enabledGPS;
 
 import android.content.Context;
 import android.content.Intent;
+import android.net.Uri;
 import android.text.Html;
 import android.text.SpannableString;
 import android.text.SpannableStringBuilder;
@@ -125,6 +127,7 @@ import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
 import ua.com.merchik.merchik.data.OptionMassageType;
 import ua.com.merchik.merchik.data.RealmModels.AdditionalRequirementsDB;
 import ua.com.merchik.merchik.data.RealmModels.AdditionalRequirementsMarkDB;
+import ua.com.merchik.merchik.data.RealmModels.AppUsersDB;
 import ua.com.merchik.merchik.data.RealmModels.LogMPDB;
 import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
 import ua.com.merchik.merchik.data.RealmModels.ReportPrepareDB;
@@ -136,6 +139,7 @@ import ua.com.merchik.merchik.data.TovarOptions;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsMarkRealm;
 import ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsRealm;
+import ua.com.merchik.merchik.database.realm.tables.AppUserRealm;
 import ua.com.merchik.merchik.database.realm.tables.CustomerRealm;
 import ua.com.merchik.merchik.database.realm.tables.LogMPRealm;
 import ua.com.merchik.merchik.database.realm.tables.ReportPrepareRealm;
@@ -1100,6 +1104,24 @@ public class Options {
         Log.e("NNK", "F/optControl/optionId: " + optionId);
         Log.e("NNK", "F/optControl/NNKMode mode: " + mode);
         switch (optionId) {
+
+            case 132938:    // Дополнительный заработок
+
+                WpDataDB wp = (WpDataDB) dataDB;
+
+                String link = String.format("/merchik.com.ua/mobile.php?mod=ticket&act=create&doc_num=%s&doc_type=report&theme_id=%s&option_id=132812&menu_close_only"
+                        , wp.getDoc_num(), wp.getTheme_id());
+                AppUsersDB appUser = AppUserRealm.getAppUserById(userId);
+                String hash = String.format("%s%s%s", appUser.getUserId(), appUser.getPassword(), "AvgrgsYihSHp6Ok9yQXfSHp6Ok9nXdXr3OSHp6Ok9UPBTzTjrF20Nsz3");
+                hash = Globals.getSha1Hex(hash);
+
+                link = link.replace("&", "**");
+
+                String format = String.format("https://merchik.com.ua/sa.php?&u=%s&s=%s&l=/%s", userId, hash, link);
+
+                Intent site = new Intent(Intent.ACTION_VIEW, Uri.parse(format));
+                context.startActivity(site);
+                break;
             case 164351:
                 OptionButtonPhotoCassZone<?> optionButtonPhotoCassZone = new OptionButtonPhotoCassZone<>(context, dataDB, option, type, mode, unlockCodeResultListener);
                 break;
@@ -1657,7 +1679,7 @@ public class Options {
                     OpinionSDB opinionSDB = SQL_DB.opinionDao().getOpinionByNm(information);
 
                     tarDB.sotrOpinionDt = System.currentTimeMillis() / 1000;
-                    tarDB.sotrOpinionAuthorId = Globals.userId;
+                    tarDB.sotrOpinionAuthorId = userId;
                     tarDB.sotrOpinionId = opinionSDB.id;
 
                     SQL_DB.tarDao().insertData(Collections.singletonList(tarDB));

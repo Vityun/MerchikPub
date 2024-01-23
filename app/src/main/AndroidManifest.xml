@@ -60,8 +60,8 @@ android:theme="@style/Theme.AppCompat.Light.NoActionBar"
         android:supportsRtl="true"
         android:label="@string/app_name"
         android:theme="@style/AppTheme"
-        android:versionCode="2024011801"
-        android:versionName="2024011801"
+        android:versionCode="2024012400"
+        android:versionName="2024012400"
         tools:targetApi="m"
         >
 
