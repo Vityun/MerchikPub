@@ -1151,7 +1151,9 @@ public class TablesLoadingUnloading {
 
 
                             if (RealmManager.setTovar(list)) {
-                                PhotoDownload.getPhotoURLFromServer(list, new Clicks.clickStatusMsg() {
+
+                                // 24/01/2024 Закоментил что б при синхронизации не заваливало фотками обмен
+/*                                PhotoDownload.getPhotoURLFromServer(list, new Clicks.clickStatusMsg() {
                                     @Override
                                     public void onSuccess(String data) {
                                         Log.e("test", "String data: " + data);
@@ -1171,7 +1173,7 @@ public class TablesLoadingUnloading {
                                     public void onFailure(String error) {
 
                                     }
-                                });
+                                });*/
 
 //                                if (finalPg != null)
 //                                    if (finalPg.isShowing())
