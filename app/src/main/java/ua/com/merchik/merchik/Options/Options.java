@@ -1105,7 +1105,7 @@ public class Options {
         Log.e("NNK", "F/optControl/NNKMode mode: " + mode);
         switch (optionId) {
 
-            case 132938:    // Дополнительный заработок
+            case 132812:    // Хочу увеличение оплаты
 
                 WpDataDB wp = (WpDataDB) dataDB;
 
