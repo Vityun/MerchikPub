@@ -59,10 +59,10 @@ public class MenuMainActivity extends toolbar_menus {
 
     private void testLong() {
         Calendar calendar = Calendar.getInstance();
-        int count = 1;
-
-        while (count < 365) {
-            Log.e("testLong", "calendar(" + count + "): " + calendar);
+//        int count = 1;
+//
+//        while (count < 365) {
+//            Log.e("testLong", "calendar(" + count + "): " + calendar);
             int year = calendar.get(Calendar.YEAR);
             int dayOfYear = calendar.get(Calendar.DAY_OF_YEAR);
             int dayOfWeek = calendar.get(Calendar.DAY_OF_WEEK);
@@ -72,10 +72,12 @@ public class MenuMainActivity extends toolbar_menus {
 
             int res = Integer.parseInt(String.format("%03d", (int) (pass * 100)));
 
+            Toast.makeText(getApplicationContext(), "" + res, Toast.LENGTH_LONG).show();
+
             Log.e("testLong", "pass: " + res);
-            calendar.add(Calendar.DAY_OF_YEAR, count);
-            count++;
-        }
+//            calendar.add(Calendar.DAY_OF_YEAR, count);
+//            count++;
+//        }
     }
 
     private void test() {

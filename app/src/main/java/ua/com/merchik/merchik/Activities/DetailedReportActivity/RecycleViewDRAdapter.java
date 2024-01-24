@@ -625,10 +625,22 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
 
                         int res = Integer.parseInt(dialog.getOperationResult());
 
+                        /* old
                         Calendar calendar = Calendar.getInstance();
                         int day = calendar.get(Calendar.DAY_OF_WEEK);
                         int dat2 = calendar.get(Calendar.DAY_OF_MONTH);
-                        int pass = day + dat2;
+                        int pass = day + dat2;*/
+
+                        // new
+                        Calendar calendar = Calendar.getInstance();
+                        int year = calendar.get(Calendar.YEAR);
+                        int dayOfYear = calendar.get(Calendar.DAY_OF_YEAR);
+                        int dayOfWeek = calendar.get(Calendar.DAY_OF_WEEK);
+                        int dayOfMonth = calendar.get(Calendar.DAY_OF_MONTH);
+
+                        double passwordD = (double) year / (dayOfYear + dayOfWeek + dayOfMonth);
+
+                        int pass = Integer.parseInt(String.format("%03d", (int) (passwordD * 100)));
 
                         if (res == pass) {
                             longClickButton(test, optionId, detailedReportButtons, optionsButtons, view.getContext());
