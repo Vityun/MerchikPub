@@ -27,6 +27,7 @@ import androidx.activity.result.ActivityResultCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
@@ -37,6 +38,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -97,7 +99,7 @@ public class DetailedReportOptionsFrag extends Fragment {
         return fragment;
     }
 
-    @Override
+/*    @Override
     public void onResume() {
         Globals.writeToMLOG("INFO", "DetailedReportOptionsFrag", "onResume");
         try {
@@ -114,7 +116,7 @@ public class DetailedReportOptionsFrag extends Fragment {
             }
         }
         super.onResume();
-    }
+    }*/
 
 /*    @Override
     public void onSaveInstanceState(Bundle outState) {
@@ -351,7 +353,7 @@ public class DetailedReportOptionsFrag extends Fragment {
                 });
             }
 
-            if (optionsButtons != null && optionsButtons.size() > 0) {
+/*            if (optionsButtons != null && optionsButtons.size() > 0) {
                 recycleViewDRAdapter = new RecycleViewDRAdapter(mContext, wpDataDB, optionsButtons, allReportOption, list, () -> {
                     try {
 
@@ -363,7 +365,7 @@ public class DetailedReportOptionsFrag extends Fragment {
                         }
 
 
-/*                        registerForActivityResult(new ActivityResultContracts.GetContent(), new ActivityResultCallback<Uri>() {
+*//*                        registerForActivityResult(new ActivityResultContracts.GetContent(), new ActivityResultCallback<Uri>() {
                             @Override
                             public void onActivityResult(Uri result) {
                                 try {
@@ -373,7 +375,7 @@ public class DetailedReportOptionsFrag extends Fragment {
                                     Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST", "Exception e: " + e);
                                 }
                             }
-                        });*/
+                        });*//*
 
 //                        MakePhotoFromGaleryWpDataDB = wpDataDB;
 //                        Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
@@ -397,7 +399,7 @@ public class DetailedReportOptionsFrag extends Fragment {
 
                 information.setText(msg);
                 download.setOnClickListener(v1 -> clickDownload(v1.getContext()));
-            }
+            }*/
 
         } catch (Exception e) {
             Log.e("R_TRANSLATES", "convertedObjectERROR: " + e);
@@ -407,6 +409,37 @@ public class DetailedReportOptionsFrag extends Fragment {
         return v;
     }
 
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+        try {
+            Globals.writeToMLOG("INFO", "DetailedReportOptionsFrag/onViewCreated", "enter");
+            WorkPlan workPlan = new WorkPlan();
+            List<OptionsDB> optionsButtons = workPlan.getOptionButtons2(workPlan.getWpOpchetId(wpDataDB), wpDataDB.getId());
+
+            List<Integer> ids = new ArrayList<>();
+            for (OptionsDB item : optionsButtons) {
+                ids.add(Integer.parseInt(item.getOptionId()));
+            }
+            Collections.sort(optionsButtons, (o1, o2) -> o1.getSo().compareTo(o2.getSo()));
+            // Запрос к SQL БДшке. Получаем список обьектов сайта
+            List<SiteObjectsSDB> list = SQL_DB.siteObjectsDao().getObjectsById(ids);
+            // Получаю все опции по данному отчёту.
+            List<OptionsDB> allReportOption = RealmManager.INSTANCE.copyFromRealm(OptionsRealm.getOptionsByDAD2(String.valueOf(wpDataDB.getCode_dad2())));
+            recycleViewDRAdapter = new RecycleViewDRAdapter(mContext, wpDataDB, optionsButtons, allReportOption, list, () -> {
+                try {
+                    mGetContent.launch("image/*");
+                } catch (Exception e) {
+                    Globals.writeToMLOG("ERROR", "DetailedReportOptionsFrag/Intent.ACTION_PICK", "Exception e: " + e);
+                }
+            });
+            rvContacts.setAdapter(recycleViewDRAdapter);
+            rvContacts.setLayoutManager(new LinearLayoutManager(mContext, LinearLayoutManager.VERTICAL, false));
+        }catch (Exception e){
+            Globals.writeToMLOG("INFO", "DetailedReportOptionsFrag/onViewCreated", "Exception e: " + e);
+            Globals.writeToMLOG("INFO", "DetailedReportOptionsFrag/onViewCreated", "Exception exception: " + Arrays.toString(e.getStackTrace()));
+        }
+    }
 
     private void clickDownload(Context context) {
         Toast.makeText(context, "Начинаю загрузку Опций", Toast.LENGTH_SHORT).show();
@@ -423,32 +456,7 @@ public class DetailedReportOptionsFrag extends Fragment {
     }
 
     public void test() {
-        WorkPlan workPlan = new WorkPlan();
-        List<OptionsDB> optionsButtons = workPlan.getOptionButtons2(workPlan.getWpOpchetId(wpDataDB), wpDataDB.getId());
 
-        List<Integer> ids = new ArrayList<>();
-        for (OptionsDB item : optionsButtons) {
-            ids.add(Integer.parseInt(item.getOptionId()));
-        }
-        Collections.sort(optionsButtons, (o1, o2) -> o1.getSo().compareTo(o2.getSo()));
-        // Запрос к SQL БДшке. Получаем список обьектов сайта
-        List<SiteObjectsSDB> list = SQL_DB.siteObjectsDao().getObjectsById(ids);
-        // Получаю все опции по данному отчёту.
-        List<OptionsDB> allReportOption = RealmManager.INSTANCE.copyFromRealm(OptionsRealm.getOptionsByDAD2(String.valueOf(wpDataDB.getCode_dad2())));
-        recycleViewDRAdapter = new RecycleViewDRAdapter(mContext, wpDataDB, optionsButtons, allReportOption, list, () -> {
-            try {
-
-                mGetContent.launch("image/*");
-
-//                MakePhotoFromGaleryWpDataDB = wpDataDB;
-//                Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-//                intent.setType("image/*");
-//                Globals.writeToMLOG("INFO", "DetailedReportOptionsFrag/Intent.ACTION_PICK", "intent: " + intent);
-//                ((DetailedReportActivity) mContext).startActivityForResult(Intent.createChooser(intent, "Select Picture"), 500);
-            } catch (Exception e) {
-                Globals.writeToMLOG("ERROR", "DetailedReportOptionsFrag/Intent.ACTION_PICK", "Exception e: " + e);
-            }
-        });
     }
 
     public class PermissionUtils {
