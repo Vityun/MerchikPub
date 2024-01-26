@@ -413,6 +413,7 @@ public class DetailedReportOptionsFrag extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         try {
+            rvContacts = view.findViewById(R.id.DRRecycleView);
             Globals.writeToMLOG("INFO", "DetailedReportOptionsFrag/onViewCreated", "enter");
             WorkPlan workPlan = new WorkPlan();
             List<OptionsDB> optionsButtons = workPlan.getOptionButtons2(workPlan.getWpOpchetId(wpDataDB), wpDataDB.getId());
@@ -426,6 +427,13 @@ public class DetailedReportOptionsFrag extends Fragment {
             List<SiteObjectsSDB> list = SQL_DB.siteObjectsDao().getObjectsById(ids);
             // Получаю все опции по данному отчёту.
             List<OptionsDB> allReportOption = RealmManager.INSTANCE.copyFromRealm(OptionsRealm.getOptionsByDAD2(String.valueOf(wpDataDB.getCode_dad2())));
+
+            Globals.writeToMLOG("INFO", "DetailedReportOptionsFrag/onViewCreated/", "mContext: " + view.getContext());
+            Globals.writeToMLOG("INFO", "DetailedReportOptionsFrag/onViewCreated/", "wpDataDB: " + wpDataDB);
+            Globals.writeToMLOG("INFO", "DetailedReportOptionsFrag/onViewCreated/", "optionsButtons: " + optionsButtons);
+            Globals.writeToMLOG("INFO", "DetailedReportOptionsFrag/onViewCreated/", "allReportOption: " + allReportOption);
+            Globals.writeToMLOG("INFO", "DetailedReportOptionsFrag/onViewCreated/", "list: " + list);
+
             recycleViewDRAdapter = new RecycleViewDRAdapter(mContext, wpDataDB, optionsButtons, allReportOption, list, () -> {
                 try {
                     mGetContent.launch("image/*");
@@ -435,6 +443,7 @@ public class DetailedReportOptionsFrag extends Fragment {
             });
             rvContacts.setAdapter(recycleViewDRAdapter);
             rvContacts.setLayoutManager(new LinearLayoutManager(mContext, LinearLayoutManager.VERTICAL, false));
+            Globals.writeToMLOG("INFO", "DetailedReportOptionsFrag/onViewCreated", "end");
         }catch (Exception e){
             Globals.writeToMLOG("INFO", "DetailedReportOptionsFrag/onViewCreated", "Exception e: " + e);
             Globals.writeToMLOG("INFO", "DetailedReportOptionsFrag/onViewCreated", "Exception exception: " + Arrays.toString(e.getStackTrace()));
