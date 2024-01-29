@@ -162,7 +162,8 @@ public class Globals {
         PHOTO_LOG,              // Журнал фото
         DETAILED_REPORT,        // Детализированный отчёт
         TASK_AND_RECLAMATION,   // Задачи и Рекламации (ЗИР)
-        WP_DATA                 // План работ
+        WP_DATA,                // План работ
+        NOTHING                 // Универсальное, для случайных мест
     }
 
     public enum ViewHolderDataType {

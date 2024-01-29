@@ -370,6 +370,7 @@ public class TablesLoadingUnloading {
                         }
 
                         if (response.body().getState()) {
+                            Globals.writeToMLOG("INFO", "PetrovExchangeTest/startExchange/downloadWPData/onSuccess", "(response.body().getList(): " + response.body().getList().size());
                             if (RealmManager.setWpData(response.body().getList())) {
                                 if (pg != null)
                                     if (pg.isShowing())
@@ -382,16 +383,6 @@ public class TablesLoadingUnloading {
 
                             long currentTime = System.currentTimeMillis() / 1000;
 
-                            // 19.08.2020. МЕГАКОСТЫЛЬ. УБРАТЬ.
-//                            RealmManager.setToSynchronizationTimetableDB(new SynchronizationTimetableDB(1, "wp_data", 600, currentTime, currentTime, 0, 0));
-//                            RealmManager.setToSynchronizationTimetableDB(new SynchronizationTimetableDB(2, "image_tp", 600, currentTime, currentTime, 0, 0));
-//                            RealmManager.setToSynchronizationTimetableDB(new SynchronizationTimetableDB(3, "client_group_tp", 600, currentTime, currentTime, 0, 0));
-//                            RealmManager.setToSynchronizationTimetableDB(new SynchronizationTimetableDB(4, "log_mp", 600, currentTime, currentTime, 0, 0));
-//                            RealmManager.setToSynchronizationTimetableDB(new SynchronizationTimetableDB(5, "clients", 600, currentTime, currentTime, 0, 0));
-//                            RealmManager.setToSynchronizationTimetableDB(new SynchronizationTimetableDB(6, "address", 600, currentTime, currentTime, 0, 0));
-//                            RealmManager.setToSynchronizationTimetableDB(new SynchronizationTimetableDB(7, "users", 600, currentTime, currentTime, 0, 0));
-//                            RealmManager.setToSynchronizationTimetableDB(new SynchronizationTimetableDB(8, "promoList", 600, currentTime, currentTime, 0, 0));
-//                            RealmManager.setToSynchronizationTimetableDB(new SynchronizationTimetableDB(9, "errorsList", 600, currentTime, currentTime, 0, 0));
                         } else {
                             if (pg != null)
                                 if (pg.isShowing())
@@ -610,8 +601,6 @@ public class TablesLoadingUnloading {
                     Log.e("SERVER_REALM_DB_UPDATE", "===================================downloadOptions_:" + response.body().getState() + "/" + response.body().getError());
 
                     try {
-//                        JsonObject convertedObject = new Gson().fromJson(new Gson().toJson(response.body()), JsonObject.class);
-//                        globals.writeToMLOG(Clock.getHumanTime() + "_INFO.TablesLU.class.downloadOptions.ответ от сервера: " + convertedObject + "\n");
                         try {
                             globals.writeToMLOG(Clock.getHumanTime() + "_INFO.TablesLU.class.downloadOptions.размер ответа: " + response.body().getList().size() + "\n");
                         } catch (Exception e) {
@@ -624,6 +613,7 @@ public class TablesLoadingUnloading {
 
                     if (response.body().getList() != null) {
                         Log.e("SERVER_REALM_DB_UPDATE", "===================================.Options.SIZE: " + response.body().getList().size());
+                        Globals.writeToMLOG("INFO", "PetrovExchangeTest/startExchange/downloadOptions/onSuccess", "(response.body().getList(): " + response.body().getList().size());
                     } else {
                         Log.e("SERVER_REALM_DB_UPDATE", "===================================.Options.SIZE: NuLL");
                     }
@@ -731,6 +721,7 @@ public class TablesLoadingUnloading {
                         Globals.writeToMLOG("INFO", "downloadReportPrepare/onResponse", "response.body().getState(): " + response.body().getState());
 
                         if (response.body().getList() != null) {
+                            Globals.writeToMLOG("INFO", "PetrovExchangeTest/startExchange/downloadReportPrepare/onSuccess", "(response.body().getList(): " + response.body().getList().size());
                             Log.e("SERVER_REALM_DB_UPDATE", "===================================.ReportPrepare.SIZE: " + response.body().getList().size());
                             Globals.writeToMLOG("INFO", "downloadReportPrepare/onResponse", "response.body().getList().size(): " + response.body().getList().size());
                         } else {
@@ -1132,8 +1123,6 @@ public class TablesLoadingUnloading {
 
 
                             try {
-//                            JsonObject convertedObject = new Gson().fromJson(new Gson().toJson(response.body()), JsonObject.class);
-//                            globals.writeToMLOG(Clock.getHumanTime() + "_INFO.TablesLU.class.downloadTovarTable.ответ от сервера: " + convertedObject + "\n");
                                 try {
                                     globals.writeToMLOG(Clock.getHumanTime() + "_INFO.TablesLU.class.downloadTovarTable.размер ответа: " + list.size() + "\n");
                                 } catch (Exception e) {
@@ -1144,6 +1133,8 @@ public class TablesLoadingUnloading {
                             }
 
                             if (list != null) {
+                                Globals.writeToMLOG("INFO", "PetrovExchangeTest/startExchange/downloadTovarTable/onSuccess", "list.size(): " + list.size());
+
                                 Log.e("SERVER_REALM_DB_UPDATE", "===================================.TovarTable.SIZE: " + list.size());
                             } else {
                                 Log.e("SERVER_REALM_DB_UPDATE", "===================================.TovarTable.SIZE: NuLL");
@@ -1238,6 +1229,8 @@ public class TablesLoadingUnloading {
 
                     if (resp.state) {
                         if (resp.list.size() > 0) {
+                            Globals.writeToMLOG("INFO", "PetrovExchangeTest/startExchange/downloadTovarGroupTable/onSuccess", "resp.list.size(): " + resp.list.size());
+
                             exchange.onSuccess(resp.list);
                         } else {
                             exchange.onFailure("Данных для обработки нет.");
@@ -1278,6 +1271,8 @@ public class TablesLoadingUnloading {
 
 
                         if (response.body().getList() != null) {
+                            Globals.writeToMLOG("INFO", "PetrovExchangeTest/startExchange/downloadTradeMarksTable/onSuccess", "response.body().getList(): " + response.body().getList().size());
+
                             Log.e("SERVER_REALM_DB_UPDATE", "===================================.TradeMarksTable.SIZE: " + response.body().getList().size());
                         } else {
                             Log.e("SERVER_REALM_DB_UPDATE", "===================================.TradeMarksTable.SIZE: NuLL");
@@ -1385,18 +1380,18 @@ public class TablesLoadingUnloading {
         String json = gson.toJson(data);
         JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
 
-        retrofit2.Call<JsonObject> callTest = RetrofitBuilder.getRetrofitInterface().TEST_JSON_UPLOAD(RetrofitBuilder.contentType, convertedObject);
-        callTest.enqueue(new Callback<JsonObject>() {
-            @Override
-            public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
-                Log.e("test", "test" + response);
-            }
-
-            @Override
-            public void onFailure(Call<JsonObject> call, Throwable t) {
-                Log.e("test", "test");
-            }
-        });
+//        retrofit2.Call<JsonObject> callTest = RetrofitBuilder.getRetrofitInterface().TEST_JSON_UPLOAD(RetrofitBuilder.contentType, convertedObject);
+//        callTest.enqueue(new Callback<JsonObject>() {
+//            @Override
+//            public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
+//                Log.e("test", "test" + response);
+//            }
+//
+//            @Override
+//            public void onFailure(Call<JsonObject> call, Throwable t) {
+//                Log.e("test", "test");
+//            }
+//        });
 
         retrofit2.Call<ErrorTableResponce> call = RetrofitBuilder.getRetrofitInterface().GET_ERROR_LIST(mod, act);
         call.enqueue(new retrofit2.Callback<ErrorTableResponce>() {
@@ -2469,6 +2464,7 @@ public class TablesLoadingUnloading {
                     try {
                         if (response.isSuccessful()){
                             if (response.body() != null && response.body().getState() && response.body().getObjectList() != null && response.body().getObjectList().size() > 0) {
+                                Globals.writeToMLOG("INFO", "PetrovExchangeTest/startExchange/downloadSiteHints/onSuccess", "response.body().getObjectList().size(): " + response.body().getObjectList().size());
                                 saveSiteObjectsDB(response.body().getObjectList());
                             }
                         }
@@ -2540,6 +2536,7 @@ public class TablesLoadingUnloading {
                         if (response.body() != null) {
                             if (response.body().getState() != null && response.body().getState()) {
                                 if (response.body().getList() != null && response.body().getList().size() > 0) {
+                                    Globals.writeToMLOG("INFO", "PetrovExchangeTest/startExchange/downloadVideoLessons/onSuccess", "response.body().getList().size(): " + response.body().getList().size());
                                     saveSiteHintsDB(response.body().getList());
                                 }
                             }

@@ -245,6 +245,9 @@ public class PhotoDownload {
         String json = gson.toJson(data);
         JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
 
+        Globals.writeToMLOG("INFO", "PetrovExchangeTest/startExchange/getPhotoURLFromServer/onSuccess", "convertedObject: " + convertedObject);
+
+
         // Отладочная инфа
         long start = System.currentTimeMillis() / 1000;
 
@@ -262,6 +265,8 @@ public class PhotoDownload {
                             } catch (Exception e) {
                                 photoListUrlSize = -1;
                             }
+
+                            Globals.writeToMLOG("INFO", "PetrovExchangeTest/startExchange/getPhotoURLFromServer/onSuccess/photoListUrlSize", "photoListUrlSize: " + photoListUrlSize);
 
                             long end = System.currentTimeMillis() / 1000 - start;
                             result.onSuccess("Данные о фото товаров(" + photoListUrlSize + "шт) успешно получены. Это заняло " + end + " секунд! \nНачинаю загрузку фотографий.. \n\nЭТО МОЖЕТ ЗАНЯТЬ МНОГО ВРЕМЕНИ И ТРАФИКА!");
@@ -472,6 +477,9 @@ public class PhotoDownload {
             }
         }
 
+        Globals.writeToMLOG("INFO", "PetrovExchangeTest/startExchange/getPhotoURLFromServer/downloadPhoto", "Фоток с типом 18: " + count);
+
+
         result.onSuccess("Фоток с типом 18: " + count);
     }
 
@@ -493,6 +501,7 @@ public class PhotoDownload {
                     int size = 0;
                     if (response.body() != null && response.body().getState() && response.body().getList() != null) {
                         size = response.body().getList().size();
+                        Globals.writeToMLOG("INFO", "PetrovExchangeTest/startExchange/getPhotoFromServer/onSuccess", "(фото юзеров которые надо закачать)size: " + size);
                     }
                     Globals.writeToMLOG("INFO", "" + getClass().getName() + "/getPhotoFromServer/onResponse", "size: " + size);
                     savePhotoToDB(response.body().getList());

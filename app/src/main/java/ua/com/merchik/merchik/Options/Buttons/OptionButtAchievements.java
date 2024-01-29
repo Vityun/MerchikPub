@@ -112,10 +112,14 @@ public class OptionButtAchievements<T> extends OptionControl {
     private void showAchievementDialog() {
         DialogData dialog = new DialogData(context);
         dialog.setTitle("Досягнення");
-        dialog.setText("");
+        dialog.setText("Виберіть знизу досягнення, або створіть нове!");
+        dialog.setClose(dialog::dismiss);
+        dialog.showFilter(()->{
+            // Тут я должен обработать данные, что я внёс в фильтре и закинуть их на обновление
+        });
         dialog.setRecycler(createAdapter(dialog.context, achievements), new LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false));
         dialog.setClose(dialog::dismiss);
-        dialog.setOk("Нове досягнення", () -> {
+        dialog.setOkRv("Нове досягнення", () -> {
             DialogAchievement dialogAchievement = new DialogAchievement(context, wpDataDB);
             dialogAchievement.setTitle("Створення нового Досягнення");
             dialogAchievement.show();

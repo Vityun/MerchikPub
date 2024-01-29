@@ -151,14 +151,15 @@ public class Exchange {
     /**
      * 26.02.2021
      * Начало Обмена. Внутри находятся все Обмены
-     */
-    public void startExchange() {
+     */    public void startExchange() {
         try {
             Log.e("startExchange", "start");
 
             if (exchange + retryTime < System.currentTimeMillis()) {
                 Log.e("startExchange", "start/Время обновлять наступило");
                 exchange = System.currentTimeMillis();
+
+                Globals.writeToMLOG("INFO", "PetrovExchangeTest/startExchange", "Началась загрузка данных");
 
                 try {
                     globals.fixMP(null, null);    //
@@ -189,6 +190,7 @@ public class Exchange {
                         @Override
                         public <T> void onSuccess(List<T> data) {
                             try {
+                                Globals.writeToMLOG("INFO", "PetrovExchangeTest/startExchange/LocationExchange/downloadLocationTable/onSuccess", "(List<T> data: " + data.size());
                                 List<LocationList> newDataList = (List<LocationList>) data;
                                 List<LogMPDB> allLogMPListDB = RealmManager.INSTANCE.copyFromRealm(RealmManager.getAllLogMPDB());
 
@@ -274,6 +276,7 @@ public class Exchange {
                         @Override
                         public <T> void onSuccess(List<T> data) {
                             try {
+                                Globals.writeToMLOG("INFO", "PetrovExchangeTest/startExchange/planogram/onSuccess", "(List<T> data: " + data.size());
                                 List<ImagesViewListImageList> datalist = (List<ImagesViewListImageList>) data;
                                 PhotoDownload.savePhotoToDB2(datalist);
                                 Globals.writeToMLOG("INFO", "startExchange/planogram.onSuccess", "OK: " + datalist.size());
@@ -305,6 +308,7 @@ public class Exchange {
                         public <T> void onSuccess(List<T> data) {
                             try {
                                 Log.e("AddressExchange", "START");
+                                Globals.writeToMLOG("INFO", "PetrovExchangeTest/startExchange/AddressExchange/onSuccess", "(List<T> data: " + data.size());
                                 SQL_DB.addressDao().insertData((List<AddressSDB>) data)
                                         .subscribeOn(Schedulers.io())
                                         .subscribe(new DisposableCompletableObserver() {
@@ -334,6 +338,7 @@ public class Exchange {
                         @Override
                         public <T> void onSuccess(List<T> data) {
                             try {
+                                Globals.writeToMLOG("INFO", "PetrovExchangeTest/startExchange/CustomerExchange/onSuccess", "(List<T> data: " + data.size());
                                 SQL_DB.customerDao().insertData((List<CustomerSDB>) data)
                                         .subscribeOn(Schedulers.io())
                                         .subscribe(new DisposableCompletableObserver() {
@@ -362,6 +367,7 @@ public class Exchange {
                         @Override
                         public <T> void onSuccess(List<T> data) {
                             Log.e("downloadUsersTable", "onSuccess: " + data);
+                            Globals.writeToMLOG("INFO", "PetrovExchangeTest/startExchange/UsersExchange/onSuccess", "(List<T> data: " + data.size());
                             try {
                                 SQL_DB.usersDao().insertData((List<UsersSDB>) data)
                                         .subscribeOn(Schedulers.io())
@@ -389,6 +395,7 @@ public class Exchange {
                         @Override
                         public <T> void onSuccess(List<T> data) {
                             try {
+                                Globals.writeToMLOG("INFO", "PetrovExchangeTest/startExchange/CityExchange/onSuccess", "(List<T> data: " + data.size());
                                 SQL_DB.cityDao().insertData((List<CitySDB>) data)
                                         .subscribeOn(Schedulers.io())
                                         .subscribe(new DisposableCompletableObserver() {
@@ -414,6 +421,7 @@ public class Exchange {
                         @Override
                         public <T> void onSuccess(List<T> data) {
                             try {
+                                Globals.writeToMLOG("INFO", "PetrovExchangeTest/startExchange/OblastExchange/onSuccess", "(List<T> data: " + data.size());
                                 SQL_DB.oblastDao().insertData((List<OblastSDB>) data)
                                         .subscribeOn(Schedulers.io())
                                         .subscribe(new DisposableCompletableObserver() {
@@ -445,6 +453,7 @@ public class Exchange {
                         public <T> void onSuccess(List<T> data) {
                             try {
                                 Log.e("AddressExchange", "START");
+                                Globals.writeToMLOG("INFO", "PetrovExchangeTest/startExchange/EKLExchange/onSuccess", "(List<T> data: " + data.size());
                                 SQL_DB.eklDao().insertData((List<EKL_SDB>) data)
                                         .subscribeOn(Schedulers.io())
                                         .subscribe(new DisposableCompletableObserver() {
@@ -480,6 +489,7 @@ public class Exchange {
                         @Override
                         public <T> void onSuccess(List<T> data) {
                             Log.e("MerchikTest", "data: " + data);
+                            Globals.writeToMLOG("INFO", "PetrovExchangeTest/startExchange/StandartExchange/downloadStandartTable/onSuccess", "(List<T> data: " + data.size());
                             SQL_DB.standartDao().insertData((List<StandartSDB>) data)
                                     .subscribeOn(Schedulers.io())
                                     .subscribe(new DisposableCompletableObserver() {
@@ -504,6 +514,7 @@ public class Exchange {
                         @Override
                         public <T> void onSuccess(List<T> data) {
                             Log.e("MerchikTest", "data: " + data);
+                            Globals.writeToMLOG("INFO", "PetrovExchangeTest/startExchange/StandartExchange/downloadContentTable/onSuccess", "(List<T> data: " + data.size());
 //                        List<ContentSDB> save = (List<ContentSDB>) data;
                             SQL_DB.contentDao().insertData((List<ContentSDB>) data)
                                     .subscribeOn(Schedulers.io())
@@ -750,6 +761,7 @@ public class Exchange {
                             Globals.writeToMLOG("INFO", "Exchange/SamplePhotoExchange()/onSuccess", "data: " + data);
 
                             List<SamplePhotoSDB> res = (List<SamplePhotoSDB>) data;
+                            Globals.writeToMLOG("INFO", "PetrovExchangeTest/startExchange/samplePhotoExchange/onSuccess", "Загрузка ОБРАЗЦОВ ФОТО res: " + res.size());
 
                             try {
                                 RealmManager.INSTANCE.executeTransaction(realm -> {
@@ -836,7 +848,7 @@ public class Exchange {
                     new FragmentsExchange().downloadFragmentsTable(new ExchangeInterface.ExchangeResponseInterface() {
                         @Override
                         public <T> void onSuccess(List<T> data) {
-
+                            Globals.writeToMLOG("INFO", "PetrovExchangeTest/startExchange/FragmentsExchange/onSuccess", " data.list: " + data.size());
                         }
 
                         @Override
@@ -859,6 +871,7 @@ public class Exchange {
                     new VideoViewExchange().downloadVideoViewTable(new ExchangeInterface.ExchangeResponseInterface() {
                         @Override
                         public <T> void onSuccess(List<T> data) {
+                            Globals.writeToMLOG("INFO", "PetrovExchangeTest/startExchange/VideoViewExchange/onSuccess", "(List<ViewListSDB>) data: " + data.size());
                             SQL_DB.videoViewDao().insertAll((List<ViewListSDB>) data);
                         }
 
@@ -876,6 +889,7 @@ public class Exchange {
                     new ShowcaseExchange().downloadShowcaseTable(new ExchangeInterface.ExchangeResponseInterface() {
                         @Override
                         public <T> void onSuccess(List<T> data) {
+                            Globals.writeToMLOG("INFO", "PetrovExchangeTest/startExchange/ShowcaseExchange/onSuccess", "(data: " + data.size());
                             SQL_DB.showcaseDao().insertAll((List<ShowcaseSDB>) data)
                                     .subscribeOn(Schedulers.io())
                                     .subscribe(new DisposableCompletableObserver() {
@@ -1962,6 +1976,7 @@ public class Exchange {
             @Override
             public void onResponse(Call<ChatResponse> call, Response<ChatResponse> response) {
                 Log.e("chatExchange", "response: " + response);
+                Globals.writeToMLOG("INFO", "PetrovExchangeTest/startExchange/chatExchange/onResponse", "(response.body().list: " + response.body().list.size());
                 SQL_DB.chatDao().insertData(response.body().list)
                         .subscribeOn(Schedulers.io())
                         .subscribe(new DisposableCompletableObserver() {
@@ -2439,6 +2454,7 @@ public class Exchange {
                 Log.e("test", "test" + response);
                 try {
                     Globals.writeToMLOG("INFO", "downloadAchievements/onResponse", "response: " + response.body().list.size());
+                    Globals.writeToMLOG("INFO", "PetrovExchangeTest/startExchange/downloadAchievements/onSuccess", " response: " + response.body().list.size());
 
                     SQL_DB.achievementsDao().insertAllCompletable(response.body().list)
                             .subscribeOn(Schedulers.io())
@@ -2488,6 +2504,7 @@ public class Exchange {
 
                 try {
                     Globals.writeToMLOG("INFO", "downloadVoteTable/onResponse", "response: " + response.body().list.size());
+                    Globals.writeToMLOG("INFO", "PetrovExchangeTest/startExchange/downloadVoteTable/onSuccess", " response: " + response.body().list.size());
 
                     SQL_DB.votesDao().insertAllCompletable(response.body().list)
                             .subscribeOn(Schedulers.io())
@@ -2583,6 +2600,7 @@ public class Exchange {
                 Log.e("test", "test" + response);
                 try {
                     Globals.writeToMLOG("INFO", "downloadArticleTable/onResponse", "response: " + response.body().list.size());
+                    Globals.writeToMLOG("INFO", "PetrovExchangeTest/startExchange/downloadArticleTable/onSuccess", " response: " + response.body().list.size());
                     SQL_DB.articleDao().insertAllCompletable(response.body().list)
                             .subscribeOn(Schedulers.io())
                             .subscribe(new DisposableCompletableObserver() {
