@@ -49,10 +49,12 @@ import ua.com.merchik.merchik.data.OptionMassageType;
 import ua.com.merchik.merchik.data.OptionsButtons;
 import ua.com.merchik.merchik.data.RealmModels.AdditionalRequirementsDB;
 import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
+import ua.com.merchik.merchik.data.RealmModels.ReportPrepareDB;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsRealm;
+import ua.com.merchik.merchik.database.realm.tables.ReportPrepareRealm;
 import ua.com.merchik.merchik.database.realm.tables.StackPhotoRealm;
 import ua.com.merchik.merchik.database.realm.tables.WpDataRealm;
 import ua.com.merchik.merchik.dialogs.DialogData;
@@ -1078,14 +1080,28 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
             ) min = "1";
             try {
                 if (option.getOptionId().equals("157277")) {
+                    List<ReportPrepareDB> reportPrepare = RealmManager.INSTANCE.copyFromRealm(ReportPrepareRealm.getReportPrepareByDad2(dad2));
                     List<AdditionalRequirementsDB> ad = AdditionalRequirementsRealm.getDocumentAdditionalRequirements(dataDB, true, 157278, null, null, null);
+                    String[] tovIds = new String[ad.size()];
+                    for (int i = 0; i < ad.size(); i++) {
+                        tovIds[i] = ad.get(i).getTovarId();
+                    }
+                    Arrays.sort(tovIds);
+                    int count = 0;
+                    for (ReportPrepareDB item : reportPrepare) {
+                        String akciya = item.akciyaId;
+                        if (akciya == null || akciya.equals("")) continue;
+
+                        if (Arrays.asList(tovIds).contains(item.getTovarId())) {
+                            count++;
+                        }
+                    }
+
                     if (ad != null && ad.size() > 0) {
-                        min = String.valueOf(ad.size());
+                        min = String.valueOf(count);
                     }
                 }
-            } catch (Exception e) {
-
-            }
+            } catch (Exception e) {}
         }
 
         int maxPhotos = Integer.parseInt(min);
