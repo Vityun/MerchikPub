@@ -121,7 +121,10 @@ public class OptionButtAchievements<T> extends OptionControl {
         dialog.setClose(dialog::dismiss);
         dialog.setOkRv("Нове досягнення", () -> {
             DialogAchievement dialogAchievement = new DialogAchievement(context, wpDataDB);
+            dialogAchievement.setOption(optionDB);
             dialogAchievement.setTitle("Створення нового Досягнення");
+            dialogAchievement.buttonPhotoTo();
+            dialogAchievement.buttonPhotoAfter();
             dialogAchievement.show();
         });
         dialog.show();

@@ -181,17 +181,46 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/photo_to" />
 
+        <ImageView
+            android:id="@+id/photoTo"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="8dp"
+            android:visibility="gone"
+            app:layout_constraintBottom_toTopOf="@+id/comment"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/offer_from_the_client"
+            app:layout_constraintVertical_bias="0.0"
+            app:srcCompat="@mipmap/merchik"
+            tools:visibility="gone" />
+
+        <ImageView
+            android:id="@+id/photoAfter"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:layout_marginTop="8dp"
+            android:visibility="gone"
+            app:layout_constraintBottom_toTopOf="@+id/comment"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/photoTo"
+            app:layout_constraintVertical_bias="0.0"
+            app:srcCompat="@mipmap/merchik"
+            tools:visibility="gone" />
+
         <EditText
             android:id="@+id/comment"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
-            android:layout_marginTop="8dp"
             android:layout_marginEnd="16dp"
             android:hint="Внесіть коментар до досягнення"
             app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/photo_after" />
+            tools:layout_editor_absoluteY="333dp" />
 
         <Button
             android:id="@+id/save"
@@ -209,4 +238,5 @@
         <!--        app:layout_constrainedHeight="true"-->
 
     </androidx.constraintlayout.widget.ConstraintLayout>
+
 </androidx.constraintlayout.widget.ConstraintLayout>

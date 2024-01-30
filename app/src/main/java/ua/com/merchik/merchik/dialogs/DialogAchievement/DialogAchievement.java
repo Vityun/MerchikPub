@@ -1,7 +1,9 @@
 package ua.com.merchik.merchik.dialogs.DialogAchievement;
 
 import static ua.com.merchik.merchik.Globals.HELPDESK_PHONE_NUMBER;
+import static ua.com.merchik.merchik.MakePhoto.MakePhoto.photoNum;
 
+import android.app.Activity;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.Intent;
@@ -15,14 +17,21 @@ import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.util.Arrays;
+
 import ua.com.merchik.merchik.Globals;
+import ua.com.merchik.merchik.MakePhoto.MakePhoto;
 import ua.com.merchik.merchik.R;
+import ua.com.merchik.merchik.WorkPlan;
 import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteHintsDB;
 import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteObjects.SiteObjectsDB;
+import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
+import ua.com.merchik.merchik.data.WPDataObj;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.dialogs.DialogVideo;
@@ -37,6 +46,8 @@ public class DialogAchievement {
     private TextView title, client, address, visit, theme, offerFromClient;
     private EditText comment;
     private Button photoTo, photoAfter, save;
+    private ImageView photoToIV, photoAfterIV;
+    private OptionsDB optionDB;
 
     public DialogAchievement(Context context, WpDataDB wpDataDB) {
         this.context = context;
@@ -66,6 +77,9 @@ public class DialogAchievement {
             photoTo = dialog.findViewById(R.id.photo_to);
             photoAfter = dialog.findViewById(R.id.photo_after);
             save = dialog.findViewById(R.id.save);
+
+            photoToIV = dialog.findViewById(R.id.photoTo);
+            photoAfterIV = dialog.findViewById(R.id.photoAfter);
 
             putTextData();
 
@@ -233,6 +247,9 @@ public class DialogAchievement {
         Log.e("setImgBtnCall", "and here");
     }
 
+    public void setOption(OptionsDB optionDB) {
+        this.optionDB = optionDB;
+    }
 
     public void putTextData() {
         client.setText(Html.fromHtml("<b>Кліент: </b> " + wpDataDB.getClient_txt() + ""));
@@ -241,5 +258,43 @@ public class DialogAchievement {
         theme.setText(Html.fromHtml("<b>Тема: </b> " + wpDataDB.getTheme_id() + ""));
         offerFromClient.setText(Html.fromHtml("<b>Пропозиція від клієнта: </b> " + "" + ""));
     }
+
+    public void buttonPhotoTo(){
+        photoTo.setOnClickListener(v->{
+            try {
+                WorkPlan workPlan = new WorkPlan();
+                WPDataObj wpDataObj = workPlan.getKPS(wpDataDB.getId());
+                wpDataObj.setPhotoType("0");
+
+                MakePhoto makePhoto = new MakePhoto();
+                makePhoto.pressedMakePhotoOldStyle((Activity) context, wpDataObj, wpDataDB, optionDB);
+
+                photoTo.setVisibility(View.GONE);
+                photoToIV.setVisibility(View.VISIBLE);
+                photoToIV.setImageURI(Uri.parse(photoNum));
+            }catch (Exception e){
+                Globals.writeToMLOG("ERROR", "buttonPhotoTo", "Exception e: " + Arrays.toString(e.getStackTrace()));
+            }
+        });
+    }
+    public void buttonPhotoAfter(){
+        photoTo.setOnClickListener(v->{
+            try {
+                WorkPlan workPlan = new WorkPlan();
+                WPDataObj wpDataObj = workPlan.getKPS(wpDataDB.getId());
+                wpDataObj.setPhotoType("0");
+
+                MakePhoto makePhoto = new MakePhoto();
+                makePhoto.pressedMakePhotoOldStyle((Activity) context, wpDataObj, wpDataDB, optionDB);
+
+                photoTo.setVisibility(View.GONE);
+                photoToIV.setVisibility(View.VISIBLE);
+                photoToIV.setImageURI(Uri.parse(photoNum));
+            }catch (Exception e){
+                Globals.writeToMLOG("ERROR", "buttonPhotoTo", "Exception e: " + Arrays.toString(e.getStackTrace()));
+            }
+        });
+    }
+
 
 }
