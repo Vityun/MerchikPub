@@ -6,11 +6,18 @@ import android.content.Context;
 import android.util.Log;
 import android.widget.Toast;
 
+import java.util.Collections;
+import java.util.Date;
+
 import ua.com.merchik.merchik.Clock;
+import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.Database.Room.UsersSDB;
+import ua.com.merchik.merchik.data.RealmModels.LogDB;
 import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
+import ua.com.merchik.merchik.database.realm.RealmManager;
+import ua.com.merchik.merchik.database.realm.tables.LogRealm;
 import ua.com.merchik.merchik.dialogs.DialogData;
 
 /**
@@ -74,46 +81,99 @@ public class UnlockCode {
 
 
     public void showDialogUnlockCode(Context context, WpDataDB wp, OptionsDB option, UnlockCodeMode mode, Clicks.clickStatusMsg click) {
-        DialogData dialog = new DialogData(context);
-        dialog.setTitle("Внесіть пароль!");
-        dialog.setText("Для продовження внесіть пароль: ");
-        dialog.setClose(()->{
-            click.onFailure("");
-            dialog.dismiss();
-        });
-        dialog.setOperation(DialogData.Operations.TEXT, "", null, () -> {
-        });
-        dialog.setOkNotClose("Ok", () -> {
-            String res = dialog.getOperationResult();
 
-            long date = wp.getDt().getTime() / 1000;
-            UsersSDB user = SQL_DB.usersDao().getUserById(wp.getUser_id());
-            long dad2 = wp.getCode_dad2();
+        // Pika подготовка данных для работы с кодом разблокировки
+        int tema_id = 1285; // код темы для лога для сохранения кода разблокировки
+        Date wpDate = wp.getDt(); // дата работ из плана работ
+        long date = wpDate.getTime() / 1000; // дата работ из плана работ в Юниксе
+        long dad2 = wp.getCode_dad2(); // код ДАД2 из плана работ
+        String dad2str=String.valueOf(dad2); // код ДАД2 из плана работ в виде строки
+        int addr_id = wp.getAddr_id(); // код адреса из плана работ
+        String client_id = wp.getClient_id(); // код клиента из плана работ
+        int user_id = wp.getUser_id(); // код сотрудника из плана работ
+        UsersSDB user = SQL_DB.usersDao().getUserById(user_id); // сотрудник (объект класса)
+        String opt_id = option.getOptionId(); // код опции в виде строки
+        String s = "";
 
-            Log.e("UnlockCode", "date: " + Clock.getHumanTimeYYYYMMDD(date));
-            Log.e("UnlockCode", "user: " + user.id);
-            Log.e("UnlockCode", "dad2: " + dad2);
-            Log.e("UnlockCode", "option: " + option.getOptionId());
+        // Pika Формирую строку для записи в поле "КодОбъекта" лога
+        int len = opt_id.length();
+        String kodObstr = "1"+opt_id.substring(len-3,len)+dad2str.substring(1,5)+dad2str.substring(6,7)+dad2str.substring(8,13)+dad2str.substring(14,19);
+        long kodOb = Long.valueOf(kodObstr);
 
-            String unlockCode = new UnlockCode().unlockCode(date, user, dad2, option, mode);
+        // Pika Получаю из таблицы лога приложения инфо или вносился код уже сегодня для данных параметров
+        LogDB logDBRec = LogRealm.getLogDbByKodOb(kodOb);
+        if (logDBRec!=null) { s = logDBRec.getComments(); }
+        String passAlreadyExists = ""; // строка с кодом разблокировки 4 симв
+        if (!s.isEmpty()) {
+            len=s.length();
+            passAlreadyExists = s.substring(len-4,len);
+        }
+
+        // Pika Если код разблокировки еще не вносился, то вызываю диалог его внесения и сохраняю потом в лог приложения
+        // а если вносился, то пропускаю диалог внесения кода разблокировки
+        if (passAlreadyExists=="") {
+
+            DialogData dialog = new DialogData(context);
+            dialog.setTitle("Внесіть пароль!");
+            dialog.setText("Для продовження внесіть пароль: ");
+            dialog.setClose(()->{
+                click.onFailure("");
+                dialog.dismiss();
+            });
+            dialog.setOperation(DialogData.Operations.TEXT, "", null, () -> {
+            });
+            dialog.setOkNotClose("Ok", () -> {
+                String res = dialog.getOperationResult();
+
+//            long date = wp.getDt().getTime() / 1000;
+//            UsersSDB user = SQL_DB.usersDao().getUserById(wp.getUser_id());
+//            long dad2 = wp.getCode_dad2();
+
+                Log.e("UnlockCode", "date: " + Clock.getHumanTimeYYYYMMDD(date));
+                Log.e("UnlockCode", "user: " + user.id);
+                Log.e("UnlockCode", "dad2: " + dad2);
+                Log.e("UnlockCode", "option: " + option.getOptionId());
+
+                String unlockCode = new UnlockCode().unlockCode(date, user, dad2, option, mode);
 
 //            String unlockCode = new UnlockCode().unlockCode(date, user, dad2, option, CODE_DAD_2_AND_OPTION);
 //            String unlockCode2 = new UnlockCode().unlockCode(date, user, dad2, option, DATE_AND_USER);
 //
-            Log.e("UnlockCode", "unlockCode: " + unlockCode);
+                Log.e("UnlockCode", "unlockCode: " + unlockCode);
 //            Log.e("UnlockCode", "unlockCode2: " + unlockCode2);
 
-            if (res.equals(unlockCode)) {
-                Toast.makeText(context, "Код прийнято", Toast.LENGTH_LONG).show();
-                click.onSuccess("");
-                dialog.dismiss();
-            } else {
-                Toast.makeText(context, "Код не вірний!", Toast.LENGTH_LONG).show();
-                click.onFailure("");
-                dialog.dismiss();
-            }
-        });
-        dialog.show();
+                if (res.equals(unlockCode)) {
+                    // Pika сохраняю код в лог приложения
+                    RealmManager.setRowToLog(Collections.singletonList(
+                            new LogDB(
+                                    RealmManager.getLastIdLogDB() + 1,
+                                    System.currentTimeMillis() / 1000,
+                                    "використання коду розблокування "+res,
+                                    tema_id,
+                                    client_id,
+                                    addr_id,
+                                    kodOb,
+                                    user_id,
+                                    null,
+                                    Globals.session,
+                                    String.valueOf(wpDate))));
+
+                    Toast.makeText(context, "Код прийнято", Toast.LENGTH_LONG).show();
+                    click.onSuccess("");
+                    dialog.dismiss();
+                } else {
+                    Toast.makeText(context, "Код не вірний!", Toast.LENGTH_LONG).show();
+                    click.onFailure("");
+                    dialog.dismiss();
+                }
+            });
+            dialog.show();
+        } else {
+            // Pika Если в логе есть за сегодня этот код разблокировки, то тут делаю вид, что успешно внесен правильный код разблокировки
+            click.onSuccess("");
+
+        }
+
     }
 
 }

@@ -33,9 +33,12 @@ import io.realm.RealmResults;
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity;
 import ua.com.merchik.merchik.Activities.WorkPlanActivity.WPDataActivity;
 import ua.com.merchik.merchik.Filter.MyFilter;
+import ua.com.merchik.merchik.Global.UnlockCode;
+import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.Data;
 import ua.com.merchik.merchik.data.Database.Room.AddressSDB;
 import ua.com.merchik.merchik.data.Database.Room.CustomerSDB;
+import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
 import ua.com.merchik.merchik.data.RealmModels.TradeMarkDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
@@ -414,11 +417,35 @@ public class RecycleViewWPAdapter extends RecyclerView.Adapter<RecycleViewWPAdap
                     });
                     dialogQuestionOne.show();
                 }else {
+//                    // Pika test
+//                    Sandbox();
                     openReportPrepare(wpDataDB, otchetId);
                 }
             });
             dialog.show();
         }
+
+        // Pika (don't use)
+        public void Sandbox() {
+
+            UnlockCode uc = new UnlockCode();
+            WpDataDB wp1=new WpDataDB();
+            OptionsDB op1 = new OptionsDB();
+            UnlockCode.UnlockCodeMode mode1 = UnlockCode.UnlockCodeMode.CODE_DAD_2_AND_OPTION;
+            Clicks.clickStatusMsg click1 = null;
+            Date dt = new Date(24,00,22);
+            Long dad2 = new Long("1220124022607054798");
+
+            wp1.setDt(dt);
+            wp1.setCode_dad2(dad2);
+            wp1.setAddr_id(22607);
+            wp1.setClient_id("9382");
+            wp1.setUser_id(240045);
+            op1.setOptionId("139576");
+
+            uc.showDialogUnlockCode(mContext,wp1,op1,mode1,click1);
+        }
+
 
         private void openReportPrepare(WpDataDB wp, long otchetId) {
             try {
