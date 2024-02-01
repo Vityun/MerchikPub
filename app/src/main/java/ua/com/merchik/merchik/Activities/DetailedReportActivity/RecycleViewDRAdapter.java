@@ -1062,6 +1062,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                     || option.getOptionId().equals("164355")
                     || option.getOptionId().equals("151139")
                     || option.getOptionId().equals("164351")
+                    || option.getOptionControlId().equals("164351")
             ) min = "1";
             try {
                 if (option.getOptionId().equals("157277")) {
