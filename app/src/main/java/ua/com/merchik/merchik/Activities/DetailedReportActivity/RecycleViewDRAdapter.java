@@ -1,5 +1,8 @@
 package ua.com.merchik.merchik.Activities.DetailedReportActivity;
 
+import static ua.com.merchik.merchik.Options.Options.NNKMode.CHECK_CLICK;
+import static ua.com.merchik.merchik.Options.Options.NNKMode.NULL;
+import static ua.com.merchik.merchik.data.OptionMassageType.Type.DIALOG;
 import static ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsRealm.AdditionalRequirementsModENUM.HIDE_FOR_USER;
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
@@ -35,6 +38,7 @@ import java.util.List;
 import ua.com.merchik.merchik.Activities.PhotoLogActivity.PhotoLogActivity;
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
+import ua.com.merchik.merchik.Options.Controls.OptionControlAvailabilityControlPhotoRemainingGoods;
 import ua.com.merchik.merchik.Options.Controls.OptionControlReclamationAnswer;
 import ua.com.merchik.merchik.Options.Controls.OptionControlTaskAnswer;
 import ua.com.merchik.merchik.Options.OptionControl;
@@ -528,7 +532,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                         case 135328:    // Рекламация
                             OptionMassageType type = new OptionMassageType();
                             type.type = OptionMassageType.Type.STRING;
-                            OptionControlReclamationAnswer<?> optionControlReclamationAnswer = new OptionControlReclamationAnswer<>(itemView.getContext(), dataDB, optionsButtons, type, Options.NNKMode.NULL, null);
+                            OptionControlReclamationAnswer<?> optionControlReclamationAnswer = new OptionControlReclamationAnswer<>(itemView.getContext(), dataDB, optionsButtons, type, NULL, null);
 
                             textInteger.setText("" + optionControlReclamationAnswer.problemReclamationCount());
                             break;
@@ -536,7 +540,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                         case 135327:    // Задачи
                             type = new OptionMassageType();
                             type.type = OptionMassageType.Type.STRING;
-                            OptionControlTaskAnswer<?> optionControlTask = new OptionControlTaskAnswer<>(itemView.getContext(), dataDB, optionsButtons, type, Options.NNKMode.NULL, null);
+                            OptionControlTaskAnswer<?> optionControlTask = new OptionControlTaskAnswer<>(itemView.getContext(), dataDB, optionsButtons, type, NULL, null);
 
                             textInteger.setText("" + optionControlTask.problemTaskCount());
                             break;
@@ -587,7 +591,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                                             (WpDataDB) dataDB,
                                             butt.get(getBindingAdapterPosition()),
                                             0);
-                                    setCheck(POS, optionsButtons, Options.NNKMode.NULL);
+                                    setCheck(POS, optionsButtons, NULL);
                                 }
                             } catch (Exception e) {
 
@@ -666,7 +670,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                 // Нажатие на СИГНАЛ Кнопки Опции.
                 setCheck.setOnClickListener(v -> {
                     Toast.makeText(v.getContext(), "Проверка статуса данной опции", Toast.LENGTH_SHORT).show();
-                    setCheck(POS, optionsButtons, Options.NNKMode.CHECK_CLICK);
+                    setCheck(POS, optionsButtons, CHECK_CLICK);
                 });
             } catch (Exception e) {
                 Globals.writeToMLOG("INFO", "RecycleViewDRAdapter/bind", "Exception e: " + e);
@@ -929,35 +933,14 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
             switch (option.getOptionId()) {
                 case "135158":  // - 4  - Фото остатков товаров
                     ss.append(createLinkedStringGal(mContext, "Завантажити фото з галереї", photoType, () -> {
-                        // В данном случае надо открыть галерею и выбрать фото остатков
-//                        WpDataDB wp = (WpDataDB) dataDB;
-//                        new MakePhotoFromGalery().openGalleryToPeakPhoto(mContext.getApplicationContext(), wp);
+//                        click.click();
 
-/*                        if (Build.VERSION.SDK_INT == 28) {
-                            if (internetStatus == 1) {
-                                WpDataDB wp = (WpDataDB) dataDB;
-                                String date = Clock.getHumanTimeSecPattern(wp.getDt().getTime() / 1000, "yyyy-MM-dd");
+                        OptionMassageType newOptionType = new OptionMassageType();
+                        newOptionType.type = DIALOG;
 
-                                String link = String.format("/merchik.com.ua/mobile.php?mod=images_prepare&act=prepare_image&date=%s&client_id=%s&addr_id=%s&img_type_id=4&theme_id=%s&code_dad2=%s&option_control_id=1470&menu_close_only=1"
-                                        , date, wp.getClient_id(), wp.getAddr_id(), wp.getTheme_id(), wp.getCode_dad2());
-//                        String res = Globals.PrepareLinkedTextForMVSfromHTML(link);
-
-//                        String menuItem164format = "mobile.php" + menuItem164.getUrl();
-
-                                AppUsersDB appUser = AppUserRealm.getAppUserById(userId);
-                                String hash = String.format("%s%s%s", appUser.getUserId(), appUser.getPassword(), "AvgrgsYihSHp6Ok9yQXfSHp6Ok9nXdXr3OSHp6Ok9UPBTzTjrF20Nsz3");
-                                hash = Globals.getSha1Hex(hash);
-
-                                link = link.replace("&", "**");
-
-                                String format = String.format("https://merchik.com.ua/sa.php?&u=%s&s=%s&l=/%s", userId, hash, link);
-
-                                Intent site = new Intent(Intent.ACTION_VIEW, Uri.parse(format));
-                                context.startActivity(site);
-                            }
-                        } else {*/
-                        click.click();
-                        /*                        }*/
+                        OptionControlAvailabilityControlPhotoRemainingGoods<?> optionControlAvailabilityControlPhotoRemainingGoods =
+                                new OptionControlAvailabilityControlPhotoRemainingGoods<>(context, (WpDataDB) dataDB, option, newOptionType, Options.NNKMode.CHECK, null);
+                        optionControlAvailabilityControlPhotoRemainingGoods.showOptionMassage("");
                     }));
 
                     ss.append("\n\n");
