@@ -162,6 +162,8 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                 Log.e("bindRPA", "buttText: " + buttText);
                 Log.e("bindRPA", "optionsButtons.getOptionId(): " + optionsButtons.getOptionId());
                 Log.e("bindRPA", "optionsButtons.getOptionControlId(): " + optionsButtons.getOptionControlId());
+                Log.e("bindRPA", "optionsButtons.getOptionBlock1(): " + optionsButtons.getOptionBlock1());
+                Log.e("bindRPA", "optionsButtons.getOptionBlock2(): " + optionsButtons.getOptionBlock2());
                 Log.e("bindRPA", "optionsButtons.getIsSignal(): " + optionsButtons.getIsSignal());
                 Log.e("bindRPA", "optionsButtons.getBlockPns(): " + optionsButtons.getBlockPns());
                 Log.e("bindRPA", "optionsButtons.getAmountMin(): " + optionsButtons.getAmountMin());

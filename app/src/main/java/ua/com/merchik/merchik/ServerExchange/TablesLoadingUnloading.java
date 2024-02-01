@@ -370,7 +370,7 @@ public class TablesLoadingUnloading {
                         }
 
                         if (response.body().getState()) {
-                            Globals.writeToMLOG("INFO", "PetrovExchangeTest/startExchange/downloadWPData/onSuccess", "(response.body().getList(): " + response.body().getList().size());
+//                            Globals.writeToMLOG("INFO", "PetrovExchangeTest/startExchange/downloadWPData/onSuccess", "(response.body().getList(): " + response.body().getList().size());
                             if (RealmManager.setWpData(response.body().getList())) {
                                 if (pg != null)
                                     if (pg.isShowing())
@@ -613,7 +613,7 @@ public class TablesLoadingUnloading {
 
                     if (response.body().getList() != null) {
                         Log.e("SERVER_REALM_DB_UPDATE", "===================================.Options.SIZE: " + response.body().getList().size());
-                        Globals.writeToMLOG("INFO", "PetrovExchangeTest/startExchange/downloadOptions/onSuccess", "(response.body().getList(): " + response.body().getList().size());
+//                        Globals.writeToMLOG("INFO", "PetrovExchangeTest/startExchange/downloadOptions/onSuccess", "(response.body().getList(): " + response.body().getList().size());
                     } else {
                         Log.e("SERVER_REALM_DB_UPDATE", "===================================.Options.SIZE: NuLL");
                     }
@@ -721,7 +721,7 @@ public class TablesLoadingUnloading {
                         Globals.writeToMLOG("INFO", "downloadReportPrepare/onResponse", "response.body().getState(): " + response.body().getState());
 
                         if (response.body().getList() != null) {
-                            Globals.writeToMLOG("INFO", "PetrovExchangeTest/startExchange/downloadReportPrepare/onSuccess", "(response.body().getList(): " + response.body().getList().size());
+//                            Globals.writeToMLOG("INFO", "PetrovExchangeTest/startExchange/downloadReportPrepare/onSuccess", "(response.body().getList(): " + response.body().getList().size());
                             Log.e("SERVER_REALM_DB_UPDATE", "===================================.ReportPrepare.SIZE: " + response.body().getList().size());
                             Globals.writeToMLOG("INFO", "downloadReportPrepare/onResponse", "response.body().getList().size(): " + response.body().getList().size());
                         } else {
@@ -1133,7 +1133,7 @@ public class TablesLoadingUnloading {
                             }
 
                             if (list != null) {
-                                Globals.writeToMLOG("INFO", "PetrovExchangeTest/startExchange/downloadTovarTable/onSuccess", "list.size(): " + list.size());
+//                                Globals.writeToMLOG("INFO", "PetrovExchangeTest/startExchange/downloadTovarTable/onSuccess", "list.size(): " + list.size());
 
                                 Log.e("SERVER_REALM_DB_UPDATE", "===================================.TovarTable.SIZE: " + list.size());
                             } else {
@@ -1229,7 +1229,7 @@ public class TablesLoadingUnloading {
 
                     if (resp.state) {
                         if (resp.list.size() > 0) {
-                            Globals.writeToMLOG("INFO", "PetrovExchangeTest/startExchange/downloadTovarGroupTable/onSuccess", "resp.list.size(): " + resp.list.size());
+//                            Globals.writeToMLOG("INFO", "PetrovExchangeTest/startExchange/downloadTovarGroupTable/onSuccess", "resp.list.size(): " + resp.list.size());
 
                             exchange.onSuccess(resp.list);
                         } else {
@@ -1271,7 +1271,7 @@ public class TablesLoadingUnloading {
 
 
                         if (response.body().getList() != null) {
-                            Globals.writeToMLOG("INFO", "PetrovExchangeTest/startExchange/downloadTradeMarksTable/onSuccess", "response.body().getList(): " + response.body().getList().size());
+//                            Globals.writeToMLOG("INFO", "PetrovExchangeTest/startExchange/downloadTradeMarksTable/onSuccess", "response.body().getList(): " + response.body().getList().size());
 
                             Log.e("SERVER_REALM_DB_UPDATE", "===================================.TradeMarksTable.SIZE: " + response.body().getList().size());
                         } else {
@@ -2464,7 +2464,7 @@ public class TablesLoadingUnloading {
                     try {
                         if (response.isSuccessful()){
                             if (response.body() != null && response.body().getState() && response.body().getObjectList() != null && response.body().getObjectList().size() > 0) {
-                                Globals.writeToMLOG("INFO", "PetrovExchangeTest/startExchange/downloadSiteHints/onSuccess", "response.body().getObjectList().size(): " + response.body().getObjectList().size());
+//                                Globals.writeToMLOG("INFO", "PetrovExchangeTest/startExchange/downloadSiteHints/onSuccess", "response.body().getObjectList().size(): " + response.body().getObjectList().size());
                                 saveSiteObjectsDB(response.body().getObjectList());
                             }
                         }
@@ -2536,7 +2536,7 @@ public class TablesLoadingUnloading {
                         if (response.body() != null) {
                             if (response.body().getState() != null && response.body().getState()) {
                                 if (response.body().getList() != null && response.body().getList().size() > 0) {
-                                    Globals.writeToMLOG("INFO", "PetrovExchangeTest/startExchange/downloadVideoLessons/onSuccess", "response.body().getList().size(): " + response.body().getList().size());
+//                                    Globals.writeToMLOG("INFO", "PetrovExchangeTest/startExchange/downloadVideoLessons/onSuccess", "response.body().getList().size(): " + response.body().getList().size());
                                     saveSiteHintsDB(response.body().getList());
                                 }
                             }
