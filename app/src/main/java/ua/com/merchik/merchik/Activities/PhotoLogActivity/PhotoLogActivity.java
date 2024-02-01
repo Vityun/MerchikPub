@@ -1,7 +1,9 @@
 package ua.com.merchik.merchik.Activities.PhotoLogActivity;
 
 import static ua.com.merchik.merchik.MakePhoto.MakePhoto.CAMERA_REQUEST_TAKE_PHOTO;
+import static ua.com.merchik.merchik.database.realm.tables.StackPhotoRealm.getPhotosByDAD2;
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
+import static ua.com.merchik.merchik.dialogs.DialogAchievement.DialogAchievement.clickVoidAchievement;
 
 import android.content.Context;
 import android.content.Intent;
@@ -138,7 +140,7 @@ public class PhotoLogActivity extends toolbar_menus {
         PhotoLogMode photoLogMode;
 
         try {
-            if (getChoice()) {
+            if (getChoice() && !this.getIntent().getBooleanExtra("achievements", false)) {
                 photoLogMode = PhotoLogMode.CHOICE;
                 stackPhoto = StackPhotoRealm.getTARFilterPhoto(
                         this.getIntent().getIntExtra("address", 0),
@@ -174,9 +176,9 @@ public class PhotoLogActivity extends toolbar_menus {
                 }
             } else if (this.getIntent().getBooleanExtra("SamplePhoto", false)) {
 
-                if (this.getIntent().getBooleanExtra("SamplePhotoActivity", false)){
+                if (this.getIntent().getBooleanExtra("SamplePhotoActivity", false)) {
                     photoLogMode = PhotoLogMode.SAMPLE_PHOTO_ACTIVITY;   // Тип откуда открыли Журнал Фото
-                }else {
+                } else {
                     photoLogMode = PhotoLogMode.SAMPLE_PHOTO;   // Тип откуда открыли Журнал Фото
                 }
 
@@ -213,6 +215,12 @@ public class PhotoLogActivity extends toolbar_menus {
 
                 Globals.writeToMLOG("INFO", "PhotoLogActivity/setRecycler/SamplePhoto", "stackPhoto size: " + stackPhoto.size());
 
+            } else if (this.getIntent().getBooleanExtra("achievements", false)) {
+                photoLogMode = PhotoLogMode.ACHIEVEMENTS;
+                long dad2 = this.getIntent().getLongExtra("dad2", 0);
+                int photoType = this.getIntent().getIntExtra("photoType", 0);
+
+                stackPhoto = getPhotosByDAD2(dad2, photoType);
             } else {
                 photoLogMode = PhotoLogMode.BASE;
                 stackPhoto = RealmManager.getStackPhoto();
@@ -233,9 +241,17 @@ public class PhotoLogActivity extends toolbar_menus {
                     // TODO тут есть косяк, у мерчиков по какой-то причине вылетало приложение. resultCode == 101 не срабатывал там где должен был. Вообще это лучше по другому делать.
                     switch (finalPhotoLogMode) {
                         case SAMPLE_PHOTO:
-                            if (stackPhoto != null && stackPhoto.size() == 1){
+                            if (stackPhoto != null && stackPhoto.size() == 1) {
                                 finish();
                             }
+                            break;
+
+                        case ACHIEVEMENTS:
+                            if (clickVoidAchievement != null) {
+                                Toast.makeText(getApplicationContext(), "Натиснули на якусь фотку", Toast.LENGTH_LONG).show();
+                                clickVoidAchievement.click(data);
+                            }
+                            finish();
                             break;
 
                         default:
@@ -263,7 +279,7 @@ public class PhotoLogActivity extends toolbar_menus {
                             finish();
                             break;
                     }
-                }catch (Exception e){
+                } catch (Exception e) {
                     Globals.writeToMLOG("ERROR", "PhotoLogActivity/PhotoLogAdapter/click", "Exeption: " + e);
                     DialogData dialogData = new DialogData(getApplicationContext());
                     dialogData.setTitle("Произошла ошибка");

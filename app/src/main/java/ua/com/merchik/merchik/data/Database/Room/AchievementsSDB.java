@@ -14,9 +14,8 @@ import com.google.gson.annotations.SerializedName;
 @Entity(tableName = "achievements", indices = {@Index(value = {"serverId"}, unique = true)})
 public class AchievementsSDB {
 
-    @PrimaryKey
+    @PrimaryKey(autoGenerate = true)
     @ColumnInfo(name = "id")
-    @NonNull
     public Integer id;
 
     @SerializedName("ID")

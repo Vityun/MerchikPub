@@ -57,10 +57,12 @@ public class OptionButtAchievements<T> extends OptionControl {
         if (document instanceof WpDataDB) {
             this.wpDataDB = (WpDataDB) document;
             dateFrom = Clock.getDatePeriodLong(wpDataDB.getDt().getTime(), -41) / 1000;   // -41 потому что оно берет начало дня
-            dateTo = wpDataDB.getDt().getTime() / 1000;
+            dateTo = Clock.getDatePeriodLong(wpDataDB.getDt().getTime(), 1) / 1000;
             clientId = wpDataDB.getClient_id();
             addressId = wpDataDB.getAddr_id();
         }
+
+        List<AchievementsSDB> test = SQL_DB.achievementsDao().getAll();
 
         achievements = SQL_DB.achievementsDao().getAchievementsList(dateFrom, dateTo, clientId, addressId, null);
     }

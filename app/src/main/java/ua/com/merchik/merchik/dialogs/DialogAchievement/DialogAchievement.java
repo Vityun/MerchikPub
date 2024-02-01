@@ -1,9 +1,8 @@
 package ua.com.merchik.merchik.dialogs.DialogAchievement;
 
 import static ua.com.merchik.merchik.Globals.HELPDESK_PHONE_NUMBER;
-import static ua.com.merchik.merchik.MakePhoto.MakePhoto.photoNum;
+import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
-import android.app.Activity;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.Intent;
@@ -22,25 +21,31 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.Arrays;
+import java.util.Collections;
 
+import ua.com.merchik.merchik.Activities.PhotoLogActivity.PhotoLogActivity;
 import ua.com.merchik.merchik.Globals;
-import ua.com.merchik.merchik.MakePhoto.MakePhoto;
 import ua.com.merchik.merchik.R;
-import ua.com.merchik.merchik.WorkPlan;
+import ua.com.merchik.merchik.ViewHolders.Clicks;
+import ua.com.merchik.merchik.data.Database.Room.AchievementsSDB;
 import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteHintsDB;
 import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteObjects.SiteObjectsDB;
 import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
+import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
-import ua.com.merchik.merchik.data.WPDataObj;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.dialogs.DialogData;
+import ua.com.merchik.merchik.dialogs.DialogFullPhoto;
 import ua.com.merchik.merchik.dialogs.DialogVideo;
 
 public class DialogAchievement {
 
+    public static Clicks.click clickVoidAchievement;
+
     private Dialog dialog;
     private Context context;
     private WpDataDB wpDataDB;
+    private StackPhotoDB stackPhotoDBTo, stackPhotoDBAfter;
 
     private ImageButton close, help, videoHelp, call, addSotr;
     private TextView title, client, address, visit, theme, offerFromClient;
@@ -74,6 +79,8 @@ public class DialogAchievement {
             theme = dialog.findViewById(R.id.theme);
             offerFromClient = dialog.findViewById(R.id.offer_from_the_client);
 
+            comment = dialog.findViewById(R.id.comment);
+
             photoTo = dialog.findViewById(R.id.photo_to);
             photoAfter = dialog.findViewById(R.id.photo_after);
             save = dialog.findViewById(R.id.save);
@@ -82,10 +89,36 @@ public class DialogAchievement {
             photoAfterIV = dialog.findViewById(R.id.photoAfter);
 
             putTextData();
+            buttonSave();
 
         } catch (Exception e) {
             Globals.writeToMLOG("ERROR", "DialogAchievement", "Exception e: " + e);
         }
+    }
+
+    private void buttonSave() {
+        save.setOnClickListener(v -> {
+            try {
+                AchievementsSDB achievementsSDB = new AchievementsSDB();
+                achievementsSDB.serverId = 0;
+                achievementsSDB.dt_ut = (System.currentTimeMillis() / 1000);
+                achievementsSDB.addrId = wpDataDB.getAddr_id();
+                achievementsSDB.themeId = 0;
+                achievementsSDB.clientId = wpDataDB.getClient_id();
+                achievementsSDB.codeDad2 = wpDataDB.getCode_dad2();
+                if (comment != null && comment.getText() != null) {
+                    achievementsSDB.commentTxt = comment.getText().toString();
+                }
+                achievementsSDB.imgBeforeId = Integer.valueOf(stackPhotoDBTo.photoServerId);
+                achievementsSDB.imgAfterId = Integer.valueOf(stackPhotoDBAfter.photoServerId);
+
+                SQL_DB.achievementsDao().insertAll(Collections.singletonList(achievementsSDB));
+                Toast.makeText(v.getContext(), "Створено нове досягнення", Toast.LENGTH_LONG).show();
+                dialog.dismiss();
+            } catch (Exception e) {
+                Globals.writeToMLOG("ERROR", "DialogAchievement/buttonSave", "Exception e: " + e);
+            }
+        });
     }
 
 
@@ -254,43 +287,82 @@ public class DialogAchievement {
     public void putTextData() {
         client.setText(Html.fromHtml("<b>Кліент: </b> " + wpDataDB.getClient_txt() + ""));
         address.setText(Html.fromHtml("<b>Адреса: </b> " + wpDataDB.getAddr_txt() + ""));
-        visit.setText(Html.fromHtml("<b>Відвідування: </b> " + "" + ""));
+        visit.setText(Html.fromHtml("<b>Відвідування: </b> " + wpDataDB.getCode_dad2() + ""));
         theme.setText(Html.fromHtml("<b>Тема: </b> " + wpDataDB.getTheme_id() + ""));
         offerFromClient.setText(Html.fromHtml("<b>Пропозиція від клієнта: </b> " + "" + ""));
     }
 
-    public void buttonPhotoTo(){
-        photoTo.setOnClickListener(v->{
+    public void buttonPhotoTo() {
+        photoTo.setVisibility(View.VISIBLE);
+        photoTo.setOnClickListener(v -> {
             try {
-                WorkPlan workPlan = new WorkPlan();
-                WPDataObj wpDataObj = workPlan.getKPS(wpDataDB.getId());
-                wpDataObj.setPhotoType("0");
-
-                MakePhoto makePhoto = new MakePhoto();
-                makePhoto.pressedMakePhotoOldStyle((Activity) context, wpDataObj, wpDataDB, optionDB);
+                Intent intentPhotoLog = new Intent(v.getContext(), PhotoLogActivity.class);
+                intentPhotoLog.putExtra("achievements", true);
+                intentPhotoLog.putExtra("choise", true);
+                intentPhotoLog.putExtra("dad2", wpDataDB.getCode_dad2());
+                intentPhotoLog.putExtra("photoType", 14);
+                v.getContext().startActivity(intentPhotoLog);
 
                 photoTo.setVisibility(View.GONE);
-                photoToIV.setVisibility(View.VISIBLE);
-                photoToIV.setImageURI(Uri.parse(photoNum));
-            }catch (Exception e){
+
+                clickVoidAchievement = new Clicks.click() {
+                    @Override
+                    public <T> void click(T data) {
+                        stackPhotoDBTo = (StackPhotoDB) data;
+                        photoToIV.setVisibility(View.VISIBLE);
+                        photoToIV.setImageURI(Uri.parse(stackPhotoDBTo.photo_num));
+                        photoToIV.setOnClickListener(v1 -> {
+                            try {
+                                DialogFullPhoto dialogFullPhoto = new DialogFullPhoto(v1.getContext());
+                                dialogFullPhoto.setPhoto(Uri.parse(stackPhotoDBTo.photo_num));
+                                dialogFullPhoto.setClose(dialogFullPhoto::dismiss);
+                                dialogFullPhoto.show();
+                            } catch (Exception e) {
+                                Globals.writeToMLOG("ERROR", "DialogAchievement/buttonPhotoTo", "Exception e: " + e);
+                            }
+                        });
+                    }
+                };
+
+            } catch (Exception e) {
                 Globals.writeToMLOG("ERROR", "buttonPhotoTo", "Exception e: " + Arrays.toString(e.getStackTrace()));
             }
         });
     }
-    public void buttonPhotoAfter(){
-        photoTo.setOnClickListener(v->{
+
+    public void buttonPhotoAfter() {
+        photoAfter.setVisibility(View.VISIBLE);
+        photoAfter.setOnClickListener(v -> {
             try {
-                WorkPlan workPlan = new WorkPlan();
-                WPDataObj wpDataObj = workPlan.getKPS(wpDataDB.getId());
-                wpDataObj.setPhotoType("0");
+                Intent intentPhotoLog = new Intent(v.getContext(), PhotoLogActivity.class);
+                intentPhotoLog.putExtra("achievements", true);
+                intentPhotoLog.putExtra("choise", true);
+                intentPhotoLog.putExtra("dad2", wpDataDB.getCode_dad2());
+                intentPhotoLog.putExtra("photoType", 0);
+                v.getContext().startActivity(intentPhotoLog);
 
-                MakePhoto makePhoto = new MakePhoto();
-                makePhoto.pressedMakePhotoOldStyle((Activity) context, wpDataObj, wpDataDB, optionDB);
+                photoAfter.setVisibility(View.GONE);
 
-                photoTo.setVisibility(View.GONE);
-                photoToIV.setVisibility(View.VISIBLE);
-                photoToIV.setImageURI(Uri.parse(photoNum));
-            }catch (Exception e){
+                clickVoidAchievement = new Clicks.click() {
+                    @Override
+                    public <T> void click(T data) {
+                        stackPhotoDBAfter = (StackPhotoDB) data;
+                        photoAfterIV.setVisibility(View.VISIBLE);
+                        photoAfterIV.setImageURI(Uri.parse(stackPhotoDBAfter.photo_num));
+                        photoAfterIV.setOnClickListener(v1 -> {
+                            try {
+                                DialogFullPhoto dialogFullPhoto = new DialogFullPhoto(v1.getContext());
+                                dialogFullPhoto.setPhoto(Uri.parse(stackPhotoDBTo.photo_num));
+                                dialogFullPhoto.setClose(dialogFullPhoto::dismiss);
+                                dialogFullPhoto.show();
+                            } catch (Exception e) {
+                                Globals.writeToMLOG("ERROR", "DialogAchievement/buttonPhotoAfter", "Exception e: " + e);
+                            }
+                        });
+                    }
+                };
+
+            } catch (Exception e) {
                 Globals.writeToMLOG("ERROR", "buttonPhotoTo", "Exception e: " + Arrays.toString(e.getStackTrace()));
             }
         });
