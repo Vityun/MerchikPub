@@ -207,13 +207,21 @@ public class OptionControlEKL<T> extends OptionControl {
 
             // Проверка ЭКЛов
             if (eklSDB == null || eklSDB.size() == 0) {
-                signal = true;
-                optionMsg.append("За период с ")
-                        .append(Clock.getHumanTime3(dateFrom / 1000))
-                        .append(" по ")
-                        .append(Clock.getHumanTime3(dateTo / 1000))
-                        .append(" НЕ получено ни одного ЭКЛ ")
-                        .append(controllerType);
+                if (addressSDB.tpId == 8196){
+                    if (wpDataDB.getDot_user_id() != 0 && wpDataDB.getFot_user_id() != 0){
+                        signal = false;
+                        optionMsg.append("но для Ашанов по которым работаем с ДОТ или ФОТ ЭКЛ не проверяем.");
+                    }
+                }else {
+                    signal = true;
+                    optionMsg.append("За период с ")
+                            .append(Clock.getHumanTime3(dateFrom / 1000))
+                            .append(" по ")
+                            .append(Clock.getHumanTime3(dateTo / 1000))
+                            .append(" НЕ получено ни одного ЭКЛ ")
+                            .append(controllerType);
+                }
+
             /*  //добавим исключение
 				Если (ДокИст.Вид()="ОтчетИсполнителя") и (КодВлад=8196) Тогда //для Ашанов, котоые работают через ДОТ и ФОТ НЕ проверяем ЭКЛ
 					Если (ПустоеЗначение(ДокИст.ОператорДОТ)=0) или (ПустоеЗначение(ДокИст.ОператорФОТ)=0) Тогда
