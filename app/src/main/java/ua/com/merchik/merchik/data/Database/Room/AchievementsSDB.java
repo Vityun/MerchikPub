@@ -174,6 +174,16 @@ public class AchievementsSDB {
     @ColumnInfo(name = "theme_id")
     public Integer themeId;
 
+    @SerializedName("img_before_hash")
+    @Expose
+    @ColumnInfo(name = "img_before_hash")
+    public String img_before_hash;
+
+    @SerializedName("img_after_hash")
+    @Expose
+    @ColumnInfo(name = "img_after_hash")
+    public String img_after_hash;
+
     // ---------- ДЛЯ ОПЦИИ КОНТРОЛЯ НАЧАЛО---------------
 
     @Ignore

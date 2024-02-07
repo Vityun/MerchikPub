@@ -121,7 +121,7 @@ public class OptionControlAchievements<T> extends OptionControl {
             if (usersSDBDocument.reportDate20 == null || dateDocument < usersSDBDocument.reportDate20.getTime() / 1000) {
                 traineeSignal = 1;
                 trainee = "Исполнитель ещё НЕ провёл своего 20-го отчёта. Наличие Достижений не проверяем!";
-            } else if (optionDB.getOptionControlId().equals("160209") && (usersSDBDocument.reportDate40 == null || dateDocument < usersSDBDocument.reportDate40.getTime() / 1000)) {
+            } else if ((optionDB.getOptionId().equals("160209") || optionDB.getOptionControlId().equals("160209")) && (usersSDBDocument.reportDate40 == null || dateDocument < usersSDBDocument.reportDate40.getTime() / 1000)) {
                 traineeSignal = 1;
                 trainee = "Исполнитель ещё НЕ провёл своего 40-го отчёта. Наличие Достижений не проверяем!";
             }

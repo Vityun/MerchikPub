@@ -48,6 +48,7 @@ import ua.com.merchik.merchik.ServerExchange.TablesExchange.TranslationsExchange
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.UsersExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.VideoViewExchange;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
+import ua.com.merchik.merchik.data.Database.Room.AchievementsSDB;
 import ua.com.merchik.merchik.data.Database.Room.AddressSDB;
 import ua.com.merchik.merchik.data.Database.Room.CitySDB;
 import ua.com.merchik.merchik.data.Database.Room.ContentSDB;
@@ -84,6 +85,9 @@ import ua.com.merchik.merchik.data.RetrofitResponse.photos.ImagesViewListImageRe
 import ua.com.merchik.merchik.data.RetrofitResponse.photos.PhotoInfoResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.photos.PhotoInfoResponseList;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.AchievementsResponse;
+import ua.com.merchik.merchik.data.RetrofitResponse.tables.AchievementsUpload.AchievementsUpload;
+import ua.com.merchik.merchik.data.RetrofitResponse.tables.AchievementsUpload.AchievementsUploadResponse;
+import ua.com.merchik.merchik.data.RetrofitResponse.tables.AchievementsUpload.AchievementsUploadResponseList;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.ArticleResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.ChatGrp.ChatGrpResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.ChatResponse;
@@ -262,6 +266,13 @@ public class Exchange {
                     });
                 } catch (Exception e) {
                     Globals.writeToMLOG("ERROR", "startExchange/downloadLocationTable", "Exception e: " + e);
+                }
+
+                try {
+                    uploadAchievemnts();
+                }catch (Exception e){
+                    Globals.writeToMLOG("ERROR", "startExchange/uploadAchievemnts", "Exception e: " + e);
+                    Globals.writeToMLOG("ERROR", "startExchange/uploadAchievemnts", "Exception e/getStackTrace: " + Arrays.toString(e.getStackTrace()));
                 }
 
 
@@ -2677,6 +2688,65 @@ public class Exchange {
                 click.onFailure("Нема зв'язку. Помилка: " + t);
             }
         });
+    }
+
+    public void uploadAchievemnts(){
+        StandartData data = new StandartData();
+        data.mod = "images_achieve";
+        data.act = "add_row";
+
+        List<AchievementsSDB> list = SQL_DB.achievementsDao().getAllToDownload();
+
+        if (list != null && list.size() > 0) {
+            List<AchievementsUpload> dataList = new ArrayList<>();
+            for (AchievementsSDB item : list) {
+                AchievementsUpload uploadData = new AchievementsUpload();
+                uploadData.element_id = item.id;
+                uploadData.client_id = item.clientId;
+                uploadData.addr_id = item.addrId;
+                uploadData.theme_id = item.themeId;
+                uploadData.code_dad2 = item.codeDad2;
+                uploadData.comment_txt = item.commentTxt;
+                uploadData.img_before_hash = item.img_before_hash;
+                uploadData.img_after_hash = item.img_after_hash;
+                dataList.add(uploadData);
+            }
+
+            data.data = dataList;
+
+            Gson gson = new Gson();
+            String json = gson.toJson(data);
+            JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
+
+            Log.e("test", "convertedObject: " + convertedObject);
+
+            retrofit2.Call<AchievementsUploadResponse> call = RetrofitBuilder.getRetrofitInterface().AchievementsUploadResponseUPLOAD(RetrofitBuilder.contentType, convertedObject);
+            call.enqueue(new Callback<AchievementsUploadResponse>() {
+                @Override
+                public void onResponse(Call<AchievementsUploadResponse> call, Response<AchievementsUploadResponse> response) {
+                    Log.e("showcaseTp", "response: " + response);
+                    if (response.body() != null){
+                        if (response.body().list != null && response.body().list.size() > 0){
+                            for (AchievementsUploadResponseList item : response.body().list){
+                                for (AchievementsSDB itemSDB : list){
+                                    if (itemSDB.id.equals(item.elementId)){
+                                        itemSDB.serverId = item.id;
+                                        SQL_DB.achievementsDao().insertAll(Collections.singletonList(itemSDB));
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                @Override
+                public void onFailure(Call<AchievementsUploadResponse> call, Throwable t) {
+                    Log.e("showcaseTp", "Throwable t: " + t);
+                }
+            });
+        }else {
+            return;
+        }
     }
 
 }

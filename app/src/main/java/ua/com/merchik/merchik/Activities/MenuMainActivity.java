@@ -13,13 +13,19 @@ import com.google.android.material.navigation.NavigationView;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 
+import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
+import java.util.List;
 
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
-import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.R;
+import ua.com.merchik.merchik.data.Database.Room.AchievementsSDB;
+import ua.com.merchik.merchik.data.RetrofitResponse.tables.AchievementsUpload.AchievementsUpload;
+import ua.com.merchik.merchik.data.RetrofitResponse.tables.AchievementsUpload.AchievementsUploadResponse;
+import ua.com.merchik.merchik.data.RetrofitResponse.tables.AchievementsUpload.AchievementsUploadResponseList;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.ShowcaseResponse;
 import ua.com.merchik.merchik.data.TestJsonUpload.StandartData;
 import ua.com.merchik.merchik.dialogs.DialogShowcase.DialogShowcase;
@@ -63,18 +69,18 @@ public class MenuMainActivity extends toolbar_menus {
 //
 //        while (count < 365) {
 //            Log.e("testLong", "calendar(" + count + "): " + calendar);
-            int year = calendar.get(Calendar.YEAR);
-            int dayOfYear = calendar.get(Calendar.DAY_OF_YEAR);
-            int dayOfWeek = calendar.get(Calendar.DAY_OF_WEEK);
-            int dayOfMonth = calendar.get(Calendar.DAY_OF_MONTH);
+        int year = calendar.get(Calendar.YEAR);
+        int dayOfYear = calendar.get(Calendar.DAY_OF_YEAR);
+        int dayOfWeek = calendar.get(Calendar.DAY_OF_WEEK);
+        int dayOfMonth = calendar.get(Calendar.DAY_OF_MONTH);
 
-            double pass = (double) year / (dayOfYear + dayOfWeek + dayOfMonth);
+        double pass = (double) year / (dayOfYear + dayOfWeek + dayOfMonth);
 
-            int res = Integer.parseInt(String.format("%03d", (int) (pass * 100)));
+        int res = Integer.parseInt(String.format("%03d", (int) (pass * 100)));
 
-            Toast.makeText(getApplicationContext(), "" + res, Toast.LENGTH_LONG).show();
+        Toast.makeText(getApplicationContext(), "" + res, Toast.LENGTH_LONG).show();
 
-            Log.e("testLong", "pass: " + res);
+        Log.e("testLong", "pass: " + res);
 //            calendar.add(Calendar.DAY_OF_YEAR, count);
 //            count++;
 //        }
@@ -82,27 +88,61 @@ public class MenuMainActivity extends toolbar_menus {
 
     private void test() {
         StandartData data = new StandartData();
-        data.mod = "rack";
-        data.act = "type_list";
-        data.dt_change_from = String.valueOf(Clock.getDatePeriodLong(-30) / 1000);
-        data.dt_change_to = String.valueOf(Clock.getDatePeriodLong(1) / 1000);
+        data.mod = "images_achieve";
+        data.act = "add_row";
 
-        Gson gson = new Gson();
-        String json = gson.toJson(data);
-        JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
+        List<AchievementsSDB> list = SQL_DB.achievementsDao().getAllToDownload();
 
-        retrofit2.Call<JsonObject> call = RetrofitBuilder.getRetrofitInterface().TEST_JSON_UPLOAD(RetrofitBuilder.contentType, convertedObject);
-        call.enqueue(new Callback<JsonObject>() {
-            @Override
-            public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
-                Log.e("showcaseTp", "response: " + response);
+        if (list != null && list.size() > 0) {
+            List<AchievementsUpload> dataList = new ArrayList<>();
+            for (AchievementsSDB item : list) {
+                AchievementsUpload uploadData = new AchievementsUpload();
+                uploadData.element_id = item.id;
+                uploadData.client_id = item.clientId;
+                uploadData.addr_id = item.addrId;
+                uploadData.theme_id = item.themeId;
+                uploadData.code_dad2 = item.codeDad2;
+                uploadData.comment_txt = item.commentTxt;
+                uploadData.img_before_hash = item.img_before_hash;
+                uploadData.img_after_hash = item.img_after_hash;
+                dataList.add(uploadData);
             }
 
-            @Override
-            public void onFailure(Call<JsonObject> call, Throwable t) {
-                Log.e("showcaseTp", "Throwable t: " + t);
-            }
-        });
+            data.data = dataList;
+
+            Gson gson = new Gson();
+            String json = gson.toJson(data);
+            JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
+
+            Log.e("test", "convertedObject: " + convertedObject);
+
+            retrofit2.Call<AchievementsUploadResponse> call = RetrofitBuilder.getRetrofitInterface().AchievementsUploadResponseUPLOAD(RetrofitBuilder.contentType, convertedObject);
+            call.enqueue(new Callback<AchievementsUploadResponse>() {
+                @Override
+                public void onResponse(Call<AchievementsUploadResponse> call, Response<AchievementsUploadResponse> response) {
+                    Log.e("showcaseTp", "response: " + response);
+                    if (response.body() != null){
+                        if (response.body().list != null && response.body().list.size() > 0){
+                            for (AchievementsUploadResponseList item : response.body().list){
+                                for (AchievementsSDB itemSDB : list){
+                                    if (itemSDB.id.equals(item.elementId)){
+                                        itemSDB.serverId = item.id;
+                                        SQL_DB.achievementsDao().insertAll(Collections.singletonList(itemSDB));
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                @Override
+                public void onFailure(Call<AchievementsUploadResponse> call, Throwable t) {
+                    Log.e("showcaseTp", "Throwable t: " + t);
+                }
+            });
+        }else {
+            return;
+        }
     }
 
 /*

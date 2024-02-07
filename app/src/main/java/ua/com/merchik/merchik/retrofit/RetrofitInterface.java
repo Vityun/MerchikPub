@@ -69,6 +69,7 @@ import ua.com.merchik.merchik.data.RetrofitResponse.WpDataServer;
 import ua.com.merchik.merchik.data.RetrofitResponse.photos.ImagesViewListImageResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.photos.PhotoInfoResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.AchievementsResponse;
+import ua.com.merchik.merchik.data.RetrofitResponse.tables.AchievementsUpload.AchievementsUploadResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.AddressResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.ArticleResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.ChatGrp.ChatGrpResponse;
@@ -609,6 +610,10 @@ public interface RetrofitInterface {
 
     // -------------------------------------------------------
 
+    @POST("mobile_app.php?")
+    Call<AchievementsUploadResponse> AchievementsUploadResponseUPLOAD(
+            @Header("ContentType") String content,
+            @Body JsonObject json);
     @POST("mobile_app.php?")
     Call<TovarTableResponse> GET_TOVAR_TABLE(
             @Header("ContentType") String content,

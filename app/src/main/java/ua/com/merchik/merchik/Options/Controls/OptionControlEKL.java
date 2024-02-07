@@ -120,7 +120,7 @@ public class OptionControlEKL<T> extends OptionControl {
         int userId = wpDataDB.getUser_id();
         String ptt = PTT;
         long dateFrom = Clock.getDatePeriodLong(documentDt * 1000, -3);
-        long dateTo = Clock.getDatePeriodLong(documentDt * 1000, 4);
+        long dateTo = Clock.getDatePeriodLong(documentDt * 1000, 5);
 
         Log.e("OptionControlEKL", "HERE TEST OptionControlEKL 3");
 

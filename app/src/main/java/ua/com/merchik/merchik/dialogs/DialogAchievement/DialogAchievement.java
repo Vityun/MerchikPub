@@ -35,7 +35,7 @@ import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.dialogs.DialogData;
-import ua.com.merchik.merchik.dialogs.DialogFullPhoto;
+import ua.com.merchik.merchik.dialogs.DialogFullPhotoR;
 import ua.com.merchik.merchik.dialogs.DialogVideo;
 
 public class DialogAchievement {
@@ -103,7 +103,11 @@ public class DialogAchievement {
                 achievementsSDB.serverId = 0;
                 achievementsSDB.dt_ut = (System.currentTimeMillis() / 1000);
                 achievementsSDB.addrId = wpDataDB.getAddr_id();
-                achievementsSDB.themeId = 0;
+                achievementsSDB.themeId = 595;
+                achievementsSDB.dvi = 1;
+                achievementsSDB.error = 0;
+                achievementsSDB.currentVisit = 0;
+                achievementsSDB.score = "0";
                 achievementsSDB.clientId = wpDataDB.getClient_id();
                 achievementsSDB.codeDad2 = wpDataDB.getCode_dad2();
                 if (comment != null && comment.getText() != null) {
@@ -111,6 +115,9 @@ public class DialogAchievement {
                 }
                 achievementsSDB.imgBeforeId = Integer.valueOf(stackPhotoDBTo.photoServerId);
                 achievementsSDB.imgAfterId = Integer.valueOf(stackPhotoDBAfter.photoServerId);
+
+                achievementsSDB.img_before_hash = stackPhotoDBAfter.photo_hash;
+                achievementsSDB.img_after_hash = stackPhotoDBAfter.photo_hash;
 
                 SQL_DB.achievementsDao().insertAll(Collections.singletonList(achievementsSDB));
                 Toast.makeText(v.getContext(), "Створено нове досягнення", Toast.LENGTH_LONG).show();
@@ -313,7 +320,7 @@ public class DialogAchievement {
                         photoToIV.setImageURI(Uri.parse(stackPhotoDBTo.photo_num));
                         photoToIV.setOnClickListener(v1 -> {
                             try {
-                                DialogFullPhoto dialogFullPhoto = new DialogFullPhoto(v1.getContext());
+                                DialogFullPhotoR dialogFullPhoto = new DialogFullPhotoR(v1.getContext());
                                 dialogFullPhoto.setPhoto(Uri.parse(stackPhotoDBTo.photo_num));
                                 dialogFullPhoto.setClose(dialogFullPhoto::dismiss);
                                 dialogFullPhoto.show();
@@ -351,7 +358,7 @@ public class DialogAchievement {
                         photoAfterIV.setImageURI(Uri.parse(stackPhotoDBAfter.photo_num));
                         photoAfterIV.setOnClickListener(v1 -> {
                             try {
-                                DialogFullPhoto dialogFullPhoto = new DialogFullPhoto(v1.getContext());
+                                DialogFullPhotoR dialogFullPhoto = new DialogFullPhotoR(v1.getContext());
                                 dialogFullPhoto.setPhoto(Uri.parse(stackPhotoDBTo.photo_num));
                                 dialogFullPhoto.setClose(dialogFullPhoto::dismiss);
                                 dialogFullPhoto.show();
