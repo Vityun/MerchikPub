@@ -119,8 +119,8 @@ public class OptionControlEKL<T> extends OptionControl {
 
         int userId = wpDataDB.getUser_id();
         String ptt = PTT;
-        long dateFrom = Clock.getDatePeriodLong(documentDt * 1000, -3);
-        long dateTo = Clock.getDatePeriodLong(documentDt * 1000, 5);
+        long dateFrom = Clock.getDatePeriodLong(documentDt * 1000, -3) / 1000;
+        long dateTo = Clock.getDatePeriodLong(documentDt * 1000, 5) / 1000;
 
         Log.e("OptionControlEKL", "HERE TEST OptionControlEKL 3");
 
@@ -162,7 +162,7 @@ public class OptionControlEKL<T> extends OptionControl {
 
 
             // лезем в таблицу ЭКЛ и проверяем, еслть ли ПОДПИСАННЫЙ ЭКЛ по данным условиям
-            eklSDB = SQL_DB.eklDao().getBy(dateFrom/1000, dateTo/1000, wpDataDB.getClient_id(), wpDataDB.getAddr_id(), wpDataDB.getUser_id());
+            eklSDB = SQL_DB.eklDao().getBy(dateFrom, dateTo, wpDataDB.getClient_id(), wpDataDB.getAddr_id(), wpDataDB.getUser_id());
 //            eklSDB = SQL_DB.eklDao().getBy(dateFrom, dateTo, wpDataDB.getClient_id(), wpDataDB.getAddr_id(), wpDataDB.getUser_id());
 //        eklSDB = SQL_DB.eklDao().getBy(dateFrom, dateTo, wpDataDB.getClient_id(), wpDataDB.getAddr_id(), wpDataDB.getUser_id(), wpDataDB.ptt_user_id);
 
@@ -171,7 +171,7 @@ public class OptionControlEKL<T> extends OptionControl {
             Log.e("OptionControlEKL", "HERE TEST OptionControlEKL 5");
             if (eklSDB == null || eklSDB.size() == 0) {
                 List<Integer> ids = new ArrayList<>();
-                if (tovarGroupSDB != null){
+                if (tovarGroupSDB != null) {
                     for (TovarGroupSDB item : tovarGroupSDB) {
                         ids.add(item.id);
                     }
@@ -182,16 +182,24 @@ public class OptionControlEKL<T> extends OptionControl {
                     eklSDB = SQL_DB.eklDao().getBy(dateFrom, dateTo, ids, wpDataDB.getAddr_id(), wpDataDB.getUser_id());
 
 //                    Globals.writeToMLOG("INFO", "OptionControlEKL/createTZN", "eklSDB(0): " + new Gson().toJson(eklSDB));
-                }else {
+                } else {
                     // TODO отсебятина, у меня у Эрики не было групп товаров изза чего проблема выникла, это может быть очень опасно
                     eklSDB = SQL_DB.eklDao().getBy(dateFrom, dateTo, wpDataDB.getAddr_id(), wpDataDB.getUser_id());
 //                    Globals.writeToMLOG("INFO", "OptionControlEKL/createTZN", "eklSDB(1): " + new Gson().toJson(eklSDB));
                 }
 
-                if (eklSDB.size() == 0 && addressSDB != null && addressSDB.kolKass != null && addressSDB.kolKass <= 5){
+                if (eklSDB.size() == 0 && addressSDB != null && addressSDB.kolKass != null && addressSDB.kolKass <= 5) {
                     eklSDB = SQL_DB.eklDao().getBy(dateFrom, dateTo, wpDataDB.getAddr_id(), wpDataDB.getUser_id());
 //                    Globals.writeToMLOG("INFO", "OptionControlEKL/createTZN", "eklSDB(2): " + new Gson().toJson(eklSDB));
                 }
+
+                /*test*/
+//                Log.e("OptionControlEKL", "HERE TEST OptionControlEKL 0.6");
+//                eklSDB = SQL_DB.eklDao().getByTEst(wpDataDB.getAddr_id(), wpDataDB.getUser_id());
+//                Log.e("OptionControlEKL", "HERE TEST OptionControlEKL 0.7");
+//                eklSDB = SQL_DB.eklDao().getByTEst(dateFrom, dateTo, wpDataDB.getAddr_id(), wpDataDB.getUser_id());
+//                Log.e("OptionControlEKL", "HERE TEST OptionControlEKL 0.8");
+                /*end test*/
 
                 if (eklSDB != null) {
                     Globals.writeToMLOG("INFO", "OptionControlEKL/createTZN", "eklSDB1: " + eklSDB.size());
@@ -207,17 +215,17 @@ public class OptionControlEKL<T> extends OptionControl {
 
             // Проверка ЭКЛов
             if (eklSDB == null || eklSDB.size() == 0) {
-                if (addressSDB.tpId == 8196){
-                    if (wpDataDB.getDot_user_id() != 0 && wpDataDB.getFot_user_id() != 0){
+                if (addressSDB.tpId == 8196) {
+                    if (wpDataDB.getDot_user_id() != 0 && wpDataDB.getFot_user_id() != 0) {
                         signal = false;
                         optionMsg.append("но для Ашанов по которым работаем с ДОТ или ФОТ ЭКЛ не проверяем.");
                     }
-                }else {
+                } else {
                     signal = true;
                     optionMsg.append("За период с ")
-                            .append(Clock.getHumanTime3(dateFrom / 1000))
+                            .append(Clock.getHumanTime3(dateFrom))
                             .append(" по ")
-                            .append(Clock.getHumanTime3(dateTo / 1000))
+                            .append(Clock.getHumanTime3(dateTo))
                             .append(" НЕ получено ни одного ЭКЛ ")
                             .append(controllerType);
                 }
@@ -237,8 +245,8 @@ public class OptionControlEKL<T> extends OptionControl {
                     usersSDBPTT = SQL_DB.usersDao().getById(eklSDB.get(0).sotrId);
                 }
                 optionMsg.append("За период с ")
-                        .append(Clock.getHumanTime3(dateFrom / 1000)).append(" по ")
-                        .append(Clock.getHumanTime3(dateTo / 1000))
+                        .append(Clock.getHumanTime3(dateFrom)).append(" по ")
+                        .append(Clock.getHumanTime3(dateTo))
                         .append(" получено ").append(eklSDB.size()).append(" ЭКЛ у ").append(usersSDBPTT.fio)
                         .append(" (").append(usersSDBPTT.department).append(") тел: ").append(usersSDBPTT.tel)
                         .append(", ").append(usersSDBPTT.tel2);
@@ -335,23 +343,23 @@ public class OptionControlEKL<T> extends OptionControl {
 
 
     public void showUnlockCodeDialogInMainThread() {
-            new UnlockCode().showDialogUnlockCode(context, wpDataDB, optionDB, CODE_DAD_2_AND_OPTION, new Clicks.clickStatusMsg() {
-                @Override
-                public void onSuccess(String data) {
-                    signal = false;
-                    setIsBlockOption(signal);
-                    unlockCodeResultListener.onUnlockCodeSuccess();
-                }
+        new UnlockCode().showDialogUnlockCode(context, wpDataDB, optionDB, CODE_DAD_2_AND_OPTION, new Clicks.clickStatusMsg() {
+            @Override
+            public void onSuccess(String data) {
+                signal = false;
+                setIsBlockOption(signal);
+                unlockCodeResultListener.onUnlockCodeSuccess();
+            }
 
-                @Override
-                public void onFailure(String error) {
-                    setIsBlockOption(signal);
-                    stringBuilderMsg.append("\n\n").append("Документ проведен не будет!");
-                    spannableStringBuilder.append(stringBuilderMsg);
-                    showOptionMassage("");
-                    unlockCodeResultListener.onUnlockCodeFailure();
-                }
-            });
+            @Override
+            public void onFailure(String error) {
+                setIsBlockOption(signal);
+                stringBuilderMsg.append("\n\n").append("Документ проведен не будет!");
+                spannableStringBuilder.append(stringBuilderMsg);
+                showOptionMassage("");
+                unlockCodeResultListener.onUnlockCodeFailure();
+            }
+        });
     }
 
 

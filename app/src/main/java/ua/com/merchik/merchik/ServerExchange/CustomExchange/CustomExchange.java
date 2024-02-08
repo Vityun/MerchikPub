@@ -133,7 +133,7 @@ public class CustomExchange {
                                 dialogData.setClose(dialogData::dismiss);
                                 dialogData.show();
                             }
-                        });
+                        }, context);
                     }catch (Exception e){
                         Toast.makeText(context, "Помилка при завантаженні товарів: " + e, Toast.LENGTH_LONG).show();
                         Globals.writeToMLOG("ERROR", "CustomExchange/startExchangeBySyncTable/photo_tovar", "Exception e: " + e);

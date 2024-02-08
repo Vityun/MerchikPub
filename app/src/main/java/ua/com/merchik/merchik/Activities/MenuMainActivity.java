@@ -98,6 +98,7 @@ public class MenuMainActivity extends toolbar_menus {
             for (AchievementsSDB item : list) {
                 AchievementsUpload uploadData = new AchievementsUpload();
                 uploadData.element_id = item.id;
+                uploadData.dt = item.dt_ut;
                 uploadData.client_id = item.clientId;
                 uploadData.addr_id = item.addrId;
                 uploadData.theme_id = item.themeId;

@@ -101,6 +101,7 @@ public class DialogAchievement {
             try {
                 AchievementsSDB achievementsSDB = new AchievementsSDB();
                 achievementsSDB.serverId = 0;
+                achievementsSDB.dt = String.valueOf((System.currentTimeMillis() / 1000));
                 achievementsSDB.dt_ut = (System.currentTimeMillis() / 1000);
                 achievementsSDB.addrId = wpDataDB.getAddr_id();
                 achievementsSDB.themeId = 595;
@@ -116,7 +117,7 @@ public class DialogAchievement {
                 achievementsSDB.imgBeforeId = Integer.valueOf(stackPhotoDBTo.photoServerId);
                 achievementsSDB.imgAfterId = Integer.valueOf(stackPhotoDBAfter.photoServerId);
 
-                achievementsSDB.img_before_hash = stackPhotoDBAfter.photo_hash;
+                achievementsSDB.img_before_hash = stackPhotoDBTo.photo_hash;
                 achievementsSDB.img_after_hash = stackPhotoDBAfter.photo_hash;
 
                 SQL_DB.achievementsDao().insertAll(Collections.singletonList(achievementsSDB));

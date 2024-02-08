@@ -1,6 +1,10 @@
 package ua.com.merchik.merchik.ServerExchange;
 
 
+import static androidx.core.content.ContextCompat.startForegroundService;
+
+import android.content.Context;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.util.Log;
@@ -17,6 +21,7 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 import ua.com.merchik.merchik.Clock;
+import ua.com.merchik.merchik.DownloadPictureService;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
@@ -209,7 +214,7 @@ public class PhotoDownload {
      * 12.02.2022
      * Формирование запроса на получение ссылок для скачивания фотографий.
      */
-    public static void getPhotoURLFromServer(List<TovarDB> tovars, Clicks.clickStatusMsg result, Clicks.clickStatusMsgMode result2) {
+    public static void getPhotoURLFromServer(List<TovarDB> tovars, Clicks.clickStatusMsg result, Clicks.clickStatusMsgMode result2, Context context) {
         List<Integer> tovarIdsList = getTovarIds(tovars);
 
         Globals.writeToMLOG("INFO", "getPhotoURLFromServer", "ЗАГРУЗКА ФОТО. ПОЛУЧЕНО ФОТО: " + tovars.size());
@@ -271,7 +276,11 @@ public class PhotoDownload {
                             long end = System.currentTimeMillis() / 1000 - start;
                             result.onSuccess("Данные о фото товаров(" + photoListUrlSize + "шт) успешно получены. Это заняло " + end + " секунд! \nНачинаю загрузку фотографий.. \n\nЭТО МОЖЕТ ЗАНЯТЬ МНОГО ВРЕМЕНИ И ТРАФИКА!");
                             // TODO Начинаем загрузку + сохранение на телефон фоток Товаров.
-                            downloadPhoto(response.body().getList(), result, result2);
+//                            downloadPhoto(response.body().getList(), result, result2);
+
+                            Intent serviceIntent = new Intent(context, DownloadPictureService.class);
+                            DownloadPictureService.picList = response.body().getList();
+                            startForegroundService(context, serviceIntent);
                         } else {
                             result.onFailure("Не получилось загрузить фото Товаров. Обратитесь к руководителю. Ошибка:\n\n(URL)state = false");
                         }

@@ -895,7 +895,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                             public void onFailure(String error) {
 
                             }
-                        });
+                        }, view.getContext());
 
                         return false;
                     });

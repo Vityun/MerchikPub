@@ -269,7 +269,7 @@ public class Exchange {
                 }
 
                 try {
-                    uploadAchievemnts();
+//                    uploadAchievemnts();
                 }catch (Exception e){
                     Globals.writeToMLOG("ERROR", "startExchange/uploadAchievemnts", "Exception e: " + e);
                     Globals.writeToMLOG("ERROR", "startExchange/uploadAchievemnts", "Exception e/getStackTrace: " + Arrays.toString(e.getStackTrace()));
@@ -2702,6 +2702,7 @@ public class Exchange {
             for (AchievementsSDB item : list) {
                 AchievementsUpload uploadData = new AchievementsUpload();
                 uploadData.element_id = item.id;
+                uploadData.dt = item.dt_ut;
                 uploadData.client_id = item.clientId;
                 uploadData.addr_id = item.addrId;
                 uploadData.theme_id = item.themeId;
