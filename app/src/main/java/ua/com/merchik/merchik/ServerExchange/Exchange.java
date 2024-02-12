@@ -269,7 +269,7 @@ public class Exchange {
                 }
 
                 try {
-//                    uploadAchievemnts();
+                    uploadAchievemnts();
                 }catch (Exception e){
                     Globals.writeToMLOG("ERROR", "startExchange/uploadAchievemnts", "Exception e: " + e);
                     Globals.writeToMLOG("ERROR", "startExchange/uploadAchievemnts", "Exception e/getStackTrace: " + Arrays.toString(e.getStackTrace()));

@@ -84,7 +84,8 @@ public class OptionControlPhotoCartWithGoods<T> extends OptionControl {
                     dateTo = Clock.getDatePeriodLong(dateDocument * 1000, 2) / 1000;
                 } else {
                     dateFrom = Clock.getDatePeriodLong(dateDocument * 1000, -30) / 1000;
-                    dateTo = dateDocument + 86400;  // делаю + 86 400 типо для того что б фото считались за ВЕСЬ день, а не за начало
+//                    dateTo = dateDocument + 86400;  // делаю + 86 400 типо для того что б фото считались за ВЕСЬ день, а не за начало
+                    dateTo = Clock.getDatePeriodLong(dateDocument * 1000, 2) / 1000;  // делаю + 86 400 типо для того что б фото считались за ВЕСЬ день, а не за начало
                 }
 
                 wpDataSize = WpDataRealm.getWpDataBy(new Date(dateFrom * 1000), new Date(dateTo * 1000), null, wp.getAddr_id(), wp.getClient_id(), wp.getUser_id()).size();

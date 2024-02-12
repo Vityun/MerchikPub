@@ -216,6 +216,7 @@ public class PhotoDownload {
      */
     public static void getPhotoURLFromServer(List<TovarDB> tovars, Clicks.clickStatusMsg result, Clicks.clickStatusMsgMode result2, Context context) {
         List<Integer> tovarIdsList = getTovarIds(tovars);
+//        List<Integer> tovarIdsList = getTovarIds(TovarRealm.getAllTov());
 
         Globals.writeToMLOG("INFO", "getPhotoURLFromServer", "ЗАГРУЗКА ФОТО. ПОЛУЧЕНО ФОТО: " + tovars.size());
 
@@ -280,6 +281,7 @@ public class PhotoDownload {
 
                             Intent serviceIntent = new Intent(context, DownloadPictureService.class);
                             DownloadPictureService.picList = response.body().getList();
+//                            context.startService(serviceIntent);
                             startForegroundService(context, serviceIntent);
                         } else {
                             result.onFailure("Не получилось загрузить фото Товаров. Обратитесь к руководителю. Ошибка:\n\n(URL)state = false");
@@ -563,7 +565,7 @@ public class PhotoDownload {
                                 stackPhotoDB.setAddr_id(Integer.valueOf(item.getAddrId()));
                                 stackPhotoDB.setClient_id(item.getClientId());
                                 stackPhotoDB.setPhoto_type(Integer.valueOf(item.getPhotoTp()));
-                                stackPhotoDB.photo_hash = item.getHash();
+                                stackPhotoDB.photo_hash = item.imgHash;
                                 stackPhotoDB.tovar_id = item.getTovarId();
 
                                 stackPhotoDB.showcase_id = item.showcase_id;

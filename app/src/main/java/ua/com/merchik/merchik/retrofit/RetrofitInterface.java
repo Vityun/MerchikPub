@@ -8,6 +8,7 @@ import com.google.gson.JsonObject;
 import java.util.HashMap;
 import java.util.List;
 
+import io.reactivex.rxjava3.core.Single;
 import okhttp3.MultipartBody;
 import okhttp3.RequestBody;
 import okhttp3.ResponseBody;
@@ -289,6 +290,9 @@ public interface RetrofitInterface {
 
     @GET
     Call<ResponseBody> DOWNLOAD_PHOTO_BY_URL(@Url String url);
+
+    @GET
+    Single<ResponseBody> DOWNLOAD_PHOTO_BY_URL_TEST(@Url String url);
 
 
     @POST("mobile_app.php?")
