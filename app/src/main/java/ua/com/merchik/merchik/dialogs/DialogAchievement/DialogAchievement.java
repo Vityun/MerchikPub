@@ -112,6 +112,8 @@ public class DialogAchievement {
                 achievementsSDB.clientId = wpDataDB.getClient_id();
                 achievementsSDB.codeDad2 = wpDataDB.getCode_dad2();
                 if (comment != null && comment.getText() != null) {
+                    achievementsSDB.commentDt = String.valueOf((System.currentTimeMillis() / 1000));
+                    achievementsSDB.commentUser = String.valueOf(wpDataDB.getUser_id());
                     achievementsSDB.commentTxt = comment.getText().toString();
                 }
                 achievementsSDB.imgBeforeId = Integer.valueOf(stackPhotoDBTo.photoServerId);

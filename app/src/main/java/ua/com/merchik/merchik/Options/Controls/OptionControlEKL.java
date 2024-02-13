@@ -215,7 +215,7 @@ public class OptionControlEKL<T> extends OptionControl {
 
             // Проверка ЭКЛов
             if (eklSDB == null || eklSDB.size() == 0) {
-                if (addressSDB.tpId == 8196) {
+                if (addressSDB.tpId == 383) {   // АШАН
                     if (wpDataDB.getDot_user_id() != 0 && wpDataDB.getFot_user_id() != 0) {
                         signal = false;
                         optionMsg.append("но для Ашанов по которым работаем с ДОТ или ФОТ ЭКЛ не проверяем.");

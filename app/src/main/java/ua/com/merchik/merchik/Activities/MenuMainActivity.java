@@ -13,19 +13,12 @@ import com.google.android.material.navigation.NavigationView;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 
-import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Collections;
-import java.util.List;
 
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 import ua.com.merchik.merchik.R;
-import ua.com.merchik.merchik.data.Database.Room.AchievementsSDB;
-import ua.com.merchik.merchik.data.RetrofitResponse.tables.AchievementsUpload.AchievementsUpload;
-import ua.com.merchik.merchik.data.RetrofitResponse.tables.AchievementsUpload.AchievementsUploadResponse;
-import ua.com.merchik.merchik.data.RetrofitResponse.tables.AchievementsUpload.AchievementsUploadResponseList;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.ShowcaseResponse;
 import ua.com.merchik.merchik.data.TestJsonUpload.StandartData;
 import ua.com.merchik.merchik.dialogs.DialogShowcase.DialogShowcase;
@@ -87,63 +80,7 @@ public class MenuMainActivity extends toolbar_menus {
     }
 
     private void test() {
-        StandartData data = new StandartData();
-        data.mod = "images_achieve";
-        data.act = "add_row";
 
-        List<AchievementsSDB> list = SQL_DB.achievementsDao().getAllToDownload();
-
-        if (list != null && list.size() > 0) {
-            List<AchievementsUpload> dataList = new ArrayList<>();
-            for (AchievementsSDB item : list) {
-                AchievementsUpload uploadData = new AchievementsUpload();
-                uploadData.element_id = item.id;
-                uploadData.dt = item.dt_ut;
-                uploadData.client_id = item.clientId;
-                uploadData.addr_id = item.addrId;
-                uploadData.theme_id = item.themeId;
-                uploadData.code_dad2 = item.codeDad2;
-                uploadData.comment_txt = item.commentTxt;
-                uploadData.img_before_hash = item.img_before_hash;
-                uploadData.img_after_hash = item.img_after_hash;
-                dataList.add(uploadData);
-            }
-
-            data.data = dataList;
-
-            Gson gson = new Gson();
-            String json = gson.toJson(data);
-            JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
-
-            Log.e("test", "convertedObject: " + convertedObject);
-
-            retrofit2.Call<AchievementsUploadResponse> call = RetrofitBuilder.getRetrofitInterface().AchievementsUploadResponseUPLOAD(RetrofitBuilder.contentType, convertedObject);
-            call.enqueue(new Callback<AchievementsUploadResponse>() {
-                @Override
-                public void onResponse(Call<AchievementsUploadResponse> call, Response<AchievementsUploadResponse> response) {
-                    Log.e("showcaseTp", "response: " + response);
-                    if (response.body() != null){
-                        if (response.body().list != null && response.body().list.size() > 0){
-                            for (AchievementsUploadResponseList item : response.body().list){
-                                for (AchievementsSDB itemSDB : list){
-                                    if (itemSDB.id.equals(item.elementId)){
-                                        itemSDB.serverId = item.id;
-                                        SQL_DB.achievementsDao().insertAll(Collections.singletonList(itemSDB));
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-
-                @Override
-                public void onFailure(Call<AchievementsUploadResponse> call, Throwable t) {
-                    Log.e("showcaseTp", "Throwable t: " + t);
-                }
-            });
-        }else {
-            return;
-        }
     }
 
 /*

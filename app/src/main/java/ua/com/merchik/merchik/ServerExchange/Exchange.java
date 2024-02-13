@@ -2707,6 +2707,9 @@ public class Exchange {
                 uploadData.addr_id = item.addrId;
                 uploadData.theme_id = item.themeId;
                 uploadData.code_dad2 = item.codeDad2;
+                uploadData.dvi = item.dvi;
+                uploadData.commentDt = item.commentDt;
+                uploadData.commentUser = item.commentUser;
                 uploadData.comment_txt = item.commentTxt;
                 uploadData.img_before_hash = item.img_before_hash;
                 uploadData.img_after_hash = item.img_after_hash;
@@ -2721,28 +2724,38 @@ public class Exchange {
 
             Log.e("test", "convertedObject: " + convertedObject);
 
+            Globals.writeToMLOG("INFO", "uploadAchievemnts", "convertedObject: " + convertedObject);
+
             retrofit2.Call<AchievementsUploadResponse> call = RetrofitBuilder.getRetrofitInterface().AchievementsUploadResponseUPLOAD(RetrofitBuilder.contentType, convertedObject);
             call.enqueue(new Callback<AchievementsUploadResponse>() {
                 @Override
                 public void onResponse(Call<AchievementsUploadResponse> call, Response<AchievementsUploadResponse> response) {
-                    Log.e("showcaseTp", "response: " + response);
-                    if (response.body() != null){
-                        if (response.body().list != null && response.body().list.size() > 0){
-                            for (AchievementsUploadResponseList item : response.body().list){
-                                for (AchievementsSDB itemSDB : list){
-                                    if (itemSDB.id.equals(item.elementId)){
-                                        itemSDB.serverId = item.id;
-                                        SQL_DB.achievementsDao().insertAll(Collections.singletonList(itemSDB));
+                    try {
+                        Log.e("showcaseTp", "response: " + response);
+                        if (response.body() != null){
+                            try {
+                                Globals.writeToMLOG("INFO", "uploadAchievemnts/onResponse", "response: " + new Gson().toJson(response));
+                            }catch (Exception e){}
+                            if (response.body().list != null && response.body().list.size() > 0){
+                                for (AchievementsUploadResponseList item : response.body().list){
+                                    for (AchievementsSDB itemSDB : list){
+                                        if (itemSDB.id.equals(item.elementId)){
+                                            itemSDB.serverId = item.id;
+                                            SQL_DB.achievementsDao().insertAll(Collections.singletonList(itemSDB));
+                                        }
                                     }
                                 }
                             }
                         }
+                    }catch (Exception e){
+                        Globals.writeToMLOG("ERROR", "uploadAchievemnts/onResponse/catch", "Exception e: " + Arrays.toString(e.getStackTrace()));
                     }
                 }
 
                 @Override
                 public void onFailure(Call<AchievementsUploadResponse> call, Throwable t) {
                     Log.e("showcaseTp", "Throwable t: " + t);
+                    Globals.writeToMLOG("ERROR", "uploadAchievemnts/onFailure", "Throwable t: " + Arrays.toString(t.getStackTrace()));
                 }
             });
         }else {
