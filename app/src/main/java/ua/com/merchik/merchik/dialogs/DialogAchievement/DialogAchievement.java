@@ -116,9 +116,10 @@ public class DialogAchievement {
                     achievementsSDB.commentUser = String.valueOf(wpDataDB.getUser_id());
                     achievementsSDB.commentTxt = comment.getText().toString();
                 }
-                achievementsSDB.imgBeforeId = Integer.valueOf(stackPhotoDBTo.photoServerId);
-                achievementsSDB.imgAfterId = Integer.valueOf(stackPhotoDBAfter.photoServerId);
-
+                try {
+                    achievementsSDB.imgBeforeId = Integer.valueOf(stackPhotoDBTo.photoServerId);
+                    achievementsSDB.imgAfterId = Integer.valueOf(stackPhotoDBAfter.photoServerId);
+                }catch (Exception e){}
                 achievementsSDB.img_before_hash = stackPhotoDBTo.photo_hash;
                 achievementsSDB.img_after_hash = stackPhotoDBAfter.photo_hash;
 
