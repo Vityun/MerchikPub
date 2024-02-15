@@ -52,12 +52,6 @@ public class OptionControlPhoto<T> extends OptionControl {
     }
 
     private void executeOption() {
-        String typeNm = "";
-        int m = Integer.parseInt(optionDB.getAmountMin());
-        if (m == 0) {
-            m = 3;
-        }
-        int photoType = 0;
 
         String optionId;
         if (nnkMode.equals(Options.NNKMode.BLOCK)) {
@@ -65,6 +59,17 @@ public class OptionControlPhoto<T> extends OptionControl {
         } else {
             optionId = optionDB.getOptionControlId();
         }
+
+        String typeNm = "";
+        int m = Integer.parseInt(optionDB.getAmountMin());
+        if (m == 0) {
+            if (optionId.equals("164352")){
+                m = 1;
+            }else {
+                m = 3;
+            }
+        }
+        int photoType = 0;
 
         switch (optionId) {
             case "164354":  // Фото Планограмми ТТ
@@ -74,7 +79,6 @@ public class OptionControlPhoto<T> extends OptionControl {
 
             case "164352":  // Контроль наявності світлини прикасової зони
                 photoType = 45;
-                m = 1;
                 typeNm = "світлина прикасової зони";
                 break;
 

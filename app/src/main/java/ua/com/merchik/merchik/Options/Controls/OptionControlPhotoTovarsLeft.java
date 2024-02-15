@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Objects;
 
 import ua.com.merchik.merchik.Clock;
+import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.Options.OptionControl;
 import ua.com.merchik.merchik.Options.Options;
 import ua.com.merchik.merchik.data.Database.Room.AddressSDB;
@@ -52,15 +53,19 @@ public class OptionControlPhotoTovarsLeft<T> extends OptionControl {
     private Integer tpId; // идентификатор сети (сильпо, атб..)
 
     public OptionControlPhotoTovarsLeft(Context context, T document, OptionsDB optionDB, OptionMassageType msgType, Options.NNKMode nnkMode, UnlockCodeResultListener unlockCodeResultListener) {
-        this.context = context;
-        this.document = document;
-        this.optionDB = optionDB;
-        this.msgType = msgType;
-        this.nnkMode = nnkMode;
-        this.unlockCodeResultListener = unlockCodeResultListener;
-        getDocumentVar();
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            executeOption();
+        try {
+            this.context = context;
+            this.document = document;
+            this.optionDB = optionDB;
+            this.msgType = msgType;
+            this.nnkMode = nnkMode;
+            this.unlockCodeResultListener = unlockCodeResultListener;
+            getDocumentVar();
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                executeOption();
+            }
+        }catch (Exception e){
+            Globals.writeToMLOG("ERROR", "OptionControlPhotoTovarsLeft", "Exception e: " + e);
         }
     }
 
