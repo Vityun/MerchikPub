@@ -8,8 +8,8 @@ public class AchievementsUpload {
     public int theme_id;
     public int dvi;
     public long code_dad2;
-    public String commentDt;
-    public String commentUser;
+    public String comment_dt;
+    public String comment_user_id;
     public String comment_txt;
     public String img_before_hash;
     public String img_after_hash;

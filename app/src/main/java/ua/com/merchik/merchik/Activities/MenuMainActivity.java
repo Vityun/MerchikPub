@@ -18,7 +18,9 @@ import java.util.Calendar;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
+import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.R;
+import ua.com.merchik.merchik.ServerExchange.Exchange;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.ShowcaseResponse;
 import ua.com.merchik.merchik.data.TestJsonUpload.StandartData;
 import ua.com.merchik.merchik.dialogs.DialogShowcase.DialogShowcase;
@@ -80,7 +82,8 @@ public class MenuMainActivity extends toolbar_menus {
     }
 
     private void test() {
-
+        Globals.writeToMLOG("INFO", "uploadAchievemnts", "test");
+        new Exchange().uploadAchievemnts();
     }
 
 /*

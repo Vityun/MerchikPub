@@ -2708,8 +2708,8 @@ public class Exchange {
                 uploadData.theme_id = item.themeId;
                 uploadData.code_dad2 = item.codeDad2;
                 uploadData.dvi = item.dvi;
-                uploadData.commentDt = item.commentDt;
-                uploadData.commentUser = item.commentUser;
+                uploadData.comment_dt = item.commentDt;
+                uploadData.comment_user_id = item.commentUser;
                 uploadData.comment_txt = item.commentTxt;
                 uploadData.img_before_hash = item.img_before_hash;
                 uploadData.img_after_hash = item.img_after_hash;
@@ -2733,9 +2733,9 @@ public class Exchange {
                     try {
                         Log.e("showcaseTp", "response: " + response);
                         if (response.body() != null){
-                            try {
-                                Globals.writeToMLOG("INFO", "uploadAchievemnts/onResponse", "response: " + new Gson().toJson(response));
-                            }catch (Exception e){}
+//                            try {
+//                                Globals.writeToMLOG("INFO", "uploadAchievemnts/onResponse", "response: " + new Gson().toJson(response));
+//                            }catch (Exception e){}
                             if (response.body().list != null && response.body().list.size() > 0){
                                 for (AchievementsUploadResponseList item : response.body().list){
                                     for (AchievementsSDB itemSDB : list){

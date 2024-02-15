@@ -3,6 +3,7 @@ package ua.com.merchik.merchik;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -21,6 +22,7 @@ import io.reactivex.rxjava3.core.Observer;
 import io.reactivex.rxjava3.disposables.Disposable;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 import okhttp3.ResponseBody;
+import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
 import ua.com.merchik.merchik.data.RetrofitResponse.TovarImgList;
 import ua.com.merchik.merchik.database.realm.RealmManager;
@@ -28,6 +30,7 @@ import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
 
 public class DownloadPictureService extends Service {
 
+    public Context context;
     public static List<TovarImgList> picList;
 
 
@@ -35,6 +38,7 @@ public class DownloadPictureService extends Service {
     public void onCreate() {
         super.onCreate();
         final NotificationManager nm = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+        context = this;
 
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, "1000")
                 .setSmallIcon(R.mipmap.merchik)
@@ -61,7 +65,12 @@ public class DownloadPictureService extends Service {
 
         try {
             List<TovarImgList> data = picList;
-            downloadPhoto(data);
+            downloadPhoto(data, new Clicks.click() {
+                @Override
+                public <T> void click(T data) {
+//                    Toast.makeText(context, "Загрузил: " + data + " фото", Toast.LENGTH_LONG).show();
+                }
+            });
         }catch (Exception e){
             Globals.writeToMLOG("ERROR", "DownloadPictureService/onStartCommand/", "Exception e: " + Arrays.toString(e.getStackTrace()));
         }
@@ -83,10 +92,12 @@ public class DownloadPictureService extends Service {
     static int errorSaveTovarPhoto;
     static int internetError;
 
-    public void downloadPhoto(List<TovarImgList> data) {
+
+    static int count = 0;
+    public void downloadPhoto(List<TovarImgList> data, Clicks.click click) {
         long start = System.currentTimeMillis() / 1000;
         final int[] cnt = {0};
-        int count = 0;
+        count = 0;
         notSuccessfulResponse = 0;
         bodyIsNull = 0;
         saveNewTovarPhoto = 0;
@@ -150,6 +161,7 @@ public class DownloadPictureService extends Service {
                     @Override
                     public void onNext(@NonNull SumTestObj sumTestObj) {
                         Log.e("DownloadPictureService", "onNext" + "sumTestObj: " + sumTestObj);
+                        count++;
                     }
 
                     @Override
@@ -160,7 +172,12 @@ public class DownloadPictureService extends Service {
 
                     @Override
                     public void onComplete() {
-                        Log.e("DownloadPictureService", "onComplete" + "OK");
+                        try {
+                            Log.e("DownloadPictureService", "onComplete" + "OK");
+                            click.click(count);
+                        }catch (Exception e){
+                            Log.e("DownloadPictureService", "onComplete/Exception e" + e);
+                        }
                     }
                 });
 

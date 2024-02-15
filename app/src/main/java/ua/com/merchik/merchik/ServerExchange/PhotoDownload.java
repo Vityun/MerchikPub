@@ -224,7 +224,7 @@ public class PhotoDownload {
 
         Globals.writeToMLOG("INFO", "getPhotoURLFromServer", "ЗАГРУЗКА ФОТО. НУЖНО СКАЧАТЬ СТОЛЬКО ФОТО: " + tovarsPhotoToDownload.size());
 
-        result.onSuccess("Треба Дозавантажити " + tovarsPhotoToDownload.size() + " фото Товарів");
+//        result.onSuccess("Треба Дозавантажити " + tovarsPhotoToDownload.size() + " фото Товарів");
 
 
         // Разбивка на группі
@@ -243,8 +243,8 @@ public class PhotoDownload {
         data.act = "list_image";
         data.nolimit = "1";
         data.image_type = "small";
-        data.tovar_id = tovarsPhotoToDownload;    // Должен сюда записать список ID-шников Товаров которые я хочу загрузить на свою сторону.
-//        data.tovar_id = batches.get(0);    // Должен сюда записать список ID-шников Товаров которые я хочу загрузить на свою сторону.
+//        data.tovar_id = tovarsPhotoToDownload;    // Должен сюда записать список ID-шников Товаров которые я хочу загрузить на свою сторону.
+        data.tovar_id = batches.get(0);    // Должен сюда записать список ID-шников Товаров которые я хочу загрузить на свою сторону.
 
         // Формирование тела запроса
         Gson gson = new Gson();

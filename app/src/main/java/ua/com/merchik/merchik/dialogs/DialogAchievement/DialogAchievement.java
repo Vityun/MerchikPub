@@ -116,10 +116,14 @@ public class DialogAchievement {
                     achievementsSDB.commentUser = String.valueOf(wpDataDB.getUser_id());
                     achievementsSDB.commentTxt = comment.getText().toString();
                 }
-                try {
-                    achievementsSDB.imgBeforeId = Integer.valueOf(stackPhotoDBTo.photoServerId);
-                    achievementsSDB.imgAfterId = Integer.valueOf(stackPhotoDBAfter.photoServerId);
-                }catch (Exception e){}
+
+//                try {
+//                    achievementsSDB.imgBeforeId = Integer.valueOf(stackPhotoDBTo.photoServerId);
+//                    achievementsSDB.imgAfterId = Integer.valueOf(stackPhotoDBAfter.photoServerId);
+//                }catch (Exception e){
+//                    Globals.writeToMLOG("ERROR", "DialogAchievement/buttonSave.achievementsSDB", "Exception e: " + e);
+//                }
+
                 achievementsSDB.img_before_hash = stackPhotoDBTo.photo_hash;
                 achievementsSDB.img_after_hash = stackPhotoDBAfter.photo_hash;
 
@@ -209,23 +213,18 @@ public class DialogAchievement {
                 Globals.writeToMLOG("ERROR", "DialogEKL/EXCEPTION/2", "Exception e: " + e);
             }
 
-
             SiteHintsDB finalData = data;
             videoHelp.setOnClickListener(v -> {
-
                 Log.e("setVideoLesson", "click");
-
                 if (finalData != null) {
                     Log.e("setVideoLesson", "click1");
                     if (clickListener == null) {
-
                         String s = finalData.getUrl();
                         Log.e("setVideoLesson", "click2.URL: " + s);
                         s = s.replace("http://www.youtube.com/", "http://www.youtube.com/embed/");
                         Log.e("setVideoLesson", "click2.replace.URL: " + s);
                         s = s.replace("watch?v=", "");
                         Log.e("setVideoLesson", "click2.replace.URL: " + s);
-
                         // Отображаем видео
                         // Samsung A6 Galaxy
                         DialogVideo video = new DialogVideo(context);
@@ -240,9 +239,7 @@ public class DialogAchievement {
                             context.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(finalData.getUrl())));
                         }, null);
                         video.setVideo("<html><body><iframe width=\"700\" height=\"600\" src=\"" + s + "\"></iframe></body></html>");
-
                         video.show();
-
                     } else {
                         Log.e("setVideoLesson", "click3");
                         // Переходим по ссылке
