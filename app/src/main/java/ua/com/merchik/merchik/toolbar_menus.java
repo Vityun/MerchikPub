@@ -86,6 +86,7 @@ import ua.com.merchik.merchik.Activities.ToolbarActivity.WebSocketStatus;
 import ua.com.merchik.merchik.Activities.WorkPlanActivity.WPDataActivity;
 import ua.com.merchik.merchik.Activities.navigationMenu.MenuHeader;
 import ua.com.merchik.merchik.Activities.navigationMenu.MenuHeaderAdapter;
+import ua.com.merchik.merchik.Global.UnlockCode;
 import ua.com.merchik.merchik.ServerExchange.CustomExchange.CustomExchange;
 import ua.com.merchik.merchik.ServerExchange.Exchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.PhotoMerchikExchange;
@@ -99,7 +100,9 @@ import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
 import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteObjects.SiteObjectsDB;
 import ua.com.merchik.merchik.data.RealmModels.AppUsersDB;
 import ua.com.merchik.merchik.data.RealmModels.MenuItemFromWebDB;
+import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
+import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.data.RetrofitResponse.Logout;
 import ua.com.merchik.merchik.data.RetrofitResponse.PhotoHash;
 import ua.com.merchik.merchik.data.RetrofitResponse.PhotoHashList;
@@ -115,6 +118,7 @@ import ua.com.merchik.merchik.dialogs.DialogMap;
 import ua.com.merchik.merchik.retrofit.CheckInternet.CheckServer;
 import ua.com.merchik.merchik.retrofit.CheckInternet.NetworkUtil;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
+
 
 public class toolbar_menus extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
     public Globals globals = new Globals();

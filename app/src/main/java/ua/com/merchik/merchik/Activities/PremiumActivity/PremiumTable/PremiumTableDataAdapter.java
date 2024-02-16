@@ -435,6 +435,8 @@ public class PremiumTableDataAdapter extends RecyclerView.Adapter<PremiumTableDa
 //                }
 //            });
 
+// {"act":"get_salary_basis","doc_type_id":5301,"mod":"premium","smeta":"АНач-142540"}
+
             retrofit2.Call<PremiumResponse> call = RetrofitBuilder.getRetrofitInterface().Premium_get_salary_basis_RESPONSE(RetrofitBuilder.contentType, convertedObject);
             call.enqueue(new Callback<PremiumResponse>() {
                 @Override
