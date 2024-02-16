@@ -46,11 +46,13 @@ import java.io.File;
 import java.lang.reflect.Field;
 import java.util.Calendar;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.RecycleViewDRAdapterTovar;
+import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.TelephoneMask;
@@ -66,6 +68,7 @@ import ua.com.merchik.merchik.data.RealmModels.ReportPrepareDB;
 import ua.com.merchik.merchik.data.TovarOptions;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.ErrorRealm;
+import ua.com.merchik.merchik.dialogs.DialogFilter.DialogFilter;
 
 public class DialogData {
 
@@ -87,6 +90,7 @@ public class DialogData {
     // ---- UI start ----
     private Dialog dialog;
     private ConstraintLayout layoutDialog, infoLayout, operationLayout, additionalOperationLayout;
+    private ConstraintLayout layoutFilter;
     private Drawable drawable;
 
     private RecyclerView rView, recycler;
@@ -98,6 +102,7 @@ public class DialogData {
     public ImageView photo, merchikIco;
 
     private EditText editText, editDate, editText2, editTextSearch;
+    private EditText editTextFilter;
     private Spinner spinner, spinner2;
     private ExpandableListView expListView;
 
@@ -105,8 +110,9 @@ public class DialogData {
     public ImageButton imgBtnLesson;
     public ImageButton imgBtnVideoLesson;
     public ImageButton imgBtnCall;
+    public ImageButton filter;
 
-    private Button ok, okRecycler, cancel, cancel2;
+    private Button ok, okRv, okRecycler, cancel, cancel2;
     private Button operationButton1, operationButton2;
     // ---- UI end ----
 
@@ -139,6 +145,8 @@ public class DialogData {
         infoLayout = dialog.findViewById(R.id.layout_info);
         operationLayout = dialog.findViewById(R.id.layout_operation);
         additionalOperationLayout = dialog.findViewById(R.id.layout_additional_operation);
+        layoutFilter = dialog.findViewById(R.id.layoutFilter);
+
         rView = dialog.findViewById(R.id.recycler_view);
         recycler = dialog.findViewById(R.id.recycler);
 
@@ -146,12 +154,14 @@ public class DialogData {
         imgBtnLesson = dialog.findViewById(R.id.imageButtonLesson);
         imgBtnVideoLesson = dialog.findViewById(R.id.imageButtonVideoLesson);
         imgBtnCall = dialog.findViewById(R.id.imageButtonCall);
+        filter = dialog.findViewById(R.id.filter);
 
         merchikIco = dialog.findViewById(R.id.merchik_ico);
 
         // ---------- operation block ----------
         editTextSearch = dialog.findViewById(R.id.editTextSearch);
         editText = dialog.findViewById(R.id.editText);
+        editTextFilter = dialog.findViewById(R.id.editTextFilter);
         editDate = dialog.findViewById(R.id.editDate);
         spinner = dialog.findViewById(R.id.spinner);
         spinner2 = dialog.findViewById(R.id.spinner2);
@@ -164,6 +174,7 @@ public class DialogData {
 
         // ---------- buttons ----------
         ok = dialog.findViewById(R.id.ok);
+        okRv = dialog.findViewById(R.id.okRv);
         okRecycler = dialog.findViewById(R.id.okRecycler);
         cancel = dialog.findViewById(R.id.cancel);
         cancel2 = dialog.findViewById(R.id.cancel2);
@@ -1198,6 +1209,17 @@ public class DialogData {
         });
     }
 
+    public void setOkRv(CharSequence setButtonText, DialogClickListener clickListener) {
+        okRv.setVisibility(View.VISIBLE);
+        if (setButtonText != null) {
+            okRv.setText(setButtonText);
+        }
+        okRv.setOnClickListener(v -> {
+            if (clickListener != null) clickListener.clicked();
+            dismiss();
+        });
+    }
+
     public void setOkNotClose(CharSequence setButtonText, DialogClickListener clickListener) {
         ok.setVisibility(View.VISIBLE);
         if (setButtonText != null) {
@@ -1261,6 +1283,40 @@ public class DialogData {
     public void setDialogColorDefault() {
         drawable = context.getResources().getDrawable(R.drawable.shape_rounded_corner);
         layoutDialog.setBackground(drawable);
+    }
+
+    public void showFilter(DialogClickListener clickListener){
+        layoutFilter.setVisibility(View.VISIBLE);
+        editTextFilter.setVisibility(View.VISIBLE);
+        filter.setVisibility(View.VISIBLE);
+        filter.setOnClickListener(v->{
+
+            // Хрень с датой по умолчанию для фильтра, но тут надо будет придумать какой-то регулятор ее
+            // Данные для фильтра даты
+            Calendar cal = Calendar.getInstance();
+            cal.setTimeInMillis(System.currentTimeMillis());
+            cal.set(Calendar.HOUR_OF_DAY, 0);
+            cal.set(Calendar.MINUTE, 0);
+            cal.set(Calendar.SECOND, 0);
+            cal.set(Calendar.MILLISECOND, 0);
+
+            Date dateFrom = cal.getTime();
+            Date dateTo = Clock.timeLongToDAte(Clock.getDatePeriodLong(cal.getTime().getTime(), +7) / 1000);
+            // Дата конец
+
+
+            DialogFilter dialog = new DialogFilter(v.getContext(), Globals.SourceAct.NOTHING);
+            dialog.setDates(dateFrom, dateTo);
+            dialog.setRecycler();
+            dialog.setClose(dialog::dismiss);
+            dialog.setApply(() -> {
+//                applyFilter(dialog);
+                // Тут должен быть приниматься клик и фильтры
+            });
+            dialog.show();
+
+            clickListener.clicked();
+        });
     }
 
 

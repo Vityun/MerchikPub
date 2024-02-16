@@ -8,6 +8,7 @@ import com.google.gson.JsonObject;
 import java.util.HashMap;
 import java.util.List;
 
+import io.reactivex.rxjava3.core.Single;
 import okhttp3.MultipartBody;
 import okhttp3.RequestBody;
 import okhttp3.ResponseBody;
@@ -69,6 +70,7 @@ import ua.com.merchik.merchik.data.RetrofitResponse.WpDataServer;
 import ua.com.merchik.merchik.data.RetrofitResponse.photos.ImagesViewListImageResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.photos.PhotoInfoResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.AchievementsResponse;
+import ua.com.merchik.merchik.data.RetrofitResponse.tables.AchievementsUpload.AchievementsUploadResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.AddressResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.ArticleResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.ChatGrp.ChatGrpResponse;
@@ -288,6 +290,9 @@ public interface RetrofitInterface {
 
     @GET
     Call<ResponseBody> DOWNLOAD_PHOTO_BY_URL(@Url String url);
+
+    @GET
+    Single<ResponseBody> DOWNLOAD_PHOTO_BY_URL_TEST(@Url String url);
 
 
     @POST("mobile_app.php?")
@@ -609,6 +614,10 @@ public interface RetrofitInterface {
 
     // -------------------------------------------------------
 
+    @POST("mobile_app.php?")
+    Call<AchievementsUploadResponse> AchievementsUploadResponseUPLOAD(
+            @Header("ContentType") String content,
+            @Body JsonObject json);
     @POST("mobile_app.php?")
     Call<TovarTableResponse> GET_TOVAR_TABLE(
             @Header("ContentType") String content,

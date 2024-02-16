@@ -5,7 +5,6 @@ import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 import android.content.Context;
 
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
@@ -109,7 +108,7 @@ public class OptionControlPhotoShowcase<T> extends OptionControl {
             if (stackPhotoDBSList.size() == 0) {
                 stringBuilderMsg.append("Не можу знайти світлини стосовні до поточного відвідування.");
                 signal = true;
-            } else if (showcaseSDBList.size() == 0) {
+            } /*else if (showcaseSDBList.size() == 0) {
                 stringBuilderMsg.append("Не можу знайти жодної вітрини у даній Адресі (для даного Клієнта).");
 
                 // создание объекта для даты '01.01.2024'
@@ -127,7 +126,7 @@ public class OptionControlPhotoShowcase<T> extends OptionControl {
                 } else {
                     signal = true;
                 }
-            } else if (showcaseSDBList.size() > 0 && filledShowcaseIdsCount == 0) {
+            }*/ else if (showcaseSDBList.size() > 0 && filledShowcaseIdsCount == 0) {
                 stringBuilderMsg.append("При виготовленні світлин Ви НЕ обрали жодної з ").append(showcaseSDBList.size()).append(" вітрин.");
                 signal = true;
             } else if (colMin > 0 && percentValue < colMin) {
@@ -135,6 +134,13 @@ public class OptionControlPhotoShowcase<T> extends OptionControl {
                         .append(filledShowcaseIdsCount)
                         .append(" фото з ")
                         .append(stackPhotoDBSList.size()).append(" (")
+                        .append(percentValue).append("%) що МЕНШЕ плану в ").append(colMin).append("%");
+                signal = true;
+            }else if (stackPhotoDBSList.size() > 0 && filledShowcaseIdsCount < stackPhotoDBSList.size()*colMin/100) {
+                stringBuilderMsg.append("При виготовленні світлин, Ви сфотографували лише у ")
+                        .append(filledShowcaseIdsCount)
+                        .append(" вітрин з ")
+                        .append(stackPhotoDBSList.size()).append(" присутніх на ТТ(")
                         .append(percentValue).append("%) що МЕНШЕ плану в ").append(colMin).append("%");
                 signal = true;
             } else {

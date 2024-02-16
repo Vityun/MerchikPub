@@ -48,6 +48,7 @@ import ua.com.merchik.merchik.ServerExchange.TablesExchange.TranslationsExchange
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.UsersExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.VideoViewExchange;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
+import ua.com.merchik.merchik.data.Database.Room.AchievementsSDB;
 import ua.com.merchik.merchik.data.Database.Room.AddressSDB;
 import ua.com.merchik.merchik.data.Database.Room.CitySDB;
 import ua.com.merchik.merchik.data.Database.Room.ContentSDB;
@@ -84,6 +85,9 @@ import ua.com.merchik.merchik.data.RetrofitResponse.photos.ImagesViewListImageRe
 import ua.com.merchik.merchik.data.RetrofitResponse.photos.PhotoInfoResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.photos.PhotoInfoResponseList;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.AchievementsResponse;
+import ua.com.merchik.merchik.data.RetrofitResponse.tables.AchievementsUpload.AchievementsUpload;
+import ua.com.merchik.merchik.data.RetrofitResponse.tables.AchievementsUpload.AchievementsUploadResponse;
+import ua.com.merchik.merchik.data.RetrofitResponse.tables.AchievementsUpload.AchievementsUploadResponseList;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.ArticleResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.ChatGrp.ChatGrpResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.ChatResponse;
@@ -151,14 +155,15 @@ public class Exchange {
     /**
      * 26.02.2021
      * Начало Обмена. Внутри находятся все Обмены
-     */
-    public void startExchange() {
+     */    public void startExchange() {
         try {
             Log.e("startExchange", "start");
 
             if (exchange + retryTime < System.currentTimeMillis()) {
                 Log.e("startExchange", "start/Время обновлять наступило");
                 exchange = System.currentTimeMillis();
+
+//                Globals.writeToMLOG("INFO", "PetrovExchangeTest/startExchange", "Началась загрузка данных");
 
                 try {
                     globals.fixMP(null, null);    //
@@ -189,6 +194,7 @@ public class Exchange {
                         @Override
                         public <T> void onSuccess(List<T> data) {
                             try {
+//                                Globals.writeToMLOG("INFO", "PetrovExchangeTest/startExchange/LocationExchange/downloadLocationTable/onSuccess", "(List<T> data: " + data.size());
                                 List<LocationList> newDataList = (List<LocationList>) data;
                                 List<LogMPDB> allLogMPListDB = RealmManager.INSTANCE.copyFromRealm(RealmManager.getAllLogMPDB());
 
@@ -262,6 +268,13 @@ public class Exchange {
                     Globals.writeToMLOG("ERROR", "startExchange/downloadLocationTable", "Exception e: " + e);
                 }
 
+                try {
+                    uploadAchievemnts();
+                }catch (Exception e){
+                    Globals.writeToMLOG("ERROR", "startExchange/uploadAchievemnts", "Exception e: " + e);
+                    Globals.writeToMLOG("ERROR", "startExchange/uploadAchievemnts", "Exception e/getStackTrace: " + Arrays.toString(e.getStackTrace()));
+                }
+
 
                 try {
                     downloadAdditionalMaterials();
@@ -274,6 +287,7 @@ public class Exchange {
                         @Override
                         public <T> void onSuccess(List<T> data) {
                             try {
+//                                Globals.writeToMLOG("INFO", "PetrovExchangeTest/startExchange/planogram/onSuccess", "(List<T> data: " + data.size());
                                 List<ImagesViewListImageList> datalist = (List<ImagesViewListImageList>) data;
                                 PhotoDownload.savePhotoToDB2(datalist);
                                 Globals.writeToMLOG("INFO", "startExchange/planogram.onSuccess", "OK: " + datalist.size());
@@ -305,6 +319,7 @@ public class Exchange {
                         public <T> void onSuccess(List<T> data) {
                             try {
                                 Log.e("AddressExchange", "START");
+//                                Globals.writeToMLOG("INFO", "PetrovExchangeTest/startExchange/AddressExchange/onSuccess", "(List<T> data: " + data.size());
                                 SQL_DB.addressDao().insertData((List<AddressSDB>) data)
                                         .subscribeOn(Schedulers.io())
                                         .subscribe(new DisposableCompletableObserver() {
@@ -334,6 +349,7 @@ public class Exchange {
                         @Override
                         public <T> void onSuccess(List<T> data) {
                             try {
+//                                Globals.writeToMLOG("INFO", "PetrovExchangeTest/startExchange/CustomerExchange/onSuccess", "(List<T> data: " + data.size());
                                 SQL_DB.customerDao().insertData((List<CustomerSDB>) data)
                                         .subscribeOn(Schedulers.io())
                                         .subscribe(new DisposableCompletableObserver() {
@@ -362,6 +378,7 @@ public class Exchange {
                         @Override
                         public <T> void onSuccess(List<T> data) {
                             Log.e("downloadUsersTable", "onSuccess: " + data);
+//                            Globals.writeToMLOG("INFO", "PetrovExchangeTest/startExchange/UsersExchange/onSuccess", "(List<T> data: " + data.size());
                             try {
                                 SQL_DB.usersDao().insertData((List<UsersSDB>) data)
                                         .subscribeOn(Schedulers.io())
@@ -389,6 +406,7 @@ public class Exchange {
                         @Override
                         public <T> void onSuccess(List<T> data) {
                             try {
+//                                Globals.writeToMLOG("INFO", "PetrovExchangeTest/startExchange/CityExchange/onSuccess", "(List<T> data: " + data.size());
                                 SQL_DB.cityDao().insertData((List<CitySDB>) data)
                                         .subscribeOn(Schedulers.io())
                                         .subscribe(new DisposableCompletableObserver() {
@@ -414,6 +432,7 @@ public class Exchange {
                         @Override
                         public <T> void onSuccess(List<T> data) {
                             try {
+//                                Globals.writeToMLOG("INFO", "PetrovExchangeTest/startExchange/OblastExchange/onSuccess", "(List<T> data: " + data.size());
                                 SQL_DB.oblastDao().insertData((List<OblastSDB>) data)
                                         .subscribeOn(Schedulers.io())
                                         .subscribe(new DisposableCompletableObserver() {
@@ -445,6 +464,7 @@ public class Exchange {
                         public <T> void onSuccess(List<T> data) {
                             try {
                                 Log.e("AddressExchange", "START");
+//                                Globals.writeToMLOG("INFO", "PetrovExchangeTest/startExchange/EKLExchange/onSuccess", "(List<T> data: " + data.size());
                                 SQL_DB.eklDao().insertData((List<EKL_SDB>) data)
                                         .subscribeOn(Schedulers.io())
                                         .subscribe(new DisposableCompletableObserver() {
@@ -480,6 +500,7 @@ public class Exchange {
                         @Override
                         public <T> void onSuccess(List<T> data) {
                             Log.e("MerchikTest", "data: " + data);
+//                            Globals.writeToMLOG("INFO", "PetrovExchangeTest/startExchange/StandartExchange/downloadStandartTable/onSuccess", "(List<T> data: " + data.size());
                             SQL_DB.standartDao().insertData((List<StandartSDB>) data)
                                     .subscribeOn(Schedulers.io())
                                     .subscribe(new DisposableCompletableObserver() {
@@ -504,6 +525,7 @@ public class Exchange {
                         @Override
                         public <T> void onSuccess(List<T> data) {
                             Log.e("MerchikTest", "data: " + data);
+//                            Globals.writeToMLOG("INFO", "PetrovExchangeTest/startExchange/StandartExchange/downloadContentTable/onSuccess", "(List<T> data: " + data.size());
 //                        List<ContentSDB> save = (List<ContentSDB>) data;
                             SQL_DB.contentDao().insertData((List<ContentSDB>) data)
                                     .subscribeOn(Schedulers.io())
@@ -750,6 +772,7 @@ public class Exchange {
                             Globals.writeToMLOG("INFO", "Exchange/SamplePhotoExchange()/onSuccess", "data: " + data);
 
                             List<SamplePhotoSDB> res = (List<SamplePhotoSDB>) data;
+//                            Globals.writeToMLOG("INFO", "PetrovExchangeTest/startExchange/samplePhotoExchange/onSuccess", "Загрузка ОБРАЗЦОВ ФОТО res: " + res.size());
 
                             try {
                                 RealmManager.INSTANCE.executeTransaction(realm -> {
@@ -836,7 +859,7 @@ public class Exchange {
                     new FragmentsExchange().downloadFragmentsTable(new ExchangeInterface.ExchangeResponseInterface() {
                         @Override
                         public <T> void onSuccess(List<T> data) {
-
+//                            Globals.writeToMLOG("INFO", "PetrovExchangeTest/startExchange/FragmentsExchange/onSuccess", " data.list: " + data.size());
                         }
 
                         @Override
@@ -859,6 +882,7 @@ public class Exchange {
                     new VideoViewExchange().downloadVideoViewTable(new ExchangeInterface.ExchangeResponseInterface() {
                         @Override
                         public <T> void onSuccess(List<T> data) {
+//                            Globals.writeToMLOG("INFO", "PetrovExchangeTest/startExchange/VideoViewExchange/onSuccess", "(List<ViewListSDB>) data: " + data.size());
                             SQL_DB.videoViewDao().insertAll((List<ViewListSDB>) data);
                         }
 
@@ -876,6 +900,7 @@ public class Exchange {
                     new ShowcaseExchange().downloadShowcaseTable(new ExchangeInterface.ExchangeResponseInterface() {
                         @Override
                         public <T> void onSuccess(List<T> data) {
+//                            Globals.writeToMLOG("INFO", "PetrovExchangeTest/startExchange/ShowcaseExchange/onSuccess", "(data: " + data.size());
                             SQL_DB.showcaseDao().insertAll((List<ShowcaseSDB>) data)
                                     .subscribeOn(Schedulers.io())
                                     .subscribe(new DisposableCompletableObserver() {
@@ -1962,6 +1987,7 @@ public class Exchange {
             @Override
             public void onResponse(Call<ChatResponse> call, Response<ChatResponse> response) {
                 Log.e("chatExchange", "response: " + response);
+//                Globals.writeToMLOG("INFO", "PetrovExchangeTest/startExchange/chatExchange/onResponse", "(response.body().list: " + response.body().list.size());
                 SQL_DB.chatDao().insertData(response.body().list)
                         .subscribeOn(Schedulers.io())
                         .subscribe(new DisposableCompletableObserver() {
@@ -2438,7 +2464,8 @@ public class Exchange {
             public void onResponse(Call<AchievementsResponse> call, Response<AchievementsResponse> response) {
                 Log.e("test", "test" + response);
                 try {
-                    Globals.writeToMLOG("INFO", "downloadAchievements/onResponse", "response: " + response.body().list.size());
+//                    Globals.writeToMLOG("INFO", "downloadAchievements/onResponse", "response: " + response.body().list.size());
+//                    Globals.writeToMLOG("INFO", "PetrovExchangeTest/startExchange/downloadAchievements/onSuccess", " response: " + response.body().list.size());
 
                     SQL_DB.achievementsDao().insertAllCompletable(response.body().list)
                             .subscribeOn(Schedulers.io())
@@ -2487,7 +2514,8 @@ public class Exchange {
                 Log.e("test", "test" + response);
 
                 try {
-                    Globals.writeToMLOG("INFO", "downloadVoteTable/onResponse", "response: " + response.body().list.size());
+//                    Globals.writeToMLOG("INFO", "downloadVoteTable/onResponse", "response: " + response.body().list.size());
+//                    Globals.writeToMLOG("INFO", "PetrovExchangeTest/startExchange/downloadVoteTable/onSuccess", " response: " + response.body().list.size());
 
                     SQL_DB.votesDao().insertAllCompletable(response.body().list)
                             .subscribeOn(Schedulers.io())
@@ -2582,7 +2610,8 @@ public class Exchange {
             public void onResponse(Call<ArticleResponse> call, Response<ArticleResponse> response) {
                 Log.e("test", "test" + response);
                 try {
-                    Globals.writeToMLOG("INFO", "downloadArticleTable/onResponse", "response: " + response.body().list.size());
+//                    Globals.writeToMLOG("INFO", "downloadArticleTable/onResponse", "response: " + response.body().list.size());
+//                    Globals.writeToMLOG("INFO", "PetrovExchangeTest/startExchange/downloadArticleTable/onSuccess", " response: " + response.body().list.size());
                     SQL_DB.articleDao().insertAllCompletable(response.body().list)
                             .subscribeOn(Schedulers.io())
                             .subscribe(new DisposableCompletableObserver() {
@@ -2659,6 +2688,79 @@ public class Exchange {
                 click.onFailure("Нема зв'язку. Помилка: " + t);
             }
         });
+    }
+
+    public void uploadAchievemnts(){
+        StandartData data = new StandartData();
+        data.mod = "images_achieve";
+        data.act = "add_row";
+
+        List<AchievementsSDB> list = SQL_DB.achievementsDao().getAllToDownload();
+
+        if (list != null && list.size() > 0) {
+            List<AchievementsUpload> dataList = new ArrayList<>();
+            for (AchievementsSDB item : list) {
+                AchievementsUpload uploadData = new AchievementsUpload();
+                uploadData.element_id = item.id;
+                uploadData.dt = item.dt_ut;
+                uploadData.client_id = item.clientId;
+                uploadData.addr_id = item.addrId;
+                uploadData.theme_id = item.themeId;
+                uploadData.code_dad2 = item.codeDad2;
+                uploadData.dvi = item.dvi;
+                uploadData.comment_dt = item.commentDt;
+                uploadData.comment_user_id = item.commentUser;
+                uploadData.comment_txt = item.commentTxt;
+                uploadData.img_before_hash = item.img_before_hash;
+                uploadData.img_after_hash = item.img_after_hash;
+                dataList.add(uploadData);
+            }
+
+            data.data = dataList;
+
+            Gson gson = new Gson();
+            String json = gson.toJson(data);
+            JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
+
+            Log.e("test", "convertedObject: " + convertedObject);
+
+            Globals.writeToMLOG("INFO", "uploadAchievemnts", "convertedObject: " + convertedObject);
+
+            retrofit2.Call<AchievementsUploadResponse> call = RetrofitBuilder.getRetrofitInterface().AchievementsUploadResponseUPLOAD(RetrofitBuilder.contentType, convertedObject);
+            call.enqueue(new Callback<AchievementsUploadResponse>() {
+                @Override
+                public void onResponse(Call<AchievementsUploadResponse> call, Response<AchievementsUploadResponse> response) {
+                    try {
+                        Log.e("showcaseTp", "response: " + response);
+                        if (response.body() != null){
+//                            try {
+//                                Globals.writeToMLOG("INFO", "uploadAchievemnts/onResponse", "response: " + new Gson().toJson(response));
+//                            }catch (Exception e){}
+                            if (response.body().list != null && response.body().list.size() > 0){
+                                for (AchievementsUploadResponseList item : response.body().list){
+                                    for (AchievementsSDB itemSDB : list){
+                                        if (itemSDB.id.equals(item.elementId)){
+                                            itemSDB.serverId = item.id;
+                                            SQL_DB.achievementsDao().insertAll(Collections.singletonList(itemSDB));
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }catch (Exception e){
+                        Globals.writeToMLOG("ERROR", "uploadAchievemnts/onResponse/catch", "Exception e: " + Arrays.toString(e.getStackTrace()));
+                    }
+                }
+
+                @Override
+                public void onFailure(Call<AchievementsUploadResponse> call, Throwable t) {
+                    Log.e("showcaseTp", "Throwable t: " + t);
+                    Globals.writeToMLOG("ERROR", "uploadAchievemnts/onFailure", "Throwable t: " + Arrays.toString(t.getStackTrace()));
+                }
+            });
+        }else {
+            return;
+        }
     }
 
 }

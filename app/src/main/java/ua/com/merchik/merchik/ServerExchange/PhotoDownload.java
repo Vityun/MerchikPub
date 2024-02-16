@@ -1,6 +1,10 @@
 package ua.com.merchik.merchik.ServerExchange;
 
 
+import static androidx.core.content.ContextCompat.startForegroundService;
+
+import android.content.Context;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.util.Log;
@@ -17,6 +21,7 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 import ua.com.merchik.merchik.Clock;
+import ua.com.merchik.merchik.DownloadPictureService;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
@@ -209,8 +214,9 @@ public class PhotoDownload {
      * 12.02.2022
      * Формирование запроса на получение ссылок для скачивания фотографий.
      */
-    public static void getPhotoURLFromServer(List<TovarDB> tovars, Clicks.clickStatusMsg result, Clicks.clickStatusMsgMode result2) {
+    public static void getPhotoURLFromServer(List<TovarDB> tovars, Clicks.clickStatusMsg result, Clicks.clickStatusMsgMode result2, Context context) {
         List<Integer> tovarIdsList = getTovarIds(tovars);
+//        List<Integer> tovarIdsList = getTovarIds(TovarRealm.getAllTov());
 
         Globals.writeToMLOG("INFO", "getPhotoURLFromServer", "ЗАГРУЗКА ФОТО. ПОЛУЧЕНО ФОТО: " + tovars.size());
 
@@ -218,7 +224,7 @@ public class PhotoDownload {
 
         Globals.writeToMLOG("INFO", "getPhotoURLFromServer", "ЗАГРУЗКА ФОТО. НУЖНО СКАЧАТЬ СТОЛЬКО ФОТО: " + tovarsPhotoToDownload.size());
 
-        result.onSuccess("Треба Дозавантажити " + tovarsPhotoToDownload.size() + " фото Товарів");
+//        result.onSuccess("Треба Дозавантажити " + tovarsPhotoToDownload.size() + " фото Товарів");
 
 
         // Разбивка на группі
@@ -237,13 +243,16 @@ public class PhotoDownload {
         data.act = "list_image";
         data.nolimit = "1";
         data.image_type = "small";
-        data.tovar_id = tovarsPhotoToDownload;    // Должен сюда записать список ID-шников Товаров которые я хочу загрузить на свою сторону.
-//        data.tovar_id = batches.get(0);    // Должен сюда записать список ID-шников Товаров которые я хочу загрузить на свою сторону.
+//        data.tovar_id = tovarsPhotoToDownload;    // Должен сюда записать список ID-шников Товаров которые я хочу загрузить на свою сторону.
+        data.tovar_id = batches.get(0);    // Должен сюда записать список ID-шников Товаров которые я хочу загрузить на свою сторону.
 
         // Формирование тела запроса
         Gson gson = new Gson();
         String json = gson.toJson(data);
         JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
+
+//        Globals.writeToMLOG("INFO", "PetrovExchangeTest/startExchange/getPhotoURLFromServer/onSuccess", "convertedObject: " + convertedObject);
+
 
         // Отладочная инфа
         long start = System.currentTimeMillis() / 1000;
@@ -263,10 +272,17 @@ public class PhotoDownload {
                                 photoListUrlSize = -1;
                             }
 
+//                            Globals.writeToMLOG("INFO", "PetrovExchangeTest/startExchange/getPhotoURLFromServer/onSuccess/photoListUrlSize", "photoListUrlSize: " + photoListUrlSize);
+
                             long end = System.currentTimeMillis() / 1000 - start;
                             result.onSuccess("Данные о фото товаров(" + photoListUrlSize + "шт) успешно получены. Это заняло " + end + " секунд! \nНачинаю загрузку фотографий.. \n\nЭТО МОЖЕТ ЗАНЯТЬ МНОГО ВРЕМЕНИ И ТРАФИКА!");
                             // TODO Начинаем загрузку + сохранение на телефон фоток Товаров.
-                            downloadPhoto(response.body().getList(), result, result2);
+//                            downloadPhoto(response.body().getList(), result, result2);
+
+                            Intent serviceIntent = new Intent(context, DownloadPictureService.class);
+                            DownloadPictureService.picList = response.body().getList();
+//                            context.startService(serviceIntent);
+                            startForegroundService(context, serviceIntent);
                         } else {
                             result.onFailure("Не получилось загрузить фото Товаров. Обратитесь к руководителю. Ошибка:\n\n(URL)state = false");
                         }
@@ -434,6 +450,7 @@ public class PhotoDownload {
                                     stackPhotoDB.setUpload_status(0);
                                     stackPhotoDB.setStatus(false);
 
+                                    // 30.01
                                     RealmManager.stackPhotoSavePhoto(stackPhotoDB);
                                     saveNewTovarPhoto++;
                                 } catch (Exception e) {
@@ -472,6 +489,9 @@ public class PhotoDownload {
             }
         }
 
+//        Globals.writeToMLOG("INFO", "PetrovExchangeTest/startExchange/getPhotoURLFromServer/downloadPhoto", "Фоток с типом 18: " + count);
+
+
         result.onSuccess("Фоток с типом 18: " + count);
     }
 
@@ -493,6 +513,7 @@ public class PhotoDownload {
                     int size = 0;
                     if (response.body() != null && response.body().getState() && response.body().getList() != null) {
                         size = response.body().getList().size();
+//                        Globals.writeToMLOG("INFO", "PetrovExchangeTest/startExchange/getPhotoFromServer/onSuccess", "(фото юзеров которые надо закачать)size: " + size);
                     }
                     Globals.writeToMLOG("INFO", "" + getClass().getName() + "/getPhotoFromServer/onResponse", "size: " + size);
                     savePhotoToDB(response.body().getList());
@@ -544,7 +565,7 @@ public class PhotoDownload {
                                 stackPhotoDB.setAddr_id(Integer.valueOf(item.getAddrId()));
                                 stackPhotoDB.setClient_id(item.getClientId());
                                 stackPhotoDB.setPhoto_type(Integer.valueOf(item.getPhotoTp()));
-                                stackPhotoDB.photo_hash = item.getHash();
+                                stackPhotoDB.photo_hash = item.imgHash;
                                 stackPhotoDB.tovar_id = item.getTovarId();
 
                                 stackPhotoDB.showcase_id = item.showcase_id;

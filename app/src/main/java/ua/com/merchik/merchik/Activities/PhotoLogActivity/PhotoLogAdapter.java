@@ -18,8 +18,6 @@ import android.view.ViewGroup;
 import android.widget.Filter;
 import android.widget.Filterable;
 import android.widget.ImageView;
-import android.widget.PopupWindow;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -331,6 +329,10 @@ public class PhotoLogAdapter extends RecyclerView.Adapter<PhotoLogAdapter.ViewHo
                             }
                             break;
 
+                        case ACHIEVEMENTS:
+
+                            break;
+
 
                         default:
                             check.setVisibility(View.GONE);
@@ -471,43 +473,6 @@ public class PhotoLogAdapter extends RecyclerView.Adapter<PhotoLogAdapter.ViewHo
     }
 
     //----------------------------------------------------------------------------------------------
-
-    private PopupWindow popup;
-    private TextView tvDetailed, tvError;
-
-    private void addPopup(Context context, View view, StackPhotoDB photoLogDat) {
-        setPopUpWindow(context);
-        popup.showAsDropDown(view, 200, -100);
-
-        tvDetailed = popup.getContentView().findViewById(R.id.detailed);
-        tvError = popup.getContentView().findViewById(R.id.error);
-
-        tvDetailed.setOnClickListener(v -> {
-//            globals.alertDialogMsg(photoData(photoLogDat), context);
-            popup.dismiss();
-        });
-
-        tvError.setOnClickListener(v -> {
-            if (photoLogDat.getError() != null) {
-                globals.alertDialogMsg(context, getPhotoErrorInfo(photoLogDat));
-            } else {
-                Toast.makeText(context, "Ошибок нет", Toast.LENGTH_SHORT).show();
-            }
-            popup.dismiss();
-        });
-    }
-
-
-    /**
-     * 04.01.2021
-     * Установка в POPUP layout-а
-     */
-    private void setPopUpWindow(Context context) {
-        LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        View view = inflater.inflate(R.layout.photo_log_popup, null);
-        popup = new PopupWindow(view, 300, RelativeLayout.LayoutParams.WRAP_CONTENT, true);
-    }
-
 
     /**
      * 04.01.2021

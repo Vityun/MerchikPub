@@ -18,8 +18,9 @@ import java.util.Calendar;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
-import ua.com.merchik.merchik.Clock;
+import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.R;
+import ua.com.merchik.merchik.ServerExchange.Exchange;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.ShowcaseResponse;
 import ua.com.merchik.merchik.data.TestJsonUpload.StandartData;
 import ua.com.merchik.merchik.dialogs.DialogShowcase.DialogShowcase;
@@ -59,48 +60,30 @@ public class MenuMainActivity extends toolbar_menus {
 
     private void testLong() {
         Calendar calendar = Calendar.getInstance();
-        int count = 1;
+//        int count = 1;
+//
+//        while (count < 365) {
+//            Log.e("testLong", "calendar(" + count + "): " + calendar);
+        int year = calendar.get(Calendar.YEAR);
+        int dayOfYear = calendar.get(Calendar.DAY_OF_YEAR);
+        int dayOfWeek = calendar.get(Calendar.DAY_OF_WEEK);
+        int dayOfMonth = calendar.get(Calendar.DAY_OF_MONTH);
 
-        while (count < 365) {
-            Log.e("testLong", "calendar(" + count + "): " + calendar);
-            int year = calendar.get(Calendar.YEAR);
-            int dayOfYear = calendar.get(Calendar.DAY_OF_YEAR);
-            int dayOfWeek = calendar.get(Calendar.DAY_OF_WEEK);
-            int dayOfMonth = calendar.get(Calendar.DAY_OF_MONTH);
+        double pass = (double) year / (dayOfYear + dayOfWeek + dayOfMonth);
 
-            double pass = (double) year / (dayOfYear + dayOfWeek + dayOfMonth);
+        int res = Integer.parseInt(String.format("%03d", (int) (pass * 100)));
 
-            int res = Integer.parseInt(String.format("%03d", (int) (pass * 100)));
+        Toast.makeText(getApplicationContext(), "" + res, Toast.LENGTH_LONG).show();
 
-            Log.e("testLong", "pass: " + res);
-            calendar.add(Calendar.DAY_OF_YEAR, count);
-            count++;
-        }
+        Log.e("testLong", "pass: " + res);
+//            calendar.add(Calendar.DAY_OF_YEAR, count);
+//            count++;
+//        }
     }
 
     private void test() {
-        StandartData data = new StandartData();
-        data.mod = "rack";
-        data.act = "type_list";
-        data.dt_change_from = String.valueOf(Clock.getDatePeriodLong(-30) / 1000);
-        data.dt_change_to = String.valueOf(Clock.getDatePeriodLong(1) / 1000);
-
-        Gson gson = new Gson();
-        String json = gson.toJson(data);
-        JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
-
-        retrofit2.Call<JsonObject> call = RetrofitBuilder.getRetrofitInterface().TEST_JSON_UPLOAD(RetrofitBuilder.contentType, convertedObject);
-        call.enqueue(new Callback<JsonObject>() {
-            @Override
-            public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
-                Log.e("showcaseTp", "response: " + response);
-            }
-
-            @Override
-            public void onFailure(Call<JsonObject> call, Throwable t) {
-                Log.e("showcaseTp", "Throwable t: " + t);
-            }
-        });
+        Globals.writeToMLOG("INFO", "uploadAchievemnts", "test");
+        new Exchange().uploadAchievemnts();
     }
 
 /*

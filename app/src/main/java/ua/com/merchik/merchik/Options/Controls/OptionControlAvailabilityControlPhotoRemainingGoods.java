@@ -21,6 +21,7 @@ import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.Options.OptionControl;
 import ua.com.merchik.merchik.Options.Options;
 import ua.com.merchik.merchik.data.Database.Room.AddressSDB;
+import ua.com.merchik.merchik.data.Database.Room.ArticleSDB;
 import ua.com.merchik.merchik.data.Database.Room.CustomerSDB;
 import ua.com.merchik.merchik.data.OptionMassageType;
 import ua.com.merchik.merchik.data.RealmModels.AdditionalRequirementsDB;
@@ -129,11 +130,18 @@ public class OptionControlAvailabilityControlPhotoRemainingGoods<T> extends Opti
                 int face = Integer.parseInt(item.face);
                 if (face == 0 && !stackPhotoList.stream().anyMatch(stackPhoto -> stackPhoto.tovar_id.equals(item.getTovarId()))) {
                     TovarDB tovar = TovarRealm.getById(item.getTovarId());
+                    ArticleSDB articleSDB = SQL_DB.articleDao().getByTovId(Integer.parseInt(tovar.getiD()));
                     item.error = 1;
-                    item.errorNote = "(" + tovar.getiD() + ") " + tovar.getNm() + " отриману з додатку мережі.";
+
+                    String code = tovar.getiD();
+                    if (articleSDB != null && articleSDB.vendorCode != null)
+                        code = articleSDB.vendorCode;
+
+//                    item.errorNote = "(" + tovar.getiD() + ") " + tovar.getNm() + " отриману з додатку мережі.";  // 14.02.2024 По просьбе Анны меняю тут на Артикула
+                    item.errorNote = "(" + code + ") " + tovar.getNm() + " отриману з додатку мережі.";
 
                     tovs.append(createLinkedString(item.errorNote, item)).append("\n");
-                }else {
+                } else {
                     item.error = 0;
                 }
             }
@@ -159,8 +167,8 @@ public class OptionControlAvailabilityControlPhotoRemainingGoods<T> extends Opti
             }
 
             // 7.0.
-            if (signal){
-                if (wpDataDB.getUser_id() == 232545 || wpDataDB.getUser_id() == 189955){
+            if (signal) {
+                if (wpDataDB.getUser_id() == 232545 || wpDataDB.getUser_id() == 189955) {
                     spannableStringBuilder.append(", але для цього виконавця зроблено виключення.");
                     signal = false;
                 }

@@ -78,7 +78,6 @@ public class TovarRequisites {
                     } else {
                         DetailedReportOptionsFrag.PermissionUtils.requestReadExternalStoragePermission(context, (DetailedReportActivity) context);
                     }
-
                 });
 
         res.setCancel("Закрити", res::dismiss);

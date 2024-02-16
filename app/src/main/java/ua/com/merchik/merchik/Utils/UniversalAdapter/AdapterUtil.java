@@ -449,8 +449,8 @@ public class AdapterUtil extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             text5.setText("" + data.commentTxt);
 
             try {
-                StackPhotoDB stackPhotoBefore = StackPhotoRealm.getByServerId(String.valueOf(data.imgBeforeId));
-                StackPhotoDB stackPhotoAfter = StackPhotoRealm.getByServerId(String.valueOf(data.imgAfterId));
+                StackPhotoDB stackPhotoBefore = StackPhotoRealm.getByHash(data.img_before_hash);
+                StackPhotoDB stackPhotoAfter = StackPhotoRealm.getByHash(data.img_after_hash);
 
                 image.setImageURI(Uri.parse(stackPhotoBefore.photo_num));
                 image2.setImageURI(Uri.parse(stackPhotoAfter.photo_num));

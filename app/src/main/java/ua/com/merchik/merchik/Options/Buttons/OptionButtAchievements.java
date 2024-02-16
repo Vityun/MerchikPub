@@ -57,53 +57,19 @@ public class OptionButtAchievements<T> extends OptionControl {
         if (document instanceof WpDataDB) {
             this.wpDataDB = (WpDataDB) document;
             dateFrom = Clock.getDatePeriodLong(wpDataDB.getDt().getTime(), -41) / 1000;   // -41 потому что оно берет начало дня
-            dateTo = wpDataDB.getDt().getTime() / 1000;
+            dateTo = Clock.getDatePeriodLong(wpDataDB.getDt().getTime(), 3) / 1000;
             clientId = wpDataDB.getClient_id();
             addressId = wpDataDB.getAddr_id();
         }
+
+        List<AchievementsSDB> test = SQL_DB.achievementsDao().getAll();
 
         achievements = SQL_DB.achievementsDao().getAchievementsList(dateFrom, dateTo, clientId, addressId, null);
     }
 
     private void executeOption() {
         try {
-
             showAchievementDialog();
-
-            if (internetStatus == 1) {
-                // Получаю ВСЕ выгруженные фото по данному отчёту.
-                List<StackPhotoDB> stackPhotoDBS = StackPhotoRealm.getUploadedStackPhotoByDAD2(wpDataDB.getCode_dad2());
-
-                if (stackPhotoDBS != null && stackPhotoDBS.size() >= 2) {
-                    String dateFrom = Clock.getHumanTimeSecPattern(Clock.getDatePeriodLong(wpDataDB.getDt().getTime(), -31) / 1000, "yyyy-MM-dd");
-                    String dateTo = Clock.getHumanTimeSecPattern(Clock.getDatePeriodLong(wpDataDB.getDt().getTime(), +2) / 1000, "yyyy-MM-dd");
-
-                    String link = String.format("/mobile.php?mod=images_achieve**act=list_achieve**code_dad2_create=%s**client_id=%s**addr_id=%s**date_from=%s**date_to=%s", wpDataDB.getCode_dad2(), wpDataDB.getClient_id(), wpDataDB.getAddr_id(), dateFrom, dateTo);
-                    AppUsersDB appUser = AppUserRealm.getAppUserById(userId);
-
-                    String hash = String.format("%s%s%s", appUser.getUserId(), appUser.getPassword(), "AvgrgsYihSHp6Ok9yQXfSHp6Ok9nXdXr3OSHp6Ok9UPBTzTjrF20Nsz3");
-                    hash = Globals.getSha1Hex(hash);
-
-                    String format = String.format("https://merchik.com.ua/sa.php?&u=%s&s=%s&l=%s", userId, hash, link);
-
-                    Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(format));
-                    context.startActivity(browserIntent);
-                } else {
-                    DialogData dialogData = new DialogData(context);
-                    dialogData.setTitle("Не бачу фото");
-                    dialogData.setText("Не можу знайти фотографії для створення Досягнення.\n\nВи або не зробили фото або фото ще не потрапили на сторону серверу. " +
-                            "Треба дочекатися виватаження всіх фото по цьому звіту.");
-                    dialogData.setClose(dialogData::dismiss);
-                    dialogData.show();
-                }
-            } else {
-                DialogData dialogData = new DialogData(context);
-                dialogData.setTitle("Помилка!");
-                dialogData.setText("Обнаружена проблема с сетью, проверьте интернет соединение и повторите попытку позже.");
-                dialogData.setClose(dialogData::dismiss);
-                dialogData.show();
-                Globals.writeToMLOG("RESP", "OptionButtAchievements/executeOption", "Обнаружена проблема с сетью, проверьте интернет соединение и повторите попытку позже.");
-            }
         } catch (Exception e) {
             Globals.writeToMLOG("ERROR", "OptionButtAchievements/executeOption", "Exception e: " + e);
         }
@@ -112,14 +78,23 @@ public class OptionButtAchievements<T> extends OptionControl {
     private void showAchievementDialog() {
         DialogData dialog = new DialogData(context);
         dialog.setTitle("Досягнення");
-        dialog.setText("");
+        dialog.setText("Оиберіть досягнення, або створіть нове!");
+        dialog.setClose(dialog::dismiss);
+        dialog.showFilter(() -> {
+            // Тут я должен обработать данные, что я внёс в фильтре и закинуть их на обновление
+        });
         dialog.setRecycler(createAdapter(dialog.context, achievements), new LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false));
         dialog.setClose(dialog::dismiss);
-        dialog.setOk("Нове досягнення", () -> {
+        dialog.setOkRv("Створення досягнення (додаток)", () -> {
             DialogAchievement dialogAchievement = new DialogAchievement(context, wpDataDB);
+            dialogAchievement.setClose(dialogAchievement::dismiss);
+            dialogAchievement.setOption(optionDB);
             dialogAchievement.setTitle("Створення нового Досягнення");
+            dialogAchievement.buttonPhotoTo();
+            dialogAchievement.buttonPhotoAfter();
             dialogAchievement.show();
         });
+        dialog.setCancel2("Створення досягнення (МВС)", this::openAchievementMVS);
         dialog.show();
     }
 
@@ -128,5 +103,42 @@ public class OptionButtAchievements<T> extends OptionControl {
         data.achievementsSDBS = achievements;
         AdapterUtil adapter = new AdapterUtil(context, data, Globals.ReferencesEnum.ACHIEVEMENTS);
         return adapter;
+    }
+
+    private void openAchievementMVS() {
+        if (internetStatus == 1) {
+            // Получаю ВСЕ выгруженные фото по данному отчёту.
+            List<StackPhotoDB> stackPhotoDBS = StackPhotoRealm.getUploadedStackPhotoByDAD2(wpDataDB.getCode_dad2());
+
+            if (stackPhotoDBS != null && stackPhotoDBS.size() >= 2) {
+                String dateFrom = Clock.getHumanTimeSecPattern(Clock.getDatePeriodLong(wpDataDB.getDt().getTime(), -31) / 1000, "yyyy-MM-dd");
+                String dateTo = Clock.getHumanTimeSecPattern(Clock.getDatePeriodLong(wpDataDB.getDt().getTime(), +2) / 1000, "yyyy-MM-dd");
+
+                String link = String.format("/mobile.php?mod=images_achieve**act=list_achieve**code_dad2_create=%s**client_id=%s**addr_id=%s**date_from=%s**date_to=%s", wpDataDB.getCode_dad2(), wpDataDB.getClient_id(), wpDataDB.getAddr_id(), dateFrom, dateTo);
+                AppUsersDB appUser = AppUserRealm.getAppUserById(userId);
+
+                String hash = String.format("%s%s%s", appUser.getUserId(), appUser.getPassword(), "AvgrgsYihSHp6Ok9yQXfSHp6Ok9nXdXr3OSHp6Ok9UPBTzTjrF20Nsz3");
+                hash = Globals.getSha1Hex(hash);
+
+                String format = String.format("https://merchik.com.ua/sa.php?&u=%s&s=%s&l=%s", userId, hash, link);
+
+                Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(format));
+                context.startActivity(browserIntent);
+            } else {
+                DialogData dialogData = new DialogData(context);
+                dialogData.setTitle("Не бачу фото");
+                dialogData.setText("Не можу знайти фотографії для створення Досягнення.\n\nВи або не зробили фото або фото ще не потрапили на сторону серверу. " +
+                        "Треба дочекатися виватаження всіх фото по цьому звіту.");
+                dialogData.setClose(dialogData::dismiss);
+                dialogData.show();
+            }
+        } else {
+            DialogData dialogData = new DialogData(context);
+            dialogData.setTitle("Помилка!");
+            dialogData.setText("Обнаружена проблема с сетью, проверьте интернет соединение и повторите попытку позже.");
+            dialogData.setClose(dialogData::dismiss);
+            dialogData.show();
+            Globals.writeToMLOG("RESP", "OptionButtAchievements/executeOption", "Обнаружена проблема с сетью, проверьте интернет соединение и повторите попытку позже.");
+        }
     }
 }

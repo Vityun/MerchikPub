@@ -68,4 +68,10 @@ public interface EKLDao {
 
     @Query("SELECT * FROM ekl WHERE address_id = :addr_id AND user_id = :user_id AND code_verify = 1 AND (vpi IS NOT NULL AND vpi BETWEEN :l AND :l1 OR dt BETWEEN :l AND :l1)")
     List<EKL_SDB> getBy(long l, long l1, int addr_id, int user_id);
+
+    @Query("SELECT * FROM ekl WHERE address_id = :addr_id AND user_id = :user_id AND code_verify = 1 AND (dt BETWEEN :l AND :l1)")
+    List<EKL_SDB> getByTEst(long l, long l1, int addr_id, int user_id);
+
+    @Query("SELECT * FROM ekl WHERE address_id = :addr_id AND user_id = :user_id AND code_verify = 1 ORDER BY dt")
+    List<EKL_SDB> getByTEst(int addr_id, int user_id);
 }

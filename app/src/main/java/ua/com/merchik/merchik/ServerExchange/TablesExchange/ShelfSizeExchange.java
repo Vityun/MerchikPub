@@ -56,6 +56,8 @@ public class ShelfSizeExchange {
 
 
             if (data != null && data.state && data.list != null && data.list.size() > 0) {
+//                Globals.writeToMLOG("INFO", "PetrovExchangeTest/startExchange/ShelfSizeExchange/onSuccess", " data.list: " + data.list);
+
                 SQL_DB.shelfSizeDao().insertAll(data.list)
                         .subscribeOn(Schedulers.io())
                         .subscribe(new DisposableCompletableObserver() {

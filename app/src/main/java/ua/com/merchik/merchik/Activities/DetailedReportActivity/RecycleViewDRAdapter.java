@@ -1,5 +1,8 @@
 package ua.com.merchik.merchik.Activities.DetailedReportActivity;
 
+import static ua.com.merchik.merchik.Options.Options.NNKMode.CHECK_CLICK;
+import static ua.com.merchik.merchik.Options.Options.NNKMode.NULL;
+import static ua.com.merchik.merchik.data.OptionMassageType.Type.DIALOG;
 import static ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsRealm.AdditionalRequirementsModENUM.HIDE_FOR_USER;
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
@@ -28,12 +31,14 @@ import android.widget.Toast;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.recyclerview.widget.RecyclerView;
 
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.List;
 
 import ua.com.merchik.merchik.Activities.PhotoLogActivity.PhotoLogActivity;
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
+import ua.com.merchik.merchik.Options.Controls.OptionControlAvailabilityControlPhotoRemainingGoods;
 import ua.com.merchik.merchik.Options.Controls.OptionControlReclamationAnswer;
 import ua.com.merchik.merchik.Options.Controls.OptionControlTaskAnswer;
 import ua.com.merchik.merchik.Options.OptionControl;
@@ -48,10 +53,12 @@ import ua.com.merchik.merchik.data.OptionMassageType;
 import ua.com.merchik.merchik.data.OptionsButtons;
 import ua.com.merchik.merchik.data.RealmModels.AdditionalRequirementsDB;
 import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
+import ua.com.merchik.merchik.data.RealmModels.ReportPrepareDB;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsRealm;
+import ua.com.merchik.merchik.database.realm.tables.ReportPrepareRealm;
 import ua.com.merchik.merchik.database.realm.tables.StackPhotoRealm;
 import ua.com.merchik.merchik.database.realm.tables.WpDataRealm;
 import ua.com.merchik.merchik.dialogs.DialogData;
@@ -137,519 +144,538 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
         }
 
         public void bind(OptionsDB optionsButtons, SiteObjectsSDB siteObjectsSDB) {
-            final int POS = getAdapterPosition();
-            boolean describedOption = true;
-
-            Log.e("RViewDRAdapterBind", "optionsButtons: " + optionsButtons);
-
-            textInteger.setVisibility(View.VISIBLE);
-
-            String buttText = optionsButtons.getOptionTxt();
-            buttText = buttText.replace("&quot;", "\"");
-            buttText = buttText.replace("Кнопка ", "");
-
-            if (siteObjectsSDB != null) {
-                Log.e("R_TRANSLATES", "siteObjectsSDB.id: " + siteObjectsSDB.id);
-                Log.e("R_TRANSLATES", "siteObjectsSDB.commentsTranslation: " + siteObjectsSDB.commentsTranslation);
-                buttText = siteObjectsSDB.commentsTranslation;
-            }
-
-            Log.e("bindRPA", "=============================================");
-            Log.e("bindRPA", "buttText: " + buttText);
-            Log.e("bindRPA", "optionsButtons.getOptionId(): " + optionsButtons.getOptionId());
-            Log.e("bindRPA", "optionsButtons.getOptionControlId(): " + optionsButtons.getOptionControlId());
-            Log.e("bindRPA", "optionsButtons.getIsSignal(): " + optionsButtons.getIsSignal());
-            Log.e("bindRPA", "optionsButtons.getBlockPns(): " + optionsButtons.getBlockPns());
-            Log.e("bindRPA", "optionsButtons.getAmountMin(): " + optionsButtons.getAmountMin());
-            Log.e("bindRPA", "optionsButtons.getAmountMax(): " + optionsButtons.getAmountMax());
-
-            // Подсвечивает Кнопки Опций с блоком ПНС() КРАСНЫМ цветом
-            if (optionsButtons.getIsSignal().equals("1") && optionsButtons.getBlockPns().equals("1")) {
-                Log.e("bindRPA", "RED");
-                textTitle.setText("" + Html.fromHtml("<font color='#FF0000'>" + buttText + "</font>")); // Должно гореть красным
-            } else {
-                Log.e("bindRPA", "NORM");
-                textTitle.setText("" + buttText);
-            }
-
-            int optionId = Integer.parseInt(butt.get(getAdapterPosition()).getOptionId());
-
-            // Выделяет жирным ОСОБЕННЫЕ Кнопки Опций
-            if (optionId == 132968 || optionId == 158309 || optionId == 158308) { // Фото витрины)
-                textTitle.setTypeface(null, Typeface.BOLD);
-            } else {
-                textTitle.setTypeface(null, Typeface.NORMAL);
-            }
-
-            // 06.08.2020
-            // На данный момент опции делаем "нажимными" по id-шникам.
-            // ОПИСАННЫЕ Кнопки Опций
-            // TODO заменить на ENUM
-            if (optionId == 135809   // Фото витрины ДО начала работ
-                    || optionId == 132968   // Фото витрины
-                    || optionId == 135158   // Фото Остатков Товаров (ФОТ)
-                    || optionId == 132969   // Фото Тележка с Товаром (ФТТ)
-                    || optionId == 138518   // Начало работы
-                    || optionId == 138520   // Окончание работы
-                    || optionId == 138773   // Местоположение
-                    || optionId == 137797   // ДеталОтчёт план по товарам
-                    || optionId == 138339   // Доп. Требования
-                    || optionId == 141360   // Фото товара на складе
-                    || optionId == 141910   // Получение заказа в ТТ
-                    || optionId == 141888   // Выкуп Товара с ТТ
-                    || optionId == 141885   // Фото Документов
-                    || optionId == 84007    // ЭКЛ
-                    || optionId == 132666   // Стандарт
-                    || optionId == 139576   // Версия ПО
-                    || optionId == 138767   // Планограмма
-                    || optionId == 135742   // "Дет.Отчет" (по Клиенто-Адресу)
-                    || optionId == 132621   // Оценка
-                    || optionId == 84003    // Мнение о сотруднике
-                    || optionId == 138340   // Доп. Материалы
-                    || optionId == 135327   // Задача
-                    || optionId == 135328   // Рекламация
-                    || optionId == 156882   // Акции
-                    || optionId == 151139   // Фото планограммы
-                    || optionId == 132623   // Комментарий
-                    || optionId == 133382   // Потенциальный клиент
-                    || optionId == 157275   // 1.
-                    || optionId == 157276   // 2. Две опции контроля тут на всяк случай. Тестим.
-                    || optionId == 157274   // 3. ..три
-                    || optionId == 135159   // Достижения
-                    || optionId == 157277   // Фото Акционного Товара
-                    || optionId == 157353   // Дет отчёт исправление
-                    || optionId == 138643   // Подъём товара со склада
-                    || optionId == 158243   // Стикеровка
-                    || optionId == 135412   // Процент премиальных
-                    || optionId == 151748   // ДОЛЯ полочного пространства
-                    || optionId == 158309   // "Фото Витрины" (Наближене)
-                    || optionId == 158308   // "Фото Витрины" (Панорамне)
-                    || optionId == 158604   // ФВ (Наполненность)
-                    || optionId == 158605   // ФВ (Корпор. блок)
-                    || optionId == 158606   // Дополнительное место продаж
-                    || optionId == 157354   // Фото ДМП.
-                    || optionId == 157242   // Причина отсутствия товара
-                    || optionId == 159726   // Фото торговой точки
-                    || optionId == 159706   // Инвентаризация
-                    || optionId == 159725   // Кнопка "Фото Торговой Точки (ФТТ)"
-                    || optionId == 159799   // Возврат
-                    || optionId == 135413   // "Фото Витрины (Оценка)"
-                    || optionId == 135719   // "Дет.Отчет" (оценка)
-                    || optionId == 143969   // "СМС-код Клиенту" (электронный контрольный лист ЭКЛ)
-                    || optionId == 160567   // Витрины
-                    || optionId == 164351   // Контроль наявності світлини прикасової зони
-                    || optionId == 164355   // "Фото Планограммы ТТ"
-                    || optionId == 132938   // Хочу дополнительный заработок
-            ) {
-                optionButton.setBackgroundResource(R.drawable.bg_temp);
-                textInteger2.setVisibility(View.VISIBLE);
-                if (optionsButtons.getIsSignal().equals("1") && !optionsButtons.getBlockPns().equals("1")) {
-                    textInteger2.setText(counter2Text());
-                } else {
-                    if (optionId == 133382) {
-                        textInteger2.setVisibility(View.VISIBLE);
-                        textInteger2.setText("+1100 грн.");
-                    } else {
-                        textInteger2.setVisibility(View.GONE);
-                    }
-                }
-            } else {
-                describedOption = false;
-                textInteger2.setVisibility(View.GONE);
-                optionButton.setBackgroundResource(R.drawable.button_bg_inactive);
-            }
-
-
-            // color log
-            Log.e("ColorLog", "Color.Opt.Id: " + optionsButtons.getID());
-            Log.e("ColorLog", "Color.Opt.getOptionTxt: " + optionsButtons.getOptionTxt());
-            Log.e("ColorLog", "Color.Opt.getOptionId: " + optionsButtons.getOptionId());
-            Log.e("ColorLog", "Color.Opt.getIsSignal: " + optionsButtons.getIsSignal());
-
-
-            // Определения цвета которым будет гореть СИГНАЛ
-            setCheck.setColorFilter(mContext.getResources().getColor(R.color.shadow));
-            if (describedOption) {
-                setCheck.setVisibility(View.VISIBLE);
-                if (optionsButtons.getIsSignal().equals("1")) {
-//                setCheck.setImageResource(R.drawable.red_checkbox);
-                    setCheck.setImageResource(R.drawable.ic_exclamation_mark_in_a_circle);
-                    setCheck.setColorFilter(mContext.getResources().getColor(R.color.red_error));
-                } else if (optionsButtons.getIsSignal().equals("2")) {
-//                setCheck.setImageResource(R.drawable.greeen_checkbox);
-                    setCheck.setImageResource(R.drawable.ic_check);
-//                    setCheck.setColorFilter(mContext.getResources().getColor(R.color.greenCol));
-                    setCheck.setColorFilter(mContext.getResources().getColor(R.color.green_default));
-                } else {
-                    if (optionsButtons.getOptionControlId().equals("0")) {
-                        setCheck.setVisibility(View.INVISIBLE);
-                    } else {
-                        setCheck.setImageResource(R.drawable.ic_round);
-                        setCheck.setColorFilter(mContext.getResources().getColor(R.color.shadow));
-                    }
-                }
-            } else {
-                setCheck.setVisibility(View.INVISIBLE);
-                setCheck.setImageResource(R.drawable.ic_round);
-                setCheck.setColorFilter(mContext.getResources().getColor(R.color.colorUnselectedTab));
-            }
-
-
-            // =========== СЧЁТЧИК ===========
-            // У Каждой кнопки есть какое-то значение, тут я его считаю и вставляю
-            // todo textInteger.setText(msg); -- могу ли выводить это нормально 1 раз?
             try {
-                // Вчтавляем "счётчкик"
-                switch (optionId) {
-                    // Start Work
-                    case (138518):
-                        long startTime;
+                final int POS = getAdapterPosition();
+                boolean describedOption = true;
+
+                Log.e("RViewDRAdapterBind", "optionsButtons: " + optionsButtons);
+
+                textInteger.setVisibility(View.VISIBLE);
+
+                String buttText = optionsButtons.getOptionTxt();
+                buttText = buttText.replace("&quot;", "\"");
+                buttText = buttText.replace("Кнопка ", "");
+
+                if (siteObjectsSDB != null) {
+                    Log.e("R_TRANSLATES", "siteObjectsSDB.id: " + siteObjectsSDB.id);
+                    Log.e("R_TRANSLATES", "siteObjectsSDB.commentsTranslation: " + siteObjectsSDB.commentsTranslation);
+                    buttText = siteObjectsSDB.commentsTranslation;
+                }
+
+                Log.e("bindRPA", "=============================================");
+                Log.e("bindRPA", "buttText: " + buttText);
+                Log.e("bindRPA", "optionsButtons.getOptionId(): " + optionsButtons.getOptionId());
+                Log.e("bindRPA", "optionsButtons.getOptionControlId(): " + optionsButtons.getOptionControlId());
+                Log.e("bindRPA", "optionsButtons.getOptionBlock1(): " + optionsButtons.getOptionBlock1());
+                Log.e("bindRPA", "optionsButtons.getOptionBlock2(): " + optionsButtons.getOptionBlock2());
+                Log.e("bindRPA", "optionsButtons.getIsSignal(): " + optionsButtons.getIsSignal());
+                Log.e("bindRPA", "optionsButtons.getBlockPns(): " + optionsButtons.getBlockPns());
+                Log.e("bindRPA", "optionsButtons.getAmountMin(): " + optionsButtons.getAmountMin());
+                Log.e("bindRPA", "optionsButtons.getAmountMax(): " + optionsButtons.getAmountMax());
+
+                // Подсвечивает Кнопки Опций с блоком ПНС() КРАСНЫМ цветом
+                if (optionsButtons.getIsSignal().equals("1") && optionsButtons.getBlockPns().equals("1")) {
+                    Log.e("bindRPA", "RED");
+                    textTitle.setText("" + Html.fromHtml("<font color='#FF0000'>" + buttText + "</font>")); // Должно гореть красным
+                } else {
+                    Log.e("bindRPA", "NORM");
+                    textTitle.setText("" + buttText);
+                }
+
+                int optionId = Integer.parseInt(butt.get(getAdapterPosition()).getOptionId());
+
+                // Выделяет жирным ОСОБЕННЫЕ Кнопки Опций
+                if (optionId == 132968 || optionId == 158309 || optionId == 158308) { // Фото витрины)
+                    textTitle.setTypeface(null, Typeface.BOLD);
+                } else {
+                    textTitle.setTypeface(null, Typeface.NORMAL);
+                }
+
+                // 06.08.2020
+                // На данный момент опции делаем "нажимными" по id-шникам.
+                // ОПИСАННЫЕ Кнопки Опций
+                // TODO заменить на ENUM
+                if (optionId == 135809   // Фото витрины ДО начала работ
+                        || optionId == 132968   // Фото витрины
+                        || optionId == 135158   // Фото Остатков Товаров (ФОТ)
+                        || optionId == 132969   // Фото Тележка с Товаром (ФТТ)
+                        || optionId == 138518   // Начало работы
+                        || optionId == 138520   // Окончание работы
+                        || optionId == 138773   // Местоположение
+                        || optionId == 137797   // ДеталОтчёт план по товарам
+                        || optionId == 138339   // Доп. Требования
+                        || optionId == 141360   // Фото товара на складе
+                        || optionId == 141910   // Получение заказа в ТТ
+                        || optionId == 141888   // Выкуп Товара с ТТ
+                        || optionId == 141885   // Фото Документов
+                        || optionId == 84007    // ЭКЛ
+                        || optionId == 132666   // Стандарт
+                        || optionId == 139576   // Версия ПО
+                        || optionId == 138767   // Планограмма
+                        || optionId == 135742   // "Дет.Отчет" (по Клиенто-Адресу)
+                        || optionId == 132621   // Оценка
+                        || optionId == 84003    // Мнение о сотруднике
+                        || optionId == 138340   // Доп. Материалы
+                        || optionId == 135327   // Задача
+                        || optionId == 135328   // Рекламация
+                        || optionId == 156882   // Акции
+                        || optionId == 151139   // Фото планограммы
+                        || optionId == 132623   // Комментарий
+                        || optionId == 133382   // Потенциальный клиент
+                        || optionId == 157275   // 1.
+                        || optionId == 157276   // 2. Две опции контроля тут на всяк случай. Тестим.
+                        || optionId == 157274   // 3. ..три
+                        || optionId == 135159   // Достижения
+                        || optionId == 157277   // Фото Акционного Товара
+                        || optionId == 157353   // Дет отчёт исправление
+                        || optionId == 138643   // Подъём товара со склада
+                        || optionId == 158243   // Стикеровка
+                        || optionId == 135412   // Процент премиальных
+                        || optionId == 151748   // ДОЛЯ полочного пространства
+                        || optionId == 158309   // "Фото Витрины" (Наближене)
+                        || optionId == 158308   // "Фото Витрины" (Панорамне)
+                        || optionId == 158604   // ФВ (Наполненность)
+                        || optionId == 158605   // ФВ (Корпор. блок)
+                        || optionId == 158606   // Дополнительное место продаж
+                        || optionId == 157354   // Фото ДМП.
+                        || optionId == 157242   // Причина отсутствия товара
+                        || optionId == 159726   // Фото торговой точки
+                        || optionId == 159706   // Инвентаризация
+                        || optionId == 159725   // Кнопка "Фото Торговой Точки (ФТТ)"
+                        || optionId == 159799   // Возврат
+                        || optionId == 135413   // "Фото Витрины (Оценка)"
+                        || optionId == 135719   // "Дет.Отчет" (оценка)
+                        || optionId == 143969   // "СМС-код Клиенту" (электронный контрольный лист ЭКЛ)
+                        || optionId == 160567   // Витрины
+                        || optionId == 164351   // Контроль наявності світлини прикасової зони
+                        || optionId == 164355   // "Фото Планограммы ТТ"
+                        || optionId == 132812   // Хочу увеличение оплаты
+                ) {
+                    optionButton.setBackgroundResource(R.drawable.bg_temp);
+                    textInteger2.setVisibility(View.VISIBLE);
+                    if (optionsButtons.getIsSignal().equals("1") && !optionsButtons.getBlockPns().equals("1")) {
+                        textInteger2.setText(counter2Text());
+                    } else {
+                        if (optionId == 133382) {
+                            textInteger2.setVisibility(View.VISIBLE);
+                            textInteger2.setText("+1100 грн.");
+                        } else {
+                            textInteger2.setVisibility(View.GONE);
+                        }
+                    }
+                } else {
+                    describedOption = false;
+                    textInteger2.setVisibility(View.GONE);
+                    optionButton.setBackgroundResource(R.drawable.button_bg_inactive);
+                }
+
+
+                // color log
+                Log.e("ColorLog", "Color.Opt.Id: " + optionsButtons.getID());
+                Log.e("ColorLog", "Color.Opt.getOptionTxt: " + optionsButtons.getOptionTxt());
+                Log.e("ColorLog", "Color.Opt.getOptionId: " + optionsButtons.getOptionId());
+                Log.e("ColorLog", "Color.Opt.getIsSignal: " + optionsButtons.getIsSignal());
+
+
+                // Определения цвета которым будет гореть СИГНАЛ
+                setCheck.setColorFilter(setCheck.getContext().getResources().getColor(R.color.shadow));
+                if (describedOption) {
+                    setCheck.setVisibility(View.VISIBLE);
+                    if (optionsButtons.getIsSignal().equals("1")) {
+//                setCheck.setImageResource(R.drawable.red_checkbox);
+                        setCheck.setImageResource(R.drawable.ic_exclamation_mark_in_a_circle);
+                        setCheck.setColorFilter(setCheck.getContext().getResources().getColor(R.color.red_error));
+                    } else if (optionsButtons.getIsSignal().equals("2")) {
+//                setCheck.setImageResource(R.drawable.greeen_checkbox);
+                        setCheck.setImageResource(R.drawable.ic_check);
+//                    setCheck.setColorFilter(mContext.getResources().getColor(R.color.greenCol));
+                        setCheck.setColorFilter(setCheck.getContext().getResources().getColor(R.color.green_default));
+                    } else {
+                        if (optionsButtons.getOptionControlId().equals("0")) {
+                            setCheck.setVisibility(View.INVISIBLE);
+                        } else {
+                            setCheck.setImageResource(R.drawable.ic_round);
+                            setCheck.setColorFilter(setCheck.getContext().getResources().getColor(R.color.shadow));
+                        }
+                    }
+                } else {
+                    setCheck.setVisibility(View.INVISIBLE);
+                    setCheck.setImageResource(R.drawable.ic_round);
+                    setCheck.setColorFilter(setCheck.getContext().getResources().getColor(R.color.colorUnselectedTab));
+                }
+
+
+                // =========== СЧЁТЧИК ===========
+                // У Каждой кнопки есть какое-то значение, тут я его считаю и вставляю
+                // todo textInteger.setText(msg); -- могу ли выводить это нормально 1 раз?
+                try {
+                    // Вчтавляем "счётчкик"
+                    switch (optionId) {
+                        // Start Work
+                        case (138518):
+                            long startTime;
 /*                        if (dataDB instanceof WpDataDB) {
                             startTime = ((WpDataDB) dataDB).getVisit_start_dt();
                         } else {
                             startTime = ((TasksAndReclamationsSDB) dataDB).dt_start_fact;
                         }*/
-                        startTime = WpDataRealm.getWpDataRowByDad2Id(Long.parseLong(optionsButtons.getCodeDad2())).getVisit_start_dt();
-                        textInteger.setText("" + Clock.getHumanTimeOpt(startTime * 1000));
-                        break;
-                    case (138520):
-                        long endTime;
+                            startTime = WpDataRealm.getWpDataRowByDad2Id(Long.parseLong(optionsButtons.getCodeDad2())).getVisit_start_dt();
+                            textInteger.setText("" + Clock.getHumanTimeOpt(startTime * 1000));
+                            break;
+                        case (138520):
+                            long endTime;
 /*                        if (dataDB instanceof WpDataDB) {
                             endTime = ((WpDataDB) dataDB).getVisit_end_dt();
                         } else {
                             endTime = ((TasksAndReclamationsSDB) dataDB).dt_end_fact;
                         }*/
-                        endTime = WpDataRealm.getWpDataRowByDad2Id(Long.parseLong(optionsButtons.getCodeDad2())).getVisit_end_dt();
-                        textInteger.setText("" + Clock.getHumanTimeOpt(endTime * 1000));
-                        break;
+                            endTime = WpDataRealm.getWpDataRowByDad2Id(Long.parseLong(optionsButtons.getCodeDad2())).getVisit_end_dt();
+                            textInteger.setText("" + Clock.getHumanTimeOpt(endTime * 1000));
+                            break;
 
-                    case (158309):  // Фото витрины Приближённое
-                        textInteger.setText(
-                                setPhotoCountsMakeAndMust(optionsButtons, RealmManager.stackPhotoShowcasePhotoCount(dad2, 39)),
-                                TextView.BufferType.SPANNABLE
-                        );
+                        case (158309):  // Фото витрины Приближённое
+                            textInteger.setText(
+                                    setPhotoCountsMakeAndMust(optionsButtons, RealmManager.stackPhotoShowcasePhotoCount(dad2, 39)),
+                                    TextView.BufferType.SPANNABLE
+                            );
 
-                        textInteger.setOnClickListener(view -> {
-                            Intent intent = new Intent(view.getContext(), PhotoLogActivity.class);
-                            intent.putExtra("report_prepare", true);
-                            intent.putExtra("dad2", dad2);
-                            view.getContext().startActivity(intent);
-                        });
-                        break;
-                    case (158605):
-                        textInteger.setText(
-                                setPhotoCountsMakeAndMust(optionsButtons, RealmManager.stackPhotoShowcasePhotoCount(dad2, 40)),
-                                TextView.BufferType.SPANNABLE
-                        );
+                            textInteger.setOnClickListener(view -> {
+                                Intent intent = new Intent(view.getContext(), PhotoLogActivity.class);
+                                intent.putExtra("report_prepare", true);
+                                intent.putExtra("dad2", dad2);
+                                view.getContext().startActivity(intent);
+                            });
+                            break;
+                        case (158605):
+                            textInteger.setText(
+                                    setPhotoCountsMakeAndMust(optionsButtons, RealmManager.stackPhotoShowcasePhotoCount(dad2, 40)),
+                                    TextView.BufferType.SPANNABLE
+                            );
 
-                        textInteger.setOnClickListener(view -> {
-                            Intent intent = new Intent(view.getContext(), PhotoLogActivity.class);
-                            intent.putExtra("report_prepare", true);
-                            intent.putExtra("dad2", dad2);
-                            view.getContext().startActivity(intent);
-                        });
-                        break;
-                    case (158308):  // Фото витрины отдалённое
-                    case (132968):  // Вставляем количество выполненных Фоток Витрин
-                        textInteger.setText(
-                                setPhotoCountsMakeAndMust(optionsButtons, RealmManager.stackPhotoShowcasePhotoCount(dad2, 0)),
-                                TextView.BufferType.SPANNABLE
-                        );
+                            textInteger.setOnClickListener(view -> {
+                                Intent intent = new Intent(view.getContext(), PhotoLogActivity.class);
+                                intent.putExtra("report_prepare", true);
+                                intent.putExtra("dad2", dad2);
+                                view.getContext().startActivity(intent);
+                            });
+                            break;
+                        case (158308):  // Фото витрины отдалённое
+                        case (132968):  // Вставляем количество выполненных Фоток Витрин
+                            textInteger.setText(
+                                    setPhotoCountsMakeAndMust(optionsButtons, RealmManager.stackPhotoShowcasePhotoCount(dad2, 0)),
+                                    TextView.BufferType.SPANNABLE
+                            );
 
-                        textInteger.setOnClickListener(view -> {
-                            Intent intent = new Intent(view.getContext(), PhotoLogActivity.class);
-                            intent.putExtra("report_prepare", true);
-                            intent.putExtra("dad2", dad2);
-                            view.getContext().startActivity(intent);
-                        });
-                        break;
+                            textInteger.setOnClickListener(view -> {
+                                Intent intent = new Intent(view.getContext(), PhotoLogActivity.class);
+                                intent.putExtra("report_prepare", true);
+                                intent.putExtra("dad2", dad2);
+                                view.getContext().startActivity(intent);
+                            });
+                            break;
 
-                    case (157277):  // Вставляем количество выполненных Фото Акционного Товара
-                        textInteger.setText(
-                                setPhotoCountsMakeAndMust(optionsButtons, RealmManager.stackPhotoShowcasePhotoCount(dad2, 28)),
-                                TextView.BufferType.SPANNABLE
-                        );
+                        case (157277):  // Вставляем количество выполненных Фото Акционного Товара
+                            textInteger.setText(
+                                    setPhotoCountsMakeAndMust(optionsButtons, RealmManager.stackPhotoShowcasePhotoCount(dad2, 28)),
+                                    TextView.BufferType.SPANNABLE
+                            );
 
-                        textInteger.setOnClickListener(view -> {
-                            Intent intent = new Intent(view.getContext(), PhotoLogActivity.class);
-                            intent.putExtra("report_prepare", true);
-                            intent.putExtra("dad2", dad2);
-                            view.getContext().startActivity(intent);
-                        });
-                        break;
+                            textInteger.setOnClickListener(view -> {
+                                Intent intent = new Intent(view.getContext(), PhotoLogActivity.class);
+                                intent.putExtra("report_prepare", true);
+                                intent.putExtra("dad2", dad2);
+                                view.getContext().startActivity(intent);
+                            });
+                            break;
 
-                    case (159726):  // Фото ТТ
-                    case (159725):  // Кнопка "Фото Торговой Точки (ФТТ)"
-                        textInteger.setText(
-                                setPhotoCountsMakeAndMust(optionsButtons, RealmManager.stackPhotoShowcasePhotoCount(dad2, 37)),
-                                TextView.BufferType.SPANNABLE
-                        );
+                        case (159726):  // Фото ТТ
+                        case (159725):  // Кнопка "Фото Торговой Точки (ФТТ)"
+                            textInteger.setText(
+                                    setPhotoCountsMakeAndMust(optionsButtons, RealmManager.stackPhotoShowcasePhotoCount(dad2, 37)),
+                                    TextView.BufferType.SPANNABLE
+                            );
 
-                        textInteger.setOnClickListener(view -> {
-                            Intent intent = new Intent(view.getContext(), PhotoLogActivity.class);
-                            intent.putExtra("report_prepare", true);
-                            intent.putExtra("dad2", dad2);
-                            view.getContext().startActivity(intent);
-                        });
-                        break;
+                            textInteger.setOnClickListener(view -> {
+                                Intent intent = new Intent(view.getContext(), PhotoLogActivity.class);
+                                intent.putExtra("report_prepare", true);
+                                intent.putExtra("dad2", dad2);
+                                view.getContext().startActivity(intent);
+                            });
+                            break;
 
-                    case (158606):
-                        textInteger.setText(
-                                setPhotoCountsMakeAndMust(optionsButtons, RealmManager.stackPhotoShowcasePhotoCount(dad2, 36)),
-                                TextView.BufferType.SPANNABLE
-                        );
+                        case (158606):
+                            textInteger.setText(
+                                    setPhotoCountsMakeAndMust(optionsButtons, RealmManager.stackPhotoShowcasePhotoCount(dad2, 36)),
+                                    TextView.BufferType.SPANNABLE
+                            );
 
-                        textInteger.setOnClickListener(view -> {
-                            Intent intent = new Intent(view.getContext(), PhotoLogActivity.class);
-                            intent.putExtra("report_prepare", true);
-                            intent.putExtra("dad2", dad2);
-                            view.getContext().startActivity(intent);
-                        });
-                        break;
+                            textInteger.setOnClickListener(view -> {
+                                Intent intent = new Intent(view.getContext(), PhotoLogActivity.class);
+                                intent.putExtra("report_prepare", true);
+                                intent.putExtra("dad2", dad2);
+                                view.getContext().startActivity(intent);
+                            });
+                            break;
 
-                    case (157354):
-                        textInteger.setText(
-                                setPhotoCountsMakeAndMust(optionsButtons, RealmManager.stackPhotoShowcasePhotoCount(dad2, 42)),
-                                TextView.BufferType.SPANNABLE
-                        );
+                        case (157354):
+                            textInteger.setText(
+                                    setPhotoCountsMakeAndMust(optionsButtons, RealmManager.stackPhotoShowcasePhotoCount(dad2, 42)),
+                                    TextView.BufferType.SPANNABLE
+                            );
 
-                        textInteger.setOnClickListener(view -> {
-                            Intent intent = new Intent(view.getContext(), PhotoLogActivity.class);
-                            intent.putExtra("report_prepare", true);
-                            intent.putExtra("dad2", dad2);
-                            view.getContext().startActivity(intent);
-                        });
-                        break;
+                            textInteger.setOnClickListener(view -> {
+                                Intent intent = new Intent(view.getContext(), PhotoLogActivity.class);
+                                intent.putExtra("report_prepare", true);
+                                intent.putExtra("dad2", dad2);
+                                view.getContext().startActivity(intent);
+                            });
+                            break;
 
-                    case 164351:
-                        textInteger.setText(
-                                setPhotoCountsMakeAndMust(optionsButtons, RealmManager.stackPhotoShowcasePhotoCount(dad2, 45)),
-                                TextView.BufferType.SPANNABLE
-                        );
+                        case 164351:
+                            textInteger.setText(
+                                    setPhotoCountsMakeAndMust(optionsButtons, RealmManager.stackPhotoShowcasePhotoCount(dad2, 45)),
+                                    TextView.BufferType.SPANNABLE
+                            );
 
-                        textInteger.setOnClickListener(view -> {
-                            Intent intent = new Intent(view.getContext(), PhotoLogActivity.class);
-                            intent.putExtra("report_prepare", true);
-                            intent.putExtra("dad2", dad2);
-                            view.getContext().startActivity(intent);
-                        });
-                        break;
+                            textInteger.setOnClickListener(view -> {
+                                Intent intent = new Intent(view.getContext(), PhotoLogActivity.class);
+                                intent.putExtra("report_prepare", true);
+                                intent.putExtra("dad2", dad2);
+                                view.getContext().startActivity(intent);
+                            });
+                            break;
 
-                    case 151139:
-                    case 164355:
-                        textInteger.setText(
-                                setPhotoCountsMakeAndMust(optionsButtons, RealmManager.stackPhotoShowcasePhotoCount(dad2, 5)),
-                                TextView.BufferType.SPANNABLE
-                        );
+                        case 151139:
+                        case 164355:
+                            textInteger.setText(
+                                    setPhotoCountsMakeAndMust(optionsButtons, RealmManager.stackPhotoShowcasePhotoCount(dad2, 5)),
+                                    TextView.BufferType.SPANNABLE
+                            );
 
-                        textInteger.setOnClickListener(view -> {
-                            Intent intent = new Intent(view.getContext(), PhotoLogActivity.class);
-                            intent.putExtra("report_prepare", true);
-                            intent.putExtra("dad2", dad2);
-                            view.getContext().startActivity(intent);
-                        });
-                        break;
+                            textInteger.setOnClickListener(view -> {
+                                Intent intent = new Intent(view.getContext(), PhotoLogActivity.class);
+                                intent.putExtra("report_prepare", true);
+                                intent.putExtra("dad2", dad2);
+                                view.getContext().startActivity(intent);
+                            });
+                            break;
 
-                    case (158604):
-                        textInteger.setText(
-                                setPhotoCountsMakeAndMust(optionsButtons, RealmManager.stackPhotoShowcasePhotoCount(dad2, 41)),
-                                TextView.BufferType.SPANNABLE
-                        );
+                        case (158604):
+                            textInteger.setText(
+                                    setPhotoCountsMakeAndMust(optionsButtons, RealmManager.stackPhotoShowcasePhotoCount(dad2, 41)),
+                                    TextView.BufferType.SPANNABLE
+                            );
 
-                        textInteger.setOnClickListener(view -> {
-                            Intent intent = new Intent(view.getContext(), PhotoLogActivity.class);
-                            intent.putExtra("report_prepare", true);
-                            intent.putExtra("dad2", dad2);
-                            view.getContext().startActivity(intent);
-                        });
-                        break;
+                            textInteger.setOnClickListener(view -> {
+                                Intent intent = new Intent(view.getContext(), PhotoLogActivity.class);
+                                intent.putExtra("report_prepare", true);
+                                intent.putExtra("dad2", dad2);
+                                view.getContext().startActivity(intent);
+                            });
+                            break;
 
-                    case (135809):  // Вставляем количество выполненных Фото витрины ДО начала работ
+                        case (135809):  // Вставляем количество выполненных Фото витрины ДО начала работ
 //                        textInteger.setText("" + RealmManager.stackPhotoShowcasePhotoCount(dad2, 14));
-                        textInteger.setText(
-                                setPhotoCountsMakeAndMust(optionsButtons, RealmManager.stackPhotoShowcasePhotoCount(dad2, 14)),
-                                TextView.BufferType.SPANNABLE
-                        );
-                        break;
-                    case (135158):  // Вставляем количество выполненных Фото Остатков Товаров (ФОТ)
-                        textInteger.setText("" + RealmManager.stackPhotoShowcasePhotoCount(dad2, 4));
-                        break;
-                    case (132969):  // Вставляем количество выполненных Фото Тележка с Товаром (ФТТ)
-                        textInteger.setText("" + RealmManager.stackPhotoShowcasePhotoCount(dad2, 10));
-                        break;
-                    case (141360):
-                        textInteger.setText("" + RealmManager.stackPhotoShowcasePhotoCount(dad2, 31));
-                        break;
+                            textInteger.setText(
+                                    setPhotoCountsMakeAndMust(optionsButtons, RealmManager.stackPhotoShowcasePhotoCount(dad2, 14)),
+                                    TextView.BufferType.SPANNABLE
+                            );
+                            break;
+                        case (135158):  // Вставляем количество выполненных Фото Остатков Товаров (ФОТ)
+                            textInteger.setText("" + RealmManager.stackPhotoShowcasePhotoCount(dad2, 4));
+                            break;
+                        case (132969):  // Вставляем количество выполненных Фото Тележка с Товаром (ФТТ)
+                            textInteger.setText("" + RealmManager.stackPhotoShowcasePhotoCount(dad2, 10));
+                            break;
+                        case (141360):
+                            textInteger.setText("" + RealmManager.stackPhotoShowcasePhotoCount(dad2, 31));
+                            break;
 
-                    case 137797:    // Остатки
-                        String msg = String.format("%s/%s/%s", (int) DetailedReportActivity.SKUPlan, (int) DetailedReportActivity.SKUFact, (int) DetailedReportActivity.OFS);
-                        textInteger.setText(msg);
-                        break;
+                        case 137797:    // Остатки
+                            String msg = String.format("%s/%s/%s", (int) DetailedReportActivity.SKUPlan, (int) DetailedReportActivity.SKUFact, (int) DetailedReportActivity.OFS);
+                            textInteger.setText(msg);
+                            break;
 
-                    case 141910:    // "Получение заказа в ТТ"
-                        String counter141910 = DetailedReportActivity.rpAmountSum + " шт";
-                        textInteger.setText(counter141910);
-                        break;
+                        case 141910:    // "Получение заказа в ТТ"
+                            String counter141910 = DetailedReportActivity.rpAmountSum + " шт";
+                            textInteger.setText(counter141910);
+                            break;
 
-                    case 141888:    // "Выкуп Товара с ТТ"
-                        String counter141888 = DetailedReportActivity.rpTotalSumToRedemptionOfGoods + "грн";
-                        textInteger.setText(counter141888);
-                        break;
+                        case 141888:    // "Выкуп Товара с ТТ"
+                            String counter141888 = DetailedReportActivity.rpTotalSumToRedemptionOfGoods + "грн";
+                            textInteger.setText(counter141888);
+                            break;
 
-                    case 141885:    // Фото Документов
-                        textInteger.setText("" + RealmManager.stackPhotoShowcasePhotoCount(dad2, 3));
-                        break;
+                        case 141885:    // Фото Документов
+                            textInteger.setText("" + RealmManager.stackPhotoShowcasePhotoCount(dad2, 3));
+                            break;
 
-                    case 138339:    // Доп Требования
-                        // Устанавливаю в счётчик доп. требований их количество
-                        Integer ttCategory = null;
-                        WpDataDB wp = (WpDataDB) dataDB;
-                        AddressSDB addressSDB = SQL_DB.addressDao().getById(wp.getAddr_id());
-                        if (addressSDB != null) {
-                            ttCategory = addressSDB.ttId;
-                        }
-                        textInteger.setText("" + AdditionalRequirementsRealm.getData3(dataDB, HIDE_FOR_USER, ttCategory, 0).size());
-                        break;
+                        case 138339:    // Доп Требования
+                            // Устанавливаю в счётчик доп. требований их количество
+                            Integer ttCategory = null;
+                            WpDataDB wp = (WpDataDB) dataDB;
+                            AddressSDB addressSDB = SQL_DB.addressDao().getById(wp.getAddr_id());
+                            if (addressSDB != null) {
+                                ttCategory = addressSDB.ttId;
+                            }
+                            textInteger.setText("" + AdditionalRequirementsRealm.getData3(dataDB, HIDE_FOR_USER, ttCategory, 0).size());
+                            break;
 
-                    case 138340:    // Доп Требования
-                        // Устанавливаю в счётчик доп. требований их количество
+                        case 138340:    // Доп Требования
+                            // Устанавливаю в счётчик доп. требований их количество
 //                        String expire = Clock.getHumanTimeYYYYMMDD(System.currentTimeMillis() / 1000);
 //                        textInteger.setText("" + SQL_DB.additionalMaterialsDao().getAllForOptionTEST(optionsButtons.getClientId(), Integer.parseInt(optionsButtons.getAddrId()), "1", "0").size());
 //                        textInteger.setText("" + SQL_DB.additionalMaterialsDao().getAllForOptionTEST(optionsButtons.getClientId(), Integer.parseInt(optionsButtons.getAddrId()), "0").size());
-                        textInteger.setText("" + SQL_DB.additionalMaterialsDao().getAllForOptionTEST2(optionsButtons.getClientId(), "0").size());
-                        break;
+                            textInteger.setText("" + SQL_DB.additionalMaterialsDao().getAllForOptionTEST2(optionsButtons.getClientId(), "0").size());
+                            break;
 
-                    case 135328:    // Рекламация
-                        OptionMassageType type = new OptionMassageType();
-                        type.type = OptionMassageType.Type.STRING;
-                        OptionControlReclamationAnswer<?> optionControlReclamationAnswer = new OptionControlReclamationAnswer<>(itemView.getContext(), dataDB, optionsButtons, type, Options.NNKMode.NULL, null);
+                        case 135328:    // Рекламация
+                            OptionMassageType type = new OptionMassageType();
+                            type.type = OptionMassageType.Type.STRING;
+                            OptionControlReclamationAnswer<?> optionControlReclamationAnswer = new OptionControlReclamationAnswer<>(itemView.getContext(), dataDB, optionsButtons, type, NULL, null);
 
-                        textInteger.setText("" + optionControlReclamationAnswer.problemReclamationCount());
-                        break;
+                            textInteger.setText("" + optionControlReclamationAnswer.problemReclamationCount());
+                            break;
 
-                    case 135327:    // Задачи
-                        type = new OptionMassageType();
-                        type.type = OptionMassageType.Type.STRING;
-                        OptionControlTaskAnswer<?> optionControlTask = new OptionControlTaskAnswer<>(itemView.getContext(), dataDB, optionsButtons, type, Options.NNKMode.NULL, null);
+                        case 135327:    // Задачи
+                            type = new OptionMassageType();
+                            type.type = OptionMassageType.Type.STRING;
+                            OptionControlTaskAnswer<?> optionControlTask = new OptionControlTaskAnswer<>(itemView.getContext(), dataDB, optionsButtons, type, NULL, null);
 
-                        textInteger.setText("" + optionControlTask.problemTaskCount());
-                        break;
+                            textInteger.setText("" + optionControlTask.problemTaskCount());
+                            break;
 
-                    default:
-                        textInteger.setVisibility(View.GONE);
+                        default:
+                            textInteger.setVisibility(View.GONE);
 //                        textInteger.setText(optionsButtons.getPrice());
+                    }
+                } catch (Exception e) {
+                    // TODO Вставить обработчик
+                    e.printStackTrace();
                 }
-            } catch (Exception e) {
-                // TODO Вставить обработчик
-                e.printStackTrace();
-            }
 
 
-            // Работа с кнопками и нажатиями на них
-            final DetailedReportButtons detailedReportButtons = new DetailedReportButtons();
+                // Работа с кнопками и нажатиями на них
+                final DetailedReportButtons detailedReportButtons = new DetailedReportButtons();
 
-            // Функционал Опций (контроль, NNK..)
-            final Options options = new Options();
+                // Функционал Опций (контроль, NNK..)
+                final Options options = new Options();
 
 
-            // Кликаем по кнопке Опции
-            boolean finalDescribedOption = describedOption;
-            optionButton.setOnClickListener(view -> {
-                Log.e("notifyItemChanged", "CLICK");
+                // Кликаем по кнопке Опции
+                boolean finalDescribedOption = describedOption;
+                optionButton.setOnClickListener(view -> {
+                    Log.e("notifyItemChanged", "CLICK");
 //                animate();
 
-                // Если эта кнопка НЕ активная - значит она находится в разработке
-                if (finalDescribedOption) {
+                    // Если эта кнопка НЕ активная - значит она находится в разработке
+                    if (finalDescribedOption) {
 
-                    // Обработка нажатия на кнопку
-                    OptionMassageType msgType = new OptionMassageType();
-                    msgType.type = OptionMassageType.Type.DIALOG;
-                    options.setOptionFromDetailedReport(allReportOption);
-                    msgType = options.NNK(mContext, dataDB, optionsButtons, butt, msgType, Options.NNKMode.MAKE, () -> {
-                        try {
-                            int test1 = getAdapterPosition();
-                            int test2 = getBindingAdapterPosition();
-                            int test3 = getAbsoluteAdapterPosition();
+                        // Обработка нажатия на кнопку
+                        OptionMassageType msgType = new OptionMassageType();
+                        msgType.type = OptionMassageType.Type.DIALOG;
+                        options.setOptionFromDetailedReport(allReportOption);
+                        msgType = options.NNK(mContext, dataDB, optionsButtons, butt, msgType, Options.NNKMode.MAKE, () -> {
+                            try {
+                                int test1 = getAdapterPosition();
+                                int test2 = getBindingAdapterPosition();
+                                int test3 = getAbsoluteAdapterPosition();
 
-                            Log.e("NNK", "test1: " + test1);
-                            Log.e("NNK", "test2: " + test2);
-                            Log.e("NNK", "test3: " + test3);
+                                Log.e("NNK", "test1: " + test1);
+                                Log.e("NNK", "test2: " + test2);
+                                Log.e("NNK", "test3: " + test3);
 
-                            if (dataDB instanceof WpDataDB) {
-                                detailedReportButtons.buttonClick(
-                                        mContext,
-                                        (WpDataDB) dataDB,
-                                        butt.get(getBindingAdapterPosition()),
-                                        0);
-                                setCheck(POS, optionsButtons, Options.NNKMode.NULL);
+                                if (dataDB instanceof WpDataDB) {
+                                    detailedReportButtons.buttonClick(
+                                            mContext,
+                                            (WpDataDB) dataDB,
+                                            butt.get(getBindingAdapterPosition()),
+                                            0);
+                                    setCheck(POS, optionsButtons, NULL);
+                                }
+                            } catch (Exception e) {
+
                             }
-                        } catch (Exception e) {
 
+                            notifyDataSetChanged();
+                        });
+
+                        // todo Определить нафиг это сделано
+                        // Это нужно для старого отображения ошибки контроля опции
+                        if (msgType != null && msgType.dialog != null) {
+                            msgType.dialog.setDialogIco();
+                            msgType.dialog.show();
                         }
 
-                        notifyDataSetChanged();
-                    });
-
-                    // todo Определить нафиг это сделано
-                    // Это нужно для старого отображения ошибки контроля опции
-                    if (msgType != null && msgType.dialog != null) {
-                        msgType.dialog.setDialogIco();
-                        msgType.dialog.show();
+                        // todo Определить нафиг это сделано
+                        // Это нужно для старого отображения ошибки контроля опции
+                        if (msgType != null && msgType.msg != null && !msgType.msg.equals("")) {
+                            Toast.makeText(mContext, msgType.msg, Toast.LENGTH_SHORT).show();
+                        }
+                    } else {
+                        Toast.makeText(view.getContext(), "Данная Опция находится в РАЗРАБОТКЕ", Toast.LENGTH_SHORT).show();
                     }
 
-                    // todo Определить нафиг это сделано
-                    // Это нужно для старого отображения ошибки контроля опции
-                    if (msgType != null && msgType.msg != null && !msgType.msg.equals("")) {
-                        Toast.makeText(mContext, msgType.msg, Toast.LENGTH_SHORT).show();
-                    }
-                } else {
-                    Toast.makeText(view.getContext(), "Данная Опция находится в РАЗРАБОТКЕ", Toast.LENGTH_SHORT).show();
-                }
-
-            });
+                });
 
 
-            // ДОЛГИЙ клик по Кнопке Опции
-            OptionsDB test = optionsButtons;
-            optionButton.setOnLongClickListener(view -> {
-                if (optionId == 132968 || optionId == 158309 || optionId == 158308) {
-                    optionDetailPhotos(test, view.getContext());
-                    DialogData dialog = new DialogData(itemView.getContext());
-                    dialog.setTitle("Внесите пароль!");
-                    dialog.setText("Для продолжения внесите пароль: ");
-                    dialog.setClose(dialog::dismiss);
-                    dialog.setOperation(DialogData.Operations.TEXT, "", null, () -> {
-                    });
-                    dialog.setOk("Ok", () -> {
-                        Toast.makeText(dialog.context, "Внесли: " + dialog.getOperationResult(), Toast.LENGTH_SHORT).show();
+                // ДОЛГИЙ клик по Кнопке Опции
+                OptionsDB test = optionsButtons;
+                optionButton.setOnLongClickListener(view -> {
+                    if (optionId == 132968 || optionId == 158309 || optionId == 158308) {
+                        optionDetailPhotos(test, view.getContext());
+                        DialogData dialog = new DialogData(itemView.getContext());
+                        dialog.setTitle("Внесите пароль!");
+                        dialog.setText("Для продолжения внесите пароль: ");
+                        dialog.setClose(dialog::dismiss);
+                        dialog.setOperation(DialogData.Operations.TEXT, "", null, () -> {
+                        });
+                        dialog.setOk("Ok", () -> {
+                            Toast.makeText(dialog.context, "Внесли: " + dialog.getOperationResult(), Toast.LENGTH_SHORT).show();
 
-                        int res = Integer.parseInt(dialog.getOperationResult());
+                            int res = Integer.parseInt(dialog.getOperationResult());
 
+                        /* old
                         Calendar calendar = Calendar.getInstance();
                         int day = calendar.get(Calendar.DAY_OF_WEEK);
                         int dat2 = calendar.get(Calendar.DAY_OF_MONTH);
-                        int pass = day + dat2;
+                        int pass = day + dat2;*/
 
-                        if (res == pass) {
-                            longClickButton(test, optionId, detailedReportButtons, optionsButtons, view.getContext());
-                        } else {
-                            Toast.makeText(dialog.context, "Внесите корректный пароль", Toast.LENGTH_SHORT).show();
-                        }
-                    });
-                    dialog.show();
-                } else {
-                    int optId = Integer.parseInt(butt.get(getAdapterPosition()).getOptionId());
-                    longClickButton(test, optId, detailedReportButtons, optionsButtons, view.getContext());
-                }
-                return false;
-            });
+                            // new
+                            Calendar calendar = Calendar.getInstance();
+                            int year = calendar.get(Calendar.YEAR);
+                            int dayOfYear = calendar.get(Calendar.DAY_OF_YEAR);
+                            int dayOfWeek = calendar.get(Calendar.DAY_OF_WEEK);
+                            int dayOfMonth = calendar.get(Calendar.DAY_OF_MONTH);
+
+                            double passwordD = (double) year / (dayOfYear + dayOfWeek + dayOfMonth);
+
+                            int pass = Integer.parseInt(String.format("%03d", (int) (passwordD * 100)));
+
+                            if (res == pass) {
+                                longClickButton(test, optionId, detailedReportButtons, optionsButtons, view.getContext());
+                            } else {
+                                Toast.makeText(dialog.context, "Внесите корректный пароль", Toast.LENGTH_SHORT).show();
+                            }
+                        });
+                        dialog.show();
+                    } else {
+                        int optId = Integer.parseInt(butt.get(getAdapterPosition()).getOptionId());
+                        longClickButton(test, optId, detailedReportButtons, optionsButtons, view.getContext());
+                    }
+                    return false;
+                });
 
 
-            // Нажатие на СИГНАЛ Кнопки Опции.
-            setCheck.setOnClickListener(v -> {
-                Toast.makeText(v.getContext(), "Проверка статуса данной опции", Toast.LENGTH_SHORT).show();
-                setCheck(POS, optionsButtons, Options.NNKMode.CHECK_CLICK);
-            });
+                // Нажатие на СИГНАЛ Кнопки Опции.
+                setCheck.setOnClickListener(v -> {
+                    Toast.makeText(v.getContext(), "Проверка статуса данной опции", Toast.LENGTH_SHORT).show();
+                    setCheck(POS, optionsButtons, CHECK_CLICK);
+                });
+            } catch (Exception e) {
+                Globals.writeToMLOG("INFO", "RecycleViewDRAdapter/bind", "Exception e: " + e);
+                Globals.writeToMLOG("INFO", "RecycleViewDRAdapter/bind", "Exception exception: " + Arrays.toString(e.getStackTrace()));
+            }
         }
     }
 
@@ -707,69 +733,89 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
 
     /*Определяем конструктор*/
     public RecycleViewDRAdapter(Context context, T dataDB, List<OptionsDB> dataButtons, List<OptionsDB> allReportOption, List<SiteObjectsSDB> list, Clicks.clickVoid click) {
-        this.click = click;
-        this.dataDB = dataDB;
-        this.butt = dataButtons;
-        this.translate = list;
-        this.mContext = context;
-        this.allReportOption = allReportOption;
+        try {
+            this.click = click;
+            this.dataDB = dataDB;
+            this.butt = dataButtons;
+            this.translate = list;
+            this.mContext = context;
+            this.allReportOption = allReportOption;
 
-        if (dataDB instanceof WpDataDB) {
-            WpDataDB wp = (WpDataDB) dataDB;
-            dad2 = wp.getCode_dad2();
-            startDt = wp.getVisit_start_dt();
-            endDt = wp.getVisit_end_dt();
-        } else {
-            TasksAndReclamationsSDB tar = (TasksAndReclamationsSDB) dataDB;
-//            dad2 = tar.codeDad2;
-            dad2 = tar.codeDad2SrcDoc;
-            startDt = tar.dt_start_fact;
-            endDt = tar.dt_end_fact;
+            if (dataDB instanceof WpDataDB) {
+                WpDataDB wp = (WpDataDB) dataDB;
+                dad2 = wp.getCode_dad2();
+                startDt = wp.getVisit_start_dt();
+                endDt = wp.getVisit_end_dt();
+            } else {
+                TasksAndReclamationsSDB tar = (TasksAndReclamationsSDB) dataDB;
+                dad2 = tar.codeDad2SrcDoc;
+                startDt = tar.dt_start_fact;
+                endDt = tar.dt_end_fact;
+            }
+        }catch (Exception e){
+            Globals.writeToMLOG("INFO", "RecycleViewDRAdapter/RecycleViewDRAdapter", "Exception e: " + e);
+            Globals.writeToMLOG("INFO", "RecycleViewDRAdapter/RecycleViewDRAdapter", "Exception exception: " + Arrays.toString(e.getStackTrace()));
         }
     }
 
     @Override
     public RecycleViewDRAdapter.ViewHolder onCreateViewHolder(ViewGroup parent, int i) {
         View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.dr_option_item_button, parent, false);
+        Globals.writeToMLOG("INFO", "RecycleViewDRAdapter/onCreateViewHolder", "View v: " + v);
         return new ViewHolder(v);
     }
 
 
     @Override
     public void onBindViewHolder(RecycleViewDRAdapter.ViewHolder viewHolder, int position) {
-        OptionsDB optionsButtons = butt.get(position);
+        try {
+            OptionsDB optionsButtons = butt.get(position);
+            SiteObjectsSDB siteObjectsSDB = null;
+            if (translate != null && translate.size() > 0) {
+                for (SiteObjectsSDB item : translate) {
 
-        SiteObjectsSDB siteObjectsSDB = null;
-        if (translate != null && translate.size() > 0) {
-            for (SiteObjectsSDB item : translate) {
+                    Log.e("R_TRANSLATES", "onBindViewHolder.optionsButtons.getOptionId(): " + optionsButtons.getOptionId());
+                    Log.e("R_TRANSLATES", "onBindViewHolder.item.additionalId: " + item.additionalId);
 
-                Log.e("R_TRANSLATES", "onBindViewHolder.optionsButtons.getOptionId(): " + optionsButtons.getOptionId());
-                Log.e("R_TRANSLATES", "onBindViewHolder.item.additionalId: " + item.additionalId);
-
-                if (optionsButtons.getOptionId().equals(String.valueOf(item.additionalId))) {
-                    siteObjectsSDB = item;
-                    break;
+                    if (optionsButtons.getOptionId().equals(String.valueOf(item.additionalId))) {
+                        siteObjectsSDB = item;
+                        break;
+                    }
                 }
             }
+
+            if (siteObjectsSDB != null) {
+                Log.e("R_TRANSLATES", "onBindViewHolder: " + siteObjectsSDB.id);
+            } else {
+                Log.e("R_TRANSLATES", "onBindViewHolder: " + siteObjectsSDB);
+            }
+
+            viewHolder.bind(optionsButtons, siteObjectsSDB);
+        } catch (Exception e) {
+            Globals.writeToMLOG("INFO", "RecycleViewDRAdapter/onBindViewHolder", "Exception e: " + e);
+            Globals.writeToMLOG("INFO", "RecycleViewDRAdapter/onBindViewHolder", "Exception exception: " + Arrays.toString(e.getStackTrace()));
         }
-
-        if (siteObjectsSDB != null) {
-            Log.e("R_TRANSLATES", "onBindViewHolder: " + siteObjectsSDB.id);
-        } else {
-            Log.e("R_TRANSLATES", "onBindViewHolder: " + siteObjectsSDB);
-        }
-
-
-        viewHolder.bind(optionsButtons, siteObjectsSDB);
     }
 
     @Override
     public int getItemCount() {
-        return butt.size();
+        try {
+            return butt.size();
+        } catch (Exception e) {
+            Globals.writeToMLOG("INFO", "RecycleViewDRAdapter/getItemCount", "Exception e: " + e);
+            Globals.writeToMLOG("INFO", "RecycleViewDRAdapter/getItemCount", "Exception exception: " + Arrays.toString(e.getStackTrace()));
+        }
+        return 0;
     }
 
     public int getItemPosition(OptionsDB item) {
-        return butt.indexOf(item);
+        try {
+            return butt.indexOf(item);
+        } catch (Exception e) {
+            Globals.writeToMLOG("INFO", "RecycleViewDRAdapter/getItemPosition", "Exception e: " + e);
+            Globals.writeToMLOG("INFO", "RecycleViewDRAdapter/getItemPosition", "Exception exception: " + Arrays.toString(e.getStackTrace()));
+        }
+        return 0;
     }
 
 
@@ -887,35 +933,14 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
             switch (option.getOptionId()) {
                 case "135158":  // - 4  - Фото остатков товаров
                     ss.append(createLinkedStringGal(mContext, "Завантажити фото з галереї", photoType, () -> {
-                        // В данном случае надо открыть галерею и выбрать фото остатков
-//                        WpDataDB wp = (WpDataDB) dataDB;
-//                        new MakePhotoFromGalery().openGalleryToPeakPhoto(mContext.getApplicationContext(), wp);
+//                        click.click();
 
-/*                        if (Build.VERSION.SDK_INT == 28) {
-                            if (internetStatus == 1) {
-                                WpDataDB wp = (WpDataDB) dataDB;
-                                String date = Clock.getHumanTimeSecPattern(wp.getDt().getTime() / 1000, "yyyy-MM-dd");
+                        OptionMassageType newOptionType = new OptionMassageType();
+                        newOptionType.type = DIALOG;
 
-                                String link = String.format("/merchik.com.ua/mobile.php?mod=images_prepare&act=prepare_image&date=%s&client_id=%s&addr_id=%s&img_type_id=4&theme_id=%s&code_dad2=%s&option_control_id=1470&menu_close_only=1"
-                                        , date, wp.getClient_id(), wp.getAddr_id(), wp.getTheme_id(), wp.getCode_dad2());
-//                        String res = Globals.PrepareLinkedTextForMVSfromHTML(link);
-
-//                        String menuItem164format = "mobile.php" + menuItem164.getUrl();
-
-                                AppUsersDB appUser = AppUserRealm.getAppUserById(userId);
-                                String hash = String.format("%s%s%s", appUser.getUserId(), appUser.getPassword(), "AvgrgsYihSHp6Ok9yQXfSHp6Ok9nXdXr3OSHp6Ok9UPBTzTjrF20Nsz3");
-                                hash = Globals.getSha1Hex(hash);
-
-                                link = link.replace("&", "**");
-
-                                String format = String.format("https://merchik.com.ua/sa.php?&u=%s&s=%s&l=/%s", userId, hash, link);
-
-                                Intent site = new Intent(Intent.ACTION_VIEW, Uri.parse(format));
-                                context.startActivity(site);
-                            }
-                        } else {*/
-                            click.click();
-/*                        }*/
+                        OptionControlAvailabilityControlPhotoRemainingGoods<?> optionControlAvailabilityControlPhotoRemainingGoods =
+                                new OptionControlAvailabilityControlPhotoRemainingGoods<>(context, (WpDataDB) dataDB, option, newOptionType, Options.NNKMode.CHECK, null);
+                        optionControlAvailabilityControlPhotoRemainingGoods.showOptionMassage("");
                     }));
 
                     ss.append("\n\n");
@@ -1037,17 +1062,32 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                     || option.getOptionId().equals("164355")
                     || option.getOptionId().equals("151139")
                     || option.getOptionId().equals("164351")
+                    || option.getOptionControlId().equals("164351")
             ) min = "1";
             try {
                 if (option.getOptionId().equals("157277")) {
+                    List<ReportPrepareDB> reportPrepare = RealmManager.INSTANCE.copyFromRealm(ReportPrepareRealm.getReportPrepareByDad2(dad2));
                     List<AdditionalRequirementsDB> ad = AdditionalRequirementsRealm.getDocumentAdditionalRequirements(dataDB, true, 157278, null, null, null);
+                    String[] tovIds = new String[ad.size()];
+                    for (int i = 0; i < ad.size(); i++) {
+                        tovIds[i] = ad.get(i).getTovarId();
+                    }
+                    Arrays.sort(tovIds);
+                    int count = 0;
+                    for (ReportPrepareDB item : reportPrepare) {
+                        String akciya = item.akciyaId;
+                        if (akciya == null || akciya.equals("")) continue;
+
+                        if (Arrays.asList(tovIds).contains(item.getTovarId())) {
+                            count++;
+                        }
+                    }
+
                     if (ad != null && ad.size() > 0) {
-                        min = String.valueOf(ad.size());
+                        min = String.valueOf(count);
                     }
                 }
-            } catch (Exception e) {
-
-            }
+            } catch (Exception e) {}
         }
 
         int maxPhotos = Integer.parseInt(min);

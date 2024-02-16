@@ -14,9 +14,8 @@ import com.google.gson.annotations.SerializedName;
 @Entity(tableName = "achievements", indices = {@Index(value = {"serverId"}, unique = true)})
 public class AchievementsSDB {
 
-    @PrimaryKey
+    @PrimaryKey(autoGenerate = true)
     @ColumnInfo(name = "id")
-    @NonNull
     public Integer id;
 
     @SerializedName("ID")
@@ -174,6 +173,16 @@ public class AchievementsSDB {
     @Expose
     @ColumnInfo(name = "theme_id")
     public Integer themeId;
+
+    @SerializedName("img_before_hash")
+    @Expose
+    @ColumnInfo(name = "img_before_hash")
+    public String img_before_hash;
+
+    @SerializedName("img_after_hash")
+    @Expose
+    @ColumnInfo(name = "img_after_hash")
+    public String img_after_hash;
 
     // ---------- ДЛЯ ОПЦИИ КОНТРОЛЯ НАЧАЛО---------------
 
