@@ -57,7 +57,9 @@ public class PremiumResponse {
         public String adrStr;
         @SerializedName("SumNZPSotrDoc")
         @Expose
-        public long sumNZPSotrDoc;
+        // Pika поставил дробный тип - когда был целый, то не загружалась доп информация по начислениям
+        public float sumNZPSotrDoc;
+//        public long sumNZPSotrDoc;
 
     }
 }
