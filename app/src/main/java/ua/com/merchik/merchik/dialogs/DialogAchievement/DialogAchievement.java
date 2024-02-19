@@ -13,10 +13,13 @@ import android.text.Html;
 import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -52,6 +55,14 @@ public class DialogAchievement {
     private EditText comment;
     private Button photoTo, photoAfter, save;
     private ImageView photoToIV, photoAfterIV;
+
+    private Spinner spinnerTheme;
+    private String[] themeList = new String[]{
+            "Досягнення (покращення розташування товару в ТТ)",     // 595
+            "Замовлення на фінансування нового Досягнення",         // 1252
+            "Утримання викладки на полиці (досягнутого раніше)"};   // 1251
+
+    private Integer spinnerThemeResult;
     private OptionsDB optionDB;
 
     public DialogAchievement(Context context, WpDataDB wpDataDB) {
@@ -88,6 +99,8 @@ public class DialogAchievement {
             photoToIV = dialog.findViewById(R.id.photoTo);
             photoAfterIV = dialog.findViewById(R.id.photoAfter);
 
+            spinnerTheme = dialog.findViewById(R.id.spinner_theme);
+
             putTextData();
             buttonSave();
 
@@ -104,7 +117,6 @@ public class DialogAchievement {
                 achievementsSDB.dt = String.valueOf((System.currentTimeMillis() / 1000));
                 achievementsSDB.dt_ut = (System.currentTimeMillis() / 1000);
                 achievementsSDB.addrId = wpDataDB.getAddr_id();
-                achievementsSDB.themeId = 595;
                 achievementsSDB.dvi = 1;
                 achievementsSDB.error = 0;
                 achievementsSDB.currentVisit = 0;
@@ -117,12 +129,9 @@ public class DialogAchievement {
                     achievementsSDB.commentTxt = comment.getText().toString();
                 }
 
-//                try {
-//                    achievementsSDB.imgBeforeId = Integer.valueOf(stackPhotoDBTo.photoServerId);
-//                    achievementsSDB.imgAfterId = Integer.valueOf(stackPhotoDBAfter.photoServerId);
-//                }catch (Exception e){
-//                    Globals.writeToMLOG("ERROR", "DialogAchievement/buttonSave.achievementsSDB", "Exception e: " + e);
-//                }
+                if (spinnerTheme != null && spinnerThemeResult != null){
+                    achievementsSDB.themeId = spinnerThemeResult;
+                }
 
                 achievementsSDB.img_before_hash = stackPhotoDBTo.photo_hash;
                 achievementsSDB.img_after_hash = stackPhotoDBAfter.photo_hash;
@@ -296,7 +305,36 @@ public class DialogAchievement {
         client.setText(Html.fromHtml("<b>Кліент: </b> " + wpDataDB.getClient_txt() + ""));
         address.setText(Html.fromHtml("<b>Адреса: </b> " + wpDataDB.getAddr_txt() + ""));
         visit.setText(Html.fromHtml("<b>Відвідування: </b> " + wpDataDB.getCode_dad2() + ""));
-        theme.setText(Html.fromHtml("<b>Тема: </b> " + wpDataDB.getTheme_id() + ""));
+        theme.setText(Html.fromHtml("<b>Тема: </b> "));
+
+        ArrayAdapter adapter = new ArrayAdapter(context, android.R.layout.simple_spinner_item, themeList);
+
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinnerTheme.setAdapter(adapter);
+        spinnerTheme.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+                String data = adapterView.getItemAtPosition(i).toString();
+                Toast.makeText(adapterView.getContext(), "Выбрали: " + data, Toast.LENGTH_SHORT).show();
+
+                if (data.equals(themeList[0])){
+                    spinnerThemeResult = 595;
+                }else if (data.equals(themeList[1])){
+                    spinnerThemeResult = 1252;
+                }else if (data.equals(themeList[2])){
+                    spinnerThemeResult = 1251;
+                }else {
+                    spinnerThemeResult = 595;
+                }
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> adapterView) {
+                Toast.makeText(adapterView.getContext(), "Ничего не выбрано", Toast.LENGTH_SHORT).show();
+                spinnerThemeResult = null;
+            }
+        });
+
         offerFromClient.setText(Html.fromHtml("<b>Пропозиція від клієнта: </b> " + "" + ""));
     }
 
