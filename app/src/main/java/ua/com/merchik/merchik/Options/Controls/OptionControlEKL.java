@@ -8,6 +8,7 @@ import android.os.Build;
 import android.util.Log;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -89,6 +90,7 @@ public class OptionControlEKL<T> extends OptionControl {
         } catch (Exception e) {
             Log.e("OptionControlEKL", "HERE TEST OptionControlEKL executeOption Exception: " + e);
             Globals.writeToMLOG("ERROR", "OptionControlEKL/executeOption/Exception", "Exception: " + e);
+            Globals.writeToMLOG("ERROR", "OptionControlEKL/executeOption/Exception", "Exception: " + Arrays.toString(e.getStackTrace()));
         }
     }
 
@@ -251,6 +253,7 @@ public class OptionControlEKL<T> extends OptionControl {
                         .append(" (").append(usersSDBPTT.department).append(") тел: ").append(usersSDBPTT.tel)
                         .append(", ").append(usersSDBPTT.tel2);
 
+                TovarGroupSDB tovarGroupSDB1 = SQL_DB.tovarGroupDao().getById(usersSDBPTT.otdelId);
 
                 //Если (ПТТ.Уволен=1) и (Опц=глОпция132629) и (ПустоеЗначение(ПТТ.ДатаУвол)=0) и (ПТТ.ДатаУвол<Дат) и (Тем<>Тема421) Тогда //для случая когда Контролер берет ЭКЛ у проверяеМОГО но это НЕ разбор з/п (в т.ч. с уволенным)
                 if (usersSDBPTT.fired == 1 && optionDB.getOptionControlId().equals("132629") && (usersSDBPTT.firedDt != null && usersSDBPTT.firedDt != 0) && wpDataDB.getTheme_id() != 421) {
@@ -263,7 +266,7 @@ public class OptionControlEKL<T> extends OptionControl {
                 } else if (usersSDBPTT.otdelId == null || usersSDBPTT.otdelId == 0) {
                     signal = false;
                     optionMsg.append(", но ").append("у ПТТ ").append(usersSDBPTT.fio).append(" не указан отдел в котором он работает!");
-                } else if (usersSDBPTT.otdelId != null && SQL_DB.tovarGroupDao().getById(usersSDBPTT.otdelId).parent == 0) {    // нет у меня понятия УРОВЕНЬ
+                } else if (usersSDBPTT.otdelId != null && tovarGroupSDB1.parent != null && tovarGroupSDB1.parent == 0) {    // нет у меня понятия УРОВЕНЬ
                     signal = false;
                     // TODO otdel lvl
                     Globals.writeToMLOG("INFO", "OptionControlEKL/else if /01.09.23./Sheva", "usersSDBPTT.otdelId: " + usersSDBPTT.otdelId);
