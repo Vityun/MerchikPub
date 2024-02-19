@@ -1330,7 +1330,9 @@ public class DialogEKL {
                             .observeOn(AndroidSchedulers.mainThread())
                             .subscribe((EKL_SDB ekl_sdb) -> {
                                         Log.e("DialogEKL", "LOOP.POS4");
+                                        // TODO Разобраться почему не всегда принимаются ЭКЛ
                                         if (item.state) {
+                                            Globals.writeToMLOG("RESP", "DialogEKL.sendEKL/onResponse", "item.state: " + item.state);
                                             ekl_sdb.eklCode = ekl_sdb.eklHashCode;
                                             ekl_sdb.upload = true;
                                             ekl_sdb.codeVerify = 1;
