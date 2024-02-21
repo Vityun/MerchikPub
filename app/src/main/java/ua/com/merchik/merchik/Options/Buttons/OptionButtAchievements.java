@@ -110,7 +110,7 @@ public class OptionButtAchievements<T> extends OptionControl {
             // Получаю ВСЕ выгруженные фото по данному отчёту.
             List<StackPhotoDB> stackPhotoDBS = StackPhotoRealm.getUploadedStackPhotoByDAD2(wpDataDB.getCode_dad2());
 
-            if (stackPhotoDBS != null && stackPhotoDBS.size() >= 2) {
+            if (stackPhotoDBS != null && stackPhotoDBS.size() >= 1) {
                 String dateFrom = Clock.getHumanTimeSecPattern(Clock.getDatePeriodLong(wpDataDB.getDt().getTime(), -31) / 1000, "yyyy-MM-dd");
                 String dateTo = Clock.getHumanTimeSecPattern(Clock.getDatePeriodLong(wpDataDB.getDt().getTime(), +2) / 1000, "yyyy-MM-dd");
 

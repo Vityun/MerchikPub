@@ -449,8 +449,17 @@ public class AdapterUtil extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             text5.setText("" + data.commentTxt);
 
             try {
-                StackPhotoDB stackPhotoBefore = StackPhotoRealm.getByHash(data.img_before_hash);
+                StackPhotoDB stackPhotoBefore = StackPhotoRealm.getByServerId(data.img_before_hash);
+
+                if (stackPhotoBefore == null){
+                    stackPhotoBefore = StackPhotoRealm.getByServerId(String.valueOf(data.imgBeforeId));
+                }
+
                 StackPhotoDB stackPhotoAfter = StackPhotoRealm.getByHash(data.img_after_hash);
+
+                if (stackPhotoAfter == null){
+                    stackPhotoAfter = StackPhotoRealm.getByServerId(String.valueOf(data.imgAfterId));
+                }
 
                 image.setImageURI(Uri.parse(stackPhotoBefore.photo_num));
                 image2.setImageURI(Uri.parse(stackPhotoAfter.photo_num));

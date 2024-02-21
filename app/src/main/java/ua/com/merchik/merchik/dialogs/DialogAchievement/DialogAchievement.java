@@ -129,6 +129,7 @@ public class DialogAchievement {
                     achievementsSDB.commentTxt = comment.getText().toString();
                 }
 
+                achievementsSDB.themeId = 595;
                 if (spinnerTheme != null && spinnerThemeResult != null){
                     achievementsSDB.themeId = spinnerThemeResult;
                 }
