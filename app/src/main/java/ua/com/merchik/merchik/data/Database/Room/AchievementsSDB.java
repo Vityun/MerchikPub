@@ -184,6 +184,11 @@ public class AchievementsSDB {
     @ColumnInfo(name = "img_after_hash")
     public String img_after_hash;
 
+    @SerializedName("add_requirement_id")
+    @Expose
+    @ColumnInfo(name = "add_requirement_id")
+    public Integer addRequirementId;
+
     // ---------- ДЛЯ ОПЦИИ КОНТРОЛЯ НАЧАЛО---------------
 
     @Ignore
@@ -194,6 +199,5 @@ public class AchievementsSDB {
 
     @Ignore
     public Integer currentVisit;
-
     // ---------- ДЛЯ ОПЦИИ КОНТРОЛЯ КОНЕЦ---------------
 }

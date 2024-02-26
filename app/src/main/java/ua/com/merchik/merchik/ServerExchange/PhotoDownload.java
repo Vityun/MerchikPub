@@ -244,7 +244,7 @@ public class PhotoDownload {
         data.nolimit = "1";
         data.image_type = "small";
 //        data.tovar_id = tovarsPhotoToDownload;    // Должен сюда записать список ID-шников Товаров которые я хочу загрузить на свою сторону.
-        data.tovar_id = batches.get(0);    // Должен сюда записать список ID-шников Товаров которые я хочу загрузить на свою сторону.
+        data.photo_tovar_id = batches.get(0);    // Должен сюда записать список ID-шников Товаров которые я хочу загрузить на свою сторону.
 
         // Формирование тела запроса
         Gson gson = new Gson();

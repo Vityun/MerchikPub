@@ -113,7 +113,7 @@ import ua.com.merchik.merchik.database.room.DaoInterfaces.VotesDao;
                 ShowcaseSDB.class,       // Витрины, не путать с полками и тп
                 PlanogrammSDB.class      // Планограми
         },
-        version = 45
+        version = 46
 )
 
 

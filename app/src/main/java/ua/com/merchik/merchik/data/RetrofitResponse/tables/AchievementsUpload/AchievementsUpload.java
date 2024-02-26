@@ -13,4 +13,5 @@ public class AchievementsUpload {
     public String comment_txt;
     public String img_before_hash;
     public String img_after_hash;
+    public Integer add_requirement_id;
 }

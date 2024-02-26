@@ -2713,6 +2713,7 @@ public class Exchange {
                 uploadData.comment_txt = item.commentTxt;
                 uploadData.img_before_hash = item.img_before_hash;
                 uploadData.img_after_hash = item.img_after_hash;
+                uploadData.add_requirement_id = item.addRequirementId;
                 dataList.add(uploadData);
             }
 

@@ -266,7 +266,7 @@ public class OptionControlEKL<T> extends OptionControl {
                 } else if (usersSDBPTT.otdelId == null || usersSDBPTT.otdelId == 0) {
                     signal = false;
                     optionMsg.append(", но ").append("у ПТТ ").append(usersSDBPTT.fio).append(" не указан отдел в котором он работает!");
-                } else if (usersSDBPTT.otdelId != null && tovarGroupSDB1.parent != null && tovarGroupSDB1.parent == 0) {    // нет у меня понятия УРОВЕНЬ
+                } else if (usersSDBPTT.otdelId != null && tovarGroupSDB1 != null && tovarGroupSDB1.parent != null && tovarGroupSDB1.parent == 0) {    // нет у меня понятия УРОВЕНЬ
                     signal = false;
                     // TODO otdel lvl
                     Globals.writeToMLOG("INFO", "OptionControlEKL/else if /01.09.23./Sheva", "usersSDBPTT.otdelId: " + usersSDBPTT.otdelId);

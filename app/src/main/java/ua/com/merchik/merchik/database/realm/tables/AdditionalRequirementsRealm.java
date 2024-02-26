@@ -291,6 +291,13 @@ public class AdditionalRequirementsRealm {
         return res;
     }
 
+    public static List<AdditionalRequirementsDB> getADByClientAll(String clientId) {
+        List<AdditionalRequirementsDB> res = INSTANCE.where(AdditionalRequirementsDB.class)
+                .equalTo("clientId", clientId)
+                .findAll();
+        return res;
+    }
+
 
     /**
      * 20.09.2022

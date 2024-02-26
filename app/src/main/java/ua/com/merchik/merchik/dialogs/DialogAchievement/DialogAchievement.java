@@ -14,7 +14,6 @@ import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
@@ -23,20 +22,27 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.RequiresApi;
+
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
 
 import ua.com.merchik.merchik.Activities.PhotoLogActivity.PhotoLogActivity;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.R;
+import ua.com.merchik.merchik.Utils.Spinner.SpinnerAdapter;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.Database.Room.AchievementsSDB;
 import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteHintsDB;
 import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteObjects.SiteObjectsDB;
+import ua.com.merchik.merchik.data.RealmModels.AdditionalRequirementsDB;
 import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.database.realm.RealmManager;
+import ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsRealm;
 import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.dialogs.DialogFullPhotoR;
 import ua.com.merchik.merchik.dialogs.DialogVideo;
@@ -56,13 +62,13 @@ public class DialogAchievement {
     private Button photoTo, photoAfter, save;
     private ImageView photoToIV, photoAfterIV;
 
-    private Spinner spinnerTheme;
+    private Spinner spinnerTheme, spinnerClient;
     private String[] themeList = new String[]{
             "Досягнення (покращення розташування товару в ТТ)",     // 595
             "Замовлення на фінансування нового Досягнення",         // 1252
             "Утримання викладки на полиці (досягнутого раніше)"};   // 1251
 
-    private Integer spinnerThemeResult;
+    private Integer spinnerThemeResult, spinnerClientResult;
     private OptionsDB optionDB;
 
     public DialogAchievement(Context context, WpDataDB wpDataDB) {
@@ -100,6 +106,7 @@ public class DialogAchievement {
             photoAfterIV = dialog.findViewById(R.id.photoAfter);
 
             spinnerTheme = dialog.findViewById(R.id.spinner_theme);
+            spinnerClient = dialog.findViewById(R.id.spinner_client);
 
             putTextData();
             buttonSave();
@@ -132,6 +139,12 @@ public class DialogAchievement {
                 achievementsSDB.themeId = 595;
                 if (spinnerTheme != null && spinnerThemeResult != null){
                     achievementsSDB.themeId = spinnerThemeResult;
+                }
+
+                if (spinnerClientResult != null){
+                    achievementsSDB.addRequirementId = spinnerClientResult;
+                }else {
+                    achievementsSDB.addRequirementId = 0;
                 }
 
                 achievementsSDB.img_before_hash = stackPhotoDBTo.photo_hash;
@@ -308,33 +321,9 @@ public class DialogAchievement {
         visit.setText(Html.fromHtml("<b>Відвідування: </b> " + wpDataDB.getCode_dad2() + ""));
         theme.setText(Html.fromHtml("<b>Тема: </b> "));
 
-        ArrayAdapter adapter = new ArrayAdapter(context, android.R.layout.simple_spinner_item, themeList);
+        createSpinnerTheme();
 
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        spinnerTheme.setAdapter(adapter);
-        spinnerTheme.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
-                String data = adapterView.getItemAtPosition(i).toString();
-                Toast.makeText(adapterView.getContext(), "Выбрали: " + data, Toast.LENGTH_SHORT).show();
-
-                if (data.equals(themeList[0])){
-                    spinnerThemeResult = 595;
-                }else if (data.equals(themeList[1])){
-                    spinnerThemeResult = 1252;
-                }else if (data.equals(themeList[2])){
-                    spinnerThemeResult = 1251;
-                }else {
-                    spinnerThemeResult = 595;
-                }
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> adapterView) {
-                Toast.makeText(adapterView.getContext(), "Ничего не выбрано", Toast.LENGTH_SHORT).show();
-                spinnerThemeResult = null;
-            }
-        });
+        createSpinnerClient();
 
         offerFromClient.setText(Html.fromHtml("<b>Пропозиція від клієнта: </b> " + "" + ""));
     }
@@ -415,5 +404,86 @@ public class DialogAchievement {
         });
     }
 
+    public void createSpinnerTheme(){
+//        ArrayAdapter adapter = new ArrayAdapter(context, android.R.layout.simple_spinner_item, themeList);
+//        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+
+        SpinnerAdapter adapter1 = new SpinnerAdapter(context, themeList, "Выберите тему");
+        spinnerTheme.setAdapter(adapter1);
+        spinnerTheme.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+                String data = adapterView.getItemAtPosition(i).toString();
+                Toast.makeText(adapterView.getContext(), "Выбрали: " + data, Toast.LENGTH_SHORT).show();
+
+                if (data.equals(themeList[0])){
+                    spinnerThemeResult = 595;
+                }else if (data.equals(themeList[1])){
+                    spinnerThemeResult = 1252;
+                }else if (data.equals(themeList[2])){
+                    spinnerThemeResult = 1251;
+                }else {
+                    spinnerThemeResult = 595;
+                }
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> adapterView) {
+                Toast.makeText(adapterView.getContext(), "Ничего не выбрано", Toast.LENGTH_SHORT).show();
+                spinnerThemeResult = 595;
+            }
+        });
+    }
+
+    public void createSpinnerClient(){
+        List<AdditionalRequirementsDB> additionalRequirementsDBList = AdditionalRequirementsRealm.getADByClientAll(wpDataDB.getClient_id());
+
+        if (additionalRequirementsDBList == null) return;
+
+        String[] clientList = new String[additionalRequirementsDBList.size()+1];
+        clientList[0] = "це досягнення не відноситься до жодної з пропозицій замовника";
+        for (int i=0; i<additionalRequirementsDBList.size(); i++){
+            clientList[i+1] = additionalRequirementsDBList.get(i).getNotes();
+        }
+
+
+//        ArrayAdapter adapter = new ArrayAdapter(context, android.R.layout.simple_spinner_item, clientList);
+//        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+
+        SpinnerAdapter adapter1 = new SpinnerAdapter(context, clientList, additionalRequirementsDBList.size() > 0 ? "От клиента есть (" + additionalRequirementsDBList.size() + ") предложений" : "Предложений от клиента НЕТ");
+        spinnerClient.setAdapter(adapter1);
+        spinnerClient.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @RequiresApi(api = Build.VERSION_CODES.N)
+            @Override
+            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+                String data = adapterView.getItemAtPosition(i).toString();
+                Toast.makeText(adapterView.getContext(), "Выбрали: " + data, Toast.LENGTH_SHORT).show();
+
+                // Используем Stream для поиска объекта в списке по значению notes
+                Optional<AdditionalRequirementsDB> foundObject = additionalRequirementsDBList.stream()
+                        .filter(item -> data.equals(item.getNotes()))
+                        .findFirst();
+
+                // Проверяем, найден ли объект
+                if (foundObject.isPresent()) {
+                    // Объект найден, можно получить его id или выполнить другие действия
+                    int objectId = foundObject.get().getId();
+                    spinnerClientResult = objectId;
+                    Toast.makeText(adapterView.getContext(), "Выбрали: " + data + ", id: " + objectId, Toast.LENGTH_SHORT).show();
+                } else if (data.equals("це досягнення не відноситься до жодної з пропозицій замовника")){
+                    spinnerClientResult = 0;
+                }else {
+                    // Объект не найден
+                    Toast.makeText(adapterView.getContext(), "Объект не найден", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> adapterView) {
+                Toast.makeText(adapterView.getContext(), "Ничего не выбрано", Toast.LENGTH_SHORT).show();
+                spinnerClientResult = 0;
+            }
+        });
+    }
 
 }
