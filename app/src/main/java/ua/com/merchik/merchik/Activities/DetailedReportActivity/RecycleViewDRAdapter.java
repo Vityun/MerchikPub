@@ -45,6 +45,7 @@ import ua.com.merchik.merchik.Options.OptionControl;
 import ua.com.merchik.merchik.Options.Options;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
+import ua.com.merchik.merchik.data.Database.Room.AchievementsSDB;
 import ua.com.merchik.merchik.data.Database.Room.AddressSDB;
 import ua.com.merchik.merchik.data.Database.Room.SamplePhotoSDB;
 import ua.com.merchik.merchik.data.Database.Room.SiteObjectsSDB;
@@ -311,6 +312,17 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                 try {
                     // Вчтавляем "счётчкик"
                     switch (optionId) {
+
+                        case 135159:
+                            int achievementSum = 0;
+                            List<AchievementsSDB> achievementsSDBList = SQL_DB.achievementsDao().getByDad2(dad2);
+                            if (achievementsSDBList != null){
+                                achievementSum = achievementsSDBList.size();
+                            }
+
+                            textInteger.setText("" + achievementSum);
+                            break;
+
                         // Start Work
                         case (138518):
                             long startTime;
