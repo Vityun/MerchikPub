@@ -124,31 +124,54 @@ public class DialogAchievement {
                 achievementsSDB.dt = String.valueOf((System.currentTimeMillis() / 1000));
                 achievementsSDB.dt_ut = (System.currentTimeMillis() / 1000);
                 achievementsSDB.addrId = wpDataDB.getAddr_id();
+                achievementsSDB.adresaNm = wpDataDB.getAddr_txt();
                 achievementsSDB.dvi = 1;
                 achievementsSDB.error = 0;
                 achievementsSDB.currentVisit = 0;
                 achievementsSDB.score = "0";
                 achievementsSDB.clientId = wpDataDB.getClient_id();
+                achievementsSDB.spiskliNm = wpDataDB.getClient_txt();
                 achievementsSDB.codeDad2 = wpDataDB.getCode_dad2();
-                if (comment != null && comment.getText() != null) {
+                achievementsSDB.sotrFio = wpDataDB.getUser_txt();
+                if (comment != null && comment.getText() != null && comment.getText().toString().length() > 10) {
                     achievementsSDB.commentDt = String.valueOf((System.currentTimeMillis() / 1000));
                     achievementsSDB.commentUser = String.valueOf(wpDataDB.getUser_id());
                     achievementsSDB.commentTxt = comment.getText().toString();
+                }else {
+                    Toast.makeText(v.getContext(), "Ви не вказали коментар до досягнення, досягнення створено не буде", Toast.LENGTH_LONG).show();
+                    return;
                 }
 
-                achievementsSDB.themeId = 595;
+//                achievementsSDB.themeId = 595;
                 if (spinnerTheme != null && spinnerThemeResult != null){
                     achievementsSDB.themeId = spinnerThemeResult;
+                }else {
+                    Toast.makeText(v.getContext(), "Ви не вказали тему досягнення, досягнення створено не буде", Toast.LENGTH_LONG).show();
+                    return;
                 }
 
                 if (spinnerClientResult != null){
                     achievementsSDB.addRequirementId = spinnerClientResult;
                 }else {
                     achievementsSDB.addRequirementId = 0;
+                    Toast.makeText(v.getContext(), "Ви не вказали пропозицію клієнта, досягнення створено не буде", Toast.LENGTH_LONG).show();
+                    return;
                 }
 
-                achievementsSDB.img_before_hash = stackPhotoDBTo.photo_hash;
-                achievementsSDB.img_after_hash = stackPhotoDBAfter.photo_hash;
+                if (stackPhotoDBTo != null && stackPhotoDBTo.photo_hash != null){
+                    achievementsSDB.img_before_hash = stackPhotoDBTo.photo_hash;
+                }else {
+                    Toast.makeText(v.getContext(), "Виберіть фото До, досягнення створено не буде", Toast.LENGTH_LONG).show();
+                    return;
+                }
+
+                if (stackPhotoDBAfter != null && stackPhotoDBAfter.photo_hash != null){
+                    achievementsSDB.img_after_hash = stackPhotoDBAfter.photo_hash;
+                }else {
+                    Toast.makeText(v.getContext(), "Виберіть фото Після, досягнення створено не буде", Toast.LENGTH_LONG).show();
+                    return;
+                }
+
 
                 SQL_DB.achievementsDao().insertAll(Collections.singletonList(achievementsSDB));
                 Toast.makeText(v.getContext(), "Створено нове досягнення", Toast.LENGTH_LONG).show();
@@ -422,15 +445,15 @@ public class DialogAchievement {
                     spinnerThemeResult = 1252;
                 }else if (data.equals(themeList[2])){
                     spinnerThemeResult = 1251;
-                }else {
+                }/*else {
                     spinnerThemeResult = 595;
-                }
+                }*/
             }
 
             @Override
             public void onNothingSelected(AdapterView<?> adapterView) {
                 Toast.makeText(adapterView.getContext(), "Ничего не выбрано", Toast.LENGTH_SHORT).show();
-                spinnerThemeResult = 595;
+//                spinnerThemeResult = 595;
             }
         });
     }

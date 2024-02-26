@@ -21,6 +21,8 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Filter;
+import android.widget.Filterable;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -32,9 +34,11 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import java.io.File;
 import java.util.Collections;
+import java.util.List;
 
 import io.reactivex.rxjava3.observers.DisposableCompletableObserver;
 import io.reactivex.rxjava3.schedulers.Schedulers;
+import ua.com.merchik.merchik.Filter.MyFilter;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.ServerExchange.Exchange;
@@ -53,15 +57,17 @@ import ua.com.merchik.merchik.database.realm.tables.AppUserRealm;
 import ua.com.merchik.merchik.database.realm.tables.StackPhotoRealm;
 import ua.com.merchik.merchik.dialogs.DialogData;
 
-public class AdapterUtil extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
+public class AdapterUtil extends RecyclerView.Adapter<RecyclerView.ViewHolder> implements Filterable {
 
     private Context mContext;
     private UniversalAdapterData data;
+    private UniversalAdapterData dataFilter;
     private Globals.ReferencesEnum referencesEnum;
 
     public AdapterUtil(Context mContext, UniversalAdapterData data, Globals.ReferencesEnum referencesEnum) {
         this.mContext = mContext;
         this.data = data;
+        this.dataFilter = data;
         this.referencesEnum = referencesEnum;
 
         Log.e("AdapterUtil", "ENTER referencesEnum: " + referencesEnum);
@@ -436,45 +442,69 @@ public class AdapterUtil extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         }
 
         private void bindACHIEVEMENTS(AchievementsSDB data) {
-            title1.setText("ID:");
-            title2.setText("Кліент:");
-            title3.setText("Адреса:");
-            title4.setText("Виконавець:");
-            title5.setText("Коментар:");
-
-            text1.setText("" + data.serverId);
-            text2.setText("" + data.spiskliNm);
-            text3.setText("" + data.adresaNm);
-            text4.setText("" + data.sotrFio);
-            text5.setText("" + data.commentTxt);
-
             try {
-                StackPhotoDB stackPhotoBefore = StackPhotoRealm.getByServerId(data.img_before_hash);
+                title1.setText("ID:");
+                title2.setText("Кліент:");
+                title3.setText("Адреса:");
+                title4.setText("Виконавець:");
+                title5.setText("Коментар:");
 
-                if (stackPhotoBefore == null){
-                    stackPhotoBefore = StackPhotoRealm.getByServerId(String.valueOf(data.imgBeforeId));
+                String id = "";
+                if (data.serverId == 0){
+                    id = data.id + "*";
+                }else {
+                    id = String.valueOf(data.serverId);
                 }
 
-                StackPhotoDB stackPhotoAfter = StackPhotoRealm.getByHash(data.img_after_hash);
+                text1.setText("" + id);
+                text2.setText("" + data.spiskliNm);
+                text3.setText("" + data.adresaNm);
+                text4.setText("" + data.sotrFio);
+                text5.setText("" + data.commentTxt);
 
-                if (stackPhotoAfter == null){
-                    stackPhotoAfter = StackPhotoRealm.getByServerId(String.valueOf(data.imgAfterId));
+                try {
+                    StackPhotoDB stackPhotoBefore = StackPhotoRealm.getByHash(data.img_before_hash);
+
+                    if (stackPhotoBefore == null){
+                        stackPhotoBefore = StackPhotoRealm.getByServerId(String.valueOf(data.imgBeforeId));
+                    }
+
+                    StackPhotoDB stackPhotoAfter = StackPhotoRealm.getByHash(data.img_after_hash);
+
+                    if (stackPhotoAfter == null){
+                        stackPhotoAfter = StackPhotoRealm.getByServerId(String.valueOf(data.imgAfterId));
+                    }
+
+
+
+//                    Uri beforeUri = Uri.parse(stackPhotoBefore.photo_num);
+//                    image.setImageURI(beforeUri);
+
+                    File file = new File(stackPhotoBefore.getPhoto_num());
+                    Bitmap b = decodeSampledBitmapFromResource(file, 200, 200);
+                    image.setImageBitmap(b);
+
+//                    Uri afterUri = Uri.parse(stackPhotoAfter.photo_num);
+//                    image2.setImageURI(afterUri);
+
+                    File file2 = new File(stackPhotoAfter.getPhoto_num());
+                    Bitmap b2 = decodeSampledBitmapFromResource(file2, 200, 200);
+                    image2.setImageBitmap(b2);
+                } catch (Exception e) {
+                    Globals.writeToMLOG("ERROR", "bindACHIEVEMENTS", "Exception e: " + e);
                 }
 
-                image.setImageURI(Uri.parse(stackPhotoBefore.photo_num));
-                image2.setImageURI(Uri.parse(stackPhotoAfter.photo_num));
-            } catch (Exception e) {
-                Globals.writeToMLOG("ERROR", "bindACHIEVEMENTS", "Exception e: " + e);
+
+                layout.setOnClickListener(v -> {
+                    DialogData dialog = new DialogData(v.getContext());
+                    dialog.setTitle("Коментар");
+                    dialog.setText(data.commentTxt);
+                    dialog.setClose(dialog::dismiss);
+                    dialog.show();
+                });
+            }catch (Exception e){
+                Log.e("bindACHIEVEMENTS", "Exception e: " + e);
             }
-
-
-            layout.setOnClickListener(v -> {
-                DialogData dialog = new DialogData(v.getContext());
-                dialog.setTitle("Коментар");
-                dialog.setText(data.commentTxt);
-                dialog.setClose(dialog::dismiss);
-                dialog.show();
-            });
         }
     }
 
@@ -568,5 +598,39 @@ public class AdapterUtil extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         return String.format("https://merchik.com.ua/sa.php?&u=%s&s=%s&l=/mobile.php?mod=sotr_list**act=my_profile", userId, hash);
     }
 
+
+    @Override
+    public Filter getFilter() {
+        return new Filter() {
+
+            @Override
+            protected FilterResults performFiltering(CharSequence constraint) {
+                List<AchievementsSDB> filteredResults = null;
+
+                if (constraint.length() == 0) {
+                    filteredResults = data.achievementsSDBS;
+                } else {
+                    String[] splited = constraint.toString().split("\\s+");
+                    for (String item : splited) {
+                        if (item != null && !item.equals("")) {
+                            filteredResults = new MyFilter(mContext).getFilteredResultsAchievements(item, filteredResults, data.achievementsSDBS);
+                        }
+                    }
+                }
+
+                FilterResults results = new FilterResults();
+                results.values = filteredResults;
+                return results;
+            }
+
+            @Override
+            protected void publishResults(CharSequence constraint, FilterResults results) {
+                if (constraint.length() != 0){
+                    dataFilter.achievementsSDBS = (List<AchievementsSDB>) results.values;
+                }
+                notifyDataSetChanged();
+            }
+        };
+    }
 
 }
