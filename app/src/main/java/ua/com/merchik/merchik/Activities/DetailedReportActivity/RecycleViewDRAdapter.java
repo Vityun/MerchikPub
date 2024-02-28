@@ -1012,12 +1012,18 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                         dialog.setClose(dialog::dismiss);
                         dialog.show();
                     } else {
-                        Toast.makeText(context, "Не могу найти образцы фото", Toast.LENGTH_SHORT).show();
+                        // тут Toast работает но пользователю нгепонятны тексты ошибок Джавы, и Петров сказал, сюда нужно внятное
+                        // пользователю сообщение (универсвльное) из глоб модуля, типа "не получается показать фото попробуйте
+                        // выполнить синхронизацию и пробуйте снова..."
+                        Toast.makeText(context, "Не могу найти образцы фото. "+context.getText(R.string.msg_try_sync), Toast.LENGTH_SHORT).show();
                         Globals.writeToMLOG("ERROR", "Не могу найти образцы фото", "");
                     }
                 } catch (Exception e) {
-                    Toast.makeText(context, "Не могу отоброзить образец фото по причине: " + e, Toast.LENGTH_SHORT).show();
-                    Globals.writeToMLOG("ERROR", "Не могу отоброзить образец фото по причине", "Exception e: " + e);
+                    // тут Toast работает но пользователю нгепонятны тексты ошибок Джавы, и Петров сказал, сюда нужно внятное
+                    // пользователю сообщение (универсвльное) из глоб модуля, типа "не получается показать фото попробуйте
+                    // выполнить синхронизацию и пробуйте снова..."
+                    Toast.makeText(context, "Не могу отобразить образец фото. "+context.getText(R.string.msg_try_sync), Toast.LENGTH_SHORT).show();
+                    Globals.writeToMLOG("ERROR", "Не могу отобразить образец фото по причине", "Exception e: " + e);
                 }
             }
 

@@ -175,6 +175,9 @@
     <string name="internet_connection_error_code_not_200">Не удалось получить данные, сервер не отвечает. Проверьте связь с интернетом и повторите попытку позже.</string>
     <string name="internet_connection_error_body_is_null">Запрашиваемые данные не обнаружены. Повторите попытку или обратитесь к Руководителю.</string>
 
+    <!--USER MESSAGES-->
+    <string name="msg_try_sync">Виконайте синхронізацію даних з сервером і повторіть дію після синхронізації.</string>
+
 
     <!-- OPTIONS -->
     <!-- OPTION CONTROL -->
