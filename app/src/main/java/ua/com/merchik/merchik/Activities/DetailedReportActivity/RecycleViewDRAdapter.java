@@ -864,6 +864,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
          * 157277 - 28 - Фото Акционного Товара
          * 159726 - 37 - Фото ТТ
          * 159725 - 37 - Кнопка "Фото Торговой Точки (ФТТ)"
+         * 133382 - 25 - Товар потенциального клиента
          * */
         int photoType = 0;
         boolean showPhotoLink = false;
@@ -932,6 +933,11 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
 
             case "157354":  // - 42 - Фото ДМП
                 photoType = 42;
+                showPhotoLink = true;
+                break;
+
+            case "133382":  // - 25 - Фото товара потенциального клиента
+                photoType = 25;
                 showPhotoLink = true;
                 break;
         }
@@ -1018,12 +1024,18 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                         dialog.setClose(dialog::dismiss);
                         dialog.show();
                     } else {
-                        Toast.makeText(context, "Не могу найти образцы фото", Toast.LENGTH_SHORT).show();
+                        // тут Toast работает но пользователю нгепонятны тексты ошибок Джавы, и Петров сказал, сюда нужно внятное
+                        // пользователю сообщение (универсвльное) из глоб модуля, типа "не получается показать фото попробуйте
+                        // выполнить синхронизацию и пробуйте снова..."
+                        Toast.makeText(context, "Не могу найти образцы фото. "+context.getText(R.string.msg_try_sync), Toast.LENGTH_SHORT).show();
                         Globals.writeToMLOG("ERROR", "Не могу найти образцы фото", "");
                     }
                 } catch (Exception e) {
-                    Toast.makeText(context, "Не могу отоброзить образец фото по причине: " + e, Toast.LENGTH_SHORT).show();
-                    Globals.writeToMLOG("ERROR", "Не могу отоброзить образец фото по причине", "Exception e: " + e);
+                    // тут Toast работает но пользователю нгепонятны тексты ошибок Джавы, и Петров сказал, сюда нужно внятное
+                    // пользователю сообщение (универсвльное) из глоб модуля, типа "не получается показать фото попробуйте
+                    // выполнить синхронизацию и пробуйте снова..."
+                    Toast.makeText(context, "Не могу отобразить образец фото. "+context.getText(R.string.msg_try_sync), Toast.LENGTH_SHORT).show();
+                    Globals.writeToMLOG("ERROR", "Не могу отобразить образец фото по причине", "Exception e: " + e);
                 }
             }
 
