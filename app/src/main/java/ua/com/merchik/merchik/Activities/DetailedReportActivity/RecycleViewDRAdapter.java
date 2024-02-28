@@ -852,6 +852,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
          * 157277 - 28 - Фото Акционного Товара
          * 159726 - 37 - Фото ТТ
          * 159725 - 37 - Кнопка "Фото Торговой Точки (ФТТ)"
+         * 133382 - 25 - Товар потенциального клиента
          * */
         int photoType = 0;
         boolean showPhotoLink = false;
@@ -920,6 +921,11 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
 
             case "157354":  // - 42 - Фото ДМП
                 photoType = 42;
+                showPhotoLink = true;
+                break;
+
+            case "133382":  // - 25 - Фото товара потенциального клиента
+                photoType = 25;
                 showPhotoLink = true;
                 break;
         }
