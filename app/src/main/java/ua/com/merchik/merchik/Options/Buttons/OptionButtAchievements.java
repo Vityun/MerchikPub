@@ -57,7 +57,7 @@ public class OptionButtAchievements<T> extends OptionControl {
         if (document instanceof WpDataDB) {
             this.wpDataDB = (WpDataDB) document;
             dateFrom = Clock.getDatePeriodLong(wpDataDB.getDt().getTime(), -41) / 1000;   // -41 потому что оно берет начало дня
-            dateTo = Clock.getDatePeriodLong(wpDataDB.getDt().getTime(), 3) / 1000;
+            dateTo = Clock.getDatePeriodLong(wpDataDB.getDt().getTime(), 8) / 1000; // TODO DEBUG Тут должно быть 3
             clientId = wpDataDB.getClient_id();
             addressId = wpDataDB.getAddr_id();
         }
@@ -84,6 +84,7 @@ public class OptionButtAchievements<T> extends OptionControl {
             // Тут я должен обработать данные, что я внёс в фильтре и закинуть их на обновление
         });
         dialog.setRecycler(createAdapter(dialog.context, achievements), new LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false));
+        dialog.setRecyclerFilterSearch();
         dialog.setClose(dialog::dismiss);
         dialog.setOkRv("Створення досягнення (додаток)", () -> {
             DialogAchievement dialogAchievement = new DialogAchievement(context, wpDataDB);
@@ -110,7 +111,7 @@ public class OptionButtAchievements<T> extends OptionControl {
             // Получаю ВСЕ выгруженные фото по данному отчёту.
             List<StackPhotoDB> stackPhotoDBS = StackPhotoRealm.getUploadedStackPhotoByDAD2(wpDataDB.getCode_dad2());
 
-            if (stackPhotoDBS != null && stackPhotoDBS.size() >= 2) {
+            if (stackPhotoDBS != null && stackPhotoDBS.size() >= 1) {
                 String dateFrom = Clock.getHumanTimeSecPattern(Clock.getDatePeriodLong(wpDataDB.getDt().getTime(), -31) / 1000, "yyyy-MM-dd");
                 String dateTo = Clock.getHumanTimeSecPattern(Clock.getDatePeriodLong(wpDataDB.getDt().getTime(), +2) / 1000, "yyyy-MM-dd");
 

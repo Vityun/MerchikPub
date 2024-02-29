@@ -11,6 +11,7 @@ import java.util.List;
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.ViewHolders.AutoTextUsersViewHolder;
+import ua.com.merchik.merchik.data.Database.Room.AchievementsSDB;
 import ua.com.merchik.merchik.data.Database.Room.AddressSDB;
 import ua.com.merchik.merchik.data.Database.Room.ArticleSDB;
 import ua.com.merchik.merchik.data.Database.Room.CustomerSDB;
@@ -72,12 +73,6 @@ public class MyFilter {
         for (WpDataDB item : sorted) {
             try {
                 String themeId = String.valueOf(item.getTheme_id());
-
-//                AtomicReference<ThemeDB> theme = new AtomicReference<>();
-//                RealmManager.INSTANCE.executeTransactionAsync((realm) -> {
-//                    theme.set(realm.copyFromRealm(ThemeRealm.getThemeById(themeId)));
-//                });
-
                 // Дата
                 if (item.getDt() != null && !item.getDt().equals("") && Clock.getHumanTimeYYYYMMDD(item.getDt().getTime() / 1000).toLowerCase().contains(constraint)) {   //+TODO CHANGE DATE
                     results.add(item);
@@ -102,6 +97,41 @@ public class MyFilter {
                 Log.d("test", "test");
             }
         }
+        return results;
+    }
+
+    public List<AchievementsSDB> getFilteredResultsAchievements(String constraint, List<AchievementsSDB> sorted, List<AchievementsSDB> orig) {
+        constraint = constraint.toLowerCase();
+
+        List<AchievementsSDB> results = new ArrayList<>();
+        if (sorted == null) {
+            sorted = orig;
+        }
+
+        for (AchievementsSDB item : sorted) {
+            try {
+                // Идентификатор
+                String servId = String.valueOf(item.serverId);
+                if (!servId.equals("") && servId.toLowerCase().contains(constraint)) {
+                    results.add(item);
+                }
+                // Адрес
+                else if (item.adresaNm != null && !item.adresaNm.equals("") && item.adresaNm.toLowerCase().contains(constraint)) {
+                    results.add(item);
+                }
+                // Клиент
+                else if (item.spiskliNm != null && !item.spiskliNm.equals("") && item.spiskliNm.toLowerCase().contains(constraint)) {
+                    results.add(item);
+                }
+                // Пользователь
+                else if (item.sotrFio != null && !item.sotrFio.equals("") && item.sotrFio.toLowerCase().contains(constraint)) {
+                    results.add(item);
+                }
+            } catch (Exception e) {
+                Log.d("test", "test");
+            }
+        }
+
         return results;
     }
 

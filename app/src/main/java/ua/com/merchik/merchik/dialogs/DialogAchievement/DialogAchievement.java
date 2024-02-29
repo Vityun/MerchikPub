@@ -1,5 +1,6 @@
 package ua.com.merchik.merchik.dialogs.DialogAchievement;
 
+import static ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportTab.detailedReportOptionsFrag;
 import static ua.com.merchik.merchik.Globals.HELPDESK_PHONE_NUMBER;
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
@@ -13,27 +14,36 @@ import android.text.Html;
 import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
+import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.RequiresApi;
+
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
 
 import ua.com.merchik.merchik.Activities.PhotoLogActivity.PhotoLogActivity;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.R;
+import ua.com.merchik.merchik.Utils.Spinner.SpinnerAdapter;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.Database.Room.AchievementsSDB;
 import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteHintsDB;
 import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteObjects.SiteObjectsDB;
+import ua.com.merchik.merchik.data.RealmModels.AdditionalRequirementsDB;
 import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.database.realm.RealmManager;
+import ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsRealm;
 import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.dialogs.DialogFullPhotoR;
 import ua.com.merchik.merchik.dialogs.DialogVideo;
@@ -52,6 +62,14 @@ public class DialogAchievement {
     private EditText comment;
     private Button photoTo, photoAfter, save;
     private ImageView photoToIV, photoAfterIV;
+
+    private Spinner spinnerTheme, spinnerClient;
+    private String[] themeList = new String[]{
+            "Досягнення (покращення розташування товару в ТТ)",     // 595
+            "Замовлення на фінансування нового Досягнення",         // 1252
+            "Утримання викладки на полиці (досягнутого раніше)"};   // 1251
+
+    private Integer spinnerThemeResult, spinnerClientResult;
     private OptionsDB optionDB;
 
     public DialogAchievement(Context context, WpDataDB wpDataDB) {
@@ -88,6 +106,9 @@ public class DialogAchievement {
             photoToIV = dialog.findViewById(R.id.photoTo);
             photoAfterIV = dialog.findViewById(R.id.photoAfter);
 
+            spinnerTheme = dialog.findViewById(R.id.spinner_theme);
+            spinnerClient = dialog.findViewById(R.id.spinner_client);
+
             putTextData();
             buttonSave();
 
@@ -104,32 +125,60 @@ public class DialogAchievement {
                 achievementsSDB.dt = String.valueOf((System.currentTimeMillis() / 1000));
                 achievementsSDB.dt_ut = (System.currentTimeMillis() / 1000);
                 achievementsSDB.addrId = wpDataDB.getAddr_id();
-                achievementsSDB.themeId = 595;
+                achievementsSDB.adresaNm = wpDataDB.getAddr_txt();
                 achievementsSDB.dvi = 1;
                 achievementsSDB.error = 0;
                 achievementsSDB.currentVisit = 0;
                 achievementsSDB.score = "0";
                 achievementsSDB.clientId = wpDataDB.getClient_id();
+                achievementsSDB.spiskliNm = wpDataDB.getClient_txt();
                 achievementsSDB.codeDad2 = wpDataDB.getCode_dad2();
-                if (comment != null && comment.getText() != null) {
+                achievementsSDB.sotrFio = wpDataDB.getUser_txt();
+                if (comment != null && comment.getText() != null && comment.getText().toString().length() > 10) {
                     achievementsSDB.commentDt = String.valueOf((System.currentTimeMillis() / 1000));
                     achievementsSDB.commentUser = String.valueOf(wpDataDB.getUser_id());
                     achievementsSDB.commentTxt = comment.getText().toString();
+                }else {
+                    Toast.makeText(v.getContext(), "Ви не вказали коментар до досягнення, досягнення створено не буде", Toast.LENGTH_LONG).show();
+                    return;
                 }
 
-//                try {
-//                    achievementsSDB.imgBeforeId = Integer.valueOf(stackPhotoDBTo.photoServerId);
-//                    achievementsSDB.imgAfterId = Integer.valueOf(stackPhotoDBAfter.photoServerId);
-//                }catch (Exception e){
-//                    Globals.writeToMLOG("ERROR", "DialogAchievement/buttonSave.achievementsSDB", "Exception e: " + e);
-//                }
+//                achievementsSDB.themeId = 595;
+                if (spinnerTheme != null && spinnerThemeResult != null){
+                    achievementsSDB.themeId = spinnerThemeResult;
+                }else {
+                    Toast.makeText(v.getContext(), "Ви не вказали тему досягнення, досягнення створено не буде", Toast.LENGTH_LONG).show();
+                    return;
+                }
 
-                achievementsSDB.img_before_hash = stackPhotoDBTo.photo_hash;
-                achievementsSDB.img_after_hash = stackPhotoDBAfter.photo_hash;
+                if (spinnerClientResult != null){
+                    achievementsSDB.addRequirementId = spinnerClientResult;
+                }else {
+                    achievementsSDB.addRequirementId = 0;
+                    Toast.makeText(v.getContext(), "Ви не вказали пропозицію клієнта, досягнення створено не буде", Toast.LENGTH_LONG).show();
+                    return;
+                }
+
+                if (stackPhotoDBTo != null && stackPhotoDBTo.photo_hash != null){
+                    achievementsSDB.img_before_hash = stackPhotoDBTo.photo_hash;
+                }else {
+                    Toast.makeText(v.getContext(), "Виберіть фото До, досягнення створено не буде", Toast.LENGTH_LONG).show();
+                    return;
+                }
+
+                if (stackPhotoDBAfter != null && stackPhotoDBAfter.photo_hash != null){
+                    achievementsSDB.img_after_hash = stackPhotoDBAfter.photo_hash;
+                }else {
+                    Toast.makeText(v.getContext(), "Виберіть фото Після, досягнення створено не буде", Toast.LENGTH_LONG).show();
+                    return;
+                }
+
 
                 SQL_DB.achievementsDao().insertAll(Collections.singletonList(achievementsSDB));
                 Toast.makeText(v.getContext(), "Створено нове досягнення", Toast.LENGTH_LONG).show();
                 dialog.dismiss();
+
+                detailedReportOptionsFrag.recycleViewDRAdapter.notifyDataSetChanged();
             } catch (Exception e) {
                 Globals.writeToMLOG("ERROR", "DialogAchievement/buttonSave", "Exception e: " + e);
             }
@@ -296,7 +345,12 @@ public class DialogAchievement {
         client.setText(Html.fromHtml("<b>Кліент: </b> " + wpDataDB.getClient_txt() + ""));
         address.setText(Html.fromHtml("<b>Адреса: </b> " + wpDataDB.getAddr_txt() + ""));
         visit.setText(Html.fromHtml("<b>Відвідування: </b> " + wpDataDB.getCode_dad2() + ""));
-        theme.setText(Html.fromHtml("<b>Тема: </b> " + wpDataDB.getTheme_id() + ""));
+        theme.setText(Html.fromHtml("<b>Тема: </b> "));
+
+        createSpinnerTheme();
+
+        createSpinnerClient();
+
         offerFromClient.setText(Html.fromHtml("<b>Пропозиція від клієнта: </b> " + "" + ""));
     }
 
@@ -376,5 +430,86 @@ public class DialogAchievement {
         });
     }
 
+    public void createSpinnerTheme(){
+//        ArrayAdapter adapter = new ArrayAdapter(context, android.R.layout.simple_spinner_item, themeList);
+//        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+
+        SpinnerAdapter adapter1 = new SpinnerAdapter(context, themeList, "Выберите тему");
+        spinnerTheme.setAdapter(adapter1);
+        spinnerTheme.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+                String data = adapterView.getItemAtPosition(i).toString();
+                Toast.makeText(adapterView.getContext(), "Выбрали: " + data, Toast.LENGTH_SHORT).show();
+
+                if (data.equals(themeList[0])){
+                    spinnerThemeResult = 595;
+                }else if (data.equals(themeList[1])){
+                    spinnerThemeResult = 1252;
+                }else if (data.equals(themeList[2])){
+                    spinnerThemeResult = 1251;
+                }/*else {
+                    spinnerThemeResult = 595;
+                }*/
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> adapterView) {
+                Toast.makeText(adapterView.getContext(), "Ничего не выбрано", Toast.LENGTH_SHORT).show();
+//                spinnerThemeResult = 595;
+            }
+        });
+    }
+
+    public void createSpinnerClient(){
+        List<AdditionalRequirementsDB> additionalRequirementsDBList = AdditionalRequirementsRealm.getADByClientAll(wpDataDB.getClient_id());
+
+        if (additionalRequirementsDBList == null) return;
+
+        String[] clientList = new String[additionalRequirementsDBList.size()+1];
+        clientList[0] = "це досягнення не відноситься до жодної з пропозицій замовника";
+        for (int i=0; i<additionalRequirementsDBList.size(); i++){
+            clientList[i+1] = additionalRequirementsDBList.get(i).getNotes();
+        }
+
+
+//        ArrayAdapter adapter = new ArrayAdapter(context, android.R.layout.simple_spinner_item, clientList);
+//        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+
+        SpinnerAdapter adapter1 = new SpinnerAdapter(context, clientList, additionalRequirementsDBList.size() > 0 ? "От клиента есть (" + additionalRequirementsDBList.size() + ") предложений" : "Предложений от клиента НЕТ");
+        spinnerClient.setAdapter(adapter1);
+        spinnerClient.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @RequiresApi(api = Build.VERSION_CODES.N)
+            @Override
+            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+                String data = adapterView.getItemAtPosition(i).toString();
+                Toast.makeText(adapterView.getContext(), "Выбрали: " + data, Toast.LENGTH_SHORT).show();
+
+                // Используем Stream для поиска объекта в списке по значению notes
+                Optional<AdditionalRequirementsDB> foundObject = additionalRequirementsDBList.stream()
+                        .filter(item -> data.equals(item.getNotes()))
+                        .findFirst();
+
+                // Проверяем, найден ли объект
+                if (foundObject.isPresent()) {
+                    // Объект найден, можно получить его id или выполнить другие действия
+                    int objectId = foundObject.get().getId();
+                    spinnerClientResult = objectId;
+                    Toast.makeText(adapterView.getContext(), "Выбрали: " + data + ", id: " + objectId, Toast.LENGTH_SHORT).show();
+                } else if (data.equals("це досягнення не відноситься до жодної з пропозицій замовника")){
+                    spinnerClientResult = 0;
+                }else {
+                    // Объект не найден
+                    Toast.makeText(adapterView.getContext(), "Объект не найден", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> adapterView) {
+                Toast.makeText(adapterView.getContext(), "Ничего не выбрано", Toast.LENGTH_SHORT).show();
+                spinnerClientResult = 0;
+            }
+        });
+    }
 
 }

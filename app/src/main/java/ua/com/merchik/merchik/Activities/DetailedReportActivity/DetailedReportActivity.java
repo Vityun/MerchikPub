@@ -630,10 +630,10 @@ public class DetailedReportActivity extends toolbar_menus {
             viewPager.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
                 @Override
                 public void onPageSelected(int position) {
-                   TabLayout.Tab tab =  tabLayout.getTabAt(position);
-                   if (tab != null && !tab.isSelected()) {
-                       tab.select();
-                   }
+                    TabLayout.Tab tab = tabLayout.getTabAt(position);
+                    if (tab != null && !tab.isSelected()) {
+                        tab.select();
+                    }
                 }
             });
 
@@ -931,6 +931,7 @@ public class DetailedReportActivity extends toolbar_menus {
                 globals.alertDialogMsg(this, "Ошибка при выполнении фото: " + e);
             }
 
+            refreshAdapterFragmentB();
         } catch (Exception e) {
             Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult", "Exception e: " + e);
         }

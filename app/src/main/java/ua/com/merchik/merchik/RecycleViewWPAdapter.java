@@ -1,6 +1,5 @@
 package ua.com.merchik.merchik;
 
-import static ua.com.merchik.merchik.data.RealmModels.StackPhotoDB.PHOTO_PROMOTION_TOV;
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
 import android.content.Context;
@@ -23,11 +22,9 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
-
-// Pika
-import java.util.Comparator;
 
 import io.realm.RealmResults;
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity;
@@ -44,7 +41,6 @@ import ua.com.merchik.merchik.data.RealmModels.TradeMarkDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.data.WPDataObj;
 import ua.com.merchik.merchik.database.realm.RealmManager;
-import ua.com.merchik.merchik.database.realm.tables.StackPhotoRealm;
 import ua.com.merchik.merchik.database.realm.tables.ThemeRealm;
 import ua.com.merchik.merchik.database.realm.tables.TradeMarkRealm;
 import ua.com.merchik.merchik.database.realm.tables.WpDataRealm;
@@ -209,6 +205,10 @@ public class RecycleViewWPAdapter extends RecyclerView.Adapter<RecycleViewWPAdap
         public int getOrderedPos(int pos) {
             return orderList1.get(pos).getPos();
         }
+
+//        public int getOrderedData(int pos) {
+//            return orderList1.get(pos).;
+//        }
     }
     // ----------------------------------------------------
 
@@ -501,7 +501,6 @@ public class RecycleViewWPAdapter extends RecyclerView.Adapter<RecycleViewWPAdap
         // Pika
         // создаю класс для определения порядка сортировки
         WPSO = new WpSortOrder(WP);
-
     }
 
     public void updateData(List<WpDataDB> wp) {
@@ -580,6 +579,7 @@ public class RecycleViewWPAdapter extends RecyclerView.Adapter<RecycleViewWPAdap
             protected void publishResults(CharSequence constraint, FilterResults results) {
                 if (constraint.length() != 0){
                     WP = (List<WpDataDB>) results.values;
+                    WPSO = new WpSortOrder(WP); // 29.02.2024 Victor учитываю изменение в фильтре для алгоритма @Pika
                 }
                 notifyDataSetChanged();
             }

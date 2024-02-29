@@ -20,8 +20,8 @@ import android.text.Editable;
 import android.text.InputType;
 import android.text.SpannableStringBuilder;
 import android.text.TextWatcher;
-import android.text.method.ScrollingMovementMethod;
 import android.text.method.LinkMovementMethod;
+import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
@@ -58,6 +58,7 @@ import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.TelephoneMask;
 import ua.com.merchik.merchik.Utils.MySimpleExpandableListAdapter;
 import ua.com.merchik.merchik.Utils.Test.ClickableMovementMethod;
+import ua.com.merchik.merchik.Utils.UniversalAdapter.AdapterUtil;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.Database.Room.ViewListSDB;
 import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteHintsDB;
@@ -1196,6 +1197,28 @@ public class DialogData {
                 }
             });
         }
+    }
+
+    public void setRecyclerFilterSearch(){
+        editTextFilter.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void afterTextChanged(Editable s) {
+                if (s.length() != 0) {
+                    AdapterUtil adapter = (AdapterUtil) recycler.getAdapter();
+                    adapter.getFilter().filter(s);
+                    recycler.scheduleLayoutAnimation();
+                }
+            }
+
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+            }
+        });
     }
 
     public void setOk(CharSequence setButtonText, DialogClickListener clickListener) {
