@@ -10,6 +10,7 @@ import android.net.Uri;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.Toast;
 
 import com.ortiz.touchview.TouchImageView;
@@ -99,6 +100,11 @@ public class DialogFullPhotoR {
 
     // ---------------------------------------------------------------------------------------------
 
+    // Pika Виктор добавил этот метод чтоб при создании диалога можно было установить масштабирование
+    public void scaleType(ImageView.ScaleType type){
+        photo.setScaleType(type);
+    }
+
     public void setPhoto(Uri data) {
         File file = new File(data.toString());
         Bitmap b = decodeSampledBitmapFromResource(file, 200, 200);
@@ -129,7 +135,6 @@ public class DialogFullPhotoR {
         else
             textComment1=txt;
     }
-
 
 }
 

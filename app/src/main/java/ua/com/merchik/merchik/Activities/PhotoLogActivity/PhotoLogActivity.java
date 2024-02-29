@@ -129,6 +129,10 @@ public class PhotoLogActivity extends toolbar_menus {
     private PhotoLogAdapter recycleViewPLAdapter;
     private RealmResults<StackPhotoDB> stackPhoto;
 
+    // Pika вынес сюда чтоб иметь доступ потом ниже
+    List<SamplePhotoSDB> samplePhotoSDBList;
+    boolean isSample=false;
+
     private void setRecycler() {
 
         editText.setHint("Введите текст для поиска по любым реквизитам");
@@ -176,6 +180,10 @@ public class PhotoLogActivity extends toolbar_menus {
                 }
             } else if (this.getIntent().getBooleanExtra("SamplePhoto", false)) {
 
+                // Pika не знаю какие виды фото может отображать эта активити, поэтому делаю флаг чтоб знать когда она
+                // работает именно с типами - образец фото
+                isSample=true;
+
                 if (this.getIntent().getBooleanExtra("SamplePhotoActivity", false)) {
                     photoLogMode = PhotoLogMode.SAMPLE_PHOTO_ACTIVITY;   // Тип откуда открыли Журнал Фото
                 } else {
@@ -187,8 +195,10 @@ public class PhotoLogActivity extends toolbar_menus {
 
                 Globals.writeToMLOG("INFO", "PhotoLogActivity/setRecycler/SamplePhoto", "SamplePhoto TP: " + photoTp);
 
+                // Pika Убрал отсюда поскольку мне нужен доступ к нему в дркгом методе
                 // Получаем список Образцов Фото для фрмирования запроса к БД Стэк Фото
-                List<SamplePhotoSDB> samplePhotoSDBList;
+                // List<SamplePhotoSDB> samplePhotoSDBList;
+
                 if (photoTp == 999) {
                     samplePhotoSDBList = SQL_DB.samplePhotoDao().getPhotoLogActive(1);
                 } else {
@@ -294,9 +304,29 @@ public class PhotoLogActivity extends toolbar_menus {
 //                DialogFullPhotoR dialog = new DialogFullPhotoR(getApplicationContext());
                 DialogFullPhotoR dialog = new DialogFullPhotoR(context);
                 dialog.setPhoto(photoDB);
-
                 // Pika
-                dialog.setComment(photoDB.getComment());
+                // dialog.setComment(photoDB.getComment());
+
+                // Pika Сделал более универсально - если это фото оьразца то коммент будет в поле "about"
+                // образцов - его и берем, а если это просто фото - то коммент из поля комментария самого фото
+                // то же касается и образца если для него не сделали нормальный комментв поле "about" образцов
+                // плюс учитывается что поскольку это журнал, то может быть несколько разных фоток,
+                // поэтому подбираю коммент для соответственной фотки из списка образцов по ИД фотки
+                int photoId=Integer.parseInt(photoDB.getPhotoServerId());
+                String commentPhoto="";
+                for (SamplePhotoSDB a:samplePhotoSDBList) {
+                    if (a.photoId==photoId) {
+                        commentPhoto=a.about;
+                        break;
+                    }
+                }
+                if (commentPhoto==null || commentPhoto=="") {
+                    commentPhoto=photoDB.getComment();
+                }
+                dialog.setComment(commentPhoto);
+                // Pika для образца фото делаю такое масштабирование
+                if (isSample) { dialog.scaleType(ImageView.ScaleType.FIT_CENTER); }
+                // ----------------------------------------------
 
                 dialog.setClose(dialog::dismiss);
                 dialog.show();

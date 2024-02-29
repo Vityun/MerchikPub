@@ -953,6 +953,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                     break;
             }
             ss.append(createLinkedString(mContext, "Показать образец фото", photoType));
+            ss.append("\n");
         }
 
         DialogData dialog = new DialogData(mContext);
@@ -1007,7 +1008,15 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                         dialog.setPhoto(photo);
 
                         // Pika
-                        dialog.setComment(photo.getComment());
+//                        dialog.setComment(photo.getComment());
+
+                        // Pika сделал универсальнее - если в поле "about" есть текст к образцу фото - то вывожу его,
+                        // а если нет, то пробую взять из комментов для самих фото по этому фото
+                        String commentPhoto=samplePhotoSDBList.get(0).about;
+                        if (commentPhoto != null && commentPhoto !="") {
+                            dialog.setComment(commentPhoto);
+                        } else dialog.setComment(photo.getComment());
+                        dialog.scaleType(ImageView.ScaleType.FIT_CENTER);
 
                         dialog.setClose(dialog::dismiss);
                         dialog.show();
