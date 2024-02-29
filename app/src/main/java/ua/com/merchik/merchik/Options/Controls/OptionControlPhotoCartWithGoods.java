@@ -66,8 +66,7 @@ public class OptionControlPhotoCartWithGoods<T> extends OptionControl {
 
     private void getDocumentVar() {
         try {
-            if (document instanceof WpDataDB) {
-                WpDataDB wpDataDB = (WpDataDB) document;
+            if (document instanceof WpDataDB wpDataDB) {
 
                 wp = wpDataDB;
                 customerSDBDocument = SQL_DB.customerDao().getById(wpDataDB.getClient_id());
@@ -75,18 +74,19 @@ public class OptionControlPhotoCartWithGoods<T> extends OptionControl {
                 addressSDBDocument = SQL_DB.addressDao().getById(wpDataDB.getAddr_id());
 
                 themeId = wp.getTheme_id();
-                tpId = addressSDBDocument.tpId;
+                if (addressSDBDocument != null) {
+                    tpId = addressSDBDocument.tpId;
+                }
+
 
                 dateDocument = wpDataDB.getDt().getTime() / 1000;
 
                 if (themeId == 1178) {    // если это выкуп продукции в ТТ
                     dateFrom = Clock.getDatePeriodLong(dateDocument * 1000, -2) / 1000;
-                    dateTo = Clock.getDatePeriodLong(dateDocument * 1000, 2) / 1000;
                 } else {
                     dateFrom = Clock.getDatePeriodLong(dateDocument * 1000, -30) / 1000;
-//                    dateTo = dateDocument + 86400;  // делаю + 86 400 типо для того что б фото считались за ВЕСЬ день, а не за начало
-                    dateTo = Clock.getDatePeriodLong(dateDocument * 1000, 2) / 1000;  // делаю + 86 400 типо для того что б фото считались за ВЕСЬ день, а не за начало
                 }
+                dateTo = Clock.getDatePeriodLong(dateDocument * 1000, 2) / 1000;
 
                 wpDataSize = WpDataRealm.getWpDataBy(new Date(dateFrom * 1000), new Date(dateTo * 1000), null, wp.getAddr_id(), wp.getClient_id(), wp.getUser_id()).size();
 
@@ -94,6 +94,7 @@ public class OptionControlPhotoCartWithGoods<T> extends OptionControl {
 
         } catch (Exception e) {
             Globals.writeToMLOG("ERROR", "OptionControlPhotoCartWithGoods/getDocumentVar", "Exception e: " + e);
+            Globals.writeToMLOG("ERROR", "OptionControlPhotoCartWithGoods/getDocumentVar", "Exception e: " + Arrays.toString(e.getStackTrace()));
         }
     }
 
@@ -110,19 +111,21 @@ public class OptionControlPhotoCartWithGoods<T> extends OptionControl {
 
 
             //2.0. проверим наличие фото. Ступенями для того, чтобы ускорить проведение документа
-            if (themeId == 1178 || themeId == 1003) {   // 1178-выкуп продукции, 1003-курьерские
+            if (themeId != null && (themeId == 1178 || themeId == 1003)) {   // 1178-выкуп продукции, 1003-курьерские
                 stackPhotoDBList = RealmManager.INSTANCE.copyFromRealm(StackPhotoRealm.getPhoto(dateFrom, dateTo, wp.getUser_id(), wp.getAddr_id(), wp.getClient_id(), wp.getCode_dad2(), StackPhotoDB.PHOTO_CART_WITH_GOODS, null));
 
                 photoCount = stackPhotoDBList.size();
                 photoDVICount = stackPhotoDBList.stream().map(table -> table.dvi).reduce(0, Integer::sum);
-            } else if (Arrays.stream(groups).anyMatch(x -> Objects.equals(x, tpId)) || Arrays.stream(groups).anyMatch(x -> Objects.equals(x, tpId))) {
+            } else if (tpId != null && Arrays.stream(groups).anyMatch(x -> Objects.equals(x, tpId)) || Arrays.stream(groups).anyMatch(x -> Objects.equals(x, tpId))) {
                 //для 8196-Ашанов и 6164-АТБ пока, исключения
+                // TODO А мне точно надо это место?
+                Globals.writeToMLOG("INFO", "OptionControlPhotoCartWithGoods/stream(groups)", "Может это все же не надо делать и тратить на это ресурсы?");
             } else {
                 experience = calculateExperience(usersSDBDocument, dateDocument);
-                if (experience > 30 && usersSDBDocument.reportDate40 != null && dateDocument > usersSDBDocument.reportDate40.getTime() / 1000) {
+                if (experience > 30 && usersSDBDocument != null && usersSDBDocument.reportDate40 != null && dateDocument > usersSDBDocument.reportDate40.getTime() / 1000) {
                     workCount = wpDataSize;
                     if (workCount > 3) {
-                        stackPhotoDBList = RealmManager.INSTANCE.copyFromRealm(StackPhotoRealm.getPhoto(dateFrom*1000, dateTo*1000, null, wp.getAddr_id(), wp.getClient_id(), null, StackPhotoDB.PHOTO_CART_WITH_GOODS, null));
+                        stackPhotoDBList = RealmManager.INSTANCE.copyFromRealm(StackPhotoRealm.getPhoto(dateFrom * 1000, dateTo * 1000, null, wp.getAddr_id(), wp.getClient_id(), null, StackPhotoDB.PHOTO_CART_WITH_GOODS, null));
                         photoCount = stackPhotoDBList.size();
                         photoDVICount = stackPhotoDBList.stream().map(table -> table.dvi).reduce(0, Integer::sum);
                     }
@@ -130,11 +133,11 @@ public class OptionControlPhotoCartWithGoods<T> extends OptionControl {
             }
 
             // 3.0. подведем итог
-            if (Arrays.stream(groups).anyMatch(x -> Objects.equals(x, tpId)) && themeId != 1178 && themeId != 1003) {   // //для 8196-Ашанов и 6164-АТБ  //1178-выкуп продукции, 1003-курьерские
+            if (Arrays.stream(groups).anyMatch(x -> Objects.equals(x, tpId)) && themeId != null && themeId != 1178 && themeId != 1003) {   // //для 8196-Ашанов и 6164-АТБ  //1178-выкуп продукции, 1003-курьерские
                 stringBuilderMsg.append("Фото Тележки с Товаром (ФТТ) для сети (Ашае/АТБ) пока не проверяем.");
                 signal = false;
                 unlockCodeResultListener.onUnlockCodeSuccess();
-            } else if (photoCount > 0 && themeId == 1003 && photoCount == photoDVICount) {
+            } else if (photoCount > 0 && themeId != null && themeId == 1003 && photoCount == photoDVICount) {
                 stringBuilderMsg.append("Фото Тележки с Товаром (ФТТ) ").append(usersSDBDocument.fio)
                         .append(" выполнено (").append(photoCount).append(") но помечено на ДВИ. Для данной темы ДВИ ставить НЕ нужно!");
                 signal = false;
@@ -144,20 +147,20 @@ public class OptionControlPhotoCartWithGoods<T> extends OptionControl {
                         .append(" выполнено (").append(photoCount).append(") и будет проверено ОСП.");
                 signal = false;
                 unlockCodeResultListener.onUnlockCodeSuccess();
-            } else if (experience < 30 && usersSDBDocument.reportDate40 != null && usersSDBDocument.reportDate40.getTime() / 1000 < dateDocument && themeId == 998) {
+            } else if (experience < 30 && usersSDBDocument.reportDate40 != null && usersSDBDocument.reportDate40.getTime() / 1000 < dateDocument && themeId != null && themeId == 998) {
                 stringBuilderMsg.append("Сотрудник ").append(usersSDBDocument.fio)
                         .append(" имеет стаж ").append("experience").append(" дней и провел ").append(usersSDBDocument.reportCount)
                         .append(" отчетов. Данный тип фото начинаем проверять после 30-и дней стажа или после проведения 40-а отчетов.");
                 signal = false;
                 unlockCodeResultListener.onUnlockCodeSuccess();
-            } else if (workCount < 4 && themeId == 998) {
+            } else if (workCount < 4 && themeId != null && themeId == 998) {
                 stringBuilderMsg.append("Сотрудник ").append(usersSDBDocument.fio)
                         .append(" за период с ").append(Clock.getHumanTimeSecPattern(dateFrom, "MM-dd"))
                         .append(" по ").append(Clock.getHumanTimeSecPattern(dateTo, "MM-dd"))
                         .append(" дней и провел ").append(workCount).append(" отчетов по данному КлиентоАдресу. Данный тип фото начинаем проверять после проведения более 3-х отчетов за 30-ь дней.");
                 signal = false;
                 unlockCodeResultListener.onUnlockCodeSuccess();
-            }else {
+            } else {
                 stringBuilderMsg.append("Фото Тележки с Товаром (ФТТ) отсутствует (или помечено на ДВИ) по данному клиенту и адресу за период с ")
                         .append(Clock.getHumanTimeSecPattern(dateFrom, "MM-dd"))
                         .append(" по ").append(Clock.getHumanTimeSecPattern(dateTo, "MM-dd"))

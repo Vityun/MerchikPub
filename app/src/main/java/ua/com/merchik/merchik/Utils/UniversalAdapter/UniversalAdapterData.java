@@ -20,4 +20,6 @@ public class UniversalAdapterData {
     public List<ChatGrpSDB> chats;
     public List<AchievementsSDB> achievementsSDBS;
 
+//    public List<T> data;
+
 }
