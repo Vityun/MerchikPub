@@ -1,5 +1,6 @@
 package ua.com.merchik.merchik.dialogs.DialogAchievement;
 
+import static ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportTab.detailedReportOptionsFrag;
 import static ua.com.merchik.merchik.Globals.HELPDESK_PHONE_NUMBER;
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
@@ -176,6 +177,8 @@ public class DialogAchievement {
                 SQL_DB.achievementsDao().insertAll(Collections.singletonList(achievementsSDB));
                 Toast.makeText(v.getContext(), "Створено нове досягнення", Toast.LENGTH_LONG).show();
                 dialog.dismiss();
+
+                detailedReportOptionsFrag.recycleViewDRAdapter.notifyDataSetChanged();
             } catch (Exception e) {
                 Globals.writeToMLOG("ERROR", "DialogAchievement/buttonSave", "Exception e: " + e);
             }
