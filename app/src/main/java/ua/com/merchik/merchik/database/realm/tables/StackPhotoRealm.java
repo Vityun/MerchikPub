@@ -30,6 +30,16 @@ public class StackPhotoRealm {
                 .findFirst();
     }
 
+    public static StackPhotoDB stackPhotoDBGetPhotoByHASH(String hash) {
+        if (hash == null || hash.equals("")) {
+            return null;
+        }
+
+        return INSTANCE.where(StackPhotoDB.class)
+                .equalTo("photo_hash", hash)
+                .findFirst();
+    }
+
     public static StackPhotoDB stackPhotoDBGetPhotoBySiteId2(String id) {
         if (id == null || id.equals("")) {
             return null;

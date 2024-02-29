@@ -540,7 +540,8 @@ public class PhotoDownload {
             List<StackPhotoDB> stackList = new ArrayList<>();
 
             for (ModImagesViewList item : list) {
-                if (StackPhotoRealm.stackPhotoDBGetPhotoBySiteId(item.getID()) == null) {
+//                if (StackPhotoRealm.stackPhotoDBGetPhotoBySiteId(item.getID()) == null) {
+                if (StackPhotoRealm.stackPhotoDBGetPhotoByHASH(item.imgHash) == null) {
                     try {
                         downloadPhoto(item.getPhotoUrl(), new ExchangeInterface.ExchangePhoto() {
                             @Override
