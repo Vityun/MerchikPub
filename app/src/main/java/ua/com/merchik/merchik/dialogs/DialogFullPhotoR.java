@@ -39,6 +39,10 @@ public class DialogFullPhotoR {
     private Button comment1;
     private String textComment1 = "";
 
+    // Pika комментарий сразу поверх фото
+    public boolean commentOn = false;
+
+
     // ------------------------
     private ImageButton close, help, videoHelp, call;
 
@@ -85,7 +89,16 @@ public class DialogFullPhotoR {
     }
 
     public void show() {
-        if (dialog != null) dialog.show();
+        if (dialog != null)
+            dialog.show();
+        // Pika
+        if (commentOn) {
+            DialogData dialogData = new DialogData(context);
+            dialogData.setTitle("Комментарий");
+            dialogData.setText(textComment1);
+            dialogData.setClose(dialogData::dismiss);
+            dialogData.show();
+        }
     }
 
     public void dismiss() {

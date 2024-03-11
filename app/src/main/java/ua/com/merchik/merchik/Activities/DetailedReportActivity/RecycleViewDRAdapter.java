@@ -31,6 +31,7 @@ import android.widget.Toast;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.recyclerview.widget.RecyclerView;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.List;
@@ -1007,17 +1008,39 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
 
                     List<SamplePhotoSDB> samplePhotoSDBList = SQL_DB.samplePhotoDao().getPhotoLogActiveAndTp(1, photoType, addressSDB.tpId);
                     if (samplePhotoSDBList != null && samplePhotoSDBList.size() > 1) {
-                        Intent intent = new Intent(context, PhotoLogActivity.class);
-                        intent.putExtra("SamplePhoto", true);
-                        intent.putExtra("SamplePhotoActivity", false);
-                        intent.putExtra("photoTp", photoType);
-                        intent.putExtra("grpId", addressSDB.tpId);
-                        context.startActivity(intent);
+//                        Pika Убираю эти действия и делаю открытие всех фото одно за другим
+//                        Intent intent = new Intent(context, PhotoLogActivity.class);
+//                        intent.putExtra("SamplePhoto", true);
+//                        intent.putExtra("SamplePhotoActivity", false);
+//                        intent.putExtra("photoTp", photoType);
+//                        intent.putExtra("grpId", addressSDB.tpId);
+//                        intent.putExtra("justFullPhoto", true);
+//                        context.startActivity(intent);
+
+                        List<DialogFullPhotoR> dialogFullPhotoRList = new ArrayList<>();
+                        DialogFullPhotoR dlg;
+                        Context dcontext=context;
+                        if (dialogFullPhotoRList.size()>0) dialogFullPhotoRList.clear();
+                        for (SamplePhotoSDB a:samplePhotoSDBList) {
+                            dlg = new DialogFullPhotoR(dcontext);
+                            StackPhotoDB photo = StackPhotoRealm.stackPhotoDBGetPhotoBySiteId(String.valueOf(a.photoId));
+                            dlg.setPhoto(photo);
+                            dlg.commentOn=true;
+                            String commentPhoto=a.about;
+                            if (commentPhoto != null && commentPhoto !="") {
+                                dlg.setComment(commentPhoto);
+                            } else dlg.setComment(photo.getComment());
+                            dlg.scaleType(ImageView.ScaleType.FIT_CENTER);
+                            dlg.setClose(dlg::dismiss);
+                            dialogFullPhotoRList.add(dlg);
+                            dlg.show();
+                        }
                     } else if (samplePhotoSDBList != null && samplePhotoSDBList.size() == 1) {
                         // Тут должен отобразить фото на весь экран
                         StackPhotoDB photo = StackPhotoRealm.stackPhotoDBGetPhotoBySiteId(String.valueOf(samplePhotoSDBList.get(0).photoId));
                         DialogFullPhotoR dialog = new DialogFullPhotoR(context);
                         dialog.setPhoto(photo);
+                        dialog.commentOn=true;
 
                         // Pika
 //                        dialog.setComment(photo.getComment());
