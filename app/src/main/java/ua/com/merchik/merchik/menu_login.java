@@ -2192,12 +2192,12 @@ public class menu_login extends AppCompatActivity {
      * Сохранение в БД переводов
      */
     private void saveTranslates(List<SiteTranslationsList> data) {
-        Log.e("saveTranslates", "data: " + data);
-        for (SiteTranslationsList item : data) {
-            Log.e("saveTranslates", "item.getID(): " + item.getID());
-            Log.e("saveTranslates", "item.getNm(): " + item.getNm());
-            Log.e("saveTranslates", "item.getTitle(): " + item.getTitle());
-        }
+//        Log.e("saveTranslates", "data: " + data);
+//        for (SiteTranslationsList item : data) {
+//            Log.e("saveTranslates", "item.getID(): " + item.getID());
+//            Log.e("saveTranslates", "item.getNm(): " + item.getNm());
+//            Log.e("saveTranslates", "item.getTitle(): " + item.getTitle());
+//        }
 
         if (data != null) {
             INSTANCE.executeTransaction(realm -> {

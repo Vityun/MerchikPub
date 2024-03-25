@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportTovar.ShowTovarRequisites;
+import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.Options.OptionControl;
 import ua.com.merchik.merchik.Options.Options;
 import ua.com.merchik.merchik.data.OptionMassageType;
@@ -30,15 +31,19 @@ public class OptionControlCheckingReasonOutOfStock<T> extends OptionControl {
     public boolean signal = false;
 
     public OptionControlCheckingReasonOutOfStock(Context context, T document, OptionsDB optionDB, OptionMassageType msgType, Options.NNKMode nnkMode, UnlockCodeResultListener unlockCodeResultListener) {
-        this.context = context;
-        this.document = document;
-        this.optionDB = optionDB;
-        this.msgType = msgType;
-        this.nnkMode = nnkMode;
-        this.unlockCodeResultListener = unlockCodeResultListener;
+        try {
+            this.context = context;
+            this.document = document;
+            this.optionDB = optionDB;
+            this.msgType = msgType;
+            this.nnkMode = nnkMode;
+            this.unlockCodeResultListener = unlockCodeResultListener;
 
-        getDocumentVar();
-        executeOption();
+            getDocumentVar();
+            executeOption();
+        }catch (Exception e){
+            Globals.writeToMLOG("ERROR", "OptionControlCheckingReasonOutOfStock", "Exception e: " + e);
+        }
     }
 
     private void getDocumentVar() {
@@ -56,7 +61,7 @@ public class OptionControlCheckingReasonOutOfStock<T> extends OptionControl {
         resultMsg.append("Для товара с ОСВ (Особым Вниманием) Вы должны обязательно указать ПРИЧИНУ его отсутствия.").append("\n\n");
 
         // Получение Репорт Препэйра
-        List<ReportPrepareDB> detailedReportRPList = ReportPrepareRealm.getReportPrepareByDad2(wpDataDB.getCode_dad2());
+        List<ReportPrepareDB> detailedReportRPList = ReportPrepareRealm.getReportPrepareByDad2_LIST(wpDataDB.getCode_dad2());
 
         // проверим, по каким из товаров с ОСВ отсутствуют на витрине?
         for (ReportPrepareDB item : detailedReportRPList) {
@@ -83,13 +88,14 @@ public class OptionControlCheckingReasonOutOfStock<T> extends OptionControl {
             resultMsg.append("Не предоставлена информация о ПИЧИНАХ отсутствия товара (в т.ч. с ОСВ (Особым Вниманием)). См. ниже.").append("\n\n");
             for (ReportPrepareDB item : result){
                 TovarDB tov = TovarRealm.getById(item.getTovarId());
-                String msg = String.format("(%s) %s (%s)\n", item.getTovarId(), tov.getNm(), tov.getWeight());
-
-                resultMsg.append(createLinkedString(msg, item, tov));
+                if (tov != null){
+                    String msg = String.format("(%s) %s (%s)\n", item.getTovarId(), tov.getNm(), tov.getWeight());
+                    resultMsg.append(createLinkedString(msg, item, tov));
+                }else {
+                    String msg = String.format("(%s) %s (%s)\n", item.getTovarId(), "Товар не знайдено", "0");
+                    resultMsg.append(createLinkedString(msg, item, tov));
+                }
             }
-//        }else if (find == 0){
-//            signal = true;
-//            resultMsg.append("Ни у одного ОТСУТСТВУЮЩЕГО товара не указана ПРИЧИНА отсутствия.").append("\n\n");
         }else {
             signal = false;
             resultMsg.append("Замечаний по предоставлению информации о ПРИЧИНАХ отсутствия товаров (в т.ч. с ОСВ (Особым Вниманием)) нет.").append("\n\n");
@@ -127,7 +133,9 @@ public class OptionControlCheckingReasonOutOfStock<T> extends OptionControl {
         ClickableSpan clickableSpan = new ClickableSpan() {
             @Override
             public void onClick(View textView) {
-                showDialogs(textView.getContext(), tov);
+                if (tov != null){
+                    showDialogs(textView.getContext(), tov);
+                }
             }
 
             @Override

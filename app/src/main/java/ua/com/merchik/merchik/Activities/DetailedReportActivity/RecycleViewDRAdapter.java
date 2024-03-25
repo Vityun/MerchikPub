@@ -31,6 +31,8 @@ import android.widget.Toast;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.gson.Gson;
+
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.List;
@@ -1015,23 +1017,34 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                         context.startActivity(intent);
                     } else if (samplePhotoSDBList != null && samplePhotoSDBList.size() == 1) {
                         // Тут должен отобразить фото на весь экран
-                        StackPhotoDB photo = StackPhotoRealm.stackPhotoDBGetPhotoBySiteId(String.valueOf(samplePhotoSDBList.get(0).photoId));
-                        DialogFullPhotoR dialog = new DialogFullPhotoR(context);
-                        dialog.setPhoto(photo);
+                        try {
+                            Globals.writeToMLOG("INFO", "Не могу найти образцы фото SOLO ", "samplePhotoSDBList: " + new Gson().toJson(samplePhotoSDBList));
+                            StackPhotoDB photo = StackPhotoRealm.stackPhotoDBGetPhotoBySiteId(String.valueOf(samplePhotoSDBList.get(0).photoId));
 
-                        // Pika
+                            photo = RealmManager.INSTANCE.copyFromRealm(photo);
+
+                            Globals.writeToMLOG("INFO", "Не могу найти образцы фото SOLO ", "photo: " + new Gson().toJson(photo));
+
+                            DialogFullPhotoR dialog = new DialogFullPhotoR(context);
+                            dialog.setPhoto(photo);
+
+                            // Pika
 //                        dialog.setComment(photo.getComment());
 
-                        // Pika сделал универсальнее - если в поле "about" есть текст к образцу фото - то вывожу его,
-                        // а если нет, то пробую взять из комментов для самих фото по этому фото
-                        String commentPhoto=samplePhotoSDBList.get(0).about;
-                        if (commentPhoto != null && commentPhoto !="") {
-                            dialog.setComment(commentPhoto);
-                        } else dialog.setComment(photo.getComment());
-                        dialog.scaleType(ImageView.ScaleType.FIT_CENTER);
+                            // Pika сделал универсальнее - если в поле "about" есть текст к образцу фото - то вывожу его,
+                            // а если нет, то пробую взять из комментов для самих фото по этому фото
+                            String commentPhoto=samplePhotoSDBList.get(0).about;
+                            if (commentPhoto != null && commentPhoto != "") {
+                                dialog.setComment(commentPhoto);
+                            } else dialog.setComment(photo.getComment());
+                            dialog.scaleType(ImageView.ScaleType.FIT_CENTER);
 
-                        dialog.setClose(dialog::dismiss);
-                        dialog.show();
+                            dialog.setClose(dialog::dismiss);
+                            dialog.show();
+                        }catch (Exception e){
+                            Globals.writeToMLOG("ERROR", "Не могу найти образцы фото SOLO ", "Exception e: " + e);
+                        }
+
                     } else {
                         // тут Toast работает но пользователю нгепонятны тексты ошибок Джавы, и Петров сказал, сюда нужно внятное
                         // пользователю сообщение (универсвльное) из глоб модуля, типа "не получается показать фото попробуйте

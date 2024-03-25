@@ -127,8 +127,8 @@ public class DetailedReportActivity extends toolbar_menus {
     public static double SKUFact = 0;
     public static double OFS = 0;   // % сколько нет товаров
     public static double OOS = 0;   // Представленность %
-    public static RealmResults<TovarDB> detailedReportTovList = null;
-    public static RealmResults<ReportPrepareDB> detailedReportRPList = null;
+    public static List<TovarDB> detailedReportTovList = null;
+    public static List<ReportPrepareDB> detailedReportRPList = null;
     //==================================
 
 
@@ -615,7 +615,7 @@ public class DetailedReportActivity extends toolbar_menus {
         try {
             Globals.writeToMLOG("INFO", "DetailedReportActivity/setTab", "setTab");
             // 02.10.23. Убрал вечную проверку фоток Товаров при входе в отчёт. У некоторых мерчей это занимает сильно много ресурсов.
-            List<TovarDB> dataTovar = RealmManager.getTovarListFromReportPrepareByDad2(wpDataDB.getCode_dad2());
+            List<TovarDB> dataTovar = RealmManager.INSTANCE.copyFromRealm(RealmManager.getTovarListFromReportPrepareByDad2(wpDataDB.getCode_dad2()));
             Log.e("getTovarImg", "dataTovar: " + dataTovar);
             if (dataTovar != null) {
 //                List<TovarDB> dataTovarDownloadList = RealmManager.getTovarListPhotoToDownload(dataTovar, "small");

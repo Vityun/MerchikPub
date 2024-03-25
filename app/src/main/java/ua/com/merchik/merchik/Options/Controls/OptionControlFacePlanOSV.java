@@ -64,11 +64,11 @@ class OptionControlFacePlanOSV<T> extends OptionControl {
 
         //2.0. получим данные о товарах в отчете (если она еще не рассчитана)
         if (detailedReportTovList == null || detailedReportTovList.isEmpty()) {
-            detailedReportTovList = RealmManager.getTovarListFromReportPrepareByDad2(dad2);
+            detailedReportTovList = RealmManager.INSTANCE.copyFromRealm(RealmManager.getTovarListFromReportPrepareByDad2(dad2));
         }
 
         if (detailedReportRPList == null || detailedReportRPList.isEmpty()) {
-            detailedReportRPList = ReportPrepareRealm.getReportPrepareByDad2(dad2);
+            detailedReportRPList = RealmManager.INSTANCE.copyFromRealm(ReportPrepareRealm.getReportPrepareByDad2(dad2));
         }
 
         //3.0. получим список товаров с особым вниманием (хранится в Доп.Требованиях)

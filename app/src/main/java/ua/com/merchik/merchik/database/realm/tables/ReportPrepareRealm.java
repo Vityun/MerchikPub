@@ -37,20 +37,37 @@ public class ReportPrepareRealm {
                 .findAll();
     }
 
-    public static RealmResults<ReportPrepareDB> getRPLastChange(String clientId, String addrId, long dtChange) {
-        return INSTANCE.where(ReportPrepareDB.class)
+    public static List<ReportPrepareDB> getReportPrepareByDad2_LIST(long dad2) {
+        RealmResults<ReportPrepareDB> reportPrepareDBS = INSTANCE.where(ReportPrepareDB.class)
+                .equalTo("codeDad2", String.valueOf(dad2))
+                .findAll();
+
+        List<ReportPrepareDB> result = new ArrayList<>();
+        if (reportPrepareDBS != null) result = INSTANCE.copyFromRealm(reportPrepareDBS);
+
+        return result;
+    }
+
+    public static List<ReportPrepareDB> getRPLastChange(String clientId, String addrId, long dtChange) {
+        RealmResults<ReportPrepareDB> reportPrepareDBS = INSTANCE.where(ReportPrepareDB.class)
                 .equalTo("kli", clientId)
                 .equalTo("addrId", addrId)
                 .greaterThan("dtChange", dtChange)
                 .findAll();
+
+        List<ReportPrepareDB> res = new ArrayList<>();
+        if (reportPrepareDBS != null) res = INSTANCE.copyFromRealm(reportPrepareDBS);
+        return res;
     }
 
     public static ReportPrepareDB getReportPrepareByTov(String dad2, String tovarId) {
-        return INSTANCE.where(ReportPrepareDB.class)
+        ReportPrepareDB reportPrepareDB = INSTANCE.where(ReportPrepareDB.class)
                 .equalTo("tovarId", tovarId)
                 .and()
                 .equalTo("codeDad2", dad2)
                 .findFirst();
+        if (reportPrepareDB != null) reportPrepareDB = INSTANCE.copyFromRealm(reportPrepareDB);
+        return reportPrepareDB;
     }
 
 

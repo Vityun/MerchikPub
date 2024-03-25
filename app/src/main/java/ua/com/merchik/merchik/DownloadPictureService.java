@@ -13,19 +13,24 @@ import android.util.Log;
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
 
+import com.google.gson.Gson;
+
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 import io.reactivex.rxjava3.annotations.NonNull;
 import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.core.Observer;
 import io.reactivex.rxjava3.disposables.Disposable;
 import io.reactivex.rxjava3.schedulers.Schedulers;
+import io.realm.Realm;
+import io.realm.RealmResults;
 import okhttp3.ResponseBody;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
 import ua.com.merchik.merchik.data.RetrofitResponse.TovarImgList;
-import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
 
 public class DownloadPictureService extends Service {
@@ -68,7 +73,12 @@ public class DownloadPictureService extends Service {
             downloadPhoto(data, new Clicks.click() {
                 @Override
                 public <T> void click(T data) {
-//                    Toast.makeText(context, "Загрузил: " + data + " фото", Toast.LENGTH_LONG).show();
+//                    try {
+//                        Log.e("DownloadPictureService", "onStartCommand: " + data);
+//                        RealmManager.stackPhotoSavePhoto((List<StackPhotoDB>)data);
+//                    }catch (Exception e){
+//                        Log.e("DownloadPictureService", "Exception e: " + e);
+//                    }
                 }
             });
         }catch (Exception e){
@@ -91,6 +101,8 @@ public class DownloadPictureService extends Service {
     static int saveNewTovarPhoto;
     static int errorSaveTovarPhoto;
     static int internetError;
+
+    static List<StackPhotoDB> savePhotoToDB = new ArrayList<>();
 
 
     static int count = 0;
@@ -120,35 +132,79 @@ public class DownloadPictureService extends Service {
 
                         String path = Globals.saveImage1(bmp, "TOVAR_" + item.getTovarId() + "_SID" + item.getID());
 
-                        int id = RealmManager.stackPhotoGetLastId();
-                        id++;
 
-                        StackPhotoDB stackPhotoDB = new StackPhotoDB();
-                        stackPhotoDB.setId(id);
-                        stackPhotoDB.setPhotoServerId(item.getID());
-                        stackPhotoDB.setObject_id(Integer.valueOf(item.getTovarId()));
+                        Realm realm = Realm.getDefaultInstance();
+                        realm.executeTransaction(innerRealm -> {
+                            try {
+                                int id;
+                                RealmResults<StackPhotoDB> realmResults = innerRealm.where(StackPhotoDB.class)
+                                        .sort("id")
+                                        .findAll();
 
-                        stackPhotoDB.addr_id = Integer.valueOf(item.getAddrId());
-                        stackPhotoDB.approve = Integer.valueOf(item.getApprove());
-                        stackPhotoDB.dvi = Integer.valueOf(item.getDvi());
+                                try {
+                                    StackPhotoDB s = innerRealm.copyFromRealm(Objects.requireNonNull(realmResults.last()));
+                                    int idPhoto = s.getId();
+                                    Log.e("DownloadPictureService", "s.getId(): " + s.getId());
+                                    String idServerPhoto = s.getPhotoServerId();
+                                    Log.e("DownloadPictureService", "idServerPhoto: " + idServerPhoto);
+                                    id = idPhoto + 1;
+                                } catch (Exception e) {
+                                    id = 0;
+                                    Log.e("DownloadPictureService", "Objects.requireNonNullException e: " + e);
+                                }
 
-                        stackPhotoDB.setVpi(0);
-                        stackPhotoDB.setCreate_time(Long.parseLong(item.getDt()) * 1000);
-                        stackPhotoDB.setUpload_to_server(0);
-                        stackPhotoDB.setGet_on_server(0);
-                        stackPhotoDB.setPhoto_num(path);
-                        stackPhotoDB.setPhoto_hash(item.getHash());
-                        stackPhotoDB.setPhoto_type(Integer.valueOf(item.getPhotoTp()));
-                        stackPhotoDB.setComment("small");
-                        stackPhotoDB.setUpload_time(0);
-                        stackPhotoDB.setUpload_status(0);
-                        stackPhotoDB.setStatus(false);
 
-                        // 30.01
-                        RealmManager.stackPhotoSavePhoto(stackPhotoDB);
+                                Log.e("DownloadPictureService", "Objects.requireNonNull: " + id);
+                                StackPhotoDB stackPhotoDB = new StackPhotoDB();
+                                stackPhotoDB.setId(id);
+                                stackPhotoDB.setPhotoServerId(item.getID());
+                                stackPhotoDB.setObject_id(Integer.valueOf(item.getTovarId()));
+
+                                stackPhotoDB.addr_id = Integer.valueOf(item.getAddrId());
+                                stackPhotoDB.approve = Integer.valueOf(item.getApprove());
+                                stackPhotoDB.dvi = Integer.valueOf(item.getDvi());
+
+                                stackPhotoDB.setVpi(0);
+                                stackPhotoDB.setCreate_time(Long.parseLong(item.getDt()) * 1000);
+                                stackPhotoDB.setUpload_to_server(0);
+                                stackPhotoDB.setGet_on_server(0);
+                                stackPhotoDB.setPhoto_num(path);
+                                stackPhotoDB.setPhoto_hash(item.getHash());
+                                stackPhotoDB.setPhoto_type(Integer.valueOf(item.getPhotoTp()));
+                                stackPhotoDB.setComment("small");
+                                stackPhotoDB.setUpload_time(0);
+                                stackPhotoDB.setUpload_status(0);
+                                stackPhotoDB.setStatus(false);
+
+                                innerRealm.copyToRealmOrUpdate(stackPhotoDB);
+
+                            } catch (Exception e) {
+                                Log.e("DownloadPictureService", "onNext/RealmManager Exception e" + e);
+                            }
+                        });
+                        realm.close();
+
+
+//                        try {
+//                            Log.e("DownloadPictureService", "onNext/RealmManager HERE?");
+//                            Realm realm = Realm.getDefaultInstance();
+//                            realm.executeTransaction(innerRealm -> {
+//                                try {
+//                                    Log.e("DownloadPictureService", "onNext" + "photo: " + new Gson().toJson(stackPhotoDB));
+//                                    innerRealm.copyToRealmOrUpdate(stackPhotoDB);
+//                                } catch (Exception e) {
+//                                    Log.e("DownloadPictureService", "onNext/RealmManager Exception e" + e);
+//                                }
+//                            });
+//                            realm.close();
+//                        }catch (Exception e){
+//                            Log.e("DownloadPictureService", "doOnNext/RealmManager Exception eee" + e);
+//                        }
+
                         saveNewTovarPhoto++;
                     } catch (Exception e) {
                         errorSaveTovarPhoto++;
+                        Log.e("DownloadPictureService", "doOnNext/Exception e: " + e);
                     }
                 })
                 .observeOn(Schedulers.io())
@@ -160,7 +216,7 @@ public class DownloadPictureService extends Service {
 
                     @Override
                     public void onNext(@NonNull SumTestObj sumTestObj) {
-                        Log.e("DownloadPictureService", "onNext" + "sumTestObj: " + sumTestObj);
+                        Log.e("DownloadPictureService", "onNext" + "sumTestObj: " + new Gson().toJson(sumTestObj));
                         count++;
                     }
 
@@ -174,9 +230,13 @@ public class DownloadPictureService extends Service {
                     public void onComplete() {
                         try {
                             Log.e("DownloadPictureService", "onComplete" + "OK");
-                            click.click(count);
+                            Log.e("DownloadPictureService", "onComplete" + "savePhotoToDB: " + savePhotoToDB.size());
+                            Globals.writeToMLOG("ERROR", "DownloadPictureService/downloadPhoto/onComplete", "ОК: " + count);
+                            click.click(savePhotoToDB);
+                            Log.e("DownloadPictureService", "onComplete" + "OK1");
                         }catch (Exception e){
                             Log.e("DownloadPictureService", "onComplete/Exception e" + e);
+                            Globals.writeToMLOG("ERROR", "DownloadPictureService/downloadPhoto/onComplete", "Exception e: " + e);
                         }
                     }
                 });

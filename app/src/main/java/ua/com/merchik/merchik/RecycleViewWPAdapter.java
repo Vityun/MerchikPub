@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.text.SpannableString;
 import android.text.method.LinkMovementMethod;
 import android.text.style.UnderlineSpan;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -19,6 +20,8 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.recyclerview.widget.RecyclerView;
+
+import com.google.gson.Gson;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -143,10 +146,24 @@ public class RecycleViewWPAdapter extends RecyclerView.Adapter<RecycleViewWPAdap
             List<CustomerSDB> customerSDBList = new ArrayList<>();
 
             // получаю коды клиентов из списка работ плана работ
-            for (WpDataDB a:a1) {
-                s = a.getClient_id();
-                if (!ids.contains(s)) ids.add(s);
+            int count = 0;
+            try {
+                for (WpDataDB a:a1) {
+                    if (a != null && a.getClient_id() != null){
+                        s = a.getClient_id();
+                        if (!ids.contains(s)) ids.add(s);
+                        count++;
+                    }else {
+                        Log.e("WpSortOrder", "count:" + count);
+                        Log.e("WpSortOrder", "new Gson().toJson(a):" + new Gson().toJson(a));
+                        Globals.writeToMLOG("ERROR", "WpSortOrder", "WpDataDB: " + new Gson().toJson(a));
+                    }
+                }
+            }catch (Exception e){
+                Log.e("WpSortOrder", "count E: " + count);
+//                Log.e("WpSortOrder", "count E: " + new Gson().toJson(a1.get(count)));
             }
+
 
             // получаю список самих клиентов по этим кодам из базы данных приложения
             if (ids.size()>0) {
@@ -500,7 +517,7 @@ public class RecycleViewWPAdapter extends RecyclerView.Adapter<RecycleViewWPAdap
         this.workPlanList2 = RealmManager.INSTANCE.copyFromRealm(wp);
         // Pika
         // создаю класс для определения порядка сортировки
-        WPSO = new WpSortOrder(WP);
+//        WPSO = new WpSortOrder(WP);
     }
 
     public void updateData(List<WpDataDB> wp) {
@@ -515,7 +532,7 @@ public class RecycleViewWPAdapter extends RecyclerView.Adapter<RecycleViewWPAdap
 
         // Pika
         // создаю класс для определения порядка сортировки
-        WPSO = new WpSortOrder(WP);
+//        WPSO = new WpSortOrder(WP);
     }
 
 
@@ -530,9 +547,9 @@ public class RecycleViewWPAdapter extends RecyclerView.Adapter<RecycleViewWPAdap
     public void onBindViewHolder(RecycleViewWPAdapter.ViewHolder viewHolder, int position) {
         try {
             // Pika - было:
-//            WpDataDB wpDataDB = WP.get(position);
+            WpDataDB wpDataDB = WP.get(position);
             // Pika - стало: (сортировка по свежести клиента)
-            WpDataDB wpDataDB = WP.get(WPSO.getOrderedPos(position));
+//            WpDataDB wpDataDB = WP.get(WPSO.getOrderedPos(position));
 
             viewHolder.bind(wpDataDB);
         } catch (Exception e) {
@@ -579,7 +596,7 @@ public class RecycleViewWPAdapter extends RecyclerView.Adapter<RecycleViewWPAdap
             protected void publishResults(CharSequence constraint, FilterResults results) {
                 if (constraint.length() != 0){
                     WP = (List<WpDataDB>) results.values;
-                    WPSO = new WpSortOrder(WP); // 29.02.2024 Victor учитываю изменение в фильтре для алгоритма @Pika
+//                    WPSO = new WpSortOrder(WP); // 29.02.2024 Victor учитываю изменение в фильтре для алгоритма @Pika
                 }
                 notifyDataSetChanged();
             }

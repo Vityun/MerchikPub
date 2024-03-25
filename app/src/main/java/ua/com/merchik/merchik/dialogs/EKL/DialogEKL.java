@@ -1329,24 +1329,32 @@ public class DialogEKL {
                     SQL_DB.eklDao().getById(item.id)
                             .observeOn(AndroidSchedulers.mainThread())
                             .subscribe((EKL_SDB ekl_sdb) -> {
-                                        Log.e("DialogEKL", "LOOP.POS4");
-                                        // TODO Разобраться почему не всегда принимаются ЭКЛ
-                                        if (item.state) {
-                                            Globals.writeToMLOG("RESP", "DialogEKL.sendEKL/onResponse", "item.state: " + item.state);
-                                            ekl_sdb.eklCode = ekl_sdb.eklHashCode;
-                                            ekl_sdb.upload = true;
-                                            ekl_sdb.codeVerify = 1;
-                                        } else if (item.error.equals("Ця заявка вже успішно перевірена раніше")) {
-                                            ekl_sdb.eklCode = ekl_sdb.eklHashCode;
-                                            ekl_sdb.upload = true;
-                                            ekl_sdb.codeVerify = 1;
-                                        } else {
-                                            ekl_sdb.comment = item.error;
-                                            ekl_sdb.codeVerify = 1;
-                                        }
+                                        try {
+                                            Globals.writeToMLOG("RESP", "DialogEKL.sendEKL/onResponse", "ekl_sdb: " + ekl_sdb.id);
+                                            Log.e("DialogEKL", "LOOP.POS4");
+                                            // TODO Разобраться почему не всегда принимаются ЭКЛ
+                                            if (item.state) {
+                                                Globals.writeToMLOG("RESP", "DialogEKL.sendEKL/onResponse", "item.state: " + item.state);
+                                                ekl_sdb.dt = System.currentTimeMillis()/1000;
+                                                ekl_sdb.eklCode = ekl_sdb.eklHashCode;
+                                                ekl_sdb.upload = true;
+                                                ekl_sdb.codeVerify = 1;
+                                            } else if (item.error.equals("Ця заявка вже успішно перевірена раніше")) {
+                                                ekl_sdb.dt = System.currentTimeMillis()/1000;
+                                                ekl_sdb.eklCode = ekl_sdb.eklHashCode;
+                                                ekl_sdb.upload = true;
+                                                ekl_sdb.codeVerify = 1;
+                                            } else {
+                                                ekl_sdb.dt = System.currentTimeMillis()/1000;
+                                                ekl_sdb.comment = item.error;
+                                                ekl_sdb.codeVerify = 1;
+                                            }
 
-                                        SQL_DB.eklDao().insertAll(Collections.singletonList(ekl_sdb));
-                                        disposable.dispose();
+                                            SQL_DB.eklDao().insertAll(Collections.singletonList(ekl_sdb));
+                                            disposable.dispose();
+                                        } catch (Exception e) {
+                                            Globals.writeToMLOG("ERROR", "DialogEKL.sendEKL/onResponse", "Exception e: " + e);
+                                        }
                                     }
                             )
             );

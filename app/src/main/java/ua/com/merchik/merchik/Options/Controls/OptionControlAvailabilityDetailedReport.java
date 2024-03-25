@@ -48,14 +48,18 @@ public class OptionControlAvailabilityDetailedReport<T> extends OptionControl {
 
 
     public OptionControlAvailabilityDetailedReport(Context context, T document, OptionsDB optionDB, OptionMassageType msgType, Options.NNKMode nnkMode, UnlockCodeResultListener unlockCodeResultListener) {
-        this.context = context;
-        this.document = document;
-        this.optionDB = optionDB;
-        this.msgType = msgType;
-        this.nnkMode = nnkMode;
-        this.unlockCodeResultListener = unlockCodeResultListener;
-        getDocumentVar();
-        executeOption();
+        try {
+            this.context = context;
+            this.document = document;
+            this.optionDB = optionDB;
+            this.msgType = msgType;
+            this.nnkMode = nnkMode;
+            this.unlockCodeResultListener = unlockCodeResultListener;
+            getDocumentVar();
+            executeOption();
+        }catch (Exception e){
+            Log.e("OCAvailabilityDReport", "Exception e: " + e);
+        }
     }
 
     private void getDocumentVar() {
@@ -83,25 +87,25 @@ public class OptionControlAvailabilityDetailedReport<T> extends OptionControl {
 
         // Получение Товаров для Отчёта исполнителя
 //        if (detailedReportTovList == null || detailedReportTovList.isEmpty()) {
-            detailedReportTovList = RealmManager.getTovarListFromReportPrepareByDad2(dad2);
+            detailedReportTovList = RealmManager.INSTANCE.copyFromRealm(RealmManager.getTovarListFromReportPrepareByDad2(dad2));
 //        }
 
         SKUPlan = detailedReportTovList.size();
 
         // Получение REPORT PREPARE для Отчёта исполнителя
 //        if (detailedReportRPList == null || detailedReportRPList.isEmpty()) {
-            detailedReportRPList = ReportPrepareRealm.getReportPrepareByDad2(dad2);
+            detailedReportRPList = RealmManager.INSTANCE.copyFromRealm(ReportPrepareRealm.getReportPrepareByDad2(dad2));
 //        }
 
         // Обработка опции контроля
         if (detailedReportRPList.size() > 0) {
             for (ReportPrepareDB item : detailedReportRPList) {
-                if (item.getFace() != null && !item.getFace().equals("") && !item.getFace().equals("0") || item.getAmount() > 0) {
+                if ((item.getFace() != null && !item.getFace().equals("") && !item.getFace().equals("0")) || item.getAmount() > 0) {
                     SKUFact++;
                     test++;
                 }
 
-                if (find == 0 && item.getNotes().length() > 1) {
+                if (find == 0 && item.getNotes() != null && item.getNotes().length() > 1) {
                     find = item.getNotes().length();
                 }else if (find == 0 && comment != null && comment.length() > 1){
                     find = comment.length();

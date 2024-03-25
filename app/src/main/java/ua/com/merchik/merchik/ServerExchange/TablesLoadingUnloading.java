@@ -2024,12 +2024,9 @@ public class TablesLoadingUnloading {
                 });
 
             } catch (Exception e) {
+                Globals.writeToMLOG("ERR", "uploadRP", "Exception e: " + e);
             }
 
-            try {
-//                sendWpData();
-            } catch (Exception e) {
-            }
 
             // Сохранение последнего обмена
             try {
@@ -2152,7 +2149,6 @@ public class TablesLoadingUnloading {
             JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
 
             Log.e("uploadRP", "convertedObject: " + convertedObject);
-
             Globals.writeToMLOG("INFO", "uploadRP().Start", "Size: " + data.data.size());
 
             if (data.data.size() > 0) {
@@ -2169,6 +2165,7 @@ public class TablesLoadingUnloading {
 
                     @Override
                     public void onFailure(Call<ReportPrepareUpdateResponse> call, Throwable t) {
+                        Log.e("uploadRP", "Throwable t: " + t);
                         exchange.onFailure("uploadRP: " + t);
                     }
                 });

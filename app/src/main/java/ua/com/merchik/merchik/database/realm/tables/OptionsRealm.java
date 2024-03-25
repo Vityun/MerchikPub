@@ -1,10 +1,10 @@
 package ua.com.merchik.merchik.database.realm.tables;
 
+import static ua.com.merchik.merchik.database.realm.RealmManager.INSTANCE;
+
 import java.util.List;
 
 import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
-
-import static ua.com.merchik.merchik.database.realm.RealmManager.INSTANCE;
 
 public class OptionsRealm {
 
@@ -33,6 +33,20 @@ public class OptionsRealm {
                 .and()
                 .equalTo("optionGroup", "3161")
                 .findAll();
+    }
+
+    public static OptionsDB getOption(String dad2, String optId){
+        OptionsDB optionsDB = INSTANCE.where(OptionsDB.class)
+                .equalTo("codeDad2", dad2)
+                .and()
+//                .equalTo("optionId", optId)
+//                .or()
+                .equalTo("optionControlId", optId)
+                .findFirst();
+
+        if (optionsDB != null) return INSTANCE.copyFromRealm(optionsDB);
+
+        return null;
     }
 
 

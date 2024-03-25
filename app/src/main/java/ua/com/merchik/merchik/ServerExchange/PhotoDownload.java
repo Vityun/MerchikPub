@@ -229,7 +229,7 @@ public class PhotoDownload {
 
         // Разбивка на группі
         // Нужно для того что б не сразу все 8000 фоток загружалось на сторону приложения
-        int batchSize = 100; // Размер каждой группы
+        int batchSize = 50; // Размер каждой группы
         List<List<Integer>> batches = new ArrayList<>(); // Список, который будет содержать группы
 
         for (int i = 0; i < tovarsPhotoToDownload.size(); i += batchSize) {
@@ -244,7 +244,8 @@ public class PhotoDownload {
         data.nolimit = "1";
         data.image_type = "small";
 //        data.tovar_id = tovarsPhotoToDownload;    // Должен сюда записать список ID-шников Товаров которые я хочу загрузить на свою сторону.
-        data.photo_tovar_id = batches.get(0);    // Должен сюда записать список ID-шников Товаров которые я хочу загрузить на свою сторону.
+//        data.photo_tovar_id = batches.get(0);    // Должен сюда записать список ID-шников Товаров которые я хочу загрузить на свою сторону.
+        data.photo_tovar_id = tovarsPhotoToDownload;    // Должен сюда записать список ID-шников Товаров которые я хочу загрузить на свою сторону.
 
         // Формирование тела запроса
         Gson gson = new Gson();
@@ -279,10 +280,14 @@ public class PhotoDownload {
                             // TODO Начинаем загрузку + сохранение на телефон фоток Товаров.
 //                            downloadPhoto(response.body().getList(), result, result2);
 
-                            Intent serviceIntent = new Intent(context, DownloadPictureService.class);
-                            DownloadPictureService.picList = response.body().getList();
-//                            context.startService(serviceIntent);
-                            startForegroundService(context, serviceIntent);
+                            try {
+                                Intent serviceIntent = new Intent(context, DownloadPictureService.class);
+                                DownloadPictureService.picList = response.body().getList();
+                                startForegroundService(context, serviceIntent);
+                            }catch (Exception e){
+                                Globals.writeToMLOG("ERROR", "DownloadPictureService", "Exception e: " + e);
+                                downloadPhoto(response.body().getList(), result, result2);
+                            }
                         } else {
                             result.onFailure("Не получилось загрузить фото Товаров. Обратитесь к руководителю. Ошибка:\n\n(URL)state = false");
                         }

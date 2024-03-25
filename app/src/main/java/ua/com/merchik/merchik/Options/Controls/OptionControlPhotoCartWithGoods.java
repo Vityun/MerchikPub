@@ -47,20 +47,24 @@ public class OptionControlPhotoCartWithGoods<T> extends OptionControl {
     private Integer[] groups = {383, 434};  // исключаем из отчетов: 383-АШАН, 434-АТБ
 
     public OptionControlPhotoCartWithGoods(Context context, T document, OptionsDB optionDB, OptionMassageType msgType, Options.NNKMode nnkMode, UnlockCodeResultListener unlockCodeResultListener) {
-        this.context = context;
-        this.document = document;
-        this.optionDB = optionDB;
-        this.msgType = msgType;
-        this.nnkMode = nnkMode;
-        this.unlockCodeResultListener = unlockCodeResultListener;
+        try {
+            this.context = context;
+            this.document = document;
+            this.optionDB = optionDB;
+            this.msgType = msgType;
+            this.nnkMode = nnkMode;
+            this.unlockCodeResultListener = unlockCodeResultListener;
 
-        getDocumentVar();
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            try {
-                executeOption();
-            } catch (Exception e) {
-                Globals.writeToMLOG("INFO", "OptionControlPhotoCartWithGoods/executeOption", "Exception e: " + e);
+            getDocumentVar();
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                try {
+                    executeOption();
+                } catch (Exception e) {
+                    Globals.writeToMLOG("INFO", "OptionControlPhotoCartWithGoods/executeOption", "Exception e: " + e);
+                }
             }
+        }catch (Exception e){
+            Globals.writeToMLOG("INFO", "OptionControlPhotoCartWithGoods", "Exception e: " + e);
         }
     }
 
@@ -112,7 +116,7 @@ public class OptionControlPhotoCartWithGoods<T> extends OptionControl {
 
             //2.0. проверим наличие фото. Ступенями для того, чтобы ускорить проведение документа
             if (themeId != null && (themeId == 1178 || themeId == 1003)) {   // 1178-выкуп продукции, 1003-курьерские
-                stackPhotoDBList = RealmManager.INSTANCE.copyFromRealm(StackPhotoRealm.getPhoto(dateFrom, dateTo, wp.getUser_id(), wp.getAddr_id(), wp.getClient_id(), wp.getCode_dad2(), StackPhotoDB.PHOTO_CART_WITH_GOODS, null));
+                stackPhotoDBList = StackPhotoRealm.getPhoto(dateFrom, dateTo, wp.getUser_id(), wp.getAddr_id(), wp.getClient_id(), wp.getCode_dad2(), StackPhotoDB.PHOTO_CART_WITH_GOODS, null);
 
                 photoCount = stackPhotoDBList.size();
                 photoDVICount = stackPhotoDBList.stream().map(table -> table.dvi).reduce(0, Integer::sum);
@@ -125,9 +129,13 @@ public class OptionControlPhotoCartWithGoods<T> extends OptionControl {
                 if (experience > 30 && usersSDBDocument != null && usersSDBDocument.reportDate40 != null && dateDocument > usersSDBDocument.reportDate40.getTime() / 1000) {
                     workCount = wpDataSize;
                     if (workCount > 3) {
-                        stackPhotoDBList = RealmManager.INSTANCE.copyFromRealm(StackPhotoRealm.getPhoto(dateFrom * 1000, dateTo * 1000, null, wp.getAddr_id(), wp.getClient_id(), null, StackPhotoDB.PHOTO_CART_WITH_GOODS, null));
+                        stackPhotoDBList = StackPhotoRealm.getPhoto(dateFrom * 1000, dateTo * 1000, null, wp.getAddr_id(), wp.getClient_id(), null, StackPhotoDB.PHOTO_CART_WITH_GOODS, null);
                         photoCount = stackPhotoDBList.size();
-                        photoDVICount = stackPhotoDBList.stream().map(table -> table.dvi).reduce(0, Integer::sum);
+//                        photoDVICount = stackPhotoDBList.stream().map(table -> table.dvi).reduce(0, Integer::sum);
+                        photoDVICount = stackPhotoDBList.stream()
+                                .filter(table -> table.dvi != null)
+                                .mapToInt(table -> table.dvi)
+                                .sum();
                     }
                 }
             }

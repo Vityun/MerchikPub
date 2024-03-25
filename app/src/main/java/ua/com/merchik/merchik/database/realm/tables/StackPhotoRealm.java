@@ -25,9 +25,11 @@ public class StackPhotoRealm {
             return null;
         }
 
-        return INSTANCE.where(StackPhotoDB.class)
+        StackPhotoDB stackPhotoDB = INSTANCE.where(StackPhotoDB.class)
                 .equalTo("photoServerId", id)
                 .findFirst();
+        if (stackPhotoDB != null) stackPhotoDB = INSTANCE.copyFromRealm(stackPhotoDB);
+        return stackPhotoDB;
     }
 
     public static StackPhotoDB stackPhotoDBGetPhotoByHASH(String hash) {
@@ -48,9 +50,9 @@ public class StackPhotoRealm {
                 .equalTo("photoServerId", id)
                 .findFirst();
 
-        if (res != null){
+        if (res != null) {
             res = INSTANCE.copyFromRealm(res);
-        }else {
+        } else {
             return null;
         }
         return res;
@@ -68,9 +70,11 @@ public class StackPhotoRealm {
 
 
     public static StackPhotoDB getById(int id) {
-        return INSTANCE.where(StackPhotoDB.class)
+        StackPhotoDB stackPhotoDB = INSTANCE.where(StackPhotoDB.class)
                 .equalTo("id", id)
                 .findFirst();
+        if (stackPhotoDB != null) stackPhotoDB = INSTANCE.copyFromRealm(stackPhotoDB);
+        return stackPhotoDB;
     }
 
     public static RealmResults<StackPhotoDB> getById(Integer[] id) {
@@ -109,9 +113,11 @@ public class StackPhotoRealm {
     }
 
     public static StackPhotoDB getByHash(String hash) {
-        return INSTANCE.where(StackPhotoDB.class)
+        StackPhotoDB stackPhotoDB = INSTANCE.where(StackPhotoDB.class)
                 .equalTo("photo_hash", hash)
                 .findFirst();
+        if (stackPhotoDB != null) stackPhotoDB = INSTANCE.copyFromRealm(stackPhotoDB);
+        return stackPhotoDB;
     }
 
     public static StackPhotoDB getByPhotoNum(String photoNum) {
@@ -244,7 +250,7 @@ public class StackPhotoRealm {
                     .equalTo("object_id", tovarId)
                     .findFirst();
 
-            if (stackPhotoDB == null || stackPhotoDB.getPhoto_num().equals("")) {
+            if (stackPhotoDB == null || stackPhotoDB.getPhoto_num() == null || stackPhotoDB.getPhoto_num().equals("")) {
                 result.add(tovarId);
             }
         }
@@ -276,7 +282,7 @@ public class StackPhotoRealm {
      * 09.01.2023.
      * Универсальная функция для получения Жернала фото
      */
-    public static RealmResults<StackPhotoDB> getPhoto(Long dtFrom, Long dtTo, Integer userId, Integer addrId, String clientId, Long dad2, Integer photoType, String[] tovIds) {
+    public static List<StackPhotoDB> getPhoto(Long dtFrom, Long dtTo, Integer userId, Integer addrId, String clientId, Long dad2, Integer photoType, String[] tovIds) {
         RealmResults<StackPhotoDB> res = INSTANCE.where(StackPhotoDB.class).findAll();
 
 //        res = res.where().isNull("showcase_id").findAll();  // Показываем мерчу в ЖФ фото НЕ "ВИТРИН"
@@ -347,7 +353,10 @@ public class StackPhotoRealm {
             Globals.writeToMLOG("INFO", "StackPhotoRealm.getPhoto.all", "res: " + res.size());
         }
 
-        return res;
+        List<StackPhotoDB> result = new ArrayList<>();
+        if (res != null) result = INSTANCE.copyFromRealm(res);
+
+        return result;
     }
 
 

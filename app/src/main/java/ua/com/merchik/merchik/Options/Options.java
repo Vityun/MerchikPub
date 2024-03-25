@@ -93,6 +93,7 @@ import ua.com.merchik.merchik.Options.Controls.OptionControlCheckDetailedReport;
 import ua.com.merchik.merchik.Options.Controls.OptionControlCheckMarkDetailedReport;
 import ua.com.merchik.merchik.Options.Controls.OptionControlCheckMarkPhotoReport;
 import ua.com.merchik.merchik.Options.Controls.OptionControlCheckTovarUp;
+import ua.com.merchik.merchik.Options.Controls.OptionControlCheckingForAnAchievement;
 import ua.com.merchik.merchik.Options.Controls.OptionControlCheckingPercentageOfShelfSpaceDPPO;
 import ua.com.merchik.merchik.Options.Controls.OptionControlCheckingReasonOutOfStock;
 import ua.com.merchik.merchik.Options.Controls.OptionControlCheckingReasonOutOfStockOSV;
@@ -167,7 +168,8 @@ public class Options {
     public static int[] describedOptions = new int[]{132624, 76815, 157241, 157243, 84006, 156928,
             151594, 80977, 135330, 133381, 135329, 138518, 151139, 132623, 133382, 137797, 135809,
             135328, 135327, 157275, 138341, 590, 84932, 134583, 157352, 1470, 138644, 1455, 135061,
-            158361, 159707, 575, 132971, 135591, 135708, 135595, 143968, 160568, 164352, 164354};
+            158361, 159707, 575, 132971, 135591, 135708, 135595, 143968, 160568, 164352, 164354,
+            84005, 84967, 164985, 165276, 165275};
 
     /*Сюда записываются Опции которые не прошли проверку, при особенном переданном MOD-e. Сделано
     для того что б потом можно было посмотреть название опций которые не прошли проверку и, возможно,
@@ -205,6 +207,11 @@ public class Options {
 
             switch (optionControlId) {
 
+                case 84005, 84967, 164985, 165276:
+                    OptionControlCheckingForAnAchievement<?> optionControlCheckingForAnAchievement = new OptionControlCheckingForAnAchievement<>(context, dataDB, optionsDB, newOptionType, mode, unlockCodeResultListener);
+                    optionControlCheckingForAnAchievement.showOptionMassage("");
+                    break;
+
                 case 160568:
                     OptionControlPhotoShowcase<?> optionControlPhotoShowcase = new OptionControlPhotoShowcase<>(context, dataDB, optionsDB, newOptionType, mode, unlockCodeResultListener);
                     optionControlPhotoShowcase.showOptionMassage("");
@@ -220,6 +227,7 @@ public class Options {
                     optionControlCheckMarkPhotoReport.showOptionMassage("");
                     break;
 
+                case 165275:
                 case 135591:
                     OptionControlReturnOfGoods<?> optionControlReturnOfGoods = new OptionControlReturnOfGoods<>(context, dataDB, optionsDB, newOptionType, mode, unlockCodeResultListener);
                     optionControlReturnOfGoods.showOptionMassage("");
@@ -1043,6 +1051,16 @@ public class Options {
         Log.e("NNK", "F/optControl/NNKMode mode: " + mode);
         switch (optionId) {
 
+            case 84005, 84967, 164985, 165276:
+                OptionControlCheckingForAnAchievement<?> optionControlCheckingForAnAchievement = new OptionControlCheckingForAnAchievement<>(context, dataDB, option, type, mode, unlockCodeResultListener);
+                if (mode.equals(NNKMode.MAKE) || (mode.equals(NNKMode.CHECK) && optionControlCheckingForAnAchievement.isBlockOption()))
+                    optionControlCheckingForAnAchievement.showOptionMassage(block);
+
+                if (mode.equals(NNKMode.BLOCK) && optionControlCheckingForAnAchievement.signal && optionControlCheckingForAnAchievement.isBlockOption()) {
+                    optionControlCheckingForAnAchievement.showOptionMassage(block);
+                }
+                return optionControlCheckingForAnAchievement.isBlockOption2() ? 1 : 0;
+
             case 132812:    // Хочу увеличение оплаты
 
                 WpDataDB wp = (WpDataDB) dataDB;
@@ -1104,7 +1122,8 @@ public class Options {
                 optionControlCheckMarkPhotoReport.showOptionMassage(block);
                 break;
 
-            case 159799:    // Кнопка "Возврат"
+            case 165275:
+            case 159799:// Кнопка "Возврат"
             case 135591:// Выполняется проверка НАЛИЧИЯ данных о количестве ВОЗВРАТА товара или запись в поле "ошибка" о том, что его "возвращать НЕ нужно".
                 OptionControlReturnOfGoods<?> optionControlReturnOfGoods =
                         new OptionControlReturnOfGoods<>(context, dataDB, option, type, mode, unlockCodeResultListener);
@@ -2789,7 +2808,7 @@ public class Options {
         }
 
 
-        List<TovarDB> dataTovar = RealmManager.getTovarListFromReportPrepareByDad2(dad2);    // Это типа моего СКЮ План
+        List<TovarDB> dataTovar = RealmManager.INSTANCE.copyFromRealm(RealmManager.getTovarListFromReportPrepareByDad2(dad2));    // Это типа моего СКЮ План
         SKUPlan = dataTovar.size();
 
         // Перебираем товары по плану
@@ -3417,10 +3436,10 @@ public class Options {
             list = new ArrayList<>();
             list.add(new TovarOptions(PRICE, "Ц", "Цена товара", "price", "main", 579));
             list.add(new TovarOptions(FACE, "Ф", "Кол. фейсов", "face", "main", 576, 76815));
-            list.add(new TovarOptions(EXPIRE_LEFT, "В", "Возврат", "expire_left", "main", 135591));
+            list.add(new TovarOptions(EXPIRE_LEFT, "В", "Возврат", "expire_left", "main", 135591, 165275));
             list.add(new TovarOptions(AMOUNT, "К", "Кол. на витрине", "amount", "main", 578, 587, 1465, 158244));
             list.add(new TovarOptions(UP, "П", "Поднято товара", "up", "main", 138644));
-            list.add(new TovarOptions(DT_EXPIRE, "Д", "Дата ок. ср. год", "dt_expire", "main", 84005, 84967));
+            list.add(new TovarOptions(DT_EXPIRE, "Д", "Дата ок. ср. год", "dt_expire", "main", 84005, 84967, 164985, 165276));
             list.add(new TovarOptions(OBOROTVED_NUM, "О", "Остаток по учёту", "oborotved_num", "main", 2243, 135448));
             list.add(new TovarOptions(ERROR_ID, "Ш", "Ошибка товара", "error_id", "main", 135592, 157242));
             list.add(new TovarOptions(AKCIYA_ID, "А", "Вид акции", "akciya_id", "main", 80977));
@@ -3540,10 +3559,10 @@ $options_list_tpl=array(
 
 (PRICE,         "Ц", "Цена товара"              , "price", "main", 579));
 (FACE,          "Ф", "Кол. фейсов"              , "face", "main", 576, 76815));
-(EXPIRE_LEFT,   "В", "Возврат"                  , "expire_left", "main", 135591));
+(EXPIRE_LEFT,   "В", "Возврат"                  , "expire_left", "main", 135591, 165275));
 (AMOUNT,        "К", "Кол. на витрине"          , "amount", "main", 578, 1465));
 (UP,            "П", "Поднято товара"           , "up", "main", 138644));
-(DT_EXPIRE,     "Д", "Дата ок. ср. год"         , "dt_expire", "main", 84005, 84967));
+(DT_EXPIRE,     "Д", "Дата ок. ср. год"         , "dt_expire", "main", 84005, 84967, 164985, 165276));
 (OBOROTVED_NUM, "О", "Остаток по учёту"         , "oborotved_num", "main", 2243, 135448));
 (ERROR_ID,      "Ш", "Ошибка товара"            , "error_id", "main", 135592, 157242, !157241, !157243));
 (AKCIYA_ID,     "А", "Вид акции"                , "akciya_id", "main", 80977));

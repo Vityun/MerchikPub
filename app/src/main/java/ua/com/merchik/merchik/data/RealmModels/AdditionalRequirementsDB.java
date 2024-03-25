@@ -88,6 +88,10 @@ public class AdditionalRequirementsDB extends RealmObject {
     @Expose
     private String summ;
 
+    @SerializedName("showcase_tp_id")
+    @Expose
+    public Integer showcaseTpId;
+
     public Integer getId() {
         return id;
     }

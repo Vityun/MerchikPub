@@ -17,7 +17,6 @@ import androidx.annotation.RequiresApi;
 import java.util.ArrayList;
 import java.util.List;
 
-import io.realm.RealmResults;
 import ua.com.merchik.merchik.Activities.TaskAndReclamations.TARActivity;
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
@@ -212,7 +211,7 @@ public class OptionControlReclamationAnswer<T> extends OptionControl {
                     } else if (theme.need_report == 1) {
 
                         long timeCreateTAR = item.dtRealPost;
-                        RealmResults<ReportPrepareDB> rp = ReportPrepareRealm.getRPLastChange(item.client, String.valueOf(item.addr), timeCreateTAR);
+                        List<ReportPrepareDB> rp = ReportPrepareRealm.getRPLastChange(item.client, String.valueOf(item.addr), timeCreateTAR);
 
                         if (rp == null || rp.size() == 0) {
                             String msg = context.getString(R.string.option_control_135330_no_detailed_report);

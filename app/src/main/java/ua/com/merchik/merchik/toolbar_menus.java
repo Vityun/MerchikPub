@@ -86,7 +86,6 @@ import ua.com.merchik.merchik.Activities.ToolbarActivity.WebSocketStatus;
 import ua.com.merchik.merchik.Activities.WorkPlanActivity.WPDataActivity;
 import ua.com.merchik.merchik.Activities.navigationMenu.MenuHeader;
 import ua.com.merchik.merchik.Activities.navigationMenu.MenuHeaderAdapter;
-import ua.com.merchik.merchik.Global.UnlockCode;
 import ua.com.merchik.merchik.ServerExchange.CustomExchange.CustomExchange;
 import ua.com.merchik.merchik.ServerExchange.Exchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.PhotoMerchikExchange;
@@ -96,13 +95,10 @@ import ua.com.merchik.merchik.ServerExchange.TablesLoadingUnloading;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.Database.Room.Chat.ChatSDB;
 import ua.com.merchik.merchik.data.Database.Room.ShowcaseSDB;
-import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
 import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteObjects.SiteObjectsDB;
 import ua.com.merchik.merchik.data.RealmModels.AppUsersDB;
 import ua.com.merchik.merchik.data.RealmModels.MenuItemFromWebDB;
-import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
-import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.data.RetrofitResponse.Logout;
 import ua.com.merchik.merchik.data.RetrofitResponse.PhotoHash;
 import ua.com.merchik.merchik.data.RetrofitResponse.PhotoHashList;
@@ -1506,7 +1502,7 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
      */
     public void cronCheckUploadsPhotoOnServer() {
         try {
-            final RealmResults<StackPhotoDB> realmResults = RealmManager.stackPhotoGetHashs();
+            final List<StackPhotoDB> realmResults = RealmManager.INSTANCE.copyFromRealm(RealmManager.stackPhotoGetHashs());
 
             Log.e("CHECK_HASH", "realmResults: " + realmResults.size());
 
@@ -1519,39 +1515,11 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                 for (int i = 0; i < realmResults.size(); i++) {
                     listHash.add(i, realmResults.get(i).getPhoto_hash());
                 }
-
-                // TODO нормально оформить этот запрос
-/*                StandartData standartData = new StandartData();
-                standartData.mod = "images_view";
-                standartData.act = "list_image";
-                standartData.nolimit = "no_limit";
-                standartData.date_from = Clock.lastWeek();
-                standartData.date_to = Clock.tomorrow;
-                standartData.hash_list = listHash;
-
-                JsonObject convertedObject = new Gson().fromJson(new Gson().toJson(standartData), JsonObject.class);
-
-                retrofit2.Call<JsonObject> callJS = RetrofitBuilder.getRetrofitInterface().TEST_JSON_UPLOAD(RetrofitBuilder.contentType, convertedObject);
-//                retrofit2.Call<PhotoHash> callPH = RetrofitBuilder.getRetrofitInterface().SEND_PHOTO_HASH_NEW(RetrofitBuilder.contentType, convertedObject);
-
-                callJS.enqueue(new Callback<JsonObject>() {
-                    @Override
-                    public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
-                        Log.e("test", "test: " + response);
-                    }
-
-                    @Override
-                    public void onFailure(Call<JsonObject> call, Throwable t) {
-                        Log.e("test", "test t: " + t);
-                    }
-                });*/
-
                 String mod = "images_view";
                 String act = "list_image";
                 String noLimit = "no_limit";
                 String date_from = Clock.lastWeek();
                 String date_to = Clock.tomorrow;
-
 
                 retrofit2.Call<PhotoHash> call = RetrofitBuilder.getRetrofitInterface()
                         .SEND_PHOTO_HASH(mod, act, noLimit, date_from, date_to, listHash);

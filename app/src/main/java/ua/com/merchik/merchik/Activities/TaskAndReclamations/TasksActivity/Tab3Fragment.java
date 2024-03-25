@@ -85,7 +85,7 @@ public class Tab3Fragment extends Fragment {
 
     public void setPhotoTARComment(Integer id, int tarCommentIndex) {
         photoId = id;
-        StackPhotoDB photoDB = RealmManager.INSTANCE.copyFromRealm(StackPhotoRealm.getById(id));
+        StackPhotoDB photoDB = StackPhotoRealm.getById(id);
 
         TARCommentsDB tarCommentsDB = dataComments.get(tarCommentIndex);
         tarCommentsDB.photo_hash = photoDB.getPhoto_hash();

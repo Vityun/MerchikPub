@@ -13,7 +13,6 @@ import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
 import ua.com.merchik.merchik.data.OptionMassageType;
 import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
-import ua.com.merchik.merchik.data.WPDataObj;
 import ua.com.merchik.merchik.database.realm.tables.WpDataRealm;
 
 public class OptionButtonPhotoCassZone <T> extends OptionControl {
@@ -48,11 +47,14 @@ public class OptionButtonPhotoCassZone <T> extends OptionControl {
     private void executeOption() {
         new Globals().fixMP(wpDataDB, null);// Фиксация Местоположения в таблице ЛогМп
         try {
-            WPDataObj wpDataObj = workPlan.getKPS(wpDataDB.getId());
-            wpDataObj.setPhotoType("45");
+//            WPDataObj wpDataObj = workPlan.getKPS(wpDataDB.getId());
+//            wpDataObj.setPhotoType("45");
+
+//            MakePhoto makePhoto = new MakePhoto();
+//            makePhoto.pressedMakePhotoOldStyle((Activity) context, wpDataObj, wpDataDB, optionDB);
 
             MakePhoto makePhoto = new MakePhoto();
-            makePhoto.pressedMakePhotoOldStyle((Activity) context, wpDataObj, wpDataDB, optionDB);
+            makePhoto.pressedMakePhoto((Activity) context, wpDataDB, optionDB, "45");
         } catch (Exception e) {
             Globals.writeToMLOG("ERROR", "OptionButtonPhotoCassZone/executeOption/Exception", "Exception e: " + e);
         }

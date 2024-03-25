@@ -276,7 +276,7 @@ public class ReportPrepareDB extends RealmObject {
 
     /*
      * 01.05.23.
-     * Используется в опции контроля 575, 159707, 135591
+     * Используется в опции контроля 575, 159707, 135591, 84005, 84967, 164985
      * Наруш. //признак ошибки
      * */
     @Ignore
@@ -289,6 +289,30 @@ public class ReportPrepareDB extends RealmObject {
      * */
     @Ignore
     public String errorNote;
+
+    /*
+    * 10.03.24.
+    * Используется в опции контроля 84005, 84967, 164985
+    * признак того, що ДОСГ зазначений
+    * */
+    @Ignore
+    public Integer colTov;
+
+    /*
+     * 10.03.24.
+     * Используется в опции контроля 84005, 84967, 164985
+     * признак того, що ДОСГ зазначений
+     * */
+    @Ignore
+    public Integer colDOSG;
+
+    /*
+     * 10.03.24.
+     * Используется в опции контроля 84005, 84967, 164985
+     * Особое Внимание
+     * */
+    @Ignore
+    public int OSV;
 
     public ReportPrepareDB() {
     }

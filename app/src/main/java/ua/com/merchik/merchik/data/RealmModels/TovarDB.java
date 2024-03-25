@@ -69,6 +69,10 @@ public class TovarDB extends RealmObject {
     @Expose
     public Integer deleted;    // Поставлен ли товар на удаление
 
+    @SerializedName("expire_period")
+    @Expose
+    public Integer expirePeriod;    //
+
     @Ignore
     public String article;    // Артикул
 

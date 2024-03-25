@@ -64,15 +64,19 @@ public class OptionControlPromotion<T> extends OptionControl {
     private long dad2;
 
     public OptionControlPromotion(Context context, T document, OptionsDB optionDB, OptionMassageType msgType, Options.NNKMode nnkMode, UnlockCodeResultListener unlockCodeResultListener) {
-        this.context = context;
-        this.document = document;
-        this.optionDB = optionDB;
-        this.msgType = msgType;
-        this.nnkMode = nnkMode;
-        this.unlockCodeResultListener = unlockCodeResultListener;
+        try {
+            this.context = context;
+            this.document = document;
+            this.optionDB = optionDB;
+            this.msgType = msgType;
+            this.nnkMode = nnkMode;
+            this.unlockCodeResultListener = unlockCodeResultListener;
 
-        getDocumentVar();
-        executeOption();
+            getDocumentVar();
+            executeOption();
+        }catch (Exception e){
+            Globals.writeToMLOG("ERROR", "OptionControlPromotion", "Exception e: " + e);
+        }
     }
 
     private void getDocumentVar() {
@@ -85,7 +89,6 @@ public class OptionControlPromotion<T> extends OptionControl {
             addressId = wpDataDB.getAddr_id();
             userId = wpDataDB.getUser_id();
             dad2 = wpDataDB.getCode_dad2();
-
         }
     }
 
@@ -97,7 +100,7 @@ public class OptionControlPromotion<T> extends OptionControl {
 
         // Получение RP по данному документу.
         //2.0. получим данные о товарах в отчете
-        List<ReportPrepareDB> reportPrepare = ReportPrepareRealm.getReportPrepareByDad2(dad2);
+        List<ReportPrepareDB> reportPrepare = RealmManager.INSTANCE.copyFromRealm(ReportPrepareRealm.getReportPrepareByDad2(dad2));
 //        List<ReportPrepareDB> reportRes = new ArrayList<>();
 
         // Получение Доп. Требований с дополнительными фильтрами.

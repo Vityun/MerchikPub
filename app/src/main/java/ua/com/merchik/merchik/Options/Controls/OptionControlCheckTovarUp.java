@@ -92,7 +92,7 @@ public class OptionControlCheckTovarUp<T> extends OptionControl {
         List<ReportPrepareDB> reportPrepare = RealmManager.INSTANCE.copyFromRealm(ReportPrepareRealm.getReportPrepareByDad2(dad2));
 
         // Получаем Фото Товара с Тележки
-        List<StackPhotoDB> stackPhoto = RealmManager.INSTANCE.copyFromRealm(StackPhotoRealm.getPhoto(
+        List<StackPhotoDB> stackPhoto = StackPhotoRealm.getPhoto(
                 Clock.getDatePeriodLong(documentDate, -3),
                 Clock.getDatePeriodLong(documentDate, 1),
                 null,
@@ -100,7 +100,7 @@ public class OptionControlCheckTovarUp<T> extends OptionControl {
                 null,
                 dad2,
                 PHOTO_CART_WITH_GOODS,
-                null));
+                null);
 
         try {
             Globals.writeToMLOG("INFO", "OptionControlCheckTovarUp/executeOption/sumUp!!!", "stackPhoto/stackPhoto!!!!: " + stackPhoto);
@@ -116,7 +116,7 @@ public class OptionControlCheckTovarUp<T> extends OptionControl {
         // если ФТТ нет и это АШАН то проверяем еще наличие ФВ До начала работ... для Ашанов сделано исключение
         if (stackPhoto == null || stackPhoto.size() == 0) {
             if (tpId == 8196) {
-                stackPhoto = RealmManager.INSTANCE.copyFromRealm(StackPhotoRealm.getPhoto(
+                stackPhoto = StackPhotoRealm.getPhoto(
                         Clock.getDatePeriodLong(documentDate, -3),  // 18.04.23. Жаловались что не видит фото опция. Я так ещё подфиксил (1 на 3 изменил)
                         Clock.getDatePeriodLong(documentDate, 3),
                         null,
@@ -124,7 +124,7 @@ public class OptionControlCheckTovarUp<T> extends OptionControl {
                         null,
                         dad2,
                         PHOTO_SHOWCASE_BEFORE_START_WORK,
-                        null));
+                        null);
 
                 if (stackPhoto != null){
                     Globals.writeToMLOG("INFO", "OptionControlCheckTovarUp/executeOption/sumUp", "stackPhoto (null): " + stackPhoto.size());

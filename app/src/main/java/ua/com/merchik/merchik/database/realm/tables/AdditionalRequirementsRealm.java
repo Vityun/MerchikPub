@@ -4,6 +4,7 @@ import static ua.com.merchik.merchik.database.realm.RealmManager.INSTANCE;
 
 import android.util.Log;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -107,7 +108,9 @@ public class AdditionalRequirementsRealm {
             Globals.writeToMLOG("ERR", "getDocumentAdditionalRequirements", "Exception e: " + e);
         }
 
-        return res;
+        List<AdditionalRequirementsDB> result = new ArrayList<>();
+        if (res != null) result = INSTANCE.copyFromRealm(res);
+        return result;
     }
 
     /**
@@ -269,6 +272,20 @@ public class AdditionalRequirementsRealm {
         return RealmManager.INSTANCE.copyFromRealm(realmResults);
     }
 
+    public static List<AdditionalRequirementsDB> getAdditionalRequirements(String clientId, int addressId, int optionId) {
+        List<AdditionalRequirementsDB> res = new ArrayList<>();
+
+        res = INSTANCE.where(AdditionalRequirementsDB.class)
+                .equalTo("clientId", clientId)
+                .equalTo("addrId", String.valueOf(addressId))
+                .equalTo("optionId", String.valueOf(optionId))
+                .equalTo("not_approve", "0")
+                .findAll();
+
+        if (res != null) res = INSTANCE.copyFromRealm(res);
+
+        return res;
+    }
 
     public static AdditionalRequirementsDB getADByClientAdr(String addrId, String clientId) {
         AdditionalRequirementsDB res = INSTANCE.where(AdditionalRequirementsDB.class)

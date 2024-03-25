@@ -52,20 +52,24 @@ public class OptionControlPhotoPromotion<T> extends OptionControl {
     public boolean signal = false;
 
     public OptionControlPhotoPromotion(Context context, T document, OptionsDB optionDB, OptionMassageType msgType, Options.NNKMode nnkMode, UnlockCodeResultListener unlockCodeResultListener) {
-        this.context = context;
-        this.document = document;
-        this.optionDB = optionDB;
-        this.msgType = msgType;
-        this.nnkMode = nnkMode;
-        this.unlockCodeResultListener = unlockCodeResultListener;
+        try {
+            this.context = context;
+            this.document = document;
+            this.optionDB = optionDB;
+            this.msgType = msgType;
+            this.nnkMode = nnkMode;
+            this.unlockCodeResultListener = unlockCodeResultListener;
 
-        getDocumentVar();
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            try {
-                executeOption();
-            } catch (Exception e) {
-                Globals.writeToMLOG("INFO", "OptionControlPhotoPromotion/executeOption", "Exception e: " + e);
+            getDocumentVar();
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                try {
+                    executeOption();
+                } catch (Exception e) {
+                    Globals.writeToMLOG("INFO", "OptionControlPhotoPromotion/executeOption", "Exception e: " + e);
+                }
             }
+        }catch (Exception e){
+            Globals.writeToMLOG("INFO", "OptionControlPhotoPromotion/", "Exception e: " + e);
         }
     }
 
@@ -242,7 +246,7 @@ public class OptionControlPhotoPromotion<T> extends OptionControl {
      * @param stackPhotoDB: Фото из БД. Нужно для того что б правильно отрисовывать цвета товарам.
      */
     private SpannableString createLinkedString(ReportPrepareDB item, StackPhotoDB stackPhotoDB) {
-        TovarDB tov = RealmManager.INSTANCE.copyFromRealm(TovarRealm.getById(item.getTovarId()));
+        TovarDB tov = TovarRealm.getById(item.getTovarId());
         String tovName = tov.getNm().replace("&quot;", "\"");
         String msg = String.format("(%s) %s (%s)", tov.getBarcode(), tovName, tov.getWeight());
         SpannableString res = new SpannableString(msg);

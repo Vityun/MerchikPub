@@ -1,6 +1,7 @@
 package ua.com.merchik.merchik.data.RealmModels;
 
 import io.realm.RealmObject;
+import io.realm.annotations.Ignore;
 import io.realm.annotations.PrimaryKey;
 
 public class StackPhotoDB extends RealmObject {
@@ -69,6 +70,9 @@ public class StackPhotoDB extends RealmObject {
     public String showcase_id;
     public String planogram_id;
     public String planogram_img_id;
+
+    @Ignore
+    public int specialCol;
 
     public StackPhotoDB() {
     }
@@ -143,6 +147,54 @@ public class StackPhotoDB extends RealmObject {
         this.userTxt = userTxt;
         this.customerTxt = customerTxt;
         this.addressTxt = addressTxt;
+    }
+
+    public String getTovar_id() {
+        return tovar_id;
+    }
+
+    public void setTovar_id(String tovar_id) {
+        this.tovar_id = tovar_id;
+    }
+
+    public String getImg_src_id() {
+        return img_src_id;
+    }
+
+    public void setImg_src_id(String img_src_id) {
+        this.img_src_id = img_src_id;
+    }
+
+    public String getShowcase_id() {
+        return showcase_id;
+    }
+
+    public void setShowcase_id(String showcase_id) {
+        this.showcase_id = showcase_id;
+    }
+
+    public String getPlanogram_id() {
+        return planogram_id;
+    }
+
+    public void setPlanogram_id(String planogram_id) {
+        this.planogram_id = planogram_id;
+    }
+
+    public String getPlanogram_img_id() {
+        return planogram_img_id;
+    }
+
+    public void setPlanogram_img_id(String planogram_img_id) {
+        this.planogram_img_id = planogram_img_id;
+    }
+
+    public int getSpecialCol() {
+        return specialCol;
+    }
+
+    public void setSpecialCol(int specialCol) {
+        this.specialCol = specialCol;
     }
 
     public int getId() {

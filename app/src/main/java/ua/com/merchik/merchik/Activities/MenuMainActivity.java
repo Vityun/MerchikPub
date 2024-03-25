@@ -18,9 +18,7 @@ import java.util.Calendar;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
-import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.R;
-import ua.com.merchik.merchik.ServerExchange.Exchange;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.ShowcaseResponse;
 import ua.com.merchik.merchik.data.TestJsonUpload.StandartData;
 import ua.com.merchik.merchik.dialogs.DialogShowcase.DialogShowcase;
@@ -82,11 +80,34 @@ public class MenuMainActivity extends toolbar_menus {
     }
 
     private void test() {
-        Globals.writeToMLOG("INFO", "uploadAchievemnts", "test");
-        new Exchange().uploadAchievemnts();
+        StandartData data = new StandartData();
+        data.mod = "additional_requirements";
+        data.act = "list";
+
+        Gson gson = new Gson();
+        String json = gson.toJson(data);
+        JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
+
+        Log.e("additional_requirements", "convertedObject: " + convertedObject);
+
+        retrofit2.Call<JsonObject> callTest = RetrofitBuilder.getRetrofitInterface().TEST_JSON_UPLOAD(RetrofitBuilder.contentType, convertedObject);
+        callTest.enqueue(new Callback<JsonObject>() {
+            @Override
+            public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
+                Log.e("additional_requirements", "response: " + response);
+            }
+
+            @Override
+            public void onFailure(Call<JsonObject> call, Throwable t) {
+                Log.e("additional_requirements", "Throwable t: " + t);
+            }
+        });
     }
 
 /*
+
+        Globals.writeToMLOG("INFO", "uploadAchievemnts", "test");
+        new Exchange().uploadAchievemnts();
 
         new Exchange().planogram(new ExchangeInterface.ExchangeResponseInterface() {
             @Override

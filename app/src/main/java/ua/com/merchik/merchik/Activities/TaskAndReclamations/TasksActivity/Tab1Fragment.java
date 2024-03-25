@@ -555,7 +555,7 @@ public class Tab1Fragment extends Fragment {
     private Uri getPhotoPath(String photo) {
         Log.e("getPhotoPath", "photo: " + photo);
         try {
-            if (photo != null && !photo.equals("")) {
+            if (photo != null && !photo.equals("") && !photo.equals("0")) {
                 StackPhotoDB stackPhotoDB = StackPhotoRealm.stackPhotoDBGetPhotoBySiteId(photo);
 
                 if (stackPhotoDB == null) {

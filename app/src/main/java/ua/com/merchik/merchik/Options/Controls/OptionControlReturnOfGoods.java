@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportTovar.ShowTovarRequisites;
+import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Options.OptionControl;
 import ua.com.merchik.merchik.Options.Options;
 import ua.com.merchik.merchik.data.OptionMassageType;
@@ -30,9 +31,9 @@ import ua.com.merchik.merchik.database.realm.tables.TovarRealm;
 
 /**
  * // Петров 28.05.2023 Написал на основании 157243-ПровПричОтсТовОСВ
- *
+ * <p>
  * // Выполняется проверка НАЛИЧИЯ данных о количестве ВОЗВРАТА товара или запись в поле "ошибка" о том, что его "возвращать НЕ нужно". Если в ДТ нет товаров с "особым вниманием" то проверяем наличие указания этой информации у КАЖДОГО товара, у которого поле "возврат=0" и "Фейсы">0
- *
+ * <p>
  * // ДокИст - документ - источник типа ОтчетИсполнителя, Задача, ОтчетИсполнителя, ОтчетОСтажировке и пр. к которому подчинена данная опция
  * // ДокОпц - документ - набор опций (на момент передачи в эту функцию позиционирован на конкретную строку с ДАННОЙ опцией)
  * // ТзнТов - таблица со списком данных отчета о товарах (используется для ускорения ГРУППОВЫХ расчетов опций)
@@ -42,12 +43,16 @@ import ua.com.merchik.merchik.database.realm.tables.TovarRealm;
  * //			=2 - выводить сообщение,
  * //			=3 - выводить Тзн (в самих функциях в этом режиме ничего делать НЕ надо письмо пишется в функции РазрешитьДействия(), которая их вызывает)
  * //			=4 - выполнить запись в ЧАТ + Сообщение
- * //			=0(пусто) - выполняет все действия, но возвращает 0 без предупреждений и сообщений */
+ * //			=0(пусто) - выполняет все действия, но возвращает 0 без предупреждений и сообщений
+ */
 public class OptionControlReturnOfGoods<T> extends OptionControl {
     public int OPTION_CONTROL_ReturnOfGoods_ID = 135591;
 
     private WpDataDB wpDataDB;
     public boolean signal = false;
+    public boolean badDate = false;
+
+    private int colMax = 0;
 
     public OptionControlReturnOfGoods(Context context, T document, OptionsDB optionDB, OptionMassageType msgType, Options.NNKMode nnkMode, UnlockCodeResultListener unlockCodeResultListener) {
         try {
@@ -60,7 +65,7 @@ public class OptionControlReturnOfGoods<T> extends OptionControl {
 
             getDocumentVar();
             executeOption();
-        }catch (Exception e){
+        } catch (Exception e) {
             Log.e("OCReturnOfGoods", "Exception e: " + e);
         }
     }
@@ -68,6 +73,11 @@ public class OptionControlReturnOfGoods<T> extends OptionControl {
     private void getDocumentVar() {
         if (document instanceof WpDataDB) {
             this.wpDataDB = (WpDataDB) document;
+
+            if (optionDB.getAmountMax() != null && !optionDB.getAmountMax().equals("")) {
+                int max = Integer.parseInt(optionDB.getAmountMax());
+                colMax = max == 0 ? 30 : max;
+            }
         }
     }
 
@@ -81,7 +91,7 @@ public class OptionControlReturnOfGoods<T> extends OptionControl {
         resultMsg.append("Для товара с ОСВ (Особым Вниманием) Вы должны обязательно указать ПРИЧИНУ его отсутствия.").append("\n\n");
 
         // Получение Репорт Препэйра
-        List<ReportPrepareDB> detailedReportRPList = ReportPrepareRealm.getReportPrepareByDad2(wpDataDB.getCode_dad2());
+        List<ReportPrepareDB> detailedReportRPList = RealmManager.INSTANCE.copyFromRealm(ReportPrepareRealm.getReportPrepareByDad2(wpDataDB.getCode_dad2()));
 
         // Получаем Товары с особым вниманием
         List<AdditionalRequirementsDB> additionalRequirementsDBS = AdditionalRequirementsRealm.getData3(document, DEFAULT, null, 0);
@@ -94,6 +104,8 @@ public class OptionControlReturnOfGoods<T> extends OptionControl {
         // проверим, по каким из товаров с ОСВ отсутствуют на витрине?
         int osvSize = tovarIds.size();
         for (ReportPrepareDB item : detailedReportRPList) {
+
+//            TovarDB tovarDB = RealmManager.INSTANCE.copyFromRealm(TovarRealm.getById(item.tovarId));
 
             boolean osv = false; // Товар с Особым Вниманием
 
@@ -108,18 +120,36 @@ public class OptionControlReturnOfGoods<T> extends OptionControl {
                 Log.e("OCReturnOfGoods", "item.expireLeft: " + item.expireLeft);
                 Log.e("OCReturnOfGoods", "item.getErrorId(): " + item.getErrorId());
 
-                if ((item.expireLeft != null && item.expireLeft.equals("0")) &&
-                        (item.getErrorId() != null && !item.getErrorId().equals("") && item.getErrorId().equals("0"))){
+                long dat = wpDataDB.getDt().getTime() / 1000;
+                long colMaxLong = colMax * 86400L;
+                long datRes = dat + colMaxLong;
+                long test = 0;
 
+                if (item.dtExpire != null && !item.dtExpire.equals("") && !item.dtExpire.equals("0000-00-00")){
+                    test = Clock.dateConvertToLong(item.dtExpire)/1000;
+                }
+
+                if ((optionDB.getOptionControlId().equals("165275") || optionDB.getOptionId().equals("165275"))
+//                if ((optionDB.getOptionControlId().equals("135591") || optionDB.getOptionId().equals("135591"))
+                        && (item.dtExpire != null && !item.dtExpire.equals("") && !item.dtExpire.equals("0000-00-00"))
+                        && item.expireLeft != null && item.expireLeft.equals("0")
+                        && test <= datRes) {
                     errCnt++;
                     item.error = 1;
-                    item.errorNote = "Для кожного наявного товара ви зобов'язані зазначити або кількіть товару, що підлягає поверненню, або обрати 'привід' = товар поверненню НЕ підлягає.";
+                    item.errorNote = "Для наявного товара, якщо ДОСГ менше " + Clock.getHumanTimeSecPattern(datRes, "yyyy-MM-dd") + " (" + colMax + " діб) ви зобов'язані зазначити або кількість товару, що підлягає поверненню, або обрати 'помилку' = товар поверненню НЕ підлягає.";
+                    result.add(item);
+                } else if ((optionDB.getOptionControlId().equals("135591") || optionDB.getOptionId().equals("135591"))
+                        && (item.expireLeft != null && item.expireLeft.equals("0")) /*&&
+                        (item.getErrorId() != null && !item.getErrorId().equals("") && item.getErrorId().equals("0"))*/) {
+                    errCnt++;
+                    item.error = 1;
+                    item.errorNote = "Для кожного наявного товара ви зобов'язані зазначити або кількіть товару, що підлягає поверненню, або обрати 'помилку' = товар поверненню НЕ підлягає.";
                     result.add(item);
                     Log.e("OCReturnOfGoods", "Добавил iD: " + item.iD);
-                }else {
+                } else {
                     Log.e("OCReturnOfGoods", "НЕ Добавил iD: " + item.iD);
                 }
-            }else { //если есть товары с ОСВ то проверяем только по ним
+            } else { //если есть товары с ОСВ то проверяем только по ним
                 Integer tovId = Integer.valueOf(item.getTovarId());
                 if (tovarIds.contains(tovId)) {
                     osv = true;
@@ -145,14 +175,14 @@ public class OptionControlReturnOfGoods<T> extends OptionControl {
             resultMsg.append("Товарів, по котрим треба перевірити необхідність повернення, не знайдено.").append("\n\n");
         } else if (errCnt > 0) {
             signal = true;
-            resultMsg.append("Не надана інформация про необхідність повернення товару (в т.р. з ОСУ (Особовою Увагою)). Див. таблицю: ").append("\n\n");
-            for (ReportPrepareDB item : result){
+            resultMsg.append("Не надана інформация про кількість товару що підлягає поверненню у").append(""+errCnt).append(" товарів. Див. таблицю: ").append("\n\n");
+            for (ReportPrepareDB item : result) {
                 TovarDB tov = TovarRealm.getById(item.getTovarId());
                 String msg = String.format("(%s) %s (%s): %s", tov.getBarcode(), tov.getNm(), tov.getWeight(), item.errorNote);
 
                 resultMsg.append(createLinkedString(msg, item, tov)).append("\n\n");
             }
-        }else {
+        } else {
             signal = false;
             resultMsg.append("Зауважень по наданню інформації про необхідність повернення товару (в т.р. з ОСУ (Особовою Увагою)) нема.").append("\n\n");
         }
@@ -164,9 +194,9 @@ public class OptionControlReturnOfGoods<T> extends OptionControl {
         // Установка Сигнала
         RealmManager.INSTANCE.executeTransaction(realm -> {
             if (optionDB != null) {
-                if (signal){
+                if (signal) {
                     optionDB.setIsSignal("1");
-                }else {
+                } else {
                     optionDB.setIsSignal("2");
                 }
                 realm.insertOrUpdate(optionDB);
@@ -175,9 +205,9 @@ public class OptionControlReturnOfGoods<T> extends OptionControl {
 
         // 8.0 Блокировка проведения
         if (signal) {
-            if (optionDB.getBlockPns().equals("1") && wpDataDB.getStatus() == 0){
+            if (optionDB.getBlockPns().equals("1") && wpDataDB.getStatus() == 0) {
                 resultMsg.append("Документ проведен не будет!").append("\n\n");
-            }else {
+            } else {
                 resultMsg.append("Вы можете получить Премиальные БОЛЬШЕ, если будете указывать информацию о причинах отсутствия товаров.").append("\n\n");
             }
             setIsBlockOption(true);
@@ -189,9 +219,11 @@ public class OptionControlReturnOfGoods<T> extends OptionControl {
         ClickableSpan clickableSpan = new ClickableSpan() {
             @Override
             public void onClick(View textView) {
-//                Toast.makeText(textView.getContext(), "Функция в разработке. Идентификатор Товара: " + reportPrepareDB.getTovarId(), Toast.LENGTH_LONG).show();
-
-                showDialogs(textView.getContext(), tov);
+                try {
+                    showDialogs(textView.getContext(), tov);
+                }catch (Exception e){
+                    Log.e("createLinkedString", "Exception e: " + e);
+                }
             }
 
             @Override
@@ -205,8 +237,7 @@ public class OptionControlReturnOfGoods<T> extends OptionControl {
     }
 
 
-
-    private void showDialogs(Context context, TovarDB tovarDB){
+    private void showDialogs(Context context, TovarDB tovarDB) {
         new ShowTovarRequisites(context, wpDataDB, tovarDB).showDialogs();
     }
 }

@@ -64,7 +64,7 @@ public class ShowTovarRequisites {
     public void showDialogs() {
         boolean finalDeletePromoOption = true;  // true - потому что так захотел
 
-        ReportPrepareDB reportPrepareTovar = RealmManager.INSTANCE.copyFromRealm(RealmManager.getTovarReportPrepare(String.valueOf(wpDataDB.getCode_dad2()), tovarDB.getiD()));
+        ReportPrepareDB reportPrepareTovar = RealmManager.getTovarReportPrepare(String.valueOf(wpDataDB.getCode_dad2()), tovarDB.getiD());
         List<OptionsDB> optionsList2 = RealmManager.getTovarOptionInReportPrepare(String.valueOf(wpDataDB.getCode_dad2()), tovarDB.getiD());
         tovOptTplList = options.getRequiredOptionsTPL(optionsList2, finalDeletePromoOption);
 
@@ -116,7 +116,7 @@ public class ShowTovarRequisites {
     }
 
 
-//    @RequiresApi(api = Build.VERSION_CODES.N)
+    //    @RequiresApi(api = Build.VERSION_CODES.N)
     private void showDialog(TovarDB list, TovarOptions tpl, ReportPrepareDB reportPrepareDB, String tovarId, String cd2, String clientId, String finalBalanceData1, String finalBalanceDate1, boolean clickType) {
         try {
             DialogData dialog = new DialogData(context);
@@ -265,12 +265,20 @@ public class ShowTovarRequisites {
                 if (dialogList.size() > 0) {
                     dialogList.get(0).show();
                 }
-            } else {
+            } else if (clickType &&
+                    dialogList.get(0).tovarOptions.getOptionControlName().equals(DT_EXPIRE) &&
+                    dialogList.get(0).tovarOptions.getOptionId().contains(135591) &&
+                    face > 0
+            ){
+                dialogList.remove(0);
+                if (dialogList.size() > 0) {
+                    dialogList.get(0).show();
+                }
+            }else {
                 dialogList.get(0).show();
             }
         }
     }
-
 
 
     private Map<Integer, String> setMapData(Globals.OptionControlName optionControlName) {
@@ -381,7 +389,6 @@ public class ShowTovarRequisites {
 
         return adapter;
     }
-
 
 
     /**
@@ -633,8 +640,6 @@ public class ShowTovarRequisites {
 
         return null;
     }
-
-
 
 
 }

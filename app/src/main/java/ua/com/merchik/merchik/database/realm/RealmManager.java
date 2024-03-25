@@ -22,7 +22,6 @@ import io.realm.RealmResults;
 import io.realm.Sort;
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
-import ua.com.merchik.merchik.ServerExchange.TablesLoadingUnloading;
 import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteHintsDB;
 import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteObjects.SiteObjectsDB;
 import ua.com.merchik.merchik.data.RealmModels.AddressDB;
@@ -92,35 +91,35 @@ public class RealmManager {
 
     public static void addSynchronizationTimetable() {
         INSTANCE.beginTransaction();
-        INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(1, "wp_data",               600,    0, 0, 0, 0, "План робіт",       0));
-        INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(2, "image_tp",              36000,  0, 0, 0, 0, "Типи фото",         0));
-        INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(3, "client_group_tp",       36000,  0, 0, 0, 0, "Групи товарів",         0));
-        INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(4, "log_mp",                600,    0, 0, 0, 0, "Лог місцеположення",         0));
-        INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(5, "clients",               36000,  0, 0, 0, 0, "Кліенти",         0));
-        INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(6, "address",               36000,  0, 0, 0, 0, "Адреси",         0));
-        INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(7, "users",                 36000,  0, 0, 0, 0, "Користувачі",         0));
-        INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(8, "promoList",             3600000,0, 0, 0, 0, "Акії",         0));     // Акции
-        INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(9, "errorsList",            3600000,0, 0, 0, 0, "Помилки",         0));     // Ошибки
-        INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(10, "stack_photo",          36000,  0, 0, 0, 0, "Журнал фото",         0));     // стэк фото
-        INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(11, "task_and_reclamations",600,    0, 0, 0, 0, "Задачі та рекламації",         0));     // ЗИР
-        INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(12, "planogram",            36000,  0, 0, 0, 0, "Планограми",         0));     // Планограммы
-        INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(13, "address_sql",          36000,  0, 0, 0, 0, "Адреси",         0));
-        INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(14, "clients_sql",          36000,  0, 0, 0, 0, "Клієнти",         0));
-        INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(15, "users_sql",            36000,  0, 0, 0, 0, "Користувачі",         0));
-        INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(16, "city_sql",             36000,  0, 0, 0, 0, "Міста",         0));
-        INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(17, "oblast_sql",           36000,  0, 0, 0, 0, "Області",         0));
-        INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(18, "sample_photo",         604800, 0, 0, 0, 0, "Зразки фото",         0));    // Образцы фото    604800с = 7 дней
-        INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(19, "ekl_sql",              36000,  0, 0, 0, 0, "ЕКЛ",         0));
-        INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(20, "location",             86400,  0, 0, 0, 0, "Місцеположення",         0));    // 86400 - 1 day
+        INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(1, "wp_data", 600, 0, 0, 0, 0, "План робіт", 0));
+        INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(2, "image_tp", 36000, 0, 0, 0, 0, "Типи фото", 0));
+        INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(3, "client_group_tp", 36000, 0, 0, 0, 0, "Групи товарів", 0));
+        INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(4, "log_mp", 600, 0, 0, 0, 0, "Лог місцеположення", 0));
+        INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(5, "clients", 36000, 0, 0, 0, 0, "Кліенти", 0));
+        INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(6, "address", 36000, 0, 0, 0, 0, "Адреси", 0));
+        INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(7, "users", 36000, 0, 0, 0, 0, "Користувачі", 0));
+        INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(8, "promoList", 3600000, 0, 0, 0, 0, "Акії", 0));     // Акции
+        INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(9, "errorsList", 3600000, 0, 0, 0, 0, "Помилки", 0));     // Ошибки
+        INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(10, "stack_photo", 36000, 0, 0, 0, 0, "Журнал фото", 0));     // стэк фото
+        INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(11, "task_and_reclamations", 600, 0, 0, 0, 0, "Задачі та рекламації", 0));     // ЗИР
+        INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(12, "planogram", 36000, 0, 0, 0, 0, "Планограми", 0));     // Планограммы
+        INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(13, "address_sql", 36000, 0, 0, 0, 0, "Адреси", 0));
+        INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(14, "clients_sql", 36000, 0, 0, 0, 0, "Клієнти", 0));
+        INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(15, "users_sql", 36000, 0, 0, 0, 0, "Користувачі", 0));
+        INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(16, "city_sql", 36000, 0, 0, 0, 0, "Міста", 0));
+        INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(17, "oblast_sql", 36000, 0, 0, 0, 0, "Області", 0));
+        INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(18, "sample_photo", 604800, 0, 0, 0, 0, "Зразки фото", 0));    // Образцы фото    604800с = 7 дней
+        INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(19, "ekl_sql", 36000, 0, 0, 0, 0, "ЕКЛ", 0));
+        INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(20, "location", 86400, 0, 0, 0, 0, "Місцеположення", 0));    // 86400 - 1 day
 
-        INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(21, "photo_tovar",          86400,  0, 0, 0, 0, "Фото товара",                  1));
-        INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(22, "photo_sample",         86400,  0, 0, 0, 0, "Ідентифікатори фото",          1));
-        INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(23, "photo_planogram",      86400,  0, 0, 0, 0, "Фото планограм",               1));
-        INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(24, "photo_showcase",       86400,  0, 0, 0, 0, "Фото зразків",                  1));
-        INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(25, "coments_to_photo",     86400,  0, 0, 0, 0, "Коментарі до фото",            1));
-        INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(26, "photo_user_from_serv", 86400,  0, 0, 0, 0, "Завантажити мої старі фото",   1));
-        INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(27, "upload_ekl",           86400,  0, 0, 0, 0, "Вивантажити ЄКЛ",              1));
-        INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(28, "photo_tar",            86400,  0, 0, 0, 0, "Фото Задач та Рекламацій",     1));
+        INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(21, "photo_tovar", 86400, 0, 0, 0, 0, "Фото товара", 1));
+        INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(22, "photo_sample", 86400, 0, 0, 0, 0, "Ідентифікатори фото", 1));
+        INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(23, "photo_planogram", 86400, 0, 0, 0, 0, "Фото планограм", 1));
+        INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(24, "photo_showcase", 86400, 0, 0, 0, 0, "Фото зразків", 1));
+        INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(25, "coments_to_photo", 86400, 0, 0, 0, 0, "Коментарі до фото", 1));
+        INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(26, "photo_user_from_serv", 86400, 0, 0, 0, 0, "Завантажити мої старі фото", 1));
+        INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(27, "upload_ekl", 86400, 0, 0, 0, 0, "Вивантажити ЄКЛ", 1));
+        INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(28, "photo_tar", 86400, 0, 0, 0, 0, "Фото Задач та Рекламацій", 1));
 
         INSTANCE.commitTransaction();
     }
@@ -473,15 +472,19 @@ public class RealmManager {
     // APP_USER_DB START ------------------------------------
 
     public static AppUsersDB getAppUser() {
-        return INSTANCE.where(AppUsersDB.class)
+        AppUsersDB appUsersDB = INSTANCE.where(AppUsersDB.class)
                 .findFirst();
+        if (appUsersDB != null) appUsersDB = INSTANCE.copyFromRealm(appUsersDB);
+        return appUsersDB;
     }
 
     public static AppUsersDB getAppUserById(String ids) {
         int id = Integer.parseInt(ids);
-        return INSTANCE.where(AppUsersDB.class)
+        AppUsersDB appUsersDB = INSTANCE.where(AppUsersDB.class)
                 .equalTo("userId", id)
                 .findFirst();
+        if (appUsersDB != null) appUsersDB = INSTANCE.copyFromRealm(appUsersDB);
+        return appUsersDB;
     }
 
     public static void setAppUser(AppUsersDB appUsersDB) {
@@ -624,13 +627,27 @@ public class RealmManager {
 
     public static int stackPhotoGetLastId() {
         RealmResults<StackPhotoDB> realmResults = INSTANCE.where(StackPhotoDB.class)
-//                .notEqualTo("photo_type", 18)
                 .findAll();
+
         try {
-            return Objects.requireNonNull(realmResults.last()).getId();
+            if (realmResults.isEmpty()) {
+                return 0; // Возвращаем 0, если список пуст
+            } else {
+                StackPhotoDB stackPhotoDB = INSTANCE.copyFromRealm(realmResults.last());
+                return stackPhotoDB.getId();
+            }
         } catch (Exception e) {
+            Globals.writeToMLOG("ERROR", "RealmManager/stackPhotoGetLastId", "Exception e: " + e);
             return 0;
         }
+
+
+//        StackPhotoDB stackPhotoDB = INSTANCE.copyFromRealm(realmResults.last());
+//        try {
+//            return Objects.requireNonNull(stackPhotoDB).getId();
+//        } catch (Exception e) {
+//            return 0;
+//        }
     }
 
     public static boolean chechPhotoExist(String photoUri) {
@@ -797,10 +814,14 @@ public class RealmManager {
                     .sort("approve", Sort.DESCENDING, "photoServerId", Sort.DESCENDING);
         }
 
-        StackPhotoDB st = query.findFirst();
-        Log.e("GET_TOV_PHOTO", "st: " + st);
+        StackPhotoDB st;
+        if (query.findFirst() != null) {
+            st = INSTANCE.copyFromRealm(query.findFirst());
+        } else {
+            st = null;
+        }
 
-        return query.findFirst();
+        return st;
     }
 
 
@@ -1204,13 +1225,14 @@ public class RealmManager {
                 .equalTo("codeDad2", String.valueOf(dad2))
                 .findAll();
 
-//        Log.e("TovarListFromRPByDad2", "realmResults: " + realmResults);
-        Globals.writeToMLOG("INFO", "getTovarListFromReportPrepareByDad2", "realmResults.size(): " + realmResults.size());
+        List<ReportPrepareDB> reportPrepareDBList = INSTANCE.copyFromRealm(realmResults);
 
-        String[] list = new String[realmResults.size()];
-        for (int i = 0; i < realmResults.size(); i++) {
-            list[i] = realmResults.get(i).getTovarId();
-            listRpTovId.add(realmResults.get(i).getTovarId());
+        Globals.writeToMLOG("INFO", "getTovarListFromReportPrepareByDad2", "reportPrepareDBList.size(): " + reportPrepareDBList.size());
+
+        String[] list = new String[reportPrepareDBList.size()];
+        for (int i = 0; i < reportPrepareDBList.size(); i++) {
+            list[i] = reportPrepareDBList.get(i).getTovarId();
+            listRpTovId.add(reportPrepareDBList.get(i).getTovarId());
         }
 
 //        Log.e("TovarListFromRPByDad2", "list: " + list);
@@ -1220,16 +1242,19 @@ public class RealmManager {
                 .equalTo("deleted", 0)      // Не показывать удалённые Товары
                 .findAll();
 
+        Globals.writeToMLOG("INFO", "getTovarListFromReportPrepareByDad2", "realmResults2.size(): " + realmResults2.size());
+
         try {
             for (TovarDB item : realmResults2) {
                 listTovId.add(item.getiD());
             }
 
-            ArrayList<String> tovarsToDownload = neededTovars(listRpTovId, listTovId);
-            if (tovarsToDownload.size() > 0) {
-                TablesLoadingUnloading tablesLoadingUnloading = new TablesLoadingUnloading();
-                tablesLoadingUnloading.downloadTovarTable(null, tovarsToDownload);
-            }
+            // TODO Загрузка недостающих Товаров (ФОТО)
+//            ArrayList<String> tovarsToDownload = neededTovars(listRpTovId, listTovId);
+//            if (tovarsToDownload.size() > 0) {
+//                TablesLoadingUnloading tablesLoadingUnloading = new TablesLoadingUnloading();
+//                tablesLoadingUnloading.downloadTovarTable(null, tovarsToDownload);
+//            }
         } catch (Exception e) {
             Log.e("TovarListFromRPByDad2", "ERR: " + e);
             Globals.writeToMLOG("ERROR", "getTovarListFromReportPrepareByDad2", "Exception e: " + e);
@@ -1240,11 +1265,12 @@ public class RealmManager {
         Log.e("TovarListFromRPByDad2", "3");
 
 
-        for (TovarDB item : realmResults2) {
+        for (TovarDB item : RealmManager.INSTANCE.copyFromRealm(realmResults2)) {
             if (item.getManufacturer() == null) {
                 String id = item.getManufacturerId();
                 TradeMarkDB tm = TradeMarkRealm.getTradeMarkRowById(id);
-                String data = item.getSortcol().toLowerCase();
+                String sortCol = item.getSortcol();
+                String data = sortCol.toLowerCase();
 
                 INSTANCE.executeTransaction(realm -> {
                     item.setSortcol(data);
@@ -1322,21 +1348,26 @@ public class RealmManager {
 
     // Получение листа Опций по данному товару
     public static List<OptionsDB> getTovarOptionInReportPrepare(String dad2, String tovarId) {
-        List<OptionsDB> optionsDBS = INSTANCE.where(OptionsDB.class)
+        RealmResults<OptionsDB> optionsDBS = INSTANCE.where(OptionsDB.class)
                 .equalTo("codeDad2", dad2)
                 .sort("so")
                 .findAll();
-        Log.e("getTovarOption", "optionsDBS: " + optionsDBS.size());
-        return optionsDBS;
+        List<OptionsDB> res = new ArrayList<>();
+        if (optionsDBS != null) res = INSTANCE.copyFromRealm(optionsDBS);
+        return res;
     }
 
     // Получение строки с ReportPrepare для записи туда данных
     public static ReportPrepareDB getTovarReportPrepare(String dad2, String tovarId) {
-        return INSTANCE.where(ReportPrepareDB.class)
+        ReportPrepareDB prepareDB = INSTANCE.where(ReportPrepareDB.class)
                 .equalTo("tovarId", tovarId)
                 .and()
                 .equalTo("codeDad2", dad2)
                 .findFirst();
+
+        ReportPrepareDB res = null;
+        if (prepareDB != null) res = INSTANCE.copyFromRealm(prepareDB);
+        return res;
     }
 
 
@@ -1362,9 +1393,12 @@ public class RealmManager {
                 .equalTo("uploadStatus", 1)
                 .findAll();
 
+        rp = INSTANCE.copyFromRealm(rp);
+
         ArrayList<ReportPrepareServ> reportPrepareServ = new ArrayList<>();
 
         if (rp != null) {
+
             for (int i = 0; i < rp.size(); i++) {
                 Log.e("REPORT_PREPARE_SEND", "DATABASE + ");
                 reportPrepareServ.add(new ReportPrepareServ(

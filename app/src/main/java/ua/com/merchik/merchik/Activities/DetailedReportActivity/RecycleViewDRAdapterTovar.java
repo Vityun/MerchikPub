@@ -385,7 +385,6 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                 Log.e("optionsList2", sb.toString());*/
 
 
-
                 try {
                     Drawable background = constraintLayout.getBackground();
 
@@ -401,11 +400,11 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
 
                         AdditionalRequirementsDB ad = showTovarAdditionalRequirement(list);
 
-                        if (ad != null && ad.color != null && !ad.color.equals("")){
+                        if (ad != null && ad.color != null && !ad.color.equals("")) {
                             int color = Color.parseColor("#" + ad.color);
                             Drawable coloredBackground = new ColorDrawable(color);
                             constraintLayout.setBackground(coloredBackground);
-                        }else {
+                        } else {
                             if (background instanceof ShapeDrawable) {
                                 ((ShapeDrawable) background).getPaint().setColor(ContextCompat.getColor(mContext, R.color.yellow));
                             } else if (background instanceof GradientDrawable) {
@@ -421,7 +420,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                             result = adList.stream()
                                     .filter(obj -> obj.getOptionId().equals("80977"))
                                     .findFirst();
-                            if (result.isPresent()/* && !Options.optionConstraintTPL(optionsList2)*/){
+                            if (result.isPresent()/* && !Options.optionConstraintTPL(optionsList2)*/) {
                                 deletePromoOption = false;
 
                             } else {
@@ -638,7 +637,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                 closeDialog.setOnClickListener(v -> dialog.cancel());
 
                 if (reportPrepareTovar != null) {
-                    reportPrepareTovar2 = INSTANCE.copyFromRealm(reportPrepareTovar);
+                    reportPrepareTovar2 = reportPrepareTovar;
                 }
 
                 String s = options.getOptionString(optionsList2, reportPrepareTovar2, deletePromoOption);
@@ -651,7 +650,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                         // Тут должно быть условие. Я его пока не добавляю. (если фейс = 0 и есть ОК 159707)
                         requiredOptionsTPL.add(new TovarOptions().createTovarOptionPhoto());
                         AdditionalRequirementsDB ar = showTovarAdditionalRequirement(list);
-                        if (ar != null){
+                        if (ar != null) {
                             requiredOptionsTPL.add(0, new TovarOptions().createLinkText());
                         }
 
@@ -660,7 +659,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                                 finalReportPrepareTovar1,
                                 (tpl, data, data2) -> operetionSaveRPToDB(tpl, finalReportPrepareTovar1, data, data2, list)
                         );
-                        recyclerViewTPLAdapter.setAddReq(ar, ()->{
+                        recyclerViewTPLAdapter.setAddReq(ar, () -> {
                             showTovarAdditionalRequirementDialog(mContext, list, ar);
                         });
 
@@ -782,7 +781,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                                 }
 
                                 AdditionalRequirementsDB ar = showTovarAdditionalRequirement(list);
-                                if (ar != null){
+                                if (ar != null) {
                                     showTovarAdditionalRequirementDialog(mContext, list, ar);
                                 }
 
@@ -915,9 +914,9 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                 result.ifPresent(currentAR -> {
                     currentAR = result.get();
                     // если опция контроля не указана
-                    if (currentAR.getOptionId() != null && currentAR.getOptionId().equals("0")){
+                    if (currentAR.getOptionId() != null && currentAR.getOptionId().equals("0")) {
                         res[0] = currentAR;
-                    }else {
+                    } else {
                         out.println();
                         res[0] = null;
                     }
@@ -926,7 +925,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
             return res[0];
         }
 
-        public void showTovarAdditionalRequirementDialog(Context context, TovarDB tovar, AdditionalRequirementsDB additionalRequirementsDB){
+        public void showTovarAdditionalRequirementDialog(Context context, TovarDB tovar, AdditionalRequirementsDB additionalRequirementsDB) {
             TradeMarkDB tradeMarkDB = TradeMarkRealm.getTradeMarkRowById(tovar.getManufacturerId());
             new AdditionalRequirementsAdapter().click(context, additionalRequirementsDB, tovar, tradeMarkDB);
         }
@@ -1148,7 +1147,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                         if (containsOptionId2) {
                             groupPos = "13";
                         }
-                    }catch (Exception e){
+                    } catch (Exception e) {
                         Globals.writeToMLOG("ERROR", "dialog tovars error in stream", "Exception e: " + e);
                     }
 
@@ -1156,7 +1155,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                         if (dialog.getOperationResult() != null) {
                             operetionSaveRPToDB(tpl, reportPrepareDB, dialog.getOperationResult(), dialog.getOperationResult2(), null);
                             refreshElement(cd2, list.getiD());
-                            dialogShowRule(clickType);
+                            dialogShowRule(/*list, tpl, reportPrepareDB, tovarId, cd2, clientId, finalBalanceData1, finalBalanceDate1, */clickType);
                         }
 
                         notifyItemChanged(adapterPosition);
@@ -1227,7 +1226,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
          * Специальное правило по которому отображаю последовательно модальные окошки из
          * списка dialogList.
          */
-        private void dialogShowRule(boolean clickType) {
+        private void dialogShowRule(/*TovarDB list, TovarOptions tpl, ReportPrepareDB reportPrepareDB, String tovarId, String cd2, String clientId, String finalBalanceData1, String finalBalanceDate1, */boolean clickType) {
             Log.e("dialogShowRule", "clickType: " + clickType);
             dialogList.remove(0);
             if (dialogList.size() > 0) {
@@ -1289,7 +1288,32 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                     }
 
 
-                } else {
+                }/* else if (clickType
+                        && face > 0
+                        && dialogList.get(0).tovarOptions.getOptionId().contains(165276)
+                ) {
+                    if ((dialogList.get(0).reportPrepareDB.dtExpire != null && !dialogList.get(0).reportPrepareDB.dtExpire.equals("") && !dialogList.get(0).reportPrepareDB.dtExpire.equals("0000-00-00"))
+                            && dialogList.get(0).reportPrepareDB.expireLeft != null && dialogList.get(0).reportPrepareDB.expireLeft.equals("0")) {
+
+                        OptionsDB optionsDB = OptionsRealm.getOption(String.valueOf(wpDataDB.getCode_dad2()), "165275");
+                        if (optionsDB != null && optionsDB.getAmountMax() != null && !optionsDB.getAmountMax().equals("")){
+                            int max = Integer.parseInt(optionsDB.getAmountMax());
+                            int colMax = max == 0 ? 30 : max;
+
+                            long dat = wpDataDB.getDt().getTime() / 1000;
+                            long colMaxLong = colMax * 86400L;
+                            long datRes = dat + colMaxLong;
+                            long test = 0;
+                            if (dialogList.get(0).reportPrepareDB.dtExpire != null && !dialogList.get(0).reportPrepareDB.dtExpire.equals("") && !dialogList.get(0).reportPrepareDB.dtExpire.equals("0000-00-00")){
+                                test = Clock.dateConvertToLong(dialogList.get(0).reportPrepareDB.dtExpire)/1000;
+                            }
+
+                            if (test <= datRes){
+                                showDialog(list, new TovarOptions(), finalReportPrepareTovar, tovarId, String.valueOf(codeDad2), clientId, finalBalanceData1, finalBalanceDate1, true);
+                            }
+                        }
+                    }
+                }*/ else {
                     dialogList.get(0).show();
                 }
             }
@@ -1501,7 +1525,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
             boolean deletePromoOption;
             int tovId = Integer.parseInt(id);
             ReportPrepareDB reportPrepareTovar = RealmManager.getTovarReportPrepare(cd2, id);
-            ReportPrepareDB reportPrepareTovar2 = INSTANCE.copyFromRealm(reportPrepareTovar);
+            ReportPrepareDB reportPrepareTovar2 = reportPrepareTovar;
 
             deletePromoOption = tovIdList.contains(tovId);
 

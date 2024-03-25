@@ -26,14 +26,14 @@ import ua.com.merchik.merchik.data.RealmModels.AdditionalRequirementsMarkDB;
 import ua.com.merchik.merchik.data.RealmModels.TovarDB;
 import ua.com.merchik.merchik.data.RealmModels.TradeMarkDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
-import ua.com.merchik.merchik.database.realm.tables.TovarRealm;
-import ua.com.merchik.merchik.database.realm.tables.TradeMarkRealm;
-import ua.com.merchik.merchik.dialogs.DialogAdditionalRequirements.DialogARMark.DialogARMark;
-import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsMarkRealm;
 import ua.com.merchik.merchik.database.realm.tables.AddressRealm;
 import ua.com.merchik.merchik.database.realm.tables.CustomerRealm;
+import ua.com.merchik.merchik.database.realm.tables.TovarRealm;
+import ua.com.merchik.merchik.database.realm.tables.TradeMarkRealm;
 import ua.com.merchik.merchik.database.realm.tables.UsersRealm;
+import ua.com.merchik.merchik.dialogs.DialogAdditionalRequirements.DialogARMark.DialogARMark;
+import ua.com.merchik.merchik.dialogs.DialogData;
 
 public class AdditionalRequirementsAdapter extends RecyclerView.Adapter<AdditionalRequirementsAdapter.ViewHolder> {
 

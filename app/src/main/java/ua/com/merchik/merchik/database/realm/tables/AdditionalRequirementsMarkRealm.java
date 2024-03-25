@@ -33,7 +33,8 @@ public class AdditionalRequirementsMarkRealm {
                 .equalTo("userId", userId)
                 .sort("dt", Sort.DESCENDING)
                 .findFirst();
-        return  data;
+        if (data != null) data = INSTANCE.copyFromRealm(data);
+        return data;
     }
 
     public static List<AdditionalRequirementsMarkDB> getToUpload() {

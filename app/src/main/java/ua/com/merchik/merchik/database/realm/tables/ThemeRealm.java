@@ -1,10 +1,10 @@
 package ua.com.merchik.merchik.database.realm.tables;
 
+import static ua.com.merchik.merchik.database.realm.RealmManager.INSTANCE;
+
 import java.util.List;
 
 import ua.com.merchik.merchik.data.RealmModels.ThemeDB;
-
-import static ua.com.merchik.merchik.database.realm.RealmManager.INSTANCE;
 
 public class ThemeRealm {
 
@@ -32,9 +32,11 @@ public class ThemeRealm {
 
 
     public static ThemeDB getThemeById(String id){
-        return INSTANCE.where(ThemeDB.class)
+        ThemeDB themeDB = INSTANCE.where(ThemeDB.class)
                 .endsWith("id", id)
                 .findFirst();
+        if (themeDB != null) themeDB = INSTANCE.copyFromRealm(themeDB);
+        return themeDB;
     }
 
     public static List<ThemeDB> getTARTheme(){

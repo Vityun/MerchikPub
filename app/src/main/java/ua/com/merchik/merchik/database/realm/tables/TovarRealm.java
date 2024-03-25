@@ -9,9 +9,11 @@ import ua.com.merchik.merchik.data.RealmModels.TovarDB;
 public class TovarRealm {
 
     public static TovarDB getById(String tov){
-        return INSTANCE.where(TovarDB.class)
+        TovarDB tovarDB = INSTANCE.where(TovarDB.class)
                 .equalTo("iD", tov)
                 .findFirst();
+        if (tovarDB != null) tovarDB = INSTANCE.copyFromRealm(tovarDB);
+        return tovarDB;
     }
 
     public static List<TovarDB> getByIds(String[] tov){

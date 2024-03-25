@@ -20,7 +20,6 @@ import com.google.gson.JsonObject;
 import java.util.ArrayList;
 import java.util.List;
 
-import io.realm.RealmResults;
 import ua.com.merchik.merchik.Activities.TaskAndReclamations.TARActivity;
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
@@ -31,12 +30,14 @@ import ua.com.merchik.merchik.data.Database.Room.CustomerSDB;
 import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
 import ua.com.merchik.merchik.data.Database.Room.UsersSDB;
 import ua.com.merchik.merchik.data.OptionMassageType;
+import ua.com.merchik.merchik.data.RealmModels.AppUsersDB;
 import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
 import ua.com.merchik.merchik.data.RealmModels.ReportPrepareDB;
 import ua.com.merchik.merchik.data.RealmModels.TARCommentsDB;
 import ua.com.merchik.merchik.data.RealmModels.ThemeDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.database.realm.RealmManager;
+import ua.com.merchik.merchik.database.realm.tables.AppUserRealm;
 import ua.com.merchik.merchik.database.realm.tables.ReportPrepareRealm;
 import ua.com.merchik.merchik.database.realm.tables.TARCommentsRealm;
 import ua.com.merchik.merchik.database.realm.tables.ThemeRealm;
@@ -53,22 +54,28 @@ public class OptionControlTaskAnswer<T> extends OptionControl {
     private CustomerSDB customerSDB;
     private UsersSDB usersSDB;
 
+    private AppUsersDB appUsersDB;
+
     private String clientId, documentDate;
     private int userId, addressId, taskCount;
 
     public boolean signal = false;
 
     public OptionControlTaskAnswer(Context context, T document, OptionsDB optionDB, OptionMassageType msgType, Options.NNKMode nnkMode, UnlockCodeResultListener unlockCodeResultListener) {
-        this.context = context;
-        this.document = document;
-        this.optionDB = optionDB;
-        this.msgType = msgType;
-        this.nnkMode = nnkMode;
-        this.unlockCodeResultListener = unlockCodeResultListener;
+        try {
+            this.context = context;
+            this.document = document;
+            this.optionDB = optionDB;
+            this.msgType = msgType;
+            this.nnkMode = nnkMode;
+            this.unlockCodeResultListener = unlockCodeResultListener;
 
-        getDocumentVar();
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            executeOption();
+            getDocumentVar();
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                executeOption();
+            }
+        }catch (Exception e){
+            Globals.writeToMLOG("ERROR", "OptionControlTaskAnswer", "Exception e: " + e);
         }
     }
 
@@ -87,6 +94,7 @@ public class OptionControlTaskAnswer<T> extends OptionControl {
 
             customerSDB = SQL_DB.customerDao().getById(clientId);
             usersSDB = SQL_DB.usersDao().getById(userId);
+            appUsersDB = AppUserRealm.getAppUserById(userId);
         }
     }
 
@@ -144,7 +152,7 @@ public class OptionControlTaskAnswer<T> extends OptionControl {
                 // конец изменений за 11.10.22
 
 
-                ThemeDB test = RealmManager.INSTANCE.copyFromRealm(ThemeRealm.getThemeById(String.valueOf(item.themeId)));
+//                ThemeDB test = RealmManager.INSTANCE.copyFromRealm(ThemeRealm.getThemeById(String.valueOf(item.themeId)));
                 ThemeDB theme = ThemeRealm.getThemeById(String.valueOf(item.themeId));
 
                 Globals.writeToMLOG("INFO", "OptionControlTaskAnswer/executeOption/for/data", "item: " + item.id);
@@ -237,7 +245,7 @@ public class OptionControlTaskAnswer<T> extends OptionControl {
                     } else if (theme.need_report == 1) {
 
                         long timeCreateTAR = item.dtRealPost;
-                        RealmResults<ReportPrepareDB> rp = ReportPrepareRealm.getRPLastChange(item.client, String.valueOf(item.addr), timeCreateTAR);
+                        List<ReportPrepareDB> rp = ReportPrepareRealm.getRPLastChange(item.client, String.valueOf(item.addr), timeCreateTAR);
 
                         if (rp == null || rp.size() == 0) {
                             Globals.writeToMLOG("INFO", "OptionControlTaskAnswer/executeOption/for/data", "rp: " + rp.size());
@@ -267,7 +275,7 @@ public class OptionControlTaskAnswer<T> extends OptionControl {
             } else if (result.size() == 0) {
                 spannableStringBuilder.append("Обнаружено ").append(String.valueOf(result.size())).append(" активных задач с ответами. Замечаний нет.");
                 signal = false;
-            } else if (usersSDB.reportDate20 == null && usersSDB.reportCount < 20) {
+            } else if (appUsersDB != null && !appUsersDB.user_work_plan_status.equals("foreign") && usersSDB.reportDate20 == null && usersSDB.reportCount < 20) {
                 spannableStringBuilder.append("Исполнитель ").append(usersSDB.fio).append(" еще не провел своего 20-го отчета.");
                 signal = false;
             } else {

@@ -491,7 +491,7 @@ public class DetailedReportTovarsFrag extends Fragment {
         List<TovarDB> res = new ArrayList<>();
         switch (type) {
             case DETAILED_REPORT:
-                if (RealmManager.getTovarListFromReportPrepareByDad2(codeDad2) != null) {
+                if (RealmManager.INSTANCE.copyFromRealm(RealmManager.getTovarListFromReportPrepareByDad2(codeDad2)) != null) {
                     res = RealmManager.INSTANCE.copyFromRealm(Objects.requireNonNull(RealmManager.getTovarListFromReportPrepareByDad2(codeDad2)));
                 }
                 return res;
@@ -637,7 +637,7 @@ public class DetailedReportTovarsFrag extends Fragment {
     private ArrayList<TovarDB> getTovList() {
         ArrayList<TovarDB> list = null;
         if (flag) {
-            List<TovarDB> dataTovar = RealmManager.getTovarListFromReportPrepareByDad2(codeDad2);
+            List<TovarDB> dataTovar = RealmManager.INSTANCE.copyFromRealm(RealmManager.getTovarListFromReportPrepareByDad2(codeDad2));
             Globals.writeToMLOG("INFO", "DetailedReportTovarsFrag/getTovList", "codeDad2: " + codeDad2);
             if (dataTovar != null && dataTovar.size() > 0) {
                 list = (ArrayList<TovarDB>) RealmManager.INSTANCE.copyFromRealm(dataTovar);

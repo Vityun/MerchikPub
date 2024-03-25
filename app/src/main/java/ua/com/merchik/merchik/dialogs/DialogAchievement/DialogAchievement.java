@@ -497,7 +497,7 @@ public class DialogAchievement {
                     spinnerClientResult = objectId;
                     Toast.makeText(adapterView.getContext(), "Выбрали: " + data + ", id: " + objectId, Toast.LENGTH_SHORT).show();
                 } else if (data.equals("це досягнення не відноситься до жодної з пропозицій замовника")){
-                    spinnerClientResult = 0;
+                    spinnerClientResult = 1;
                 }else {
                     // Объект не найден
                     Toast.makeText(adapterView.getContext(), "Объект не найден", Toast.LENGTH_SHORT).show();
