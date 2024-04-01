@@ -31,8 +31,6 @@ import android.widget.Toast;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.google.gson.Gson;
-
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.List;
@@ -953,16 +951,14 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
             switch (option.getOptionId()) {
                 case "135158":  // - 4  - Фото остатков товаров
                     ss.append(createLinkedStringGal(mContext, "Завантажити фото з галереї", photoType, () -> {
-                        if (option.getOptionControlId().equals("159707")){
-                            OptionMassageType newOptionType = new OptionMassageType();
-                            newOptionType.type = DIALOG;
+//                        click.click();
 
-                            OptionControlAvailabilityControlPhotoRemainingGoods<?> optionControlAvailabilityControlPhotoRemainingGoods =
-                                    new OptionControlAvailabilityControlPhotoRemainingGoods<>(context, (WpDataDB) dataDB, option, newOptionType, Options.NNKMode.CHECK, null);
-                            optionControlAvailabilityControlPhotoRemainingGoods.showOptionMassage("");
-                        }else {
-                            click.click();
-                        }
+                        OptionMassageType newOptionType = new OptionMassageType();
+                        newOptionType.type = DIALOG;
+
+                        OptionControlAvailabilityControlPhotoRemainingGoods<?> optionControlAvailabilityControlPhotoRemainingGoods =
+                                new OptionControlAvailabilityControlPhotoRemainingGoods<>(context, (WpDataDB) dataDB, option, newOptionType, Options.NNKMode.CHECK, null);
+                        optionControlAvailabilityControlPhotoRemainingGoods.showOptionMassage("");
                     }));
 
                     ss.append("\n\n");
@@ -1029,6 +1025,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
 
                             DialogFullPhotoR dialog = new DialogFullPhotoR(context);
                             dialog.setPhoto(photo);
+                            dialog.commentOn=true;
 
                             // Pika
 //                        dialog.setComment(photo.getComment());
