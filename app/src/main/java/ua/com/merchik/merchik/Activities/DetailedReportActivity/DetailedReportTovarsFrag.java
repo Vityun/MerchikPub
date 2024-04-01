@@ -457,7 +457,14 @@ public class DetailedReportTovarsFrag extends Fragment {
         dialog.setTitle("Оберіть Товар");
         dialog.setText("");
 
-        RecycleViewDRAdapterTovar adapter = new RecycleViewDRAdapterTovar(getContext(), getTovListNew(TovarDisplayType.ONE), wpDataDB, RecycleViewDRAdapterTovar.OpenType.DIALOG);
+        RecycleViewDRAdapterTovar adapter;// = new RecycleViewDRAdapterTovar(getContext(), getTovListNew(TovarDisplayType.ONE), wpDataDB, RecycleViewDRAdapterTovar.OpenType.DIALOG);
+
+        if (wpDataDB != null) {
+            adapter = new RecycleViewDRAdapterTovar(getContext(), getTovListNew(TovarDisplayType.ONE), wpDataDB, RecycleViewDRAdapterTovar.OpenType.DIALOG);
+        } else {
+            adapter = new RecycleViewDRAdapterTovar(getContext(), getTovListNew(TovarDisplayType.ONE), tasksAndReclamationsSDB, RecycleViewDRAdapterTovar.OpenType.DIALOG);
+        }
+
         adapter.elementClick(new Clicks.click() {
             @Override
             public <T> void click(T data) {
@@ -680,13 +687,13 @@ public class DetailedReportTovarsFrag extends Fragment {
 
     private void downloadDetailedReportTovarsData(TovarDisplayType type, Clicks.clickStatusMsg click) {
         try {
-            if (tasksAndReclamationsSDB == null){
+//            if (tasksAndReclamationsSDB == null){
                 BlockingProgressDialog pg = BlockingProgressDialog.show(mContext, "Загрузка списка товаров", "Подождите окончания загрузки. Это может занять время.");
                 downloadReportPrepareByDad2(pg, click);
 
-                BlockingProgressDialog pg2 = BlockingProgressDialog.show(mContext, "Загрузка списка опций", "Подождите окончания загрузки. Это может занять время.");
-                downloadOptionByDad2(pg2, click);
-            }
+//                BlockingProgressDialog pg2 = BlockingProgressDialog.show(mContext, "Загрузка списка опций", "Подождите окончания загрузки. Это может занять время.");
+//                downloadOptionByDad2(pg2, click);
+//            }
         } catch (Exception e) {
             Globals.writeToMLOG("INFO", "DetailedReportTovarsFrag/getTovList/downloadDetailedReportTovarsData", "Exception e: " + e);
         }

@@ -19,6 +19,12 @@ public interface ShowcaseDao {
     ShowcaseSDB getById(int id);
 
     @Query("SELECT * FROM showcase WHERE client_id = :clientId AND addr_id = :addrId")
+    List<ShowcaseSDB> getByDocTP(String clientId, int addrId);
+
+    @Query("SELECT * FROM showcase WHERE client_id = :clientId AND addr_id = :addrId AND tp_id IN (:tpId) ")
+    List<ShowcaseSDB> getByDocTP(String clientId, int addrId, List<Integer> tpId);
+
+    @Query("SELECT * FROM showcase WHERE client_id = :clientId AND addr_id = :addrId")
     List<ShowcaseSDB> getByDoc(String clientId, int addrId);
 
     @Query("SELECT * FROM showcase WHERE client_id = :clientId AND addr_id = :addrId AND id IN (:shwAR)")

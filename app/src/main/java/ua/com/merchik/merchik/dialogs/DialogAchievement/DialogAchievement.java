@@ -109,6 +109,8 @@ public class DialogAchievement {
             spinnerTheme = dialog.findViewById(R.id.spinner_theme);
             spinnerClient = dialog.findViewById(R.id.spinner_client);
 
+
+
             putTextData();
             buttonSave();
 

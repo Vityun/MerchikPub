@@ -9,6 +9,8 @@ import android.widget.AbsListView;
 import android.widget.BaseAdapter;
 import android.widget.TextView;
 
+import ua.com.merchik.merchik.R;
+
 public class SpinnerAdapter extends BaseAdapter {
 
     private Context context;
@@ -44,7 +46,8 @@ public class SpinnerAdapter extends BaseAdapter {
         View view = convertView;
 
         if (view == null) {
-            view = inflater.inflate(android.R.layout.simple_spinner_item, parent, false);
+//            view = inflater.inflate(android.R.layout.simple_spinner_item, parent, false);
+            view = inflater.inflate(R.layout.spinner_text, parent, false);
         }
 
         TextView textView = view.findViewById(android.R.id.text1);

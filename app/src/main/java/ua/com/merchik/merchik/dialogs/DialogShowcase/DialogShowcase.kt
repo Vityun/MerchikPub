@@ -249,17 +249,37 @@ class DialogShowcase(private val context: Context?) : DialogData() {
 
     private fun setRecyclerView() {
         try {
-            var showcaseDataList = RoomManager.SQL_DB.showcaseDao().getByDoc(
+            val list: MutableList<Int> = ArrayList()
+            if (photoType == 0 || photoType == 14){
+                list.add(0)
+                list.add(1)
+                list.add(2)
+            }else if (photoType == 45){
+                list.add(5)
+                list.add(8)
+            }
+
+            var showcaseDataListTest = RoomManager.SQL_DB.showcaseDao().getByDocTP(
                 wpDataDB!!.client_id, wpDataDB!!.addr_id
             )
+
+            Log.e("setRecyclerView", "showcaseDataListTest: $showcaseDataListTest")
+
+            var showcaseDataList = RoomManager.SQL_DB.showcaseDao().getByDocTP(
+                wpDataDB!!.client_id, wpDataDB!!.addr_id, list
+            )
+
+            Log.e("setRecyclerView", "showcaseDataList: $showcaseDataList")
             try {
                 for (item in showcaseDataList) {
+                    // Нахожу группу товара, если её нет
                     if (item.tovarGrp != null) {
                         val group = GroupTypeRealm.getGroupTypeById(item.tovarGrp)
                         if (group != null && group.nm != null) {
                             item.tovarGrpTxt = group.nm
                         }
                     }
+
                     val stackPhotoDBS =
                         StackPhotoRealm.getShowcase(item.id, wpDataDB!!.code_dad2, photoType)
                     if (stackPhotoDBS != null && stackPhotoDBS.size > 0) {

@@ -953,14 +953,16 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
             switch (option.getOptionId()) {
                 case "135158":  // - 4  - Фото остатков товаров
                     ss.append(createLinkedStringGal(mContext, "Завантажити фото з галереї", photoType, () -> {
-//                        click.click();
+                        if (option.getOptionControlId().equals("159707")){
+                            OptionMassageType newOptionType = new OptionMassageType();
+                            newOptionType.type = DIALOG;
 
-                        OptionMassageType newOptionType = new OptionMassageType();
-                        newOptionType.type = DIALOG;
-
-                        OptionControlAvailabilityControlPhotoRemainingGoods<?> optionControlAvailabilityControlPhotoRemainingGoods =
-                                new OptionControlAvailabilityControlPhotoRemainingGoods<>(context, (WpDataDB) dataDB, option, newOptionType, Options.NNKMode.CHECK, null);
-                        optionControlAvailabilityControlPhotoRemainingGoods.showOptionMassage("");
+                            OptionControlAvailabilityControlPhotoRemainingGoods<?> optionControlAvailabilityControlPhotoRemainingGoods =
+                                    new OptionControlAvailabilityControlPhotoRemainingGoods<>(context, (WpDataDB) dataDB, option, newOptionType, Options.NNKMode.CHECK, null);
+                            optionControlAvailabilityControlPhotoRemainingGoods.showOptionMassage("");
+                        }else {
+                            click.click();
+                        }
                     }));
 
                     ss.append("\n\n");

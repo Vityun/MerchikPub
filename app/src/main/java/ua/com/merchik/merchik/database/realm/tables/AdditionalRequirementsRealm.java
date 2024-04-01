@@ -312,6 +312,7 @@ public class AdditionalRequirementsRealm {
         List<AdditionalRequirementsDB> res = INSTANCE.where(AdditionalRequirementsDB.class)
                 .equalTo("clientId", clientId)
                 .findAll();
+        if (res != null) res = INSTANCE.copyFromRealm(res);
         return res;
     }
 

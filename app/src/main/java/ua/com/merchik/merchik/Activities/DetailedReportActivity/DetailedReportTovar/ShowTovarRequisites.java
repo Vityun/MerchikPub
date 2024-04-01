@@ -232,8 +232,10 @@ public class ShowTovarRequisites {
      * списка dialogList.
      */
     private void dialogShowRule(boolean clickType) {
+        ReportPrepareDB report = dialogList.get(0).reportPrepareDB;
         dialogList.remove(0);
         if (dialogList.size() > 0) {
+            dialogList.get(0).reportPrepareDB = report;
             int face = 0;
             if (dialogList.get(0).reportPrepareDB.face != null && !dialogList.get(0).reportPrepareDB.face.equals(""))
                 face = Integer.parseInt(dialogList.get(0).reportPrepareDB.face);

@@ -93,6 +93,7 @@ import ua.com.merchik.merchik.data.RetrofitResponse.ReportHint;
 import ua.com.merchik.merchik.data.RetrofitResponse.ReportHintList;
 import ua.com.merchik.merchik.data.TovarOptions;
 import ua.com.merchik.merchik.database.realm.RealmManager;
+import ua.com.merchik.merchik.database.realm.tables.OptionsRealm;
 import ua.com.merchik.merchik.database.realm.tables.PromoRealm;
 import ua.com.merchik.merchik.database.realm.tables.ReportPrepareRealm;
 import ua.com.merchik.merchik.database.realm.tables.TradeMarkRealm;
@@ -732,10 +733,10 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                                             if (tovOptTplList.get(i).getOptionControlName().equals(AKCIYA_ID) && finalDeletePromoOption) {
                                                 // втыкаю
                                                 Log.e("dialogShowRule", "1");
-                                                showDialog(list, tovOptTplList.get(i), finalReportPrepareTovar, tovarId, String.valueOf(codeDad2), clientId, finalBalanceData1, finalBalanceDate1, true);
+                                                showDialog(list, tovOptTplList.get(i), finalReportPrepareTovar, tovarId, String.valueOf(codeDad2), clientId, finalBalanceData1, finalBalanceDate1, true, true);
                                             } else {
                                                 Log.e("dialogShowRule", "2");
-                                                showDialog(list, tovOptTplList.get(i), finalReportPrepareTovar, tovarId, String.valueOf(codeDad2), clientId, finalBalanceData1, finalBalanceDate1, true);
+                                                showDialog(list, tovOptTplList.get(i), finalReportPrepareTovar, tovarId, String.valueOf(codeDad2), clientId, finalBalanceData1, finalBalanceDate1, true, true);
                                             }
                                         }
                                     }
@@ -805,7 +806,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                                     if (tovOptTplList.get(i).getOptionControlName() != AKCIYA) {
                                         Log.e("dialogShowRule", "3");
                                         Log.e("dialogShowRule", "tovOptTplList: " + new Gson().toJson(tovOptTplList));
-                                        showDialog(list, tovOptTplList.get(i), finalReportPrepareTovar, tovarId, String.valueOf(codeDad2), clientId, finalBalanceData1, finalBalanceDate1, false);
+                                        showDialog(list, tovOptTplList.get(i), finalReportPrepareTovar, tovarId, String.valueOf(codeDad2), clientId, finalBalanceData1, finalBalanceDate1, false, true);
                                     }
                                 }
                                 Collections.reverse(dialogList);
@@ -832,7 +833,9 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                                 for (TovarOptions tpl : tovOptTplList) {
                                     if (tpl.getOptionControlName() != AKCIYA) {
                                         Log.e("dialogShowRule", "4");
-                                        showDialog(list, tpl, rp, tovarId, String.valueOf(codeDad2), clientId, "", "", false);
+                                        // Для новых Товаров делаю так что б реквизиты работали в клик - тру
+//                                        showDialog(list, tpl, rp, tovarId, String.valueOf(codeDad2), clientId, "", "", false);
+                                        showDialog(list, tpl, rp, tovarId, String.valueOf(codeDad2), clientId, "", "", true, true);
                                     }
                                 }
                                 Collections.reverse(dialogList);
@@ -1083,11 +1086,16 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
          * boolean clickType - добавлено для того что б различать долгий/короткий клик
          * true - короткий
          * false - длинный
+         *
+         * @param pos true - простой add
+         *            false - добавляем на 0 позицию
          */
 //        @RequiresApi(api = Build.VERSION_CODES.N)
-        private void showDialog(TovarDB list, TovarOptions tpl, ReportPrepareDB reportPrepareDB, String tovarId, String cd2, String clientId, String finalBalanceData1, String finalBalanceDate1, boolean clickType) {
+        private void showDialog(TovarDB list, TovarOptions tpl, ReportPrepareDB reportPrepareDB, String tovarId, String cd2, String clientId, String finalBalanceData1, String finalBalanceDate1, boolean clickType, boolean pos) {
             try {
                 final int adapterPosition = getAdapterPosition();
+
+                Log.e("showDialog", "TovarOptions tpl: " + tpl);
 
                 DialogData dialog = new DialogData(mContext);
                 dialog.setTitle("");
@@ -1155,7 +1163,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                         if (dialog.getOperationResult() != null) {
                             operetionSaveRPToDB(tpl, reportPrepareDB, dialog.getOperationResult(), dialog.getOperationResult2(), null);
                             refreshElement(cd2, list.getiD());
-                            dialogShowRule(/*list, tpl, reportPrepareDB, tovarId, cd2, clientId, finalBalanceData1, finalBalanceDate1, */clickType);
+                            dialogShowRule(list, tpl, reportPrepareDB, tovarId, cd2, clientId, finalBalanceData1, finalBalanceDate1, clickType);
                         }
 
                         notifyItemChanged(adapterPosition);
@@ -1166,7 +1174,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                             operetionSaveRPToDB(tpl, reportPrepareDB, dialog.getOperationResult(), dialog.getOperationResult2(), null);
                             Toast.makeText(mContext, "Внесено: " + dialog.getOperationResult(), Toast.LENGTH_LONG).show();
                             refreshElement(cd2, list.getiD());
-                            dialogShowRule(clickType);
+                            dialogShowRule(list, tpl, reportPrepareDB, tovarId, cd2, clientId, finalBalanceData1, finalBalanceDate1, clickType);
                         } else {
                             Toast.makeText(dialog.context, "Внесите корректно данные", Toast.LENGTH_LONG).show();
                         }
@@ -1177,7 +1185,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
 
                 dialog.setCancel("Пропустить", () -> closeDialogRule(dialog, () -> {
                     dialog.dismiss();
-                    dialogShowRule(clickType);
+                    dialogShowRule(list, tpl, reportPrepareDB, tovarId, cd2, clientId, finalBalanceData1, finalBalanceDate1, clickType);
                 }));
 
                 if (!tpl.getOptionControlName().equals(AKCIYA_ID) && !tpl.getOptionControlName().equals(AKCIYA)) {
@@ -1198,7 +1206,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                                                 refreshElement(cd2, list.getiD());
                                                 notifyItemChanged(adapterPosition);
                                                 dialog.dismiss();
-                                                dialogShowRule(clickType);
+                                                dialogShowRule(list, tpl, reportPrepareDB, tovarId, cd2, clientId, finalBalanceData1, finalBalanceDate1, clickType);
                                             }), setLayout());
                                         }
                                     }
@@ -1214,7 +1222,12 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                     });
                 }
 
+//                if (pos){
                 dialogList.add(dialog);
+//                }else {
+//                    dialogList.add(0, dialog);
+//                }
+
 
             } catch (Exception e) {
                 Log.d("test", "test" + e);
@@ -1226,13 +1239,21 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
          * Специальное правило по которому отображаю последовательно модальные окошки из
          * списка dialogList.
          */
-        private void dialogShowRule(/*TovarDB list, TovarOptions tpl, ReportPrepareDB reportPrepareDB, String tovarId, String cd2, String clientId, String finalBalanceData1, String finalBalanceDate1, */boolean clickType) {
+        private void dialogShowRule(TovarDB list, TovarOptions tpl, ReportPrepareDB reportPrepareDB, String tovarId, String cd2, String clientId, String finalBalanceData1, String finalBalanceDate1, boolean clickType) {
             Log.e("dialogShowRule", "clickType: " + clickType);
+            ReportPrepareDB report = dialogList.get(0).reportPrepareDB;
             dialogList.remove(0);
+
+            boolean option165276 = false;
+            OptionsDB option = OptionsRealm.getOption(String.valueOf(wpDataDB.getCode_dad2()), "165276");
+            if (option != null) option165276 = true;
+
             if (dialogList.size() > 0) {
+                dialogList.get(0).reportPrepareDB = report;
                 int face = 0;
                 if (dialogList.get(0).reportPrepareDB.face != null && !dialogList.get(0).reportPrepareDB.face.equals(""))
                     face = Integer.parseInt(dialogList.get(0).reportPrepareDB.face);
+
                 if (clickType &&
                         dialogList.get(0).tovarOptions.getOptionControlName().equals(ERROR_ID) &&
                         (dialogList.get(0).tovarOptions.getOptionId().contains(157242) ||
@@ -1252,7 +1273,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                     if (dialogList.size() > 0) {
                         dialogList.get(0).show();
                     }
-                } else if (clickType &&
+                } /*else if (clickType &&
                         dialogList.get(0).tovarOptions.getOptionControlName().equals(PHOTO) &&
 //                        dialogList.get(0).tovarOptions.getOptionId().contains(159707) &&
                         face != 0
@@ -1261,7 +1282,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                     if (dialogList.size() > 0) {
                         dialogList.get(0).show();
                     }
-                } else if (clickType && (
+                }*/ else if (clickType && (
                         dialogList.get(0).tovarOptions.getOptionControlName().equals(AKCIYA_ID) ||
                                 dialogList.get(0).tovarOptions.getOptionControlName().equals(AKCIYA)
                 )
@@ -1288,32 +1309,99 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                     }
 
 
-                }/* else if (clickType
+                } else if (clickType
+                        && option165276
                         && face > 0
-                        && dialogList.get(0).tovarOptions.getOptionId().contains(165276)
+                        && !tpl.getOptionShort().equals("Ш")
                 ) {
-                    if ((dialogList.get(0).reportPrepareDB.dtExpire != null && !dialogList.get(0).reportPrepareDB.dtExpire.equals("") && !dialogList.get(0).reportPrepareDB.dtExpire.equals("0000-00-00"))
-                            && dialogList.get(0).reportPrepareDB.expireLeft != null && dialogList.get(0).reportPrepareDB.expireLeft.equals("0")) {
-
-                        OptionsDB optionsDB = OptionsRealm.getOption(String.valueOf(wpDataDB.getCode_dad2()), "165275");
-                        if (optionsDB != null && optionsDB.getAmountMax() != null && !optionsDB.getAmountMax().equals("")){
+                    OptionsDB optionsDB = OptionsRealm.getOption(String.valueOf(wpDataDB.getCode_dad2()), "165276");
+                    if ((dialogList.get(0).reportPrepareDB.dtExpire != null
+                            && !dialogList.get(0).reportPrepareDB.dtExpire.equals("")
+                            && !dialogList.get(0).reportPrepareDB.dtExpire.equals("0000-00-00"))
+                            && optionsDB != null
+                    ) {
+                        if (optionsDB.getAmountMax() != null && !optionsDB.getAmountMax().equals("")) {
                             int max = Integer.parseInt(optionsDB.getAmountMax());
                             int colMax = max == 0 ? 30 : max;
 
                             long dat = wpDataDB.getDt().getTime() / 1000;
                             long colMaxLong = colMax * 86400L;
-                            long datRes = dat + colMaxLong;
-                            long test = 0;
-                            if (dialogList.get(0).reportPrepareDB.dtExpire != null && !dialogList.get(0).reportPrepareDB.dtExpire.equals("") && !dialogList.get(0).reportPrepareDB.dtExpire.equals("0000-00-00")){
-                                test = Clock.dateConvertToLong(dialogList.get(0).reportPrepareDB.dtExpire)/1000;
+                            long optionControlDate = dat + colMaxLong;
+                            long reportDate = 0;
+                            if (dialogList.get(0).reportPrepareDB.dtExpire != null && !dialogList.get(0).reportPrepareDB.dtExpire.equals("") && !dialogList.get(0).reportPrepareDB.dtExpire.equals("0000-00-00")) {
+                                reportDate = Clock.dateConvertToLong(dialogList.get(0).reportPrepareDB.dtExpire) / 1000;
                             }
 
-                            if (test <= datRes){
-                                showDialog(list, new TovarOptions(), finalReportPrepareTovar, tovarId, String.valueOf(codeDad2), clientId, finalBalanceData1, finalBalanceDate1, true);
+                            // Если ДАТА плохая:
+                            if (reportDate <= optionControlDate) {
+                                // Мы смотрим на ВОЗВРАТ и ЕСЛИ он 0 - Выводим ОШИБКУ
+                                if (dialogList.get(0).reportPrepareDB.expireLeft != null
+                                        && (dialogList.get(0).reportPrepareDB.expireLeft.equals("0") || dialogList.get(0).reportPrepareDB.expireLeft.equals(""))) {
+
+                                    boolean existError = false;
+                                    try {
+                                        for (DialogData item : dialogList) {
+                                            if (item.tovarOptions.getOptionShort().equals("Ш")) {
+                                                existError = true;
+                                            }
+                                        }
+                                    } catch (Exception e) {
+                                        Log.e("dialogShowRule", "Exception e: " + e);
+                                    }
+
+                                    if (!existError && tpl.getOptionShort().equals("В")) {
+                                        TovarOptions to = new TovarOptions(ERROR_ID, "Ш", "Ошибка товара", "error_id", "main", 135592, 157242);
+                                        showDialog(list, to, reportPrepareDB, tovarId, String.valueOf(codeDad2), clientId, finalBalanceData1, finalBalanceDate1, true, false);
+                                        if (dialogList.size() > 0 /*&& dialogList.get(0).tovarOptions.getOptionShort().equals("P")*/) {
+                                            Collections.swap(dialogList, 0, 1);
+                                            dialogList.get(0).show();
+                                        }
+                                    } else {
+                                        if (dialogList.size() > 0) {
+                                            dialogList.get(0).show();
+                                        }
+                                    }
+
+                                    // Отображаем то что у нас дальше
+                                } else {
+                                    if (dialogList.size() > 0) {
+                                        dialogList.get(0).show();
+                                    }
+                                }
+                                // Если ДАТА Хорошая
+                            } else {
+
+                                if (tpl.getOptionShort().equals("Д")){  // Если текущее окно - ДАТА
+                                    // Удаляем Возврат
+                                    try {
+                                        for (DialogData item : dialogList) {
+                                            if (item.tovarOptions.getOptionShort().equals("В")) {
+                                                dialogList.remove(item);
+                                            }
+                                        }
+                                    } catch (Exception e) {
+                                        Log.e("dialogShowRule", "Exception e: " + e);
+                                    }
+                                }
+
+
+                                // Тут мы не должны указывать ВОЗВРАТ
+                                dialogList.get(0).show();
                             }
                         }
+                    } else {
+                        dialogList.get(0).show();
                     }
-                }*/ else {
+                } else if (clickType &&
+                        dialogList.get(0).tovarOptions.getOptionControlName().equals(PHOTO) &&
+//                        dialogList.get(0).tovarOptions.getOptionId().contains(159707) &&
+                        face != 0
+                ) {
+                    dialogList.remove(0);
+                    if (dialogList.size() > 0) {
+                        dialogList.get(0).show();
+                    }
+                } else {
                     dialogList.get(0).show();
                 }
             }
