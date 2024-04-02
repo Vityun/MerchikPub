@@ -258,18 +258,16 @@ public class AdditionalRequirementsAdapter extends RecyclerView.Adapter<Addition
             try {
                 String text2 = String.format("%s", data.getNotes());
                 bText.append(text2);
-
-
             } catch (Exception e) {
             }
 
             /*Добавляю Товары*/
-            try {
-                bText.append("\n").append("<b>Товар: </b>");
-                bText.append(createTovarText(tovarDB, tradeMarkDB));
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+//            try {
+//                bText.append("\n").append("<b>Товар: </b>");
+//                bText.append(createTovarText(tovarDB, tradeMarkDB));
+//            } catch (Exception e) {
+//                e.printStackTrace();
+//            }
 
             CharSequence endbText = Html.fromHtml(bText.toString());
 
