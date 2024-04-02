@@ -87,7 +87,9 @@ public class OptionButtAchievements<T> extends OptionControl {
         dialog.setRecyclerFilterSearch();
         dialog.setClose(dialog::dismiss);
         dialog.setOkRv("Створення досягнення (додаток)", () -> {
-            DialogAchievement dialogAchievement = new DialogAchievement(context, wpDataDB);
+//            DialogAchievement dialogAchievement = new DialogAchievement(context, wpDataDB);
+            DialogAchievement dialogAchievement = new DialogAchievement(context);
+            dialogAchievement.setData(wpDataDB);
             dialogAchievement.setClose(dialogAchievement::dismiss);
             dialogAchievement.setOption(optionDB);
             dialogAchievement.setTitle("Створення нового Досягнення");

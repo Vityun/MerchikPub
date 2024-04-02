@@ -36,6 +36,8 @@ import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.Utils.Spinner.SpinnerAdapter;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.Database.Room.AchievementsSDB;
+import ua.com.merchik.merchik.data.Database.Room.CustomerSDB;
+import ua.com.merchik.merchik.data.Database.Room.UsersSDB;
 import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteHintsDB;
 import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteObjects.SiteObjectsDB;
 import ua.com.merchik.merchik.data.RealmModels.AdditionalRequirementsDB;
@@ -54,7 +56,13 @@ public class DialogAchievement {
 
     private Dialog dialog;
     private Context context;
-    private WpDataDB wpDataDB;
+//    private WpDataDB wpDataDB;
+
+    private int addressId, userId;
+    private long codeDad2;
+    private String clientId, clientTxt, addressTxt, userTxt;
+
+
     private StackPhotoDB stackPhotoDBTo, stackPhotoDBAfter;
 
     private ImageButton close, help, videoHelp, call, addSotr;
@@ -72,9 +80,9 @@ public class DialogAchievement {
     private Integer spinnerThemeResult, spinnerClientResult;
     private OptionsDB optionDB;
 
-    public DialogAchievement(Context context, WpDataDB wpDataDB) {
+    public DialogAchievement(Context context/*, WpDataDB wpDataDB*/) {
         this.context = context;
-        this.wpDataDB = wpDataDB;
+        /*this.wpDataDB = wpDataDB;*/
         try {
             dialog = new Dialog(context);
             dialog.setCancelable(false);
@@ -108,12 +116,6 @@ public class DialogAchievement {
 
             spinnerTheme = dialog.findViewById(R.id.spinner_theme);
             spinnerClient = dialog.findViewById(R.id.spinner_client);
-
-
-
-            putTextData();
-            buttonSave();
-
         } catch (Exception e) {
             Globals.writeToMLOG("ERROR", "DialogAchievement", "Exception e: " + e);
         }
@@ -126,19 +128,19 @@ public class DialogAchievement {
                 achievementsSDB.serverId = 0;
                 achievementsSDB.dt = String.valueOf((System.currentTimeMillis() / 1000));
                 achievementsSDB.dt_ut = (System.currentTimeMillis() / 1000);
-                achievementsSDB.addrId = wpDataDB.getAddr_id();
-                achievementsSDB.adresaNm = wpDataDB.getAddr_txt();
+                achievementsSDB.addrId = addressId;
+                achievementsSDB.adresaNm = addressTxt;
                 achievementsSDB.dvi = 1;
                 achievementsSDB.error = 0;
                 achievementsSDB.currentVisit = 0;
                 achievementsSDB.score = "0";
-                achievementsSDB.clientId = wpDataDB.getClient_id();
-                achievementsSDB.spiskliNm = wpDataDB.getClient_txt();
-                achievementsSDB.codeDad2 = wpDataDB.getCode_dad2();
-                achievementsSDB.sotrFio = wpDataDB.getUser_txt();
+                achievementsSDB.clientId = clientId;
+                achievementsSDB.spiskliNm = clientTxt;
+                achievementsSDB.codeDad2 = codeDad2;
+                achievementsSDB.sotrFio = userTxt;
                 if (comment != null && comment.getText() != null && comment.getText().toString().length() > 10) {
                     achievementsSDB.commentDt = String.valueOf((System.currentTimeMillis() / 1000));
-                    achievementsSDB.commentUser = String.valueOf(wpDataDB.getUser_id());
+                    achievementsSDB.commentUser = String.valueOf(userId);
                     achievementsSDB.commentTxt = comment.getText().toString();
                 }else {
                     Toast.makeText(v.getContext(), "Ви не вказали коментар до досягнення, досягнення створено не буде", Toast.LENGTH_LONG).show();
@@ -344,9 +346,9 @@ public class DialogAchievement {
     }
 
     public void putTextData() {
-        client.setText(Html.fromHtml("<b>Кліент: </b> " + wpDataDB.getClient_txt() + ""));
-        address.setText(Html.fromHtml("<b>Адреса: </b> " + wpDataDB.getAddr_txt() + ""));
-        visit.setText(Html.fromHtml("<b>Відвідування: </b> " + wpDataDB.getCode_dad2() + ""));
+        client.setText(Html.fromHtml("<b>Кліент: </b> " + clientTxt + ""));
+        address.setText(Html.fromHtml("<b>Адреса: </b> " + addressTxt + ""));
+        visit.setText(Html.fromHtml("<b>Відвідування: </b> " + codeDad2 + ""));
         theme.setText(Html.fromHtml("<b>Тема: </b> "));
 
         createSpinnerTheme();
@@ -356,6 +358,25 @@ public class DialogAchievement {
         offerFromClient.setText(Html.fromHtml("<b>Пропозиція від клієнта: </b> " + "" + ""));
     }
 
+    /**
+     * Это для установки фото ДО. Для создания одного достижения на основании другого.
+     * */
+    public void setPhotoDo(StackPhotoDB stackPhotoDB){
+        stackPhotoDBTo = stackPhotoDB;
+        photoToIV.setVisibility(View.VISIBLE);
+        photoToIV.setImageURI(Uri.parse(stackPhotoDB.photo_num));
+        photoToIV.setOnClickListener(v1 -> {
+            try {
+                DialogFullPhotoR dialogFullPhoto = new DialogFullPhotoR(v1.getContext());
+                dialogFullPhoto.setPhoto(Uri.parse(stackPhotoDB.photo_num));
+                dialogFullPhoto.setClose(dialogFullPhoto::dismiss);
+                dialogFullPhoto.show();
+            } catch (Exception e) {
+                Globals.writeToMLOG("ERROR", "DialogAchievement/buttonPhotoTo", "Exception e: " + e);
+            }
+        });
+    }
+
     public void buttonPhotoTo() {
         photoTo.setVisibility(View.VISIBLE);
         photoTo.setOnClickListener(v -> {
@@ -363,7 +384,7 @@ public class DialogAchievement {
                 Intent intentPhotoLog = new Intent(v.getContext(), PhotoLogActivity.class);
                 intentPhotoLog.putExtra("achievements", true);
                 intentPhotoLog.putExtra("choise", true);
-                intentPhotoLog.putExtra("dad2", wpDataDB.getCode_dad2());
+                intentPhotoLog.putExtra("dad2", codeDad2);
                 intentPhotoLog.putExtra("photoType", 14);
                 v.getContext().startActivity(intentPhotoLog);
 
@@ -401,7 +422,7 @@ public class DialogAchievement {
                 Intent intentPhotoLog = new Intent(v.getContext(), PhotoLogActivity.class);
                 intentPhotoLog.putExtra("achievements", true);
                 intentPhotoLog.putExtra("choise", true);
-                intentPhotoLog.putExtra("dad2", wpDataDB.getCode_dad2());
+                intentPhotoLog.putExtra("dad2", codeDad2);
                 intentPhotoLog.putExtra("photoType", 0);
                 v.getContext().startActivity(intentPhotoLog);
 
@@ -464,7 +485,7 @@ public class DialogAchievement {
     }
 
     public void createSpinnerClient(){
-        List<AdditionalRequirementsDB> additionalRequirementsDBList = AdditionalRequirementsRealm.getADByClientAll(wpDataDB.getClient_id());
+        List<AdditionalRequirementsDB> additionalRequirementsDBList = AdditionalRequirementsRealm.getADByClientAll(clientId);
 
         if (additionalRequirementsDBList == null) return;
 
@@ -514,4 +535,32 @@ public class DialogAchievement {
         });
     }
 
+    public void setData(WpDataDB wpDataDB) {
+        userId = wpDataDB.getUser_id();
+        userTxt = wpDataDB.getUser_txt();
+        addressId = wpDataDB.getAddr_id();
+        addressTxt = wpDataDB.getAction_txt();
+        clientId = wpDataDB.getClient_id();
+        clientTxt = wpDataDB.getClient_txt();
+        codeDad2 = wpDataDB.getCode_dad2();
+
+        putTextData();
+        buttonSave();
+    }
+
+    public void setData(AchievementsSDB data) {
+        CustomerSDB customerSDB = SQL_DB.customerDao().getById(data.clientId);
+        UsersSDB usersSDB = SQL_DB.usersDao().getById(data.userId);
+
+        userId = data.userId;
+        userTxt = usersSDB.fio;
+        addressId = data.addrId;
+        addressTxt = data.adresaNm;
+        clientId = data.clientId;
+        clientTxt = customerSDB.nm;
+        codeDad2 = data.codeDad2;
+
+        putTextData();
+        buttonSave();
+    }
 }

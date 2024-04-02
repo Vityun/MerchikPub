@@ -107,9 +107,11 @@ public class StackPhotoRealm {
     }
 
     public static StackPhotoDB getByServerId(String id) {
-        return INSTANCE.where(StackPhotoDB.class)
+        StackPhotoDB stackPhotoDB = INSTANCE.where(StackPhotoDB.class)
                 .equalTo("photoServerId", id)
                 .findFirst();
+        if (stackPhotoDB != null) stackPhotoDB = INSTANCE.copyFromRealm(stackPhotoDB);
+        return stackPhotoDB;
     }
 
     public static StackPhotoDB getByHash(String hash) {

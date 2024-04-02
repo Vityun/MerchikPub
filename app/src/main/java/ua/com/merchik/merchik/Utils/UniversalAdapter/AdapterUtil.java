@@ -33,6 +33,7 @@ import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.io.File;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -55,6 +56,7 @@ import ua.com.merchik.merchik.data.TestJsonUpload.StandartData;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.AppUserRealm;
 import ua.com.merchik.merchik.database.realm.tables.StackPhotoRealm;
+import ua.com.merchik.merchik.dialogs.DialogAchievement.DialogAchievement;
 import ua.com.merchik.merchik.dialogs.DialogData;
 
 public class AdapterUtil extends RecyclerView.Adapter<RecyclerView.ViewHolder> implements Filterable {
@@ -441,6 +443,9 @@ public class AdapterUtil extends RecyclerView.Adapter<RecyclerView.ViewHolder> i
             });
         }
 
+
+        StackPhotoDB stackPhotoBefore;
+        StackPhotoDB stackPhotoAfter;
         private void bindACHIEVEMENTS(AchievementsSDB data) {
             try {
                 title1.setText("ID:");
@@ -462,36 +467,29 @@ public class AdapterUtil extends RecyclerView.Adapter<RecyclerView.ViewHolder> i
                 text4.setText("" + data.sotrFio);
                 text5.setText("" + data.commentTxt);
 
-                try {
-                    StackPhotoDB stackPhotoBefore = StackPhotoRealm.getByHash(data.img_before_hash);
 
+
+                try {
+                    stackPhotoBefore = StackPhotoRealm.getByHash(data.img_before_hash);
                     if (stackPhotoBefore == null){
                         stackPhotoBefore = StackPhotoRealm.getByServerId(String.valueOf(data.imgBeforeId));
                     }
 
-                    StackPhotoDB stackPhotoAfter = StackPhotoRealm.getByHash(data.img_after_hash);
-
+                    stackPhotoAfter = StackPhotoRealm.getByHash(data.img_after_hash);
                     if (stackPhotoAfter == null){
                         stackPhotoAfter = StackPhotoRealm.getByServerId(String.valueOf(data.imgAfterId));
                     }
-
-
-
-//                    Uri beforeUri = Uri.parse(stackPhotoBefore.photo_num);
-//                    image.setImageURI(beforeUri);
 
                     File file = new File(stackPhotoBefore.getPhoto_num());
                     Bitmap b = decodeSampledBitmapFromResource(file, 200, 200);
                     image.setImageBitmap(b);
 
-//                    Uri afterUri = Uri.parse(stackPhotoAfter.photo_num);
-//                    image2.setImageURI(afterUri);
-
                     File file2 = new File(stackPhotoAfter.getPhoto_num());
                     Bitmap b2 = decodeSampledBitmapFromResource(file2, 200, 200);
                     image2.setImageBitmap(b2);
                 } catch (Exception e) {
-                    Globals.writeToMLOG("ERROR", "bindACHIEVEMENTS", "Exception e: " + e);
+                    Globals.writeToMLOG("ERROR", "bindACHIEVEMENTS/photo", "Exception e: " + e);
+                    Globals.writeToMLOG("ERROR", "bindACHIEVEMENTS/photo", "Exception es: " + Arrays.toString(e.getStackTrace()));
                 }
 
 
@@ -500,6 +498,20 @@ public class AdapterUtil extends RecyclerView.Adapter<RecyclerView.ViewHolder> i
                     dialog.setTitle("Коментар");
                     dialog.setText(data.commentTxt);
                     dialog.setClose(dialog::dismiss);
+                    dialog.setOk("Створити ДІНДОС", ()->{
+                        try {
+                            DialogAchievement dialogAchievement = new DialogAchievement(v.getContext());
+                            dialogAchievement.setData(data);
+                            dialogAchievement.setClose(dialogAchievement::dismiss);
+                            dialogAchievement.setTitle("Створення Досягнення на основі створеного");
+                            dialogAchievement.setPhotoDo(stackPhotoAfter);
+                            dialogAchievement.buttonPhotoAfter();
+                            dialogAchievement.show();
+                        }catch (Exception e){
+                            Globals.writeToMLOG("ERROR", "bindACHIEVEMENTS/create", "Exception e: " + e);
+                            Globals.writeToMLOG("ERROR", "bindACHIEVEMENTS/create", "Exception es: " + Arrays.toString(e.getStackTrace()));
+                        }
+                    });
                     dialog.show();
                 });
             }catch (Exception e){
