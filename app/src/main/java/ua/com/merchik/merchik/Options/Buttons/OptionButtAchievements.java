@@ -97,7 +97,7 @@ public class OptionButtAchievements<T> extends OptionControl {
             dialogAchievement.buttonPhotoAfter();
             dialogAchievement.show();
         });
-        dialog.setCancel2("Створення досягнення (МВС)", this::openAchievementMVS);
+//        dialog.setCancel2("Створення досягнення (МВС)", this::openAchievementMVS);
         dialog.show();
     }
 
