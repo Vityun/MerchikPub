@@ -4,6 +4,7 @@ import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -62,7 +63,14 @@ public class LogMPAdapter extends RecyclerView.Adapter<LogMPAdapter.ViewHolder> 
         public void bind(LogMPDB logMPDB) {
             try {
                 textView.setText(coordinateText(logMPDB));
-                textView.setPadding(16, 0, 0, 0);
+//                textView.setPadding(16, 0, 0, 0);
+
+/*
+                LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+                params.setMargins(0,20,0,0);
+                textView.setLayoutParams(params);
+*/
+
                 layout.setBackgroundResource(R.drawable.border_map);
                 layout.setOnClickListener((v)->{
                     // Вывод диалога с МП

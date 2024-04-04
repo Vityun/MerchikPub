@@ -44,8 +44,10 @@ import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.AddressRealm;
 import ua.com.merchik.merchik.database.realm.tables.CustomerRealm;
 import ua.com.merchik.merchik.database.realm.tables.ImagesTypeListRealm;
+import ua.com.merchik.merchik.database.realm.tables.StackPhotoRealm;
 import ua.com.merchik.merchik.database.realm.tables.UsersRealm;
 import ua.com.merchik.merchik.dialogs.DialogFullPhoto;
+import ua.com.merchik.merchik.dialogs.DialogFullPhotoR;
 
 /**
  * Начальный Список Журнала фото.
@@ -293,6 +295,7 @@ public class PhotoLogAdapter extends RecyclerView.Adapter<PhotoLogAdapter.ViewHo
 
                 if (photoLogMode.equals(PhotoLogMode.SAMPLE_PHOTO) && openDefaultStarDialog) {
                     if (getBindingAdapterPosition() == 0){
+//                        Toast.makeText(mContext, "2222222222222222222222222222", Toast.LENGTH_SHORT).show();
                         openDialog(photoLogMode, photoLogDat, mOnPhotoClickListener);
                         openDefaultStarDialog = false;
                     }
@@ -300,6 +303,7 @@ public class PhotoLogAdapter extends RecyclerView.Adapter<PhotoLogAdapter.ViewHo
 
                 // 13/08/2020 Выгрузка фоток из Журнала фото
                 imageView.setOnClickListener(v -> {
+//                    Toast.makeText(mContext, "11111111111111111111111111111111111", Toast.LENGTH_SHORT).show();
                     openDialog(photoLogMode, photoLogDat, mOnPhotoClickListener);
                 });
 
@@ -364,50 +368,77 @@ public class PhotoLogAdapter extends RecyclerView.Adapter<PhotoLogAdapter.ViewHo
         }
 
         public void openDialog(PhotoLogMode photoLogMode, StackPhotoDB photoLogDat, PhotoLogPhotoAdapter.OnPhotoClickListener mOnPhotoClickListener) {
-            try {
-                Log.e("setPhotos", "2position: " + getAdapterPosition());
-                Log.e("setPhotos", "2photoLogData: " + photoLogData.get(getAdapterPosition()).getId());
 
-                DialogFullPhoto dialog = new DialogFullPhoto(mContext);
-                Collections.reverse(photoLogData);
-                dialog.setPhotos(getAdapterPosition(), photoLogData, mOnPhotoClickListener, dialog::dismiss);
+            if (photoLogMode.equals(PhotoLogMode.SAMPLE_PHOTO)) {
+                String sphotoID=photoLogDat.photoServerId;
+                StackPhotoDB photo = StackPhotoRealm.stackPhotoDBGetPhotoBySiteId(String.valueOf(sphotoID));
+                DialogFullPhotoR dialog = new DialogFullPhotoR(mContext);
+                dialog.setPhoto(photoLogDat);
+                dialog.commentOn=true;
+                // Pika сделал универсальнее - если в поле "about" есть текст к образцу фото - то вывожу его,
+                // а если нет, то пробую взять из комментов для самих фото по этому фото
 
-                dialog.setTextInfo(photoData(photoLogDat));
-                dialog.getComment(photoLogDat.getComment(), () -> {
-                    Globals.writeToMLOG("INFO", "SAVE_PHOTO_COMMENT", "photoLogDat: " + new Gson().toJson(photoLogDat));
-                    Globals.writeToMLOG("INFO", "SAVE_PHOTO_COMMENT", "photoLogDat.getComment(): " + photoLogDat.getComment());
-                    RealmManager.INSTANCE.executeTransaction(realm -> {
-                        photoLogDat.setComment(dialog.commentResult);
-                        photoLogDat.setCommentUpload(true);
-                    });
-                    RealmManager.stackPhotoSavePhoto(photoLogDat);
-                    Toast.makeText(mContext, "Комментарий сохранён", Toast.LENGTH_LONG).show();
-                });
+                // ТУТ надо получить ABOUT для образцов, задание прервано...
+                // Петров сказал сделать открытие фуллфото образцов без журнала, просто одно за другим
+                // в диалоговых окнах
+
+                String commentPhoto="";
+                if (commentPhoto != null && commentPhoto !="") {
+                    dialog.setComment(commentPhoto);
+                } else dialog.setComment(photo.getComment());
+                dialog.scaleType(ImageView.ScaleType.FIT_CENTER);
+
+                dialog.setClose(dialog::dismiss);
+                dialog.show();
+            }
+            else {
 
                 try {
-                    dialog.setTask(photoLogDat.getUser_id(), photoLogDat.getAddr_id(), photoLogDat.getClient_id(), photoLogDat.getCode_dad2(), photoLogDat);
-                } catch (Exception e) {
+                    Log.e("setPhotos", "2position: " + getAdapterPosition());
+                    Log.e("setPhotos", "2photoLogData: " + photoLogData.get(getAdapterPosition()).getId());
 
-                }
+                    DialogFullPhoto dialog = new DialogFullPhoto(mContext);
+                    Collections.reverse(photoLogData);
+                    dialog.setPhotos(getAdapterPosition(), photoLogData, mOnPhotoClickListener, dialog::dismiss);
 
-                switch (photoLogMode) {
-                    case SAMPLE_PHOTO:
-                        dialog.setClose(() -> {
-                            click.click(null);
-                            dialog.dismiss();
+                    dialog.setTextInfo(photoData(photoLogDat));
+                    dialog.getComment(photoLogDat.getComment(), () -> {
+                        Globals.writeToMLOG("INFO", "SAVE_PHOTO_COMMENT", "photoLogDat: " + new Gson().toJson(photoLogDat));
+                        Globals.writeToMLOG("INFO", "SAVE_PHOTO_COMMENT", "photoLogDat.getComment(): " + photoLogDat.getComment());
+                        RealmManager.INSTANCE.executeTransaction(realm -> {
+                            photoLogDat.setComment(dialog.commentResult);
+                            photoLogDat.setCommentUpload(true);
                         });
-                        break;
+                        RealmManager.stackPhotoSavePhoto(photoLogDat);
+                        Toast.makeText(mContext, "Комментарий сохранён", Toast.LENGTH_LONG).show();
+                    });
 
-                    default:
-                        dialog.setClose(dialog::dismiss);
-                        break;
-                }
+                    try {
+                        dialog.setTask(photoLogDat.getUser_id(), photoLogDat.getAddr_id(), photoLogDat.getClient_id(), photoLogDat.getCode_dad2(), photoLogDat);
+                    } catch (Exception e) {
+
+                    }
+
+                    switch (photoLogMode) {
+                        case SAMPLE_PHOTO:
+                            dialog.setClose(() -> {
+                                click.click(null);
+                                dialog.dismiss();
+                            });
+                            break;
+
+                        default:
+                            dialog.setClose(dialog::dismiss);
+                            break;
+                    }
 //                dialog.setClose(dialog::dismiss);
-                dialog.setRating();
-                dialog.setDvi();
-                dialog.show();
-            } catch (Exception e) {
-                Toast.makeText(mContext, "Не получилось открыть фото. Ошибка: " + e, Toast.LENGTH_LONG).show();
+                    dialog.setRating();
+                    dialog.setDvi();
+                    dialog.show();
+                } catch (Exception e) {
+                    Toast.makeText(mContext, "Не получилось открыть фото. Ошибка: " + e, Toast.LENGTH_LONG).show();
+                }
+
             }
 
         }

@@ -131,7 +131,8 @@ public class PhotoLogActivity extends toolbar_menus {
 
     // Pika вынес сюда чтоб иметь доступ потом ниже
     List<SamplePhotoSDB> samplePhotoSDBList;
-    boolean isSample=false;
+    boolean isSample = false;
+    boolean justFullPhoto = false;
 
     private void setRecycler() {
 
@@ -192,6 +193,7 @@ public class PhotoLogActivity extends toolbar_menus {
 
                 int photoTp = this.getIntent().getIntExtra("photoTp", 999);     // Если открыли Журнал фото с каким-то типом = он тут
                 int grpId = this.getIntent().getIntExtra("grpId", 999);
+                justFullPhoto = this.getIntent().getBooleanExtra("justFullPhoto",false);
 
                 Globals.writeToMLOG("INFO", "PhotoLogActivity/setRecycler/SamplePhoto", "SamplePhoto TP: " + photoTp);
 

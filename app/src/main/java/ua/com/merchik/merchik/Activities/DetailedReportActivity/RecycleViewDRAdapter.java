@@ -65,6 +65,8 @@ import ua.com.merchik.merchik.database.realm.tables.WpDataRealm;
 import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.dialogs.DialogFullPhotoR;
 
+import com.google.gson.Gson;
+
 public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRAdapter.ViewHolder> {
 
     private List<OptionsDB> butt;
@@ -947,7 +949,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
         ss.append(option.getOptionDescr());
         ss.append(additionalText);
         if (showPhotoLink) {
-            ss.append("\n\n");
+            ss.append("\n");
             switch (option.getOptionId()) {
                 case "135158":  // - 4  - Фото остатков товаров
                     ss.append(createLinkedStringGal(mContext, "Завантажити фото з галереї", photoType, () -> {
@@ -961,7 +963,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                         optionControlAvailabilityControlPhotoRemainingGoods.showOptionMassage("");
                     }));
 
-                    ss.append("\n\n");
+                    ss.append("\n");
                     break;
             }
             ss.append(createLinkedString(mContext, "Показать образец фото", photoType));
@@ -970,8 +972,8 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
 
         DialogData dialog = new DialogData(mContext);
         dialog.setTitle(buttText);
-        dialog.setText(ss, () -> {
-        });
+        dialog.setText(ss, () -> {});
+//        dialog.setTextOneClick(ss, () -> {});
         dialog.setMerchikIco(mContext);
         dialog.show();
     }
@@ -1002,6 +1004,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
             @Override
             public void onClick(View textView) {
                 try {
+
                     WpDataDB wp = (WpDataDB) dataDB;
                     AddressSDB addressSDB = SQL_DB.addressDao().getById(wp.getAddr_id());
 
@@ -1018,19 +1021,13 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                         try {
                             Globals.writeToMLOG("INFO", "Не могу найти образцы фото SOLO ", "samplePhotoSDBList: " + new Gson().toJson(samplePhotoSDBList));
                             StackPhotoDB photo = StackPhotoRealm.stackPhotoDBGetPhotoBySiteId(String.valueOf(samplePhotoSDBList.get(0).photoId));
-
-                            photo = RealmManager.INSTANCE.copyFromRealm(photo);
-
                             Globals.writeToMLOG("INFO", "Не могу найти образцы фото SOLO ", "photo: " + new Gson().toJson(photo));
-
                             DialogFullPhotoR dialog = new DialogFullPhotoR(context);
                             dialog.setPhoto(photo);
                             dialog.commentOn=true;
 
                             // Pika
-//                        dialog.setComment(photo.getComment());
-
-                            // Pika сделал универсальнее - если в поле "about" есть текст к образцу фото - то вывожу его,
+                            // сделал универсальнее - если в поле "about" есть текст к образцу фото - то вывожу его,
                             // а если нет, то пробую взять из комментов для самих фото по этому фото
                             String commentPhoto=samplePhotoSDBList.get(0).about;
                             if (commentPhoto != null && commentPhoto != "") {

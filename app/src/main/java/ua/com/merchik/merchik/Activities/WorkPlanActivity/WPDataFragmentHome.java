@@ -59,6 +59,9 @@ public class WPDataFragmentHome extends Fragment {
     private Date dateFrom;
     private Date dateTo;
 
+    public AppUsersDB appUsersDB1;
+    public AppUserRealm appUsersRealm1;
+
     public WPDataFragmentHome() {
         Log.d("test", "test");
     }
@@ -110,6 +113,7 @@ public class WPDataFragmentHome extends Fragment {
 //        workPlan = workPlan.where().between("dt", dateFrom, dateTo).sort("dt_start", Sort.ASCENDING, "addr_id", Sort.ASCENDING).findAll();
 
             UsersSDB usersSDB = SQL_DB.usersDao().getById(Globals.userId);
+
             AppUsersDB appUsersDB = AppUserRealm.getAppUserById(Globals.userId);
             if (appUsersDB.user_work_plan_status.equals("our")){
                 if (System.currentTimeMillis() / 1000 < 1668124799) {

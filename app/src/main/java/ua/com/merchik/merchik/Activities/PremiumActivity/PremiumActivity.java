@@ -386,6 +386,29 @@ public class PremiumActivity extends toolbar_menus {
         String json = gson.toJson(data);
         JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
 
+//        //
+//            retrofit2.Call<JsonObject> callTest = RetrofitBuilder.getRetrofitInterface().TEST_JSON_UPLOAD(RetrofitBuilder.contentType, convertedObject);
+//            callTest.enqueue(new Callback<JsonObject>() {
+//                @Override
+//                public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
+//                    Log.e("downloadPremium", "response: " + response);
+//
+//                    try {
+//                        Response<JsonObject> res = response;
+//                    }catch (Exception e){
+//                        Log.e("downloadPremium", "Exception e: " + e);
+//                    }
+//
+//                    JsonObject s = response.body();
+//                }
+//
+//                @Override
+//                public void onFailure(Call<JsonObject> call, Throwable t) {
+//                    Log.e("downloadPremium", "Throwable t: " + t);
+//                }
+//            });
+//        //
+
         retrofit2.Call<JsonObject> test = RetrofitBuilder.getRetrofitInterface().TEST_JSON_UPLOAD(RetrofitBuilder.contentType, convertedObject);
         test.enqueue(new Callback<JsonObject>() {
             @Override

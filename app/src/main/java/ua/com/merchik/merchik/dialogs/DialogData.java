@@ -274,6 +274,17 @@ public class DialogData {
         }
     }
 
+//    public void setText(SpannableStringBuilder text) {
+//        this.text.setVisibility(View.VISIBLE);
+//        this.text.setLinksClickable(false);
+//        this.text.setMaxLines(5);
+//        if (text != null && !text.equals("")) {
+//            this.text.setText(text);
+//        } else {
+//            this.text.setVisibility(View.GONE);
+//        }
+//    }
+
     //
     public void setText(SpannableStringBuilder text, DialogClickListener clickListener) {
         this.text.setVisibility(View.VISIBLE);
@@ -289,6 +300,23 @@ public class DialogData {
             this.text.setVisibility(View.GONE);
         }
     }
+
+    //
+//    public void setTextOneClick(SpannableStringBuilder text, DialogClickListener clickListener) {
+//        this.text.setVisibility(View.VISIBLE);
+//        this.text.setScrollbarFadingEnabled(false);
+////        this.text.setMovementMethod(ClickableMovementMethod.getInstance());// Делаю возможность скролить текст
+//        this.text.setMovementMethod(LinkMovementMethod.getInstance());// Делаю возможность скролить текст
+//        this.text.setClickable(false);
+//        this.text.setLongClickable(false);
+//
+//        if (text != null && !text.equals("")) {
+//            this.text.setText(text);
+//            this.text.setOnClickListener(v -> clickListener.clicked());
+//        } else {
+//            this.text.setVisibility(View.GONE);
+//        }
+//    }
 
 
     public void setClose(DialogClickListener clickListener) {

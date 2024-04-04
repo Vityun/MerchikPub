@@ -59,6 +59,9 @@ public class ClickableMovementMethod extends LinkMovementMethod {
                 Log.d("ClickableMovementMethod", "click inside?");
             }
 
+            Log.d("ClickableMovementMethod", "PS down: " + down);
+            Log.d("ClickableMovementMethod", "PS up: " + up);
+
             if (action == MotionEvent.ACTION_DOWN){
                 down = line;
             }else {
@@ -68,20 +71,24 @@ public class ClickableMovementMethod extends LinkMovementMethod {
 
         Log.d("ClickableMovementMethod", "down: " + down);
         Log.d("ClickableMovementMethod", "up: " + up);
-
+        Log.d("ClickableMovementMethod", "onTouchEvent 1: " + event);
 
         if (down != up && action == MotionEvent.ACTION_UP){
             Log.d("ClickableMovementMethod", "WORK/ Я не должен нажаться! Просто ничего не сделать.");
-            return true;
+// Pika Внимание! 04.04.24 убрал этот возврат, потому что аостоянно перескакивал текст вверх вместо нажатия на ссылку
+// каким-то ообразом тут генерится множество событий MOVE хотя я просто кликнул. и в конце после мувов идет АП
+// и вот этот возврат не давал сработать клику на ссылку. Подозреваю что эти МУВЫ из за быстрой реакции системы - типа "пальцы очень толстые"
+// поэтому и отключил, хотя ТЕОРЕТИЧЕСКИ было правильно - нажатие и отпускание должно бить в той же строке чтоб расценивать это как клик при событии АП
+// Но поскольку я не понимаю откуда столько МУВОВ, и они сбивают равенство АП и ДАУН, то убираю этот возврат и теперь линк отрабатывает нормально
+// У него свой обработчик клика, поэтому ему все равно, что тут линии АП и ДАУН не совпадают!!!
+//            return true;
         }else if (down == up){
             Log.d("ClickableMovementMethod", "WORK/ Я должен кликнуться.");
         }else {
             Log.d("ClickableMovementMethod", "WORK/ Я продолжаю работу, пока не кликнусь!");
         }
 
-
         if (action == MotionEvent.ACTION_CANCEL){return true;}
-
 
         Log.d("ClickableMovementMethod", "onTouchEvent: " + event);
         return super.onTouchEvent(widget, buffer, event);
