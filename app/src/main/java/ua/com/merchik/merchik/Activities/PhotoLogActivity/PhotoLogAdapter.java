@@ -1,5 +1,6 @@
 package ua.com.merchik.merchik.Activities.PhotoLogActivity;
 
+import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 import static ua.com.merchik.merchik.menu_main.decodeSampledBitmapFromResource;
 
 import android.annotation.SuppressLint;
@@ -39,6 +40,7 @@ import ua.com.merchik.merchik.Filter.MyFilter;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
+import ua.com.merchik.merchik.data.Database.Room.SamplePhotoSDB;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.AddressRealm;
@@ -64,15 +66,25 @@ public class PhotoLogAdapter extends RecyclerView.Adapter<PhotoLogAdapter.ViewHo
     private Clicks.click click;
     private PhotoLogMode photoLogMode;
 
+    // Pika
+    // добавил, чтоб получать данные по фото образцов
+    private List<SamplePhotoSDB> samplePhotoSDBList;
+
+
     private PhotoLogPhotoAdapter.OnPhotoClickListener mOnPhotoClickListener;
 
-    public PhotoLogAdapter(Context context, RealmResults<StackPhotoDB> photoLogData, boolean mod, Clicks.click click, PhotoLogPhotoAdapter.OnPhotoClickListener mOnPhotoClickListener) {
+    // Pika
+    // Добавил в конструктор 2 параметра photoTp,grpId, они нужны для получения данных по образцам фото
+    public PhotoLogAdapter(Context context, RealmResults<StackPhotoDB> photoLogData, int photoTp, int grpId, boolean mod, Clicks.click click, PhotoLogPhotoAdapter.OnPhotoClickListener mOnPhotoClickListener) {
         this.mContext = context;
         this.photoLogData = RealmManager.INSTANCE.copyFromRealm(photoLogData);
         this.photoLogDataList = RealmManager.INSTANCE.copyFromRealm(photoLogData);
         this.mod = mod;
         this.click = click;
         this.mOnPhotoClickListener = mOnPhotoClickListener;
+        // Pika
+        // добавил, чтоб получать данные по фото образцов (а конкретно - нужен комментарий именно к образцу фото, а не к самому фото)
+        this.samplePhotoSDBList = SQL_DB.samplePhotoDao().getPhotoLogActiveAndTp(1,photoTp , grpId);
     }
 
     public void updateData(RealmResults<StackPhotoDB> photoLogData) {
@@ -370,26 +382,28 @@ public class PhotoLogAdapter extends RecyclerView.Adapter<PhotoLogAdapter.ViewHo
         public void openDialog(PhotoLogMode photoLogMode, StackPhotoDB photoLogDat, PhotoLogPhotoAdapter.OnPhotoClickListener mOnPhotoClickListener) {
 
             if (photoLogMode.equals(PhotoLogMode.SAMPLE_PHOTO)) {
-                String sphotoID=photoLogDat.photoServerId;
-                StackPhotoDB photo = StackPhotoRealm.stackPhotoDBGetPhotoBySiteId(String.valueOf(sphotoID));
-                DialogFullPhotoR dialog = new DialogFullPhotoR(mContext);
-                dialog.setPhoto(photoLogDat);
-                dialog.commentOn=true;
-                // Pika сделал универсальнее - если в поле "about" есть текст к образцу фото - то вывожу его,
-                // а если нет, то пробую взять из комментов для самих фото по этому фото
 
-                // ТУТ надо получить ABOUT для образцов, задание прервано...
-                // Петров сказал сделать открытие фуллфото образцов без журнала, просто одно за другим
-                // в диалоговых окнах
-
-                String commentPhoto="";
-                if (commentPhoto != null && commentPhoto !="") {
-                    dialog.setComment(commentPhoto);
-                } else dialog.setComment(photo.getComment());
-                dialog.scaleType(ImageView.ScaleType.FIT_CENTER);
-
-                dialog.setClose(dialog::dismiss);
-                dialog.show();
+                // Pika
+                // Сделал отображение всех фото образцов одно над другим,
+                // а когда позакрываются диалоговые окна фото, будет видео журнал в котором снова можно будет их открыть кликая на фото в журнале
+                // при первом открытии покажутся все фото в окнах, потом при выборе определенного фото будет открываться только оно
+                if (samplePhotoSDBList != null) {
+                    for (SamplePhotoSDB a : samplePhotoSDBList) {
+                        StackPhotoDB photo = StackPhotoRealm.stackPhotoDBGetPhotoBySiteId(String.valueOf(a.photoId));
+                        if (openDefaultStarDialog==true || photoLogDat.photoServerId.equalsIgnoreCase(String.valueOf(a.photoId))) {
+                            DialogFullPhotoR dialog = new DialogFullPhotoR(mContext);
+                            dialog.setPhoto(photo);
+                            dialog.commentOn = true;
+                            String commentPhoto = a.about;
+                            if (commentPhoto != null && commentPhoto != "") {
+                                dialog.setComment(commentPhoto);
+                            } else dialog.setComment(photo.getComment());
+                            dialog.scaleType(ImageView.ScaleType.FIT_CENTER);
+                            dialog.setClose(dialog::dismiss);
+                            dialog.show();
+                        }
+                    }
+                }
             }
             else {
 
@@ -591,5 +605,4 @@ public class PhotoLogAdapter extends RecyclerView.Adapter<PhotoLogAdapter.ViewHo
 
 
     // ---------------------------------------------------------------------------------------------
-
 }

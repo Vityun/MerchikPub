@@ -55,6 +55,10 @@ public class PhotoLogActivity extends toolbar_menus {
     private ImageView imageView;
     private long codeDad2;
 
+    // Pika
+    private int photoTp;
+    private int grpId;
+
     //----------------------------------------------------------------------------------------------
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -194,6 +198,8 @@ public class PhotoLogActivity extends toolbar_menus {
                 int photoTp = this.getIntent().getIntExtra("photoTp", 999);     // Если открыли Журнал фото с каким-то типом = он тут
                 int grpId = this.getIntent().getIntExtra("grpId", 999);
                 justFullPhoto = this.getIntent().getBooleanExtra("justFullPhoto",false);
+                setPhotoTp(photoTp);
+                setGrpId(grpId);
 
                 Globals.writeToMLOG("INFO", "PhotoLogActivity/setRecycler/SamplePhoto", "SamplePhoto TP: " + photoTp);
 
@@ -246,7 +252,7 @@ public class PhotoLogActivity extends toolbar_menus {
 
         Integer resultCode = this.getIntent().getIntExtra("resultCode", 0);
         PhotoLogMode finalPhotoLogMode = photoLogMode;
-        recycleViewPLAdapter = new PhotoLogAdapter(this, stackPhoto, getChoice(), new Clicks.click() {
+        recycleViewPLAdapter = new PhotoLogAdapter(this, stackPhoto, photoTp, grpId, getChoice(), new Clicks.click() {
             @Override
             public <T> void click(T data) {
                 try {
@@ -480,6 +486,22 @@ public class PhotoLogActivity extends toolbar_menus {
             Globals.writeToMLOG("ERROR", "TARActivity.onActivityResult.savePhoto", "Exception e: " + e);
             return null;
         }
+    }
+
+    public void setPhotoTp(int photoTp) {
+        this.photoTp = photoTp;
+    }
+
+    public int getPhotoTp() {
+        return photoTp;
+    }
+
+    public void setGrpId(int grpId) {
+        this.grpId = grpId;
+    }
+
+    public int getGrpId() {
+        return grpId;
     }
 
 }

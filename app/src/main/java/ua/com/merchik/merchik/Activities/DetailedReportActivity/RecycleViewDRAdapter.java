@@ -1010,6 +1010,10 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
 
                     List<SamplePhotoSDB> samplePhotoSDBList = SQL_DB.samplePhotoDao().getPhotoLogActiveAndTp(1, photoType, addressSDB.tpId);
                     if (samplePhotoSDBList != null && samplePhotoSDBList.size() > 1) {
+                        // Pika
+                        // Если фоток образца несколько, то вызывается ФотоЛогАктивити, а там эти фотки отобразятся в полный экран
+                        // одна за другой, с комментариями на них, а по их закрытии останется список этих фото и их снова можно
+                        // просмотреть по отдельности, кликая на фотки в этом списке
                         Intent intent = new Intent(context, PhotoLogActivity.class);
                         intent.putExtra("SamplePhoto", true);
                         intent.putExtra("SamplePhotoActivity", false);
@@ -1017,7 +1021,8 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                         intent.putExtra("grpId", addressSDB.tpId);
                         context.startActivity(intent);
                     } else if (samplePhotoSDBList != null && samplePhotoSDBList.size() == 1) {
-                        // Тут должен отобразить фото на весь экран
+                        // Pika
+                        // Если фото образца одно, то тут должен отобразить фото на весь экран и на этом все...
                         try {
                             Globals.writeToMLOG("INFO", "Не могу найти образцы фото SOLO ", "samplePhotoSDBList: " + new Gson().toJson(samplePhotoSDBList));
                             StackPhotoDB photo = StackPhotoRealm.stackPhotoDBGetPhotoBySiteId(String.valueOf(samplePhotoSDBList.get(0).photoId));
@@ -1025,7 +1030,6 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                             DialogFullPhotoR dialog = new DialogFullPhotoR(context);
                             dialog.setPhoto(photo);
                             dialog.commentOn=true;
-
                             // Pika
                             // сделал универсальнее - если в поле "about" есть текст к образцу фото - то вывожу его,
                             // а если нет, то пробую взять из комментов для самих фото по этому фото
@@ -1034,7 +1038,6 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                                 dialog.setComment(commentPhoto);
                             } else dialog.setComment(photo.getComment());
                             dialog.scaleType(ImageView.ScaleType.FIT_CENTER);
-
                             dialog.setClose(dialog::dismiss);
                             dialog.show();
                         }catch (Exception e){
