@@ -1502,7 +1502,7 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
      */
     public void cronCheckUploadsPhotoOnServer() {
         try {
-            final List<StackPhotoDB> realmResults = RealmManager.INSTANCE.copyFromRealm(RealmManager.stackPhotoGetHashs());
+            final RealmResults<StackPhotoDB> realmResults = RealmManager.stackPhotoGetHashs();
 
             Log.e("CHECK_HASH", "realmResults: " + realmResults.size());
 
@@ -1515,11 +1515,39 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                 for (int i = 0; i < realmResults.size(); i++) {
                     listHash.add(i, realmResults.get(i).getPhoto_hash());
                 }
+
+                // TODO нормально оформить этот запрос
+/*                StandartData standartData = new StandartData();
+                standartData.mod = "images_view";
+                standartData.act = "list_image";
+                standartData.nolimit = "no_limit";
+                standartData.date_from = Clock.lastWeek();
+                standartData.date_to = Clock.tomorrow;
+                standartData.hash_list = listHash;
+
+                JsonObject convertedObject = new Gson().fromJson(new Gson().toJson(standartData), JsonObject.class);
+
+                retrofit2.Call<JsonObject> callJS = RetrofitBuilder.getRetrofitInterface().TEST_JSON_UPLOAD(RetrofitBuilder.contentType, convertedObject);
+//                retrofit2.Call<PhotoHash> callPH = RetrofitBuilder.getRetrofitInterface().SEND_PHOTO_HASH_NEW(RetrofitBuilder.contentType, convertedObject);
+
+                callJS.enqueue(new Callback<JsonObject>() {
+                    @Override
+                    public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
+                        Log.e("test", "test: " + response);
+                    }
+
+                    @Override
+                    public void onFailure(Call<JsonObject> call, Throwable t) {
+                        Log.e("test", "test t: " + t);
+                    }
+                });*/
+
                 String mod = "images_view";
                 String act = "list_image";
                 String noLimit = "no_limit";
                 String date_from = Clock.lastWeek();
                 String date_to = Clock.tomorrow;
+
 
                 retrofit2.Call<PhotoHash> call = RetrofitBuilder.getRetrofitInterface()
                         .SEND_PHOTO_HASH(mod, act, noLimit, date_from, date_to, listHash);

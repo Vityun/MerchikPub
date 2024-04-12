@@ -12,12 +12,15 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+
+import org.w3c.dom.Text;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -130,6 +133,23 @@ public class RecyclerAndPhotoAdapter extends RecyclerView.Adapter<RecyclerAndPho
             res.add(distance);
 
             return res;
+
+//            List<TextView> res1 = new ArrayList<TextView>();
+//            res1.add(new TextView(context));
+//            res1.get(0).setText(time);
+//            res1.get(0).setPadding(0,0,0,0);
+//            res1.add(new TextView(context));
+//            res1.get(1).setText(provider);
+//            res1.get(1).setPadding(0,0,0,0);
+//            res1.add(new TextView(context));
+//            res1.get(2).setText(accuracy);
+//            res1.get(2).setPadding(0,0,0,0);
+//            res1.add(new TextView(context));
+//            res1.get(3).setText(distance);
+//            res1.get(3).setPadding(0,0,0,0);
+//
+//            return res1;
+
         }
 
         private void openMap(LogMPDB logMPDB) {

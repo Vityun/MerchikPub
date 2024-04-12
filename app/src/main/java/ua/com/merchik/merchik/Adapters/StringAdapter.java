@@ -29,7 +29,8 @@ public class StringAdapter extends RecyclerView.Adapter<StringAdapter.ViewHolder
     @NonNull
     @Override
     public StringAdapter.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        return new StringAdapter.ViewHolder(LayoutInflater.from(context).inflate(R.layout.item_rv_text, parent, false));
+        StringAdapter.ViewHolder strAdap = new StringAdapter.ViewHolder(LayoutInflater.from(context).inflate(R.layout.item_rv_text, parent, false));
+        return strAdap;
     }
 
     @Override

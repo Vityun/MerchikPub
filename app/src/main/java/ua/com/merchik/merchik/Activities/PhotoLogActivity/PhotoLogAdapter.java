@@ -1,5 +1,6 @@
 package ua.com.merchik.merchik.Activities.PhotoLogActivity;
 
+import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 import static ua.com.merchik.merchik.menu_main.decodeSampledBitmapFromResource;
 
 import android.annotation.SuppressLint;
@@ -39,13 +40,16 @@ import ua.com.merchik.merchik.Filter.MyFilter;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
+import ua.com.merchik.merchik.data.Database.Room.SamplePhotoSDB;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.AddressRealm;
 import ua.com.merchik.merchik.database.realm.tables.CustomerRealm;
 import ua.com.merchik.merchik.database.realm.tables.ImagesTypeListRealm;
+import ua.com.merchik.merchik.database.realm.tables.StackPhotoRealm;
 import ua.com.merchik.merchik.database.realm.tables.UsersRealm;
 import ua.com.merchik.merchik.dialogs.DialogFullPhoto;
+import ua.com.merchik.merchik.dialogs.DialogFullPhotoR;
 
 /**
  * Начальный Список Журнала фото.
@@ -62,15 +66,25 @@ public class PhotoLogAdapter extends RecyclerView.Adapter<PhotoLogAdapter.ViewHo
     private Clicks.click click;
     private PhotoLogMode photoLogMode;
 
+    // Pika
+    // добавил, чтоб получать данные по фото образцов
+    private List<SamplePhotoSDB> samplePhotoSDBList;
+
+
     private PhotoLogPhotoAdapter.OnPhotoClickListener mOnPhotoClickListener;
 
-    public PhotoLogAdapter(Context context, RealmResults<StackPhotoDB> photoLogData, boolean mod, Clicks.click click, PhotoLogPhotoAdapter.OnPhotoClickListener mOnPhotoClickListener) {
+    // Pika
+    // Добавил в конструктор 2 параметра photoTp,grpId, они нужны для получения данных по образцам фото
+    public PhotoLogAdapter(Context context, RealmResults<StackPhotoDB> photoLogData, int photoTp, int grpId, boolean mod, Clicks.click click, PhotoLogPhotoAdapter.OnPhotoClickListener mOnPhotoClickListener) {
         this.mContext = context;
         this.photoLogData = RealmManager.INSTANCE.copyFromRealm(photoLogData);
         this.photoLogDataList = RealmManager.INSTANCE.copyFromRealm(photoLogData);
         this.mod = mod;
         this.click = click;
         this.mOnPhotoClickListener = mOnPhotoClickListener;
+        // Pika
+        // добавил, чтоб получать данные по фото образцов (а конкретно - нужен комментарий именно к образцу фото, а не к самому фото)
+        this.samplePhotoSDBList = SQL_DB.samplePhotoDao().getPhotoLogActiveAndTp(1,photoTp , grpId);
     }
 
     public void updateData(RealmResults<StackPhotoDB> photoLogData) {
@@ -293,6 +307,7 @@ public class PhotoLogAdapter extends RecyclerView.Adapter<PhotoLogAdapter.ViewHo
 
                 if (photoLogMode.equals(PhotoLogMode.SAMPLE_PHOTO) && openDefaultStarDialog) {
                     if (getBindingAdapterPosition() == 0){
+//                        Toast.makeText(mContext, "2222222222222222222222222222", Toast.LENGTH_SHORT).show();
                         openDialog(photoLogMode, photoLogDat, mOnPhotoClickListener);
                         openDefaultStarDialog = false;
                     }
@@ -300,6 +315,7 @@ public class PhotoLogAdapter extends RecyclerView.Adapter<PhotoLogAdapter.ViewHo
 
                 // 13/08/2020 Выгрузка фоток из Журнала фото
                 imageView.setOnClickListener(v -> {
+//                    Toast.makeText(mContext, "11111111111111111111111111111111111", Toast.LENGTH_SHORT).show();
                     openDialog(photoLogMode, photoLogDat, mOnPhotoClickListener);
                 });
 
@@ -364,50 +380,79 @@ public class PhotoLogAdapter extends RecyclerView.Adapter<PhotoLogAdapter.ViewHo
         }
 
         public void openDialog(PhotoLogMode photoLogMode, StackPhotoDB photoLogDat, PhotoLogPhotoAdapter.OnPhotoClickListener mOnPhotoClickListener) {
-            try {
-                Log.e("setPhotos", "2position: " + getAdapterPosition());
-                Log.e("setPhotos", "2photoLogData: " + photoLogData.get(getAdapterPosition()).getId());
 
-                DialogFullPhoto dialog = new DialogFullPhoto(mContext);
-                Collections.reverse(photoLogData);
-                dialog.setPhotos(getAdapterPosition(), photoLogData, mOnPhotoClickListener, dialog::dismiss);
+            if (photoLogMode.equals(PhotoLogMode.SAMPLE_PHOTO)) {
 
-                dialog.setTextInfo(photoData(photoLogDat));
-                dialog.getComment(photoLogDat.getComment(), () -> {
-                    Globals.writeToMLOG("INFO", "SAVE_PHOTO_COMMENT", "photoLogDat: " + new Gson().toJson(photoLogDat));
-                    Globals.writeToMLOG("INFO", "SAVE_PHOTO_COMMENT", "photoLogDat.getComment(): " + photoLogDat.getComment());
-                    RealmManager.INSTANCE.executeTransaction(realm -> {
-                        photoLogDat.setComment(dialog.commentResult);
-                        photoLogDat.setCommentUpload(true);
-                    });
-                    RealmManager.stackPhotoSavePhoto(photoLogDat);
-                    Toast.makeText(mContext, "Комментарий сохранён", Toast.LENGTH_LONG).show();
-                });
+                // Pika
+                // Сделал отображение всех фото образцов одно над другим,
+                // а когда позакрываются диалоговые окна фото, будет видео журнал в котором снова можно будет их открыть кликая на фото в журнале
+                // при первом открытии покажутся все фото в окнах, потом при выборе определенного фото будет открываться только оно
+                if (samplePhotoSDBList != null) {
+                    for (SamplePhotoSDB a : samplePhotoSDBList) {
+                        StackPhotoDB photo = StackPhotoRealm.stackPhotoDBGetPhotoBySiteId(String.valueOf(a.photoId));
+                        if (openDefaultStarDialog==true || photoLogDat.photoServerId.equalsIgnoreCase(String.valueOf(a.photoId))) {
+                            DialogFullPhotoR dialog = new DialogFullPhotoR(mContext);
+                            dialog.setPhoto(photo);
+                            dialog.commentOn = true;
+                            String commentPhoto = a.about;
+                            if (commentPhoto != null && commentPhoto != "") {
+                                dialog.setComment(commentPhoto);
+                            } else dialog.setComment(photo.getComment());
+                            dialog.scaleType(ImageView.ScaleType.FIT_CENTER);
+                            dialog.setClose(dialog::dismiss);
+                            dialog.show();
+                        }
+                    }
+                }
+            }
+            else {
 
                 try {
-                    dialog.setTask(photoLogDat.getUser_id(), photoLogDat.getAddr_id(), photoLogDat.getClient_id(), photoLogDat.getCode_dad2(), photoLogDat);
-                } catch (Exception e) {
+                    Log.e("setPhotos", "2position: " + getAdapterPosition());
+                    Log.e("setPhotos", "2photoLogData: " + photoLogData.get(getAdapterPosition()).getId());
 
-                }
+                    DialogFullPhoto dialog = new DialogFullPhoto(mContext);
+                    Collections.reverse(photoLogData);
+                    dialog.setPhotos(getAdapterPosition(), photoLogData, mOnPhotoClickListener, dialog::dismiss);
 
-                switch (photoLogMode) {
-                    case SAMPLE_PHOTO:
-                        dialog.setClose(() -> {
-                            click.click(null);
-                            dialog.dismiss();
+                    dialog.setTextInfo(photoData(photoLogDat));
+                    dialog.getComment(photoLogDat.getComment(), () -> {
+                        Globals.writeToMLOG("INFO", "SAVE_PHOTO_COMMENT", "photoLogDat: " + new Gson().toJson(photoLogDat));
+                        Globals.writeToMLOG("INFO", "SAVE_PHOTO_COMMENT", "photoLogDat.getComment(): " + photoLogDat.getComment());
+                        RealmManager.INSTANCE.executeTransaction(realm -> {
+                            photoLogDat.setComment(dialog.commentResult);
+                            photoLogDat.setCommentUpload(true);
                         });
-                        break;
+                        RealmManager.stackPhotoSavePhoto(photoLogDat);
+                        Toast.makeText(mContext, "Комментарий сохранён", Toast.LENGTH_LONG).show();
+                    });
 
-                    default:
-                        dialog.setClose(dialog::dismiss);
-                        break;
-                }
+                    try {
+                        dialog.setTask(photoLogDat.getUser_id(), photoLogDat.getAddr_id(), photoLogDat.getClient_id(), photoLogDat.getCode_dad2(), photoLogDat);
+                    } catch (Exception e) {
+
+                    }
+
+                    switch (photoLogMode) {
+                        case SAMPLE_PHOTO:
+                            dialog.setClose(() -> {
+                                click.click(null);
+                                dialog.dismiss();
+                            });
+                            break;
+
+                        default:
+                            dialog.setClose(dialog::dismiss);
+                            break;
+                    }
 //                dialog.setClose(dialog::dismiss);
-                dialog.setRating();
-                dialog.setDvi();
-                dialog.show();
-            } catch (Exception e) {
-                Toast.makeText(mContext, "Не получилось открыть фото. Ошибка: " + e, Toast.LENGTH_LONG).show();
+                    dialog.setRating();
+                    dialog.setDvi();
+                    dialog.show();
+                } catch (Exception e) {
+                    Toast.makeText(mContext, "Не получилось открыть фото. Ошибка: " + e, Toast.LENGTH_LONG).show();
+                }
+
             }
 
         }
@@ -560,5 +605,4 @@ public class PhotoLogAdapter extends RecyclerView.Adapter<PhotoLogAdapter.ViewHo
 
 
     // ---------------------------------------------------------------------------------------------
-
 }
