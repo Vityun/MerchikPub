@@ -118,6 +118,10 @@ public class OptionControlPhoto<T> extends OptionControl {
                 photoType = 37;
                 break;
 
+            case "165482":  // Контроль наличия Фото - скан посещения в приложении Эффи
+                photoType = 46; // 46 - фото скан посещения в приложении эффи
+                break;
+
         }
 
         RealmResults<StackPhotoDB> stackPhotoDB = StackPhotoRealm.getPhotosByDAD2(dad2, photoType);

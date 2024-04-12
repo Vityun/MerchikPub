@@ -767,7 +767,14 @@ public class DetailedReportActivity extends toolbar_menus {
                 try {
                     Uri uri = data.getData();
                     File file = new File(Globals.FileUtils.getRealPathFromUri(getApplicationContext(), uri));
-                    savePhoto(file, MakePhotoFromGaleryWpDataDB, MakePhotoFromGalery.tovarId, getApplicationContext());
+                    StackPhotoDB stackPhotoDB = savePhoto(file, MakePhotoFromGaleryWpDataDB, MakePhotoFromGalery.tovarId, getApplicationContext());
+
+                    if (stackPhotoDB != null){
+                        // Сохраняем результат что фото сохранено
+                        Intent resultIntent = new Intent();
+                        resultIntent.putExtra("photo_saved", true); // Передайте информацию о сохраненном фото
+                        setResult(Activity.RESULT_OK, resultIntent);
+                    }
                 } catch (Exception e) {
                     Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST", "Exception e: " + e);
                 }
@@ -907,7 +914,7 @@ public class DetailedReportActivity extends toolbar_menus {
                             wpDataObj = MakePhoto.wp;
                             Log.e("getPhotoType", "wpDataObj.getPhotoType(): " + wpDataObj.getPhotoType());
 
-                            PhotoReportActivity.savePhoto(this, wpDataObj, image);
+                            PhotoReportActivity.savePhoto(this, wpDataObj, image, ()->{});
 
                             refreshAdapterFragmentB();
 

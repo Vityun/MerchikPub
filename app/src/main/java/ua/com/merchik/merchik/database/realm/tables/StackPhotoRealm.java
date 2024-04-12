@@ -378,6 +378,22 @@ public class StackPhotoRealm {
         return INSTANCE.copyFromRealm(res);
     }
 
+    /**
+     * 10.04.24
+     * */
+    public static List<StackPhotoDB> getPhotoByTypeAndTovar(Integer photoType, String tovarId){
+        RealmResults<StackPhotoDB> res = INSTANCE.where(StackPhotoDB.class)
+                .equalTo("tovar_id", tovarId)
+                .equalTo("photo_type", photoType)
+                .findAll();
+
+        if (res != null){
+            return INSTANCE.copyFromRealm(res);
+        }else {
+            return null;
+        }
+
+    }
 
     public static List<StackPhotoDB> getShowcase(int showcase, long codeDad2, Integer photoType) {
         RealmResults<StackPhotoDB> res = INSTANCE.where(StackPhotoDB.class)

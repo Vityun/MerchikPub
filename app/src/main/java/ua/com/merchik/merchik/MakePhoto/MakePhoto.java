@@ -447,7 +447,7 @@ public class MakePhoto {
     public static String planogram_id = "";
     public static String planogram_img_id = "";
 
-    public <T> void makePhoto(Activity activity, T data) {
+    public <T> void makePhoto(Activity activity, T data, Clicks.clickVoid clickVoid) {
         try {
             final WorkPlan workPlan = new WorkPlan();
             WPDataObj wpDataObj;
@@ -469,7 +469,7 @@ public class MakePhoto {
             intent.putExtra(MediaStore.EXTRA_OUTPUT, uri);
 
             photoNum = photoFile.getAbsolutePath();
-            boolean isSavePhoto = PhotoReportActivity.savePhoto(activity, wpDataObj, photoFile);
+            boolean isSavePhoto = PhotoReportActivity.savePhoto(activity, wpDataObj, photoFile, clickVoid);
 
             Globals.writeToMLOG("INFO", "makePhoto", "photoType: " + photoType);
             Globals.writeToMLOG("INFO", "makePhoto", "photoNum: " + photoNum);
@@ -528,7 +528,7 @@ public class MakePhoto {
                 showDialogSW(activity, wpDataObj, data, optionsDB);
             }else {
 //                photoDialogsNEW(activity, wpDataObj, data, optionsDB);
-                choiceCustomerGroupAndPhoto2(activity, wpDataObj, data, optionsDB);
+                choiceCustomerGroupAndPhoto2(activity, wpDataObj, data, optionsDB, ()->{});
             }
 
 //            choiceCustomerGroupAndPhoto2(activity, wpDataObj, data, optionsDB);
@@ -537,7 +537,7 @@ public class MakePhoto {
         }
     }
 
-    public <T> void pressedMakePhoto(Activity activity, T data, OptionsDB optionsDB, String photoType, String tovarId) {
+    public <T> void pressedMakePhoto(Activity activity, T data, OptionsDB optionsDB, String photoType, String tovarId, Clicks.clickVoid click) {
         try {
             final WorkPlan workPlan = new WorkPlan();
             WPDataObj wpDataObj;
@@ -550,7 +550,8 @@ public class MakePhoto {
             MakePhoto.photoType = photoType;
             MakePhoto.tovarId = tovarId;
             Globals.writeToMLOG("INFO", "pressedMakePhoto", "photoType: " + photoType);
-            choiceCustomerGroupAndPhoto2(activity, wpDataObj, data, optionsDB);
+            choiceCustomerGroupAndPhoto2(activity, wpDataObj, data, optionsDB, click);
+            click.click();
         } catch (Exception e) {
             Globals.writeToMLOG("ERROR", "pressedMakePhoto", "Exception e: " + e);
         }
@@ -558,10 +559,10 @@ public class MakePhoto {
 
     public <T> void pressedMakePhotoOldStyle(Activity activity, WPDataObj wp, T data, OptionsDB optionsDB) {
         photoType = wp.getPhotoType();
-        choiceCustomerGroupAndPhoto2(activity, wp, data, optionsDB);
+        choiceCustomerGroupAndPhoto2(activity, wp, data, optionsDB, ()->{});
     }
 
-    private <T> void choiceCustomerGroupAndPhoto2(Activity activity, WPDataObj wp, T data, OptionsDB optionsDB) {
+    private <T> void choiceCustomerGroupAndPhoto2(Activity activity, WPDataObj wp, T data, OptionsDB optionsDB, Clicks.clickVoid clickVoid) {
         if (wp.getCustomerTypeGrp() != null) {
             final String[] result = wp.getCustomerTypeGrp().values().toArray(new String[0]);
             if (wp.getCustomerTypeGrp().size() > 1 && !wp.getPhotoType().equals("5")) {
@@ -581,21 +582,21 @@ public class MakePhoto {
                             photoCustomerGroup = Globals.getKeyForValue(result[which], wp.getCustomerTypeGrp());
 
 //                            photoDialogs(activity, wp, data, optionsDB);
-                            photoDialogsNEW(activity, wp, data, optionsDB);
+                            photoDialogsNEW(activity, wp, data, optionsDB, clickVoid);
                         })
                         .show();
             } else if (wp.getCustomerTypeGrp().size() == 1 && !wp.getPhotoType().equals("5")) {
                 wp.setCustomerTypeGrpS(Globals.getKeyForValue(result[0], wp.getCustomerTypeGrp()));
                 Toast.makeText(activity, "Выбрана группа товара: " + result[0], Toast.LENGTH_LONG).show();
 //                photoDialogs(activity, wp, data, optionsDB);
-                photoDialogsNEW(activity, wp, data, optionsDB);
+                photoDialogsNEW(activity, wp, data, optionsDB, clickVoid);
             } else {
                 if (!wp.getPhotoType().equals("5")) {
                     globals.alertDialogMsg(activity, "Не обнаружено ни одной группы товаров по данному клиенту. Сообщите об этом Администратору!");
                 }
                 wp.setCustomerTypeGrpS("");
 //                photoDialogs(activity, wp, data, optionsDB);
-                photoDialogsNEW(activity, wp, data, optionsDB);
+                photoDialogsNEW(activity, wp, data, optionsDB, clickVoid);
             }
         } else {
             globals.alertDialogMsg(activity, "Не выбрано посещение\n\nЗайдите в раздел План работ, выберите посещение и повторите попытку.");
@@ -606,12 +607,12 @@ public class MakePhoto {
      * 28.08.23
      *
      * */
-    private <T> void photoDialogsNEW(Activity activity, WPDataObj wpDataObj, T data, OptionsDB optionsDB) {
+    private <T> void photoDialogsNEW(Activity activity, WPDataObj wpDataObj, T data, OptionsDB optionsDB, Clicks.clickVoid clickVoid) {
         OptionControlMP optionControlMP = new OptionControlMP(activity.getBaseContext(), (WpDataDB) data, optionsDB, null, null, null);
         optionControlMP.showMassage(new Clicks.clickStatusMsg() {
             @Override
             public void onSuccess(String string) {
-                makePhoto(activity, data); // Метод который запускает камеру и создаёт файл фото.
+                makePhoto(activity, data, clickVoid); // Метод который запускает камеру и создаёт файл фото.
             }
 
             @Override
@@ -632,7 +633,7 @@ public class MakePhoto {
                         dialog1.dismiss();
                         dialogData2.dismiss();
                         showDialogPass(activity, wpDataObj, optionsDB, () -> {
-                            makePhoto(activity, data); // Метод который запускает камеру и создаёт файл фото.
+                            makePhoto(activity, data, clickVoid); // Метод который запускает камеру и создаёт файл фото.
                         });
                     });
                     dialogData2.setClose(dialogData2::dismiss);
@@ -672,7 +673,7 @@ public class MakePhoto {
                                     dialog1.dismiss();
                                     dialogData2.dismiss();
                                     showDialogPass(activity, wpDataObj, optionsDB, () -> {
-                                        makePhoto(activity, data); // Метод который запускает камеру и создаёт файл фото.
+                                        makePhoto(activity, data, ()->{}); // Метод который запускает камеру и создаёт файл фото.
                                     });
                                 });
                                 dialogData2.setClose(dialogData2::dismiss);
@@ -704,7 +705,7 @@ public class MakePhoto {
 
                             alertMassageMP(activity, 1, t1, m1, bt1, bf1, t2, m2, bt2, bf2);
                         } else {
-                            makePhoto(activity, data); // Метод который запускает камеру и создаёт файл фото.
+                            makePhoto(activity, data, ()->{}); // Метод который запускает камеру и создаёт файл фото.
                         }
                     } else {
                         String t1 = "Координаты не определены";
@@ -723,7 +724,7 @@ public class MakePhoto {
                     }
                 } else {
                     Toast.makeText(activity, "Координаты магазина не обнаружены. Выполнение фото невозможно, обратитесь к Вашему руководителю.", Toast.LENGTH_SHORT).show();
-                    makePhoto(activity, data); // Метод который запускает камеру и создаёт файл фото.
+                    makePhoto(activity, data, ()->{}); // Метод который запускает камеру и создаёт файл фото.
                 }
             } else {
                 Toast.makeText(activity.getBaseContext(), "Не обнаружены данные посещения, обратитесь к Вашему руководителю.", Toast.LENGTH_SHORT).show();
@@ -758,7 +759,7 @@ public class MakePhoto {
                     dialogData1.dismiss();
                     dialogData2.dismiss();
                     showDialogPass(activity, wpDataObj, optionsDB, () -> {
-                        makePhoto(activity, data); // Метод который запускает камеру и создаёт файл фото.
+                        makePhoto(activity, data, ()->{}); // Метод который запускает камеру и создаёт файл фото.
                     });
                 });
                 dialogData2.setClose(dialogData2::dismiss);
@@ -838,9 +839,9 @@ public class MakePhoto {
                         wp.setCustomerTypeGrpS(String.valueOf(showcase.tovarGrp));
                         Toast.makeText(activity, "Обрана група товару: " + showcase.tovarGrpTxt, Toast.LENGTH_LONG).show();
 //                        photoDialogs(activity, wp, dataT, optionsDB);
-                        photoDialogsNEW(activity, wp, dataT, optionsDB);
+                        photoDialogsNEW(activity, wp, dataT, optionsDB, ()->{});
                     } else {
-                        choiceCustomerGroupAndPhoto2(activity, wp, dataT, optionsDB);
+                        choiceCustomerGroupAndPhoto2(activity, wp, dataT, optionsDB, ()->{});
                     }
 
                     dialog.dismiss();

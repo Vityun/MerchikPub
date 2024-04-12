@@ -103,7 +103,7 @@ public class ShowTovarRequisites {
                         OptionsDB optionsDB = matchingOption.get();
                         // Делайте что-то с объектом OptionsDB
                         System.out.println(optionsDB);
-                        dialogList.add(new TovarRequisites(tovarDB, reportPrepareTovar).createDialog(context, wpDataDB, optionsDB));
+                        dialogList.add(new TovarRequisites(tovarDB, reportPrepareTovar).createDialog(context, wpDataDB, optionsDB, ()->{}));
                     } else {
                         // Обработка случая, когда объект OptionsDB не найден
                         System.out.println("Объект OptionsDB не найден");

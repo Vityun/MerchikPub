@@ -840,13 +840,13 @@ public class DialogData {
                     String date = editDate.getText().toString();
                     if (date.equals("0000-00-00")) {
                         listener.clicked();
-                        dialog.dismiss();
+//                        dialog.dismiss();
                     }
 
                     result = editDate.getText().toString();
                     Log.e("setOperation", "Date.result: " + result);
                     listener.clicked();
-                    dialog.dismiss();
+//                    dialog.dismiss();
                 });
                 break;
 

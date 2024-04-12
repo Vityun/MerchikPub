@@ -112,7 +112,7 @@ public class ShowcaseAdapter extends RecyclerView.Adapter<ShowcaseAdapter.ViewHo
 
                 StackPhotoDB stackPhotoDB = StackPhotoRealm.stackPhotoDBGetPhotoBySiteId2(String.valueOf(showcase.photoId));
 
-                textViewShowcaseId.setText(Html.fromHtml("<b>Ідентифікатор:</b> " + showcase.id));
+                textViewShowcaseId.setText(Html.fromHtml("<b>Вітрина №:</b> " + showcase.id));
                 textViewShowcaseNm.setText(Html.fromHtml("<b>Назва:</b> " + showcase.nm));
                 textViewClientGroup.setText(Html.fromHtml("<b>Група тов.:</b> " + groupName));
                 textViewPlanogramm.setText(Html.fromHtml("<b>Планограма:</b> " + planogram));

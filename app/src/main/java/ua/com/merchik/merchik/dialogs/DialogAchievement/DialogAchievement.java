@@ -1,88 +1,57 @@
 package ua.com.merchik.merchik.dialogs.DialogAchievement;
 
-import static ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportTab.detailedReportOptionsFrag;
 import static ua.com.merchik.merchik.Globals.HELPDESK_PHONE_NUMBER;
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
+import static ua.com.merchik.merchik.menu_main.decodeSampledBitmapFromResource;
 
 import android.app.Dialog;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Build;
-import android.text.Html;
+import android.text.SpannableStringBuilder;
 import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
-import android.widget.AdapterView;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
-import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.annotation.RequiresApi;
-
+import java.io.File;
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
 
-import ua.com.merchik.merchik.Activities.PhotoLogActivity.PhotoLogActivity;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.R;
-import ua.com.merchik.merchik.Utils.Spinner.SpinnerAdapter;
-import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.Database.Room.AchievementsSDB;
 import ua.com.merchik.merchik.data.Database.Room.CustomerSDB;
 import ua.com.merchik.merchik.data.Database.Room.UsersSDB;
 import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteHintsDB;
 import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteObjects.SiteObjectsDB;
-import ua.com.merchik.merchik.data.RealmModels.AdditionalRequirementsDB;
-import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
-import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.database.realm.RealmManager;
-import ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsRealm;
+import ua.com.merchik.merchik.database.realm.tables.StackPhotoRealm;
 import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.dialogs.DialogFullPhotoR;
 import ua.com.merchik.merchik.dialogs.DialogVideo;
 
 public class DialogAchievement {
 
-    public static Clicks.click clickVoidAchievement;
-
     private Dialog dialog;
     private Context context;
-//    private WpDataDB wpDataDB;
-
-    private int addressId, userId;
-    private long codeDad2;
-    private String clientId, clientTxt, addressTxt, userTxt;
-
-
-    private StackPhotoDB stackPhotoDBTo, stackPhotoDBAfter;
-
     private ImageButton close, help, videoHelp, call, addSotr;
-    private TextView title, client, address, visit, theme, offerFromClient;
-    private EditText comment;
-    private Button photoTo, photoAfter, save;
-    private ImageView photoToIV, photoAfterIV;
+    private ImageView photoTo, photoAfter;
+    private TextView title, text;
 
-    private Spinner spinnerTheme, spinnerClient;
-    private String[] themeList = new String[]{
-            "Досягнення (покращення розташування товару в ТТ)",     // 595
-            "Замовлення на фінансування нового Досягнення",         // 1252
-            "Утримання викладки на полиці (досягнутого раніше)"};   // 1251
+    private Button ok;
 
-    private Integer spinnerThemeResult, spinnerClientResult;
-    private OptionsDB optionDB;
+    private StackPhotoDB stackPhotoBefore, stackPhotoAfter;
 
-    public DialogAchievement(Context context/*, WpDataDB wpDataDB*/) {
+    public DialogAchievement(Context context) {
         this.context = context;
-        /*this.wpDataDB = wpDataDB;*/
         try {
             dialog = new Dialog(context);
             dialog.setCancelable(false);
@@ -92,6 +61,8 @@ public class DialogAchievement {
             int height = (int) (context.getResources().getDisplayMetrics().heightPixels * 0.70);
             dialog.getWindow().setLayout(width, WindowManager.LayoutParams.WRAP_CONTENT);
 
+            ok = dialog.findViewById(R.id.ok);
+
             close = dialog.findViewById(R.id.imageButtonClose);
             help = dialog.findViewById(R.id.imageButtonLesson);
             videoHelp = dialog.findViewById(R.id.imageButtonVideoLesson);
@@ -99,96 +70,14 @@ public class DialogAchievement {
             addSotr = dialog.findViewById(R.id.add_sotr);
 
             title = dialog.findViewById(R.id.title);
-            client = dialog.findViewById(R.id.client);
-            address = dialog.findViewById(R.id.address);
-            visit = dialog.findViewById(R.id.visit);
-            theme = dialog.findViewById(R.id.theme);
-            offerFromClient = dialog.findViewById(R.id.offer_from_the_client);
+            text = dialog.findViewById(R.id.text);
 
-            comment = dialog.findViewById(R.id.comment);
-
-            photoTo = dialog.findViewById(R.id.photo_to);
-            photoAfter = dialog.findViewById(R.id.photo_after);
-            save = dialog.findViewById(R.id.save);
-
-            photoToIV = dialog.findViewById(R.id.photoTo);
-            photoAfterIV = dialog.findViewById(R.id.photoAfter);
-
-            spinnerTheme = dialog.findViewById(R.id.spinner_theme);
-            spinnerClient = dialog.findViewById(R.id.spinner_client);
+            photoTo = dialog.findViewById(R.id.photoTo);
+            photoAfter = dialog.findViewById(R.id.photoAfter);
         } catch (Exception e) {
             Globals.writeToMLOG("ERROR", "DialogAchievement", "Exception e: " + e);
         }
     }
-
-    private void buttonSave() {
-        save.setOnClickListener(v -> {
-            try {
-                AchievementsSDB achievementsSDB = new AchievementsSDB();
-                achievementsSDB.serverId = 0;
-                achievementsSDB.dt = String.valueOf((System.currentTimeMillis() / 1000));
-                achievementsSDB.dt_ut = (System.currentTimeMillis() / 1000);
-                achievementsSDB.addrId = addressId;
-                achievementsSDB.adresaNm = addressTxt;
-                achievementsSDB.dvi = 1;
-                achievementsSDB.error = 0;
-                achievementsSDB.currentVisit = 0;
-                achievementsSDB.score = "0";
-                achievementsSDB.clientId = clientId;
-                achievementsSDB.spiskliNm = clientTxt;
-                achievementsSDB.codeDad2 = codeDad2;
-                achievementsSDB.sotrFio = userTxt;
-                if (comment != null && comment.getText() != null && comment.getText().toString().length() > 10) {
-                    achievementsSDB.commentDt = String.valueOf((System.currentTimeMillis() / 1000));
-                    achievementsSDB.commentUser = String.valueOf(userId);
-                    achievementsSDB.commentTxt = comment.getText().toString();
-                }else {
-                    Toast.makeText(v.getContext(), "Ви не вказали коментар до досягнення, досягнення створено не буде", Toast.LENGTH_LONG).show();
-                    return;
-                }
-
-//                achievementsSDB.themeId = 595;
-                if (spinnerTheme != null && spinnerThemeResult != null){
-                    achievementsSDB.themeId = spinnerThemeResult;
-                }else {
-                    Toast.makeText(v.getContext(), "Ви не вказали тему досягнення, досягнення створено не буде", Toast.LENGTH_LONG).show();
-                    return;
-                }
-
-                if (spinnerClientResult != null){
-                    achievementsSDB.addRequirementId = spinnerClientResult;
-                }else {
-                    achievementsSDB.addRequirementId = 0;
-                    Toast.makeText(v.getContext(), "Ви не вказали пропозицію клієнта, досягнення створено не буде", Toast.LENGTH_LONG).show();
-                    return;
-                }
-
-                if (stackPhotoDBTo != null && stackPhotoDBTo.photo_hash != null){
-                    achievementsSDB.img_before_hash = stackPhotoDBTo.photo_hash;
-                }else {
-                    Toast.makeText(v.getContext(), "Виберіть фото До, досягнення створено не буде", Toast.LENGTH_LONG).show();
-                    return;
-                }
-
-                if (stackPhotoDBAfter != null && stackPhotoDBAfter.photo_hash != null){
-                    achievementsSDB.img_after_hash = stackPhotoDBAfter.photo_hash;
-                }else {
-                    Toast.makeText(v.getContext(), "Виберіть фото Після, досягнення створено не буде", Toast.LENGTH_LONG).show();
-                    return;
-                }
-
-
-                SQL_DB.achievementsDao().insertAll(Collections.singletonList(achievementsSDB));
-                Toast.makeText(v.getContext(), "Створено нове досягнення", Toast.LENGTH_LONG).show();
-                dialog.dismiss();
-
-                detailedReportOptionsFrag.recycleViewDRAdapter.notifyDataSetChanged();
-            } catch (Exception e) {
-                Globals.writeToMLOG("ERROR", "DialogAchievement/buttonSave", "Exception e: " + e);
-            }
-        });
-    }
-
 
     public void setClose(DialogData.DialogClickListener clickListener) {
         close.setOnClickListener(v -> {
@@ -210,6 +99,24 @@ public class DialogAchievement {
             this.title.setText(title);
         } else {
             this.title.setVisibility(View.GONE);
+        }
+    }
+
+    public void setText(String text) {
+        this.text.setVisibility(View.VISIBLE);
+        if (text != null && !text.equals("")) {
+            this.text.setText(text);
+        } else {
+            this.text.setVisibility(View.GONE);
+        }
+    }
+
+    public void setText(SpannableStringBuilder text) {
+        this.text.setVisibility(View.VISIBLE);
+        if (text != null) {
+            this.text.setText(text);
+        } else {
+            this.text.setVisibility(View.GONE);
         }
     }
 
@@ -341,226 +248,83 @@ public class DialogAchievement {
         Log.e("setImgBtnCall", "and here");
     }
 
-    public void setOption(OptionsDB optionDB) {
-        this.optionDB = optionDB;
+    // =============================================================================================
+
+    public void setAchievement(AchievementsSDB achievement){
+        setTitle("Досягнення (" + achievement.serverId + ")");
+        setPhotos(achievement);
+        setAchievementData(achievement);
     }
 
-    public void putTextData() {
-        client.setText(Html.fromHtml("<b>Кліент: </b> " + clientTxt + ""));
-        address.setText(Html.fromHtml("<b>Адреса: </b> " + addressTxt + ""));
-        visit.setText(Html.fromHtml("<b>Відвідування: </b> " + codeDad2 + ""));
-        theme.setText(Html.fromHtml("<b>Тема: </b> "));
+    private void setAchievementData(AchievementsSDB achievement){
+        CustomerSDB customerSDB = SQL_DB.customerDao().getById(achievement.clientId);
+        UsersSDB usersSDB = SQL_DB.usersDao().getById(achievement.userId);
 
-        createSpinnerTheme();
+        SpannableStringBuilder sb = new SpannableStringBuilder();
 
-        createSpinnerClient();
+        sb.append("Дата: ").append(achievement.dt).append("\n");
+        sb.append("Кліент: ").append(customerSDB.nm).append("\n");
+        sb.append("Адреса: ").append(achievement.adresaNm).append("\n");
+        sb.append("Виконавець: ").append(usersSDB.fio).append("\n");
+        sb.append("Коментар: ").append(achievement.commentTxt).append("\n");
 
-        offerFromClient.setText(Html.fromHtml("<b>Пропозиція від клієнта: </b> " + "" + ""));
+        setText(sb);
     }
 
-    /**
-     * Это для установки фото ДО. Для создания одного достижения на основании другого.
-     * */
-    public void setPhotoDo(StackPhotoDB stackPhotoDB){
-        stackPhotoDBTo = stackPhotoDB;
-        photoToIV.setVisibility(View.VISIBLE);
-        photoToIV.setImageURI(Uri.parse(stackPhotoDB.photo_num));
-        photoToIV.setOnClickListener(v1 -> {
-            try {
-                DialogFullPhotoR dialogFullPhoto = new DialogFullPhotoR(v1.getContext());
-                dialogFullPhoto.setPhoto(Uri.parse(stackPhotoDB.photo_num));
-                dialogFullPhoto.setClose(dialogFullPhoto::dismiss);
-                dialogFullPhoto.show();
-            } catch (Exception e) {
-                Globals.writeToMLOG("ERROR", "DialogAchievement/buttonPhotoTo", "Exception e: " + e);
-            }
-        });
-    }
-
-    public void buttonPhotoTo() {
-        photoTo.setVisibility(View.VISIBLE);
-        photoTo.setOnClickListener(v -> {
-            try {
-                Intent intentPhotoLog = new Intent(v.getContext(), PhotoLogActivity.class);
-                intentPhotoLog.putExtra("achievements", true);
-                intentPhotoLog.putExtra("choise", true);
-                intentPhotoLog.putExtra("dad2", codeDad2);
-                intentPhotoLog.putExtra("photoType", 14);
-                v.getContext().startActivity(intentPhotoLog);
-
-                photoTo.setVisibility(View.GONE);
-
-                clickVoidAchievement = new Clicks.click() {
-                    @Override
-                    public <T> void click(T data) {
-                        stackPhotoDBTo = (StackPhotoDB) data;
-                        photoToIV.setVisibility(View.VISIBLE);
-                        photoToIV.setImageURI(Uri.parse(stackPhotoDBTo.photo_num));
-                        photoToIV.setOnClickListener(v1 -> {
-                            try {
-                                DialogFullPhotoR dialogFullPhoto = new DialogFullPhotoR(v1.getContext());
-                                dialogFullPhoto.setPhoto(Uri.parse(stackPhotoDBTo.photo_num));
-                                dialogFullPhoto.setClose(dialogFullPhoto::dismiss);
-                                dialogFullPhoto.show();
-                            } catch (Exception e) {
-                                Globals.writeToMLOG("ERROR", "DialogAchievement/buttonPhotoTo", "Exception e: " + e);
-                            }
-                        });
-                    }
-                };
-
-            } catch (Exception e) {
-                Globals.writeToMLOG("ERROR", "buttonPhotoTo", "Exception e: " + Arrays.toString(e.getStackTrace()));
-            }
-        });
-    }
-
-    public void buttonPhotoAfter() {
-        photoAfter.setVisibility(View.VISIBLE);
-        photoAfter.setOnClickListener(v -> {
-            try {
-                Intent intentPhotoLog = new Intent(v.getContext(), PhotoLogActivity.class);
-                intentPhotoLog.putExtra("achievements", true);
-                intentPhotoLog.putExtra("choise", true);
-                intentPhotoLog.putExtra("dad2", codeDad2);
-                intentPhotoLog.putExtra("photoType", 0);
-                v.getContext().startActivity(intentPhotoLog);
-
-                photoAfter.setVisibility(View.GONE);
-
-                clickVoidAchievement = new Clicks.click() {
-                    @Override
-                    public <T> void click(T data) {
-                        stackPhotoDBAfter = (StackPhotoDB) data;
-                        photoAfterIV.setVisibility(View.VISIBLE);
-                        photoAfterIV.setImageURI(Uri.parse(stackPhotoDBAfter.photo_num));
-                        photoAfterIV.setOnClickListener(v1 -> {
-                            try {
-                                DialogFullPhotoR dialogFullPhoto = new DialogFullPhotoR(v1.getContext());
-                                dialogFullPhoto.setPhoto(Uri.parse(stackPhotoDBTo.photo_num));
-                                dialogFullPhoto.setClose(dialogFullPhoto::dismiss);
-                                dialogFullPhoto.show();
-                            } catch (Exception e) {
-                                Globals.writeToMLOG("ERROR", "DialogAchievement/buttonPhotoAfter", "Exception e: " + e);
-                            }
-                        });
-                    }
-                };
-
-            } catch (Exception e) {
-                Globals.writeToMLOG("ERROR", "buttonPhotoTo", "Exception e: " + Arrays.toString(e.getStackTrace()));
-            }
-        });
-    }
-
-    public void createSpinnerTheme(){
-//        ArrayAdapter adapter = new ArrayAdapter(context, android.R.layout.simple_spinner_item, themeList);
-//        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-
-        SpinnerAdapter adapter1 = new SpinnerAdapter(context, themeList, "Выберите тему");
-        spinnerTheme.setAdapter(adapter1);
-        spinnerTheme.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
-                String data = adapterView.getItemAtPosition(i).toString();
-                Toast.makeText(adapterView.getContext(), "Выбрали: " + data, Toast.LENGTH_SHORT).show();
-
-                if (data.equals(themeList[0])){
-                    spinnerThemeResult = 595;
-                }else if (data.equals(themeList[1])){
-                    spinnerThemeResult = 1252;
-                }else if (data.equals(themeList[2])){
-                    spinnerThemeResult = 1251;
-                }/*else {
-                    spinnerThemeResult = 595;
-                }*/
+    private void setPhotos(AchievementsSDB achievement){
+        try {
+            stackPhotoBefore = StackPhotoRealm.getByHash(achievement.img_before_hash);
+            if (stackPhotoBefore == null){
+                stackPhotoBefore = StackPhotoRealm.getByServerId(String.valueOf(achievement.imgBeforeId));
             }
 
-            @Override
-            public void onNothingSelected(AdapterView<?> adapterView) {
-                Toast.makeText(adapterView.getContext(), "Ничего не выбрано", Toast.LENGTH_SHORT).show();
-//                spinnerThemeResult = 595;
+            stackPhotoAfter = StackPhotoRealm.getByHash(achievement.img_after_hash);
+            if (stackPhotoAfter == null){
+                stackPhotoAfter = StackPhotoRealm.getByServerId(String.valueOf(achievement.imgAfterId));
             }
-        });
-    }
 
-    public void createSpinnerClient(){
-        List<AdditionalRequirementsDB> additionalRequirementsDBList = AdditionalRequirementsRealm.getADByClientAll(clientId);
-
-        if (additionalRequirementsDBList == null) return;
-
-        String[] clientList = new String[additionalRequirementsDBList.size()+1];
-        clientList[0] = "це досягнення не відноситься до жодної з пропозицій замовника";
-        for (int i=0; i<additionalRequirementsDBList.size(); i++){
-            clientList[i+1] = additionalRequirementsDBList.get(i).getNotes();
-        }
-
-
-//        ArrayAdapter adapter = new ArrayAdapter(context, android.R.layout.simple_spinner_item, clientList);
-//        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-
-        SpinnerAdapter adapter1 = new SpinnerAdapter(context, clientList, additionalRequirementsDBList.size() > 0 ? "От клиента есть (" + additionalRequirementsDBList.size() + ") предложений" : "Предложений от клиента НЕТ");
-        spinnerClient.setAdapter(adapter1);
-        spinnerClient.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @RequiresApi(api = Build.VERSION_CODES.N)
-            @Override
-            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
-                String data = adapterView.getItemAtPosition(i).toString();
-                Toast.makeText(adapterView.getContext(), "Выбрали: " + data, Toast.LENGTH_SHORT).show();
-
-                // Используем Stream для поиска объекта в списке по значению notes
-                Optional<AdditionalRequirementsDB> foundObject = additionalRequirementsDBList.stream()
-                        .filter(item -> data.equals(item.getNotes()))
-                        .findFirst();
-
-                // Проверяем, найден ли объект
-                if (foundObject.isPresent()) {
-                    // Объект найден, можно получить его id или выполнить другие действия
-                    int objectId = foundObject.get().getId();
-                    spinnerClientResult = objectId;
-                    Toast.makeText(adapterView.getContext(), "Выбрали: " + data + ", id: " + objectId, Toast.LENGTH_SHORT).show();
-                } else if (data.equals("це досягнення не відноситься до жодної з пропозицій замовника")){
-                    spinnerClientResult = 1;
-                }else {
-                    // Объект не найден
-                    Toast.makeText(adapterView.getContext(), "Объект не найден", Toast.LENGTH_SHORT).show();
+            File file = new File(stackPhotoBefore.getPhoto_num());
+            Bitmap b = decodeSampledBitmapFromResource(file, 200, 200);
+            photoTo.setImageBitmap(b);
+            photoTo.setOnClickListener(v1 -> {
+                try {
+                    DialogFullPhotoR dialogFullPhoto = new DialogFullPhotoR(v1.getContext());
+                    dialogFullPhoto.setPhoto(Uri.parse(stackPhotoBefore.photo_num));
+                    dialogFullPhoto.setClose(dialogFullPhoto::dismiss);
+                    dialogFullPhoto.show();
+                } catch (Exception e) {
+                    Globals.writeToMLOG("ERROR", "DialogAchievement/buttonPhotoAfter", "Exception e: " + e);
                 }
-            }
+            });
 
-            @Override
-            public void onNothingSelected(AdapterView<?> adapterView) {
-                Toast.makeText(adapterView.getContext(), "Ничего не выбрано", Toast.LENGTH_SHORT).show();
-                spinnerClientResult = 0;
-            }
+            File file2 = new File(stackPhotoAfter.getPhoto_num());
+            Bitmap b2 = decodeSampledBitmapFromResource(file2, 200, 200);
+            photoAfter.setImageBitmap(b2);
+            photoAfter.setOnClickListener(v1 -> {
+                try {
+                    DialogFullPhotoR dialogFullPhoto = new DialogFullPhotoR(v1.getContext());
+                    dialogFullPhoto.setPhoto(Uri.parse(stackPhotoAfter.photo_num));
+                    dialogFullPhoto.setClose(dialogFullPhoto::dismiss);
+                    dialogFullPhoto.show();
+                } catch (Exception e) {
+                    Globals.writeToMLOG("ERROR", "DialogAchievement/buttonPhotoAfter", "Exception e: " + e);
+                }
+            });
+        } catch (Exception e) {
+            Globals.writeToMLOG("ERROR", "DialogAchievement/setPhotos", "Exception e: " + e);
+            Globals.writeToMLOG("ERROR", "DialogAchievement/setPhotos", "Exception es: " + Arrays.toString(e.getStackTrace()));
+        }
+    }
+
+    public void setOk(CharSequence setButtonText, DialogData.DialogClickListener clickListener) {
+        ok.setVisibility(View.VISIBLE);
+        if (setButtonText != null) {
+            ok.setText(setButtonText);
+        }
+        ok.setOnClickListener(v -> {
+            if (clickListener != null) clickListener.clicked();
+            dismiss();
         });
     }
 
-    public void setData(WpDataDB wpDataDB) {
-        userId = wpDataDB.getUser_id();
-        userTxt = wpDataDB.getUser_txt();
-        addressId = wpDataDB.getAddr_id();
-        addressTxt = wpDataDB.getAction_txt();
-        clientId = wpDataDB.getClient_id();
-        clientTxt = wpDataDB.getClient_txt();
-        codeDad2 = wpDataDB.getCode_dad2();
-
-        putTextData();
-        buttonSave();
-    }
-
-    public void setData(AchievementsSDB data) {
-        CustomerSDB customerSDB = SQL_DB.customerDao().getById(data.clientId);
-        UsersSDB usersSDB = SQL_DB.usersDao().getById(data.userId);
-
-        userId = data.userId;
-        userTxt = usersSDB.fio;
-        addressId = data.addrId;
-        addressTxt = data.adresaNm;
-        clientId = data.clientId;
-        clientTxt = customerSDB.nm;
-        codeDad2 = data.codeDad2;
-
-        putTextData();
-        buttonSave();
-    }
 }

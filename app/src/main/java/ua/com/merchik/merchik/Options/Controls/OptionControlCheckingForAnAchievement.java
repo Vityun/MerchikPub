@@ -33,6 +33,7 @@ import ua.com.merchik.merchik.database.realm.tables.TovarRealm;
 // 84005 - контроль наявності дати закінчення терміну придатності (сроков годности) хоча б у ОДНОГО товара наявного на полиці.
 // 84967 - контроль наявності дати закінчення терміну придатності (сроков годности) в УСІХ товарів, наявних на полицях.
 // 164985 - контроль наявності дати закінчення терміну придатності (сроков годности) у товарів у котрих (в доп.вимогах) встановлений признак "особое внимание" - поточна опция. Если в ДТ нет товаров с "особым вниманием" то проверяем наличие указания этой информации у ОДНОГО ЛЮБОГО товара
+// 165276 -
 
 // ДокИст - документ - источник типа ОтчетИсполнителя, Задача, ОтчетИсполнителя, ОтчетОСтажировке и пр. к которому подчинена данная опция
 // ДокОпц - документ - набор опций (на момент передачи в эту функцию позиционирован на конкретную строку с ДАННОЙ опцией)
@@ -49,7 +50,7 @@ public class OptionControlCheckingForAnAchievement<T> extends OptionControl {
     public int OPTION_CONTROL_CheckingForAnAchievement1_ID = 84005;
     public int OPTION_CONTROL_CheckingForAnAchievement2_ID = 84967;
     public int OPTION_CONTROL_CheckingForAnAchievement3_ID = 164985;
-    public int OPTION_CONTROL_CheckingForAnAchievement4_ID  = 165276;
+    public int OPTION_CONTROL_CheckingForAnAchievement4_ID = 165276;
 
     public boolean signal = true;
 
@@ -232,7 +233,7 @@ public class OptionControlCheckingForAnAchievement<T> extends OptionControl {
                 stringBuilderMsg.append("У жодного з  ").append(sumcolTov).append(" товарів, присутніх на вітрині, не зазначена ДОСГ (Дата Закінчення Терміну Придатності).");
                 signal = true;
 
-            } else if (optionDB.getOptionId().equals("165276") && sumcolTov > 0 && sumERR > 0) {     // 84005 - контроль наявності дати закінчення терміну придатності (сроков годности) хоча б у ОДНОГО товара наявного на полиці
+            } else if (optionDB.getOptionId().equals("165276") && sumcolTov > 0 && sumERR > 0) {
                 stringBuilderMsg.append("У ")
                         .append(sumERR)
                         .append(" товарів, присутніх на вітрині, і терміном придатності менше ")

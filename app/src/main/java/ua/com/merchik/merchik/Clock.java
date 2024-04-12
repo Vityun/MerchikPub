@@ -142,6 +142,9 @@ public class Clock {
         return new java.util.Date(l);
     }
 
+    /**
+     * Эта штука работает В МИЛЛИСЕКУНДАХ
+     * */
     public static long dateConvertToLong(String str) {
         // Это понадобилось в момент работы с Доп.Требованиями. Мне надо получить с 0000-00-00 нормальную дату
         if (str.equals("0000-00-00")) {

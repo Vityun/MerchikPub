@@ -57,6 +57,7 @@ import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.AppUserRealm;
 import ua.com.merchik.merchik.database.realm.tables.StackPhotoRealm;
 import ua.com.merchik.merchik.dialogs.DialogAchievement.DialogAchievement;
+import ua.com.merchik.merchik.dialogs.DialogAchievement.DialogCreateAchievement;
 import ua.com.merchik.merchik.dialogs.DialogData;
 
 public class AdapterUtil extends RecyclerView.Adapter<RecyclerView.ViewHolder> implements Filterable {
@@ -494,25 +495,61 @@ public class AdapterUtil extends RecyclerView.Adapter<RecyclerView.ViewHolder> i
 
 
                 layout.setOnClickListener(v -> {
-                    DialogData dialog = new DialogData(v.getContext());
-                    dialog.setTitle("Коментар");
-                    dialog.setText(data.commentTxt);
-                    dialog.setClose(dialog::dismiss);
-                    dialog.setOk("Створити ДІНДОС", ()->{
+                    DialogAchievement dialogAchievement = new DialogAchievement(v.getContext());
+                    dialogAchievement.setClose(dialogAchievement::dismiss);
+                    dialogAchievement.setAchievement(data);
+                    dialogAchievement.setOk("Створити ДІНДОС", ()->{
                         try {
-                            DialogAchievement dialogAchievement = new DialogAchievement(v.getContext());
-                            dialogAchievement.setData(data);
-                            dialogAchievement.setClose(dialogAchievement::dismiss);
-                            dialogAchievement.setTitle("Створення Досягнення на основі створеного");
-                            dialogAchievement.setPhotoDo(stackPhotoAfter);
-                            dialogAchievement.buttonPhotoAfter();
-                            dialogAchievement.show();
+                            DialogCreateAchievement dialogCreateAchievement = new DialogCreateAchievement(v.getContext());
+                            dialogCreateAchievement.setData(data);
+                            dialogCreateAchievement.setClose(dialogCreateAchievement::dismiss);
+                            dialogCreateAchievement.setTitle("Створення Досягнення на основі створеного");
+                            dialogCreateAchievement.setPhotoDo(stackPhotoAfter);
+                            dialogCreateAchievement.buttonPhotoAfter();
+                            dialogCreateAchievement.show();
                         }catch (Exception e){
                             Globals.writeToMLOG("ERROR", "bindACHIEVEMENTS/create", "Exception e: " + e);
                             Globals.writeToMLOG("ERROR", "bindACHIEVEMENTS/create", "Exception es: " + Arrays.toString(e.getStackTrace()));
                         }
                     });
-                    dialog.show();
+                    dialogAchievement.show();
+
+                    layout.setOnLongClickListener(v1 -> {
+                        try {
+                            DialogCreateAchievement dialogCreateAchievement = new DialogCreateAchievement(v1.getContext());
+                            dialogCreateAchievement.setData(data);
+                            dialogCreateAchievement.setClose(dialogCreateAchievement::dismiss);
+                            dialogCreateAchievement.setTitle("Створення Досягнення на основі створеного");
+                            dialogCreateAchievement.setPhotoDo(stackPhotoAfter);
+                            dialogCreateAchievement.buttonPhotoAfter();
+                            dialogCreateAchievement.show();
+                        }catch (Exception e){
+                            Globals.writeToMLOG("ERROR", "bindACHIEVEMENTS/create", "Exception e: " + e);
+                            Globals.writeToMLOG("ERROR", "bindACHIEVEMENTS/create", "Exception es: " + Arrays.toString(e.getStackTrace()));
+                        }
+
+                        return false;
+                    });
+
+/*                    DialogData dialog = new DialogData(v.getContext());
+                    dialog.setTitle("Коментар");
+                    dialog.setText(data.commentTxt);
+                    dialog.setClose(dialog::dismiss);
+                    dialog.setOk("Створити ДІНДОС", ()->{
+                        try {
+                            DialogCreateAchievement dialogCreateAchievement = new DialogCreateAchievement(v.getContext());
+                            dialogCreateAchievement.setData(data);
+                            dialogCreateAchievement.setClose(dialogCreateAchievement::dismiss);
+                            dialogCreateAchievement.setTitle("Створення Досягнення на основі створеного");
+                            dialogCreateAchievement.setPhotoDo(stackPhotoAfter);
+                            dialogCreateAchievement.buttonPhotoAfter();
+                            dialogCreateAchievement.show();
+                        }catch (Exception e){
+                            Globals.writeToMLOG("ERROR", "bindACHIEVEMENTS/create", "Exception e: " + e);
+                            Globals.writeToMLOG("ERROR", "bindACHIEVEMENTS/create", "Exception es: " + Arrays.toString(e.getStackTrace()));
+                        }
+                    });
+                    dialog.show();*/
                 });
             }catch (Exception e){
                 Log.e("bindACHIEVEMENTS", "Exception e: " + e);

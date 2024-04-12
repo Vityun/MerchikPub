@@ -138,6 +138,8 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
         ELDEST, OLD, NEW
     }
 
+    // 08.04.24.
+    boolean openNext = true;
 
     /*Определяем конструктор*/
     public RecycleViewDRAdapterTovar(Context context, List<TovarDB> list, WpDataDB wp, OpenType openType) {
@@ -658,7 +660,50 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                         RecyclerViewTPLAdapter recyclerViewTPLAdapter = new RecyclerViewTPLAdapter(
                                 requiredOptionsTPL,
                                 finalReportPrepareTovar1,
-                                (tpl, data, data2) -> operetionSaveRPToDB(tpl, finalReportPrepareTovar1, data, data2, list)
+                                (tpl, data, data2) -> {
+                                    OptionsDB option = OptionsRealm.getOption(String.valueOf(codeDad2), "165276");
+                                    if (option != null && operationType(tpl).equals(Date)) {
+                                        long tovExpirationDate = list.expirePeriod * 86400;         // термін придатності товару. (дни перевожу в секунды)
+                                        long dtCurrentWPData = wpDataDB.getDt().getTime() / 1000;   // дата посещения в секундах
+                                        long dtUserSetToTovar = 0;                                  // То что указал в Дате окончания срока годности мерчик
+                                        long resDays = 0;                                           // Дата текущего посещения + срок годности товара
+
+                                        if (data != null && !data.equals("")) {
+                                            dtUserSetToTovar = Clock.dateConvertToLong(data) / 1000;
+                                        }
+
+                                        resDays = dtCurrentWPData + tovExpirationDate;
+                                        if (dtUserSetToTovar > resDays) {
+                                            DialogData dialogBadData = new DialogData(mContext);
+                                            dialogBadData.setTitle("Зауваження до Дати");
+                                            dialogBadData.setText("Ви внесли некоректну дату закінчення строку годності. Впевнені що хочете продовжити?");
+                                            dialogBadData.setOk("Так", () -> {
+                                                dialogBadData.dismiss();
+                                                DialogData dialogBadData2 = new DialogData(mContext);
+                                                dialogBadData2.setTitle("Зауваження до Дати");
+                                                dialogBadData2.setText("Впевнені що не хочете зберігати некоректні данні?");
+                                                dialogBadData2.setOk("Так", () -> {
+                                                    dialogBadData2.dismiss();
+                                                });
+                                                dialogBadData2.setCancel("Ні", () -> {
+                                                    dialogBadData2.dismiss();
+                                                    operetionSaveRPToDB(tpl, finalReportPrepareTovar1, data, data2, list);
+                                                });
+                                                dialogBadData2.setClose(dialogBadData2::dismiss);
+                                                dialogBadData2.show();
+                                            });
+                                            dialogBadData.setCancel("Ні", () -> {
+                                                dialogBadData.dismiss();
+                                            });
+                                            dialogBadData.setClose(dialogBadData::dismiss);
+                                            dialogBadData.show();
+                                        } else {
+                                            operetionSaveRPToDB(tpl, finalReportPrepareTovar1, data, data2, list);
+                                        }
+                                    } else {
+                                        operetionSaveRPToDB(tpl, finalReportPrepareTovar1, data, data2, list);
+                                    }
+                                }
                         );
                         recyclerViewTPLAdapter.setAddReq(ar, () -> {
                             showTovarAdditionalRequirementDialog(mContext, list, ar);
@@ -762,7 +807,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                                                 OptionsDB optionsDB = matchingOption.get();
                                                 // Делайте что-то с объектом OptionsDB
                                                 out.println(optionsDB);
-                                                dialogList.add(new TovarRequisites(list, finalReportPrepareTovar).createDialog(mContext, wpDataDB, optionsDB));
+                                                dialogList.add(new TovarRequisites(list, finalReportPrepareTovar).createDialog(mContext, wpDataDB, optionsDB, ()->{}));
 
                                             } else {
                                                 // Обработка случая, когда объект OptionsDB не найден
@@ -1170,11 +1215,64 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                     });
                 } else {
                     dialog.setOperation(operationType(tpl), getCurrentData(tpl, cd2, tovarId), setMapData(tpl.getOptionControlName()), () -> {
-                        if (dialog.getOperationResult() != null && !dialog.getOperationResult().equals("")) {
-                            operetionSaveRPToDB(tpl, reportPrepareDB, dialog.getOperationResult(), dialog.getOperationResult2(), null);
-                            Toast.makeText(mContext, "Внесено: " + dialog.getOperationResult(), Toast.LENGTH_LONG).show();
-                            refreshElement(cd2, list.getiD());
-                            dialogShowRule(list, tpl, reportPrepareDB, tovarId, cd2, clientId, finalBalanceData1, finalBalanceDate1, clickType);
+                        // Сделал удаление даты тут потому что 08.04.24. в setOperation пришлось это убрать.
+                        // Мне надо проверять корректность внесенной даты и отталкиваясь от этого выводить модальное окно или нет.
+                        OptionsDB option = OptionsRealm.getOption(String.valueOf(codeDad2), "165276");
+                        if (option != null && operationType(tpl).equals(Date)) {
+                            openNext = false;
+
+                            long tovExpirationDate = list.expirePeriod * 86400;         // термін придатності товару. (дни перевожу в секунды)
+                            long dtCurrentWPData = wpDataDB.getDt().getTime() / 1000;   // дата посещения в секундах
+                            long dtUserSetToTovar = 0;                                  // То что указал в Дате окончания срока годности мерчик
+                            long resDays = 0;                                           // Дата текущего посещения + срок годности товара
+
+                            if (dialog.getOperationResult() != null && !dialog.getOperationResult().equals("")) {
+                                dtUserSetToTovar = Clock.dateConvertToLong(dialog.getOperationResult()) / 1000;
+                            }
+
+                            resDays = dtCurrentWPData + tovExpirationDate;
+                            if (dtUserSetToTovar > resDays) {
+                                DialogData dialogBadData = new DialogData(dialog.context);
+                                dialogBadData.setTitle("Зауваження до Дати");
+                                dialogBadData.setText("Ви внесли некоректну дату закінчення строку годності. Впевнені що хочете продовжити?");
+                                dialogBadData.setOk("Так", () -> {
+                                    dialogBadData.dismiss();
+                                    DialogData dialogBadData2 = new DialogData(dialog.context);
+                                    dialogBadData2.setTitle("Зауваження до Дати");
+                                    dialogBadData2.setText("Впевнені що не хочете зберігати некоректні данні?");
+                                    dialogBadData2.setOk("Так", () -> {
+                                        dialogBadData2.dismiss();
+                                    });
+                                    dialogBadData2.setCancel("Ні", () -> {
+                                        dialog.dismiss();
+                                        dialogBadData2.dismiss();
+                                        pushOkButtonRequisites(tpl, reportPrepareDB, dialog, cd2, list, tovarId, clientId, finalBalanceData1, finalBalanceDate1, clickType);
+                                    });
+                                    dialogBadData2.setClose(dialogBadData2::dismiss);
+                                    dialogBadData2.show();
+                                });
+                                dialogBadData.setCancel("Ні", () -> {
+                                    dialogBadData.dismiss();
+                                });
+                                dialogBadData.setClose(dialogBadData::dismiss);
+                                dialogBadData.show();
+                            } else {
+                                openNext = true;
+                                dialog.dismiss();
+                            }
+                        } else if (operationType(tpl).equals(Date)) {
+                            dialog.dismiss();
+                        }
+
+                        if (openNext && dialog.getOperationResult() != null && !dialog.getOperationResult().equals("")) {
+
+                            pushOkButtonRequisites(tpl, reportPrepareDB, dialog, cd2, list, tovarId, clientId, finalBalanceData1, finalBalanceDate1, clickType);
+
+                            // 08.04.24. Перенес это в отдельную функцию pushOkButtonRequisites
+//                            operetionSaveRPToDB(tpl, reportPrepareDB, dialog.getOperationResult(), dialog.getOperationResult2(), null);
+//                            Toast.makeText(mContext, "Внесено: " + dialog.getOperationResult(), Toast.LENGTH_LONG).show();
+//                            refreshElement(cd2, list.getiD());
+//                            dialogShowRule(list, tpl, reportPrepareDB, tovarId, cd2, clientId, finalBalanceData1, finalBalanceDate1, clickType);
                         } else {
                             Toast.makeText(dialog.context, "Внесите корректно данные", Toast.LENGTH_LONG).show();
                         }
@@ -1235,6 +1333,18 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
         }
 
         /**
+         * 08.04.2024
+         * Сохранение данных и открытие нового модального окошка с реквизитами.
+         * (то что должно происходить при нажатии на Ок в модальном окне при внесении реквизитов)
+         */
+        private void pushOkButtonRequisites(TovarOptions tpl, ReportPrepareDB reportPrepareDB, DialogData dialog, String cd2, TovarDB list, String tovarId, String clientId, String finalBalanceData1, String finalBalanceDate1, boolean clickType) {
+            operetionSaveRPToDB(tpl, reportPrepareDB, dialog.getOperationResult(), dialog.getOperationResult2(), null);
+            Toast.makeText(mContext, "Внесено: " + dialog.getOperationResult(), Toast.LENGTH_LONG).show();
+            refreshElement(cd2, list.getiD());
+            dialogShowRule(list, tpl, reportPrepareDB, tovarId, cd2, clientId, finalBalanceData1, finalBalanceDate1, clickType);
+        }
+
+        /**
          * 29.03.23.
          * Специальное правило по которому отображаю последовательно модальные окошки из
          * списка dialogList.
@@ -1245,7 +1355,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
             dialogList.remove(0);
 
             boolean option165276 = false;
-            OptionsDB option = OptionsRealm.getOption(String.valueOf(wpDataDB.getCode_dad2()), "165276");
+            OptionsDB option = OptionsRealm.getOption(String.valueOf(codeDad2), "165276");
             if (option != null) option165276 = true;
 
             if (dialogList.size() > 0) {
@@ -1314,7 +1424,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                         && face > 0
                         && !tpl.getOptionShort().equals("Ш")
                 ) {
-                    OptionsDB optionsDB = OptionsRealm.getOption(String.valueOf(wpDataDB.getCode_dad2()), "165276");
+                    OptionsDB optionsDB = OptionsRealm.getOption(String.valueOf(codeDad2), "165276");
                     if ((dialogList.get(0).reportPrepareDB.dtExpire != null
                             && !dialogList.get(0).reportPrepareDB.dtExpire.equals("")
                             && !dialogList.get(0).reportPrepareDB.dtExpire.equals("0000-00-00"))
@@ -1371,7 +1481,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                                 // Если ДАТА Хорошая
                             } else {
 
-                                if (tpl.getOptionShort().equals("Д")){  // Если текущее окно - ДАТА
+                                if (tpl.getOptionShort().equals("Д")) {  // Если текущее окно - ДАТА
                                     // Удаляем Возврат
                                     try {
                                         for (DialogData item : dialogList) {

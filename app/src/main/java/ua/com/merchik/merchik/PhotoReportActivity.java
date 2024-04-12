@@ -55,6 +55,7 @@ import java.util.Map;
 import java.util.Objects;
 
 import io.realm.RealmResults;
+import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.DataFromServer.PhotoData.AddrId;
 import ua.com.merchik.merchik.data.DataFromServer.PhotoData.ClientId;
 import ua.com.merchik.merchik.data.DataFromServer.PhotoData.ClientTovarGroup;
@@ -1249,7 +1250,7 @@ public class PhotoReportActivity extends toolbar_menus {
      * @return true    - если данные сохранить удалось
      * false   - есил произошла какая-то ошибка
      */
-    public static boolean savePhoto(Context context, WPDataObj wpDataObj, File image) {
+    public static boolean savePhoto(Context context, WPDataObj wpDataObj, File image, Clicks.clickVoid clickVoid) {
 
         Globals globals = new Globals();
         try {
@@ -1366,6 +1367,8 @@ public class PhotoReportActivity extends toolbar_menus {
 
                     // Проверка - есть ли что-то NULL для сохранения в БД
                     RealmManager.stackPhotoSavePhoto(stackPhotoDB); // Сохранение фотографии в БД
+
+                    clickVoid.click();
 
                     Globals.writeToMLOG("INFO", "savePhoto", "stackPhotoDB_2: " + stackPhotoDB);
                     return true;

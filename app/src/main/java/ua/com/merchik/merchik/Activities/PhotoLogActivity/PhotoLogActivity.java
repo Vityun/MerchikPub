@@ -3,7 +3,7 @@ package ua.com.merchik.merchik.Activities.PhotoLogActivity;
 import static ua.com.merchik.merchik.MakePhoto.MakePhoto.CAMERA_REQUEST_TAKE_PHOTO;
 import static ua.com.merchik.merchik.database.realm.tables.StackPhotoRealm.getPhotosByDAD2;
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
-import static ua.com.merchik.merchik.dialogs.DialogAchievement.DialogAchievement.clickVoidAchievement;
+import static ua.com.merchik.merchik.dialogs.DialogAchievement.DialogCreateAchievement.clickVoidAchievement;
 
 import android.content.Context;
 import android.content.Intent;

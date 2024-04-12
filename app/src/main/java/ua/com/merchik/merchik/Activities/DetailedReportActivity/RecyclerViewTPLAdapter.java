@@ -59,6 +59,7 @@ import ua.com.merchik.merchik.data.RealmModels.TovarDB;
 import ua.com.merchik.merchik.data.TovarOptions;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.ErrorRealm;
+import ua.com.merchik.merchik.database.realm.tables.StackPhotoRealm;
 import ua.com.merchik.merchik.database.realm.tables.TovarRealm;
 import ua.com.merchik.merchik.database.realm.tables.WpDataRealm;
 import ua.com.merchik.merchik.dialogs.DialogData;
@@ -654,12 +655,13 @@ public class RecyclerViewTPLAdapter extends RecyclerView.Adapter<RecyclerView.Vi
     class ViewHolderButton extends RecyclerView.ViewHolder {
 
         private Button button;
-        private TextView textView;
+        private TextView textView, textViewCounter;
 
         public ViewHolderButton(@NonNull View itemView) {
             super(itemView);
             button = itemView.findViewById(R.id.button);
             textView = itemView.findViewById(R.id.title);
+            textViewCounter = itemView.findViewById(R.id.count);
         }
 
         public void bind(TovarOptions item) {
@@ -689,8 +691,22 @@ public class RecyclerViewTPLAdapter extends RecyclerView.Adapter<RecyclerView.Vi
         }
 
         public void bind() {
+            int count = 0;
+            List<StackPhotoDB> stackPhotoDBList = StackPhotoRealm.getPhotoByTypeAndTovar(4, dataRp.tovarId);
+            if (stackPhotoDBList != null){
+                count = stackPhotoDBList.size();
+            }
+            textViewCounter.setText("" + count);
             button.setOnClickListener(v -> {
-                new TovarRequisites(TovarRealm.getById(dataRp.tovarId), dataRp).createDialog(itemView.getContext(), WpDataRealm.getWpDataRowByDad2Id(Long.parseLong(dataRp.codeDad2)), null).show();
+                new TovarRequisites(TovarRealm.getById(dataRp.tovarId), dataRp)
+                        .createDialog(
+                                itemView.getContext(),
+                                WpDataRealm.getWpDataRowByDad2Id(Long.parseLong(dataRp.codeDad2)),
+                                null,
+                                ()->{
+                                    notifyDataSetChanged();
+                                })
+                        .show();
             });
         }
 

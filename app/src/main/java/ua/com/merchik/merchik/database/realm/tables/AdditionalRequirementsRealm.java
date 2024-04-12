@@ -308,9 +308,10 @@ public class AdditionalRequirementsRealm {
         return res;
     }
 
-    public static List<AdditionalRequirementsDB> getADByClientAll(String clientId) {
+    public static List<AdditionalRequirementsDB> getADByClientAll(String clientId, String themeId) {
         List<AdditionalRequirementsDB> res = INSTANCE.where(AdditionalRequirementsDB.class)
                 .equalTo("clientId", clientId)
+                .equalTo("themeId", themeId)
                 .findAll();
         if (res != null) res = INSTANCE.copyFromRealm(res);
         return res;

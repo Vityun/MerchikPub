@@ -330,7 +330,8 @@ public class Options {
                 case 158609:
                 case 159726:    // Фото торговой точки
                 case 159725:    // Кнопка "Фото Торговой Точки (ФТТ)"
-                case 164352:    // Контроль наявності світлини прикасової зони
+                case 165482:    // Контроль
+                case 164352:    // Фото Планограмми ТТ
                 case 164354:    // Фото Планограмми ТТ
                     //                    checkPhotoReport(context, dataDB, optionsDB, type, mode);
                     OptionControlPhoto<?> optionControlPhoto = new OptionControlPhoto<>(context, dataDB, optionsDB, newOptionType, mode, unlockCodeResultListener);
@@ -1208,6 +1209,7 @@ public class Options {
             case 158609:
             case 84932:     // Проверка наличия ФотоОтчётов (id мне дали из 1С) (тип 0)
             case 159726:    // Фото торговой точки
+            case 165482:
             case 164354:    // Фото Планограмми ТТ
             case 164352:    // Контроль наявності світлини прикасової зони
 //            case 159725:    // Кнопка "Фото Торговой Точки (ФТТ)"

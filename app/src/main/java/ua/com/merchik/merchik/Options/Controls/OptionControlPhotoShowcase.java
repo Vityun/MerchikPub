@@ -96,7 +96,10 @@ public class OptionControlPhotoShowcase<T> extends OptionControl {
                 showcaseSDBList = SQL_DB.showcaseDao().getByDoc(wpDataDB.getClient_id(), wpDataDB.getAddr_id());
             }
 
+            // ШЕВА ПРОСИТ 45 ТИП СЮДА ДОБАВИТЬ
             stackPhotoDBSList = RealmManager.INSTANCE.copyFromRealm(StackPhotoRealm.getPhotosByDAD2(dad2, 0)); // 0 - Фото Витрины
+            List<StackPhotoDB> stackPhotoDBSList45 = RealmManager.INSTANCE.copyFromRealm(StackPhotoRealm.getPhotosByDAD2(dad2, 45)); // 0 - Фото Витрины
+            stackPhotoDBSList.addAll(stackPhotoDBSList45);
         } catch (Exception e) {
             Globals.writeToMLOG("ERROR", "OptionControlPhotoShowcase/getDocumentVar", "Exception e: " + e);
         }
@@ -167,12 +170,13 @@ public class OptionControlPhotoShowcase<T> extends OptionControl {
                     signal = false;
                 } else {
                     signal = true;
+            // (вітрина панорамна)
                 }
             }*/ else if (showcaseSDBList.size() > 0 && filledShowcaseIdsCount == 0) {
-                stringBuilderMsg.append("При виготовленні світлин Ви НЕ обрали жодної з ").append(showcaseSDBList.size()).append(" вітрин.");
+                stringBuilderMsg.append("При виготовленні світлин (вітрина панорамна) Ви НЕ обрали жодної з ").append(showcaseSDBList.size()).append(" вітрин.");
                 signal = true;
             } else if (colMin > 0 && percentValue < colMin && newTT == 0) {
-                stringBuilderMsg.append("При виготовленні світлин, Ви зазначили вітрини лише у ")
+                stringBuilderMsg.append("При виготовленні світлин (вітрина панорамна), Ви зазначили вітрини лише у ")
                         .append(filledShowcaseIdsCount)
                         .append(" фото з ")
                         .append(stackPhotoDBSList.size()).append(" (")
@@ -180,7 +184,7 @@ public class OptionControlPhotoShowcase<T> extends OptionControl {
                 signal = true;
             } else if (showcaseSDBList.size() > 0 && list.size() < showcaseSDBList.size() * colMin / 100) {
                 int perShowcase = (int) 100 * filledShowcaseIdsCount / list.size();
-                stringBuilderMsg.append("При виготовленні світлин, Ви сфотографували лише у ")
+                stringBuilderMsg.append("При виготовленні світлин (вітрина панорамна), Ви сфотографували лише у ")
                         .append(list.size())
                         .append(" вітрин з ")
                         .append(stackPhotoDBSList.size()).append(" присутніх на ТТ(")
