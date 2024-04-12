@@ -139,7 +139,8 @@ public class Tab1Fragment extends Fragment {
         }
 
 
-        toolbar_menus.setFab(v.getContext(), TARActivity.fab, ()->{}); // ГЛАВНАЯ
+        toolbar_menus.setFab(v.getContext(), TARActivity.fab, () -> {
+        }); // ГЛАВНАЯ
 
         return v;
     }
@@ -218,7 +219,7 @@ public class Tab1Fragment extends Fragment {
 //            if (data.state == 1 || data.state == 3) {
 //                money = "0";
 //            } else {
-                money = "<font color='red'> -" + data.sumPenalty + " (виновнику)</font>";
+            money = "<font color='red'> -" + data.sumPenalty + " (виновнику)</font>";
 //            }
 
 
@@ -351,8 +352,7 @@ public class Tab1Fragment extends Fragment {
         if (data.lastAnswer != null) {
             goToTab3.setVisibility(View.VISIBLE);
             goToTab3.setText(data.lastAnswer);
-        }
-        else {
+        } else {
             goToTab3.setVisibility(View.GONE);
         }
 
@@ -373,7 +373,7 @@ public class Tab1Fragment extends Fragment {
                 try {
                     List<FragmentSDB> fragmentSDB = SQL_DB.fragmentDao().getAllByPhotoId(Integer.parseInt(String.valueOf(data.photo)));
                     StackPhotoDB stackPhotoDB = StackPhotoRealm.stackPhotoDBGetPhotoBySiteId(String.valueOf(data.photo));
-                    if (stackPhotoDB != null && fragmentSDB != null && fragmentSDB.size() > 0){
+                    if (stackPhotoDB != null && fragmentSDB != null && fragmentSDB.size() > 0) {
                         DialogFullPhotoR dialog = new DialogFullPhotoR(mContext);
                         dialog.setPhoto(stackPhotoDB);
 
@@ -383,7 +383,7 @@ public class Tab1Fragment extends Fragment {
                         dialog.setClose(dialog::dismiss);
                         dialog.show();
                     }
-                }catch (Exception e){
+                } catch (Exception e) {
 
                 }
             }
@@ -401,12 +401,16 @@ public class Tab1Fragment extends Fragment {
 
 
         imageView.setOnClickListener(v -> {
-            downloadAndSetFullPhoto(String.valueOf(data.photo));
+            if (data.photo != null && data.photo != 0) {
+                downloadAndSetFullPhoto(String.valueOf(data.photo));
+            }
         });
 
         imageView2.setOnClickListener(v -> {
             try {
-                downloadAndSetFullPhoto(String.valueOf(data.photo2));
+                if (data.photo2 != null && data.photo2 != 0) {
+                    downloadAndSetFullPhoto(String.valueOf(data.photo2));
+                }
             } catch (Exception e) {
                 Toast.makeText(imageView.getContext(), "НЕ УДАЛОСЬ СКАЧАТЬ ФОТО! \n\nОбратитесь к Вашему руководителю. \n\nОшибка: " + e, Toast.LENGTH_LONG).show();
             }
@@ -579,40 +583,38 @@ public class Tab1Fragment extends Fragment {
      * 23.03.21
      * Скачивание и установка полноразмерной фотографии при нажатии на фото.
      */
+    private StackPhotoDB stackPhotoDB;  // Фото ЗіР.
     private void downloadAndSetFullPhoto(String photo) {
-        StackPhotoDB stackPhotoDB = StackPhotoRealm.stackPhotoDBGetPhotoBySiteId(photo);
-
+        stackPhotoDB = StackPhotoRealm.stackPhotoDBGetPhotoBySiteId(photo);
         if (stackPhotoDB == null) {
             stackPhotoDB = StackPhotoRealm.getById(Integer.parseInt(photo));
-
-            DialogPhotoTovar dialogPhotoTovar = new DialogPhotoTovar(mContext);
-//            dialogPhotoTovar.setPhotoTovar(Uri.parse(stackPhotoDB.getPhoto_num()));
-            dialogPhotoTovar.setPhotoTovar(stackPhotoDB);
-            dialogPhotoTovar.setClose(dialogPhotoTovar::dismiss);
-            dialogPhotoTovar.show();
-
+            if (stackPhotoDB != null && stackPhotoDB.photo_size.equals("Full")){
+                DialogPhotoTovar dialogPhotoTovar = new DialogPhotoTovar(mContext);
+                dialogPhotoTovar.setPhotoTovar(stackPhotoDB);
+                dialogPhotoTovar.setClose(dialogPhotoTovar::dismiss);
+                dialogPhotoTovar.show();
+            }else {
+                DialogData dialogData = new DialogData(getContext());
+                dialogData.setTitle("Фото ЗіР");
+                dialogData.setText("Зараз буде завантажено фото ЗіР в гарній якості, якщо завантаження не вдасться - фото можна відкрити так як є натиснувши 'Відкрити'.");
+                dialogData.setClose(dialogData::dismiss);
+                dialogData.setOk("Відкрити", ()->{
+                    DialogPhotoTovar dialogPhotoTovar = new DialogPhotoTovar(mContext);
+                    dialogPhotoTovar.setPhotoTovar(stackPhotoDB);
+                    dialogPhotoTovar.setClose(dialogPhotoTovar::dismiss);
+                    dialogPhotoTovar.show();
+                });
+                dialogData.show();
+            }
             return;
         }
 
         if (stackPhotoDB != null) {
-//            Gson gson = new Gson();
-//            String json = gson.toJson(stackPhotoDB);
-//            JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
-
             Log.e("downloadAndSetFullPhoto", "convertedObject: " + stackPhotoDB);
-
-//        Log.e("stackPhotoDB", "stackPhotoDB.size: " + stackPhotoDB.getPhoto_size());
-
             StackPhotoDB finalStackPhotoDB = stackPhotoDB;
             new PhotoDownload().downloadPhoto(true, stackPhotoDB, "/TaR", new PhotoDownload.downloadPhotoInterface() {
                 @Override
                 public void onSuccess(StackPhotoDB data) {
-//                    DialogPhotoTovar dialogPhotoTovar = new DialogPhotoTovar(mContext);
-////                    dialogPhotoTovar.setPhotoTovar(Uri.parse(finalStackPhotoDB.getPhoto_num()));
-//                    dialogPhotoTovar.setPhotoTovar(finalStackPhotoDB);
-//                    dialogPhotoTovar.setClose(dialogPhotoTovar::dismiss);
-//                    dialogPhotoTovar.show();
-
                     DialogFullPhotoR dialog = new DialogFullPhotoR(mContext);
                     dialog.setPhoto(finalStackPhotoDB);
 
