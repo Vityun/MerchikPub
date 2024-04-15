@@ -253,6 +253,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                         || optionId == 164351   // Контроль наявності світлини прикасової зони
                         || optionId == 164355   // "Фото Планограммы ТТ"
                         || optionId == 132812   // Хочу увеличение оплаты
+                        || optionId == 165481   // Кнопка ЭФФИ
                 ) {
                     optionButton.setBackgroundResource(R.drawable.bg_temp);
                     textInteger2.setVisibility(View.VISIBLE);

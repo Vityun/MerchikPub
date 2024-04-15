@@ -1097,7 +1097,11 @@ public class DetailedReportActivity extends toolbar_menus {
 
             stackPhotoDB.setUser_id(Globals.userId);
             stackPhotoDB.setUserTxt(SQL_DB.usersDao().getUserName(Globals.userId));
-            stackPhotoDB.setPhoto_type(4);      // Тип фото Остатков
+            if (tovarId.equals("0")){
+                stackPhotoDB.setPhoto_type(46);
+            }else {
+                stackPhotoDB.setPhoto_type(4);      // Тип фото Остатков
+            }
             stackPhotoDB.tovar_id = tovarId;
 
             stackPhotoDB.setCreate_time(System.currentTimeMillis());
