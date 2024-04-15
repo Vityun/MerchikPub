@@ -25,6 +25,8 @@ import android.widget.Toast;
 
 import androidx.annotation.RequiresApi;
 
+import com.google.gson.Gson;
+
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -89,9 +91,13 @@ public class DialogCreateAchievement {
             dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
             dialog.setContentView(R.layout.dialog_create_achievement);
             int width = (int) (context.getResources().getDisplayMetrics().widthPixels * 0.95);
-//            int height = (int) (context.getResources().getDisplayMetrics().heightPixels * 0.70);
-//            dialog.getWindow().setLayout(width, WindowManager.LayoutParams.WRAP_CONTENT);
-            dialog.getWindow().setLayout(width, WindowManager.LayoutParams.MATCH_PARENT);
+            int height = (int) (context.getResources().getDisplayMetrics().heightPixels * 1);
+//            dialog.getWindow().setLayout(width, height);
+
+//            dialog.getWindow().setLayout(width, WindowManager.LayoutParams.MATCH_PARENT);
+            dialog.getWindow().setLayout(width, WindowManager.LayoutParams.WRAP_CONTENT);
+
+//            dialog.getWindow().setLayout(height, WindowManager.LayoutParams.MATCH_PARENT);
 
             close = dialog.findViewById(R.id.imageButtonClose);
             help = dialog.findViewById(R.id.imageButtonLesson);
@@ -178,6 +184,7 @@ public class DialogCreateAchievement {
                     return;
                 }
 
+                Globals.writeToMLOG("INFO", "" + getClass().getName() + "/buttonSave", "" + new Gson().toJson(achievementsSDB));
 
                 SQL_DB.achievementsDao().insertAll(Collections.singletonList(achievementsSDB));
                 Toast.makeText(v.getContext(), "Створено нове досягнення", Toast.LENGTH_LONG).show();

@@ -2748,6 +2748,14 @@ public class Exchange {
                                 }
                             }
                         }
+
+                        try {
+                            Globals.writeToMLOG("INFO", "uploadAchievemnts/onResponse", "response: " + response);
+                            Globals.writeToMLOG("INFO", "uploadAchievemnts/onResponse", "response.code(): " + response.code());
+                            Globals.writeToMLOG("INFO", "uploadAchievemnts/onResponse", "response.body(): " + new Gson().toJson(response.body()));
+                        }catch (Exception e){
+                            Globals.writeToMLOG("INFO", "uploadAchievemnts/onResponse", "Exception e: " + e);
+                        }
                     }catch (Exception e){
                         Globals.writeToMLOG("ERROR", "uploadAchievemnts/onResponse/catch", "Exception e: " + Arrays.toString(e.getStackTrace()));
                     }
