@@ -673,24 +673,25 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                                         }
 
                                         resDays = dtCurrentWPData + tovExpirationDate;
-                                        if (dtUserSetToTovar > resDays) {
+                                        if (list.expirePeriod == 0 && dtUserSetToTovar > resDays) {
                                             DialogData dialogBadData = new DialogData(mContext);
                                             dialogBadData.setTitle("Зауваження до Дати");
-                                            dialogBadData.setText("Ви внесли некоректну дату закінчення строку годності. Впевнені що хочете продовжити?");
+                                            dialogBadData.setText("Ви внесли некоректну дату закінчення терміну придатності! Відмовитись від її збереження?");
                                             dialogBadData.setOk("Так", () -> {
                                                 dialogBadData.dismiss();
-                                                DialogData dialogBadData2 = new DialogData(mContext);
-                                                dialogBadData2.setTitle("Зауваження до Дати");
-                                                dialogBadData2.setText("Впевнені що не хочете зберігати некоректні данні?");
-                                                dialogBadData2.setOk("Так", () -> {
-                                                    dialogBadData2.dismiss();
-                                                });
-                                                dialogBadData2.setCancel("Ні", () -> {
-                                                    dialogBadData2.dismiss();
-                                                    operetionSaveRPToDB(tpl, finalReportPrepareTovar1, data, data2, list);
-                                                });
-                                                dialogBadData2.setClose(dialogBadData2::dismiss);
-                                                dialogBadData2.show();
+                                                Toast.makeText(mContext, "Дата не збережена!", Toast.LENGTH_LONG).show();
+//                                                DialogData dialogBadData2 = new DialogData(mContext);
+//                                                dialogBadData2.setTitle("Зауваження до Дати");
+//                                                dialogBadData2.setText("Впевнені що не хочете зберігати некоректні данні?");
+//                                                dialogBadData2.setOk("Так", () -> {
+//                                                    dialogBadData2.dismiss();
+//                                                });
+//                                                dialogBadData2.setCancel("Ні", () -> {
+//                                                    dialogBadData2.dismiss();
+//                                                    operetionSaveRPToDB(tpl, finalReportPrepareTovar1, data, data2, list);
+//                                                });
+//                                                dialogBadData2.setClose(dialogBadData2::dismiss);
+//                                                dialogBadData2.show();
                                             });
                                             dialogBadData.setCancel("Ні", () -> {
                                                 dialogBadData.dismiss();
@@ -1231,25 +1232,26 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                             }
 
                             resDays = dtCurrentWPData + tovExpirationDate;
-                            if (dtUserSetToTovar > resDays) {
+                            if (list.expirePeriod == 0 && dtUserSetToTovar > resDays) {
                                 DialogData dialogBadData = new DialogData(dialog.context);
                                 dialogBadData.setTitle("Зауваження до Дати");
-                                dialogBadData.setText("Ви внесли некоректну дату закінчення строку годності. Впевнені що хочете продовжити?");
+                                dialogBadData.setText("Ви внесли некоректну дату закінчення терміну придатності! Відмовитись від її збереження?");
                                 dialogBadData.setOk("Так", () -> {
                                     dialogBadData.dismiss();
-                                    DialogData dialogBadData2 = new DialogData(dialog.context);
-                                    dialogBadData2.setTitle("Зауваження до Дати");
-                                    dialogBadData2.setText("Впевнені що не хочете зберігати некоректні данні?");
-                                    dialogBadData2.setOk("Так", () -> {
-                                        dialogBadData2.dismiss();
-                                    });
-                                    dialogBadData2.setCancel("Ні", () -> {
-                                        dialog.dismiss();
-                                        dialogBadData2.dismiss();
-                                        pushOkButtonRequisites(tpl, reportPrepareDB, dialog, cd2, list, tovarId, clientId, finalBalanceData1, finalBalanceDate1, clickType);
-                                    });
-                                    dialogBadData2.setClose(dialogBadData2::dismiss);
-                                    dialogBadData2.show();
+                                    Toast.makeText(mContext, "Дата не збережена!", Toast.LENGTH_LONG).show();
+//                                    DialogData dialogBadData2 = new DialogData(dialog.context);
+//                                    dialogBadData2.setTitle("Зауваження до Дати");
+//                                    dialogBadData2.setText("Впевнені що не хочете зберігати некоректні данні?");
+//                                    dialogBadData2.setOk("Так", () -> {
+//                                        dialogBadData2.dismiss();
+//                                    });
+//                                    dialogBadData2.setCancel("Ні", () -> {
+//                                        dialog.dismiss();
+//                                        dialogBadData2.dismiss();
+//                                        pushOkButtonRequisites(tpl, reportPrepareDB, dialog, cd2, list, tovarId, clientId, finalBalanceData1, finalBalanceDate1, clickType);
+//                                    });
+//                                    dialogBadData2.setClose(dialogBadData2::dismiss);
+//                                    dialogBadData2.show();
                                 });
                                 dialogBadData.setCancel("Ні", () -> {
                                     dialogBadData.dismiss();
