@@ -673,7 +673,8 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                                         }
 
                                         resDays = dtCurrentWPData + tovExpirationDate;
-                                        if (list.expirePeriod == 0 && dtUserSetToTovar > resDays) {
+                                        int exPer = list.expirePeriod;
+                                        if (exPer != 0 && dtUserSetToTovar > resDays) {
                                             DialogData dialogBadData = new DialogData(mContext);
                                             dialogBadData.setTitle("Зауваження до Дати");
                                             dialogBadData.setText("Ви внесли некоректну дату закінчення терміну придатності! Відмовитись від її збереження?");
@@ -1232,7 +1233,8 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                             }
 
                             resDays = dtCurrentWPData + tovExpirationDate;
-                            if (list.expirePeriod == 0 && dtUserSetToTovar > resDays) {
+                            int exPer = list.expirePeriod;
+                            if (exPer != 0 && dtUserSetToTovar > resDays) {
                                 DialogData dialogBadData = new DialogData(dialog.context);
                                 dialogBadData.setTitle("Зауваження до Дати");
                                 dialogBadData.setText("Ви внесли некоректну дату закінчення терміну придатності! Відмовитись від її збереження?");

@@ -75,6 +75,7 @@ import ua.com.merchik.merchik.Options.Buttons.OptionButtonPhotoAktionTovar;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonPhotoBeforeStartWork;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonPhotoCassZone;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonPhotoDMP;
+import ua.com.merchik.merchik.Options.Buttons.OptionButtonPhotoEFFIE;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonPhotoFOT;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonPhotoOfACartWithGoods;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonPhotoShowcaseCorporateBlock;
@@ -1051,6 +1052,10 @@ public class Options {
         Log.e("NNK", "F/optControl/optionId: " + optionId);
         Log.e("NNK", "F/optControl/NNKMode mode: " + mode);
         switch (optionId) {
+
+            case 165481:
+                OptionButtonPhotoEFFIE<?> optionButtonPhotoEFFIE = new OptionButtonPhotoEFFIE<>(context, dataDB, option, type, mode, unlockCodeResultListener);
+                break;
 
             case 84005, 84967, 164985, 165276:
                 OptionControlCheckingForAnAchievement<?> optionControlCheckingForAnAchievement = new OptionControlCheckingForAnAchievement<>(context, dataDB, option, type, mode, unlockCodeResultListener);
