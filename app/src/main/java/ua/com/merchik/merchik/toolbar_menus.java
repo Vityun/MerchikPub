@@ -1502,7 +1502,8 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
      */
     public void cronCheckUploadsPhotoOnServer() {
         try {
-            final RealmResults<StackPhotoDB> realmResults = RealmManager.stackPhotoGetHashs();
+//            final RealmResults<StackPhotoDB> realmResults = RealmManager.stackPhotoGetHashs();
+            final List<StackPhotoDB> realmResults = RealmManager.INSTANCE.copyFromRealm(RealmManager.stackPhotoGetHashs());
 
             Log.e("CHECK_HASH", "realmResults: " + realmResults.size());
 
@@ -1515,6 +1516,8 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                 for (int i = 0; i < realmResults.size(); i++) {
                     listHash.add(i, realmResults.get(i).getPhoto_hash());
                 }
+
+                Globals.writeToMLOG("INFO", "cronCheckUploadsPhotoOnServer", "listHash: " + listHash);
 
                 // TODO нормально оформить этот запрос
 /*                StandartData standartData = new StandartData();
@@ -1560,6 +1563,8 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                                     if (response.body().getList() != null && response.body().getList().size() > 0) {
                                         List<PhotoHashList> list = response.body().getList();
 
+                                        Globals.writeToMLOG("INFO", "cronCheckUploadsPhotoOnServer", "list: " + list.size());
+
                                         for (PhotoHashList itemSite : list) {
                                             for (StackPhotoDB itemApp : realmResults) {
 
@@ -1593,7 +1598,7 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                                 }
                             }
                         } catch (Exception e) {
-//                            Toast.makeText(toolbar_menus.this, "Ошибка при проверке фото с сервера: " + e, Toast.LENGTH_SHORT).show();
+                            Globals.writeToMLOG("INFO", "cronCheckUploadsPhotoOnServer", "Exception e: " + e);
                         }
 
                     }
@@ -1601,13 +1606,15 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                     @Override
                     public void onFailure(Call<PhotoHash> call, Throwable t) {
                         Log.d("test", "Нет данных3");
+                        Globals.writeToMLOG("INFO", "cronCheckUploadsPhotoOnServer", "Throwable t: " + t);
                     }
                 });
             } else {
                 Log.d("test", "Нет данных4");
             }
         } catch (Exception e) {
-            Toast.makeText(toolbar_menus.this, "Ошибка при проверке фото: " + e, Toast.LENGTH_SHORT).show();
+            Globals.writeToMLOG("INFO", "cronCheckUploadsPhotoOnServer", "Exception e2: " + e);
+//            Toast.makeText(toolbar_menus.this, "Ошибка при проверке фото: " + e, Toast.LENGTH_SHORT).show();
         }
 
     }

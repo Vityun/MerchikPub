@@ -2,7 +2,6 @@ package ua.com.merchik.merchik.Activities.DetailedReportActivity;
 
 import static io.realm.Realm.getApplicationContext;
 import static ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity.savePhoto;
-import static ua.com.merchik.merchik.MakePhoto.MakePhotoFromGalery.MakePhotoFromGaleryWpDataDB;
 import static ua.com.merchik.merchik.Options.Options.ConductMode.DEFAULT_CONDUCT;
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
@@ -69,9 +68,9 @@ public class DetailedReportOptionsFrag extends Fragment {
                 @Override
                 public void onActivityResult(Uri uri) {
                     try {
-//                        File file = new File(getPathFromURI(getContext(), uri));
+                        int photoType = 4;
                         File file = new File(Globals.FileUtils.getRealPathFromUri(getContext(), uri));
-                        savePhoto(file, MakePhotoFromGaleryWpDataDB, MakePhotoFromGalery.tovarId, getApplicationContext());
+                        savePhoto(file, wpDataDB, photoType, MakePhotoFromGalery.tovarId, getApplicationContext());
                     } catch (Exception e) {
                         Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST", "Exception e: " + e);
                     }

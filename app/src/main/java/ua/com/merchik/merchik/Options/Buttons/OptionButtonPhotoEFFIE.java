@@ -53,6 +53,7 @@ public class OptionButtonPhotoEFFIE<T> extends OptionControl {
                 MakePhotoFromGalery.tovarId = "0";
                 Intent intent = new Intent(Intent.ACTION_PICK);
                 intent.setType("image/*");
+                intent.putExtra("photo_type", 46); // Добавляем тип фотографии в интент
                 ((DetailedReportActivity) context).startActivityForResult(Intent.createChooser(intent, "Select Picture"), 500);
             } else {
                 DetailedReportOptionsFrag.PermissionUtils.requestReadExternalStoragePermission(context, (DetailedReportActivity) context);

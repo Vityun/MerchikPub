@@ -765,9 +765,10 @@ public class DetailedReportActivity extends toolbar_menus {
 
             if (requestCode == PICK_GALLERY_IMAGE_REQUEST && resultCode == RESULT_OK && data != null && data.getData() != null) {
                 try {
+                    int photoType = data.getIntExtra("photo_type", 4); // Получаем тип фотографии из Intent
                     Uri uri = data.getData();
                     File file = new File(Globals.FileUtils.getRealPathFromUri(getApplicationContext(), uri));
-                    StackPhotoDB stackPhotoDB = savePhoto(file, MakePhotoFromGaleryWpDataDB, MakePhotoFromGalery.tovarId, getApplicationContext());
+                    StackPhotoDB stackPhotoDB = savePhoto(file, MakePhotoFromGaleryWpDataDB, photoType, MakePhotoFromGalery.tovarId, getApplicationContext());
 
                     if (stackPhotoDB != null){
                         // Сохраняем результат что фото сохранено
@@ -1072,7 +1073,7 @@ public class DetailedReportActivity extends toolbar_menus {
     }
 
 
-    public static StackPhotoDB savePhoto(File file, WpDataDB wpDataDB, String tovarId, Context context) {
+    public static StackPhotoDB savePhoto(File file, WpDataDB wpDataDB, int photoType, String tovarId, Context context) {
         try {
             file.exists();
             int id = RealmManager.stackPhotoGetLastId();
@@ -1097,11 +1098,12 @@ public class DetailedReportActivity extends toolbar_menus {
 
             stackPhotoDB.setUser_id(Globals.userId);
             stackPhotoDB.setUserTxt(SQL_DB.usersDao().getUserName(Globals.userId));
-            if (tovarId.equals("0")){
-                stackPhotoDB.setPhoto_type(46);
-            }else {
-                stackPhotoDB.setPhoto_type(4);      // Тип фото Остатков
-            }
+//            if (tovarId.equals("0")){
+//                stackPhotoDB.setPhoto_type(46);
+//            }else {
+//                stackPhotoDB.setPhoto_type(4);      // Тип фото Остатков
+//            }
+            stackPhotoDB.setPhoto_type(photoType);
             stackPhotoDB.tovar_id = tovarId;
 
             stackPhotoDB.setCreate_time(System.currentTimeMillis());
