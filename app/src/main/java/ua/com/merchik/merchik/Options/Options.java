@@ -1298,14 +1298,14 @@ public class Options {
                     return optionControlEKL.isBlockOption2() ? 1 : 0;
                 }
 
-
-                if (mode.equals(NNKMode.BLOCK)/* && optionControlEKL.signal && optionControlEKL.isBlockOption()*/) {
+//                if (mode.equals(NNKMode.BLOCK)) {
+                if (mode.equals(NNKMode.BLOCK) && optionControlEKL.signal && optionControlEKL.isBlockOption()) {
                     optionControlEKL.showOptionMassage(block);
-//                    return optionControlEKL.getResultCode();
-
                     return optionControlEKL.isBlockOption2() ? 1 : 0;
                 }
-                break;
+
+                return optionControlEKL.isBlockOption2() ? 1 : 0;
+//                break;
 
 
             case 133381:
