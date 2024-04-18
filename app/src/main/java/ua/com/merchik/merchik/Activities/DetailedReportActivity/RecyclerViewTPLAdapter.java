@@ -17,6 +17,7 @@ import android.text.TextPaint;
 import android.text.TextWatcher;
 import android.text.style.ClickableSpan;
 import android.text.style.StyleSpan;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -691,23 +692,27 @@ public class RecyclerViewTPLAdapter extends RecyclerView.Adapter<RecyclerView.Vi
         }
 
         public void bind() {
-            int count = 0;
-            List<StackPhotoDB> stackPhotoDBList = StackPhotoRealm.getPhotoByTypeAndTovar(4, dataRp.tovarId);
-            if (stackPhotoDBList != null){
-                count = stackPhotoDBList.size();
+            try {
+                int count = 0;
+                List<StackPhotoDB> stackPhotoDBList = StackPhotoRealm.getPhotoByTypeAndTovar(4, dataRp.tovarId);
+                if (stackPhotoDBList != null){
+                    count = stackPhotoDBList.size();
+                }
+                textViewCounter.setText("" + count);
+                button.setOnClickListener(v -> {
+                    new TovarRequisites(TovarRealm.getById(dataRp.tovarId), dataRp)
+                            .createDialog(
+                                    itemView.getContext(),
+                                    WpDataRealm.getWpDataRowByDad2Id(Long.parseLong(dataRp.codeDad2)),
+                                    null,
+                                    ()->{
+                                        notifyDataSetChanged();
+                                    })
+                            .show();
+                });
+            }catch (Exception e){
+                Log.e("RVTPLAdapter_bind", "Exception e: " + e);
             }
-            textViewCounter.setText("" + count);
-            button.setOnClickListener(v -> {
-                new TovarRequisites(TovarRealm.getById(dataRp.tovarId), dataRp)
-                        .createDialog(
-                                itemView.getContext(),
-                                WpDataRealm.getWpDataRowByDad2Id(Long.parseLong(dataRp.codeDad2)),
-                                null,
-                                ()->{
-                                    notifyDataSetChanged();
-                                })
-                        .show();
-            });
         }
 
 

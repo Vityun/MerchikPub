@@ -713,6 +713,50 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
 
                         recyclerView.setAdapter(recyclerViewTPLAdapter);
                         recyclerView.setLayoutManager(new LinearLayoutManager(mContext, LinearLayoutManager.VERTICAL, false));
+                    }else {
+                        ReportPrepareDB finalReportPrepareTovar1 = createNewRPRow(list);
+                        List<TovarOptions> requiredOptionsTPL = options.getRequiredOptionsTPL(optionsList2, deletePromoOption);
+                        RecyclerViewTPLAdapter recyclerViewTPLAdapter = new RecyclerViewTPLAdapter(
+                                requiredOptionsTPL,
+                                finalReportPrepareTovar1,
+                                (tpl, data, data2) -> {
+                                    OptionsDB option = OptionsRealm.getOption(String.valueOf(codeDad2), "165276");
+                                    if (option != null && operationType(tpl).equals(Date)) {
+                                        long tovExpirationDate = list.expirePeriod * 86400;         // термін придатності товару. (дни перевожу в секунды)
+                                        long dtCurrentWPData = wpDataDB.getDt().getTime() / 1000;   // дата посещения в секундах
+                                        long dtUserSetToTovar = 0;                                  // То что указал в Дате окончания срока годности мерчик
+                                        long resDays = 0;                                           // Дата текущего посещения + срок годности товара
+
+                                        if (data != null && !data.equals("")) {
+                                            dtUserSetToTovar = Clock.dateConvertToLong(data) / 1000;
+                                        }
+
+                                        resDays = dtCurrentWPData + tovExpirationDate;
+                                        int exPer = list.expirePeriod;
+                                        if (exPer != 0 && dtUserSetToTovar > resDays) {
+                                            DialogData dialogBadData = new DialogData(mContext);
+                                            dialogBadData.setTitle("Зауваження до Дати");
+                                            dialogBadData.setText("Ви внесли некоректну дату закінчення терміну придатності! Відмовитись від її збереження?");
+                                            dialogBadData.setOk("Так", () -> {
+                                                dialogBadData.dismiss();
+                                                Toast.makeText(mContext, "Дата не збережена!", Toast.LENGTH_LONG).show();
+                                            });
+                                            dialogBadData.setCancel("Ні", () -> {
+                                                dialogBadData.dismiss();
+                                            });
+                                            dialogBadData.setClose(dialogBadData::dismiss);
+                                            dialogBadData.show();
+                                        } else {
+                                            operetionSaveRPToDB(tpl, finalReportPrepareTovar1, data, data2, list);
+                                        }
+                                    } else {
+                                        operetionSaveRPToDB(tpl, finalReportPrepareTovar1, data, data2, list);
+                                    }
+                                }
+                        );
+
+                        recyclerView.setAdapter(recyclerViewTPLAdapter);
+                        recyclerView.setLayoutManager(new LinearLayoutManager(mContext, LinearLayoutManager.VERTICAL, false));
                     }
                 } catch (Exception e) {
                     Globals.writeToMLOG("ERR", "RecyclerViewTPLAdapter", "Exception e: " + e);
