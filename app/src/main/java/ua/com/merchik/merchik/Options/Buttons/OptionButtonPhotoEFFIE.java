@@ -51,6 +51,7 @@ public class OptionButtonPhotoEFFIE<T> extends OptionControl {
             if (DetailedReportOptionsFrag.PermissionUtils.checkReadExternalStoragePermission(context)) {
                 MakePhotoFromGaleryWpDataDB = wpDataDB;
                 MakePhotoFromGalery.tovarId = "0";
+                MakePhotoFromGalery.photoType = 46;
                 Intent intent = new Intent(Intent.ACTION_PICK);
                 intent.setType("image/*");
                 intent.putExtra("photo_type", 46); // Добавляем тип фотографии в интент

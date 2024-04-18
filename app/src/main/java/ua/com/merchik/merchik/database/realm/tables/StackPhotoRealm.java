@@ -347,7 +347,7 @@ public class StackPhotoRealm {
         if (tovIds != null) {
             res = res.where().in("tovar_id", tovIds).findAll();
             if (res != null) {
-                Globals.writeToMLOG("INFO", "StackPhotoRealm.getPhoto.photoType", "res: " + res.size());
+                Globals.writeToMLOG("INFO", "StackPhotoRealm.getPhoto.tovar_id", "res: " + res.size());
             }
         }
 

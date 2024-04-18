@@ -14,6 +14,7 @@ public class MakePhotoFromGalery {
     public static WpDataDB MakePhotoFromGaleryWpDataDB;
     public static TasksAndReclamationsSDB MakePhotoFromGaleryTasksAndReclamationsSDB;
     public static String tovarId;
+    public static Integer photoType;
     public void openGalleryToPeakPhoto(Context context, WpDataDB wp){
         MakePhotoFromGaleryWpDataDB = wp;
         Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);

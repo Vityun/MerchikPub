@@ -15,6 +15,7 @@ import okhttp3.Request;
 import okhttp3.Response;
 import okhttp3.WebSocket;
 import okhttp3.WebSocketListener;
+import okhttp3.logging.HttpLoggingInterceptor;
 import okio.ByteString;
 import retrofit2.Retrofit;
 import retrofit2.adapter.rxjava3.RxJava3CallAdapterFactory;
@@ -62,11 +63,14 @@ public class RetrofitBuilder {
 
         Gson gson = gsonBuilder.create();
 
-//        loggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
+        HttpLoggingInterceptor loggingInterceptor = new HttpLoggingInterceptor();
+        loggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BODY); // Логирует тела запросов и ответов
+
         OkHttpClient.Builder httpClientBuilder = new OkHttpClient.Builder();
         httpClientBuilder.addInterceptor(new TimeoutInterceptor());
         httpClientBuilder.addInterceptor(new ChuckerInterceptor(MyApplication.getAppContext()));
-//        httpClientBuilder.addInterceptor(loggingInterceptor);
+
+        httpClientBuilder.addInterceptor(loggingInterceptor);
 
         httpClientBuilder.cookieJar(cookie)
                 .connectTimeout(60, TimeUnit.SECONDS)
