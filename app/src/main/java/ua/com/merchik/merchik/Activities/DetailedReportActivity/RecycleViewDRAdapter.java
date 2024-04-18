@@ -961,7 +961,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
 
                         OptionControlAvailabilityControlPhotoRemainingGoods<?> optionControlAvailabilityControlPhotoRemainingGoods =
                                 new OptionControlAvailabilityControlPhotoRemainingGoods<>(context, (WpDataDB) dataDB, option, newOptionType, Options.NNKMode.CHECK, null);
-                        if (optionControlAvailabilityControlPhotoRemainingGoods.signal){
+                        if (optionControlAvailabilityControlPhotoRemainingGoods.signal && option.getOptionControlId().equals("159707")){
                             optionControlAvailabilityControlPhotoRemainingGoods.showOptionMassage("");
                         }else {
                             click.click();
