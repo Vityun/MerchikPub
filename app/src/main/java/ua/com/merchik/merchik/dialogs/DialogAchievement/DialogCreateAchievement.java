@@ -74,7 +74,7 @@ public class DialogCreateAchievement {
     private ImageView photoToIV, photoAfterIV;
 
     private Spinner spinnerTheme, spinnerClient;
-    private String[] themeList = new String[]{
+    public static String[] themeList = new String[]{
             "Досягнення (покращення розташування товару в ТТ)",     // 595
             "Замовлення на фінансування нового Досягнення",         // 1252
             "Утримання викладки на полиці (досягнутого раніше)"};   // 1251

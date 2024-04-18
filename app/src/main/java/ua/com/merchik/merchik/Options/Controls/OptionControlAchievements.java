@@ -21,8 +21,10 @@ import ua.com.merchik.merchik.data.Database.Room.UsersSDB;
 import ua.com.merchik.merchik.data.Database.Room.VoteSDB;
 import ua.com.merchik.merchik.data.OptionMassageType;
 import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
+import ua.com.merchik.merchik.data.RealmModels.ThemeDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.database.realm.RealmManager;
+import ua.com.merchik.merchik.database.realm.tables.ThemeRealm;
 
 public class OptionControlAchievements<T> extends OptionControl {
     public int OPTION_CONTROL_ACHIEVEMENTS_ID = 590;
@@ -48,6 +50,8 @@ public class OptionControlAchievements<T> extends OptionControl {
     private Long dateDocument;  // В секундах
     private Long dateFrom = 0L;
     private Long dateTo = 0L;
+
+    private int sumError = 0;
 
 
     public OptionControlAchievements(Context context, T document, OptionsDB optionDB, OptionMassageType msgType, Options.NNKMode nnkMode, UnlockCodeResultListener unlockCodeResultListener) {
@@ -78,9 +82,9 @@ public class OptionControlAchievements<T> extends OptionControl {
                 addressSDBDocument = SQL_DB.addressDao().getById(wpDataDB.getAddr_id());
                 dateDocument = wpDataDB.getDt().getTime() / 1000;
 
-                if (System.currentTimeMillis() > 1681603200000L) {
-                    themeId = 595;
-                }
+//                if (System.currentTimeMillis() > 1681603200000L) {
+//                    themeId = 595;
+//                }
 
                 // dateDocument*1000 -- Делаем такую херь, потому что функция работает в миллисекундах. / 1000 - для перевода в секунды.
                 int minusDay = Integer.parseInt(optionDB.getAmountMax()) > 0 ? Integer.parseInt(optionDB.getAmountMax()) : 30;
@@ -133,6 +137,26 @@ public class OptionControlAchievements<T> extends OptionControl {
                 SPIS.append(customerSDBDocument.nm).append(", ");
             } else {
                 for (AchievementsSDB item : achievementsSDBList) {
+
+                    // 18.04.24. Проверка на тему 595. Мерчикам надо ГОВОРИТь что у них нет нужной темы.
+                    if (item.themeId != 595) {
+                        String themeTxt = "";
+                        String theme595Txt = "";
+                        ThemeDB theme = ThemeRealm.getThemeById(String.valueOf(item.themeId));
+                        ThemeDB theme595 = ThemeRealm.getThemeById(String.valueOf(595));
+                        if (theme != null) themeTxt = theme.getNm();
+                        if (theme595 != null) theme595Txt = theme595.getNm();
+
+                        item.error = 1;
+                        item.note = new StringBuilder().append("тема досягнення №")
+                                .append(item.serverId)
+                                .append(" (").append(item.themeId).append("-").append(themeTxt)
+                                .append(") не влаштовує! Повинна бути тема: ")
+                                .append(" (").append("595").append("-").append(theme595Txt)
+                                .append(")");
+                        continue;
+                    }
+
                     if ((optionDB.getOptionId().equals("160209") || optionDB.getOptionControlId().equals("160209"))) {
                         item.note = new StringBuilder().append("для опції перевіряем лише наявність досягнень");
                         continue;
@@ -177,7 +201,7 @@ public class OptionControlAchievements<T> extends OptionControl {
                 }// end for
 
 
-                int sumError = 0;
+
                 try {
                     sumError = achievementsSDBList.stream().map(table -> table.error).reduce(0, Integer::sum);
                 } catch (Exception ignored) {
@@ -209,6 +233,8 @@ public class OptionControlAchievements<T> extends OptionControl {
             } else if ((optionDB.getOptionId().equals("160209") || optionDB.getOptionControlId().equals("160209")) && achievementsSDBList.size() == 0 && traineeSignal > 0) {
                 stringBuilderMsg.append(period).append(" нема жодного досягнення. Але виконавець ще не провів свого 40-го звіту.");
                 signal = false;
+
+            } else if ((optionDB.getOptionId().equals("160209") || optionDB.getOptionControlId().equals("160209")) && achievementsSDBList.size() > 0 && sumError == achievementsSDBList.size()){
 
             } else if ((optionDB.getOptionId().equals("160209") || optionDB.getOptionControlId().equals("160209")) && achievementsSDBList.size() == 0) {
                 stringBuilderMsg.append(period).append(" нема жодного досягнення. ");
