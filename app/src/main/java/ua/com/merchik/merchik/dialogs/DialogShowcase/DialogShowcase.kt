@@ -255,6 +255,7 @@ class DialogShowcase(private val context: Context?) : DialogData() {
                 list.add(1)
                 list.add(2)
             }else if (photoType == 45){
+                list.add(3)
                 list.add(5)
                 list.add(8)
             }

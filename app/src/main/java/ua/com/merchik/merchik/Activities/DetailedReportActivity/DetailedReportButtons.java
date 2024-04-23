@@ -189,7 +189,7 @@ public class DetailedReportButtons {
                     ttCategory = addressSDB.ttId;
                 }
 
-                List<AdditionalRequirementsDB> data = AdditionalRequirementsRealm.getData3(wpDataDB, HIDE_FOR_USER, ttCategory, 0);
+                List<AdditionalRequirementsDB> data = AdditionalRequirementsRealm.getData3(wpDataDB, HIDE_FOR_USER, ttCategory, null,0);
                 Log.e("AdditionalRequirements", "data2.size(): " + data.size());
 
 

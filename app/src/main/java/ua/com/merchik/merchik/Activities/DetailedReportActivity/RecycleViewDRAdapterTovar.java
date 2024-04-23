@@ -696,6 +696,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                                             });
                                             dialogBadData.setCancel("Ні", () -> {
                                                 dialogBadData.dismiss();
+                                                operetionSaveRPToDB(tpl, finalReportPrepareTovar1, data, data2, list);
                                             });
                                             dialogBadData.setClose(dialogBadData::dismiss);
                                             dialogBadData.show();
@@ -743,6 +744,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                                             });
                                             dialogBadData.setCancel("Ні", () -> {
                                                 dialogBadData.dismiss();
+                                                operetionSaveRPToDB(tpl, finalReportPrepareTovar1, data, data2, list);
                                             });
                                             dialogBadData.setClose(dialogBadData::dismiss);
                                             dialogBadData.show();
@@ -1301,6 +1303,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                                 });
                                 dialogBadData.setCancel("Ні", () -> {
                                     dialogBadData.dismiss();
+                                    pushOkButtonRequisites(tpl, reportPrepareDB, dialog, cd2, list, tovarId, clientId, finalBalanceData1, finalBalanceDate1, clickType);
                                 });
                                 dialogBadData.setClose(dialogBadData::dismiss);
                                 dialogBadData.show();

@@ -123,7 +123,7 @@ public class AdditionalRequirementsRealm {
         HIDE_FOR_CLIENT     // Скрывать для клиента. Добавил просто потому что в БД есть такое поле и может в будущем пригодиться.
     }
 
-    public static <T> List<AdditionalRequirementsDB> getData3(T data, AdditionalRequirementsModENUM mod, Integer ttCategory, int mode) {
+    public static <T> List<AdditionalRequirementsDB> getData3(T data, AdditionalRequirementsModENUM mod, Integer ttCategory, String optionId, int mode) {
 
         Log.e("getData3", "mod: " + mod);
 
@@ -267,6 +267,12 @@ public class AdditionalRequirementsRealm {
                 .isNull("dtEnd") // Проверка на NULL для неограниченной даты
                 .endGroup()
                 .findAll();
+
+        if (optionId != null && !optionId.equals("")){
+            realmResults = realmResults.where()
+                    .equalTo("optionId", optionId)
+                    .findAll();
+        }
 
 
         return RealmManager.INSTANCE.copyFromRealm(realmResults);

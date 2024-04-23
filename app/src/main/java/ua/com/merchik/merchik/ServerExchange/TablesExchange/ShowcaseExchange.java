@@ -50,7 +50,7 @@ public class ShowcaseExchange {
                     Log.e("checkRequest", "response.body(): " + response.body());
                     if (response.isSuccessful()) {
                         Globals.writeToMLOG("INFO", "downloadShowcaseTable/onResponse/isSuccessful", "isSuccessful");
-                        if (response.body() != null && response.body().state && response.body().list != null && response.body().list.size() > 0) {
+                        if (response.body() != null && response.body().state != null && response.body().state && response.body().list != null && response.body().list.size() > 0) {
                             Globals.writeToMLOG("INFO", "downloadShowcaseTable/onResponse/isSuccessful", "response.body().list.size(): " + response.body().list.size());
                             List<ShowcaseSDB> serv = response.body().list;
                             List<ShowcaseSDB> db = SQL_DB.showcaseDao().getAll();

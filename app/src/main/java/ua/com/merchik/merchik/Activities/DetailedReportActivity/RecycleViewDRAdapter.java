@@ -533,7 +533,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                             if (addressSDB != null) {
                                 ttCategory = addressSDB.ttId;
                             }
-                            textInteger.setText("" + AdditionalRequirementsRealm.getData3(dataDB, HIDE_FOR_USER, ttCategory, 0).size());
+                            textInteger.setText("" + AdditionalRequirementsRealm.getData3(dataDB, HIDE_FOR_USER, ttCategory, null,0).size());
                             break;
 
                         case 138340:    // Доп Требования

@@ -81,7 +81,7 @@ public class MenuMainActivity extends toolbar_menus {
     }
 
     private void test() {
-        new TablesLoadingUnloading().downloadImagesTp(this);
+        new TablesLoadingUnloading().downloadOptions(this);
     }
 
 /*
