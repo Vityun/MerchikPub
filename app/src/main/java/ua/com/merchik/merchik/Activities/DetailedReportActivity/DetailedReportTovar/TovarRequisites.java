@@ -9,6 +9,7 @@ import android.content.Intent;
 import android.util.Log;
 
 import java.io.File;
+import java.util.Arrays;
 
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity;
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportOptionsFrag;
@@ -70,15 +71,23 @@ public class TovarRequisites {
                 },
                 "Вибрати з галереї",
                 () -> {
-                    if (DetailedReportOptionsFrag.PermissionUtils.checkReadExternalStoragePermission(context)) {
-                        MakePhotoFromGaleryWpDataDB = wpDataDB;
-                        MakePhotoFromGalery.tovarId = reportPrepareDB.tovarId;
-                        Intent intent = new Intent(Intent.ACTION_PICK);
-                        intent.setType("image/*");
-                        ((DetailedReportActivity) context).startActivityForResult(Intent.createChooser(intent, "Select Picture"), 500);
-                    } else {
-                        DetailedReportOptionsFrag.PermissionUtils.requestReadExternalStoragePermission(context, (DetailedReportActivity) context);
+                    try {
+                        if (DetailedReportOptionsFrag.PermissionUtils.checkReadExternalStoragePermission(context)) {
+                            Globals.writeToMLOG("INFO", "Вибрати з галереї", "DetailedReportOptionsFrag.PermissionUtils.checkReadExternalStoragePermission(context)");
+                            MakePhotoFromGaleryWpDataDB = wpDataDB;
+                            MakePhotoFromGalery.tovarId = reportPrepareDB.tovarId;
+                            MakePhotoFromGalery.photoType = 4;
+                            Intent intent = new Intent(Intent.ACTION_PICK);
+                            intent.setType("image/*");
+                            ((DetailedReportActivity) context).startActivityForResult(Intent.createChooser(intent, "Select Picture"), 500);
+                        } else {
+                            DetailedReportOptionsFrag.PermissionUtils.requestReadExternalStoragePermission(context, (DetailedReportActivity) context);
+                            Globals.writeToMLOG("INFO", "Вибрати з галереї", "Запрос доступа");
+                        }
+                    }catch (Exception e){
+                        Globals.writeToMLOG("INFO", "Вибрати з галереї", "Exception e: " + Arrays.toString(e.getStackTrace()));
                     }
+
                 });
 
         res.setCancel("Закрити", res::dismiss);
