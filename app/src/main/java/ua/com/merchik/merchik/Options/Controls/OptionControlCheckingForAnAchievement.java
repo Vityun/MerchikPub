@@ -4,12 +4,20 @@ import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
 import android.content.Context;
 import android.os.Build;
+import android.text.SpannableString;
+import android.text.SpannableStringBuilder;
+import android.text.Spanned;
+import android.text.TextPaint;
+import android.text.style.ClickableSpan;
+import android.util.Log;
+import android.view.View;
 
 import androidx.annotation.RequiresApi;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportTovar.ShowTovarRequisites;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.Options.OptionControl;
 import ua.com.merchik.merchik.Options.Options;
@@ -53,6 +61,7 @@ public class OptionControlCheckingForAnAchievement<T> extends OptionControl {
     public int OPTION_CONTROL_CheckingForAnAchievement4_ID = 165276;
 
     public boolean signal = true;
+    private SpannableStringBuilder resultMsg = new SpannableStringBuilder();
 
     private List<Integer> tovListOSV;
     private WpDataDB wpDataDB;
@@ -60,6 +69,7 @@ public class OptionControlCheckingForAnAchievement<T> extends OptionControl {
     private UsersSDB usersSDBDocument;
     private AddressSDB addressSDBDocument;
     private List<ReportPrepareDB> reportPrepareDB = new ArrayList<>();
+    private List<TovarDB> tovarResultList = new ArrayList<>();
 
     private int colMax = 0;
 
@@ -154,6 +164,7 @@ public class OptionControlCheckingForAnAchievement<T> extends OptionControl {
                     item.error = 1;
                     item.errorNote = "Для товара з ОСУ (Особою Увагою) ви повинні зазначити ДЗТП (ДОСГ).";
                     find = 1;
+                    tovarResultList.add(tovarDB);
                 }
 
                 // 84967 - контроль наявності дати закінчення терміну придатності (сроков годности) в УСІХ товарів, наявних на полицях
@@ -161,6 +172,7 @@ public class OptionControlCheckingForAnAchievement<T> extends OptionControl {
                     item.error = 1;
                     item.errorNote = "Для поточного товара ви повинні зазначити ДЗТП (ДОСГ).";
                     find = 1;
+                    tovarResultList.add(tovarDB);
                 }
 
                 // 165276 -
@@ -168,6 +180,7 @@ public class OptionControlCheckingForAnAchievement<T> extends OptionControl {
                     item.error = 1;
                     item.errorNote = "Для поточного товара ви повинні зазначити ДЗТП (ДОСГ).";
                     find = 1;
+                    tovarResultList.add(tovarDB);
                 }
             }
 
@@ -213,42 +226,49 @@ public class OptionControlCheckingForAnAchievement<T> extends OptionControl {
 
             //6.0. готовим сообщение и сигнал
             if (reportPrepareDB.size() == 0) {
-                stringBuilderMsg.append("Товарів, по котрим треба перевірити факт наякності ДОСГ (Дати Закінчення Терміну Придатності), не знайдено.");
+                resultMsg.append("Товарів, по котрим треба перевірити факт наякності ДОСГ (Дати Закінчення Терміну Придатності), не знайдено.");
                 signal = true;
             } else if (optionDB.getOptionId().equals("164985") && sumOSV == 0 && sumDOSG == 0) {
-                stringBuilderMsg.append("На поточний момент, товари з ОСВ (Особым Вниманием) не знайдено, це значить, що достатньо зазначити ДОСГ у любого отного товару, але ви цього теж не зробили.");
+                resultMsg.append("На поточний момент, товари з ОСВ (Особым Вниманием) не знайдено, це значить, що достатньо зазначити ДОСГ у любого отного товару, але ви цього теж не зробили.");
                 signal = true;
             } else if (optionDB.getOptionId().equals("164985") && sumOSV > 0 && sumERR > 0) {
-                stringBuilderMsg.append("Знайдено ").append(sumERR).append(" товарів, присутніх на вітрині, з ОСВ (Особым Вниманием) по котрим не зазначена ДОСГ (Дата Закінчення Терміну Придатності).");
+                resultMsg.append("Знайдено ").append("" + sumERR).append(" товарів, присутніх на вітрині, з ОСВ (Особым Вниманием) по котрим не зазначена ДОСГ (Дата Закінчення Терміну Придатності).");
                 signal = true;
             } else if (optionDB.getOptionId().equals("84967") && sumERR > 0) {      // 84967 - контроль наявності дати закінчення терміну придатності (сроков годности) в УСІХ товарів, наявних на полицях
-                stringBuilderMsg.append("Знайдено ").append(sumERR).append(" товарів, присутніх на вітрині, але з не зазначеною ДОСГ (Датою Закінчення Терміну Придатності).");
+                resultMsg.append("Знайдено ").append("" + sumERR).append(" товарів, присутніх на вітрині, але з не зазначеною ДОСГ (Датою Закінчення Терміну Придатності).");
                 signal = true;
             } else if (optionDB.getOptionId().equals("84967") && sumDOSG < sumcolTov) {      // 84967 - контроль наявності дати закінчення терміну придатності (сроков годности) в УСІХ товарів, наявних на полицях
-                stringBuilderMsg.append("Ви не зазначили ДОСГ (Датою Закінчення Терміну Придатності) у ")
-                        .append(sumcolTov - sumDOSG)
+                int tovWithoutDOSG = sumcolTov - sumDOSG;
+                resultMsg.append("Ви не зазначили ДОСГ (Датою Закінчення Терміну Придатності) у ")
+                        .append("" + tovWithoutDOSG)
                         .append(" товарів.");
                 signal = true;
             } else if (optionDB.getOptionId().equals("84005") && sumcolTov > 0 && sumDOSG == 0) {     // 84005 - контроль наявності дати закінчення терміну придатності (сроков годности) хоча б у ОДНОГО товара наявного на полиці
-                stringBuilderMsg.append("У жодного з  ").append(sumcolTov).append(" товарів, присутніх на вітрині, не зазначена ДОСГ (Дата Закінчення Терміну Придатності).");
+                resultMsg.append("У жодного з  ").append("" + sumcolTov).append(" товарів, присутніх на вітрині, не зазначена ДОСГ (Дата Закінчення Терміну Придатності).");
                 signal = true;
 
             } else if (optionDB.getOptionId().equals("165276") && sumcolTov > 0 && sumERR > 0) {
-                stringBuilderMsg.append("У ")
-                        .append(sumERR)
+                resultMsg.append("У ")
+                        .append("" + sumERR)
                         .append(" товарів, присутніх на вітрині, і терміном придатності менше ")
-                        .append(colMax)
+                        .append("" + colMax)
                         .append(" діб, не зазначена ДОСГ (Дата Закінчення Терміну Придатності).");
                 signal = true;
 
             } else if (sumcolTov == 0) {     // Не заповнений звіт
-                stringBuilderMsg.append("У жодного з ").append(reportPrepareDB.size()).append(" товарів, не зазначена наявність на вітрині.");
+                resultMsg.append("У жодного з ").append("" + reportPrepareDB.size()).append(" товарів, не зазначена наявність на вітрині.");
                 signal = true;
             } else {
-                stringBuilderMsg.append("Зауважень по наданню інформації про ДОСГ (Дати Закінчення Терміну Придатності) нема.");
+                resultMsg.append("Зауважень по наданню інформації про ДОСГ (Дати Закінчення Терміну Придатності) нема.");
                 signal = false;
             }
 
+
+            resultMsg.append("\n\n");
+            for (TovarDB item : tovarResultList) {
+                String msg = String.format("(%s) %s (%s)", item.getBarcode(), item.getNm(), item.getWeight());
+                resultMsg.append(createLinkedString(msg, item)).append("\n\n");
+            }
 
             // Сохранение
             RealmManager.INSTANCE.executeTransaction(realm -> {
@@ -266,15 +286,44 @@ public class OptionControlCheckingForAnAchievement<T> extends OptionControl {
                 if (optionDB.getBlockPns().equals("1")) {
                     setIsBlockOption(signal);
 //                    showUnlockCodeDialogInMainThread(wpDataDB, signal);
-                    stringBuilderMsg.append("\n\n").append("Документ проведен не будет!");
+                    resultMsg.append("\n\n").append("Документ проведен не будет!");
                 } else {
-                    stringBuilderMsg.append("\n\n").append("Вы можете получить Премиальные БОЛЬШЕ, если будете делать Достижения.");
+                    resultMsg.append("\n\n").append("Вы можете получить Премиальные БОЛЬШЕ, если будете делать Достижения.");
                 }
             }
+
+            spannableStringBuilder.append(resultMsg);
 
         } catch (Exception e) {
             Globals.writeToMLOG("ERROR", "OptionControlCheckingForAnAchievement/executeOption", "Exception e: " + e);
         }
+    }
+
+    private SpannableString createLinkedString(String msg, TovarDB tov) {
+        SpannableString res = new SpannableString(msg);
+        ClickableSpan clickableSpan = new ClickableSpan() {
+            @Override
+            public void onClick(View textView) {
+                try {
+                    showDialogs(textView.getContext(), tov);
+                }catch (Exception e){
+                    Log.e("createLinkedString", "Exception e: " + e);
+                }
+            }
+
+            @Override
+            public void updateDrawState(TextPaint ds) {
+                super.updateDrawState(ds);
+                ds.setUnderlineText(false);
+            }
+        };
+        res.setSpan(clickableSpan, 0, msg.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        return res;
+    }
+
+
+    private void showDialogs(Context context, TovarDB tovarDB) {
+        new ShowTovarRequisites(context, wpDataDB, tovarDB).showDialogs();
     }
 }
 
