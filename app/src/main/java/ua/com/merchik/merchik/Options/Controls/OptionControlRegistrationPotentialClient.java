@@ -4,9 +4,11 @@ import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
 import android.content.Context;
 
+import java.util.Arrays;
 import java.util.List;
 
 import ua.com.merchik.merchik.Clock;
+import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.Options.OptionControl;
 import ua.com.merchik.merchik.Options.Options;
 import ua.com.merchik.merchik.data.Database.Room.PotentialClientSDB;
@@ -35,15 +37,19 @@ public class OptionControlRegistrationPotentialClient<T> extends OptionControl {
     private long dtTo;
 
     public OptionControlRegistrationPotentialClient(Context context, T document, OptionsDB optionDB, OptionMassageType msgType, Options.NNKMode nnkMode, UnlockCodeResultListener unlockCodeResultListener) {
-        this.context = context;
-        this.document = document;
-        this.optionDB = optionDB;
-        this.msgType = msgType;
-        this.nnkMode = nnkMode;
-        this.unlockCodeResultListener = unlockCodeResultListener;
+        try {
+            this.context = context;
+            this.document = document;
+            this.optionDB = optionDB;
+            this.msgType = msgType;
+            this.nnkMode = nnkMode;
+            this.unlockCodeResultListener = unlockCodeResultListener;
 
-        getDocumentVar();
-        executeOption();
+            getDocumentVar();
+            executeOption();
+        }catch (Exception e){
+            Globals.writeToMLOG("ERROR", "OptionControlRegistrationPotentialClient", "Exception e: " + Arrays.toString(e.getStackTrace()));
+        }
     }
 
     private void getDocumentVar() {
@@ -74,7 +80,7 @@ public class OptionControlRegistrationPotentialClient<T> extends OptionControl {
         UsersSDB user = SQL_DB.usersDao().getUserById(wpDataDB.getUser_id());
 //        if (err > 0 && user != null && user.reportCount < 200) {
 
-        if (err > 0 && user != null && (user.reportDate200 != null || wpDataDB.getDt().getTime() < user.reportDate200.getTime())) {
+        if (err > 0 && user != null && (user.reportDate200 != null && wpDataDB.getDt().getTime() < user.reportDate200.getTime())) {
             count = 0;
             potentialClientMsg.append(", но он еще не провел своего 200-го отчета.");
             report200 = true;
