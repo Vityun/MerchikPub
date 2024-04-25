@@ -16,8 +16,8 @@ android {
         minSdkVersion 21
         targetSdkVersion 33
         //noinspection HighAppVersionCode
-        versionCode  2024042400
-        versionName "2024042400"
+        versionCode  2024042500
+        versionName "2024042500"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
         multiDexEnabled true

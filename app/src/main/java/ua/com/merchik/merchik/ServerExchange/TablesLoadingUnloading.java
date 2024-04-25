@@ -13,6 +13,8 @@ import android.os.Build;
 import android.util.Log;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
+
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 
@@ -67,6 +69,7 @@ import ua.com.merchik.merchik.data.RetrofitResponse.OptionsServer;
 import ua.com.merchik.merchik.data.RetrofitResponse.PPATableResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.PromoTableResponce;
 import ua.com.merchik.merchik.data.RetrofitResponse.ReportHint;
+import ua.com.merchik.merchik.data.RetrofitResponse.ReportPrepareServer;
 import ua.com.merchik.merchik.data.RetrofitResponse.SotrTable;
 import ua.com.merchik.merchik.data.RetrofitResponse.SotrTableList;
 import ua.com.merchik.merchik.data.RetrofitResponse.TARCommentsResponse;
@@ -692,8 +695,8 @@ public class TablesLoadingUnloading {
         String json = gson.toJson(data);
         JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
 
-//        retrofit2.Call<ReportPrepareServer> call = RetrofitBuilder.getRetrofitInterface().ReportPrepareServer_RESPONSE(RetrofitBuilder.contentType, convertedObject);
-        retrofit2.Call<JsonObject> callT = RetrofitBuilder.getRetrofitInterface().TEST_JSON_UPLOAD(RetrofitBuilder.contentType, convertedObject);
+        retrofit2.Call<ReportPrepareServer> call = RetrofitBuilder.getRetrofitInterface().ReportPrepareServer_RESPONSE(RetrofitBuilder.contentType, convertedObject);
+//        retrofit2.Call<JsonObject> callT = RetrofitBuilder.getRetrofitInterface().TEST_JSON_UPLOAD(RetrofitBuilder.contentType, convertedObject);
 
 //        retrofit2.Call<ReportPrepareServer> call;
 //        if (lastUpdate == 0) {
@@ -704,20 +707,20 @@ public class TablesLoadingUnloading {
 
         BlockingProgressDialog pg = BlockingProgressDialog.show(context, "Обмен данными с сервером.", "Обновление таблицы: Дет. отчёт");
 
-        callT.enqueue(new Callback<JsonObject>() {
-            @Override
-            public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
-                Log.e("TAG_TEST_callT", "response: " + response);
-            }
+//        callT.enqueue(new Callback<JsonObject>() {
+//            @Override
+//            public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
+//                Log.e("TAG_TEST_callT", "response: " + response);
+//            }
+//
+//            @Override
+//            public void onFailure(Call<JsonObject> call, Throwable t) {
+//                Log.e("TAG_TEST_callT", "Throwable t: " + t);
+//            }
+//        });
 
-            @Override
-            public void onFailure(Call<JsonObject> call, Throwable t) {
-                Log.e("TAG_TEST_callT", "Throwable t: " + t);
-            }
-        });
 
-
-        /*call.enqueue(new retrofit2.Callback<ReportPrepareServer>() {
+        call.enqueue(new retrofit2.Callback<ReportPrepareServer>() {
             @Override
             public void onResponse(@NonNull retrofit2.Call<ReportPrepareServer> call, @NonNull retrofit2.Response<ReportPrepareServer> response) {
                 Log.e("TAG_TEST", "RESPONSE_4");
@@ -768,7 +771,7 @@ public class TablesLoadingUnloading {
                 Log.e("TAG_TEST", "FAILURE_4 E: " + t);
                 Globals.writeToMLOG("ERR", "downloadReportPrepare/onFailure", "Throwable t: " + t);
             }
-        });*/
+        });
         Log.e("SERVER_REALM_DB_UPDATE", "===================================.downloadReportPrepare.END");
 
     }
