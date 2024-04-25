@@ -80,7 +80,7 @@ public class OptionControlRegistrationPotentialClient<T> extends OptionControl {
         UsersSDB user = SQL_DB.usersDao().getUserById(wpDataDB.getUser_id());
 //        if (err > 0 && user != null && user.reportCount < 200) {
 
-        if (err > 0 && user != null && (user.reportDate200 != null && wpDataDB.getDt().getTime() < user.reportDate200.getTime())) {
+        if (err > 0 && user != null && (user.reportDate200 == null || wpDataDB.getDt().getTime() < user.reportDate200.getTime())) {
             count = 0;
             potentialClientMsg.append(", но он еще не провел своего 200-го отчета.");
             report200 = true;
