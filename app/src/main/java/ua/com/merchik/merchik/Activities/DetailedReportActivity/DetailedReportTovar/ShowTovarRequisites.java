@@ -26,6 +26,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import io.realm.RealmResults;
+import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.Options.Options;
 import ua.com.merchik.merchik.Utils.MySimpleExpandableListAdapter;
@@ -38,6 +39,7 @@ import ua.com.merchik.merchik.data.RealmModels.TovarDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.data.TovarOptions;
 import ua.com.merchik.merchik.database.realm.RealmManager;
+import ua.com.merchik.merchik.database.realm.tables.OptionsRealm;
 import ua.com.merchik.merchik.database.realm.tables.PromoRealm;
 import ua.com.merchik.merchik.dialogs.DialogData;
 
@@ -46,6 +48,9 @@ public class ShowTovarRequisites {
     private Context context;
     private WpDataDB wpDataDB;
     private TovarDB tovarDB;
+
+    //    private List<AdditionalRequirementsDB> adList;
+    boolean openNext = true;
 
 
     private final Options options = new Options();
@@ -103,7 +108,8 @@ public class ShowTovarRequisites {
                         OptionsDB optionsDB = matchingOption.get();
                         // Делайте что-то с объектом OptionsDB
                         System.out.println(optionsDB);
-                        dialogList.add(new TovarRequisites(tovarDB, reportPrepareTovar).createDialog(context, wpDataDB, optionsDB, ()->{}));
+                        dialogList.add(new TovarRequisites(tovarDB, reportPrepareTovar).createDialog(context, wpDataDB, optionsDB, () -> {
+                        }));
                     } else {
                         // Обработка случая, когда объект OptionsDB не найден
                         System.out.println("Объект OptionsDB не найден");
@@ -171,15 +177,59 @@ public class ShowTovarRequisites {
                 dialog.setExpandableListView(createExpandableAdapter(dialog.context, groupPos), () -> {
                     if (dialog.getOperationResult() != null) {
                         operetionSaveRPToDB(tpl, reportPrepareDB, dialog.getOperationResult(), dialog.getOperationResult2(), null);
-                        dialogShowRule(clickType);
+                        dialogShowRule2(list, tpl, reportPrepareDB, tovarId, cd2, clientId, finalBalanceData1, finalBalanceDate1, clickType);
                     }
                 });
             } else {
                 dialog.setOperation(operationType(tpl), getCurrentData(tpl, cd2, tovarId), setMapData(tpl.getOptionControlName()), () -> {
-                    if (dialog.getOperationResult() != null && !dialog.getOperationResult().equals("")) {
-                        operetionSaveRPToDB(tpl, reportPrepareDB, dialog.getOperationResult(), dialog.getOperationResult2(), null);
-                        Toast.makeText(context, "Внесено: " + dialog.getOperationResult(), Toast.LENGTH_LONG).show();
-                        dialogShowRule(clickType);
+                    // Сделал удаление даты тут потому что 08.04.24. в setOperation пришлось это убрать.
+                    // Мне надо проверять корректность внесенной даты и отталкиваясь от этого выводить модальное окно или нет.
+                    OptionsDB option = OptionsRealm.getOption(String.valueOf(cd2), "165276");
+                    if (option != null && operationType(tpl).equals(Date)) {
+                        openNext = false;
+
+                        long tovExpirationDate = list.expirePeriod * 86400;         // термін придатності товару. (дни перевожу в секунды)
+                        long dtCurrentWPData = wpDataDB.getDt().getTime() / 1000;   // дата посещения в секундах
+                        long dtUserSetToTovar = 0;                                  // То что указал в Дате окончания срока годности мерчик
+                        long resDays = 0;                                           // Дата текущего посещения + срок годности товара
+
+                        if (dialog.getOperationResult() != null && !dialog.getOperationResult().equals("")) {
+                            dtUserSetToTovar = Clock.dateConvertToLong(dialog.getOperationResult()) / 1000;
+                        }
+
+                        resDays = dtCurrentWPData + tovExpirationDate;
+                        int exPer = list.expirePeriod;
+                        if (exPer != 0 && dtUserSetToTovar > resDays) {
+                            DialogData dialogBadData = new DialogData(dialog.context);
+                            dialogBadData.setTitle("Зауваження до Дати");
+                            dialogBadData.setText("Ви внесли некоректну дату закінчення терміну придатності! Відмовитись від її збереження?");
+                            dialogBadData.setOk("Так", () -> {
+                                dialogBadData.dismiss();
+                                Toast.makeText(context, "Дата не збережена!", Toast.LENGTH_LONG).show();
+                            });
+                            dialogBadData.setCancel("Ні", () -> {
+                                dialogBadData.dismiss();
+                                pushOkButtonRequisites(tpl, reportPrepareDB, dialog, cd2, list, tovarId, clientId, finalBalanceData1, finalBalanceDate1, clickType);
+                            });
+                            dialogBadData.setClose(dialogBadData::dismiss);
+                            dialogBadData.show();
+                        } else {
+                            openNext = true;
+                            dialog.dismiss();
+                        }
+                    } else if (operationType(tpl).equals(Date)) {
+                        dialog.dismiss();
+                    }
+
+                    if (openNext && dialog.getOperationResult() != null && !dialog.getOperationResult().equals("")) {
+
+                        pushOkButtonRequisites(tpl, reportPrepareDB, dialog, cd2, list, tovarId, clientId, finalBalanceData1, finalBalanceDate1, clickType);
+
+                        // 08.04.24. Перенес это в отдельную функцию pushOkButtonRequisites
+//                            operetionSaveRPToDB(tpl, reportPrepareDB, dialog.getOperationResult(), dialog.getOperationResult2(), null);
+//                            Toast.makeText(mContext, "Внесено: " + dialog.getOperationResult(), Toast.LENGTH_LONG).show();
+//                            refreshElement(cd2, list.getiD());
+//                            dialogShowRule(list, tpl, reportPrepareDB, tovarId, cd2, clientId, finalBalanceData1, finalBalanceDate1, clickType);
                     } else {
                         Toast.makeText(dialog.context, "Внесите корректно данные", Toast.LENGTH_LONG).show();
                     }
@@ -188,7 +238,7 @@ public class ShowTovarRequisites {
 
             dialog.setCancel("Пропустить", () -> closeDialogRule(dialog, () -> {
                 dialog.dismiss();
-                dialogShowRule(clickType);
+                dialogShowRule2(list, tpl, reportPrepareDB, tovarId, cd2, clientId, finalBalanceData1, finalBalanceDate1, clickType);
             }));
 
             dialogList.add(dialog);
@@ -271,12 +321,183 @@ public class ShowTovarRequisites {
                     dialogList.get(0).tovarOptions.getOptionControlName().equals(DT_EXPIRE) &&
                     dialogList.get(0).tovarOptions.getOptionId().contains(135591) &&
                     face > 0
-            ){
+            ) {
                 dialogList.remove(0);
                 if (dialogList.size() > 0) {
                     dialogList.get(0).show();
                 }
-            }else {
+            } else {
+                dialogList.get(0).show();
+            }
+        }
+    }
+
+    private void dialogShowRule2(TovarDB list, TovarOptions tpl, ReportPrepareDB reportPrepareDB, String tovarId, String cd2, String clientId, String finalBalanceData1, String finalBalanceDate1, boolean clickType) {
+        Log.e("dialogShowRule", "clickType: " + clickType);
+        ReportPrepareDB report = dialogList.get(0).reportPrepareDB;
+        dialogList.remove(0);
+
+        boolean option165276 = false;
+        OptionsDB option = OptionsRealm.getOption(String.valueOf(cd2), "165276");
+        if (option != null) option165276 = true;
+
+        if (dialogList.size() > 0) {
+            dialogList.get(0).reportPrepareDB = report;
+            int face = 0;
+            if (dialogList.get(0).reportPrepareDB.face != null && !dialogList.get(0).reportPrepareDB.face.equals(""))
+                face = Integer.parseInt(dialogList.get(0).reportPrepareDB.face);
+
+            if (clickType &&
+                    dialogList.get(0).tovarOptions.getOptionControlName().equals(ERROR_ID) &&
+                    (dialogList.get(0).tovarOptions.getOptionId().contains(157242) ||
+                            dialogList.get(0).tovarOptions.getOptionId().contains(157241) ||
+                            dialogList.get(0).tovarOptions.getOptionId().contains(157243)) &&
+                    face > 0) {
+                // НЕ отображаю модальное окно и удаляю его. Уникальное правило потому что потому.
+                dialogList.remove(0);
+                if (dialogList.size() > 0) {
+                    dialogList.get(0).show();
+                }
+            } else if (clickType &&
+                    (dialogList.get(0).tovarOptions.getOptionControlName().equals(UP) ||
+                            dialogList.get(0).tovarOptions.getOptionControlName().equals(DT_EXPIRE)) &&
+                    face == 0) {
+                dialogList.remove(0);
+                if (dialogList.size() > 0) {
+                    dialogList.get(0).show();
+                }
+            } /*else if (clickType &&
+                        dialogList.get(0).tovarOptions.getOptionControlName().equals(PHOTO) &&
+//                        dialogList.get(0).tovarOptions.getOptionId().contains(159707) &&
+                        face != 0
+                ) {
+                    dialogList.remove(0);
+                    if (dialogList.size() > 0) {
+                        dialogList.get(0).show();
+                    }
+                }*/ else if (clickType && (
+                    dialogList.get(0).tovarOptions.getOptionControlName().equals(AKCIYA_ID) ||
+                            dialogList.get(0).tovarOptions.getOptionControlName().equals(AKCIYA)
+            )
+            ) {
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+//                    Optional<AdditionalRequirementsDB> result;
+//                    result = adList.stream()
+//                            .filter(obj -> obj.getOptionId().equals("80977"))
+//                            .findFirst();
+
+//                        AdditionalRequirementsDB foundObject = result.get();
+
+//                    if (result.isPresent()) {
+//                        // Делайте что-то с найденным объектом
+//                        dialogList.get(0).show();
+//                    } else {
+                    // Обработка случая, когда объект не найден
+//                            dialogList.get(0).show();
+                    dialogList.remove(0);
+                    if (dialogList.size() > 0) {
+                        dialogList.get(0).show();
+//                        }
+                    }
+                }
+
+
+            } else if (clickType
+                    && option165276
+                    && face > 0
+                    && !tpl.getOptionShort().equals("Ш")
+            ) {
+                OptionsDB optionsDB = OptionsRealm.getOption(String.valueOf(cd2), "165276");
+                if ((dialogList.get(0).reportPrepareDB.dtExpire != null
+                        && !dialogList.get(0).reportPrepareDB.dtExpire.equals("")
+                        && !dialogList.get(0).reportPrepareDB.dtExpire.equals("0000-00-00"))
+                        && optionsDB != null
+                ) {
+                    if (optionsDB.getAmountMax() != null && !optionsDB.getAmountMax().equals("")) {
+                        int max = Integer.parseInt(optionsDB.getAmountMax());
+                        int colMax = max == 0 ? 30 : max;
+
+                        long dat = wpDataDB.getDt().getTime() / 1000;
+                        long colMaxLong = colMax * 86400L;
+                        long optionControlDate = dat + colMaxLong;
+                        long reportDate = 0;
+                        if (dialogList.get(0).reportPrepareDB.dtExpire != null && !dialogList.get(0).reportPrepareDB.dtExpire.equals("") && !dialogList.get(0).reportPrepareDB.dtExpire.equals("0000-00-00")) {
+                            reportDate = Clock.dateConvertToLong(dialogList.get(0).reportPrepareDB.dtExpire) / 1000;
+                        }
+
+                        // Если ДАТА плохая:
+                        if (reportDate <= optionControlDate) {
+                            // Мы смотрим на ВОЗВРАТ и ЕСЛИ он 0 - Выводим ОШИБКУ
+                            if (dialogList.get(0).reportPrepareDB.expireLeft != null
+                                    && (dialogList.get(0).reportPrepareDB.expireLeft.equals("0") || dialogList.get(0).reportPrepareDB.expireLeft.equals(""))) {
+
+                                boolean existError = false;
+                                try {
+                                    for (DialogData item : dialogList) {
+                                        if (item.tovarOptions.getOptionShort().equals("Ш")) {
+                                            existError = true;
+                                        }
+                                    }
+                                } catch (Exception e) {
+                                    Log.e("dialogShowRule", "Exception e: " + e);
+                                }
+
+                                if (!existError && tpl.getOptionShort().equals("В")) {
+                                    TovarOptions to = new TovarOptions(ERROR_ID, "Ш", "Ошибка товара", "error_id", "main", 135592, 157242);
+                                    showDialog(list, to, reportPrepareDB, tovarId, String.valueOf(cd2), clientId, finalBalanceData1, finalBalanceDate1, true);
+                                    dialogList.remove(0);
+                                    if (dialogList.size() > 0 /*&& dialogList.get(0).tovarOptions.getOptionShort().equals("P")*/) {
+                                        Collections.swap(dialogList, 0, 1);
+                                        dialogList.get(0).show();
+                                    }
+                                } else {
+                                    dialogList.remove(0);
+                                    if (dialogList.size() > 0) {
+                                        dialogList.get(0).show();
+                                    }
+                                }
+
+                                // Отображаем то что у нас дальше
+                            } else {
+                                dialogList.remove(0);
+                                if (dialogList.size() > 0) {
+                                    dialogList.get(0).show();
+                                }
+                            }
+                            // Если ДАТА Хорошая
+                        } else {
+
+                            if (tpl.getOptionShort().equals("Д")) {  // Если текущее окно - ДАТА
+                                // Удаляем Возврат
+                                try {
+                                    for (DialogData item : dialogList) {
+                                        if (item.tovarOptions.getOptionShort().equals("В")) {
+                                            dialogList.remove(item);
+                                        }
+                                    }
+                                } catch (Exception e) {
+                                    Log.e("dialogShowRule", "Exception e: " + e);
+                                }
+                            }
+
+
+                            // Тут мы не должны указывать ВОЗВРАТ
+                            dialogList.get(0).show();
+                        }
+                    }
+                } else {
+                    dialogList.get(0).show();
+                }
+            } else if (clickType &&
+                    dialogList.get(0).tovarOptions.getOptionControlName().equals(PHOTO) &&
+//                        dialogList.get(0).tovarOptions.getOptionId().contains(159707) &&
+                    face != 0
+            ) {
+                dialogList.remove(0);
+                if (dialogList.size() > 0) {
+                    dialogList.get(0).show();
+                }
+            } else {
                 dialogList.get(0).show();
             }
         }
@@ -643,5 +864,11 @@ public class ShowTovarRequisites {
         return null;
     }
 
+
+    private void pushOkButtonRequisites(TovarOptions tpl, ReportPrepareDB reportPrepareDB, DialogData dialog, String cd2, TovarDB list, String tovarId, String clientId, String finalBalanceData1, String finalBalanceDate1, boolean clickType) {
+        operetionSaveRPToDB(tpl, reportPrepareDB, dialog.getOperationResult(), dialog.getOperationResult2(), null);
+        Toast.makeText(context, "Внесено: " + dialog.getOperationResult(), Toast.LENGTH_LONG).show();
+        dialogShowRule2(list, tpl, reportPrepareDB, tovarId, cd2, clientId, finalBalanceData1, finalBalanceDate1, clickType);
+    }
 
 }

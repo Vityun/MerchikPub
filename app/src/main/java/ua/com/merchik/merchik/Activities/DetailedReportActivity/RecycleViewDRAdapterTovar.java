@@ -1287,19 +1287,6 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                                 dialogBadData.setOk("Так", () -> {
                                     dialogBadData.dismiss();
                                     Toast.makeText(mContext, "Дата не збережена!", Toast.LENGTH_LONG).show();
-//                                    DialogData dialogBadData2 = new DialogData(dialog.context);
-//                                    dialogBadData2.setTitle("Зауваження до Дати");
-//                                    dialogBadData2.setText("Впевнені що не хочете зберігати некоректні данні?");
-//                                    dialogBadData2.setOk("Так", () -> {
-//                                        dialogBadData2.dismiss();
-//                                    });
-//                                    dialogBadData2.setCancel("Ні", () -> {
-//                                        dialog.dismiss();
-//                                        dialogBadData2.dismiss();
-//                                        pushOkButtonRequisites(tpl, reportPrepareDB, dialog, cd2, list, tovarId, clientId, finalBalanceData1, finalBalanceDate1, clickType);
-//                                    });
-//                                    dialogBadData2.setClose(dialogBadData2::dismiss);
-//                                    dialogBadData2.show();
                                 });
                                 dialogBadData.setCancel("Ні", () -> {
                                     dialogBadData.dismiss();
