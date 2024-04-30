@@ -1101,6 +1101,8 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                             Bitmap b = decodeSampledBitmapFromResource(file, 200, 200);
                             if (b != null) {
                                 imageView.setImageBitmap(b);
+                            }else {
+                                imageView.setImageResource(R.mipmap.merchik);
                             }
                             return true;
                         }
@@ -1133,10 +1135,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                         sb.append("Штрихкод: ").append(tovar.getBarcode()).append("\n");
                         sb.append("Артикул: ").append(getArticle(tovar, 0));
 
-
                         dialogPhotoTovar.setPhotoBarcode(tovar.getBarcode());
-//                        dialogPhotoTovar.setPhotoBarcode(sb);
-
                         dialogPhotoTovar.setTextInfo(sb);
 
                         dialogPhotoTovar.setClose(dialogPhotoTovar::dismiss);
@@ -1155,7 +1154,13 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                             DialogPhotoTovar dialogPhotoTovar = new DialogPhotoTovar(mContext);
 
                             dialogPhotoTovar.setPhotoTovar(Uri.parse(stackPhotoDB.getPhoto_num()));
+
+                            StringBuilder sb = new StringBuilder();
+                            sb.append("Штрихкод: ").append(tovar.getBarcode()).append("\n");
+                            sb.append("Артикул: ").append(getArticle(tovar, 0));
+
                             dialogPhotoTovar.setPhotoBarcode(tovar.getBarcode());
+                            dialogPhotoTovar.setTextInfo(sb);
 
                             dialogPhotoTovar.setClose(dialogPhotoTovar::dismiss);
                             dialogPhotoTovar.show();
