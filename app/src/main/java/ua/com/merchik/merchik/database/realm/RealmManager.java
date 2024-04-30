@@ -64,14 +64,9 @@ public class RealmManager {
     public static void init(Context context) {
         Realm.init(context);
 
-        RealmConfiguration config = new RealmConfiguration.Builder()
-                .name("myrealm.realm")
-                .deleteRealmIfMigrationNeeded()
+        RealmConfiguration config = new RealmConfiguration.Builder().name("myrealm.realm").deleteRealmIfMigrationNeeded()
 //                .schemaVersion(18)
-                .allowWritesOnUiThread(true)
-                .allowQueriesOnUiThread(true)
-                .migration(new MyMigration())
-                .build();
+                .allowWritesOnUiThread(true).allowQueriesOnUiThread(true).migration(new MyMigration()).build();
         Realm.setDefaultConfiguration(config);
         INSTANCE = Realm.getInstance(Realm.getDefaultConfiguration());
 
@@ -194,12 +189,7 @@ public class RealmManager {
             // мне стоит для однозначного сравнения использовать 4 поля: 'code_dad2', 'user_id', 'client_id', 'isp'
             INSTANCE.beginTransaction();
             for (WpDataDB wp : serverData) {
-                WpDataDB row = INSTANCE.where(WpDataDB.class)
-                        .equalTo("code_dad2", wp.getCode_dad2())
-                        .equalTo("user_id", wp.getUser_id())
-                        .equalTo("client_id", wp.getClient_id())
-                        .equalTo("isp", wp.getIsp())
-                        .findFirst();
+                WpDataDB row = INSTANCE.where(WpDataDB.class).equalTo("code_dad2", wp.getCode_dad2()).equalTo("user_id", wp.getUser_id()).equalTo("client_id", wp.getClient_id()).equalTo("isp", wp.getIsp()).findFirst();
 
                 Globals.writeToMLOG("INFO", "setWpDataAuto", "План работ с СЕРВЕРА: " + new Gson().toJson(wp));
 
@@ -472,17 +462,14 @@ public class RealmManager {
     // APP_USER_DB START ------------------------------------
 
     public static AppUsersDB getAppUser() {
-        AppUsersDB appUsersDB = INSTANCE.where(AppUsersDB.class)
-                .findFirst();
+        AppUsersDB appUsersDB = INSTANCE.where(AppUsersDB.class).findFirst();
         if (appUsersDB != null) appUsersDB = INSTANCE.copyFromRealm(appUsersDB);
         return appUsersDB;
     }
 
     public static AppUsersDB getAppUserById(String ids) {
         int id = Integer.parseInt(ids);
-        AppUsersDB appUsersDB = INSTANCE.where(AppUsersDB.class)
-                .equalTo("userId", id)
-                .findFirst();
+        AppUsersDB appUsersDB = INSTANCE.where(AppUsersDB.class).equalTo("userId", id).findFirst();
         if (appUsersDB != null) appUsersDB = INSTANCE.copyFromRealm(appUsersDB);
         return appUsersDB;
     }
@@ -502,31 +489,22 @@ public class RealmManager {
      * Получение Всего плана работ
      */
     public static RealmResults<WpDataDB> getAllWorkPlan() {
-        return INSTANCE.where(WpDataDB.class)
-                .sort("dt_start", Sort.ASCENDING, "addr_id", Sort.ASCENDING)
-                .findAll();
+        return INSTANCE.where(WpDataDB.class).sort("dt_start", Sort.ASCENDING, "addr_id", Sort.ASCENDING).findAll();
     }
 
     public static RealmResults<WpDataDB> getAllWorkPlanMAP() {
-        return INSTANCE.where(WpDataDB.class)
-                .sort("dt_start", Sort.ASCENDING)
-                .distinct("addr_id")
-                .findAll();
+        return INSTANCE.where(WpDataDB.class).sort("dt_start", Sort.ASCENDING).distinct("addr_id").findAll();
     }
 
     public static WpDataDB getWorkPlanRowById(long id) {
         //"SELECT * FROM wp_data WHERE id = " + wpId + ";"
-        return INSTANCE.where(WpDataDB.class)
-                .equalTo("ID", id)
-                .findFirst();
+        return INSTANCE.where(WpDataDB.class).equalTo("ID", id).findFirst();
     }
 
 
     public static int getWpDataDate(String dt) {
         Date date = Clock.stringDateConvertToDate(dt);
-        return INSTANCE.where(WpDataDB.class)
-                .equalTo("dt", date)
-                .findAll().size();
+        return INSTANCE.where(WpDataDB.class).equalTo("dt", date).findAll().size();
     }
 
     /**
@@ -537,10 +515,7 @@ public class RealmManager {
 
         Date date = Clock.stringDateConvertToDate(dt);
 
-        return INSTANCE.where(WpDataDB.class)
-                .equalTo("status", status)
-                .equalTo("dt", date)
-                .findAll().size();
+        return INSTANCE.where(WpDataDB.class).equalTo("status", status).equalTo("dt", date).findAll().size();
     }
 
     // CUST GRP TYPE:-------------------------------------------------------------------------------
@@ -548,66 +523,40 @@ public class RealmManager {
 //"SELECT * FROM client_group_tp WHERE client_id = '" + customer_id + "';"
         Log.e("TAG_TEST_GRP", "cli_id(0): " + customer_id);
         int cli = Integer.parseInt(customer_id);
-        return INSTANCE.where(GroupTypeDB.class)
-                .equalTo("client_id", cli)
-                .findAll();
+        return INSTANCE.where(GroupTypeDB.class).equalTo("client_id", cli).findAll();
     }
 
 
     // OPTIONS:-------------------------------------------------------------------------------------
     public static RealmResults<OptionsDB> getOptionsNOButton(long otchetId) {
         String sOtchetId = String.valueOf(otchetId);
-        return INSTANCE.where(OptionsDB.class)
-                .equalTo("docId", sOtchetId)
-                .and()
-                .notEqualTo("optionGroup", "3161")
-                .and()
-                .equalTo("deleted", "0")
-                .findAll();
+        return INSTANCE.where(OptionsDB.class).equalTo("docId", sOtchetId).and().notEqualTo("optionGroup", "3161").and().equalTo("deleted", "0").findAll();
     }
 
     public static RealmResults<OptionsDB> getOptionsButton(long otchetId) {
         String sOtchetId = String.valueOf(otchetId);
-        return INSTANCE.where(OptionsDB.class)
-                .equalTo("docId", sOtchetId)
-                .and()
-                .equalTo("optionGroup", "3161")
-                .and()
-                .equalTo("deleted", "0")
-                .findAll();
+        return INSTANCE.where(OptionsDB.class).equalTo("docId", sOtchetId).and().equalTo("optionGroup", "3161").and().equalTo("deleted", "0").findAll();
     }
 
     public static RealmResults<OptionsDB> getOptionsButtonRED(long otchetId) {
         String sOtchetId = String.valueOf(otchetId);
-        return INSTANCE.where(OptionsDB.class)
-                .equalTo("docId", sOtchetId)
-                .and()
-                .equalTo("optionGroup", "3161")
-                .equalTo("isSignal", "1")
-                .findAll();
+        return INSTANCE.where(OptionsDB.class).equalTo("docId", sOtchetId).and().equalTo("optionGroup", "3161").equalTo("isSignal", "1").findAll();
     }
 
     public static OptionsDB getOptionById(String id) {
-        return INSTANCE.where(OptionsDB.class)
-                .equalTo("iD", id)
-                .findFirst();
+        return INSTANCE.where(OptionsDB.class).equalTo("iD", id).findFirst();
     }
 
     public static RealmResults<OptionsDB> getOptionsByOtchetId(long otchetId, String codeDad2) {
         String sOtchetId = String.valueOf(otchetId);
-        return INSTANCE.where(OptionsDB.class)
-                .equalTo("docId", sOtchetId)
-                .and()
-                .equalTo("codeDad2", codeDad2)
-                .findAll();
+        return INSTANCE.where(OptionsDB.class).equalTo("docId", sOtchetId).and().equalTo("codeDad2", codeDad2).findAll();
     }
 
 
     // IMAGES TP:-----------------------------------------------------------------------------------
     public static RealmResults<ImagesTypeListDB> getAllImagesTypeList() {
         //"SELECT * FROM images_tp;"
-        return INSTANCE.where(ImagesTypeListDB.class)
-                .findAll();
+        return INSTANCE.where(ImagesTypeListDB.class).findAll();
     }
 
     // STACK PHOTO:---------------------------------------------------------------------------------
@@ -626,8 +575,7 @@ public class RealmManager {
     }
 
     public static int stackPhotoGetLastId() {
-        RealmResults<StackPhotoDB> realmResults = INSTANCE.where(StackPhotoDB.class)
-                .findAll();
+        RealmResults<StackPhotoDB> realmResults = INSTANCE.where(StackPhotoDB.class).findAll();
 
         try {
             if (realmResults.isEmpty()) {
@@ -651,42 +599,27 @@ public class RealmManager {
     }
 
     public static boolean chechPhotoExist(String photoUri) {
-        RealmResults<StackPhotoDB> realmResults = INSTANCE.where(StackPhotoDB.class)
-                .equalTo("photo_num", photoUri)
-                .findAll();
+        RealmResults<StackPhotoDB> realmResults = INSTANCE.where(StackPhotoDB.class).equalTo("photo_num", photoUri).findAll();
         return realmResults.isEmpty();
     }
 
     //    "SELECT count(*) FROM stack_photo WHERE upload_to_server = '' AND get_on_server = '';"
     public static int stackPhotoNotUploadedPhotosCount() {
-        RealmResults<StackPhotoDB> realmResults = INSTANCE.where(StackPhotoDB.class)
-                .equalTo("upload_to_server", 0)
-                .equalTo("get_on_server", 0)
+        RealmResults<StackPhotoDB> realmResults = INSTANCE.where(StackPhotoDB.class).equalTo("upload_to_server", 0).equalTo("get_on_server", 0)
 //                .notEqualTo("photo_type", 18)     // 08.01.24 Надо на сервер выгружать фото Товаров сделанные с ЗИР, да и вообще
-                .isNotNull("photo_hash")
-                .isNotNull("client_id")
-                .isNotNull("addr_id")
-                .isNotNull("time_event")
-                .findAll();
+                .isNotNull("photo_hash").isNotNull("client_id").isNotNull("addr_id").isNotNull("time_event").findAll();
         return realmResults.size();
     }
 
     // Количество фото витрины
     // Зачем так криво? Надо будет отказаться от просто получения числа
     public static int stackPhotoShowcasePhotoCount(long codeDad2, int photoType) {
-        RealmResults<StackPhotoDB> realmResults = INSTANCE.where(StackPhotoDB.class)
-                .equalTo("code_dad2", codeDad2)
-                .equalTo("photo_type", photoType)
-                .findAll();
+        RealmResults<StackPhotoDB> realmResults = INSTANCE.where(StackPhotoDB.class).equalTo("code_dad2", codeDad2).equalTo("photo_type", photoType).findAll();
         return realmResults.size();
     }
 
     public static List<StackPhotoDB> stackPhotoByDad2AndType(long codeDad2, int photoType) {
-        RealmResults<StackPhotoDB> realmResults = INSTANCE.where(StackPhotoDB.class)
-                .equalTo("code_dad2", codeDad2)
-                .equalTo("photo_type", photoType)
-                .isNotNull("photo_hash")
-                .findAll();
+        RealmResults<StackPhotoDB> realmResults = INSTANCE.where(StackPhotoDB.class).equalTo("code_dad2", codeDad2).equalTo("photo_type", photoType).isNotNull("photo_hash").findAll();
         return INSTANCE.copyFromRealm(realmResults);
     }
 
@@ -698,10 +631,7 @@ public class RealmManager {
      * @return
      */
     public static RealmResults<StackPhotoDB> stackPhotoByDad2(long codeDad2) {
-        RealmResults<StackPhotoDB> realmResults = INSTANCE.where(StackPhotoDB.class)
-                .equalTo("code_dad2", codeDad2)
-                .isNotNull("photo_hash")
-                .findAll();
+        RealmResults<StackPhotoDB> realmResults = INSTANCE.where(StackPhotoDB.class).equalTo("code_dad2", codeDad2).isNotNull("photo_hash").findAll();
         return realmResults;
     }
 
@@ -709,27 +639,16 @@ public class RealmManager {
     // Получене фотографий для выгрузки на сервер
     //"SELECT * FROM stack_photo WHERE upload_to_server = '';"
     public static RealmResults<StackPhotoDB> getStackPhotoPhotoToUpload() {
-        return INSTANCE.where(StackPhotoDB.class)
-                .equalTo("upload_to_server", 0)
-                .equalTo("get_on_server", 0)
+        return INSTANCE.where(StackPhotoDB.class).equalTo("upload_to_server", 0).equalTo("get_on_server", 0)
 //                .notEqualTo("photo_type", 18)// 08.01.24 Надо на сервер выгружать фото Товаров сделанные с ЗИР, да и вообще
-                .and()
-                .isNotNull("client_id")
-                .isNotNull("addr_id")
-                .isNotNull("photo_hash")
-                .isNotNull("time_event")
-                .findAll();
+                .and().isNotNull("client_id").isNotNull("addr_id").isNotNull("photo_hash").isNotNull("time_event").findAll();
     }
 
 
     public static RealmResults<StackPhotoDB> getStackPhoto() {
         return INSTANCE.where(StackPhotoDB.class)
 //                .notEqualTo("photo_type", 18)
-                .notEqualTo("photo_type", 29)
-                .notEqualTo("photo_type", 5)
-                .notEqualTo("photo_type", 35)
-                .isNotNull("client_id")
-                .isNotNull("addr_id")
+                .notEqualTo("photo_type", 29).notEqualTo("photo_type", 5).notEqualTo("photo_type", 35).isNotNull("client_id").isNotNull("addr_id")
 //                .isNull("showcase_id")  // Показываем мерчу в ЖФ фото НЕ "ВИТРИН"
                 .findAll();
     }
@@ -737,12 +656,7 @@ public class RealmManager {
     public static RealmResults<StackPhotoDB> getStackPhotoLogByDad2(long dad2) {
         return INSTANCE.where(StackPhotoDB.class)
 //                .notEqualTo("photo_type", 18)
-                .notEqualTo("photo_type", 29)
-                .notEqualTo("photo_type", 5)
-                .notEqualTo("photo_type", 35)
-                .equalTo("code_dad2", dad2)
-                .isNotNull("client_id")
-                .isNotNull("addr_id")
+                .notEqualTo("photo_type", 29).notEqualTo("photo_type", 5).notEqualTo("photo_type", 35).equalTo("code_dad2", dad2).isNotNull("client_id").isNotNull("addr_id")
 //                .isNull("showcase_id")  // Показываем мерчу в ЖФ фото НЕ "ВИТРИН"
                 .findAll();
     }
@@ -754,18 +668,9 @@ public class RealmManager {
         long deleteTimeLessThan = Clock.getDatePeriodLong(System.currentTimeMillis(), -14);
         long deleteTimeLessThanPhotoType0 = Clock.getDatePeriodLong(System.currentTimeMillis(), -3);
 
-        RealmResults<StackPhotoDB> realmResults = INSTANCE.where(StackPhotoDB.class)
-                .lessThan("create_time", deleteTimeLessThanPhotoType0)
-                .and()
-                .notEqualTo("get_on_server", 0)
-                .equalTo("photo_type", 0)
-                .findAll();
+        RealmResults<StackPhotoDB> realmResults = INSTANCE.where(StackPhotoDB.class).lessThan("create_time", deleteTimeLessThanPhotoType0).and().notEqualTo("get_on_server", 0).equalTo("photo_type", 0).findAll();
 
-        RealmResults<StackPhotoDB> test = INSTANCE.where(StackPhotoDB.class)
-                .lessThan("create_time", deleteTimeLessThan)
-                .and()
-                .notEqualTo("get_on_server", 0)
-                .findAll();
+        RealmResults<StackPhotoDB> test = INSTANCE.where(StackPhotoDB.class).lessThan("create_time", deleteTimeLessThan).and().notEqualTo("get_on_server", 0).findAll();
 
         if (realmResults != null && realmResults.size() > 0) {
             Globals.writeToMLOG("INFO", "stackPhotoDeletePhoto", "realmResults.size(): " + realmResults.size());
@@ -784,16 +689,11 @@ public class RealmManager {
 
     public static RealmResults<StackPhotoDB> stackPhotoGetHashs() {
         // SELECT * FROM stack_photo WHERE get_on_server = '';
-        return INSTANCE.where(StackPhotoDB.class)
-                .equalTo("get_on_server", 0)
+        return INSTANCE.where(StackPhotoDB.class).equalTo("get_on_server", 0)
 //                .notEqualTo("photo_type", 18)
 
                 // 09.01.24. Ниже добавил что б Товары что я делаю в приложении фиксировались выгруенными
-                .isNotNull("client_id")
-                .isNotNull("addr_id")
-                .isNotNull("photo_hash")
-                .isNotNull("time_event")
-                .findAll();
+                .isNotNull("client_id").isNotNull("addr_id").isNotNull("photo_hash").isNotNull("time_event").findAll();
     }
 
 
@@ -806,6 +706,8 @@ public class RealmManager {
         RealmQuery<StackPhotoDB> query = INSTANCE.where(StackPhotoDB.class);
         if (photoServerId != null && !photoServerId.equals("0")) {
             query.equalTo("photoServerId", photoServerId)
+                    .equalTo("photo_type", type)
+                    .equalTo("comment", photoSize)
                     .sort("approve", Sort.DESCENDING, "photoServerId", Sort.DESCENDING);
         } else {
             query.equalTo("object_id", id)
@@ -828,10 +730,7 @@ public class RealmManager {
     public static ArrayList<TovarDB> getTovarListPhotoToDownload(List<TovarDB> list, String photoSize) {
         ArrayList<TovarDB> res = new ArrayList<>();
         for (int i = 0; i < list.size(); i++) {
-            StackPhotoDB stackPhotoDB = INSTANCE.where(StackPhotoDB.class)
-                    .equalTo("object_id", Integer.parseInt(list.get(i).getiD()))
-                    .equalTo("comment", photoSize)
-                    .findFirst();
+            StackPhotoDB stackPhotoDB = INSTANCE.where(StackPhotoDB.class).equalTo("object_id", Integer.parseInt(list.get(i).getiD())).equalTo("comment", photoSize).findFirst();
             if (stackPhotoDB == null) {
                 res.add(list.get(i));
             }
@@ -840,9 +739,7 @@ public class RealmManager {
     }
 
     public static List<StackPhotoDB> getStackPhotoByDad2(long dad2) {
-        return INSTANCE.where(StackPhotoDB.class)
-                .equalTo("code_dad2", dad2)
-                .findAll();
+        return INSTANCE.where(StackPhotoDB.class).equalTo("code_dad2", dad2).findAll();
     }
 
 
@@ -852,16 +749,21 @@ public class RealmManager {
      * Если она будет - true.
      */
     public static boolean stackPhotoExistByObjectId(int objectId) {
-        return INSTANCE.where(StackPhotoDB.class)
-                .equalTo("object_id", objectId)
-                .findFirst() != null;
+        return INSTANCE.where(StackPhotoDB.class).equalTo("object_id", objectId).findFirst() != null;
     }
 
     public static boolean stackPhotoExistByObjectId(int objectId, String type) {
-        return INSTANCE.where(StackPhotoDB.class)
+        boolean res = false;
+
+        StackPhotoDB stackPhotoDB = INSTANCE.where(StackPhotoDB.class)
                 .equalTo("object_id", objectId)
                 .equalTo("comment", type)
-                .findFirst() != null;
+                .findFirst();
+
+        if (stackPhotoDB != null) stackPhotoDB = INSTANCE.copyFromRealm(stackPhotoDB);
+        if (stackPhotoDB != null && stackPhotoDB.getId() != 0) res = true;
+
+        return res;
     }
 
     /**
@@ -869,44 +771,28 @@ public class RealmManager {
      * Получение всех данных >= пришедшей ВПИ
      */
     public static List<StackPhotoDB> stackPhotoGetNewDataByDVI(long vpi) {
-        return INSTANCE.where(StackPhotoDB.class)
-                .greaterThanOrEqualTo("vpi", vpi)
-                .findAll();
+        return INSTANCE.where(StackPhotoDB.class).greaterThanOrEqualTo("vpi", vpi).findAll();
     }
 
     /**
      * 27.02.2021
      */
     public static StackPhotoDB stackPhotoGetPhotoById(String id) {
-        return INSTANCE.where(StackPhotoDB.class)
-                .equalTo("id", Integer.parseInt(id))
-                .findFirst();
+        return INSTANCE.where(StackPhotoDB.class).equalTo("id", Integer.parseInt(id)).findFirst();
     }
 
     public static List<StackPhotoDB> stackPhotoDBListGetDVIToUpload() {
-        return INSTANCE.where(StackPhotoDB.class)
-                .isNotNull("photoServerId")
-                .notEqualTo("photoServerId", "")
-                .equalTo("dviUpload", true)
-                .findAll();
+        return INSTANCE.where(StackPhotoDB.class).isNotNull("photoServerId").notEqualTo("photoServerId", "").equalTo("dviUpload", true).findAll();
     }
 
 
     public static List<StackPhotoDB> stackPhotoDBListGetCommentToUpload() {
-        return INSTANCE.where(StackPhotoDB.class)
-                .isNotNull("photoServerId")
-                .notEqualTo("photoServerId", "")
-                .equalTo("commentUpload", true)
-                .findAll();
+        return INSTANCE.where(StackPhotoDB.class).isNotNull("photoServerId").notEqualTo("photoServerId", "").equalTo("commentUpload", true).findAll();
     }
 
 
     public static List<StackPhotoDB> stackPhotoDBListGetRatingToUpload() {
-        return INSTANCE.where(StackPhotoDB.class)
-                .isNotNull("photoServerId")
-                .notEqualTo("photoServerId", "")
-                .equalTo("markUpload", true)
-                .findAll();
+        return INSTANCE.where(StackPhotoDB.class).isNotNull("photoServerId").notEqualTo("photoServerId", "").equalTo("markUpload", true).findAll();
     }
 
     //==============================================================================================
@@ -916,14 +802,11 @@ public class RealmManager {
 
     // Synchronization Timetable:---------------------------------------------------------------------------------
     public static RealmResults<SynchronizationTimetableDB> getSynchronizationTimetable() {
-        return INSTANCE.where(SynchronizationTimetableDB.class)
-                .findAll();
+        return INSTANCE.where(SynchronizationTimetableDB.class).findAll();
     }
 
     public static SynchronizationTimetableDB getSynchronizationTimetableRowByTable(String tableName) {
-        return INSTANCE.where(SynchronizationTimetableDB.class)
-                .equalTo("table_name", tableName)
-                .findFirst();
+        return INSTANCE.where(SynchronizationTimetableDB.class).equalTo("table_name", tableName).findFirst();
     }
 
     public static void setToSynchronizationTimetableDB(SynchronizationTimetableDB synchronizationTimetableDB) {
@@ -945,16 +828,13 @@ public class RealmManager {
 
     public static LogDB getLogRowById(String idS) {
         Integer id = Integer.valueOf(idS); // Костыль ибо напортачено с id шками на стороне сервера и тут
-        LogDB rp = INSTANCE.where(LogDB.class)
-                .equalTo("id", id)
-                .findFirst();
+        LogDB rp = INSTANCE.where(LogDB.class).equalTo("id", id).findFirst();
 
         return RealmManager.INSTANCE.copyFromRealm(rp);
     }
 
     public static int getLastIdLogDB() {
-        RealmResults<LogDB> realmResults = INSTANCE.where(LogDB.class)
-                .findAll();
+        RealmResults<LogDB> realmResults = INSTANCE.where(LogDB.class).findAll();
         try {
             Log.e("TAG_REALM_LOG", "int: " + Objects.requireNonNull(realmResults.last().getId()));
 
@@ -966,24 +846,13 @@ public class RealmManager {
 
     public static ArrayList<LogUploadToServ> getLogToSend() {
 
-        List<LogDB> list = INSTANCE.where(LogDB.class)
-                .isNull("dt")
-                .findAll();
+        List<LogDB> list = INSTANCE.where(LogDB.class).isNull("dt").findAll();
 
         ArrayList<LogUploadToServ> logList = new ArrayList<>();
 
         if (list != null) {
             for (LogDB l : list) {
-                logList.add(new LogUploadToServ(
-                        String.valueOf(l.getId()),
-                        String.valueOf(l.getDt_action()),
-                        l.getComments(),
-                        String.valueOf(l.getTp()),
-                        l.getClient_id(),
-                        String.valueOf(l.getAddr_id()),
-                        String.valueOf(l.getObj_id()),
-                        String.valueOf(System.currentTimeMillis() / 1000)
-                ));
+                logList.add(new LogUploadToServ(String.valueOf(l.getId()), String.valueOf(l.getDt_action()), l.getComments(), String.valueOf(l.getTp()), l.getClient_id(), String.valueOf(l.getAddr_id()), String.valueOf(l.getObj_id()), String.valueOf(System.currentTimeMillis() / 1000)));
 
             }
         } else {
@@ -1008,20 +877,11 @@ public class RealmManager {
         if (list != null) {
             for (WpDataDB l : list) {
                 if (l.getVisit_start_dt() > 0 || l.getVisit_end_dt() > 0) {
-                    wpDataList.add(new WpDataUploadToServ(
-                            String.valueOf(l.getId()),
-                            String.valueOf(l.getCode_dad2()),
-                            String.valueOf(l.getUser_id()),
-                            String.valueOf(l.getClient_id()),
-                            String.valueOf(l.getIsp()),
+                    wpDataList.add(new WpDataUploadToServ(String.valueOf(l.getId()), String.valueOf(l.getCode_dad2()), String.valueOf(l.getUser_id()), String.valueOf(l.getClient_id()), String.valueOf(l.getIsp()),
 
-                            String.valueOf(l.getVisit_start_dt()),
-                            String.valueOf(l.getVisit_end_dt()),
-                            String.valueOf(l.getClient_start_dt()),
-                            String.valueOf(l.getClient_end_dt()),
+                            String.valueOf(l.getVisit_start_dt()), String.valueOf(l.getVisit_end_dt()), String.valueOf(l.getClient_start_dt()), String.valueOf(l.getClient_end_dt()),
 
-                            String.valueOf(l.getSetStatus())
-                    ));
+                            String.valueOf(l.getSetStatus())));
                 }
             }
         } else {
@@ -1114,9 +974,7 @@ public class RealmManager {
     public static ArrayList<Map<String, String>> getLogToSend2() {
 
         Map<Integer, Map<String, String>> map = new HashMap<>();
-        RealmResults<LogDB> realmResults = INSTANCE.where(LogDB.class)
-                .isNull("dt")
-                .findAll();
+        RealmResults<LogDB> realmResults = INSTANCE.where(LogDB.class).isNull("dt").findAll();
 
 
         ArrayList<Map<String, String>> LOG = new ArrayList<>();
@@ -1162,9 +1020,7 @@ public class RealmManager {
     }
 
     public static String getCustomerNm(String id) {
-        CustomerDB realmResults = INSTANCE.where(CustomerDB.class)
-                .equalTo("id", id)
-                .findFirst();
+        CustomerDB realmResults = INSTANCE.where(CustomerDB.class).equalTo("id", id).findFirst();
         return realmResults.getNm();
     }
     // CUSTOMER:----------------------------END-----------------------------------------------
@@ -1179,9 +1035,7 @@ public class RealmManager {
     }
 
     public static String getAddressNm(Integer id) {
-        AddressDB realmResults = INSTANCE.where(AddressDB.class)
-                .equalTo("addrId", id)
-                .findFirst();
+        AddressDB realmResults = INSTANCE.where(AddressDB.class).equalTo("addrId", id).findFirst();
         return realmResults.getNm();
     }
     // ADDRESS:----------------------------END-----------------------------------------------
@@ -1196,9 +1050,7 @@ public class RealmManager {
     }
 
     public static String getUsersNm(Integer id) {
-        UsersDB realmResults = INSTANCE.where(UsersDB.class)
-                .equalTo("id", id)
-                .findFirst();
+        UsersDB realmResults = INSTANCE.where(UsersDB.class).equalTo("id", id).findFirst();
         Log.e("PHOTO_REPORT", "userNmText(0): " + realmResults.getNm());
         return realmResults.getNm();
     }
@@ -1221,9 +1073,7 @@ public class RealmManager {
         ArrayList<String> listRpTovId = new ArrayList<>();
         ArrayList<String> listTovId = new ArrayList<>();
 
-        RealmResults<ReportPrepareDB> realmResults = INSTANCE.where(ReportPrepareDB.class)
-                .equalTo("codeDad2", String.valueOf(dad2))
-                .findAll();
+        RealmResults<ReportPrepareDB> realmResults = INSTANCE.where(ReportPrepareDB.class).equalTo("codeDad2", String.valueOf(dad2)).findAll();
 
         List<ReportPrepareDB> reportPrepareDBList = INSTANCE.copyFromRealm(realmResults);
 
@@ -1237,9 +1087,7 @@ public class RealmManager {
 
 //        Log.e("TovarListFromRPByDad2", "list: " + list);
 
-        RealmResults<TovarDB> realmResults2 = INSTANCE.where(TovarDB.class)
-                .in("iD", list)
-                .equalTo("deleted", 0)      // Не показывать удалённые Товары
+        RealmResults<TovarDB> realmResults2 = INSTANCE.where(TovarDB.class).in("iD", list).equalTo("deleted", 0)      // Не показывать удалённые Товары
                 .findAll();
 
         Globals.writeToMLOG("INFO", "getTovarListFromReportPrepareByDad2", "realmResults2.size(): " + realmResults2.size());
@@ -1299,9 +1147,7 @@ public class RealmManager {
 
 
     public static RealmResults<ReportPrepareDB> getRPBYDAD2() {
-        return INSTANCE.where(ReportPrepareDB.class)
-                .equalTo("codeDad2", "1220421036217049444")
-                .findAll();
+        return INSTANCE.where(ReportPrepareDB.class).equalTo("codeDad2", "1220421036217049444").findAll();
     }
 
 
@@ -1312,19 +1158,14 @@ public class RealmManager {
      * Такая же функция как выше, но отбирает вторую половину данных
      */
     public static RealmResults<TovarDB> getTovarListFromReportPrepareByDad2Not(long dad2) {
-        RealmResults<ReportPrepareDB> realmResults = INSTANCE.where(ReportPrepareDB.class)
-                .notEqualTo("codeDad2", String.valueOf(dad2))
-                .findAll();
+        RealmResults<ReportPrepareDB> realmResults = INSTANCE.where(ReportPrepareDB.class).notEqualTo("codeDad2", String.valueOf(dad2)).findAll();
 
         String[] list = new String[realmResults.size()];
         for (int i = 0; i < realmResults.size(); i++) {
             list[i] = realmResults.get(i).getTovarId();
         }
 
-        RealmResults<TovarDB> realmResults2 = INSTANCE.where(TovarDB.class)
-                .in("iD", list)
-                .sort("manufacturerId", Sort.ASCENDING, "weight", Sort.DESCENDING)
-                .findAll();
+        RealmResults<TovarDB> realmResults2 = INSTANCE.where(TovarDB.class).in("iD", list).sort("manufacturerId", Sort.ASCENDING, "weight", Sort.DESCENDING).findAll();
 
         return realmResults2;
     }
@@ -1333,12 +1174,7 @@ public class RealmManager {
      * 22.01.2021
      */
     public static RealmResults<TovarDB> getTovarListByCustomer(String id) {
-        RealmResults<TovarDB> res = INSTANCE.where(TovarDB.class)
-                .equalTo("clientId", id)
-                .or()
-                .equalTo("clientId2", id)
-                .sort("manufacturerId", Sort.ASCENDING, "weight", Sort.DESCENDING)
-                .equalTo("deleted", 0)      // Не показывать удалённые Товары
+        RealmResults<TovarDB> res = INSTANCE.where(TovarDB.class).equalTo("clientId", id).or().equalTo("clientId2", id).sort("manufacturerId", Sort.ASCENDING, "weight", Sort.DESCENDING).equalTo("deleted", 0)      // Не показывать удалённые Товары
                 .findAll();
 
         res = res.sort("sortcol", Sort.ASCENDING);
@@ -1348,10 +1184,7 @@ public class RealmManager {
 
     // Получение листа Опций по данному товару
     public static List<OptionsDB> getTovarOptionInReportPrepare(String dad2, String tovarId) {
-        RealmResults<OptionsDB> optionsDBS = INSTANCE.where(OptionsDB.class)
-                .equalTo("codeDad2", dad2)
-                .sort("so")
-                .findAll();
+        RealmResults<OptionsDB> optionsDBS = INSTANCE.where(OptionsDB.class).equalTo("codeDad2", dad2).sort("so").findAll();
         List<OptionsDB> res = new ArrayList<>();
         if (optionsDBS != null) res = INSTANCE.copyFromRealm(optionsDBS);
         return res;
@@ -1359,11 +1192,7 @@ public class RealmManager {
 
     // Получение строки с ReportPrepare для записи туда данных
     public static ReportPrepareDB getTovarReportPrepare(String dad2, String tovarId) {
-        ReportPrepareDB prepareDB = INSTANCE.where(ReportPrepareDB.class)
-                .equalTo("tovarId", tovarId)
-                .and()
-                .equalTo("codeDad2", dad2)
-                .findFirst();
+        ReportPrepareDB prepareDB = INSTANCE.where(ReportPrepareDB.class).equalTo("tovarId", tovarId).and().equalTo("codeDad2", dad2).findFirst();
 
         ReportPrepareDB res = null;
         if (prepareDB != null) res = INSTANCE.copyFromRealm(prepareDB);
@@ -1374,9 +1203,7 @@ public class RealmManager {
     // Получение строки из ReportPrepare по ID
     public static ReportPrepareDB getReportPrepareRowById(String idS) {
         Integer id = Integer.valueOf(idS); // Костыль ибо напортачено с id шками на стороне сервера и тут
-        ReportPrepareDB rp = INSTANCE.where(ReportPrepareDB.class)
-                .equalTo("iD", id)
-                .findFirst();
+        ReportPrepareDB rp = INSTANCE.where(ReportPrepareDB.class).equalTo("iD", id).findFirst();
 
         return RealmManager.INSTANCE.copyFromRealm(rp);
     }
@@ -1389,9 +1216,7 @@ public class RealmManager {
 
     public static ArrayList<ReportPrepareServ> getReportPrepareToUpload() {
 
-        List<ReportPrepareDB> rp = INSTANCE.where(ReportPrepareDB.class)
-                .equalTo("uploadStatus", 1)
-                .findAll();
+        List<ReportPrepareDB> rp = INSTANCE.where(ReportPrepareDB.class).equalTo("uploadStatus", 1).findAll();
 
         rp = INSTANCE.copyFromRealm(rp);
 
@@ -1401,27 +1226,7 @@ public class RealmManager {
 
             for (int i = 0; i < rp.size(); i++) {
                 Log.e("REPORT_PREPARE_SEND", "DATABASE + ");
-                reportPrepareServ.add(new ReportPrepareServ(
-                        String.valueOf(rp.get(i).getID()),
-                        rp.get(i).getDtChange(),
-                        rp.get(i).getDtReport(),
-                        rp.get(i).getKli(),
-                        rp.get(i).getTovarId(),
-                        rp.get(i).getAddrId(),
-                        rp.get(i).getPrice(),
-                        rp.get(i).getFace(),
-                        rp.get(i).getAmount(),
-                        rp.get(i).getDtExpire(),
-                        rp.get(i).getExpireLeft(),
-                        rp.get(i).getNotes(),
-                        rp.get(i).getUp(),
-                        rp.get(i).getAkciya(),
-                        rp.get(i).getAkciyaId(),
-                        rp.get(i).getOborotvedNum(),
-                        rp.get(i).getErrorId(),
-                        rp.get(i).getErrorComment(),
-                        rp.get(i).getCodeDad2(),
-                        String.valueOf(rp.get(i).buyerOrderId)));
+                reportPrepareServ.add(new ReportPrepareServ(String.valueOf(rp.get(i).getID()), rp.get(i).getDtChange(), rp.get(i).getDtReport(), rp.get(i).getKli(), rp.get(i).getTovarId(), rp.get(i).getAddrId(), rp.get(i).getPrice(), rp.get(i).getFace(), rp.get(i).getAmount(), rp.get(i).getDtExpire(), rp.get(i).getExpireLeft(), rp.get(i).getNotes(), rp.get(i).getUp(), rp.get(i).getAkciya(), rp.get(i).getAkciyaId(), rp.get(i).getOborotvedNum(), rp.get(i).getErrorId(), rp.get(i).getErrorComment(), rp.get(i).getCodeDad2(), String.valueOf(rp.get(i).buyerOrderId)));
             }
         } else {
             Log.e("REPORT_PREPARE_SEND", "DATABASE - ");
@@ -1434,8 +1239,7 @@ public class RealmManager {
 
 
     public static long reportPrepareGetLastId() {
-        RealmResults<ReportPrepareDB> realmResults = INSTANCE.where(ReportPrepareDB.class)
-                .findAll();
+        RealmResults<ReportPrepareDB> realmResults = INSTANCE.where(ReportPrepareDB.class).findAll();
         try {
             return Objects.requireNonNull(realmResults.last()).getID();
         } catch (Exception e) {
@@ -1459,22 +1263,18 @@ public class RealmManager {
      * Получение данных Manufacturer NM по ID
      */
     public static TradeMarkDB getNmById(String id) {
-        return INSTANCE.where(TradeMarkDB.class)
-                .equalTo("iD", id)
-                .findFirst();
+        return INSTANCE.where(TradeMarkDB.class).equalTo("iD", id).findFirst();
     }
 
 
     // ERROR DB
     public static RealmResults<ErrorDB> getAllErrorDb() {
-        return INSTANCE.where(ErrorDB.class)
-                .findAll();
+        return INSTANCE.where(ErrorDB.class).findAll();
     }
 
     // PROMO DB
     public static RealmResults<PromoDB> getAllPromoDb() {
-        return INSTANCE.where(PromoDB.class)
-                .findAll();
+        return INSTANCE.where(PromoDB.class).findAll();
     }
 
 
@@ -1513,55 +1313,41 @@ public class RealmManager {
      * Получение всей таблици для выгруки на сервер
      */
     public static RealmResults<LogMPDB> getAllLogMPDB() {
-        return INSTANCE.where(LogMPDB.class)
-                .findAll();
+        return INSTANCE.where(LogMPDB.class).findAll();
     }
 
     public static RealmResults<LogMPDB> getNOTUploadLogMPDB() {
-        return INSTANCE.where(LogMPDB.class)
-                .equalTo("upload", 0)
-                .equalTo("serverId", 0)
-                .findAll();
+        return INSTANCE.where(LogMPDB.class).equalTo("upload", 0).equalTo("serverId", 0).findAll();
     }
 
     public static RealmResults<LogMPDB> getNOTUploadLogMPDBTEST(int a, int b) {
 
         Integer[] ids = {31, 32};
 
-        return INSTANCE.where(LogMPDB.class)
-                .in("id", ids)
-                .findAll();
+        return INSTANCE.where(LogMPDB.class).in("id", ids).findAll();
     }
 
     public static RealmResults<MenuItemFromWebDB> getSiteMenu() {
-        return INSTANCE.where(MenuItemFromWebDB.class)
-                .findAll();
+        return INSTANCE.where(MenuItemFromWebDB.class).findAll();
     }
 
 
     //    public RealmQuery<MenuItemFromWebDB> in(String fieldName, Integer[] values);
     public static RealmResults<MenuItemFromWebDB> getSiteMenuItems(Integer[] ids) {
-        return INSTANCE.where(MenuItemFromWebDB.class)
-                .in("id", ids)
-                .findAll();
+        return INSTANCE.where(MenuItemFromWebDB.class).in("id", ids).findAll();
     }
 
     public static MenuItemFromWebDB getSiteMenuItem(Integer id) {
-        return INSTANCE.where(MenuItemFromWebDB.class)
-                .equalTo("id", id)
-                .findFirst();
+        return INSTANCE.where(MenuItemFromWebDB.class).equalTo("id", id).findFirst();
     }
 
 
     public static SiteObjectsDB getLesson(int id) {
-        return INSTANCE.where(SiteObjectsDB.class)
-                .equalTo("id", id)
-                .findFirst();
+        return INSTANCE.where(SiteObjectsDB.class).equalTo("id", id).findFirst();
     }
 
     public static List<SiteObjectsDB> getLesson(Integer[] ids) {
-        RealmResults<SiteObjectsDB> res = INSTANCE.where(SiteObjectsDB.class)
-                .in("id", ids)
+        RealmResults<SiteObjectsDB> res = INSTANCE.where(SiteObjectsDB.class).in("id", ids)
 //                .sort("lesson_id", Sort.ASCENDING)
                 .findAll();
         if (res != null) {
@@ -1572,20 +1358,15 @@ public class RealmManager {
     }
 
     public static List<SiteHintsDB> getAllVideoLessons() {
-        return INSTANCE.copyFromRealm(INSTANCE.where(SiteHintsDB.class)
-                .findAll());
+        return INSTANCE.copyFromRealm(INSTANCE.where(SiteHintsDB.class).findAll());
     }
 
     public static SiteHintsDB getVideoLesson(int id) {
-        return INSTANCE.where(SiteHintsDB.class)
-                .equalTo("id", id)
-                .findFirst();
+        return INSTANCE.where(SiteHintsDB.class).equalTo("id", id).findFirst();
     }
 
     public static List<SiteHintsDB> getVideoLesson(Integer[] ids) {
-        RealmResults<SiteHintsDB> res = INSTANCE.where(SiteHintsDB.class)
-                .in("id", ids)
-                .findAll();
+        RealmResults<SiteHintsDB> res = INSTANCE.where(SiteHintsDB.class).in("id", ids).findAll();
 
         if (res != null) {
             return RealmManager.INSTANCE.copyFromRealm(res);
@@ -1596,14 +1377,11 @@ public class RealmManager {
 
 
     public static LangListDB getLangList(String type) {
-        return INSTANCE.where(LangListDB.class)
-                .equalTo("nmShort", type)
-                .findFirst();
+        return INSTANCE.where(LangListDB.class).equalTo("nmShort", type).findFirst();
     }
 
     public static List<LangListDB> getAllLangList() {
-        return INSTANCE.where(LangListDB.class)
-                .findAll();
+        return INSTANCE.where(LangListDB.class).findAll();
     }
 
 //    public static List<SiteTranslationsList> getAllSiteTranslationsList() {
@@ -1612,9 +1390,7 @@ public class RealmManager {
 //    }
 
     public static List<SiteTranslationsList> getSiteTranslationsList(String id) {
-        return INSTANCE.where(SiteTranslationsList.class)
-                .equalTo("langId", id)
-                .findAll();
+        return INSTANCE.where(SiteTranslationsList.class).equalTo("langId", id).findAll();
     }
 
 }

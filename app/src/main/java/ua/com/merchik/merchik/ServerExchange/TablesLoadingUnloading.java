@@ -1591,13 +1591,7 @@ public class TablesLoadingUnloading {
                             Log.e("TESTING", "2_SAVE PHOTO/path: " + path);
 
                             int id = RealmManager.stackPhotoGetLastId();
-//                            Log.e("TAG_TABLE", "PHOTO_TOVAR_URL_path_id0: " + id);
-
                             id++;
-//                            Log.e("TAG_TABLE", "PHOTO_TOVAR_URL_path_id1: " + id);
-
-//                            Log.e("TAG_TABLE", "PHOTO_TOVAR_URL_path: " + path);
-
                             StackPhotoDB stackPhotoDB = new StackPhotoDB(
                                     id,
                                     list.get(finalI).getID(),

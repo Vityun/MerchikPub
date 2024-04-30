@@ -73,7 +73,6 @@ import ua.com.merchik.merchik.MakePhoto.MakePhoto;
 import ua.com.merchik.merchik.MakePhoto.MakePhotoFromGalery;
 import ua.com.merchik.merchik.PhotoReportActivity;
 import ua.com.merchik.merchik.R;
-import ua.com.merchik.merchik.ServerExchange.TablesLoadingUnloading;
 import ua.com.merchik.merchik.Translate;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.WorkPlan;
@@ -615,13 +614,13 @@ public class DetailedReportActivity extends toolbar_menus {
         try {
             Globals.writeToMLOG("INFO", "DetailedReportActivity/setTab", "setTab");
             // 02.10.23. Убрал вечную проверку фоток Товаров при входе в отчёт. У некоторых мерчей это занимает сильно много ресурсов.
-            List<TovarDB> dataTovar = RealmManager.INSTANCE.copyFromRealm(RealmManager.getTovarListFromReportPrepareByDad2(wpDataDB.getCode_dad2()));
-            Log.e("getTovarImg", "dataTovar: " + dataTovar);
-            if (dataTovar != null) {
+//            List<TovarDB> dataTovar = RealmManager.INSTANCE.copyFromRealm(RealmManager.getTovarListFromReportPrepareByDad2(wpDataDB.getCode_dad2()));
+//            Log.e("getTovarImg", "dataTovar: " + dataTovar);
+//            if (dataTovar != null) {
 //                List<TovarDB> dataTovarDownloadList = RealmManager.getTovarListPhotoToDownload(dataTovar, "small");
-                TablesLoadingUnloading tablesLoadingUnloading = new TablesLoadingUnloading();
-                tablesLoadingUnloading.getTovarImg(dataTovar, "small");
-            }
+//                TablesLoadingUnloading tablesLoadingUnloading = new TablesLoadingUnloading();
+//                tablesLoadingUnloading.getTovarImg(dataTovar, "small");
+//            }
 
             Globals.writeToMLOG("INFO", "DetailedReportTab/0", "setTab create");
             adapter = new DetailedReportTab(this, getSupportFragmentManager(), getLifecycle(), tabLayout.getTabCount(), rowWP);
