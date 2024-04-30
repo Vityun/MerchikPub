@@ -206,10 +206,12 @@ public class ShowTovarRequisites {
                             dialogBadData.setOk("Так", () -> {
                                 dialogBadData.dismiss();
                                 Toast.makeText(context, "Дата не збережена!", Toast.LENGTH_LONG).show();
+                                dialog.dismiss();
                             });
                             dialogBadData.setCancel("Ні", () -> {
                                 dialogBadData.dismiss();
                                 pushOkButtonRequisites(tpl, reportPrepareDB, dialog, cd2, list, tovarId, clientId, finalBalanceData1, finalBalanceDate1, clickType);
+                                dialog.dismiss();
                             });
                             dialogBadData.setClose(dialogBadData::dismiss);
                             dialogBadData.show();

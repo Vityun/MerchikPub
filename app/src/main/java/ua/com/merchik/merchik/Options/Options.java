@@ -83,6 +83,7 @@ import ua.com.merchik.merchik.Options.Buttons.OptionButtonPhotoShowcaseFullness;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonPhotoShowcaseNear;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonPhotoTT;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonReclamationAnswer;
+import ua.com.merchik.merchik.Options.Buttons.OptionButtonStartWork;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonTaskAnswer;
 import ua.com.merchik.merchik.Options.Controls.OptionControlAchievements;
 import ua.com.merchik.merchik.Options.Controls.OptionControlAddComment;
@@ -553,6 +554,9 @@ public class Options {
 
                 if (testExistOption1 == null) existOption = false;
             }
+
+//            option.setOptionBlock1("156928");
+//            option.setOptionBlock2("138341");
 
             // Проход по второй опции блокировки
             if (!option.getOptionBlock2().equals("0")) {
@@ -1507,28 +1511,15 @@ public class Options {
             // ---
 
             case 138773:
-//                optionMP_138773(context, dataDB, option, type, mode, unlockCodeResultListener);
                 new OptionButtonHistoryMP<>(context, dataDB, option, type, mode, unlockCodeResultListener);
                 break;
 
-//                case 8299:
-//                    return optionControlMP_8299(context, dataDB, option, type, mode) ? 1 : 0;
-
-            // ---
-
             case 138518:
-                Log.e("NNK", "F/optControl/138518");
-                if (dataDB instanceof WpDataDB) {
-                    optionStartWork_138518(context, (WpDataDB) dataDB, option, type, mode, unlockCodeResultListener);
-//                        sendWpData2();
-                } else if (dataDB instanceof TasksAndReclamationsSDB) {
-                    optionStartWork_138518(context, (TasksAndReclamationsSDB) dataDB, option, type, mode, unlockCodeResultListener);
-                }
+                new OptionButtonStartWork<>(context, dataDB, option, type, mode, unlockCodeResultListener);
                 break;
 
             case 138519:
                 return optionControlStartWork_138519(context, dataDB, option, type, mode, unlockCodeResultListener) ? 0 : 1;
-
 
             case 138520:
                 if (dataDB instanceof WpDataDB) {
@@ -1701,7 +1692,7 @@ public class Options {
 
     // Это вроде нигде не работает, некст раз прочитаешь - проверь. Работает с DetailedButtons
     private <T> void option138339(Context context, T dataDB, OptionsDB option, OptionMassageType type, NNKMode mode, OptionControl.UnlockCodeResultListener unlockCodeResultListener) {
-        List<AdditionalRequirementsDB> data = AdditionalRequirementsRealm.getData3(dataDB, HIDE_FOR_USER, null, null,0);
+        List<AdditionalRequirementsDB> data = AdditionalRequirementsRealm.getData3(dataDB, HIDE_FOR_USER, null, null, 0);
 
         DialogAdditionalRequirements dialogAdditionalRequirements = new DialogAdditionalRequirements(context);
 
@@ -2587,7 +2578,7 @@ public class Options {
 //            RealmResults<AdditionalRequirementsDB> realmResults = AdditionalRequirementsRealm.getData3(dataDB, HIDE_FOR_USER, null, 0);
 //            List<AdditionalRequirementsDB> data = RealmManager.INSTANCE.copyFromRealm(realmResults);
 
-            List<AdditionalRequirementsDB> data = AdditionalRequirementsRealm.getData3(dataDB, HIDE_FOR_USER, null, null,0);
+            List<AdditionalRequirementsDB> data = AdditionalRequirementsRealm.getData3(dataDB, HIDE_FOR_USER, null, null, 0);
 
             // Получаем Оценки этих Доп. требований.
             RealmResults<AdditionalRequirementsMarkDB> marks = AdditionalRequirementsMarkRealm.getAdditionalRequirementsMarks(dateFrom, dateTo, userId, "1", data);
