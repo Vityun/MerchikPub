@@ -194,6 +194,8 @@ public class DetailedReportTovarsFrag extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
 
+        Log.e("TEST_SPEED", "RecycleViewDRAdapterTovar/onCreateView/START");
+
         Globals.writeToMLOG("INFO", "DetailedReportTovarsFrag/onCreateView", "inflater: " + inflater);
         Globals.writeToMLOG("INFO", "DetailedReportTovarsFrag/onCreateView", "container: " + container);
         Globals.writeToMLOG("INFO", "DetailedReportTovarsFrag/onCreateView", "create: " + savedInstanceState);
@@ -205,11 +207,11 @@ public class DetailedReportTovarsFrag extends Fragment {
         try {
 
             // TODO 10.09.23. могут быть проблемы с Товарами в ЗИР изза этого. Проблемы будущего меня
-            if (wpDataDB != null){
+            if (wpDataDB != null) {
                 this.codeDad2 = wpDataDB.getCode_dad2();
                 this.clientId = wpDataDB.getClient_id();
                 this.addressId = wpDataDB.getAddr_id();
-            }else if (tasksAndReclamationsSDB != null) {
+            } else if (tasksAndReclamationsSDB != null) {
                 this.codeDad2 = tasksAndReclamationsSDB.codeDad2SrcDoc;
                 this.clientId = tasksAndReclamationsSDB.client;
             }
@@ -235,10 +237,12 @@ public class DetailedReportTovarsFrag extends Fragment {
         } catch (Exception e) {
             Globals.writeToMLOG("ERROR", "DetailedReportTovarsFrag/onCreateView", "Exception e: " + e);
         }
+
+        Log.e("TEST_SPEED", "RecycleViewDRAdapterTovar/onCreateView/FINISH");
         return v;
     }
 
-    private void downloadData(){
+    private void downloadData() {
         List<TovarDB> res = new ArrayList<>();
         res = RealmManager.INSTANCE.copyFromRealm(Objects.requireNonNull(RealmManager.getTovarListFromReportPrepareByDad2(codeDad2)));
         if (res.size() == 0) {
@@ -261,7 +265,7 @@ public class DetailedReportTovarsFrag extends Fragment {
         }
     }
 
-    private void setFabVideo(Context context, Clicks.clickVoid click){
+    private void setFabVideo(Context context, Clicks.clickVoid click) {
         fab.setOnClickListener(view -> {
             DialogVideo dialogVideo = new DialogVideo(context);
             dialogVideo.setTitle("Перелік відео уроків");
@@ -271,13 +275,14 @@ public class DetailedReportTovarsFrag extends Fragment {
         });
     }
 
-    private void showYouTubeFab(){
-        List<ViewListSDB> videos = checkVideos(DETAILED_REPORT_FRAGMENT_TOVAR_VIDEO_LESSONS, ()->{});
-        if (videos.size() >= DETAILED_REPORT_FRAGMENT_TOVAR_VIDEO_LESSONS.length){
+    private void showYouTubeFab() {
+        List<ViewListSDB> videos = checkVideos(DETAILED_REPORT_FRAGMENT_TOVAR_VIDEO_LESSONS, () -> {
+        });
+        if (videos.size() >= DETAILED_REPORT_FRAGMENT_TOVAR_VIDEO_LESSONS.length) {
             fab.setVisibility(View.GONE);
             imageView.setVisibility(View.GONE);
             badgeTextView.setVisibility(View.GONE);
-        }else {
+        } else {
             fab.setVisibility(View.VISIBLE);
             imageView.setVisibility(View.VISIBLE);
             int must = DETAILED_REPORT_FRAGMENT_TOVAR_VIDEO_LESSONS.length;
@@ -287,7 +292,7 @@ public class DetailedReportTovarsFrag extends Fragment {
         }
     }
 
-    private List<SiteHintsDB> getSiteHints(Integer[] integers){
+    private List<SiteHintsDB> getSiteHints(Integer[] integers) {
         List<SiteObjectsDB> siteObjects = RealmManager.getLesson(integers);
         List<SiteHintsDB> data = null;
         try {
@@ -540,6 +545,7 @@ public class DetailedReportTovarsFrag extends Fragment {
      */
     private void addRecycleView(List<TovarDB> list) {
         try {
+            Log.e("TEST_SPEED", "RecycleViewDRAdapterTovar/addRecycleView");
             Globals.writeToMLOG("INFO", "DetailedReportTovarsFrag/addRecycleView/List<TovarDB> list", "list: " + list);
             Globals.writeToMLOG("INFO", "DetailedReportTovarsFrag/addRecycleView/List<TovarDB>", "list.size(): " + list.size());
 
@@ -552,27 +558,23 @@ public class DetailedReportTovarsFrag extends Fragment {
 
             try {
                 if (wpDataDB != null) {
-                    data = AdditionalRequirementsRealm.getData3(wpDataDB, DEFAULT, null, null,0);
+                    data = AdditionalRequirementsRealm.getData3(wpDataDB, DEFAULT, null, null, 0);
                 } else {
-                    data = AdditionalRequirementsRealm.getData3(tasksAndReclamationsSDB, DEFAULT, null, null,0);
+                    data = AdditionalRequirementsRealm.getData3(tasksAndReclamationsSDB, DEFAULT, null, null, 0);
                 }
 
                 Globals.writeToMLOG("INFO", "DetailedReportTovarsFrag/addRecycleView/AdditionalRequirementsDB", "data: " + data);
 
-            for (AdditionalRequirementsDB item : data) {
+                Log.e("TEST_SPEED", "RecycleViewDRAdapterTovar/addRecycleView/AdditionalRequirementsDB");
+                for (AdditionalRequirementsDB item : data) {
                     if (item.getTovarId() != null && !item.getTovarId().equals("0") && !item.getTovarId().equals("")) {
-//                        long startDt = Clock.dateConvertToLong(item.getDtStart()) / 1000;
-//                        long endDt = Clock.dateConvertToLong(item.getDtEnd()) / 1000;
-
                         long startDt = item.dtStart != null ? item.dtStart.getTime() / 1000 : 0;
                         long endDt = item.dtEnd != null ? item.dtEnd.getTime() / 1000 : 0;
-
-
                         long docDt = wpDataDB.getDt().getTime() / 1000;
                         long docDtMinus2 = Clock.getDatePeriodLong(docDt, -2);
                         long docDtPlus1 = Clock.getDatePeriodLong(docDt, 1);
 
-                        if ((startDt > 0 && endDt > 0 && docDtMinus2 < endDt) || (startDt > 0 && endDt == 0)){
+                        if ((startDt > 0 && endDt > 0 && docDtMinus2 < endDt) || (startDt > 0 && endDt == 0)) {
                             promotionalTov.add(Integer.valueOf(item.getTovarId()));
                         }
                     }
@@ -582,9 +584,7 @@ public class DetailedReportTovarsFrag extends Fragment {
                 Globals.writeToMLOG("ERROR", "DetailedReportTovarsFrag/addRecycleView/AdditionalRequirementsDB", "Exception e: " + e);
             }
 
-
-            // TODO OH SHIT
-//            RecycleViewDRAdapterTovar recycleViewDRAdapter;
+            Log.e("TEST_SPEED", "RecycleViewDRAdapterTovar/addRecycleView/adapter");
             Globals.writeToMLOG("INFO", "DetailedReportTovarsFrag/addRecycleView/RecycleViewDRAdapterTovar", "mContext: " + mContext);
             if (wpDataDB != null) {
                 adapter = new RecycleViewDRAdapterTovar(mContext, list, wpDataDB, RecycleViewDRAdapterTovar.OpenType.DEFAULT);
@@ -688,8 +688,8 @@ public class DetailedReportTovarsFrag extends Fragment {
     private void downloadDetailedReportTovarsData(TovarDisplayType type, Clicks.clickStatusMsg click) {
         try {
 //            if (tasksAndReclamationsSDB == null){
-                BlockingProgressDialog pg = BlockingProgressDialog.show(mContext, "Загрузка списка товаров", "Подождите окончания загрузки. Это может занять время.");
-                downloadReportPrepareByDad2(pg, click);
+            BlockingProgressDialog pg = BlockingProgressDialog.show(mContext, "Загрузка списка товаров", "Подождите окончания загрузки. Это может занять время.");
+            downloadReportPrepareByDad2(pg, click);
 
 //                BlockingProgressDialog pg2 = BlockingProgressDialog.show(mContext, "Загрузка списка опций", "Подождите окончания загрузки. Это может занять время.");
 //                downloadOptionByDad2(pg2, click);

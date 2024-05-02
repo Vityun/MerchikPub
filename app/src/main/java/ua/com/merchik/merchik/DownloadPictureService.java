@@ -73,12 +73,7 @@ public class DownloadPictureService extends Service {
             downloadPhoto(data, new Clicks.click() {
                 @Override
                 public <T> void click(T data) {
-//                    try {
-//                        Log.e("DownloadPictureService", "onStartCommand: " + data);
-//                        RealmManager.stackPhotoSavePhoto((List<StackPhotoDB>)data);
-//                    }catch (Exception e){
-//                        Log.e("DownloadPictureService", "Exception e: " + e);
-//                    }
+
                 }
             });
         }catch (Exception e){
@@ -182,23 +177,6 @@ public class DownloadPictureService extends Service {
                         });
                         realm.close();
 
-
-//                        try {
-//                            Log.e("DownloadPictureService", "onNext/RealmManager HERE?");
-//                            Realm realm = Realm.getDefaultInstance();
-//                            realm.executeTransaction(innerRealm -> {
-//                                try {
-//                                    Log.e("DownloadPictureService", "onNext" + "photo: " + new Gson().toJson(stackPhotoDB));
-//                                    innerRealm.copyToRealmOrUpdate(stackPhotoDB);
-//                                } catch (Exception e) {
-//                                    Log.e("DownloadPictureService", "onNext/RealmManager Exception e" + e);
-//                                }
-//                            });
-//                            realm.close();
-//                        }catch (Exception e){
-//                            Log.e("DownloadPictureService", "doOnNext/RealmManager Exception eee" + e);
-//                        }
-
                         saveNewTovarPhoto++;
                     } catch (Exception e) {
                         errorSaveTovarPhoto++;
@@ -210,11 +188,13 @@ public class DownloadPictureService extends Service {
                     @Override
                     public void onSubscribe(@NonNull Disposable d) {
                         Log.e("DownloadPictureService", "onSubscribe" + "d: " + d);
+                        Globals.writeToMLOG("INFO", "DownloadPictureService/downloadPhoto/onSubscribe", "onSubscribe" + "d: " + d);
                     }
 
                     @Override
                     public void onNext(@NonNull SumTestObj sumTestObj) {
                         Log.e("DownloadPictureService", "onNext" + "sumTestObj: " + new Gson().toJson(sumTestObj));
+                        Globals.writeToMLOG("INFO", "DownloadPictureService/downloadPhoto/onNext", "onNext" + "sumTestObj: " + new Gson().toJson(sumTestObj));
                         count++;
                     }
 
@@ -229,12 +209,14 @@ public class DownloadPictureService extends Service {
                         try {
                             Log.e("DownloadPictureService", "onComplete" + "OK");
                             Log.e("DownloadPictureService", "onComplete" + "savePhotoToDB: " + savePhotoToDB.size());
-                            Globals.writeToMLOG("ERROR", "DownloadPictureService/downloadPhoto/onComplete", "ОК: " + count);
+                            Globals.writeToMLOG("INFO", "DownloadPictureService/downloadPhoto/onComplete", "ОК: " + count);
                             click.click(savePhotoToDB);
                             Log.e("DownloadPictureService", "onComplete" + "OK1");
-                        }catch (Exception e){
+                        } catch (Exception e) {
                             Log.e("DownloadPictureService", "onComplete/Exception e" + e);
-                            Globals.writeToMLOG("ERROR", "DownloadPictureService/downloadPhoto/onComplete", "Exception e: " + e);
+                            Globals.writeToMLOG("INFO", "DownloadPictureService/downloadPhoto/onComplete", "Exception e: " + e);
+                        } finally {
+                            stopSelf();
                         }
                     }
                 });

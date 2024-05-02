@@ -192,8 +192,14 @@ public class Options {
     public <T> void optionControl(Context context, T dataDB, OptionsDB optionsDB, OptionMassageType type, NNKMode mode, OptionControl.UnlockCodeResultListener unlockCodeResultListener) {
 
         try {
+            Log.e("OPTION_CONTROL", "=======================================================");
             Log.e("OPTION_CONTROL", "HERE(0): " + optionsDB.getOptionControlId());
             Log.e("OPTION_CONTROL", "NNKMode mode: " + mode);
+
+            Log.e("OPTION_CONTROL", "optionsDB/getOptionId: " + optionsDB.getOptionId());
+            Log.e("OPTION_CONTROL", "optionsDB/getOptionTxt: " + optionsDB.getOptionTxt());
+            Log.e("OPTION_CONTROL", "optionsDB/getOptionControlId: " + optionsDB.getOptionControlId());
+            Log.e("OPTION_CONTROL", "optionsDB/getOptionControlTxt: " + optionsDB.getOptionControlTxt());
 
             int optionControlId = Integer.parseInt(optionsDB.getOptionControlId());
 
@@ -1054,6 +1060,12 @@ public class Options {
 
 //        try {
         Log.e("NNK", "F/optControl/optionId: " + optionId);
+
+        Log.e("NNK", "F/New/optControl/getOptionId: " + optionCurrent.getOptionId());
+        Log.e("NNK", "F/New/optControl/getOptionTxt: " + optionCurrent.getOptionTxt());
+        Log.e("NNK", "F/New/optControl/getOptionControlId: " + optionCurrent.getOptionControlId());
+        Log.e("NNK", "F/New/optControl/getOptionControlTxt: " + optionCurrent.getOptionControlTxt());
+
         Log.e("NNK", "F/optControl/NNKMode mode: " + mode);
         switch (optionId) {
 

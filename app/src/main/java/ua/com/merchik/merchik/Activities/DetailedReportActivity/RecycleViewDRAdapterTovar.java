@@ -143,6 +143,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
 
     /*Определяем конструктор*/
     public RecycleViewDRAdapterTovar(Context context, List<TovarDB> list, WpDataDB wp, OpenType openType) {
+        Log.e("TEST_SPEED", "RecycleViewDRAdapterTovar/ENTER");
         this.mContext = context;
         this.dataList = list;
         this.dataFilterable = list;
@@ -159,6 +160,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
     }
 
     public RecycleViewDRAdapterTovar(Context context, List<TovarDB> list, TasksAndReclamationsSDB tasksAndReclamationsSDB, OpenType openType) {
+        Log.e("TEST_SPEED", "RecycleViewDRAdapterTovar/ENTER2");
         this.mContext = context;
         this.dataList = list;
         this.dataFilterable = list;
@@ -186,6 +188,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
     }
 
     public void setAkciyaTovList(List<Integer> tovIdList, List<AdditionalRequirementsDB> adList) {
+        Log.e("TEST_SPEED", "RecycleViewDRAdapterTovar/setAkciyaTovList");
         this.tovIdList = tovIdList;
         this.adList = adList;
         Log.e("АКЦИЯ_ТОВАРА", "tovIdList: " + tovIdList);
@@ -272,6 +275,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
         ViewHolder(View v) {
             super(v);
             // Get Resourse id`s
+            Log.e("TEST_SPEED", "RecycleViewDRAdapterTovar/ViewHolder");
 
             constraintLayout = (ConstraintLayout) v.findViewById(R.id.dr_tovar_item_tovar_layout);
             imageView = (ImageView) v.findViewById(R.id.imageViewItemTovar);
@@ -332,7 +336,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
         //        @RequiresApi(api = Build.VERSION_CODES.N)
         public void bind(TovarDB list) {
             try {
-
+                Log.e("TEST_SPEED", "RecycleViewDRAdapterTovar/bind/list: " + list);
 
                 String balanceData = "?";
                 String balanceDate = "?";
