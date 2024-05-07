@@ -424,7 +424,6 @@ public class PhotoReports {
 
                 Globals.writeToMLOG("INFO", "PhotoReports/buildCall/CALL/onResponse/responseBody", "HERE IN response: " + response);
 
-                //{"state":false,"list":[{"state":false,"error":"Файл CAMERA_PHOTO_20230911_113446723_5273240251302389927.jpg вже був завантажений раніше","error_type":"photo_already_exist","nm":"CAMERA_PHOTO_20230911_113446723_5273240251302389927.jpg"}]}
                 try {
                     if (response.isSuccessful()) {
                         if (response.body() != null) {

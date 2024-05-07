@@ -14,6 +14,7 @@ import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -117,11 +118,17 @@ public class DownloadPictureService extends Service {
                 .flatMap(tovarImgList ->
                         RetrofitBuilder.getRetrofitInterface()
                                 .DOWNLOAD_PHOTO_BY_URL_TEST(tovarImgList.getPhotoUrl())
+//                                .map(jsonObject -> new SumTestObj(jsonObject, tovarImgList))
+//                                .map(responseBody -> new SumTestObj(Single.just(responseBody), tovarImgList))
                                 .map(responseBody -> new SumTestObj(responseBody, tovarImgList))
                                 .toObservable()
 
                 ).doOnNext(sumTestObj -> {
                     try {
+
+                        Globals.writeToMLOG("INFO", "DownloadPictureService/downloadPhoto/doOnNext", "sumTestObj: " + new Gson().toJson(sumTestObj));
+
+
                         Bitmap bmp = BitmapFactory.decodeStream(sumTestObj.observable.byteStream());
                         TovarImgList item = sumTestObj.tovarImgList;
 
@@ -180,7 +187,7 @@ public class DownloadPictureService extends Service {
                         saveNewTovarPhoto++;
                     } catch (Exception e) {
                         errorSaveTovarPhoto++;
-                        Log.e("DownloadPictureService", "doOnNext/Exception e: " + e);
+                        Globals.writeToMLOG("INFO", "DownloadPictureService/downloadPhoto/doOnNext", "Exception e: " + e);
                     }
                 })
                 .observeOn(Schedulers.io())
@@ -201,6 +208,13 @@ public class DownloadPictureService extends Service {
                     @Override
                     public void onError(@NonNull Throwable e) {
                         Log.e("DownloadPictureService", "onError: Throwable e" + e);
+
+                        Log.e("DownloadPictureService", "onError: Throwable e: " + e.getMessage()); // Сообщение об ошибке
+                        Log.e("DownloadPictureService", "onError: Stack Trace: " + Log.getStackTraceString(e)); // Стек вызовов
+
+
+                        Globals.writeToMLOG("ERROR", "DownloadPictureService/downloadPhoto/onError", "onError: Throwable e: " + e.getMessage());
+                        Globals.writeToMLOG("ERROR", "DownloadPictureService/downloadPhoto/onError", "onError: Stack Trace: " + Log.getStackTraceString(e));
                         Globals.writeToMLOG("ERROR", "DownloadPictureService/downloadPhoto/onError", "Throwable e: " + Arrays.toString(e.getStackTrace()));
                     }
 
@@ -228,7 +242,14 @@ public class DownloadPictureService extends Service {
         public ResponseBody observable;
         public TovarImgList tovarImgList;
 
+        public JsonObject jsonObject;
+
         public SumTestObj(ResponseBody observable, TovarImgList tovarImgList) {
+            this.observable = observable;
+            this.tovarImgList = tovarImgList;
+        }
+
+        public SumTestObj(JsonObject jsonObject, TovarImgList tovarImgList) {
             this.observable = observable;
             this.tovarImgList = tovarImgList;
         }

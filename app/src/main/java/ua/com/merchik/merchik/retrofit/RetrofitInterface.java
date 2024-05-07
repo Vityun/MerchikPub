@@ -293,6 +293,8 @@ public interface RetrofitInterface {
 
     @GET
     Single<ResponseBody> DOWNLOAD_PHOTO_BY_URL_TEST(@Url String url);
+    @GET
+    Single<JsonObject> DOWNLOAD_PHOTO_BY_URL_TEST_JSON(@Url String url);
 
 
     @POST("mobile_app.php?")
