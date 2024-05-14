@@ -16,6 +16,7 @@ import ua.com.merchik.merchik.data.Database.Room.AddressSDB;
 import ua.com.merchik.merchik.data.Database.Room.ArticleSDB;
 import ua.com.merchik.merchik.data.Database.Room.CustomerSDB;
 import ua.com.merchik.merchik.data.Database.Room.OpinionSDB;
+import ua.com.merchik.merchik.data.Database.Room.PlanogrammSDB;
 import ua.com.merchik.merchik.data.Database.Room.ShowcaseSDB;
 import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
 import ua.com.merchik.merchik.data.Database.Room.UsersSDB;
@@ -474,6 +475,29 @@ public class MyFilter {
                 if (item.nm != null && !item.nm.equals("") && item.nm.toLowerCase().contains(constraint)) {
                     results.add(item);
                 } else if (item.tovarGrpTxt != null && !item.tovarGrpTxt.equals("") && item.tovarGrpTxt.toLowerCase().contains(constraint)) {
+                    results.add(item);
+                }
+
+            } catch (Exception e) {
+                Log.e("FilterShowcase", "Exception e: " + e);
+            }
+        }
+        return results;
+    }
+
+    public List<PlanogrammSDB> getFilteredResultsPlanogrammSDB(String constraint, List<PlanogrammSDB> sorted, List<PlanogrammSDB> orig) {
+
+        constraint = constraint.toLowerCase();
+
+        List<PlanogrammSDB> results = new ArrayList<>();
+        if (sorted == null || constraint.equals("")) {
+            sorted = orig;
+        }
+
+        for (PlanogrammSDB item : sorted) {
+            try {
+                // Название
+                if (item.nm != null && !item.nm.equals("") && item.nm.toLowerCase().contains(constraint)) {
                     results.add(item);
                 }
 

@@ -9,7 +9,6 @@ import java.util.List;
 
 import io.reactivex.rxjava3.core.Completable;
 import ua.com.merchik.merchik.data.Database.Room.PlanogrammSDB;
-import ua.com.merchik.merchik.data.Database.Room.ShowcaseSDB;
 
 @Dao
 public interface PlanogrammDao {
@@ -23,4 +22,8 @@ public interface PlanogrammDao {
     Completable insertAll(List<PlanogrammSDB> data);
 
     // ----------------------------------------------------
+
+    @Query("SELECT * FROM planogramm WHERE client_id = :clientId")
+    List<PlanogrammSDB> getByDocTP(String clientId);
+
 }

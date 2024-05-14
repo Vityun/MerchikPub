@@ -38,6 +38,7 @@ import ua.com.merchik.merchik.ServerExchange.TablesExchange.FragmentsExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.LanguagesExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.LocationExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.OblastExchange;
+import ua.com.merchik.merchik.ServerExchange.TablesExchange.PlanogrammTableExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.PotentialClientTableExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.SamplePhotoExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.ShelfSizeExchange;
@@ -921,6 +922,17 @@ public class Exchange {
                         @Override
                         public void onFailure(String error) {
                             Globals.writeToMLOG("ERROR", "startExchange/ShowcaseExchange/downloadShowcaseTable/onFailure", "error: " + error);
+                        }
+                    });
+                    new PlanogrammTableExchange().planogramDownload(new Clicks.clickObjectAndStatus() {
+                        @Override
+                        public void onSuccess(Object data) {
+
+                        }
+
+                        @Override
+                        public void onFailure(String error) {
+
                         }
                     });
                 } catch (Exception e) {

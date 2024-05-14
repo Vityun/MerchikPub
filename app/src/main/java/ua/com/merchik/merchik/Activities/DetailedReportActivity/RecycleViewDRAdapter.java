@@ -286,17 +286,16 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                 if (describedOption) {
                     setCheck.setVisibility(View.VISIBLE);
                     if (optionsButtons.getIsSignal().equals("1")) {
-//                setCheck.setImageResource(R.drawable.red_checkbox);
                         setCheck.setImageResource(R.drawable.ic_exclamation_mark_in_a_circle);
                         setCheck.setColorFilter(setCheck.getContext().getResources().getColor(R.color.red_error));
                     } else if (optionsButtons.getIsSignal().equals("2")) {
-//                setCheck.setImageResource(R.drawable.greeen_checkbox);
                         setCheck.setImageResource(R.drawable.ic_check);
-//                    setCheck.setColorFilter(mContext.getResources().getColor(R.color.greenCol));
                         setCheck.setColorFilter(setCheck.getContext().getResources().getColor(R.color.green_default));
                     } else {
                         if (optionsButtons.getOptionControlId().equals("0")) {
-                            setCheck.setVisibility(View.INVISIBLE);
+//                            setCheck.setVisibility(View.INVISIBLE);
+                            setCheck.setImageResource(R.drawable.ic_round);
+                            setCheck.setColorFilter(setCheck.getContext().getResources().getColor(R.color.shadow));
                         } else {
                             setCheck.setImageResource(R.drawable.ic_round);
                             setCheck.setColorFilter(setCheck.getContext().getResources().getColor(R.color.shadow));

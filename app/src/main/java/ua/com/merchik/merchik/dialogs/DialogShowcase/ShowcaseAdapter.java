@@ -2,6 +2,13 @@ package ua.com.merchik.merchik.dialogs.DialogShowcase;
 
 import android.net.Uri;
 import android.text.Html;
+import android.text.SpannableString;
+import android.text.SpannableStringBuilder;
+import android.text.Spanned;
+import android.text.TextPaint;
+import android.text.method.LinkMovementMethod;
+import android.text.style.ClickableSpan;
+import android.text.style.StyleSpan;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -10,6 +17,7 @@ import android.widget.Filter;
 import android.widget.Filterable;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.constraintlayout.widget.ConstraintLayout;
@@ -107,7 +115,7 @@ public class ShowcaseAdapter extends RecyclerView.Adapter<ShowcaseAdapter.ViewHo
                 }
 
                 if (showcase.photoPlanogramTxt != null) {
-                    planogram = showcase.photoPlanogramTxt;
+                    planogram = "(" + showcase.planogramId + ") " + showcase.photoPlanogramTxt;
                 }
 
                 StackPhotoDB stackPhotoDB = StackPhotoRealm.stackPhotoDBGetPhotoBySiteId2(String.valueOf(showcase.photoId));
@@ -115,7 +123,20 @@ public class ShowcaseAdapter extends RecyclerView.Adapter<ShowcaseAdapter.ViewHo
                 textViewShowcaseId.setText(Html.fromHtml("<b>Вітрина №:</b> " + showcase.id));
                 textViewShowcaseNm.setText(Html.fromHtml("<b>Назва:</b> " + showcase.nm));
                 textViewClientGroup.setText(Html.fromHtml("<b>Група тов.:</b> " + groupName));
-                textViewPlanogramm.setText(Html.fromHtml("<b>Планограма:</b> " + planogram));
+
+                String pl = "Планограма:";
+                SpannableString spannableString = new SpannableString(pl);
+                spannableString.setSpan(new StyleSpan(android.graphics.Typeface.BOLD), 0, pl.length(), SpannableString.SPAN_EXCLUSIVE_EXCLUSIVE);
+
+                SpannableString spannableString2 = new SpannableString(createLinkedString(showcase, planogram));
+//                spannableString.setSpan(new UnderlineSpan(), 0, spannableString2.length(), SpannableString.SPAN_EXCLUSIVE_EXCLUSIVE);
+
+
+                SpannableStringBuilder spannableStringRes = new SpannableStringBuilder();
+                spannableStringRes.append(spannableString).append(" ").append(spannableString2);
+
+                textViewPlanogramm.setText(spannableStringRes);
+                textViewPlanogramm.setMovementMethod(LinkMovementMethod.getInstance());
 
                 if (showcase.id == 0) {
                     textViewShowcaseId.setText("Створити фото без зазначення вітрини");
@@ -170,6 +191,34 @@ public class ShowcaseAdapter extends RecyclerView.Adapter<ShowcaseAdapter.ViewHo
 
         res.id = 0;
 
+        return res;
+    }
+
+    private SpannableString createLinkedString(ShowcaseSDB showcase, String msg) {
+        SpannableString res = new SpannableString(msg);
+        ClickableSpan clickableSpan = new ClickableSpan() {
+            @Override
+            public void onClick(View textView) {
+                try {
+                    Toast.makeText(textView.getContext(), "sjbajsdakjhsdkasdbljasdfbh", Toast.LENGTH_LONG).show();
+                    StackPhotoDB stackPhotoDB = StackPhotoRealm.stackPhotoDBGetPhotoBySiteId2(String.valueOf(showcase.photoPlanogramId));
+                    DialogFullPhotoR dialogFullPhoto = new DialogFullPhotoR(textView.getContext());
+                    dialogFullPhoto.setPhoto(stackPhotoDB);
+                    dialogFullPhoto.setClose(dialogFullPhoto::dismiss);
+                    dialogFullPhoto.show();
+                } catch (Exception e) {
+                    Log.e("ShowcaseAdapter", "Exception e: " + e);
+                    Toast.makeText(textView.getContext(), "==================================================", Toast.LENGTH_LONG).show();
+                }
+            }
+
+            @Override
+            public void updateDrawState(TextPaint ds) {
+                super.updateDrawState(ds);
+                ds.setUnderlineText(true);
+            }
+        };
+        res.setSpan(clickableSpan, 0, msg.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         return res;
     }
 

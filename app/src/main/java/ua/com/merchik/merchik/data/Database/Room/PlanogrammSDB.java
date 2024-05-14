@@ -3,6 +3,7 @@ package ua.com.merchik.merchik.data.Database.Room;
 import androidx.annotation.NonNull;
 import androidx.room.ColumnInfo;
 import androidx.room.Entity;
+import androidx.room.Ignore;
 import androidx.room.PrimaryKey;
 
 import com.google.gson.annotations.SerializedName;
@@ -77,4 +78,8 @@ public class PlanogrammSDB {
     @ColumnInfo(name = "dtUpdate")
     @SerializedName("dtUpdate")
     public Date dtUpdate;
+
+    @Ignore
+    @ColumnInfo(name = "planogrammPhoto")
+    public int planogrammPhoto;
 }
