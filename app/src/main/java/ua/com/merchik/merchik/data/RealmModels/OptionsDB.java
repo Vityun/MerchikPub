@@ -40,6 +40,10 @@ public class OptionsDB extends RealmObject {
     @Expose
     private String optionControlId;
 
+    @SerializedName("option_control_mvs")
+    @Expose
+    private Integer optionControlMVS;
+
     @SerializedName("option_block_1")
     @Expose
     private String optionBlock1;

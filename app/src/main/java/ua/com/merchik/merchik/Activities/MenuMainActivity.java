@@ -18,9 +18,8 @@ import java.util.Calendar;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
+import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.R;
-import ua.com.merchik.merchik.ServerExchange.TablesExchange.PlanogrammTableExchange;
-import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.ShowcaseResponse;
 import ua.com.merchik.merchik.data.TestJsonUpload.StandartData;
 import ua.com.merchik.merchik.dialogs.DialogShowcase.DialogShowcase;
@@ -82,16 +81,33 @@ public class MenuMainActivity extends toolbar_menus {
     }
 
     private void test() {
-//        new TablesLoadingUnloading().downloadOptions(this);
-        new PlanogrammTableExchange().planogramDownload(new Clicks.clickObjectAndStatus() {
-            @Override
-            public void onSuccess(Object data) {
+        testOptionsDownload();
+    }
 
+    public void testOptionsDownload(){
+        // Просто планограммы
+        StandartData data = new StandartData();
+        data.mod = "plan";
+        data.act = "options_list";
+        data.date_from = Clock.today_7;
+        data.date_to = Clock.getDatePeriod(5);
+
+        Gson gson = new Gson();
+        String json = gson.toJson(data);
+        JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
+        Log.e("MAIN_test", "Просто Options convertedObject: " + convertedObject);
+
+        retrofit2.Call<JsonObject> call = RetrofitBuilder.getRetrofitInterface().TEST_JSON_UPLOAD(RetrofitBuilder.contentType, convertedObject);
+        call.enqueue(new Callback<JsonObject>() {
+            @Override
+            public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
+                Log.e("MAIN_test", "Просто Options: " + response);
+                Log.e("MAIN_test", "Просто Options body: " + response.body());
             }
 
             @Override
-            public void onFailure(String error) {
-
+            public void onFailure(Call<JsonObject> call, Throwable t) {
+                Log.e("MAIN_test", "Просто Options: " + t);
             }
         });
     }
