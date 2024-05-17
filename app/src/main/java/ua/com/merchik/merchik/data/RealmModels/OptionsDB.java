@@ -40,9 +40,9 @@ public class OptionsDB extends RealmObject {
     @Expose
     private String optionControlId;
 
-    @SerializedName("option_control_mvs")
-    @Expose
-    private Integer optionControlMVS;
+//    @SerializedName("option_control_mvs")
+//    @Expose
+//    public Integer optionControlMVS;
 
     @SerializedName("option_block_1")
     @Expose
@@ -465,9 +465,10 @@ public class OptionsDB extends RealmObject {
         return iD.equals(optionsDB.iD);
     }
 
-    @Override
-    public int hashCode() {
-        return iD.hashCode();
-    }
+//    @Override
+//    public int hashCode() {
+//        String s = iD;
+//        return s.hashCode();
+//    }
 
 }

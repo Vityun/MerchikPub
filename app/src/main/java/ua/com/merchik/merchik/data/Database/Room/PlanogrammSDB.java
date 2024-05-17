@@ -31,6 +31,10 @@ public class PlanogrammSDB {
     @SerializedName("client_id")
     public String clientId;
 
+    @SerializedName("addr_id")
+    @ColumnInfo(name = "addr_id")
+    public String addrId;
+
     @ColumnInfo(name = "client_txt")
     @SerializedName("client_txt")
     public String clientTxt;

@@ -145,6 +145,7 @@ import ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsRealm;
 import ua.com.merchik.merchik.database.realm.tables.AppUserRealm;
 import ua.com.merchik.merchik.database.realm.tables.CustomerRealm;
 import ua.com.merchik.merchik.database.realm.tables.LogMPRealm;
+import ua.com.merchik.merchik.database.realm.tables.OptionsRealm;
 import ua.com.merchik.merchik.database.realm.tables.ReportPrepareRealm;
 import ua.com.merchik.merchik.database.realm.tables.WpDataRealm;
 import ua.com.merchik.merchik.dialogs.DialogAdditionalRequirements.DialogARMark.DialogARMark;
@@ -517,6 +518,79 @@ public class Options {
         this.optionFromDetailedReport = optionList;
     }
 
+
+    /**
+     * Тут я получаю список Опций которые касаются той самой/
+     */
+    public List<OptionsDB> getOptionsToControl(OptionsDB optionsDB) {
+        List<OptionsDB> optionsDBList = OptionsRealm.getOptionsNOTButtonByDAD2(optionsDB.getCodeDad2());
+//        List<OptionsDB> optionsDBList = OptionsRealm.getOptionsButtonByDAD2(optionsDB.getCodeDad2());
+        List<OptionsDB> res = new ArrayList<>();
+        if (optionsDBList != null) {
+            for (OptionsDB item : optionsDBList) {
+                if (item.getOptionControlId().equals(optionsDB.getOptionId()) && !item.getOptionId().equals(optionsDB.getOptionControlId())) {
+                    res.add(item);
+                }
+            }
+        }
+        return res;
+    }
+
+    /**
+     * Запуск нового протокола проверки ОпцийКонтроля
+     */
+    public <T> void optionControlNewAlgo(List<OptionsDB> optionsDBList, Context context, T dataDB, OptionsDB option, List<OptionsDB> optionList, OptionMassageType type, NNKMode mode, boolean check, Clicks.clickVoid click) {
+        int optionId2 = Integer.parseInt(option.getOptionId());
+        if (optionsDBList != null && optionsDBList.size() > 0){
+            for (OptionsDB item : optionsDBList) {
+                NNKMode nnkMode;
+                if (item.getBlockPns().equals("1")){
+                    nnkMode = NNKMode.BLOCK;
+                }else if (check){
+                    nnkMode = NNKMode.CHECK;
+                }else {
+                    nnkMode = NNKMode.MAKE;
+                }
+                int optionId = Integer.parseInt(item.getOptionId());
+                optControl(context, dataDB, option, optionId, option, type, nnkMode, new OptionControl.UnlockCodeResultListener() {
+                    @Override
+                    public void onUnlockCodeSuccess() {
+                        Toast.makeText(context, "Опція пройшла успішно і нікого не заблокувала.", Toast.LENGTH_LONG).show();
+                        optControl(context, dataDB, option, optionId2, option, type, nnkMode, new OptionControl.UnlockCodeResultListener() {
+                            @Override
+                            public void onUnlockCodeSuccess() {
+                                click.click();
+                            }
+
+                            @Override
+                            public void onUnlockCodeFailure() {
+                                click.click();
+                            }
+                        });
+                    }
+
+                    @Override
+                    public void onUnlockCodeFailure() {
+                        Toast.makeText(context, "Опція пройшла успішно і блокує подальше виконання.", Toast.LENGTH_LONG).show();
+                        click.click();
+                    }
+                });
+            }
+        }else {
+            optControl(context, dataDB, option, optionId2, option, type, mode, new OptionControl.UnlockCodeResultListener() {
+                @Override
+                public void onUnlockCodeSuccess() {
+                    click.click();
+                }
+
+                @Override
+                public void onUnlockCodeFailure() {
+                    click.click();
+                }
+            });
+        }
+    }
+
     /*
      * Обработка опций
      * Нажатие На Кнопку (ННК) -- абстрактное название. На самом деле в принципе обработка
@@ -561,256 +635,258 @@ public class Options {
                 if (testExistOption1 == null) existOption = false;
             }
 
-//            option.setOptionBlock1("156928");
-//            option.setOptionBlock2("138341");
-
-            // Проход по второй опции блокировки
-            if (!option.getOptionBlock2().equals("0")) {
-                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
-                    OptionsDB optionsDB = optionFromDetailedReport.stream().filter(optionListItem -> Objects.equals(optionListItem.getOptionId(), option.getOptionBlock2()))
-                            .findAny()
-                            .orElse(null);
-                    if (optionsDB != null) {
-                        Log.e("NNK", "1. Проверяю опцмю: " + option.getOptionBlock2());
-                        res += optControl(context, dataDB, option, Integer.parseInt(option.getOptionBlock2()), optionsDB, type, NNKMode.BLOCK, new OptionControl.UnlockCodeResultListener() {
-                            @Override
-                            public void onUnlockCodeSuccess() {
-                                Log.e("NNK", "Опция БЛОК 2 прошла успешно, надо проверить БЛОК 1");
-//                             Проход по первой опции блокировки
-                                if (!option.getOptionBlock1().equals("0")) {
-                                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
-                                        OptionsDB optionsDB = optionFromDetailedReport.stream().filter(optionListItem -> Objects.equals(optionListItem.getOptionId(), option.getOptionBlock1()))
-                                                .findAny()
-                                                .orElse(null);
-                                        if (optionsDB != null) {
-                                            Log.e("NNK", "2. Проверяю опцмю: " + option.getOptionBlock1());
-                                            res += optControl(context, dataDB, option, Integer.parseInt(option.getOptionBlock1()), optionsDB, type, NNKMode.BLOCK, new OptionControl.UnlockCodeResultListener() {
-                                                @Override
-                                                public void onUnlockCodeSuccess() {
-                                                    Log.e("NNK", "Успешный Успех. Первая и вторая ОК прошли проверку и должно разрешить работу.");
-                                                    optControl(context, dataDB, option, Integer.parseInt(option.getOptionId()), null, type, mode, new OptionControl.UnlockCodeResultListener() {
-                                                        @Override
-                                                        public void onUnlockCodeSuccess() {
-                                                            Log.e("NNK", "Выполняю опцию");
-                                                        }
-
-                                                        @Override
-                                                        public void onUnlockCodeFailure() {
-                                                            Log.e("NNK", "НЕ Выполняю опцию");
-                                                        }
-                                                    });
-                                                    click.click();
-                                                }
-
-                                                @Override
-                                                public void onUnlockCodeFailure() {
-                                                    Log.e("NNK", "1. Успешный НЕ Успех. Первая проверку прошла, вторая не прошла, значит не даю делать опцию на которую нажали.");
-                                                }
-                                            });
-                                            Log.e("NNK", "res OK 1: " + res);
-                                        } else {
-                                            switch (mode) {
-                                                case MAKE:
-                                                    Log.e("NNK", "1. МПроверяю опцмю: " + option.getOptionBlock1());
-                                                    optControl(context, dataDB, option, Integer.parseInt(option.getOptionId()), null, type, mode, new OptionControl.UnlockCodeResultListener() {
-                                                        @Override
-                                                        public void onUnlockCodeSuccess() {
-                                                            Log.e("NNK", "Выполняю опцию. Если опция не найдена.");
-                                                        }
-
-                                                        @Override
-                                                        public void onUnlockCodeFailure() {
-                                                            Log.e("NNK", "НЕ Выполняю опцию. Если опция не найдена.");
-                                                        }
-                                                    });
-                                                    click.click();
-                                                    break;
-                                            }
-                                        }
-                                    }
-                                } else {
-                                    switch (mode) {
-                                        case MAKE:
-                                            Log.e("NNK", "2. МПроверяю опцмю: " + option.getOptionBlock1());
-                                            optControl(context, dataDB, option, Integer.parseInt(option.getOptionId()), null, type, mode, new OptionControl.UnlockCodeResultListener() {
-                                                @Override
-                                                public void onUnlockCodeSuccess() {
-                                                    Log.e("NNK", "Success Вторая опция блокировки есть, а первой - нет. Вторая опция УСПЕШНО запершила работу, значит можно выполнять опцию изначальную");
-                                                }
-
-                                                @Override
-                                                public void onUnlockCodeFailure() {
-                                                    Log.e("NNK", "Failure Вторая опция блокировки есть, а первой - нет. Вторая опция УСПЕШНО запершила работу, значит можно выполнять опцию изначальную");
-                                                }
-                                            });
-                                            click.click();
-                                            break;
-                                    }
-                                }
-                            }
-
-                            @Override
-                            public void onUnlockCodeFailure() {
-//                             Проход по первой опции блокировки
-                                if (!option.getOptionBlock1().equals("0")) {
-                                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
-                                        OptionsDB optionsDB = optionFromDetailedReport.stream().filter(optionListItem -> Objects.equals(optionListItem.getOptionId(), option.getOptionBlock1()))
-                                                .findAny()
-                                                .orElse(null);
-                                        if (optionsDB != null) {
-                                            Log.e("NNK", "3. Проверяю опцмю: " + option.getOptionBlock1());
-                                            res += optControl(context, dataDB, option, Integer.parseInt(option.getOptionBlock1()), optionsDB, type, NNKMode.BLOCK, new OptionControl.UnlockCodeResultListener() {
-                                                @Override
-                                                public void onUnlockCodeSuccess() {
-                                                    Log.e("NNK", "НЕ Успешный Успех. Первая проверку НЕ прошла, вторая прошла, значит не даю делать опцию на которую нажали.");
-                                                }
-
-                                                @Override
-                                                public void onUnlockCodeFailure() {
-                                                    Log.e("NNK", "НЕ Успешный НЕ Успех. Первая проверку НЕ прошла, вторая НЕ прошла, значит не даю делать опцию на которую нажали.");
-                                                }
-                                            });
-                                            Log.e("NNK", "res OK 1: " + res);
-                                        } else {
-                                            Log.e("NNK", "Блок 2 не выполнен, а Блок 1 нет в отчёте - Ничего не делаю. (должно отрисовать сообщение Блока2)");
-                                        }
-                                    }
-                                }
-                            }
-                        });
-                        Log.e("NNK", "res OK 2: " + res);
-                    } else {
-                        if (!option.getOptionBlock1().equals("0")) {
-                            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
-                                OptionsDB optionsDBELSE = optionFromDetailedReport.stream().filter(optionListItem -> Objects.equals(optionListItem.getOptionId(), option.getOptionBlock1()))
-                                        .findAny()
-                                        .orElse(null);
-                                if (optionsDBELSE != null) {
-                                    Log.e("NNK", "Проверяю опцмюoptionsDBELSE: " + optionsDBELSE.getOptionBlock1());
-                                    res += optControl(context, dataDB, option, Integer.parseInt(option.getOptionBlock1()), optionsDBELSE, type, NNKMode.BLOCK, new OptionControl.UnlockCodeResultListener() {
-                                        @Override
-                                        public void onUnlockCodeSuccess() {
-                                            Log.e("NNK", "Успешный Успех. Если первая опция пустая Первая и вторая ОК прошли проверку и должно разрешить работу.");
-
-                                            optControl(context, dataDB, option, Integer.parseInt(option.getOptionId()), null, type, mode, new OptionControl.UnlockCodeResultListener() {
-                                                @Override
-                                                public void onUnlockCodeSuccess() {
-
-                                                }
-
-                                                @Override
-                                                public void onUnlockCodeFailure() {
-
-                                                }
-                                            });
-                                            click.click();
-                                        }
-
-                                        @Override
-                                        public void onUnlockCodeFailure() {
-                                            Log.e("NNK", "2. Успешный НЕ Успех. Первая проверку прошла, вторая не прошла, значит не даю делать опцию на которую нажали.");
-                                        }
-                                    });
-                                    Log.e("NNK", "res OK 1: " + res);
-                                } else {
-                                    switch (mode) {
-                                        case MAKE:
-                                            Log.e("NNK", "3. МПроверяю опцмю: " + option.getOptionBlock1());
-                                            optControl(context, dataDB, option, Integer.parseInt(option.getOptionId()), null, type, mode, new OptionControl.UnlockCodeResultListener() {
-                                                @Override
-                                                public void onUnlockCodeSuccess() {
-                                                    Log.e("NNK", "Блок2 - нет, Блок1 - нет. Success");
-                                                }
-
-                                                @Override
-                                                public void onUnlockCodeFailure() {
-                                                    Log.e("NNK", "Блок2 - нет, Блок1 - нет. Failure");
-                                                }
-                                            });
-                                            click.click();
-                                            break;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            } else if (!option.getOptionBlock1().equals("0")) {
-                //Проход по первой опции блокировки если второй нет
-                if (!option.getOptionBlock1().equals("0")) {
+            // 14301 - трегуб
+            // 14840 - Авто комфорт плюс
+            if (option.getClientId().equals("14301") || option.getClientId().equals("14840")){
+                optionControlNewAlgo(getOptionsToControl(option), context, dataDB, option, optionList, type, mode, false, click);
+            }else {
+                // Проход по второй опции блокировки
+                if (!option.getOptionBlock2().equals("0")) {
                     if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
-                        OptionsDB optionsDB = optionFromDetailedReport.stream().filter(optionListItem -> Objects.equals(optionListItem.getOptionId(), option.getOptionBlock1()))
+                        OptionsDB optionsDB = optionFromDetailedReport.stream().filter(optionListItem -> Objects.equals(optionListItem.getOptionId(), option.getOptionBlock2()))
                                 .findAny()
                                 .orElse(null);
                         if (optionsDB != null) {
-                            Log.e("NNK", "4. Проверяю опцмю: " + option.getOptionBlock1());
-                            res += optControl(context, dataDB, option, Integer.parseInt(option.getOptionBlock1()), optionsDB, type, NNKMode.BLOCK, new OptionControl.UnlockCodeResultListener() {
+                            Log.e("NNK", "1. Проверяю опцмю: " + option.getOptionBlock2());
+                            res += optControl(context, dataDB, option, Integer.parseInt(option.getOptionBlock2()), optionsDB, type, NNKMode.BLOCK, new OptionControl.UnlockCodeResultListener() {
                                 @Override
                                 public void onUnlockCodeSuccess() {
-                                    Log.e("NNK", "Успешный Успех. Если первая опция пустая Первая и вторая ОК прошли проверку и должно разрешить работу.");
-                                    optControl(context, dataDB, option, Integer.parseInt(option.getOptionId()), null, type, mode, new OptionControl.UnlockCodeResultListener() {
-                                        @Override
-                                        public void onUnlockCodeSuccess() {
+                                    Log.e("NNK", "Опция БЛОК 2 прошла успешно, надо проверить БЛОК 1");
+//                             Проход по первой опции блокировки
+                                    if (!option.getOptionBlock1().equals("0")) {
+                                        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+                                            OptionsDB optionsDB = optionFromDetailedReport.stream().filter(optionListItem -> Objects.equals(optionListItem.getOptionId(), option.getOptionBlock1()))
+                                                    .findAny()
+                                                    .orElse(null);
+                                            if (optionsDB != null) {
+                                                Log.e("NNK", "2. Проверяю опцмю: " + option.getOptionBlock1());
+                                                res += optControl(context, dataDB, option, Integer.parseInt(option.getOptionBlock1()), optionsDB, type, NNKMode.BLOCK, new OptionControl.UnlockCodeResultListener() {
+                                                    @Override
+                                                    public void onUnlockCodeSuccess() {
+                                                        Log.e("NNK", "Успешный Успех. Первая и вторая ОК прошли проверку и должно разрешить работу.");
+                                                        optControl(context, dataDB, option, Integer.parseInt(option.getOptionId()), null, type, mode, new OptionControl.UnlockCodeResultListener() {
+                                                            @Override
+                                                            public void onUnlockCodeSuccess() {
+                                                                Log.e("NNK", "Выполняю опцию");
+                                                            }
 
+                                                            @Override
+                                                            public void onUnlockCodeFailure() {
+                                                                Log.e("NNK", "НЕ Выполняю опцию");
+                                                            }
+                                                        });
+                                                        click.click();
+                                                    }
+
+                                                    @Override
+                                                    public void onUnlockCodeFailure() {
+                                                        Log.e("NNK", "1. Успешный НЕ Успех. Первая проверку прошла, вторая не прошла, значит не даю делать опцию на которую нажали.");
+                                                    }
+                                                });
+                                                Log.e("NNK", "res OK 1: " + res);
+                                            } else {
+                                                switch (mode) {
+                                                    case MAKE:
+                                                        Log.e("NNK", "1. МПроверяю опцмю: " + option.getOptionBlock1());
+                                                        optControl(context, dataDB, option, Integer.parseInt(option.getOptionId()), null, type, mode, new OptionControl.UnlockCodeResultListener() {
+                                                            @Override
+                                                            public void onUnlockCodeSuccess() {
+                                                                Log.e("NNK", "Выполняю опцию. Если опция не найдена.");
+                                                            }
+
+                                                            @Override
+                                                            public void onUnlockCodeFailure() {
+                                                                Log.e("NNK", "НЕ Выполняю опцию. Если опция не найдена.");
+                                                            }
+                                                        });
+                                                        click.click();
+                                                        break;
+                                                }
+                                            }
                                         }
+                                    } else {
+                                        switch (mode) {
+                                            case MAKE:
+                                                Log.e("NNK", "2. МПроверяю опцмю: " + option.getOptionBlock1());
+                                                optControl(context, dataDB, option, Integer.parseInt(option.getOptionId()), null, type, mode, new OptionControl.UnlockCodeResultListener() {
+                                                    @Override
+                                                    public void onUnlockCodeSuccess() {
+                                                        Log.e("NNK", "Success Вторая опция блокировки есть, а первой - нет. Вторая опция УСПЕШНО запершила работу, значит можно выполнять опцию изначальную");
+                                                    }
 
-                                        @Override
-                                        public void onUnlockCodeFailure() {
-
+                                                    @Override
+                                                    public void onUnlockCodeFailure() {
+                                                        Log.e("NNK", "Failure Вторая опция блокировки есть, а первой - нет. Вторая опция УСПЕШНО запершила работу, значит можно выполнять опцию изначальную");
+                                                    }
+                                                });
+                                                click.click();
+                                                break;
                                         }
-                                    });
-                                    click.click();
+                                    }
                                 }
 
                                 @Override
                                 public void onUnlockCodeFailure() {
-                                    Log.e("NNK", "3. Успешный НЕ Успех. Первая проверку прошла, вторая не прошла, значит не даю делать опцию на которую нажали.");
+//                             Проход по первой опции блокировки
+                                    if (!option.getOptionBlock1().equals("0")) {
+                                        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+                                            OptionsDB optionsDB = optionFromDetailedReport.stream().filter(optionListItem -> Objects.equals(optionListItem.getOptionId(), option.getOptionBlock1()))
+                                                    .findAny()
+                                                    .orElse(null);
+                                            if (optionsDB != null) {
+                                                Log.e("NNK", "3. Проверяю опцмю: " + option.getOptionBlock1());
+                                                res += optControl(context, dataDB, option, Integer.parseInt(option.getOptionBlock1()), optionsDB, type, NNKMode.BLOCK, new OptionControl.UnlockCodeResultListener() {
+                                                    @Override
+                                                    public void onUnlockCodeSuccess() {
+                                                        Log.e("NNK", "НЕ Успешный Успех. Первая проверку НЕ прошла, вторая прошла, значит не даю делать опцию на которую нажали.");
+                                                    }
+
+                                                    @Override
+                                                    public void onUnlockCodeFailure() {
+                                                        Log.e("NNK", "НЕ Успешный НЕ Успех. Первая проверку НЕ прошла, вторая НЕ прошла, значит не даю делать опцию на которую нажали.");
+                                                    }
+                                                });
+                                                Log.e("NNK", "res OK 1: " + res);
+                                            } else {
+                                                Log.e("NNK", "Блок 2 не выполнен, а Блок 1 нет в отчёте - Ничего не делаю. (должно отрисовать сообщение Блока2)");
+                                            }
+                                        }
+                                    }
                                 }
                             });
-                            Log.e("NNK", "res OK 1: " + res);
+                            Log.e("NNK", "res OK 2: " + res);
                         } else {
-                            switch (mode) {
-                                case MAKE:
-                                    Log.e("NNK", "4. МПроверяю опцмю: " + option.getOptionBlock1());
-                                    optControl(context, dataDB, option, Integer.parseInt(option.getOptionId()), null, type, mode, new OptionControl.UnlockCodeResultListener() {
-                                        @Override
-                                        public void onUnlockCodeSuccess() {
-                                            Log.e("NNK", "Блок 2 не указан вообще, Блок 1 указан, но в отчёте нет, буду делать опцию.");
-                                        }
+                            if (!option.getOptionBlock1().equals("0")) {
+                                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+                                    OptionsDB optionsDBELSE = optionFromDetailedReport.stream().filter(optionListItem -> Objects.equals(optionListItem.getOptionId(), option.getOptionBlock1()))
+                                            .findAny()
+                                            .orElse(null);
+                                    if (optionsDBELSE != null) {
+                                        Log.e("NNK", "Проверяю опцмюoptionsDBELSE: " + optionsDBELSE.getOptionBlock1());
+                                        res += optControl(context, dataDB, option, Integer.parseInt(option.getOptionBlock1()), optionsDBELSE, type, NNKMode.BLOCK, new OptionControl.UnlockCodeResultListener() {
+                                            @Override
+                                            public void onUnlockCodeSuccess() {
+                                                Log.e("NNK", "Успешный Успех. Если первая опция пустая Первая и вторая ОК прошли проверку и должно разрешить работу.");
 
-                                        @Override
-                                        public void onUnlockCodeFailure() {
-                                            Log.e("NNK", "Блок 2 не указан вообще, Блок 1 указан, но в отчёте нет, буду делать опцию.");
+                                                optControl(context, dataDB, option, Integer.parseInt(option.getOptionId()), null, type, mode, new OptionControl.UnlockCodeResultListener() {
+                                                    @Override
+                                                    public void onUnlockCodeSuccess() {
+
+                                                    }
+
+                                                    @Override
+                                                    public void onUnlockCodeFailure() {
+
+                                                    }
+                                                });
+                                                click.click();
+                                            }
+
+                                            @Override
+                                            public void onUnlockCodeFailure() {
+                                                Log.e("NNK", "2. Успешный НЕ Успех. Первая проверку прошла, вторая не прошла, значит не даю делать опцию на которую нажали.");
+                                            }
+                                        });
+                                        Log.e("NNK", "res OK 1: " + res);
+                                    } else {
+                                        switch (mode) {
+                                            case MAKE:
+                                                Log.e("NNK", "3. МПроверяю опцмю: " + option.getOptionBlock1());
+                                                optControl(context, dataDB, option, Integer.parseInt(option.getOptionId()), null, type, mode, new OptionControl.UnlockCodeResultListener() {
+                                                    @Override
+                                                    public void onUnlockCodeSuccess() {
+                                                        Log.e("NNK", "Блок2 - нет, Блок1 - нет. Success");
+                                                    }
+
+                                                    @Override
+                                                    public void onUnlockCodeFailure() {
+                                                        Log.e("NNK", "Блок2 - нет, Блок1 - нет. Failure");
+                                                    }
+                                                });
+                                                click.click();
+                                                break;
                                         }
-                                    });
-                                    click.click();
-                                    break;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                } else if (!option.getOptionBlock1().equals("0")) {
+                    //Проход по первой опции блокировки если второй нет
+                    if (!option.getOptionBlock1().equals("0")) {
+                        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+                            OptionsDB optionsDB = optionFromDetailedReport.stream().filter(optionListItem -> Objects.equals(optionListItem.getOptionId(), option.getOptionBlock1()))
+                                    .findAny()
+                                    .orElse(null);
+                            if (optionsDB != null) {
+                                Log.e("NNK", "4. Проверяю опцмю: " + option.getOptionBlock1());
+                                res += optControl(context, dataDB, option, Integer.parseInt(option.getOptionBlock1()), optionsDB, type, NNKMode.BLOCK, new OptionControl.UnlockCodeResultListener() {
+                                    @Override
+                                    public void onUnlockCodeSuccess() {
+                                        Log.e("NNK", "Успешный Успех. Если первая опция пустая Первая и вторая ОК прошли проверку и должно разрешить работу.");
+                                        optControl(context, dataDB, option, Integer.parseInt(option.getOptionId()), null, type, mode, new OptionControl.UnlockCodeResultListener() {
+                                            @Override
+                                            public void onUnlockCodeSuccess() {
+
+                                            }
+
+                                            @Override
+                                            public void onUnlockCodeFailure() {
+
+                                            }
+                                        });
+                                        click.click();
+                                    }
+
+                                    @Override
+                                    public void onUnlockCodeFailure() {
+                                        Log.e("NNK", "3. Успешный НЕ Успех. Первая проверку прошла, вторая не прошла, значит не даю делать опцию на которую нажали.");
+                                    }
+                                });
+                                Log.e("NNK", "res OK 1: " + res);
+                            } else {
+                                switch (mode) {
+                                    case MAKE:
+                                        Log.e("NNK", "4. МПроверяю опцмю: " + option.getOptionBlock1());
+                                        optControl(context, dataDB, option, Integer.parseInt(option.getOptionId()), null, type, mode, new OptionControl.UnlockCodeResultListener() {
+                                            @Override
+                                            public void onUnlockCodeSuccess() {
+                                                Log.e("NNK", "Блок 2 не указан вообще, Блок 1 указан, но в отчёте нет, буду делать опцию.");
+                                            }
+
+                                            @Override
+                                            public void onUnlockCodeFailure() {
+                                                Log.e("NNK", "Блок 2 не указан вообще, Блок 1 указан, но в отчёте нет, буду делать опцию.");
+                                            }
+                                        });
+                                        click.click();
+                                        break;
+                                }
                             }
                         }
                     }
                 }
-            }
 
-            if ((option.getOptionBlock2().equals("0") || !existOption2) && (option.getOptionBlock1().equals("0") || !existOption)) {
-                switch (mode) {
-                    case MAKE:
-                        Log.e("NNK", "5. Проверяю опцмю: " + option.getOptionBlock1());
-                        optControl(context, dataDB, option, Integer.parseInt(option.getOptionId()), null, type, mode, new OptionControl.UnlockCodeResultListener() {
-                            @Override
-                            public void onUnlockCodeSuccess() {
-                                Log.e("NNK", "onUnlockCodeSuccess Потеряли 2 опции");
-                            }
+                if ((option.getOptionBlock2().equals("0") || !existOption2) && (option.getOptionBlock1().equals("0") || !existOption)) {
+                    switch (mode) {
+                        case MAKE:
+                            Log.e("NNK", "5. Проверяю опцмю: " + option.getOptionBlock1());
+                            optControl(context, dataDB, option, Integer.parseInt(option.getOptionId()), null, type, mode, new OptionControl.UnlockCodeResultListener() {
+                                @Override
+                                public void onUnlockCodeSuccess() {
+                                    Log.e("NNK", "onUnlockCodeSuccess Потеряли 2 опции");
+                                }
 
-                            @Override
-                            public void onUnlockCodeFailure() {
-                                Log.e("NNK", "onUnlockCodeFailure Потеряли 2 опции");
-                            }
-                        });
-                        click.click();
-                        break;
+                                @Override
+                                public void onUnlockCodeFailure() {
+                                    Log.e("NNK", "onUnlockCodeFailure Потеряли 2 опции");
+                                }
+                            });
+                            click.click();
+                            break;
+                    }
                 }
             }
-
             Log.e("NNK", "-------------END-------------------");
         } catch (Exception e) {
             Log.e("NNK", "Exception e: " + e);
@@ -1513,9 +1589,8 @@ public class Options {
 
             case 138339:
                 if (dataDB instanceof WpDataDB) {
-                    // Пока что пусто
+                    option138339(context, dataDB, option, type, mode, unlockCodeResultListener);
                 } else if (dataDB instanceof TasksAndReclamationsSDB) {
-                    // Надо чем-то заполнить
                     option138339(context, dataDB, option, type, mode, unlockCodeResultListener);
                 }
                 break;
@@ -1704,12 +1779,22 @@ public class Options {
 
     // Это вроде нигде не работает, некст раз прочитаешь - проверь. Работает с DetailedButtons
     private <T> void option138339(Context context, T dataDB, OptionsDB option, OptionMassageType type, NNKMode mode, OptionControl.UnlockCodeResultListener unlockCodeResultListener) {
-        List<AdditionalRequirementsDB> data = AdditionalRequirementsRealm.getData3(dataDB, HIDE_FOR_USER, null, null, 0);
+        WpDataDB wpDataDB = (WpDataDB) dataDB;
+
+        Integer ttCategory = null;
+        AddressSDB addressSDB = SQL_DB.addressDao().getById(wpDataDB.getAddr_id());
+        if (addressSDB != null){
+            ttCategory = addressSDB.ttId;
+        }
+
+        List<AdditionalRequirementsDB> data = AdditionalRequirementsRealm.getData3(wpDataDB, HIDE_FOR_USER, ttCategory, null,0);
+        Log.e("AdditionalRequirements", "data2.size(): " + data.size());
+
 
         DialogAdditionalRequirements dialogAdditionalRequirements = new DialogAdditionalRequirements(context);
 
         dialogAdditionalRequirements.setTitle("Доп. требования (" + data.size() + ")");
-        dialogAdditionalRequirements.setRecycler((WpDataDB) dataDB, data);
+        dialogAdditionalRequirements.setRecycler(wpDataDB, data);
 
         dialogAdditionalRequirements.setClose(dialogAdditionalRequirements::dismiss);
         dialogAdditionalRequirements.setLesson(context, true, 1232);

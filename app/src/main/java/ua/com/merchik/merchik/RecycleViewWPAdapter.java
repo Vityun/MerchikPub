@@ -60,14 +60,14 @@ public class RecycleViewWPAdapter extends RecyclerView.Adapter<RecycleViewWPAdap
     private List<WpDataDB> workPlanList2;
 
     // Pika чтобы получать список нужных фото, анализируя который можно было нарисовать тот или иной чекбокс на элементе ресиклера
-    private List<StackPhotoDB> ListPhotos;
+    private List<StackPhotoDB> listPhotos;
 
     // Pika - создаю элемент, который будет использован для сортировки плана работ
     private WpSortOrder WPSO;
 
     // ---------------------- сортировка по свежести клиента ------------------------------
     // Pika - создаю класс для определения сортированого порядка получения элементов плана работ
-    class WpSortOrder  {
+    class WpSortOrder {
 
         // Pika - мини структура для элемента списка сортировки (возможно, будут и другие)
         class OrderStruct1 {
@@ -85,20 +85,28 @@ public class RecycleViewWPAdapter extends RecyclerView.Adapter<RecycleViewWPAdap
                 this.DataPereZap = dperezap;
                 this.TekDate = drab;
                 this.AdrKod = adrCode;
-                if (dzap.compareTo(dperezap)>0) { this.DataMax = dzap; } else { this.DataMax = dperezap; }
+                if (dzap.compareTo(dperezap) > 0) {
+                    this.DataMax = dzap;
+                } else {
+                    this.DataMax = dperezap;
+                }
             }
 
             public Date getDataMax() {
                 return DataMax;
             }
 
-            public Date getTekDate() { return TekDate; }
+            public Date getTekDate() {
+                return TekDate;
+            }
 
             public int getPos() {
                 return Pos;
             }
 
-            public int getAdrKod() { return AdrKod; }
+            public int getAdrKod() {
+                return AdrKod;
+            }
         }
 
         // Pika - класс для сравнения элементов, используемый при сортировке (сортирует по "свежести" клиентов в пределах даты)
@@ -106,23 +114,23 @@ public class RecycleViewWPAdapter extends RecyclerView.Adapter<RecycleViewWPAdap
 
             @Override
             public int compare(OrderStruct1 o1, OrderStruct1 o2) {
-                if (o1.getTekDate().compareTo(o2.getTekDate())<0) {
+                if (o1.getTekDate().compareTo(o2.getTekDate()) < 0) {
                     return -1;
-                    }
-                else if (o1.getTekDate().compareTo(o2.getTekDate())>0) {
+                } else if (o1.getTekDate().compareTo(o2.getTekDate()) > 0) {
                     return 1;
-                    }
-                else {
-                    if (o1.getAdrKod()<o2.getAdrKod()) {
+                } else {
+                    if (o1.getAdrKod() < o2.getAdrKod()) {
                         return -1;
-                    } else if (o1.getAdrKod()>o2.getAdrKod()) {
+                    } else if (o1.getAdrKod() > o2.getAdrKod()) {
                         return 1;
                     } else {
                         if (o1.getDataMax().compareTo(o2.getDataMax()) > 0) {
-                           return -1;
+                            return -1;
                         } else if (o1.getDataMax().compareTo(o2.getDataMax()) < 0) {
-                           return 1;
-                        } else { return 0; }
+                            return 1;
+                        } else {
+                            return 0;
+                        }
                     }
                 }
             }
@@ -136,8 +144,8 @@ public class RecycleViewWPAdapter extends RecyclerView.Adapter<RecycleViewWPAdap
             WpDataDB elem;
             OrderStruct1 os1;
             String s;
-            int fillOk,foundId;
-            Date wsd,wrsd,tekd;
+            int fillOk, foundId;
+            Date wsd, wrsd, tekd;
             int adrKod;
 
             // список для строк - кодов клиентов
@@ -148,69 +156,71 @@ public class RecycleViewWPAdapter extends RecyclerView.Adapter<RecycleViewWPAdap
             // получаю коды клиентов из списка работ плана работ
             int count = 0;
             try {
-                for (WpDataDB a:a1) {
-                    if (a != null && a.getClient_id() != null){
+                for (WpDataDB a : a1) {
+                    if (a != null && a.getClient_id() != null) {
                         s = a.getClient_id();
                         if (!ids.contains(s)) ids.add(s);
                         count++;
-                    }else {
+                    } else {
                         Log.e("WpSortOrder", "count:" + count);
                         Log.e("WpSortOrder", "new Gson().toJson(a):" + new Gson().toJson(a));
                         Globals.writeToMLOG("ERROR", "WpSortOrder", "WpDataDB: " + new Gson().toJson(a));
                     }
                 }
-            }catch (Exception e){
+            } catch (Exception e) {
                 Log.e("WpSortOrder", "count E: " + count);
 //                Log.e("WpSortOrder", "count E: " + new Gson().toJson(a1.get(count)));
             }
 
 
             // получаю список самих клиентов по этим кодам из базы данных приложения
-            if (ids.size()>0) {
+            if (ids.size() > 0) {
                 customerSDBList = SQL_DB.customerDao().getByIds(ids);
             }
 
             // устанавливаю флаг успешного заполнения сортировочного списка
             // если что пойдет не так, то не нужно будет выполнять сортировку
-            fillOk=1;
+            fillOk = 1;
 
             // перебираю элементы плана работ
-            for (int i=0; i<a1.size(); i++) {
+            for (int i = 0; i < a1.size(); i++) {
                 elem = a1.get(i);
-                s=elem.getClient_id();
+                s = elem.getClient_id();
 
                 // устанавливаю начальные значения для даты старта, даты рестарта и текущей даты работ
-                tekd=elem.getDt();
-                wsd=tekd;
-                wrsd=tekd;
-                adrKod=elem.getAddr_id();
+                tekd = elem.getDt();
+                wsd = tekd;
+                wrsd = tekd;
+                adrKod = elem.getAddr_id();
 
                 // устанавливаю флаг успешного нахождения клиента.
                 // если не будет найден клиент по коду клиента, то при этом не нужно будет выполнять сортировку
-                foundId=0;
+                foundId = 0;
 
                 // Тут перебираю клиентов и нахожу того, который соответствует текущему коду клиента в плане работ
                 // и из него беру workStartDate и workRestartDate
-                for (CustomerSDB a:customerSDBList) {
-                    if (s.compareTo(a.id)==0) {
-                        foundId=1;
-                        wsd=a.workStartDate;
-                        wrsd=a.workRestartDate;
+                for (CustomerSDB a : customerSDBList) {
+                    if (s.compareTo(a.id) == 0) {
+                        foundId = 1;
+                        wsd = a.workStartDate;
+                        wrsd = a.workRestartDate;
                         break;
                     }
                 }
 
                 // если клиент не был найден, то сбрасываю флаг успешности заполнения сортировочного списка, и сортировку не буду делать
-                if (foundId==0) { fillOk=0; }
+                if (foundId == 0) {
+                    fillOk = 0;
+                }
 
                 // в любом случае добавляю элемент в сортировочный список, чтоб можно было потом получить позицию из него
                 // в случае если список не будет отсортирован, то возвращаться будет та же позиция, что и передана
-                os1=new OrderStruct1(i,wsd,wrsd,tekd,adrKod);
+                os1 = new OrderStruct1(i, wsd, wrsd, tekd, adrKod);
                 orderList1.add(os1);
             }
 
             // теперь сортировка в нужном порядке с использованием нужного компаратора
-            if (fillOk==1) {
+            if (fillOk == 1) {
                 Comparator fComparator = new FreshClientComparator();
                 Collections.sort(orderList1, fComparator);
             }
@@ -282,13 +292,13 @@ public class RecycleViewWPAdapter extends RecyclerView.Adapter<RecycleViewWPAdap
                 check.setImageDrawable(mContext.getResources().getDrawable(R.drawable.ic_check));
                 check.setColorFilter(mContext.getResources().getColor(R.color.colorInetGreen));
             } else {
-                    // Pika Если есть паеорамное фото по этому ДАД2 то рисуем желтый кружок
-                    ListPhotos = RealmManager.stackPhotoByDad2AndType(wpDataDB.getCode_dad2(),0);
-                    if (ListPhotos.size()>0) {
-                        check.setImageDrawable(mContext.getResources().getDrawable(R.drawable.ic_exclamation_mark_in_a_circle));
-                        check.setColorFilter(mContext.getResources().getColor(R.color.colorInetYellow));
-                    } else {
-                    if (Clock.dateConvertToLong(Clock.getHumanTimeYYYYMMDD(wpDataDB.getDt().getTime()/1000)) < System.currentTimeMillis()) {    //+TODO CHANGE DATE
+                // Pika Если есть паеорамное фото по этому ДАД2 то рисуем желтый кружок
+                listPhotos = RealmManager.stackPhotoByDad2AndType(wpDataDB.getCode_dad2(), 0);
+                if (listPhotos != null && listPhotos.size() > 0) {
+                    check.setImageDrawable(mContext.getResources().getDrawable(R.drawable.ic_exclamation_mark_in_a_circle));
+                    check.setColorFilter(mContext.getResources().getColor(R.color.colorInetYellow));
+                } else {
+                    if (Clock.dateConvertToLong(Clock.getHumanTimeYYYYMMDD(wpDataDB.getDt().getTime() / 1000)) < System.currentTimeMillis()) {    //+TODO CHANGE DATE
                         check.setImageDrawable(mContext.getResources().getDrawable(R.drawable.ic_exclamation_mark_in_a_circle));
                         check.setColorFilter(mContext.getResources().getColor(R.color.colorInetRed));
                     } else {
@@ -311,7 +321,7 @@ public class RecycleViewWPAdapter extends RecyclerView.Adapter<RecycleViewWPAdap
 //            String t_price = String.format("%s/+%s/%s", 0.00, 0, wpDataDB.getCash_ispolnitel());
 
             // План/Снижение/Расчёт Факт
-            String t_price = String.format("%s/-%s/%s",(int)wpDataDB.getCash_ispolnitel(), (int)wpDataDB.cash_penalty, (int)wpDataDB.cash_fact);
+            String t_price = String.format("%s/-%s/%s", (int) wpDataDB.getCash_ispolnitel(), (int) wpDataDB.cash_penalty, (int) wpDataDB.cash_fact);
 
             SpannableString string = new SpannableString(t_price);
             string.setSpan(new UnderlineSpan(), 0, string.length(), 0);
@@ -319,11 +329,11 @@ public class RecycleViewWPAdapter extends RecyclerView.Adapter<RecycleViewWPAdap
             AddressSDB addressSDB = SQL_DB.addressDao().getById(wpDataDB.getAddr_id());
             String numberTTS = addressSDB != null && addressSDB.nomerTT != null && addressSDB.nomerTT != 0 ? "" + addressSDB.nomerTT + "" : "";
 
-            if (!numberTTS.equals("")){
+            if (!numberTTS.equals("")) {
                 numberTTTitle.setVisibility(View.VISIBLE);
                 numberTT.setVisibility(View.VISIBLE);
                 numberTT.setText(numberTTS);
-            }else {
+            } else {
                 numberTTTitle.setVisibility(View.GONE);
                 numberTT.setVisibility(View.GONE);
             }
@@ -332,18 +342,18 @@ public class RecycleViewWPAdapter extends RecyclerView.Adapter<RecycleViewWPAdap
             cust.setText(wpDataDB.getClient_txt());
             merc.setText(wpDataDB.getUser_txt());
 //            date.setText(Clock.getHumanTimeYYYYMMDD(wpDataDB.getDt().getTime()/1000) + " " + Clock.getHumanTimeOpt(wpDataDB.getDt_start() * 1000));
-            date.setText(Clock.getHumanTimeSecPattern(wpDataDB.getDt().getTime()/1000, "dd-MM-yy") + " " + Clock.getHumanTimeOpt(wpDataDB.getDt_start() * 1000));
+            date.setText(Clock.getHumanTimeSecPattern(wpDataDB.getDt().getTime() / 1000, "dd-MM-yy") + " " + Clock.getHumanTimeOpt(wpDataDB.getDt_start() * 1000));
             price.setText(string);
             price.setMovementMethod(LinkMovementMethod.getInstance());
 
             try {
                 theme.setText(ThemeRealm.getByID(String.valueOf(wpDataDB.getTheme_id())).getNm());
-                if (wpDataDB.getTheme_id() != 998){
+                if (wpDataDB.getTheme_id() != 998) {
                     theme.setTextColor(mContext.getResources().getColor(R.color.red_error));
-                }else {
+                } else {
                     theme.setTextColor(mContext.getResources().getColor(android.R.color.tab_indicator_text));
                 }
-            }catch (Exception e){
+            } catch (Exception e) {
                 // Тема не успела загрузиться
                 theme.setText("Тема не обнаружена");
             }
@@ -353,7 +363,7 @@ public class RecycleViewWPAdapter extends RecyclerView.Adapter<RecycleViewWPAdap
                 AddressSDB addr = SQL_DB.addressDao().getById(wpDataDB.getAddr_id());
                 TradeMarkDB tradeMarkDB = TradeMarkRealm.getTradeMarkRowById(String.valueOf(addr.tpId));
                 groupText.setText(tradeMarkDB.getNm());
-            }catch (Exception e){
+            } catch (Exception e) {
                 groupText.setText("Мережа не знайдена");
             }
 
@@ -391,22 +401,22 @@ public class RecycleViewWPAdapter extends RecyclerView.Adapter<RecycleViewWPAdap
         private void setDialog(WpDataDB wpDataDB, long otchetId) {
 
             String addrTxt;
-            if (wpDataDB.getAddr_txt() != null && !wpDataDB.getAddr_txt().equals("")){
+            if (wpDataDB.getAddr_txt() != null && !wpDataDB.getAddr_txt().equals("")) {
                 addrTxt = wpDataDB.getAddr_txt();
-            }else {
+            } else {
                 AddressSDB addressSDB = SQL_DB.addressDao().getById(wpDataDB.getAddr_id());
-                if (addressSDB != null){
+                if (addressSDB != null) {
                     addrTxt = addressSDB.nm;
                     wpDataDB.setAddr_location_xd(String.valueOf(addressSDB.locationXd));
                     wpDataDB.setAddr_location_yd(String.valueOf(addressSDB.locationYd));
-                }else {
+                } else {
                     addrTxt = "Адресс не определён";
                 }
                 wpDataDB.setAddr_txt(addrTxt);
                 WpDataRealm.setWpData(Collections.singletonList(wpDataDB));
             }
 
-            String msg = String.format("Дата: %s\nАдрес: %s\nКлиент: %s\nИсполнитель: %s\n", Clock.getHumanTimeYYYYMMDD(wpDataDB.getDt().getTime()/1000), addrTxt, wpDataDB.getClient_txt(), wpDataDB.getUser_txt());
+            String msg = String.format("Дата: %s\nАдрес: %s\nКлиент: %s\nИсполнитель: %s\n", Clock.getHumanTimeYYYYMMDD(wpDataDB.getDt().getTime() / 1000), addrTxt, wpDataDB.getClient_txt(), wpDataDB.getUser_txt());
 
             DialogData errorMsg = new DialogData(mContext);
             errorMsg.setTitle("");
@@ -418,22 +428,24 @@ public class RecycleViewWPAdapter extends RecyclerView.Adapter<RecycleViewWPAdap
             dialog.setText(msg);
             dialog.setOk(null, () -> {
                 Globals.writeToMLOG("INFO", "RecycleViewWPAdapter/openReportPrepare/CLICK_KPS", "wpDataDB: " + wpDataDB);
-                if (wpDataDB.getTheme_id() == 1182){
+                if (wpDataDB.getTheme_id() == 1182) {
                     DialogData dialogQuestionOne = new DialogData(mContext);
                     dialogQuestionOne.setTitle("");
                     dialogQuestionOne.setText(mContext.getString(R.string.re_questioning_wpdata_first_msg));
                     dialogQuestionOne.setOk("Да", errorMsg::show);
-                    dialogQuestionOne.setCancel("Нет", ()->{
+                    dialogQuestionOne.setCancel("Нет", () -> {
                         DialogData dialogQuestionOTwo = new DialogData(mContext);
                         dialogQuestionOne.dismiss();
                         dialogQuestionOTwo.setTitle("");
                         dialogQuestionOTwo.setText(mContext.getString(R.string.re_questioning_wpdata_second_msg));
                         dialogQuestionOTwo.setOk("Да", errorMsg::show);
-                        dialogQuestionOTwo.setCancel("Нет", ()->{openReportPrepare(wpDataDB, otchetId);});
+                        dialogQuestionOTwo.setCancel("Нет", () -> {
+                            openReportPrepare(wpDataDB, otchetId);
+                        });
                         dialogQuestionOTwo.show();
                     });
                     dialogQuestionOne.show();
-                }else {
+                } else {
 //                    // Pika test
 //                    Sandbox();
                     openReportPrepare(wpDataDB, otchetId);
@@ -446,11 +458,11 @@ public class RecycleViewWPAdapter extends RecyclerView.Adapter<RecycleViewWPAdap
         public void Sandbox() {
 
             UnlockCode uc = new UnlockCode();
-            WpDataDB wp1=new WpDataDB();
+            WpDataDB wp1 = new WpDataDB();
             OptionsDB op1 = new OptionsDB();
             UnlockCode.UnlockCodeMode mode1 = UnlockCode.UnlockCodeMode.CODE_DAD_2_AND_OPTION;
             Clicks.clickStatusMsg click1 = null;
-            Date dt = new Date(24,00,22);
+            Date dt = new Date(24, 00, 22);
             Long dad2 = new Long("1220124022607054798");
 
             wp1.setDt(dt);
@@ -460,7 +472,7 @@ public class RecycleViewWPAdapter extends RecyclerView.Adapter<RecycleViewWPAdap
             wp1.setUser_id(240045);
             op1.setOptionId("139576");
 
-            uc.showDialogUnlockCode(mContext,wp1,op1,mode1,click1);
+            uc.showDialogUnlockCode(mContext, wp1, op1, mode1, click1);
         }
 
 
@@ -500,7 +512,7 @@ public class RecycleViewWPAdapter extends RecyclerView.Adapter<RecycleViewWPAdap
                 dialogData.setTitle("Виникла помилка");
                 dialogData.setDialogIco();
                 dialogData.setText("План робіт оновився і треба в нього перезайти. Якщо це повідомлення повторюється передайте його Вашому керівнику або в слуюбу підтримки merchik.");
-                dialogData.setOk("Перезайти", ()->{
+                dialogData.setOk("Перезайти", () -> {
                     Intent intent = new Intent(mContext, WPDataActivity.class);
                     mContext.startActivity(intent);
                 });
@@ -553,6 +565,7 @@ public class RecycleViewWPAdapter extends RecyclerView.Adapter<RecycleViewWPAdap
 
             viewHolder.bind(wpDataDB);
         } catch (Exception e) {
+            e.printStackTrace();
             globals.alertDialogMsg(mContext, "Возникла ошибка. Сообщите о ней своему администратору. Ошибка: " + e);
         }
 
@@ -594,7 +607,7 @@ public class RecycleViewWPAdapter extends RecyclerView.Adapter<RecycleViewWPAdap
 
             @Override
             protected void publishResults(CharSequence constraint, FilterResults results) {
-                if (constraint.length() != 0){
+                if (constraint.length() != 0) {
                     WP = (List<WpDataDB>) results.values;
 //                    WPSO = new WpSortOrder(WP); // 29.02.2024 Victor учитываю изменение в фильтре для алгоритма @Pika
                 }

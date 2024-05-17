@@ -867,42 +867,46 @@ public class PhotoDownload {
      * Отправляю на сервер ссылку, в ответ фотографию, возвращаю дальше в приложение фото
      */
     public static void downloadPhoto(String photoUrl, ExchangeInterface.ExchangePhoto exchange) {
-        retrofit2.Call<ResponseBody> call = RetrofitBuilder.getRetrofitInterface().DOWNLOAD_PHOTO_BY_URL(photoUrl.replace("thumb_", ""));
-        call.enqueue(new Callback<ResponseBody>() {
-            @Override
-            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
-                try {
-                    if (response.isSuccessful()) {
-                        if (response.body() != null) {
-                            Globals.writeToMLOG("INFO", "downloadPhoto/onResponse", "response.body(): " + response.body());
-                            InputStream data = response.body().byteStream(); // <--- TODO BUG    java.lang.NullPointerException: Attempt to invoke virtual method 'java.io.InputStream okhttp3.ResponseBody.byteStream()' on a null object reference at ua.com.merchik.merchik.ServerExchange.PhotoDownload$8.onResponse(PhotoDownload.java:574)
+        try {
+            retrofit2.Call<ResponseBody> call = RetrofitBuilder.getRetrofitInterface().DOWNLOAD_PHOTO_BY_URL(photoUrl.replace("thumb_", ""));
+            call.enqueue(new Callback<ResponseBody>() {
+                @Override
+                public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                    try {
+                        if (response.isSuccessful()) {
+                            if (response.body() != null) {
+                                Globals.writeToMLOG("INFO", "downloadPhoto/onResponse", "response.body(): " + response.body());
+                                InputStream data = response.body().byteStream(); // <--- TODO BUG    java.lang.NullPointerException: Attempt to invoke virtual method 'java.io.InputStream okhttp3.ResponseBody.byteStream()' on a null object reference at ua.com.merchik.merchik.ServerExchange.PhotoDownload$8.onResponse(PhotoDownload.java:574)
 
-                            if (data.toString().length() > 0) {
-                                Bitmap bmp = BitmapFactory.decodeStream(data);
-                                if (bmp != null) {
-                                    exchange.onSuccess(bmp);
+                                if (data.toString().length() > 0) {
+                                    Bitmap bmp = BitmapFactory.decodeStream(data);
+                                    if (bmp != null) {
+                                        exchange.onSuccess(bmp);
+                                    } else {
+                                        exchange.onFailure("Фото нет");
+                                    }
                                 } else {
                                     exchange.onFailure("Фото нет");
                                 }
                             } else {
-                                exchange.onFailure("Фото нет");
+                                exchange.onFailure("response.body() == 0");
                             }
                         } else {
-                            exchange.onFailure("response.body() == 0");
+                            exchange.onFailure("Код: " + response.code());
                         }
-                    } else {
-                        exchange.onFailure("Код: " + response.code());
+                    } catch (Exception e) {
+                        Globals.writeToMLOG("ERROR", "downloadPhoto/onResponse", "Exception e: " + e);
                     }
-                } catch (Exception e) {
-                    Globals.writeToMLOG("ERROR", "downloadPhoto/onResponse", "Exception e: " + e);
                 }
-            }
 
-            @Override
-            public void onFailure(Call<ResponseBody> call, Throwable t) {
-                exchange.onFailure("Ошибка: " + t);
-            }
-        });
+                @Override
+                public void onFailure(Call<ResponseBody> call, Throwable t) {
+                    exchange.onFailure("Ошибка: " + t);
+                }
+            });
+        }catch (Exception e){
+            Globals.writeToMLOG("ERROR", "downloadPhoto", "Exception e: " + e);
+        }
     }
 
     public static void savePhotoToDB2(List<ImagesViewListImageList> data) {

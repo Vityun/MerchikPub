@@ -846,7 +846,11 @@ public class MakePhoto {
                     if (showcase.planogramId != null && showcase.planogramId != 0) {
                         needPlan = false;
                     } else {
-                        needPlan = true;
+                        if (dialog.photoType == 0){
+                            needPlan = true;
+                        }else {
+                            needPlan = false;
+                        }
                     }
 
                     if (showcase.tovarGrp != null && showcase.tovarGrp > 0) {

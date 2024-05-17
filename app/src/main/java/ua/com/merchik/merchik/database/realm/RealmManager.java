@@ -540,7 +540,28 @@ public class RealmManager {
 
     public static RealmResults<OptionsDB> getOptionsButtonRED(long otchetId) {
         String sOtchetId = String.valueOf(otchetId);
-        return INSTANCE.where(OptionsDB.class).equalTo("docId", sOtchetId).and().equalTo("optionGroup", "3161").equalTo("isSignal", "1").findAll();
+        return INSTANCE.where(OptionsDB.class)
+                .equalTo("docId", sOtchetId)
+                .and()
+                .equalTo("optionGroup", "3161")
+                .equalTo("isSignal", "1")
+                .findAll();
+    }
+
+    public static List<OptionsDB> getOptionsButtonRED2(long otchetId) {
+        String sOtchetId = String.valueOf(otchetId);
+        RealmResults<OptionsDB> realmResults = INSTANCE.where(OptionsDB.class)
+                .equalTo("docId", sOtchetId)
+                .and()
+                .equalTo("optionGroup", "3161")
+                .equalTo("isSignal", "1")
+                .findAll();
+
+        if (realmResults != null && realmResults.size() > 0){
+            return INSTANCE.copyFromRealm(realmResults);
+        }else {
+            return null;
+        }
     }
 
     public static OptionsDB getOptionById(String id) {
@@ -619,8 +640,15 @@ public class RealmManager {
     }
 
     public static List<StackPhotoDB> stackPhotoByDad2AndType(long codeDad2, int photoType) {
-        RealmResults<StackPhotoDB> realmResults = INSTANCE.where(StackPhotoDB.class).equalTo("code_dad2", codeDad2).equalTo("photo_type", photoType).isNotNull("photo_hash").findAll();
-        return INSTANCE.copyFromRealm(realmResults);
+        RealmResults<StackPhotoDB> realmResults = INSTANCE.where(StackPhotoDB.class)
+                .equalTo("code_dad2", codeDad2)
+                .equalTo("photo_type", photoType)
+                .isNotNull("photo_hash").findAll();
+        if (realmResults != null && realmResults.size() > 0) {
+            return INSTANCE.copyFromRealm(realmResults);
+        } else {
+            return null;
+        }
     }
 
 
