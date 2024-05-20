@@ -1,4 +1,4 @@
-package ua.com.merchik.merchik.data.Database.Room;
+package ua.com.merchik.merchik.data.Database.Room.Planogram;
 
 import androidx.annotation.NonNull;
 import androidx.room.ColumnInfo;
@@ -30,10 +30,6 @@ public class PlanogrammSDB {
     @ColumnInfo(name = "client_id")
     @SerializedName("client_id")
     public String clientId;
-
-    @SerializedName("addr_id")
-    @ColumnInfo(name = "addr_id")
-    public String addrId;
 
     @ColumnInfo(name = "client_txt")
     @SerializedName("client_txt")

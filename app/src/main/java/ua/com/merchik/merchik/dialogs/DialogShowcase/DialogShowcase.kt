@@ -21,6 +21,7 @@ import androidx.recyclerview.widget.RecyclerView
 import ua.com.merchik.merchik.Globals
 import ua.com.merchik.merchik.R
 import ua.com.merchik.merchik.ViewHolders.Clicks.click
+import ua.com.merchik.merchik.data.Database.Room.AddressSDB
 import ua.com.merchik.merchik.data.Database.Room.ShowcaseSDB
 import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteHintsDB
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB
@@ -327,15 +328,18 @@ class DialogShowcase(private val context: Context?) : DialogData() {
 
     private fun setRecyclerViewPlanogramm() {
         try {
-            var planogrammDataList = RoomManager.SQL_DB.planogrammDao().getByDocTP(
-                wpDataDB!!.client_id
+            var adress = RoomManager.SQL_DB.addressDao().getById(wpDataDB!!.addr_id);
+            var planogrammDataList = RoomManager.SQL_DB.planogrammDao().getByClientAddress(
+                wpDataDB!!.client_id,
+                wpDataDB!!.addr_id,
+                null
             )
 
             Log.e("setRecyclerView", "planogrammDataList: $planogrammDataList")
             try {
                 for (item in planogrammDataList) {
                     val stackPhotoDBS =
-                        StackPhotoRealm.getPlanogramm(item.id, wpDataDB!!.code_dad2, photoType)
+                        StackPhotoRealm.getPlanogramm(item.planogrammPhotoId, wpDataDB!!.code_dad2, photoType)
                     if (stackPhotoDBS != null && stackPhotoDBS.size > 0) {
                         item.planogrammPhoto = stackPhotoDBS.size // Меня тут просили ставить просто 1 или 0, но я слишком умный, да
                     } else {

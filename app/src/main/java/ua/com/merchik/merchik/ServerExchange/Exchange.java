@@ -924,7 +924,15 @@ public class Exchange {
                             Globals.writeToMLOG("ERROR", "startExchange/ShowcaseExchange/downloadShowcaseTable/onFailure", "error: " + error);
                         }
                     });
-                    new PlanogrammTableExchange().planogramDownload(new Clicks.clickObjectAndStatus() {
+
+                } catch (Exception e) {
+                    Globals.writeToMLOG("ERROR", "startExchange/ShowcaseExchange/downloadShowcaseTable", "Exception e: " + e);
+                }
+
+
+                try {
+                    PlanogrammTableExchange planogrammTableExchange = new PlanogrammTableExchange();
+                    planogrammTableExchange.planogramDownload(new Clicks.clickObjectAndStatus() {
                         @Override
                         public void onSuccess(Object data) {
 
@@ -935,8 +943,41 @@ public class Exchange {
 
                         }
                     });
-                } catch (Exception e) {
-                    Globals.writeToMLOG("ERROR", "startExchange/ShowcaseExchange/downloadShowcaseTable", "Exception e: " + e);
+                    planogrammTableExchange.planogrammAddressDownload(new Clicks.clickObjectAndStatus() {
+                        @Override
+                        public void onSuccess(Object data) {
+
+                        }
+
+                        @Override
+                        public void onFailure(String error) {
+
+                        }
+                    });
+                    planogrammTableExchange.planogrammGroupDownload(new Clicks.clickObjectAndStatus() {
+                        @Override
+                        public void onSuccess(Object data) {
+
+                        }
+
+                        @Override
+                        public void onFailure(String error) {
+
+                        }
+                    });
+                    planogrammTableExchange.planogrammImagesDownload(new Clicks.clickObjectAndStatus() {
+                        @Override
+                        public void onSuccess(Object data) {
+
+                        }
+
+                        @Override
+                        public void onFailure(String error) {
+
+                        }
+                    });
+                }catch (Exception e){
+                    Globals.writeToMLOG("ERROR", "startExchange/PlanogrammExchange/planogrammDownload", "Exception e: " + e);
                 }
 
                 // --------------------------------------------------------------

@@ -23,19 +23,19 @@ import ua.com.merchik.merchik.Filter.MyFilter;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
-import ua.com.merchik.merchik.data.Database.Room.PlanogrammSDB;
+import ua.com.merchik.merchik.data.Database.Room.Planogram.PlanogrammJOINSDB;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
 import ua.com.merchik.merchik.database.realm.tables.StackPhotoRealm;
 import ua.com.merchik.merchik.dialogs.DialogFullPhotoR;
 
 public class PlanogramAdapter extends RecyclerView.Adapter<PlanogramAdapter.ViewHolder> implements Filterable {
 
-    private List<PlanogrammSDB> planogrammList;
-    private List<PlanogrammSDB> planogrammListFilterable;
-    private List<PlanogrammSDB> planogrammListOrig;
+    private List<PlanogrammJOINSDB> planogrammList;
+    private List<PlanogrammJOINSDB> planogrammListFilterable;
+    private List<PlanogrammJOINSDB> planogrammListOrig;
     private Clicks.click click;
 
-    public PlanogramAdapter(ArrayList<PlanogrammSDB> planogrammList, Clicks.click click) {
+    public PlanogramAdapter(ArrayList<PlanogrammJOINSDB> planogrammList, Clicks.click click) {
         if (planogrammList != null && !planogrammList.isEmpty()) {
             planogrammList.add(defaultShowcase());
             this.planogrammList = planogrammList;
@@ -50,8 +50,8 @@ public class PlanogramAdapter extends RecyclerView.Adapter<PlanogramAdapter.View
         }
     }
 
-    private PlanogrammSDB defaultShowcase() {
-        PlanogrammSDB res = new PlanogrammSDB();
+    private PlanogrammJOINSDB defaultShowcase() {
+        PlanogrammJOINSDB res = new PlanogrammJOINSDB();
         res.id = 0;
         return res;
     }
@@ -92,7 +92,7 @@ public class PlanogramAdapter extends RecyclerView.Adapter<PlanogramAdapter.View
             image = v.findViewById(R.id.image);
         }
 
-        public void bind(PlanogrammSDB planogrammData) {
+        public void bind(PlanogrammJOINSDB planogrammData) {
             try {
 //                if (planogramm.id == 0) {
                     constraintLayout.setBackgroundColor(constraintLayout.getContext().getResources().getColor(R.color.white));
@@ -104,21 +104,21 @@ public class PlanogramAdapter extends RecyclerView.Adapter<PlanogramAdapter.View
 //                    constraintLayout.setBackgroundColor(constraintLayout.getContext().getResources().getColor(R.color.red_error));
 //                }
 
-                String groupName = "не встановлена";
+                String groupName = planogrammData.planogrammGroupTxt == null ? "не встановлена" : planogrammData.planogrammGroupTxt;
                 String planogram = "не встановлена";
 
 //                if (planogrammData.tovarGrp != null && planogrammData.tovarGrpTxt != null) {
 //                    groupName = planogrammData.tovarGrpTxt;
 //                }
 
-                if (planogrammData.nm != null) {
-                    planogram = planogrammData.nm;
+                if (planogrammData.planogrammName != null) {
+                    planogram = planogrammData.planogrammName;
                 }
 
-                StackPhotoDB stackPhotoDB = StackPhotoRealm.stackPhotoDBGetPhotoBySiteId2(String.valueOf(planogrammData.photoId));
+                StackPhotoDB stackPhotoDB = StackPhotoRealm.stackPhotoDBGetPhotoBySiteId2(String.valueOf(planogrammData.planogrammPhotoId));
 
                 textViewShowcaseId.setText(Html.fromHtml("<b>Планограма №:</b> " + planogrammData.id));
-                textViewShowcaseNm.setText(Html.fromHtml("<b>Назва:</b> " + planogrammData.nm));
+                textViewShowcaseNm.setText(Html.fromHtml("<b>Назва:</b> " + planogrammData.planogrammName));
                 textViewClientGroup.setText(Html.fromHtml("<b>Група тов.:</b> " + groupName));
                 textViewPlanogramm.setText(Html.fromHtml("<b>Планограма:</b> " + planogram));
 
@@ -167,7 +167,7 @@ public class PlanogramAdapter extends RecyclerView.Adapter<PlanogramAdapter.View
 
             @Override
             protected FilterResults performFiltering(CharSequence constraint) {
-                List<PlanogrammSDB> filteredResults = null;
+                List<PlanogrammJOINSDB> filteredResults = null;
 
                 if (constraint.length() == 0) {
                     filteredResults = planogrammListOrig;
@@ -187,7 +187,7 @@ public class PlanogramAdapter extends RecyclerView.Adapter<PlanogramAdapter.View
 
             @Override
             protected void publishResults(CharSequence constraint, FilterResults results) {
-                planogrammList = (List<PlanogrammSDB>) results.values;
+                planogrammList = (List<PlanogrammJOINSDB>) results.values;
                 notifyDataSetChanged();
             }
         };

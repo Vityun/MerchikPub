@@ -1,5 +1,7 @@
 package ua.com.merchik.merchik.dialogs.DialogShowcase;
 
+import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
+
 import android.net.Uri;
 import android.text.Html;
 import android.text.SpannableString;
@@ -30,6 +32,7 @@ import ua.com.merchik.merchik.Filter.MyFilter;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
+import ua.com.merchik.merchik.data.Database.Room.Planogram.PlanogrammJOINSDB;
 import ua.com.merchik.merchik.data.Database.Room.ShowcaseSDB;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
 import ua.com.merchik.merchik.database.realm.tables.StackPhotoRealm;
@@ -200,7 +203,11 @@ public class ShowcaseAdapter extends RecyclerView.Adapter<ShowcaseAdapter.ViewHo
             public void onClick(View textView) {
                 try {
 //                    Toast.makeText(textView.getContext(), "sjbajsdakjhsdkasdbljasdfbh", Toast.LENGTH_LONG).show();
-                    StackPhotoDB stackPhotoDB = StackPhotoRealm.stackPhotoDBGetPhotoBySiteId2(String.valueOf(showcase.photoPlanogramId));
+
+                    PlanogrammJOINSDB planogrammJOINSDB = SQL_DB.planogrammDao().getSoloBy(showcase.planogramId, null, null);
+                    StackPhotoDB stackPhotoDB = StackPhotoRealm.stackPhotoDBGetPhotoBySiteId2(String.valueOf(planogrammJOINSDB.planogrammPhotoId));
+
+//                    StackPhotoDB stackPhotoDB = StackPhotoRealm.stackPhotoDBGetPhotoBySiteId2(String.valueOf(showcase.photoPlanogramId));
                     if (stackPhotoDB != null){
                         DialogFullPhotoR dialogFullPhoto = new DialogFullPhotoR(textView.getContext());
                         dialogFullPhoto.setPhoto(stackPhotoDB);

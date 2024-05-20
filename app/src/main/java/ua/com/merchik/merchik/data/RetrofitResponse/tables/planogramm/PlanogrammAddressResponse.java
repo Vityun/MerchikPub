@@ -4,14 +4,14 @@ import com.google.gson.annotations.SerializedName;
 
 import java.util.List;
 
-import ua.com.merchik.merchik.data.Database.Room.Planogram.PlanogrammSDB;
+import ua.com.merchik.merchik.data.Database.Room.Planogram.PlanogrammAddressSDB;
 
-public class PlanogrammResponse {
+public class PlanogrammAddressResponse {
     @SerializedName("state")
     public Boolean state;
 
     @SerializedName("list")
-    public List<PlanogrammSDB> list;
+    public List<PlanogrammAddressSDB> list;
 
     @SerializedName("error")
     public String error;

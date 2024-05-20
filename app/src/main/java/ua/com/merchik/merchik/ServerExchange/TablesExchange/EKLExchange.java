@@ -47,6 +47,8 @@ public class EKLExchange {
             Gson gson = new Gson();
             String json = gson.toJson(data);
             JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
+            Globals.writeToMLOG("INFO", "downloadEKLTable/convertedObject", "convertedObject: " + convertedObject);
+
 
             retrofit2.Call<EKLResponse> call = RetrofitBuilder.getRetrofitInterface().GET_EKL_ROOM(RetrofitBuilder.contentType, convertedObject);
             call.enqueue(new Callback<EKLResponse>() {

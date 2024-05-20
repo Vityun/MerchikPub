@@ -16,7 +16,7 @@ import ua.com.merchik.merchik.data.Database.Room.AddressSDB;
 import ua.com.merchik.merchik.data.Database.Room.ArticleSDB;
 import ua.com.merchik.merchik.data.Database.Room.CustomerSDB;
 import ua.com.merchik.merchik.data.Database.Room.OpinionSDB;
-import ua.com.merchik.merchik.data.Database.Room.PlanogrammSDB;
+import ua.com.merchik.merchik.data.Database.Room.Planogram.PlanogrammJOINSDB;
 import ua.com.merchik.merchik.data.Database.Room.ShowcaseSDB;
 import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
 import ua.com.merchik.merchik.data.Database.Room.UsersSDB;
@@ -485,19 +485,25 @@ public class MyFilter {
         return results;
     }
 
-    public List<PlanogrammSDB> getFilteredResultsPlanogrammSDB(String constraint, List<PlanogrammSDB> sorted, List<PlanogrammSDB> orig) {
+    public List<PlanogrammJOINSDB> getFilteredResultsPlanogrammSDB(String constraint, List<PlanogrammJOINSDB> sorted, List<PlanogrammJOINSDB> orig) {
 
         constraint = constraint.toLowerCase();
 
-        List<PlanogrammSDB> results = new ArrayList<>();
+        List<PlanogrammJOINSDB> results = new ArrayList<>();
         if (sorted == null || constraint.equals("")) {
             sorted = orig;
         }
 
-        for (PlanogrammSDB item : sorted) {
+        for (PlanogrammJOINSDB item : sorted) {
             try {
                 // Название
-                if (item.nm != null && !item.nm.equals("") && item.nm.toLowerCase().contains(constraint)) {
+                if (item.planogrammName != null && !item.planogrammName.equals("") && item.planogrammName.toLowerCase().contains(constraint)) {
+                    results.add(item);
+                } else if (item.planogrammAddressTxt != null && !item.planogrammAddressTxt.equals("") && item.planogrammAddressTxt.toLowerCase().contains(constraint)) {
+                    results.add(item);
+                } else if (item.planogrammClientTxt != null && !item.planogrammClientTxt.equals("") && item.planogrammClientTxt.toLowerCase().contains(constraint)){
+                    results.add(item);
+                }else if (item.planogrammComment != null && !item.planogrammComment.equals("") && item.planogrammComment.toLowerCase().contains(constraint)){
                     results.add(item);
                 }
 

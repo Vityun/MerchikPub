@@ -18,7 +18,10 @@ import java.util.Calendar;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
+import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.R;
+import ua.com.merchik.merchik.ServerExchange.TablesExchange.PlanogrammTableExchange;
+import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.ShowcaseResponse;
 import ua.com.merchik.merchik.data.TestJsonUpload.StandartData;
 import ua.com.merchik.merchik.dialogs.DialogShowcase.DialogShowcase;
@@ -80,9 +83,55 @@ public class MenuMainActivity extends toolbar_menus {
     }
 
     private void test() {
-        planogramAddr();
-        planogramGrp();
-        planogramImg();
+        try {
+            PlanogrammTableExchange planogrammTableExchange = new PlanogrammTableExchange();
+            planogrammTableExchange.planogramDownload(new Clicks.clickObjectAndStatus() {
+                @Override
+                public void onSuccess(Object data) {
+
+                }
+
+                @Override
+                public void onFailure(String error) {
+
+                }
+            });
+            planogrammTableExchange.planogrammAddressDownload(new Clicks.clickObjectAndStatus() {
+                @Override
+                public void onSuccess(Object data) {
+
+                }
+
+                @Override
+                public void onFailure(String error) {
+
+                }
+            });
+            planogrammTableExchange.planogrammGroupDownload(new Clicks.clickObjectAndStatus() {
+                @Override
+                public void onSuccess(Object data) {
+
+                }
+
+                @Override
+                public void onFailure(String error) {
+
+                }
+            });
+            planogrammTableExchange.planogrammImagesDownload(new Clicks.clickObjectAndStatus() {
+                @Override
+                public void onSuccess(Object data) {
+
+                }
+
+                @Override
+                public void onFailure(String error) {
+
+                }
+            });
+        }catch (Exception e){
+            Globals.writeToMLOG("ERROR", "startExchange/PlanogrammExchange/planogrammDownload", "Exception e: " + e);
+        }
     }
 
 

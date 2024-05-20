@@ -52,7 +52,7 @@ public class ShowcaseSDB {
     @SerializedName("planogram_id")
     @Expose
     @ColumnInfo(name = "planogram_id")
-    public Long planogramId;
+    public Integer planogramId;
 
     @SerializedName("photo_planogram_id")
     @Expose
