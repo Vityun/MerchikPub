@@ -75,11 +75,32 @@ public class OptionButtonStartWork<T> extends OptionControl {
                             } else {
                                 optionStartWork_138518(context, wpDataDB, optionDB, msgType, nnkMode, unlockCodeResultListener);
                             }
+                        }else {
+                            DialogData dialogData = new DialogData(context);
+                            dialogData.setTitle("Система не визначила Вас на ТТ");
+                            dialogData.setText("Система не отримала координати. Спробуйте вийти на вулицю і отримати координати.");
+                            dialogData.setClose(dialogData::dismiss);
+                            dialogData.show();
                         }
+                    }else {
+                        DialogData dialogData = new DialogData(context);
+                        dialogData.setTitle("Система не визначила Вас на ТТ");
+                        dialogData.setText("У Торгівельної Точки не визначені координати, зверніться до свого керівника!");
+                        dialogData.setClose(dialogData::dismiss);
+                        dialogData.setOk("", ()->{
+                            optionStartWork_138518(context, wpDataDB, optionDB, msgType, nnkMode, unlockCodeResultListener);
+                            dialogData.dismiss();
+                        });
+                        dialogData.show();
                     }
                 }
+            }else {
+                DialogData dialogData = new DialogData(context);
+                dialogData.setTitle("Система не визначила Вас на ТТ");
+                dialogData.setText("У Вас вимкнений GPS! Увімкніть його та повторість спробу. ");
+                dialogData.setClose(dialogData::dismiss);
+                dialogData.show();
             }
-//            unlockCodeResultListener.onUnlockCodeSuccess();
         } catch (Exception e) {
             Globals.writeToMLOG("ERROR", "OptionButtonStartWork/executeOption/Exception", "Exception e: " + e);
         }
