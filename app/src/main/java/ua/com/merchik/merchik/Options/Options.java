@@ -637,7 +637,21 @@ public class Options {
 
             // 14301 - трегуб
             // 14840 - Авто комфорт плюс
-            if (option.getClientId().equals("14301") || option.getClientId().equals("14840")){
+            // 14843 - Джокер
+            // 91276 - БВІ
+            // 16898 - Ямуна
+            // 13633 - ВС-Импэкс ООО
+            // 8523 - Альянс Краси ПП
+            // 91429 - Петровська Елла Олександрівна ФОП
+            if (option.getClientId().equals("14301") ||
+                    option.getClientId().equals("14840") ||
+                    option.getClientId().equals("14843") ||
+                    option.getClientId().equals("91276") ||
+                    option.getClientId().equals("16898") ||
+                    option.getClientId().equals("13633") ||
+                    option.getClientId().equals("8523") ||
+                    option.getClientId().equals("91429")
+            ){
                 optionControlNewAlgo(getOptionsToControl(option), context, dataDB, option, optionList, type, mode, false, click);
             }else {
                 // Проход по второй опции блокировки
