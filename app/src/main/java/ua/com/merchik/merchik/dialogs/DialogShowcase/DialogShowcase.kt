@@ -332,7 +332,7 @@ class DialogShowcase(private val context: Context?) : DialogData() {
             var planogrammDataList = RoomManager.SQL_DB.planogrammDao().getByClientAddress(
                 wpDataDB!!.client_id,
                 wpDataDB!!.addr_id,
-                null
+                adress.ttId
             )
 
             Log.e("setRecyclerView", "planogrammDataList: $planogrammDataList")

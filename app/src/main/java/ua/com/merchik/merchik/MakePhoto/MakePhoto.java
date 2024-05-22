@@ -34,7 +34,7 @@ import ua.com.merchik.merchik.PhotoReportActivity;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.WorkPlan;
-import ua.com.merchik.merchik.data.Database.Room.Planogram.PlanogrammSDB;
+import ua.com.merchik.merchik.data.Database.Room.Planogram.PlanogrammJOINSDB;
 import ua.com.merchik.merchik.data.Database.Room.ShowcaseSDB;
 import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
 import ua.com.merchik.merchik.data.Database.Room.UsersSDB;
@@ -904,14 +904,14 @@ public class MakePhoto {
             @Override
             public <T> void click(T data) {
                 try {
-                    PlanogrammSDB planogramm = (PlanogrammSDB) data;
-                    Toast.makeText(activity, "Обрана планограма: " + planogramm.nm + " (" + planogramm.id + ")", Toast.LENGTH_LONG).show();
+                    PlanogrammJOINSDB planogramm = (PlanogrammJOINSDB) data;
+                    Toast.makeText(activity, "Обрана планограма: " + planogramm.planogrammName + " (" + planogramm.id + ")", Toast.LENGTH_LONG).show();
 
                     MakePhoto.planogram_id = String.valueOf(planogramm.id);
-                    MakePhoto.planogram_img_id = String.valueOf(planogramm.photoId);
+                    MakePhoto.planogram_img_id = String.valueOf(planogramm.planogrammPhotoId);
 
-//                    choiceCustomerGroupAndPhoto2(activity, wp, dataT, optionsDB, () -> {
-//                    });
+                    choiceCustomerGroupAndPhoto2(activity, wp, dataT, optionsDB, () -> {
+                    });
 
                     clickVoid.click();
 
