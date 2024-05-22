@@ -4,6 +4,7 @@ import static ua.com.merchik.merchik.database.realm.RealmManager.INSTANCE;
 
 import java.util.List;
 
+import io.realm.RealmResults;
 import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
 
 public class OptionsRealm {
@@ -33,6 +34,20 @@ public class OptionsRealm {
                 .and()
                 .equalTo("optionGroup", "3161")
                 .findAll();
+    }
+
+    public static List<OptionsDB> getOptionsNOTButtonByDAD2(String dad2) {
+        RealmResults<OptionsDB> realmResults = INSTANCE.where(OptionsDB.class)
+                .equalTo("codeDad2", dad2)
+                .and()
+                .notEqualTo("optionGroup", "3161")
+                .findAll();
+
+        if (realmResults != null && realmResults.size() > 0){
+            return INSTANCE.copyFromRealm(realmResults);
+        }else {
+            return null;
+        }
     }
 
     public static OptionsDB getOption(String dad2, String optId){

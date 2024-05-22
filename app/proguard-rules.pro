@@ -58,6 +58,11 @@
 -keep class org.apache.** { *; }
 -keep class javax.inject.** { *; }
 -keep class retrofit.** { *; }
+-keepclasseswithmembers class * {
+    @retrofit2.http.* <methods>;
+}
+-keep,allowoptimization,allowobfuscation class retrofit2.** { *; }
+-keep class io.reactivex.rxjava3.** { *; }
 
 -keep class ua.com.merchik.merchik.data.** { *; }
 -keep class ua.com.merchik.merchik.dialogs.** { *; }
@@ -93,6 +98,9 @@
 # При синхронизации ЄКЛ я получил java.lang.ClassCastException я так понял что тут: exchange.onSuccess(response.body().list); а там типа генерик <T>
 -keep class ua.com.merchik.merchik.ServerExchange.** { *; }
 -keep class ua.com.merchik.merchik.dialogs.** { *; }
+
+# Сервис для загрузки фото Товаров. Надо проверить может изза этого он не мог нормально работать
+-keep class ua.com.merchik.merchik.DownloadPictureService { *; }
 
 # Uncomment this to preserve the line number information for
 # debugging stack traces.

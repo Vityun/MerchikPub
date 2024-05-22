@@ -158,15 +158,6 @@ public class OptionControlCheckingPercentageOfShelfSpaceDPPO<T> extends OptionCo
             optionResultTable.colSKU = item.getValue().stream().map(table -> table.colSKU).reduce(0, Integer::sum);
             optionResultTable.sizePPF = item.getValue().stream().map(table -> table.shelfSpaceLength).reduce(0d, Double::sum);
 
-
-//            optionResultTable.plannedShare = null;
-//            optionResultTable.shareActual = null;
-//            optionResultTable.deflection = null;
-//            optionResultTable.deficit = null;
-//            optionResultTable.widthPPO = null;
-//            optionResultTable.note = null;
-
-
             if (shelfSize.stream().filter(itm -> itm.codeZASG.equals(codeZASG)).findFirst().orElse(null) != null) {
                 ShelfSizeSDB shelfSizeSDB = shelfSize.stream().filter(itm -> itm.codeZASG.equals(codeZASG)).findFirst().get();
 //                ShelfSizeSDB shelfSizeSDB = shelfSize.get(0);

@@ -97,7 +97,7 @@ public class OptionControlAdditionalRequirementsMark<T> extends OptionControl {
 //            RealmResults<AdditionalRequirementsDB> realmResults = AdditionalRequirementsRealm.getData3(document, HIDE_FOR_USER, ttCategory, 1);
 //            List<AdditionalRequirementsDB> data = RealmManager.INSTANCE.copyFromRealm(realmResults);
 
-            List<AdditionalRequirementsDB> data = AdditionalRequirementsRealm.getData3(document, HIDE_FOR_USER, ttCategory, 1);
+            List<AdditionalRequirementsDB> data = AdditionalRequirementsRealm.getData3(document, HIDE_FOR_USER, ttCategory, null,1);
 
 //            // DEBUG DATA-------------
 //            try {
@@ -249,12 +249,12 @@ public class OptionControlAdditionalRequirementsMark<T> extends OptionControl {
                         .append(CustomerRealm.getCustomerById(wpDataDB.getClient_id()).getNm())
                         .append(" нет доп. требований по этому адресу");
                 signal = false;
-                unlockCodeResultListener.onUnlockCodeSuccess();
+//                unlockCodeResultListener.onUnlockCodeSuccess();
             } else if (offsetSum == virtualTable.size()) {
                 msg.append("Все доп.требования были изменены после текущего посещения, проверка не выполняется.");
 
                 signal = true;
-                unlockCodeResultListener.onUnlockCodeFailure();
+//                unlockCodeResultListener.onUnlockCodeFailure();
             } else if (nedotochSum > 0) {
 
                 msg.append("За период с ")
@@ -268,7 +268,7 @@ public class OptionControlAdditionalRequirementsMark<T> extends OptionControl {
                         .append(" Доп.требованиям. ");
 
                 signal = true;
-                unlockCodeResultListener.onUnlockCodeFailure();
+//                unlockCodeResultListener.onUnlockCodeFailure();
             } else if (virtualTable.size() > 1 && deviationFromTheMeanSum < 0.5) {
 
                 msg.append("Вы оценили Все (")
@@ -279,7 +279,7 @@ public class OptionControlAdditionalRequirementsMark<T> extends OptionControl {
                                 "Оценивайте эти требования ОБЬЕКТИВНО!");
 
                 signal = true;
-                unlockCodeResultListener.onUnlockCodeFailure();
+//                unlockCodeResultListener.onUnlockCodeFailure();
             } else {
                 msg.append("За период с ")
                         .append(Clock.getHumanTime3(dateFrom))
@@ -291,8 +291,9 @@ public class OptionControlAdditionalRequirementsMark<T> extends OptionControl {
                         .append(virtualTable.size())
                         .append(" Доп.требованиям. Замечаний по выполнению опции нет.");
 
+
                 signal = false;
-                unlockCodeResultListener.onUnlockCodeSuccess();
+//                unlockCodeResultListener.onUnlockCodeSuccess();
             }
 
             // Установка сообщения

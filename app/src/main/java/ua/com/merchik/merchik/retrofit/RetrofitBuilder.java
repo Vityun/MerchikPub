@@ -1,5 +1,6 @@
 package ua.com.merchik.merchik.retrofit;
 
+import android.os.Build;
 import android.util.Log;
 
 import com.chuckerteam.chucker.api.ChuckerInterceptor;
@@ -32,8 +33,11 @@ import ua.com.merchik.merchik.database.realm.RealmManager;
 public class RetrofitBuilder {
 
     private static RetrofitBuilder INSTANCE = new RetrofitBuilder();
-    private static final String BASE_URL = "https://merchik.net/";
-    private static final String BASE_URL_OLD = "http://merchik.net/";
+    private static final String BASE_URL = "https://merchik.net/";  // android 8+
+    private static final String BASE_URL_OLD = "http://merchik.net/";   // old android
+
+    // test
+//    private static final String BASE_URL_OLD = "http://merchik.net/";
 //    private static final String BASE_URL = "https://merchik.com.ua/";
 //    private static final String BASE_URL = "http://merchik.alien/";merchik.com.ua/matest.php
 
@@ -79,8 +83,15 @@ public class RetrofitBuilder {
 
         OkHttpClient client = httpClientBuilder.build();
 
+        String url = "";
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O){
+            url = BASE_URL;
+        }else {
+            url = BASE_URL_OLD;
+        }
+
         Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl(BASE_URL)
+                .baseUrl(url)
                 .addConverterFactory(GsonConverterFactory.create(gson))
                 .addCallAdapterFactory(RxJava3CallAdapterFactory.create())
                 .client(client)

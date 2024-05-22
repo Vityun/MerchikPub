@@ -696,6 +696,7 @@ public class TablesLoadingUnloading {
         JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
 
         retrofit2.Call<ReportPrepareServer> call = RetrofitBuilder.getRetrofitInterface().ReportPrepareServer_RESPONSE(RetrofitBuilder.contentType, convertedObject);
+//        retrofit2.Call<JsonObject> callT = RetrofitBuilder.getRetrofitInterface().TEST_JSON_UPLOAD(RetrofitBuilder.contentType, convertedObject);
 
 //        retrofit2.Call<ReportPrepareServer> call;
 //        if (lastUpdate == 0) {
@@ -705,6 +706,18 @@ public class TablesLoadingUnloading {
 //        }
 
         BlockingProgressDialog pg = BlockingProgressDialog.show(context, "Обмен данными с сервером.", "Обновление таблицы: Дет. отчёт");
+
+//        callT.enqueue(new Callback<JsonObject>() {
+//            @Override
+//            public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
+//                Log.e("TAG_TEST_callT", "response: " + response);
+//            }
+//
+//            @Override
+//            public void onFailure(Call<JsonObject> call, Throwable t) {
+//                Log.e("TAG_TEST_callT", "Throwable t: " + t);
+//            }
+//        });
 
 
         call.enqueue(new retrofit2.Callback<ReportPrepareServer>() {
@@ -1578,13 +1591,7 @@ public class TablesLoadingUnloading {
                             Log.e("TESTING", "2_SAVE PHOTO/path: " + path);
 
                             int id = RealmManager.stackPhotoGetLastId();
-//                            Log.e("TAG_TABLE", "PHOTO_TOVAR_URL_path_id0: " + id);
-
                             id++;
-//                            Log.e("TAG_TABLE", "PHOTO_TOVAR_URL_path_id1: " + id);
-
-//                            Log.e("TAG_TABLE", "PHOTO_TOVAR_URL_path: " + path);
-
                             StackPhotoDB stackPhotoDB = new StackPhotoDB(
                                     id,
                                     list.get(finalI).getID(),

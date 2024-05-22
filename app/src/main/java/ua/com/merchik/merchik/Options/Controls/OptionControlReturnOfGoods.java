@@ -94,7 +94,7 @@ public class OptionControlReturnOfGoods<T> extends OptionControl {
         List<ReportPrepareDB> detailedReportRPList = RealmManager.INSTANCE.copyFromRealm(ReportPrepareRealm.getReportPrepareByDad2(wpDataDB.getCode_dad2()));
 
         // Получаем Товары с особым вниманием
-        List<AdditionalRequirementsDB> additionalRequirementsDBS = AdditionalRequirementsRealm.getData3(document, DEFAULT, null, 0);
+        List<AdditionalRequirementsDB> additionalRequirementsDBS = AdditionalRequirementsRealm.getData3(document, DEFAULT, null, optionDB.getOptionId(),0);
         for (AdditionalRequirementsDB item : additionalRequirementsDBS) {
             if (item.getTovarId() != null && !item.getTovarId().equals("") && !item.getTovarId().equals("0")) {
                 tovarIds.add(Integer.valueOf(item.getTovarId()));
@@ -115,7 +115,6 @@ public class OptionControlReturnOfGoods<T> extends OptionControl {
             }
 
             if (osvSize == 0) {
-
                 Log.e("OCReturnOfGoods", "item.iD: " + item.iD);
                 Log.e("OCReturnOfGoods", "item.expireLeft: " + item.expireLeft);
                 Log.e("OCReturnOfGoods", "item.getErrorId(): " + item.getErrorId());

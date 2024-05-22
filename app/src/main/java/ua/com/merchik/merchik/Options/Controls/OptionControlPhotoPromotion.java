@@ -145,7 +145,7 @@ public class OptionControlPhotoPromotion<T> extends OptionControl {
                         showTovList = true;
                         OSV = 1;
                         totalOSV++;
-                        errMsgType1.append(createLinkedString(item, currentTovPhoto)).append("\n");
+//                        errMsgType1.append(createLinkedString(item, currentTovPhoto)).append("\n");
                     } else {
                         showTovList = true;
                         err++;

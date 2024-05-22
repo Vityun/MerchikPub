@@ -143,6 +143,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
 
     /*Определяем конструктор*/
     public RecycleViewDRAdapterTovar(Context context, List<TovarDB> list, WpDataDB wp, OpenType openType) {
+        Log.e("TEST_SPEED", "RecycleViewDRAdapterTovar/ENTER");
         this.mContext = context;
         this.dataList = list;
         this.dataFilterable = list;
@@ -159,6 +160,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
     }
 
     public RecycleViewDRAdapterTovar(Context context, List<TovarDB> list, TasksAndReclamationsSDB tasksAndReclamationsSDB, OpenType openType) {
+        Log.e("TEST_SPEED", "RecycleViewDRAdapterTovar/ENTER2");
         this.mContext = context;
         this.dataList = list;
         this.dataFilterable = list;
@@ -186,6 +188,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
     }
 
     public void setAkciyaTovList(List<Integer> tovIdList, List<AdditionalRequirementsDB> adList) {
+        Log.e("TEST_SPEED", "RecycleViewDRAdapterTovar/setAkciyaTovList");
         this.tovIdList = tovIdList;
         this.adList = adList;
         Log.e("АКЦИЯ_ТОВАРА", "tovIdList: " + tovIdList);
@@ -272,6 +275,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
         ViewHolder(View v) {
             super(v);
             // Get Resourse id`s
+            Log.e("TEST_SPEED", "RecycleViewDRAdapterTovar/ViewHolder");
 
             constraintLayout = (ConstraintLayout) v.findViewById(R.id.dr_tovar_item_tovar_layout);
             imageView = (ImageView) v.findViewById(R.id.imageViewItemTovar);
@@ -332,7 +336,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
         //        @RequiresApi(api = Build.VERSION_CODES.N)
         public void bind(TovarDB list) {
             try {
-
+                Log.e("TEST_SPEED", "RecycleViewDRAdapterTovar/bind/list: " + list);
 
                 String balanceData = "?";
                 String balanceDate = "?";
@@ -696,6 +700,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                                             });
                                             dialogBadData.setCancel("Ні", () -> {
                                                 dialogBadData.dismiss();
+                                                operetionSaveRPToDB(tpl, finalReportPrepareTovar1, data, data2, list);
                                             });
                                             dialogBadData.setClose(dialogBadData::dismiss);
                                             dialogBadData.show();
@@ -743,6 +748,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                                             });
                                             dialogBadData.setCancel("Ні", () -> {
                                                 dialogBadData.dismiss();
+                                                operetionSaveRPToDB(tpl, finalReportPrepareTovar1, data, data2, list);
                                             });
                                             dialogBadData.setClose(dialogBadData::dismiss);
                                             dialogBadData.show();
@@ -1099,6 +1105,8 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                             Bitmap b = decodeSampledBitmapFromResource(file, 200, 200);
                             if (b != null) {
                                 imageView.setImageBitmap(b);
+                            }else {
+                                imageView.setImageResource(R.mipmap.merchik);
                             }
                             return true;
                         }
@@ -1131,10 +1139,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                         sb.append("Штрихкод: ").append(tovar.getBarcode()).append("\n");
                         sb.append("Артикул: ").append(getArticle(tovar, 0));
 
-
                         dialogPhotoTovar.setPhotoBarcode(tovar.getBarcode());
-//                        dialogPhotoTovar.setPhotoBarcode(sb);
-
                         dialogPhotoTovar.setTextInfo(sb);
 
                         dialogPhotoTovar.setClose(dialogPhotoTovar::dismiss);
@@ -1153,7 +1158,13 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                             DialogPhotoTovar dialogPhotoTovar = new DialogPhotoTovar(mContext);
 
                             dialogPhotoTovar.setPhotoTovar(Uri.parse(stackPhotoDB.getPhoto_num()));
+
+                            StringBuilder sb = new StringBuilder();
+                            sb.append("Штрихкод: ").append(tovar.getBarcode()).append("\n");
+                            sb.append("Артикул: ").append(getArticle(tovar, 0));
+
                             dialogPhotoTovar.setPhotoBarcode(tovar.getBarcode());
+                            dialogPhotoTovar.setTextInfo(sb);
 
                             dialogPhotoTovar.setClose(dialogPhotoTovar::dismiss);
                             dialogPhotoTovar.show();
@@ -1285,22 +1296,10 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                                 dialogBadData.setOk("Так", () -> {
                                     dialogBadData.dismiss();
                                     Toast.makeText(mContext, "Дата не збережена!", Toast.LENGTH_LONG).show();
-//                                    DialogData dialogBadData2 = new DialogData(dialog.context);
-//                                    dialogBadData2.setTitle("Зауваження до Дати");
-//                                    dialogBadData2.setText("Впевнені що не хочете зберігати некоректні данні?");
-//                                    dialogBadData2.setOk("Так", () -> {
-//                                        dialogBadData2.dismiss();
-//                                    });
-//                                    dialogBadData2.setCancel("Ні", () -> {
-//                                        dialog.dismiss();
-//                                        dialogBadData2.dismiss();
-//                                        pushOkButtonRequisites(tpl, reportPrepareDB, dialog, cd2, list, tovarId, clientId, finalBalanceData1, finalBalanceDate1, clickType);
-//                                    });
-//                                    dialogBadData2.setClose(dialogBadData2::dismiss);
-//                                    dialogBadData2.show();
                                 });
                                 dialogBadData.setCancel("Ні", () -> {
                                     dialogBadData.dismiss();
+                                    pushOkButtonRequisites(tpl, reportPrepareDB, dialog, cd2, list, tovarId, clientId, finalBalanceData1, finalBalanceDate1, clickType);
                                 });
                                 dialogBadData.setClose(dialogBadData::dismiss);
                                 dialogBadData.show();

@@ -116,17 +116,17 @@ public class OptionControlEndAnotherWork<T> extends OptionControl {
             massageToUser = "Нет данных для анализа окончания ПРЕДЫДУЩИХ работ.";
             signal = false;
 //            unlockCodeResultListener.onUnlockCodeFailure();
-            unlockCodeResultListener.onUnlockCodeSuccess();
+//            unlockCodeResultListener.onUnlockCodeSuccess();
         } else if (result.size() == 0) {
             massageToUser = "Замечаний по указанию времени начала/окончания ПРЕДЫДУЩИХ работ нет.";
             signal = false;
 //            unlockCodeResultListener.onUnlockCodeFailure();
-            unlockCodeResultListener.onUnlockCodeSuccess();
+//            unlockCodeResultListener.onUnlockCodeSuccess();
         } else {
             massageToUser = "Вы еще не закончили (не указали время окончания) ПРЕДЫДУЩУЮ работу!";
             signal = true;
 //            unlockCodeResultListener.onUnlockCodeSuccess();
-            unlockCodeResultListener.onUnlockCodeFailure();
+//            unlockCodeResultListener.onUnlockCodeFailure();
         }
 
         setIsBlockOption(signal);

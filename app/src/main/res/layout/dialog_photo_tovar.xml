@@ -91,10 +91,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
-            android:layout_marginLeft="8dp"
             android:layout_marginTop="20dp"
             android:layout_marginEnd="8dp"
-            android:layout_marginRight="8dp"
 
             android:padding="1dp"
 
@@ -103,19 +101,18 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            tools:visibility="gone" />
+            app:srcCompat="@mipmap/merchik_m" />
 
         <TextView
             android:id="@+id/barcodeError"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
-            android:layout_marginLeft="16dp"
             android:layout_marginTop="16dp"
             android:layout_marginEnd="16dp"
-            android:layout_marginRight="16dp"
             android:layout_marginBottom="16dp"
             android:gravity="center"
+            android:text="test text test text "
             android:visibility="gone"
             app:layout_constraintBottom_toBottomOf="@+id/photoBarcode"
             app:layout_constraintEnd_toEndOf="@+id/photoBarcode"
@@ -127,52 +124,45 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
-            android:layout_marginLeft="8dp"
             android:layout_marginTop="8dp"
             android:layout_marginEnd="8dp"
-            android:layout_marginRight="8dp"
             android:gravity="center"
             android:minWidth="300dp"
+            android:text="test text test text "
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/photoBarcode"
-            tools:visibility="gone" />
+            app:layout_constraintTop_toBottomOf="@+id/photoBarcode" />
 
         <TextView
             android:id="@+id/info"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="8dp"
-            app:layout_constraintBottom_toTopOf="@+id/imageTovFull"
+            android:text="test text test text "
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/barcode"
-            tools:visibility="gone" />
+            app:layout_constraintTop_toBottomOf="@+id/barcode" />
 
         <ImageView
             android:id="@+id/imageTovFull"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_width="0dp"
+            android:layout_height="300dp"
             android:layout_centerVertical="true"
             android:layout_marginStart="8dp"
-            android:layout_marginLeft="8dp"
             android:layout_marginTop="8dp"
+
             android:layout_marginEnd="8dp"
-
-
-            android:layout_marginRight="8dp"
             android:layout_marginBottom="8dp"
             android:layout_weight="1"
+
             android:adjustViewBounds="true"
-
-
             android:background="#FF0000"
             android:scaleType="centerCrop"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/barcode" />
-<!--        android:scaleType="fitXY"-->
+            app:layout_constraintTop_toBottomOf="@+id/info"
+            app:srcCompat="@mipmap/merchik_m" />
+        <!--        android:scaleType="fitXY"-->
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

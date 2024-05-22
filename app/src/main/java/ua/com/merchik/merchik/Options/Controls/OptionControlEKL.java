@@ -8,7 +8,6 @@ import android.os.Build;
 import android.util.Log;
 
 import com.google.gson.Gson;
-import com.google.gson.JsonObject;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -106,18 +105,18 @@ public class OptionControlEKL<T> extends OptionControl {
         StringBuilder optionMsg = new StringBuilder(); //
 
         // DEBUG DATA-------------
-        try {
-            List<EKL_SDB> fullEkl = SQL_DB.eklDao().getAll();
-            StringBuilder stringBuilderDEBUG = new StringBuilder();
-            for (EKL_SDB item : fullEkl) {
-                JsonObject object = new Gson().fromJson(new Gson().toJson(item), JsonObject.class);
-                stringBuilderDEBUG.append(object);
-            }
-            Globals.writeToMLOG("INFO", "OptionControlEKL/createTZN", "fullEkl.size: " + fullEkl.size());
-            Globals.writeToMLOG("INFO", "OptionControlEKL/createTZN", "stringBuilderDEBUG: " + stringBuilderDEBUG);
-        } catch (Exception e) {
-            Globals.writeToMLOG("INFO", "OptionControlEKL/createTZN", "stringBuilderDEBUG/Exception e: " + e);
-        }
+//        try {
+//            List<EKL_SDB> fullEkl = SQL_DB.eklDao().getAll();
+//            StringBuilder stringBuilderDEBUG = new StringBuilder();
+//            for (EKL_SDB item : fullEkl) {
+//                JsonObject object = new Gson().fromJson(new Gson().toJson(item), JsonObject.class);
+//                stringBuilderDEBUG.append(object);
+//            }
+//            Globals.writeToMLOG("INFO", "OptionControlEKL/createTZN", "fullEkl.size: " + fullEkl.size());
+//            Globals.writeToMLOG("INFO", "OptionControlEKL/createTZN", "stringBuilderDEBUG: " + stringBuilderDEBUG);
+//        } catch (Exception e) {
+//            Globals.writeToMLOG("INFO", "OptionControlEKL/createTZN", "stringBuilderDEBUG/Exception e: " + e);
+//        }
         // -----------------------
 
         Log.e("OptionControlEKL", "HERE TEST OptionControlEKL 2");

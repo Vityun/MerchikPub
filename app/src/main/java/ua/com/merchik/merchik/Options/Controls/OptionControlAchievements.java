@@ -88,6 +88,7 @@ public class OptionControlAchievements<T> extends OptionControl {
 
                 // dateDocument*1000 -- Делаем такую херь, потому что функция работает в миллисекундах. / 1000 - для перевода в секунды.
                 int minusDay = Integer.parseInt(optionDB.getAmountMax()) > 0 ? Integer.parseInt(optionDB.getAmountMax()) : 30;
+                minusDay = minusDay + 1;
                 dateFrom = Clock.getDatePeriodLong(dateDocument * 1000, -minusDay) / 1000;
                 dateTo = Clock.getDatePeriodLong(dateDocument * 1000, 3) / 1000;    // Тут надо указывать на +1 день, потому что функция работает до НАЧАЛА дня, а не до конца
             }
@@ -111,6 +112,7 @@ public class OptionControlAchievements<T> extends OptionControl {
             // 3.1. Получим данные о достижениях.
             // Сразу отсортировали (свежие должны быть сверху)
             List<AchievementsSDB> achievementsSDBList = SQL_DB.achievementsDao().getForOptionControl(dateFrom, dateTo, customerSDBDocument.id, addressSDBDocument.id, themeId);
+//            List<AchievementsSDB> achievementsSDBList = SQL_DB.achievementsDao().getForOptionControl(dateFrom, dateTo, customerSDBDocument.id, addressSDBDocument.id);
 
             List<Integer> ids = new ArrayList<>();
             for (AchievementsSDB item : achievementsSDBList) {

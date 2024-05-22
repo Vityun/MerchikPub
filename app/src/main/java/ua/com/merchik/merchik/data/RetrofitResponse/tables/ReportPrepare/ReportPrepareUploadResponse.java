@@ -10,6 +10,10 @@ public class ReportPrepareUploadResponse {
     @Expose
     public boolean state;
 
+    @SerializedName("error")
+    @Expose
+    public String error;
+
     @SerializedName("data")
     @Expose
     public List<ReportPrepareUploadList> data = null;

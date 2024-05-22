@@ -13,7 +13,9 @@ import android.widget.Toast;
 
 import androidx.annotation.RequiresApi;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
@@ -25,8 +27,11 @@ import ua.com.merchik.merchik.data.Database.Room.UsersSDB;
 import ua.com.merchik.merchik.data.Database.Room.VoteSDB;
 import ua.com.merchik.merchik.data.OptionMassageType;
 import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
+import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.database.realm.RealmManager;
+import ua.com.merchik.merchik.database.realm.tables.StackPhotoRealm;
+import ua.com.merchik.merchik.dialogs.DialogFullPhotoR;
 
 public class OptionControlCheckMarkPhotoReport<T> extends OptionControl {
     public int OPTION_CONTROL_CheckMarkPhotoReport_ID = 135595;
@@ -84,13 +89,19 @@ public class OptionControlCheckMarkPhotoReport<T> extends OptionControl {
         try {
             List<VoteSDB> votes = SQL_DB.votesDao().getAll(dateFrom, dateTo, maxRating, wpDataDB.getCode_dad2(), wpDataDB.getClient_id(), wpDataDB.getAddr_id());
 
+            List<VoteSDB> uniqueVotes = votes.stream()
+                    .collect(Collectors.collectingAndThen(
+                            Collectors.toMap(vote -> vote.photoId, vote -> vote, (existing, replacement) -> existing),
+                            map -> new ArrayList<>(map.values())
+                    ));
+
             VoteSDB vote = null;
-            if (votes != null && votes.size() > 0) {
-                vote = votes.get(0);
+            if (uniqueVotes != null && uniqueVotes.size() > 0) {
+                vote = uniqueVotes.get(0);
                 vote.error = 1;
 
                 if (wpDataDB.getTheme_id() == 95) {
-                    vote.note = "Вы нашли " + votes.size() + " нарушений в ДетОтчете " + wpDataDB.getDoc_num_otchet() + ". За это Вам положена премия.";
+                    vote.note = "Вы нашли " + uniqueVotes.size() + " нарушений в ДетОтчете " + wpDataDB.getDoc_num_otchet() + ". За это Вам положена премия.";
                 } else {
                     UsersSDB userScore = SQL_DB.usersDao().getUserById(vote.voterId);
                     vote.authorVote = userScore.fio;
@@ -99,15 +110,15 @@ public class OptionControlCheckMarkPhotoReport<T> extends OptionControl {
                 }
             }
 
-            if ((votes == null || votes.size() == 0) && wpDataDB.getTheme_id() == 95) {
+            if ((uniqueVotes == null || uniqueVotes.size() == 0) && wpDataDB.getTheme_id() == 95) {
                 signal = true;
                 spannableStringBuilder.append("Низких оценок по ФотоОтчетам исполнителя ").append(usersSDBDocument.fio).append(" нет.");
-            } else if (votes.size() == 0 && wpDataDB.getTheme_id() == 95) {
+            } else if (uniqueVotes.size() == 0 && wpDataDB.getTheme_id() == 95) {
                 signal = false;
                 spannableStringBuilder.append("Нарушений в оценивании ФО за период с ")
                         .append(Clock.getHumanTimeSecPattern(dateFrom, "dd.MM.yy")).append(" по ")
                         .append(Clock.getHumanTimeSecPattern(dateTo, "dd.MM.yy")).append(" нет.");
-            } else if (votes.size() == 0) {
+            } else if (uniqueVotes.size() == 0) {
                 signal = false;
                 spannableStringBuilder.append("Низких оценок по ФотоОтчетам исполнителя ").append(usersSDBDocument.fio).append(" нет.");
             } else if (vote == null) {
@@ -115,13 +126,13 @@ public class OptionControlCheckMarkPhotoReport<T> extends OptionControl {
                 spannableStringBuilder.append("Низких оценок по ФотоОтчетам исполнителя ").append(usersSDBDocument.fio).append(" нет.");
             } else if (wpDataDB.getTheme_id() == 1147) {
                 signal = true;
-                spannableStringBuilder.append("Обнаружено ").append(String.valueOf(votes.size())).append(" нарушение в оценивании ФотоОтчетов (подробности см. в таблице)");
+                spannableStringBuilder.append("Обнаружено ").append(String.valueOf(uniqueVotes.size())).append(" нарушение в оценивании ФотоОтчетов (подробности см. в таблице)");
             } else {
                 signal = true;
-                spannableStringBuilder.append("Обнаружено ").append(String.valueOf(votes.size()))
+                spannableStringBuilder.append("Обнаружено ").append(String.valueOf(uniqueVotes.size()))
                         .append(" низких оценок по ДетОтчетам от ").append(vote.authorVote).append("\n\n");
 
-                for (VoteSDB item : votes){
+                for (VoteSDB item : uniqueVotes){
                     UsersSDB userScore = SQL_DB.usersDao().getUserById(vote.voterId);
                     spannableStringBuilder.append(createLinkedString(userScore.fio, item)).append("\n");
                 }
@@ -148,7 +159,7 @@ public class OptionControlCheckMarkPhotoReport<T> extends OptionControl {
                 }
             }
 
-            spannableStringBuilder.append("У Вас ").append(String.valueOf(votes.size())).append(" плохих оценок. По фото.");
+            spannableStringBuilder.append("У Вас ").append(String.valueOf(uniqueVotes.size())).append(" плохих оценок. По фото.");
 
         } catch (Exception e) {
             Globals.writeToMLOG("ERROR", "OptionControlCheckMarkPhotoReport/executeOption", "Exception e: " + e);
@@ -161,6 +172,16 @@ public class OptionControlCheckMarkPhotoReport<T> extends OptionControl {
             @Override
             public void onClick(View textView) {
                 Toast.makeText(textView.getContext(), "Ідентифікатор оцінки: " + vote.serverId, Toast.LENGTH_LONG).show();
+                try {
+                    StackPhotoDB stackPhotoDB = StackPhotoRealm.stackPhotoDBGetPhotoBySiteId(String.valueOf(vote.photoId));
+                    DialogFullPhotoR dialog = new DialogFullPhotoR(textView.getContext());
+                    dialog.setPhoto(stackPhotoDB);
+                    dialog.setComment(vote.comments);
+                    dialog.setClose(dialog::dismiss);
+                    dialog.show();
+                }catch (Exception e){
+                    Globals.writeToMLOG("ERROR", "OptionControlCheckMarkPhotoReport/createLinkedString/onClick", "Exception e: " + e);
+                }
             }
 
             @Override

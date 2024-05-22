@@ -40,6 +40,7 @@ public class OptionControlPhotoShowcase<T> extends OptionControl {
     private Date dateTo;
     private long dad2;
     private int percentValue;
+    private int perShowcase;
 
     private WpDataDB wpDataDB;
     private UsersSDB usersSDB;
@@ -140,6 +141,14 @@ public class OptionControlPhotoShowcase<T> extends OptionControl {
                 Globals.writeToMLOG("ERROR", "OptionControlPhotoShowcase/executeOption/percentValue", "Exception e: " + e);
             }
 
+            try {
+                perShowcase = (int) 100 * filledShowcaseIdsCount / list.size();
+            }catch (Exception e){
+                perShowcase = 0;
+                Globals.writeToMLOG("ERROR", "OptionControlPhotoShowcase/executeOption/perShowcase", "Exception e: " + e);
+            }
+
+
             //3.4
             int newTT = 0;
             if (stackPhotoDBSList.size() == 0 && list.size() == 0) {
@@ -175,15 +184,15 @@ public class OptionControlPhotoShowcase<T> extends OptionControl {
             }*/ else if (showcaseSDBList.size() > 0 && filledShowcaseIdsCount == 0) {
                 stringBuilderMsg.append("При виготовленні світлин (вітрина панорамна) Ви НЕ обрали жодної з ").append(showcaseSDBList.size()).append(" вітрин.");
                 signal = true;
-            } else if (colMin > 0 && percentValue < colMin && newTT == 0) {
+            } else if (colMin > 0 && percentValue < colMin && newTT == 0 && showcaseSDBList.size() > 0) {
                 stringBuilderMsg.append("При виготовленні світлин (вітрина панорамна), Ви зазначили вітрини лише у ")
                         .append(filledShowcaseIdsCount)
                         .append(" фото з ")
                         .append(stackPhotoDBSList.size()).append(" (")
-                        .append(percentValue).append("%) що МЕНШЕ плану в ").append(colMin).append("%");
+                            .append(percentValue).append("%) що МЕНШЕ плану в ").append(colMin).append("%").append(" Загальна кількість вітрин на ТТ: ")
+                            .append(showcaseSDBList.size()).append(", з них фото зроблено по ").append(stackPhotoDBSList.size()).append("(").append(perShowcase).append("%)");
                 signal = true;
             } else if (showcaseSDBList.size() > 0 && list.size() < showcaseSDBList.size() * colMin / 100) {
-                int perShowcase = (int) 100 * filledShowcaseIdsCount / list.size();
                 stringBuilderMsg.append("При виготовленні світлин (вітрина панорамна), Ви сфотографували лише у ")
                         .append(list.size())
                         .append(" вітрин з ")
@@ -213,9 +222,11 @@ public class OptionControlPhotoShowcase<T> extends OptionControl {
             else {
                 stringBuilderMsg.append("При виготовленні світлин, Ви зазначили вітрини у ")
                         .append(filledShowcaseIdsCount)
-                        .append(" фото з ")
-                        .append(stackPhotoDBSList.size()).append(" (").append(percentValue).append("%) що БІЛЬШЕ плану в ")
-                        .append(colMin).append("%. Зауважень немає.");
+                        .append(" з ")
+                        .append(stackPhotoDBSList.size()).append(" СВІТЛИН ").append(" (").append(percentValue).append("%) що БІЛЬШЕ плану в ")
+                        .append(colMin).append("%.").append(" Загальна кількість вітрин на ТТ: ")
+                        .append(showcaseSDBList.size()).append(", з них фото зроблено по ").append(stackPhotoDBSList.size()).append("(")
+                        .append(perShowcase).append("%)").append(" Зауважень немає.");
                 signal = false;
             }
 

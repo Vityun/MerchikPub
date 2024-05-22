@@ -1,7 +1,16 @@
 package ua.com.merchik.merchik.dialogs.DialogShowcase;
 
+import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
+
 import android.net.Uri;
 import android.text.Html;
+import android.text.SpannableString;
+import android.text.SpannableStringBuilder;
+import android.text.Spanned;
+import android.text.TextPaint;
+import android.text.method.LinkMovementMethod;
+import android.text.style.ClickableSpan;
+import android.text.style.StyleSpan;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -23,9 +32,11 @@ import ua.com.merchik.merchik.Filter.MyFilter;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
+import ua.com.merchik.merchik.data.Database.Room.Planogram.PlanogrammJOINSDB;
 import ua.com.merchik.merchik.data.Database.Room.ShowcaseSDB;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
 import ua.com.merchik.merchik.database.realm.tables.StackPhotoRealm;
+import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.dialogs.DialogFullPhotoR;
 
 public class ShowcaseAdapter extends RecyclerView.Adapter<ShowcaseAdapter.ViewHolder> implements Filterable {
@@ -107,7 +118,20 @@ public class ShowcaseAdapter extends RecyclerView.Adapter<ShowcaseAdapter.ViewHo
                 }
 
                 if (showcase.photoPlanogramTxt != null) {
-                    planogram = showcase.photoPlanogramTxt;
+                    planogram = "(" + showcase.planogramId + ") " + showcase.photoPlanogramTxt;
+                    String pl = "Планограма:";
+                    SpannableString spannableString = new SpannableString(pl);
+                    spannableString.setSpan(new StyleSpan(android.graphics.Typeface.BOLD), 0, pl.length(), SpannableString.SPAN_EXCLUSIVE_EXCLUSIVE);
+
+                    SpannableString spannableString2 = new SpannableString(createLinkedString(showcase, planogram));
+
+                    SpannableStringBuilder spannableStringRes = new SpannableStringBuilder();
+                    spannableStringRes.append(spannableString).append(" ").append(spannableString2);
+
+                    textViewPlanogramm.setText(spannableStringRes);
+                    textViewPlanogramm.setMovementMethod(LinkMovementMethod.getInstance());
+                }else {
+                    textViewPlanogramm.setText(Html.fromHtml("<b>Планограма::</b> " + planogram));
                 }
 
                 StackPhotoDB stackPhotoDB = StackPhotoRealm.stackPhotoDBGetPhotoBySiteId2(String.valueOf(showcase.photoId));
@@ -115,7 +139,6 @@ public class ShowcaseAdapter extends RecyclerView.Adapter<ShowcaseAdapter.ViewHo
                 textViewShowcaseId.setText(Html.fromHtml("<b>Вітрина №:</b> " + showcase.id));
                 textViewShowcaseNm.setText(Html.fromHtml("<b>Назва:</b> " + showcase.nm));
                 textViewClientGroup.setText(Html.fromHtml("<b>Група тов.:</b> " + groupName));
-                textViewPlanogramm.setText(Html.fromHtml("<b>Планограма:</b> " + planogram));
 
                 if (showcase.id == 0) {
                     textViewShowcaseId.setText("Створити фото без зазначення вітрини");
@@ -170,6 +193,46 @@ public class ShowcaseAdapter extends RecyclerView.Adapter<ShowcaseAdapter.ViewHo
 
         res.id = 0;
 
+        return res;
+    }
+
+    private SpannableString createLinkedString(ShowcaseSDB showcase, String msg) {
+        SpannableString res = new SpannableString(msg);
+        ClickableSpan clickableSpan = new ClickableSpan() {
+            @Override
+            public void onClick(View textView) {
+                try {
+//                    Toast.makeText(textView.getContext(), "sjbajsdakjhsdkasdbljasdfbh", Toast.LENGTH_LONG).show();
+
+                    PlanogrammJOINSDB planogrammJOINSDB = SQL_DB.planogrammDao().getSoloBy(showcase.planogramId, null, null);
+                    StackPhotoDB stackPhotoDB = StackPhotoRealm.stackPhotoDBGetPhotoBySiteId2(String.valueOf(planogrammJOINSDB.planogrammPhotoId));
+
+//                    StackPhotoDB stackPhotoDB = StackPhotoRealm.stackPhotoDBGetPhotoBySiteId2(String.valueOf(showcase.photoPlanogramId));
+                    if (stackPhotoDB != null){
+                        DialogFullPhotoR dialogFullPhoto = new DialogFullPhotoR(textView.getContext());
+                        dialogFullPhoto.setPhoto(stackPhotoDB);
+                        dialogFullPhoto.setClose(dialogFullPhoto::dismiss);
+                        dialogFullPhoto.show();
+                    }else {
+                        DialogData dialogData = new DialogData(textView.getContext());
+                        dialogData.setTitle("Фото не знайдено.");
+                        dialogData.setText("Не вийшло виявити фото Планограми. Спробуйте повторити синхронізацію, або зверніться до Вашого керівника.");
+                        dialogData.setClose(dialogData::dismiss);
+                        dialogData.show();
+                    }
+                } catch (Exception e) {
+                    Log.e("ShowcaseAdapter", "Exception e: " + e);
+//                    Toast.makeText(textView.getContext(), "==================================================", Toast.LENGTH_LONG).show();
+                }
+            }
+
+            @Override
+            public void updateDrawState(TextPaint ds) {
+                super.updateDrawState(ds);
+                ds.setUnderlineText(true);
+            }
+        };
+        res.setSpan(clickableSpan, 0, msg.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         return res;
     }
 

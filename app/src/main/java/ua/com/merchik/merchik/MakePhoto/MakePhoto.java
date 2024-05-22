@@ -34,6 +34,7 @@ import ua.com.merchik.merchik.PhotoReportActivity;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.WorkPlan;
+import ua.com.merchik.merchik.data.Database.Room.Planogram.PlanogrammJOINSDB;
 import ua.com.merchik.merchik.data.Database.Room.ShowcaseSDB;
 import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
 import ua.com.merchik.merchik.data.Database.Room.UsersSDB;
@@ -523,12 +524,13 @@ public class MakePhoto {
             Globals.writeToMLOG("INFO", "pressedMakePhoto", "photoType: " + photoType);
 
 
-            if (AppUserRealm.getAppUserById(userId).user_work_plan_status.equals("our")){
+            if (AppUserRealm.getAppUserById(userId).user_work_plan_status.equals("our")) {
                 // Тут должна открываться инфа про Витрины
                 showDialogSW(activity, wpDataObj, data, optionsDB);
-            }else {
+            } else {
 //                photoDialogsNEW(activity, wpDataObj, data, optionsDB);
-                choiceCustomerGroupAndPhoto2(activity, wpDataObj, data, optionsDB, ()->{});
+                choiceCustomerGroupAndPhoto2(activity, wpDataObj, data, optionsDB, () -> {
+                });
             }
 
 //            choiceCustomerGroupAndPhoto2(activity, wpDataObj, data, optionsDB);
@@ -559,7 +561,8 @@ public class MakePhoto {
 
     public <T> void pressedMakePhotoOldStyle(Activity activity, WPDataObj wp, T data, OptionsDB optionsDB) {
         photoType = wp.getPhotoType();
-        choiceCustomerGroupAndPhoto2(activity, wp, data, optionsDB, ()->{});
+        choiceCustomerGroupAndPhoto2(activity, wp, data, optionsDB, () -> {
+        });
     }
 
     private <T> void choiceCustomerGroupAndPhoto2(Activity activity, WPDataObj wp, T data, OptionsDB optionsDB, Clicks.clickVoid clickVoid) {
@@ -605,8 +608,7 @@ public class MakePhoto {
 
     /**
      * 28.08.23
-     *
-     * */
+     */
     private <T> void photoDialogsNEW(Activity activity, WPDataObj wpDataObj, T data, OptionsDB optionsDB, Clicks.clickVoid clickVoid) {
         OptionControlMP optionControlMP = new OptionControlMP(activity.getBaseContext(), (WpDataDB) data, optionsDB, null, null, null);
         optionControlMP.showMassage(new Clicks.clickStatusMsg() {
@@ -673,7 +675,8 @@ public class MakePhoto {
                                     dialog1.dismiss();
                                     dialogData2.dismiss();
                                     showDialogPass(activity, wpDataObj, optionsDB, () -> {
-                                        makePhoto(activity, data, ()->{}); // Метод который запускает камеру и создаёт файл фото.
+                                        makePhoto(activity, data, () -> {
+                                        }); // Метод который запускает камеру и создаёт файл фото.
                                     });
                                 });
                                 dialogData2.setClose(dialogData2::dismiss);
@@ -705,7 +708,8 @@ public class MakePhoto {
 
                             alertMassageMP(activity, 1, t1, m1, bt1, bf1, t2, m2, bt2, bf2);
                         } else {
-                            makePhoto(activity, data, ()->{}); // Метод который запускает камеру и создаёт файл фото.
+                            makePhoto(activity, data, () -> {
+                            }); // Метод который запускает камеру и создаёт файл фото.
                         }
                     } else {
                         String t1 = "Координаты не определены";
@@ -724,7 +728,8 @@ public class MakePhoto {
                     }
                 } else {
                     Toast.makeText(activity, "Координаты магазина не обнаружены. Выполнение фото невозможно, обратитесь к Вашему руководителю.", Toast.LENGTH_SHORT).show();
-                    makePhoto(activity, data, ()->{}); // Метод который запускает камеру и создаёт файл фото.
+                    makePhoto(activity, data, () -> {
+                    }); // Метод который запускает камеру и создаёт файл фото.
                 }
             } else {
                 Toast.makeText(activity.getBaseContext(), "Не обнаружены данные посещения, обратитесь к Вашему руководителю.", Toast.LENGTH_SHORT).show();
@@ -759,7 +764,8 @@ public class MakePhoto {
                     dialogData1.dismiss();
                     dialogData2.dismiss();
                     showDialogPass(activity, wpDataObj, optionsDB, () -> {
-                        makePhoto(activity, data, ()->{}); // Метод который запускает камеру и создаёт файл фото.
+                        makePhoto(activity, data, () -> {
+                        }); // Метод который запускает камеру и создаёт файл фото.
                     });
                 });
                 dialogData2.setClose(dialogData2::dismiss);
@@ -832,17 +838,82 @@ public class MakePhoto {
 
                     MakePhoto.img_src_id = String.valueOf(showcase.photoId);
                     MakePhoto.showcase_id = String.valueOf(showcase.id);
-                    MakePhoto.planogram_id = String.valueOf(showcase.photoPlanogramId);
+
+                    MakePhoto.planogram_id = String.valueOf(showcase.planogramId);
                     MakePhoto.planogram_img_id = String.valueOf(showcase.photoPlanogramId);
+
+                    boolean needPlan;
+                    if (showcase.planogramId != null && showcase.planogramId != 0) {
+                        needPlan = false;
+                    } else {
+                        if (dialog.photoType == 0){
+                            needPlan = true;
+                        }else {
+                            needPlan = false;
+                        }
+                    }
 
                     if (showcase.tovarGrp != null && showcase.tovarGrp > 0) {
                         wp.setCustomerTypeGrpS(String.valueOf(showcase.tovarGrp));
                         Toast.makeText(activity, "Обрана група товару: " + showcase.tovarGrpTxt, Toast.LENGTH_LONG).show();
-//                        photoDialogs(activity, wp, dataT, optionsDB);
-                        photoDialogsNEW(activity, wp, dataT, optionsDB, ()->{});
+
+                        if (needPlan) {
+                            showDialogPlanogramm(activity, wp, dataT, optionsDB, () -> {
+                                photoDialogsNEW(activity, wp, dataT, optionsDB, () -> {
+                                });
+                            });
+                        } else {
+                            photoDialogsNEW(activity, wp, dataT, optionsDB, () -> {
+                            });
+                        }
+
                     } else {
-                        choiceCustomerGroupAndPhoto2(activity, wp, dataT, optionsDB, ()->{});
+                        if (needPlan) {
+                            showDialogPlanogramm(activity, wp, dataT, optionsDB, () -> {
+                                choiceCustomerGroupAndPhoto2(activity, wp, dataT, optionsDB, () -> {
+                                });
+                            });
+                        } else {
+                            choiceCustomerGroupAndPhoto2(activity, wp, dataT, optionsDB, () -> {
+                            });
+                        }
                     }
+
+                    dialog.dismiss();
+                } catch (Exception e) {
+                    Log.e("", "Exception e: " + e);
+                }
+            }
+        });
+        dialog.setClose(dialog::dismiss);
+        dialog.show();
+    }
+
+    /**
+     * 08.05.25.
+     * Открытие модального окна для выбора Планограм
+     *
+     * @param activity
+     */
+    public <T> void showDialogPlanogramm(Activity activity, WPDataObj wp, T dataT, OptionsDB optionsDB, Clicks.clickVoid clickVoid) {
+        DialogShowcase dialog = new DialogShowcase(activity);
+        dialog.setCurrTitle("Оберіть планограму по котрій будете викладати товар");
+        dialog.wpDataDB = (WpDataDB) dataT;
+        dialog.photoType = Integer.valueOf(MakePhoto.photoType);
+        dialog.populateDialogDataPlanogramm(new Clicks.click() {
+            @Override
+            public <T> void click(T data) {
+                try {
+                    PlanogrammJOINSDB planogramm = (PlanogrammJOINSDB) data;
+                    Toast.makeText(activity, "Обрана планограма: " + planogramm.planogrammName + " (" + planogramm.id + ")", Toast.LENGTH_LONG).show();
+
+                    MakePhoto.planogram_id = String.valueOf(planogramm.id);
+                    MakePhoto.planogram_img_id = String.valueOf(planogramm.planogrammPhotoId);
+
+                    choiceCustomerGroupAndPhoto2(activity, wp, dataT, optionsDB, () -> {
+                    });
+
+                    clickVoid.click();
 
                     dialog.dismiss();
                 } catch (Exception e) {

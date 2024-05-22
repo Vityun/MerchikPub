@@ -38,6 +38,7 @@ import ua.com.merchik.merchik.ServerExchange.TablesExchange.FragmentsExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.LanguagesExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.LocationExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.OblastExchange;
+import ua.com.merchik.merchik.ServerExchange.TablesExchange.PlanogrammTableExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.PotentialClientTableExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.SamplePhotoExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.ShelfSizeExchange;
@@ -923,8 +924,60 @@ public class Exchange {
                             Globals.writeToMLOG("ERROR", "startExchange/ShowcaseExchange/downloadShowcaseTable/onFailure", "error: " + error);
                         }
                     });
+
                 } catch (Exception e) {
                     Globals.writeToMLOG("ERROR", "startExchange/ShowcaseExchange/downloadShowcaseTable", "Exception e: " + e);
+                }
+
+
+                try {
+                    PlanogrammTableExchange planogrammTableExchange = new PlanogrammTableExchange();
+                    planogrammTableExchange.planogramDownload(new Clicks.clickObjectAndStatus() {
+                        @Override
+                        public void onSuccess(Object data) {
+
+                        }
+
+                        @Override
+                        public void onFailure(String error) {
+
+                        }
+                    });
+                    planogrammTableExchange.planogrammAddressDownload(new Clicks.clickObjectAndStatus() {
+                        @Override
+                        public void onSuccess(Object data) {
+
+                        }
+
+                        @Override
+                        public void onFailure(String error) {
+
+                        }
+                    });
+                    planogrammTableExchange.planogrammGroupDownload(new Clicks.clickObjectAndStatus() {
+                        @Override
+                        public void onSuccess(Object data) {
+
+                        }
+
+                        @Override
+                        public void onFailure(String error) {
+
+                        }
+                    });
+                    planogrammTableExchange.planogrammImagesDownload(new Clicks.clickObjectAndStatus() {
+                        @Override
+                        public void onSuccess(Object data) {
+
+                        }
+
+                        @Override
+                        public void onFailure(String error) {
+
+                        }
+                    });
+                }catch (Exception e){
+                    Globals.writeToMLOG("ERROR", "startExchange/PlanogrammExchange/planogrammDownload", "Exception e: " + e);
                 }
 
                 // --------------------------------------------------------------
@@ -1375,8 +1428,11 @@ public class Exchange {
         String tovarOnly = "1";
         String nolimit = "1";
 
-        if (imageType.equals("") && imageType == null) {
+        // Зачем? Ну работает и ОК
+        if (imageType == null || imageType.equals("") || imageType.equals("small")) {
             imageType = "small";
+        }else {
+            imageType = "full";
         }
 
         // todo убрать это нафиг отсюда, что я курил когда это писал?
@@ -1386,9 +1442,9 @@ public class Exchange {
                 if (!RealmManager.stackPhotoExistByObjectId(Integer.parseInt(tov.getiD()), imageType)) {
                     listId.add(tov.getiD());
                 }
-
             } catch (Exception e) {
-                // ЛОГ ошибки
+                Log.e("getTovarImg", "Exception e: " + e);
+                Globals.writeToMLOG("ERROR", "Exchange/getTovarImg/listId/Exception e", "Exception e: " + e);
             }
         }
 
@@ -1469,36 +1525,57 @@ public class Exchange {
                             Log.e("TESTING", "1_SAVE PHOTO");
                             Log.e("TESTING", "1_SAVE PHOTO/path: " + path);
 
+                            TovarImgList item = list.get(finalI);
+
                             int id = RealmManager.stackPhotoGetLastId();
                             id++;
-                            StackPhotoDB stackPhotoDB = new StackPhotoDB(
-                                    id,
-                                    list.get(finalI).getID(),
-                                    Integer.parseInt(list.get(finalI).getTovarId()),
-                                    null,
-                                    null,
-                                    null,
-                                    null,
-                                    null,
-                                    0,
-                                    System.currentTimeMillis(),
-                                    0,
-                                    0,
-                                    0,
-                                    path,
-                                    null,
-                                    Integer.parseInt(list.get(finalI).getPhotoTp()),
-                                    null,
-                                    null,
-                                    null,
-                                    imageType,
-                                    null,
-                                    0,
-                                    0,
-                                    false,
-                                    null,
-                                    null,
-                                    null);
+//                            StackPhotoDB stackPhotoDB = new StackPhotoDB(
+//                                    id,
+//                                    list.get(finalI).getID(),
+//                                    Integer.parseInt(list.get(finalI).getTovarId()),
+//                                    null,
+//                                    null,
+//                                    null,
+//                                    null,
+//                                    null,
+//                                    0,
+//                                    System.currentTimeMillis(),
+//                                    0,
+//                                    0,
+//                                    0,
+//                                    path,
+//                                    null,
+//                                    Integer.parseInt(list.get(finalI).getPhotoTp()),
+//                                    null,
+//                                    null,
+//                                    null,
+//                                    imageType,
+//                                    null,
+//                                    0,
+//                                    0,
+//                                    false,
+//                                    null,
+//                                    null,
+//                                    null);
+
+                            StackPhotoDB stackPhotoDB = new StackPhotoDB();
+                            stackPhotoDB.setId(id);
+                            stackPhotoDB.setPhotoServerId(item.getID());
+                            stackPhotoDB.setObject_id(Integer.valueOf(item.getTovarId()));
+                            stackPhotoDB.addr_id = Integer.valueOf(item.getAddrId());
+                            stackPhotoDB.approve = Integer.valueOf(item.getApprove());
+                            stackPhotoDB.dvi = Integer.valueOf(item.getDvi());
+                            stackPhotoDB.setVpi(0);
+                            stackPhotoDB.setCreate_time(Long.parseLong(item.getDt()) * 1000);
+                            stackPhotoDB.setUpload_to_server(0);
+                            stackPhotoDB.setGet_on_server(0);
+                            stackPhotoDB.setPhoto_num(path);
+                            stackPhotoDB.setPhoto_hash(item.getHash());
+                            stackPhotoDB.setPhoto_type(Integer.valueOf(item.getPhotoTp()));
+                            stackPhotoDB.setComment(imageType);
+                            stackPhotoDB.setUpload_time(0);
+                            stackPhotoDB.setUpload_status(0);
+                            stackPhotoDB.setStatus(false);
 
                             RealmManager.stackPhotoSavePhoto(stackPhotoDB);
                         }

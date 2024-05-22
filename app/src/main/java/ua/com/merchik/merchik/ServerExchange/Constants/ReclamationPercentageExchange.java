@@ -48,11 +48,7 @@ public class ReclamationPercentageExchange {
      * @param data
      */
     private void saveReclamationPercentage(ReclamationPercentageResponse data) {
-
-//        Log.e("ReclamationPercentage", "data: " + new Gson().toJson(data));
-//        Log.e("ReclamationPercentage", "dataS: " + data.list.size());
-
-        if (data != null && data.state && data.list != null && data.list.size() > 0) {
+        if (data != null && data.state != null && data.state && data.list != null && data.list.size() > 0) {
             SQL_DB.reclamationPercentageDao().insertAll(data.list)
                     .subscribeOn(Schedulers.io())
                     .subscribe(new DisposableCompletableObserver() {

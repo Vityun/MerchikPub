@@ -39,6 +39,7 @@ import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Filter.MyFilter;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.R;
+import ua.com.merchik.merchik.ServerExchange.ExchangeInterface;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.Database.Room.SamplePhotoSDB;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
@@ -84,7 +85,7 @@ public class PhotoLogAdapter extends RecyclerView.Adapter<PhotoLogAdapter.ViewHo
         this.mOnPhotoClickListener = mOnPhotoClickListener;
         // Pika
         // добавил, чтоб получать данные по фото образцов (а конкретно - нужен комментарий именно к образцу фото, а не к самому фото)
-        this.samplePhotoSDBList = SQL_DB.samplePhotoDao().getPhotoLogActiveAndTp(1,photoTp , grpId);
+        this.samplePhotoSDBList = SQL_DB.samplePhotoDao().getPhotoLogActiveAndTp(1, photoTp, grpId);
     }
 
     public void updateData(RealmResults<StackPhotoDB> photoLogData) {
@@ -158,10 +159,13 @@ public class PhotoLogAdapter extends RecyclerView.Adapter<PhotoLogAdapter.ViewHo
                 }
 
                 if (photoLogDat.getUpload_to_server() > 0) {
-                    ((GradientDrawable) imageView.getBackground()).setStroke(5, Color.parseColor("#FFBB1F"));
-                    if (photoLogDat.getGet_on_server() > 0) {
-                        ((GradientDrawable) imageView.getBackground()).setStroke(5, Color.GREEN);
-                    }
+                    ((GradientDrawable) imageView.getBackground()).setStroke(5, Color.parseColor("#FFBB1F"));   //желтый
+                } else {
+                    ((GradientDrawable) imageView.getBackground()).setStroke(5, Color.LTGRAY);
+                }
+
+                if (photoLogDat.getGet_on_server() > 0) {
+                    ((GradientDrawable) imageView.getBackground()).setStroke(5, Color.GREEN);
                 } else {
                     ((GradientDrawable) imageView.getBackground()).setStroke(5, Color.LTGRAY);
                 }
@@ -306,7 +310,7 @@ public class PhotoLogAdapter extends RecyclerView.Adapter<PhotoLogAdapter.ViewHo
 
 
                 if (photoLogMode.equals(PhotoLogMode.SAMPLE_PHOTO) && openDefaultStarDialog) {
-                    if (getBindingAdapterPosition() == 0){
+                    if (getBindingAdapterPosition() == 0) {
 //                        Toast.makeText(mContext, "2222222222222222222222222222", Toast.LENGTH_SHORT).show();
                         openDialog(photoLogMode, photoLogDat, mOnPhotoClickListener);
                         openDefaultStarDialog = false;
@@ -321,7 +325,17 @@ public class PhotoLogAdapter extends RecyclerView.Adapter<PhotoLogAdapter.ViewHo
 
                 //04.01.2021 Долгое нажатие - выгрузка фото
                 imageView.setOnLongClickListener(v -> {
-                    new PhotoLog().sendPhotoOnServer(mContext, photoLogDat);
+                    new PhotoLog().sendPhotoOnServer(mContext, photoLogDat, new ExchangeInterface.UploadPhotoReports() {
+                        @Override
+                        public void onSuccess(StackPhotoDB photoDB, String s) {
+
+                        }
+
+                        @Override
+                        public void onFailure(StackPhotoDB photoDB, String error) {
+
+                        }
+                    });
                     Toast.makeText(mContext, "Начинаю выгрузку фото.", Toast.LENGTH_SHORT).show();
                     return true;
                 });
@@ -390,7 +404,7 @@ public class PhotoLogAdapter extends RecyclerView.Adapter<PhotoLogAdapter.ViewHo
                 if (samplePhotoSDBList != null) {
                     for (SamplePhotoSDB a : samplePhotoSDBList) {
                         StackPhotoDB photo = StackPhotoRealm.stackPhotoDBGetPhotoBySiteId(String.valueOf(a.photoId));
-                        if (openDefaultStarDialog==true || photoLogDat.photoServerId.equalsIgnoreCase(String.valueOf(a.photoId))) {
+                        if (openDefaultStarDialog == true || photoLogDat.photoServerId.equalsIgnoreCase(String.valueOf(a.photoId))) {
                             DialogFullPhotoR dialog = new DialogFullPhotoR(mContext);
                             dialog.setPhoto(photo);
                             dialog.commentOn = true;
@@ -404,8 +418,7 @@ public class PhotoLogAdapter extends RecyclerView.Adapter<PhotoLogAdapter.ViewHo
                         }
                     }
                 }
-            }
-            else {
+            } else {
 
                 try {
                     Log.e("setPhotos", "2position: " + getAdapterPosition());

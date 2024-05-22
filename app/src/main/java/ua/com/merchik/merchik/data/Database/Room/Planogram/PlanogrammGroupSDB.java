@@ -1,5 +1,6 @@
 package ua.com.merchik.merchik.data.Database.Room.Planogram;
 
+
 import androidx.annotation.NonNull;
 import androidx.room.ColumnInfo;
 import androidx.room.Entity;
@@ -8,9 +9,8 @@ import androidx.room.PrimaryKey;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
-@Entity(tableName = "planogram_img_list")
-public class PlanogramImgListSDB {
-
+@Entity(tableName = "planogramm_group")
+public class PlanogrammGroupSDB {
     @SerializedName("ID")
     @Expose
     @PrimaryKey
@@ -23,20 +23,15 @@ public class PlanogramImgListSDB {
     @ColumnInfo(name = "planogram_id")
     public Integer planogramId;
 
-    @SerializedName("img_id")
+    @SerializedName("group_id")
     @Expose
-    @ColumnInfo(name = "img_id")
-    public String imgId;
+    @ColumnInfo(name = "group_id")
+    public Integer groupId;
 
-    @SerializedName("photo_id")
+    @SerializedName("group_txt")
     @Expose
-    @ColumnInfo(name = "photo_id")
-    public Integer photoId;
-
-    @SerializedName("photo_big")
-    @Expose
-    @ColumnInfo(name = "photo_big")
-    public String photoBig;
+    @ColumnInfo(name = "group_txt")
+    public String groupTxt;
 
     @SerializedName("author_txt")
     @Expose

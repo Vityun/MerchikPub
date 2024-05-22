@@ -26,7 +26,10 @@ import ua.com.merchik.merchik.data.Database.Room.OblastSDB;
 import ua.com.merchik.merchik.data.Database.Room.OborotVedSDB;
 import ua.com.merchik.merchik.data.Database.Room.OpinionSDB;
 import ua.com.merchik.merchik.data.Database.Room.OpinionThemeSDB;
-import ua.com.merchik.merchik.data.Database.Room.PlanogrammSDB;
+import ua.com.merchik.merchik.data.Database.Room.Planogram.PlanogrammAddressSDB;
+import ua.com.merchik.merchik.data.Database.Room.Planogram.PlanogrammGroupSDB;
+import ua.com.merchik.merchik.data.Database.Room.Planogram.PlanogrammImagesSDB;
+import ua.com.merchik.merchik.data.Database.Room.Planogram.PlanogrammSDB;
 import ua.com.merchik.merchik.data.Database.Room.PotentialClientSDB;
 import ua.com.merchik.merchik.data.Database.Room.ReclamationPercentageSDB;
 import ua.com.merchik.merchik.data.Database.Room.SamplePhotoSDB;
@@ -59,7 +62,10 @@ import ua.com.merchik.merchik.database.room.DaoInterfaces.OblastDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.OborotVedDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.OpinionDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.OpinionThemeDao;
+import ua.com.merchik.merchik.database.room.DaoInterfaces.PlanogrammAddressDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.PlanogrammDao;
+import ua.com.merchik.merchik.database.room.DaoInterfaces.PlanogrammGroupDao;
+import ua.com.merchik.merchik.database.room.DaoInterfaces.PlanogrammImagesDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.PotentialClientDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.ReclamationPercentageDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.SamplePhotoDao;
@@ -111,9 +117,12 @@ import ua.com.merchik.merchik.database.room.DaoInterfaces.VotesDao;
                 FragmentSDB.class,           // Таблица Фрагментов (полей на фото)
                 ViewListSDB.class,       // Знак видео просмотрено или нет
                 ShowcaseSDB.class,       // Витрины, не путать с полками и тп
-                PlanogrammSDB.class      // Планограми
+                PlanogrammSDB.class,      // Планограми
+                PlanogrammAddressSDB.class, // Планограми Адреса
+                PlanogrammGroupSDB.class,   // Планограми Группы
+                PlanogrammImagesSDB.class   // Планограми Идентификаторы
         },
-        version = 46
+        version = 50
 )
 
 
@@ -185,6 +194,12 @@ public abstract class AppDatabase extends RoomDatabase {
     public abstract ShowcaseDao showcaseDao();
 
     public abstract PlanogrammDao planogrammDao();
+
+    public abstract PlanogrammAddressDao planogrammAddressDao();
+
+    public abstract PlanogrammGroupDao planogrammGroupDao();
+
+    public abstract PlanogrammImagesDao planogrammImagesDao();
 
     public class MyAutoMigration {
     }

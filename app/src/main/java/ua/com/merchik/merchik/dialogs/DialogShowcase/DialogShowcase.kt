@@ -21,6 +21,7 @@ import androidx.recyclerview.widget.RecyclerView
 import ua.com.merchik.merchik.Globals
 import ua.com.merchik.merchik.R
 import ua.com.merchik.merchik.ViewHolders.Clicks.click
+import ua.com.merchik.merchik.data.Database.Room.AddressSDB
 import ua.com.merchik.merchik.data.Database.Room.ShowcaseSDB
 import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteHintsDB
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB
@@ -57,7 +58,6 @@ class DialogShowcase(private val context: Context?) : DialogData() {
     init {
         try {
             initializeDialog()
-            //            populateDialogData();
         } catch (e: Exception) {
             Globals.writeToMLOG("ERROR", "DialogShowcase", "Exception e: $e")
         }
@@ -238,9 +238,18 @@ class DialogShowcase(private val context: Context?) : DialogData() {
         merchikIco.setImageDrawable(context.resources.getDrawable(R.drawable.ic_caution))
     }
 
+    fun setCurrTitle(title: String){
+        this.title!!.text = title
+    }
+
     fun populateDialogData(click: click?) {
         this.click = click
         setRecyclerView()
+    }
+
+    fun populateDialogDataPlanogramm(click: click?) {
+        this.click = click
+        setRecyclerViewPlanogramm()
     }
 
     fun result(click: click?) {
@@ -255,6 +264,7 @@ class DialogShowcase(private val context: Context?) : DialogData() {
                 list.add(1)
                 list.add(2)
             }else if (photoType == 45){
+                list.add(3)
                 list.add(5)
                 list.add(8)
             }
@@ -316,6 +326,42 @@ class DialogShowcase(private val context: Context?) : DialogData() {
         }
     }
 
+    private fun setRecyclerViewPlanogramm() {
+        try {
+            var adress = RoomManager.SQL_DB.addressDao().getById(wpDataDB!!.addr_id);
+            var planogrammDataList = RoomManager.SQL_DB.planogrammDao().getByClientAddress(
+                wpDataDB!!.client_id,
+                wpDataDB!!.addr_id,
+                adress.ttId
+            )
+
+            Log.e("setRecyclerView", "planogrammDataList: $planogrammDataList")
+            try {
+                for (item in planogrammDataList) {
+                    val stackPhotoDBS =
+                        StackPhotoRealm.getPlanogramm(item.planogrammPhotoId, wpDataDB!!.code_dad2, photoType)
+                    if (stackPhotoDBS != null && stackPhotoDBS.size > 0) {
+                        item.planogrammPhoto = stackPhotoDBS.size // Меня тут просили ставить просто 1 или 0, но я слишком умный, да
+                    } else {
+                        item.planogrammPhoto = 0
+                    }
+                }
+
+            } catch (e: Exception) {
+                Globals.writeToMLOG("ERROR", "planogrammDataList", "Exception e: $e")
+            }
+            val planogrammDataListT = ArrayList(planogrammDataList)
+            val adapter = PlanogramAdapter(planogrammDataListT, click)
+            setFilter(adapter)
+            recyclerView!!.adapter = adapter
+            recyclerView!!.layoutManager =
+                LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false)
+        } catch (e: Exception) {
+            Log.e("setRecyclerView", "Exception e: $e")
+            e.printStackTrace()
+        }
+    }
+
     private fun newTestShowcase(id: Int): ShowcaseSDB {
         val res = ShowcaseSDB()
         res.id = id
@@ -341,7 +387,24 @@ class DialogShowcase(private val context: Context?) : DialogData() {
                 }
             }
         })
-        //
-//        adapter.notifyDataSetChanged();
+    }
+
+    private fun setFilter(adapter: PlanogramAdapter) {
+        searchView!!.addTextChangedListener(object : TextWatcher {
+            override fun afterTextChanged(s: Editable) {}
+            override fun beforeTextChanged(s: CharSequence, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence, start: Int, before: Int, count: Int) {
+                Log.e("PlanogramAdapter", "onTextChanged s: $s")
+                if (s.length != 0) {
+                    Log.e("FilterPlanogram", "onTextChanged HAVE")
+                    adapter.filter.filter(s)
+                    recyclerView!!.scheduleLayoutAnimation()
+                } else {
+                    Log.e("FilterPlanogram", "onTextChanged ZERO")
+                    adapter.filter.filter(s)
+                    recyclerView!!.scheduleLayoutAnimation()
+                }
+            }
+        })
     }
 }

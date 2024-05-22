@@ -351,55 +351,6 @@ public class DetailedReportOptionsFrag extends Fragment {
                     }
                 });
             }
-
-/*            if (optionsButtons != null && optionsButtons.size() > 0) {
-                recycleViewDRAdapter = new RecycleViewDRAdapter(mContext, wpDataDB, optionsButtons, allReportOption, list, () -> {
-                    try {
-
-                        if (PermissionUtils.checkReadExternalStoragePermission(getContext())) {
-                            MakePhotoFromGaleryWpDataDB = wpDataDB;
-                            mGetContent.launch("image/*");
-                        } else {
-                            PermissionUtils.requestReadExternalStoragePermission(getContext(), getActivity());
-                        }
-
-
-*//*                        registerForActivityResult(new ActivityResultContracts.GetContent(), new ActivityResultCallback<Uri>() {
-                            @Override
-                            public void onActivityResult(Uri result) {
-                                try {
-                                    File file = new File(getRealPathFromURI(result));
-                                    savePhoto(file, MakePhotoFromGaleryWpDataDB, MakePhotoFromGalery.tovarId, getApplicationContext());
-                                } catch (Exception e) {
-                                    Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST", "Exception e: " + e);
-                                }
-                            }
-                        });*//*
-
-//                        MakePhotoFromGaleryWpDataDB = wpDataDB;
-//                        Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-//                        intent.setType("image/*");
-//                        Globals.writeToMLOG("INFO", "DetailedReportOptionsFrag/Intent.ACTION_PICK", "intent: " + intent);
-//                        ((DetailedReportActivity) mContext).startActivityForResult(Intent.createChooser(intent, "Select Picture"), 500);
-                    } catch (Exception e) {
-                        Globals.writeToMLOG("ERROR", "DetailedReportOptionsFrag/Intent.ACTION_PICK", "Exception e: " + e);
-                    }
-                });
-                rvContacts.setAdapter(recycleViewDRAdapter);
-                rvContacts.setLayoutManager(new LinearLayoutManager(mContext, LinearLayoutManager.VERTICAL, false));
-            } else {
-                clickDownload(mContext);
-
-                // TODO Написать текст или в Обьект или в Ресурсы
-                String msg = "По данному посещению не обнаружено ни одной опции. Попробуйте перезайти в отчёт или нажать на кнопку 'Загрузить'. При этом у Вас должен быть включён интернет и обеспеченна связь с сервером.";
-                rvContacts.setVisibility(View.GONE);
-                download.setVisibility(View.VISIBLE);
-                information.setVisibility(View.VISIBLE);
-
-                information.setText(msg);
-                download.setOnClickListener(v1 -> clickDownload(v1.getContext()));
-            }*/
-
         } catch (Exception e) {
             Log.e("R_TRANSLATES", "convertedObjectERROR: " + e);
             e.printStackTrace();

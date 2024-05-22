@@ -404,4 +404,14 @@ public class StackPhotoRealm {
 
         return INSTANCE.copyFromRealm(res);
     }
+
+    public static List<StackPhotoDB> getPlanogramm(int planogramm, long codeDad2, Integer photoType) {
+        RealmResults<StackPhotoDB> res = INSTANCE.where(StackPhotoDB.class)
+                .equalTo("planogram_id", String.valueOf(planogramm))
+                .equalTo("code_dad2", codeDad2)
+                .equalTo("photo_type", photoType)
+                .findAll();
+
+        return INSTANCE.copyFromRealm(res);
+    }
 }

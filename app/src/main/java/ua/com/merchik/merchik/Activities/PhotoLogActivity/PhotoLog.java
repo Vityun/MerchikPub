@@ -5,7 +5,6 @@ import android.content.Context;
 import android.util.Log;
 import android.widget.Button;
 import android.widget.SearchView;
-import android.widget.Toast;
 
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -13,20 +12,19 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 
-import org.json.JSONObject;
-
 import java.io.File;
-import java.util.Arrays;
-import java.util.Iterator;
 
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
 import okhttp3.RequestBody;
+import retrofit2.Call;
+import retrofit2.Response;
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.R;
+import ua.com.merchik.merchik.ServerExchange.ExchangeInterface;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
-import ua.com.merchik.merchik.data.UploadPhotoData.Move;
+import ua.com.merchik.merchik.data.UploadPhotoData.ImagesPrepareUploadPhoto;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.retrofit.MyCookieJar;
@@ -86,8 +84,10 @@ public class PhotoLog {
      * 14.08.2020
      * <p>
      * upload photo to server
+     *
+     * 06.05.2024
      */
-    public void sendPhotoOnServer(Context context, StackPhotoDB photoDB) {
+    public void sendPhotoOnServer(Context context, StackPhotoDB photoDB, ExchangeInterface.UploadPhotoReports callback) {
         new MyCookieJar();
         Globals globals = new Globals();
 
@@ -95,7 +95,6 @@ public class PhotoLog {
 
         int photoId = photoDB.getId();
         String mod = "images_prepare";
-//        String act              = "upload_image";
         String act = "upload_photo";
 
         String client_id = "";
@@ -230,7 +229,75 @@ public class PhotoLog {
                 .SEND_PHOTO_2_BODY(mod2, act2, client_id2, addr_id2, date2, img_type_id2, photo_user_id2, client_tovar_group2, doc_num2, theme_id2, comment2, dvi2, codeDad2, gp2, tov2, img_src_id2, showcase_id2, planogram_id2, planogram_img_id2, photo);
 
         try {
+
             call.enqueue(new retrofit2.Callback<JsonObject>() {
+                @Override
+                public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
+                    Globals.writeToMLOG("INFO", "Long/PhotoReports/buildCall/CALL/onResponse/responseBody", "HERE IN");
+                    Globals.writeToMLOG("INFO", "Long/PhotoReports/buildCall/CALL/onResponse/responseBody", "HERE IN call: " + call);
+                    Globals.writeToMLOG("INFO", "Long/PhotoReports/buildCall/CALL/onResponse/responseBody", "HERE IN response: " + response);
+                    try {
+                        if (response.isSuccessful()) {
+                            if (response.body() != null) {
+                                Globals.writeToMLOG("INFO", "Long/PhotoReports/buildCall/CALL/onResponse/responseBody", "" + response.body());
+                                ImagesPrepareUploadPhoto info = new Gson().fromJson(new Gson().toJson(response.body()), ImagesPrepareUploadPhoto.class);
+                                Globals.writeToMLOG("INFO", "Long/PhotoReports/buildCall/CALL/onResponse/responseBody/info", "" + new Gson().toJson(info));
+                                if (info.state) {
+                                    ImagesPrepareUploadPhoto.DataList data = info.list.get(0);
+                                    if (data.state) {
+                                        callback.onSuccess(photoDB, "test");
+                                    } else {
+                                        if (data.errorType.equals("photo_already_exist")) {
+                                            Globals.writeToMLOG("INFO", "Long/PhotoReports/buildCall/CALL/onResponse/responseBody/info/photo_already_exist", "photo_already_exist");
+                                            callback.onSuccess(photoDB, "Фото уже было загружено");
+                                        } else {
+                                            callback.onFailure(photoDB, "Ошибка при обработке фото: " + data.error);
+                                        }
+                                    }
+                                } else {
+                                    try {
+                                        if (info.list != null && info.list.size() > 0) {
+                                            ImagesPrepareUploadPhoto.DataList data = info.list.get(0);
+                                            Globals.writeToMLOG("INFO", "Long/PhotoReports/buildCall/CALL/onResponse/responseBody/info/data", "" + new Gson().toJson(data));
+                                            if (data.state) {
+                                                callback.onSuccess(photoDB, "При выгрузке фото произошла ошибка1: " + data.error);
+                                            } else {
+                                                if (data.errorType.equals("photo_already_exist")) {
+                                                    Globals.writeToMLOG("INFO", "Long/PhotoReports/buildCall/CALL/onResponse/responseBody/info/photo_already_exist", "photo_already_exist");
+                                                    callback.onSuccess(photoDB, "Фото уже было загружено");
+                                                } else {
+                                                    callback.onFailure(photoDB, "Ошибка при обработке фото: " + data.error);
+                                                }
+                                            }
+                                        } else {
+                                            callback.onFailure(photoDB, "Список list - пустой!");
+                                        }
+                                    } catch (Exception e) {
+                                        callback.onFailure(photoDB, "Ошибка при обработке данных: " + e);
+                                    }
+                                }
+                            } else {
+                                callback.onFailure(photoDB, "Запрос прошел с ошибкой, ответ с сервера - пустой. Обратитесь к Вашему руководителю.");
+                            }
+                        } else {
+                            callback.onFailure(photoDB, "Запрос прошел с ошибкой, возможно проблема на сервере, повторите попытку позже. code: " + response.code());
+                        }
+                    } catch (Exception e) {
+                        Globals.writeToMLOG("INFO", "Long/PhotoReports/buildCall/CALL/onResponse/responseBody", "HEREException e: " + e);
+                        callback.onFailure(photoDB, "ВНИМАНИЕ! Передайте эту ошибку Вашему руководителю: " + e);
+                    }
+                }
+
+                @Override
+                public void onFailure(Call<JsonObject> call, Throwable t) {
+                    Log.e("M_UPLOAD_GALLERY", "HERE IN onFailure: " + t);
+                    Globals.writeToMLOG("FAILURE", "Long/PhotoReports/buildCall/CALL/onFailure", "t.toString(): " + t.toString());
+                    callback.onFailure(photoDB, t.toString());
+                }
+            });
+
+
+            /*call.enqueue(new retrofit2.Callback<JsonObject>() {
                 @Override
                 public void onResponse(retrofit2.Call<JsonObject> call, retrofit2.Response<JsonObject> response) {
 
@@ -244,9 +311,7 @@ public class PhotoLog {
                     if (response.isSuccessful() && response.body() != null) {
                         try {
                             if (jsonR != null) {
-//                                RealmManager.setRowToLog(Collections.singletonList(new LogDB(RealmManager.getLastIdLogDB()+1, System.currentTimeMillis()/1000, "(Журнал фото) Ответ от сервера: " + jsonR, 1088, null, null, null, null, null, Globals.session, null)));
                                 if (!jsonR.get("state").isJsonNull() && jsonR.get("state").getAsBoolean()) {
-
                                     if (!jsonR.get("move").isJsonNull()) {
                                         try {
                                             Log.e("TAG_REALM_LOG", "ФОТО ВЫГРУЖЕНО с ID: " + photoDB.getId());
@@ -334,7 +399,7 @@ public class PhotoLog {
 
                     Log.e("TAG_SEND_PHOTO", "FAILURE: " + t.getMessage());
                 }
-            });
+            });*/
         } catch (Exception e) {
 //            RealmManager.setRowToLog(Collections.singletonList(new LogDB(RealmManager.getLastIdLogDB()+1, System.currentTimeMillis()/1000, "(Журнал фото) Ошибка при выгрузке фото: " + e, 1088, null, null, null, null, null, Globals.session, null)));
         }

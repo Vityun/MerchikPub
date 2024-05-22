@@ -1,22 +1,17 @@
 package ua.com.merchik.merchik;
 
 
-import static ua.com.merchik.merchik.Options.Options.describedOptionsButt;
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
 import android.content.Context;
-import android.os.Build;
 import android.util.Log;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.IntStream;
 
 import io.realm.RealmResults;
 import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
@@ -33,25 +28,30 @@ public class WorkPlan {
      * ПОЛУЧИТЬ ОПЦИИ ОБЫЧНЫЕ
      */
     public LinearLayout getOptionLinearLayout(Context mContext, long otchetId) {
-//        RealmResults<OptionsDB> options = RealmManager.getOptionsNOButton(otchetId);
-//        RealmResults<OptionsDB> options = RealmManager.getOptionsButton(otchetId);
-        RealmResults<OptionsDB> options = RealmManager.getOptionsButtonRED(otchetId);
+//        RealmResults<OptionsDB> options = RealmManager.getOptionsButtonRED(otchetId);
+        List<OptionsDB> arraylist = RealmManager.getOptionsButtonRED2(otchetId);
 
         // Отображаю "Описанные" на стороне приложения опции
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            IntStream intStream = Arrays.stream(describedOptionsButt);
-            String[] answer = intStream.sorted().mapToObj(String::valueOf).toArray(String[]::new);
+//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+//            IntStream intStream = Arrays.stream(describedOptionsButt);
+//            String[] answer = intStream.sorted().mapToObj(String::valueOf).toArray(String[]::new);
+//
+//            options = options.where()
+//                    .in("optionId", answer)
+//                    .sort("so")
+//                    .findAll();
+//        }
 
-            options = options.where()
-                    .in("optionId", answer)
-                    .sort("so")
-                    .findAll();
-        }
+//        List<OptionsDB> arraylist = RealmManager.INSTANCE.copyFromRealm(options);
+        Log.e("arraylist", "" + arraylist); // Проверяем, что объекты скопированы правильно
 
-        List<OptionsDB> arraylist;
-        arraylist = RealmManager.INSTANCE.copyFromRealm(options);
+//        List<OptionsDB> test = new ArrayList<>();
+//        if (options != null && options.size() > 0){
+//            test = RealmManager.INSTANCE.copyFromRealm(options);
+//        }
+//        Log.e("test", "" + test);
 
-        Collections.sort(arraylist, (o1, o2) -> o1.getSo().compareTo(o2.getSo()));
+//        Collections.sort(arraylist, (o1, o2) -> o1.getSo().compareTo(o2.getSo()));
 
         LinearLayout ll = new LinearLayout(mContext);
         LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(
@@ -60,6 +60,8 @@ public class WorkPlan {
         ll.setOrientation(LinearLayout.HORIZONTAL);
         ll.setId((int) otchetId);
         ll.setScrollContainer(true);
+
+        if (arraylist == null) return ll;
 
         for (int i = 0; i < arraylist.size(); i++) {
             long linearId = Long.parseLong(arraylist.get(i).getID());

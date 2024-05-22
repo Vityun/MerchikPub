@@ -20,7 +20,6 @@ public class CustomDateTypeAdapter extends TypeAdapter<Date> {
                 return null; // Заменяем на NULL
             }
             // Иначе, если значение не "0000-00-00", преобразуем его в Date
-            // (это пример, как можно преобразовать строку в Date, вам может понадобиться другой способ)
             SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
             try {
                 return format.parse(dateString);

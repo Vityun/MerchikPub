@@ -139,6 +139,12 @@ public class UsersSDB {
     @ColumnInfo(name = "report_date_40")
     public Date reportDate40;
 
+
+    @SerializedName("report_date_200")
+    @Expose
+    @ColumnInfo(name = "report_date_200")
+    public Date reportDate200;
+
 //    @Override
 //    public String toString() {
 //        return fio;
