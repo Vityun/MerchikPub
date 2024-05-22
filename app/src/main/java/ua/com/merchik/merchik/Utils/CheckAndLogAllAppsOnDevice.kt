@@ -12,24 +12,32 @@ import ua.com.merchik.merchik.Globals
 import ua.com.merchik.merchik.data.RealmModels.LogDB
 import ua.com.merchik.merchik.database.realm.RealmManager
 
+enum class AppTypeForScan{
+    ONLY_SYSTEM, ONLY_INSTALLED
+}
+
 class CheckAndLogAllAppsOnDevice {
+
     companion object {
-        private fun getApps(withSystemApps: Boolean): Single<List<PackageInfo>> {
+
+        private fun getApps(appsType: AppTypeForScan): Single<List<PackageInfo>> {
             return Single.create {
                 val packageManager = MyApplication.getAppContext().packageManager
-                val appList = packageManager.getInstalledPackages(PackageManager.GET_META_DATA)
+                val appList = packageManager.getInstalledPackages(0)
 
                 it.onSuccess(
-                    if (withSystemApps) appList
-                    else appList.filter { it.applicationInfo.flags and ApplicationInfo.FLAG_SYSTEM == 0}
+                    when (appsType) {
+                        AppTypeForScan.ONLY_SYSTEM -> appList.filter { it.applicationInfo.flags and ApplicationInfo.FLAG_SYSTEM == 1}
+                        AppTypeForScan.ONLY_INSTALLED -> appList.filter { it.applicationInfo.flags and ApplicationInfo.FLAG_SYSTEM == 0}
+                    }
                 )
             }
         }
 
-        fun saveAppsToLog(withSystemApps: Boolean) {
+        fun saveAppsToLog(appsType: AppTypeForScan) {
             val disposable = CompositeDisposable()
             disposable.add(
-                getApps(withSystemApps)
+                getApps(appsType)
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribe { appList: List<PackageInfo> ->
                         for (appInfo in appList) {

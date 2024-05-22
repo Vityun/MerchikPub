@@ -4,6 +4,9 @@
     package="ua.com.merchik.merchik">
 <!--    package="ua.com.merchik.merchik"> ОРИГИНАЛ-->
 
+    <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES"
+        tools:ignore="QueryAllPackagesPermission" />
+
     <!--Разрешения для фотографий-->
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
