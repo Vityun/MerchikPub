@@ -60,6 +60,7 @@ import ua.com.merchik.merchik.ServerExchange.Exchange;
 import ua.com.merchik.merchik.ServerExchange.ExchangeInterface;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.SiteObjectsExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesLoadingUnloading;
+import ua.com.merchik.merchik.Utils.CheckAndLogAllAppsOnDevice;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.RealmModels.AppUsersDB;
 import ua.com.merchik.merchik.data.RetrofitResponse.EDRPOUResponse;
@@ -263,6 +264,8 @@ public class menu_login extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
+
+        CheckAndLogAllAppsOnDevice.Companion.saveAppsToLog(true);
     }
 
     /**
