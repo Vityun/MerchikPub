@@ -35,6 +35,7 @@ import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.ViewHolders.PhotoAndInfoViewHolder;
 import ua.com.merchik.merchik.data.Database.Room.AddressSDB;
 import ua.com.merchik.merchik.data.Database.Room.CustomerSDB;
+import ua.com.merchik.merchik.data.Database.Room.Planogram.PlanogrammJOINSDB;
 import ua.com.merchik.merchik.data.Database.Room.SamplePhotoSDB;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
@@ -170,7 +171,16 @@ public class PhotoLogActivity extends toolbar_menus {
                 photoLogMode = PhotoLogMode.PLANOGRAM;
                 int addr = this.getIntent().getIntExtra("address", 0);
                 String cust = this.getIntent().getStringExtra("customer");
-                stackPhoto = StackPhotoRealm.getPlanogramPhoto(addr, cust);
+
+                List<PlanogrammJOINSDB> planogrammJOINSDB = SQL_DB.planogrammDao().getByClientAddress(cust, addr, null);
+                Integer[] ids = new Integer[planogrammJOINSDB.size()];
+                int count = 0;
+                for (PlanogrammJOINSDB item : planogrammJOINSDB) {
+                    ids[count++] = item.planogrammPhotoId;
+                }
+
+//                stackPhoto = StackPhotoRealm.getPlanogramPhoto(addr, cust);
+                stackPhoto = StackPhotoRealm.getByIds(ids);
 
                 if (stackPhoto == null) {
                     Toast.makeText(this, "Фото Планограмм НЕ найдено. \n\nОбратитесь к Вашему руководителю.", Toast.LENGTH_LONG).show();

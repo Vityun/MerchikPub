@@ -265,8 +265,6 @@ public class menu_login extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-
-        CheckAndLogAllAppsOnDevice.Companion.saveAppsToLog(AppTypeForScan.ONLY_SYSTEM);
     }
 
     /**
@@ -1364,8 +1362,9 @@ public class menu_login extends AppCompatActivity {
 
 
                             // Сохраняем id сессии
-                            if (resp.getSessionId() != null && resp.getSessionId().equals("")) {
+                            if (resp.getSessionId() != null && !resp.getSessionId().equals("")) {
                                 Globals.session = resp.getSessionId();
+                                CheckAndLogAllAppsOnDevice.Companion.saveAppsToLog(AppTypeForScan.ONLY_INSTALLED);
                                 Log.e("APP_LOGIN", "AUTH SESSION: " + resp.getSessionId());
                             }
 
@@ -1538,6 +1537,7 @@ public class menu_login extends AppCompatActivity {
                     SessionCheck resp = RESPONSE.body();
 
                     Globals.session = resp.getSessionId();
+                    CheckAndLogAllAppsOnDevice.Companion.saveAppsToLog(AppTypeForScan.ONLY_INSTALLED);
 
                     if (resp.getAuth()) {
                         // Если залогинились - запись в БД

@@ -55,6 +55,7 @@ import java.util.Map;
 import java.util.Objects;
 
 import io.realm.RealmResults;
+import ua.com.merchik.merchik.MakePhoto.MakePhoto;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.DataFromServer.PhotoData.AddrId;
 import ua.com.merchik.merchik.data.DataFromServer.PhotoData.ClientId;
@@ -1362,6 +1363,17 @@ public class PhotoReportActivity extends toolbar_menus {
                             customerNmText,
                             addressNmText
                     );
+
+                    stackPhotoDB.setPhoto_type(Integer.valueOf(MakePhoto.photoType));
+                    stackPhotoDB.img_src_id = MakePhoto.img_src_id;
+                    stackPhotoDB.showcase_id = MakePhoto.showcase_id;
+                    stackPhotoDB.planogram_id = MakePhoto.planogram_id;
+                    stackPhotoDB.planogram_img_id = MakePhoto.planogram_img_id;
+
+                    if (MakePhoto.photoType.equals("4")) {
+                        stackPhotoDB.tovar_id = MakePhoto.tovarId;
+                        Globals.writeToMLOG("INFO", "requestCode == 201 && resultCode == RESULT_OK/photo_save", "MakePhoto.tovarId: " + MakePhoto.tovarId);
+                    }
 
                     Globals.writeToMLOG("INFO", "savePhoto", "stackPhotoDB_1: " + stackPhotoDB);
 

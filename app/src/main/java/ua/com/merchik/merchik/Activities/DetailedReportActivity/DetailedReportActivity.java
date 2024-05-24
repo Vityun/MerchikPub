@@ -865,8 +865,6 @@ public class DetailedReportActivity extends toolbar_menus {
 
                     Globals.writeToMLOG("INFO", "requestCode == 201 && resultCode == RESULT_OK/photo_save", "photoSave: " + jsonObject2);
 
-//                Globals.writeToMLOG("INFO", "requestCode == 201 && resultCode == RESULT_OK/photo_save", "photoSave: " + photo);
-
                     StackPhotoRealm.setAll(Collections.singletonList(photo));
                 } catch (Exception e) {
                     Globals.writeToMLOG("ERROR", "requestCode == 201 && resultCode == RESULT_OK", "Exception e: " + e);
