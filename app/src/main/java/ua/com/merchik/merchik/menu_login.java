@@ -266,7 +266,7 @@ public class menu_login extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
 
-        CheckAndLogAllAppsOnDevice.Companion.saveAppsToLog(AppTypeForScan.ONLY_INSTALLED);
+        CheckAndLogAllAppsOnDevice.Companion.saveAppsToLog(AppTypeForScan.ONLY_SYSTEM);
     }
 
     /**

@@ -34,6 +34,11 @@ class CheckAndLogAllAppsOnDevice {
             }
         }
 
+        private fun getLabelApp(appInfo: ApplicationInfo): CharSequence {
+            val packageManager = MyApplication.getAppContext().packageManager
+            return packageManager.getApplicationLabel(appInfo)
+        }
+
         fun saveAppsToLog(appsType: AppTypeForScan) {
             val disposable = CompositeDisposable()
             disposable.add(
@@ -41,12 +46,13 @@ class CheckAndLogAllAppsOnDevice {
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribe { appList: List<PackageInfo> ->
                         for (appInfo in appList) {
+                            val labelInfo = getLabelApp(appInfo.applicationInfo)
                             RealmManager.setRowToLog(
                                 listOf(
                                     LogDB(
                                         RealmManager.getLastIdLogDB() + 1,
                                         System.currentTimeMillis() / 1000,
-                                        "app: ${appInfo.packageName} | ${appInfo.versionName}",
+                                        "app: ${appInfo.packageName} | $labelInfo",
                                         1309,
                                         null,
                                         null,
