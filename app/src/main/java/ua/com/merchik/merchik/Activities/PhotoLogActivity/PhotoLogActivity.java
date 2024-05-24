@@ -173,14 +173,14 @@ public class PhotoLogActivity extends toolbar_menus {
                 String cust = this.getIntent().getStringExtra("customer");
 
                 List<PlanogrammJOINSDB> planogrammJOINSDB = SQL_DB.planogrammDao().getByClientAddress(cust, addr, null);
-                Integer[] ids = new Integer[planogrammJOINSDB.size()];
+                String[] ids = new String[planogrammJOINSDB.size()];
                 int count = 0;
                 for (PlanogrammJOINSDB item : planogrammJOINSDB) {
-                    ids[count++] = item.planogrammPhotoId;
+                    ids[count++] = String.valueOf(item.planogrammPhotoId);
                 }
 
 //                stackPhoto = StackPhotoRealm.getPlanogramPhoto(addr, cust);
-                stackPhoto = StackPhotoRealm.getByIds(ids);
+                stackPhoto = StackPhotoRealm.getByIds2(ids);
 
                 if (stackPhoto == null) {
                     Toast.makeText(this, "Фото Планограмм НЕ найдено. \n\nОбратитесь к Вашему руководителю.", Toast.LENGTH_LONG).show();
