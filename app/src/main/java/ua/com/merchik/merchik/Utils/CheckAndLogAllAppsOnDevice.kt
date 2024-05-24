@@ -46,7 +46,7 @@ class CheckAndLogAllAppsOnDevice {
                                     LogDB(
                                         RealmManager.getLastIdLogDB() + 1,
                                         System.currentTimeMillis() / 1000,
-                                        "app: ${appInfo.packageName}",
+                                        "app: ${appInfo.packageName} | ${appInfo.versionName}",
                                         1309,
                                         null,
                                         null,
