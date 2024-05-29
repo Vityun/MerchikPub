@@ -1224,6 +1224,7 @@ public class Globals {
                 String locationUniqueStringNETThis = "" + imHereNET.getLatitude() + imHereNET.getLongitude() + imHereNET.getTime();
                 if (!locationUniqueStringGSM.equals(locationUniqueStringNETThis)) {
                     int idNET = RealmManager.logMPGetLastId() + 1;
+                    Globals.writeToMLOG("INFO", "fixMP", "create new logMP idNET: " + idNET);
                     LogMPDB logNET = new LogMPDB();
                     logNET.id = idNET;
                     logNET.provider = 2;

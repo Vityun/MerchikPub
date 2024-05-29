@@ -94,7 +94,7 @@ public class OptionControlCheckTovarUp<T> extends OptionControl {
         // Получаем Фото Товара с Тележки
         List<StackPhotoDB> stackPhoto = StackPhotoRealm.getPhoto(
                 Clock.getDatePeriodLong(documentDate, -3),
-                Clock.getDatePeriodLong(documentDate, 1),
+                Clock.getDatePeriodLong(documentDate, 3),   // 29.05.24. поправил с +1 на +3, что б в промежуток за пару дней попадали фотки.
                 null,
                 null,
                 null,

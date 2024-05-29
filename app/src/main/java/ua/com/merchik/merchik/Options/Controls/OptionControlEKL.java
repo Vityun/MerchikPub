@@ -126,6 +126,11 @@ public class OptionControlEKL<T> extends OptionControl {
         long dateFrom = Clock.getDatePeriodLong(documentDt * 1000, -3) / 1000;
         long dateTo = Clock.getDatePeriodLong(documentDt * 1000, 5) / 1000;
 
+        if (System.currentTimeMillis()/1000 < 1719878399 && addressSDB.cityId == 41){
+            dateFrom = Clock.getDatePeriodLong(documentDt * 1000, -11) / 1000;
+            dateTo = Clock.getDatePeriodLong(documentDt * 1000, 5) / 1000;
+        }
+
         Log.e("OptionControlEKL", "HERE TEST OptionControlEKL 3");
 
         if (addressSDB.tpId == 434 && !optionDB.getOptionControlId().equals("132629") && documentDt < 1725148800) { // 1725148800 == 01.09.2024 / 434 = АТБ
@@ -352,6 +357,16 @@ public class OptionControlEKL<T> extends OptionControl {
             @Override
             public void onSuccess(String data) {
                 signal = false;
+                RealmManager.INSTANCE.executeTransaction(realm -> {
+                    if (optionDB != null) {
+                        if (signal) {
+                            optionDB.setBlockPns("1");
+                        } else {
+                            optionDB.setIsSignal("0");
+                        }
+                        realm.insertOrUpdate(optionDB);
+                    }
+                });
                 setIsBlockOption(signal);
                 unlockCodeResultListener.onUnlockCodeSuccess();
             }

@@ -1925,16 +1925,33 @@ public class Options {
         }
 
         try {
-            long visitStart = wpDataDB.getVisit_start_dt();
-            long visitEnd = wpDataDB.getVisit_end_dt() > 0 ? wpDataDB.getVisit_end_dt() : System.currentTimeMillis() / 1000;
+//            long visitStart = wpDataDB.getVisit_start_dt();
+//            long visitEnd = wpDataDB.getVisit_end_dt() > 0 ? wpDataDB.getVisit_end_dt() : System.currentTimeMillis() / 1000;
 //            List<LogMPDB> logs = LogMPRealm.getLogMPByDtAndDistance(visitStart*1000, visitEnd*1000, 500);
 //            List<LogMPDB> logs = LogMPRealm.getLogMPByDad2Distance(wpDataDB.getCode_dad2(), 500);
 //            List<LogMPDB> logs = LogMPRealm.getLogMPByDad2(wpDataDB.getCode_dad2());
 
+            int minutes30 = 1800; // - обычные мерчики
+            int minutes45 = 2700; // - СУППР Ласунка
+            int minutes60 = 3600; // - Харьков
+            int minutes180 = 10800; // - СУППР ПремьерСокс (13799)
+
+            int time = 0;
+            AddressSDB addressSDB = SQL_DB.addressDao().getById(wpDataDB.getAddr_id());
+            AppUsersDB appUsersDB = AppUserRealm.getAppUserById(wpDataDB.getUser_id());
+            if (appUsersDB.user_work_plan_status.equals("our")){
+                time = 1800;
+            }else if (appUsersDB.user_work_plan_status.equals("foreign")){
+                time = 2700;
+            }else if (addressSDB.cityId == 41){
+                time = 3600;
+            }else if (wpDataDB.getClient_id().equals("13799")){
+                time = 10800;
+            }
 
             long startTime = (wpDataDB.getVisit_start_dt() > 0)
-                    ? wpDataDB.getVisit_start_dt() - 1800
-                    : (System.currentTimeMillis() / 1000) - 1800;
+                    ? wpDataDB.getVisit_start_dt() - time
+                    : (System.currentTimeMillis() / 1000) - time;
 
             long endTime = wpDataDB.getVisit_end_dt() > 0 ? wpDataDB.getVisit_end_dt() : System.currentTimeMillis() / 1000;
 
@@ -1944,7 +1961,7 @@ public class Options {
 
             List<LogMPDB> logsRes = new ArrayList<>();
             float coordAddrX = 0f, coordAddrY = 0f;
-            AddressSDB addressSDB = SQL_DB.addressDao().getById(wpDataDB.getAddr_id());
+//            AddressSDB addressSDB = SQL_DB.addressDao().getById(wpDataDB.getAddr_id());
             if (addressSDB != null) {
                 coordAddrX = addressSDB.locationXd;
                 coordAddrY = addressSDB.locationYd;

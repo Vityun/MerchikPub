@@ -139,6 +139,19 @@ public class OptionControlAvailabilityDetailedReport<T> extends OptionControl {
                 .append(String.valueOf((int)SKUFact)).append("шт.,\n").append(Html.fromHtml("<b> ОФС: </b>"))
                 .append(SKUFact > SKUPlan ? "товаров больше, чем должно быть на " + String.format("%.2f", OFS) + "%" : "отсутствует " + String.format("%.2f", OFS) + "% товаров.");
 
+
+        // Блокировки
+        // Блокировка для Витмарка
+        if (clientId.equals("9382")) {    // Витмарк
+            if (OFS >= 90) {
+                optionDB.setBlockPns("1");
+                signal = true;
+                spannableStringBuilder.append("\n\nВы можете снять сигнал, если напишите комментарии о причинах отсутствия товара.");
+            } else {
+                optionDB.setBlockPns("0");
+            }
+        }
+
         // Формирование Сигналов для БЛОКИРОВКИ
         if (OFS == 100) {
             signal = true;
@@ -172,18 +185,6 @@ public class OptionControlAvailabilityDetailedReport<T> extends OptionControl {
                         "В случае, если на витрине (и на складе) реально нет части товара напишите об этом в комментарии (см. на кнопку \"Комментарий\")");
                 // massageToUser += " Вы можете снять сигнал, если Примечание к Товару заказчику о том, что товара мало (или он отсутствует).";
                 // глТекстЧата=глТекстЧата+" Вы можете снять сигнал, если отправите СМС заказчику о том, что товара мало (или он отсутствует).";
-            }
-        }
-
-        // Блокировки
-        // Блокировка для Витмарка
-        if (clientId.equals("9382")) {    // Витмарк
-            if (OFS >= 90) {
-                optionDB.setBlockPns("1");
-                signal = true;
-                spannableStringBuilder.append("\n\nВы можете снять сигнал, если напишите комментарии о причинах отсутствия товара.");
-            } else {
-                optionDB.setBlockPns("0");
             }
         }
 
