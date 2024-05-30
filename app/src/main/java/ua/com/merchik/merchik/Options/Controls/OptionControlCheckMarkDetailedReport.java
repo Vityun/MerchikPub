@@ -95,7 +95,7 @@ public class OptionControlCheckMarkDetailedReport<T> extends OptionControl {
         try {
 //            List<VoteSDB> votes = SQL_DB.votesDao().getAll(dateFrom, dateTo, 5, wpDataDB.getCode_dad2());   // ДатаС, ДатаПо, Оценка < 5, dad2
 
-            List<VoteSDB> votes = SQL_DB.votesDao().getAll(dateFrom, dateTo, maxRating, wpDataDB.getCode_dad2(), wpDataDB.getClient_id(), wpDataDB.getAddr_id());
+            List<VoteSDB> votes = SQL_DB.votesDao().getAll(dateFrom, dateTo, maxRating, wpDataDB.getCode_dad2(), wpDataDB.getClient_id(), wpDataDB.getAddr_id(), 1);
 
             List<VoteSDB> uniqueVotes = votes.stream()
                     .filter(vote -> vote.photoId == null)

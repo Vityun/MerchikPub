@@ -35,8 +35,8 @@ public interface VotesDao {
      * 14.06.23.
      * Для Опции Контроля 135595
      * */
-    @Query("SELECT * FROM votes WHERE :dtFrom < dt < :dtTo AND score <= :score AND code_dad2 = :codeDad2 AND kli = :client AND addr_id = :addr AND vote_class = 0")
-    List<VoteSDB> getAll(long dtFrom, long dtTo, int score, long codeDad2, String client, int addr);
+    @Query("SELECT * FROM votes WHERE :dtFrom < dt < :dtTo AND score <= :score AND code_dad2 = :codeDad2 AND kli = :client AND addr_id = :addr AND vote_class = :voteClass")
+    List<VoteSDB> getAll(long dtFrom, long dtTo, int score, long codeDad2, String client, int addr, int voteClass);
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     Completable insertAllCompletable(List<VoteSDB> data);
