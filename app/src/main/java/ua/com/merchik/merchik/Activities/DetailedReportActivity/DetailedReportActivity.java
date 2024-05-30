@@ -840,14 +840,15 @@ public class DetailedReportActivity extends toolbar_menus {
 
                     exifPhotoData(photoFile);
 
-                    String hash;
-                    hash = globals.getHashMD5FromFile2(photoFile, this);
-
-                    if (hash == null || hash.equals("")) {
-                        hash = globals.getHashMD5FromFile(photoFile, this);
+                    if (photo.getPhoto_hash() == null || photo.getPhoto_hash().equals("")){
+                        String hash;
+                        hash = globals.getHashMD5FromFile2(photoFile, this);
+                        if (hash == null || hash.equals("")) {
+                            hash = globals.getHashMD5FromFile(photoFile, this);
+                        }
+                        photo.setPhoto_hash(hash);
                     }
 
-                    photo.setPhoto_hash(hash);
                     photo.setPhoto_num(photoFile.getAbsolutePath());
                     photo.setPhoto_type(Integer.valueOf(MakePhoto.photoType));
 
