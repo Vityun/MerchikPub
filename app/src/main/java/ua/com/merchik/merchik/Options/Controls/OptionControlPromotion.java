@@ -150,9 +150,9 @@ public class OptionControlPromotion<T> extends OptionControl {
                     find = 1;
                 }
             }else {
-                err++;
-                errType1Cnt++;
-                errMsgType1.append("Товар з ідентифікатором: (").append(item.getTovarId()).append(") не знайдено").append("\n");
+//                err++;
+//                errType1Cnt++;
+//                errMsgType1.append("Товар з ідентифікатором: (").append(item.getTovarId()).append(") не знайдено").append("\n");
             }
 
         }

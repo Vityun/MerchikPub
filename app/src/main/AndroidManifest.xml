@@ -4,8 +4,10 @@
     package="ua.com.merchik.merchik">
 <!--    package="ua.com.merchik.merchik"> ОРИГИНАЛ-->
 
-<!--    <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES"-->
-<!--        tools:ignore="QueryAllPackagesPermission" />-->
+    <queries>
+        <package android:name="effie.app.com.effie" />
+        <package android:name="ua.com.lexmarketing.storecheckonline" />
+    </queries>
 
     <!--Разрешения для фотографий-->
     <uses-permission android:name="android.permission.CAMERA" />
@@ -66,14 +68,18 @@ android:theme="@style/Theme.AppCompat.Light.NoActionBar"
         android:supportsRtl="true"
         android:label="@string/app_name"
         android:theme="@style/AppTheme"
-        android:versionCode="2024053000"
-        android:versionName="2024053000"
+        android:versionCode="2024060200"
+        android:versionName="2024060200"
         tools:targetApi="m"
         >
 
 <!--        <meta-data-->
 <!--            android:name="com.google.android.gms.version"-->
 <!--            android:value="@integer/google_play_services_version" />-->
+
+        <meta-data
+            android:name="ua.com.merchik.merchik.COMPETITOR_PACKAGES"
+            android:resource="@array/competitor_packages" />
 
         <meta-data
             android:name="com.google.android.geo.API_KEY"

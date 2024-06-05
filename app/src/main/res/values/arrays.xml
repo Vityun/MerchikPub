@@ -5,4 +5,11 @@
         <item> - </item>
         <item>Наяв.</item>
     </string-array>
+
+
+    <string-array name="competitor_packages">
+        <item>effie.app.com.effie</item>
+        <item>ua.com.lexmarketing.storecheckonline</item>
+    </string-array>
+
 </resources>

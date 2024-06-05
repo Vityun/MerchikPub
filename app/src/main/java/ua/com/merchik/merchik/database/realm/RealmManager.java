@@ -66,7 +66,9 @@ public class RealmManager {
 
         RealmConfiguration config = new RealmConfiguration.Builder().name("myrealm.realm").deleteRealmIfMigrationNeeded()
 //                .schemaVersion(18)
-                .allowWritesOnUiThread(true).allowQueriesOnUiThread(true).migration(new MyMigration()).build();
+                .allowWritesOnUiThread(true)
+                .allowQueriesOnUiThread(true)
+                .migration(new MyMigration()).build();
         Realm.setDefaultConfiguration(config);
         INSTANCE = Realm.getInstance(Realm.getDefaultConfiguration());
 
