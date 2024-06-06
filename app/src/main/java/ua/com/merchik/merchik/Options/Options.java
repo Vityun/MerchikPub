@@ -29,6 +29,7 @@ import static ua.com.merchik.merchik.trecker.enabledGPS;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
+import android.os.Build;
 import android.text.Html;
 import android.text.SpannableString;
 import android.text.SpannableStringBuilder;
@@ -39,6 +40,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
+import androidx.annotation.RequiresApi;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
 import com.google.gson.Gson;
@@ -539,44 +541,143 @@ public class Options {
     /**
      * Запуск нового протокола проверки ОпцийКонтроля
      */
+    @RequiresApi(api = Build.VERSION_CODES.N)
     public <T> void optionControlNewAlgo(List<OptionsDB> optionsDBList, Context context, T dataDB, OptionsDB option, List<OptionsDB> optionList, OptionMassageType type, NNKMode mode, boolean check, Clicks.clickVoid click) {
         int optionId2 = Integer.parseInt(option.getOptionId());
-        if (optionsDBList != null && optionsDBList.size() > 0){
+        if (optionsDBList != null && optionsDBList.size() > 0) {
             for (OptionsDB item : optionsDBList) {
                 NNKMode nnkMode;
-                if (item.getBlockPns().equals("1")){
+                if (item.getBlockPns().equals("1")) {
                     nnkMode = NNKMode.BLOCK;
-                }else if (check){
+                } else if (check) {
                     nnkMode = NNKMode.CHECK;
-                }else {
+                } else {
                     nnkMode = NNKMode.MAKE;
                 }
                 int optionId = Integer.parseInt(item.getOptionId());
-                optControl(context, dataDB, option, optionId, option, type, nnkMode, new OptionControl.UnlockCodeResultListener() {
-                    @Override
-                    public void onUnlockCodeSuccess() {
-                        Toast.makeText(context, "Опція пройшла успішно і нікого не заблокувала.", Toast.LENGTH_LONG).show();
-                        optControl(context, dataDB, option, optionId2, option, type, nnkMode, new OptionControl.UnlockCodeResultListener() {
-                            @Override
-                            public void onUnlockCodeSuccess() {
-                                click.click();
-                            }
 
-                            @Override
-                            public void onUnlockCodeFailure() {
-                                click.click();
-                            }
-                        });
-                    }
 
-                    @Override
-                    public void onUnlockCodeFailure() {
-                        Toast.makeText(context, "Опція пройшла успішно і блокує подальше виконання.", Toast.LENGTH_LONG).show();
-                        click.click();
-                    }
-                });
+                // Проверка первой блокировки
+                if (!option.getOptionBlock1().equals("0")) {
+                    OptionsDB optionsDB = optionFromDetailedReport.stream().filter(optionListItem -> Objects.equals(optionListItem.getOptionId(), option.getOptionBlock1()))
+                            .findAny()
+                            .orElse(option);    // Если менеджер в Отчёт не добавил опцию Блокировки - Его проблемы. Искать траблы тут.
+                    optControl(context, dataDB, option, optionId2, optionsDB, type, mode, new OptionControl.UnlockCodeResultListener() {
+                        @Override
+                        public void onUnlockCodeSuccess() {
+                            // Опция БЛОК 1 НЕ блокирует.
+                            // Проверка второй блокировки
+                            if (!option.getOptionBlock2().equals("0")) {
+                                OptionsDB optionsDB = optionFromDetailedReport.stream().filter(optionListItem -> Objects.equals(optionListItem.getOptionId(), option.getOptionBlock2()))
+                                        .findAny()
+                                        .orElse(option);    // Если менеджер в Отчёт не добавил опцию Блокировки - Его проблемы. Искать траблы тут.
+                                optControl(context, dataDB, option, optionId2, optionsDB, type, mode, new OptionControl.UnlockCodeResultListener() {
+                                    @Override
+                                    public void onUnlockCodeSuccess() {
+                                        // Опция БЛОК 2 НЕ блокирует.
+                                        // Проверка Опции контроля текущей опции.
+                                        optControl(context, dataDB, option, optionId, option, type, nnkMode, new OptionControl.UnlockCodeResultListener() {
+                                            @Override
+                                            public void onUnlockCodeSuccess() {
+                                                // Это обычная проверка нашей опции Контроля. Проверку прошли.
+                                                // Обычное выполнение нажатия на кнопку.
+                                                optControl(context, dataDB, option, optionId2, option, type, nnkMode, new OptionControl.UnlockCodeResultListener() {
+                                                    @Override
+                                                    public void onUnlockCodeSuccess() {
+                                                        click.click();
+                                                    }
+
+                                                    @Override
+                                                    public void onUnlockCodeFailure() {
+                                                        click.click();
+                                                    }
+                                                });
+                                            }
+
+                                            @Override
+                                            public void onUnlockCodeFailure() {
+                                                // Это обычная проверка нашей опции Контроля. Тут типо проверку мы не прошли.
+                                                click.click();
+                                            }
+                                        });
+                                    }
+
+                                    @Override
+                                    public void onUnlockCodeFailure() {
+                                        // Опция БЛОК 2 блокирует.
+                                        click.click();
+                                    }
+                                });
+                            }else {
+                                // Если БЛОК 1 прошла, а БЛОК 2 - Нет.
+                                // Проверка Опции контроля текущей опции.
+                                optControl(context, dataDB, option, optionId, option, type, nnkMode, new OptionControl.UnlockCodeResultListener() {
+                                    @Override
+                                    public void onUnlockCodeSuccess() {
+                                        // Это обычная проверка нашей опции Контроля. Проверку прошли.
+                                        // Обычное выполнение нажатия на кнопку.
+                                        optControl(context, dataDB, option, optionId2, option, type, nnkMode, new OptionControl.UnlockCodeResultListener() {
+                                            @Override
+                                            public void onUnlockCodeSuccess() {
+                                                click.click();
+                                            }
+
+                                            @Override
+                                            public void onUnlockCodeFailure() {
+                                                click.click();
+                                            }
+                                        });
+                                    }
+
+                                    @Override
+                                    public void onUnlockCodeFailure() {
+                                        // Это обычная проверка нашей опции Контроля. Тут типо проверку мы не прошли.
+                                        click.click();
+                                    }
+                                });
+                            }
+                        }
+
+                        @Override
+                        public void onUnlockCodeFailure() {
+                            // Опция БЛОК 1 блокирует.
+                            click.click();
+                        }
+                    });
+                }else {
+                    // Опции БЛОК 1 - Нет
+                    // Проверка Опции контроля текущей опции.
+                    optControl(context, dataDB, option, optionId, option, type, nnkMode, new OptionControl.UnlockCodeResultListener() {
+                        @Override
+                        public void onUnlockCodeSuccess() {
+                            // Это обычная проверка нашей опции Контроля. Проверку прошли.
+                            // Обычное выполнение нажатия на кнопку.
+                            optControl(context, dataDB, option, optionId2, option, type, nnkMode, new OptionControl.UnlockCodeResultListener() {
+                                @Override
+                                public void onUnlockCodeSuccess() {
+                                    click.click();
+                                }
+
+                                @Override
+                                public void onUnlockCodeFailure() {
+                                    click.click();
+                                }
+                            });
+                        }
+
+                        @Override
+                        public void onUnlockCodeFailure() {
+                            // Это обычная проверка нашей опции Контроля. Тут типо проверку мы не прошли.
+                            click.click();
+                        }
+                    });
+                }
+
+
+
             }
-        }else {
+        } else {
+            // Обычное выполнение нажатия на кнопку.
             optControl(context, dataDB, option, optionId2, option, type, mode, new OptionControl.UnlockCodeResultListener() {
                 @Override
                 public void onUnlockCodeSuccess() {
@@ -621,7 +722,7 @@ public class Options {
             boolean existOption = true;
             boolean existOption2 = true;
 
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                 OptionsDB testExistOption2 = optionFromDetailedReport.stream().filter(optionListItem -> Objects.equals(optionListItem.getOptionId(), option.getOptionBlock2()))
                         .findAny()
                         .orElse(null);
@@ -651,12 +752,14 @@ public class Options {
                     option.getClientId().equals("13633") ||
                     option.getClientId().equals("8523") ||
                     option.getClientId().equals("91429")
-            ){
-                optionControlNewAlgo(getOptionsToControl(option), context, dataDB, option, optionList, type, mode, false, click);
-            }else {
+            ) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                    optionControlNewAlgo(getOptionsToControl(option), context, dataDB, option, optionList, type, mode, false, click);
+                }
+            } else {
                 // Проход по второй опции блокировки
                 if (!option.getOptionBlock2().equals("0")) {
-                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                         OptionsDB optionsDB = optionFromDetailedReport.stream().filter(optionListItem -> Objects.equals(optionListItem.getOptionId(), option.getOptionBlock2()))
                                 .findAny()
                                 .orElse(null);
@@ -668,7 +771,7 @@ public class Options {
                                     Log.e("NNK", "Опция БЛОК 2 прошла успешно, надо проверить БЛОК 1");
 //                             Проход по первой опции блокировки
                                     if (!option.getOptionBlock1().equals("0")) {
-                                        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+                                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                                             OptionsDB optionsDB = optionFromDetailedReport.stream().filter(optionListItem -> Objects.equals(optionListItem.getOptionId(), option.getOptionBlock1()))
                                                     .findAny()
                                                     .orElse(null);
@@ -743,7 +846,7 @@ public class Options {
                                 public void onUnlockCodeFailure() {
 //                             Проход по первой опции блокировки
                                     if (!option.getOptionBlock1().equals("0")) {
-                                        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+                                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                                             OptionsDB optionsDB = optionFromDetailedReport.stream().filter(optionListItem -> Objects.equals(optionListItem.getOptionId(), option.getOptionBlock1()))
                                                     .findAny()
                                                     .orElse(null);
@@ -771,7 +874,7 @@ public class Options {
                             Log.e("NNK", "res OK 2: " + res);
                         } else {
                             if (!option.getOptionBlock1().equals("0")) {
-                                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                                     OptionsDB optionsDBELSE = optionFromDetailedReport.stream().filter(optionListItem -> Objects.equals(optionListItem.getOptionId(), option.getOptionBlock1()))
                                             .findAny()
                                             .orElse(null);
@@ -828,7 +931,7 @@ public class Options {
                 } else if (!option.getOptionBlock1().equals("0")) {
                     //Проход по первой опции блокировки если второй нет
                     if (!option.getOptionBlock1().equals("0")) {
-                        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                             OptionsDB optionsDB = optionFromDetailedReport.stream().filter(optionListItem -> Objects.equals(optionListItem.getOptionId(), option.getOptionBlock1()))
                                     .findAny()
                                     .orElse(null);
@@ -1797,11 +1900,11 @@ public class Options {
 
         Integer ttCategory = null;
         AddressSDB addressSDB = SQL_DB.addressDao().getById(wpDataDB.getAddr_id());
-        if (addressSDB != null){
+        if (addressSDB != null) {
             ttCategory = addressSDB.ttId;
         }
 
-        List<AdditionalRequirementsDB> data = AdditionalRequirementsRealm.getData3(wpDataDB, HIDE_FOR_USER, ttCategory, null,0);
+        List<AdditionalRequirementsDB> data = AdditionalRequirementsRealm.getData3(wpDataDB, HIDE_FOR_USER, ttCategory, null, 0);
         Log.e("AdditionalRequirements", "data2.size(): " + data.size());
 
 
@@ -1939,13 +2042,13 @@ public class Options {
             int time = 0;
             AddressSDB addressSDB = SQL_DB.addressDao().getById(wpDataDB.getAddr_id());
             AppUsersDB appUsersDB = AppUserRealm.getAppUserById(wpDataDB.getUser_id());
-            if (appUsersDB.user_work_plan_status.equals("our")){
+            if (appUsersDB.user_work_plan_status.equals("our")) {
                 time = 1800;
-            }else if (appUsersDB.user_work_plan_status.equals("foreign")){
+            } else if (appUsersDB.user_work_plan_status.equals("foreign")) {
                 time = 2700;
-            }else if (addressSDB.cityId == 41){
+            } else if (addressSDB.cityId == 41) {
                 time = 3600;
-            }else if (wpDataDB.getClient_id().equals("13799")){
+            } else if (wpDataDB.getClient_id().equals("13799")) {
                 time = 10800;
             }
 
