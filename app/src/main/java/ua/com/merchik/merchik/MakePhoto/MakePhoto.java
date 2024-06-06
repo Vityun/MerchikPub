@@ -650,6 +650,7 @@ public class MakePhoto {
         });
     }
 
+/*
     private <T> void photoDialogs(Activity activity, WPDataObj wpDataObj, T data, OptionsDB optionsDB) {
         if (enabledGPS) {
             if (wpDataObj != null) {
@@ -777,6 +778,7 @@ public class MakePhoto {
             dialogData1.show();
         }
     }
+*/
 
     public void showDialogPass(Context context, WPDataObj wpDataObj, OptionsDB option, Clicks.clickVoid click) {
 
@@ -910,8 +912,8 @@ public class MakePhoto {
                     MakePhoto.planogram_id = String.valueOf(planogramm.id);
                     MakePhoto.planogram_img_id = String.valueOf(planogramm.planogrammPhotoId);
 
-                    choiceCustomerGroupAndPhoto2(activity, wp, dataT, optionsDB, () -> {
-                    });
+//                    choiceCustomerGroupAndPhoto2(activity, wp, dataT, optionsDB, () -> {
+//                    });
 
                     clickVoid.click();
 
