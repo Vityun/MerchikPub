@@ -10,6 +10,7 @@
         <package android:name="com.dodotap.reportal" />
         <package android:name="com.mobileua.spot2r" />
         <package android:name="ua.com.lexmarketing.storecheckonline" />
+        <package android:name="com.swe.ssbs.sweloader" />
     </queries>
 
     <!--Разрешения для фотографий-->
@@ -71,8 +72,8 @@ android:theme="@style/Theme.AppCompat.Light.NoActionBar"
         android:supportsRtl="true"
         android:label="@string/app_name"
         android:theme="@style/AppTheme"
-        android:versionCode="2024060200"
-        android:versionName="2024060200"
+        android:versionCode="2024060700"
+        android:versionName="2024060700"
         tools:targetApi="m"
         >
 
@@ -80,9 +81,9 @@ android:theme="@style/Theme.AppCompat.Light.NoActionBar"
 <!--            android:name="com.google.android.gms.version"-->
 <!--            android:value="@integer/google_play_services_version" />-->
 
-<!--        <meta-data-->
-<!--            android:name="ua.com.merchik.merchik.COMPETITOR_PACKAGES"-->
-<!--            android:resource="@array/competitor_packages" />-->
+        <meta-data
+            android:name="ua.com.merchik.merchik.COMPETITOR_PACKAGES"
+            android:resource="@array/competitor_packages" />
 
         <meta-data
             android:name="com.google.android.geo.API_KEY"

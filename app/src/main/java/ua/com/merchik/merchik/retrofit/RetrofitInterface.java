@@ -296,6 +296,7 @@ public interface RetrofitInterface {
 
     @GET
     Single<ResponseBody> DOWNLOAD_PHOTO_BY_URL_TEST(@Url String url);
+
     @GET
     Single<JsonObject> DOWNLOAD_PHOTO_BY_URL_TEST_JSON(@Url String url);
 
@@ -468,8 +469,8 @@ public interface RetrofitInterface {
     Call<JsonObject> UPLOAD_LOG_MP(
             @Field("mod") String mod,
             @Field("act") String act,
-//            @Field("gp[]") ArrayList<String> logMp);
-            @FieldMap() HashMap<String, String> gp);
+            @FieldMap() HashMap<String, String> gp/*,
+            @Field("debug_param_1") String test_something*/);
 
 
     @POST("mobile_app.php?")
@@ -623,6 +624,7 @@ public interface RetrofitInterface {
     Call<AchievementsUploadResponse> AchievementsUploadResponseUPLOAD(
             @Header("ContentType") String content,
             @Body JsonObject json);
+
     @POST("mobile_app.php?")
     Call<TovarTableResponse> GET_TOVAR_TABLE(
             @Header("ContentType") String content,

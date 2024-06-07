@@ -29,7 +29,7 @@ public class CheckAndLogCompetitorAppsOnDevice {
             ApplicationInfo appInfo = context.getPackageManager().getApplicationInfo(context.getPackageName(), PackageManager.GET_META_DATA);
             Bundle metaData = appInfo.metaData;
             if (metaData != null) {
-                int resId = metaData.getInt("com.example.yourapp.COMPETITOR_PACKAGES");
+                int resId = metaData.getInt("ua.com.merchik.merchik.COMPETITOR_PACKAGES");
                 competitorPackages = Arrays.asList(context.getResources().getStringArray(resId));
             }
         } catch (PackageManager.NameNotFoundException e) {

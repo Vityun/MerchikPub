@@ -60,6 +60,7 @@ import ua.com.merchik.merchik.ServerExchange.Exchange;
 import ua.com.merchik.merchik.ServerExchange.ExchangeInterface;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.SiteObjectsExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesLoadingUnloading;
+import ua.com.merchik.merchik.Utils.CheckAndLogCompetitorAppsOnDevice;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.RealmModels.AppUsersDB;
 import ua.com.merchik.merchik.data.RetrofitResponse.EDRPOUResponse;
@@ -1363,7 +1364,7 @@ public class menu_login extends AppCompatActivity {
                             if (resp.getSessionId() != null && !resp.getSessionId().equals("")) {
                                 Globals.session = resp.getSessionId();
 //                                CheckAndLogAllAppsOnDevice.Companion.saveAppsToLog(AppTypeForScan.ONLY_INSTALLED);
-//                                new CheckAndLogCompetitorAppsOnDevice(getApplicationContext()).saveAppsToLog();
+                                new CheckAndLogCompetitorAppsOnDevice(getApplicationContext()).saveAppsToLog();
                                 Log.e("APP_LOGIN", "AUTH SESSION: " + resp.getSessionId());
                             }
 
@@ -1537,7 +1538,7 @@ public class menu_login extends AppCompatActivity {
 
                     Globals.session = resp.getSessionId();
 //                    CheckAndLogAllAppsOnDevice.Companion.saveAppsToLog(AppTypeForScan.ONLY_INSTALLED);
-//                    new CheckAndLogCompetitorAppsOnDevice(getApplicationContext()).saveAppsToLog();
+                    new CheckAndLogCompetitorAppsOnDevice(getApplicationContext()).saveAppsToLog();
 
                     if (resp.getAuth()) {
                         // Если залогинились - запись в БД

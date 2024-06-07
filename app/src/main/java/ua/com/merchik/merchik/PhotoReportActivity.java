@@ -1294,19 +1294,19 @@ public class PhotoReportActivity extends toolbar_menus {
                 String hash = "";
                 String path = file.getAbsolutePath();
 
-                try {
-                    hash = globals.getHashMD5FromFilePath(path, context);
-                } catch (Exception e) {
-                    globals.alertDialogMsg(context, "Ошибка в расчёте hash(тип 1) фото: " + e);
-                }
+//                try {
+//                    hash = globals.getHashMD5FromFilePath(path, context);
+//                } catch (Exception e) {
+//                    globals.alertDialogMsg(context, "Ошибка в расчёте hash(тип 1) фото: " + e);
+//                }
 
-                if (hash == null || hash.equals("")) {
-                    try {
-                        hash = globals.getHashMD5FromFile(file, context);
-                    } catch (Exception e) {
-                        globals.alertDialogMsg(context, "Ошибка в расчёте hash(тип 2) фото: " + e);
-                    }
-                }
+//                if (hash == null || hash.equals("")) {
+//                    try {
+//                        hash = globals.getHashMD5FromFile(file, context);
+//                    } catch (Exception e) {
+//                        globals.alertDialogMsg(context, "Ошибка в расчёте hash(тип 2) фото: " + e);
+//                    }
+//                }
 
                 try {
                     int id = RealmManager.stackPhotoGetLastId();

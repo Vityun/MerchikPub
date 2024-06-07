@@ -1350,9 +1350,9 @@ public class RealmManager {
         return INSTANCE.where(LogMPDB.class).equalTo("upload", 0).equalTo("serverId", 0).findAll();
     }
 
-    public static RealmResults<LogMPDB> getNOTUploadLogMPDBTEST(int a, int b) {
+    public static RealmResults<LogMPDB> getNOTUploadLogMPDBTEST() {
 
-        Integer[] ids = {31, 32};
+        Integer[] ids = {432, 431, 430, 429, 428, 427, 426, 425, 424};
 
         return INSTANCE.where(LogMPDB.class).in("id", ids).findAll();
     }
