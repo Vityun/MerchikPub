@@ -318,7 +318,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                         case 135159:
                             int achievementSum = 0;
                             List<AchievementsSDB> achievementsSDBList = SQL_DB.achievementsDao().getByDad2(dad2);
-                            if (achievementsSDBList != null){
+                            if (achievementsSDBList != null) {
                                 achievementSum = achievementsSDBList.size();
                             }
 
@@ -532,7 +532,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                             if (addressSDB != null) {
                                 ttCategory = addressSDB.ttId;
                             }
-                            textInteger.setText("" + AdditionalRequirementsRealm.getData3(dataDB, HIDE_FOR_USER, ttCategory, null,0).size());
+                            textInteger.setText("" + AdditionalRequirementsRealm.getData3(dataDB, HIDE_FOR_USER, ttCategory, null, 0).size());
                             break;
 
                         case 138340:    // Доп Требования
@@ -766,7 +766,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                 startDt = tar.dt_start_fact;
                 endDt = tar.dt_end_fact;
             }
-        }catch (Exception e){
+        } catch (Exception e) {
             Globals.writeToMLOG("INFO", "RecycleViewDRAdapter/RecycleViewDRAdapter", "Exception e: " + e);
             Globals.writeToMLOG("INFO", "RecycleViewDRAdapter/RecycleViewDRAdapter", "Exception exception: " + Arrays.toString(e.getStackTrace()));
         }
@@ -887,6 +887,11 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                 showPhotoLink = true;
                 break;
 
+            case "151139":  // - 5  - Фото планограммы
+                photoType = 5;
+                showPhotoLink = true;
+                break;
+
             case "132969":  // - 10 - Фото тележка с товаром
                 photoType = 10;
                 showPhotoLink = true;
@@ -960,9 +965,9 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
 
                         OptionControlAvailabilityControlPhotoRemainingGoods<?> optionControlAvailabilityControlPhotoRemainingGoods =
                                 new OptionControlAvailabilityControlPhotoRemainingGoods<>(context, (WpDataDB) dataDB, option, newOptionType, Options.NNKMode.CHECK, null);
-                        if (optionControlAvailabilityControlPhotoRemainingGoods.signal && option.getOptionControlId().equals("159707")){
+                        if (optionControlAvailabilityControlPhotoRemainingGoods.signal && option.getOptionControlId().equals("159707")) {
                             optionControlAvailabilityControlPhotoRemainingGoods.showOptionMassage("");
-                        }else {
+                        } else {
                             click.click(4);
                         }
                     }));
@@ -971,7 +976,9 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                     break;
 
                 case "151139":
-                    click.click(5);
+                    ss.append(createLinkedStringGal(mContext, "Завантажити фото з галереї", photoType, () -> {
+                        click.click(5);
+                    }));
                     ss.append("\n\n");
                     break;
             }
@@ -1033,18 +1040,18 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                             Globals.writeToMLOG("INFO", "Не могу найти образцы фото SOLO ", "photo: " + new Gson().toJson(photo));
                             DialogFullPhotoR dialog = new DialogFullPhotoR(context);
                             dialog.setPhoto(photo);
-                            dialog.commentOn=true;
+                            dialog.commentOn = true;
                             // Pika
                             // сделал универсальнее - если в поле "about" есть текст к образцу фото - то вывожу его,
                             // а если нет, то пробую взять из комментов для самих фото по этому фото
-                            String commentPhoto=samplePhotoSDBList.get(0).about;
+                            String commentPhoto = samplePhotoSDBList.get(0).about;
                             if (commentPhoto != null && commentPhoto != "") {
                                 dialog.setComment(commentPhoto);
                             } else dialog.setComment(photo.getComment());
                             dialog.scaleType(ImageView.ScaleType.FIT_CENTER);
                             dialog.setClose(dialog::dismiss);
                             dialog.show();
-                        }catch (Exception e){
+                        } catch (Exception e) {
                             Globals.writeToMLOG("ERROR", "Не могу найти образцы фото SOLO ", "Exception e: " + e);
                         }
 
@@ -1052,14 +1059,14 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                         // тут Toast работает но пользователю нгепонятны тексты ошибок Джавы, и Петров сказал, сюда нужно внятное
                         // пользователю сообщение (универсвльное) из глоб модуля, типа "не получается показать фото попробуйте
                         // выполнить синхронизацию и пробуйте снова..."
-                        Toast.makeText(context, "Не могу найти образцы фото. "+context.getText(R.string.msg_try_sync), Toast.LENGTH_SHORT).show();
+                        Toast.makeText(context, "Не могу найти образцы фото. " + context.getText(R.string.msg_try_sync), Toast.LENGTH_SHORT).show();
                         Globals.writeToMLOG("ERROR", "Не могу найти образцы фото", "");
                     }
                 } catch (Exception e) {
                     // тут Toast работает но пользователю нгепонятны тексты ошибок Джавы, и Петров сказал, сюда нужно внятное
                     // пользователю сообщение (универсвльное) из глоб модуля, типа "не получается показать фото попробуйте
                     // выполнить синхронизацию и пробуйте снова..."
-                    Toast.makeText(context, "Не могу отобразить образец фото. "+context.getText(R.string.msg_try_sync), Toast.LENGTH_SHORT).show();
+                    Toast.makeText(context, "Не могу отобразить образец фото. " + context.getText(R.string.msg_try_sync), Toast.LENGTH_SHORT).show();
                     Globals.writeToMLOG("ERROR", "Не могу отобразить образец фото по причине", "Exception e: " + e);
                 }
             }
@@ -1136,7 +1143,8 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                         min = String.valueOf(count);
                     }
                 }
-            } catch (Exception e) {}
+            } catch (Exception e) {
+            }
         }
 
         int maxPhotos = Integer.parseInt(min);
