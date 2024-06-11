@@ -138,6 +138,9 @@ public class OptionControlPhotoPromotion<T> extends OptionControl {
             // ЕСЛИ Аккии нет (2) - пропускаем
             if (akciya == null || akciya.equals("")) continue;
 
+            String face = item.face;
+            if (face == null || face.equals("") || face.equals("0")) continue;
+
             if (Arrays.asList(tovIds).contains(item.getTovarId())) {
                 if (stackPhotoDBS != null && stackPhotoDBS.size() > 0) {
                     StackPhotoDB currentTovPhoto = stackPhotoDBS.stream().filter(listItem -> listItem.tovar_id.equals(item.getTovarId())).findFirst().orElse(null);
