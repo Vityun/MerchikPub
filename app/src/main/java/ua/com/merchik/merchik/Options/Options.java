@@ -541,8 +541,10 @@ public class Options {
     /**
      * Запуск нового протокола проверки ОпцийКонтроля
      */
+    int count = 0;
     @RequiresApi(api = Build.VERSION_CODES.N)
     public <T> void optionControlNewAlgo(List<OptionsDB> optionsDBList, Context context, T dataDB, OptionsDB option, List<OptionsDB> optionList, OptionMassageType type, NNKMode mode, boolean check, Clicks.clickVoid click) {
+        count = 0;
         int optionId2 = Integer.parseInt(option.getOptionId());
         if (optionsDBList != null && optionsDBList.size() > 0) {
             for (OptionsDB item : optionsDBList) {
@@ -556,103 +558,16 @@ public class Options {
                 }
                 int optionId = Integer.parseInt(item.getOptionId());
 
-
-                // Проверка первой блокировки
-                if (!option.getOptionBlock1().equals("0")) {
-                    OptionsDB optionsDB = optionFromDetailedReport.stream().filter(optionListItem -> Objects.equals(optionListItem.getOptionId(), option.getOptionBlock1()))
-                            .findAny()
-                            .orElse(option);    // Если менеджер в Отчёт не добавил опцию Блокировки - Его проблемы. Искать траблы тут.
-                    optControl(context, dataDB, option, optionId2, optionsDB, type, mode, new OptionControl.UnlockCodeResultListener() {
-                        @Override
-                        public void onUnlockCodeSuccess() {
-                            // Опция БЛОК 1 НЕ блокирует.
-                            // Проверка второй блокировки
-                            if (!option.getOptionBlock2().equals("0")) {
-                                OptionsDB optionsDB = optionFromDetailedReport.stream().filter(optionListItem -> Objects.equals(optionListItem.getOptionId(), option.getOptionBlock2()))
-                                        .findAny()
-                                        .orElse(option);    // Если менеджер в Отчёт не добавил опцию Блокировки - Его проблемы. Искать траблы тут.
-                                optControl(context, dataDB, option, optionId2, optionsDB, type, mode, new OptionControl.UnlockCodeResultListener() {
-                                    @Override
-                                    public void onUnlockCodeSuccess() {
-                                        // Опция БЛОК 2 НЕ блокирует.
-                                        // Проверка Опции контроля текущей опции.
-                                        optControl(context, dataDB, option, optionId, option, type, nnkMode, new OptionControl.UnlockCodeResultListener() {
-                                            @Override
-                                            public void onUnlockCodeSuccess() {
-                                                // Это обычная проверка нашей опции Контроля. Проверку прошли.
-                                                // Обычное выполнение нажатия на кнопку.
-                                                optControl(context, dataDB, option, optionId2, option, type, nnkMode, new OptionControl.UnlockCodeResultListener() {
-                                                    @Override
-                                                    public void onUnlockCodeSuccess() {
-                                                        click.click();
-                                                    }
-
-                                                    @Override
-                                                    public void onUnlockCodeFailure() {
-                                                        click.click();
-                                                    }
-                                                });
-                                            }
-
-                                            @Override
-                                            public void onUnlockCodeFailure() {
-                                                // Это обычная проверка нашей опции Контроля. Тут типо проверку мы не прошли.
-                                                click.click();
-                                            }
-                                        });
-                                    }
-
-                                    @Override
-                                    public void onUnlockCodeFailure() {
-                                        // Опция БЛОК 2 блокирует.
-                                        click.click();
-                                    }
-                                });
-                            }else {
-                                // Если БЛОК 1 прошла, а БЛОК 2 - Нет.
-                                // Проверка Опции контроля текущей опции.
-                                optControl(context, dataDB, option, optionId, option, type, nnkMode, new OptionControl.UnlockCodeResultListener() {
-                                    @Override
-                                    public void onUnlockCodeSuccess() {
-                                        // Это обычная проверка нашей опции Контроля. Проверку прошли.
-                                        // Обычное выполнение нажатия на кнопку.
-                                        optControl(context, dataDB, option, optionId2, option, type, nnkMode, new OptionControl.UnlockCodeResultListener() {
-                                            @Override
-                                            public void onUnlockCodeSuccess() {
-                                                click.click();
-                                            }
-
-                                            @Override
-                                            public void onUnlockCodeFailure() {
-                                                click.click();
-                                            }
-                                        });
-                                    }
-
-                                    @Override
-                                    public void onUnlockCodeFailure() {
-                                        // Это обычная проверка нашей опции Контроля. Тут типо проверку мы не прошли.
-                                        click.click();
-                                    }
-                                });
-                            }
-                        }
-
-                        @Override
-                        public void onUnlockCodeFailure() {
-                            // Опция БЛОК 1 блокирует.
+                optControl(context, dataDB, item, optionId, item, type, NNKMode.BLOCK, new OptionControl.UnlockCodeResultListener() {
+                    @Override
+                    public void onUnlockCodeSuccess() {
+//                        Toast.makeText(context, "Option: " + item.getOptionTxt() + " execute Success", Toast.LENGTH_LONG).show();
+//                        click.click();
+                        count++;
+                        if (count == optionsDBList.size()){
                             click.click();
-                        }
-                    });
-                }else {
-                    // Опции БЛОК 1 - Нет
-                    // Проверка Опции контроля текущей опции.
-                    optControl(context, dataDB, option, optionId, option, type, nnkMode, new OptionControl.UnlockCodeResultListener() {
-                        @Override
-                        public void onUnlockCodeSuccess() {
-                            // Это обычная проверка нашей опции Контроля. Проверку прошли.
                             // Обычное выполнение нажатия на кнопку.
-                            optControl(context, dataDB, option, optionId2, option, type, nnkMode, new OptionControl.UnlockCodeResultListener() {
+                            optControl(context, dataDB, option, optionId2, option, type, mode, new OptionControl.UnlockCodeResultListener() {
                                 @Override
                                 public void onUnlockCodeSuccess() {
                                     click.click();
@@ -664,17 +579,13 @@ public class Options {
                                 }
                             });
                         }
+                    }
 
-                        @Override
-                        public void onUnlockCodeFailure() {
-                            // Это обычная проверка нашей опции Контроля. Тут типо проверку мы не прошли.
-                            click.click();
-                        }
-                    });
-                }
-
-
-
+                    @Override
+                    public void onUnlockCodeFailure() {
+                        click.click();
+                    }
+                });
             }
         } else {
             // Обычное выполнение нажатия на кнопку.
