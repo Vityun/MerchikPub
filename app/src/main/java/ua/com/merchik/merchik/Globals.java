@@ -1107,6 +1107,7 @@ public class Globals {
 
         geo_debug.put("app_id", logMP.id);
         DataMap.put("geo_debug", geo_debug);
+        DataMap.put("code_dad2", logMP.codeDad2);
 
         DataMap.put("timestamp", System.currentTimeMillis()); // unixtime текущего времени, когда был отправлен запрос с данными с точностью до тысячных (если не сможешь настолько точное врем¤ получить, бери текущий unixtime и умножай на 1000)
 

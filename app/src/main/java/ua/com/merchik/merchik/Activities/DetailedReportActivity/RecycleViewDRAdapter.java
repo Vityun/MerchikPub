@@ -73,7 +73,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
     private List<OptionsDB> allReportOption;
     private List<SiteObjectsSDB> translate;
     private Context mContext;
-    private Clicks.clickVoid click;
+    private Clicks.click click;
     //    private static WpDataDB wpDataDB;
     private T dataDB;
 
@@ -746,7 +746,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
 
 
     /*Определяем конструктор*/
-    public RecycleViewDRAdapter(Context context, T dataDB, List<OptionsDB> dataButtons, List<OptionsDB> allReportOption, List<SiteObjectsSDB> list, Clicks.clickVoid click) {
+    public RecycleViewDRAdapter(Context context, T dataDB, List<OptionsDB> dataButtons, List<OptionsDB> allReportOption, List<SiteObjectsSDB> list, Clicks.click click) {
         try {
             this.click = click;
             this.dataDB = dataDB;
@@ -963,10 +963,15 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                         if (optionControlAvailabilityControlPhotoRemainingGoods.signal && option.getOptionControlId().equals("159707")){
                             optionControlAvailabilityControlPhotoRemainingGoods.showOptionMassage("");
                         }else {
-                            click.click();
+                            click.click(4);
                         }
                     }));
 
+                    ss.append("\n\n");
+                    break;
+
+                case "151139":
+                    click.click(5);
                     ss.append("\n\n");
                     break;
             }

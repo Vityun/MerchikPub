@@ -19,6 +19,7 @@ import java.util.List;
 
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.RecycleViewDRAdapter;
 import ua.com.merchik.merchik.R;
+import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.Database.Room.SiteObjectsSDB;
 import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
 import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
@@ -80,7 +81,12 @@ public class Tab2Fragment extends Fragment {
 //            wp = RealmManager.INSTANCE.copyFromRealm(wp);
 //        }
 
-        RecycleViewDRAdapter recycleViewDRAdapter = new RecycleViewDRAdapter(mContext, data, list, allReportOption, listTr, ()->{});
+        RecycleViewDRAdapter recycleViewDRAdapter = new RecycleViewDRAdapter(mContext, data, list, allReportOption, listTr, new Clicks.click() {
+            @Override
+            public <T> void click(T data) {
+
+            }
+        });
         recyclerView.setAdapter(recycleViewDRAdapter);
         recyclerView.setLayoutManager(new LinearLayoutManager(mContext, LinearLayoutManager.VERTICAL, false));
     }

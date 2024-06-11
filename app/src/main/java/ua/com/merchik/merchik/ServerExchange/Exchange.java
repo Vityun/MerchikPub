@@ -1626,6 +1626,7 @@ public class Exchange {
                 TARCommentDataListUpload dataItem = new TARCommentDataListUpload();
                 dataItem.id = item.getRId();
                 dataItem.comment = item.getComment();
+                dataItem.dt = item.getDt();
 
                 if (item.commentId != null && item.dtUpdate != null && item.dtUpdate != 0) {
                     dataItem.comment_id = String.valueOf(item.commentId);

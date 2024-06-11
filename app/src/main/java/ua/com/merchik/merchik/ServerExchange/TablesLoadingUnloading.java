@@ -2311,6 +2311,16 @@ public class TablesLoadingUnloading {
                                                 res.onFailure("Exception e: " + e);
                                             }
                                         }else {
+                                            try {
+                                                long id = geoInfo.get("geo_id").getAsLong();
+                                                RealmManager.INSTANCE.executeTransaction(realm -> {
+                                                    list.serverId = id;
+                                                    list.upload = System.currentTimeMillis()/1000;  // 27.08.23 Вместо удаления, пишу воемя когда координаты были выгружены
+                                                    realm.insertOrUpdate(list);
+                                                });
+                                            }catch (Exception e){
+                                                Globals.writeToMLOG("INFO", "uploadLodMp/onResponse/geoInfo.get(\"state\")", "Exception e: " + e);
+                                            }
                                             Globals.writeToMLOG("INFO", "uploadLodMp/onResponse/geoInfo.get(\"state\")", "response.body(): " + response.body());
                                         }
                                     }
