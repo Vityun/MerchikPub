@@ -349,6 +349,7 @@ public class OptionControlEKL<T> extends OptionControl {
             }
         });
         setIsBlockOption(signal);
+        checkUnlockCode(optionDB);
     }
 
 

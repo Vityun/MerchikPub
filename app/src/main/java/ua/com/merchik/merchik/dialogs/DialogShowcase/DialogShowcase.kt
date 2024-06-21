@@ -18,10 +18,10 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import ua.com.merchik.merchik.Clock
 import ua.com.merchik.merchik.Globals
 import ua.com.merchik.merchik.R
 import ua.com.merchik.merchik.ViewHolders.Clicks.click
-import ua.com.merchik.merchik.data.Database.Room.AddressSDB
 import ua.com.merchik.merchik.data.Database.Room.ShowcaseSDB
 import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteHintsDB
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB
@@ -31,8 +31,6 @@ import ua.com.merchik.merchik.database.realm.tables.StackPhotoRealm
 import ua.com.merchik.merchik.database.room.RoomManager
 import ua.com.merchik.merchik.dialogs.DialogData
 import ua.com.merchik.merchik.dialogs.DialogVideo
-import ua.com.merchik.merchik.dialogs.DialogShowcase.ShowcaseAdapter
-import java.util.stream.Collectors
 
 class DialogShowcase(private val context: Context?) : DialogData() {
 
@@ -332,7 +330,9 @@ class DialogShowcase(private val context: Context?) : DialogData() {
             var planogrammDataList = RoomManager.SQL_DB.planogrammDao().getByClientAddress(
                 wpDataDB!!.client_id,
                 wpDataDB!!.addr_id,
-                adress.ttId
+//                adress.ttId,
+                null,
+                Clock.getHumanTimeSecPattern(System.currentTimeMillis() / 1000, "yyyy-MM-dd")
             )
 
             Log.e("setRecyclerView", "planogrammDataList: $planogrammDataList")

@@ -1662,6 +1662,7 @@ public class Exchange {
 
                         TARCommentsServerData res = response.body();
                         if (res != null) {
+                            Globals.writeToMLOG("INFO", "uploadTARComments/onResponse", "response.body(): " + new Gson().toJson(res));
                             if (res.getState() != null && res.getState()) {
                                 if (res.getList() != null && res.getList().size() > 0) {
                                     Log.d("test", "test");
@@ -1691,9 +1692,6 @@ public class Exchange {
                                             Log.d("test", "test1");
                                         }
                                     }
-//                                    RealmManager.INSTANCE.executeTransaction((realm) -> {
-//                                        realm.copyToRealmOrUpdate(finalList);
-//                                    });
 
                                     // Удаление Старых ID
                                     String[] ids = new String[deleteFromDb.size()];
@@ -1713,7 +1711,7 @@ public class Exchange {
                                         // Сохранение новых
                                         Log.e("uploadTARComments", "saveToDb: " + saveToDb.size());
                                         List<TARCommentsDB> result = realm.copyToRealmOrUpdate(saveToDb);
-                                        Globals.writeToMLOG("INFO", "uploadTARComments/onResponse", "result list comments to seve(" + (result != null ? result.size() + "): .." : "null"));
+                                        Globals.writeToMLOG("INFO", "uploadTARComments/onResponse", "result list comments to seve(" + (result != null ? result.size() + "): " + result.size() : "null"));
                                     });
                                 }
                             }

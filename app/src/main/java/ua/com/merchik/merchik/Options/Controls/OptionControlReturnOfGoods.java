@@ -202,6 +202,8 @@ public class OptionControlReturnOfGoods<T> extends OptionControl {
             }
         });
 
+        checkUnlockCode(optionDB);
+
         // 8.0 Блокировка проведения
         if (signal) {
             if (optionDB.getBlockPns().equals("1") && wpDataDB.getStatus() == 0) {

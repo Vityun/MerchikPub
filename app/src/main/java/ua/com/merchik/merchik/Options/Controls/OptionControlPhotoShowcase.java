@@ -242,6 +242,8 @@ public class OptionControlPhotoShowcase<T> extends OptionControl {
                 }
             });
 
+
+
             if (signal) {
                 if (optionDB.getBlockPns().equals("1")) {
                     setIsBlockOption(signal);
@@ -250,12 +252,12 @@ public class OptionControlPhotoShowcase<T> extends OptionControl {
                     stringBuilderMsg.append("\n\n").append("Вы можете получить Премиальные БОЛЬШЕ, если будете делать Достижения.");
                 }
             }
-
-            if (signal) {
-                unlockCodeResultListener.onUnlockCodeFailure();
-            } else {
-                unlockCodeResultListener.onUnlockCodeSuccess();
-            }
+            checkUnlockCode(optionDB);
+//            if (signal) {
+//                unlockCodeResultListener.onUnlockCodeFailure();
+//            } else {
+//                unlockCodeResultListener.onUnlockCodeSuccess();
+//            }
 
         } catch (Exception e) {
             Globals.writeToMLOG("ERROR", "OptionControlPhotoShowcase/executeOption", "Exception e: " + e);

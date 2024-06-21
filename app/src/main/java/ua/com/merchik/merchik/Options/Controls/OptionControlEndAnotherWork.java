@@ -128,8 +128,8 @@ public class OptionControlEndAnotherWork<T> extends OptionControl {
 //            unlockCodeResultListener.onUnlockCodeSuccess();
 //            unlockCodeResultListener.onUnlockCodeFailure();
         }
-
         setIsBlockOption(signal);
+        checkUnlockCode(optionDB);
         Log.d("test", "spannableStringBuilder: " + spannableStringBuilder);
         Log.d("test", "massageToUser: " + massageToUser);
     }

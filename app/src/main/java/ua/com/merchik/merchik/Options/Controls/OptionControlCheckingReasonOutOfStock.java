@@ -124,6 +124,8 @@ public class OptionControlCheckingReasonOutOfStock<T> extends OptionControl {
             setIsBlockOption(true);
         }
 
+        checkUnlockCode(optionDB);
+
         notCloseSpannableStringBuilderDialog = true;    // Делает так что при клике на текст диалог не будет закрываться
         spannableStringBuilder = resultMsg;
     }

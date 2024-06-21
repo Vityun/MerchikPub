@@ -172,7 +172,7 @@ public class PhotoLogActivity extends toolbar_menus {
                 int addr = this.getIntent().getIntExtra("address", 0);
                 String cust = this.getIntent().getStringExtra("customer");
 
-                List<PlanogrammJOINSDB> planogrammJOINSDB = SQL_DB.planogrammDao().getByClientAddress(cust, addr, null);
+                List<PlanogrammJOINSDB> planogrammJOINSDB = SQL_DB.planogrammDao().getByClientAddress(cust, addr, null, Clock.getHumanTimeSecPattern(System.currentTimeMillis()/1000, "yyyy-MM-dd"));
                 String[] ids = new String[planogrammJOINSDB.size()];
                 int count = 0;
                 for (PlanogrammJOINSDB item : planogrammJOINSDB) {

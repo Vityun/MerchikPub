@@ -294,6 +294,8 @@ public class OptionControlCheckingForAnAchievement<T> extends OptionControl {
 
             spannableStringBuilder.append(resultMsg);
 
+            checkUnlockCode(optionDB);
+
         } catch (Exception e) {
             Globals.writeToMLOG("ERROR", "OptionControlCheckingForAnAchievement/executeOption", "Exception e: " + e);
         }

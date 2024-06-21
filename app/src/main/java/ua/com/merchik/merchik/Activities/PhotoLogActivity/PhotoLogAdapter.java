@@ -464,7 +464,6 @@ public class PhotoLogAdapter extends RecyclerView.Adapter<PhotoLogAdapter.ViewHo
                             dialog.setClose(dialog::dismiss);
                             break;
                     }
-//                dialog.setClose(dialog::dismiss);
                     dialog.setRating();
                     dialog.setDvi();
                     dialog.show();

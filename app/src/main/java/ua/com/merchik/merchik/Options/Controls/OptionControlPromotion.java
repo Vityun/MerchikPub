@@ -218,6 +218,8 @@ public class OptionControlPromotion<T> extends OptionControl {
             }
         });
 
+
+
         if (signal) {
             if (optionDB.getBlockPns().equals("1")) {
                 setIsBlockOption(signal);
@@ -227,7 +229,7 @@ public class OptionControlPromotion<T> extends OptionControl {
             }
         }
 
-
+        checkUnlockCode(optionDB);
         // Если есть какой-то сигнал - нужно вывести сообщение
 
     }

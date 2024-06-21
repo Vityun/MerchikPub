@@ -35,6 +35,7 @@ import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.WorkPlan;
 import ua.com.merchik.merchik.data.Database.Room.Planogram.PlanogrammJOINSDB;
+import ua.com.merchik.merchik.data.Database.Room.Planogram.PlanogrammSDB;
 import ua.com.merchik.merchik.data.Database.Room.ShowcaseSDB;
 import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
 import ua.com.merchik.merchik.data.Database.Room.UsersSDB;
@@ -838,19 +839,25 @@ public class MakePhoto {
                     ShowcaseSDB showcase = (ShowcaseSDB) data;
                     Toast.makeText(activity, "Обрана вітрина: " + showcase.nm + " (" + showcase.id + ")", Toast.LENGTH_LONG).show();
 
-                    MakePhoto.img_src_id = String.valueOf(showcase.photoId);
-                    MakePhoto.showcase_id = String.valueOf(showcase.id);
-
-                    MakePhoto.planogram_id = String.valueOf(showcase.planogramId);
-                    MakePhoto.planogram_img_id = String.valueOf(showcase.photoPlanogramId);
+                    try {
+                        MakePhoto.img_src_id = String.valueOf(showcase.photoId);
+                        MakePhoto.showcase_id = String.valueOf(showcase.id);
+                        MakePhoto.planogram_id = String.valueOf(showcase.planogramId);
+                        PlanogrammSDB planogrammSDB = SQL_DB.planogrammDao().getById(showcase.planogramId);
+                        if (planogrammSDB != null && planogrammSDB.photoId != null){
+                            MakePhoto.planogram_img_id = String.valueOf(planogrammSDB.photoId);
+                        }
+                    }catch (Exception e){
+                        Globals.writeToMLOG("ERROR", "showDialogSW/click/showcase", "Exception e: " + e);
+                    }
 
                     boolean needPlan;
                     if (showcase.planogramId != null && showcase.planogramId != 0) {
                         needPlan = false;
                     } else {
-                        if (dialog.photoType == 0){
+                        if (dialog.photoType == 0) {
                             needPlan = true;
-                        }else {
+                        } else {
                             needPlan = false;
                         }
                     }
@@ -884,6 +891,7 @@ public class MakePhoto {
                     dialog.dismiss();
                 } catch (Exception e) {
                     Log.e("", "Exception e: " + e);
+                    Globals.writeToMLOG("ERROR", "showDialogSW/click", "Exception e: " + e);
                 }
             }
         });

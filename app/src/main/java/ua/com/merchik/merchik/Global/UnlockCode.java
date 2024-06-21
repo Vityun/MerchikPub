@@ -173,7 +173,18 @@ public class UnlockCode {
             click.onSuccess("");
 
         }
+    }
+    public Long codeODAD(OptionsDB optionsDB){
+        Long res = null;
 
+        String dad2str= optionsDB.getCodeDad2();
+        String optId = optionsDB.getOptionId();
+        int len = optionsDB.getOptionId().length();
+
+        String kodObstr = "1"+optId.substring(len-3,len)+dad2str.substring(1,5)+dad2str.substring(6,7)+dad2str.substring(8,13)+dad2str.substring(14,19);
+        res = Long.valueOf(kodObstr);
+
+        return res;
     }
 
 }

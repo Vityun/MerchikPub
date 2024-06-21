@@ -57,7 +57,7 @@ public class OptionControlAvailabilityDetailedReport<T> extends OptionControl {
             this.unlockCodeResultListener = unlockCodeResultListener;
             getDocumentVar();
             executeOption();
-        }catch (Exception e){
+        } catch (Exception e) {
             Log.e("OCAvailabilityDReport", "Exception e: " + e);
         }
     }
@@ -87,14 +87,14 @@ public class OptionControlAvailabilityDetailedReport<T> extends OptionControl {
 
         // Получение Товаров для Отчёта исполнителя
 //        if (detailedReportTovList == null || detailedReportTovList.isEmpty()) {
-            detailedReportTovList = RealmManager.INSTANCE.copyFromRealm(RealmManager.getTovarListFromReportPrepareByDad2(dad2));
+        detailedReportTovList = RealmManager.INSTANCE.copyFromRealm(RealmManager.getTovarListFromReportPrepareByDad2(dad2));
 //        }
 
         SKUPlan = detailedReportTovList.size();
 
         // Получение REPORT PREPARE для Отчёта исполнителя
 //        if (detailedReportRPList == null || detailedReportRPList.isEmpty()) {
-            detailedReportRPList = RealmManager.INSTANCE.copyFromRealm(ReportPrepareRealm.getReportPrepareByDad2(dad2));
+        detailedReportRPList = RealmManager.INSTANCE.copyFromRealm(ReportPrepareRealm.getReportPrepareByDad2(dad2));
 //        }
 
         // Обработка опции контроля
@@ -107,16 +107,16 @@ public class OptionControlAvailabilityDetailedReport<T> extends OptionControl {
 
                 if (find == 0 && item.getNotes() != null && item.getNotes().length() > 1) {
                     find = item.getNotes().length();
-                }else if (find == 0 && comment != null && comment.length() > 1){
+                } else if (find == 0 && comment != null && comment.length() > 1) {
                     find = comment.length();
                 }
             }
 
             Log.e("test", "test: " + test);
             try {
-                if (SKUPlan != 0){
+                if (SKUPlan != 0) {
                     OFS = 100 - 100 * (SKUFact / SKUPlan);
-                }else {
+                } else {
                     OFS = 0;
                 }
             } catch (Exception e) {
@@ -135,8 +135,8 @@ public class OptionControlAvailabilityDetailedReport<T> extends OptionControl {
 
         // Формирование сообщения для пользователя
         // . . .
-        spannableStringBuilder.append(Html.fromHtml("<b>СКЮ (план)=</b>")).append(String.valueOf((int)SKUPlan)).append("шт.,\n").append(Html.fromHtml("<b>СКЮ (факт)=</b>"))
-                .append(String.valueOf((int)SKUFact)).append("шт.,\n").append(Html.fromHtml("<b> ОФС: </b>"))
+        spannableStringBuilder.append(Html.fromHtml("<b>СКЮ (план)=</b>")).append(String.valueOf((int) SKUPlan)).append("шт.,\n").append(Html.fromHtml("<b>СКЮ (факт)=</b>"))
+                .append(String.valueOf((int) SKUFact)).append("шт.,\n").append(Html.fromHtml("<b> ОФС: </b>"))
                 .append(SKUFact > SKUPlan ? "товаров больше, чем должно быть на " + String.format("%.2f", OFS) + "%" : "отсутствует " + String.format("%.2f", OFS) + "% товаров.");
 
 
@@ -164,7 +164,7 @@ public class OptionControlAvailabilityDetailedReport<T> extends OptionControl {
             if (clientId.equals("9295") && find > 1) {   // Костыль для клиента Бетта
                 signal = false;
                 spannableStringBuilder.append(" Комментарий об отсутствии товара написан, сигнал отменён!");
-            } else if (clientId.equals("8633") && find > 1){
+            } else if (clientId.equals("8633") && find > 1) {
                 signal = false;
                 spannableStringBuilder.append(" Комментарий об отсутствии товара написан, сигнал отменён!");
             } else if (find > 0) {
@@ -174,13 +174,13 @@ public class OptionControlAvailabilityDetailedReport<T> extends OptionControl {
             } else if (clientId.equals("9295")) {
                 spannableStringBuilder.append(" Вы можете снять сигнал, если полностью и правильно заполните детализированный отчет! \n" +
                         "В случае, если на витрине (и на складе) реально нет части товара напишите об этом в комментарии (см. на кнопку \"Комментарий\")");
-            } else if (clientId.equals("8633")){
+            } else if (clientId.equals("8633")) {
                 spannableStringBuilder.append(" Вы можете снять сигнал, если полностью и правильно заполните детализированный отчет! \n" +
                         "В случае, если на витрине (и на складе) реально нет части товара напишите об этом в комментарии (см. на кнопку \"Комментарий\")");
-            }  else if (clientId.equals("10275")) {
+            } else if (clientId.equals("10275")) {
                 spannableStringBuilder.append(" Вы можете снять сигнал, если полностью и правильно заполните детализированный отчет! \n" +
                         "В случае, если на витрине (и на складе) реально нет части товара напишите об этом в комментарии (см. на кнопку \"Комментарий\")");
-            }else {
+            } else {
                 spannableStringBuilder.append(" Вы можете снять сигнал, если полностью и правильно заполните детализированный отчет! \n" +
                         "В случае, если на витрине (и на складе) реально нет части товара напишите об этом в комментарии (см. на кнопку \"Комментарий\")");
                 // massageToUser += " Вы можете снять сигнал, если Примечание к Товару заказчику о том, что товара мало (или он отсутствует).";
@@ -203,7 +203,7 @@ public class OptionControlAvailabilityDetailedReport<T> extends OptionControl {
                 spannableStringBuilder.append("\n\nВы можете получить Премиальные БОЛЬШЕ, если ОФС не будет превышать ")
                         .append(Character.highSurrogate(Integer.parseInt(optionDB.getAmountMax()))).append("%");
             }
-        }else {
+        } else {
             spannableStringBuilder.append("\n\nЗамечаний нет.");
         }
 
@@ -213,9 +213,9 @@ public class OptionControlAvailabilityDetailedReport<T> extends OptionControl {
 
         RealmManager.INSTANCE.executeTransaction(realm -> {
             if (optionDB != null) {
-                if (signal){
+                if (signal) {
                     optionDB.setIsSignal("1");
-                }else {
+                } else {
                     optionDB.setIsSignal("2");
                 }
                 realm.insertOrUpdate(optionDB);
@@ -223,6 +223,8 @@ public class OptionControlAvailabilityDetailedReport<T> extends OptionControl {
         });
 
         setIsBlockOption(signal);
+
+        checkUnlockCode(optionDB);
     }
 
     private SpannableString createLinkedString(String msg, String link) {
@@ -244,13 +246,13 @@ public class OptionControlAvailabilityDetailedReport<T> extends OptionControl {
         return res;
     }
 
-    private String makeLink(){
+    private String makeLink() {
         AppUsersDB appUser = AppUserRealm.getAppUserById(userId);
         String hash = String.format("%s%s%s", appUser.getUserId(), appUser.getPassword(), "AvgrgsYihSHp6Ok9yQXfSHp6Ok9nXdXr3OSHp6Ok9UPBTzTjrF20Nsz3");
         hash = Globals.getSha1Hex(hash);
 
         String addrId = String.valueOf(wp.getAddr_id());
-        String date = Clock.getHumanTimeSecPattern(wp.getDt().getTime(), "yyyy-MM-dd");
+        String date = Clock.getHumanTimeSecPattern(wp.getDt().getTime() / 1000, "yyyy-MM-dd");
         String clientId = String.valueOf(wp.getClient_id());
 
         return String.format("https://merchik.com.ua/sa.php?&u=%s&s=%s&l=/mobile.php?mod=message**act=to_client_addr**addr_id=%s**date=%s**client_id=%s", userId, hash, addrId, date, clientId);

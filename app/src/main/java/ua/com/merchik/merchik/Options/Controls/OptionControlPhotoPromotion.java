@@ -226,6 +226,8 @@ public class OptionControlPhotoPromotion<T> extends OptionControl {
         saveOption(String.valueOf(signalInt));
 //        }
 
+        checkUnlockCode(optionDB);
+
         // 8.0 Блокировка проведения
         if (signalInt == 1) {
             setIsBlockOption(true);

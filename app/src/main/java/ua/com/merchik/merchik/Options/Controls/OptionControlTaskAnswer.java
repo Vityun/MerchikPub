@@ -295,9 +295,10 @@ public class OptionControlTaskAnswer<T> extends OptionControl {
                     realm.insertOrUpdate(optionDB);
                 }
             });
+
             setIsBlockOption(signal);    // Установка блокирует ли опция работу приложения или нет
 
-
+            checkUnlockCode(optionDB);
             Globals.writeToMLOG("INFO", "OptionControlTaskAnswer/executeOption/spannableStringBuilder", "spannableStringBuilder: " + spannableStringBuilder);
         } catch (Exception e) {
             e.printStackTrace();

@@ -221,27 +221,27 @@ public class OptionControlCheckTovarUp<T> extends OptionControl {
         if (tznErrorExist > 0 && tznOffset > 0 && optionDB.getBlockPns().equals("1")) {
             stringBuilderMsg.append("Товар со склада на витрину не поднимался, НО по всем позициям указана ПРИЧИНА (в поле 'Ошибка').");
             signal = false;
-            unlockCodeResultListener.onUnlockCodeSuccess();
+//            unlockCodeResultListener.onUnlockCodeSuccess();
         } else if (tznErrorExist == 0 && tznOffset > 0) {
             stringBuilderMsg.append("Поднято (со склада): ").append(sumUp).append(" единиц товара, и есть: ")
                     .append(stackPhotoSize).append(" ФТТ, подтверждающих это. Зачтено поднятие у ")
                     .append(tznOffset).append(" клиентов.");
             signal = false;
-            unlockCodeResultListener.onUnlockCodeSuccess();
+//            unlockCodeResultListener.onUnlockCodeSuccess();
         } else if (tznErrorExist == 0) {
             stringBuilderMsg.append("Поднято (со склада): ").append(sumUp).append(" единиц товара, и есть: ")
                     .append(stackPhotoSize).append(" ФТТ, подтверждающих это. Зачтено поднятие у ")
                     .append(tznOffset).append(" клиентов.");
             signal = false;
-            unlockCodeResultListener.onUnlockCodeSuccess();
+//            unlockCodeResultListener.onUnlockCodeSuccess();
         } else if (tznOffset > 0) {
             stringBuilderMsg.append("Выполнены работы по поднятию товаров (со склада) у ").append(tznOffset).append(" клиентов.");
             signal = false;
-            unlockCodeResultListener.onUnlockCodeSuccess();
+//            unlockCodeResultListener.onUnlockCodeSuccess();
         } else {
             stringBuilderMsg.append("Товар зі складу не підіймався. Бонус не нарахован.");
             signal = true;
-            unlockCodeResultListener.onUnlockCodeFailure();
+//            unlockCodeResultListener.onUnlockCodeFailure();
         }
 
         stringBuilderMsg.append("\n\n").append(tznNotes);
@@ -256,6 +256,7 @@ public class OptionControlCheckTovarUp<T> extends OptionControl {
                 stringBuilderMsg.append("\n\n").append("Вы можете получить Премиальные БОЛЬШЕ, если будете вносить отчетность корректно.");
             }
         }
+        checkUnlockCode(optionDB);
     }
 
     /**

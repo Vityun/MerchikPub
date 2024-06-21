@@ -257,18 +257,22 @@ public class DialogAchievement {
     }
 
     private void setAchievementData(AchievementsSDB achievement){
-        CustomerSDB customerSDB = SQL_DB.customerDao().getById(achievement.clientId);
-        UsersSDB usersSDB = SQL_DB.usersDao().getById(achievement.userId);
+        try {
+            CustomerSDB customerSDB = SQL_DB.customerDao().getById(achievement.clientId);
+            UsersSDB usersSDB = SQL_DB.usersDao().getById(achievement.userId);
 
-        SpannableStringBuilder sb = new SpannableStringBuilder();
+            SpannableStringBuilder sb = new SpannableStringBuilder();
 
-        sb.append("Дата: ").append(achievement.dt).append("\n");
-        sb.append("Кліент: ").append(customerSDB.nm).append("\n");
-        sb.append("Адреса: ").append(achievement.adresaNm).append("\n");
-        sb.append("Виконавець: ").append(usersSDB.fio).append("\n");
-        sb.append("Коментар: ").append(achievement.commentTxt).append("\n");
+            sb.append("Дата: ").append(achievement.dt).append("\n");
+            sb.append("Кліент: ").append(customerSDB != null ? customerSDB.nm : "не визначено").append("\n");
+            sb.append("Адреса: ").append(achievement.adresaNm).append(" ").append(achievement.adresaAddr).append("\n");
+            sb.append("Виконавець: ").append(usersSDB != null ? usersSDB.fio : "не визначено").append("\n");
+            sb.append("Коментар: ").append(achievement.commentTxt).append("\n");
 
-        setText(sb);
+            setText(sb);
+        }catch (Exception e){
+            Globals.writeToMLOG("ERROR", "setAchievementData", "Exception e: " + e);
+        }
     }
 
     private void setPhotos(AchievementsSDB achievement){

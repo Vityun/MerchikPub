@@ -126,6 +126,8 @@ public class OptionControlCheckDetailedReport<T> extends OptionControl {
             }
         }
 
+        checkUnlockCode(optionDB);
+
     }
 
     /**

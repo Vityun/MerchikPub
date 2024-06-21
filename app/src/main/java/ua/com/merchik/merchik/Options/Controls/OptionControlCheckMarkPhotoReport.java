@@ -161,6 +161,8 @@ public class OptionControlCheckMarkPhotoReport<T> extends OptionControl {
                 }
             }
 
+            checkUnlockCode(optionDB);
+
             spannableStringBuilder.append("У Вас ").append(String.valueOf(uniqueVotes.size())).append(" плохих оценок. По фото.");
 
         } catch (Exception e) {

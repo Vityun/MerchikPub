@@ -217,6 +217,8 @@ public class OptionControlCheckingPercentageOfShelfSpaceDPPO<T> extends OptionCo
             }
         }
 
+        checkUnlockCode(optionDB);
+
         Log.e("OPTION_CONTROL_1455", "stringBuilderMsg: " + stringBuilderMsg);
         Globals.writeToMLOG("INFO", "OPTION_CONTROL_1455", "stringBuilderMsg: " + stringBuilderMsg);
     }

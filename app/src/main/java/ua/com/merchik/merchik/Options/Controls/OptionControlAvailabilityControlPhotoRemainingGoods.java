@@ -199,6 +199,8 @@ public class OptionControlAvailabilityControlPhotoRemainingGoods<T> extends Opti
                 }
             }
 
+            checkUnlockCode(optionDB);
+
 
         } catch (Exception e) {
             Globals.writeToMLOG("ERROR", "OptionControlAvailabilityControlPhotoRemainingGoods/executeOption", "Exception e: " + e);

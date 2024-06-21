@@ -129,11 +129,11 @@ public class OptionControlPhoto<T> extends OptionControl {
             ImagesTypeListDB item = ImagesTypeListRealm.getByID(photoType);
             stringBuilderMsg.append("Вы должны сделать: ").append(m).append(" фото с типом: ").append(item != null ? item.getNm() : typeNm).append(", а сделали: ").append(stackPhotoDB.size()).append(" - доделайте фотографии.");
             signal = true;
-            unlockCodeResultListener.onUnlockCodeFailure();
+//            unlockCodeResultListener.onUnlockCodeFailure();
         } else {
             stringBuilderMsg.append("Жалоб по фыполнению фото нет. Сделано: ").append(stackPhotoDB.size()).append(" фото.");
             signal = false;
-            unlockCodeResultListener.onUnlockCodeSuccess();
+//            unlockCodeResultListener.onUnlockCodeSuccess();
         }
 
         //7.0. сохраним сигнал
@@ -141,13 +141,14 @@ public class OptionControlPhoto<T> extends OptionControl {
             if (optionDB != null) {
                 if (signal) {
                     optionDB.setIsSignal("1");
-                    setIsBlockOption(signal);
+//                    setIsBlockOption(signal);
                 } else {
                     optionDB.setIsSignal("2");
                 }
                 realm.insertOrUpdate(optionDB);
             }
         });
+
 
         //8.0. блокировка проведения
         // Установка блокирует ли опция работу приложения или нет
@@ -159,5 +160,6 @@ public class OptionControlPhoto<T> extends OptionControl {
                 stringBuilderMsg.append("\n\n").append("Вы можете отримати Преміальні БІЛЬШЕ, якщо будете збільшувати кількість фейсів товарів замовника на полиці.");
             }
         }
+        checkUnlockCode(optionDB);
     }
 }

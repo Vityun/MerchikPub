@@ -150,6 +150,8 @@ public class OptionControlCheckingReasonOutOfStockOSV<T> extends OptionControl {
             }
             setIsBlockOption(true);
         }
+
+        checkUnlockCode(optionDB);
     }
 
     private SpannableString createLinkedString(String msg, ReportPrepareDB reportPrepareDB, TovarDB tov) {

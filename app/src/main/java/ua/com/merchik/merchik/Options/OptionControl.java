@@ -13,9 +13,12 @@ import ua.com.merchik.merchik.Global.UnlockCode;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.OptionMassageType;
+import ua.com.merchik.merchik.data.RealmModels.LogDB;
 import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.database.realm.RealmManager;
+import ua.com.merchik.merchik.database.realm.tables.LogRealm;
+import ua.com.merchik.merchik.database.realm.tables.OptionsRealm;
 import ua.com.merchik.merchik.database.realm.tables.WpDataRealm;
 import ua.com.merchik.merchik.dialogs.DialogData;
 
@@ -151,6 +154,7 @@ public class OptionControl<T> {
                         realm.insertOrUpdate(optionDB);
                     }
                 });
+                dialog.dismiss();
                 Toast.makeText(context, "Код прийнято", Toast.LENGTH_LONG).show();
             }
 
@@ -168,5 +172,41 @@ public class OptionControl<T> {
                 Toast.makeText(context, "Код розблокування НЕ прийнято", Toast.LENGTH_LONG).show();
             }
         });
+    }
+
+    public boolean checkUnlockCode(OptionsDB optionDB) {
+        try {
+
+            if (optionDB != null && optionDB.getIsSignal().equals("1") && optionDB.getBlockPns().equals("1")) {
+                if (nnkMode.equals(Options.NNKMode.CHECK) || nnkMode.equals(Options.NNKMode.CHECK_CLICK)){
+                    optionDB = OptionsRealm.getOption(optionDB.getCodeDad2(), optionDB.getOptionControlId());
+                }
+
+                Long codeODAD = new UnlockCode().codeODAD(optionDB);
+                int themeCode = 1285;
+
+                if (codeODAD != null) {
+                    LogDB log = LogRealm.getLogByODADandTheme(codeODAD, themeCode);
+                    if (log != null) {
+                        stringBuilderMsg.append("\n\nАле виконавцю видано код розблокування!");
+                        setIsBlockOption(false);
+                        OptionsDB finalOptionDB = optionDB;
+                        RealmManager.INSTANCE.executeTransaction(realm -> {
+                            finalOptionDB.setIsSignal("2");
+                            finalOptionDB.setBlockPns("0");
+                            realm.insertOrUpdate(finalOptionDB);
+                        });
+                        return true;
+                    }
+                }
+                return false;
+            }else {
+                setIsBlockOption(false);
+                return true;
+            }
+        } catch (Exception e) {
+            Globals.writeToMLOG("ERROR", "OptionControl/checkUnlockCode", "Exception e: " + e);
+            return false;
+        }
     }
 }

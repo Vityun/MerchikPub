@@ -276,6 +276,7 @@ public class OptionControlAchievements<T> extends OptionControl {
                 }
             }
 
+            checkUnlockCode(optionDB);
 
         } catch (Exception e) {
             Globals.writeToMLOG("ERROR", "OptionControlAchievements/executeOption", "Exception e: " + e);

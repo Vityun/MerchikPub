@@ -155,6 +155,7 @@ public class OptionControlCheckMarkDetailedReport<T> extends OptionControl {
                     spannableStringBuilder.append("\n\n").append("Вы можете получить Премиальные БОЛЬШЕ, если будете делать Достижения.");
                 }
             }
+            checkUnlockCode(optionDB);
 
         } catch (Exception e) {
             Globals.writeToMLOG("ERROR", "OptionControlCheckMarkDetailedReport/executeOption", "Exception e: " + e);

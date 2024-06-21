@@ -144,30 +144,30 @@ public class OptionControlPhotoCartWithGoods<T> extends OptionControl {
             if (Arrays.stream(groups).anyMatch(x -> Objects.equals(x, tpId)) && themeId != null && themeId != 1178 && themeId != 1003) {   // //для 8196-Ашанов и 6164-АТБ  //1178-выкуп продукции, 1003-курьерские
                 stringBuilderMsg.append("Фото Тележки с Товаром (ФТТ) для сети (Ашае/АТБ) пока не проверяем.");
                 signal = false;
-                unlockCodeResultListener.onUnlockCodeSuccess();
+//                unlockCodeResultListener.onUnlockCodeSuccess();
             } else if (photoCount > 0 && themeId != null && themeId == 1003 && photoCount == photoDVICount) {
                 stringBuilderMsg.append("Фото Тележки с Товаром (ФТТ) ").append(usersSDBDocument.fio)
                         .append(" выполнено (").append(photoCount).append(") но помечено на ДВИ. Для данной темы ДВИ ставить НЕ нужно!");
                 signal = false;
-                unlockCodeResultListener.onUnlockCodeSuccess();
+//                unlockCodeResultListener.onUnlockCodeSuccess();
             } else if (photoCount > 0) {
                 stringBuilderMsg.append("Фото Тележки с Товаром (ФТТ) ").append(usersSDBDocument.fio)
                         .append(" выполнено (").append(photoCount).append(") и будет проверено ОСП.");
                 signal = false;
-                unlockCodeResultListener.onUnlockCodeSuccess();
+//                unlockCodeResultListener.onUnlockCodeSuccess();
             } else if (experience < 30 && usersSDBDocument.reportDate40 != null && usersSDBDocument.reportDate40.getTime() / 1000 < dateDocument && themeId != null && themeId == 998) {
                 stringBuilderMsg.append("Сотрудник ").append(usersSDBDocument.fio)
                         .append(" имеет стаж ").append("experience").append(" дней и провел ").append(usersSDBDocument.reportCount)
                         .append(" отчетов. Данный тип фото начинаем проверять после 30-и дней стажа или после проведения 40-а отчетов.");
                 signal = false;
-                unlockCodeResultListener.onUnlockCodeSuccess();
+//                unlockCodeResultListener.onUnlockCodeSuccess();
             } else if (workCount < 4 && themeId != null && themeId == 998) {
                 stringBuilderMsg.append("Сотрудник ").append(usersSDBDocument.fio)
                         .append(" за период с ").append(Clock.getHumanTimeSecPattern(dateFrom, "MM-dd"))
                         .append(" по ").append(Clock.getHumanTimeSecPattern(dateTo, "MM-dd"))
                         .append(" дней и провел ").append(workCount).append(" отчетов по данному КлиентоАдресу. Данный тип фото начинаем проверять после проведения более 3-х отчетов за 30-ь дней.");
                 signal = false;
-                unlockCodeResultListener.onUnlockCodeSuccess();
+//                unlockCodeResultListener.onUnlockCodeSuccess();
             } else {
                 stringBuilderMsg.append("Фото Тележки с Товаром (ФТТ) отсутствует (или помечено на ДВИ) по данному клиенту и адресу за период с ")
                         .append(Clock.getHumanTimeSecPattern(dateFrom, "MM-dd"))
@@ -175,7 +175,7 @@ public class OptionControlPhotoCartWithGoods<T> extends OptionControl {
                         .append(" . При этом проведено ").append(workCount).append(" отчетов.")
                         .append(" Вы можете получить Премиальные больше, если разместите ФТТ.");
                 signal = true;
-                unlockCodeResultListener.onUnlockCodeFailure();
+//                unlockCodeResultListener.onUnlockCodeFailure();
             }
 
 
@@ -191,6 +191,8 @@ public class OptionControlPhotoCartWithGoods<T> extends OptionControl {
                 }
             });
 
+
+
             if (signal) {
                 if (optionDB.getBlockPns().equals("1")) {
                     setIsBlockOption(signal);
@@ -199,6 +201,7 @@ public class OptionControlPhotoCartWithGoods<T> extends OptionControl {
                     stringBuilderMsg.append("\n\n").append("Вы можете получить Премиальные БОЛЬШЕ, если будете делать Достижения.");
                 }
             }
+            checkUnlockCode(optionDB);
         } catch (Exception e) {
             Globals.writeToMLOG("ERROR", "OptionControlPhotoCartWithGoods/executeOption", "Exception e: " + e);
         }

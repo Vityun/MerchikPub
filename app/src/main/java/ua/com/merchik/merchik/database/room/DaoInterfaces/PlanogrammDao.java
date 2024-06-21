@@ -58,10 +58,15 @@ public interface PlanogrammDao {
             "  GROUP BY planogram_id" +
             ") pi ON planogramm.id = pi.planogram_id " +
             "WHERE " +
+//            "(planogramm.client_id = :clientId OR :clientId IS NULL) " +
+//            "AND (pa.addr_id = :addressId OR :addressId IS NULL OR pa.addr_id IS NULL) " +
+//            "AND (pg.group_id = :groupId OR :groupId IS NULL OR pg.group_id IS NULL)")
             "(planogramm.client_id = :clientId OR :clientId IS NULL) " +
             "AND (pa.addr_id = :addressId OR :addressId IS NULL OR pa.addr_id IS NULL) " +
-            "AND (pg.group_id = :groupId OR :groupId IS NULL OR pg.group_id IS NULL)")
-    List<PlanogrammJOINSDB> getByClientAddress(String clientId, Integer addressId, Integer groupId);
+            "AND (pg.group_id = :groupId OR :groupId IS NULL OR pg.group_id IS NULL) " +
+            "AND ((planogramm.dt_start <= :currentDate OR planogramm.dt_start = '0000-00-00') " +
+            "AND (planogramm.dt_end >= :currentDate OR planogramm.dt_end = '0000-00-00'))")
+    List<PlanogrammJOINSDB> getByClientAddress(String clientId, Integer addressId, Integer groupId, String currentDate);    // yyyy-MM-dd
 
     @Query("SELECT " +
             "planogramm.id AS id, " +

@@ -221,6 +221,7 @@ public class OptionControlAdditionalMaterialsMark<T> extends OptionControl {
             }
 //            setIsBlockOption(signal);
 
+            checkUnlockCode(optionDB);
 
         } catch (Exception e) {
             Globals.writeToMLOG("ERROR", "OptionControlAdditionalMaterialsMark/executeOption", "Exception e: " + e);

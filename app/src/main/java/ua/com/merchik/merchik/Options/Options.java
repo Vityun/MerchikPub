@@ -558,7 +558,7 @@ public class Options {
                 }
                 int optionId = Integer.parseInt(item.getOptionId());
 
-                optControl(context, dataDB, item, optionId, item, type, NNKMode.BLOCK, new OptionControl.UnlockCodeResultListener() {
+                optControl(context, dataDB, option, optionId, item, type, NNKMode.BLOCK, new OptionControl.UnlockCodeResultListener() {
                     @Override
                     public void onUnlockCodeSuccess() {
 //                        Toast.makeText(context, "Option: " + item.getOptionTxt() + " execute Success", Toast.LENGTH_LONG).show();
@@ -615,9 +615,13 @@ public class Options {
         try {
             option.setIsSignal("0");
 
+            List<OptionsDB> testDad2 = RealmManager.INSTANCE.copyFromRealm(OptionsRealm.getOptionsByDAD2(option.getCodeDad2()));
+
             Log.e("NNK", "---------------START-----------------");
             Log.e("NNK", "option.option_id: " + option.getOptionId());
             Log.e("NNK", "option.getCodeDad2: " + option.getCodeDad2());
+            Log.e("NNK", "option.getCodeDad2 testDad2 SIZE: " + testDad2.size());
+            Log.e("NNK", "option.getCodeDad2 testDad2: " + new Gson().toJson(testDad2));
             Log.e("NNK", "option.getOptionTxt: " + option.getOptionTxt());
             Log.e("NNK", "option.option_control_id: " + option.getOptionControlId());
             Log.e("NNK", "option.option_control_id: " + option.getOptionControlTxt());
@@ -992,9 +996,10 @@ public class Options {
 
             for (OptionsDB item : options) {
                 Log.e("conduct", "------------------------------START----------------------------------");
-                Log.e("conduct", "OptionsDB item.getOptionTxt(): " + item.getOptionTxt());
                 Log.e("conduct", "OptionsDB item.getOptionId(): " + item.getOptionId());
+                Log.e("conduct", "OptionsDB item.getOptionTxt(): " + item.getOptionTxt());
                 Log.e("conduct", "OptionsDB item.getOptionControlId(): " + item.getOptionControlId());
+                Log.e("conduct", "OptionsDB item.getOptionControlTxt(): " + item.getOptionControlTxt());
 
                 // Блокирует опция или нет
                 final int[] controlResult = {0};
@@ -1009,6 +1014,15 @@ public class Options {
                         controlResult[0] = 1;
                     }
                 });
+
+                if (new OptionControl<>().checkUnlockCode(item)){
+                    controlResult[0] = 0;
+                    Log.e("checkUnlockCode", "item T: " + item.getOptionTxt());
+                    Log.e("checkUnlockCode", "item T: " + item.getOptionControlTxt());
+                }else {
+                    Log.e("checkUnlockCode", "item F: " + item.getOptionTxt());
+                    Log.e("checkUnlockCode", "item F: " + item.getOptionControlTxt());
+                }
 
                 // Создаю список опций который блокирует
                 if (controlResult[0] == 0) {
@@ -1164,7 +1178,6 @@ public class Options {
 
 //        try {
         Log.e("NNK", "F/optControl/optionId: " + optionId);
-
         Log.e("NNK", "F/New/optControl/getOptionId: " + optionCurrent.getOptionId());
         Log.e("NNK", "F/New/optControl/getOptionTxt: " + optionCurrent.getOptionTxt());
         Log.e("NNK", "F/New/optControl/getOptionControlId: " + optionCurrent.getOptionControlId());
@@ -1308,7 +1321,7 @@ public class Options {
                 if (mode.equals(NNKMode.BLOCK) && optionControlCheckingPercentageOfShelfSpaceDPPO.signal && optionControlCheckingPercentageOfShelfSpaceDPPO.isBlockOption()) {
                     optionControlCheckingPercentageOfShelfSpaceDPPO.showOptionMassage(block);
                 }
-                break;
+                return optionControlCheckingPercentageOfShelfSpaceDPPO.isBlockOption2() ? 1 : 0;
 
             case 135061:
 //
@@ -1322,7 +1335,7 @@ public class Options {
                 if (mode.equals(NNKMode.BLOCK) && optionControlPercentageOfThePrize.signal && optionControlPercentageOfThePrize.isBlockOption()) {
                     optionControlPercentageOfThePrize.showOptionMassage(block);
                 }
-                break;
+                return optionControlPercentageOfThePrize.isBlockOption2() ? 1 : 0;
 
             // Контроль фотоотчётов
 //            case 132971:    // Проверка наличия Фото тележка с товаром (тип 10)
@@ -1415,13 +1428,13 @@ public class Options {
                 OptionControlEKL<?> optionControlEKL = new OptionControlEKL<>(context, dataDB, option, type, mode, unlockCodeResultListener);
                 if (mode.equals(NNKMode.MAKE) || (mode.equals(NNKMode.CHECK) && optionControlEKL.isBlockOption())) {
                     optionControlEKL.showOptionMassage(block);
-                    return optionControlEKL.isBlockOption2() ? 1 : 0;
+//                    return optionControlEKL.isBlockOption2() ? 1 : 0;
                 }
 
 //                if (mode.equals(NNKMode.BLOCK)) {
                 if (mode.equals(NNKMode.BLOCK) && optionControlEKL.signal && optionControlEKL.isBlockOption()) {
                     optionControlEKL.showOptionMassage(block);
-                    return optionControlEKL.isBlockOption2() ? 1 : 0;
+//                    return optionControlEKL.isBlockOption2() ? 1 : 0;
                 }
 
                 return optionControlEKL.isBlockOption2() ? 1 : 0;
