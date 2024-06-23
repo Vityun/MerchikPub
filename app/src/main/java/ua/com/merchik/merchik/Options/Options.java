@@ -659,6 +659,12 @@ public class Options {
             // 13633 - ВС-Импэкс ООО
             // 8523 - Альянс Краси ПП
             // 91429 - Петровська Елла Олександрівна ФОП
+            // 10076 - Триплекс,
+            // 78230 - Триумф,
+            // 14463 - Креатив,
+            // 11034 - Блумі,
+            // 82339 - Профекс Груп,
+            // 14798 - Еудуко
             if (option.getClientId().equals("14301") ||
                     option.getClientId().equals("14840") ||
                     option.getClientId().equals("14843") ||
@@ -666,7 +672,14 @@ public class Options {
                     option.getClientId().equals("16898") ||
                     option.getClientId().equals("13633") ||
                     option.getClientId().equals("8523") ||
-                    option.getClientId().equals("91429")
+                    option.getClientId().equals("91429") ||
+                    option.getClientId().equals("10076") || // Триплекс
+                    option.getClientId().equals("78230") || // Триумф
+                    option.getClientId().equals("14463") || // Креатив
+                    option.getClientId().equals("11034") || // Блумі
+                    option.getClientId().equals("82339") || // Профекс Груп
+                    option.getClientId().equals("14798")  // Еудуко
+
             ) {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                     optionControlNewAlgo(getOptionsToControl(option), context, dataDB, option, optionList, type, mode, false, click);
