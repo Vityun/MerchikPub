@@ -64,8 +64,8 @@ public interface PlanogrammDao {
             "(planogramm.client_id = :clientId OR :clientId IS NULL) " +
             "AND (pa.addr_id = :addressId OR :addressId IS NULL OR pa.addr_id IS NULL) " +
             "AND (pg.group_id = :groupId OR :groupId IS NULL OR pg.group_id IS NULL) " +
-            "AND ((planogramm.dt_start <= :currentDate OR planogramm.dt_start = '0000-00-00') " +
-            "AND (planogramm.dt_end >= :currentDate OR planogramm.dt_end = '0000-00-00'))")
+            "AND ((planogramm.dt_start <= :currentDate OR planogramm.dt_start = '0000-00-00' OR planogramm.dt_start IS NULL) " +
+            "AND (planogramm.dt_end >= :currentDate OR planogramm.dt_end = '0000-00-00' OR planogramm.dt_end IS NULL))")
     List<PlanogrammJOINSDB> getByClientAddress(String clientId, Integer addressId, Integer groupId, String currentDate);    // yyyy-MM-dd
 
     @Query("SELECT " +

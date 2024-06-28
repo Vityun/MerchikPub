@@ -12,8 +12,10 @@ import io.reactivex.rxjava3.schedulers.Schedulers;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
+import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
+import ua.com.merchik.merchik.data.Database.Room.Planogram.PlanogrammSDB;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.planogramm.PlanogrammAddressResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.planogramm.PlanogrammGroupResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.planogramm.PlanogrammImagesResponse;
@@ -47,6 +49,16 @@ public class PlanogrammTableExchange {
                         if (response.body() != null) {
                             if (response.body().state) {
                                 if (response.body().list != null && response.body().list.size() > 0) {
+
+                                    for (PlanogrammSDB item : response.body().list){
+                                        Globals.writeToMLOG("INFO", "D_PlanogrammSDB", "dtEnd: " + item.dtEnd);
+                                        Globals.writeToMLOG("INFO", "D_PlanogrammSDB", "dtEnd: " + item.dtEnd.getTime());
+                                        Globals.writeToMLOG("INFO", "D_PlanogrammSDB", "dtEnd: " + Clock.getHumanTimeSecPattern(item.dtEnd.getTime()/1000, "yyyy-MM-dd"));
+                                        if (item.dtEnd.getTime() < 0){
+                                            item.dtEnd = null;
+                                        }
+                                    }
+
                                     SQL_DB.planogrammDao().insertAll(response.body().list)
                                             .subscribeOn(Schedulers.io())
                                             .subscribe(new DisposableCompletableObserver() {

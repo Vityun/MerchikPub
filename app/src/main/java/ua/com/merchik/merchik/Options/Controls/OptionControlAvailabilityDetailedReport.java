@@ -167,7 +167,6 @@ public class OptionControlAvailabilityDetailedReport<T> extends OptionControl {
             List<SMSPlanSDB> smsPlanSDBS =  SQL_DB.smsPlanDao().getAll(dtFrom, dtTo, 1172, wp.getAddr_id(), wp.getClient_id());
             List<SMSLogSDB> smsLogSDBS = SQL_DB.smsLogDao().getAll(dtFrom, dtTo, 1172, wp.getAddr_id(), wp.getClient_id());
 
-
             if (smsPlanSDBS != null && smsPlanSDBS.size() > 0){
                 signal = false;
                 spannableStringBuilder.append("\n").append("СМС об ОТСУТСТВИИ товара заказчику отправлено, сигнал отменён!");
