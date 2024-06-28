@@ -28,7 +28,7 @@ import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.WpDataRealm;
 
 public class OptionControlEndAnotherWork<T> extends OptionControl {
-    public int OPTION_CONTROL_TASK_ANSWER_ID = 156928;
+    public int OPTION_CONTROL_EndAnotherWork_ID = 156928;
 
     public boolean signal = true;
 
