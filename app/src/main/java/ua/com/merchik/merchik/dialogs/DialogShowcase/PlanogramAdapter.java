@@ -146,7 +146,7 @@ public class PlanogramAdapter extends RecyclerView.Adapter<PlanogramAdapter.View
                         try {
                             DialogFullPhoto dialog = new DialogFullPhoto(image.getContext());
                             dialog.setRatingType(DialogFullPhoto.RatingType.PLANOGRAM);
-                            dialog.setPhotos(getAdapterPosition(), Collections.singletonList(stackPhotoDB), new PhotoLogPhotoAdapter.OnPhotoClickListener() {
+                            dialog.setPhotos(0, Collections.singletonList(stackPhotoDB), new PhotoLogPhotoAdapter.OnPhotoClickListener() {
                                 @Override
                                 public void onPhotoClicked(Context context, StackPhotoDB photoDB) {
                                     try {
@@ -162,7 +162,7 @@ public class PlanogramAdapter extends RecyclerView.Adapter<PlanogramAdapter.View
                                         Log.e("ShowcaseAdapter", "Exception e: " + e);
                                     }
                                 }
-                            }, dialog::dismiss);
+                            }, ()->{});
 
                             dialog.setTextInfo(photoData(stackPhotoDB));
                             dialog.getComment(stackPhotoDB.getComment(), () -> {

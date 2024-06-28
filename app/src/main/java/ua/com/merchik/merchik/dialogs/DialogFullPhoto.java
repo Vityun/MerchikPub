@@ -3,6 +3,7 @@ package ua.com.merchik.merchik.dialogs;
 import static android.graphics.Color.BLACK;
 import static android.graphics.Color.GREEN;
 import static android.graphics.Color.YELLOW;
+import static ua.com.merchik.merchik.Globals.generateUniqueNumber;
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 import static ua.com.merchik.merchik.menu_main.decodeSampledBitmapFromResource;
 
@@ -46,6 +47,7 @@ import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.Database.Room.VoteSDB;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
+import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.dialogs.DialodTAR.DialogCreateTAR;
 
@@ -53,6 +55,8 @@ public class DialogFullPhoto {
 
     private Dialog dialog;
     private Context context;
+
+    private WpDataDB wpDataDB;
 
     private enum MoveTo {
         PREVIOUS, NEXT
@@ -137,6 +141,10 @@ public class DialogFullPhoto {
         return ratingType;
     }
 
+    public void setWpDataDB(WpDataDB wpDataDB) {
+        this.wpDataDB = wpDataDB;
+    }
+
     public void setRatingType(RatingType ratingType) {
         this.ratingType = ratingType;
     }
@@ -194,12 +202,14 @@ public class DialogFullPhoto {
         photoLogData = list;
         position = pos;
 
+        Log.e("setPhotos", "ratingType: " + ratingType);
+
         Log.e("setPhotos", "position: " + position);
         Log.e("setPhotos", "photoLogData: " + photoLogData.get(position).getId());
 
         openFullSize.setOnClickListener(view -> {
             mOnPhotoClickListener.onPhotoClicked(view.getContext(), data.get(pos));
-            dialog.dismiss();
+//            dialog.dismiss();
         });
 
         PhotoLogPhotoAdapter adapter = new PhotoLogPhotoAdapter(list, (v, event) -> {
@@ -382,16 +392,27 @@ public class DialogFullPhoto {
         });
     }
 
+
+    // 1 - оценка дет отчёта
+    // 2 - оценка аудио файла
+    // 3 - оценка достижения
+    // 4 - оценка идентификатора витрины
+    // 5 - оценка идентификатора планограммы
     private void savePhotoData(StackPhotoDB row, int rate, String comment, RatingType ratingType) {
+//        ratingType = RatingType.PHOTO;
         switch (ratingType) {
             case SHOWCASE -> {
                 VoteSDB vote = new VoteSDB();
-                vote.codeDad2 = row.code_dad2;
-                vote.kli = row.client_id;
-                vote.addrId = row.addr_id;
+                vote.serverId = generateUniqueNumber();
+                vote.dtUpload = 0L;
+                vote.codeDad2 = wpDataDB.getCode_dad2();
+                vote.isp = wpDataDB.getIsp();
+                vote.themeId = wpDataDB.getTheme_id();
+                vote.kli = wpDataDB.getClient_id();
+                vote.addrId = wpDataDB.getAddr_id();
                 vote.dt = System.currentTimeMillis() / 1000;
-                vote.merchik = row.user_id;
-                vote.voterId = row.user_id;
+                vote.merchik = wpDataDB.getUser_id();
+                vote.voterId = wpDataDB.getUser_id();
                 vote.photoId = row.photoServerId != null ? Long.parseLong(row.photoServerId) : 0;
                 vote.voteClass = 4;
                 vote.score = rate;
@@ -401,12 +422,16 @@ public class DialogFullPhoto {
             }
             case PLANOGRAM -> {
                 VoteSDB vote = new VoteSDB();
-                vote.codeDad2 = row.code_dad2;
-                vote.kli = row.client_id;
-                vote.addrId = row.addr_id;
+                vote.serverId = generateUniqueNumber();
+                vote.dtUpload = 0L;
+                vote.codeDad2 = wpDataDB.getCode_dad2();
+                vote.isp = wpDataDB.getIsp();
+                vote.themeId = wpDataDB.getTheme_id();
+                vote.kli = wpDataDB.getClient_id();
+                vote.addrId = wpDataDB.getAddr_id();
                 vote.dt = System.currentTimeMillis() / 1000;
-                vote.merchik = row.user_id;
-                vote.voterId = row.user_id;
+                vote.merchik = wpDataDB.getUser_id();
+                vote.voterId = wpDataDB.getUser_id();
                 vote.photoId = row.photoServerId != null ? Long.parseLong(row.photoServerId) : 0;
                 vote.voteClass = 5;
                 vote.score = rate;

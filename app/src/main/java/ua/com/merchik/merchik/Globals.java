@@ -1798,6 +1798,14 @@ public class Globals {
         return result;
     }
 
+    public static int generateUniqueNumber() {
+        long currentTimeMillis = System.currentTimeMillis();
+        String timeString = String.valueOf(currentTimeMillis);
+        String lastDigits = timeString.substring(timeString.length() - 8);
+        String uniqueString = "9" + lastDigits;
+        return Integer.parseInt(uniqueString);
+    }
+
 
 }//--------------
 

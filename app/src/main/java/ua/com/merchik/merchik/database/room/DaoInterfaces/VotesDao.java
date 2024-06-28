@@ -43,4 +43,8 @@ public interface VotesDao {
 
     // ---------------------------------------------------------
 
+
+    @Query("SELECT * FROM votes WHERE dt_upload = 0")
+    List<VoteSDB> getAllToUpload();
+
 }

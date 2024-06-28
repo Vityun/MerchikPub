@@ -6,6 +6,7 @@ import static ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedR
 import static ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity.detailedReportRPList;
 import static ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity.detailedReportTovList;
 import static ua.com.merchik.merchik.Globals.userId;
+import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
@@ -19,10 +20,14 @@ import android.text.style.ClickableSpan;
 import android.util.Log;
 import android.view.View;
 
+import java.util.List;
+
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.Options.OptionControl;
 import ua.com.merchik.merchik.Options.Options;
+import ua.com.merchik.merchik.data.Database.Room.SMS.SMSLogSDB;
+import ua.com.merchik.merchik.data.Database.Room.SMS.SMSPlanSDB;
 import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
 import ua.com.merchik.merchik.data.OptionMassageType;
 import ua.com.merchik.merchik.data.RealmModels.AppUsersDB;
@@ -155,8 +160,25 @@ public class OptionControlAvailabilityDetailedReport<T> extends OptionControl {
         // Формирование Сигналов для БЛОКИРОВКИ
         if (OFS == 100) {
             signal = true;
-            spannableStringBuilder.append("\n\nВы можете снять сигнал, если полностью и правильно заполните детализированный отчет! \n" +
-                    "В случае, если на витрине (и на складе) реально нет части товара напишите об этом в комментарии (см. на кнопку \"Комментарий\")");
+
+            Long dtFrom = wp.getDt().getTime()/1000 - 604800;   // -7 дней в секундах.. на самом деле должно біть минус 6, но оно  счтиает старт дня
+            Long dtTo = wp.getDt().getTime()/1000 + 345600;   // +4 дней в секундах.. на самом деле должно біть минус 3, но оно  счтиает старт дня
+
+            List<SMSPlanSDB> smsPlanSDBS =  SQL_DB.smsPlanDao().getAll(dtFrom, dtTo, 1172, wp.getAddr_id(), wp.getClient_id());
+            List<SMSLogSDB> smsLogSDBS = SQL_DB.smsLogDao().getAll(dtFrom, dtTo, 1172, wp.getAddr_id(), wp.getClient_id());
+
+
+            if (smsPlanSDBS != null && smsPlanSDBS.size() > 0){
+                signal = false;
+                spannableStringBuilder.append("\n").append("СМС об ОТСУТСТВИИ товара заказчику отправлено, сигнал отменён!");
+            }else if (smsLogSDBS != null && smsLogSDBS.size() > 0){
+                signal = false;
+                spannableStringBuilder.append("\n").append("СМС об ОТСУТСТВИИ товара заказчику отправлено, сигнал отменён!");
+            }else {
+                spannableStringBuilder.append("\n\nВы можете снять сигнал, если полностью и правильно заполните детализированный отчет! \n" +
+                        "В случае, если на витрине (и на складе) реально нет части товара напишите об этом в комментарии (см. на кнопку \"Комментарий\")");
+            }
+
         } else if (OFS > Integer.parseInt(optionDB.getAmountMax()) && Integer.parseInt(optionDB.getAmountMax()) > 0) {
             signal = true;
             spannableStringBuilder.append(" и это больше ").append(optionDB.getAmountMax()).append("% (максимально допустимого).");

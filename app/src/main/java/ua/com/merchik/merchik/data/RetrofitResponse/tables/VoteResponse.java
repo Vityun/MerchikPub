@@ -18,5 +18,5 @@ public class VoteResponse {
 
     @SerializedName("list")
     @Expose
-    public List<VoteSDB> list = null;
+    public List<VoteSDB> list;
 }

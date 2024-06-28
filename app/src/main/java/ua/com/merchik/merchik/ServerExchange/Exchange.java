@@ -40,6 +40,7 @@ import ua.com.merchik.merchik.ServerExchange.TablesExchange.LocationExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.OblastExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.PlanogrammTableExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.PotentialClientTableExchange;
+import ua.com.merchik.merchik.ServerExchange.TablesExchange.SMSExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.SamplePhotoExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.ShelfSizeExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.ShowcaseExchange;
@@ -48,6 +49,7 @@ import ua.com.merchik.merchik.ServerExchange.TablesExchange.StandartExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.TranslationsExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.UsersExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.VideoViewExchange;
+import ua.com.merchik.merchik.ServerExchange.TablesExchange.VotesExchange;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.Database.Room.AchievementsSDB;
 import ua.com.merchik.merchik.data.Database.Room.AddressSDB;
@@ -979,6 +981,54 @@ public class Exchange {
                 }catch (Exception e){
                     Globals.writeToMLOG("ERROR", "startExchange/PlanogrammExchange/planogrammDownload", "Exception e: " + e);
                 }
+
+
+                // SMS A & B
+                try {
+                    SMSExchange smsExchange = new SMSExchange();
+                    smsExchange.smsPlanExchange(new Clicks.clickObjectAndStatus() {
+                        @Override
+                        public void onSuccess(Object data) {
+
+                        }
+
+                        @Override
+                        public void onFailure(String error) {
+
+                        }
+                    });
+
+                    smsExchange.smsLogExchange(new Clicks.clickObjectAndStatus() {
+                        @Override
+                        public void onSuccess(Object data) {
+
+                        }
+
+                        @Override
+                        public void onFailure(String error) {
+
+                        }
+                    });
+                }catch (Exception e){
+                    Globals.writeToMLOG("ERROR", "startExchange/SMSExchange/", "Exception e: " + e);
+                }
+
+                try {
+                    new VotesExchange().uploadVotes(new Clicks.clickObjectAndStatus() {
+                        @Override
+                        public void onSuccess(Object data) {
+                            Globals.writeToMLOG("INFO", "startExchange/VotesExchange/", "Object: " + data);
+                        }
+
+                        @Override
+                        public void onFailure(String error) {
+                            Globals.writeToMLOG("ERROR", "startExchange/VotesExchange/onFailure", "error: " + error);
+                        }
+                    });
+                }catch (Exception e){
+                    Globals.writeToMLOG("ERROR", "startExchange/VotesExchange/", "Exception e: " + e);
+                }
+
 
                 // --------------------------------------------------------------
             } else {

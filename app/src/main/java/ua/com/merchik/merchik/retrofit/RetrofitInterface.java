@@ -55,6 +55,8 @@ import ua.com.merchik.merchik.data.RetrofitResponse.PremiumResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.PromoTableResponce;
 import ua.com.merchik.merchik.data.RetrofitResponse.ReportHint;
 import ua.com.merchik.merchik.data.RetrofitResponse.ReportPrepareServer;
+import ua.com.merchik.merchik.data.RetrofitResponse.SMSLogResponse;
+import ua.com.merchik.merchik.data.RetrofitResponse.SMSPlanResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.SamplePhotoResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.ServerConnection;
 import ua.com.merchik.merchik.data.RetrofitResponse.SiteObjectsResponse;
@@ -633,6 +635,16 @@ public interface RetrofitInterface {
     // PlanogrammResponse
     @POST("mobile_app.php?")
     Call<PlanogrammResponse> Planogramm_RESPONSE(
+            @Header("ContentType") String content,
+            @Body JsonObject json);
+
+    @POST("mobile_app.php?")
+    Call<SMSPlanResponse> SMSPlan_RESPONSE(
+            @Header("ContentType") String content,
+            @Body JsonObject json);
+
+    @POST("mobile_app.php?")
+    Call<SMSLogResponse> SMSLog_RESPONSE(
             @Header("ContentType") String content,
             @Body JsonObject json);
 

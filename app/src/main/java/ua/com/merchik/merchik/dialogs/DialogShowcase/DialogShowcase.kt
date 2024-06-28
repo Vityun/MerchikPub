@@ -313,7 +313,7 @@ class DialogShowcase(private val context: Context?) : DialogData() {
                 Globals.writeToMLOG("ERROR", "showcaseDataList", "Exception e: $e")
             }
             val showcaseDataListT = ArrayList(showcaseDataList)
-            val adapter = ShowcaseAdapter(showcaseDataListT, click)
+            val adapter = ShowcaseAdapter(wpDataDB, showcaseDataListT, click)
             setFilter(adapter)
             recyclerView!!.adapter = adapter
             recyclerView!!.layoutManager =

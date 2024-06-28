@@ -19,8 +19,8 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 import ua.com.merchik.merchik.R;
-import ua.com.merchik.merchik.ServerExchange.ExchangeInterface;
-import ua.com.merchik.merchik.ServerExchange.TablesLoadingUnloading;
+import ua.com.merchik.merchik.ServerExchange.TablesExchange.VotesExchange;
+import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.ShowcaseResponse;
 import ua.com.merchik.merchik.data.TestJsonUpload.StandartData;
 import ua.com.merchik.merchik.dialogs.DialogShowcase.DialogShowcase;
@@ -39,8 +39,12 @@ public class MenuMainActivity extends toolbar_menus {
         try {
 
             findViewById(R.id.fab).setOnClickListener(v -> {
-                Toast.makeText(this, "Подсказка к данному разделу не готова", Toast.LENGTH_SHORT).show();
-                test();
+                try {
+                    Toast.makeText(this, "Подсказка к данному разделу не готова", Toast.LENGTH_SHORT).show();
+                    test();
+                }catch (Exception e){
+                    Log.e("MenuMainActivity", "Exception e: " + e);
+                }
             });
 
             findViewById(R.id.fab).setOnLongClickListener(v -> {
@@ -83,21 +87,22 @@ public class MenuMainActivity extends toolbar_menus {
 
     private void test() {
         try {
-            TablesLoadingUnloading tablesLoadingUnloading = new TablesLoadingUnloading();
-            tablesLoadingUnloading.uploadLodMp(new ExchangeInterface.ExchangeRes() {
+            new VotesExchange().uploadVotes(new Clicks.clickObjectAndStatus() {
                 @Override
-                public void onSuccess(String ok) {
-                    Log.e("uploadLodMp", "uploadLodMp: " + ok);
+                public void onSuccess(Object data) {
+
                 }
 
                 @Override
                 public void onFailure(String error) {
-                    Log.e("uploadLodMp", "uploadLodMp error: " + error);
+
                 }
             });
-        } catch (Exception e) {
-            Log.e("uploadLodMp", "uploadLodMp Exception e: " + e);
+        }catch (Exception e){
+            Log.e("testLong", "Exception e: " + e);
         }
+
+
     }
 
 /*        try {

@@ -60,17 +60,21 @@ public class OptionControlEKL<T> extends OptionControl {
     }
 
     public OptionControlEKL(Context context, T document, OptionsDB optionDB, OptionMassageType msgType, Options.NNKMode nnkMode, OptionControl.UnlockCodeResultListener unlockCodeResultListener) {
-        Log.e("OptionControlEKL", "HERE TEST OptionControlEKL START");
-        this.context = context;
-        this.document = document;
-        this.optionDB = optionDB;
-        this.msgType = msgType;
-        this.nnkMode = nnkMode;
-        this.unlockCodeResultListener = unlockCodeResultListener;
+        try {
+            Log.e("OptionControlEKL", "HERE TEST OptionControlEKL START");
+            this.context = context;
+            this.document = document;
+            this.optionDB = optionDB;
+            this.msgType = msgType;
+            this.nnkMode = nnkMode;
+            this.unlockCodeResultListener = unlockCodeResultListener;
 
-        getDocumentVar();
-        executeOption();
-        Log.e("OptionControlEKL", "HERE TEST OptionControlEKL END");
+            getDocumentVar();
+            executeOption();
+            Log.e("OptionControlEKL", "HERE TEST OptionControlEKL END");
+        }catch (Exception e){
+            Globals.writeToMLOG("ERROR", "OptionControlEKL", "Exception e: " + e);
+        }
     }
 
     private void getDocumentVar() {
@@ -147,6 +151,11 @@ public class OptionControlEKL<T> extends OptionControl {
                 //ГрупТов.ДобавитьЗначение(ПТТ.Отдел); //если мы уже определились с ПТТ в этом режиме то и отдел получим из ПТТ ... клиент сам решил использовать ЭТОГО ПТТ независимо от отдела
             } else if (optionDB.getOptionControlId().equals("84006") || (nnkMode.equals(Options.NNKMode.BLOCK) && optionDB.getOptionId().equals("84006"))) {
                 tovarGroupClientSDB = SQL_DB.tovarGroupClientDao().getAllBy(wpDataDB.getClient_id(), addressSDB.tpId);  // Получаю ГруппыТоваров по Адресу и Сети!
+
+                if (tovarGroupClientSDB == null || tovarGroupClientSDB.size() == 0){
+                    tovarGroupClientSDB = SQL_DB.tovarGroupClientDao().getAllBy(wpDataDB.getClient_id(), 0);
+                }
+
                 if (tovarGroupClientSDB != null && tovarGroupClientSDB.size() > 0) {
                     List<Integer> ids = new ArrayList<>();
                     for (TovarGroupClientSDB item : tovarGroupClientSDB) {
@@ -286,8 +295,10 @@ public class OptionControlEKL<T> extends OptionControl {
 //                    }catch (Exception e){
 //                        Globals.writeToMLOG("INFO", "OptionControlEKL/Build.VERSION.SDK_INT", "Exception e: " + e);
 //                    }
-                    if (tovarGroupSDB.stream().filter(item -> item.id.equals(usersSDBPTT.otdelId)).findFirst().orElse(null) != null
-                            && optionDB.getOptionControlId().equals("132629") && (addressSDB.kolKass > 5 || addressSDB.kolKass == 0)) {
+                    TovarGroupSDB test = tovarGroupSDB.stream().filter(item -> item.id.equals(usersSDBPTT.otdelId)).findFirst().orElse(null);
+                    Log.e("test", "test: " + test);
+                    if (tovarGroupSDB.stream().filter(item -> item.id.equals(usersSDBPTT.otdelId)).findFirst().orElse(null) == null
+                            && !optionDB.getOptionControlId().equals("132629") && (addressSDB.kolKass > 5 || addressSDB.kolKass == 0)) {
                         if (documentUser.reportDate05 != null && documentUser.reportDate05.getTime() >= wpDataDB.getDt().getTime()) {
                             signal = true;
                             optionMsg.append(", но ").append("ПТТ работает в отделе ").append(SQL_DB.tovarGroupDao().getById(usersSDBPTT.otdelId).nm).append(" и не может подписывать ЭКЛ для: ")
@@ -297,8 +308,8 @@ public class OptionControlEKL<T> extends OptionControl {
                             optionMsg.append(", но ").append("ПТТ работает в отделе ").append(SQL_DB.tovarGroupDao().getById(usersSDBPTT.otdelId).nm).append(" и не может подписывать ЭКЛ для: ")
                                     .append(TG.getNmFromList(tovarGroupSDB)).append(" (для магазина в котором более 5 касс и исполнитель провел 5-й отчет)");
                         }
-                    } else if (tovarGroupSDB.stream().filter(item -> item.id.equals(usersSDBPTT.otdelId)).findFirst().orElse(null) != null
-                            && optionDB.getOptionControlId().equals("132629") && (addressSDB.kolKass > 0 && addressSDB.kolKass <= 5)) {
+                    } else if (tovarGroupSDB.stream().filter(item -> item.id.equals(usersSDBPTT.otdelId)).findFirst().orElse(null) == null
+                            && !optionDB.getOptionControlId().equals("132629") && (addressSDB.kolKass > 0 && addressSDB.kolKass <= 5)) {
                         if (documentUser.reportDate05 != null && documentUser.reportDate05.getTime() >= wpDataDB.getDt().getTime()) {
                             signal = true;
                             optionMsg.append(", но ").append("ПТТ работает в отделе ").append(SQL_DB.tovarGroupDao().getById(usersSDBPTT.otdelId).nm).append(" и не может подписывать ЭКЛ для: ")

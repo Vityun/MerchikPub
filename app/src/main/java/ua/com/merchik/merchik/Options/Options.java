@@ -174,7 +174,7 @@ public class Options {
             151594, 80977, 135330, 133381, 135329, 138518, 151139, 132623, 133382, 137797, 135809,
             135328, 135327, 157275, 138341, 590, 84932, 134583, 157352, 1470, 138644, 1455, 135061,
             158361, 159707, 575, 132971, 135591, 135708, 135595, 143968, 160568, 164352, 164354,
-            84005, 84967, 164985, 165276, 165275, 165482};
+            84005, 84967, 164985, 165276, 165275, 165482, 166528};
 
     /*Сюда записываются Опции которые не прошли проверку, при особенном переданном MOD-e. Сделано
     для того что б потом можно было посмотреть название опций которые не прошли проверку и, возможно,
@@ -327,6 +327,7 @@ public class Options {
                     break;
 
                 case 157278:
+                case 166528:
                     OptionControlPhotoPromotion<?> optionControlPhotoPromotion = new OptionControlPhotoPromotion<>(context, dataDB, optionsDB, newOptionType, mode, unlockCodeResultListener);
                     optionControlPhotoPromotion.showOptionMassage("");
                     break;
@@ -665,6 +666,13 @@ public class Options {
             // 11034 - Блумі,
             // 82339 - Профекс Груп,
             // 14798 - Еудуко
+
+            // 91332 - Фуд Воркс,
+            // 84186 - Уикенд,
+            // 69842 - Мега Крисп,
+            // 9261  - фабрика бакалійних,
+            // 10349 - Гифт-К,
+            // 91419 - Чміль Валерій Васильович ФОП
             if (option.getClientId().equals("14301") ||
                     option.getClientId().equals("14840") ||
                     option.getClientId().equals("14843") ||
@@ -678,7 +686,13 @@ public class Options {
                     option.getClientId().equals("14463") || // Креатив
                     option.getClientId().equals("11034") || // Блумі
                     option.getClientId().equals("82339") || // Профекс Груп
-                    option.getClientId().equals("14798")  // Еудуко
+                    option.getClientId().equals("14798") || // Еудуко
+                    option.getClientId().equals("91332") || // Фуд Воркс,
+                    option.getClientId().equals("84186") || // Уикенд,
+                    option.getClientId().equals("69842") || // Мега Крисп,
+                    option.getClientId().equals("9261") ||  // фабрика бакалійних,
+                    option.getClientId().equals("10349") || // Гифт-К,
+                    option.getClientId().equals("91419")   // Чміль Валерій Васильович ФОП
 
             ) {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
@@ -1592,6 +1606,7 @@ public class Options {
                 return optionControlPromotion.isBlockOption2() ? 1 : 0;
 
             case 157278:
+            case 166528:
                 OptionControlPhotoPromotion<?> optionControlPhotoPromotion =
                         new OptionControlPhotoPromotion<>(context, dataDB, option, type, mode, unlockCodeResultListener);
                 if (optionControlPhotoPromotion.isBlockOption()) {

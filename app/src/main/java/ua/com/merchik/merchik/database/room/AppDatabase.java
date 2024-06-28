@@ -32,6 +32,8 @@ import ua.com.merchik.merchik.data.Database.Room.Planogram.PlanogrammImagesSDB;
 import ua.com.merchik.merchik.data.Database.Room.Planogram.PlanogrammSDB;
 import ua.com.merchik.merchik.data.Database.Room.PotentialClientSDB;
 import ua.com.merchik.merchik.data.Database.Room.ReclamationPercentageSDB;
+import ua.com.merchik.merchik.data.Database.Room.SMS.SMSLogSDB;
+import ua.com.merchik.merchik.data.Database.Room.SMS.SMSPlanSDB;
 import ua.com.merchik.merchik.data.Database.Room.SamplePhotoSDB;
 import ua.com.merchik.merchik.data.Database.Room.ShelfSizeSDB;
 import ua.com.merchik.merchik.data.Database.Room.ShowcaseSDB;
@@ -68,6 +70,8 @@ import ua.com.merchik.merchik.database.room.DaoInterfaces.PlanogrammGroupDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.PlanogrammImagesDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.PotentialClientDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.ReclamationPercentageDao;
+import ua.com.merchik.merchik.database.room.DaoInterfaces.SMSLogDao;
+import ua.com.merchik.merchik.database.room.DaoInterfaces.SMSPlanDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.SamplePhotoDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.ShelfSizeDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.ShowcaseDao;
@@ -120,9 +124,11 @@ import ua.com.merchik.merchik.database.room.DaoInterfaces.VotesDao;
                 PlanogrammSDB.class,      // Планограми
                 PlanogrammAddressSDB.class, // Планограми Адреса
                 PlanogrammGroupSDB.class,   // Планограми Группы
-                PlanogrammImagesSDB.class   // Планограми Идентификаторы
+                PlanogrammImagesSDB.class,   // Планограми Идентификаторы
+                SMSPlanSDB.class,       //  СМС А (тут типо должны быть те кто в очереди или недавно отправленные)
+                SMSLogSDB.class         //  СМС Б
         },
-        version = 50
+        version = 52
 )
 
 
@@ -200,6 +206,10 @@ public abstract class AppDatabase extends RoomDatabase {
     public abstract PlanogrammGroupDao planogrammGroupDao();
 
     public abstract PlanogrammImagesDao planogrammImagesDao();
+
+    public abstract SMSPlanDao smsPlanDao();
+
+    public abstract SMSLogDao smsLogDao();
 
     public class MyAutoMigration {
     }

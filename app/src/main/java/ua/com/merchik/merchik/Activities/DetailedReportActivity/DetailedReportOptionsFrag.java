@@ -48,6 +48,7 @@ import ua.com.merchik.merchik.Options.OptionControl;
 import ua.com.merchik.merchik.Options.Options;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.ServerExchange.Exchange;
+import ua.com.merchik.merchik.ServerExchange.TablesExchange.SMSExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesLoadingUnloading;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.WorkPlan;
@@ -276,6 +277,36 @@ public class DetailedReportOptionsFrag extends Fragment {
                 try {
                     List<OptionsDB> opt = workPlan.getOptionButtons2(workPlan.getWpOpchetId(wpDataDB), wpDataDB.getId());
                     WpDataDB wp = WpDataRealm.getWpDataRowByDad2Id(wpDataDB.getCode_dad2());
+
+                    try {
+                        SMSExchange smsExchange = new SMSExchange();
+                        smsExchange.smsPlanExchange(new Clicks.clickObjectAndStatus() {
+                            @Override
+                            public void onSuccess(Object data) {
+
+                            }
+
+                            @Override
+                            public void onFailure(String error) {
+
+                            }
+                        });
+
+                        smsExchange.smsLogExchange(new Clicks.clickObjectAndStatus() {
+                            @Override
+                            public void onSuccess(Object data) {
+
+                            }
+
+                            @Override
+                            public void onFailure(String error) {
+
+                            }
+                        });
+                    }catch (Exception e){
+                        Globals.writeToMLOG("ERROR", "buttonMakeAReport.setOnClickListener/", "Exception e: " + e);
+                    }
+
 
                     new Options().conduct(getContext(), wp, opt, DEFAULT_CONDUCT, new Clicks.click() {
                         @Override

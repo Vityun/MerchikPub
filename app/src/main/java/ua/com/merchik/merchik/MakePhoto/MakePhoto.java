@@ -838,12 +838,13 @@ public class MakePhoto {
                 try {
                     ShowcaseSDB showcase = (ShowcaseSDB) data;
                     Toast.makeText(activity, "Обрана вітрина: " + showcase.nm + " (" + showcase.id + ")", Toast.LENGTH_LONG).show();
+                    PlanogrammSDB planogrammSDB = null;
 
                     try {
                         MakePhoto.img_src_id = String.valueOf(showcase.photoId);
                         MakePhoto.showcase_id = String.valueOf(showcase.id);
                         MakePhoto.planogram_id = String.valueOf(showcase.planogramId);
-                        PlanogrammSDB planogrammSDB = SQL_DB.planogrammDao().getById(showcase.planogramId);
+                        planogrammSDB = SQL_DB.planogrammDao().getById(showcase.planogramId);
                         if (planogrammSDB != null && planogrammSDB.photoId != null){
                             MakePhoto.planogram_img_id = String.valueOf(planogrammSDB.photoId);
                         }
@@ -852,8 +853,8 @@ public class MakePhoto {
                     }
 
                     boolean needPlan;
-                    if (showcase.planogramId != null && showcase.planogramId != 0) {
-                        needPlan = false;
+                    if (planogrammSDB != null) {
+                        needPlan = true;
                     } else {
                         if (dialog.photoType == 0) {
                             needPlan = true;
