@@ -16,10 +16,14 @@ buildscript {
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:8.1.1'
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.8.10"
-
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.9.22"
         classpath "io.realm:realm-gradle-plugin:10.16.1"
     }
+}
+
+plugins {
+    id("com.google.dagger.hilt.android") version "2.50" apply false
+    id("io.realm.kotlin") version "1.11.0" apply false
 }
 
 allprojects {

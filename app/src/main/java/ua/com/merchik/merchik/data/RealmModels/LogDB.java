@@ -1,9 +1,19 @@
 package ua.com.merchik.merchik.data.RealmModels;
 
+import androidx.annotation.NonNull;
+
+import com.google.gson.annotations.SerializedName;
+
+import org.jetbrains.annotations.Nullable;
+import org.json.JSONObject;
+
 import io.realm.RealmObject;
 import io.realm.annotations.PrimaryKey;
+import ua.com.merchik.merchik.data.Database.Room.LogDBOverride;
+import ua.com.merchik.merchik.dataLayer.DataObjectUI;
+import ua.com.merchik.merchik.dataLayer.model.MerchModifier;
 
-public class LogDB extends RealmObject {
+public class LogDB extends RealmObject implements DataObjectUI{
 
     @PrimaryKey
     private Integer id;
@@ -121,5 +131,35 @@ public class LogDB extends RealmObject {
 
     public void setObj_date(String obj_date) {
         this.obj_date = obj_date;
+    }
+
+    @NonNull
+    @Override
+    public String getHidedFieldsOnUI() {
+        return LogDBOverride.INSTANCE.getHidedFieldsOnUI();
+    }
+
+    @Nullable
+    @Override
+    public Long getTranslateId(@NonNull String key) {
+        return LogDBOverride.INSTANCE.getTranslateId(key);
+    }
+
+    @NonNull
+    @Override
+    public String getValueUI(@NonNull String key, @NonNull Object value) {
+        return LogDBOverride.INSTANCE.getValueUI(key, value);
+    }
+
+    @Nullable
+    @Override
+    public MerchModifier getFieldModifier(@NonNull String key, @NonNull JSONObject jsonObject) {
+        return LogDBOverride.INSTANCE.getFieldModifier(key, jsonObject);
+    }
+
+    @Nullable
+    @Override
+    public MerchModifier getValueModifier(@NonNull String key, @NonNull JSONObject jsonObject) {
+        return LogDBOverride.INSTANCE.getValueModifier(key, jsonObject);
     }
 }

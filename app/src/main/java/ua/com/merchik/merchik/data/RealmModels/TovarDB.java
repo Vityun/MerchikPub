@@ -1,13 +1,20 @@
 package ua.com.merchik.merchik.data.RealmModels;
 
+import androidx.annotation.NonNull;
+
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
+
+import org.jetbrains.annotations.Nullable;
+import org.json.JSONObject;
 
 import io.realm.RealmObject;
 import io.realm.annotations.Ignore;
 import io.realm.annotations.PrimaryKey;
+import ua.com.merchik.merchik.dataLayer.DataObjectUI;
+import ua.com.merchik.merchik.dataLayer.model.MerchModifier;
 
-public class TovarDB extends RealmObject {
+public class TovarDB extends RealmObject implements DataObjectUI {
     @SerializedName("ID")
     @Expose
     @PrimaryKey
@@ -183,5 +190,35 @@ public class TovarDB extends RealmObject {
 
     public void setSortcol(String sortcol) {
         this.sortcol = sortcol;
+    }
+
+    @NonNull
+    @Override
+    public String getHidedFieldsOnUI() {
+        return DataObjectUI.DefaultImpls.getHidedFieldsOnUI(this);
+    }
+
+    @Nullable
+    @Override
+    public Long getTranslateId(@NonNull String key) {
+        return DataObjectUI.DefaultImpls.getTranslateId(this, key);
+    }
+
+    @NonNull
+    @Override
+    public String getValueUI(@NonNull String key, @NonNull Object value) {
+        return DataObjectUI.DefaultImpls.getValueUI(this, key, value);
+    }
+
+    @Nullable
+    @Override
+    public MerchModifier getFieldModifier(@NonNull String key, @NonNull JSONObject jsonObject) {
+        return DataObjectUI.DefaultImpls.getFieldModifier(this, key, jsonObject);
+    }
+
+    @Nullable
+    @Override
+    public MerchModifier getValueModifier(@NonNull String key, @NonNull JSONObject jsonObject) {
+        return DataObjectUI.DefaultImpls.getValueModifier(this, key, jsonObject);
     }
 }

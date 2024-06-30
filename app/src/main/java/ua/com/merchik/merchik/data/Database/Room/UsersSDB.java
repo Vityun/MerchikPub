@@ -8,10 +8,16 @@ import androidx.room.PrimaryKey;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
+import org.jetbrains.annotations.Nullable;
+import org.json.JSONObject;
+
 import java.sql.Date;
 
+import ua.com.merchik.merchik.dataLayer.DataObjectUI;
+import ua.com.merchik.merchik.dataLayer.model.MerchModifier;
+
 @Entity(tableName = "sotr")
-public class UsersSDB {
+public class UsersSDB implements DataObjectUI{
     @SerializedName("user_id")
     @Expose
     @PrimaryKey
@@ -144,6 +150,38 @@ public class UsersSDB {
     @Expose
     @ColumnInfo(name = "report_date_200")
     public Date reportDate200;
+
+    @NonNull
+    @Override
+    public String getHidedFieldsOnUI() {
+        return "author_id, city_id, client_id, department, fired, fired_dt, " +
+                "user_id, img_personal_photo, img_personal_photo_thumb, " +
+                "otdel_id, work_addr_id";
+    }
+
+    @Nullable
+    @Override
+    public Long getTranslateId(@NonNull String key) {
+        return DataObjectUI.DefaultImpls.getTranslateId(this, key);
+    }
+
+    @NonNull
+    @Override
+    public String getValueUI(@NonNull String key, @NonNull Object value) {
+        return DataObjectUI.DefaultImpls.getValueUI(this, key, value);
+    }
+
+    @Nullable
+    @Override
+    public MerchModifier getFieldModifier(@NonNull String key, @NonNull JSONObject jsonObject) {
+        return DataObjectUI.DefaultImpls.getFieldModifier(this, key, jsonObject);
+    }
+
+    @Nullable
+    @Override
+    public MerchModifier getValueModifier(@NonNull String key, @NonNull JSONObject jsonObject) {
+        return DataObjectUI.DefaultImpls.getValueModifier(this, key, jsonObject);
+    }
 
 //    @Override
 //    public String toString() {

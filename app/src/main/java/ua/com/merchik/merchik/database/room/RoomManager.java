@@ -21,7 +21,8 @@ public class RoomManager {
                 .addMigrations(
                         MIGRATION_12_13,
                         MIGRATION_40_41,
-                        MIGRATION_41_42
+                        MIGRATION_41_42,
+                        MIGRATION_42_51
                 )
 
                 .build();
@@ -425,6 +426,18 @@ public class RoomManager {
             database.execSQL("DROP TABLE tasks_and_reclamations");
             database.execSQL("ALTER TABLE tasks_and_reclamations_new RENAME TO tasks_and_reclamations");
 
+        }
+    };
+
+    static final Migration MIGRATION_42_51 = new Migration(42, 51) {
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase database) {
+            database.execSQL("CREATE TABLE IF NOT EXISTS `settings_ui` (" +
+                    "`id` INTEGER NOT NULL, " +
+                    "`context_tag` TEXT, " +
+                    "`table_db` TEXT, " +
+                    "`settings_json` TEXT, " +
+                    "PRIMARY KEY(`id`))");
         }
     };
 }

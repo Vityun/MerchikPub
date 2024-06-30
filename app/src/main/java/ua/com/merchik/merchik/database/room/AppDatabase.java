@@ -33,6 +33,7 @@ import ua.com.merchik.merchik.data.Database.Room.Planogram.PlanogrammSDB;
 import ua.com.merchik.merchik.data.Database.Room.PotentialClientSDB;
 import ua.com.merchik.merchik.data.Database.Room.ReclamationPercentageSDB;
 import ua.com.merchik.merchik.data.Database.Room.SamplePhotoSDB;
+import ua.com.merchik.merchik.data.Database.Room.SettingsUISDB;
 import ua.com.merchik.merchik.data.Database.Room.ShelfSizeSDB;
 import ua.com.merchik.merchik.data.Database.Room.ShowcaseSDB;
 import ua.com.merchik.merchik.data.Database.Room.SiteObjectsSDB;
@@ -69,6 +70,7 @@ import ua.com.merchik.merchik.database.room.DaoInterfaces.PlanogrammImagesDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.PotentialClientDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.ReclamationPercentageDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.SamplePhotoDao;
+import ua.com.merchik.merchik.database.room.DaoInterfaces.SettingsUIDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.ShelfSizeDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.ShowcaseDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.SiteObjectsDao;
@@ -120,9 +122,10 @@ import ua.com.merchik.merchik.database.room.DaoInterfaces.VotesDao;
                 PlanogrammSDB.class,      // Планограми
                 PlanogrammAddressSDB.class, // Планограми Адреса
                 PlanogrammGroupSDB.class,   // Планограми Группы
-                PlanogrammImagesSDB.class   // Планограми Идентификаторы
+                PlanogrammImagesSDB.class,   // Планограми Идентификаторы
+                SettingsUISDB.class
         },
-        version = 50
+        version = 51
 )
 
 
@@ -200,6 +203,8 @@ public abstract class AppDatabase extends RoomDatabase {
     public abstract PlanogrammGroupDao planogrammGroupDao();
 
     public abstract PlanogrammImagesDao planogrammImagesDao();
+
+    public abstract SettingsUIDao settingsUIDao();
 
     public class MyAutoMigration {
     }

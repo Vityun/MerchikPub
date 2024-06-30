@@ -103,7 +103,6 @@
     <string name="t_photo_log">Журнал фото</string>
     <string name="Search">Поиск..</string>
 
-
     <!-- ============== PHOTO REPORT FRAGMENT ============== -->
     <string name="title_photo_report">Фотоотчёт</string>
 
@@ -205,6 +204,14 @@
     <string name="data_download_error">Не вийшло завантажити данні</string>
     <string name="data_download_wait">Зачекайте, йде завантаження інформації</string>
 
+
+    <string name="comments">Коментарі:</string>
+    <string name="setting_table">Налаштування таблиці</string>
+    <string name="setting_column_visibility">Налаштування видимості стовпців</string>
+    <string name="setting_column_visibility_desc">Щоб приховати якісь стовпці, клацніть на полі</string>
+    <string name="column_name">Назва стовпця</string>
+    <string name="visibility">Видимість</string>
+    <string name="cancel">Скасувати</string>
 
 </resources>
 

@@ -3,10 +3,12 @@ package ua.com.merchik.merchik.Activities;
 import android.app.Application;
 import android.content.Context;
 
+import dagger.hilt.android.HiltAndroidApp;
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.room.RoomManager;
 
+@HiltAndroidApp
 public class MyApplication extends Application {
 
     private static Context context;
