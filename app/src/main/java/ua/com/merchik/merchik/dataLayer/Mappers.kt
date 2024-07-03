@@ -36,6 +36,7 @@ fun DataObjectUI.toItemUI(nameUIRepository: NameUIRepository, hideUserFields: St
         if (!("${hideUserFields}, ${this.getHidedFieldsOnUI()}").contains(key)) {
             fields.add(
                 FieldValue(
+                    key,
                     TextField(
                         nameUIRepository.getTranslateString(key, this.getTranslateId(key)),
                         this.getFieldModifier(key, jsonObject)

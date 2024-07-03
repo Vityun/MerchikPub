@@ -1,12 +1,14 @@
 package ua.com.merchik.merchik.features.main
 
 import android.view.View
+import android.widget.DatePicker
 import androidx.annotation.DrawableRes
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -20,6 +22,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -30,13 +35,18 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldColors
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
@@ -56,7 +66,7 @@ import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.imageResource
 import androidx.compose.ui.res.painterResource
@@ -67,12 +77,10 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.zIndex
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
-import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.launch
 import ua.com.merchik.merchik.R
 import ua.com.merchik.merchik.dataLayer.model.FieldValue
@@ -80,13 +88,9 @@ import ua.com.merchik.merchik.dataLayer.model.MerchModifier
 import ua.com.merchik.merchik.dataLayer.model.Padding
 import ua.com.merchik.merchik.dataLayer.model.SettingsItemUI
 import ua.com.merchik.merchik.dataLayer.model.TextField
+import java.util.Calendar
 import java.util.Collections
 import kotlin.math.roundToInt
-
-@Composable
-fun MainUI() {
-    MainUI(viewModel = viewModel())
-}
 
 @Composable
 internal fun MainUI(viewModel: MainViewModel) {
@@ -101,8 +105,6 @@ internal fun MainUI(viewModel: MainViewModel) {
 
     var searchStr by remember { mutableStateOf("") }
 
-    var isFocusedSearchView by remember { mutableStateOf(false) }
-
     Column {
 
         ImageButton(
@@ -111,7 +113,9 @@ internal fun MainUI(viewModel: MainViewModel) {
             colorImage = ColorFilter.tint(color = colorResource(id = R.color.colorInetYellow)),
             sizeButton = 45.dp,
             sizeImage = 25.dp,
-            modifier = Modifier.padding(start = 7.dp).align(alignment = Alignment.End),
+            modifier = Modifier
+                .padding(start = 7.dp)
+                .align(alignment = Alignment.End),
             onClick = { showSettingsDialog = true }
         )
 
@@ -119,39 +123,15 @@ internal fun MainUI(viewModel: MainViewModel) {
             .padding(7.dp)
             .align(Alignment.CenterHorizontally))
 
-        val textFieldColors = TextFieldDefaults.colors(
-            focusedContainerColor = Color.White,
-            unfocusedContainerColor = Color.White,
-            disabledContainerColor = Color.White,
-            cursorColor = Color.Black,
-            focusedIndicatorColor = Color.White,
-            unfocusedIndicatorColor = Color.White,
-        )
-
         Row(
             modifier = Modifier
                 .padding(10.dp)
         ) {
-            TextField(
+
+            TextFieldInputRounded(
                 value = searchStr,
                 onValueChange = { searchStr = it },
-                colors = textFieldColors,
-                maxLines = 1,
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                label = {
-                    if (!isFocusedSearchView) Text("Пошук", color = colorResource(id = R.color.hintColorDefault))
-                },
-                trailingIcon = {
-                    Image(
-                        painter = painterResource(id = com.google.android.material.R.drawable.ic_search_black_24),
-                        contentDescription = "")
-                },
-                modifier = Modifier
-                    .weight(1f)
-                    .shadow(4.dp, RoundedCornerShape(10.dp))
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(color = Color.White)
-                    .onFocusChanged { isFocusedSearchView = it.isFocused }
+                modifier = Modifier.weight(1f)
             )
 
             ImageButton(id = R.drawable.ic_filter,
@@ -228,6 +208,49 @@ internal fun MainUI(viewModel: MainViewModel) {
 }
 
 @Composable
+private fun TextFieldInputRounded(
+    modifier: Modifier = Modifier,
+    value: String,
+    onValueChange: (String) -> Unit
+) {
+    var isFocusedSearchView by remember { mutableStateOf(false) }
+
+    val textFieldColors = TextFieldDefaults.colors(
+        focusedContainerColor = Color.White,
+        unfocusedContainerColor = Color.White,
+        disabledContainerColor = Color.White,
+        cursorColor = Color.Black,
+        focusedIndicatorColor = Color.White,
+        unfocusedIndicatorColor = Color.White,
+    )
+
+    TextField(
+        value = value,
+        onValueChange = onValueChange,
+        colors = textFieldColors,
+        maxLines = 1,
+        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+        label = {
+            if (!isFocusedSearchView) Text(
+                "Пошук",
+                color = colorResource(id = R.color.hintColorDefault)
+            )
+        },
+        trailingIcon = {
+            Image(
+                painter = painterResource(id = com.google.android.material.R.drawable.ic_search_black_24),
+                contentDescription = ""
+            )
+        },
+        modifier = modifier
+            .shadow(4.dp, RoundedCornerShape(10.dp))
+            .clip(RoundedCornerShape(8.dp))
+            .background(color = Color.White)
+            .onFocusChanged { isFocusedSearchView = it.isFocused }
+    )
+}
+
+@Composable
 private fun ItemFieldValue(it: FieldValue, visibilityField: Int? = null) {
     Row(Modifier.fillMaxWidth()) {
         if (visibilityField == View.VISIBLE) {
@@ -268,7 +291,10 @@ fun DragAndDropList() {
     var startIndex by remember { mutableStateOf(-1) }
     val elevation = remember { Animatable(0f) }
 
-    Column(Modifier.fillMaxSize().padding(16.dp)) {
+    Column(
+        Modifier
+            .fillMaxSize()
+            .padding(16.dp)) {
         items.forEachIndexed { index, item ->
             Box(
                 Modifier
@@ -299,7 +325,8 @@ fun DragAndDropList() {
                                 dragOffset += Offset(dragAmount.x, dragAmount.y)
 
                                 val offsetY = dragOffset.y.roundToInt()
-                                val newIndex = (startIndex + offsetY / 60).coerceIn(0, items.size - 1)
+                                val newIndex =
+                                    (startIndex + offsetY / 60).coerceIn(0, items.size - 1)
 
                                 if (newIndex != draggedIndex) {
                                     coroutineScope.launch {
@@ -354,7 +381,9 @@ fun ImageButton(
             contentDescription = "",
             contentScale = ContentScale.Inside,
             colorFilter = colorImage,
-            modifier = Modifier.clip(shape).size(sizeImage)
+            modifier = Modifier
+                .clip(shape)
+                .size(sizeImage)
         )
     }
 }
@@ -382,18 +411,162 @@ fun SettingsItemView(item: SettingsItemUI) {
 
 @Composable
 internal fun FilteringDialog(viewModel: MainViewModel, onDismiss: () -> Unit) {
+    var searchStr by remember { mutableStateOf("") }
+
     Dialog(onDismissRequest = onDismiss) {
         Box(
             modifier = Modifier
-                .fillMaxSize()
                 .padding(top = 20.dp, bottom = 20.dp)
                 .clip(RoundedCornerShape(8.dp))
                 .background(color = Color.White)
         ) {
-            DragAndDropList()
+            Column {
+                Text(
+                    fontWeight = FontWeight.Bold,
+                    text = viewModel.getTranslateString(stringResource(id = R.string.search))
+                )
+                TextFieldInputRounded(
+                    value = searchStr,
+                    onValueChange = { searchStr = it }
+                )
+
+                DatePickerExample()
+            }
         }
     }
 }
+
+@Composable
+fun DatePickerExample() {
+    var selectedDate by remember { mutableStateOf("") }
+    var showDialog by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        verticalArrangement = Arrangement.Center
+    ) {
+        Text(
+            text = "Дата с:\n$selectedDate",
+            modifier = Modifier.clickable { showDialog = true }
+        )
+
+        if (showDialog) {
+            Dialog(onDismissRequest = { showDialog = false }) {
+                Surface(
+                    shape = MaterialTheme.shapes.medium,
+                    tonalElevation = 8.dp,
+                    modifier = Modifier
+                        .wrapContentWidth()
+                        .wrapContentHeight()
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally
+                    ) {
+                        val datePicker = DatePicker(context).apply {
+                            init(Calendar.getInstance().get(Calendar.YEAR),
+                                Calendar.getInstance().get(Calendar.MONTH),
+                                Calendar.getInstance().get(Calendar.DAY_OF_MONTH)
+                            ) { _, year, month, dayOfMonth ->
+                                val date = "$dayOfMonth/${month + 1}/$year"
+                                selectedDate = date
+                            }
+                        }
+
+                        AndroidView(
+                            factory = { datePicker },
+                            modifier = Modifier.wrapContentWidth()
+                        )
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        Row(
+                            horizontalArrangement = Arrangement.End,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            TextButton(onClick = { showDialog = false }) {
+                                Text("Cancel")
+                            }
+                            Spacer(modifier = Modifier.width(8.dp))
+                            TextButton(onClick = {
+                                // Confirm date selection
+                                showDialog = false
+                            }) {
+                                Text("OK")
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+//@OptIn(ExperimentalMaterial3Api::class)
+//@Composable
+//fun DatePickerExample() {
+//    var selectedDate by remember { mutableStateOf("") }
+//    var showDialog by remember { mutableStateOf(false) }
+//
+//    Column(
+//        modifier = Modifier
+//            .fillMaxSize()
+//            .padding(16.dp),
+//        verticalArrangement = Arrangement.Center
+//    ) {
+//        Text(text = "Selected Date: $selectedDate")
+//        Spacer(modifier = Modifier.height(16.dp))
+//        Button(onClick = {
+//            showDialog = true
+//        }) {
+//            Text(text = "Show Date Picker")
+//        }
+//
+//        if (showDialog) {
+//            DatePickerDialog(
+//                onDismissRequest = { showDialog = false },
+//                confirmButton = {
+//                    Button(onClick = {
+//                        // Handle date confirmation
+//                        val calendar = Calendar.getInstance().apply {
+//                            timeInMillis = System.currentTimeMillis()
+//                        }
+//                        val date = "${calendar.get(Calendar.DAY_OF_MONTH)}/${calendar.get(Calendar.MONTH) + 1}/${calendar.get(Calendar.YEAR)}"
+//                        selectedDate = date
+//                        showDialog = false
+//                    }) {
+//                        Text("OK")
+//                    }
+//                },
+//                dismissButton = {
+//                    Button(onClick = { showDialog = false }) {
+//                        Text("Cancel")
+//                    }
+//                }
+//            ) {
+//                AndroidView(
+//                    modifier = Modifier.align(Alignment.CenterHorizontally),
+//                    factory = { context ->
+//                        DatePicker(context).apply {
+//                            init(Calendar.getInstance().get(Calendar.YEAR),
+//                                Calendar.getInstance().get(Calendar.MONTH),
+//                                Calendar.getInstance().get(Calendar.DAY_OF_MONTH)
+//                            ) { _, year, month, dayOfMonth ->
+//                                val date = "$dayOfMonth/${month + 1}/$year"
+//                                selectedDate = date
+//                            }
+//                        }
+//                    }
+//                )
+//            }
+//        }
+//    }
+//}
+
 @Composable
 internal fun SortingDialog(viewModel: MainViewModel, onDismiss: () -> Unit) {
     Dialog(onDismissRequest = onDismiss) {
@@ -454,6 +627,7 @@ internal fun SettingsDialog(viewModel: MainViewModel, onDismiss: () -> Unit) {
                     Column {
                         ItemFieldValue(
                             FieldValue(
+                                key = "",
                                 TextField(
                                     viewModel.getTranslateString(stringResource(id = R.string.column_name)),
                                     MerchModifier(fontWeight = FontWeight.Bold, padding = Padding(10.dp, 7.dp, 10.dp, 7.dp))

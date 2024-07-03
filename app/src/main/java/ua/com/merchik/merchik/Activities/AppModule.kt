@@ -20,4 +20,5 @@ object AppModule {
     fun provideNameUIRepository(): NameUIRepository {
         return NameUIRepository()
     }
+
 }

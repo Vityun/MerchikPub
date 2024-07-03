@@ -76,6 +76,7 @@ import okhttp3.RequestBody;
 import okhttp3.WebSocket;
 import retrofit2.Call;
 import retrofit2.Response;
+import ua.com.merchik.merchik.Activities.Features.FeaturesActivity;
 import ua.com.merchik.merchik.Activities.MenuMainActivity;
 import ua.com.merchik.merchik.Activities.MyApplication;
 import ua.com.merchik.merchik.Activities.PhotoLogActivity.PhotoLogActivity;

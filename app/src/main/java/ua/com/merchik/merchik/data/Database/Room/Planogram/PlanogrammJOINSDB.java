@@ -1,5 +1,6 @@
 package ua.com.merchik.merchik.data.Database.Room.Planogram;
 
+import androidx.annotation.NonNull;
 import androidx.room.ColumnInfo;
 import androidx.room.Entity;
 import androidx.room.Ignore;
@@ -7,10 +8,16 @@ import androidx.room.PrimaryKey;
 import androidx.room.TypeConverter;
 import androidx.room.TypeConverters;
 
+import org.jetbrains.annotations.Nullable;
+import org.json.JSONObject;
+
 import java.sql.Date;
 
+import ua.com.merchik.merchik.dataLayer.DataObjectUI;
+import ua.com.merchik.merchik.dataLayer.model.MerchModifier;
+
 @Entity(tableName = "planogramm_join")
-public class PlanogrammJOINSDB {
+public class PlanogrammJOINSDB implements DataObjectUI {
 
     @PrimaryKey
     @ColumnInfo(name = "id")
@@ -57,6 +64,36 @@ public class PlanogrammJOINSDB {
     @Ignore
     @ColumnInfo(name = "planogrammPhoto")
     public int planogrammPhoto;
+
+    @NonNull
+    @Override
+    public String getHidedFieldsOnUI() {
+        return DataObjectUI.DefaultImpls.getHidedFieldsOnUI(this);
+    }
+
+    @Nullable
+    @Override
+    public Long getTranslateId(@NonNull String key) {
+        return DataObjectUI.DefaultImpls.getTranslateId(this, key);
+    }
+
+    @NonNull
+    @Override
+    public String getValueUI(@NonNull String key, @NonNull Object value) {
+        return DataObjectUI.DefaultImpls.getValueUI(this, key, value);
+    }
+
+    @Nullable
+    @Override
+    public MerchModifier getFieldModifier(@NonNull String key, @NonNull JSONObject jsonObject) {
+        return DataObjectUI.DefaultImpls.getFieldModifier(this, key, jsonObject);
+    }
+
+    @Nullable
+    @Override
+    public MerchModifier getValueModifier(@NonNull String key, @NonNull JSONObject jsonObject) {
+        return DataObjectUI.DefaultImpls.getValueModifier(this, key, jsonObject);
+    }
 
     public static class DateConverter {
         @TypeConverter

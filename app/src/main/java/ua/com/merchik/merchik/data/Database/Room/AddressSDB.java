@@ -95,7 +95,7 @@ public class AddressSDB implements DataObjectUI {
     @Nullable
     @Override
     public MerchModifier getFieldModifier(@NonNull String key, @NonNull JSONObject jsonObject) {
-        return AddressSDBOverride.INSTANCE.getFieldModifier(key, jsonObject);
+        return DataObjectUI.DefaultImpls.getFieldModifier(this, key, jsonObject);
     }
 
     @Nullable

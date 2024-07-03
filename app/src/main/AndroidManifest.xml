@@ -86,7 +86,7 @@ android:theme="@style/Theme.AppCompat.Light.NoActionBar"
         <!--            android:name="ua.com.merchik.merchik.Activities.Features.FeaturesActivity"-->
 
         <activity
-            android:name="ua.com.merchik.merchik.Activities.Features.FeaturesActivity"
+            android:name="ua.com.merchik.merchik.menu_login"
             android:exported="true"
             android:theme="@style/AppTheme.NoActionBar">
 
@@ -126,6 +126,12 @@ android:theme="@style/Theme.AppCompat.Light.NoActionBar"
 
         <activity
             android:name="ua.com.merchik.merchik.menu_wp_data"
+            android:theme="@style/AppTheme.NoActionBar"
+            >
+        </activity>
+
+        <activity
+            android:name="ua.com.merchik.merchik.Activities.Features.FeaturesActivity"
             android:theme="@style/AppTheme.NoActionBar"
             >
         </activity>

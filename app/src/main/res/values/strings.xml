@@ -212,6 +212,7 @@
     <string name="column_name">Назва стовпця</string>
     <string name="visibility">Видимість</string>
     <string name="cancel">Скасувати</string>
+    <string name="search">Пошук</string>
 
 </resources>
 

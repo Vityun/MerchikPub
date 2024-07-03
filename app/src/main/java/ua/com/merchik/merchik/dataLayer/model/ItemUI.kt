@@ -36,6 +36,7 @@ data class TextField(
 )
 
 data class FieldValue(
+    val key: String,
     val field: TextField,
     val value: TextField
 )

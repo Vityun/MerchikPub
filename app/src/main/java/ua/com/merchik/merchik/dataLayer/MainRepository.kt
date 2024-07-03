@@ -1,6 +1,5 @@
 package ua.com.merchik.merchik.dataLayer
 
-import android.util.Log
 import com.google.gson.Gson
 import io.realm.RealmChangeListener
 import io.realm.RealmObject
@@ -14,7 +13,6 @@ import ua.com.merchik.merchik.data.Database.Room.CustomerSDB
 import ua.com.merchik.merchik.data.Database.Room.Planogram.PlanogrammSDB
 import ua.com.merchik.merchik.data.Database.Room.SettingsUISDB
 import ua.com.merchik.merchik.data.Database.Room.UsersSDB
-import ua.com.merchik.merchik.data.RealmModels.LogDB
 import ua.com.merchik.merchik.dataLayer.model.FieldValue
 import ua.com.merchik.merchik.dataLayer.model.ItemUI
 import ua.com.merchik.merchik.dataLayer.model.SettingsItemUI
@@ -22,9 +20,6 @@ import ua.com.merchik.merchik.dataLayer.model.TextField
 import ua.com.merchik.merchik.database.realm.RealmManager
 import ua.com.merchik.merchik.database.room.RoomManager
 import kotlin.reflect.KClass
-import kotlin.reflect.full.createInstance
-import kotlin.reflect.full.memberProperties
-import kotlin.reflect.jvm.isAccessible
 
 fun <T : RealmObject> RealmResults<T>.toFlow(): Flow<RealmResults<T>> = callbackFlow {
     val listener = RealmChangeListener<RealmResults<T>> { results ->
@@ -97,15 +92,23 @@ class MainRepository(
     }
 
     fun <T: RealmObject> getAllRealm(kClass: KClass<T>, contextUI: ContextUI?): List<ItemUI> {
+        return getAllRealmDataObjectUI(kClass).toItemUI(kClass, contextUI)
+    }
+
+    fun <T: RealmObject> getAllRealmDataObjectUI(kClass: KClass<T>): List<DataObjectUI> {
         return RealmManager.INSTANCE
             .copyFromRealm(RealmManager.INSTANCE
                 .where(kClass.java)
                 .findAllAsync())
             .filter { it is DataObjectUI }
-            .map { (it as DataObjectUI).toItemUI(nameUIRepository, getHideUserFields(kClass.java, contextUI)) }
+            .map { it as DataObjectUI }
     }
 
     fun <T: DataObjectUI> getAllRoom(kClass: KClass<T>, contextUI: ContextUI?): List<ItemUI> {
+        return getAllRoomDataObjectUI(kClass).toItemUI(kClass, contextUI)
+    }
+
+    fun <T: DataObjectUI> getAllRoomDataObjectUI(kClass: KClass<T>): List<DataObjectUI> {
         val roomManager = RoomManager.SQL_DB
         return when (kClass) {
             PlanogrammSDB::class-> roomManager.planogrammDao().all
@@ -113,7 +116,45 @@ class MainRepository(
             UsersSDB::class -> roomManager.usersDao().all2
             AddressSDB::class -> roomManager.addressDao().all
             else -> { return emptyList() }
-        }.map { it.toItemUI(nameUIRepository, getHideUserFields(kClass.java, contextUI)) }
+        }
     }
 
+    fun <T: DataObjectUI>toItemUIList(kClass: KClass<T>, data: List<DataObjectUI>, contextUI: ContextUI?): List<ItemUI> {
+        return data.map { it.toItemUI(nameUIRepository, getHideUserFields(kClass.java, contextUI)) }
+    }
+
+    private fun <T: DataObjectUI> List<T>.toItemUI(kClass: KClass<*>, contextUI: ContextUI?): List<ItemUI> {
+        return this.map { (it as DataObjectUI).toItemUI(nameUIRepository, getHideUserFields(kClass.java, contextUI)) }
+    }
+
+}
+
+fun List<ItemUI>.join(rightTable: List<ItemUI>, query: String): List<ItemUI> {
+    val keyLeft = query.split(":")[0].trim().split("=")[0].trim()
+    val keyRight = query.split(":")[0].trim().split("=")[1].trim()
+    val expFields = query.split(":")[1].replace(" ", "").split(",")
+
+    return this.map { itemLeftUI ->
+        val joinedFields: MutableList<FieldValue> = mutableListOf()
+        itemLeftUI.fields.firstOrNull { it.key.equals(keyLeft, true) }?.let { fieldLeftUI ->
+            val itemRightUI = rightTable.firstOrNull { it.fields.firstOrNull { it.key.equals(keyRight, true) }?.value == fieldLeftUI.value }
+            expFields.forEach { expField ->
+                itemRightUI?.fields?.firstOrNull { it.key.equals(expField, true) }?.let { fieldRightUI ->
+                    joinedFields.add(
+                        FieldValue(
+                            "${fieldLeftUI.key}_${fieldRightUI.key}",
+                            fieldRightUI.field,
+                            fieldRightUI.value,
+                        )
+                    )
+                }
+            }
+        }
+
+        val newFields = mutableListOf<FieldValue>()
+        newFields.addAll(itemLeftUI.fields)
+        newFields.addAll(joinedFields)
+
+        itemLeftUI.copy(fields = newFields)
+    }
 }
