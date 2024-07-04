@@ -407,7 +407,7 @@ public class DialogFullPhoto {
                 vote.dtUpload = 0L;
                 vote.codeDad2 = wpDataDB.getCode_dad2();
                 vote.isp = wpDataDB.getIsp();
-                vote.themeId = wpDataDB.getTheme_id();
+                vote.themeId = 1313;
                 vote.kli = wpDataDB.getClient_id();
                 vote.addrId = wpDataDB.getAddr_id();
                 vote.dt = System.currentTimeMillis() / 1000;
@@ -426,7 +426,7 @@ public class DialogFullPhoto {
                 vote.dtUpload = 0L;
                 vote.codeDad2 = wpDataDB.getCode_dad2();
                 vote.isp = wpDataDB.getIsp();
-                vote.themeId = wpDataDB.getTheme_id();
+                vote.themeId = 1314;
                 vote.kli = wpDataDB.getClient_id();
                 vote.addrId = wpDataDB.getAddr_id();
                 vote.dt = System.currentTimeMillis() / 1000;

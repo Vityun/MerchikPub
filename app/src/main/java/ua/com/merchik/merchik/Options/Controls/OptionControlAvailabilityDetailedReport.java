@@ -157,12 +157,13 @@ public class OptionControlAvailabilityDetailedReport<T> extends OptionControl {
             }
         }
 
+
+        Long dtFrom = wp.getDt().getTime()/1000 - 604800;   // -7 дней в секундах.. на самом деле должно біть минус 6, но оно  счтиает старт дня
+        Long dtTo = wp.getDt().getTime()/1000 + 345600;   // +4 дней в секундах.. на самом деле должно біть минус 3, но оно  счтиает старт дня
+
         // Формирование Сигналов для БЛОКИРОВКИ
         if (OFS == 100) {
             signal = true;
-
-            Long dtFrom = wp.getDt().getTime()/1000 - 604800;   // -7 дней в секундах.. на самом деле должно біть минус 6, но оно  счтиает старт дня
-            Long dtTo = wp.getDt().getTime()/1000 + 345600;   // +4 дней в секундах.. на самом деле должно біть минус 3, но оно  счтиает старт дня
 
             List<SMSPlanSDB> smsPlanSDBS =  SQL_DB.smsPlanDao().getAll(dtFrom, dtTo, 1172, wp.getAddr_id(), wp.getClient_id());
             List<SMSLogSDB> smsLogSDBS = SQL_DB.smsLogDao().getAll(dtFrom, dtTo, 1172, wp.getAddr_id(), wp.getClient_id());
@@ -188,6 +189,12 @@ public class OptionControlAvailabilityDetailedReport<T> extends OptionControl {
             } else if (clientId.equals("8633") && find > 1) {
                 signal = false;
                 spannableStringBuilder.append(" Комментарий об отсутствии товара написан, сигнал отменён!");
+            } else if (SQL_DB.smsPlanDao().getAll(dtFrom, dtTo, 727, wp.getAddr_id(), wp.getClient_id()).size() > 0){
+                signal = false;
+                spannableStringBuilder.append(" СМС о МАЛОМ количестве товара отправлено заказчику, сигнал отменен!");
+            }else if (SQL_DB.smsLogDao().getAll(dtFrom, dtTo, 727, wp.getAddr_id(), wp.getClient_id()).size() > 0){
+                signal = false;
+                spannableStringBuilder.append(" СМС о МАЛОМ количестве товара отправлено заказчику, сигнал отменен!");
             } else if (find > 0) {
                 signal = false;
                 spannableStringBuilder.append(" Примечание об отсутствии товара отписано, сигнал отменен!");

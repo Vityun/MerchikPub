@@ -351,7 +351,7 @@ class DialogShowcase(private val context: Context?) : DialogData() {
                 Globals.writeToMLOG("ERROR", "planogrammDataList", "Exception e: $e")
             }
             val planogrammDataListT = ArrayList(planogrammDataList)
-            val adapter = PlanogramAdapter(planogrammDataListT, click)
+            val adapter = PlanogramAdapter(wpDataDB, planogrammDataListT, click)
             setFilter(adapter)
             recyclerView!!.adapter = adapter
             recyclerView!!.layoutManager =

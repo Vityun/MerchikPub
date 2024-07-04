@@ -144,20 +144,30 @@ public class OptionControlPhotoPromotion<T> extends OptionControl {
 
             else if (OSV == 0 && optionDB.getOptionId().equals("157278")) continue;
 
-            else if ((item.getAkciya().equals("") || item.getAkciya().equals("0")) && optionDB.getOptionId().equals("166528")) continue;
+            else if ((item.getAkciya().equals("") || item.getAkciya().equals("0")) && optionDB.getOptionId().equals("166528"))
+                continue;
 
             // 6.2 new 27.06.24
-            StackPhotoDB currentTovPhoto = stackPhotoDBS.stream().filter(listItem -> listItem.tovar_id.equals(item.getTovarId())).findFirst().orElse(null);
-            if (currentTovPhoto != null) {
-                size = stackPhotoDBS.size();
-                find++;
-            }else {
+            if (stackPhotoDBS != null) {
+                StackPhotoDB currentTovPhoto = stackPhotoDBS.stream().filter(listItem -> listItem.tovar_id.equals(item.getTovarId())).findFirst().orElse(null);
+                if (currentTovPhoto != null) {
+                    size = stackPhotoDBS.size();
+                    find++;
+                } else {
+                    showTovList = true;
+                    errType1Cnt++;
+                    err++;
+                    totalOSV++;
+                    errMsgType1.append(createLinkedString(item, null)).append("\n");
+                }
+            } else {
                 showTovList = true;
                 errType1Cnt++;
                 err++;
                 totalOSV++;
                 errMsgType1.append(createLinkedString(item, null)).append("\n");
             }
+
 
 
 

@@ -32,6 +32,7 @@ import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.Database.Room.Planogram.PlanogrammJOINSDB;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
+import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.StackPhotoRealm;
 import ua.com.merchik.merchik.dialogs.DialogFullPhoto;
@@ -44,7 +45,10 @@ public class PlanogramAdapter extends RecyclerView.Adapter<PlanogramAdapter.View
     private List<PlanogrammJOINSDB> planogrammListOrig;
     private Clicks.click click;
 
-    public PlanogramAdapter(ArrayList<PlanogrammJOINSDB> planogrammList, Clicks.click click) {
+    private WpDataDB wpDataDB;
+
+    public PlanogramAdapter(WpDataDB wpDataDB, ArrayList<PlanogrammJOINSDB> planogrammList, Clicks.click click) {
+        this.wpDataDB = wpDataDB;
         if (planogrammList != null && !planogrammList.isEmpty()) {
             planogrammList.add(defaultShowcase());
             this.planogrammList = planogrammList;
@@ -145,6 +149,7 @@ public class PlanogramAdapter extends RecyclerView.Adapter<PlanogramAdapter.View
                     image.setOnClickListener(v -> {
                         try {
                             DialogFullPhoto dialog = new DialogFullPhoto(image.getContext());
+                            dialog.setWpDataDB(wpDataDB);
                             dialog.setRatingType(DialogFullPhoto.RatingType.PLANOGRAM);
                             dialog.setPhotos(0, Collections.singletonList(stackPhotoDB), new PhotoLogPhotoAdapter.OnPhotoClickListener() {
                                 @Override

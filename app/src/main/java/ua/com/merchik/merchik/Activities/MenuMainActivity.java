@@ -101,11 +101,25 @@ public class MenuMainActivity extends toolbar_menus {
         }catch (Exception e){
             Log.e("testLong", "Exception e: " + e);
         }
-
-
     }
 
-/*        try {
+/*
+            PlanogrammTableExchange planogrammTableExchange = new PlanogrammTableExchange();
+            planogrammTableExchange.planogramDownload(new Clicks.clickObjectAndStatus() {
+                @Override
+                public void onSuccess(Object data) {
+
+                }
+
+                @Override
+                public void onFailure(String error) {
+
+                }
+            });
+
+
+
+try {
         PlanogrammTableExchange planogrammTableExchange = new PlanogrammTableExchange();
         planogrammTableExchange.planogramDownload(new Clicks.clickObjectAndStatus() {
             @Override

@@ -385,6 +385,7 @@ public class Options {
                             break;
                     }
                     OptionControlAvailabilityDetailedReport optionControlAvailabilityDetailedReport = new OptionControlAvailabilityDetailedReport(context, dataDB, optionsDB, type2, mode, unlockCodeResultListener);
+                    optionControlAvailabilityDetailedReport.showOptionMassage("");
                     break;
 
                 case 138519:
