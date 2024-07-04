@@ -238,22 +238,22 @@ public class OptionControlPhotoPromotion<T> extends OptionControl {
         // 6.0
         // Тут формируются более короткие соообшения касательно наличия акций у Товаров
         if (reportPrepare.size() == 0) {
-            massageToUser = "Товарів, по котрим треба перевіряти наявність Акцції, не знайдено.";
+            spannableStringBuilder.append("Товарів, по котрим треба перевіряти наявність Акцції, не знайдено.");
             signalInt = 1;
             signal = true;
 //            unlockCodeResultListener.onUnlockCodeFailure();
         } else if (totalOSV == 0) {
-            massageToUser = "Товарів з ОСУ (Особливою увагою), по котрим треба виконати світлини 'Акційного товару', не знайдено.";
+            spannableStringBuilder.append("Товарів з ОСУ (Особливою увагою), по котрим треба виконати світлини 'Акційного товару', не знайдено.");
             signalInt = 2;
             signal = false;
 //            unlockCodeResultListener.onUnlockCodeSuccess();
         } else if (err > 0) {
-            massageToUser = "Не виконані світлини по (" + errType1Cnt + " шт.) з " + totalOSV + " Акційних товарів, які присутні на полицях.";
+            spannableStringBuilder.append("Не виконані світлини по (" + errType1Cnt + " шт.) з " + totalOSV + " Акційних товарів, які присутні на полицях.");
             signalInt = 1;
             signal = true;
 //            unlockCodeResultListener.onUnlockCodeFailure();
         } else {
-            massageToUser = "Зауважень по виготовленню світлин 'Акцційних товарів' нема. Виготовлено " + size + " світлин.";
+            spannableStringBuilder.append("Зауважень по виготовленню світлин 'Акцційних товарів' нема. Виготовлено " + size + " світлин.");
             signalInt = 2;
             signal = false;
 //            unlockCodeResultListener.onUnlockCodeSuccess();

@@ -113,6 +113,7 @@ import ua.com.merchik.merchik.Options.Controls.OptionControlPhotoShowcase;
 import ua.com.merchik.merchik.Options.Controls.OptionControlPhotoTovarsLeft;
 import ua.com.merchik.merchik.Options.Controls.OptionControlPhotoTovarsLeftClient;
 import ua.com.merchik.merchik.Options.Controls.OptionControlPromotion;
+import ua.com.merchik.merchik.Options.Controls.OptionControlPromotionTov;
 import ua.com.merchik.merchik.Options.Controls.OptionControlReclamationAnswer;
 import ua.com.merchik.merchik.Options.Controls.OptionControlRegistrationPotentialClient;
 import ua.com.merchik.merchik.Options.Controls.OptionControlReturnOfGoods;
@@ -174,7 +175,7 @@ public class Options {
             151594, 80977, 135330, 133381, 135329, 138518, 151139, 132623, 133382, 137797, 135809,
             135328, 135327, 157275, 138341, 590, 84932, 134583, 157352, 1470, 138644, 1455, 135061,
             158361, 159707, 575, 132971, 135591, 135708, 135595, 143968, 160568, 164352, 164354,
-            84005, 84967, 164985, 165276, 165275, 165482, 166528};
+            84005, 84967, 164985, 165276, 165275, 165482, 166528, 157288};
 
     /*Сюда записываются Опции которые не прошли проверку, при особенном переданном MOD-e. Сделано
     для того что б потом можно было посмотреть название опций которые не прошли проверку и, возможно,
@@ -217,6 +218,11 @@ public class Options {
             }
 
             switch (optionControlId) {
+
+                case 157288:
+                    OptionControlPromotionTov<?> optionControlPromotionTov = new OptionControlPromotionTov<>(context, dataDB, optionsDB, newOptionType, mode, unlockCodeResultListener);
+                    optionControlPromotionTov.showOptionMassage("");
+                    break;
 
                 case 84005, 84967, 164985, 165276:
                     OptionControlCheckingForAnAchievement<?> optionControlCheckingForAnAchievement = new OptionControlCheckingForAnAchievement<>(context, dataDB, optionsDB, newOptionType, mode, unlockCodeResultListener);
@@ -544,6 +550,7 @@ public class Options {
      * Запуск нового протокола проверки ОпцийКонтроля
      */
     int count = 0;
+
     @RequiresApi(api = Build.VERSION_CODES.N)
     public <T> void optionControlNewAlgo(List<OptionsDB> optionsDBList, Context context, T dataDB, OptionsDB option, List<OptionsDB> optionList, OptionMassageType type, NNKMode mode, boolean check, Clicks.clickVoid click) {
         count = 0;
@@ -566,7 +573,7 @@ public class Options {
 //                        Toast.makeText(context, "Option: " + item.getOptionTxt() + " execute Success", Toast.LENGTH_LONG).show();
 //                        click.click();
                         count++;
-                        if (count == optionsDBList.size()){
+                        if (count == optionsDBList.size()) {
                             click.click();
                             // Обычное выполнение нажатия на кнопку.
                             optControl(context, dataDB, option, optionId2, option, type, mode, new OptionControl.UnlockCodeResultListener() {
@@ -1043,11 +1050,11 @@ public class Options {
                     }
                 });
 
-                if (new OptionControl<>().checkUnlockCode(item)){
+                if (new OptionControl<>().checkUnlockCode(item)) {
                     controlResult[0] = 0;
                     Log.e("checkUnlockCode", "item T: " + item.getOptionTxt());
                     Log.e("checkUnlockCode", "item T: " + item.getOptionControlTxt());
-                }else {
+                } else {
                     Log.e("checkUnlockCode", "item F: " + item.getOptionTxt());
                     Log.e("checkUnlockCode", "item F: " + item.getOptionControlTxt());
                 }
@@ -1213,6 +1220,39 @@ public class Options {
 
         Log.e("NNK", "F/optControl/NNKMode mode: " + mode);
         switch (optionId) {
+
+            case 156882:
+                if (optionCurrent.getOptionControlId().equals("80977")) {
+                    OptionControlPromotion<?> optionControlPromotion = new OptionControlPromotion<>(context, dataDB, option, type, mode, unlockCodeResultListener);
+                    if (mode.equals(NNKMode.MAKE) || (mode.equals(NNKMode.CHECK) && optionControlPromotion.isBlockOption()))
+                        optionControlPromotion.showOptionMassage(block);
+                    if (mode.equals(NNKMode.BLOCK) && optionControlPromotion.signal && optionControlPromotion.isBlockOption()) {
+                        optionControlPromotion.showOptionMassage(block);
+                    }
+
+                    return optionControlPromotion.isBlockOption2() ? 1 : 0;
+                } else if (optionCurrent.getOptionControlId().equals("157288")) {
+                    OptionControlPromotionTov<?> optionControlPromotionTov = new OptionControlPromotionTov<>(context, dataDB, option, type, mode, unlockCodeResultListener);
+                    if (mode.equals(NNKMode.MAKE) || (mode.equals(NNKMode.CHECK) && optionControlPromotionTov.isBlockOption()))
+                        optionControlPromotionTov.showOptionMassage(block);
+
+                    if (mode.equals(NNKMode.BLOCK) && optionControlPromotionTov.signal && optionControlPromotionTov.isBlockOption()) {
+                        optionControlPromotionTov.showOptionMassage(block);
+                    }
+                    return optionControlPromotionTov.isBlockOption2() ? 1 : 0;
+                }
+                break;
+
+            case 157288:
+                OptionControlPromotionTov<?> optionControlPromotionTov = new OptionControlPromotionTov<>(context, dataDB, option, type, mode, unlockCodeResultListener);
+                if (mode.equals(NNKMode.MAKE) || (mode.equals(NNKMode.CHECK) && optionControlPromotionTov.isBlockOption()))
+                    optionControlPromotionTov.showOptionMassage(block);
+
+                if (mode.equals(NNKMode.BLOCK) && optionControlPromotionTov.signal && optionControlPromotionTov.isBlockOption()) {
+                    optionControlPromotionTov.showOptionMassage(block);
+                }
+                return optionControlPromotionTov.isBlockOption2() ? 1 : 0;
+
 
             case 165481:
                 OptionButtonPhotoEFFIE<?> optionButtonPhotoEFFIE = new OptionButtonPhotoEFFIE<>(context, dataDB, option, type, mode, unlockCodeResultListener);
@@ -1595,8 +1635,7 @@ public class Options {
                 break;
 
             case 80977:     // Контроль Акций
-
-            case 156882:    // Кнопка Акций
+//            case 156882:    // Кнопка Акций
                 OptionControlPromotion<?> optionControlPromotion = new OptionControlPromotion<>(context, dataDB, option, type, mode, unlockCodeResultListener);
                 if (mode.equals(NNKMode.MAKE) || (mode.equals(NNKMode.CHECK) && optionControlPromotion.isBlockOption()))
                     optionControlPromotion.showOptionMassage(block);
