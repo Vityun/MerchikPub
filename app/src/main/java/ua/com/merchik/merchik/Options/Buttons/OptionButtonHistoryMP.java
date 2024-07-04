@@ -1,24 +1,36 @@
 package ua.com.merchik.merchik.Options.Buttons;
 
+import static ua.com.merchik.merchik.features.main.MainUIKt.MainUI;
+
+import android.app.Activity;
+import android.app.Dialog;
+import android.app.Fragment;
 import android.content.Context;
+import android.content.Intent;
 import android.widget.Toast;
 
+import androidx.compose.ui.platform.ComposeView;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.List;
 
+import ua.com.merchik.merchik.Activities.Features.FeaturesActivity;
+import ua.com.merchik.merchik.Activities.TaskAndReclamations.TARActivity;
 import ua.com.merchik.merchik.Adapters.RecyclerAndPhotoAdapter;
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.Options.OptionControl;
 import ua.com.merchik.merchik.Options.Options;
+import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.data.OptionMassageType;
 import ua.com.merchik.merchik.data.RealmModels.LogMPDB;
 import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.database.realm.tables.LogMPRealm;
 import ua.com.merchik.merchik.dialogs.DialogData;
+import ua.com.merchik.merchik.features.main.DBViewModels.LogDBViewModel;
+import ua.com.merchik.merchik.features.main.MainUIKt;
 
 // 138773
 public class OptionButtonHistoryMP<T> extends OptionControl {
@@ -62,21 +74,25 @@ public class OptionButtonHistoryMP<T> extends OptionControl {
     }
 
     private void executeOption(){
-        try {
-            Globals.fixMP(wpDataDB, context);
-            DialogData dialog = new DialogData(context);
-            dialog.setTitle("Історія місцеположення");
-            dialog.setText("Нижче зазначені данні із місцезнаходженням вашого пристрою за період: з " + Clock.getHumanTimeSecPattern(startTime, "dd.MM HH:mm:ss") + " по " + Clock.getHumanTimeSecPattern(endTime, "dd.MM HH:mm:ss"));
-            dialog.setRecycler(createAdapter(dialog.context, logMPDBList, wpDataDB.getAddr_id()), new LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false));
-            dialog.setClose(dialog::dismiss);
-            dialog.setOk("Запит МП", ()->{
-                Globals.fixMP(wpDataDB, null);
-                Toast.makeText(context, "Запит створено!", Toast.LENGTH_SHORT).show();
-            });
-            dialog.show();
-        }catch (Exception e){
-            Globals.writeToMLOG("ERROR", "OptionButtonHistoryMP/executeOption", "Exception e: " + e);
-        }
+        Intent intent = new Intent(context, FeaturesActivity.class);
+        context.startActivity(intent);
+
+
+//        try {
+//            Globals.fixMP(wpDataDB, context);
+//            DialogData dialog = new DialogData(context);
+//            dialog.setTitle("Історія місцеположення");
+//            dialog.setText("Нижче зазначені данні із місцезнаходженням вашого пристрою за період: з " + Clock.getHumanTimeSecPattern(startTime, "dd.MM HH:mm:ss") + " по " + Clock.getHumanTimeSecPattern(endTime, "dd.MM HH:mm:ss"));
+//            dialog.setRecycler(createAdapter(dialog.context, logMPDBList, wpDataDB.getAddr_id()), new LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false));
+//            dialog.setClose(dialog::dismiss);
+//            dialog.setOk("Запит МП", ()->{
+//                Globals.fixMP(wpDataDB, null);
+//                Toast.makeText(context, "Запит створено!", Toast.LENGTH_SHORT).show();
+//            });
+//            dialog.show();
+//        }catch (Exception e){
+//            Globals.writeToMLOG("ERROR", "OptionButtonHistoryMP/executeOption", "Exception e: " + e);
+//        }
     }
 
     /**

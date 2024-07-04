@@ -1,5 +1,6 @@
 package ua.com.merchik.merchik.features.main
 
+import android.util.Log
 import android.view.View
 import android.widget.DatePicker
 import androidx.annotation.DrawableRes
@@ -24,7 +25,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -35,16 +35,12 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
-import androidx.compose.material3.DatePickerDialog
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldColors
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -79,7 +75,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.zIndex
 import kotlinx.coroutines.launch
 import ua.com.merchik.merchik.R
@@ -88,7 +83,10 @@ import ua.com.merchik.merchik.dataLayer.model.MerchModifier
 import ua.com.merchik.merchik.dataLayer.model.Padding
 import ua.com.merchik.merchik.dataLayer.model.SettingsItemUI
 import ua.com.merchik.merchik.dataLayer.model.TextField
-import java.util.Calendar
+import java.time.LocalDate
+import java.time.LocalTime
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 import java.util.Collections
 import kotlin.math.roundToInt
 
@@ -96,6 +94,9 @@ import kotlin.math.roundToInt
 internal fun MainUI(viewModel: MainViewModel) {
 
     val uiState by viewModel.uiState.collectAsState()
+
+    var filterDateStart by remember { mutableStateOf(viewModel.getFilters()?.rangeDataByKey?.start) }
+    var filterDateEnd by remember { mutableStateOf(viewModel.getFilters()?.rangeDataByKey?.end) }
 
     var showSettingsDialog by remember { mutableStateOf(false) }
 
@@ -105,87 +106,117 @@ internal fun MainUI(viewModel: MainViewModel) {
 
     var searchStr by remember { mutableStateOf("") }
 
-    Column {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(10.dp)
+    ) {
+        Column {
 
-        ImageButton(
-            id = R.drawable.ic_10,
-            shape = CircleShape,
-            colorImage = ColorFilter.tint(color = colorResource(id = R.color.colorInetYellow)),
-            sizeButton = 45.dp,
-            sizeImage = 25.dp,
-            modifier = Modifier
-                .padding(start = 7.dp)
-                .align(alignment = Alignment.End),
-            onClick = { showSettingsDialog = true }
-        )
-
-        Text(text = uiState.title, fontSize = 24.sp, modifier = Modifier
-            .padding(7.dp)
-            .align(Alignment.CenterHorizontally))
-
-        Row(
-            modifier = Modifier
-                .padding(10.dp)
-        ) {
-
-            TextFieldInputRounded(
-                value = searchStr,
-                onValueChange = { searchStr = it },
-                modifier = Modifier.weight(1f)
-            )
-
-            ImageButton(id = R.drawable.ic_filter,
-                sizeButton = 55.dp,
+            ImageButton(
+                id = R.drawable.ic_10,
+                shape = CircleShape,
+                colorImage = ColorFilter.tint(color = colorResource(id = R.color.colorInetYellow)),
+                sizeButton = 45.dp,
                 sizeImage = 25.dp,
-                modifier = Modifier.padding(start = 7.dp),
-                onClick = { showFilteringDialog = true }
+                modifier = Modifier
+                    .padding(start = 7.dp)
+                    .align(alignment = Alignment.End),
+                onClick = { showSettingsDialog = true }
             )
 
-            ImageButton(id = R.drawable.ic_2,
-                sizeButton = 55.dp,
-                sizeImage = 25.dp,
-                modifier = Modifier.padding(start = 7.dp),
-                onClick = { showSortingDialog = true }
-            )
-        }
-
-        LazyColumn {
-            val searchStrList = searchStr.split(" ")
-            val visibilityField = if (uiState.settingsItems.firstOrNull { it.key == "column_name" }?.isEnabled == true) View.VISIBLE else View.GONE
-            var isColored = false
-            items(uiState.items.filter { itemUI ->
-                itemUI.fields.any { fieldValue ->
-                    var isFounded = true
-                    searchStrList.forEach {
-                        isFounded = if (isFounded) fieldValue.value.value.contains(it, true) else false
-                    }
-                    isFounded
-                }
-            }) { item ->
-                isColored = !isColored
-                Box(modifier = Modifier
-                    .fillMaxWidth()
+            Text(
+                text = uiState.title, fontSize = 16.sp, modifier = Modifier
                     .padding(7.dp)
-                    .shadow(10.dp)
-                    .border(1.dp, Color.Black)
-                    .background(Color.White)
-                ) {
-                    Row(Modifier.padding(7.dp)) {
-                        Box(modifier = Modifier
+                    .align(Alignment.CenterHorizontally),
+                fontWeight = FontWeight.Bold
+            )
+
+            Row(
+                modifier = Modifier
+                    .padding(10.dp)
+            ) {
+
+                TextFieldInputRounded(
+                    value = searchStr,
+                    onValueChange = { searchStr = it },
+                    modifier = Modifier.weight(1f)
+                )
+
+                ImageButton(id = R.drawable.ic_filter,
+                    sizeButton = 55.dp,
+                    sizeImage = 25.dp,
+                    modifier = Modifier.padding(start = 7.dp),
+                    onClick = { showFilteringDialog = true }
+                )
+
+                ImageButton(id = R.drawable.ic_2,
+                    sizeButton = 55.dp,
+                    sizeImage = 25.dp,
+                    modifier = Modifier.padding(start = 7.dp),
+                    onClick = { showSortingDialog = true }
+                )
+            }
+
+            LazyColumn {
+                val searchStrList = searchStr.split(" ")
+                val visibilityField =
+                    if (uiState.settingsItems.firstOrNull { it.key == "column_name" }?.isEnabled == true) View.VISIBLE else View.GONE
+                var isColored = false
+                items(uiState.items.filter { itemUI ->
+
+                    viewModel.getFilters()?.let { filters ->
+                        itemUI.fields.forEach { fieldValue ->
+                            if (fieldValue.key.equals(filters.rangeDataByKey.key, true) ) {
+                                if ((fieldValue.value.value.toLongOrNull() ?: 0) < (filterDateStart?.atStartOfDay(ZoneId.systemDefault())?.toInstant()?.toEpochMilli() ?: 0)
+                                    || (fieldValue.value.value.toLongOrNull() ?: 0) > (filterDateEnd?.atTime(LocalTime.MAX)?.atZone(ZoneId.systemDefault())?.toInstant()?.toEpochMilli() ?: 0)) {
+                                    return@filter false
+                                }
+                            }
+                        }
+                    }
+
+                    var isFound: Boolean
+                    searchStrList.forEach {
+                        isFound = false
+                        itemUI.fields.forEach inner@ { fieldValue ->
+                            if (fieldValue.value.value.contains(it, true)) {
+                                isFound = true
+                                return@inner
+                            }
+                        }
+                        if (!isFound) return@filter false
+                    }
+                    return@filter true
+
+                }) { item ->
+                    isColored = !isColored
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
                             .padding(7.dp)
+                            .shadow(10.dp)
                             .border(1.dp, Color.Black)
                             .background(Color.White)
-                            .align(alignment = Alignment.CenterVertically)
-                        ) {
-                            Image(
-                                modifier = Modifier.size(100.dp),
-                                bitmap = ImageBitmap.imageResource(id = R.mipmap.merchik),
-                                contentDescription = null
-                            )
-                        }
-                        Column {
-                            item.fields.forEach {
-                                ItemFieldValue(it, visibilityField)
+                    ) {
+                        Row(Modifier.padding(7.dp)) {
+                            Box(
+                                modifier = Modifier
+                                    .padding(7.dp)
+                                    .border(1.dp, Color.Black)
+                                    .background(Color.White)
+                                    .align(alignment = Alignment.CenterVertically)
+                            ) {
+                                Image(
+                                    modifier = Modifier.size(100.dp),
+                                    bitmap = ImageBitmap.imageResource(id = R.mipmap.merchik),
+                                    contentDescription = null
+                                )
+                            }
+                            Column {
+                                item.fields.forEach {
+                                    ItemFieldValue(it, visibilityField)
+                                }
                             }
                         }
                     }
@@ -203,7 +234,17 @@ internal fun MainUI(viewModel: MainViewModel) {
     }
 
     if (showFilteringDialog) {
-        FilteringDialog(viewModel, onDismiss = { showFilteringDialog = false })
+        val key = viewModel.getFilters()?.rangeDataByKey?.key ?: ""
+        FilteringDialog(viewModel,
+            Filters(RangeDate(key, filterDateStart ?: LocalDate.now(), filterDateEnd ?: LocalDate.now()), searchStr),
+            onDismiss = { showFilteringDialog = false },
+            onChanged = {
+                filterDateStart = it.rangeDataByKey.start
+                filterDateEnd = it.rangeDataByKey.end
+                searchStr = it.searchText
+                showFilteringDialog = false
+            }
+        )
     }
 }
 
@@ -410,17 +451,22 @@ fun SettingsItemView(item: SettingsItemUI) {
 }
 
 @Composable
-internal fun FilteringDialog(viewModel: MainViewModel, onDismiss: () -> Unit) {
-    var searchStr by remember { mutableStateOf("") }
+internal fun FilteringDialog(viewModel: MainViewModel,
+                             filters: Filters,
+                             onDismiss: () -> Unit,
+                             onChanged: (Filters) -> Unit) {
+
+    var searchStr by remember { mutableStateOf(filters.searchText) }
+    var selectedFilterDateStart = filters.rangeDataByKey.start
+    var selectedFilterDateEnd = filters.rangeDataByKey.end
 
     Dialog(onDismissRequest = onDismiss) {
         Box(
             modifier = Modifier
-                .padding(top = 20.dp, bottom = 20.dp)
                 .clip(RoundedCornerShape(8.dp))
                 .background(color = Color.White)
         ) {
-            Column {
+            Column(modifier = Modifier.padding(10.dp)) {
                 Text(
                     fontWeight = FontWeight.Bold,
                     text = viewModel.getTranslateString(stringResource(id = R.string.search))
@@ -430,26 +476,73 @@ internal fun FilteringDialog(viewModel: MainViewModel, onDismiss: () -> Unit) {
                     onValueChange = { searchStr = it }
                 )
 
-                DatePickerExample()
+                Row {
+                    DatePickerExample("Дата з:", selectedFilterDateStart) {
+                        selectedFilterDateStart = it
+                    }
+                    DatePickerExample("Дата по:", selectedFilterDateEnd) { selectedFilterDateEnd = it}
+                }
+
+                Row {
+                    Button(
+                        onClick = {
+                            onChanged.invoke(Filters(
+                                RangeDate(
+                                    filters.rangeDataByKey.key,
+                                    selectedFilterDateStart,
+                                    selectedFilterDateEnd
+                                ),
+                                searchStr
+                            ))
+                        },
+                        shape = RoundedCornerShape(8.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color.Blue),
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(5.dp)
+                    ) {
+                        Text(viewModel.getTranslateString(stringResource(id = R.string.apply)))
+                    }
+
+                    Button(
+                        onClick = {
+                            onChanged.invoke(Filters(
+                                RangeDate(
+                                    filters.rangeDataByKey.key,
+                                    LocalDate.now(),
+                                    LocalDate.now()
+                                ),
+                                ""
+                            ))
+                        },
+                        shape = RoundedCornerShape(8.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(5.dp)
+                    ) {
+                        Text(viewModel.getTranslateString(stringResource(id = R.string.clear)))
+                    }
+                }
             }
         }
     }
 }
 
 @Composable
-fun DatePickerExample() {
-    var selectedDate by remember { mutableStateOf("") }
+fun DatePickerExample(title: String, date: LocalDate?, dateChange: (date: LocalDate) -> Unit) {
+    var selectedDate by remember { mutableStateOf(date ?: LocalDate.now()) }
     var showDialog by remember { mutableStateOf(false) }
     val context = LocalContext.current
+    val dateFormat = DateTimeFormatter.ofPattern("dd/MM/yyyy")
 
     Column(
         modifier = Modifier
-            .fillMaxSize()
             .padding(16.dp),
         verticalArrangement = Arrangement.Center
     ) {
         Text(
-            text = "Дата с:\n$selectedDate",
+            text = "${title}:\n${selectedDate.format(dateFormat)}",
             modifier = Modifier.clickable { showDialog = true }
         )
 
@@ -465,15 +558,12 @@ fun DatePickerExample() {
                     Column(
                         modifier = Modifier.padding(16.dp),
                         verticalArrangement = Arrangement.Center,
-                        horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally
+                        horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         val datePicker = DatePicker(context).apply {
-                            init(Calendar.getInstance().get(Calendar.YEAR),
-                                Calendar.getInstance().get(Calendar.MONTH),
-                                Calendar.getInstance().get(Calendar.DAY_OF_MONTH)
-                            ) { _, year, month, dayOfMonth ->
-                                val date = "$dayOfMonth/${month + 1}/$year"
-                                selectedDate = date
+                            init(selectedDate.year, selectedDate.month.value, selectedDate.dayOfMonth) { _, year, month, dayOfMonth ->
+                                selectedDate = LocalDate.of(year, month, dayOfMonth)
+                                dateChange.invoke(selectedDate)
                             }
                         }
 
@@ -506,67 +596,6 @@ fun DatePickerExample() {
     }
 }
 
-//@OptIn(ExperimentalMaterial3Api::class)
-//@Composable
-//fun DatePickerExample() {
-//    var selectedDate by remember { mutableStateOf("") }
-//    var showDialog by remember { mutableStateOf(false) }
-//
-//    Column(
-//        modifier = Modifier
-//            .fillMaxSize()
-//            .padding(16.dp),
-//        verticalArrangement = Arrangement.Center
-//    ) {
-//        Text(text = "Selected Date: $selectedDate")
-//        Spacer(modifier = Modifier.height(16.dp))
-//        Button(onClick = {
-//            showDialog = true
-//        }) {
-//            Text(text = "Show Date Picker")
-//        }
-//
-//        if (showDialog) {
-//            DatePickerDialog(
-//                onDismissRequest = { showDialog = false },
-//                confirmButton = {
-//                    Button(onClick = {
-//                        // Handle date confirmation
-//                        val calendar = Calendar.getInstance().apply {
-//                            timeInMillis = System.currentTimeMillis()
-//                        }
-//                        val date = "${calendar.get(Calendar.DAY_OF_MONTH)}/${calendar.get(Calendar.MONTH) + 1}/${calendar.get(Calendar.YEAR)}"
-//                        selectedDate = date
-//                        showDialog = false
-//                    }) {
-//                        Text("OK")
-//                    }
-//                },
-//                dismissButton = {
-//                    Button(onClick = { showDialog = false }) {
-//                        Text("Cancel")
-//                    }
-//                }
-//            ) {
-//                AndroidView(
-//                    modifier = Modifier.align(Alignment.CenterHorizontally),
-//                    factory = { context ->
-//                        DatePicker(context).apply {
-//                            init(Calendar.getInstance().get(Calendar.YEAR),
-//                                Calendar.getInstance().get(Calendar.MONTH),
-//                                Calendar.getInstance().get(Calendar.DAY_OF_MONTH)
-//                            ) { _, year, month, dayOfMonth ->
-//                                val date = "$dayOfMonth/${month + 1}/$year"
-//                                selectedDate = date
-//                            }
-//                        }
-//                    }
-//                )
-//            }
-//        }
-//    }
-//}
-
 @Composable
 internal fun SortingDialog(viewModel: MainViewModel, onDismiss: () -> Unit) {
     Dialog(onDismissRequest = onDismiss) {
@@ -591,7 +620,7 @@ internal fun SettingsDialog(viewModel: MainViewModel, onDismiss: () -> Unit) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(top = 20.dp, bottom = 20.dp)
+                .padding(top = 40.dp, bottom = 40.dp)
                 .clip(RoundedCornerShape(8.dp))
                 .background(color = Color.White)
         ) {

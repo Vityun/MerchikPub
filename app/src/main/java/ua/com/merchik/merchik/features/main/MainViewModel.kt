@@ -1,25 +1,20 @@
 package ua.com.merchik.merchik.features.main
 
-import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import dagger.assisted.Assisted
-import dagger.hilt.android.lifecycle.HiltViewModel
-import io.realm.RealmObject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import ua.com.merchik.merchik.data.RealmModels.LogDB
 import ua.com.merchik.merchik.dataLayer.ContextUI
 import ua.com.merchik.merchik.dataLayer.DataObjectUI
 import ua.com.merchik.merchik.dataLayer.MainRepository
 import ua.com.merchik.merchik.dataLayer.NameUIRepository
 import ua.com.merchik.merchik.dataLayer.model.ItemUI
 import ua.com.merchik.merchik.dataLayer.model.SettingsItemUI
-import javax.inject.Inject
+import java.time.LocalDate
 import kotlin.reflect.KClass
 
 data class StateUI(
@@ -29,15 +24,28 @@ data class StateUI(
     val lastUpdate: Long = 0
 )
 
+data class Filters(
+    val rangeDataByKey: RangeDate,
+    val searchText: String
+)
+
+data class RangeDate(
+    val key: String,
+    val start: LocalDate,
+    val end: LocalDate
+)
+
 abstract class MainViewModel(
     val repository: MainRepository,
     val nameUIRepository: NameUIRepository,
     protected val savedStateHandle: SavedStateHandle
 ): ViewModel() {
 
+    open val title: String = "Довідник"
     abstract val contextUI: ContextUI
     abstract val table: KClass<out DataObjectUI>
     abstract fun getItems(): List<ItemUI>
+    open fun getFilters(): Filters? = null
 
 //    private val contextUI = ContextUI.MAIN
 //    private val table = LogDB::class
@@ -77,7 +85,7 @@ abstract class MainViewModel(
 
             _uiState.update {
                 it.copy(
-                    title = "Title",
+                    title = title,
                     items = items ?: emptyList(),
                     settingsItems = settingsItems,
                     lastUpdate = System.currentTimeMillis()

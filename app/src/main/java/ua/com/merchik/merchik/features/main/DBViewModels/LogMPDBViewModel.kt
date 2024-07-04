@@ -14,7 +14,10 @@ import ua.com.merchik.merchik.dataLayer.MainRepository
 import ua.com.merchik.merchik.dataLayer.NameUIRepository
 import ua.com.merchik.merchik.dataLayer.join
 import ua.com.merchik.merchik.dataLayer.model.ItemUI
+import ua.com.merchik.merchik.features.main.Filters
 import ua.com.merchik.merchik.features.main.MainViewModel
+import ua.com.merchik.merchik.features.main.RangeDate
+import java.time.LocalDate
 import javax.inject.Inject
 import kotlin.reflect.KClass
 
@@ -24,6 +27,10 @@ class LogMPDBViewModel @Inject constructor(
     nameUIRepository: NameUIRepository,
     savedStateHandle: SavedStateHandle
 ) : MainViewModel(repository, nameUIRepository, savedStateHandle) {
+
+    override val title: String
+        get() = "Історія місцеположення"
+
     override val contextUI: ContextUI
         get() = ContextUI.DEFAULT
 
@@ -33,5 +40,13 @@ class LogMPDBViewModel @Inject constructor(
     override fun getItems(): List<ItemUI> {
         val logMPDBUI = repository.getAllRealm(LogMPDB::class, contextUI)
         return logMPDBUI
+    }
+
+
+    override fun getFilters(): Filters {
+        return Filters(
+            RangeDate("CoordTime", LocalDate.now(), LocalDate.now()),
+            ""
+        )
     }
 }

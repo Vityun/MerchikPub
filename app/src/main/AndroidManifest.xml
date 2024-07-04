@@ -132,7 +132,7 @@ android:theme="@style/Theme.AppCompat.Light.NoActionBar"
 
         <activity
             android:name="ua.com.merchik.merchik.Activities.Features.FeaturesActivity"
-            android:theme="@style/AppTheme.NoActionBar"
+            android:theme="@style/TransparentTheme"
             >
         </activity>
 

@@ -64,7 +64,8 @@ public class LogMPDB extends RealmObject implements DataObjectUI {
     @NonNull
     @Override
     public String getHidedFieldsOnUI() {
-        return DataObjectUI.DefaultImpls.getHidedFieldsOnUI(this);
+        return "CoordAccuracy, CoordAltitude, CoordSpeed, CoordX, CoordY, codeDad2, id, inPlace, mocking, serverId" +
+                "upload, vpi, gp";
     }
 
     @Nullable

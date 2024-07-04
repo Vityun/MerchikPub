@@ -213,6 +213,8 @@
     <string name="visibility">Видимість</string>
     <string name="cancel">Скасувати</string>
     <string name="search">Пошук</string>
+    <string name="apply">Застосувати</string>
+    <string name="clear">Очистити</string>
 
 </resources>
 
