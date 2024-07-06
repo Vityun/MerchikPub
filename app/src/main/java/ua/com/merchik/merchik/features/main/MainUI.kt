@@ -1,22 +1,31 @@
 package ua.com.merchik.merchik.features.main
 
-import android.util.Log
+import android.app.Activity
+import android.os.Build
 import android.view.View
 import android.widget.DatePicker
 import androidx.annotation.DrawableRes
+import androidx.annotation.RequiresApi
+import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.gestures.draggable
+import androidx.compose.foundation.gestures.rememberDraggableState
+import androidx.compose.foundation.gestures.scrollBy
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -28,9 +37,12 @@ import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonDefaults
@@ -44,6 +56,7 @@ import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -62,7 +75,9 @@ import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.imageResource
 import androidx.compose.ui.res.painterResource
@@ -76,6 +91,9 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.zIndex
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import ua.com.merchik.merchik.R
 import ua.com.merchik.merchik.dataLayer.model.FieldValue
@@ -83,6 +101,7 @@ import ua.com.merchik.merchik.dataLayer.model.MerchModifier
 import ua.com.merchik.merchik.dataLayer.model.Padding
 import ua.com.merchik.merchik.dataLayer.model.SettingsItemUI
 import ua.com.merchik.merchik.dataLayer.model.TextField
+import ua.com.merchik.merchik.dialogs.DialogMap
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.ZoneId
@@ -90,6 +109,7 @@ import java.time.format.DateTimeFormatter
 import java.util.Collections
 import kotlin.math.roundToInt
 
+@RequiresApi(Build.VERSION_CODES.N)
 @Composable
 internal fun MainUI(viewModel: MainViewModel) {
 
@@ -100,11 +120,13 @@ internal fun MainUI(viewModel: MainViewModel) {
 
     var showSettingsDialog by remember { mutableStateOf(false) }
 
-    var showSortingDialog by remember { mutableStateOf(false) }
+//    var showSortingDialog by remember { mutableStateOf(false) }
 
     var showFilteringDialog by remember { mutableStateOf(false) }
 
     var searchStr by remember { mutableStateOf("") }
+
+//    val scrollbarSettings = remember { mutableStateOf(LazyColumnScrollbarSettings()) }
 
     Box(
         modifier = Modifier
@@ -150,46 +172,57 @@ internal fun MainUI(viewModel: MainViewModel) {
                     onClick = { showFilteringDialog = true }
                 )
 
-                ImageButton(id = R.drawable.ic_2,
-                    sizeButton = 55.dp,
-                    sizeImage = 25.dp,
-                    modifier = Modifier.padding(start = 7.dp),
-                    onClick = { showSortingDialog = true }
-                )
+//                ImageButton(id = R.drawable.ic_2,
+//                    sizeButton = 55.dp,
+//                    sizeImage = 25.dp,
+//                    modifier = Modifier.padding(start = 7.dp),
+//                    onClick = { showSortingDialog = true }
+//                )
             }
 
-            LazyColumn {
-                val searchStrList = searchStr.split(" ")
-                val visibilityField =
-                    if (uiState.settingsItems.firstOrNull { it.key == "column_name" }?.isEnabled == true) View.VISIBLE else View.GONE
-                var isColored = false
-                items(uiState.items.filter { itemUI ->
 
-                    viewModel.getFilters()?.let { filters ->
-                        itemUI.fields.forEach { fieldValue ->
-                            if (fieldValue.key.equals(filters.rangeDataByKey.key, true) ) {
-                                if ((fieldValue.value.value.toLongOrNull() ?: 0) < (filterDateStart?.atStartOfDay(ZoneId.systemDefault())?.toInstant()?.toEpochMilli() ?: 0)
-                                    || (fieldValue.value.value.toLongOrNull() ?: 0) > (filterDateEnd?.atTime(LocalTime.MAX)?.atZone(ZoneId.systemDefault())?.toInstant()?.toEpochMilli() ?: 0)) {
-                                    return@filter false
-                                }
+            val searchStrList = searchStr.split(" ")
+            val visibilityField =
+                if (uiState.settingsItems.firstOrNull { it.key == "column_name" }?.isEnabled == true) View.VISIBLE else View.GONE
+            var isColored = false
+
+            val items = uiState.items.filter { itemUI ->
+                viewModel.getFilters()?.let { filters ->
+                    itemUI.fields.forEach { fieldValue ->
+                        if (fieldValue.key.equals(filters.rangeDataByKey.key, true)) {
+                            if ((fieldValue.value.value.toLongOrNull()
+                                    ?: 0) < (filterDateStart?.atStartOfDay(ZoneId.systemDefault())
+                                    ?.toInstant()?.toEpochMilli() ?: 0)
+                                || (fieldValue.value.value.toLongOrNull()
+                                    ?: 0) > (filterDateEnd?.atTime(LocalTime.MAX)
+                                    ?.atZone(ZoneId.systemDefault())?.toInstant()
+                                    ?.toEpochMilli() ?: 0)
+                            ) {
+                                return@filter false
                             }
                         }
                     }
+                }
 
-                    var isFound: Boolean
-                    searchStrList.forEach {
-                        isFound = false
-                        itemUI.fields.forEach inner@ { fieldValue ->
-                            if (fieldValue.value.value.contains(it, true)) {
-                                isFound = true
-                                return@inner
-                            }
+                var isFound: Boolean
+                searchStrList.forEach {
+                    isFound = false
+                    itemUI.fields.forEach inner@{ fieldValue ->
+                        if (fieldValue.value.value.contains(it, true)) {
+                            isFound = true
+                            return@inner
                         }
-                        if (!isFound) return@filter false
                     }
-                    return@filter true
+                    if (!isFound) return@filter false
+                }
+                return@filter true
+            }
 
-                }) { item ->
+            LazyColumn(
+//                data = items,
+//                settings = scrollbarSettings.value
+            ) {
+                items(items) { item ->
                     isColored = !isColored
                     Box(
                         modifier = Modifier
@@ -208,7 +241,23 @@ internal fun MainUI(viewModel: MainViewModel) {
                                     .align(alignment = Alignment.CenterVertically)
                             ) {
                                 Image(
-                                    modifier = Modifier.size(100.dp),
+                                    modifier = Modifier
+                                        .size(100.dp)
+                                        .clickable {
+//                                            val dialogMap = DialogMap(
+//                                                activity,
+//                                                "",
+//                                                48.529587f,
+//                                                35.030895f,
+//                                                "Місцеположення ТТ",
+//                                                50.46282166666667,
+//                                                30.591601666666666,
+//                                                "Ваше місцеположення"
+//                                            )
+//                                            //                dialogMap.updateMap2(addressSDB.locationXd, addressSDB.locationYd, "Місцеположення ТТ", logMPDB.CoordX, logMPDB.CoordY, "Ваше місцеположення");
+//                                            dialogMap.setData("", "Місцеположення")
+//                                            dialogMap.show()
+                                        },
                                     bitmap = ImageBitmap.imageResource(id = R.mipmap.merchik),
                                     contentDescription = null
                                 )
@@ -229,9 +278,9 @@ internal fun MainUI(viewModel: MainViewModel) {
         SettingsDialog(viewModel, onDismiss = { showSettingsDialog = false })
     }
 
-    if (showSortingDialog) {
-        SortingDialog(viewModel, onDismiss = { showSortingDialog = false })
-    }
+//    if (showSortingDialog) {
+//        SortingDialog(viewModel, onDismiss = { showSortingDialog = false })
+//    }
 
     if (showFilteringDialog) {
         val key = viewModel.getFilters()?.rangeDataByKey?.key ?: ""
@@ -322,6 +371,31 @@ private fun ItemTextField(it: TextField, modifier: Modifier? = null) {
             } ?: Modifier)
     )
 }
+
+//@Composable
+//fun VerticalScrollbar(
+//    modifier: Modifier,
+//    scrollState: ScrollState,
+//    itemCount: Int,
+//    itemHeight: Dp
+//) {
+//    val proportion = itemHeight * itemCount / scrollState.maxValue.toFloat()
+//
+//    Box(
+//        modifier = modifier
+//            .width(8.dp)
+//            .fillMaxHeight()
+//            .background(Color.LightGray.copy(alpha = 0.6f))
+//    ) {
+//        Box(
+//            modifier = Modifier
+//                .width(8.dp)
+//                .height(10.dp)
+//                .align(Alignment.TopStart)
+//                .background(Color.Gray)
+//        )
+//    }
+//}
 
 @Composable
 fun DragAndDropList() {
@@ -430,7 +504,7 @@ fun ImageButton(
 }
 
 @Composable
-fun SettingsItemView(item: SettingsItemUI) {
+fun SettingsItemView(item: SettingsItemUI, onChangeIndex: (offset: Int) -> Unit) {
     var isChecked by remember { mutableStateOf(item.isEnabled) }
 
     Row(
@@ -440,6 +514,23 @@ fun SettingsItemView(item: SettingsItemUI) {
         Text(text = item.text, modifier = Modifier
             .padding(start = 10.dp)
             .align(Alignment.CenterVertically))
+
+        Spacer(modifier = Modifier.weight(1f))
+
+        ImageButton(id = R.drawable.ic_angle_down_solid, sizeButton = 30.dp, sizeImage = 15.dp,
+            modifier = Modifier
+                .padding(start = 5.dp)
+                .align(Alignment.CenterVertically)) {
+            onChangeIndex.invoke(1)
+        }
+
+        ImageButton(id = R.drawable.ic_angle_up_solid, sizeButton = 30.dp, sizeImage = 15.dp,
+            modifier = Modifier
+                .padding(start = 5.dp)
+                .align(Alignment.CenterVertically)) {
+            onChangeIndex.invoke(-1)
+        }
+
         Checkbox(
             checked = isChecked,
             onCheckedChange = { checked ->
@@ -671,8 +762,8 @@ internal fun SettingsDialog(viewModel: MainViewModel, onDismiss: () -> Unit) {
                         HorizontalDivider(thickness = 1.dp)
 
                         LazyColumn {
-                            items(uiState.settingsItems) {
-                                SettingsItemView(item = it)
+                            items(uiState.settingsItems) { itemSettingsUI ->
+                                SettingsItemView(item = itemSettingsUI, onChangeIndex = { viewModel.onChangeItemIndex(itemSettingsUI, it) })
                             }
                         }
                     }
@@ -680,7 +771,10 @@ internal fun SettingsDialog(viewModel: MainViewModel, onDismiss: () -> Unit) {
 
                 Row {
                     Button(
-                        onClick = onDismiss,
+                        onClick = {
+                            viewModel.updateContent()
+                            onDismiss.invoke()
+                        },
                         shape = RoundedCornerShape(8.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = Color.Blue),
                         modifier = Modifier

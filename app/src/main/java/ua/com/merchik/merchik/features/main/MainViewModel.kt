@@ -93,4 +93,8 @@ abstract class MainViewModel(
             }
         }
     }
+
+    fun onChangeItemIndex(item: SettingsItemUI, offset: Int) {
+//        repository.getSettingsItemList(table, contextUI)
+    }
 }

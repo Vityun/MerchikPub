@@ -16,7 +16,6 @@ import ua.com.merchik.merchik.data.Database.Room.UsersSDB
 import ua.com.merchik.merchik.dataLayer.model.FieldValue
 import ua.com.merchik.merchik.dataLayer.model.ItemUI
 import ua.com.merchik.merchik.dataLayer.model.SettingsItemUI
-import ua.com.merchik.merchik.dataLayer.model.TextField
 import ua.com.merchik.merchik.database.realm.RealmManager
 import ua.com.merchik.merchik.database.room.RoomManager
 import kotlin.reflect.KClass
@@ -72,7 +71,8 @@ class MainRepository(
                     SettingsItemUI(
                         it,
                         if (it == "column_name") "Назва реквізитів" else nameUIRepository.getTranslateString(it, obj.getTranslateId(it)),
-                        hideUserFields?.contains(it) != true
+                        hideUserFields?.contains(it) != true,
+                        0
                     )
                 }
         } ?: return emptyList()

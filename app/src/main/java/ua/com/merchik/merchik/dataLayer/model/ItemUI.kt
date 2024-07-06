@@ -44,5 +44,6 @@ data class FieldValue(
 data class SettingsItemUI(
     val key: String,
     val text: String,
-    var isEnabled: Boolean
+    var isEnabled: Boolean,
+    var index: Int
 )
