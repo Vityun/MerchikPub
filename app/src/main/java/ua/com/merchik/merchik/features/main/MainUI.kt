@@ -8,6 +8,7 @@ import androidx.annotation.DrawableRes
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.ScrollState
@@ -95,6 +96,11 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import my.nanihadesuka.compose.LazyColumnScrollbar
+import my.nanihadesuka.compose.ScrollbarLayoutSide
+import my.nanihadesuka.compose.ScrollbarSelectionActionable
+import my.nanihadesuka.compose.ScrollbarSelectionMode
+import my.nanihadesuka.compose.ScrollbarSettings
 import ua.com.merchik.merchik.R
 import ua.com.merchik.merchik.dataLayer.model.FieldValue
 import ua.com.merchik.merchik.dataLayer.model.MerchModifier
@@ -111,7 +117,7 @@ import kotlin.math.roundToInt
 
 @RequiresApi(Build.VERSION_CODES.N)
 @Composable
-internal fun MainUI(viewModel: MainViewModel) {
+internal fun MainUI(viewModel: MainViewModel, activity: AppCompatActivity) {
 
     val uiState by viewModel.uiState.collectAsState()
 
@@ -120,13 +126,11 @@ internal fun MainUI(viewModel: MainViewModel) {
 
     var showSettingsDialog by remember { mutableStateOf(false) }
 
-//    var showSortingDialog by remember { mutableStateOf(false) }
-
     var showFilteringDialog by remember { mutableStateOf(false) }
 
     var searchStr by remember { mutableStateOf("") }
 
-//    val scrollbarSettings = remember { mutableStateOf(LazyColumnScrollbarSettings()) }
+    val listState = rememberLazyListState()
 
     Box(
         modifier = Modifier
@@ -171,20 +175,12 @@ internal fun MainUI(viewModel: MainViewModel) {
                     modifier = Modifier.padding(start = 7.dp),
                     onClick = { showFilteringDialog = true }
                 )
-
-//                ImageButton(id = R.drawable.ic_2,
-//                    sizeButton = 55.dp,
-//                    sizeImage = 25.dp,
-//                    modifier = Modifier.padding(start = 7.dp),
-//                    onClick = { showSortingDialog = true }
-//                )
             }
 
 
             val searchStrList = searchStr.split(" ")
             val visibilityField =
                 if (uiState.settingsItems.firstOrNull { it.key == "column_name" }?.isEnabled == true) View.VISIBLE else View.GONE
-            var isColored = false
 
             val items = uiState.items.filter { itemUI ->
                 viewModel.getFilters()?.let { filters ->
@@ -218,53 +214,56 @@ internal fun MainUI(viewModel: MainViewModel) {
                 return@filter true
             }
 
-            LazyColumn(
-//                data = items,
-//                settings = scrollbarSettings.value
-            ) {
-                items(items) { item ->
-                    isColored = !isColored
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(7.dp)
-                            .shadow(10.dp)
-                            .border(1.dp, Color.Black)
-                            .background(Color.White)
+            Box(
+                modifier = Modifier
+                    .padding(7.dp)
+                    .shadow(4.dp)
+                    .background(Color.White)
+            ){
+                LazyColumnScrollbar(
+                    modifier = Modifier.padding(5.dp),
+                    state = listState,
+                    settings = ScrollbarSettings(
+                        alwaysShowScrollbar = true,
+                        thumbUnselectedColor = Color.Gray,
+                        thumbSelectedColor = Color.Gray,
+                        thumbShape = CircleShape,
+                    ),
+                ) {
+                    LazyColumn(
+                        modifier = Modifier.padding(end = 15.dp),
+                        state = listState,
                     ) {
-                        Row(Modifier.padding(7.dp)) {
+                        items(items) { item ->
                             Box(
                                 modifier = Modifier
+                                    .fillMaxWidth()
                                     .padding(7.dp)
+                                    .shadow(4.dp)
                                     .border(1.dp, Color.Black)
                                     .background(Color.White)
-                                    .align(alignment = Alignment.CenterVertically)
                             ) {
-                                Image(
-                                    modifier = Modifier
-                                        .size(100.dp)
-                                        .clickable {
-//                                            val dialogMap = DialogMap(
-//                                                activity,
-//                                                "",
-//                                                48.529587f,
-//                                                35.030895f,
-//                                                "Місцеположення ТТ",
-//                                                50.46282166666667,
-//                                                30.591601666666666,
-//                                                "Ваше місцеположення"
-//                                            )
-//                                            //                dialogMap.updateMap2(addressSDB.locationXd, addressSDB.locationYd, "Місцеположення ТТ", logMPDB.CoordX, logMPDB.CoordY, "Ваше місцеположення");
-//                                            dialogMap.setData("", "Місцеположення")
-//                                            dialogMap.show()
-                                        },
-                                    bitmap = ImageBitmap.imageResource(id = R.mipmap.merchik),
-                                    contentDescription = null
-                                )
-                            }
-                            Column {
-                                item.fields.forEach {
-                                    ItemFieldValue(it, visibilityField)
+                                Row(Modifier.padding(7.dp)) {
+                                    Box(
+                                        modifier = Modifier
+                                            .padding(7.dp)
+                                            .border(1.dp, Color.Black)
+                                            .background(Color.White)
+                                            .align(alignment = Alignment.CenterVertically)
+                                    ) {
+                                        Image(
+                                            modifier = Modifier
+                                                .size(100.dp)
+                                                .clickable { viewModel.onClickItemImage(item, activity) },
+                                            bitmap = ImageBitmap.imageResource(id = R.mipmap.merchik),
+                                            contentDescription = null
+                                        )
+                                    }
+                                    Column {
+                                        item.fields.forEach {
+                                            ItemFieldValue(it, visibilityField)
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -371,31 +370,6 @@ private fun ItemTextField(it: TextField, modifier: Modifier? = null) {
             } ?: Modifier)
     )
 }
-
-//@Composable
-//fun VerticalScrollbar(
-//    modifier: Modifier,
-//    scrollState: ScrollState,
-//    itemCount: Int,
-//    itemHeight: Dp
-//) {
-//    val proportion = itemHeight * itemCount / scrollState.maxValue.toFloat()
-//
-//    Box(
-//        modifier = modifier
-//            .width(8.dp)
-//            .fillMaxHeight()
-//            .background(Color.LightGray.copy(alpha = 0.6f))
-//    ) {
-//        Box(
-//            modifier = Modifier
-//                .width(8.dp)
-//                .height(10.dp)
-//                .align(Alignment.TopStart)
-//                .background(Color.Gray)
-//        )
-//    }
-//}
 
 @Composable
 fun DragAndDropList() {
@@ -683,21 +657,6 @@ fun DatePickerExample(title: String, date: LocalDate?, dateChange: (date: LocalD
                     }
                 }
             }
-        }
-    }
-}
-
-@Composable
-internal fun SortingDialog(viewModel: MainViewModel, onDismiss: () -> Unit) {
-    Dialog(onDismissRequest = onDismiss) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(top = 20.dp, bottom = 20.dp)
-                .clip(RoundedCornerShape(8.dp))
-                .background(color = Color.White)
-        ) {
-            DragAndDropList()
         }
     }
 }

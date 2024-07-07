@@ -1,5 +1,7 @@
 package ua.com.merchik.merchik.features.main
 
+import android.app.Activity
+import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -46,6 +48,7 @@ abstract class MainViewModel(
     abstract val table: KClass<out DataObjectUI>
     abstract fun getItems(): List<ItemUI>
     open fun getFilters(): Filters? = null
+    open fun onClickItemImage(itemUI: ItemUI, activity: AppCompatActivity) {}
 
 //    private val contextUI = ContextUI.MAIN
 //    private val table = LogDB::class

@@ -51,7 +51,7 @@ fun DataObjectUI.toItemUI(nameUIRepository: NameUIRepository, hideUserFields: St
     }
 
     return ItemUI(
-        id = 1,
+        rawObj = listOf(this),
         fields = fields
     )
 }

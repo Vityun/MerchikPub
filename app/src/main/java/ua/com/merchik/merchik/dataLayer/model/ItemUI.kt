@@ -6,9 +6,10 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import ua.com.merchik.merchik.dataLayer.DataObjectUI
 
 data class ItemUI(
-    val id: Long,
+    val rawObj: List<DataObjectUI>,
     val fields: List<FieldValue>
 )
 

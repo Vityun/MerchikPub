@@ -136,8 +136,9 @@ fun List<ItemUI>.join(rightTable: List<ItemUI>, query: String): List<ItemUI> {
 
     return this.map { itemLeftUI ->
         val joinedFields: MutableList<FieldValue> = mutableListOf()
+        var itemRightUI: ItemUI? = null
         itemLeftUI.fields.firstOrNull { it.key.equals(keyLeft, true) }?.let { fieldLeftUI ->
-            val itemRightUI = rightTable.firstOrNull { it.fields.firstOrNull { it.key.equals(keyRight, true) }?.value == fieldLeftUI.value }
+            itemRightUI = rightTable.firstOrNull { it.fields.firstOrNull { it.key.equals(keyRight, true) }?.value == fieldLeftUI.value }
             expFields.forEach { expField ->
                 itemRightUI?.fields?.firstOrNull { it.key.equals(expField, true) }?.let { fieldRightUI ->
                     joinedFields.add(
@@ -155,6 +156,12 @@ fun List<ItemUI>.join(rightTable: List<ItemUI>, query: String): List<ItemUI> {
         newFields.addAll(itemLeftUI.fields)
         newFields.addAll(joinedFields)
 
-        itemLeftUI.copy(fields = newFields)
+        val rawObj = mutableListOf<DataObjectUI>()
+        rawObj.addAll(itemLeftUI.rawObj)
+        itemRightUI?.let {
+            rawObj.addAll(it.rawObj)
+        }
+
+        itemLeftUI.copy(rawObj = rawObj, fields = newFields)
     }
 }

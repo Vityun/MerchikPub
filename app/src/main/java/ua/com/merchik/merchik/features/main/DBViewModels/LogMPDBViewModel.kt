@@ -1,5 +1,6 @@
 package ua.com.merchik.merchik.features.main.DBViewModels
 
+import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.SavedStateHandle
 import dagger.hilt.android.lifecycle.HiltViewModel
 import ua.com.merchik.merchik.data.Database.Room.AddressSDB
@@ -14,6 +15,7 @@ import ua.com.merchik.merchik.dataLayer.MainRepository
 import ua.com.merchik.merchik.dataLayer.NameUIRepository
 import ua.com.merchik.merchik.dataLayer.join
 import ua.com.merchik.merchik.dataLayer.model.ItemUI
+import ua.com.merchik.merchik.dialogs.DialogMap
 import ua.com.merchik.merchik.features.main.Filters
 import ua.com.merchik.merchik.features.main.MainViewModel
 import ua.com.merchik.merchik.features.main.RangeDate
@@ -39,14 +41,34 @@ class LogMPDBViewModel @Inject constructor(
 
     override fun getItems(): List<ItemUI> {
         val logMPDBUI = repository.getAllRealm(LogMPDB::class, contextUI)
-        return logMPDBUI
+        val addressSDB = repository.getAllRoom(AddressSDB::class, contextUI)
+        return logMPDBUI.join(addressSDB, "address = addr_id: nm")
     }
-
 
     override fun getFilters(): Filters {
         return Filters(
             RangeDate("CoordTime", LocalDate.now(), LocalDate.now()),
             ""
         )
+    }
+
+    override fun onClickItemImage(itemUI: ItemUI, activity: AppCompatActivity) {
+        val logMPDB = (itemUI.rawObj.firstOrNull { it is LogMPDB } as? LogMPDB)
+        val addressSDB = (itemUI.rawObj.firstOrNull { it is AddressSDB } as? AddressSDB)
+
+        if (logMPDB != null) {
+            val dialogMap = DialogMap(
+                activity,
+                "",
+                addressSDB?.locationXd ?: 0f,
+                addressSDB?.locationYd ?: 0f,
+                "Місцеположення ТТ",
+                logMPDB.CoordX,
+                logMPDB.CoordY,
+                "Ваше місцеположення"
+            )
+            dialogMap.setData("", "Місцеположення")
+            dialogMap.show()
+        }
     }
 }
