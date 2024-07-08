@@ -158,7 +158,7 @@ public class OptionControlPromotion<T> extends OptionControl {
                     err++;
                     errType1Cnt++;
                     errMsgType1.append(createLinkedString(msg, item, tov)).append("\n");
-                } else if ((!item.getAkciya().equals("") || !item.getAkciya().equals("0")) && (!item.getAkciyaId().equals("") || !item.getAkciyaId().equals("0"))) {
+                } else if ((!item.getAkciya().equals("0")) && (!item.getAkciyaId().equals("0"))) {
                     find = find + 1;
                     item.find = 1;
                 }

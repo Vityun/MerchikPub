@@ -144,7 +144,7 @@ public class OptionControlPhotoPromotion<T> extends OptionControl {
 
             else if (OSV == 0 && optionDB.getOptionId().equals("157278")) continue;
 
-            else if ((item.getAkciya().equals("") || item.getAkciya().equals("0")) && optionDB.getOptionId().equals("166528"))
+            else if ((item.getAkciya().equals("0")) && optionDB.getOptionId().equals("166528"))
                 continue;
 
             // 6.2 new 27.06.24
