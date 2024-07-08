@@ -113,7 +113,6 @@ import ua.com.merchik.merchik.Options.Controls.OptionControlPhotoShowcase;
 import ua.com.merchik.merchik.Options.Controls.OptionControlPhotoTovarsLeft;
 import ua.com.merchik.merchik.Options.Controls.OptionControlPhotoTovarsLeftClient;
 import ua.com.merchik.merchik.Options.Controls.OptionControlPromotion;
-import ua.com.merchik.merchik.Options.Controls.OptionControlPromotionTov;
 import ua.com.merchik.merchik.Options.Controls.OptionControlReclamationAnswer;
 import ua.com.merchik.merchik.Options.Controls.OptionControlRegistrationPotentialClient;
 import ua.com.merchik.merchik.Options.Controls.OptionControlReturnOfGoods;
@@ -219,10 +218,10 @@ public class Options {
 
             switch (optionControlId) {
 
-                case 157288:
-                    OptionControlPromotionTov<?> optionControlPromotionTov = new OptionControlPromotionTov<>(context, dataDB, optionsDB, newOptionType, mode, unlockCodeResultListener);
-                    optionControlPromotionTov.showOptionMassage("");
-                    break;
+//                case 157288:
+//                    OptionControlPromotionTov<?> optionControlPromotionTov = new OptionControlPromotionTov<>(context, dataDB, optionsDB, newOptionType, mode, unlockCodeResultListener);
+//                    optionControlPromotionTov.showOptionMassage("");
+//                    break;
 
                 case 84005, 84967, 164985, 165276:
                     OptionControlCheckingForAnAchievement<?> optionControlCheckingForAnAchievement = new OptionControlCheckingForAnAchievement<>(context, dataDB, optionsDB, newOptionType, mode, unlockCodeResultListener);
@@ -318,6 +317,7 @@ public class Options {
                     break;
 
                 case 80977:
+                case 157288:
                     OptionMassageType type1 = new OptionMassageType();
                     switch (mode) {
                         case NULL:
@@ -1221,37 +1221,37 @@ public class Options {
         Log.e("NNK", "F/optControl/NNKMode mode: " + mode);
         switch (optionId) {
 
-            case 156882:
-                if (optionCurrent.getOptionControlId().equals("80977")) {
-                    OptionControlPromotion<?> optionControlPromotion = new OptionControlPromotion<>(context, dataDB, option, type, mode, unlockCodeResultListener);
-                    if (mode.equals(NNKMode.MAKE) || (mode.equals(NNKMode.CHECK) && optionControlPromotion.isBlockOption()))
-                        optionControlPromotion.showOptionMassage(block);
-                    if (mode.equals(NNKMode.BLOCK) && optionControlPromotion.signal && optionControlPromotion.isBlockOption()) {
-                        optionControlPromotion.showOptionMassage(block);
-                    }
+//            case 156882:
+//                if (optionCurrent.getOptionControlId().equals("80977")) {
+//                    OptionControlPromotion<?> optionControlPromotion = new OptionControlPromotion<>(context, dataDB, option, type, mode, unlockCodeResultListener);
+//                    if (mode.equals(NNKMode.MAKE) || (mode.equals(NNKMode.CHECK) && optionControlPromotion.isBlockOption()))
+//                        optionControlPromotion.showOptionMassage(block);
+//                    if (mode.equals(NNKMode.BLOCK) && optionControlPromotion.signal && optionControlPromotion.isBlockOption()) {
+//                        optionControlPromotion.showOptionMassage(block);
+//                    }
+//
+//                    return optionControlPromotion.isBlockOption2() ? 1 : 0;
+//                } else if (optionCurrent.getOptionControlId().equals("157288")) {
+//                    OptionControlPromotionTov<?> optionControlPromotionTov = new OptionControlPromotionTov<>(context, dataDB, option, type, mode, unlockCodeResultListener);
+//                    if (mode.equals(NNKMode.MAKE) || (mode.equals(NNKMode.CHECK) && optionControlPromotionTov.isBlockOption()))
+//                        optionControlPromotionTov.showOptionMassage(block);
+//
+//                    if (mode.equals(NNKMode.BLOCK) && optionControlPromotionTov.signal && optionControlPromotionTov.isBlockOption()) {
+//                        optionControlPromotionTov.showOptionMassage(block);
+//                    }
+//                    return optionControlPromotionTov.isBlockOption2() ? 1 : 0;
+//                }
+//                break;
 
-                    return optionControlPromotion.isBlockOption2() ? 1 : 0;
-                } else if (optionCurrent.getOptionControlId().equals("157288")) {
-                    OptionControlPromotionTov<?> optionControlPromotionTov = new OptionControlPromotionTov<>(context, dataDB, option, type, mode, unlockCodeResultListener);
-                    if (mode.equals(NNKMode.MAKE) || (mode.equals(NNKMode.CHECK) && optionControlPromotionTov.isBlockOption()))
-                        optionControlPromotionTov.showOptionMassage(block);
-
-                    if (mode.equals(NNKMode.BLOCK) && optionControlPromotionTov.signal && optionControlPromotionTov.isBlockOption()) {
-                        optionControlPromotionTov.showOptionMassage(block);
-                    }
-                    return optionControlPromotionTov.isBlockOption2() ? 1 : 0;
-                }
-                break;
-
-            case 157288:
-                OptionControlPromotionTov<?> optionControlPromotionTov = new OptionControlPromotionTov<>(context, dataDB, option, type, mode, unlockCodeResultListener);
-                if (mode.equals(NNKMode.MAKE) || (mode.equals(NNKMode.CHECK) && optionControlPromotionTov.isBlockOption()))
-                    optionControlPromotionTov.showOptionMassage(block);
-
-                if (mode.equals(NNKMode.BLOCK) && optionControlPromotionTov.signal && optionControlPromotionTov.isBlockOption()) {
-                    optionControlPromotionTov.showOptionMassage(block);
-                }
-                return optionControlPromotionTov.isBlockOption2() ? 1 : 0;
+//            case 157288:
+//                OptionControlPromotionTov<?> optionControlPromotionTov = new OptionControlPromotionTov<>(context, dataDB, option, type, mode, unlockCodeResultListener);
+//                if (mode.equals(NNKMode.MAKE) || (mode.equals(NNKMode.CHECK) && optionControlPromotionTov.isBlockOption()))
+//                    optionControlPromotionTov.showOptionMassage(block);
+//
+//                if (mode.equals(NNKMode.BLOCK) && optionControlPromotionTov.signal && optionControlPromotionTov.isBlockOption()) {
+//                    optionControlPromotionTov.showOptionMassage(block);
+//                }
+//                return optionControlPromotionTov.isBlockOption2() ? 1 : 0;
 
 
             case 165481:
@@ -1635,7 +1635,8 @@ public class Options {
                 break;
 
             case 80977:     // Контроль Акций
-//            case 156882:    // Кнопка Акций
+            case 156882:    // Кнопка Акций
+            case 157288:
                 OptionControlPromotion<?> optionControlPromotion = new OptionControlPromotion<>(context, dataDB, option, type, mode, unlockCodeResultListener);
                 if (mode.equals(NNKMode.MAKE) || (mode.equals(NNKMode.CHECK) && optionControlPromotion.isBlockOption()))
                     optionControlPromotion.showOptionMassage(block);

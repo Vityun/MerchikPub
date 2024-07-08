@@ -215,6 +215,7 @@ public class Tab3Fragment extends Fragment {
                                 }catch (Exception e){
                                     Globals.writeToMLOG("ERROR", "Tab3Fragment.setAddButton.case2", "Exception e: " + e);
                                 }
+                                break;
 
                             case 3:
                                 try {

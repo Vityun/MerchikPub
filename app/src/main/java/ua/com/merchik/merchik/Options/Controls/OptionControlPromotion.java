@@ -63,6 +63,8 @@ public class OptionControlPromotion<T> extends OptionControl {
     private int addressId, userId;
     private long dad2;
 
+    private Integer colMin = 1;
+
     public OptionControlPromotion(Context context, T document, OptionsDB optionDB, OptionMassageType msgType, Options.NNKMode nnkMode, UnlockCodeResultListener unlockCodeResultListener) {
         try {
             this.context = context;
@@ -74,7 +76,7 @@ public class OptionControlPromotion<T> extends OptionControl {
 
             getDocumentVar();
             executeOption();
-        }catch (Exception e){
+        } catch (Exception e) {
             Globals.writeToMLOG("ERROR", "OptionControlPromotion", "Exception e: " + e);
         }
     }
@@ -83,12 +85,17 @@ public class OptionControlPromotion<T> extends OptionControl {
         if (document instanceof WpDataDB) {
             WpDataDB wpDataDB = (WpDataDB) document;
 
-            documentDate = Clock.getHumanTimeYYYYMMDD(wpDataDB.getDt().getTime()/1000); //+TODO CHANGE DATE
+            documentDate = Clock.getHumanTimeYYYYMMDD(wpDataDB.getDt().getTime() / 1000); //+TODO CHANGE DATE
 
             clientId = wpDataDB.getClient_id();
             addressId = wpDataDB.getAddr_id();
             userId = wpDataDB.getUser_id();
             dad2 = wpDataDB.getCode_dad2();
+            try {
+                colMin = Integer.valueOf(optionDB.getAmountMin());
+            } catch (Exception e) {
+                colMin = 1;
+            }
         }
     }
 
@@ -104,14 +111,19 @@ public class OptionControlPromotion<T> extends OptionControl {
 //        List<ReportPrepareDB> reportRes = new ArrayList<>();
 
         // Получение Доп. Требований с дополнительными фильтрами.
-        List<AdditionalRequirementsDB> additionalRequirements = AdditionalRequirementsRealm.getDocumentAdditionalRequirements(document, true, OPTION_CONTROL_PROMOTION_ID, null, null, null);
-        String[] tovIds = new String[additionalRequirements.size()];
+        List<AdditionalRequirementsDB> additionalRequirements;
+        String[] tovIds;
+        if (optionDB.getOptionId().equals("80977")) {
+            additionalRequirements = AdditionalRequirementsRealm.getDocumentAdditionalRequirements(document, true, OPTION_CONTROL_PROMOTION_ID, null, null, null);
+            tovIds = new String[additionalRequirements.size()];
 
-
-        for (int i = 0; i < additionalRequirements.size(); i++) {
-            tovIds[i] = additionalRequirements.get(i).getTovarId();
+            for (int i = 0; i < additionalRequirements.size(); i++) {
+                tovIds[i] = additionalRequirements.get(i).getTovarId();
+            }
+            Arrays.sort(tovIds);
+        } else {
+            tovIds = new String[0];
         }
-        Arrays.sort(tovIds);
 
 
         SpannableStringBuilder errMsgType1 = new SpannableStringBuilder();
@@ -133,7 +145,7 @@ public class OptionControlPromotion<T> extends OptionControl {
             }
 
             TovarDB tov = TovarRealm.getById(item.getTovarId());
-            if (tov != null){
+            if (tov != null) {
                 String msg = String.format("(%s) %s (%s)", item.getTovarId(), tov.getNm(), tov.getWeight());
 
                 if (OSV == 1 && (item.getAkciyaId().equals("") || item.getAkciyaId().equals("0"))) {
@@ -141,21 +153,25 @@ public class OptionControlPromotion<T> extends OptionControl {
                     err++;
                     errType2Cnt++;
                     errMsgType2.append(createLinkedString(msg, item, tov)).append("\n");
-                } else if (OSV == 1 && (item.getAkciya() != null  && (item.getAkciya().equals("") || item.getAkciya().equals("0")))) {
+                } else if (OSV == 1 && (item.getAkciya() != null && (item.getAkciya().equals("") || item.getAkciya().equals("0")))) {
                     // Для товара с ОСВ (Особым Вниманием) Вы должны обязательно указать наличие (или отсутствие) Акции.
                     err++;
                     errType1Cnt++;
                     errMsgType1.append(createLinkedString(msg, item, tov)).append("\n");
-                } else if (!item.getAkciyaId().equals("") && !item.getAkciyaId().equals("0")) {
-                    find = 1;
+                } else if ((!item.getAkciya().equals("") || !item.getAkciya().equals("0")) && (!item.getAkciyaId().equals("") || !item.getAkciyaId().equals("0"))) {
+                    find = find + 1;
+                    item.find = 1;
                 }
-            }else {
+            } else {
 //                err++;
 //                errType1Cnt++;
 //                errMsgType1.append("Товар з ідентифікатором: (").append(item.getTovarId()).append(") не знайдено").append("\n");
             }
-
         }
+
+        // 5.1 05.07.24.    Если менеджен указал 10 товаров, а у нас всего 5 - указываем максимальным
+        // значением кол-во товаров. что б не было так что б я требовал от мерчей рожать товары
+        colMin = reportPrepare.size() < colMin ? reportPrepare.size() : colMin;
 
         // Формирование сообщения
         if (errType1Cnt > 0) {
@@ -174,23 +190,27 @@ public class OptionControlPromotion<T> extends OptionControl {
         if (reportPrepare.size() == 0) {
             spannableStringBuilder.append("Товаров, по которым надо проверять факт наличия Акции, не обнаружено.");
             signalInt = 1;
-        }else if (totalOSV == 0){
+        } else if (totalOSV == 0 && optionDB.getOptionId().equals("80977")) {
             spannableStringBuilder.append("Для данной ТТ, на текущий момент, нет товаров с ОСВ (Особым Вниманием). Контролировать нечего. Замечаний нет.");
             signalInt = 2;
-        } else if (err > 0) {
+        } else if (err > 0 && optionDB.getOptionId().equals("80977")) {
             spannableStringBuilder.append("Не предоставлена информация о типе и наличии Акции по товару (" + err + " шт.) (в т.ч. с ОСВ (Особым Вниманием)). См. таблицу.");
             signalInt = 1;
-//        } else if (find == 0) {
-//            massageToUser = "Ни у одного товара не указано тип, наличие (или отсутствие) Акции.";
-//            signalInt = 1;
+        } else if (find == 0) {
+            spannableStringBuilder.append("Ни у одного товара не указано тип, наличие (или отсутствие) Акции.");
+            signalInt = 1;
+
+        } else if (find < colMin) {
+            spannableStringBuilder.append("Ви зазначили дані про наявність/відсутність Акцій у ").append("" + find).append(" товарів, що менше мінімально пропустимого ").append("" + colMin);
+            signalInt = 1;
         } else {
             spannableStringBuilder.append("Замечаний по предоставлению информации о наличии Акций по товарам (в т.ч. с ОСВ (Особым Вниманием)) нет.");
             signalInt = 2;
         }
 
-        if (signalInt == 1){
+        if (signalInt == 1) {
             signal = true;
-        }else {
+        } else {
             signal = false;
         }
 
@@ -202,7 +222,7 @@ public class OptionControlPromotion<T> extends OptionControl {
         // 8.0 Блокировка проведения
         if (signalInt == 1) {
             setIsBlockOption(true);
-        }else {
+        } else {
             setIsBlockOption(false);
         }
 
@@ -217,7 +237,6 @@ public class OptionControlPromotion<T> extends OptionControl {
                 realm.insertOrUpdate(optionDB);
             }
         });
-
 
 
         if (signal) {
