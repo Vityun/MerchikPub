@@ -32,14 +32,18 @@ class FeaturesActivity: AppCompatActivity() {
                         .fillMaxSize()
                         .padding(20.dp)
                         .clip(RoundedCornerShape(8.dp)),
-                    color = Color.White,
+                    color = Color.Transparent,
                 ) {
                     intent?.let { intent ->
                         intent.extras?.let { bundle ->
                             bundle.getString("viewModel")?.let {
-                                val ff: KClass<*> = Class.forName(it).kotlin
-                                when (ff) {
-                                    LogMPDBViewModel::class -> { MainUI(viewModel = viewModel() as LogMPDBViewModel, this) }
+                                val dataJson = bundle.getString("dataJson")
+                                when (Class.forName(it).kotlin) {
+                                    LogMPDBViewModel::class -> {
+                                        val viewModel = viewModel() as LogMPDBViewModel
+                                        viewModel.dataJson = dataJson
+                                        MainUI(viewModel = viewModel, this)
+                                    }
                                     else -> { finish() }
                                 }
                             }

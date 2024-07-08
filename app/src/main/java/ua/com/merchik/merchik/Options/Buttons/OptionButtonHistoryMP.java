@@ -12,6 +12,8 @@ import androidx.compose.ui.platform.ComposeView;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.gson.Gson;
+
 import java.util.List;
 
 import ua.com.merchik.merchik.Activities.Features.FeaturesActivity;
@@ -77,24 +79,25 @@ public class OptionButtonHistoryMP<T> extends OptionControl {
         Intent intent = new Intent(context, FeaturesActivity.class);
         Bundle bundle = new Bundle();
         bundle.putString("viewModel", LogMPDBViewModel.class.getCanonicalName());
+        bundle.putString("dataJson", new Gson().toJson(wpDataDB));
         intent.putExtras(bundle);
         context.startActivity(intent);
 
-        try {
-            Globals.fixMP(wpDataDB, context);
-            DialogData dialog = new DialogData(context);
-            dialog.setTitle("Історія місцеположення");
-            dialog.setText("Нижче зазначені данні із місцезнаходженням вашого пристрою за період: з " + Clock.getHumanTimeSecPattern(startTime, "dd.MM HH:mm:ss") + " по " + Clock.getHumanTimeSecPattern(endTime, "dd.MM HH:mm:ss"));
-            dialog.setRecycler(createAdapter(dialog.context, logMPDBList, wpDataDB.getAddr_id()), new LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false));
-            dialog.setClose(dialog::dismiss);
-            dialog.setOk("Запит МП", ()->{
-                Globals.fixMP(wpDataDB, null);
-                Toast.makeText(context, "Запит створено!", Toast.LENGTH_SHORT).show();
-            });
-            dialog.show();
-        }catch (Exception e){
-            Globals.writeToMLOG("ERROR", "OptionButtonHistoryMP/executeOption", "Exception e: " + e);
-        }
+//        try {
+//            Globals.fixMP(wpDataDB, context);
+//            DialogData dialog = new DialogData(context);
+//            dialog.setTitle("Історія місцеположення");
+//            dialog.setText("Нижче зазначені данні із місцезнаходженням вашого пристрою за період: з " + Clock.getHumanTimeSecPattern(startTime, "dd.MM HH:mm:ss") + " по " + Clock.getHumanTimeSecPattern(endTime, "dd.MM HH:mm:ss"));
+//            dialog.setRecycler(createAdapter(dialog.context, logMPDBList, wpDataDB.getAddr_id()), new LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false));
+//            dialog.setClose(dialog::dismiss);
+//            dialog.setOk("Запит МП", ()->{
+//                Globals.fixMP(wpDataDB, null);
+//                Toast.makeText(context, "Запит створено!", Toast.LENGTH_SHORT).show();
+//            });
+//            dialog.show();
+//        }catch (Exception e){
+//            Globals.writeToMLOG("ERROR", "OptionButtonHistoryMP/executeOption", "Exception e: " + e);
+//        }
     }
 
     /**

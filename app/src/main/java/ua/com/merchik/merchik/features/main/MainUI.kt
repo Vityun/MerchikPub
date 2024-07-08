@@ -117,12 +117,14 @@ import kotlin.math.roundToInt
 
 @RequiresApi(Build.VERSION_CODES.N)
 @Composable
-internal fun MainUI(viewModel: MainViewModel, activity: AppCompatActivity) {
+fun MainUI(viewModel: MainViewModel, activity: AppCompatActivity) {
 
     val uiState by viewModel.uiState.collectAsState()
 
     var filterDateStart by remember { mutableStateOf(viewModel.getFilters()?.rangeDataByKey?.start) }
     var filterDateEnd by remember { mutableStateOf(viewModel.getFilters()?.rangeDataByKey?.end) }
+
+    var isActiveFiltered by remember { mutableStateOf(false) }
 
     var showSettingsDialog by remember { mutableStateOf(false) }
 
@@ -132,136 +134,167 @@ internal fun MainUI(viewModel: MainViewModel, activity: AppCompatActivity) {
 
     val listState = rememberLazyListState()
 
-    Box(
+    Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(10.dp)
+            .background(color = Color.Transparent)
     ) {
-        Column {
 
+        Row(
+            modifier = Modifier.align(alignment = Alignment.End)
+        ) {
             ImageButton(
                 id = R.drawable.ic_10,
                 shape = CircleShape,
                 colorImage = ColorFilter.tint(color = colorResource(id = R.color.colorInetYellow)),
-                sizeButton = 45.dp,
+                sizeButton = 40.dp,
                 sizeImage = 25.dp,
                 modifier = Modifier
-                    .padding(start = 7.dp)
-                    .align(alignment = Alignment.End),
+                    .padding(start = 15.dp, bottom = 10.dp),
                 onClick = { showSettingsDialog = true }
             )
 
-            Text(
-                text = uiState.title, fontSize = 16.sp, modifier = Modifier
-                    .padding(7.dp)
-                    .align(Alignment.CenterHorizontally),
-                fontWeight = FontWeight.Bold
-            )
-
-            Row(
+            ImageButton(
+                id = R.drawable.ic_letter_x,
+                shape = CircleShape,
+                colorImage = ColorFilter.tint(color = Color.Black),
+                sizeButton = 40.dp,
+                sizeImage = 25.dp,
                 modifier = Modifier
-                    .padding(10.dp)
-            ) {
+                    .padding(start = 15.dp, bottom = 10.dp),
+                onClick = { activity.finish() }
+            )
+        }
 
-                TextFieldInputRounded(
-                    value = searchStr,
-                    onValueChange = { searchStr = it },
-                    modifier = Modifier.weight(1f)
-                )
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .clip(RoundedCornerShape(8.dp))
+                .background(color = Color.White)
+        ) {
+            Column {
 
-                ImageButton(id = R.drawable.ic_filter,
-                    sizeButton = 55.dp,
-                    sizeImage = 25.dp,
-                    modifier = Modifier.padding(start = 7.dp),
-                    onClick = { showFilteringDialog = true }
-                )
-            }
+                val searchStrList = searchStr.split(" ")
+                val visibilityField =
+                    if (uiState.settingsItems.firstOrNull { it.key == "column_name" }?.isEnabled == true) View.VISIBLE else View.GONE
 
-
-            val searchStrList = searchStr.split(" ")
-            val visibilityField =
-                if (uiState.settingsItems.firstOrNull { it.key == "column_name" }?.isEnabled == true) View.VISIBLE else View.GONE
-
-            val items = uiState.items.filter { itemUI ->
-                viewModel.getFilters()?.let { filters ->
-                    itemUI.fields.forEach { fieldValue ->
-                        if (fieldValue.key.equals(filters.rangeDataByKey.key, true)) {
-                            if ((fieldValue.value.value.toLongOrNull()
-                                    ?: 0) < (filterDateStart?.atStartOfDay(ZoneId.systemDefault())
-                                    ?.toInstant()?.toEpochMilli() ?: 0)
-                                || (fieldValue.value.value.toLongOrNull()
-                                    ?: 0) > (filterDateEnd?.atTime(LocalTime.MAX)
-                                    ?.atZone(ZoneId.systemDefault())?.toInstant()
-                                    ?.toEpochMilli() ?: 0)
-                            ) {
-                                return@filter false
+                isActiveFiltered = false
+                val items = uiState.items.filter { itemUI ->
+                    viewModel.getFilters()?.let { filters ->
+                        itemUI.fields.forEach { fieldValue ->
+                            if (fieldValue.key.equals(filters.rangeDataByKey.key, true)) {
+                                if ((fieldValue.value.value.toLongOrNull()
+                                        ?: 0) < (filterDateStart?.atStartOfDay(ZoneId.systemDefault())
+                                        ?.toInstant()?.toEpochMilli() ?: 0)
+                                    || (fieldValue.value.value.toLongOrNull()
+                                        ?: 0) > (filterDateEnd?.atTime(LocalTime.MAX)
+                                        ?.atZone(ZoneId.systemDefault())?.toInstant()
+                                        ?.toEpochMilli() ?: 0)
+                                ) {
+                                    isActiveFiltered = true
+                                    return@filter false
+                                }
                             }
                         }
                     }
-                }
 
-                var isFound: Boolean
-                searchStrList.forEach {
-                    isFound = false
-                    itemUI.fields.forEach inner@{ fieldValue ->
-                        if (fieldValue.value.value.contains(it, true)) {
-                            isFound = true
-                            return@inner
+                    var isFound: Boolean
+                    searchStrList.forEach {
+                        isFound = false
+                        itemUI.fields.forEach inner@{ fieldValue ->
+                            if (fieldValue.value.value.contains(it, true)) {
+                                isFound = true
+                                return@inner
+                            }
+                        }
+                        if (!isFound) {
+                            isActiveFiltered = true
+                            return@filter false
                         }
                     }
-                    if (!isFound) return@filter false
+                    return@filter true
                 }
-                return@filter true
-            }
 
-            Box(
-                modifier = Modifier
-                    .padding(7.dp)
-                    .shadow(4.dp)
-                    .background(Color.White)
-            ){
-                LazyColumnScrollbar(
-                    modifier = Modifier.padding(5.dp),
-                    state = listState,
-                    settings = ScrollbarSettings(
-                        alwaysShowScrollbar = true,
-                        thumbUnselectedColor = Color.Gray,
-                        thumbSelectedColor = Color.Gray,
-                        thumbShape = CircleShape,
-                    ),
+                Text(
+                    text = uiState.title, fontSize = 16.sp, modifier = Modifier
+                        .padding(7.dp)
+                        .align(Alignment.CenterHorizontally),
+                    fontWeight = FontWeight.Bold
+                )
+
+                Row(
+                    modifier = Modifier
+                        .padding(10.dp)
                 ) {
-                    LazyColumn(
-                        modifier = Modifier.padding(end = 15.dp),
+
+                    TextFieldInputRounded(
+                        value = searchStr,
+                        onValueChange = { searchStr = it },
+                        modifier = Modifier.weight(1f)
+                    )
+
+                    ImageButton(id = if (isActiveFiltered) R.drawable.ic_filterbold else R.drawable.ic_filter,
+                        sizeButton = 55.dp,
+                        sizeImage = 25.dp,
+                        modifier = Modifier.padding(start = 7.dp),
+                        onClick = { showFilteringDialog = true }
+                    )
+                }
+
+                Box(
+                    modifier = Modifier
+                        .padding(7.dp)
+                        .shadow(4.dp)
+                        .background(Color.White)
+                ) {
+                    LazyColumnScrollbar(
+                        modifier = Modifier.padding(5.dp),
                         state = listState,
+                        settings = ScrollbarSettings(
+                            alwaysShowScrollbar = true,
+                            thumbUnselectedColor = Color.Gray,
+                            thumbSelectedColor = Color.Gray,
+                            thumbShape = CircleShape,
+                        ),
                     ) {
-                        items(items) { item ->
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(7.dp)
-                                    .shadow(4.dp)
-                                    .border(1.dp, Color.Black)
-                                    .background(Color.White)
-                            ) {
-                                Row(Modifier.padding(7.dp)) {
-                                    Box(
-                                        modifier = Modifier
-                                            .padding(7.dp)
-                                            .border(1.dp, Color.Black)
-                                            .background(Color.White)
-                                            .align(alignment = Alignment.CenterVertically)
-                                    ) {
-                                        Image(
+                        LazyColumn(
+                            modifier = Modifier.padding(end = 15.dp),
+                            state = listState,
+                        ) {
+                            items(items) { item ->
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(7.dp)
+                                        .shadow(4.dp)
+                                        .border(1.dp, Color.Black)
+                                        .background(Color.White)
+                                ) {
+                                    Row(Modifier.padding(7.dp)) {
+                                        Box(
                                             modifier = Modifier
-                                                .size(100.dp)
-                                                .clickable { viewModel.onClickItemImage(item, activity) },
-                                            bitmap = ImageBitmap.imageResource(id = R.mipmap.merchik),
-                                            contentDescription = null
-                                        )
-                                    }
-                                    Column {
-                                        item.fields.forEach {
-                                            ItemFieldValue(it, visibilityField)
+                                                .padding(7.dp)
+                                                .border(1.dp, Color.Black)
+                                                .background(Color.White)
+                                                .align(alignment = Alignment.CenterVertically)
+                                        ) {
+                                            Image(
+                                                modifier = Modifier
+                                                    .size(100.dp)
+                                                    .clickable {
+                                                        viewModel.onClickItemImage(
+                                                            item,
+                                                            activity
+                                                        )
+                                                    },
+                                                bitmap = ImageBitmap.imageResource(id = R.mipmap.merchik),
+                                                contentDescription = null
+                                            )
+                                        }
+                                        Column {
+                                            item.fields.forEach {
+                                                ItemFieldValue(it, visibilityField)
+                                            }
                                         }
                                     }
                                 }
@@ -516,7 +549,7 @@ fun SettingsItemView(item: SettingsItemUI, onChangeIndex: (offset: Int) -> Unit)
 }
 
 @Composable
-internal fun FilteringDialog(viewModel: MainViewModel,
+fun FilteringDialog(viewModel: MainViewModel,
                              filters: Filters,
                              onDismiss: () -> Unit,
                              onChanged: (Filters) -> Unit) {
@@ -662,7 +695,7 @@ fun DatePickerExample(title: String, date: LocalDate?, dateChange: (date: LocalD
 }
 
 @Composable
-internal fun SettingsDialog(viewModel: MainViewModel, onDismiss: () -> Unit) {
+fun SettingsDialog(viewModel: MainViewModel, onDismiss: () -> Unit) {
 
     val uiState by viewModel.uiState.collectAsState()
 
@@ -735,7 +768,7 @@ internal fun SettingsDialog(viewModel: MainViewModel, onDismiss: () -> Unit) {
                             onDismiss.invoke()
                         },
                         shape = RoundedCornerShape(8.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color.Blue),
+                        colors = ButtonDefaults.buttonColors(containerColor = colorResource(id = R.color.blue)),
                         modifier = Modifier
                             .weight(1f)
                             .padding(5.dp)
@@ -750,7 +783,7 @@ internal fun SettingsDialog(viewModel: MainViewModel, onDismiss: () -> Unit) {
                             onDismiss.invoke()
                         },
                         shape = RoundedCornerShape(8.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
+                        colors = ButtonDefaults.buttonColors(containerColor = colorResource(id = R.color.orange)),
                         modifier = Modifier
                             .weight(1f)
                             .padding(5.dp)

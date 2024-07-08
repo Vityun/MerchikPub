@@ -43,24 +43,13 @@ abstract class MainViewModel(
     protected val savedStateHandle: SavedStateHandle
 ): ViewModel() {
 
+    var dataJson: String? = null
     open val title: String = "Довідник"
     abstract val contextUI: ContextUI
     abstract val table: KClass<out DataObjectUI>
     abstract fun getItems(): List<ItemUI>
     open fun getFilters(): Filters? = null
     open fun onClickItemImage(itemUI: ItemUI, activity: AppCompatActivity) {}
-
-//    private val contextUI = ContextUI.MAIN
-//    private val table = LogDB::class
-
-//    private val table = PromoDB::class
-//    private val table = ArticleDB::class
-//    private val table = TovarDB::class
-//    private val table = SiteObjectsDB::class
-//    private val table = CustomerSDB::class
-//    private val table = PlanogrammSDB::class
-//    private val table = AddressSDB::class
-//    private val table = UsersSDB::class
 
     private val _uiState = MutableStateFlow(StateUI())
     val uiState: StateFlow<StateUI>
@@ -89,7 +78,7 @@ abstract class MainViewModel(
             _uiState.update {
                 it.copy(
                     title = title,
-                    items = items ?: emptyList(),
+                    items = items,
                     settingsItems = settingsItems,
                     lastUpdate = System.currentTimeMillis()
                 )

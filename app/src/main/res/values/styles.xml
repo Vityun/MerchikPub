@@ -77,7 +77,7 @@
 <!--    </style>-->
 
     <!-- Transparent theme -->
-    <style name="TransparentTheme" parent="AppTheme">
+    <style name="TransparentTheme" parent="AppTheme.NoActionBar">
         <item name="android:windowIsTranslucent">true</item>
         <item name="android:windowBackground">@color/gray_50</item>
         <item name="android:windowNoTitle">true</item>

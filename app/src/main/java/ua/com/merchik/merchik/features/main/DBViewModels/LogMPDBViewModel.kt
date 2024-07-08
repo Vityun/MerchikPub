@@ -2,12 +2,10 @@ package ua.com.merchik.merchik.features.main.DBViewModels
 
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.SavedStateHandle
+import com.google.gson.Gson
 import dagger.hilt.android.lifecycle.HiltViewModel
 import ua.com.merchik.merchik.data.Database.Room.AddressSDB
-import ua.com.merchik.merchik.data.RealmModels.LogDB
 import ua.com.merchik.merchik.data.RealmModels.LogMPDB
-import ua.com.merchik.merchik.data.RealmModels.ThemeDB
-import ua.com.merchik.merchik.data.RealmModels.UsersDB
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB
 import ua.com.merchik.merchik.dataLayer.ContextUI
 import ua.com.merchik.merchik.dataLayer.DataObjectUI
@@ -15,6 +13,7 @@ import ua.com.merchik.merchik.dataLayer.MainRepository
 import ua.com.merchik.merchik.dataLayer.NameUIRepository
 import ua.com.merchik.merchik.dataLayer.join
 import ua.com.merchik.merchik.dataLayer.model.ItemUI
+import ua.com.merchik.merchik.database.room.RoomManager
 import ua.com.merchik.merchik.dialogs.DialogMap
 import ua.com.merchik.merchik.features.main.Filters
 import ua.com.merchik.merchik.features.main.MainViewModel
@@ -54,7 +53,10 @@ class LogMPDBViewModel @Inject constructor(
 
     override fun onClickItemImage(itemUI: ItemUI, activity: AppCompatActivity) {
         val logMPDB = (itemUI.rawObj.firstOrNull { it is LogMPDB } as? LogMPDB)
-        val addressSDB = (itemUI.rawObj.firstOrNull { it is AddressSDB } as? AddressSDB)
+
+        val wpDataDB = Gson().fromJson(dataJson, WpDataDB::class.java)
+
+        val addressSDB = RoomManager.SQL_DB.addressDao().getById(wpDataDB.addr_id)
 
         if (logMPDB != null) {
             val dialogMap = DialogMap(
