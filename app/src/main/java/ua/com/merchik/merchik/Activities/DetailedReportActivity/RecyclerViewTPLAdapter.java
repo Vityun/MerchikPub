@@ -397,66 +397,69 @@ public class RecyclerViewTPLAdapter extends RecyclerView.Adapter<RecyclerView.Vi
         }
 
         private void setSpinner(TovarOptions item) {
-            // AKCIYA_ID
-            // Выбор какая именно у нас Акция
-            Map<Integer, String> mapSpinner2 = getSpinnerDataMap();
-            String[] res = mapSpinner2.values().toArray(new String[0]);
+            try {
+                // AKCIYA_ID
+                // Выбор какая именно у нас Акция
+                Map<Integer, String> mapSpinner2 = getSpinnerDataMap();
+                String[] res = mapSpinner2.values().toArray(new String[0]);
 
-            ArrayAdapter<String> adapter = new ArrayAdapter(spinner.getContext(), android.R.layout.simple_spinner_item, res) {
-                @Override
-                public boolean isEnabled(int position) {
-                    if (position == 0) {
-                        return false;
-                    } else {
-                        return true;
+                ArrayAdapter<String> adapter = new ArrayAdapter(spinner.getContext(), android.R.layout.simple_spinner_item, res) {
+                    @Override
+                    public boolean isEnabled(int position) {
+                        if (position == 0) {
+                            return false;
+                        } else {
+                            return true;
+                        }
                     }
-                }
 
-                @Override
-                public View getDropDownView(int position, View convertView,
-                                            ViewGroup parent) {
-                    View view = super.getDropDownView(position, convertView, parent);
-                    TextView tv = (TextView) view;
-                    if (position == 0) {
-                        // Set the hint text color gray
-                        tv.setTextColor(Color.GRAY);
-                    } else {
-                        tv.setTextColor(Color.BLACK);
+                    @Override
+                    public View getDropDownView(int position, View convertView,
+                                                ViewGroup parent) {
+                        View view = super.getDropDownView(position, convertView, parent);
+                        TextView tv = (TextView) view;
+                        if (position == 0) {
+                            // Set the hint text color gray
+                            tv.setTextColor(Color.GRAY);
+                        } else {
+                            tv.setTextColor(Color.BLACK);
+                        }
+                        return view;
                     }
-                    return view;
-                }
-            };
-            adapter.setDropDownViewResource(android.R.layout.simple_spinner_item);
-            spinner.setAdapter(adapter);
+                };
+                adapter.setDropDownViewResource(android.R.layout.simple_spinner_item);
+                spinner.setAdapter(adapter);
 
-            data1 = mapSpinner2.get(Integer.parseInt(dataRp.akciyaId));
-            int spinnerPosition = adapter.getPosition(data1);
-            spinner.setSelection(spinnerPosition);
+                data1 = mapSpinner2.get(Integer.parseInt(dataRp.akciyaId));
+                int spinnerPosition = adapter.getPosition(data1);
+                spinner.setSelection(spinnerPosition);
 
 //            SpinnerDialogData spinnerDialogData = new SpinnerDialogData();
 //            spinnerDialogData.setData(mapSpinner2);
 //            spinner.setOnItemSelectedListener(spinnerDialogData);
 
-            spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-                @Override
-                public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
-                    try {
-                        String s = adapterView.getSelectedItem().toString();
-                        data1 = Globals.getKeyForValueS(s, mapSpinner2);
+                spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                    @Override
+                    public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+                        try {
+                            String s = adapterView.getSelectedItem().toString();
+                            data1 = Globals.getKeyForValueS(s, mapSpinner2);
 
-                        click.getData(item, data1, dataRp.akciya);
+                            click.getData(item, data1, dataRp.akciya);
 
-                    } catch (Exception e) {
-                        // TODO Рассматривать ошибку
+                        } catch (Exception e) {
+                            // TODO Рассматривать ошибку
+                        }
                     }
-                }
 
-                @Override
-                public void onNothingSelected(AdapterView<?> adapterView) {
+                    @Override
+                    public void onNothingSelected(AdapterView<?> adapterView) {
 
-                }
-            });
-
+                    }
+                });
+            }catch (Exception e){
+                Globals.writeToMLOG("ERROR", "RecyclerViewTPLAdapter/setSpinner", "Exception e: " + e);
+            }
         }
 
         private Map<Integer, String> getSpinnerDataMap() {

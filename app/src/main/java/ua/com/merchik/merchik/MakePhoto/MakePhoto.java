@@ -35,6 +35,7 @@ import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.WorkPlan;
 import ua.com.merchik.merchik.data.Database.Room.Planogram.PlanogrammJOINSDB;
+import ua.com.merchik.merchik.data.Database.Room.Planogram.PlanogrammSDB;
 import ua.com.merchik.merchik.data.Database.Room.ShowcaseSDB;
 import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
 import ua.com.merchik.merchik.data.Database.Room.UsersSDB;
@@ -650,6 +651,7 @@ public class MakePhoto {
         });
     }
 
+/*
     private <T> void photoDialogs(Activity activity, WPDataObj wpDataObj, T data, OptionsDB optionsDB) {
         if (enabledGPS) {
             if (wpDataObj != null) {
@@ -777,6 +779,7 @@ public class MakePhoto {
             dialogData1.show();
         }
     }
+*/
 
     public void showDialogPass(Context context, WPDataObj wpDataObj, OptionsDB option, Clicks.clickVoid click) {
 
@@ -835,20 +838,27 @@ public class MakePhoto {
                 try {
                     ShowcaseSDB showcase = (ShowcaseSDB) data;
                     Toast.makeText(activity, "Обрана вітрина: " + showcase.nm + " (" + showcase.id + ")", Toast.LENGTH_LONG).show();
+                    PlanogrammSDB planogrammSDB = null;
 
-                    MakePhoto.img_src_id = String.valueOf(showcase.photoId);
-                    MakePhoto.showcase_id = String.valueOf(showcase.id);
-
-                    MakePhoto.planogram_id = String.valueOf(showcase.planogramId);
-                    MakePhoto.planogram_img_id = String.valueOf(showcase.photoPlanogramId);
+                    try {
+                        MakePhoto.img_src_id = String.valueOf(showcase.photoId);
+                        MakePhoto.showcase_id = String.valueOf(showcase.id);
+                        MakePhoto.planogram_id = String.valueOf(showcase.planogramId);
+                        planogrammSDB = SQL_DB.planogrammDao().getById(showcase.planogramId);
+                        if (planogrammSDB != null && planogrammSDB.photoId != null){
+                            MakePhoto.planogram_img_id = String.valueOf(planogrammSDB.photoId);
+                        }
+                    }catch (Exception e){
+                        Globals.writeToMLOG("ERROR", "showDialogSW/click/showcase", "Exception e: " + e);
+                    }
 
                     boolean needPlan;
-                    if (showcase.planogramId != null && showcase.planogramId != 0) {
-                        needPlan = false;
+                    if (planogrammSDB != null) {
+                        needPlan = true;
                     } else {
-                        if (dialog.photoType == 0){
+                        if (dialog.photoType == 0) {
                             needPlan = true;
-                        }else {
+                        } else {
                             needPlan = false;
                         }
                     }
@@ -882,6 +892,7 @@ public class MakePhoto {
                     dialog.dismiss();
                 } catch (Exception e) {
                     Log.e("", "Exception e: " + e);
+                    Globals.writeToMLOG("ERROR", "showDialogSW/click", "Exception e: " + e);
                 }
             }
         });
@@ -910,8 +921,8 @@ public class MakePhoto {
                     MakePhoto.planogram_id = String.valueOf(planogramm.id);
                     MakePhoto.planogram_img_id = String.valueOf(planogramm.planogrammPhotoId);
 
-                    choiceCustomerGroupAndPhoto2(activity, wp, dataT, optionsDB, () -> {
-                    });
+//                    choiceCustomerGroupAndPhoto2(activity, wp, dataT, optionsDB, () -> {
+//                    });
 
                     clickVoid.click();
 

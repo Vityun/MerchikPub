@@ -2261,8 +2261,10 @@ public class TablesLoadingUnloading {
     public void uploadLodMp(ExchangeInterface.ExchangeRes res) {
         String mod = "location";
         String act = "track";
+//        String debug_param_1 = "test_something";
 
         List<LogMPDB> logMp = RealmManager.INSTANCE.copyFromRealm(RealmManager.getNOTUploadLogMPDB());
+//        List<LogMPDB> logMp = RealmManager.INSTANCE.copyFromRealm(RealmManager.getNOTUploadLogMPDBTEST());
         if (logMp != null && logMp.size() > 0) {
             Log.e("uploadLodMp", "LogMpUploadText. LogSize: " + logMp.size());
 
@@ -2276,7 +2278,7 @@ public class TablesLoadingUnloading {
             Globals.writeToMLOG("INFO", "uploadLodMp", "Количество ЛОГ МП на выгрузку: " + logMp.size());
 //            Globals.writeToMLOG("INFO", "uploadLodMp", "Данные на выгрузку: " + map);
 
-            retrofit2.Call<JsonObject> call = RetrofitBuilder.getRetrofitInterface().UPLOAD_LOG_MP(mod, act, map);
+            retrofit2.Call<JsonObject> call = RetrofitBuilder.getRetrofitInterface().UPLOAD_LOG_MP(mod, act, map/*, debug_param_1*/);
             call.enqueue(new retrofit2.Callback<JsonObject>() {
                 @Override
                 public void onResponse(retrofit2.Call<JsonObject> call, retrofit2.Response<JsonObject> response) {
@@ -2308,9 +2310,23 @@ public class TablesLoadingUnloading {
                                                 Globals.writeToMLOG("ERROR", "uploadLodMp/onResponse/executeTransaction", "Exception e: " + e);
                                                 res.onFailure("Exception e: " + e);
                                             }
+                                        }else {
+                                            try {
+                                                long id = geoInfo.get("geo_id").getAsLong();
+                                                RealmManager.INSTANCE.executeTransaction(realm -> {
+                                                    list.serverId = id;
+                                                    list.upload = System.currentTimeMillis()/1000;  // 27.08.23 Вместо удаления, пишу воемя когда координаты были выгружены
+                                                    realm.insertOrUpdate(list);
+                                                });
+                                            }catch (Exception e){
+                                                Globals.writeToMLOG("INFO", "uploadLodMp/onResponse/geoInfo.get(\"state\")", "Exception e: " + e);
+                                            }
+                                            Globals.writeToMLOG("INFO", "uploadLodMp/onResponse/geoInfo.get(\"state\")", "response.body(): " + response.body());
                                         }
                                     }
                                 }
+                            }else {
+                                Globals.writeToMLOG("INFO", "uploadLodMp/onResponse/state=false", "response.body(): " + response.body());
                             }
                         }
                     } catch (Exception e) {

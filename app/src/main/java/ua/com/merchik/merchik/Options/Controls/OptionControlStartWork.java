@@ -33,6 +33,8 @@ public class OptionControlStartWork<T> extends OptionControl {
         } else {
             saveOption("1");
         }
+
+        checkUnlockCode(optionDB);
     }
 
     private void getStartWorkFromDocument() {

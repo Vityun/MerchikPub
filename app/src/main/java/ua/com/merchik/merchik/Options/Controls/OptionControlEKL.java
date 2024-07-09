@@ -60,17 +60,21 @@ public class OptionControlEKL<T> extends OptionControl {
     }
 
     public OptionControlEKL(Context context, T document, OptionsDB optionDB, OptionMassageType msgType, Options.NNKMode nnkMode, OptionControl.UnlockCodeResultListener unlockCodeResultListener) {
-        Log.e("OptionControlEKL", "HERE TEST OptionControlEKL START");
-        this.context = context;
-        this.document = document;
-        this.optionDB = optionDB;
-        this.msgType = msgType;
-        this.nnkMode = nnkMode;
-        this.unlockCodeResultListener = unlockCodeResultListener;
+        try {
+            Log.e("OptionControlEKL", "HERE TEST OptionControlEKL START");
+            this.context = context;
+            this.document = document;
+            this.optionDB = optionDB;
+            this.msgType = msgType;
+            this.nnkMode = nnkMode;
+            this.unlockCodeResultListener = unlockCodeResultListener;
 
-        getDocumentVar();
-        executeOption();
-        Log.e("OptionControlEKL", "HERE TEST OptionControlEKL END");
+            getDocumentVar();
+            executeOption();
+            Log.e("OptionControlEKL", "HERE TEST OptionControlEKL END");
+        }catch (Exception e){
+            Globals.writeToMLOG("ERROR", "OptionControlEKL", "Exception e: " + e);
+        }
     }
 
     private void getDocumentVar() {
@@ -126,6 +130,11 @@ public class OptionControlEKL<T> extends OptionControl {
         long dateFrom = Clock.getDatePeriodLong(documentDt * 1000, -3) / 1000;
         long dateTo = Clock.getDatePeriodLong(documentDt * 1000, 5) / 1000;
 
+        if (System.currentTimeMillis()/1000 < 1719878399 && addressSDB.cityId == 41){
+            dateFrom = Clock.getDatePeriodLong(documentDt * 1000, -11) / 1000;
+            dateTo = Clock.getDatePeriodLong(documentDt * 1000, 5) / 1000;
+        }
+
         Log.e("OptionControlEKL", "HERE TEST OptionControlEKL 3");
 
         if (addressSDB.tpId == 434 && !optionDB.getOptionControlId().equals("132629") && documentDt < 1725148800) { // 1725148800 == 01.09.2024 / 434 = АТБ
@@ -142,6 +151,11 @@ public class OptionControlEKL<T> extends OptionControl {
                 //ГрупТов.ДобавитьЗначение(ПТТ.Отдел); //если мы уже определились с ПТТ в этом режиме то и отдел получим из ПТТ ... клиент сам решил использовать ЭТОГО ПТТ независимо от отдела
             } else if (optionDB.getOptionControlId().equals("84006") || (nnkMode.equals(Options.NNKMode.BLOCK) && optionDB.getOptionId().equals("84006"))) {
                 tovarGroupClientSDB = SQL_DB.tovarGroupClientDao().getAllBy(wpDataDB.getClient_id(), addressSDB.tpId);  // Получаю ГруппыТоваров по Адресу и Сети!
+
+                if (tovarGroupClientSDB == null || tovarGroupClientSDB.size() == 0){
+                    tovarGroupClientSDB = SQL_DB.tovarGroupClientDao().getAllBy(wpDataDB.getClient_id(), 0);
+                }
+
                 if (tovarGroupClientSDB != null && tovarGroupClientSDB.size() > 0) {
                     List<Integer> ids = new ArrayList<>();
                     for (TovarGroupClientSDB item : tovarGroupClientSDB) {
@@ -281,23 +295,25 @@ public class OptionControlEKL<T> extends OptionControl {
 //                    }catch (Exception e){
 //                        Globals.writeToMLOG("INFO", "OptionControlEKL/Build.VERSION.SDK_INT", "Exception e: " + e);
 //                    }
-                    if (tovarGroupSDB.stream().filter(item -> item.id.equals(usersSDBPTT.otdelId)).findFirst().orElse(null) != null
-                            && optionDB.getOptionControlId().equals("132629") && (addressSDB.kolKass > 5 || addressSDB.kolKass == 0)) {
-                        if (documentUser.reportDate05 != null && documentUser.reportDate05.getTime() >= wpDataDB.getDt().getTime()) {
+                    TovarGroupSDB test = tovarGroupSDB.stream().filter(item -> item.id.equals(usersSDBPTT.otdelId)).findFirst().orElse(null);
+                    Log.e("test", "test: " + test);
+                    if (tovarGroupSDB.stream().filter(item -> item.id.equals(usersSDBPTT.otdelId)).findFirst().orElse(null) == null
+                            && !optionDB.getOptionControlId().equals("132629") && (addressSDB.kolKass > 5 || addressSDB.kolKass == 0)) {
+                        if (documentUser.reportDate20 != null && documentUser.reportDate20.getTime() >= wpDataDB.getDt().getTime()) {
                             signal = true;
                             optionMsg.append(", но ").append("ПТТ работает в отделе ").append(SQL_DB.tovarGroupDao().getById(usersSDBPTT.otdelId).nm).append(" и не может подписывать ЭКЛ для: ")
-                                    .append(TG.getNmFromList(tovarGroupSDB)).append(" (но исполнитель не провел свой 5-й отчет и эту блокировку пропускаем)");
+                                    .append(TG.getNmFromList(tovarGroupSDB)).append(" (но исполнитель не провел свой 20-й отчет и эту блокировку пропускаем)");
                         } else {
                             signal = false;
                             optionMsg.append(", но ").append("ПТТ работает в отделе ").append(SQL_DB.tovarGroupDao().getById(usersSDBPTT.otdelId).nm).append(" и не может подписывать ЭКЛ для: ")
                                     .append(TG.getNmFromList(tovarGroupSDB)).append(" (для магазина в котором более 5 касс и исполнитель провел 5-й отчет)");
                         }
-                    } else if (tovarGroupSDB.stream().filter(item -> item.id.equals(usersSDBPTT.otdelId)).findFirst().orElse(null) != null
-                            && optionDB.getOptionControlId().equals("132629") && (addressSDB.kolKass > 0 && addressSDB.kolKass <= 5)) {
-                        if (documentUser.reportDate05 != null && documentUser.reportDate05.getTime() >= wpDataDB.getDt().getTime()) {
+                    } else if (tovarGroupSDB.stream().filter(item -> item.id.equals(usersSDBPTT.otdelId)).findFirst().orElse(null) == null
+                            && !optionDB.getOptionControlId().equals("132629") && (addressSDB.kolKass > 0 && addressSDB.kolKass <= 5)) {
+                        if (documentUser.reportDate40 != null && documentUser.reportDate40.getTime() >= wpDataDB.getDt().getTime()) {
                             signal = true;
                             optionMsg.append(", но ").append("ПТТ работает в отделе ").append(SQL_DB.tovarGroupDao().getById(usersSDBPTT.otdelId).nm).append(" и не может подписывать ЭКЛ для: ")
-                                    .append(TG.getNmFromList(tovarGroupSDB)).append(" (но исполнитель не провел свой 5-й отчет и эту блокировку пропускаем)");
+                                    .append(TG.getNmFromList(tovarGroupSDB)).append(" (но исполнитель не провел свой 20-й отчет и эту блокировку пропускаем)");
                         } else {
                             signal = true;
                             optionMsg.append(", но ").append("ПТТ работает в отделе ").append(SQL_DB.tovarGroupDao().getById(usersSDBPTT.otdelId).nm).append(" и не может подписывать ЭКЛ для: ")
@@ -314,9 +330,9 @@ public class OptionControlEKL<T> extends OptionControl {
 
         // "подводим итог"
         // Изначально ЭТО не надо было вообще писать, НО для парней с < 5 отчётами надо сделать исключение
-        if (signal && (documentUser.reportDate05 == null || documentUser.reportDate05.getTime() > wpDataDB.getDt().getTime())) {
+        if (signal && (documentUser.reportDate20 == null || documentUser.reportDate20.getTime() > wpDataDB.getDt().getTime())) {
             signal = false;
-            stringBuilderMsg.append("Исполнитель еще не провел свою пятую отчетность! ЭКЛ не подписан!").append("\n\n");
+            stringBuilderMsg.append("Исполнитель еще не провел свою двадцатую отчетность! ЭКЛ не подписан!").append("\n\n");
         }
 
         Log.e("OptionControlEKL", "HERE TEST OptionControlEKL 9");
@@ -344,6 +360,7 @@ public class OptionControlEKL<T> extends OptionControl {
             }
         });
         setIsBlockOption(signal);
+        checkUnlockCode(optionDB);
     }
 
 
@@ -352,6 +369,16 @@ public class OptionControlEKL<T> extends OptionControl {
             @Override
             public void onSuccess(String data) {
                 signal = false;
+                RealmManager.INSTANCE.executeTransaction(realm -> {
+                    if (optionDB != null) {
+                        if (signal) {
+                            optionDB.setBlockPns("1");
+                        } else {
+                            optionDB.setIsSignal("0");
+                        }
+                        realm.insertOrUpdate(optionDB);
+                    }
+                });
                 setIsBlockOption(signal);
                 unlockCodeResultListener.onUnlockCodeSuccess();
             }

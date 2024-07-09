@@ -18,9 +18,8 @@ import java.util.Calendar;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
-import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.R;
-import ua.com.merchik.merchik.ServerExchange.TablesExchange.PlanogrammTableExchange;
+import ua.com.merchik.merchik.ServerExchange.TablesExchange.VotesExchange;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.ShowcaseResponse;
 import ua.com.merchik.merchik.data.TestJsonUpload.StandartData;
@@ -40,8 +39,12 @@ public class MenuMainActivity extends toolbar_menus {
         try {
 
             findViewById(R.id.fab).setOnClickListener(v -> {
-                Toast.makeText(this, "Подсказка к данному разделу не готова", Toast.LENGTH_SHORT).show();
-                test();
+                try {
+                    Toast.makeText(this, "Подсказка к данному разделу не готова", Toast.LENGTH_SHORT).show();
+                    test();
+                }catch (Exception e){
+                    Log.e("MenuMainActivity", "Exception e: " + e);
+                }
             });
 
             findViewById(R.id.fab).setOnLongClickListener(v -> {
@@ -84,6 +87,23 @@ public class MenuMainActivity extends toolbar_menus {
 
     private void test() {
         try {
+            new VotesExchange().uploadVotes(new Clicks.clickObjectAndStatus() {
+                @Override
+                public void onSuccess(Object data) {
+
+                }
+
+                @Override
+                public void onFailure(String error) {
+
+                }
+            });
+        }catch (Exception e){
+            Log.e("testLong", "Exception e: " + e);
+        }
+    }
+
+/*
             PlanogrammTableExchange planogrammTableExchange = new PlanogrammTableExchange();
             planogrammTableExchange.planogramDownload(new Clicks.clickObjectAndStatus() {
                 @Override
@@ -96,45 +116,58 @@ public class MenuMainActivity extends toolbar_menus {
 
                 }
             });
-            planogrammTableExchange.planogrammAddressDownload(new Clicks.clickObjectAndStatus() {
-                @Override
-                public void onSuccess(Object data) {
-
-                }
-
-                @Override
-                public void onFailure(String error) {
-
-                }
-            });
-            planogrammTableExchange.planogrammGroupDownload(new Clicks.clickObjectAndStatus() {
-                @Override
-                public void onSuccess(Object data) {
-
-                }
-
-                @Override
-                public void onFailure(String error) {
-
-                }
-            });
-            planogrammTableExchange.planogrammImagesDownload(new Clicks.clickObjectAndStatus() {
-                @Override
-                public void onSuccess(Object data) {
-
-                }
-
-                @Override
-                public void onFailure(String error) {
-
-                }
-            });
-        }catch (Exception e){
-            Globals.writeToMLOG("ERROR", "startExchange/PlanogrammExchange/planogrammDownload", "Exception e: " + e);
-        }
-    }
 
 
+
+try {
+        PlanogrammTableExchange planogrammTableExchange = new PlanogrammTableExchange();
+        planogrammTableExchange.planogramDownload(new Clicks.clickObjectAndStatus() {
+            @Override
+            public void onSuccess(Object data) {
+
+            }
+
+            @Override
+            public void onFailure(String error) {
+
+            }
+        });
+        planogrammTableExchange.planogrammAddressDownload(new Clicks.clickObjectAndStatus() {
+            @Override
+            public void onSuccess(Object data) {
+
+            }
+
+            @Override
+            public void onFailure(String error) {
+
+            }
+        });
+        planogrammTableExchange.planogrammGroupDownload(new Clicks.clickObjectAndStatus() {
+            @Override
+            public void onSuccess(Object data) {
+
+            }
+
+            @Override
+            public void onFailure(String error) {
+
+            }
+        });
+        planogrammTableExchange.planogrammImagesDownload(new Clicks.clickObjectAndStatus() {
+            @Override
+            public void onSuccess(Object data) {
+
+            }
+
+            @Override
+            public void onFailure(String error) {
+
+            }
+        });
+    }catch (Exception e){
+        Globals.writeToMLOG("ERROR", "startExchange/PlanogrammExchange/planogrammDownload", "Exception e: " + e);
+    }*/
 
 /*
 

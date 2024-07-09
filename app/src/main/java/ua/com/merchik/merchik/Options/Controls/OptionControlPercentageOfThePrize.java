@@ -209,6 +209,7 @@ public class OptionControlPercentageOfThePrize<T> extends OptionControl {
 
 
         saveOptionResultInDB();
+
         if (signal) {
             if (optionDB.getBlockPns().equals("1")) {
                 setIsBlockOption(signal);
@@ -217,6 +218,7 @@ public class OptionControlPercentageOfThePrize<T> extends OptionControl {
                 spannableStringBuilder.append("\n\n").append("Ви можете отримати Преміальні БІЛЬШЕ, якщо будете отримувати менше рекламацій.");
             }
         }
+        checkUnlockCode(optionDB);
     }
 
 

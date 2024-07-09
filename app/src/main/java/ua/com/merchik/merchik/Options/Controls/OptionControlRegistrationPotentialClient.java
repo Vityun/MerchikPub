@@ -108,6 +108,7 @@ public class OptionControlRegistrationPotentialClient<T> extends OptionControl {
                 realm.insertOrUpdate(optionDB);
             }
         });
+        checkUnlockCode(optionDB);
 
         showOptionMassage("");
     }

@@ -184,7 +184,7 @@ public class ShowTovarRequisites {
                 dialog.setOperation(operationType(tpl), getCurrentData(tpl, cd2, tovarId), setMapData(tpl.getOptionControlName()), () -> {
                     // Сделал удаление даты тут потому что 08.04.24. в setOperation пришлось это убрать.
                     // Мне надо проверять корректность внесенной даты и отталкиваясь от этого выводить модальное окно или нет.
-                    OptionsDB option = OptionsRealm.getOption(String.valueOf(cd2), "165276");
+                    OptionsDB option = OptionsRealm.getOptionControl(String.valueOf(cd2), "165276");
                     if (option != null && operationType(tpl).equals(Date)) {
                         openNext = false;
 
@@ -340,7 +340,7 @@ public class ShowTovarRequisites {
         dialogList.remove(0);
 
         boolean option165276 = false;
-        OptionsDB option = OptionsRealm.getOption(String.valueOf(cd2), "165276");
+        OptionsDB option = OptionsRealm.getOptionControl(String.valueOf(cd2), "165276");
         if (option != null) option165276 = true;
 
         if (dialogList.size() > 0) {
@@ -409,7 +409,7 @@ public class ShowTovarRequisites {
                     && face > 0
                     && !tpl.getOptionShort().equals("Ш")
             ) {
-                OptionsDB optionsDB = OptionsRealm.getOption(String.valueOf(cd2), "165276");
+                OptionsDB optionsDB = OptionsRealm.getOptionControl(String.valueOf(cd2), "165276");
                 if ((dialogList.get(0).reportPrepareDB.dtExpire != null
                         && !dialogList.get(0).reportPrepareDB.dtExpire.equals("")
                         && !dialogList.get(0).reportPrepareDB.dtExpire.equals("0000-00-00"))

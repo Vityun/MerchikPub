@@ -393,14 +393,15 @@ public class DetailedReportTovarsFrag extends Fragment {
 
 
             List<TovarDB> tovarDBList;
-            switch (item.getOrder()) {
-                case 3:
+            item.getItemId();
+            switch (item.getTitle().toString()) {
+                case "додати один товар":
                     tovarDBList = getTovListNew(TovarDisplayType.DETAILED_REPORT);
                     Toast.makeText(getContext(), "Видалено зайві товари.(" + tovarDBList.size() + ")", Toast.LENGTH_SHORT).show();
                     addRecycleView(tovarDBList);
                     return true;
 
-                case 1:
+                case "додати товари з ППА":
                     tovarDBList = getTovListNew(TovarDisplayType.PPA);
 
                     if (customerSDB != null && customerSDB.ppaAuto == 1 && !customerSDB.id.equals("9382") && !customerSDB.id.equals("32246")) { // 9382 - Витмарк, 32246 - Ласунка
@@ -417,7 +418,7 @@ public class DetailedReportTovarsFrag extends Fragment {
                     }
                     return true;
 
-                case 2:
+                case "додати усі товари замовника":
                     tovarDBList = getTovListNew(TovarDisplayType.ALL);
 
                     if (customerSDB != null && customerSDB.ppaAuto == 1 && !customerSDB.id.equals("9382") && !customerSDB.id.equals("32246")) {
@@ -432,7 +433,7 @@ public class DetailedReportTovarsFrag extends Fragment {
                     }
                     return true;
 
-                case 0:
+                case "видалити зайві товари":
                     if (customerSDB != null && customerSDB.ppaAuto == 1 && !customerSDB.id.equals("9382") && !customerSDB.id.equals("32246")) {
                         dialogData.setCancel("Ні", () -> {
                             openOneTov();

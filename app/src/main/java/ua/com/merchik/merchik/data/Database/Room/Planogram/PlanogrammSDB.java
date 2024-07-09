@@ -16,6 +16,9 @@ import java.sql.Date;
 import ua.com.merchik.merchik.dataLayer.DataObjectUI;
 import ua.com.merchik.merchik.dataLayer.model.MerchModifier;
 
+import ua.com.merchik.merchik.Clock;
+import ua.com.merchik.merchik.Globals;
+
 @Entity(tableName = "planogramm")
 public class PlanogrammSDB implements DataObjectUI {
 
@@ -123,5 +126,36 @@ public class PlanogrammSDB implements DataObjectUI {
     @Override
     public MerchModifier getContainerModifier(@NonNull JSONObject jsonObject) {
         return DataObjectUI.DefaultImpls.getContainerModifier(this, jsonObject);
+    }
+
+    public PlanogrammSDB() {
+        Globals.writeToMLOG("INFO", "PlanogrammSDB", "test");
+    }
+
+    public PlanogrammSDB(@NonNull Integer id, String ispId, String ispTxt, String clientId, String clientTxt, Integer imgId, String photo, Long photoId, String photoBig, String nm, String comments, Date dtStart, Date dtEnd, String authorId, String authorTxt, Date dtUpdate, int planogrammPhoto) {
+        this.id = id;
+        this.ispId = ispId;
+        this.ispTxt = ispTxt;
+        this.clientId = clientId;
+        this.clientTxt = clientTxt;
+        this.imgId = imgId;
+        this.photo = photo;
+        this.photoId = photoId;
+        this.photoBig = photoBig;
+        this.nm = nm;
+        this.comments = comments;
+        this.dtStart = dtStart;
+        Globals.writeToMLOG("INFO", "PlanogrammSDB", "dtEnd: " + dtEnd);
+        Globals.writeToMLOG("INFO", "PlanogrammSDB", "dtEnd: " + dtEnd.getTime());
+        Globals.writeToMLOG("INFO", "PlanogrammSDB", "dtEnd: " + Clock.getHumanTimeSecPattern(dtEnd.getTime()/1000, "yyyy-MM-dd"));
+        if (dtEnd.equals("0002-11-29")){
+            this.dtEnd = null;
+        }else {
+            this.dtEnd = dtEnd;
+        }
+        this.authorId = authorId;
+        this.authorTxt = authorTxt;
+        this.dtUpdate = dtUpdate;
+        this.planogrammPhoto = planogrammPhoto;
     }
 }

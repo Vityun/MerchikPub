@@ -89,7 +89,19 @@ public class OptionControlPhotoTovarsLeft<T> extends OptionControl {
 
     @RequiresApi(api = Build.VERSION_CODES.N)
     private void executeOption() {
-        List<StackPhotoDB> stackPhoto = StackPhotoRealm.getPhoto(dateFrom, dateTo, null, addrId, null,  null, PHOTO_TOV_LEFT, null);
+        // 29.05.24 -- Адрес убрал с запроса, потому что в 1С его нет
+        List<StackPhotoDB> stackPhoto = StackPhotoRealm.getPhoto(dateFrom, dateTo, null, null, null,  null, PHOTO_TOV_LEFT, null);
+
+        Globals.writeToMLOG("INFO", "OptionControlPhotoTovarsLeft", "stackPhoto: " + stackPhoto);
+        if (stackPhoto != null){
+            Globals.writeToMLOG("INFO", "OptionControlPhotoTovarsLeft", "stackPhoto: " + stackPhoto.size());
+            StringBuilder stringBuilder = new StringBuilder();
+            for (StackPhotoDB item : stackPhoto){
+                stringBuilder.append("{").append(item.getId()).append("|").append(item.getPhotoServerId()).append("}, ");
+            }
+            Globals.writeToMLOG("INFO", "OptionControlPhotoTovarsLeft", "stackPhoto id's: " + stringBuilder);
+        }
+
 
         if (tpId == 8923 && (usersSDB.reportDate01 != null || usersSDB.reportDate05.getTime() >= documentDate)) {
             stringBuilderMsg.append("Для Новуса наличие ФОТ не проверяем до 5-го отчета.");
@@ -124,6 +136,7 @@ public class OptionControlPhotoTovarsLeft<T> extends OptionControl {
         }
 
         saveOptionResultInDB();
+
         if (signal) {
             if (optionDB.getBlockPns().equals("1")) {
                 setIsBlockOption(signal);
@@ -132,7 +145,7 @@ public class OptionControlPhotoTovarsLeft<T> extends OptionControl {
                 stringBuilderMsg.append("\n\n").append("Вы можете получить Премиальные БОЛЬШЕ, если будете вносить отчетность корректно.");
             }
         }
-
+        checkUnlockCode(optionDB);
     }
 
     /**

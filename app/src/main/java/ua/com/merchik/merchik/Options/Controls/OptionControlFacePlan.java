@@ -137,6 +137,7 @@ public class OptionControlFacePlan<T> extends OptionControl {
             }
         });
 
+
         //8.0. блокировка проведения
         // Установка блокирует ли опция работу приложения или нет
         if (signal) {
@@ -147,6 +148,7 @@ public class OptionControlFacePlan<T> extends OptionControl {
                 stringBuilderMsg.append("\n\n").append("Вы можете отримати Преміальні БІЛЬШЕ, якщо будете збільшувати кількість фейсів товарів замовника на полиці.");
             }
         }
+        checkUnlockCode(optionDB);
     }
 
 }

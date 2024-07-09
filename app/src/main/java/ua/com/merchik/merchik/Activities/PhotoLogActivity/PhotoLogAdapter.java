@@ -328,12 +328,18 @@ public class PhotoLogAdapter extends RecyclerView.Adapter<PhotoLogAdapter.ViewHo
                     new PhotoLog().sendPhotoOnServer(mContext, photoLogDat, new ExchangeInterface.UploadPhotoReports() {
                         @Override
                         public void onSuccess(StackPhotoDB photoDB, String s) {
+                            StringBuilder stringBuilder = new StringBuilder();
+                            stringBuilder.append("photoDB: ").append("{").append(photoDB.getId()).append("|").append(photoDB.getPhotoServerId()).append("}").append("s: ").append(s);
 
+                            Globals.writeToMLOG("INFO", "долгий клик по фото/onSuccess", "" + stringBuilder);
                         }
 
                         @Override
                         public void onFailure(StackPhotoDB photoDB, String error) {
+                            StringBuilder stringBuilder = new StringBuilder();
+                            stringBuilder.append("photoDB: ").append("{").append(photoDB.getId()).append("|").append(photoDB.getPhotoServerId()).append("}").append("error: ").append(error);
 
+                            Globals.writeToMLOG("INFO", "долгий клик по фото/onFailure", "" + stringBuilder);
                         }
                     });
                     Toast.makeText(mContext, "Начинаю выгрузку фото.", Toast.LENGTH_SHORT).show();
@@ -458,7 +464,6 @@ public class PhotoLogAdapter extends RecyclerView.Adapter<PhotoLogAdapter.ViewHo
                             dialog.setClose(dialog::dismiss);
                             break;
                     }
-//                dialog.setClose(dialog::dismiss);
                     dialog.setRating();
                     dialog.setDvi();
                     dialog.show();

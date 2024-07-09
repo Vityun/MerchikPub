@@ -262,8 +262,9 @@ public class OptionControlReclamationAnswer<T> extends OptionControl {
                     realm.insertOrUpdate(optionDB);
                 }
             });
-            setIsBlockOption(signal);    // Установка блокирует ли опция работу приложения или нет
 
+            setIsBlockOption(signal);    // Установка блокирует ли опция работу приложения или нет
+            checkUnlockCode(optionDB);
             Globals.writeToMLOG("INFO", "OptionControlTaskAnswer/executeOption/spannableStringBuilder", "spannableStringBuilder: " + spannableStringBuilder);
         } catch (Exception e) {
             Globals.writeToMLOG("ERROR", "OptionControlTaskAnswer/executeOption/Exception", "Exception e: " + e);

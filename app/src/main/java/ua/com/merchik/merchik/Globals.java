@@ -1107,6 +1107,7 @@ public class Globals {
 
         geo_debug.put("app_id", logMP.id);
         DataMap.put("geo_debug", geo_debug);
+        DataMap.put("code_dad2", logMP.codeDad2);
 
         DataMap.put("timestamp", System.currentTimeMillis()); // unixtime текущего времени, когда был отправлен запрос с данными с точностью до тысячных (если не сможешь настолько точное врем¤ получить, бери текущий unixtime и умножай на 1000)
 
@@ -1224,6 +1225,7 @@ public class Globals {
                 String locationUniqueStringNETThis = "" + imHereNET.getLatitude() + imHereNET.getLongitude() + imHereNET.getTime();
                 if (!locationUniqueStringGSM.equals(locationUniqueStringNETThis)) {
                     int idNET = RealmManager.logMPGetLastId() + 1;
+                    Globals.writeToMLOG("INFO", "fixMP", "create new logMP idNET: " + idNET);
                     LogMPDB logNET = new LogMPDB();
                     logNET.id = idNET;
                     logNET.provider = 2;
@@ -1794,6 +1796,14 @@ public class Globals {
         int pass = day + dat2;
 
         return result;
+    }
+
+    public static int generateUniqueNumber() {
+        long currentTimeMillis = System.currentTimeMillis();
+        String timeString = String.valueOf(currentTimeMillis);
+        String lastDigits = timeString.substring(timeString.length() - 8);
+        String uniqueString = "9" + lastDigits;
+        return Integer.parseInt(uniqueString);
     }
 
 

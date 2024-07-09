@@ -23,6 +23,7 @@ import ua.com.merchik.merchik.Options.Options;
 import ua.com.merchik.merchik.data.Database.Room.AddressSDB;
 import ua.com.merchik.merchik.data.Database.Room.ArticleSDB;
 import ua.com.merchik.merchik.data.Database.Room.CustomerSDB;
+import ua.com.merchik.merchik.data.Database.Room.UsersSDB;
 import ua.com.merchik.merchik.data.OptionMassageType;
 import ua.com.merchik.merchik.data.RealmModels.AdditionalRequirementsDB;
 import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
@@ -64,6 +65,8 @@ public class OptionControlAvailabilityControlPhotoRemainingGoods<T> extends Opti
     private AddressSDB addressSDBDocument;
     private CustomerSDB customerSDBDocument;
 
+    private UsersSDB usersSDB;
+
     private SpannableStringBuilder tovs = new SpannableStringBuilder();
 
     public OptionControlAvailabilityControlPhotoRemainingGoods(Context context, T document, OptionsDB optionDB, OptionMassageType msgType, Options.NNKMode nnkMode, UnlockCodeResultListener unlockCodeResultListener) {
@@ -92,6 +95,7 @@ public class OptionControlAvailabilityControlPhotoRemainingGoods<T> extends Opti
                 dad2 = wpDataDB.getCode_dad2();
                 customerSDBDocument = SQL_DB.customerDao().getById(wpDataDB.getClient_id());
                 addressSDBDocument = SQL_DB.addressDao().getById(wpDataDB.getAddr_id());
+                usersSDB = SQL_DB.usersDao().getById(wpDataDB.getUser_id());
             }
         } catch (Exception e) {
             Globals.writeToMLOG("ERROR", "OptionControlAvailabilityControlPhotoRemainingGoods/getDocumentVar", "Exception e: " + e);
@@ -175,6 +179,12 @@ public class OptionControlAvailabilityControlPhotoRemainingGoods<T> extends Opti
                 if (wpDataDB.getUser_id() == 232545 || wpDataDB.getUser_id() == 189955) {
                     spannableStringBuilder.append(", але для цього виконавця зроблено виключення.");
                     signal = false;
+                }else if (usersSDB.reportDate20 != null && usersSDB.reportDate20.getTime() <= wpDataDB.getDt().getTime()){
+                    spannableStringBuilder.append(", але виконавець не провів ще свого 20-го звіту. Сигнал прибрано.");
+                    signal = false;
+                }else if (usersSDB.reportDate05 != null && usersSDB.reportDate05.getTime() <= wpDataDB.getDt().getTime()){
+                    spannableStringBuilder.append(", але виконавець не провів ще свого 5-го звіту. Сигнал прибрано.");
+                    signal = false;
                 }
             }
 
@@ -198,6 +208,8 @@ public class OptionControlAvailabilityControlPhotoRemainingGoods<T> extends Opti
                     spannableStringBuilder.append("\n\n").append("Вы можете получить Премиальные БОЛЬШЕ, если будете делать Достижения.");
                 }
             }
+
+            checkUnlockCode(optionDB);
 
 
         } catch (Exception e) {

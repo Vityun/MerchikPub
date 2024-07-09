@@ -3,8 +3,8 @@ package ua.com.merchik.merchik.ViewHolders;
 import android.content.Context;
 import android.net.Uri;
 import android.util.Log;
+import android.view.MotionEvent;
 import android.view.View;
-import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -25,7 +25,9 @@ public class PhotoAndInfoViewHolder extends RecyclerView.ViewHolder {
     private ConstraintLayout layout;
     private TextView testText;
     public ImageView photo;
-    public ImageButton galleryPick;
+    public ImageView galleryPick;
+
+    private boolean isLongClick = false;
 
 
     public PhotoAndInfoViewHolder(@NonNull View itemView) {
@@ -51,23 +53,49 @@ public class PhotoAndInfoViewHolder extends RecyclerView.ViewHolder {
 
         }
 
-        photo.setOnClickListener(v -> {
-            Log.e("DOUBLE_CLICK", "setOnClickListener");
-            TEST_DATA test = new TEST_DATA();
-            test.type = 2;
-            click.click(test);
+/*        photo.setOnClickListener(v -> {
+            Log.e("DOUBLE_CLICK", "setOnClickListener 1");
+//            TEST_DATA test = new TEST_DATA();
+//            test.type = 2;
+//            click.click(test);
         });
 
         photo.setOnLongClickListener(view -> {
-            Log.e("DOUBLE_CLICK", "setOnLongClickListener");
-            TEST_DATA test = new TEST_DATA();
-            test.type = 1;
-            click.click(test);
+            Log.e("DOUBLE_CLICK", "setOnLongClickListener 2");
+//            TEST_DATA test = new TEST_DATA();
+//            test.type = 1;
+//            click.click(test);
+            return false;
+        });*/
+
+        photo.setOnClickListener(v -> {
+            if (!isLongClick) {
+                Log.e("DOUBLE_CLICK", "setOnClickListener 1");
+                 TEST_DATA test = new TEST_DATA();
+                 test.type = 2;
+                 click.click(test);
+            }
+            isLongClick = false;
+        });
+
+        photo.setOnLongClickListener(view -> {
+            Log.e("DOUBLE_CLICK", "setOnLongClickListener 2");
+            isLongClick = true;
+             TEST_DATA test = new TEST_DATA();
+             test.type = 1;
+             click.click(test);
+            return true;
+        });
+
+        photo.setOnTouchListener((v, event) -> {
+            if (event.getAction() == MotionEvent.ACTION_UP) {
+                isLongClick = false;
+            }
             return false;
         });
 
         galleryPick.setOnClickListener(view -> {
-            Log.e("DOUBLE_CLICK", "setOnLongClickListener");
+            Log.e("DOUBLE_CLICK", "setOnLongClickListener 3");
             TEST_DATA test = new TEST_DATA();
             test.type = 3;
             click.click(test);

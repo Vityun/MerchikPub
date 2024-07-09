@@ -314,6 +314,14 @@ public class ReportPrepareDB extends RealmObject {
     @Ignore
     public int OSV;
 
+    /*
+     * 05.07.24.
+     * Используется в опции контроля 80977
+     * Что-то нашел
+     * */
+    @Ignore
+    public int find;
+
     public ReportPrepareDB() {
     }
 

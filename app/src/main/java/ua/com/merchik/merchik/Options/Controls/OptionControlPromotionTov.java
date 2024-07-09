@@ -18,7 +18,6 @@ import android.view.View;
 import android.widget.Toast;
 
 import java.io.File;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -31,7 +30,6 @@ import ua.com.merchik.merchik.Options.OptionControl;
 import ua.com.merchik.merchik.Options.Options;
 import ua.com.merchik.merchik.data.OptionMassageType;
 import ua.com.merchik.merchik.data.PhotoDescriptionText;
-import ua.com.merchik.merchik.data.RealmModels.AdditionalRequirementsDB;
 import ua.com.merchik.merchik.data.RealmModels.ErrorDB;
 import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
 import ua.com.merchik.merchik.data.RealmModels.PromoDB;
@@ -41,7 +39,6 @@ import ua.com.merchik.merchik.data.RealmModels.TovarDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.data.TovarOptions;
 import ua.com.merchik.merchik.database.realm.RealmManager;
-import ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsRealm;
 import ua.com.merchik.merchik.database.realm.tables.ReportPrepareRealm;
 import ua.com.merchik.merchik.database.realm.tables.TovarRealm;
 import ua.com.merchik.merchik.dialogs.DialogData;
@@ -52,9 +49,9 @@ import ua.com.merchik.merchik.dialogs.DialogData;
  * ID: 80977
  * Опция контроля наличия Акции у Товаров.
  */
-public class OptionControlPromotion<T> extends OptionControl {
+public class OptionControlPromotionTov<T> extends OptionControl {
 
-    public int OPTION_CONTROL_PROMOTION_ID = 80977;
+    public int OPTION_CONTROL_PROMOTION_ID = 157288;
 
     public boolean signal = true;
 
@@ -63,9 +60,7 @@ public class OptionControlPromotion<T> extends OptionControl {
     private int addressId, userId;
     private long dad2;
 
-    private Integer colMin = 1;
-
-    public OptionControlPromotion(Context context, T document, OptionsDB optionDB, OptionMassageType msgType, Options.NNKMode nnkMode, UnlockCodeResultListener unlockCodeResultListener) {
+    public OptionControlPromotionTov(Context context, T document, OptionsDB optionDB, OptionMassageType msgType, Options.NNKMode nnkMode, UnlockCodeResultListener unlockCodeResultListener) {
         try {
             this.context = context;
             this.document = document;
@@ -91,11 +86,6 @@ public class OptionControlPromotion<T> extends OptionControl {
             addressId = wpDataDB.getAddr_id();
             userId = wpDataDB.getUser_id();
             dad2 = wpDataDB.getCode_dad2();
-            try {
-                colMin = Integer.valueOf(optionDB.getAmountMin());
-            } catch (Exception e) {
-                colMin = 1;
-            }
         }
     }
 
@@ -108,70 +98,58 @@ public class OptionControlPromotion<T> extends OptionControl {
         // Получение RP по данному документу.
         //2.0. получим данные о товарах в отчете
         List<ReportPrepareDB> reportPrepare = RealmManager.INSTANCE.copyFromRealm(ReportPrepareRealm.getReportPrepareByDad2(dad2));
-//        List<ReportPrepareDB> reportRes = new ArrayList<>();
 
-        // Получение Доп. Требований с дополнительными фильтрами.
-        List<AdditionalRequirementsDB> additionalRequirements;
-        String[] tovIds;
-        if (optionDB.getOptionId().equals("80977")) {
-            additionalRequirements = AdditionalRequirementsRealm.getDocumentAdditionalRequirements(document, true, OPTION_CONTROL_PROMOTION_ID, null, null, null);
-            tovIds = new String[additionalRequirements.size()];
-
-            for (int i = 0; i < additionalRequirements.size(); i++) {
-                tovIds[i] = additionalRequirements.get(i).getTovarId();
-            }
-            Arrays.sort(tovIds);
-        } else {
-            tovIds = new String[0];
-        }
+//            // Получение Доп. Требований с дополнительными фильтрами.
+//            List<AdditionalRequirementsDB> additionalRequirements = AdditionalRequirementsRealm.getDocumentAdditionalRequirements(document, true, OPTION_CONTROL_PROMOTION_ID, null, null, null);
+//            String[] tovIds = new String[additionalRequirements.size()];
+//
+//
+//            for (int i = 0; i < additionalRequirements.size(); i++) {
+//                tovIds[i] = additionalRequirements.get(i).getTovarId();
+//            }
+//            Arrays.sort(tovIds);
 
 
         SpannableStringBuilder errMsgType1 = new SpannableStringBuilder();
         SpannableStringBuilder errMsgType2 = new SpannableStringBuilder();
         int errType1Cnt = 0, errType2Cnt = 0;
 
-        errMsgType1.append("Для следующих товара(ов) с ОСВ (Особым Вниманием) Вы должны обязательно указать наличие (или отсутствие) Акции:").append("\n\n");
-        errMsgType2.append("Для следующих товара(ов) с ОСВ (Особым Вниманием) Вы должны обязательно указать ТИП Акции: ").append("\n\n");
-
         // 5.0
         // Тут должена формироваться более подроная информация о том с какими Товарами есть пролема
         int find = 0;
-        int totalOSV = 0;
         for (ReportPrepareDB item : reportPrepare) {
-            int OSV = 0;
-            if (Arrays.asList(tovIds).contains(item.getTovarId())) {
-                OSV = 1;
-                totalOSV++;
-            }
 
             TovarDB tov = TovarRealm.getById(item.getTovarId());
             if (tov != null) {
                 String msg = String.format("(%s) %s (%s)", item.getTovarId(), tov.getNm(), tov.getWeight());
 
-                if (OSV == 1 && (item.getAkciyaId().equals("") || item.getAkciyaId().equals("0"))) {
-                    // Для товара с ОСВ (Особым Вниманием) Вы должны обязательно указать ТИП Акции.
+                // ВТТ = 1  > (item.getAkciyaId().equals("") || item.getAkciyaId().equals("0"))
+                // НА = 0   > (item.getAkciya() != null  && (item.getAkciya().equals("") || item.getAkciya().equals("0")))
+
+
+                if ((item.getAkciya() == null || item.getAkciya().equals("") || item.getAkciya().equals("0"))
+                        && (item.getAkciyaId() != null && !item.getAkciyaId().equals("") && !item.getAkciyaId().equals("0"))) {
+                    // Вы должны указать ТИП Акции.
                     err++;
                     errType2Cnt++;
-                    errMsgType2.append(createLinkedString(msg, item, tov)).append("\n");
-                } else if (OSV == 1 && (item.getAkciya() != null && (item.getAkciya().equals("") || item.getAkciya().equals("0")))) {
-                    // Для товара с ОСВ (Особым Вниманием) Вы должны обязательно указать наличие (или отсутствие) Акции.
+                    errMsgType2.append(createLinkedString("Вы должны указать ТИП Акции: " + msg, item, tov)).append("\n");
+                } else if ((item.getAkciya() != null && !item.getAkciya().equals("") && !item.getAkciya().equals("0"))
+                        && ((item.getAkciyaId() == null || item.getAkciyaId().equals("") || item.getAkciyaId().equals("0")))) {
+                    // Вы должны указать наличие (или отсутствие) Акции
                     err++;
                     errType1Cnt++;
-                    errMsgType1.append(createLinkedString(msg, item, tov)).append("\n");
-                } else if ((!item.getAkciya().equals("0")) && (!item.getAkciyaId().equals("0"))) {
-                    find = find + 1;
-                    item.find = 1;
+                    errMsgType1.append(createLinkedString("Вы должны указать наличие (или отсутствие) Акции: " + msg, item, tov)).append("\n");
+                } else if ((item.getAkciyaId() != null && !item.getAkciyaId().equals("") && !item.getAkciyaId().equals("0"))
+                        && (item.getAkciya() != null && !item.getAkciya().equals("") && !item.getAkciya().equals("0"))) {
+                    find = 1;
                 }
             } else {
-//                err++;
-//                errType1Cnt++;
-//                errMsgType1.append("Товар з ідентифікатором: (").append(item.getTovarId()).append(") не знайдено").append("\n");
+                err++;
+                errType1Cnt++;
+                errMsgType1.append("Товар з ідентифікатором: (").append(item.getTovarId()).append(") не знайдено").append("\n");
             }
-        }
 
-        // 5.1 05.07.24.    Если менеджен указал 10 товаров, а у нас всего 5 - указываем максимальным
-        // значением кол-во товаров. что б не было так что б я требовал от мерчей рожать товары
-        colMin = reportPrepare.size() < colMin ? reportPrepare.size() : colMin;
+        }
 
         // Формирование сообщения
         if (errType1Cnt > 0) {
@@ -190,21 +168,11 @@ public class OptionControlPromotion<T> extends OptionControl {
         if (reportPrepare.size() == 0) {
             spannableStringBuilder.append("Товаров, по которым надо проверять факт наличия Акции, не обнаружено.");
             signalInt = 1;
-        } else if (totalOSV == 0 && optionDB.getOptionId().equals("80977")) {
-            spannableStringBuilder.append("Для данной ТТ, на текущий момент, нет товаров с ОСВ (Особым Вниманием). Контролировать нечего. Замечаний нет.");
-            signalInt = 2;
-        } else if (err > 0 && optionDB.getOptionId().equals("80977")) {
-            spannableStringBuilder.append("Не предоставлена информация о типе и наличии Акции по товару (" + err + " шт.) (в т.ч. с ОСВ (Особым Вниманием)). См. таблицу.");
-            signalInt = 1;
         } else if (find == 0) {
-            spannableStringBuilder.append("Ни у одного товара не указано тип, наличие (или отсутствие) Акции.");
-            signalInt = 1;
-
-        } else if (find < colMin) {
-            spannableStringBuilder.append("Ви зазначили дані про наявність/відсутність Акцій у ").append("" + find).append(" товарів, що менше мінімально пропустимого ").append("" + colMin);
+            spannableStringBuilder.append("Ни у одного товара не указаны ТИП, НАЛИЧИЕ (или отсутствие) Акции.");
             signalInt = 1;
         } else {
-            spannableStringBuilder.append("Замечаний по предоставлению информации о наличии Акций по товарам (в т.ч. с ОСВ (Особым Вниманием)) нет.");
+            spannableStringBuilder.append("Замечаний по предоставлению информации о наличии Акций по товарам нет.");
             signalInt = 2;
         }
 
@@ -480,3 +448,8 @@ public class OptionControlPromotion<T> extends OptionControl {
     }
 
 }
+
+
+
+
+

@@ -840,14 +840,15 @@ public class DetailedReportActivity extends toolbar_menus {
 
                     exifPhotoData(photoFile);
 
-                    String hash;
-                    hash = globals.getHashMD5FromFile2(photoFile, this);
-
-                    if (hash == null || hash.equals("")) {
-                        hash = globals.getHashMD5FromFile(photoFile, this);
+                    if (photo.getPhoto_hash() == null || photo.getPhoto_hash().equals("")){
+                        String hash;
+                        hash = globals.getHashMD5FromFile2(photoFile, this);
+                        if (hash == null || hash.equals("")) {
+                            hash = globals.getHashMD5FromFile(photoFile, this);
+                        }
+                        photo.setPhoto_hash(hash);
                     }
 
-                    photo.setPhoto_hash(hash);
                     photo.setPhoto_num(photoFile.getAbsolutePath());
                     photo.setPhoto_type(Integer.valueOf(MakePhoto.photoType));
 
@@ -864,8 +865,6 @@ public class DetailedReportActivity extends toolbar_menus {
                     JsonObject jsonObject2 = new Gson().fromJson(new Gson().toJson(photo), JsonObject.class);
 
                     Globals.writeToMLOG("INFO", "requestCode == 201 && resultCode == RESULT_OK/photo_save", "photoSave: " + jsonObject2);
-
-//                Globals.writeToMLOG("INFO", "requestCode == 201 && resultCode == RESULT_OK/photo_save", "photoSave: " + photo);
 
                     StackPhotoRealm.setAll(Collections.singletonList(photo));
                 } catch (Exception e) {

@@ -18,7 +18,7 @@ import android.widget.Toast;
 
 import androidx.annotation.RequiresApi;
 
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.List;
 
 import ua.com.merchik.merchik.Clock;
@@ -68,7 +68,7 @@ public class OptionControlPhotoPromotion<T> extends OptionControl {
                     Globals.writeToMLOG("INFO", "OptionControlPhotoPromotion/executeOption", "Exception e: " + e);
                 }
             }
-        }catch (Exception e){
+        } catch (Exception e) {
             Globals.writeToMLOG("INFO", "OptionControlPhotoPromotion/", "Exception e: " + e);
         }
     }
@@ -96,20 +96,20 @@ public class OptionControlPhotoPromotion<T> extends OptionControl {
         int err = 0;
         String comment = "";
 
+        List<String> spisTovOSV = new ArrayList<>();
+
         // Получение RP по данному документу.
         //2.0. получим данные о товарах в отчете
         List<ReportPrepareDB> reportPrepare = RealmManager.INSTANCE.copyFromRealm(ReportPrepareRealm.getReportPrepareByDad2(dad2));
-//        List<ReportPrepareDB> reportRes = new ArrayList<>();
 
-        // Получение Доп. Требований с дополнительными фильтрами.
-        List<AdditionalRequirementsDB> additionalRequirements = AdditionalRequirementsRealm.getDocumentAdditionalRequirements(document, true, OPTION_CONTROL_PROMOTION_ID, null, null, null);
-        String[] tovIds = new String[additionalRequirements.size()];
-
-
-        for (int i = 0; i < additionalRequirements.size(); i++) {
-            tovIds[i] = additionalRequirements.get(i).getTovarId();
+        if (optionDB.getOptionId().equals("157278")) {
+            // Получение Доп. Требований с дополнительными фильтрами.
+            List<AdditionalRequirementsDB> additionalRequirements = AdditionalRequirementsRealm.getDocumentAdditionalRequirements(document, true, OPTION_CONTROL_PROMOTION_ID, null, null, null);
+            for (AdditionalRequirementsDB item : additionalRequirements) {
+                spisTovOSV.add(item.getTovarId());
+            }
+            spisTovOSV.sort(null);  // Сортирует по возрастанию // аналог Collections.sort(spisTovOSV);
         }
-        Arrays.sort(tovIds);
 
 
         SpannableStringBuilder errMsgType1 = new SpannableStringBuilder();
@@ -117,8 +117,6 @@ public class OptionControlPhotoPromotion<T> extends OptionControl {
         int errType1Cnt = 0, errType2Cnt = 0;
 
         errMsgType1.append("Для следующих товара(ов) с ОСВ (Особым Вниманием) Вы должны обязательно сделать Фото:").append("\n\n");
-//        errMsgType2.append("Для следующих товара(ов) с ОСВ (Особым Вниманием) Вы должны обязательно указать ТИП Акции: ").append("\n\n");
-
 
         errMsgType1.append("Для товара: ").append("\n");
 
@@ -134,9 +132,54 @@ public class OptionControlPhotoPromotion<T> extends OptionControl {
         for (ReportPrepareDB item : reportPrepare) {
             int OSV = 0;
 
-            String akciya = item.akciyaId;
+            if (spisTovOSV.contains(item.getTovarId())) {
+                OSV = 1;
+            } else if (item.getAkciya().equals("1") && optionDB.getOptionId().equals("166528")) {
+                OSV = 1;
+            }
+
+            if (item.getAkciya() == null || item.getAkciya().equals("2")) continue;
+
+            else if (item.face == null || item.face.equals("") || item.face.equals("0")) continue;
+
+            else if (OSV == 0 && optionDB.getOptionId().equals("157278")) continue;
+
+            else if ((item.getAkciya().equals("0")) && optionDB.getOptionId().equals("166528"))
+                continue;
+
+            // 6.2 new 27.06.24
+            if (stackPhotoDBS != null) {
+                StackPhotoDB currentTovPhoto = stackPhotoDBS.stream().filter(listItem -> listItem.tovar_id.equals(item.getTovarId())).findFirst().orElse(null);
+                if (currentTovPhoto != null) {
+                    size = stackPhotoDBS.size();
+                    find++;
+                } else {
+                    showTovList = true;
+                    errType1Cnt++;
+                    err++;
+                    totalOSV++;
+                    errMsgType1.append(createLinkedString(item, null)).append("\n");
+                }
+            } else {
+                showTovList = true;
+                errType1Cnt++;
+                err++;
+                totalOSV++;
+                errMsgType1.append(createLinkedString(item, null)).append("\n");
+            }
+
+
+
+
+
+
+
+/*            String akciya = item.akciyaId;
             // ЕСЛИ Аккии нет (2) - пропускаем
             if (akciya == null || akciya.equals("")) continue;
+
+            String face = item.face;
+            if (face == null || face.equals("") || face.equals("0")) continue;
 
             if (Arrays.asList(tovIds).contains(item.getTovarId())) {
                 if (stackPhotoDBS != null && stackPhotoDBS.size() > 0) {
@@ -173,7 +216,7 @@ public class OptionControlPhotoPromotion<T> extends OptionControl {
                 err++;
                 comment = "Нема світлини Акціонного товару з ОСУ (Особливою Увагою).";
 //                errMsgType1.append("Товар з ідентифікатором: (").append(item.getTovarId()).append(") не знайдено").append("\n");
-            }
+            }*/
         }
 
         Log.e("test", "test" + errType1Cnt);
@@ -183,9 +226,9 @@ public class OptionControlPhotoPromotion<T> extends OptionControl {
             errMsgType1.append("нужно сделать фото.").append("\n");
             spannableStringBuilder.append(errMsgType1);
         }
-        if (errType2Cnt > 0) {
-            spannableStringBuilder.append(errMsgType2);
-        }
+//        if (errType2Cnt > 0) {
+//            spannableStringBuilder.append(errMsgType2);
+//        }
         if (err > 0) {
             notCloseSpannableStringBuilderDialog = true;    // Делает так что при клике на текст диалог не будет закрываться
 //            spannableStringBuilder.append("\n").append("Зайдите на закладку Товаров и укажите не внесенные данные.");
@@ -195,22 +238,22 @@ public class OptionControlPhotoPromotion<T> extends OptionControl {
         // 6.0
         // Тут формируются более короткие соообшения касательно наличия акций у Товаров
         if (reportPrepare.size() == 0) {
-            massageToUser = "Товарів, по котрим треба перевіряти наявність Акцції, не знайдено.";
+            spannableStringBuilder.append("Товарів, по котрим треба перевіряти наявність Акцції, не знайдено.");
             signalInt = 1;
             signal = true;
 //            unlockCodeResultListener.onUnlockCodeFailure();
         } else if (totalOSV == 0) {
-            massageToUser = "Товарів з ОСУ (Особливою увагою), по котрим треба виконати світлини 'Акційного товару', не знайдено.";
+            spannableStringBuilder.append("Товарів з ОСУ (Особливою увагою), по котрим треба виконати світлини 'Акційного товару', не знайдено.");
             signalInt = 2;
             signal = false;
 //            unlockCodeResultListener.onUnlockCodeSuccess();
         } else if (err > 0) {
-            massageToUser = "Не виконані світлини по (" + errType1Cnt + " шт.) з " + totalOSV + " Акційних товарів, які присутні на полицях.";
+            spannableStringBuilder.append("Не виконані світлини по (" + errType1Cnt + " шт.) з " + totalOSV + " Акційних товарів, які присутні на полицях.");
             signalInt = 1;
             signal = true;
 //            unlockCodeResultListener.onUnlockCodeFailure();
         } else {
-            massageToUser = "Зауважень по виготовленню світлин 'Акцційних товарів' нема. Виготовлено " + size + " світлин.";
+            spannableStringBuilder.append("Зауважень по виготовленню світлин 'Акцційних товарів' нема. Виготовлено " + size + " світлин.");
             signalInt = 2;
             signal = false;
 //            unlockCodeResultListener.onUnlockCodeSuccess();
@@ -222,6 +265,8 @@ public class OptionControlPhotoPromotion<T> extends OptionControl {
 //        if (optionDB.getIsSignal().equals("0")) {
         saveOption(String.valueOf(signalInt));
 //        }
+
+        checkUnlockCode(optionDB);
 
         // 8.0 Блокировка проведения
         if (signalInt == 1) {

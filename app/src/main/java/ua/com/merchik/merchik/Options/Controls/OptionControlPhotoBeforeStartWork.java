@@ -76,7 +76,7 @@ public class OptionControlPhotoBeforeStartWork<T> extends OptionControl {
             });
 
             setIsBlockOption(signal);
-
+            checkUnlockCode(optionDB);
         }catch (Exception e){
             Globals.writeToMLOG("ERROR", "OptionControlPhotoBeforeStartWork", "Exception e: " + e);
         }

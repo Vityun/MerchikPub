@@ -44,15 +44,17 @@
         app:layout_constraintTop_toTopOf="parent"
         app:srcCompat="@drawable/ic_47" />
 
-    <ImageButton
+    <ImageView
         android:id="@+id/galleryPick"
         android:layout_width="30dp"
         android:layout_height="30dp"
         android:backgroundTint="#003C3F41"
         android:tint="#737373"
         android:visibility="gone"
+        android:elevation="10dp"
         app:layout_constraintBottom_toBottomOf="@+id/photo"
         app:layout_constraintEnd_toEndOf="@+id/photo"
         app:srcCompat="@drawable/ic_menu_gallery"
         tools:visibility="visible" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -131,6 +131,7 @@ public class OptionControlPhotoTovarsLeftClient<T> extends OptionControl {
         }
 
         saveOptionResultInDB();
+
         if (signal) {
             if (optionDB.getBlockPns().equals("1")) {
                 setIsBlockOption(signal);
@@ -139,7 +140,7 @@ public class OptionControlPhotoTovarsLeftClient<T> extends OptionControl {
                 stringBuilderMsg.append("\n\n").append("Вы можете получить Премиальные БОЛЬШЕ, если будете вносить отчетность корректно.");
             }
         }
-
+        checkUnlockCode(optionDB);
     }
 
     /**

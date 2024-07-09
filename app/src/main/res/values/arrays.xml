@@ -5,4 +5,15 @@
         <item> - </item>
         <item>Наяв.</item>
     </string-array>
+
+
+    <string-array name="competitor_packages">
+        <item>effie.app.com.effie</item>
+        <item>ua.kyiv.fta</item>
+        <item>com.dodotap.reportal</item>
+        <item>com.mobileua.spot2r</item>
+        <item>ua.com.lexmarketing.storecheckonline</item>
+        <item>com.swe.ssbs.sweloader</item>
+    </string-array>
+
 </resources>

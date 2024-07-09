@@ -3,12 +3,12 @@ package ua.com.merchik.merchik;
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
 import android.content.Context;
-import androidx.preference.PreferenceManager;
 import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
 import androidx.appcompat.widget.PopupMenu;
+import androidx.preference.PreferenceManager;
 
 import com.google.gson.JsonObject;
 
@@ -356,11 +356,11 @@ public class Translate {
 
 
         res.add(data);
-        res.add(data1);
-        res.add(data2);
-        res.add(data3);
-        res.add(data4);
-        res.add(data5);
+//        res.add(data1);
+//        res.add(data2);
+//        res.add(data3);
+//        res.add(data4);
+//        res.add(data5);
 
         return res;
     }

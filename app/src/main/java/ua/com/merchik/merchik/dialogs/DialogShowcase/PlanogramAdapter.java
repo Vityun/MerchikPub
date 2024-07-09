@@ -1,5 +1,8 @@
 package ua.com.merchik.merchik.dialogs.DialogShowcase;
 
+import static ua.com.merchik.merchik.Activities.PhotoLogActivity.PhotoLogAdapter.photoData;
+
+import android.content.Context;
 import android.net.Uri;
 import android.text.Html;
 import android.util.Log;
@@ -10,22 +13,29 @@ import android.widget.Filter;
 import android.widget.Filterable;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.gson.Gson;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import ua.com.merchik.merchik.Activities.PhotoLogActivity.PhotoLogPhotoAdapter;
 import ua.com.merchik.merchik.Filter.MyFilter;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.Database.Room.Planogram.PlanogrammJOINSDB;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
+import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
+import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.StackPhotoRealm;
+import ua.com.merchik.merchik.dialogs.DialogFullPhoto;
 import ua.com.merchik.merchik.dialogs.DialogFullPhotoR;
 
 public class PlanogramAdapter extends RecyclerView.Adapter<PlanogramAdapter.ViewHolder> implements Filterable {
@@ -35,7 +45,10 @@ public class PlanogramAdapter extends RecyclerView.Adapter<PlanogramAdapter.View
     private List<PlanogrammJOINSDB> planogrammListOrig;
     private Clicks.click click;
 
-    public PlanogramAdapter(ArrayList<PlanogrammJOINSDB> planogrammList, Clicks.click click) {
+    private WpDataDB wpDataDB;
+
+    public PlanogramAdapter(WpDataDB wpDataDB, ArrayList<PlanogrammJOINSDB> planogrammList, Clicks.click click) {
+        this.wpDataDB = wpDataDB;
         if (planogrammList != null && !planogrammList.isEmpty()) {
             planogrammList.add(defaultShowcase());
             this.planogrammList = planogrammList;
@@ -135,16 +148,50 @@ public class PlanogramAdapter extends RecyclerView.Adapter<PlanogramAdapter.View
                     image.setImageURI(uri);
                     image.setOnClickListener(v -> {
                         try {
-                            DialogFullPhotoR dialogFullPhoto = new DialogFullPhotoR(image.getContext());
-                            dialogFullPhoto.setPhoto(stackPhotoDB);
+                            DialogFullPhoto dialog = new DialogFullPhoto(image.getContext());
+                            dialog.setWpDataDB(wpDataDB);
+                            dialog.setRatingType(DialogFullPhoto.RatingType.PLANOGRAM);
+                            dialog.setPhotos(0, Collections.singletonList(stackPhotoDB), new PhotoLogPhotoAdapter.OnPhotoClickListener() {
+                                @Override
+                                public void onPhotoClicked(Context context, StackPhotoDB photoDB) {
+                                    try {
+                                        DialogFullPhotoR dialogFullPhoto = new DialogFullPhotoR(image.getContext());
+                                        dialogFullPhoto.setPhoto(stackPhotoDB);
 
-                            // Pika
-                            dialogFullPhoto.setComment(stackPhotoDB.getComment());
+                                        // Pika
+                                        dialogFullPhoto.setComment(stackPhotoDB.getComment());
 
-                            dialogFullPhoto.setClose(dialogFullPhoto::dismiss);
-                            dialogFullPhoto.show();
+                                        dialogFullPhoto.setClose(dialogFullPhoto::dismiss);
+                                        dialogFullPhoto.show();
+                                    } catch (Exception e) {
+                                        Log.e("ShowcaseAdapter", "Exception e: " + e);
+                                    }
+                                }
+                            }, ()->{});
+
+                            dialog.setTextInfo(photoData(stackPhotoDB));
+                            dialog.getComment(stackPhotoDB.getComment(), () -> {
+                                Globals.writeToMLOG("INFO", "SAVE_PHOTO_COMMENT", "stackPhotoDB: " + new Gson().toJson(stackPhotoDB));
+                                Globals.writeToMLOG("INFO", "SAVE_PHOTO_COMMENT", "stackPhotoDB.getComment(): " + stackPhotoDB.getComment());
+                                RealmManager.INSTANCE.executeTransaction(realm -> {
+                                    stackPhotoDB.setComment(dialog.commentResult);
+                                    stackPhotoDB.setCommentUpload(true);
+                                });
+                                RealmManager.stackPhotoSavePhoto(stackPhotoDB);
+                                Toast.makeText(image.getContext(), "Комментарий сохранён", Toast.LENGTH_LONG).show();
+                            });
+
+                            try {
+                                dialog.setTask(stackPhotoDB.getUser_id(), stackPhotoDB.getAddr_id(), stackPhotoDB.getClient_id(), stackPhotoDB.getCode_dad2(), stackPhotoDB);
+                            } catch (Exception e) {
+
+                            }
+                            dialog.setClose(dialog::dismiss);
+                            dialog.setRating();
+                            dialog.setDvi();
+                            dialog.show();
                         } catch (Exception e) {
-                            Log.e("ShowcaseAdapter", "Exception e: " + e);
+
                         }
                     });
                 } else {

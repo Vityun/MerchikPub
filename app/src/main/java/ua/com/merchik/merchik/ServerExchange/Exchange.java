@@ -40,6 +40,7 @@ import ua.com.merchik.merchik.ServerExchange.TablesExchange.LocationExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.OblastExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.PlanogrammTableExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.PotentialClientTableExchange;
+import ua.com.merchik.merchik.ServerExchange.TablesExchange.SMSExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.SamplePhotoExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.ShelfSizeExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.ShowcaseExchange;
@@ -48,6 +49,7 @@ import ua.com.merchik.merchik.ServerExchange.TablesExchange.StandartExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.TranslationsExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.UsersExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.VideoViewExchange;
+import ua.com.merchik.merchik.ServerExchange.TablesExchange.VotesExchange;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.Database.Room.AchievementsSDB;
 import ua.com.merchik.merchik.data.Database.Room.AddressSDB;
@@ -980,6 +982,54 @@ public class Exchange {
                     Globals.writeToMLOG("ERROR", "startExchange/PlanogrammExchange/planogrammDownload", "Exception e: " + e);
                 }
 
+
+                // SMS A & B
+                try {
+                    SMSExchange smsExchange = new SMSExchange();
+                    smsExchange.smsPlanExchange(new Clicks.clickObjectAndStatus() {
+                        @Override
+                        public void onSuccess(Object data) {
+
+                        }
+
+                        @Override
+                        public void onFailure(String error) {
+
+                        }
+                    });
+
+                    smsExchange.smsLogExchange(new Clicks.clickObjectAndStatus() {
+                        @Override
+                        public void onSuccess(Object data) {
+
+                        }
+
+                        @Override
+                        public void onFailure(String error) {
+
+                        }
+                    });
+                }catch (Exception e){
+                    Globals.writeToMLOG("ERROR", "startExchange/SMSExchange/", "Exception e: " + e);
+                }
+
+                try {
+                    new VotesExchange().uploadVotes(new Clicks.clickObjectAndStatus() {
+                        @Override
+                        public void onSuccess(Object data) {
+                            Globals.writeToMLOG("INFO", "startExchange/VotesExchange/", "Object: " + data);
+                        }
+
+                        @Override
+                        public void onFailure(String error) {
+                            Globals.writeToMLOG("ERROR", "startExchange/VotesExchange/onFailure", "error: " + error);
+                        }
+                    });
+                }catch (Exception e){
+                    Globals.writeToMLOG("ERROR", "startExchange/VotesExchange/", "Exception e: " + e);
+                }
+
+
                 // --------------------------------------------------------------
             } else {
                 long time = (System.currentTimeMillis() - exchange) / 1000;
@@ -1626,6 +1676,7 @@ public class Exchange {
                 TARCommentDataListUpload dataItem = new TARCommentDataListUpload();
                 dataItem.id = item.getRId();
                 dataItem.comment = item.getComment();
+                dataItem.dt = item.getDt();
 
                 if (item.commentId != null && item.dtUpdate != null && item.dtUpdate != 0) {
                     dataItem.comment_id = String.valueOf(item.commentId);
@@ -1661,6 +1712,7 @@ public class Exchange {
 
                         TARCommentsServerData res = response.body();
                         if (res != null) {
+                            Globals.writeToMLOG("INFO", "uploadTARComments/onResponse", "response.body(): " + new Gson().toJson(res));
                             if (res.getState() != null && res.getState()) {
                                 if (res.getList() != null && res.getList().size() > 0) {
                                     Log.d("test", "test");
@@ -1690,9 +1742,6 @@ public class Exchange {
                                             Log.d("test", "test1");
                                         }
                                     }
-//                                    RealmManager.INSTANCE.executeTransaction((realm) -> {
-//                                        realm.copyToRealmOrUpdate(finalList);
-//                                    });
 
                                     // Удаление Старых ID
                                     String[] ids = new String[deleteFromDb.size()];
@@ -1712,7 +1761,7 @@ public class Exchange {
                                         // Сохранение новых
                                         Log.e("uploadTARComments", "saveToDb: " + saveToDb.size());
                                         List<TARCommentsDB> result = realm.copyToRealmOrUpdate(saveToDb);
-                                        Globals.writeToMLOG("INFO", "uploadTARComments/onResponse", "result list comments to seve(" + (result != null ? result.size() + "): .." : "null"));
+                                        Globals.writeToMLOG("INFO", "uploadTARComments/onResponse", "result list comments to seve(" + (result != null ? result.size() + "): " + result.size() : "null"));
                                     });
                                 }
                             }

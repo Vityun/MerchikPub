@@ -1,9 +1,10 @@
 package ua.com.merchik.merchik.database.realm.tables;
 
-import ua.com.merchik.merchik.data.RealmModels.LogDB;
 import static ua.com.merchik.merchik.database.realm.RealmManager.INSTANCE;
 
 import java.util.List;
+
+import ua.com.merchik.merchik.data.RealmModels.LogDB;
 
 public class LogRealm {
 
@@ -24,6 +25,20 @@ public class LogRealm {
         return INSTANCE.where(LogDB.class)
                 .equalTo("obj_id", kodOb)
                 .findFirst();
+    }
+
+    public static LogDB getLogByODADandTheme(Long kodOb, int themeId) {
+
+        LogDB res = INSTANCE.where(LogDB.class)
+                .equalTo("obj_id", kodOb)
+                .equalTo("tp", themeId)
+                .findFirst();
+
+        if (res != null) {
+            return INSTANCE.copyFromRealm(res);
+        }else {
+            return null;
+        }
     }
 
 }

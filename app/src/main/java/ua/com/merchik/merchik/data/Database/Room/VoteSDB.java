@@ -24,6 +24,9 @@ public class VoteSDB {
     @ColumnInfo(name = "serverId")
     public Integer serverId;        // Это идентификатор сервера
 
+    @ColumnInfo(name = "dt_upload")
+    public Long dtUpload;        // Типо время выгрузки
+
     @SerializedName("isp")
     @Expose
     @ColumnInfo(name = "isp")
@@ -138,4 +141,35 @@ public class VoteSDB {
 
     @Ignore
     public String authorVote;
+
+
+    public VoteSDB() {
+    }
+
+    public VoteSDB(@NonNull Integer id, @NonNull Integer serverId, Long dtUpload, String isp, String kli, Integer addrId, Long dt, Long df, Long photoId, Long codeDad2, Long codeIza, Integer voterId, Integer score, Integer merchik, String ip, Integer voteType, Integer voteClass, Integer themeId, Integer dtDay, Integer dtMonth, Integer dtYear, Integer cntrlDoc, Integer flag, String comments) {
+        this.id = id;
+        this.serverId = serverId;
+        this.dtUpload = dtUpload != null ? dtUpload : 1; // Default value
+        this.isp = isp;
+        this.kli = kli;
+        this.addrId = addrId;
+        this.dt = dt;
+        this.df = df;
+        this.photoId = photoId;
+        this.codeDad2 = codeDad2;
+        this.codeIza = codeIza;
+        this.voterId = voterId;
+        this.score = score;
+        this.merchik = merchik;
+        this.ip = ip;
+        this.voteType = voteType;
+        this.voteClass = voteClass;
+        this.themeId = themeId;
+        this.dtDay = dtDay;
+        this.dtMonth = dtMonth;
+        this.dtYear = dtYear;
+        this.cntrlDoc = cntrlDoc;
+        this.flag = flag;
+        this.comments = comments;
+    }
 }

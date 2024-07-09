@@ -12,8 +12,10 @@ import io.reactivex.rxjava3.schedulers.Schedulers;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
+import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
+import ua.com.merchik.merchik.data.Database.Room.Planogram.PlanogrammSDB;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.planogramm.PlanogrammAddressResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.planogramm.PlanogrammGroupResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.planogramm.PlanogrammImagesResponse;
@@ -34,6 +36,21 @@ public class PlanogrammTableExchange {
         JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
         Log.e("MAIN_test", "planogramDownload convertedObject: " + convertedObject);
 
+        retrofit2.Call<JsonObject> call1 = RetrofitBuilder.getRetrofitInterface().TEST_JSON_UPLOAD(RetrofitBuilder.contentType, convertedObject);
+        call1.enqueue(new Callback<JsonObject>() {
+            @Override
+            public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
+                Log.e("planogramDownload", "planogramDownload: " + response.body());
+                Globals.writeToMLOG("INFO", "1_D_PlanogrammSDB", "response: " + response.body());
+            }
+
+            @Override
+            public void onFailure(Call<JsonObject> call, Throwable t) {
+                Log.e("planogramDownload", "planogramDownloadThrowable t: " + t);
+                Globals.writeToMLOG("INFO", "1_D_PlanogrammSDB", "Throwable t: " + t);
+            }
+        });
+
         retrofit2.Call<PlanogrammResponse> call = RetrofitBuilder.getRetrofitInterface().Planogramm_RESPONSE(RetrofitBuilder.contentType, convertedObject);
         call.enqueue(new Callback<PlanogrammResponse>() {
             @Override
@@ -47,6 +64,16 @@ public class PlanogrammTableExchange {
                         if (response.body() != null) {
                             if (response.body().state) {
                                 if (response.body().list != null && response.body().list.size() > 0) {
+
+                                    for (PlanogrammSDB item : response.body().list){
+                                        Globals.writeToMLOG("INFO", "D_PlanogrammSDB", "dtEnd: " + item.dtEnd);
+                                        Globals.writeToMLOG("INFO", "D_PlanogrammSDB", "dtEnd: " + item.dtEnd.getTime());
+                                        Globals.writeToMLOG("INFO", "D_PlanogrammSDB", "dtEnd: " + Clock.getHumanTimeSecPattern(item.dtEnd.getTime()/1000, "yyyy-MM-dd"));
+                                        if (item.dtEnd.getTime() < 0){
+                                            item.dtEnd = null;
+                                        }
+                                    }
+
                                     SQL_DB.planogrammDao().insertAll(response.body().list)
                                             .subscribeOn(Schedulers.io())
                                             .subscribe(new DisposableCompletableObserver() {

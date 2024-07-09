@@ -323,6 +323,7 @@ public class OptionControlAdditionalRequirementsMark<T> extends OptionControl {
 //            setIsBlockOption(signal);
 
 
+            checkUnlockCode(optionDB);
         } catch (Exception e) {
             Globals.writeToMLOG("ERROR", "OptionControlAdditionalRequirementsMark/executeOption", "Exception e: " + e);
         }

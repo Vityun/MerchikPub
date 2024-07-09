@@ -4,7 +4,7 @@ import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
 import android.content.Context;
 import android.os.Build;
-import android.text.SpannableString;
+import android.text.SpannableStringBuilder;
 import android.text.Spanned;
 import android.text.TextPaint;
 import android.text.style.ClickableSpan;
@@ -87,7 +87,7 @@ public class OptionControlCheckMarkPhotoReport<T> extends OptionControl {
     @RequiresApi(api = Build.VERSION_CODES.N)
     private void executeOption() {
         try {
-            List<VoteSDB> votes = SQL_DB.votesDao().getAll(dateFrom, dateTo, maxRating, wpDataDB.getCode_dad2(), wpDataDB.getClient_id(), wpDataDB.getAddr_id());
+            List<VoteSDB> votes = SQL_DB.votesDao().getAll(dateFrom, dateTo, maxRating, wpDataDB.getCode_dad2(), wpDataDB.getClient_id(), wpDataDB.getAddr_id(), 0);
 
             List<VoteSDB> uniqueVotes = votes.stream()
                     .collect(Collectors.collectingAndThen(
@@ -133,8 +133,10 @@ public class OptionControlCheckMarkPhotoReport<T> extends OptionControl {
                         .append(" низких оценок по ДетОтчетам от ").append(vote.authorVote).append("\n\n");
 
                 for (VoteSDB item : uniqueVotes){
-                    UsersSDB userScore = SQL_DB.usersDao().getUserById(vote.voterId);
-                    spannableStringBuilder.append(createLinkedString(userScore.fio, item)).append("\n");
+                    UsersSDB userScore = SQL_DB.usersDao().getUserById(item.voterId);
+                    SpannableStringBuilder link = new SpannableStringBuilder();
+                    link.append("(").append(String.valueOf(item.id)).append(") ").append(item.comments);
+                    spannableStringBuilder.append(createLinkedString(link, item)).append("\n\n");
                 }
             }
 
@@ -159,6 +161,8 @@ public class OptionControlCheckMarkPhotoReport<T> extends OptionControl {
                 }
             }
 
+            checkUnlockCode(optionDB);
+
             spannableStringBuilder.append("У Вас ").append(String.valueOf(uniqueVotes.size())).append(" плохих оценок. По фото.");
 
         } catch (Exception e) {
@@ -166,8 +170,8 @@ public class OptionControlCheckMarkPhotoReport<T> extends OptionControl {
         }
     }
 
-    private SpannableString createLinkedString(String msg, VoteSDB vote) {
-        SpannableString res = new SpannableString(msg);
+    private SpannableStringBuilder createLinkedString(SpannableStringBuilder msg, VoteSDB vote) {
+        SpannableStringBuilder res = new SpannableStringBuilder(msg);
         ClickableSpan clickableSpan = new ClickableSpan() {
             @Override
             public void onClick(View textView) {

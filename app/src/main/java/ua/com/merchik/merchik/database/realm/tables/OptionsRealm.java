@@ -50,7 +50,7 @@ public class OptionsRealm {
         }
     }
 
-    public static OptionsDB getOption(String dad2, String optId){
+    public static OptionsDB getOptionControl(String dad2, String optId){
         OptionsDB optionsDB = INSTANCE.where(OptionsDB.class)
                 .equalTo("codeDad2", dad2)
                 .and()
@@ -61,6 +61,16 @@ public class OptionsRealm {
 
         if (optionsDB != null) return INSTANCE.copyFromRealm(optionsDB);
 
+        return null;
+    }
+
+    public static OptionsDB getOption(String dad2, String optId){
+        OptionsDB optionsDB = INSTANCE.where(OptionsDB.class)
+                .equalTo("codeDad2", dad2)
+                .and()
+                .equalTo("optionId", optId)
+                .findFirst();
+        if (optionsDB != null) return INSTANCE.copyFromRealm(optionsDB);
         return null;
     }
 

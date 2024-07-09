@@ -1,7 +1,9 @@
 package ua.com.merchik.merchik.dialogs.DialogShowcase;
 
+import static ua.com.merchik.merchik.Activities.PhotoLogActivity.PhotoLogAdapter.photoData;
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
+import android.content.Context;
 import android.net.Uri;
 import android.text.Html;
 import android.text.SpannableString;
@@ -19,15 +21,19 @@ import android.widget.Filter;
 import android.widget.Filterable;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.gson.Gson;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import ua.com.merchik.merchik.Activities.PhotoLogActivity.PhotoLogPhotoAdapter;
 import ua.com.merchik.merchik.Filter.MyFilter;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.R;
@@ -35,8 +41,11 @@ import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.Database.Room.Planogram.PlanogrammJOINSDB;
 import ua.com.merchik.merchik.data.Database.Room.ShowcaseSDB;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
+import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
+import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.StackPhotoRealm;
 import ua.com.merchik.merchik.dialogs.DialogData;
+import ua.com.merchik.merchik.dialogs.DialogFullPhoto;
 import ua.com.merchik.merchik.dialogs.DialogFullPhotoR;
 
 public class ShowcaseAdapter extends RecyclerView.Adapter<ShowcaseAdapter.ViewHolder> implements Filterable {
@@ -44,9 +53,11 @@ public class ShowcaseAdapter extends RecyclerView.Adapter<ShowcaseAdapter.ViewHo
     private List<ShowcaseSDB> showcaseList;
     private List<ShowcaseSDB> showcaseListFilterable;
     private List<ShowcaseSDB> showcaseListOrig;
+    private WpDataDB wpDataDB;
     private Clicks.click click;
 
-    public ShowcaseAdapter(ArrayList<ShowcaseSDB> showcaseList, Clicks.click click) {
+    public ShowcaseAdapter(WpDataDB wpDataDB, ArrayList<ShowcaseSDB> showcaseList, Clicks.click click) {
+        this.wpDataDB = wpDataDB;
         if (showcaseList != null && !showcaseList.isEmpty()) {
             showcaseList.add(defaultShowcase());
             this.showcaseList = showcaseList;
@@ -102,11 +113,11 @@ public class ShowcaseAdapter extends RecyclerView.Adapter<ShowcaseAdapter.ViewHo
             try {
                 if (showcase.id == 0) {
                     constraintLayout.setBackgroundColor(constraintLayout.getContext().getResources().getColor(R.color.white));
-                } else if (showcase.showcasePhoto >= 1){
+                } else if (showcase.showcasePhoto >= 1) {
                     constraintLayout.setBackgroundColor(constraintLayout.getContext().getResources().getColor(R.color.green_default));
-                } else if (showcase.showcasePhoto == 0){
+                } else if (showcase.showcasePhoto == 0) {
                     constraintLayout.setBackgroundColor(constraintLayout.getContext().getResources().getColor(R.color.red_error));
-                }else {
+                } else {
                     constraintLayout.setBackgroundColor(constraintLayout.getContext().getResources().getColor(R.color.red_error));
                 }
 
@@ -130,7 +141,7 @@ public class ShowcaseAdapter extends RecyclerView.Adapter<ShowcaseAdapter.ViewHo
 
                     textViewPlanogramm.setText(spannableStringRes);
                     textViewPlanogramm.setMovementMethod(LinkMovementMethod.getInstance());
-                }else {
+                } else {
                     textViewPlanogramm.setText(Html.fromHtml("<b>Планограма::</b> " + planogram));
                 }
 
@@ -152,17 +163,53 @@ public class ShowcaseAdapter extends RecyclerView.Adapter<ShowcaseAdapter.ViewHo
                     Uri uri = Uri.parse(uriStr);
                     image.setImageURI(uri);
                     image.setOnClickListener(v -> {
+
+
                         try {
-                            DialogFullPhotoR dialogFullPhoto = new DialogFullPhotoR(image.getContext());
-                            dialogFullPhoto.setPhoto(stackPhotoDB);
+                            DialogFullPhoto dialog = new DialogFullPhoto(image.getContext());
+                            dialog.setWpDataDB(wpDataDB);
+                            dialog.setRatingType(DialogFullPhoto.RatingType.SHOWCASE);
+                            dialog.setPhotos(0, Collections.singletonList(stackPhotoDB), new PhotoLogPhotoAdapter.OnPhotoClickListener() {
+                                @Override
+                                public void onPhotoClicked(Context context, StackPhotoDB photoDB) {
+                                    try {
+                                        DialogFullPhotoR dialogFullPhoto = new DialogFullPhotoR(image.getContext());
+                                        dialogFullPhoto.setPhoto(stackPhotoDB);
 
-                            // Pika
-                            dialogFullPhoto.setComment(stackPhotoDB.getComment());
+                                        // Pika
+                                        dialogFullPhoto.setComment(stackPhotoDB.getComment());
 
-                            dialogFullPhoto.setClose(dialogFullPhoto::dismiss);
-                            dialogFullPhoto.show();
+                                        dialogFullPhoto.setClose(dialogFullPhoto::dismiss);
+                                        dialogFullPhoto.show();
+                                    } catch (Exception e) {
+                                        Log.e("ShowcaseAdapter", "Exception e: " + e);
+                                    }
+                                }
+                            }, ()->{});
+
+                            dialog.setTextInfo(photoData(stackPhotoDB));
+                            dialog.getComment(stackPhotoDB.getComment(), () -> {
+                                Globals.writeToMLOG("INFO", "SAVE_PHOTO_COMMENT", "stackPhotoDB: " + new Gson().toJson(stackPhotoDB));
+                                Globals.writeToMLOG("INFO", "SAVE_PHOTO_COMMENT", "stackPhotoDB.getComment(): " + stackPhotoDB.getComment());
+                                RealmManager.INSTANCE.executeTransaction(realm -> {
+                                    stackPhotoDB.setComment(dialog.commentResult);
+                                    stackPhotoDB.setCommentUpload(true);
+                                });
+                                RealmManager.stackPhotoSavePhoto(stackPhotoDB);
+                                Toast.makeText(image.getContext(), "Комментарий сохранён", Toast.LENGTH_LONG).show();
+                            });
+
+                            try {
+                                dialog.setTask(stackPhotoDB.getUser_id(), stackPhotoDB.getAddr_id(), stackPhotoDB.getClient_id(), stackPhotoDB.getCode_dad2(), stackPhotoDB);
+                            } catch (Exception e) {
+
+                            }
+                            dialog.setClose(dialog::dismiss);
+                            dialog.setRating();
+                            dialog.setDvi();
+                            dialog.show();
                         } catch (Exception e) {
-                            Log.e("ShowcaseAdapter", "Exception e: " + e);
+                            Globals.writeToMLOG("ERROR", "ShowcaseAdapter/bind123123", "Exception e: " + e);
                         }
                     });
                 } else {
@@ -208,12 +255,58 @@ public class ShowcaseAdapter extends RecyclerView.Adapter<ShowcaseAdapter.ViewHo
                     StackPhotoDB stackPhotoDB = StackPhotoRealm.stackPhotoDBGetPhotoBySiteId2(String.valueOf(planogrammJOINSDB.planogrammPhotoId));
 
 //                    StackPhotoDB stackPhotoDB = StackPhotoRealm.stackPhotoDBGetPhotoBySiteId2(String.valueOf(showcase.photoPlanogramId));
-                    if (stackPhotoDB != null){
-                        DialogFullPhotoR dialogFullPhoto = new DialogFullPhotoR(textView.getContext());
+                    if (stackPhotoDB != null) {
+                        try {
+                            DialogFullPhoto dialog = new DialogFullPhoto(textView.getContext());
+                            dialog.setWpDataDB(wpDataDB);
+                            dialog.setRatingType(DialogFullPhoto.RatingType.SHOWCASE);
+                            dialog.setPhotos(0, Collections.singletonList(stackPhotoDB), new PhotoLogPhotoAdapter.OnPhotoClickListener() {
+                                @Override
+                                public void onPhotoClicked(Context context, StackPhotoDB photoDB) {
+                                    try {
+                                        DialogFullPhotoR dialogFullPhoto = new DialogFullPhotoR(textView.getContext());
+                                        dialogFullPhoto.setPhoto(stackPhotoDB);
+
+                                        // Pika
+                                        dialogFullPhoto.setComment(stackPhotoDB.getComment());
+
+                                        dialogFullPhoto.setClose(dialogFullPhoto::dismiss);
+                                        dialogFullPhoto.show();
+                                    } catch (Exception e) {
+                                        Log.e("ShowcaseAdapter", "Exception e: " + e);
+                                    }
+                                }
+                            }, ()->{});
+
+                            dialog.setTextInfo(photoData(stackPhotoDB));
+                            dialog.getComment(stackPhotoDB.getComment(), () -> {
+                                Globals.writeToMLOG("INFO", "SAVE_PHOTO_COMMENT", "stackPhotoDB: " + new Gson().toJson(stackPhotoDB));
+                                Globals.writeToMLOG("INFO", "SAVE_PHOTO_COMMENT", "stackPhotoDB.getComment(): " + stackPhotoDB.getComment());
+                                RealmManager.INSTANCE.executeTransaction(realm -> {
+                                    stackPhotoDB.setComment(dialog.commentResult);
+                                    stackPhotoDB.setCommentUpload(true);
+                                });
+                                RealmManager.stackPhotoSavePhoto(stackPhotoDB);
+                                Toast.makeText(textView.getContext(), "Комментарий сохранён", Toast.LENGTH_LONG).show();
+                            });
+
+                            try {
+                                dialog.setTask(stackPhotoDB.getUser_id(), stackPhotoDB.getAddr_id(), stackPhotoDB.getClient_id(), stackPhotoDB.getCode_dad2(), stackPhotoDB);
+                            } catch (Exception e) {
+
+                            }
+                            dialog.setClose(dialog::dismiss);
+                            dialog.setRating();
+                            dialog.setDvi();
+                            dialog.show();
+                        } catch (Exception e) {
+                            Globals.writeToMLOG("ERROR", "ShowcaseAdapter/bind123123", "Exception e: " + e);
+                        }
+/*                        DialogFullPhotoR dialogFullPhoto = new DialogFullPhotoR(textView.getContext());
                         dialogFullPhoto.setPhoto(stackPhotoDB);
                         dialogFullPhoto.setClose(dialogFullPhoto::dismiss);
-                        dialogFullPhoto.show();
-                    }else {
+                        dialogFullPhoto.show();*/
+                    } else {
                         DialogData dialogData = new DialogData(textView.getContext());
                         dialogData.setTitle("Фото не знайдено.");
                         dialogData.setText("Не вийшло виявити фото Планограми. Спробуйте повторити синхронізацію, або зверніться до Вашого керівника.");

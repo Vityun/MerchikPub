@@ -3,8 +3,9 @@ package ua.com.merchik.merchik.Options.Controls;
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
 import android.content.Context;
+import android.content.Intent;
 import android.os.Build;
-import android.text.SpannableString;
+import android.text.SpannableStringBuilder;
 import android.text.Spanned;
 import android.text.TextPaint;
 import android.text.style.ClickableSpan;
@@ -14,7 +15,9 @@ import android.widget.Toast;
 import androidx.annotation.RequiresApi;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
+import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity;
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.Options.OptionControl;
@@ -27,6 +30,7 @@ import ua.com.merchik.merchik.data.OptionMassageType;
 import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.database.realm.RealmManager;
+import ua.com.merchik.merchik.dialogs.DialogData;
 
 
 /**
@@ -50,6 +54,7 @@ public class OptionControlCheckMarkDetailedReport<T> extends OptionControl {
     private Long dateTo = 0L;
 
     private int averageRating;
+    private int maxRating = 5;
     private int averageRatingMin = 6;   // минимальная СРЕДНЯЯ оценка, ниже которой, операторы начинают "страдать"
     private int averageRatingMax = 8;   // максимальная СРЕДНЯЯ оценка, выше которой, операторы начинают "страдать"
 
@@ -88,15 +93,21 @@ public class OptionControlCheckMarkDetailedReport<T> extends OptionControl {
     @RequiresApi(api = Build.VERSION_CODES.N)
     private void executeOption() {
         try {
-            List<VoteSDB> votes = SQL_DB.votesDao().getAll(dateFrom, dateTo, 5, wpDataDB.getCode_dad2());   // ДатаС, ДатаПо, Оценка < 5, dad2
+//            List<VoteSDB> votes = SQL_DB.votesDao().getAll(dateFrom, dateTo, 5, wpDataDB.getCode_dad2());   // ДатаС, ДатаПо, Оценка < 5, dad2
+
+            List<VoteSDB> votes = SQL_DB.votesDao().getAll(dateFrom, dateTo, maxRating, wpDataDB.getCode_dad2(), wpDataDB.getClient_id(), wpDataDB.getAddr_id(), 1);
+
+            List<VoteSDB> uniqueVotes = votes.stream()
+                    .filter(vote -> vote.photoId == null)
+                    .collect(Collectors.toList());
 
             VoteSDB vote = null;
-            if (votes != null && votes.size() > 0) {
-                vote = votes.get(0);
+            if (uniqueVotes != null && uniqueVotes.size() > 0) {
+                vote = uniqueVotes.get(0);
                 vote.error = 1;
 
                 if (wpDataDB.getTheme_id() == 95) {
-                    vote.note = "Вы нашли " + votes.size() + " нарушений в ДетОтчете " + wpDataDB.getDoc_num_otchet() + ". За это Вам положена премия.";
+                    vote.note = "Вы нашли " + uniqueVotes.size() + " нарушений в ДетОтчете " + wpDataDB.getDoc_num_otchet() + ". За это Вам положена премия.";
                 } else {
                     UsersSDB userScore = SQL_DB.usersDao().getUserById(vote.voterId);
                     vote.authorVote = userScore.fio;
@@ -105,7 +116,7 @@ public class OptionControlCheckMarkDetailedReport<T> extends OptionControl {
                 }
             }
 
-            if (votes == null) {
+            if (uniqueVotes == null) {
                 signal = false;
                 spannableStringBuilder.append("Не могу определить документ для проверки оценок Дет.Отчетов");
             } else if (vote == null) {
@@ -113,12 +124,14 @@ public class OptionControlCheckMarkDetailedReport<T> extends OptionControl {
                 spannableStringBuilder.append("Низких оценок по ДетОтчету нет.");
             } else {
                 signal = true;
-                spannableStringBuilder.append("Обнаружено ").append(String.valueOf(votes.size()))
+                spannableStringBuilder.append("Обнаружено ").append(String.valueOf(uniqueVotes.size()))
                         .append(" низких оценок по ДетОтчетам от ").append(vote.authorVote).append("\n\n");
 
-                for (VoteSDB item : votes){
-                    UsersSDB userScore = SQL_DB.usersDao().getUserById(vote.voterId);
-                    spannableStringBuilder.append(createLinkedString(userScore.fio, item)).append("\n");
+                for (VoteSDB item : uniqueVotes){
+                    UsersSDB userScore = SQL_DB.usersDao().getUserById(item.voterId);
+                    SpannableStringBuilder link = new SpannableStringBuilder();
+                    link.append("(").append(String.valueOf(item.id)).append(") ").append(item.comments);
+                    spannableStringBuilder.append(createLinkedString(link, item)).append("\n\n");
                 }
             }
 
@@ -142,6 +155,7 @@ public class OptionControlCheckMarkDetailedReport<T> extends OptionControl {
                     spannableStringBuilder.append("\n\n").append("Вы можете получить Премиальные БОЛЬШЕ, если будете делать Достижения.");
                 }
             }
+            checkUnlockCode(optionDB);
 
         } catch (Exception e) {
             Globals.writeToMLOG("ERROR", "OptionControlCheckMarkDetailedReport/executeOption", "Exception e: " + e);
@@ -149,12 +163,30 @@ public class OptionControlCheckMarkDetailedReport<T> extends OptionControl {
     }
 
 
-    private SpannableString createLinkedString(String msg, VoteSDB vote) {
-        SpannableString res = new SpannableString(msg);
+    private SpannableStringBuilder createLinkedString(SpannableStringBuilder msg, VoteSDB vote) {
+        SpannableStringBuilder res = new SpannableStringBuilder(msg);
         ClickableSpan clickableSpan = new ClickableSpan() {
             @Override
             public void onClick(View textView) {
                 Toast.makeText(textView.getContext(), "Ідентифікатор оцінки: " + vote.serverId, Toast.LENGTH_LONG).show();
+
+                try {
+                    StringBuilder stringBuilder = new StringBuilder();
+                    stringBuilder.append(wpDataDB.getAddr_txt()).append("\n").append(wpDataDB.getClient_txt()).append("\n");
+                    DialogData dialog = new DialogData(textView.getContext());
+                    dialog.setTitle("Открыть посещение?");
+                    dialog.setText(stringBuilder);
+                    dialog.setOk(null, () -> {
+                        Intent intent = new Intent(textView.getContext(), DetailedReportActivity.class);
+                        intent.putExtra("WpDataDB_ID", wpDataDB.getId());
+                        textView.getContext().startActivity(intent);
+                    });
+                    dialog.setClose(dialog::dismiss);
+                    dialog.show();
+
+                }catch (Exception e){
+                    Globals.writeToMLOG("ERROR", "OptionControlCheckMarkPhotoReport/createLinkedString/onClick", "Exception e: " + e);
+                }
             }
 
             @Override

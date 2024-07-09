@@ -198,6 +198,8 @@ public class OptionControlInventory<T> extends OptionControl {
                 }
             });
 
+
+
             // ---
             if (signal) {
                 if (optionDB.getBlockPns().equals("1")) {
@@ -207,7 +209,7 @@ public class OptionControlInventory<T> extends OptionControl {
                     spannableStringBuilder.append("\n\n").append("Вы можете получить Премиальные БОЛЬШЕ, если будете делать Достижения.");
                 }
             }
-
+            checkUnlockCode(optionDB);
         } catch (Exception e) {
             Globals.writeToMLOG("ERROR", "OptionControlInventory/executeOption", "Exception e: " + e);
         }

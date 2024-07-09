@@ -103,6 +103,8 @@ public class OptionControlAddComment<T> extends OptionControl {
 
             // 6.0
             setIsBlockOption(signal);
+
+            checkUnlockCode(optionDB);
         } catch (Exception e) {
             Globals.writeToMLOG("ERROR", "OptionControlAddComment/executeOption", "Exception e: " + e);
         }

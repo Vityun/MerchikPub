@@ -13,8 +13,13 @@ import ua.com.merchik.merchik.Global.UnlockCode;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.OptionMassageType;
+import ua.com.merchik.merchik.data.RealmModels.LogDB;
 import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
+import ua.com.merchik.merchik.database.realm.RealmManager;
+import ua.com.merchik.merchik.database.realm.tables.LogRealm;
+import ua.com.merchik.merchik.database.realm.tables.OptionsRealm;
+import ua.com.merchik.merchik.database.realm.tables.WpDataRealm;
 import ua.com.merchik.merchik.dialogs.DialogData;
 
 /**
@@ -25,8 +30,10 @@ import ua.com.merchik.merchik.dialogs.DialogData;
 public class OptionControl<T> {
 
     public Context context;
+    private DialogData dialog;
     public T document;
     public OptionsDB optionDB;
+    public WpDataDB wpDataDB;
     public OptionMassageType msgType;
     public Options.NNKMode nnkMode;
 
@@ -48,6 +55,8 @@ public class OptionControl<T> {
 
     public void showOptionMassage(String msg) {
         try {
+            dialog = new DialogData(context);
+            unlockCode();
             if (msgType != null && msgType.type != null) {
                 switch (msgType.type) {
                     case STRING:
@@ -65,7 +74,6 @@ public class OptionControl<T> {
                         String optionTitle = "Опция: (" + optionDB.getOptionId() + ")\n" + optionDB.getOptionTxt();
 
                         if (stringBuilderMsg.toString().length() > 1) {
-                            DialogData dialog = new DialogData(context);
                             dialog.setTitle(optionTitle);
                             dialog.setText(msg + stringBuilderMsg);
                             if (block) {
@@ -74,7 +82,7 @@ public class OptionControl<T> {
                             dialog.setClose(dialog::dismiss);
                             dialog.show();
                         } else if (spannableStringBuilder.toString().length() > 1) {
-                            DialogData dialog = new DialogData(context);
+//                            DialogData dialog = new DialogData(context);
                             dialog.setTitle(optionTitle);
                             if (block) {
                                 dialog.setDialogIco();
@@ -90,7 +98,7 @@ public class OptionControl<T> {
                             dialog.setClose(dialog::dismiss);
                             dialog.show();
                         } else if (massageToUser.length() > 1) {  // НЕ ЮЗАЙ ЭТО
-                            DialogData dialog = new DialogData(context);
+//                            DialogData dialog = new DialogData(context);
                             dialog.setTitle(optionTitle);
                             dialog.setText(massageToUser);
                             if (block) {
@@ -106,6 +114,14 @@ public class OptionControl<T> {
         } catch (Exception e) {
             Globals.writeToMLOG("ERR", "OptionControl.showOptionMassage", "STACK: " + Arrays.toString(e.getStackTrace()));
         }
+    }
+
+    public void unlockCode() {
+        dialog.setCancel("Отримати код розблокування", () -> {
+//            Toast.makeText(dialog.context, "click", Toast.LENGTH_LONG).show();
+            WpDataDB wpDataDB1 = WpDataRealm.getWpDataRowByDad2Id(Long.parseLong(optionDB.getCodeDad2()));
+            showUnlockCodeDialogInMainThread(wpDataDB1, isBlockOption());
+        });
     }
 
     public void setIsBlockOption(boolean block) {
@@ -132,16 +148,65 @@ public class OptionControl<T> {
             public void onSuccess(String data) {
                 setIsBlockOption(false);
                 unlockCodeResultListener.onUnlockCodeSuccess();
+                RealmManager.INSTANCE.executeTransaction(realm -> {
+                    if (optionDB != null) {
+                        optionDB.setIsSignal("2");
+                        realm.insertOrUpdate(optionDB);
+                    }
+                });
+                dialog.dismiss();
+                Toast.makeText(context, "Код прийнято", Toast.LENGTH_LONG).show();
             }
 
             @Override
             public void onFailure(String error) {
                 setIsBlockOption(signal);
-                stringBuilderMsg.append("\n\n").append("Документ проведен не будет!");
-                spannableStringBuilder.append(stringBuilderMsg);
-                showOptionMassage("");
                 unlockCodeResultListener.onUnlockCodeFailure();
+                RealmManager.INSTANCE.executeTransaction(realm -> {
+                    if (optionDB != null) {
+                        optionDB.setBlockPns("1");
+                        optionDB.setIsSignal("1");
+                        realm.insertOrUpdate(optionDB);
+                    }
+                });
+                Toast.makeText(context, "Код розблокування НЕ прийнято", Toast.LENGTH_LONG).show();
             }
         });
+    }
+
+    public boolean checkUnlockCode(OptionsDB optionDB) {
+        try {
+
+            if (optionDB != null && optionDB.getIsSignal().equals("1") && optionDB.getBlockPns().equals("1")) {
+                if (nnkMode.equals(Options.NNKMode.CHECK) || nnkMode.equals(Options.NNKMode.CHECK_CLICK)){
+                    optionDB = OptionsRealm.getOption(optionDB.getCodeDad2(), optionDB.getOptionControlId());
+                }
+
+                Long codeODAD = new UnlockCode().codeODAD(optionDB);
+                int themeCode = 1285;
+
+                if (codeODAD != null) {
+                    LogDB log = LogRealm.getLogByODADandTheme(codeODAD, themeCode);
+                    if (log != null) {
+                        stringBuilderMsg.append("\n\nАле виконавцю видано код розблокування!");
+                        setIsBlockOption(false);
+                        OptionsDB finalOptionDB = optionDB;
+                        RealmManager.INSTANCE.executeTransaction(realm -> {
+                            finalOptionDB.setIsSignal("2");
+                            finalOptionDB.setBlockPns("0");
+                            realm.insertOrUpdate(finalOptionDB);
+                        });
+                        return true;
+                    }
+                }
+                return false;
+            }else {
+                setIsBlockOption(false);
+                return true;
+            }
+        } catch (Exception e) {
+            Globals.writeToMLOG("ERROR", "OptionControl/checkUnlockCode", "Exception e: " + e);
+            return false;
+        }
     }
 }

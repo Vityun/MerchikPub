@@ -1286,6 +1286,22 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
             gp = photoDB.getGp();
         }
 
+        if (photoDB.img_src_id != null && !photoDB.img_src_id.equals("") && !photoDB.img_src_id.equals("null")) {
+            img_src_id = photoDB.img_src_id;
+        }
+
+        if (photoDB.showcase_id != null && !photoDB.showcase_id.equals("") && !photoDB.showcase_id.equals("null")) {
+            showcase_id = photoDB.showcase_id;
+        }
+
+        if (photoDB.planogram_id != null && !photoDB.planogram_id.equals("") && !photoDB.planogram_id.equals("null")) {
+            planogram_id = photoDB.planogram_id;
+        }
+
+        if (photoDB.planogram_img_id != null && !photoDB.planogram_img_id.equals("") && !photoDB.planogram_img_id.equals("null")) {
+            planogram_img_id = photoDB.planogram_img_id;
+        }
+
         // Запаковка данных для сервера
         RequestBody mod2 = RequestBody.create(MediaType.parse("text/plain"), mod);
         RequestBody act2 = RequestBody.create(MediaType.parse("text/plain"), act);

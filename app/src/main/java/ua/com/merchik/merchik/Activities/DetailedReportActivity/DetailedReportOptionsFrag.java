@@ -48,6 +48,7 @@ import ua.com.merchik.merchik.Options.OptionControl;
 import ua.com.merchik.merchik.Options.Options;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.ServerExchange.Exchange;
+import ua.com.merchik.merchik.ServerExchange.TablesExchange.SMSExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesLoadingUnloading;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.WorkPlan;
@@ -63,14 +64,26 @@ import ua.com.merchik.merchik.dialogs.DialogFilter.Click;
 @SuppressLint("ValidFragment")
 public class DetailedReportOptionsFrag extends Fragment {
 
+
+    PhotoHandler photoHandler;
+    public class PhotoHandler {
+        private int photoType;
+
+        public PhotoHandler(int photoType) {
+            this.photoType = photoType;
+        }
+
+        public int getPhotoType() {
+            return photoType;
+        }
+    }
     ActivityResultLauncher<String> mGetContent = registerForActivityResult(new ActivityResultContracts.GetContent(),
             new ActivityResultCallback<Uri>() {
                 @Override
                 public void onActivityResult(Uri uri) {
                     try {
-                        int photoType = 4;
                         File file = new File(Globals.FileUtils.getRealPathFromUri(getContext(), uri));
-                        savePhoto(file, wpDataDB, photoType, MakePhotoFromGalery.tovarId, getApplicationContext());
+                        savePhoto(file, wpDataDB, photoHandler.getPhotoType(), MakePhotoFromGalery.tovarId, getApplicationContext());
                     } catch (Exception e) {
                         Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST", "Exception e: " + e);
                     }
@@ -265,6 +278,36 @@ public class DetailedReportOptionsFrag extends Fragment {
                     List<OptionsDB> opt = workPlan.getOptionButtons2(workPlan.getWpOpchetId(wpDataDB), wpDataDB.getId());
                     WpDataDB wp = WpDataRealm.getWpDataRowByDad2Id(wpDataDB.getCode_dad2());
 
+                    try {
+                        SMSExchange smsExchange = new SMSExchange();
+                        smsExchange.smsPlanExchange(new Clicks.clickObjectAndStatus() {
+                            @Override
+                            public void onSuccess(Object data) {
+
+                            }
+
+                            @Override
+                            public void onFailure(String error) {
+
+                            }
+                        });
+
+                        smsExchange.smsLogExchange(new Clicks.clickObjectAndStatus() {
+                            @Override
+                            public void onSuccess(Object data) {
+
+                            }
+
+                            @Override
+                            public void onFailure(String error) {
+
+                            }
+                        });
+                    }catch (Exception e){
+                        Globals.writeToMLOG("ERROR", "buttonMakeAReport.setOnClickListener/", "Exception e: " + e);
+                    }
+
+
                     new Options().conduct(getContext(), wp, opt, DEFAULT_CONDUCT, new Clicks.click() {
                         @Override
                         public <T> void click(T data) {
@@ -384,13 +427,19 @@ public class DetailedReportOptionsFrag extends Fragment {
             Globals.writeToMLOG("INFO", "DetailedReportOptionsFrag/onViewCreated/", "allReportOption: " + allReportOption);
             Globals.writeToMLOG("INFO", "DetailedReportOptionsFrag/onViewCreated/", "list: " + list);
 
-            recycleViewDRAdapter = new RecycleViewDRAdapter(mContext, wpDataDB, optionsButtons, allReportOption, list, () -> {
-                try {
-                    mGetContent.launch("image/*");
-                } catch (Exception e) {
-                    Globals.writeToMLOG("ERROR", "DetailedReportOptionsFrag/Intent.ACTION_PICK", "Exception e: " + e);
+            recycleViewDRAdapter = new RecycleViewDRAdapter(mContext, wpDataDB, optionsButtons, allReportOption, list, new Clicks.click() {
+                @Override
+                public <T> void click(T data) {
+                    try {
+                        int photoType = (int) data;
+                        photoHandler = new PhotoHandler(photoType);
+                        mGetContent.launch("image/*");
+                    } catch (Exception e) {
+                        Globals.writeToMLOG("ERROR", "DetailedReportOptionsFrag/Intent.ACTION_PICK", "Exception e: " + e);
+                    }
                 }
             });
+
             rvContacts.setAdapter(recycleViewDRAdapter);
             rvContacts.setLayoutManager(new LinearLayoutManager(mContext, LinearLayoutManager.VERTICAL, false));
             Globals.writeToMLOG("INFO", "DetailedReportOptionsFrag/onViewCreated", "end");

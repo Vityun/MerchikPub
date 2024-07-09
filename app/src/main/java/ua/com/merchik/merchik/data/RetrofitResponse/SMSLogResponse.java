@@ -1,19 +1,20 @@
-package ua.com.merchik.merchik.data.RetrofitResponse.tables.AchievementsUpload;
+package ua.com.merchik.merchik.data.RetrofitResponse;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
 import java.util.List;
 
-public class AchievementsUploadResponse {
+import ua.com.merchik.merchik.data.Database.Room.SMS.SMSLogSDB;
 
+public class SMSLogResponse {
     @SerializedName("state")
     @Expose
     public Boolean state;
 
     @SerializedName("list")
     @Expose
-    public List<AchievementsUploadResponseList> list;
+    public List<SMSLogSDB> list;
 
     @SerializedName("error")
     @Expose
