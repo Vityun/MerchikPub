@@ -87,3 +87,17 @@ object AddressSDBOverride {
     }
 
 }
+
+object AdditionalRequirementsDBOverride {
+    fun getContainerModifier(jsonObject: JSONObject): MerchModifier {
+        val color =
+            try {
+                val colorHex = jsonObject.optString("color", "").ifEmpty { "FFFFFF" }
+                Color(android.graphics.Color.parseColor("#$colorHex"))
+            } catch (e: Exception){
+                Color.White
+            }
+        return MerchModifier(background = color)
+    }
+
+}

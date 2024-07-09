@@ -204,4 +204,10 @@ public class SiteObjectsDB extends RealmObject implements DataObjectUI {
     public MerchModifier getValueModifier(@NonNull String key, @NonNull JSONObject jsonObject) {
         return DataObjectUI.DefaultImpls.getValueModifier(this, key, jsonObject);
     }
+
+    @Nullable
+    @Override
+    public MerchModifier getContainerModifier(@NonNull JSONObject jsonObject) {
+        return DataObjectUI.DefaultImpls.getContainerModifier(this, jsonObject);
+    }
 }

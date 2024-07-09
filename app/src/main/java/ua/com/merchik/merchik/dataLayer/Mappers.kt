@@ -20,6 +20,10 @@ interface DataObjectUI {
         return value.toString()
     }
 
+    fun getContainerModifier(jsonObject: JSONObject): MerchModifier? {
+        return null
+    }
+
     fun getFieldModifier(key: String, jsonObject: JSONObject): MerchModifier? {
         return null
     }
@@ -52,7 +56,8 @@ fun DataObjectUI.toItemUI(nameUIRepository: NameUIRepository, hideUserFields: St
 
     return ItemUI(
         rawObj = listOf(this),
-        fields = fields
+        fields = fields,
+        modifierContainer = getContainerModifier(jsonObject)
     )
 }
 

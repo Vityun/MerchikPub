@@ -183,6 +183,12 @@ public class UsersSDB implements DataObjectUI{
         return DataObjectUI.DefaultImpls.getValueModifier(this, key, jsonObject);
     }
 
+    @Nullable
+    @Override
+    public MerchModifier getContainerModifier(@NonNull JSONObject jsonObject) {
+        return DataObjectUI.DefaultImpls.getContainerModifier(this, jsonObject);
+    }
+
 //    @Override
 //    public String toString() {
 //        return fio;

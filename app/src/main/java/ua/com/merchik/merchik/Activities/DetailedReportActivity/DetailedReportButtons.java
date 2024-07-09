@@ -176,34 +176,34 @@ public class DetailedReportButtons {
 
                 break;
 
-            case 138339:
-                Log.e("AdditionalRequirements", "wpDataDB.getClient_id(): " + wpDataDB.getClient_id());
-                Log.e("AdditionalRequirements", "wpDataDB.getAddr_id(): " + wpDataDB.getAddr_id());
-
-//                List<AdditionalRequirementsDB> data = AdditionalRequirementsRealm.getData2(String.valueOf(wpDataDB.getClient_id()), String.valueOf(wpDataDB.getAddr_id()));
-//                Log.e("AdditionalRequirements", "data.size(): " + data.size());
-
-                Integer ttCategory = null;
-                AddressSDB addressSDB = SQL_DB.addressDao().getById(wpDataDB.getAddr_id());
-                if (addressSDB != null){
-                    ttCategory = addressSDB.ttId;
-                }
-
-                List<AdditionalRequirementsDB> data = AdditionalRequirementsRealm.getData3(wpDataDB, HIDE_FOR_USER, ttCategory, null,0);
-                Log.e("AdditionalRequirements", "data2.size(): " + data.size());
-
-
-                DialogAdditionalRequirements dialogAdditionalRequirements = new DialogAdditionalRequirements(context);
-
-                dialogAdditionalRequirements.setTitle("Доп. требования (" + data.size() + ")");
-                dialogAdditionalRequirements.setRecycler(wpDataDB, data);
-
-                dialogAdditionalRequirements.setClose(dialogAdditionalRequirements::dismiss);
-                dialogAdditionalRequirements.setLesson(context, true, 1232);
-                dialogAdditionalRequirements.setVideoLesson(context, true, 1233, () -> {
-                });
-                dialogAdditionalRequirements.show();
-                break;
+//            case 138339:
+//                Log.e("AdditionalRequirements", "wpDataDB.getClient_id(): " + wpDataDB.getClient_id());
+//                Log.e("AdditionalRequirements", "wpDataDB.getAddr_id(): " + wpDataDB.getAddr_id());
+//
+////                List<AdditionalRequirementsDB> data = AdditionalRequirementsRealm.getData2(String.valueOf(wpDataDB.getClient_id()), String.valueOf(wpDataDB.getAddr_id()));
+////                Log.e("AdditionalRequirements", "data.size(): " + data.size());
+//
+//                Integer ttCategory = null;
+//                AddressSDB addressSDB = SQL_DB.addressDao().getById(wpDataDB.getAddr_id());
+//                if (addressSDB != null){
+//                    ttCategory = addressSDB.ttId;
+//                }
+//
+//                List<AdditionalRequirementsDB> data = AdditionalRequirementsRealm.getData3(wpDataDB, HIDE_FOR_USER, ttCategory, null,0);
+//                Log.e("AdditionalRequirements", "data2.size(): " + data.size());
+//
+//
+//                DialogAdditionalRequirements dialogAdditionalRequirements = new DialogAdditionalRequirements(context);
+//
+//                dialogAdditionalRequirements.setTitle("Доп. требования (" + data.size() + ")");
+//                dialogAdditionalRequirements.setRecycler(wpDataDB, data);
+//
+//                dialogAdditionalRequirements.setClose(dialogAdditionalRequirements::dismiss);
+//                dialogAdditionalRequirements.setLesson(context, true, 1232);
+//                dialogAdditionalRequirements.setVideoLesson(context, true, 1233, () -> {
+//                });
+//                dialogAdditionalRequirements.show();
+//                break;
 
 
             case 141910:

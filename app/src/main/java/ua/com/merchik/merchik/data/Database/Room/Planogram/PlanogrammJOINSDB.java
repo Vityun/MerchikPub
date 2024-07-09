@@ -95,6 +95,12 @@ public class PlanogrammJOINSDB implements DataObjectUI {
         return DataObjectUI.DefaultImpls.getValueModifier(this, key, jsonObject);
     }
 
+    @Nullable
+    @Override
+    public MerchModifier getContainerModifier(@NonNull JSONObject jsonObject) {
+        return DataObjectUI.DefaultImpls.getContainerModifier(this, jsonObject);
+    }
+
     public static class DateConverter {
         @TypeConverter
         public static Date fromTimestamp(Long value) {

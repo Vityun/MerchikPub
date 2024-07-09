@@ -162,4 +162,10 @@ public class LogDB extends RealmObject implements DataObjectUI{
     public MerchModifier getValueModifier(@NonNull String key, @NonNull JSONObject jsonObject) {
         return LogDBOverride.INSTANCE.getValueModifier(key, jsonObject);
     }
+
+    @Nullable
+    @Override
+    public MerchModifier getContainerModifier(@NonNull JSONObject jsonObject) {
+        return DataObjectUI.DefaultImpls.getContainerModifier(this, jsonObject);
+    }
 }

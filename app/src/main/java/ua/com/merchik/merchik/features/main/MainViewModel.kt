@@ -1,6 +1,6 @@
 package ua.com.merchik.merchik.features.main
 
-import android.app.Activity
+import android.content.Context
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import ua.com.merchik.merchik.R
 import ua.com.merchik.merchik.dataLayer.ContextUI
 import ua.com.merchik.merchik.dataLayer.DataObjectUI
 import ua.com.merchik.merchik.dataLayer.MainRepository
@@ -45,11 +46,12 @@ abstract class MainViewModel(
 
     var dataJson: String? = null
     open val title: String = "Довідник"
+    open val idResImage: Int? = R.drawable.merchik
     abstract val contextUI: ContextUI
     abstract val table: KClass<out DataObjectUI>
     abstract fun getItems(): List<ItemUI>
     open fun getFilters(): Filters? = null
-    open fun onClickItemImage(itemUI: ItemUI, activity: AppCompatActivity) {}
+    open fun onClickItem(itemUI: ItemUI, context: Context) {}
 
     private val _uiState = MutableStateFlow(StateUI())
     val uiState: StateFlow<StateUI>

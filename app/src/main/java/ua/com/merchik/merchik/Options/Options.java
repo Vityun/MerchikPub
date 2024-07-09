@@ -29,6 +29,7 @@ import static ua.com.merchik.merchik.trecker.enabledGPS;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
+import android.os.Bundle;
 import android.text.Html;
 import android.text.SpannableString;
 import android.text.SpannableStringBuilder;
@@ -59,6 +60,7 @@ import io.reactivex.rxjava3.observers.DisposableCompletableObserver;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 import io.realm.RealmResults;
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity;
+import ua.com.merchik.merchik.Activities.Features.FeaturesActivity;
 import ua.com.merchik.merchik.Activities.TaskAndReclamations.TasksActivity.TARSecondFrag;
 import ua.com.merchik.merchik.Adapters.TextAdapter;
 import ua.com.merchik.merchik.BuildConfig;
@@ -153,6 +155,7 @@ import ua.com.merchik.merchik.dialogs.DialogAdditionalRequirements.DialogAdditio
 import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.dialogs.DialogFilter.Click;
 import ua.com.merchik.merchik.dialogs.EKL.DialogEKL;
+import ua.com.merchik.merchik.features.main.DBViewModels.LogMPDBViewModel;
 import ua.com.merchik.merchik.toolbar_menus;
 
 public class Options {
@@ -1793,28 +1796,35 @@ public class Options {
 
     // Это вроде нигде не работает, некст раз прочитаешь - проверь. Работает с DetailedButtons
     private <T> void option138339(Context context, T dataDB, OptionsDB option, OptionMassageType type, NNKMode mode, OptionControl.UnlockCodeResultListener unlockCodeResultListener) {
-        WpDataDB wpDataDB = (WpDataDB) dataDB;
+        Intent intent = new Intent(context, FeaturesActivity.class);
+        Bundle bundle = new Bundle();
+        bundle.putString("viewModel", AdditionalRequirementsDB.class.getCanonicalName());
+        bundle.putString("dataJson", new Gson().toJson(dataDB));
+        intent.putExtras(bundle);
+        context.startActivity(intent);
 
-        Integer ttCategory = null;
-        AddressSDB addressSDB = SQL_DB.addressDao().getById(wpDataDB.getAddr_id());
-        if (addressSDB != null){
-            ttCategory = addressSDB.ttId;
-        }
-
-        List<AdditionalRequirementsDB> data = AdditionalRequirementsRealm.getData3(wpDataDB, HIDE_FOR_USER, ttCategory, null,0);
-        Log.e("AdditionalRequirements", "data2.size(): " + data.size());
-
-
-        DialogAdditionalRequirements dialogAdditionalRequirements = new DialogAdditionalRequirements(context);
-
-        dialogAdditionalRequirements.setTitle("Доп. требования (" + data.size() + ")");
-        dialogAdditionalRequirements.setRecycler(wpDataDB, data);
-
-        dialogAdditionalRequirements.setClose(dialogAdditionalRequirements::dismiss);
-        dialogAdditionalRequirements.setLesson(context, true, 1232);
-        dialogAdditionalRequirements.setVideoLesson(context, true, 1233, () -> {
-        });
-        dialogAdditionalRequirements.show();
+//        WpDataDB wpDataDB = (WpDataDB) dataDB;
+//
+//        Integer ttCategory = null;
+//        AddressSDB addressSDB = SQL_DB.addressDao().getById(wpDataDB.getAddr_id());
+//        if (addressSDB != null){
+//            ttCategory = addressSDB.ttId;
+//        }
+//
+//        List<AdditionalRequirementsDB> data = AdditionalRequirementsRealm.getData3(wpDataDB, HIDE_FOR_USER, ttCategory, null,0);
+//        Log.e("AdditionalRequirements", "data2.size(): " + data.size());
+//
+//
+//        DialogAdditionalRequirements dialogAdditionalRequirements = new DialogAdditionalRequirements(context);
+//
+//        dialogAdditionalRequirements.setTitle("Доп. требования (" + data.size() + ")");
+//        dialogAdditionalRequirements.setRecycler(wpDataDB, data);
+//
+//        dialogAdditionalRequirements.setClose(dialogAdditionalRequirements::dismiss);
+//        dialogAdditionalRequirements.setLesson(context, true, 1232);
+//        dialogAdditionalRequirements.setVideoLesson(context, true, 1233, () -> {
+//        });
+//        dialogAdditionalRequirements.show();
     }
 
     private <T> void option138340(Context context, T dataDB, OptionsDB option, OptionMassageType type, NNKMode mode, OptionControl.UnlockCodeResultListener unlockCodeResultListener) {

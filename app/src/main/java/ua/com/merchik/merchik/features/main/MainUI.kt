@@ -1,6 +1,7 @@
 package ua.com.merchik.merchik.features.main
 
 import android.app.Activity
+import android.content.Context
 import android.os.Build
 import android.view.View
 import android.widget.DatePicker
@@ -8,25 +9,18 @@ import androidx.annotation.DrawableRes
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.detectDragGestures
-import androidx.compose.foundation.gestures.draggable
-import androidx.compose.foundation.gestures.rememberDraggableState
-import androidx.compose.foundation.gestures.scrollBy
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -39,11 +33,9 @@ import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonDefaults
@@ -57,7 +49,6 @@ import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -72,15 +63,11 @@ import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.colorResource
-import androidx.compose.ui.res.imageResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -92,14 +79,8 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.zIndex
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import my.nanihadesuka.compose.LazyColumnScrollbar
-import my.nanihadesuka.compose.ScrollbarLayoutSide
-import my.nanihadesuka.compose.ScrollbarSelectionActionable
-import my.nanihadesuka.compose.ScrollbarSelectionMode
 import my.nanihadesuka.compose.ScrollbarSettings
 import ua.com.merchik.merchik.R
 import ua.com.merchik.merchik.dataLayer.model.FieldValue
@@ -107,7 +88,6 @@ import ua.com.merchik.merchik.dataLayer.model.MerchModifier
 import ua.com.merchik.merchik.dataLayer.model.Padding
 import ua.com.merchik.merchik.dataLayer.model.SettingsItemUI
 import ua.com.merchik.merchik.dataLayer.model.TextField
-import ua.com.merchik.merchik.dialogs.DialogMap
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.ZoneId
@@ -117,7 +97,7 @@ import kotlin.math.roundToInt
 
 @RequiresApi(Build.VERSION_CODES.N)
 @Composable
-fun MainUI(viewModel: MainViewModel, activity: AppCompatActivity) {
+fun MainUI(viewModel: MainViewModel, context: Context) {
 
     val uiState by viewModel.uiState.collectAsState()
 
@@ -162,7 +142,7 @@ fun MainUI(viewModel: MainViewModel, activity: AppCompatActivity) {
                 sizeImage = 25.dp,
                 modifier = Modifier
                     .padding(start = 15.dp, bottom = 10.dp),
-                onClick = { activity.finish() }
+                onClick = { (context as? Activity)?.finish() }
             )
         }
 
@@ -264,11 +244,19 @@ fun MainUI(viewModel: MainViewModel, activity: AppCompatActivity) {
                             items(items) { item ->
                                 Box(
                                     modifier = Modifier
+                                        .clickable {
+                                            viewModel.onClickItem(
+                                                item,
+                                                context
+                                            )
+                                        }
                                         .fillMaxWidth()
                                         .padding(7.dp)
                                         .shadow(4.dp)
                                         .border(1.dp, Color.Black)
-                                        .background(Color.White)
+                                        .then( item.modifierContainer?.background?.let {
+                                            Modifier.background(it)
+                                        } ?: Modifier.background(Color.White))
                                 ) {
                                     Row(Modifier.padding(7.dp)) {
                                         Box(
@@ -278,18 +266,14 @@ fun MainUI(viewModel: MainViewModel, activity: AppCompatActivity) {
                                                 .background(Color.White)
                                                 .align(alignment = Alignment.CenterVertically)
                                         ) {
-                                            Image(
-                                                modifier = Modifier
-                                                    .size(100.dp)
-                                                    .clickable {
-                                                        viewModel.onClickItemImage(
-                                                            item,
-                                                            activity
-                                                        )
-                                                    },
-                                                bitmap = ImageBitmap.imageResource(id = R.mipmap.merchik),
-                                                contentDescription = null
-                                            )
+                                            viewModel.idResImage?.let {
+                                                Image(
+                                                    painter = painterResource(it),
+                                                    modifier = Modifier
+                                                        .size(100.dp),
+                                                    contentDescription = null
+                                                )
+                                            }
                                         }
                                         Column {
                                             item.fields.forEach {
@@ -309,10 +293,6 @@ fun MainUI(viewModel: MainViewModel, activity: AppCompatActivity) {
     if (showSettingsDialog) {
         SettingsDialog(viewModel, onDismiss = { showSettingsDialog = false })
     }
-
-//    if (showSortingDialog) {
-//        SortingDialog(viewModel, onDismiss = { showSortingDialog = false })
-//    }
 
     if (showFilteringDialog) {
         val key = viewModel.getFilters()?.rangeDataByKey?.key ?: ""
@@ -511,7 +491,7 @@ fun ImageButton(
 }
 
 @Composable
-fun SettingsItemView(item: SettingsItemUI, onChangeIndex: (offset: Int) -> Unit) {
+fun SettingsItemView(item: SettingsItemUI) {
     var isChecked by remember { mutableStateOf(item.isEnabled) }
 
     Row(
@@ -523,20 +503,6 @@ fun SettingsItemView(item: SettingsItemUI, onChangeIndex: (offset: Int) -> Unit)
             .align(Alignment.CenterVertically))
 
         Spacer(modifier = Modifier.weight(1f))
-
-        ImageButton(id = R.drawable.ic_angle_down_solid, sizeButton = 30.dp, sizeImage = 15.dp,
-            modifier = Modifier
-                .padding(start = 5.dp)
-                .align(Alignment.CenterVertically)) {
-            onChangeIndex.invoke(1)
-        }
-
-        ImageButton(id = R.drawable.ic_angle_up_solid, sizeButton = 30.dp, sizeImage = 15.dp,
-            modifier = Modifier
-                .padding(start = 5.dp)
-                .align(Alignment.CenterVertically)) {
-            onChangeIndex.invoke(-1)
-        }
 
         Checkbox(
             checked = isChecked,
@@ -755,7 +721,7 @@ fun SettingsDialog(viewModel: MainViewModel, onDismiss: () -> Unit) {
 
                         LazyColumn {
                             items(uiState.settingsItems) { itemSettingsUI ->
-                                SettingsItemView(item = itemSettingsUI, onChangeIndex = { viewModel.onChangeItemIndex(itemSettingsUI, it) })
+                                SettingsItemView(item = itemSettingsUI)
                             }
                         }
                     }

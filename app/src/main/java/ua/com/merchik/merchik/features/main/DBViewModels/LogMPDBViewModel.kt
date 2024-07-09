@@ -1,9 +1,11 @@
 package ua.com.merchik.merchik.features.main.DBViewModels
 
+import android.content.Context
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.SavedStateHandle
 import com.google.gson.Gson
 import dagger.hilt.android.lifecycle.HiltViewModel
+import ua.com.merchik.merchik.R
 import ua.com.merchik.merchik.data.Database.Room.AddressSDB
 import ua.com.merchik.merchik.data.RealmModels.LogMPDB
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB
@@ -29,6 +31,9 @@ class LogMPDBViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle
 ) : MainViewModel(repository, nameUIRepository, savedStateHandle) {
 
+    override val idResImage: Int
+        get() = R.drawable.gps
+
     override val title: String
         get() = "Історія місцеположення"
 
@@ -51,7 +56,9 @@ class LogMPDBViewModel @Inject constructor(
         )
     }
 
-    override fun onClickItemImage(itemUI: ItemUI, activity: AppCompatActivity) {
+    override fun onClickItem(itemUI: ItemUI, context: Context) {
+        val activity = (context as? AppCompatActivity) ?: return
+
         val logMPDB = (itemUI.rawObj.firstOrNull { it is LogMPDB } as? LogMPDB)
 
         val wpDataDB = Gson().fromJson(dataJson, WpDataDB::class.java)

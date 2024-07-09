@@ -1,13 +1,22 @@
 package ua.com.merchik.merchik.data.RealmModels;
 
+import androidx.annotation.NonNull;
+
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
+
+import org.jetbrains.annotations.Nullable;
+import org.json.JSONObject;
 
 import java.util.Date;
 
 import io.realm.RealmObject;
+import ua.com.merchik.merchik.data.Database.Room.AdditionalRequirementsDBOverride;
+import ua.com.merchik.merchik.data.Database.Room.AddressSDBOverride;
+import ua.com.merchik.merchik.dataLayer.DataObjectUI;
+import ua.com.merchik.merchik.dataLayer.model.MerchModifier;
 
-public class AdditionalRequirementsDB extends RealmObject {
+public class AdditionalRequirementsDB extends RealmObject implements DataObjectUI {
     @SerializedName("ID")
     @Expose
     private Integer id;
@@ -238,5 +247,43 @@ public class AdditionalRequirementsDB extends RealmObject {
 
     public void setDtChange(String dtChange) {
         this.dtChange = dtChange;
+    }
+
+    @NonNull
+    @Override
+    public String getHidedFieldsOnUI() {
+        return "addr_id, author_id, disable_score, dt_change, exam_id, grp_id, hide_client, " +
+                "hide_user, ID, not_approve, options_id, showcase_tp_id, site_id, summ, theme_id," +
+                "tovar_id, user_id, option_id, dt_end, dt_start, client_id, color";
+    }
+
+    @Nullable
+    @Override
+    public Long getTranslateId(@NonNull String key) {
+        return DataObjectUI.DefaultImpls.getTranslateId(this, key);
+    }
+
+    @NonNull
+    @Override
+    public String getValueUI(@NonNull String key, @NonNull Object value) {
+        return DataObjectUI.DefaultImpls.getValueUI(this, key, value);
+    }
+
+    @Nullable
+    @Override
+    public MerchModifier getFieldModifier(@NonNull String key, @NonNull JSONObject jsonObject) {
+        return DataObjectUI.DefaultImpls.getFieldModifier(this, key, jsonObject);
+    }
+
+    @Nullable
+    @Override
+    public MerchModifier getValueModifier(@NonNull String key, @NonNull JSONObject jsonObject) {
+        return DataObjectUI.DefaultImpls.getValueModifier(this, key, jsonObject);
+    }
+
+    @Nullable
+    @Override
+    public MerchModifier getContainerModifier(@NonNull JSONObject jsonObject) {
+        return AdditionalRequirementsDBOverride.INSTANCE.getContainerModifier(jsonObject);
     }
 }

@@ -12,10 +12,13 @@ import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import dagger.hilt.android.AndroidEntryPoint
 import ua.com.merchik.merchik.Activities.Features.ui.theme.MerchikTheme
+import ua.com.merchik.merchik.data.RealmModels.AdditionalRequirementsDB
+import ua.com.merchik.merchik.features.main.DBViewModels.AdditionalRequirementsDBViewModel
 import ua.com.merchik.merchik.features.main.DBViewModels.LogMPDBViewModel
 import ua.com.merchik.merchik.features.main.MainUI
 import kotlin.reflect.KClass
@@ -37,14 +40,15 @@ class FeaturesActivity: AppCompatActivity() {
                     intent?.let { intent ->
                         intent.extras?.let { bundle ->
                             bundle.getString("viewModel")?.let {
-                                val dataJson = bundle.getString("dataJson")
                                 when (Class.forName(it).kotlin) {
-                                    LogMPDBViewModel::class -> {
-                                        val viewModel = viewModel() as LogMPDBViewModel
-                                        viewModel.dataJson = dataJson
-                                        MainUI(viewModel = viewModel, this)
-                                    }
-                                    else -> { finish() }
+                                    LogMPDBViewModel::class -> viewModel() as LogMPDBViewModel
+                                    AdditionalRequirementsDB::class -> viewModel() as AdditionalRequirementsDBViewModel
+                                    else -> null
+                                }?.let { viewModel ->
+                                    viewModel.dataJson = bundle.getString("dataJson")
+                                    MainUI(viewModel = viewModel, LocalContext.current)
+                                } ?: {
+                                    finish()
                                 }
                             }
                         }
