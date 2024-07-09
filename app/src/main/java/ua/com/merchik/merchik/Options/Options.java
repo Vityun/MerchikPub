@@ -681,6 +681,13 @@ public class Options {
             // 9261  - фабрика бакалійних,
             // 10349 - Гифт-К,
             // 91419 - Чміль Валерій Васильович ФОП
+
+            // 78171 Артхим,
+            // 82575 Профит Плюс,
+            // 90749 Буко,
+            // 75411 Йозера,
+            // 10919 Маруся,
+            // 10291 Натурпродукт-вега
             if (option.getClientId().equals("14301") ||
                     option.getClientId().equals("14840") ||
                     option.getClientId().equals("14843") ||
@@ -700,8 +707,13 @@ public class Options {
                     option.getClientId().equals("69842") || // Мега Крисп,
                     option.getClientId().equals("9261") ||  // фабрика бакалійних,
                     option.getClientId().equals("10349") || // Гифт-К,
-                    option.getClientId().equals("91419")   // Чміль Валерій Васильович ФОП
-
+                    option.getClientId().equals("91419") ||   // Чміль Валерій Васильович ФОП
+                    option.getClientId().equals("78171") || // Артхим,
+                    option.getClientId().equals("82575") || // Профит Плюс,
+                    option.getClientId().equals("90749") || // Буко,
+                    option.getClientId().equals("75411") || // Йозера,
+                    option.getClientId().equals("10919") || // Маруся,
+                    option.getClientId().equals("10291") // Натурпродукт-вега
             ) {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                     optionControlNewAlgo(getOptionsToControl(option), context, dataDB, option, optionList, type, mode, false, click);

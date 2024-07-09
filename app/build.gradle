@@ -9,12 +9,12 @@ keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
 
 android {
     namespace "ua.com.merchik.merchik"
-    compileSdkVersion 33
+    compileSdkVersion 34
     defaultConfig {
-//        applicationId "ua.com.merchik.merchik_test"
-        applicationId "ua.com.merchik.merchik"
+        applicationId "ua.com.merchik.merchik_test"
+//        applicationId "ua.com.merchik.merchik"
         minSdkVersion 21
-        targetSdkVersion 33
+        targetSdkVersion 34
         //noinspection HighAppVersionCode
         versionCode  2024070800
         versionName "2024070800"
