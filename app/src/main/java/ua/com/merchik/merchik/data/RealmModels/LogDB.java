@@ -141,7 +141,7 @@ public class LogDB extends RealmObject implements DataObjectUI{
 
     @Nullable
     @Override
-    public Long getTranslateId(@NonNull String key) {
+    public Long getFieldTranslateId(@NonNull String key) {
         return LogDBOverride.INSTANCE.getTranslateId(key);
     }
 

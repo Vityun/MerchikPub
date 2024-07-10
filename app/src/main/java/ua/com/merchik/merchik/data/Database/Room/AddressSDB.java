@@ -82,7 +82,7 @@ public class AddressSDB implements DataObjectUI {
 
     @Nullable
     @Override
-    public Long getTranslateId(@NonNull String key) {
+    public Long getFieldTranslateId(@NonNull String key) {
         return AddressSDBOverride.INSTANCE.getTranslateId(key);
     }
 

@@ -11,7 +11,6 @@ import org.json.JSONObject;
 import java.util.Date;
 
 import io.realm.RealmObject;
-import io.realm.annotations.Ignore;
 import io.realm.annotations.PrimaryKey;
 import ua.com.merchik.merchik.dataLayer.DataObjectUI;
 import ua.com.merchik.merchik.dataLayer.model.MerchModifier;
@@ -1291,8 +1290,8 @@ public class WpDataDB extends RealmObject implements Parcelable, DataObjectUI {
 
     @Nullable
     @Override
-    public Long getTranslateId(@NonNull String key) {
-        return DataObjectUI.DefaultImpls.getTranslateId(this, key);
+    public Long getFieldTranslateId(@NonNull String key) {
+        return DataObjectUI.DefaultImpls.getFieldTranslateId(this, key);
     }
 
     @NonNull

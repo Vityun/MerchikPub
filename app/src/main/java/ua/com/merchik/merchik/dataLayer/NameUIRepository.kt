@@ -32,10 +32,11 @@ class NameUIRepository(
     private val cache = MemoryCache<String>()
 
     private fun getNameUIById(id: Long): String? {
-        return RealmManager.INSTANCE
-            .where(SiteObjectsDB::class.java)
-            .equalTo("id", id)
-            .findFirst()?.commentsTranslation
+        return RealmManager.INSTANCE.copyFromRealm(
+            RealmManager.INSTANCE
+                .where(SiteObjectsDB::class.java)
+                .equalTo("id", id)
+                .findFirst())?.commentsTranslation
     }
 
     fun getTranslateString(text: String, translateId: Long?): String {

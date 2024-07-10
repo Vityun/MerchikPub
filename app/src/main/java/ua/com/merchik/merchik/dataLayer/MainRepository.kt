@@ -70,7 +70,7 @@ class MainRepository(
                 .map {
                     SettingsItemUI(
                         it,
-                        if (it == "column_name") "Назва реквізитів" else nameUIRepository.getTranslateString(it, obj.getTranslateId(it)),
+                        if (it == "column_name") "Назва реквізитів" else nameUIRepository.getTranslateString(it, obj.getFieldTranslateId(it)),
                         hideUserFields?.contains(it) != true,
                         0
                     )

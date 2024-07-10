@@ -5,10 +5,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import io.realm.RealmObject
 import org.json.JSONObject
-import ua.com.merchik.merchik.data.RealmModels.LogDB
-import ua.com.merchik.merchik.dataLayer.DataObjectUI
 import ua.com.merchik.merchik.dataLayer.model.MerchModifier
 import ua.com.merchik.merchik.dataLayer.model.Padding
 import java.text.SimpleDateFormat
@@ -86,6 +83,30 @@ object AddressSDBOverride {
         else -> null
     }
 
+}
+
+object CustomerSDBOverride {
+    fun getHidedFieldsOnUI(): String =
+        "dt_update, ppa_auto, recl_reply_mode, main_tov_grp, client_id"
+
+    fun getTranslateId(key: String): Long? = when (key) {
+        "nm" -> 1102
+        else -> null
+    }
+
+    fun getFieldModifier(key: String, jsonObject: JSONObject): MerchModifier? = when (key) {
+        "nm" -> MerchModifier(fontWeight = FontWeight.Bold, padding = Padding(end = 10.dp))
+        else -> MerchModifier(fontWeight = FontWeight.Bold, padding = Padding(end = 20.dp))
+    }
+
+    fun getValueUI(key: String, value: Any): String = when (key) {
+        "dt_update", "dt_start", "dt", "dt_action" -> {
+            value.toString().toLongOrNull()?.let {
+                "${SimpleDateFormat("dd MMMM HH:mm:ss.SSS").format(Date(it))} $value"
+            } ?: value.toString()
+        }
+        else -> value.toString()
+    }
 }
 
 object AdditionalRequirementsDBOverride {

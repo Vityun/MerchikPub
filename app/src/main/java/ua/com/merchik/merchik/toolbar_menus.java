@@ -95,6 +95,7 @@ import ua.com.merchik.merchik.ServerExchange.TablesExchange.ShowcaseExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesLoadingUnloading;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.Database.Room.Chat.ChatSDB;
+import ua.com.merchik.merchik.data.Database.Room.CustomerSDB;
 import ua.com.merchik.merchik.data.Database.Room.ShowcaseSDB;
 import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteObjects.SiteObjectsDB;
 import ua.com.merchik.merchik.data.RealmModels.AppUsersDB;
@@ -112,6 +113,8 @@ import ua.com.merchik.merchik.database.realm.tables.AppUserRealm;
 import ua.com.merchik.merchik.dialogs.BlockingProgressDialog;
 import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.dialogs.DialogMap;
+import ua.com.merchik.merchik.features.main.DBViewModels.CustomerSDBViewModel;
+import ua.com.merchik.merchik.features.main.DBViewModels.LogMPDBViewModel;
 import ua.com.merchik.merchik.retrofit.CheckInternet.CheckServer;
 import ua.com.merchik.merchik.retrofit.CheckInternet.NetworkUtil;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
@@ -436,9 +439,19 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
 
             startActivity(intent);
         } else if (id == 133) {
-            Toast.makeText(this, "Премиальные", Toast.LENGTH_LONG).show();
-            Intent intent = new Intent(this, PremiumActivity.class);
+            Intent intent = new Intent(this, FeaturesActivity.class);
+            Bundle bundle = new Bundle();
+            bundle.putString("viewModel", CustomerSDB.class.getCanonicalName());
+            intent.putExtras(bundle);
             startActivity(intent);
+
+//            Toast.makeText(this, "Клиенты", Toast.LENGTH_SHORT).show();
+//            intentRef.putExtra("ReferencesEnum", Globals.ReferencesEnum.CUSTOMER);
+//            startActivity(intentRef);
+
+//            Toast.makeText(this, "Премиальные", Toast.LENGTH_LONG).show();
+//            Intent intent = new Intent(this, PremiumActivity.class);
+//            startActivity(intent);
         } else if (id == 132) {
             Toast.makeText(this, "Светофор", Toast.LENGTH_LONG).show();
         } else if (id == 131) {

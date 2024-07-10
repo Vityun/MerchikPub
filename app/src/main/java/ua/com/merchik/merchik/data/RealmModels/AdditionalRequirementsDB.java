@@ -12,7 +12,6 @@ import java.util.Date;
 
 import io.realm.RealmObject;
 import ua.com.merchik.merchik.data.Database.Room.AdditionalRequirementsDBOverride;
-import ua.com.merchik.merchik.data.Database.Room.AddressSDBOverride;
 import ua.com.merchik.merchik.dataLayer.DataObjectUI;
 import ua.com.merchik.merchik.dataLayer.model.MerchModifier;
 
@@ -259,8 +258,8 @@ public class AdditionalRequirementsDB extends RealmObject implements DataObjectU
 
     @Nullable
     @Override
-    public Long getTranslateId(@NonNull String key) {
-        return DataObjectUI.DefaultImpls.getTranslateId(this, key);
+    public Long getFieldTranslateId(@NonNull String key) {
+        return DataObjectUI.DefaultImpls.getFieldTranslateId(this, key);
     }
 
     @NonNull

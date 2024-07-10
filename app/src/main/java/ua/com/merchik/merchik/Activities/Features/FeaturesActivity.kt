@@ -17,8 +17,10 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import dagger.hilt.android.AndroidEntryPoint
 import ua.com.merchik.merchik.Activities.Features.ui.theme.MerchikTheme
+import ua.com.merchik.merchik.data.Database.Room.CustomerSDB
 import ua.com.merchik.merchik.data.RealmModels.AdditionalRequirementsDB
 import ua.com.merchik.merchik.features.main.DBViewModels.AdditionalRequirementsDBViewModel
+import ua.com.merchik.merchik.features.main.DBViewModels.CustomerSDBViewModel
 import ua.com.merchik.merchik.features.main.DBViewModels.LogMPDBViewModel
 import ua.com.merchik.merchik.features.main.MainUI
 import kotlin.reflect.KClass
@@ -43,6 +45,7 @@ class FeaturesActivity: AppCompatActivity() {
                                 when (Class.forName(it).kotlin) {
                                     LogMPDBViewModel::class -> viewModel() as LogMPDBViewModel
                                     AdditionalRequirementsDB::class -> viewModel() as AdditionalRequirementsDBViewModel
+                                    CustomerSDB::class -> viewModel() as CustomerSDBViewModel
                                     else -> null
                                 }?.let { viewModel ->
                                     viewModel.dataJson = bundle.getString("dataJson")

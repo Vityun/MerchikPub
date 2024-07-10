@@ -183,8 +183,8 @@ public class SiteObjectsDB extends RealmObject implements DataObjectUI {
 
     @Nullable
     @Override
-    public Long getTranslateId(@NonNull String key) {
-        return DataObjectUI.DefaultImpls.getTranslateId(this, key);
+    public Long getFieldTranslateId(@NonNull String key) {
+        return DataObjectUI.DefaultImpls.getFieldTranslateId(this, key);
     }
 
     @NonNull

@@ -68,13 +68,13 @@ public class CustomerSDB implements DataObjectUI {
     @NonNull
     @Override
     public String getHidedFieldsOnUI() {
-        return DataObjectUI.DefaultImpls.getHidedFieldsOnUI(this);
+        return CustomerSDBOverride.INSTANCE.getHidedFieldsOnUI();
     }
 
     @Nullable
     @Override
-    public Long getTranslateId(@NonNull String key) {
-        return DataObjectUI.DefaultImpls.getTranslateId(this, key);
+    public Long getFieldTranslateId(@NonNull String key) {
+        return CustomerSDBOverride.INSTANCE.getTranslateId(key);
     }
 
     @NonNull
@@ -86,7 +86,7 @@ public class CustomerSDB implements DataObjectUI {
     @Nullable
     @Override
     public MerchModifier getFieldModifier(@NonNull String key, @NonNull JSONObject jsonObject) {
-        return DataObjectUI.DefaultImpls.getFieldModifier(this, key, jsonObject);
+       return CustomerSDBOverride.INSTANCE.getFieldModifier(key, jsonObject);
     }
 
     @Nullable
