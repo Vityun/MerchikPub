@@ -57,10 +57,6 @@ abstract class MainViewModel(
     val uiState: StateFlow<StateUI>
         get() = _uiState.asStateFlow()
 
-    init {
-        updateContent()
-    }
-
     fun getTranslateString(text: String, translateId: Long? = null) =
         nameUIRepository.getTranslateString(text, translateId)
 

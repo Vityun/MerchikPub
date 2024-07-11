@@ -157,6 +157,7 @@ import ua.com.merchik.merchik.dialogs.DialogAdditionalRequirements.DialogAdditio
 import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.dialogs.DialogFilter.Click;
 import ua.com.merchik.merchik.dialogs.EKL.DialogEKL;
+import ua.com.merchik.merchik.features.main.DBViewModels.AdditionalRequirementsDBViewModel;
 import ua.com.merchik.merchik.features.main.DBViewModels.LogMPDBViewModel;
 import ua.com.merchik.merchik.toolbar_menus;
 
@@ -1906,7 +1907,7 @@ public class Options {
     private <T> void option138339(Context context, T dataDB, OptionsDB option, OptionMassageType type, NNKMode mode, OptionControl.UnlockCodeResultListener unlockCodeResultListener) {
         Intent intent = new Intent(context, FeaturesActivity.class);
         Bundle bundle = new Bundle();
-        bundle.putString("viewModel", AdditionalRequirementsDB.class.getCanonicalName());
+        bundle.putString("viewModel", AdditionalRequirementsDBViewModel.class.getCanonicalName());
         bundle.putString("dataJson", new Gson().toJson(dataDB));
         intent.putExtras(bundle);
         context.startActivity(intent);

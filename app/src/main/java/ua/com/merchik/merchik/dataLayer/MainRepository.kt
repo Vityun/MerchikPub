@@ -4,6 +4,7 @@ import com.google.gson.Gson
 import io.realm.RealmChangeListener
 import io.realm.RealmObject
 import io.realm.RealmResults
+import io.realm.Sort
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
@@ -13,6 +14,7 @@ import ua.com.merchik.merchik.data.Database.Room.CustomerSDB
 import ua.com.merchik.merchik.data.Database.Room.Planogram.PlanogrammSDB
 import ua.com.merchik.merchik.data.Database.Room.SettingsUISDB
 import ua.com.merchik.merchik.data.Database.Room.UsersSDB
+import ua.com.merchik.merchik.data.RealmModels.LogMPDB
 import ua.com.merchik.merchik.dataLayer.model.FieldValue
 import ua.com.merchik.merchik.dataLayer.model.ItemUI
 import ua.com.merchik.merchik.dataLayer.model.SettingsItemUI
@@ -94,6 +96,30 @@ class MainRepository(
     fun <T: RealmObject> getAllRealm(kClass: KClass<T>, contextUI: ContextUI?): List<ItemUI> {
         return getAllRealmDataObjectUI(kClass).toItemUI(kClass, contextUI)
     }
+
+
+    fun <T: RealmObject> getByRangeDateRealmDataObjectUI(
+        kClass: KClass<T>,
+        fieldName: String,
+        startTime: Long,
+        endTime: Long,
+        contextUI: ContextUI?
+    ): List<ItemUI> {
+        var query = RealmManager.INSTANCE.where( kClass.java )
+        query = query.greaterThanOrEqualTo("CoordTime", startTime)
+        query = query.and().lessThanOrEqualTo("CoordTime", endTime)
+        val results = query
+            .sort(fieldName, Sort.DESCENDING) // Сортировка по убыванию
+            .notEqualTo("CoordX", 0.0)
+            .notEqualTo("CoordY", 0.0)
+            .findAllAsync()
+
+        return RealmManager.INSTANCE.copyFromRealm(results)
+            .filter { it is DataObjectUI }
+            .map { it as DataObjectUI }
+            .toItemUI(kClass, contextUI)
+    }
+
 
     fun <T: RealmObject> getAllRealmDataObjectUI(kClass: KClass<T>): List<DataObjectUI> {
         return RealmManager.INSTANCE

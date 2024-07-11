@@ -441,7 +441,7 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
         } else if (id == 133) {
             Intent intent = new Intent(this, FeaturesActivity.class);
             Bundle bundle = new Bundle();
-            bundle.putString("viewModel", CustomerSDB.class.getCanonicalName());
+            bundle.putString("viewModel", CustomerSDBViewModel.class.getCanonicalName());
             intent.putExtras(bundle);
             startActivity(intent);
 

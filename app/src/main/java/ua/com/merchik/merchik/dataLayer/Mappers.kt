@@ -30,7 +30,7 @@ interface DataObjectUI {
     }
 
     fun getFieldModifier(key: String, jsonObject: JSONObject): MerchModifier? {
-        return MerchModifier(fontWeight = FontWeight.Bold, padding = Padding(end = 20.dp))
+        return MerchModifier(fontWeight = FontWeight.Bold, padding = Padding(end = 10.dp))
     }
 
     fun getValueModifier(key: String, jsonObject: JSONObject): MerchModifier? {
@@ -47,7 +47,7 @@ fun DataObjectUI.toItemUI(nameUIRepository: NameUIRepository, hideUserFields: St
                 FieldValue(
                     key,
                     TextField(
-                        nameUIRepository.getTranslateString(key, this.getFieldTranslateId(key)),
+                        "${nameUIRepository.getTranslateString(key, this.getFieldTranslateId(key))}: ",
                         this.getFieldModifier(key, jsonObject)
                     ),
                     TextField(

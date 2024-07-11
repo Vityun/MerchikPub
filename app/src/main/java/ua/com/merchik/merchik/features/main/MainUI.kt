@@ -365,7 +365,7 @@ private fun ItemFieldValue(it: FieldValue, visibilityField: Int? = null) {
 @Composable
 private fun ItemTextField(it: TextField, modifier: Modifier? = null) {
     Text(
-        text = "${it.value} ",
+        text = it.value,
         fontWeight = it.modifierValue?.fontWeight,
         fontStyle = it.modifierValue?.fontStyle,
         modifier = (modifier ?: Modifier)
@@ -560,7 +560,7 @@ fun FilteringDialog(viewModel: MainViewModel,
                             ))
                         },
                         shape = RoundedCornerShape(8.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color.Blue),
+                        colors = ButtonDefaults.buttonColors(containerColor = colorResource(id = R.color.blue)),
                         modifier = Modifier
                             .weight(1f)
                             .padding(5.dp)
@@ -580,7 +580,7 @@ fun FilteringDialog(viewModel: MainViewModel,
                             ))
                         },
                         shape = RoundedCornerShape(8.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
+                        colors = ButtonDefaults.buttonColors(containerColor = colorResource(id = R.color.orange)),
                         modifier = Modifier
                             .weight(1f)
                             .padding(5.dp)

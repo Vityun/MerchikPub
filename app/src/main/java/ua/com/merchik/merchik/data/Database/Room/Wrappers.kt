@@ -122,3 +122,25 @@ object AdditionalRequirementsDBOverride {
     }
 
 }
+
+object LogMPDBOverride {
+    fun getOrderFieldsOnUI(): String = "CoordTime, provider, CoordAccurancy, distance"
+
+    fun getValueUI(key: String, value: Any): String = when (key) {
+        "CoordTime" ->
+            value.toString().toLongOrNull()?.let {
+                SimpleDateFormat("dd.MM HH:mm:ss").format(Date(it))
+            } ?: value.toString()
+
+        "distance" ->
+            (value as? Int)?.let {
+                if (it > 1000) "${it / 1000} км." else  "$it м."
+            } ?: "0 м."
+
+        "provider" -> if (value == 1) "GPS" else "GSM"
+
+        "CoordAccurancy" -> if (value == 1) "GPS" else "GSM"
+
+        else -> value.toString()
+    }
+}

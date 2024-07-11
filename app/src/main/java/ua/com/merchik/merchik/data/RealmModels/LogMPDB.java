@@ -7,6 +7,7 @@ import org.json.JSONObject;
 
 import io.realm.RealmObject;
 import io.realm.annotations.PrimaryKey;
+import ua.com.merchik.merchik.data.Database.Room.LogMPDBOverride;
 import ua.com.merchik.merchik.dataLayer.DataObjectUI;
 import ua.com.merchik.merchik.dataLayer.model.MerchModifier;
 
@@ -64,7 +65,7 @@ public class LogMPDB extends RealmObject implements DataObjectUI {
     @NonNull
     @Override
     public String getHidedFieldsOnUI() {
-        return "CoordAccuracy, CoordAltitude, CoordSpeed, CoordX, CoordY, codeDad2, id, inPlace, mocking, serverId" +
+        return "address, CoordAltitude, CoordSpeed, CoordX, CoordY, codeDad2, id, inPlace, mocking, serverId" +
                 "upload, vpi, gp";
     }
 
@@ -77,7 +78,7 @@ public class LogMPDB extends RealmObject implements DataObjectUI {
     @NonNull
     @Override
     public String getValueUI(@NonNull String key, @NonNull Object value) {
-        return DataObjectUI.DefaultImpls.getValueUI(this, key, value);
+        return LogMPDBOverride.INSTANCE.getValueUI(key, value);
     }
 
     @Nullable

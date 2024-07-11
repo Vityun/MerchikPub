@@ -44,16 +44,33 @@ class LogMPDBViewModel @Inject constructor(
         get() = LogMPDB::class
 
     override fun getItems(): List<ItemUI> {
-        val logMPDBUI = repository.getAllRealm(LogMPDB::class, contextUI)
+        var startTime = System.currentTimeMillis()
+        var endTime = System.currentTimeMillis()
+
+        try {
+            val wpDataDB = Gson().fromJson(dataJson, WpDataDB::class.java)
+
+            val validTime = 1800
+
+            startTime = if ((wpDataDB.getVisit_start_dt() > 0))
+                wpDataDB.getVisit_start_dt() - validTime
+            else
+                (System.currentTimeMillis() / 1000) - validTime
+
+            endTime =
+                if (wpDataDB.getVisit_end_dt() > 0) wpDataDB.getVisit_end_dt() else System.currentTimeMillis() / 1000
+
+        } catch (e: Exception) {}
+
+        val logMPDBUI = repository
+            .getByRangeDateRealmDataObjectUI(LogMPDB::class, "CoordTime", startTime*1000, endTime*1000, contextUI)
         val addressSDB = repository.getAllRoom(AddressSDB::class, contextUI)
+
         return logMPDBUI.join(addressSDB, "address = addr_id: nm")
     }
 
-    override fun getFilters(): Filters {
-        return Filters(
-            RangeDate("CoordTime", LocalDate.now(), LocalDate.now()),
-            ""
-        )
+    override fun getFilters(): Filters? {
+        return null
     }
 
     override fun onClickItem(itemUI: ItemUI, context: Context) {
