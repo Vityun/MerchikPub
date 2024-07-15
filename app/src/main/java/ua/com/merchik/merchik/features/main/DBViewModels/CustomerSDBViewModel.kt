@@ -46,10 +46,6 @@ class CustomerSDBViewModel @Inject constructor(
         return data
     }
 
-    override fun getFilters(): Filters? {
-        return null
-    }
-
     override fun onClickItem(itemUI: ItemUI, context: Context) {
     }
 }

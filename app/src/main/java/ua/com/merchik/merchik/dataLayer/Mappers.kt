@@ -47,10 +47,12 @@ fun DataObjectUI.toItemUI(nameUIRepository: NameUIRepository, hideUserFields: St
                 FieldValue(
                     key,
                     TextField(
+                        jsonObject.get(key),
                         "${nameUIRepository.getTranslateString(key, this.getFieldTranslateId(key))}: ",
                         this.getFieldModifier(key, jsonObject)
                     ),
                     TextField(
+                        jsonObject.get(key),
                         this.getValueUI(key, jsonObject.get(key)),
                         this.getValueModifier(key, jsonObject)
                     )

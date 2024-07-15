@@ -43,6 +43,12 @@ class LogMPDBViewModel @Inject constructor(
     override val table: KClass<out DataObjectUI>
         get() = LogMPDB::class
 
+    override var filters: Filters? =
+        Filters(
+            RangeDate("CoordTime"),
+            ""
+        )
+
     override fun getItems(): List<ItemUI> {
         var startTime = System.currentTimeMillis()
         var endTime = System.currentTimeMillis()
@@ -67,10 +73,6 @@ class LogMPDBViewModel @Inject constructor(
         val addressSDB = repository.getAllRoom(AddressSDB::class, contextUI)
 
         return logMPDBUI.join(addressSDB, "address = addr_id: nm")
-    }
-
-    override fun getFilters(): Filters? {
-        return null
     }
 
     override fun onClickItem(itemUI: ItemUI, context: Context) {

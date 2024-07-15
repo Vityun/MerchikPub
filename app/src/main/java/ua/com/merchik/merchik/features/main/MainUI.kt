@@ -3,13 +3,14 @@ package ua.com.merchik.merchik.features.main
 import android.app.Activity
 import android.content.Context
 import android.os.Build
+import android.text.TextPaint
 import android.view.View
 import android.widget.DatePicker
 import androidx.annotation.DrawableRes
 import androidx.annotation.RequiresApi
-import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -64,9 +65,14 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
+import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -83,6 +89,7 @@ import kotlinx.coroutines.launch
 import my.nanihadesuka.compose.LazyColumnScrollbar
 import my.nanihadesuka.compose.ScrollbarSettings
 import ua.com.merchik.merchik.R
+import ua.com.merchik.merchik.data.RealmModels.AdditionalRequirementsMarkDB
 import ua.com.merchik.merchik.dataLayer.model.FieldValue
 import ua.com.merchik.merchik.dataLayer.model.MerchModifier
 import ua.com.merchik.merchik.dataLayer.model.Padding
@@ -101,16 +108,11 @@ fun MainUI(viewModel: MainViewModel, context: Context) {
 
     val uiState by viewModel.uiState.collectAsState()
 
-    var filterDateStart by remember { mutableStateOf(viewModel.getFilters()?.rangeDataByKey?.start) }
-    var filterDateEnd by remember { mutableStateOf(viewModel.getFilters()?.rangeDataByKey?.end) }
-
     var isActiveFiltered by remember { mutableStateOf(false) }
 
     var showSettingsDialog by remember { mutableStateOf(false) }
 
     var showFilteringDialog by remember { mutableStateOf(false) }
-
-    var searchStr by remember { mutableStateOf("") }
 
     val listState = rememberLazyListState()
 
@@ -154,24 +156,22 @@ fun MainUI(viewModel: MainViewModel, context: Context) {
         ) {
             Column {
 
-                val searchStrList = searchStr.split(" ")
+                val searchStrList = uiState.filters?.searchText?.split(" ")
                 val visibilityField =
                     if (uiState.settingsItems.firstOrNull { it.key == "column_name" }?.isEnabled == true) View.VISIBLE else View.GONE
 
-                isActiveFiltered = false
-                val items = uiState.items.filter { itemUI ->
-                    viewModel.getFilters()?.let { filters ->
+                var _isActiveFiltered = false
+                val itemsUI = uiState.items.filter { itemUI ->
+                    uiState.filters?.let { filters ->
                         itemUI.fields.forEach { fieldValue ->
                             if (fieldValue.key.equals(filters.rangeDataByKey.key, true)) {
-                                if ((fieldValue.value.value.toLongOrNull()
-                                        ?: 0) < (filterDateStart?.atStartOfDay(ZoneId.systemDefault())
+                                if (((fieldValue.value.rawValue as? Long)?: 0) < (filters.rangeDataByKey.start?.atStartOfDay(ZoneId.systemDefault())
                                         ?.toInstant()?.toEpochMilli() ?: 0)
-                                    || (fieldValue.value.value.toLongOrNull()
-                                        ?: 0) > (filterDateEnd?.atTime(LocalTime.MAX)
+                                    || ((fieldValue.value.rawValue as? Long)?: 0) > (filters.rangeDataByKey.end?.atTime(LocalTime.MAX)
                                         ?.atZone(ZoneId.systemDefault())?.toInstant()
                                         ?.toEpochMilli() ?: 0)
                                 ) {
-                                    isActiveFiltered = true
+                                    _isActiveFiltered = true
                                     return@filter false
                                 }
                             }
@@ -179,7 +179,7 @@ fun MainUI(viewModel: MainViewModel, context: Context) {
                     }
 
                     var isFound: Boolean
-                    searchStrList.forEach {
+                    searchStrList?.forEach {
                         isFound = false
                         itemUI.fields.forEach inner@{ fieldValue ->
                             if (fieldValue.value.value.contains(it, true)) {
@@ -188,12 +188,14 @@ fun MainUI(viewModel: MainViewModel, context: Context) {
                             }
                         }
                         if (!isFound) {
-                            isActiveFiltered = true
+                            _isActiveFiltered = true
                             return@filter false
                         }
                     }
                     return@filter true
                 }
+
+                isActiveFiltered = _isActiveFiltered
 
                 Text(
                     text = uiState.title, fontSize = 16.sp, modifier = Modifier
@@ -208,8 +210,18 @@ fun MainUI(viewModel: MainViewModel, context: Context) {
                 ) {
 
                     TextFieldInputRounded(
-                        value = searchStr,
-                        onValueChange = { searchStr = it },
+                        value = uiState.filters?.searchText ?: "",
+                        onValueChange = {
+                            val filters = Filters(
+                                RangeDate(
+                                    uiState.filters?.rangeDataByKey?.key,
+                                    uiState.filters?.rangeDataByKey?.start,
+                                    uiState.filters?.rangeDataByKey?.end
+                                ),
+                                it
+                            )
+                            viewModel.updateFilters(filters)
+                        },
                         modifier = Modifier.weight(1f)
                     )
 
@@ -241,7 +253,7 @@ fun MainUI(viewModel: MainViewModel, context: Context) {
                             modifier = Modifier.padding(end = 15.dp),
                             state = listState,
                         ) {
-                            items(items) { item ->
+                            items(itemsUI) { item ->
                                 Box(
                                     modifier = Modifier
                                         .clickable {
@@ -253,8 +265,8 @@ fun MainUI(viewModel: MainViewModel, context: Context) {
                                         .fillMaxWidth()
                                         .padding(7.dp)
                                         .shadow(4.dp)
-                                        .border(1.dp, Color.Black)
-                                        .then( item.modifierContainer?.background?.let {
+                                        .border(1.dp, Color.LightGray)
+                                        .then(item.modifierContainer?.background?.let {
                                             Modifier.background(it)
                                         } ?: Modifier.background(Color.White))
                                 ) {
@@ -275,10 +287,25 @@ fun MainUI(viewModel: MainViewModel, context: Context) {
                                                 )
                                             }
                                         }
-                                        Column {
+
+                                        Column(modifier = Modifier.weight(1f)) {
                                             item.fields.forEach {
                                                 ItemFieldValue(it, visibilityField)
                                             }
+                                        }
+
+                                        item.rawObj.firstOrNull{ it is AdditionalRequirementsMarkDB }?.let {
+                                            it as AdditionalRequirementsMarkDB
+                                            val text = it.score ?: "0"
+                                            TextInStrokedCircle(
+                                                modifier = Modifier.padding(2.dp),
+                                                text = text,
+                                                circleColor = if (text == "0") Color.Red else Color.Gray,
+                                                textColor = if (text == "0") Color.Red else Color.Gray,
+                                                circleSize = 30.dp,
+                                                textSize = 16f.toPx(),
+                                                strokeWidth = 2f.toPx()
+                                            )
                                         }
                                     }
                                 }
@@ -295,19 +322,18 @@ fun MainUI(viewModel: MainViewModel, context: Context) {
     }
 
     if (showFilteringDialog) {
-        val key = viewModel.getFilters()?.rangeDataByKey?.key ?: ""
         FilteringDialog(viewModel,
-            Filters(RangeDate(key, filterDateStart ?: LocalDate.now(), filterDateEnd ?: LocalDate.now()), searchStr),
             onDismiss = { showFilteringDialog = false },
             onChanged = {
-                filterDateStart = it.rangeDataByKey.start
-                filterDateEnd = it.rangeDataByKey.end
-                searchStr = it.searchText
+                viewModel.updateFilters(it)
                 showFilteringDialog = false
             }
         )
     }
 }
+
+@Composable
+fun Float.toPx() = with(LocalDensity.current) { this@toPx.sp.toPx() }
 
 @Composable
 private fun TextFieldInputRounded(
@@ -458,6 +484,68 @@ fun DragAndDropList() {
 }
 
 @Composable
+fun TextInStrokedCircle(
+    modifier: Modifier = Modifier,
+    text: String,
+    circleColor: Color,
+    textColor: Color,
+    circleSize: Dp,
+    textSize: Float,
+    strokeWidth: Float
+) {
+    Canvas(modifier = modifier.size(circleSize)) {
+        val radius = size.minDimension / 2
+        drawCircle(
+            color = circleColor,
+            radius = radius,
+            center = center,
+            style = Stroke(width = strokeWidth)
+        )
+
+        drawIntoCanvas { canvas ->
+            val paint = TextPaint().apply {
+                this.color = textColor.toArgb()
+                this.textSize = textSize
+                this.textAlign = android.graphics.Paint.Align.CENTER
+            }
+            val x = center.x
+            val y = center.y - (paint.descent() + paint.ascent()) / 2
+            canvas.nativeCanvas.drawText(text, x, y, paint)
+        }
+    }
+}
+
+@Composable
+fun TextInCircle(
+    modifier: Modifier = Modifier,
+    text: String,
+    circleColor: Color,
+    textColor: Color,
+    circleSize: Dp,
+    textSize: Float
+) {
+    Box(modifier = modifier.size(circleSize)) {
+        Canvas(modifier = Modifier.matchParentSize()) {
+            drawCircle(
+                color = circleColor,
+                radius = size.minDimension / 2
+            )
+
+            drawIntoCanvas { canvas ->
+                val paint = TextPaint().apply {
+                    this.color = textColor.toArgb()
+                    this.textSize = textSize
+                    this.textAlign = android.graphics.Paint.Align.CENTER
+                }
+                val x = size.width / 2
+                val y = size.height / 2 - (paint.descent() + paint.ascent()) / 2
+                canvas.nativeCanvas.drawText(text, x, y, paint)
+            }
+        }
+    }
+}
+
+@Composable
 fun ImageButton(
     modifier: Modifier = Modifier,
     shape: Shape = RoundedCornerShape(8.dp),
@@ -516,13 +604,12 @@ fun SettingsItemView(item: SettingsItemUI) {
 
 @Composable
 fun FilteringDialog(viewModel: MainViewModel,
-                             filters: Filters,
                              onDismiss: () -> Unit,
                              onChanged: (Filters) -> Unit) {
 
-    var searchStr by remember { mutableStateOf(filters.searchText) }
-    var selectedFilterDateStart = filters.rangeDataByKey.start
-    var selectedFilterDateEnd = filters.rangeDataByKey.end
+    var searchStr by remember { mutableStateOf(viewModel.filters?.searchText ?: "") }
+    var selectedFilterDateStart by remember { mutableStateOf(viewModel.filters?.rangeDataByKey?.start ?: LocalDate.now()) }
+    var selectedFilterDateEnd by remember { mutableStateOf(viewModel.filters?.rangeDataByKey?.end ?: LocalDate.now()) }
 
     Dialog(onDismissRequest = onDismiss) {
         Box(
@@ -541,9 +628,7 @@ fun FilteringDialog(viewModel: MainViewModel,
                 )
 
                 Row {
-                    DatePickerExample("Дата з:", selectedFilterDateStart) {
-                        selectedFilterDateStart = it
-                    }
+                    DatePickerExample("Дата з:", selectedFilterDateStart) { selectedFilterDateStart = it }
                     DatePickerExample("Дата по:", selectedFilterDateEnd) { selectedFilterDateEnd = it}
                 }
 
@@ -552,7 +637,7 @@ fun FilteringDialog(viewModel: MainViewModel,
                         onClick = {
                             onChanged.invoke(Filters(
                                 RangeDate(
-                                    filters.rangeDataByKey.key,
+                                    viewModel.filters?.rangeDataByKey?.key,
                                     selectedFilterDateStart,
                                     selectedFilterDateEnd
                                 ),
@@ -572,7 +657,7 @@ fun FilteringDialog(viewModel: MainViewModel,
                         onClick = {
                             onChanged.invoke(Filters(
                                 RangeDate(
-                                    filters.rangeDataByKey.key,
+                                    viewModel.filters?.rangeDataByKey?.key,
                                     LocalDate.now(),
                                     LocalDate.now()
                                 ),
@@ -707,10 +792,12 @@ fun SettingsDialog(viewModel: MainViewModel, onDismiss: () -> Unit) {
                             FieldValue(
                                 key = "",
                                 TextField(
+                                    "",
                                     viewModel.getTranslateString(stringResource(id = R.string.column_name)),
                                     MerchModifier(fontWeight = FontWeight.Bold, padding = Padding(10.dp, 7.dp, 10.dp, 7.dp))
                                 ),
                                 TextField(
+                                    "",
                                     viewModel.getTranslateString(stringResource(id = R.string.visibility)),
                                     MerchModifier(fontWeight = FontWeight.Bold, padding = Padding(10.dp, 7.dp, 10.dp, 7.dp), weight = 1f, alignment = Alignment.End)
                                 )

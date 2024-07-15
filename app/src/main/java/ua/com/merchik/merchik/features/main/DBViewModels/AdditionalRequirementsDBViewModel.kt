@@ -3,22 +3,27 @@ package ua.com.merchik.merchik.features.main.DBViewModels
 import android.content.Context
 import android.text.Html
 import android.util.Log
-import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.SavedStateHandle
 import com.google.gson.Gson
 import dagger.hilt.android.lifecycle.HiltViewModel
+import ua.com.merchik.merchik.Clock
+import ua.com.merchik.merchik.Globals
 import ua.com.merchik.merchik.data.RealmModels.AdditionalRequirementsDB
+import ua.com.merchik.merchik.data.RealmModels.AdditionalRequirementsMarkDB
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB
 import ua.com.merchik.merchik.dataLayer.ContextUI
 import ua.com.merchik.merchik.dataLayer.DataObjectUI
 import ua.com.merchik.merchik.dataLayer.MainRepository
 import ua.com.merchik.merchik.dataLayer.NameUIRepository
 import ua.com.merchik.merchik.dataLayer.model.ItemUI
+import ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsMarkRealm
+import ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsRealm
+import ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsRealm.AdditionalRequirementsModENUM
 import ua.com.merchik.merchik.database.realm.tables.AddressRealm
 import ua.com.merchik.merchik.database.realm.tables.CustomerRealm
 import ua.com.merchik.merchik.database.realm.tables.UsersRealm
+import ua.com.merchik.merchik.database.room.RoomManager
 import ua.com.merchik.merchik.dialogs.DialogAdditionalRequirements.DialogARMark.DialogARMark
-import ua.com.merchik.merchik.features.main.Filters
 import ua.com.merchik.merchik.features.main.MainViewModel
 import javax.inject.Inject
 import kotlin.reflect.KClass
@@ -43,12 +48,43 @@ class AdditionalRequirementsDBViewModel @Inject constructor(
         get() = AdditionalRequirementsDB::class
 
     override fun getItems(): List<ItemUI> {
-        val data = repository.getAllRealm(AdditionalRequirementsDB::class, contextUI)
-        return data
-    }
+        return try {
+            val wpDataDB = Gson().fromJson(dataJson, WpDataDB::class.java)
 
-    override fun getFilters(): Filters? {
-        return null
+            var ttCategory: Int? = null
+            val addressSDB = RoomManager.SQL_DB.addressDao().getById(wpDataDB.addr_id)
+            if (addressSDB != null) {
+                ttCategory = addressSDB.ttId
+            }
+
+            val data = AdditionalRequirementsRealm.getData3(
+                wpDataDB,
+                AdditionalRequirementsModENUM.HIDE_FOR_USER,
+                ttCategory,
+                null,
+                0
+            )
+
+            repository.toItemUIList(AdditionalRequirementsDB::class, data, contextUI).map { itemUI ->
+                itemUI.rawObj.firstOrNull { it is AdditionalRequirementsDB }?.let { elementDB ->
+                    elementDB as AdditionalRequirementsDB
+
+                    val wpDataDB = Gson().fromJson(dataJson, WpDataDB::class.java)
+
+                    val dateDocumentLong =
+                        Clock.dateConvertToLong(Clock.getHumanTimeYYYYMMDD(wpDataDB.getDt().getTime() / 1000))
+                    val dateFrom = Clock.getDatePeriodLong(dateDocumentLong, -15) / 1000
+                    AdditionalRequirementsMarkRealm.getMark(
+                        dateFrom,
+                        elementDB.getId(),
+                        Globals.userId.toString()
+                    )?.let { itemUI.copy(rawObj = listOf(elementDB, it)) }
+                        ?: itemUI.copy(rawObj = listOf(elementDB, AdditionalRequirementsMarkDB()))
+                } ?: itemUI.copy()
+            }
+        } catch (e: Exception) {
+            emptyList()
+        }
     }
 
     override fun onClickItem(itemUI: ItemUI, context: Context) {
@@ -216,9 +252,25 @@ class AdditionalRequirementsDBViewModel @Inject constructor(
         )
 
 
-//        dialog.setRatingBarAR(data, score.toString().toFloat()) {
-//            notifyItemChanged(getAdapterPosition())
-//        }
+        itemUI.rawObj.firstOrNull { it is AdditionalRequirementsDB }?.let { elementDB ->
+            elementDB as AdditionalRequirementsDB
+
+            val wpDataDB = Gson().fromJson(dataJson, WpDataDB::class.java)
+
+            val dateDocumentLong =
+                Clock.dateConvertToLong(Clock.getHumanTimeYYYYMMDD(wpDataDB.getDt().getTime() / 1000))
+            val dateFrom = Clock.getDatePeriodLong(dateDocumentLong, -15) / 1000
+            val score = AdditionalRequirementsMarkRealm.getMark(
+                dateFrom,
+                elementDB.getId(),
+                Globals.userId.toString()
+            )?.score ?: 0
+
+            dialog.setRatingBarAR(data, score.toString().toFloat()) {
+                updateContent()
+            }
+        }
+
 
         dialog.setClose { dialog.dismiss() }
         dialog.setLesson(context, true, 1234)

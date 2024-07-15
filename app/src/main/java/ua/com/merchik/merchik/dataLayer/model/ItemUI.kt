@@ -33,6 +33,7 @@ data class Padding(
 )
 
 data class TextField(
+    val rawValue: Any,
     val value: String,
     val modifierValue: MerchModifier? = null
 )

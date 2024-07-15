@@ -24,6 +24,7 @@ data class StateUI(
     val title: String = "",
     val items: List<ItemUI> = emptyList(),
     val settingsItems: List<SettingsItemUI> = emptyList(),
+    val filters: Filters? = null,
     val lastUpdate: Long = 0
 )
 
@@ -33,9 +34,9 @@ data class Filters(
 )
 
 data class RangeDate(
-    val key: String,
-    val start: LocalDate,
-    val end: LocalDate
+    val key: String? = null,
+    val start: LocalDate? = null,
+    val end: LocalDate? = null
 )
 
 abstract class MainViewModel(
@@ -50,7 +51,7 @@ abstract class MainViewModel(
     abstract val contextUI: ContextUI
     abstract val table: KClass<out DataObjectUI>
     abstract fun getItems(): List<ItemUI>
-    open fun getFilters(): Filters? = null
+    open var filters: Filters? = null
     open fun onClickItem(itemUI: ItemUI, context: Context) {}
 
     private val _uiState = MutableStateFlow(StateUI())
@@ -69,16 +70,25 @@ abstract class MainViewModel(
     fun updateContent() {
         viewModelScope.launch {
 
-            val items = getItems()
-
             val settingsItems = repository.getSettingsItemList(table, contextUI)
 
             _uiState.update {
                 it.copy(
                     title = title,
-                    items = items,
+                    items = getItems(),
                     settingsItems = settingsItems,
                     lastUpdate = System.currentTimeMillis()
+                )
+            }
+        }
+    }
+
+    fun updateFilters(filters: Filters){
+        this.filters = filters
+        viewModelScope.launch {
+            _uiState.update {
+                it.copy(
+                    filters = filters
                 )
             }
         }
