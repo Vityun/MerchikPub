@@ -439,19 +439,19 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
 
             startActivity(intent);
         } else if (id == 133) {
-            Intent intent = new Intent(this, FeaturesActivity.class);
-            Bundle bundle = new Bundle();
-            bundle.putString("viewModel", CustomerSDBViewModel.class.getCanonicalName());
-            intent.putExtras(bundle);
-            startActivity(intent);
+//            Intent intent = new Intent(this, FeaturesActivity.class);
+//            Bundle bundle = new Bundle();
+//            bundle.putString("viewModel", CustomerSDBViewModel.class.getCanonicalName());
+//            intent.putExtras(bundle);
+//            startActivity(intent);
 
 //            Toast.makeText(this, "Клиенты", Toast.LENGTH_SHORT).show();
 //            intentRef.putExtra("ReferencesEnum", Globals.ReferencesEnum.CUSTOMER);
 //            startActivity(intentRef);
 
-//            Toast.makeText(this, "Премиальные", Toast.LENGTH_LONG).show();
-//            Intent intent = new Intent(this, PremiumActivity.class);
-//            startActivity(intent);
+            Toast.makeText(this, "Премиальные", Toast.LENGTH_LONG).show();
+            Intent intent = new Intent(this, PremiumActivity.class);
+            startActivity(intent);
         } else if (id == 132) {
             Toast.makeText(this, "Светофор", Toast.LENGTH_LONG).show();
         } else if (id == 131) {
