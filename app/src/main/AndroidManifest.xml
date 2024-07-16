@@ -72,8 +72,8 @@ android:theme="@style/Theme.AppCompat.Light.NoActionBar"
         android:supportsRtl="true"
         android:label="@string/app_name"
         android:theme="@style/AppTheme"
-        android:versionCode="2024070800"
-        android:versionName="2024070800"
+        android:versionCode="2024071600"
+        android:versionName="2024071600"
         tools:targetApi="m"
         >
 
@@ -206,6 +206,7 @@ android:theme="@style/Theme.AppCompat.Light.NoActionBar"
             tools:ignore="Instantiatable" />
 
         <service android:name="ua.com.merchik.merchik.DownloadPictureService"
+            android:foregroundServiceType="shortService"
             />
 
         <!--Раскоментить когда тестить карту буду-->
