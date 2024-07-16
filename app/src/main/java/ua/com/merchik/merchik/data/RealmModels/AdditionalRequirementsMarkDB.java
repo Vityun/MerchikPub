@@ -129,4 +129,10 @@ public class AdditionalRequirementsMarkDB extends RealmObject implements DataObj
     public MerchModifier getValueModifier(@NonNull String key, @NonNull JSONObject jsonObject) {
         return DataObjectUI.DefaultImpls.getValueModifier(this, key, jsonObject);
     }
+
+    @Nullable
+    @Override
+    public Integer getIdResImage() {
+        return DataObjectUI.DefaultImpls.getIdResImage(this);
+    }
 }

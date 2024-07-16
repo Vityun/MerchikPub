@@ -1,5 +1,6 @@
 package ua.com.merchik.merchik.dataLayer
 
+import android.view.View
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -13,6 +14,10 @@ import ua.com.merchik.merchik.dataLayer.model.Padding
 import ua.com.merchik.merchik.dataLayer.model.TextField
 
 interface DataObjectUI {
+    fun getIdResImage(): Int? {
+        return null
+    }
+
     fun getHidedFieldsOnUI(): String {
         return ""
     }
@@ -41,13 +46,31 @@ interface DataObjectUI {
 fun DataObjectUI.toItemUI(nameUIRepository: NameUIRepository, hideUserFields: String?): ItemUI {
     val jsonObject = JSONObject(Gson().toJson(this))
     val fields = mutableListOf<FieldValue>()
+    this.getIdResImage()?.let {
+        val keyIdResImage = "id_res_image"
+        if (!("${hideUserFields}").contains(keyIdResImage)) {
+            fields.add(
+                FieldValue(
+                    keyIdResImage,
+                    TextField(
+                        keyIdResImage,
+                        "${nameUIRepository.getTranslateString(keyIdResImage, this.getFieldTranslateId(keyIdResImage))}: ",
+                    ),
+                    TextField(
+                        it,
+                        it.toString(),
+                    )
+                )
+            )
+        }
+    }
     jsonObject.keys().forEach { key ->
         if (!("${hideUserFields}, ${this.getHidedFieldsOnUI()}").contains(key)) {
             fields.add(
                 FieldValue(
                     key,
                     TextField(
-                        jsonObject.get(key),
+                        key,
                         "${nameUIRepository.getTranslateString(key, this.getFieldTranslateId(key))}: ",
                         this.getFieldModifier(key, jsonObject)
                     ),

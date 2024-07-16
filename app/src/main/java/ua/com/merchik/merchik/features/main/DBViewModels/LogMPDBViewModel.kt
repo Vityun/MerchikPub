@@ -31,9 +31,6 @@ class LogMPDBViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle
 ) : MainViewModel(repository, nameUIRepository, savedStateHandle) {
 
-    override val idResImage: Int
-        get() = R.drawable.gps
-
     override val title: String
         get() = "Історія місцеположення"
 
@@ -42,12 +39,6 @@ class LogMPDBViewModel @Inject constructor(
 
     override val table: KClass<out DataObjectUI>
         get() = LogMPDB::class
-
-    override var filters: Filters? =
-        Filters(
-            RangeDate("CoordTime"),
-            ""
-        )
 
     override fun getItems(): List<ItemUI> {
         var startTime = System.currentTimeMillis()

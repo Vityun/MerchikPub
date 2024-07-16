@@ -101,6 +101,12 @@ public class PlanogrammJOINSDB implements DataObjectUI {
         return DataObjectUI.DefaultImpls.getContainerModifier(this, jsonObject);
     }
 
+    @Nullable
+    @Override
+    public Integer getIdResImage() {
+        return DataObjectUI.DefaultImpls.getIdResImage(this);
+    }
+
     public static class DateConverter {
         @TypeConverter
         public static Date fromTimestamp(Long value) {

@@ -29,7 +29,7 @@ data class StateUI(
 )
 
 data class Filters(
-    val rangeDataByKey: RangeDate,
+    val rangeDataByKey: RangeDate? = null,
     val searchText: String
 )
 
@@ -47,7 +47,6 @@ abstract class MainViewModel(
 
     var dataJson: String? = null
     open val title: String = "Довідник"
-    open val idResImage: Int? = R.drawable.merchik
     abstract val contextUI: ContextUI
     abstract val table: KClass<out DataObjectUI>
     abstract fun getItems(): List<ItemUI>

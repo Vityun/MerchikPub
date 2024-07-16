@@ -285,4 +285,10 @@ public class AdditionalRequirementsDB extends RealmObject implements DataObjectU
     public MerchModifier getContainerModifier(@NonNull JSONObject jsonObject) {
         return AdditionalRequirementsDBOverride.INSTANCE.getContainerModifier(jsonObject);
     }
+
+    @Nullable
+    @Override
+    public Integer getIdResImage() {
+        return DataObjectUI.DefaultImpls.getIdResImage(this);
+    }
 }

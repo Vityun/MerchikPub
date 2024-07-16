@@ -126,9 +126,9 @@ fun MainUI(viewModel: MainViewModel, context: Context) {
             modifier = Modifier.align(alignment = Alignment.End)
         ) {
             ImageButton(
-                id = R.drawable.ic_10,
+                id = R.drawable.ic_settings,
                 shape = CircleShape,
-                colorImage = ColorFilter.tint(color = colorResource(id = R.color.colorInetYellow)),
+                colorImage = ColorFilter.tint(color = Color.Gray),
                 sizeButton = 40.dp,
                 sizeImage = 25.dp,
                 modifier = Modifier
@@ -139,7 +139,7 @@ fun MainUI(viewModel: MainViewModel, context: Context) {
             ImageButton(
                 id = R.drawable.ic_letter_x,
                 shape = CircleShape,
-                colorImage = ColorFilter.tint(color = Color.Black),
+                colorImage = ColorFilter.tint(color = Color.Gray),
                 sizeButton = 40.dp,
                 sizeImage = 25.dp,
                 modifier = Modifier
@@ -152,7 +152,7 @@ fun MainUI(viewModel: MainViewModel, context: Context) {
             modifier = Modifier
                 .fillMaxSize()
                 .clip(RoundedCornerShape(8.dp))
-                .background(color = Color.White)
+                .background(color = colorResource(id = R.color.colotSelectedTab2))
         ) {
             Column {
 
@@ -161,18 +161,21 @@ fun MainUI(viewModel: MainViewModel, context: Context) {
                     if (uiState.settingsItems.firstOrNull { it.key == "column_name" }?.isEnabled == true) View.VISIBLE else View.GONE
 
                 var _isActiveFiltered = false
+
                 val itemsUI = uiState.items.filter { itemUI ->
                     uiState.filters?.let { filters ->
-                        itemUI.fields.forEach { fieldValue ->
-                            if (fieldValue.key.equals(filters.rangeDataByKey.key, true)) {
-                                if (((fieldValue.value.rawValue as? Long)?: 0) < (filters.rangeDataByKey.start?.atStartOfDay(ZoneId.systemDefault())
-                                        ?.toInstant()?.toEpochMilli() ?: 0)
-                                    || ((fieldValue.value.rawValue as? Long)?: 0) > (filters.rangeDataByKey.end?.atTime(LocalTime.MAX)
-                                        ?.atZone(ZoneId.systemDefault())?.toInstant()
-                                        ?.toEpochMilli() ?: 0)
-                                ) {
-                                    _isActiveFiltered = true
-                                    return@filter false
+                        filters.rangeDataByKey?.let { rangeDataByKey ->
+                            itemUI.fields.forEach { fieldValue ->
+                                if (fieldValue.key.equals(rangeDataByKey.key, true)) {
+                                    if (((fieldValue.value.rawValue as? Long)?: 0) < (rangeDataByKey.start?.atStartOfDay(ZoneId.systemDefault())
+                                            ?.toInstant()?.toEpochMilli() ?: 0)
+                                        || ((fieldValue.value.rawValue as? Long)?: 0) > (rangeDataByKey.end?.atTime(LocalTime.MAX)
+                                            ?.atZone(ZoneId.systemDefault())?.toInstant()
+                                            ?.toEpochMilli() ?: 0)
+                                    ) {
+                                        _isActiveFiltered = true
+                                        return@filter false
+                                    }
                                 }
                             }
                         }
@@ -213,11 +216,7 @@ fun MainUI(viewModel: MainViewModel, context: Context) {
                         value = uiState.filters?.searchText ?: "",
                         onValueChange = {
                             val filters = Filters(
-                                RangeDate(
-                                    uiState.filters?.rangeDataByKey?.key,
-                                    uiState.filters?.rangeDataByKey?.start,
-                                    uiState.filters?.rangeDataByKey?.end
-                                ),
+                                uiState.filters?.rangeDataByKey,
                                 it
                             )
                             viewModel.updateFilters(filters)
@@ -226,7 +225,7 @@ fun MainUI(viewModel: MainViewModel, context: Context) {
                     )
 
                     ImageButton(id = if (isActiveFiltered) R.drawable.ic_filterbold else R.drawable.ic_filter,
-                        sizeButton = 55.dp,
+                        sizeButton = 56.dp,
                         sizeImage = 25.dp,
                         modifier = Modifier.padding(start = 7.dp),
                         onClick = { showFilteringDialog = true }
@@ -235,8 +234,9 @@ fun MainUI(viewModel: MainViewModel, context: Context) {
 
                 Box(
                     modifier = Modifier
-                        .padding(7.dp)
-                        .shadow(4.dp)
+                        .padding(start = 10.dp, end = 10.dp, bottom = 10.dp)
+                        .shadow(4.dp, RoundedCornerShape(8.dp))
+                        .clip(RoundedCornerShape(8.dp))
                         .background(Color.White)
                 ) {
                     LazyColumnScrollbar(
@@ -244,8 +244,8 @@ fun MainUI(viewModel: MainViewModel, context: Context) {
                         state = listState,
                         settings = ScrollbarSettings(
                             alwaysShowScrollbar = true,
-                            thumbUnselectedColor = Color.Gray,
-                            thumbSelectedColor = Color.Gray,
+                            thumbUnselectedColor = Color.LightGray,
+                            thumbSelectedColor = Color.LightGray,
                             thumbShape = CircleShape,
                         ),
                     ) {
@@ -271,18 +271,18 @@ fun MainUI(viewModel: MainViewModel, context: Context) {
                                         } ?: Modifier.background(Color.White))
                                 ) {
                                     Row(Modifier.padding(7.dp)) {
-                                        Box(
-                                            modifier = Modifier
-                                                .padding(7.dp)
-                                                .border(1.dp, Color.Black)
-                                                .background(Color.White)
-                                                .align(alignment = Alignment.CenterVertically)
-                                        ) {
-                                            viewModel.idResImage?.let {
+                                        item.fields.firstOrNull { it.key.equals("id_res_image", true) }?.let {
+                                            val idResImage = (it.value.rawValue as? Int) ?: R.drawable.merchik
+                                            Box(
+                                                modifier = Modifier
+                                                    .padding(7.dp)
+                                                    .border(1.dp, Color.Black)
+                                                    .background(Color.White)
+                                                    .align(alignment = Alignment.CenterVertically)
+                                            ) {
                                                 Image(
-                                                    painter = painterResource(it),
-                                                    modifier = Modifier
-                                                        .size(100.dp),
+                                                    painter = painterResource(idResImage),
+                                                    modifier = Modifier.size(100.dp),
                                                     contentDescription = null
                                                 )
                                             }
@@ -290,7 +290,7 @@ fun MainUI(viewModel: MainViewModel, context: Context) {
 
                                         Column(modifier = Modifier.weight(1f)) {
                                             item.fields.forEach {
-                                                ItemFieldValue(it, visibilityField)
+                                                if (!it.key.equals("id_res_image", true)) ItemFieldValue(it, visibilityField)
                                             }
                                         }
 
@@ -371,7 +371,7 @@ private fun TextFieldInputRounded(
             )
         },
         modifier = modifier
-            .shadow(4.dp, RoundedCornerShape(10.dp))
+            .shadow(4.dp, RoundedCornerShape(8.dp))
             .clip(RoundedCornerShape(8.dp))
             .background(color = Color.White)
             .onFocusChanged { isFocusedSearchView = it.isFocused }
@@ -627,20 +627,24 @@ fun FilteringDialog(viewModel: MainViewModel,
                     onValueChange = { searchStr = it }
                 )
 
-                Row {
-                    DatePickerExample("Дата з:", selectedFilterDateStart) { selectedFilterDateStart = it }
-                    DatePickerExample("Дата по:", selectedFilterDateEnd) { selectedFilterDateEnd = it}
+                if (viewModel.filters?.rangeDataByKey != null) {
+                    Row {
+                        DatePickerExample("Дата з:", selectedFilterDateStart) { selectedFilterDateStart = it }
+                        DatePickerExample("Дата по:", selectedFilterDateEnd) { selectedFilterDateEnd = it}
+                    }
                 }
 
                 Row {
                     Button(
                         onClick = {
                             onChanged.invoke(Filters(
-                                RangeDate(
-                                    viewModel.filters?.rangeDataByKey?.key,
-                                    selectedFilterDateStart,
-                                    selectedFilterDateEnd
-                                ),
+                                viewModel.filters?.let {
+                                    RangeDate(
+                                        it.rangeDataByKey?.key,
+                                        selectedFilterDateStart,
+                                        selectedFilterDateEnd
+                                    )
+                                },
                                 searchStr
                             ))
                         },
@@ -656,11 +660,13 @@ fun FilteringDialog(viewModel: MainViewModel,
                     Button(
                         onClick = {
                             onChanged.invoke(Filters(
-                                RangeDate(
-                                    viewModel.filters?.rangeDataByKey?.key,
-                                    LocalDate.now(),
-                                    LocalDate.now()
-                                ),
+                                viewModel.filters?.let {
+                                    RangeDate(
+                                        it.rangeDataByKey?.key,
+                                        LocalDate.now(),
+                                        LocalDate.now()
+                                    )
+                                },
                                 ""
                             ))
                         },

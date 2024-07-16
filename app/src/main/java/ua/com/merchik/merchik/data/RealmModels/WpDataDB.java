@@ -1317,4 +1317,10 @@ public class WpDataDB extends RealmObject implements Parcelable, DataObjectUI {
     public MerchModifier getContainerModifier(@NonNull JSONObject jsonObject) {
         return DataObjectUI.DefaultImpls.getContainerModifier(this, jsonObject);
     }
+
+    @Nullable
+    @Override
+    public Integer getIdResImage() {
+        return DataObjectUI.DefaultImpls.getIdResImage(this);
+    }
 }

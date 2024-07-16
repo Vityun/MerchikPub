@@ -29,9 +29,6 @@ class CustomerSDBViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle
 ) : MainViewModel(repository, nameUIRepository, savedStateHandle) {
 
-    override val idResImage: Int?
-        get() = R.drawable.merchik
-
     override val title: String
         get() = "Справочник: Клиенты"
 

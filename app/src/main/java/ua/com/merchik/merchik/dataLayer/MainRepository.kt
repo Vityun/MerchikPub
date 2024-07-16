@@ -63,6 +63,9 @@ class MainRepository(
             val jsonObject = JSONObject(Gson().toJson(obj))
             val fields = mutableListOf<String>()
             fields.add("column_name")
+            obj.getIdResImage()?.let {
+                fields.add("id_res_image")
+            }
             jsonObject.keys().forEach { key -> fields.add(key) }
             val hideUserFields = getHideUserFields(obj::class.java, contextUI)
             val hidedFieldsOnUI = obj.getHidedFieldsOnUI()
@@ -72,7 +75,11 @@ class MainRepository(
                 .map {
                     SettingsItemUI(
                         it,
-                        if (it == "column_name") "Назва реквізитів" else nameUIRepository.getTranslateString(it, obj.getFieldTranslateId(it)),
+                        when (it) {
+                            "column_name" -> "Назва реквізитів"
+                            "id_res_image" -> "Зображення"
+                            else -> nameUIRepository.getTranslateString(it, obj.getFieldTranslateId(it))
+                        },
                         hideUserFields?.contains(it) != true,
                         0
                     )

@@ -227,4 +227,10 @@ public class TovarDB extends RealmObject implements DataObjectUI {
     public MerchModifier getContainerModifier(@NonNull JSONObject jsonObject) {
         return DataObjectUI.DefaultImpls.getContainerModifier(this, jsonObject);
     }
+
+    @Nullable
+    @Override
+    public Integer getIdResImage() {
+        return DataObjectUI.DefaultImpls.getIdResImage(this);
+    }
 }

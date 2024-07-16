@@ -128,6 +128,12 @@ public class PlanogrammSDB implements DataObjectUI {
         return DataObjectUI.DefaultImpls.getContainerModifier(this, jsonObject);
     }
 
+    @Nullable
+    @Override
+    public Integer getIdResImage() {
+        return DataObjectUI.DefaultImpls.getIdResImage(this);
+    }
+
     public PlanogrammSDB() {
         Globals.writeToMLOG("INFO", "PlanogrammSDB", "test");
     }

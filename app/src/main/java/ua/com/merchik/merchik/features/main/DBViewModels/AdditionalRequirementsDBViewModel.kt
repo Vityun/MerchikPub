@@ -35,9 +35,6 @@ class AdditionalRequirementsDBViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle
 ) : MainViewModel(repository, nameUIRepository, savedStateHandle) {
 
-    override val idResImage: Int?
-        get() = null
-
     override val title: String
         get() = "Доп. требования"
 

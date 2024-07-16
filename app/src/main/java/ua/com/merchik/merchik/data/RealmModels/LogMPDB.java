@@ -7,6 +7,7 @@ import org.json.JSONObject;
 
 import io.realm.RealmObject;
 import io.realm.annotations.PrimaryKey;
+import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.data.Database.Room.LogMPDBOverride;
 import ua.com.merchik.merchik.dataLayer.DataObjectUI;
 import ua.com.merchik.merchik.dataLayer.model.MerchModifier;
@@ -97,5 +98,11 @@ public class LogMPDB extends RealmObject implements DataObjectUI {
     @Override
     public MerchModifier getContainerModifier(@NonNull JSONObject jsonObject) {
         return DataObjectUI.DefaultImpls.getContainerModifier(this, jsonObject);
+    }
+
+    @Nullable
+    @Override
+    public Integer getIdResImage() {
+        return R.drawable.gps;
     }
 }

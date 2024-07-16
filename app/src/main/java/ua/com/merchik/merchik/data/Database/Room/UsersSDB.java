@@ -189,6 +189,12 @@ public class UsersSDB implements DataObjectUI{
         return DataObjectUI.DefaultImpls.getContainerModifier(this, jsonObject);
     }
 
+    @Nullable
+    @Override
+    public Integer getIdResImage() {
+        return DataObjectUI.DefaultImpls.getIdResImage(this);
+    }
+
 //    @Override
 //    public String toString() {
 //        return fio;
