@@ -297,10 +297,24 @@ public class Translate {
     private List<AddTranslation> getAddTarnslationData() {
         List<AddTranslation> res = new ArrayList<>();
 
+        /*
+        *
+Требование
+
+Точность
+Время GPS/GSM (д.м ч:м)
+Расстояние до ТТ (м)
+Расстояние до ТТ (км)
+Источник
+*
+*
+        *
+        * */
+
         AddTranslation data = new AddTranslation(
                 "1",
-                "WP_Title",
-                "План работ",
+                "AR_name",
+                "Требование",
                 "WP",
                 "",
                 ""
@@ -308,8 +322,8 @@ public class Translate {
 
         AddTranslation data1 = new AddTranslation(
                 "2",
-                "date",
-                "Дата",
+                "coord_accuracy",
+                "Точность",
                 "app",
                 "all",
                 ""
@@ -317,8 +331,8 @@ public class Translate {
 
         AddTranslation data2 = new AddTranslation(
                 "3",
-                "address",
-                "Адрес",
+                "coord_time_ddMM_hhmm",
+                "Время GPS/GSM (д.м ч:м)",
                 "app",
                 "all",
                 ""
@@ -327,8 +341,8 @@ public class Translate {
 
         AddTranslation data3 = new AddTranslation(
                 "4",
-                "customer",
-                "Клиент",
+                "coord_distance_m",
+                "Расстояние до ТТ (м)",
                 "app",
                 "all",
                 ""
@@ -337,8 +351,8 @@ public class Translate {
 
         AddTranslation data4 = new AddTranslation(
                 "5",
-                "executor",
-                "Исполнитель",
+                "coord_distance_km",
+                "Расстояние до ТТ (км)",
                 "app",
                 "all",
                 ""
@@ -347,8 +361,8 @@ public class Translate {
 
         AddTranslation data5 = new AddTranslation(
                 "6",
-                "options",
-                "Товары",
+                "provider",
+                "Источник",
                 "app",
                 "all",
                 ""
@@ -356,11 +370,11 @@ public class Translate {
 
 
         res.add(data);
-//        res.add(data1);
-//        res.add(data2);
-//        res.add(data3);
-//        res.add(data4);
-//        res.add(data5);
+        res.add(data1);
+        res.add(data2);
+        res.add(data3);
+        res.add(data4);
+        res.add(data5);
 
         return res;
     }

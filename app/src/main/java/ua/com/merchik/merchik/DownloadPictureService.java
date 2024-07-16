@@ -212,7 +212,6 @@ public class DownloadPictureService extends Service {
                         Log.e("DownloadPictureService", "onError: Throwable e: " + e.getMessage()); // Сообщение об ошибке
                         Log.e("DownloadPictureService", "onError: Stack Trace: " + Log.getStackTraceString(e)); // Стек вызовов
 
-
                         Globals.writeToMLOG("ERROR", "DownloadPictureService/downloadPhoto/onError", "onError: Throwable e: " + e.getMessage());
                         Globals.writeToMLOG("ERROR", "DownloadPictureService/downloadPhoto/onError", "onError: Stack Trace: " + Log.getStackTraceString(e));
                         Globals.writeToMLOG("ERROR", "DownloadPictureService/downloadPhoto/onError", "Throwable e: " + Arrays.toString(e.getStackTrace()));

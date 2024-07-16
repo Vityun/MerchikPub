@@ -330,8 +330,8 @@ class DialogShowcase(private val context: Context?) : DialogData() {
             var planogrammDataList = RoomManager.SQL_DB.planogrammDao().getByClientAddress(
                 wpDataDB!!.client_id,
                 wpDataDB!!.addr_id,
-//                adress.ttId,
-                null,
+                adress.tpId,
+//                null,
                 Clock.getHumanTimeSecPattern(System.currentTimeMillis() / 1000, "yyyy-MM-dd")
             )
 

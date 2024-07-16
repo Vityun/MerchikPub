@@ -51,20 +51,20 @@ public class AdditionalRequirementsMarkRealm {
      * <p>
      * tp = 1 - Доп. Требования / tp = 0 - Доп. Материалы
      */
-    public static RealmResults<AdditionalRequirementsMarkDB> getAdditionalRequirementsMarks(long dateFrom, long dateTo, int userId, String tp, List<AdditionalRequirementsDB> data) {
+    public static List<AdditionalRequirementsMarkDB> getAdditionalRequirementsMarks(long dateFrom, long dateTo, int userId, String tp, List<AdditionalRequirementsDB> data) {
         Integer[] ids = new Integer[data.size()];
         int i = 0;
         for (AdditionalRequirementsDB item : data) {
             ids[i++] = item.getId();
         }
 
-        return INSTANCE.where(AdditionalRequirementsMarkDB.class)
+        return INSTANCE.copyFromRealm(INSTANCE.where(AdditionalRequirementsMarkDB.class)
                 .between("dt", dateFrom, dateTo)
                 .equalTo("userId", String.valueOf(userId))
                 .in("itemId", ids)
                 .equalTo("tp", tp)
                 .sort("dt", Sort.DESCENDING)
-                .findAll();
+                .findAll());
     }
 
     public static RealmResults<AdditionalRequirementsMarkDB> getAdditionalRequirementsMarksAM(long dateFrom, long dateTo, int userId, String tp, List<AdditionalMaterialsJOINAdditionalMaterialsAddressSDB> data) {

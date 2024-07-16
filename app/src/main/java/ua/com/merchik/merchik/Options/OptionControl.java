@@ -47,7 +47,7 @@ public class OptionControl<T> {
         void onUnlockCodeFailure();
     }
 
-    public String massageToUser;    // Для быстрого сообщения   // НЕ ЮЗАЙ БОЛЬШЕ ЕГО
+    public String massageToUser = "";    // Для быстрого сообщения   // НЕ ЮЗАЙ БОЛЬШЕ ЕГО
     public StringBuilder stringBuilderMsg = new StringBuilder();
     public SpannableStringBuilder spannableStringBuilder = new SpannableStringBuilder();
     public boolean notCloseSpannableStringBuilderDialog = false;    // Делает так что при клике на текст диалог не будет закрываться

@@ -102,7 +102,7 @@ public class OptionControlPhotoPromotion<T> extends OptionControl {
         //2.0. получим данные о товарах в отчете
         List<ReportPrepareDB> reportPrepare = RealmManager.INSTANCE.copyFromRealm(ReportPrepareRealm.getReportPrepareByDad2(dad2));
 
-        if (optionDB.getOptionId().equals("157278")) {
+        if (optionDB.getOptionId().equals("157278") || optionDB.getOptionControlId().equals("157278")) {
             // Получение Доп. Требований с дополнительными фильтрами.
             List<AdditionalRequirementsDB> additionalRequirements = AdditionalRequirementsRealm.getDocumentAdditionalRequirements(document, true, OPTION_CONTROL_PROMOTION_ID, null, null, null);
             for (AdditionalRequirementsDB item : additionalRequirements) {
@@ -134,17 +134,20 @@ public class OptionControlPhotoPromotion<T> extends OptionControl {
 
             if (spisTovOSV.contains(item.getTovarId())) {
                 OSV = 1;
-            } else if (item.getAkciya().equals("1") && optionDB.getOptionId().equals("166528")) {
+            } else if (item.getAkciya().equals("1") && (optionDB.getOptionId().equals("166528") || optionDB.getOptionControlId().equals("166528"))) {
                 OSV = 1;
             }
 
-            if (item.getAkciya() == null || item.getAkciya().equals("2")) continue;
+            if (item.getAkciya() == null || item.getAkciya().equals("2"))
+                continue;
 
-            else if (item.face == null || item.face.equals("") || item.face.equals("0")) continue;
+            else if (item.face == null || item.face.equals("") || item.face.equals("0"))
+                continue;
 
-            else if (OSV == 0 && optionDB.getOptionId().equals("157278")) continue;
+            else if (OSV == 0 && (optionDB.getOptionId().equals("157278") || optionDB.getOptionControlId().equals("157278")))
+                continue;
 
-            else if ((item.getAkciya().equals("0")) && optionDB.getOptionId().equals("166528"))
+            else if ((item.getAkciya().equals("0")) && (optionDB.getOptionId().equals("166528") || optionDB.getOptionControlId().equals("166528")))
                 continue;
 
             // 6.2 new 27.06.24
@@ -167,56 +170,6 @@ public class OptionControlPhotoPromotion<T> extends OptionControl {
                 totalOSV++;
                 errMsgType1.append(createLinkedString(item, null)).append("\n");
             }
-
-
-
-
-
-
-
-/*            String akciya = item.akciyaId;
-            // ЕСЛИ Аккии нет (2) - пропускаем
-            if (akciya == null || akciya.equals("")) continue;
-
-            String face = item.face;
-            if (face == null || face.equals("") || face.equals("0")) continue;
-
-            if (Arrays.asList(tovIds).contains(item.getTovarId())) {
-                if (stackPhotoDBS != null && stackPhotoDBS.size() > 0) {
-                    StackPhotoDB currentTovPhoto = stackPhotoDBS.stream().filter(listItem -> listItem.tovar_id.equals(item.getTovarId())).findFirst().orElse(null);
-                    if (currentTovPhoto != null) {
-                        showTovList = true;
-                        OSV = 1;
-                        totalOSV++;
-//                        errMsgType1.append(createLinkedString(item, currentTovPhoto)).append("\n");
-                    } else {
-                        showTovList = true;
-                        err++;
-                        errType1Cnt++;
-                        OSV = 1;
-                        totalOSV++;
-                        errMsgType1.append(createLinkedString(item, null)).append("\n");
-                    }
-                } else {
-                    showTovList = true;
-                    err++;
-                    errType1Cnt++;
-                    OSV = 1;
-                    totalOSV++;
-                    errMsgType1.append(createLinkedString(item, null)).append("\n");
-                }
-            }
-
-            showTovList = true;
-
-            if (stackPhotoDBS != null && stackPhotoDBS.size() > 0) {
-                size = stackPhotoDBS.size();
-                find++;
-            } else {
-                err++;
-                comment = "Нема світлини Акціонного товару з ОСУ (Особливою Увагою).";
-//                errMsgType1.append("Товар з ідентифікатором: (").append(item.getTovarId()).append(") не знайдено").append("\n");
-            }*/
         }
 
         Log.e("test", "test" + errType1Cnt);

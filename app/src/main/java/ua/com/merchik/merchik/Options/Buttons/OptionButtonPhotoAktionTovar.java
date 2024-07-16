@@ -4,7 +4,7 @@ import android.content.Context;
 import android.util.Log;
 
 import ua.com.merchik.merchik.Globals;
-import ua.com.merchik.merchik.Options.Controls.OptionControlPhotoPromotion;
+import ua.com.merchik.merchik.Options.Controls.OptionControlPromotion;
 import ua.com.merchik.merchik.Options.OptionControl;
 import ua.com.merchik.merchik.Options.Options;
 import ua.com.merchik.merchik.WorkPlan;
@@ -39,13 +39,9 @@ public class OptionButtonPhotoAktionTovar<T> extends OptionControl {
     private void executeOption() {
         new Globals().fixMP(wpDataDB, null);// Фиксация Местоположения в таблице ЛогМп
         try {
-//            WPDataObj wpDataObj = workPlan.getKPS(wpDataDB.getId());
-//            wpDataObj.setPhotoType("28");
-//
-//            MakePhoto makePhoto = new MakePhoto();
-//            makePhoto.pressedMakePhotoOldStyle((Activity) context, wpDataObj, wpDataDB);
 
-            new OptionControlPhotoPromotion<>(context, document, optionDB, msgType, nnkMode, unlockCodeResultListener).showOptionMassage("");
+//            new OptionControlPhotoPromotion<>(context, document, optionDB, msgType, nnkMode, unlockCodeResultListener).showOptionMassage("");
+            new OptionControlPromotion<>(context, document, optionDB, msgType, nnkMode, unlockCodeResultListener).showOptionMassage("");
 
         } catch (Exception e) {
             Globals.writeToMLOG("ERROR", "OptionButtonPhotoAktionTovar/executeOption/Exception", "Exception e: " + e);

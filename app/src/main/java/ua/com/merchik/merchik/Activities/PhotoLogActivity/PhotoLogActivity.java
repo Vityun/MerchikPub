@@ -42,6 +42,7 @@ import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.StackPhotoRealm;
 import ua.com.merchik.merchik.database.realm.tables.WpDataRealm;
+import ua.com.merchik.merchik.database.room.RoomManager;
 import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.dialogs.DialogFilter.DialogFilter;
 import ua.com.merchik.merchik.dialogs.DialogFullPhotoR;
@@ -172,7 +173,13 @@ public class PhotoLogActivity extends toolbar_menus {
                 int addr = this.getIntent().getIntExtra("address", 0);
                 String cust = this.getIntent().getStringExtra("customer");
 
-                List<PlanogrammJOINSDB> planogrammJOINSDB = SQL_DB.planogrammDao().getByClientAddress(cust, addr, null, Clock.getHumanTimeSecPattern(System.currentTimeMillis()/1000, "yyyy-MM-dd"));
+                AddressSDB addressSDB = RoomManager.SQL_DB.addressDao().getById(addr);
+                Integer grpId = null;
+                if (addressSDB != null){
+                    grpId = addressSDB.tpId;
+                }
+
+                List<PlanogrammJOINSDB> planogrammJOINSDB = SQL_DB.planogrammDao().getByClientAddress(cust, addr, grpId, Clock.getHumanTimeSecPattern(System.currentTimeMillis() / 1000, "yyyy-MM-dd"));
                 String[] ids = new String[planogrammJOINSDB.size()];
                 int count = 0;
                 for (PlanogrammJOINSDB item : planogrammJOINSDB) {
@@ -197,7 +204,7 @@ public class PhotoLogActivity extends toolbar_menus {
 
                 // Pika не знаю какие виды фото может отображать эта активити, поэтому делаю флаг чтоб знать когда она
                 // работает именно с типами - образец фото
-                isSample=true;
+                isSample = true;
 
                 if (this.getIntent().getBooleanExtra("SamplePhotoActivity", false)) {
                     photoLogMode = PhotoLogMode.SAMPLE_PHOTO_ACTIVITY;   // Тип откуда открыли Журнал Фото
@@ -207,7 +214,7 @@ public class PhotoLogActivity extends toolbar_menus {
 
                 int photoTp = this.getIntent().getIntExtra("photoTp", 999);     // Если открыли Журнал фото с каким-то типом = он тут
                 int grpId = this.getIntent().getIntExtra("grpId", 999);
-                justFullPhoto = this.getIntent().getBooleanExtra("justFullPhoto",false);
+                justFullPhoto = this.getIntent().getBooleanExtra("justFullPhoto", false);
                 setPhotoTp(photoTp);
                 setGrpId(grpId);
 
@@ -319,35 +326,46 @@ public class PhotoLogActivity extends toolbar_menus {
         }, new PhotoLogPhotoAdapter.OnPhotoClickListener() {
             @Override
             public void onPhotoClicked(Context context, StackPhotoDB photoDB) {
+                try {
 //                DialogFullPhotoR dialog = new DialogFullPhotoR(getApplicationContext());
-                DialogFullPhotoR dialog = new DialogFullPhotoR(context);
-                dialog.setPhoto(photoDB);
-                // Pika
-                // dialog.setComment(photoDB.getComment());
+                    DialogFullPhotoR dialog = new DialogFullPhotoR(context);
+                    dialog.setPhoto(photoDB);
+                    // Pika
+                    // dialog.setComment(photoDB.getComment());
 
-                // Pika Сделал более универсально - если это фото оьразца то коммент будет в поле "about"
-                // образцов - его и берем, а если это просто фото - то коммент из поля комментария самого фото
-                // то же касается и образца если для него не сделали нормальный комментв поле "about" образцов
-                // плюс учитывается что поскольку это журнал, то может быть несколько разных фоток,
-                // поэтому подбираю коммент для соответственной фотки из списка образцов по ИД фотки
-                int photoId=Integer.parseInt(photoDB.getPhotoServerId());
-                String commentPhoto="";
-                for (SamplePhotoSDB a:samplePhotoSDBList) {
-                    if (a.photoId==photoId) {
-                        commentPhoto=a.about;
-                        break;
+                    // Pika Сделал более универсально - если это фото оьразца то коммент будет в поле "about"
+                    // образцов - его и берем, а если это просто фото - то коммент из поля комментария самого фото
+                    // то же касается и образца если для него не сделали нормальный комментв поле "about" образцов
+                    // плюс учитывается что поскольку это журнал, то может быть несколько разных фоток,
+                    // поэтому подбираю коммент для соответственной фотки из списка образцов по ИД фотки
+
+                    String commentPhoto = "";
+
+                    if (samplePhotoSDBList != null) {
+                        int photoId = Integer.parseInt(photoDB.getPhotoServerId());
+                        for (SamplePhotoSDB a : samplePhotoSDBList) {
+                            if (a.photoId == photoId) {
+                                commentPhoto = a.about;
+                                break;
+                            }
+                        }
                     }
-                }
-                if (commentPhoto==null || commentPhoto=="") {
-                    commentPhoto=photoDB.getComment();
-                }
-                dialog.setComment(commentPhoto);
-                // Pika для образца фото делаю такое масштабирование
-                if (isSample) { dialog.scaleType(ImageView.ScaleType.FIT_CENTER); }
-                // ----------------------------------------------
 
-                dialog.setClose(dialog::dismiss);
-                dialog.show();
+                    if (commentPhoto == null || commentPhoto == "") {
+                        commentPhoto = photoDB.getComment();
+                    }
+                    dialog.setComment(commentPhoto);
+                    // Pika для образца фото делаю такое масштабирование
+                    if (isSample) {
+                        dialog.scaleType(ImageView.ScaleType.FIT_CENTER);
+                    }
+                    // ----------------------------------------------
+
+                    dialog.setClose(dialog::dismiss);
+                    dialog.show();
+                } catch (Exception e) {
+
+                }
             }
         });
         recycleViewPLAdapter.setPhotoLogMode(photoLogMode);

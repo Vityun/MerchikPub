@@ -113,7 +113,7 @@ public class OptionControlPromotion<T> extends OptionControl {
         // Получение Доп. Требований с дополнительными фильтрами.
         List<AdditionalRequirementsDB> additionalRequirements;
         String[] tovIds;
-        if (optionDB.getOptionId().equals("80977")) {
+        if (optionDB.getOptionId().equals("80977") || optionDB.getOptionControlId().equals("80977")) {
             additionalRequirements = AdditionalRequirementsRealm.getDocumentAdditionalRequirements(document, true, OPTION_CONTROL_PROMOTION_ID, null, null, null);
             tovIds = new String[additionalRequirements.size()];
 
@@ -190,10 +190,10 @@ public class OptionControlPromotion<T> extends OptionControl {
         if (reportPrepare.size() == 0) {
             spannableStringBuilder.append("Товаров, по которым надо проверять факт наличия Акции, не обнаружено.");
             signalInt = 1;
-        } else if (totalOSV == 0 && optionDB.getOptionId().equals("80977")) {
+        } else if (totalOSV == 0 && (optionDB.getOptionId().equals("80977") || optionDB.getOptionControlId().equals("80977"))) {
             spannableStringBuilder.append("Для данной ТТ, на текущий момент, нет товаров с ОСВ (Особым Вниманием). Контролировать нечего. Замечаний нет.");
             signalInt = 2;
-        } else if (err > 0 && optionDB.getOptionId().equals("80977")) {
+        } else if (err > 0 && (optionDB.getOptionId().equals("80977") || optionDB.getOptionControlId().equals("80977"))) {
             spannableStringBuilder.append("Не предоставлена информация о типе и наличии Акции по товару (" + err + " шт.) (в т.ч. с ОСВ (Особым Вниманием)). См. таблицу.");
             signalInt = 1;
         } else if (find == 0) {

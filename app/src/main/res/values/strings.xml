@@ -1,8 +1,8 @@
 <resources>
     <string name="app_name">merchik</string>
-    <string name="ver">071000</string>
-    <string name="debug_status">1</string>
-    <string name="debug_date">2024-07-10</string>
+    <string name="ver">071600</string>
+    <string name="debug_status">0</string>
+    <string name="debug_date">2024-07-16</string>
 
     <string name="test">TEST HINT</string>
 
@@ -102,7 +102,6 @@
     <string name="options">Опции: </string>
     <string name="t_photo_log">Журнал фото</string>
     <string name="Search">Поиск..</string>
-
 
     <!-- ============== PHOTO REPORT FRAGMENT ============== -->
     <string name="title_photo_report">Фотоотчёт</string>
@@ -205,6 +204,17 @@
     <string name="data_download_error">Не вийшло завантажити данні</string>
     <string name="data_download_wait">Зачекайте, йде завантаження інформації</string>
 
+
+    <string name="comments">Коментарі:</string>
+    <string name="setting_table">Налаштування таблиці</string>
+    <string name="setting_column_visibility">Налаштування видимості стовпців</string>
+    <string name="setting_column_visibility_desc">Щоб приховати якісь стовпці, клацніть на полі</string>
+    <string name="column_name">Назва стовпця</string>
+    <string name="visibility">Видимість</string>
+    <string name="cancel">Скасувати</string>
+    <string name="search">Пошук</string>
+    <string name="apply">Застосувати</string>
+    <string name="clear">Очистити</string>
 
 </resources>
 

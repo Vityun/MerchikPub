@@ -1,5 +1,7 @@
 package ua.com.merchik.merchik.Options.Controls;
 
+import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
+
 import android.content.Context;
 import android.os.Build;
 
@@ -12,6 +14,7 @@ import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.Options.OptionControl;
 import ua.com.merchik.merchik.Options.Options;
+import ua.com.merchik.merchik.data.Database.Room.AddressSDB;
 import ua.com.merchik.merchik.data.OptionMassageType;
 import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
 import ua.com.merchik.merchik.data.RealmModels.ReportPrepareDB;
@@ -33,6 +36,9 @@ public class OptionControlCheckDetailedReport<T> extends OptionControl {
     private long time = 0;
     private int correctionPercentage = 0;
     private int min = 10;    // Минимальное значение из опции, по умолчанию 10
+
+    private WpDataDB wpDataDB;
+    private AddressSDB addressSDB;
 
     // document data
     private long dad2 = 0;
@@ -59,6 +65,9 @@ public class OptionControlCheckDetailedReport<T> extends OptionControl {
     private void getDocumentVar() {
         if (document instanceof WpDataDB) {
             WpDataDB wp = (WpDataDB) document;
+
+            wpDataDB = wp;
+            addressSDB = SQL_DB.addressDao().getById(wp.getAddr_id());
 
             dad2 = wp.getCode_dad2();
             date = wp.getDt();
@@ -99,7 +108,8 @@ public class OptionControlCheckDetailedReport<T> extends OptionControl {
             stringBuilderMsg.append("Товарів, по котрим треба перевірити виправлені ДЗ, не знайдено.");
             signal = true;
         } else if (colSKU == 0) {
-            stringBuilderMsg.append("Товарів, по котрим треба виконувати ПЛАН по ФЕЙЧАС не знайдено.");
+//            stringBuilderMsg.append("Товарів, по котрим треба виконувати ПЛАН по ФЕЙЧАС не знайдено.");
+            stringBuilderMsg.append("Товарів, у котрих визначена їх наявність на вітрині (фейси) у деталіз.звітності не знайдено.");
             signal = true;
         } else if (min > 0 && correctionPercentage < min) {
             stringBuilderMsg.append("Данні деталіз.звітності виправлені у ").append(fixesNum)
@@ -113,6 +123,13 @@ public class OptionControlCheckDetailedReport<T> extends OptionControl {
                     .append("% та більше мінімально допустимого ").append(min)
                     .append("% Зауважень немає.");
             signal = false;
+        }
+
+        if (addressSDB.tpId == 8196) {   // Для АШАН-ов которые работают через ДОТ и ФОТ виправлення ДЗ НЕ проверяем
+            if (wpDataDB.getDot_user_id() > 0 || wpDataDB.getFot_user_id() > 0) {
+                signal = false;
+                stringBuilderMsg.append(", але для Ашанів, по котрим праюємо з ДОТ чи ФОТ, виправлення ДЗ не перевіряємо.");
+            }
         }
 
 

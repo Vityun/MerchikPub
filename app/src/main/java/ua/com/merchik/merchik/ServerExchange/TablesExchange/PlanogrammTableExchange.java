@@ -12,7 +12,6 @@ import io.reactivex.rxjava3.schedulers.Schedulers;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
-import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.Database.Room.Planogram.PlanogrammSDB;
@@ -66,9 +65,9 @@ public class PlanogrammTableExchange {
                                 if (response.body().list != null && response.body().list.size() > 0) {
 
                                     for (PlanogrammSDB item : response.body().list){
-                                        Globals.writeToMLOG("INFO", "D_PlanogrammSDB", "dtEnd: " + item.dtEnd);
-                                        Globals.writeToMLOG("INFO", "D_PlanogrammSDB", "dtEnd: " + item.dtEnd.getTime());
-                                        Globals.writeToMLOG("INFO", "D_PlanogrammSDB", "dtEnd: " + Clock.getHumanTimeSecPattern(item.dtEnd.getTime()/1000, "yyyy-MM-dd"));
+                                        if (item.dtStart.getTime() < 0){
+                                            item.dtStart = null;
+                                        }
                                         if (item.dtEnd.getTime() < 0){
                                             item.dtEnd = null;
                                         }

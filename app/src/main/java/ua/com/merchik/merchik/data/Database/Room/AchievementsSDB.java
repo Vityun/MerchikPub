@@ -189,6 +189,16 @@ public class AchievementsSDB {
     @ColumnInfo(name = "add_requirement_id")
     public Integer addRequirementId;
 
+    @SerializedName("manufacturer")
+    @Expose
+    @ColumnInfo(name = "manufacturer")
+    public Integer manufacturer;
+
+    @SerializedName("tovar_id")
+    @Expose
+    @ColumnInfo(name = "tovar_id")
+    public Integer tovar_id;
+
     // ---------- ДЛЯ ОПЦИИ КОНТРОЛЯ НАЧАЛО---------------
 
     @Ignore
