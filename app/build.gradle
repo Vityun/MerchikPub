@@ -3,7 +3,7 @@ apply plugin: 'org.jetbrains.kotlin.android'
 apply plugin: 'kotlin-parcelize'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-kapt'
-apply plugin: 'com.google.dagger.hilt.android'
+//apply plugin: 'com.google.dagger.hilt.android'
 apply plugin: 'realm-android'
 
 def keystorePropertiesFile = rootProject.file("keystore.properties")
