@@ -44,7 +44,10 @@
 
     <color name="inActive">#DBDBDB</color>
     <color name="active">#AAAAAA</color>
+    <color name="gray_50">#80000000</color>
 
     <color name="hintColorDefault">#808080</color>
+    <color name="blue">#008ced</color>
+    <color name="orange">#fa6600</color>
 
 </resources>
