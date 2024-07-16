@@ -19,8 +19,7 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 import ua.com.merchik.merchik.R;
-import ua.com.merchik.merchik.ServerExchange.TablesExchange.VotesExchange;
-import ua.com.merchik.merchik.ViewHolders.Clicks;
+import ua.com.merchik.merchik.Translate;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.ShowcaseResponse;
 import ua.com.merchik.merchik.data.TestJsonUpload.StandartData;
 import ua.com.merchik.merchik.dialogs.DialogShowcase.DialogShowcase;
@@ -87,23 +86,16 @@ public class MenuMainActivity extends toolbar_menus {
 
     private void test() {
         try {
-            new VotesExchange().uploadVotes(new Clicks.clickObjectAndStatus() {
-                @Override
-                public void onSuccess(Object data) {
-
-                }
-
-                @Override
-                public void onFailure(String error) {
-
-                }
-            });
+            Translate translate = new Translate();
+            translate.uploadNewTranslate();
         }catch (Exception e){
             Log.e("testLong", "Exception e: " + e);
         }
     }
 
 /*
+
+
             PlanogrammTableExchange planogrammTableExchange = new PlanogrammTableExchange();
             planogrammTableExchange.planogramDownload(new Clicks.clickObjectAndStatus() {
                 @Override

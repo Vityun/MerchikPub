@@ -1,6 +1,5 @@
 package ua.com.merchik.merchik.Options.Controls;
 
-import static ua.com.merchik.merchik.database.realm.RealmManager.INSTANCE;
 import static ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsRealm.AdditionalRequirementsModENUM.HIDE_FOR_USER;
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
@@ -18,7 +17,6 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 
-import io.realm.RealmResults;
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.Options.OptionControl;
@@ -117,11 +115,7 @@ public class OptionControlAdditionalRequirementsMark<T> extends OptionControl {
             if (data != null && data.size() > 0) {
 
                 // Получаем Оценки этих Доп. требований.
-                RealmResults<AdditionalRequirementsMarkDB> marks = AdditionalRequirementsMarkRealm.getAdditionalRequirementsMarks(dateFrom, dateTo, wpDataDB.getUser_id(), "1", data);
-                List<AdditionalRequirementsMarkDB> testMark = INSTANCE.copyFromRealm(marks);
-
-//                List<AdditionalRequirementsMarkDB> marks = RealmManager.INSTANCE.copyFromRealm(AdditionalRequirementsMarkRealm.getAdditionalRequirementsMarks(dateFrom, dateTo, wpDataDB.getUser_id(), "1", data));
-
+                List<AdditionalRequirementsMarkDB> marks = AdditionalRequirementsMarkRealm.getAdditionalRequirementsMarks(dateFrom, dateTo, wpDataDB.getUser_id(), "1", data);
                 Log.e("OptionControlARMark", "2");
 
 //                // DEBUG DATA-------------
@@ -157,8 +151,10 @@ public class OptionControlAdditionalRequirementsMark<T> extends OptionControl {
 
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                         Log.e("OptionControlARMark", "5");
-                        if (marks.stream().filter(m -> m.getItemId().equals(item.id)).findFirst().orElse(null) != null) {
-                            AdditionalRequirementsMarkDB currentMark = INSTANCE.copyFromRealm(marks.where().equalTo("itemId", item.id).findFirst());
+                        AdditionalRequirementsMarkDB markDB = marks.stream().filter(m -> m.getItemId().equals(item.id)).findFirst().orElse(null);
+                        if (markDB != null) {
+//                            AdditionalRequirementsMarkDB currentMark = INSTANCE.copyFromRealm(marks.where().equalTo("itemId", item.id).findFirst());
+                            AdditionalRequirementsMarkDB currentMark = markDB;
 
                             Log.e("OptionControlARMark", "5.1");
 

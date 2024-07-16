@@ -28,7 +28,7 @@
     <!--Тема для меню Зелёная (Если есть инет и серв)-->
     <style name="OverlayPrimaryColorGreen">
         <item name="colorPrimary">@color/colorInetGreen</item>
-<!--        <item name="greenCol">@color/colorInetGreen</item>-->
+        <!--        <item name="greenCol">@color/colorInetGreen</item>-->
         <item name="colorPrimaryDark">@color/colorInetGreenDark</item>
     </style>
 
@@ -71,10 +71,10 @@
         <item name="android:shadowRadius">1</item>
     </style>
 
-<!--    &lt;!&ndash; Base application theme &ndash;&gt;-->
-<!--    <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">-->
-<!--        &lt;!&ndash; Customize your theme here &ndash;&gt;-->
-<!--    </style>-->
+    <!--    &lt;!&ndash; Base application theme &ndash;&gt;-->
+    <!--    <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">-->
+    <!--        &lt;!&ndash; Customize your theme here &ndash;&gt;-->
+    <!--    </style>-->
 
     <!-- Transparent theme -->
     <style name="TransparentTheme" parent="AppTheme.NoActionBar">
