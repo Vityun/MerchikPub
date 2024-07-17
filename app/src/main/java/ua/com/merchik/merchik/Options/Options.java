@@ -29,8 +29,8 @@ import static ua.com.merchik.merchik.trecker.enabledGPS;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
-import android.os.Bundle;
 import android.os.Build;
+import android.os.Bundle;
 import android.text.Html;
 import android.text.SpannableString;
 import android.text.SpannableStringBuilder;
@@ -158,7 +158,6 @@ import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.dialogs.DialogFilter.Click;
 import ua.com.merchik.merchik.dialogs.EKL.DialogEKL;
 import ua.com.merchik.merchik.features.main.DBViewModels.AdditionalRequirementsDBViewModel;
-import ua.com.merchik.merchik.features.main.DBViewModels.LogMPDBViewModel;
 import ua.com.merchik.merchik.toolbar_menus;
 
 public class Options {
@@ -670,7 +669,7 @@ public class Options {
             // 91276 - БВІ
             // 16898 - Ямуна
             // 13633 - ВС-Импэкс ООО
-            // 8523 - Альянс Краси ПП
+            // 8523 -  Альянс Краси ПП
             // 91429 - Петровська Елла Олександрівна ФОП
             // 10076 - Триплекс,
             // 78230 - Триумф,
@@ -692,14 +691,27 @@ public class Options {
             // 75411 Йозера,
             // 10919 Маруся,
             // 10291 Натурпродукт-вега
-            if (option.getClientId().equals("14301") ||
-                    option.getClientId().equals("14840") ||
-                    option.getClientId().equals("14843") ||
-                    option.getClientId().equals("91276") ||
-                    option.getClientId().equals("16898") ||
-                    option.getClientId().equals("13633") ||
-                    option.getClientId().equals("8523") ||
-                    option.getClientId().equals("91429") ||
+
+            // 9443     Кохавинка
+            // 91434    Хім опт
+            // 38297    Юкойл СП
+            // 14504    Традиции вкуса ООО
+            // 84667    Парк трейдинг ООО
+            // 9029     Родная еда Компания ООО
+            // 80786    Марко Продукт ТОВ
+            // 91484    Нешнл Трейдинг
+            // 14888    Техно-Груп
+            // 86566    Троянда-захід .......... вже була
+            // 78286    Аумі
+            // 14133    ЗБС
+            if (option.getClientId().equals("14301") ||     // трегуб
+                    option.getClientId().equals("14840") || // Авто комфорт плюс
+                    option.getClientId().equals("14843") || // Джокер
+                    option.getClientId().equals("91276") || // БВІ
+                    option.getClientId().equals("16898") || // Ямуна
+                    option.getClientId().equals("13633") || // ВС-Импэкс ООО
+                    option.getClientId().equals("8523") ||  // Альянс Краси ПП
+                    option.getClientId().equals("91429") || // Петровська Елла Олександрівна ФОП
                     option.getClientId().equals("10076") || // Триплекс
                     option.getClientId().equals("78230") || // Триумф
                     option.getClientId().equals("14463") || // Креатив
@@ -717,7 +729,19 @@ public class Options {
                     option.getClientId().equals("90749") || // Буко,
                     option.getClientId().equals("75411") || // Йозера,
                     option.getClientId().equals("10919") || // Маруся,
-                    option.getClientId().equals("10291") // Натурпродукт-вега
+                    option.getClientId().equals("10291") || // Натурпродукт-вега
+                    option.getClientId().equals("9443 ") || // Кохавинка
+                    option.getClientId().equals("91434") || // Хім опт
+                    option.getClientId().equals("38297") || // Юкойл СП
+                    option.getClientId().equals("14504") || // Традиции вкуса ООО
+                    option.getClientId().equals("84667") || // Парк трейдинг ООО
+                    option.getClientId().equals("9029 ") || // Родная еда Компания ООО
+                    option.getClientId().equals("80786") || // Марко Продукт ТОВ
+                    option.getClientId().equals("91484") || // Нешнл Трейдинг
+                    option.getClientId().equals("14888") || // Техно-Груп
+                    option.getClientId().equals("86566") || // Троянда-захід .......... вже була
+                    option.getClientId().equals("78286") || // Аумі
+                    option.getClientId().equals("14133")    // ЗБС
             ) {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                     optionControlNewAlgo(getOptionsToControl(option), context, dataDB, option, optionList, type, mode, false, click);
