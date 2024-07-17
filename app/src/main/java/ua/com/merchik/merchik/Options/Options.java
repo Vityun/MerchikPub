@@ -704,6 +704,7 @@ public class Options {
             // 86566    Троянда-захід .......... вже була
             // 78286    Аумі
             // 14133    ЗБС
+            // 8804 львовский хладокомбинат
             if (option.getClientId().equals("14301") ||     // трегуб
                     option.getClientId().equals("14840") || // Авто комфорт плюс
                     option.getClientId().equals("14843") || // Джокер
@@ -723,7 +724,7 @@ public class Options {
                     option.getClientId().equals("69842") || // Мега Крисп,
                     option.getClientId().equals("9261") ||  // фабрика бакалійних,
                     option.getClientId().equals("10349") || // Гифт-К,
-                    option.getClientId().equals("91419") ||   // Чміль Валерій Васильович ФОП
+                    option.getClientId().equals("91419") || // Чміль Валерій Васильович ФОП
                     option.getClientId().equals("78171") || // Артхим,
                     option.getClientId().equals("82575") || // Профит Плюс,
                     option.getClientId().equals("90749") || // Буко,
@@ -741,7 +742,8 @@ public class Options {
                     option.getClientId().equals("14888") || // Техно-Груп
                     option.getClientId().equals("86566") || // Троянда-захід .......... вже була
                     option.getClientId().equals("78286") || // Аумі
-                    option.getClientId().equals("14133")    // ЗБС
+                    option.getClientId().equals("14133") ||   // ЗБС
+                    option.getClientId().equals("8804")    //  львовский хладокомбинат
             ) {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                     optionControlNewAlgo(getOptionsToControl(option), context, dataDB, option, optionList, type, mode, false, click);
