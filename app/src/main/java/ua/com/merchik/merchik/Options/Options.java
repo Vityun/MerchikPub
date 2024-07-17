@@ -2828,7 +2828,7 @@ public class Options {
             List<AdditionalRequirementsDB> data = AdditionalRequirementsRealm.getData3(dataDB, HIDE_FOR_USER, null, null, 0);
 
             // Получаем Оценки этих Доп. требований.
-            RealmResults<AdditionalRequirementsMarkDB> marks = AdditionalRequirementsMarkRealm.getAdditionalRequirementsMarks(dateFrom, dateTo, userId, "1", data);
+            List<AdditionalRequirementsMarkDB> marks = AdditionalRequirementsMarkRealm.getAdditionalRequirementsMarks(dateFrom, dateTo, userId, "1", data);
 
             Gson gson = new Gson();
 
