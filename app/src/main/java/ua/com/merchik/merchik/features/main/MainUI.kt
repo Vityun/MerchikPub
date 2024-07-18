@@ -152,7 +152,7 @@ fun MainUI(viewModel: MainViewModel, context: Context) {
             modifier = Modifier
                 .fillMaxSize()
                 .clip(RoundedCornerShape(8.dp))
-                .background(color = colorResource(id = R.color.colotSelectedTab2))
+                .background(color = colorResource(id = R.color.main_form))
         ) {
             Column {
 
@@ -224,6 +224,14 @@ fun MainUI(viewModel: MainViewModel, context: Context) {
                         modifier = Modifier.weight(1f)
                     )
 
+
+                    ImageButton(id = R.drawable.ic_plus,
+                        sizeButton = 56.dp,
+                        sizeImage = 25.dp,
+                        modifier = Modifier.padding(start = 7.dp),
+                        onClick = {  }
+                    )
+
                     ImageButton(id = if (isActiveFiltered) R.drawable.ic_filterbold else R.drawable.ic_filter,
                         sizeButton = 56.dp,
                         sizeImage = 25.dp,
@@ -237,7 +245,7 @@ fun MainUI(viewModel: MainViewModel, context: Context) {
                         .padding(start = 10.dp, end = 10.dp, bottom = 10.dp)
                         .shadow(4.dp, RoundedCornerShape(8.dp))
                         .clip(RoundedCornerShape(8.dp))
-                        .background(Color.White)
+                        .background(colorResource(id = R.color.main_form_list))
                 ) {
                     LazyColumnScrollbar(
                         modifier = Modifier.padding(5.dp),
@@ -250,7 +258,7 @@ fun MainUI(viewModel: MainViewModel, context: Context) {
                         ),
                     ) {
                         LazyColumn(
-                            modifier = Modifier.padding(end = 15.dp),
+                            modifier = Modifier.padding(end = 20.dp),
                             state = listState,
                         ) {
                             items(itemsUI) { item ->
@@ -264,8 +272,8 @@ fun MainUI(viewModel: MainViewModel, context: Context) {
                                         }
                                         .fillMaxWidth()
                                         .padding(7.dp)
-                                        .shadow(4.dp)
-                                        .border(1.dp, Color.LightGray)
+                                        .shadow(4.dp, RoundedCornerShape(8.dp))
+                                        .clip(RoundedCornerShape(8.dp))                                        .border(1.dp, Color.LightGray)
                                         .then(item.modifierContainer?.background?.let {
                                             Modifier.background(it)
                                         } ?: Modifier.background(Color.White))

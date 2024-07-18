@@ -50,4 +50,6 @@
     <color name="blue">#008ced</color>
     <color name="orange">#fa6600</color>
 
+    <color name="main_form">#D7D5D5</color>
+    <color name="main_form_list">#EAE8E8</color>
 </resources>
