@@ -87,12 +87,13 @@ fun DataObjectUI.toItemUI(nameUIRepository: NameUIRepository, hideUserFields: St
     return ItemUI(
         rawObj = listOf(this),
         fields = fields,
-        modifierContainer = getContainerModifier(jsonObject)
+        modifierContainer = getContainerModifier(jsonObject),
+        false
     )
 }
 
 enum class ContextUI{
-    MAIN, DEFAULT
+    MAIN, DEFAULT, ONE_SELECT, MULTI_SELECT
 }
 
 

@@ -23,6 +23,7 @@ import ua.com.merchik.merchik.data.RealmModels.LogMPDB
 import ua.com.merchik.merchik.features.main.DBViewModels.AdditionalRequirementsDBViewModel
 import ua.com.merchik.merchik.features.main.DBViewModels.CustomerSDBViewModel
 import ua.com.merchik.merchik.features.main.DBViewModels.LogMPDBViewModel
+import ua.com.merchik.merchik.features.main.DBViewModels.TovarDBViewModel
 import ua.com.merchik.merchik.features.main.MainUI
 import kotlin.reflect.KClass
 import kotlin.reflect.full.createType
@@ -46,6 +47,7 @@ class FeaturesActivity: AppCompatActivity() {
                                 when (Class.forName(it).kotlin) {
                                     LogMPDBViewModel::class -> viewModel() as LogMPDBViewModel
                                     AdditionalRequirementsDBViewModel::class -> viewModel() as AdditionalRequirementsDBViewModel
+                                    TovarDBViewModel::class -> viewModel() as TovarDBViewModel
                                     CustomerSDBViewModel::class -> viewModel() as CustomerSDBViewModel
                                     else -> null
                                 }?.let { viewModel ->

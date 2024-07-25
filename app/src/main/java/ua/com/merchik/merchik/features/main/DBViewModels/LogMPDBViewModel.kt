@@ -34,8 +34,11 @@ class LogMPDBViewModel @Inject constructor(
     override val title: String
         get() = "Історія місцеположення"
 
+    override val subTitle: String
+        get() = "Подзаголовок Подзаг Подво Подво Подзаголовок njh"
+
     override val contextUI: ContextUI
-        get() = ContextUI.DEFAULT
+        get() = ContextUI.MULTI_SELECT
 
     override val table: KClass<out DataObjectUI>
         get() = LogMPDB::class

@@ -39,7 +39,7 @@ class AdditionalRequirementsDBViewModel @Inject constructor(
         get() = "Доп. требования"
 
     override val contextUI: ContextUI
-        get() = ContextUI.DEFAULT
+        get() = ContextUI.MULTI_SELECT
 
     override val table: KClass<out DataObjectUI>
         get() = AdditionalRequirementsDB::class

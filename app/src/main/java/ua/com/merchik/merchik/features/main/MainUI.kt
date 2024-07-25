@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -36,6 +37,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonColors
@@ -76,6 +78,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.Dp
@@ -90,6 +93,7 @@ import my.nanihadesuka.compose.LazyColumnScrollbar
 import my.nanihadesuka.compose.ScrollbarSettings
 import ua.com.merchik.merchik.R
 import ua.com.merchik.merchik.data.RealmModels.AdditionalRequirementsMarkDB
+import ua.com.merchik.merchik.dataLayer.ContextUI
 import ua.com.merchik.merchik.dataLayer.model.FieldValue
 import ua.com.merchik.merchik.dataLayer.model.MerchModifier
 import ua.com.merchik.merchik.dataLayer.model.Padding
@@ -202,14 +206,31 @@ fun MainUI(viewModel: MainViewModel, context: Context) {
 
                 Text(
                     text = uiState.title, fontSize = 16.sp, modifier = Modifier
-                        .padding(7.dp)
+                        .padding(start = 10.dp, bottom = 7.dp, end = 10.dp, top = 10.dp)
                         .align(Alignment.CenterHorizontally),
                     fontWeight = FontWeight.Bold
                 )
 
+                uiState.idResImage?.let {
+                    Image(
+                        painter = painterResource(it),
+                        modifier = Modifier.size(50.dp).align(Alignment.CenterHorizontally),
+                        contentScale = ContentScale.Inside,
+                        contentDescription = null
+                    )
+                }
+
+                uiState.subTitle?.let {
+                    Text(
+                        text = it,
+                        modifier = Modifier
+                            .padding(start = 10.dp, bottom = 7.dp, end = 10.dp)
+                    )
+                }
+
                 Row(
                     modifier = Modifier
-                        .padding(10.dp)
+                        .padding(start = 10.dp, bottom = 10.dp, end = 10.dp)
                 ) {
 
                     TextFieldInputRounded(
@@ -221,20 +242,20 @@ fun MainUI(viewModel: MainViewModel, context: Context) {
                             )
                             viewModel.updateFilters(filters)
                         },
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f).height(40.dp)
+
                     )
 
-
                     ImageButton(id = R.drawable.ic_plus,
-                        sizeButton = 56.dp,
-                        sizeImage = 25.dp,
+                        sizeButton = 40.dp,
+                        sizeImage = 20.dp,
                         modifier = Modifier.padding(start = 7.dp),
                         onClick = {  }
                     )
 
                     ImageButton(id = if (isActiveFiltered) R.drawable.ic_filterbold else R.drawable.ic_filter,
-                        sizeButton = 56.dp,
-                        sizeImage = 25.dp,
+                        sizeButton = 40.dp,
+                        sizeImage = 20.dp,
                         modifier = Modifier.padding(start = 7.dp),
                         onClick = { showFilteringDialog = true }
                     )
@@ -242,82 +263,163 @@ fun MainUI(viewModel: MainViewModel, context: Context) {
 
                 Box(
                     modifier = Modifier
+                        .weight(1f)
                         .padding(start = 10.dp, end = 10.dp, bottom = 10.dp)
                         .shadow(4.dp, RoundedCornerShape(8.dp))
                         .clip(RoundedCornerShape(8.dp))
                         .background(colorResource(id = R.color.main_form_list))
                 ) {
                     LazyColumnScrollbar(
-                        modifier = Modifier.padding(5.dp),
+                        modifier = Modifier.padding(start = 10.dp, top = 10.dp, bottom = 10.dp),
                         state = listState,
                         settings = ScrollbarSettings(
+                            scrollbarPadding = 2.dp,
                             alwaysShowScrollbar = true,
-                            thumbUnselectedColor = Color.LightGray,
-                            thumbSelectedColor = Color.LightGray,
+                            thumbUnselectedColor = colorResource(id = R.color.scrollbar),
+                            thumbSelectedColor = colorResource(id = R.color.scrollbar),
                             thumbShape = CircleShape,
                         ),
                     ) {
-                        LazyColumn(
-                            modifier = Modifier.padding(end = 20.dp),
-                            state = listState,
-                        ) {
-                            items(itemsUI) { item ->
-                                Box(
-                                    modifier = Modifier
-                                        .clickable {
-                                            viewModel.onClickItem(
-                                                item,
-                                                context
-                                            )
-                                        }
-                                        .fillMaxWidth()
-                                        .padding(7.dp)
-                                        .shadow(4.dp, RoundedCornerShape(8.dp))
-                                        .clip(RoundedCornerShape(8.dp))                                        .border(1.dp, Color.LightGray)
-                                        .then(item.modifierContainer?.background?.let {
-                                            Modifier.background(it)
-                                        } ?: Modifier.background(Color.White))
-                                ) {
-                                    Row(Modifier.padding(7.dp)) {
-                                        item.fields.firstOrNull { it.key.equals("id_res_image", true) }?.let {
-                                            val idResImage = (it.value.rawValue as? Int) ?: R.drawable.merchik
-                                            Box(
-                                                modifier = Modifier
-                                                    .padding(7.dp)
-                                                    .border(1.dp, Color.Black)
-                                                    .background(Color.White)
-                                                    .align(alignment = Alignment.CenterVertically)
-                                            ) {
-                                                Image(
-                                                    painter = painterResource(idResImage),
-                                                    modifier = Modifier.size(100.dp),
-                                                    contentDescription = null
+                            LazyColumn(
+                                state = listState,
+                            ) {
+                                items(itemsUI) { item ->
+                                    Box(
+                                        modifier = Modifier
+                                            .clickable {
+                                                viewModel.onClickItem(
+                                                    item,
+                                                    context
                                                 )
                                             }
-                                        }
+                                            .fillMaxWidth()
+                                            .padding(end = 10.dp, bottom = 7.dp)
+                                            .shadow(4.dp, RoundedCornerShape(8.dp))
+                                            .clip(RoundedCornerShape(8.dp))
+                                            .border(1.dp, Color.LightGray)
+                                            .then(item.modifierContainer?.background?.let {
+                                                Modifier.background(it)
+                                            } ?: Modifier.background(
+                                                if (item.selected) colorResource(id = R.color.selected_item) else Color.White
+                                            ))
+                                    ) {
+                                        Row(Modifier.padding(7.dp)) {
+                                            item.fields.firstOrNull {
+                                                it.key.equals(
+                                                    "id_res_image",
+                                                    true
+                                                )
+                                            }?.let {
+                                                val idResImage = (it.value.rawValue as? Int)
+                                                    ?: R.drawable.merchik
+                                                Box(
+                                                    modifier = Modifier
+                                                        .padding(end = 5.dp)
+                                                        .border(1.dp, Color.Black)
+                                                        .background(Color.White)
+                                                        .align(alignment = Alignment.CenterVertically)
+                                                ) {
+                                                    Image(
+                                                        painter = painterResource(idResImage),
+                                                        modifier = Modifier.size(100.dp),
+                                                        contentDescription = null
+                                                    )
+                                                }
+                                            }
 
-                                        Column(modifier = Modifier.weight(1f)) {
-                                            item.fields.forEach {
-                                                if (!it.key.equals("id_res_image", true)) ItemFieldValue(it, visibilityField)
+                                            Column(modifier = Modifier.weight(1f)) {
+                                                item.fields.forEach {
+                                                    if (!it.key.equals(
+                                                            "id_res_image",
+                                                            true
+                                                        )
+                                                    ) ItemFieldValue(it, visibilityField)
+                                                }
                                             }
                                         }
 
-                                        item.rawObj.firstOrNull{ it is AdditionalRequirementsMarkDB }?.let {
-                                            it as AdditionalRequirementsMarkDB
-                                            val text = it.score ?: "0"
-                                            TextInStrokedCircle(
-                                                modifier = Modifier.padding(2.dp),
-                                                text = text,
-                                                circleColor = if (text == "0") Color.Red else Color.Gray,
-                                                textColor = if (text == "0") Color.Red else Color.Gray,
-                                                circleSize = 30.dp,
-                                                textSize = 16f.toPx(),
-                                                strokeWidth = 2f.toPx()
-                                            )
+                                        Column(modifier = Modifier.align(Alignment.TopEnd)) {
+
+                                            if (viewModel.contextUI == ContextUI.ONE_SELECT || viewModel.contextUI == ContextUI.MULTI_SELECT) {
+                                                RoundCheckbox(
+                                                    modifier = Modifier.padding(
+                                                        top = 3.dp,
+                                                        end = 3.dp
+                                                    ),
+                                                    checked = item.selected,
+                                                    aroundColor = if (item.selected) colorResource(
+                                                        id = R.color.selected_item
+                                                    ) else Color.White,
+                                                    onCheckedChange = { checked ->
+                                                        viewModel.updateItemSelect(checked, item)
+                                                    }
+                                                )
+                                            }
+
+                                            item.rawObj.firstOrNull { it is AdditionalRequirementsMarkDB }
+                                                ?.let {
+                                                    it as AdditionalRequirementsMarkDB
+                                                    val text = it.score ?: "0"
+                                                    TextInStrokedCircle(
+                                                        modifier = Modifier.padding(
+                                                            top = 3.dp,
+                                                            end = 3.dp
+                                                        ),
+                                                        text = text,
+                                                        circleColor = if (text == "0") Color.Red else Color.Gray,
+                                                        textColor = if (text == "0") Color.Red else Color.Gray,
+                                                        aroundColor = if (item.selected) colorResource(
+                                                            id = R.color.selected_item
+                                                        ) else Color.White,
+                                                        circleSize = 30.dp,
+                                                        textSize = 20f.toPx(),
+                                                    )
+                                                }
                                         }
                                     }
                                 }
                             }
+//                        }
+                    }
+                }
+
+                if (viewModel.contextUI == ContextUI.ONE_SELECT || viewModel.contextUI == ContextUI.MULTI_SELECT) {
+                    Row {
+                        Button(
+                            onClick = {
+                                (context as? Activity)?.finish()
+                            },
+                            shape = RoundedCornerShape(8.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = colorResource(id = R.color.blue)),
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(start = 10.dp, end = 10.dp, bottom = 10.dp)
+                        ) {
+                            Text(viewModel.getTranslateString(stringResource(id = R.string.cancel)))
+                        }
+
+                        val selectedItems = itemsUI.filter { it.selected }
+                        Button(
+                            onClick = {
+                                if (selectedItems.isNotEmpty()) {
+                                    viewModel.onSelectedItemsUI(selectedItems)
+                                    (context as? Activity)?.finish()
+                                }
+                            },
+                            shape = RoundedCornerShape(8.dp),
+                            colors =
+                            if (selectedItems.isNotEmpty())
+                                ButtonDefaults.buttonColors(containerColor = colorResource(id = R.color.orange))
+                            else
+                                ButtonDefaults.buttonColors(containerColor = Color.Gray),
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(start = 10.dp, end = 10.dp, bottom = 10.dp)
+                        ) {
+                            Text(
+                                "${viewModel.getTranslateString(stringResource(id = R.string.choice))} " +
+                                        if (selectedItems.isNotEmpty()) "(${selectedItems.size})" else ""
+                            )
                         }
                     }
                 }
@@ -351,39 +453,39 @@ private fun TextFieldInputRounded(
 ) {
     var isFocusedSearchView by remember { mutableStateOf(false) }
 
-    val textFieldColors = TextFieldDefaults.colors(
-        focusedContainerColor = Color.White,
-        unfocusedContainerColor = Color.White,
-        disabledContainerColor = Color.White,
-        cursorColor = Color.Black,
-        focusedIndicatorColor = Color.White,
-        unfocusedIndicatorColor = Color.White,
-    )
-
-    TextField(
-        value = value,
-        onValueChange = onValueChange,
-        colors = textFieldColors,
-        maxLines = 1,
-        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-        label = {
-            if (!isFocusedSearchView) Text(
-                "Пошук",
-                color = colorResource(id = R.color.hintColorDefault)
-            )
-        },
-        trailingIcon = {
-            Image(
-                painter = painterResource(id = com.google.android.material.R.drawable.ic_search_black_24),
-                contentDescription = ""
-            )
-        },
+    Box(
         modifier = modifier
             .shadow(4.dp, RoundedCornerShape(8.dp))
             .clip(RoundedCornerShape(8.dp))
             .background(color = Color.White)
             .onFocusChanged { isFocusedSearchView = it.isFocused }
-    )
+    ) {
+        if (!isFocusedSearchView)
+            Text(
+                modifier = Modifier.align(Alignment.CenterStart).padding(start = 7.dp),
+                text = "Пошук",
+                fontSize = 16.sp,
+                color = colorResource(id = R.color.hintColorDefault),
+            )
+
+        Row{
+            BasicTextField(
+                value = value,
+                onValueChange = onValueChange,
+                textStyle = TextStyle.Default.copy(color = Color.Black, fontSize = 16.sp),
+                maxLines = 1,
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                modifier = Modifier.align(Alignment.CenterVertically).padding(start = 7.dp).weight(1f)
+            )
+
+            Image(
+                modifier = Modifier.align(Alignment.CenterVertically).padding(end = 7.dp, start = 7.dp).fillMaxHeight(),
+                painter = painterResource(id = com.google.android.material.R.drawable.ic_search_black_24),
+                contentDescription = "",
+                colorFilter = ColorFilter.tint(colorResource(id = R.color.hintColorDefault))
+            )
+        }
+    }
 }
 
 @Composable
@@ -416,6 +518,47 @@ private fun ItemTextField(it: TextField, modifier: Modifier? = null) {
                 Modifier.background(color = it)
             } ?: Modifier)
     )
+}
+
+@Composable
+fun RoundCheckbox(
+    modifier: Modifier = Modifier,
+    aroundColor: Color,
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit) {
+    Box(
+        modifier = Modifier
+            .size(45.dp)
+            .clip(CircleShape)
+            .background(aroundColor)
+            .clickable { onCheckedChange(!checked) },
+        contentAlignment = Alignment.Center
+    ) {
+        Canvas(modifier = modifier.size(30.dp)) {
+            drawCircle(
+                color = Color.White,
+            )
+            drawCircle(
+                color = Color.Gray,
+                style = Stroke(width = 1.dp.toPx())
+            )
+            // Draw checkmark if checked
+            if (checked) {
+                drawLine(
+                    color = Color.Blue,
+                    start = center - Offset(6.dp.toPx(), 2.dp.toPx()),
+                    end = center + Offset(-2.dp.toPx(), 4.dp.toPx()),
+                    strokeWidth = 2.dp.toPx()
+                )
+                drawLine(
+                    color = Color.Blue,
+                    start = center + Offset(-2.dp.toPx(), 4.dp.toPx()),
+                    end = center + Offset(6.dp.toPx(), -8.dp.toPx()),
+                    strokeWidth = 2.dp.toPx()
+                )
+            }
+        }
+    }
 }
 
 @Composable
@@ -497,28 +640,36 @@ fun TextInStrokedCircle(
     text: String,
     circleColor: Color,
     textColor: Color,
+    aroundColor: Color,
     circleSize: Dp,
     textSize: Float,
-    strokeWidth: Float
 ) {
-    Canvas(modifier = modifier.size(circleSize)) {
-        val radius = size.minDimension / 2
-        drawCircle(
-            color = circleColor,
-            radius = radius,
-            center = center,
-            style = Stroke(width = strokeWidth)
-        )
+    Box(
+        modifier = Modifier
+            .size(45.dp)
+            .clip(CircleShape)
+            .background(aroundColor),
+        contentAlignment = Alignment.Center
+    ) {
+        Canvas(modifier = modifier.size(circleSize)) {
+            drawCircle(
+                color = Color.White,
+            )
+            drawCircle(
+                color = circleColor,
+                style = Stroke(width = 1.dp.toPx())
+            )
 
-        drawIntoCanvas { canvas ->
-            val paint = TextPaint().apply {
-                this.color = textColor.toArgb()
-                this.textSize = textSize
-                this.textAlign = android.graphics.Paint.Align.CENTER
+            drawIntoCanvas { canvas ->
+                val paint = TextPaint().apply {
+                    this.color = textColor.toArgb()
+                    this.textSize = textSize
+                    this.textAlign = android.graphics.Paint.Align.CENTER
+                }
+                val x = center.x
+                val y = center.y - (paint.descent() + paint.ascent()) / 2
+                canvas.nativeCanvas.drawText(text, x, y, paint)
             }
-            val x = center.x
-            val y = center.y - (paint.descent() + paint.ascent()) / 2
-            canvas.nativeCanvas.drawText(text, x, y, paint)
         }
     }
 }
@@ -620,71 +771,99 @@ fun FilteringDialog(viewModel: MainViewModel,
     var selectedFilterDateEnd by remember { mutableStateOf(viewModel.filters?.rangeDataByKey?.end ?: LocalDate.now()) }
 
     Dialog(onDismissRequest = onDismiss) {
-        Box(
+        Column(
             modifier = Modifier
-                .clip(RoundedCornerShape(8.dp))
-                .background(color = Color.White)
+                .background(color = Color.Transparent)
         ) {
-            Column(modifier = Modifier.padding(10.dp)) {
-                Text(
-                    fontWeight = FontWeight.Bold,
-                    text = viewModel.getTranslateString(stringResource(id = R.string.search))
-                )
-                TextFieldInputRounded(
-                    value = searchStr,
-                    onValueChange = { searchStr = it }
-                )
+            ImageButton(
+                id = R.drawable.ic_letter_x,
+                shape = CircleShape,
+                colorImage = ColorFilter.tint(color = Color.Gray),
+                sizeButton = 40.dp,
+                sizeImage = 25.dp,
+                modifier = Modifier
+                    .padding(start = 15.dp, bottom = 10.dp)
+                    .align(alignment = Alignment.End),
+                onClick = { onDismiss.invoke() }
+            )
 
-                if (viewModel.filters?.rangeDataByKey != null) {
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(color = Color.White)
+            ) {
+                Column(modifier = Modifier.padding(10.dp)) {
+                    Text(
+                        fontWeight = FontWeight.Bold,
+                        text = viewModel.getTranslateString(stringResource(id = R.string.search))
+                    )
+                    TextFieldInputRounded(
+                        value = searchStr,
+                        onValueChange = { searchStr = it },
+                        modifier = Modifier.height(45.dp).padding(5.dp)
+                    )
+
+                    if (viewModel.filters?.rangeDataByKey != null) {
+                        Row {
+                            DatePickerExample(
+                                "Дата з:",
+                                selectedFilterDateStart
+                            ) { selectedFilterDateStart = it }
+                            DatePickerExample(
+                                "Дата по:",
+                                selectedFilterDateEnd
+                            ) { selectedFilterDateEnd = it }
+                        }
+                    }
+
                     Row {
-                        DatePickerExample("Дата з:", selectedFilterDateStart) { selectedFilterDateStart = it }
-                        DatePickerExample("Дата по:", selectedFilterDateEnd) { selectedFilterDateEnd = it}
-                    }
-                }
-
-                Row {
-                    Button(
-                        onClick = {
-                            onChanged.invoke(Filters(
-                                viewModel.filters?.let {
-                                    RangeDate(
-                                        it.rangeDataByKey?.key,
-                                        selectedFilterDateStart,
-                                        selectedFilterDateEnd
+                        Button(
+                            onClick = {
+                                onChanged.invoke(
+                                    Filters(
+                                        viewModel.filters?.let {
+                                            RangeDate(
+                                                it.rangeDataByKey?.key,
+                                                selectedFilterDateStart,
+                                                selectedFilterDateEnd
+                                            )
+                                        },
+                                        searchStr
                                     )
-                                },
-                                searchStr
-                            ))
-                        },
-                        shape = RoundedCornerShape(8.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = colorResource(id = R.color.blue)),
-                        modifier = Modifier
-                            .weight(1f)
-                            .padding(5.dp)
-                    ) {
-                        Text(viewModel.getTranslateString(stringResource(id = R.string.apply)))
-                    }
+                                )
+                            },
+                            shape = RoundedCornerShape(8.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = colorResource(id = R.color.blue)),
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(5.dp)
+                        ) {
+                            Text(viewModel.getTranslateString(stringResource(id = R.string.apply)))
+                        }
 
-                    Button(
-                        onClick = {
-                            onChanged.invoke(Filters(
-                                viewModel.filters?.let {
-                                    RangeDate(
-                                        it.rangeDataByKey?.key,
-                                        LocalDate.now(),
-                                        LocalDate.now()
+                        Button(
+                            onClick = {
+                                onChanged.invoke(
+                                    Filters(
+                                        viewModel.filters?.let {
+                                            RangeDate(
+                                                it.rangeDataByKey?.key,
+                                                LocalDate.now(),
+                                                LocalDate.now()
+                                            )
+                                        },
+                                        ""
                                     )
-                                },
-                                ""
-                            ))
-                        },
-                        shape = RoundedCornerShape(8.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = colorResource(id = R.color.orange)),
-                        modifier = Modifier
-                            .weight(1f)
-                            .padding(5.dp)
-                    ) {
-                        Text(viewModel.getTranslateString(stringResource(id = R.string.clear)))
+                                )
+                            },
+                            shape = RoundedCornerShape(8.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = colorResource(id = R.color.orange)),
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(5.dp)
+                        ) {
+                            Text(viewModel.getTranslateString(stringResource(id = R.string.clear)))
+                        }
                     }
                 }
             }
@@ -765,97 +944,119 @@ fun SettingsDialog(viewModel: MainViewModel, onDismiss: () -> Unit) {
     val uiState by viewModel.uiState.collectAsState()
 
     Dialog(onDismissRequest = onDismiss) {
-        Box(
+        Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(top = 40.dp, bottom = 40.dp)
-                .clip(RoundedCornerShape(8.dp))
-                .background(color = Color.White)
+                .background(color = Color.Transparent)
         ) {
-            Column(
+            ImageButton(
+                id = R.drawable.ic_letter_x,
+                shape = CircleShape,
+                colorImage = ColorFilter.tint(color = Color.Gray),
+                sizeButton = 40.dp,
+                sizeImage = 25.dp,
                 modifier = Modifier
-                    .padding(16.dp)
-                    .fillMaxWidth()
+                    .padding(start = 15.dp, bottom = 10.dp)
+                    .align(alignment = Alignment.End),
+                onClick = { onDismiss.invoke() }
+            )
+
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(color = Color.White)
             ) {
-                Text(
-                    fontWeight = FontWeight.Bold,
+                Column(
                     modifier = Modifier
-                        .align(alignment = Alignment.CenterHorizontally),
-                    text = viewModel.getTranslateString(stringResource(id = R.string.setting_table))
-                )
-                Spacer(modifier = Modifier.padding(8.dp))
-                Text(
-                    fontWeight = FontWeight.Bold,
-                    text = viewModel.getTranslateString(stringResource(id = R.string.setting_column_visibility))
-                )
-                Text(
-                    text = viewModel.getTranslateString(stringResource(id = R.string.setting_column_visibility_desc))
-                )
-                Spacer(modifier = Modifier.padding(8.dp))
-
-                Box(
-                    modifier = Modifier
+                        .padding(16.dp)
                         .fillMaxWidth()
-                        .weight(1f)
-                        .shadow(4.dp, RoundedCornerShape(8.dp))
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(color = Color.White)
                 ) {
-                    Column {
-                        ItemFieldValue(
-                            FieldValue(
-                                key = "",
-                                TextField(
-                                    "",
-                                    viewModel.getTranslateString(stringResource(id = R.string.column_name)),
-                                    MerchModifier(fontWeight = FontWeight.Bold, padding = Padding(10.dp, 7.dp, 10.dp, 7.dp))
-                                ),
-                                TextField(
-                                    "",
-                                    viewModel.getTranslateString(stringResource(id = R.string.visibility)),
-                                    MerchModifier(fontWeight = FontWeight.Bold, padding = Padding(10.dp, 7.dp, 10.dp, 7.dp), weight = 1f, alignment = Alignment.End)
-                                )
-                            ),
-                            View.VISIBLE
-                        )
-                        HorizontalDivider(thickness = 1.dp)
+                    Text(
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier
+                            .align(alignment = Alignment.CenterHorizontally),
+                        text = viewModel.getTranslateString(stringResource(id = R.string.setting_table))
+                    )
+                    Spacer(modifier = Modifier.padding(8.dp))
+                    Text(
+                        text = viewModel.getTranslateString(stringResource(id = R.string.setting_column_visibility_desc))
+                    )
+                    Spacer(modifier = Modifier.padding(8.dp))
 
-                        LazyColumn {
-                            items(uiState.settingsItems) { itemSettingsUI ->
-                                SettingsItemView(item = itemSettingsUI)
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f)
+                            .shadow(4.dp, RoundedCornerShape(8.dp))
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(color = Color.White)
+                    ) {
+                        Column {
+                            ItemFieldValue(
+                                FieldValue(
+                                    key = "",
+                                    TextField(
+                                        "",
+                                        viewModel.getTranslateString(stringResource(id = R.string.column_name)),
+                                        MerchModifier(
+                                            fontWeight = FontWeight.Bold,
+                                            padding = Padding(10.dp, 7.dp, 10.dp, 7.dp)
+                                        )
+                                    ),
+                                    TextField(
+                                        "",
+                                        viewModel.getTranslateString(stringResource(id = R.string.visibility)),
+                                        MerchModifier(
+                                            fontWeight = FontWeight.Bold,
+                                            padding = Padding(10.dp, 7.dp, 10.dp, 7.dp),
+                                            weight = 1f,
+                                            alignment = Alignment.End
+                                        )
+                                    )
+                                ),
+                                View.VISIBLE
+                            )
+                            HorizontalDivider(thickness = 1.dp)
+
+                            LazyColumn {
+                                items(uiState.settingsItems) { itemSettingsUI ->
+                                    SettingsItemView(item = itemSettingsUI)
+                                }
                             }
                         }
                     }
-                }
 
-                Row {
-                    Button(
-                        onClick = {
-                            viewModel.updateContent()
-                            onDismiss.invoke()
-                        },
-                        shape = RoundedCornerShape(8.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = colorResource(id = R.color.blue)),
-                        modifier = Modifier
-                            .weight(1f)
-                            .padding(5.dp)
-                    ) {
-                        Text(viewModel.getTranslateString(stringResource(id = R.string.cancel)))
-                    }
+                    Row {
+                        Button(
+                            onClick = {
+                                viewModel.updateContent()
+                                onDismiss.invoke()
+                            },
+                            shape = RoundedCornerShape(8.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = colorResource(id = R.color.blue)),
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(5.dp)
+                        ) {
+                            Text(viewModel.getTranslateString(stringResource(id = R.string.cancel)))
+                        }
 
-                    Button(
-                        onClick = {
-                            viewModel.saveSettings()
-                            viewModel.updateContent()
-                            onDismiss.invoke()
-                        },
-                        shape = RoundedCornerShape(8.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = colorResource(id = R.color.orange)),
-                        modifier = Modifier
-                            .weight(1f)
-                            .padding(5.dp)
-                    ) {
-                        Text(viewModel.getTranslateString(stringResource(id = R.string.save)))
+                        Button(
+                            onClick = {
+                                viewModel.saveSettings()
+                                viewModel.updateContent()
+                                onDismiss.invoke()
+                            },
+                            shape = RoundedCornerShape(8.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = colorResource(id = R.color.orange)),
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(5.dp)
+                        ) {
+                            Text(viewModel.getTranslateString(stringResource(id = R.string.save)))
+                        }
                     }
                 }
             }

@@ -11,6 +11,7 @@ import org.json.JSONObject;
 import io.realm.RealmObject;
 import io.realm.annotations.Ignore;
 import io.realm.annotations.PrimaryKey;
+import ua.com.merchik.merchik.data.Database.Room.TovarDBOverride;
 import ua.com.merchik.merchik.dataLayer.DataObjectUI;
 import ua.com.merchik.merchik.dataLayer.model.MerchModifier;
 
@@ -195,7 +196,7 @@ public class TovarDB extends RealmObject implements DataObjectUI {
     @NonNull
     @Override
     public String getHidedFieldsOnUI() {
-        return DataObjectUI.DefaultImpls.getHidedFieldsOnUI(this);
+        return TovarDBOverride.INSTANCE.getHidedFieldsOnUI();
     }
 
     @Nullable

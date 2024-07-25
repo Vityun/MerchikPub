@@ -10,6 +10,7 @@ import android.content.Intent;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Build;
+import android.os.Bundle;
 import android.text.Html;
 import android.util.Log;
 import android.view.View;
@@ -32,6 +33,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
+import ua.com.merchik.merchik.Activities.Features.FeaturesActivity;
 import ua.com.merchik.merchik.Activities.PhotoLogActivity.PhotoLogActivity;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.R;
@@ -51,6 +53,7 @@ import ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsRealm;
 import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.dialogs.DialogFullPhotoR;
 import ua.com.merchik.merchik.dialogs.DialogVideo;
+import ua.com.merchik.merchik.features.main.DBViewModels.TovarDBViewModel;
 
 public class DialogCreateAchievement {
 
@@ -123,6 +126,15 @@ public class DialogCreateAchievement {
 
             spinnerTheme = dialog.findViewById(R.id.spinner_theme);
             spinnerClient = dialog.findViewById(R.id.spinner_client);
+
+            dialog.findViewById(R.id.tovar).setOnClickListener(view -> {
+                Intent intent = new Intent(context, FeaturesActivity.class);
+                Bundle bundle = new Bundle();
+                bundle.putString("viewModel", TovarDBViewModel.class.getCanonicalName());
+                intent.putExtras(bundle);
+                context.startActivity(intent, bundle);
+            });
+
         } catch (Exception e) {
             Globals.writeToMLOG("ERROR", "DialogCreateAchievement", "Exception e: " + e);
         }
@@ -139,6 +151,7 @@ public class DialogCreateAchievement {
                 achievementsSDB.adresaNm = addressTxt;
                 achievementsSDB.dvi = 1;
                 achievementsSDB.error = 0;
+                achievementsSDB.tovar_id = AchievementDataHolder.Companion.instance().getTovarId();
                 achievementsSDB.currentVisit = 0;
                 achievementsSDB.score = "0";
                 achievementsSDB.clientId = clientId;
@@ -544,6 +557,8 @@ public class DialogCreateAchievement {
     }
 
     public void setData(WpDataDB wpDataDB) {
+        AchievementDataHolder.Companion.instance().init();
+
         userId = wpDataDB.getUser_id();
         userTxt = wpDataDB.getUser_txt();
         addressId = wpDataDB.getAddr_id();
