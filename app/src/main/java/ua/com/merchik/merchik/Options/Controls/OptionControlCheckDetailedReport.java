@@ -125,7 +125,7 @@ public class OptionControlCheckDetailedReport<T> extends OptionControl {
             signal = false;
         }
 
-        if (addressSDB.tpId == 8196) {   // Для АШАН-ов которые работают через ДОТ и ФОТ виправлення ДЗ НЕ проверяем
+        if (addressSDB.tpId == 383) {   // Для АШАН-ов(8196 - у петрова такое тут, странно) которые работают через ДОТ и ФОТ виправлення ДЗ НЕ проверяем
             if (wpDataDB.getDot_user_id() > 0 || wpDataDB.getFot_user_id() > 0) {
                 signal = false;
                 stringBuilderMsg.append(", але для Ашанів, по котрим праюємо з ДОТ чи ФОТ, виправлення ДЗ не перевіряємо.");

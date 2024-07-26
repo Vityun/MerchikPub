@@ -119,6 +119,7 @@ import ua.com.merchik.merchik.Options.Controls.OptionControlReclamationAnswer;
 import ua.com.merchik.merchik.Options.Controls.OptionControlRegistrationPotentialClient;
 import ua.com.merchik.merchik.Options.Controls.OptionControlReturnOfGoods;
 import ua.com.merchik.merchik.Options.Controls.OptionControlTaskAnswer;
+import ua.com.merchik.merchik.PhotoReports;
 import ua.com.merchik.merchik.ServerExchange.Exchange;
 import ua.com.merchik.merchik.VersionApp;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
@@ -570,6 +571,11 @@ public class Options {
                 }
                 int optionId = Integer.parseInt(item.getOptionId());
 
+                Log.e("NNK_I", "F/New/ITEM_CONTROL_OPTION_optControl/getOptionId: " + item.getOptionId());
+                Log.e("NNK_I", "F/New/ITEM_CONTROL_OPTION_optControl/getOptionTxt: " + item.getOptionTxt());
+                Log.e("NNK_I", "F/New/ITEM_CONTROL_OPTION_optControl/getOptionControlId: " + item.getOptionControlId());
+                Log.e("NNK_I", "F/New/ITEM_CONTROL_OPTION_optControl/getOptionControlTxt: " + item.getOptionControlTxt());
+
                 optControl(context, dataDB, option, optionId, item, type, NNKMode.BLOCK, new OptionControl.UnlockCodeResultListener() {
                     @Override
                     public void onUnlockCodeSuccess() {
@@ -731,12 +737,12 @@ public class Options {
                     option.getClientId().equals("75411") || // Йозера,
                     option.getClientId().equals("10919") || // Маруся,
                     option.getClientId().equals("10291") || // Натурпродукт-вега
-                    option.getClientId().equals("9443 ") || // Кохавинка
+                    option.getClientId().equals("9443") || // Кохавинка
                     option.getClientId().equals("91434") || // Хім опт
                     option.getClientId().equals("38297") || // Юкойл СП
                     option.getClientId().equals("14504") || // Традиции вкуса ООО
-                    option.getClientId().equals("84667") || // Парк трейдинг ООО
-                    option.getClientId().equals("9029 ") || // Родная еда Компания ООО
+                    option.getClientId().equals("84677") || // Парк трейдинг ООО
+                    option.getClientId().equals("9029") || // Родная еда Компания ООО
                     option.getClientId().equals("80786") || // Марко Продукт ТОВ
                     option.getClientId().equals("91484") || // Нешнл Трейдинг
                     option.getClientId().equals("14888") || // Техно-Груп
@@ -1176,11 +1182,19 @@ public class Options {
                         Toast.makeText(context, "Запрос на проведение создан", Toast.LENGTH_SHORT).show();
                         DialogData dialogData = new DialogData(context);
                         dialogData.setClose(dialogData::dismiss);
+                        new PhotoReports(context).uploadPhotoReports(PhotoReports.UploadType.MULTIPLE);
+                        Exchange exchange = new Exchange();
+                        exchange.startExchange();
                         Exchange.conductingOnServerWpData(wp, wp.getCode_dad2(), new Click() {
                             @Override
                             public <T> void onSuccess(T data) {
                                 dialogData.setTitle("Команда на проведення звіту. ");
-                                dialogData.setText("" + data);
+                                try {
+                                    Spanned spanned = Html.fromHtml((String) data);
+                                    dialogData.setText(spanned);
+                                }catch (Exception e){
+
+                                }
                                 dialogData.show();
                             }
 

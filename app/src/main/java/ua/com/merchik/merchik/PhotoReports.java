@@ -50,7 +50,7 @@ public class PhotoReports {
     /*Список/очередь на выгрузку фотоотчётов*/
     private List<StackPhotoDB> realmResults = new ArrayList<>();
 
-    enum UploadType {
+    public enum UploadType {
         SINGLE,
         MULTIPLE,
         AUTO

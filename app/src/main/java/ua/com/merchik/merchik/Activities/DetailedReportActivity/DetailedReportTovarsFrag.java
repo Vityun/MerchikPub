@@ -395,7 +395,7 @@ public class DetailedReportTovarsFrag extends Fragment {
             List<TovarDB> tovarDBList;
             item.getItemId();
             switch (item.getTitle().toString()) {
-                case "додати один товар":
+                case "видалити зайві товари":
                     tovarDBList = getTovListNew(TovarDisplayType.DETAILED_REPORT);
                     Toast.makeText(getContext(), "Видалено зайві товари.(" + tovarDBList.size() + ")", Toast.LENGTH_SHORT).show();
                     addRecycleView(tovarDBList);
@@ -433,7 +433,7 @@ public class DetailedReportTovarsFrag extends Fragment {
                     }
                     return true;
 
-                case "видалити зайві товари":
+                case "додати один товар":
                     if (customerSDB != null && customerSDB.ppaAuto == 1 && !customerSDB.id.equals("9382") && !customerSDB.id.equals("32246")) {
                         dialogData.setCancel("Ні", () -> {
                             openOneTov();

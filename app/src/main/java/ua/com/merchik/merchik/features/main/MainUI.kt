@@ -366,7 +366,8 @@ private fun TextFieldInputRounded(
         },
         trailingIcon = {
             Image(
-                painter = painterResource(id = com.google.android.material.R.drawable.ic_search_black_24),
+//                painter = painterResource(id = com.google.android.material.R.drawable.ic_search_black_24),
+                painter = painterResource(id = R.drawable.ic_82),
                 contentDescription = ""
             )
         },

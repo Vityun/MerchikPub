@@ -1,9 +1,16 @@
 package ua.com.merchik.merchik.Global;
 
+import static ua.com.merchik.merchik.Globals.HELPDESK_PHONE_NUMBER;
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
 import android.content.Context;
+import android.text.Spannable;
+import android.text.SpannableString;
+import android.text.Spanned;
+import android.text.TextPaint;
+import android.text.style.ClickableSpan;
 import android.util.Log;
+import android.view.View;
 import android.widget.Toast;
 
 import java.util.Collections;
@@ -87,7 +94,7 @@ public class UnlockCode {
         Date wpDate = wp.getDt(); // дата работ из плана работ
         long date = wpDate.getTime() / 1000; // дата работ из плана работ в Юниксе
         long dad2 = wp.getCode_dad2(); // код ДАД2 из плана работ
-        String dad2str=String.valueOf(dad2); // код ДАД2 из плана работ в виде строки
+        String dad2str = String.valueOf(dad2); // код ДАД2 из плана работ в виде строки
         int addr_id = wp.getAddr_id(); // код адреса из плана работ
         String client_id = wp.getClient_id(); // код клиента из плана работ
         int user_id = wp.getUser_id(); // код сотрудника из плана работ
@@ -97,26 +104,61 @@ public class UnlockCode {
 
         // Pika Формирую строку для записи в поле "КодОбъекта" лога
         int len = opt_id.length();
-        String kodObstr = "1"+opt_id.substring(len-3,len)+dad2str.substring(1,5)+dad2str.substring(6,7)+dad2str.substring(8,13)+dad2str.substring(14,19);
+        String kodObstr = "1" + opt_id.substring(len - 3, len) + dad2str.substring(1, 5) + dad2str.substring(6, 7) + dad2str.substring(8, 13) + dad2str.substring(14, 19);
         long kodOb = Long.valueOf(kodObstr);
 
         // Pika Получаю из таблицы лога приложения инфо или вносился код уже сегодня для данных параметров
         LogDB logDBRec = LogRealm.getLogDbByKodOb(kodOb);
-        if (logDBRec!=null) { s = logDBRec.getComments(); }
+        if (logDBRec != null) {
+            s = logDBRec.getComments();
+        }
         String passAlreadyExists = ""; // строка с кодом разблокировки 4 симв
         if (!s.isEmpty()) {
-            len=s.length();
-            passAlreadyExists = s.substring(len-4,len);
+            len = s.length();
+            passAlreadyExists = s.substring(len - 4, len);
         }
 
         // Pika Если код разблокировки еще не вносился, то вызываю диалог его внесения и сохраняю потом в лог приложения
         // а если вносился, то пропускаю диалог внесения кода разблокировки
-        if (passAlreadyExists=="") {
+        if (passAlreadyExists == "") {
 
             DialogData dialog = new DialogData(context);
-            dialog.setTitle("Внесіть пароль!");
-            dialog.setText("Для продовження внесіть пароль: ");
-            dialog.setClose(()->{
+            dialog.setTitle("Внесіть код розблокування!");
+            String string = "Для розблокування внесіть код. Цей код Ви можете отримати у всого керівника. Якщо зв'язку з керівником нема - можна звернутися до керівника відділку.";
+
+            SpannableString spannableString = new SpannableString(string);
+
+            ClickableSpan clickableSpan1 = new ClickableSpan() {
+                @Override
+                public void onClick(View widget) {
+//                    Toast.makeText(widget.getContext(), "Керівник", Toast.LENGTH_SHORT).show();
+                    UsersSDB usersSDB = SQL_DB.usersDao().getById(wp.getSuper_id());
+                    Globals.telephoneCall(widget.getContext(), usersSDB.tel2);
+                }
+            };
+
+            ClickableSpan clickableSpan2 = new ClickableSpan() {
+                @Override
+                public void onClick(View widget) {
+//                    Toast.makeText(widget.getContext(), "Керівник відділку", Toast.LENGTH_SHORT).show();
+                    UsersSDB usersSDB = SQL_DB.usersDao().getById(wp.getNop_id());
+                    Globals.telephoneCall(widget.getContext(), usersSDB.tel2);
+                }
+            };
+
+            int start1 = string.indexOf("керівника");
+            int end1 = start1 + "керівника".length();
+            int start2 = string.indexOf("керівника відділку");
+            int end2 = start2 + "керівника відділку".length();
+
+            spannableString.setSpan(clickableSpan1, start1, end1, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+            spannableString.setSpan(clickableSpan2, start2, end2, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+
+
+
+
+            dialog.setText(spannableString);
+            dialog.setClose(() -> {
                 click.onFailure("");
                 dialog.dismiss();
             });
@@ -148,7 +190,7 @@ public class UnlockCode {
                             new LogDB(
                                     RealmManager.getLastIdLogDB() + 1,
                                     System.currentTimeMillis() / 1000,
-                                    "використання коду розблокування "+res,
+                                    "використання коду розблокування " + res,
                                     tema_id,
                                     client_id,
                                     addr_id,
@@ -174,16 +216,39 @@ public class UnlockCode {
 
         }
     }
-    public Long codeODAD(OptionsDB optionsDB){
+
+    public Long codeODAD(OptionsDB optionsDB) {
         Long res = null;
 
-        String dad2str= optionsDB.getCodeDad2();
+        String dad2str = optionsDB.getCodeDad2();
         String optId = optionsDB.getOptionId();
         int len = optionsDB.getOptionId().length();
 
-        String kodObstr = "1"+optId.substring(len-3,len)+dad2str.substring(1,5)+dad2str.substring(6,7)+dad2str.substring(8,13)+dad2str.substring(14,19);
+        String kodObstr = "1" + optId.substring(len - 3, len) + dad2str.substring(1, 5) + dad2str.substring(6, 7) + dad2str.substring(8, 13) + dad2str.substring(14, 19);
         res = Long.valueOf(kodObstr);
 
+        return res;
+    }
+
+    private SpannableString createLinkedString(String msg) {
+        SpannableString res = new SpannableString(msg);
+        ClickableSpan clickableSpan = new ClickableSpan() {
+            @Override
+            public void onClick(View textView) {
+                try {
+                    Globals.telephoneCall(textView.getContext(), HELPDESK_PHONE_NUMBER);
+                } catch (Exception e) {
+
+                }
+            }
+
+            @Override
+            public void updateDrawState(TextPaint ds) {
+                super.updateDrawState(ds);
+                ds.setUnderlineText(true);
+            }
+        };
+        res.setSpan(clickableSpan, msg.length() - 10, msg.length() - 1, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         return res;
     }
 

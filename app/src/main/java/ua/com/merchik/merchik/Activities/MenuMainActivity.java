@@ -19,7 +19,7 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 import ua.com.merchik.merchik.R;
-import ua.com.merchik.merchik.Translate;
+import ua.com.merchik.merchik.ServerExchange.TablesLoadingUnloading;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.ShowcaseResponse;
 import ua.com.merchik.merchik.data.TestJsonUpload.StandartData;
 import ua.com.merchik.merchik.dialogs.DialogShowcase.DialogShowcase;
@@ -86,8 +86,8 @@ public class MenuMainActivity extends toolbar_menus {
 
     private void test() {
         try {
-            Translate translate = new Translate();
-            translate.uploadNewTranslate();
+            TablesLoadingUnloading tablesLoadingUnloading = new TablesLoadingUnloading();
+            tablesLoadingUnloading.downloadAdditionalRequirements();
         }catch (Exception e){
             Log.e("testLong", "Exception e: " + e);
         }

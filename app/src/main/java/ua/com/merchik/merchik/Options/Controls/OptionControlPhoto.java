@@ -74,7 +74,7 @@ public class OptionControlPhoto<T> extends OptionControl {
         switch (optionId) {
             case "164354":  // Фото Планограмми ТТ
                 photoType = 5;
-                m = 1;
+//                m = 1;
                 break;
 
             case "164352":  // Контроль наявності світлини прикасової зони
@@ -84,17 +84,17 @@ public class OptionControlPhoto<T> extends OptionControl {
 
             case "84932":
                 photoType = 0;
-                m = 3;
+//                m = 3;
                 break;
 
             case "132971":
                 photoType = 10; // Проверка наличия Фото тележка с товаром (тип 10)
-                m = 1;
+//                m = 1;
                 break;
 
             case "141361":
                 photoType = 31; // Фото товара на скалде
-                m = 1;
+//                m = 1;
                 break;
 
             case "158606":  // Корпоративный блок
