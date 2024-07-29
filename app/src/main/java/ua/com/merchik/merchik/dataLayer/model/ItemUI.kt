@@ -20,6 +20,7 @@ data class MerchModifier(
     val fontStyle: FontStyle? = null,
     val fontWeight: FontWeight? = null,
     val padding: Padding? = null,
+    val textColor: Color? = null,
     val background: Color? = null,
     val alignment: Alignment.Horizontal? = null,
     val weight: Float? = null,

@@ -2,6 +2,8 @@ package ua.com.merchik.merchik.dataLayer
 
 import android.view.View
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -17,6 +19,14 @@ interface DataObjectUI {
     fun getIdResImage(): Int? {
         return null
     }
+
+//    fun getFieldFirstImageUI(): String? {
+//        return null
+//    }
+//
+//    fun getFieldSecondImageUI(): String? {
+//        return null
+//    }
 
     fun getHidedFieldsOnUI(): String {
         return ""
@@ -35,7 +45,7 @@ interface DataObjectUI {
     }
 
     fun getFieldModifier(key: String, jsonObject: JSONObject): MerchModifier? {
-        return MerchModifier(fontWeight = FontWeight.Bold, padding = Padding(end = 10.dp))
+        return MerchModifier(textColor = Color.Gray, padding = Padding(end = 10.dp))
     }
 
     fun getValueModifier(key: String, jsonObject: JSONObject): MerchModifier? {
@@ -64,6 +74,7 @@ fun DataObjectUI.toItemUI(nameUIRepository: NameUIRepository, hideUserFields: St
             )
         }
     }
+
     jsonObject.keys().forEach { key ->
         if (!("${hideUserFields}, ${this.getHidedFieldsOnUI()}").contains(key)) {
             fields.add(

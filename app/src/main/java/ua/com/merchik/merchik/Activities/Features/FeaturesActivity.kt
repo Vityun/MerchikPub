@@ -52,6 +52,9 @@ class FeaturesActivity: AppCompatActivity() {
                                     else -> null
                                 }?.let { viewModel ->
                                     viewModel.dataJson = bundle.getString("dataJson")
+                                    viewModel.title = bundle.getString("title")
+                                    viewModel.subTitle = bundle.getString("subTitle")
+                                    viewModel.idResImage = if (bundle.getInt("idResImage") == 0) null else bundle.getInt("idResImage")
                                     viewModel.updateContent()
                                     MainUI(viewModel = viewModel, LocalContext.current)
                                 } ?: {

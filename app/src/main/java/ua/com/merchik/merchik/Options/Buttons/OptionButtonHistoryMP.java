@@ -80,6 +80,7 @@ public class OptionButtonHistoryMP<T> extends OptionControl {
         Bundle bundle = new Bundle();
         bundle.putString("viewModel", LogMPDBViewModel.class.getCanonicalName());
         bundle.putString("dataJson", new Gson().toJson(wpDataDB));
+        bundle.putString("title", "Історія місцеположення");
         intent.putExtras(bundle);
         context.startActivity(intent);
 

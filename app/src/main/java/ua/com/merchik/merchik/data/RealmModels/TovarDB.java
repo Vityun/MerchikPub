@@ -234,4 +234,16 @@ public class TovarDB extends RealmObject implements DataObjectUI {
     public Integer getIdResImage() {
         return DataObjectUI.DefaultImpls.getIdResImage(this);
     }
+
+//    @Nullable
+//    @Override
+//    public String getFieldFirstImageUI() {
+//        return TovarDBOverride.INSTANCE.getFieldFirstImageUI();
+//    }
+//
+//    @Nullable
+//    @Override
+//    public String getFieldSecondImageUI() {
+//        return DataObjectUI.DefaultImpls.getFieldSecondImageUI(this);
+//    }
 }

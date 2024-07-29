@@ -29,9 +29,6 @@ class CustomerSDBViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle
 ) : MainViewModel(repository, nameUIRepository, savedStateHandle) {
 
-    override val title: String
-        get() = "Справочник: Клиенты"
-
     override val contextUI: ContextUI
         get() = ContextUI.DEFAULT
 

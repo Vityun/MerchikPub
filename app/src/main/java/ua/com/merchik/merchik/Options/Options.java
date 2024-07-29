@@ -1935,6 +1935,7 @@ public class Options {
         Bundle bundle = new Bundle();
         bundle.putString("viewModel", AdditionalRequirementsDBViewModel.class.getCanonicalName());
         bundle.putString("dataJson", new Gson().toJson(dataDB));
+        bundle.putString("title", "Доп. требования");
         intent.putExtras(bundle);
         context.startActivity(intent);
 

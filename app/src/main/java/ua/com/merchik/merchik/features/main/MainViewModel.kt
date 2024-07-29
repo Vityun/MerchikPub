@@ -19,7 +19,7 @@ import java.time.LocalDate
 import kotlin.reflect.KClass
 
 data class StateUI(
-    val title: String = "",
+    val title: String? = null,
     val subTitle: String? = null,
     val idResImage: Int? = null,
     val items: List<ItemUI> = emptyList(),
@@ -46,9 +46,10 @@ abstract class MainViewModel(
 ): ViewModel() {
 
     var dataJson: String? = null
-    open val title: String = "Довідник"
-    open val subTitle: String? = null
-    open val idResImage: Int? = null
+    var title: String? = null
+    var subTitle: String? = null
+    var idResImage: Int? = null
+
     abstract val contextUI: ContextUI
     abstract val table: KClass<out DataObjectUI>
     abstract fun getItems(): List<ItemUI>

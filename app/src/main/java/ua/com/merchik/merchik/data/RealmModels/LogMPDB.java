@@ -73,7 +73,7 @@ public class LogMPDB extends RealmObject implements DataObjectUI {
     @Nullable
     @Override
     public Long getFieldTranslateId(@NonNull String key) {
-        return DataObjectUI.DefaultImpls.getFieldTranslateId(this, key);
+        return LogMPDBOverride.INSTANCE.getTranslateId(key);
     }
 
     @NonNull

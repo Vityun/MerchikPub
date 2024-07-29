@@ -10,12 +10,14 @@ import androidx.annotation.DrawableRes
 import androidx.annotation.RequiresApi
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -30,6 +32,7 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
@@ -37,12 +40,14 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -50,9 +55,13 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.material3.TooltipBox
+import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -73,6 +82,7 @@ import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.colorResource
@@ -81,13 +91,18 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.Popup
+import androidx.compose.ui.window.PopupProperties
 import androidx.compose.ui.zIndex
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import my.nanihadesuka.compose.LazyColumnScrollbar
 import my.nanihadesuka.compose.ScrollbarSettings
@@ -138,6 +153,17 @@ fun MainUI(viewModel: MainViewModel, context: Context) {
                 modifier = Modifier
                     .padding(start = 15.dp, bottom = 10.dp),
                 onClick = { showSettingsDialog = true }
+            )
+
+            ImageButton(
+                id = R.drawable.ic_refresh,
+                shape = CircleShape,
+                colorImage = ColorFilter.tint(color = Color.Gray),
+                sizeButton = 40.dp,
+                sizeImage = 25.dp,
+                modifier = Modifier
+                    .padding(start = 15.dp, bottom = 10.dp),
+                onClick = {  }
             )
 
             ImageButton(
@@ -204,17 +230,21 @@ fun MainUI(viewModel: MainViewModel, context: Context) {
 
                 isActiveFiltered = _isActiveFiltered
 
-                Text(
-                    text = uiState.title, fontSize = 16.sp, modifier = Modifier
-                        .padding(start = 10.dp, bottom = 7.dp, end = 10.dp, top = 10.dp)
-                        .align(Alignment.CenterHorizontally),
-                    fontWeight = FontWeight.Bold
-                )
+                uiState.title?.let {
+                    Text(
+                        text = it, fontSize = 16.sp, modifier = Modifier
+                            .padding(start = 10.dp, bottom = 7.dp, end = 10.dp, top = 10.dp)
+                            .align(Alignment.CenterHorizontally),
+                        fontWeight = FontWeight.Bold
+                    )
+                }
 
                 uiState.idResImage?.let {
                     Image(
                         painter = painterResource(it),
-                        modifier = Modifier.size(50.dp).align(Alignment.CenterHorizontally),
+                        modifier = Modifier
+                            .size(50.dp)
+                            .align(Alignment.CenterHorizontally),
                         contentScale = ContentScale.Inside,
                         contentDescription = null
                     )
@@ -242,11 +272,20 @@ fun MainUI(viewModel: MainViewModel, context: Context) {
                             )
                             viewModel.updateFilters(filters)
                         },
-                        modifier = Modifier.weight(1f).height(40.dp)
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(40.dp)
 
                     )
 
                     ImageButton(id = R.drawable.ic_plus,
+                        sizeButton = 40.dp,
+                        sizeImage = 20.dp,
+                        modifier = Modifier.padding(start = 7.dp),
+                        onClick = {  }
+                    )
+
+                    ImageButton(id = R.drawable.ic_sort_down,
                         sizeButton = 40.dp,
                         sizeImage = 20.dp,
                         modifier = Modifier.padding(start = 7.dp),
@@ -261,7 +300,7 @@ fun MainUI(viewModel: MainViewModel, context: Context) {
                     )
                 }
 
-                Box(
+                Column(
                     modifier = Modifier
                         .weight(1f)
                         .padding(start = 10.dp, end = 10.dp, bottom = 10.dp)
@@ -270,7 +309,9 @@ fun MainUI(viewModel: MainViewModel, context: Context) {
                         .background(colorResource(id = R.color.main_form_list))
                 ) {
                     LazyColumnScrollbar(
-                        modifier = Modifier.padding(start = 10.dp, top = 10.dp, bottom = 10.dp),
+                        modifier = Modifier
+                            .padding(start = 10.dp, top = 10.dp, bottom = 7.dp)
+                            .weight(1f),
                         state = listState,
                         settings = ScrollbarSettings(
                             scrollbarPadding = 2.dp,
@@ -280,106 +321,154 @@ fun MainUI(viewModel: MainViewModel, context: Context) {
                             thumbShape = CircleShape,
                         ),
                     ) {
-                            LazyColumn(
-                                state = listState,
-                            ) {
-                                items(itemsUI) { item ->
-                                    Box(
-                                        modifier = Modifier
-                                            .clickable {
-                                                viewModel.onClickItem(
-                                                    item,
-                                                    context
+                        LazyColumn(
+                            state = listState,
+                        ) {
+                            items(itemsUI) { item ->
+                                Box(
+                                    modifier = Modifier
+                                        .clickable {
+                                            viewModel.onClickItem(
+                                                item,
+                                                context
+                                            )
+                                        }
+                                        .fillMaxWidth()
+                                        .padding(end = 10.dp, bottom = 7.dp)
+                                        .shadow(4.dp, RoundedCornerShape(8.dp))
+                                        .clip(RoundedCornerShape(8.dp))
+                                        .border(1.dp, Color.LightGray)
+                                        .then(item.modifierContainer?.background?.let {
+                                            Modifier.background(it)
+                                        } ?: Modifier.background(
+                                            if (item.selected) colorResource(id = R.color.selected_item) else Color.White
+                                        ))
+                                ) {
+                                    Row(Modifier.padding(7.dp)) {
+                                        item.fields.firstOrNull {
+                                            it.key.equals(
+                                                "id_res_image",
+                                                true
+                                            )
+                                        }?.let {
+                                            val idResImage = (it.value.rawValue as? Int)
+                                                ?: R.drawable.merchik
+                                            Box(
+                                                modifier = Modifier
+                                                    .weight(1f)
+                                                    .padding(end = 5.dp)
+                                                    .border(1.dp, Color.LightGray)
+                                                    .background(Color.White)
+                                                    .align(alignment = Alignment.Top)
+                                            ) {
+                                                Image(
+                                                    painter = painterResource(idResImage),
+                                                    modifier = Modifier.fillMaxSize(),
+                                                    contentScale = ContentScale.FillWidth,
+                                                    contentDescription = null
                                                 )
-                                            }
-                                            .fillMaxWidth()
-                                            .padding(end = 10.dp, bottom = 7.dp)
-                                            .shadow(4.dp, RoundedCornerShape(8.dp))
-                                            .clip(RoundedCornerShape(8.dp))
-                                            .border(1.dp, Color.LightGray)
-                                            .then(item.modifierContainer?.background?.let {
-                                                Modifier.background(it)
-                                            } ?: Modifier.background(
-                                                if (item.selected) colorResource(id = R.color.selected_item) else Color.White
-                                            ))
-                                    ) {
-                                        Row(Modifier.padding(7.dp)) {
-                                            item.fields.firstOrNull {
-                                                it.key.equals(
-                                                    "id_res_image",
-                                                    true
-                                                )
-                                            }?.let {
-                                                val idResImage = (it.value.rawValue as? Int)
-                                                    ?: R.drawable.merchik
-                                                Box(
-                                                    modifier = Modifier
-                                                        .padding(end = 5.dp)
-                                                        .border(1.dp, Color.Black)
-                                                        .background(Color.White)
-                                                        .align(alignment = Alignment.CenterVertically)
-                                                ) {
-                                                    Image(
-                                                        painter = painterResource(idResImage),
-                                                        modifier = Modifier.size(100.dp),
-                                                        contentDescription = null
-                                                    )
-                                                }
-                                            }
-
-                                            Column(modifier = Modifier.weight(1f)) {
-                                                item.fields.forEach {
-                                                    if (!it.key.equals(
-                                                            "id_res_image",
-                                                            true
-                                                        )
-                                                    ) ItemFieldValue(it, visibilityField)
-                                                }
                                             }
                                         }
 
-                                        Column(modifier = Modifier.align(Alignment.TopEnd)) {
+                                        Column(modifier = Modifier.weight(2f)) {
+                                            item.fields.forEachIndexed { index, field ->
+                                                if (!field.key.equals("id_res_image",true)) {
+                                                    ItemFieldValue(field, visibilityField)
+                                                    if (index < item.fields.size - 1) HorizontalDivider()
+                                                }
+                                            }
+                                        }
+                                    }
 
-                                            if (viewModel.contextUI == ContextUI.ONE_SELECT || viewModel.contextUI == ContextUI.MULTI_SELECT) {
-                                                RoundCheckbox(
+                                    Column(modifier = Modifier.align(Alignment.TopEnd)) {
+
+                                        if (viewModel.contextUI == ContextUI.ONE_SELECT || viewModel.contextUI == ContextUI.MULTI_SELECT) {
+                                            RoundCheckbox(
+                                                modifier = Modifier.padding(
+                                                    top = 3.dp,
+                                                    end = 3.dp
+                                                ),
+                                                checked = item.selected,
+                                                aroundColor = if (item.selected) colorResource(
+                                                    id = R.color.selected_item
+                                                ) else Color.White,
+                                                onCheckedChange = { checked ->
+                                                    viewModel.updateItemSelect(checked, item)
+                                                }
+                                            )
+                                        }
+
+                                        item.rawObj.firstOrNull { it is AdditionalRequirementsMarkDB }
+                                            ?.let {
+                                                it as AdditionalRequirementsMarkDB
+                                                val text = it.score ?: "0"
+                                                TextInStrokedCircle(
                                                     modifier = Modifier.padding(
                                                         top = 3.dp,
                                                         end = 3.dp
                                                     ),
-                                                    checked = item.selected,
+                                                    text = text,
+                                                    circleColor = if (text == "0") Color.Red else Color.Gray,
+                                                    textColor = if (text == "0") Color.Red else Color.Gray,
                                                     aroundColor = if (item.selected) colorResource(
                                                         id = R.color.selected_item
                                                     ) else Color.White,
-                                                    onCheckedChange = { checked ->
-                                                        viewModel.updateItemSelect(checked, item)
-                                                    }
+                                                    circleSize = 30.dp,
+                                                    textSize = 20f.toPx(),
                                                 )
                                             }
-
-                                            item.rawObj.firstOrNull { it is AdditionalRequirementsMarkDB }
-                                                ?.let {
-                                                    it as AdditionalRequirementsMarkDB
-                                                    val text = it.score ?: "0"
-                                                    TextInStrokedCircle(
-                                                        modifier = Modifier.padding(
-                                                            top = 3.dp,
-                                                            end = 3.dp
-                                                        ),
-                                                        text = text,
-                                                        circleColor = if (text == "0") Color.Red else Color.Gray,
-                                                        textColor = if (text == "0") Color.Red else Color.Gray,
-                                                        aroundColor = if (item.selected) colorResource(
-                                                            id = R.color.selected_item
-                                                        ) else Color.White,
-                                                        circleSize = 30.dp,
-                                                        textSize = 20f.toPx(),
-                                                    )
-                                                }
-                                        }
                                     }
                                 }
                             }
-//                        }
+                        }
+                    }
+
+                    Row {
+                        Tooltip(text = viewModel.getTranslateString(stringResource(id = R.string.total_number_selected, itemsUI.size))) {
+                            Text(
+                                text = "\u2211 ${itemsUI.size}",
+                                fontSize = 16.sp,
+                                textDecoration = TextDecoration.Underline,
+                                modifier = Modifier
+                                    .padding(start = 10.dp, bottom = 10.dp, end = 10.dp),
+                            )
+                        }
+
+                        Tooltip(text = viewModel.getTranslateString(stringResource(id = R.string.total_number_selected, 0))) {
+                            Text(
+                                text = "⧂ ☌ ⚲ ${0}",
+                                fontSize = 16.sp,
+                                textDecoration = TextDecoration.Underline,
+                                modifier = Modifier
+                                    .padding(start = 10.dp, bottom = 10.dp, end = 10.dp),
+                            )
+                        }
+
+                        Tooltip(text = viewModel.getTranslateString(stringResource(id = R.string.total_number_selected, 0))) {
+                            Text(
+                                text = "\u2207 ${0}",
+                                fontSize = 16.sp,
+                                textDecoration = TextDecoration.Underline,
+                                modifier = Modifier
+                                    .padding(start = 10.dp, bottom = 10.dp, end = 10.dp),
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.weight(1f))
+
+                        if (viewModel.contextUI == ContextUI.ONE_SELECT || viewModel.contextUI == ContextUI.MULTI_SELECT) {
+                            val selectedCount = itemsUI.filter { it.selected }.size
+                            Tooltip(text = viewModel.getTranslateString(stringResource(id = R.string.total_number_marked, selectedCount))) {
+                                Text(
+                                    text = "\u2713 $selectedCount",
+                                    fontSize = 16.sp,
+                                    textDecoration = TextDecoration.Underline,
+                                    modifier = Modifier
+                                        .padding(start = 10.dp, bottom = 10.dp, end = 10.dp),
+                                )
+                            }
+                        }
+
                     }
                 }
 
@@ -443,6 +532,58 @@ fun MainUI(viewModel: MainViewModel, context: Context) {
 }
 
 @Composable
+fun Tooltip(
+    text: String,
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit
+) {
+    var isVisible by remember { mutableStateOf(false) }
+    var time by remember { mutableIntStateOf(5) }
+
+    Box(modifier = modifier.pointerInput(Unit) {
+        detectTapGestures(
+            onTap = {
+                time = 5
+                isVisible = true
+            },
+        )
+    }) {
+        content()
+        if (isVisible) {
+            Popup(
+                offset = IntOffset(0, -100),
+                alignment = Alignment.Center
+            ) {
+                Box(
+                    modifier = Modifier
+                        .padding(8.dp)
+                        .shadow(4.dp, RoundedCornerShape(8.dp))
+                        .clip(RoundedCornerShape(8.dp))
+                        .border(1.dp, colorResource(id = R.color.borderToolTip), RoundedCornerShape(8.dp))
+                        .background(colorResource(id = R.color.backgroundToolTip), RoundedCornerShape(8.dp))
+                        .clickable {
+                            time = 0
+                            isVisible = false
+                        }
+                ) {
+                    Text(
+                        modifier = Modifier.widthIn(max = 200.dp).padding(7.dp),
+                        text = text,
+                        color = Color.Black
+                    )
+                }
+            }
+        }
+    }
+
+    LaunchedEffect(time) {
+        delay(1000L)
+        if (time <= 0) isVisible = false
+        else time--
+    }
+}
+
+@Composable
 fun Float.toPx() = with(LocalDensity.current) { this@toPx.sp.toPx() }
 
 @Composable
@@ -462,7 +603,9 @@ private fun TextFieldInputRounded(
     ) {
         if (!isFocusedSearchView)
             Text(
-                modifier = Modifier.align(Alignment.CenterStart).padding(start = 7.dp),
+                modifier = Modifier
+                    .align(Alignment.CenterStart)
+                    .padding(start = 7.dp),
                 text = "Пошук",
                 fontSize = 16.sp,
                 color = colorResource(id = R.color.hintColorDefault),
@@ -475,11 +618,17 @@ private fun TextFieldInputRounded(
                 textStyle = TextStyle.Default.copy(color = Color.Black, fontSize = 16.sp),
                 maxLines = 1,
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                modifier = Modifier.align(Alignment.CenterVertically).padding(start = 7.dp).weight(1f)
+                modifier = Modifier
+                    .align(Alignment.CenterVertically)
+                    .padding(start = 7.dp)
+                    .weight(1f)
             )
 
             Image(
-                modifier = Modifier.align(Alignment.CenterVertically).padding(end = 7.dp, start = 7.dp).fillMaxHeight(),
+                modifier = Modifier
+                    .align(Alignment.CenterVertically)
+                    .padding(end = 7.dp, start = 7.dp)
+                    .fillMaxHeight(),
                 painter = painterResource(id = com.google.android.material.R.drawable.ic_search_black_24),
                 contentDescription = "",
                 colorFilter = ColorFilter.tint(colorResource(id = R.color.hintColorDefault))
@@ -492,9 +641,9 @@ private fun TextFieldInputRounded(
 private fun ItemFieldValue(it: FieldValue, visibilityField: Int? = null) {
     Row(Modifier.fillMaxWidth()) {
         if (visibilityField == View.VISIBLE) {
-            ItemTextField(it.field, it.field.modifierValue?.weight?.let { Modifier.weight(it) })
+            ItemTextField(it.field, Modifier.weight(1f))
         }
-        ItemTextField(it.value, it.value.modifierValue?.weight?.let{ Modifier.weight(it) })
+        ItemTextField(it.value, Modifier.weight(1f))
     }
 }
 
@@ -504,6 +653,9 @@ private fun ItemTextField(it: TextField, modifier: Modifier? = null) {
         text = it.value,
         fontWeight = it.modifierValue?.fontWeight,
         fontStyle = it.modifierValue?.fontStyle,
+        color = it.modifierValue?.textColor ?: Color.Black,
+        maxLines = 3,
+        overflow = TextOverflow.Ellipsis,
         modifier = (modifier ?: Modifier)
             .padding(
                 start = it.modifierValue?.padding?.start ?: 0.dp,
@@ -546,14 +698,14 @@ fun RoundCheckbox(
             if (checked) {
                 drawLine(
                     color = Color.Blue,
-                    start = center - Offset(6.dp.toPx(), 2.dp.toPx()),
-                    end = center + Offset(-2.dp.toPx(), 4.dp.toPx()),
+                    start = center - Offset(6.dp.toPx(), 0.dp.toPx()),
+                    end = center + Offset(-2.dp.toPx(), 6.dp.toPx()),
                     strokeWidth = 2.dp.toPx()
                 )
                 drawLine(
                     color = Color.Blue,
-                    start = center + Offset(-2.dp.toPx(), 4.dp.toPx()),
-                    end = center + Offset(6.dp.toPx(), -8.dp.toPx()),
+                    start = center + Offset(-2.dp.toPx(), 6.dp.toPx()),
+                    end = center + Offset(6.dp.toPx(), -6.dp.toPx()),
                     strokeWidth = 2.dp.toPx()
                 )
             }
@@ -800,7 +952,9 @@ fun FilteringDialog(viewModel: MainViewModel,
                     TextFieldInputRounded(
                         value = searchStr,
                         onValueChange = { searchStr = it },
-                        modifier = Modifier.height(45.dp).padding(5.dp)
+                        modifier = Modifier
+                            .height(45.dp)
+                            .padding(5.dp)
                     )
 
                     if (viewModel.filters?.rangeDataByKey != null) {

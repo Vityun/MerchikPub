@@ -35,11 +35,8 @@ class AdditionalRequirementsDBViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle
 ) : MainViewModel(repository, nameUIRepository, savedStateHandle) {
 
-    override val title: String
-        get() = "Доп. требования"
-
     override val contextUI: ContextUI
-        get() = ContextUI.MULTI_SELECT
+        get() = ContextUI.DEFAULT
 
     override val table: KClass<out DataObjectUI>
         get() = AdditionalRequirementsDB::class

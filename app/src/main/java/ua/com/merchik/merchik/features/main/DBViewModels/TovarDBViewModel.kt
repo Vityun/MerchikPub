@@ -33,15 +33,6 @@ class TovarDBViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle
 ) : MainViewModel(repository, nameUIRepository, savedStateHandle) {
 
-    override val title: String
-        get() = "Історія місцеположення"
-
-    override val subTitle: String
-        get() = "Подзаголовок Подзаг Подво Подво Подзаголовок njh"
-
-    override val idResImage: Int
-        get() = R.drawable.ic_caution
-
     override val contextUI: ContextUI
         get() = ContextUI.ONE_SELECT
 
@@ -50,6 +41,10 @@ class TovarDBViewModel @Inject constructor(
 
     override fun getItems(): List<ItemUI> {
         return repository.getAllRealm(TovarDB::class, contextUI)
+            .map {
+                val selected = (it.rawObj.firstOrNull { it is TovarDB } as? TovarDB)?.getiD()?.toIntOrNull() == AchievementDataHolder.instance().tovarId
+                it.copy(selected = selected)
+            }
     }
 
     override fun onSelectedItemsUI(itemsUI: List<ItemUI>) {

@@ -131,6 +131,9 @@ public class DialogCreateAchievement {
                 Intent intent = new Intent(context, FeaturesActivity.class);
                 Bundle bundle = new Bundle();
                 bundle.putString("viewModel", TovarDBViewModel.class.getCanonicalName());
+                bundle.putString("title", "Заголовок");
+                bundle.putString("subTitle", "Подзаголовок Подзаг Подво Подво Подзаголовок njh");
+                bundle.putInt("idResImage", R.drawable.ic_caution);
                 intent.putExtras(bundle);
                 context.startActivity(intent, bundle);
             });

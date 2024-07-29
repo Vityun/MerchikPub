@@ -215,6 +215,8 @@
     <string name="apply">Застосувати</string>
     <string name="clear">Очистити</string>
     <string name="choice">Вибрати</string>
+    <string name="total_number_selected">Загальна кількість елементів %s шт.</string>
+    <string name="total_number_marked">Загальна кількість помічених елементів %s шт.</string>
 
 </resources>
 
