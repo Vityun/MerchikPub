@@ -63,11 +63,12 @@ public class OptionControlPhoto<T> extends OptionControl {
         String typeNm = "";
         int m = Integer.parseInt(optionDB.getAmountMin());
         if (m == 0) {
-            if (optionId.equals("164352")){
-                m = 1;
-            }else {
-                m = 3;
-            }
+            m = 1;  // Большая кака, но народ попросил так, надо будет у Петрова уточнить как именно оно должно работать ибо у него вроде как так же работатет 29.07.24
+//            if (optionId.equals("164352")){
+//                m = 1;
+//            }else {
+//                m = 3;
+//            }
         }
         int photoType = 0;
 
