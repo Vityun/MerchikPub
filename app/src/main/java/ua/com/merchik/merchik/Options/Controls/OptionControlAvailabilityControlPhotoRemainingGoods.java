@@ -179,10 +179,10 @@ public class OptionControlAvailabilityControlPhotoRemainingGoods<T> extends Opti
                 if (wpDataDB.getUser_id() == 232545 || wpDataDB.getUser_id() == 189955) {
                     spannableStringBuilder.append(", але для цього виконавця зроблено виключення.");
                     signal = false;
-                }else if (usersSDB.reportDate20 != null && usersSDB.reportDate20.getTime() <= wpDataDB.getDt().getTime()){
+                }else if (usersSDB.reportDate20 == null/* usersSDB.reportDate20 != null && usersSDB.reportDate20.getTime() <= wpDataDB.getDt().getTime()*/){
                     spannableStringBuilder.append(", але виконавець не провів ще свого 20-го звіту. Сигнал прибрано.");
                     signal = false;
-                }else if (usersSDB.reportDate05 != null && usersSDB.reportDate05.getTime() <= wpDataDB.getDt().getTime()){
+                }else if (usersSDB.reportDate05 == null/*usersSDB.reportDate05 != null && usersSDB.reportDate05.getTime() <= wpDataDB.getDt().getTime()*/){
                     spannableStringBuilder.append(", але виконавець не провів ще свого 5-го звіту. Сигнал прибрано.");
                     signal = false;
                 }
