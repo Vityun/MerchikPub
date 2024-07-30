@@ -131,18 +131,20 @@ public class UnlockCode {
             ClickableSpan clickableSpan1 = new ClickableSpan() {
                 @Override
                 public void onClick(View widget) {
-//                    Toast.makeText(widget.getContext(), "Керівник", Toast.LENGTH_SHORT).show();
                     UsersSDB usersSDB = SQL_DB.usersDao().getById(wp.getSuper_id());
-                    Globals.telephoneCall(widget.getContext(), usersSDB.tel2);
+                    String tel = usersSDB.tel;
+                    if (usersSDB.tel2Corp == 1) tel = usersSDB.tel2;
+                    Globals.telephoneCall(widget.getContext(), tel);
                 }
             };
 
             ClickableSpan clickableSpan2 = new ClickableSpan() {
                 @Override
                 public void onClick(View widget) {
-//                    Toast.makeText(widget.getContext(), "Керівник відділку", Toast.LENGTH_SHORT).show();
                     UsersSDB usersSDB = SQL_DB.usersDao().getById(wp.getNop_id());
-                    Globals.telephoneCall(widget.getContext(), usersSDB.tel2);
+                    String tel = usersSDB.tel;
+                    if (usersSDB.tel2Corp == 1) tel = usersSDB.tel2;
+                    Globals.telephoneCall(widget.getContext(), tel);
                 }
             };
 
