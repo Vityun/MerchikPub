@@ -528,6 +528,7 @@ public class Tab1Fragment extends Fragment {
         data.vinovnikScore = rate;
         data.vinovnikScoreDt = System.currentTimeMillis();
         data.vinovnikScoreUserId = Globals.userId;
+        data.voteDtUpload = 0L;
         if (comment != null && !comment.equals("")) {
             data.vinovnikScoreComment = comment;
         }

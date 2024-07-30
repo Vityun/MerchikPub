@@ -449,4 +449,11 @@ public class RoomManager {
             database.execSQL("ALTER TABLE sotr ADD COLUMN tel2_corp INTEGER");
         }
     };
+
+    static final Migration MIGRATION_52_53 = new Migration(52, 53) {
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase database) {
+            database.execSQL("ALTER TABLE tasks_and_reclamations ADD COLUMN voteDtUpload INTEGER");
+        }
+    };
 }

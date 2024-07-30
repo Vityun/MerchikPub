@@ -352,6 +352,11 @@ public class TasksAndReclamationsSDB implements Parcelable {
     @ColumnInfo(name = "dt_end_fact")
     public Long dt_end_fact;//    dt_end_fact - фактическое время окончания (unixtime)
 
+    @SerializedName("voteDtUpload")
+    @Expose
+    @ColumnInfo(name = "voteDtUpload")
+    public Long voteDtUpload;
+
     /**
      * 0 - выгружен
      * 1 - надо выгрузить

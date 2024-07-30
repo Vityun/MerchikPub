@@ -2744,8 +2744,8 @@ public class TablesLoadingUnloading {
             StandartData data = new StandartData();
             data.mod = "additional_requirements";
             data.act = "list";
-            data.date_from = Clock.getDatePeriod(-180);
-            data.date_to = Clock.today;
+//            data.date_from = Clock.getDatePeriod(-180);
+//            data.date_to = Clock.today;
 
             Gson gson = new Gson();
             String json = gson.toJson(data);

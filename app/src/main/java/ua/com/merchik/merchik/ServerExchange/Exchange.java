@@ -1029,6 +1029,19 @@ public class Exchange {
                     Globals.writeToMLOG("ERROR", "startExchange/VotesExchange/", "Exception e: " + e);
                 }
 
+                // TODO Это надо будет нормально оформить
+                try {
+                    List<TasksAndReclamationsSDB> tar = SQL_DB.tarDao().getTARVotesToUpload();
+                    Globals.writeToMLOG("INFO", "startExchange/VotesTARExchange/startUpload", "tar: " + tar.size());
+                    if (tar != null && tar.size() > 0){
+                        for (TasksAndReclamationsSDB item : tar){
+                            updateTAR(item);
+                        }
+                    }
+                }catch (Exception e){
+                    Globals.writeToMLOG("ERROR", "startExchange/VotesTARExchange/", "Exception e: " + e);
+                }
+
 
                 // --------------------------------------------------------------
             } else {
@@ -1823,6 +1836,7 @@ public class Exchange {
                     Log.e("updateTAR", "response:" + response.body());
                     Globals.writeToMLOG("INGO", "updateTAR", "response.body():" + response.body());
                     uploadData.uploadStatus = 0;
+                    uploadData.voteDtUpload = System.currentTimeMillis()/1000;
                     SQL_DB.tarDao().insertData(Collections.singletonList(uploadData));
                 }
 

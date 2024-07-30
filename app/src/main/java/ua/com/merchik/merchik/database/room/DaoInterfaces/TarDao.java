@@ -119,6 +119,9 @@ public interface TarDao {
 
     @Query("SELECT * FROM tasks_and_reclamations WHERE dt BETWEEN :fromDate AND :toDate")
     List<TasksAndReclamationsSDB> getByDateRangeFilter(Long fromDate, Long toDate);
+
+    @Query("SELECT * FROM tasks_and_reclamations WHERE voteDtUpload = 0")
+    List<TasksAndReclamationsSDB> getTARVotesToUpload();
 }
 
 /*SELECT tar.*, addr.nm FROM tasks_and_reclamations tar
