@@ -121,6 +121,7 @@ import ua.com.merchik.merchik.Options.Controls.OptionControlReturnOfGoods;
 import ua.com.merchik.merchik.Options.Controls.OptionControlTaskAnswer;
 import ua.com.merchik.merchik.PhotoReports;
 import ua.com.merchik.merchik.ServerExchange.Exchange;
+import ua.com.merchik.merchik.ServerExchange.TablesLoadingUnloading;
 import ua.com.merchik.merchik.VersionApp;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.WorkPlan;
@@ -711,6 +712,22 @@ public class Options {
             // 78286    Аумі
             // 14133    ЗБС
             // 8804 львовский хладокомбинат
+
+            // 45654 Аванта-Трейд ПП
+            // 82359 Вертикаль-Київ ТОВ
+            // 78280 Веранта ООО
+            // 38475 Глобал Трейд ЮА
+            // 70484 Кідді-Ко ПП
+            // 14023 Лаки Шуз ТОВ
+            //  9029 Родная еда Компания ООО
+            //  8767 Сл Дистрибьюшн
+            // 45748 Бико
+            // 32246 Ласунка
+            //  8463 Житомирський маслозавод
+            // 10426 Драйд Фудз
+            // 14110 Кр Ингредиентс
+            // 88939 Ничога ПП
+
             if (option.getClientId().equals("14301") ||     // трегуб
                     option.getClientId().equals("14840") || // Авто комфорт плюс
                     option.getClientId().equals("14843") || // Джокер
@@ -749,7 +766,22 @@ public class Options {
                     option.getClientId().equals("86566") || // Троянда-захід .......... вже була
                     option.getClientId().equals("78286") || // Аумі
                     option.getClientId().equals("14133") ||   // ЗБС
-                    option.getClientId().equals("8804")    //  львовский хладокомбинат
+                    option.getClientId().equals("8804")  ||  //  львовский хладокомбинат
+
+                    option.getClientId().equals("45654")  ||    // Аванта-Трейд ПП
+                    option.getClientId().equals("82359")  ||    // Вертикаль-Київ ТОВ
+                    option.getClientId().equals("78280")  ||    // Веранта ООО
+                    option.getClientId().equals("38475")  ||    // Глобал Трейд ЮА
+                    option.getClientId().equals("70484")  ||    // Кідді-Ко ПП
+                    option.getClientId().equals("14023")  ||    // Лаки Шуз ТОВ
+                    option.getClientId().equals("9029")  ||    // Родная еда Компания ООО ?? Походу манагеры проебались, прошу прощения
+                    option.getClientId().equals("8767")  ||    // Сл Дистрибьюшн
+                    option.getClientId().equals("45748")  ||    // Бико
+                    option.getClientId().equals("32246")  ||    // Ласунка
+                    option.getClientId().equals("8463")  ||    // Житомирський маслозавод
+                    option.getClientId().equals("10426")  ||    // Драйд Фудз
+                    option.getClientId().equals("14110")  ||    // Кр Ингредиентс
+                    option.getClientId().equals("88939")        // Ничога ПП
             ) {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                     optionControlNewAlgo(getOptionsToControl(option), context, dataDB, option, optionList, type, mode, false, click);
@@ -1182,7 +1214,8 @@ public class Options {
                         Toast.makeText(context, "Запрос на проведение создан", Toast.LENGTH_SHORT).show();
                         DialogData dialogData = new DialogData(context);
                         dialogData.setClose(dialogData::dismiss);
-                        new PhotoReports(context).uploadPhotoReports(PhotoReports.UploadType.MULTIPLE);
+                        new PhotoReports(context).uploadPhotoReports(PhotoReports.UploadType.AUTO);
+                        new TablesLoadingUnloading().uploadReportPrepareToServer();
                         Exchange exchange = new Exchange();
                         exchange.startExchange();
                         Exchange.conductingOnServerWpData(wp, wp.getCode_dad2(), new Click() {
