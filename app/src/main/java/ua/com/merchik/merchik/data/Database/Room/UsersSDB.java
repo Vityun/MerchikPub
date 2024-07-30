@@ -151,6 +151,16 @@ public class UsersSDB implements DataObjectUI{
     @ColumnInfo(name = "report_date_200")
     public Date reportDate200;
 
+    @SerializedName("tel_corp")
+    @Expose
+    @ColumnInfo(name = "tel_corp")
+    public Integer telCorp;
+
+    @SerializedName("tel2_corp")
+    @Expose
+    @ColumnInfo(name = "tel2_corp")
+    public Integer tel2Corp;
+
     @NonNull
     @Override
     public String getHidedFieldsOnUI() {

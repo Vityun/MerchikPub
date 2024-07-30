@@ -131,7 +131,7 @@ import ua.com.merchik.merchik.database.room.DaoInterfaces.VotesDao;
                 SMSLogSDB.class,         //  СМС Б
                 SettingsUISDB.class
         },
-        version = 51
+        version = 52
 )
 
 

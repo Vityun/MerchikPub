@@ -22,7 +22,8 @@ public class RoomManager {
                         MIGRATION_12_13,
                         MIGRATION_40_41,
                         MIGRATION_41_42,
-                        MIGRATION_42_51
+                        MIGRATION_42_51,
+                        MIGRATION_51_52
                 )
 
                 .build();
@@ -438,6 +439,14 @@ public class RoomManager {
                     "`table_db` TEXT, " +
                     "`settings_json` TEXT, " +
                     "PRIMARY KEY(`id`))");
+        }
+    };
+
+    static final Migration MIGRATION_51_52 = new Migration(51, 52) {
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase database) {
+            database.execSQL("ALTER TABLE sotr ADD COLUMN tel_corp INTEGER");
+            database.execSQL("ALTER TABLE sotr ADD COLUMN tel2_corp INTEGER");
         }
     };
 }
