@@ -40,6 +40,20 @@ public class UsersExchange {
             String json = gson.toJson(data);
             JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
 
+//            retrofit2.Call<JsonObject> callTest = RetrofitBuilder.getRetrofitInterface().TEST_JSON_UPLOAD(RetrofitBuilder.contentType, convertedObject);
+//            callTest.enqueue(new Callback<JsonObject>() {
+//                @Override
+//                public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
+//                    Log.e("downloadUsersTable", "response: " + response.body());
+//                }
+//
+//                @Override
+//                public void onFailure(Call<JsonObject> call, Throwable t) {
+//                    Log.e("downloadUsersTable", "Throwable t: " + t);
+//                }
+//            });
+
+
             retrofit2.Call<UsersResponse> call = RetrofitBuilder.getRetrofitInterface().GET_USERS_ROOM(RetrofitBuilder.contentType, convertedObject);
             call.enqueue(new Callback<UsersResponse>() {
                 @Override

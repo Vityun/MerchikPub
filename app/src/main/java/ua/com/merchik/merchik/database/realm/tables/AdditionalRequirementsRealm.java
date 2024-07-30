@@ -130,12 +130,14 @@ public class AdditionalRequirementsRealm {
         int themeId, addressId;
         String clientId;
         long dad2;
+        Date date = new Date();
 
         if (data instanceof WpDataDB) {
             addressId = ((WpDataDB) data).getAddr_id();
             clientId = ((WpDataDB) data).getClient_id();
             themeId = ((WpDataDB) data).getTheme_id();
             dad2 = ((WpDataDB) data).getCode_dad2();
+            date = ((WpDataDB) data).getDt();
         } else if (data instanceof TasksAndReclamationsSDB) {
             WpDataDB wp = WpDataRealm.getWpDataRowByDad2Id(((TasksAndReclamationsSDB) data).codeDad2SrcDoc);
             addressId = wp.getAddr_id();
@@ -244,14 +246,14 @@ public class AdditionalRequirementsRealm {
         }
 
 //        // Фильтрация по дате
-        Date currentDate = new Date(); // текущая дата
+//        Date currentDate = new Date(); // текущая дата
 
         realmResults = realmResults.where()
                 .beginGroup()
                 .beginGroup()
                 .isNull("dtStart") // Проверка на NULL для неограниченной даты
                 .or()
-                .lessThanOrEqualTo("dtStart", currentDate)
+                .lessThanOrEqualTo("dtStart", date)
                 .endGroup()
                 .or()
                 .isNull("dtStart") // Проверка на NULL для неограниченной даты
@@ -261,7 +263,7 @@ public class AdditionalRequirementsRealm {
                 .beginGroup()
                 .isNull("dtEnd") // Проверка на NULL для неограниченной даты
                 .or()
-                .greaterThan("dtEnd", currentDate)
+                .greaterThanOrEqualTo("dtEnd", date)
                 .endGroup()
                 .or()
                 .isNull("dtEnd") // Проверка на NULL для неограниченной даты

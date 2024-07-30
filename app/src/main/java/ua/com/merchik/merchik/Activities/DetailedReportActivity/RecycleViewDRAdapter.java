@@ -3,6 +3,7 @@ package ua.com.merchik.merchik.Activities.DetailedReportActivity;
 import static ua.com.merchik.merchik.Options.Options.NNKMode.CHECK_CLICK;
 import static ua.com.merchik.merchik.Options.Options.NNKMode.NULL;
 import static ua.com.merchik.merchik.data.OptionMassageType.Type.DIALOG;
+import static ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsRealm.AdditionalRequirementsModENUM.DEFAULT;
 import static ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsRealm.AdditionalRequirementsModENUM.HIDE_FOR_USER;
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
@@ -532,7 +533,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                             if (addressSDB != null) {
                                 ttCategory = addressSDB.ttId;
                             }
-                            textInteger.setText("" + AdditionalRequirementsRealm.getData3(dataDB, HIDE_FOR_USER, ttCategory, null, 0).size());
+                            textInteger.setText("" + AdditionalRequirementsRealm.getData3(dataDB, HIDE_FOR_USER, ttCategory, null, 1).size());
                             break;
 
                         case 138340:    // Доп Требования
@@ -1123,7 +1124,8 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
             try {
                 if (option.getOptionId().equals("157277")) {
                     List<ReportPrepareDB> reportPrepare = RealmManager.INSTANCE.copyFromRealm(ReportPrepareRealm.getReportPrepareByDad2(dad2));
-                    List<AdditionalRequirementsDB> ad = AdditionalRequirementsRealm.getDocumentAdditionalRequirements(dataDB, true, 157278, null, null, null);
+//                    List<AdditionalRequirementsDB> ad = AdditionalRequirementsRealm.getDocumentAdditionalRequirements(dataDB, true, 157278, null, null, null);
+                    List<AdditionalRequirementsDB> ad = AdditionalRequirementsRealm.getData3((WpDataDB) dataDB, DEFAULT, null, null, 0);
                     String[] tovIds = new String[ad.size()];
                     for (int i = 0; i < ad.size(); i++) {
                         tovIds[i] = ad.get(i).getTovarId();

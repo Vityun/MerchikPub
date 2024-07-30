@@ -59,7 +59,7 @@ class AdditionalRequirementsDBViewModel @Inject constructor(
                 AdditionalRequirementsModENUM.HIDE_FOR_USER,
                 ttCategory,
                 null,
-                0
+                1
             )
 
             repository.toItemUIList(AdditionalRequirementsDB::class, data, contextUI).map { itemUI ->

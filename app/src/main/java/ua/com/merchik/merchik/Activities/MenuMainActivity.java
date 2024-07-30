@@ -14,12 +14,17 @@ import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 
 import java.util.Calendar;
+import java.util.List;
 
+import io.reactivex.rxjava3.observers.DisposableCompletableObserver;
+import io.reactivex.rxjava3.schedulers.Schedulers;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 import ua.com.merchik.merchik.R;
-import ua.com.merchik.merchik.ServerExchange.TablesLoadingUnloading;
+import ua.com.merchik.merchik.ServerExchange.ExchangeInterface;
+import ua.com.merchik.merchik.ServerExchange.TablesExchange.UsersExchange;
+import ua.com.merchik.merchik.data.Database.Room.UsersSDB;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.ShowcaseResponse;
 import ua.com.merchik.merchik.data.TestJsonUpload.StandartData;
 import ua.com.merchik.merchik.dialogs.DialogShowcase.DialogShowcase;
@@ -86,8 +91,34 @@ public class MenuMainActivity extends toolbar_menus {
 
     private void test() {
         try {
-            TablesLoadingUnloading tablesLoadingUnloading = new TablesLoadingUnloading();
-            tablesLoadingUnloading.downloadAdditionalRequirements();
+            new UsersExchange().downloadUsersTable(new ExchangeInterface.ExchangeResponseInterface() {
+                @Override
+                public <T> void onSuccess(List<T> data) {
+                    Log.e("downloadUsersTable", "onSuccess: " + data);
+//                            Globals.writeToMLOG("INFO", "PetrovExchangeTest/startExchange/UsersExchange/onSuccess", "(List<T> data: " + data.size());
+                    try {
+                        SQL_DB.usersDao().insertData((List<UsersSDB>) data)
+                                .subscribeOn(Schedulers.io())
+                                .subscribe(new DisposableCompletableObserver() {
+                                    @Override
+                                    public void onComplete() {
+                                    }
+
+                                    @Override
+                                    public void onError(@io.reactivex.rxjava3.annotations.NonNull Throwable e) {
+                                    }
+                                });
+                    } catch (Exception e) {
+
+                    }
+                }
+
+                @Override
+                public void onFailure(String error) {
+                    Log.e("HEUTE", "3error." + error);
+                    Log.e("downloadUsersTable", "onFailure: " + error);
+                }
+            });
         }catch (Exception e){
             Log.e("testLong", "Exception e: " + e);
         }
