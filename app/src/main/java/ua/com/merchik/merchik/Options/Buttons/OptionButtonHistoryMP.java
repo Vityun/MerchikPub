@@ -32,7 +32,6 @@ import ua.com.merchik.merchik.database.realm.tables.LogMPRealm;
 import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.features.main.DBViewModels.LogDBViewModel;
 import ua.com.merchik.merchik.features.main.DBViewModels.LogMPDBViewModel;
-import ua.com.merchik.merchik.features.main.MainUIKt;
 
 // 138773
 public class OptionButtonHistoryMP<T> extends OptionControl {

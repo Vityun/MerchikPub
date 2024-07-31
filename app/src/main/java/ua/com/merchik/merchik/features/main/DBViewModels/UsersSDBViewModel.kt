@@ -8,7 +8,7 @@ import ua.com.merchik.merchik.dataLayer.DataObjectUI
 import ua.com.merchik.merchik.dataLayer.MainRepository
 import ua.com.merchik.merchik.dataLayer.NameUIRepository
 import ua.com.merchik.merchik.dataLayer.model.ItemUI
-import ua.com.merchik.merchik.features.main.MainViewModel
+import ua.com.merchik.merchik.features.main.Main.MainViewModel
 import javax.inject.Inject
 import kotlin.reflect.KClass
 

@@ -1,4 +1,4 @@
-package ua.com.merchik.merchik.features.main
+package ua.com.merchik.merchik.features.main.Main
 
 import android.content.Context
 import androidx.lifecycle.SavedStateHandle

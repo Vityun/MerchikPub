@@ -5,7 +5,6 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.SavedStateHandle
 import com.google.gson.Gson
 import dagger.hilt.android.lifecycle.HiltViewModel
-import ua.com.merchik.merchik.R
 import ua.com.merchik.merchik.data.Database.Room.AddressSDB
 import ua.com.merchik.merchik.data.RealmModels.LogMPDB
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB
@@ -17,10 +16,7 @@ import ua.com.merchik.merchik.dataLayer.join
 import ua.com.merchik.merchik.dataLayer.model.ItemUI
 import ua.com.merchik.merchik.database.room.RoomManager
 import ua.com.merchik.merchik.dialogs.DialogMap
-import ua.com.merchik.merchik.features.main.Filters
-import ua.com.merchik.merchik.features.main.MainViewModel
-import ua.com.merchik.merchik.features.main.RangeDate
-import java.time.LocalDate
+import ua.com.merchik.merchik.features.main.Main.MainViewModel
 import javax.inject.Inject
 import kotlin.reflect.KClass
 

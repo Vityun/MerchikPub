@@ -24,7 +24,7 @@ import ua.com.merchik.merchik.database.realm.tables.CustomerRealm
 import ua.com.merchik.merchik.database.realm.tables.UsersRealm
 import ua.com.merchik.merchik.database.room.RoomManager
 import ua.com.merchik.merchik.dialogs.DialogAdditionalRequirements.DialogARMark.DialogARMark
-import ua.com.merchik.merchik.features.main.MainViewModel
+import ua.com.merchik.merchik.features.main.Main.MainViewModel
 import javax.inject.Inject
 import kotlin.reflect.KClass
 

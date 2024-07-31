@@ -1,8 +1,6 @@
 package ua.com.merchik.merchik.Activities.Features
 
 import android.os.Bundle
-import android.util.Log
-import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.layout.fillMaxSize
@@ -17,16 +15,11 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import dagger.hilt.android.AndroidEntryPoint
 import ua.com.merchik.merchik.Activities.Features.ui.theme.MerchikTheme
-import ua.com.merchik.merchik.data.Database.Room.CustomerSDB
-import ua.com.merchik.merchik.data.RealmModels.AdditionalRequirementsDB
-import ua.com.merchik.merchik.data.RealmModels.LogMPDB
 import ua.com.merchik.merchik.features.main.DBViewModels.AdditionalRequirementsDBViewModel
 import ua.com.merchik.merchik.features.main.DBViewModels.CustomerSDBViewModel
 import ua.com.merchik.merchik.features.main.DBViewModels.LogMPDBViewModel
 import ua.com.merchik.merchik.features.main.DBViewModels.TovarDBViewModel
-import ua.com.merchik.merchik.features.main.MainUI
-import kotlin.reflect.KClass
-import kotlin.reflect.full.createType
+import ua.com.merchik.merchik.features.main.Main.MainUI
 
 @AndroidEntryPoint
 class FeaturesActivity: AppCompatActivity() {
