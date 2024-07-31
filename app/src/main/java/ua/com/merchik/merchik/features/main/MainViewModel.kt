@@ -39,6 +39,15 @@ data class RangeDate(
     val end: LocalDate? = null
 )
 
+data class SortingField(
+    val title: String? = null,
+    var order: Order? = null
+)
+
+enum class Order {
+    ASC, DESC
+}
+
 abstract class MainViewModel(
     val repository: MainRepository,
     val nameUIRepository: NameUIRepository,

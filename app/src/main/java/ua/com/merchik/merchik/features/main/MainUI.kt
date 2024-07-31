@@ -40,23 +40,17 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
-import androidx.compose.material3.TooltipBox
-import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -82,7 +76,6 @@ import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.colorResource
@@ -100,7 +93,6 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.Popup
-import androidx.compose.ui.window.PopupProperties
 import androidx.compose.ui.zIndex
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -114,6 +106,7 @@ import ua.com.merchik.merchik.dataLayer.model.MerchModifier
 import ua.com.merchik.merchik.dataLayer.model.Padding
 import ua.com.merchik.merchik.dataLayer.model.SettingsItemUI
 import ua.com.merchik.merchik.dataLayer.model.TextField
+import ua.com.merchik.merchik.features.main.componentsUI.ContextMenu
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.ZoneId
@@ -130,6 +123,8 @@ fun MainUI(viewModel: MainViewModel, context: Context) {
     var isActiveFiltered by remember { mutableStateOf(false) }
 
     var showSettingsDialog by remember { mutableStateOf(false) }
+
+    var showSortingDialog by remember { mutableStateOf(false) }
 
     var showFilteringDialog by remember { mutableStateOf(false) }
 
@@ -163,7 +158,7 @@ fun MainUI(viewModel: MainViewModel, context: Context) {
                 sizeImage = 25.dp,
                 modifier = Modifier
                     .padding(start = 15.dp, bottom = 10.dp),
-                onClick = {  }
+                onClick = { viewModel.updateContent() }
             )
 
             ImageButton(
@@ -289,7 +284,7 @@ fun MainUI(viewModel: MainViewModel, context: Context) {
                         sizeButton = 40.dp,
                         sizeImage = 20.dp,
                         modifier = Modifier.padding(start = 7.dp),
-                        onClick = {  }
+                        onClick = { showSortingDialog = true }
                     )
 
                     ImageButton(id = if (isActiveFiltered) R.drawable.ic_filterbold else R.drawable.ic_filter,
@@ -436,7 +431,7 @@ fun MainUI(viewModel: MainViewModel, context: Context) {
 
                         Tooltip(text = viewModel.getTranslateString(stringResource(id = R.string.total_number_selected, 0))) {
                             Text(
-                                text = "⧂ ☌ ⚲ ${0}",
+                                text = "⚲ ${0}",
                                 fontSize = 16.sp,
                                 textDecoration = TextDecoration.Underline,
                                 modifier = Modifier
@@ -520,6 +515,10 @@ fun MainUI(viewModel: MainViewModel, context: Context) {
         SettingsDialog(viewModel, onDismiss = { showSettingsDialog = false })
     }
 
+    if (showSortingDialog) {
+        SortingDialog(viewModel, onDismiss = { showSortingDialog = false })
+    }
+
     if (showFilteringDialog) {
         FilteringDialog(viewModel,
             onDismiss = { showFilteringDialog = false },
@@ -559,15 +558,24 @@ fun Tooltip(
                         .padding(8.dp)
                         .shadow(4.dp, RoundedCornerShape(8.dp))
                         .clip(RoundedCornerShape(8.dp))
-                        .border(1.dp, colorResource(id = R.color.borderToolTip), RoundedCornerShape(8.dp))
-                        .background(colorResource(id = R.color.backgroundToolTip), RoundedCornerShape(8.dp))
+                        .border(
+                            1.dp,
+                            colorResource(id = R.color.borderToolTip),
+                            RoundedCornerShape(8.dp)
+                        )
+                        .background(
+                            colorResource(id = R.color.backgroundToolTip),
+                            RoundedCornerShape(8.dp)
+                        )
                         .clickable {
                             time = 0
                             isVisible = false
                         }
                 ) {
                     Text(
-                        modifier = Modifier.widthIn(max = 200.dp).padding(7.dp),
+                        modifier = Modifier
+                            .widthIn(max = 200.dp)
+                            .padding(7.dp),
                         text = text,
                         color = Color.Black
                     )
@@ -1089,6 +1097,198 @@ fun DatePickerExample(title: String, date: LocalDate?, dateChange: (date: LocalD
                 }
             }
         }
+    }
+}
+
+@Composable
+fun SortingDialog(viewModel: MainViewModel, onDismiss: () -> Unit) {
+    val uiState by viewModel.uiState.collectAsState()
+//    val sortingFieldFirst by remember {
+//
+//    }
+
+
+    Dialog(onDismissRequest = onDismiss) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(top = 40.dp, bottom = 40.dp)
+                .background(color = Color.Transparent)
+        ) {
+            ImageButton(
+                id = R.drawable.ic_letter_x,
+                shape = CircleShape,
+                colorImage = ColorFilter.tint(color = Color.Gray),
+                sizeButton = 40.dp,
+                sizeImage = 25.dp,
+                modifier = Modifier
+                    .padding(start = 15.dp, bottom = 10.dp)
+                    .align(alignment = Alignment.End),
+                onClick = { onDismiss.invoke() }
+            )
+
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(color = Color.White)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .padding(16.dp)
+                        .fillMaxWidth()
+                ) {
+                    Text(
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier
+                            .align(alignment = Alignment.CenterHorizontally),
+                        text = viewModel.getTranslateString(stringResource(id = R.string.setting_table))
+                    )
+                    Spacer(modifier = Modifier.padding(8.dp))
+                    Text(
+                        text = viewModel.getTranslateString(stringResource(id = R.string.setting_column_visibility_desc))
+                    )
+                    Spacer(modifier = Modifier.padding(8.dp))
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f)
+                            .shadow(4.dp, RoundedCornerShape(8.dp))
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(color = Color.White)
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(7.dp)
+                        ) {
+
+                            val itemsSorting = uiState.settingsItems.filter { !it.key.equals("column_name", true) }.map { it.text }
+
+                            DropDownSortingList(
+                                "Сортировать по:",
+                                {  },
+                                itemsSorting.map { SortingField(it, Order.ASC) }
+                            )
+
+                            Spacer(modifier = Modifier.padding(10.dp))
+
+                            DropDownSortingList(
+                                "Затем по:",
+                                {
+                                
+                                },
+                                itemsSorting.map { SortingField(it, Order.ASC) }
+                            )
+
+                            Spacer(modifier = Modifier.padding(10.dp))
+
+                            DropDownSortingList(
+                                "Затем по:",
+                                {  },
+                                itemsSorting.map { SortingField(it, Order.ASC) }
+                            )
+
+                        }
+                    }
+                    Row {
+                        Button(
+                            onClick = {
+                                onDismiss.invoke()
+                            },
+                            shape = RoundedCornerShape(8.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = colorResource(id = R.color.blue)),
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(5.dp)
+                        ) {
+                            Text(viewModel.getTranslateString(stringResource(id = R.string.cancel)))
+                        }
+
+                        Button(
+                            onClick = {
+                                onDismiss.invoke()
+                            },
+                            shape = RoundedCornerShape(8.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = colorResource(id = R.color.orange)),
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(5.dp)
+                        ) {
+                            Text(viewModel.getTranslateString(stringResource(id = R.string.save)))
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun DropDownSortingList(
+    title: String,
+    onSelectedItemIndex: (Int) -> Unit,
+    items: List<SortingField>
+) {
+    var selectedItem by remember { mutableStateOf(SortingField()) }
+
+    Text(text = title)
+    Row {
+        Row(
+            modifier = Modifier
+                .height(40.dp)
+                .weight(1f)
+                .border(
+                    BorderStroke(
+                        1.dp,
+                        colorResource(id = R.color.borderContextMenu)
+                    ), RoundedCornerShape(8.dp)
+                )
+        ) {
+            ContextMenu(
+                onSelectedMenu = {
+                    selectedItem = items[it]
+                    onSelectedItemIndex.invoke(it)
+                },
+                itemsMenu = items.mapNotNull { it.title }
+            ) {
+                Row {
+                    Text(
+                        text = selectedItem.title ?: "",
+                        modifier = Modifier
+                            .padding(7.dp)
+                            .weight(1f)
+                    )
+                    Image(
+                        painter = painterResource(R.drawable.ic_arrow_down_1),
+                        modifier = Modifier
+                            .size(20.dp)
+                            .padding(end = 7.dp)
+                            .align(Alignment.CenterVertically),
+                        contentScale = ContentScale.Inside,
+                        contentDescription = null
+                    )
+                }
+            }
+        }
+        ImageButton(id = R.drawable.ic_letter_x,
+            sizeButton = 40.dp,
+            sizeImage = 20.dp,
+            colorImage = ColorFilter.tint(color = Color.Gray),
+            modifier = Modifier.padding(start = 7.dp),
+            onClick = {
+                selectedItem = SortingField()
+                onSelectedItemIndex.invoke(-1)
+            }
+        )
+        ImageButton(id = if ((selectedItem.order ?: Order.ASC) == Order.ASC) R.drawable.ic_arrow_down_2 else R.drawable.ic_arrow_up_2,
+            sizeButton = 40.dp,
+            sizeImage = 20.dp,
+            colorImage = ColorFilter.tint(color = Color.Gray),
+            modifier = Modifier.padding(start = 7.dp),
+            onClick = {
+                selectedItem = selectedItem.copy(order = if (selectedItem.order == Order.ASC) Order.DESC else Order.ASC)
+                onSelectedItemIndex.invoke(items.indexOf(selectedItem))
+            }
+        )
     }
 }
 
