@@ -53,6 +53,7 @@ import my.nanihadesuka.compose.ScrollbarSettings
 import ua.com.merchik.merchik.R
 import ua.com.merchik.merchik.data.RealmModels.AdditionalRequirementsMarkDB
 import ua.com.merchik.merchik.dataLayer.ContextUI
+import ua.com.merchik.merchik.dataLayer.model.ItemUI
 import ua.com.merchik.merchik.features.main.componentsUI.ImageButton
 import ua.com.merchik.merchik.features.main.componentsUI.RoundCheckbox
 import ua.com.merchik.merchik.features.main.componentsUI.TextFieldInputRounded
@@ -134,6 +135,19 @@ fun MainUI(viewModel: MainViewModel, context: Context) {
 
                 var _isActiveFiltered = false
 
+                fun getSortValue(it: ItemUI, sortingField: SortingField) =
+                    it.fields.firstOrNull { fieldValue ->
+                        fieldValue.key.equals(sortingField.key, true)
+                    }?.value?.value
+
+                fun comparator(sortingField: SortingField?): Comparator<ItemUI> =
+                    if (sortingField?.order == 1)
+                        compareBy { getSortValue(it, sortingField) }
+                    else if (sortingField?.order == -1)
+                        compareByDescending { getSortValue(it, sortingField) }
+                    else
+                        compareBy { 0 }
+
                 val itemsUI = uiState.items.filter { itemUI ->
                     uiState.filters?.let { filters ->
                         filters.rangeDataByKey?.let { rangeDataByKey ->
@@ -168,7 +182,11 @@ fun MainUI(viewModel: MainViewModel, context: Context) {
                         }
                     }
                     return@filter true
-                }
+                }.sortedWith(
+                    comparator(uiState.sortingFields.getOrNull(0))
+                        .thenComparing(comparator(uiState.sortingFields.getOrNull(1)))
+                        .thenComparing(comparator(uiState.sortingFields.getOrNull(2)))
+                )
 
                 isActiveFiltered = _isActiveFiltered
 

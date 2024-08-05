@@ -1,6 +1,7 @@
 package ua.com.merchik.merchik.dataLayer
 
 import com.google.gson.Gson
+import com.google.gson.JsonObject
 import io.realm.RealmChangeListener
 import io.realm.RealmObject
 import io.realm.RealmResults
@@ -20,6 +21,8 @@ import ua.com.merchik.merchik.dataLayer.model.ItemUI
 import ua.com.merchik.merchik.dataLayer.model.SettingsItemUI
 import ua.com.merchik.merchik.database.realm.RealmManager
 import ua.com.merchik.merchik.database.room.RoomManager
+import ua.com.merchik.merchik.features.main.Main.SettingsUI
+import ua.com.merchik.merchik.features.main.Main.SortingField
 import kotlin.reflect.KClass
 
 fun <T : RealmObject> RealmResults<T>.toFlow(): Flow<RealmResults<T>> = callbackFlow {
@@ -36,8 +39,16 @@ class MainRepository(
     val nameUIRepository: NameUIRepository
 ) {
 
-    private fun getHideUserFields(clazz: Class<*>, contextUI: ContextUI?) =
-        RoomManager.SQL_DB.settingsUIDao().getTableByContext(clazz.simpleName, contextUI?.name)?.settingsJson
+    private fun getSettingsUI(clazz: Class<*>, contextUI: ContextUI?) =
+        try {
+            Gson().fromJson(RoomManager.SQL_DB.settingsUIDao()
+                .getTableByContext(clazz.simpleName, contextUI?.name)?.settingsJson, SettingsUI::class.java)
+        }catch (e: Exception) {
+            null
+        }
+
+    fun <T: DataObjectUI> getSortingFields(klass: KClass<T>, contextUI: ContextUI?) =
+        getSettingsUI(klass.java, contextUI)?.sortFields ?: emptyList()
 
     fun <T: DataObjectUI> getSettingsItemList(klass: KClass<T>, contextUI: ContextUI?): List<SettingsItemUI> {
 
@@ -67,7 +78,7 @@ class MainRepository(
                 fields.add("id_res_image")
             }
             jsonObject.keys().forEach { key -> fields.add(key) }
-            val hideUserFields = getHideUserFields(obj::class.java, contextUI)
+            val hideUserFields = getSettingsUI(obj::class.java, contextUI)?.hideFields
             val hidedFieldsOnUI = obj.getHidedFieldsOnUI()
 
             return fields
@@ -87,7 +98,7 @@ class MainRepository(
         } ?: return emptyList()
     }
 
-    fun <T: DataObjectUI> saveSettingsUI(klass: KClass<T>, settingsItemUI: List<SettingsItemUI>, contextUI: ContextUI?){
+    fun <T: DataObjectUI> saveSettingsUI(klass: KClass<T>, settingsUI: SettingsUI, contextUI: ContextUI?){
         val contextTAG = contextUI?.name ?: ContextUI.DEFAULT.name
 
         val settingsUISDB = RoomManager.SQL_DB.settingsUIDao()
@@ -95,7 +106,7 @@ class MainRepository(
 
         settingsUISDB.contextTAG = contextTAG
         settingsUISDB.tableDB = klass.java.simpleName
-        settingsUISDB.settingsJson = settingsItemUI.filter { !it.isEnabled }.map { it.key }.toString()
+        settingsUISDB.settingsJson = Gson().toJson(settingsUI)
 
         RoomManager.SQL_DB.settingsUIDao().insert(settingsUISDB)
     }
@@ -153,11 +164,11 @@ class MainRepository(
     }
 
     fun <T: DataObjectUI>toItemUIList(kClass: KClass<T>, data: List<DataObjectUI>, contextUI: ContextUI?): List<ItemUI> {
-        return data.map { it.toItemUI(nameUIRepository, getHideUserFields(kClass.java, contextUI)) }
+        return data.map { it.toItemUI(nameUIRepository, getSettingsUI(kClass.java, contextUI)?.hideFields?.joinToString { "," }) }
     }
 
     private fun <T: DataObjectUI> List<T>.toItemUI(kClass: KClass<*>, contextUI: ContextUI?): List<ItemUI> {
-        return this.map { (it as DataObjectUI).toItemUI(nameUIRepository, getHideUserFields(kClass.java, contextUI)) }
+        return this.map { (it as DataObjectUI).toItemUI(nameUIRepository, getSettingsUI(kClass.java, contextUI)?.hideFields?.joinToString { "," }) }
     }
 
 }

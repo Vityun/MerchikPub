@@ -43,7 +43,24 @@ import ua.com.merchik.merchik.features.main.componentsUI.ImageButton
 
 @Composable
 fun SortingDialog(viewModel: MainViewModel, onDismiss: () -> Unit) {
+
     val uiState by viewModel.uiState.collectAsState()
+
+    var selectedItemFirst by remember { mutableStateOf(SortingField()) }
+    var selectedItemSecond by remember { mutableStateOf(SortingField()) }
+    var selectedItemThird by remember { mutableStateOf(SortingField()) }
+
+
+    fun getSelectedItem(
+        itemsSorting: List<SortingField>,
+        positionFirst: Int
+    ) = itemsSorting.firstOrNull {
+        it.key?.equals(
+            uiState.sortingFields.getOrNull(positionFirst)?.key,
+            true
+        ) == true
+    }?.copy(order = uiState.sortingFields.getOrNull(positionFirst)?.order ?: 1)
+        ?: SortingField()
 
     Dialog(onDismissRequest = onDismiss) {
         Column(
@@ -98,31 +115,49 @@ fun SortingDialog(viewModel: MainViewModel, onDismiss: () -> Unit) {
                             modifier = Modifier.padding(7.dp)
                         ) {
 
-                            val itemsSorting = uiState.settingsItems.filter { !it.key.equals("column_name", true) }.map { it.text }
+                            val itemsSorting = uiState.settingsItems.filter { !it.key.equals("column_name", true) }.map { SortingField(it.key, it.text, 1) }
+
+                            selectedItemFirst = getSelectedItem(itemsSorting, 0)
+                            selectedItemSecond = getSelectedItem(itemsSorting, 1)
+                            selectedItemThird = getSelectedItem(itemsSorting, 2)
 
                             DropDownSortingList(
-                                "Сортировать по:",
-                                {  },
-                                itemsSorting.map { SortingField(it, Order.ASC) }
-                            )
-
-                            Spacer(modifier = Modifier.padding(10.dp))
-
-                            DropDownSortingList(
-                                "Затем по:",
-                                {
-
+                                title = "Сортировать по:",
+                                selectedItem = selectedItemFirst,
+                                onSelectedItem = {
+                                    viewModel.updateSorting(it, 0)
+                                    selectedItemFirst = it ?: SortingField()
                                 },
-                                itemsSorting.map { SortingField(it, Order.ASC) }
+                                items = itemsSorting
                             )
 
-                            Spacer(modifier = Modifier.padding(10.dp))
+                            if (selectedItemFirst.key != null || selectedItemSecond.key != null) {
+                                Spacer(modifier = Modifier.padding(10.dp))
 
-                            DropDownSortingList(
-                                "Затем по:",
-                                {  },
-                                itemsSorting.map { SortingField(it, Order.ASC) }
-                            )
+                                DropDownSortingList(
+                                    title = "Затем по:",
+                                    selectedItem = selectedItemSecond,
+                                    onSelectedItem = {
+                                        viewModel.updateSorting(it, 1)
+                                        selectedItemSecond = it ?: SortingField()
+                                    },
+                                    items = itemsSorting
+                                )
+                            }
+
+                            if ((selectedItemFirst.key != null && selectedItemSecond.key != null) || selectedItemThird.key != null) {
+                                Spacer(modifier = Modifier.padding(10.dp))
+
+                                DropDownSortingList(
+                                    title = "Затем по:",
+                                    selectedItem = selectedItemThird,
+                                    onSelectedItem = {
+                                        viewModel.updateSorting(it, 2)
+                                        selectedItemThird = it ?: SortingField()
+                                    },
+                                    items = itemsSorting
+                                )
+                            }
 
                         }
                     }
@@ -142,6 +177,8 @@ fun SortingDialog(viewModel: MainViewModel, onDismiss: () -> Unit) {
 
                         Button(
                             onClick = {
+                                viewModel.saveSettings()
+                                viewModel.updateContent()
                                 onDismiss.invoke()
                             },
                             shape = RoundedCornerShape(8.dp),
@@ -162,69 +199,74 @@ fun SortingDialog(viewModel: MainViewModel, onDismiss: () -> Unit) {
 @Composable
 fun DropDownSortingList(
     title: String,
-    onSelectedItemIndex: (Int) -> Unit,
+    selectedItem: SortingField,
+    onSelectedItem: (SortingField?) -> Unit,
     items: List<SortingField>
 ) {
-    var selectedItem by remember { mutableStateOf(SortingField()) }
+    var selectedItem by remember { mutableStateOf(selectedItem) }
 
-    Text(text = title)
-    Row {
-        Row(
-            modifier = Modifier
-                .height(40.dp)
-                .weight(1f)
-                .border(
-                    BorderStroke(
-                        1.dp,
-                        colorResource(id = R.color.borderContextMenu)
-                    ), RoundedCornerShape(8.dp)
-                )
-        ) {
-            ContextMenu(
-                onSelectedMenu = {
-                    selectedItem = items[it]
-                    onSelectedItemIndex.invoke(it)
-                },
-                itemsMenu = items.mapNotNull { it.title }
+    Column {
+        Text(text = title, color = Color.Black)
+        Row {
+            Row(
+                modifier = Modifier
+                    .height(40.dp)
+                    .weight(1f)
+                    .border(
+                        BorderStroke(
+                            1.dp,
+                            colorResource(id = R.color.borderContextMenu)
+                        ), RoundedCornerShape(8.dp)
+                    )
             ) {
-                Row {
-                    Text(
-                        text = selectedItem.title ?: "",
-                        modifier = Modifier
-                            .padding(7.dp)
-                            .weight(1f)
-                    )
-                    Image(
-                        painter = painterResource(R.drawable.ic_arrow_down_1),
-                        modifier = Modifier
-                            .size(20.dp)
-                            .padding(end = 7.dp)
-                            .align(Alignment.CenterVertically),
-                        contentScale = ContentScale.Inside,
-                        contentDescription = null
-                    )
+                ContextMenu(
+                    onSelectedMenu = {
+                        selectedItem = items[it]
+                        onSelectedItem.invoke(items[it])
+                    },
+                    itemsMenu = items.mapNotNull { it.title }
+                ) {
+                    Row {
+                        Text(
+                            text = selectedItem.title ?: "",
+                            modifier = Modifier
+                                .padding(7.dp)
+                                .weight(1f)
+                        )
+                        Image(
+                            painter = painterResource(R.drawable.ic_arrow_down_1),
+                            modifier = Modifier
+                                .size(20.dp)
+                                .padding(end = 7.dp)
+                                .align(Alignment.CenterVertically),
+                            contentScale = ContentScale.Inside,
+                            contentDescription = null
+                        )
+                    }
                 }
             }
+            ImageButton(id = R.drawable.ic_letter_x,
+                sizeButton = 40.dp,
+                sizeImage = 20.dp,
+                colorImage = ColorFilter.tint(color = Color.Gray),
+                modifier = Modifier.padding(start = 7.dp),
+                onClick = {
+                    selectedItem = SortingField()
+                    onSelectedItem.invoke(null)
+                }
+            )
+            ImageButton(
+                id = if ((selectedItem.order?: 1) == 1) R.drawable.ic_arrow_down_2
+                else R.drawable.ic_arrow_up_2,
+                sizeButton = 40.dp,
+                sizeImage = 20.dp,
+                colorImage = ColorFilter.tint(color = Color.Gray),
+                modifier = Modifier.padding(start = 7.dp),
+                onClick = {
+                    selectedItem =selectedItem.copy(order = if (selectedItem.order == 1) -1 else 1)
+                    onSelectedItem.invoke(selectedItem)
+                }
+            )
         }
-        ImageButton(id = R.drawable.ic_letter_x,
-            sizeButton = 40.dp,
-            sizeImage = 20.dp,
-            colorImage = ColorFilter.tint(color = Color.Gray),
-            modifier = Modifier.padding(start = 7.dp),
-            onClick = {
-                selectedItem = SortingField()
-                onSelectedItemIndex.invoke(-1)
-            }
-        )
-        ImageButton(id = if ((selectedItem.order ?: Order.ASC) == Order.ASC) R.drawable.ic_arrow_down_2 else R.drawable.ic_arrow_up_2,
-            sizeButton = 40.dp,
-            sizeImage = 20.dp,
-            colorImage = ColorFilter.tint(color = Color.Gray),
-            modifier = Modifier.padding(start = 7.dp),
-            onClick = {
-                selectedItem = selectedItem.copy(order = if (selectedItem.order == Order.ASC) Order.DESC else Order.ASC)
-                onSelectedItemIndex.invoke(items.indexOf(selectedItem))
-            }
-        )
     }
 }

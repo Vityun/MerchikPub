@@ -24,6 +24,7 @@ data class StateUI(
     val idResImage: Int? = null,
     val items: List<ItemUI> = emptyList(),
     val settingsItems: List<SettingsItemUI> = emptyList(),
+    var sortingFields: List<SortingField> = emptyList(),
     val filters: Filters? = null,
     val lastUpdate: Long = 0
 )
@@ -40,13 +41,15 @@ data class RangeDate(
 )
 
 data class SortingField(
+    val key: String? = null,
     val title: String? = null,
-    var order: Order? = null
+    var order: Int? = null
 )
 
-enum class Order {
-    ASC, DESC
-}
+data class SettingsUI(
+    val hideFields: List<String>? = null,
+    val sortFields: List<SortingField>? = null
+)
 
 abstract class MainViewModel(
     val repository: MainRepository,
@@ -75,7 +78,31 @@ abstract class MainViewModel(
 
     fun saveSettings() {
         viewModelScope.launch {
-            repository.saveSettingsUI(table, uiState.value.settingsItems, contextUI)
+            repository.saveSettingsUI(
+                table,
+                SettingsUI(
+                    hideFields = uiState.value.settingsItems.filter { !it.isEnabled }.map { it.key },
+                    sortFields = uiState.value.sortingFields.filter { it.key != null }.map { it.copy(title = null) }
+                ),
+                contextUI)
+        }
+    }
+
+    fun updateSorting(newSortingField: SortingField?, position: Int) {
+        viewModelScope.launch {
+            val newSortingFields = mutableListOf<SortingField>()
+            newSortingFields.addAll(_uiState.value.sortingFields)
+            newSortingField?.let {
+                if (position < newSortingFields.size) newSortingFields[position] = it
+                else newSortingFields.add(position, it)
+            } ?: run {
+                if (position < newSortingFields.size) newSortingFields[position] = SortingField()
+            }
+            _uiState.update {
+                it.copy(
+                    sortingFields = newSortingFields
+                )
+            }
         }
     }
 
@@ -83,6 +110,7 @@ abstract class MainViewModel(
         viewModelScope.launch {
 
             val settingsItems = repository.getSettingsItemList(table, contextUI)
+            val sortingFields = repository.getSortingFields(table, contextUI)
 
             _uiState.update {
                 it.copy(
@@ -91,6 +119,7 @@ abstract class MainViewModel(
                     idResImage = idResImage,
                     items = getItems(),
                     settingsItems = settingsItems,
+                    sortingFields = sortingFields,
                     lastUpdate = System.currentTimeMillis()
                 )
             }
