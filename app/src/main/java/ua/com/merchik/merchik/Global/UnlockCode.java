@@ -124,7 +124,7 @@ public class UnlockCode {
 
             DialogData dialog = new DialogData(context);
             dialog.setTitle("Внесіть код розблокування!");
-            String string = "Для розблокування внесіть код. Цей код Ви можете отримати у всого керівника. Якщо зв'язку з керівником нема - можна звернутися до керівника відділку.";
+            String string = "Для розблокування внесіть код. Цей код Ви можете отримати у свого керівника. Якщо зв'язку з керівником нема - можна звернутися до керівника відділку.";
 
             SpannableString spannableString = new SpannableString(string);
 
@@ -142,8 +142,8 @@ public class UnlockCode {
                 @Override
                 public void onClick(View widget) {
                     UsersSDB usersSDB = SQL_DB.usersDao().getById(wp.getNop_id());
-                    String tel = usersSDB.tel;
-                    if (usersSDB.tel2Corp == 1) tel = usersSDB.tel2;
+                    String tel = usersSDB.tel2;
+//                    if (usersSDB.tel2Corp == 1) tel = usersSDB.tel2;
                     Globals.telephoneCall(widget.getContext(), tel);
                 }
             };

@@ -32,7 +32,7 @@ public class LocationExchange {
 //                        data.dt_change_from = String.valueOf(synchronizationTimetableDB.getVpi_app()-120);  // минус 2 минуты для "синхрона". Это надо поменять.
 //                    }
 //                }else {
-//                    data.dt_change_from = "0";
+//                    data.dt_change_from = "17:00";
 //                }
 //            }catch (Exception e){
 //                data.dt_change_from = "0";

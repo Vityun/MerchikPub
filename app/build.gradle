@@ -14,13 +14,13 @@ android {
     namespace "ua.com.merchik.merchik"
     compileSdk 34
     defaultConfig {
-        applicationId "ua.com.merchik.merchik_test"
-//        applicationId "ua.com.merchik.merchik"
+//        applicationId "ua.com.merchik.merchik_test"
+        applicationId "ua.com.merchik.merchik"
         minSdkVersion 21
         targetSdkVersion 34
         //noinspection HighAppVersionCode
-        versionCode  2024073100
-        versionName "2024073100"
+        versionCode  2024080200
+        versionName "2024080200"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
         multiDexEnabled true

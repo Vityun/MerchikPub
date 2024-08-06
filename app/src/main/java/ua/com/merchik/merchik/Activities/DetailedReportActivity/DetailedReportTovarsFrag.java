@@ -596,7 +596,6 @@ public class DetailedReportTovarsFrag extends Fragment {
 
             adapter.setTplType(RecycleViewDRAdapterTovar.DRAdapterTovarTPLTypeView.GONE);
 
-//            RecycleViewDRAdapterTovar finalRecycleViewDRAdapter = recycleViewDRAdapter;
             adapter.refreshAdapter(() -> {
                 adapter.switchTPLView();
                 recyclerView.setAdapter(adapter);

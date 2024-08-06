@@ -1204,7 +1204,12 @@ public class RealmManager {
      * 22.01.2021
      */
     public static RealmResults<TovarDB> getTovarListByCustomer(String id) {
-        RealmResults<TovarDB> res = INSTANCE.where(TovarDB.class).equalTo("clientId", id).or().equalTo("clientId2", id).sort("manufacturerId", Sort.ASCENDING, "weight", Sort.DESCENDING).equalTo("deleted", 0)      // Не показывать удалённые Товары
+        RealmResults<TovarDB> res = INSTANCE.where(TovarDB.class)
+                .equalTo("clientId", id)
+                .or()
+                .equalTo("clientId2", id)
+                .sort("manufacturerId", Sort.ASCENDING, "weight", Sort.DESCENDING)
+                .equalTo("deleted", 0)      // Не показывать удалённые Товары
                 .findAll();
 
         res = res.sort("sortcol", Sort.ASCENDING);
