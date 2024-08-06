@@ -23,7 +23,8 @@ public class RoomManager {
                         MIGRATION_40_41,
                         MIGRATION_41_42,
                         MIGRATION_42_51,
-                        MIGRATION_51_52
+                        MIGRATION_51_52,
+                        MIGRATION_52_53
                 )
 
                 .build();
