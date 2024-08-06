@@ -73,7 +73,7 @@ public class LogMPDB extends RealmObject implements DataObjectUI {
     @Nullable
     @Override
     public Long getFieldTranslateId(@NonNull String key) {
-        return DataObjectUI.DefaultImpls.getFieldTranslateId(this, key);
+        return LogMPDBOverride.INSTANCE.getTranslateId(key);
     }
 
     @NonNull
@@ -104,5 +104,11 @@ public class LogMPDB extends RealmObject implements DataObjectUI {
     @Override
     public Integer getIdResImage() {
         return R.drawable.gps;
+    }
+
+    @NonNull
+    @Override
+    public String getFieldsImageOnUI() {
+        return DataObjectUI.DefaultImpls.getFieldsImageOnUI(this);
     }
 }

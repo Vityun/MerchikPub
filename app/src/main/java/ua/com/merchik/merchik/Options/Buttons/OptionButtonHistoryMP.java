@@ -32,7 +32,6 @@ import ua.com.merchik.merchik.database.realm.tables.LogMPRealm;
 import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.features.main.DBViewModels.LogDBViewModel;
 import ua.com.merchik.merchik.features.main.DBViewModels.LogMPDBViewModel;
-import ua.com.merchik.merchik.features.main.MainUIKt;
 
 // 138773
 public class OptionButtonHistoryMP<T> extends OptionControl {
@@ -80,6 +79,7 @@ public class OptionButtonHistoryMP<T> extends OptionControl {
         Bundle bundle = new Bundle();
         bundle.putString("viewModel", LogMPDBViewModel.class.getCanonicalName());
         bundle.putString("dataJson", new Gson().toJson(wpDataDB));
+        bundle.putString("title", "Історія місцеположення");
         intent.putExtras(bundle);
         context.startActivity(intent);
 

@@ -1,9 +1,6 @@
 package ua.com.merchik.merchik.dataLayer
 
-import android.view.View
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontStyle
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.google.gson.Gson
 import org.json.JSONObject
@@ -12,10 +9,15 @@ import ua.com.merchik.merchik.dataLayer.model.ItemUI
 import ua.com.merchik.merchik.dataLayer.model.MerchModifier
 import ua.com.merchik.merchik.dataLayer.model.Padding
 import ua.com.merchik.merchik.dataLayer.model.TextField
+import ua.com.merchik.merchik.database.realm.RealmManager
 
 interface DataObjectUI {
     fun getIdResImage(): Int? {
         return null
+    }
+
+    fun getFieldsImageOnUI(): String {
+        return ""
     }
 
     fun getHidedFieldsOnUI(): String {
@@ -35,7 +37,7 @@ interface DataObjectUI {
     }
 
     fun getFieldModifier(key: String, jsonObject: JSONObject): MerchModifier? {
-        return MerchModifier(fontWeight = FontWeight.Bold, padding = Padding(end = 10.dp))
+        return MerchModifier(textColor = Color.Gray, padding = Padding(end = 10.dp))
     }
 
     fun getValueModifier(key: String, jsonObject: JSONObject): MerchModifier? {
@@ -64,6 +66,23 @@ fun DataObjectUI.toItemUI(nameUIRepository: NameUIRepository, hideUserFields: St
             )
         }
     }
+
+    val images = mutableListOf<String>()
+    this.getFieldsImageOnUI().split(",").forEach {
+        if (it.isNotEmpty()) {
+            RealmManager
+                .getTovarPhotoByIdAndType(
+                    null,
+                    jsonObject.get(it.trim()).toString(),
+                    18,
+                    false
+                )
+                ?.getPhoto_num()?.let { pathPhoto ->
+                    images.add(pathPhoto)
+                }
+        }
+    }
+
     jsonObject.keys().forEach { key ->
         if (!("${hideUserFields}, ${this.getHidedFieldsOnUI()}").contains(key)) {
             fields.add(
@@ -87,12 +106,14 @@ fun DataObjectUI.toItemUI(nameUIRepository: NameUIRepository, hideUserFields: St
     return ItemUI(
         rawObj = listOf(this),
         fields = fields,
-        modifierContainer = getContainerModifier(jsonObject)
+        images = images,
+        modifierContainer = getContainerModifier(jsonObject),
+        false
     )
 }
 
 enum class ContextUI{
-    MAIN, DEFAULT
+    MAIN, DEFAULT, ONE_SELECT, MULTI_SELECT
 }
 
 

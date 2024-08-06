@@ -205,6 +205,12 @@ public class UsersSDB implements DataObjectUI{
         return DataObjectUI.DefaultImpls.getIdResImage(this);
     }
 
+    @NonNull
+    @Override
+    public String getFieldsImageOnUI() {
+        return DataObjectUI.DefaultImpls.getFieldsImageOnUI(this);
+    }
+
 //    @Override
 //    public String toString() {
 //        return fio;

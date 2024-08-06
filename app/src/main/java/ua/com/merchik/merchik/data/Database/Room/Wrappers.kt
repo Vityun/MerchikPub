@@ -113,18 +113,27 @@ object AdditionalRequirementsDBOverride {
     fun getContainerModifier(jsonObject: JSONObject): MerchModifier {
         val color =
             try {
-                val colorHex = jsonObject.optString("color", "").ifEmpty { "FFFFFF" }
+                val colorHex = jsonObject.optString("color", "")
                 Color(android.graphics.Color.parseColor("#$colorHex"))
             } catch (e: Exception){
-                Color.White
+                null
             }
         return MerchModifier(background = color)
     }
 
+    fun getValueModifier(key: String, jsonObject: JSONObject): MerchModifier? = when (key) {
+        else -> MerchModifier(padding = Padding(start = 10.dp))
+    }
 }
 
 object LogMPDBOverride {
-    fun getOrderFieldsOnUI(): String = "CoordTime, provider, CoordAccurancy, distance"
+    fun getTranslateId(key: String): Long? = when (key) {
+        "CoordAccuracy" -> 5562
+        "CoordTime" -> 5563
+        "distance" -> 5564
+        "provider" -> 5566
+        else -> null
+    }
 
     fun getValueUI(key: String, value: Any): String = when (key) {
         "CoordTime" ->
@@ -143,4 +152,16 @@ object LogMPDBOverride {
 
         else -> value.toString()
     }
+
+    fun getValueModifier(key: String, jsonObject: JSONObject): MerchModifier? = when (key) {
+        else -> MerchModifier(padding = Padding(start = 10.dp))
+    }
+}
+
+object TovarDBOverride {
+    fun getHidedFieldsOnUI(): String =
+        "barcode, client_id, client_id2, deleted, depth, dt_update, expire_period, group_id, " +
+                "height, ID, manufacturer_id, photo_id, related_tovar_id, width, sortcol"
+
+    fun getFieldFirstImageUI(): String = "photo_id"
 }

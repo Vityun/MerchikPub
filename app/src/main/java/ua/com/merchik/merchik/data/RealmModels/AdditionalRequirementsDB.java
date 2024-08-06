@@ -277,7 +277,7 @@ public class AdditionalRequirementsDB extends RealmObject implements DataObjectU
     @Nullable
     @Override
     public MerchModifier getValueModifier(@NonNull String key, @NonNull JSONObject jsonObject) {
-        return DataObjectUI.DefaultImpls.getValueModifier(this, key, jsonObject);
+        return AdditionalRequirementsDBOverride.INSTANCE.getValueModifier(key, jsonObject);
     }
 
     @Nullable
@@ -290,5 +290,11 @@ public class AdditionalRequirementsDB extends RealmObject implements DataObjectU
     @Override
     public Integer getIdResImage() {
         return DataObjectUI.DefaultImpls.getIdResImage(this);
+    }
+
+    @NonNull
+    @Override
+    public String getFieldsImageOnUI() {
+        return DataObjectUI.DefaultImpls.getFieldsImageOnUI(this);
     }
 }
