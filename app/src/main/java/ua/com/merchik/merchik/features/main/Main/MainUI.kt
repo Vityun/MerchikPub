@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
@@ -39,6 +40,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.colorResource
@@ -48,6 +50,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.rememberAsyncImagePainter
+import coil.compose.rememberImagePainter
 import my.nanihadesuka.compose.LazyColumnScrollbar
 import my.nanihadesuka.compose.ScrollbarSettings
 import ua.com.merchik.merchik.R
@@ -59,6 +63,7 @@ import ua.com.merchik.merchik.features.main.componentsUI.RoundCheckbox
 import ua.com.merchik.merchik.features.main.componentsUI.TextFieldInputRounded
 import ua.com.merchik.merchik.features.main.componentsUI.TextInStrokeCircle
 import ua.com.merchik.merchik.features.main.componentsUI.Tooltip
+import java.io.File
 import java.time.LocalTime
 import java.time.ZoneId
 
@@ -321,12 +326,39 @@ fun MainUI(viewModel: MainViewModel, context: Context) {
                                                     .background(Color.White)
                                                     .align(alignment = Alignment.Top)
                                             ) {
-                                                Image(
-                                                    painter = painterResource(idResImage),
-                                                    modifier = Modifier.fillMaxSize(),
-                                                    contentScale = ContentScale.FillWidth,
-                                                    contentDescription = null
-                                                )
+                                                val images = mutableListOf<Painter>()
+                                                if (item.images.isNullOrEmpty()) {
+                                                    images.add(painterResource(idResImage))
+                                                } else {
+                                                    item.images.forEach { pathImage ->
+                                                        val file = File(pathImage)
+                                                        if (file.exists()) {
+                                                            images.add(
+                                                                rememberAsyncImagePainter(model = file)
+                                                            )
+                                                        }
+                                                    }
+                                                }
+
+                                                if (images.size <= 1) {
+                                                    Image(
+                                                        painter = images[0],
+                                                        modifier = Modifier.padding(5.dp).size(100.dp),
+                                                        contentScale = ContentScale.FillWidth,
+                                                        contentDescription = null
+                                                    )
+                                                } else {
+                                                    LazyRow {
+                                                        items(images) { image ->
+                                                            Image(
+                                                                painter = image,
+                                                                modifier = Modifier.padding(5.dp).size(100.dp),
+                                                                contentScale = ContentScale.FillWidth,
+                                                                contentDescription = null
+                                                            )
+                                                        }
+                                                    }
+                                                }
                                             }
                                         }
 

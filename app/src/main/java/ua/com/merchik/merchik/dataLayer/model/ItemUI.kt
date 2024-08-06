@@ -11,6 +11,7 @@ import ua.com.merchik.merchik.dataLayer.DataObjectUI
 data class ItemUI(
     val rawObj: List<DataObjectUI>,
     val fields: List<FieldValue>,
+    val images: List<String>? = null,
     val modifierContainer: MerchModifier? = null,
     val selected: Boolean
 )

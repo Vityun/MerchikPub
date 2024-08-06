@@ -106,4 +106,10 @@ public class CustomerSDB implements DataObjectUI {
     public Integer getIdResImage() {
         return DataObjectUI.DefaultImpls.getIdResImage(this);
     }
+
+    @NonNull
+    @Override
+    public String getFieldsImageOnUI() {
+        return DataObjectUI.DefaultImpls.getFieldsImageOnUI(this);
+    }
 }

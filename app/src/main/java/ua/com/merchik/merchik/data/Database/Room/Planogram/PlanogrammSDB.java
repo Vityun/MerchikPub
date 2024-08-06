@@ -164,4 +164,10 @@ public class PlanogrammSDB implements DataObjectUI {
         this.dtUpdate = dtUpdate;
         this.planogrammPhoto = planogrammPhoto;
     }
+
+    @NonNull
+    @Override
+    public String getFieldsImageOnUI() {
+        return DataObjectUI.DefaultImpls.getFieldsImageOnUI(this);
+    }
 }

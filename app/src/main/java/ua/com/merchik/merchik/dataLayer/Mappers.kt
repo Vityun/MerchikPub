@@ -1,11 +1,6 @@
 package ua.com.merchik.merchik.dataLayer
 
-import android.view.View
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.colorResource
-import androidx.compose.ui.text.font.FontStyle
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.google.gson.Gson
 import org.json.JSONObject
@@ -14,19 +9,16 @@ import ua.com.merchik.merchik.dataLayer.model.ItemUI
 import ua.com.merchik.merchik.dataLayer.model.MerchModifier
 import ua.com.merchik.merchik.dataLayer.model.Padding
 import ua.com.merchik.merchik.dataLayer.model.TextField
+import ua.com.merchik.merchik.database.realm.RealmManager
 
 interface DataObjectUI {
     fun getIdResImage(): Int? {
         return null
     }
 
-//    fun getFieldFirstImageUI(): String? {
-//        return null
-//    }
-//
-//    fun getFieldSecondImageUI(): String? {
-//        return null
-//    }
+    fun getFieldsImageOnUI(): String {
+        return ""
+    }
 
     fun getHidedFieldsOnUI(): String {
         return ""
@@ -75,6 +67,22 @@ fun DataObjectUI.toItemUI(nameUIRepository: NameUIRepository, hideUserFields: St
         }
     }
 
+    val images = mutableListOf<String>()
+    this.getFieldsImageOnUI().split(",").forEach {
+        if (it.isNotEmpty()) {
+            RealmManager
+                .getTovarPhotoByIdAndType(
+                    null,
+                    jsonObject.get(it.trim()).toString(),
+                    18,
+                    false
+                )
+                ?.getPhoto_num()?.let { pathPhoto ->
+                    images.add(pathPhoto)
+                }
+        }
+    }
+
     jsonObject.keys().forEach { key ->
         if (!("${hideUserFields}, ${this.getHidedFieldsOnUI()}").contains(key)) {
             fields.add(
@@ -98,6 +106,7 @@ fun DataObjectUI.toItemUI(nameUIRepository: NameUIRepository, hideUserFields: St
     return ItemUI(
         rawObj = listOf(this),
         fields = fields,
+        images = images,
         modifierContainer = getContainerModifier(jsonObject),
         false
     )

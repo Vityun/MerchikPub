@@ -105,4 +105,10 @@ public class LogMPDB extends RealmObject implements DataObjectUI {
     public Integer getIdResImage() {
         return R.drawable.gps;
     }
+
+    @NonNull
+    @Override
+    public String getFieldsImageOnUI() {
+        return DataObjectUI.DefaultImpls.getFieldsImageOnUI(this);
+    }
 }

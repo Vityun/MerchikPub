@@ -291,4 +291,10 @@ public class AdditionalRequirementsDB extends RealmObject implements DataObjectU
     public Integer getIdResImage() {
         return DataObjectUI.DefaultImpls.getIdResImage(this);
     }
+
+    @NonNull
+    @Override
+    public String getFieldsImageOnUI() {
+        return DataObjectUI.DefaultImpls.getFieldsImageOnUI(this);
+    }
 }
