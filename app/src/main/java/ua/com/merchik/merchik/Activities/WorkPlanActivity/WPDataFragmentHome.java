@@ -18,7 +18,10 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import androidx.compose.ui.platform.ComposeView;
+import androidx.compose.ui.platform.ViewCompositionStrategy;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -38,6 +41,8 @@ import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.AppUserRealm;
 import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.dialogs.DialogFilter.DialogFilter;
+import ua.com.merchik.merchik.features.main.DBViewModels.LogMPDBViewModel;
+import ua.com.merchik.merchik.features.main.Main.MyComposeFunKt;
 
 public class WPDataFragmentHome extends Fragment {
 
@@ -69,6 +74,21 @@ public class WPDataFragmentHome extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View v = inflater.inflate(R.layout.fragment_tab_wp_home, container, false);
+
+        LogMPDBViewModel viewModel = new ViewModelProvider(this).get(LogMPDBViewModel.class);
+
+        ComposeView composeView = v.findViewById(R.id.compose_view);
+        composeView.setViewCompositionStrategy(
+                ViewCompositionStrategy.DisposeOnDetachedFromWindow.INSTANCE
+        );
+
+        composeView.setContent(
+                () -> {
+                    // Вызов вашей Composable функции
+                    MyComposeFunKt.MyComposeFun();
+                    return null;
+                }
+        );
 
         try {
             recyclerView = v.findViewById(R.id.RecyclerViewWorkPlan);
