@@ -2,6 +2,7 @@ package ua.com.merchik.merchik.dialogs.DialogAchievement
 
 class AchievementDataHolder private constructor() {
     var tovarId: Int = 0
+    var tovarNm: String = ""
 
     companion object {
         private var instance: AchievementDataHolder? = null
@@ -15,5 +16,6 @@ class AchievementDataHolder private constructor() {
 
     fun init() {
         tovarId = 0
+        tovarNm = ""
     }
 }

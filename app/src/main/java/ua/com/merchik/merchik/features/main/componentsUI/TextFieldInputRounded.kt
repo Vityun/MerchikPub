@@ -73,7 +73,8 @@ fun TextFieldInputRounded(
                     .align(Alignment.CenterVertically)
                     .padding(end = 7.dp, start = 7.dp)
                     .fillMaxHeight(),
-                painter = painterResource(id = com.google.android.material.R.drawable.ic_search_black_24),
+                painter = painterResource(id = R.drawable.ic_82),
+//                painter = painterResource(id = com.google.android.material.R.drawable.ic_search_black_24),
                 contentDescription = "",
                 colorFilter = ColorFilter.tint(colorResource(id = R.color.hintColorDefault))
             )

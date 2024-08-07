@@ -191,6 +191,39 @@
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@+id/offer_from_the_client" />
 
+                <TextView
+                    android:id="@+id/tradeMark"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="16dp"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginEnd="16dp"
+                    android:text="Торгівельна марка: "
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/spinner_client" />
+
+                <Spinner
+                    android:id="@+id/spinner_trade_mark"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:layout_marginEnd="16dp"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/tradeMark" />
+
+                <TextView
+                    android:id="@+id/tovar"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="16dp"
+                    android:layout_marginTop="8dp"
+                    android:text="Товар:"
+                    android:visibility="visible"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/spinner_trade_mark" />
+
                 <androidx.constraintlayout.widget.ConstraintLayout
                     android:id="@+id/constraintLayout2"
                     android:layout_width="match_parent"
@@ -285,17 +318,16 @@
                     app:layout_constraintTop_toBottomOf="@+id/comment" />
 
                 <TextView
-                    android:id="@+id/tovar"
+                    android:id="@+id/tovar_choose"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="16dp"
-                    android:layout_marginTop="8dp"
                     android:layout_marginEnd="16dp"
-                    android:text="ПРИ КЛИКЕ СЮДА - УнСправ С ВЫБОРОМ ТОВАРОВ"
-                    android:visibility="gone"
+                    android:text="Натисніть для обрання Товару"
+                    app:layout_constraintBottom_toBottomOf="@+id/tovar"
                     app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/spinner_client" />
+                    app:layout_constraintStart_toEndOf="@+id/tovar"
+                    app:layout_constraintTop_toTopOf="@+id/tovar" />
 
             </androidx.constraintlayout.widget.ConstraintLayout>
         </ScrollView>

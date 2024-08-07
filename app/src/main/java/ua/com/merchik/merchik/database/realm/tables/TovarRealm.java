@@ -5,6 +5,7 @@ import static ua.com.merchik.merchik.database.realm.RealmManager.INSTANCE;
 import java.util.List;
 
 import ua.com.merchik.merchik.data.RealmModels.TovarDB;
+import ua.com.merchik.merchik.database.realm.RealmManager;
 
 public class TovarRealm {
 
@@ -23,9 +24,9 @@ public class TovarRealm {
     }
 
     public static List<TovarDB> getByCliIds(String[] tov){
-        return INSTANCE.where(TovarDB.class)
+        return RealmManager.INSTANCE.copyFromRealm(INSTANCE.where(TovarDB.class)
                 .in("clientId", tov)
-                .findAll();
+                .findAll());
     }
 
     public static List<TovarDB> getTov(){
