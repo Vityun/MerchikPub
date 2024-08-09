@@ -14,4 +14,6 @@ public class AchievementsUpload {
     public String img_before_hash;
     public String img_after_hash;
     public Integer add_requirement_id;
+    public Integer tovar_id;
+    public Integer manufacturer;
 }

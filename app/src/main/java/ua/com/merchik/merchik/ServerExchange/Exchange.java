@@ -2868,6 +2868,8 @@ public class Exchange {
                 uploadData.img_before_hash = item.img_before_hash;
                 uploadData.img_after_hash = item.img_after_hash;
                 uploadData.add_requirement_id = item.addRequirementId;
+                uploadData.tovar_id = item.tovar_id;
+                uploadData.manufacturer = item.manufacturer;
                 dataList.add(uploadData);
             }
 
