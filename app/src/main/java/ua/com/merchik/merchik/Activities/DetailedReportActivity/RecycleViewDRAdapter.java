@@ -35,7 +35,6 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.google.gson.Gson;
 
 import java.util.Arrays;
-import java.util.Calendar;
 import java.util.List;
 
 import ua.com.merchik.merchik.Activities.PhotoLogActivity.PhotoLogActivity;
@@ -47,6 +46,7 @@ import ua.com.merchik.merchik.Options.Controls.OptionControlTaskAnswer;
 import ua.com.merchik.merchik.Options.OptionControl;
 import ua.com.merchik.merchik.Options.Options;
 import ua.com.merchik.merchik.R;
+import ua.com.merchik.merchik.Utils.CodeGenerator;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.Database.Room.AchievementsSDB;
 import ua.com.merchik.merchik.data.Database.Room.AddressSDB;
@@ -648,7 +648,8 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                         dialog.setOk("Ok", () -> {
                             Toast.makeText(dialog.context, "Внесли: " + dialog.getOperationResult(), Toast.LENGTH_SHORT).show();
 
-                            int res = Integer.parseInt(dialog.getOperationResult());
+//                            int res = Integer.parseInt(dialog.getOperationResult());
+                            String res = dialog.getOperationResult();
 
                         /* old
                         Calendar calendar = Calendar.getInstance();
@@ -657,15 +658,16 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                         int pass = day + dat2;*/
 
                             // new
-                            Calendar calendar = Calendar.getInstance();
-                            int year = calendar.get(Calendar.YEAR);
-                            int dayOfYear = calendar.get(Calendar.DAY_OF_YEAR);
-                            int dayOfWeek = calendar.get(Calendar.DAY_OF_WEEK);
-                            int dayOfMonth = calendar.get(Calendar.DAY_OF_MONTH);
-
-                            double passwordD = (double) year / (dayOfYear + dayOfWeek + dayOfMonth);
-
-                            int pass = Integer.parseInt(String.format("%03d", (int) (passwordD * 100)));
+//                            Calendar calendar = Calendar.getInstance();
+//                            int year = calendar.get(Calendar.YEAR);
+//                            int dayOfYear = calendar.get(Calendar.DAY_OF_YEAR);
+//                            int dayOfWeek = calendar.get(Calendar.DAY_OF_WEEK);
+//                            int dayOfMonth = calendar.get(Calendar.DAY_OF_MONTH);
+//
+//                            double passwordD = (double) year / (dayOfYear + dayOfWeek + dayOfMonth);
+//
+//                            int pass = Integer.parseInt(String.format("%03d", (int) (passwordD * 100)));
+                            String pass = CodeGenerator.getCode();
 
                             if (res == pass) {
                                 longClickButton(test, optionId, detailedReportButtons, optionsButtons, view.getContext());

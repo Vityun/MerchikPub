@@ -13,7 +13,6 @@ import com.google.android.material.navigation.NavigationView;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 
-import java.util.Calendar;
 import java.util.List;
 
 import io.reactivex.rxjava3.observers.DisposableCompletableObserver;
@@ -24,6 +23,7 @@ import retrofit2.Response;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.ServerExchange.ExchangeInterface;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.UsersExchange;
+import ua.com.merchik.merchik.Utils.CodeGenerator;
 import ua.com.merchik.merchik.data.Database.Room.UsersSDB;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.ShowcaseResponse;
 import ua.com.merchik.merchik.data.TestJsonUpload.StandartData;
@@ -67,26 +67,16 @@ public class MenuMainActivity extends toolbar_menus {
     }
 
     private void testLong() {
-        Calendar calendar = Calendar.getInstance();
-//        int count = 1;
-//
-//        while (count < 365) {
-//            Log.e("testLong", "calendar(" + count + "): " + calendar);
+/*        Calendar calendar = Calendar.getInstance();
         int year = calendar.get(Calendar.YEAR);
         int dayOfYear = calendar.get(Calendar.DAY_OF_YEAR);
         int dayOfWeek = calendar.get(Calendar.DAY_OF_WEEK);
         int dayOfMonth = calendar.get(Calendar.DAY_OF_MONTH);
+        double pass = (double) year / (dayOfYear + dayOfWeek + dayOfMonth);*/
+//        int res = Integer.parseInt(String.format("%03d", (int) (pass * 100)));
 
-        double pass = (double) year / (dayOfYear + dayOfWeek + dayOfMonth);
-
-        int res = Integer.parseInt(String.format("%03d", (int) (pass * 100)));
-
+        String res = CodeGenerator.getCode();
         Toast.makeText(getApplicationContext(), "" + res, Toast.LENGTH_LONG).show();
-
-        Log.e("testLong", "pass: " + res);
-//            calendar.add(Calendar.DAY_OF_YEAR, count);
-//            count++;
-//        }
     }
 
     private void test() {
