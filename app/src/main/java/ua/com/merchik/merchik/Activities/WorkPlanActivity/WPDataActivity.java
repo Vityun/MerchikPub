@@ -22,6 +22,7 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.navigation.NavigationView;
 import com.google.android.material.tabs.TabLayout;
 
+import dagger.hilt.android.AndroidEntryPoint;
 import io.realm.RealmResults;
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.FabYoutube;
@@ -34,6 +35,7 @@ import ua.com.merchik.merchik.retrofit.CheckInternet.CheckServer;
 import ua.com.merchik.merchik.retrofit.CheckInternet.NetworkUtil;
 import ua.com.merchik.merchik.toolbar_menus;
 
+@AndroidEntryPoint
 public class WPDataActivity extends toolbar_menus {
 
     private RealmResults<WpDataDB> workPlan;
