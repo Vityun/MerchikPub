@@ -201,7 +201,7 @@ public class OptionControl<T> {
                 }
                 return false;
             }else {
-                setIsBlockOption(false);
+                setIsBlockOption(true);
                 return true;
             }
         } catch (Exception e) {
