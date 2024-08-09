@@ -526,6 +526,3 @@ fun MainUI(viewModel: MainViewModel, context: Context) {
         )
     }
 }
-
-@Composable
-fun Float.toPx() = with(LocalDensity.current) { this@toPx.sp.toPx() }
