@@ -29,6 +29,7 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 
+import dagger.hilt.android.AndroidEntryPoint;
 import io.realm.RealmResults;
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
@@ -41,9 +42,8 @@ import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.AppUserRealm;
 import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.dialogs.DialogFilter.DialogFilter;
-import ua.com.merchik.merchik.features.main.DBViewModels.LogMPDBViewModel;
-import ua.com.merchik.merchik.features.main.Main.MyComposeFunKt;
 
+@AndroidEntryPoint
 public class WPDataFragmentHome extends Fragment {
 
     private Globals globals = new Globals();
@@ -75,20 +75,15 @@ public class WPDataFragmentHome extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View v = inflater.inflate(R.layout.fragment_tab_wp_home, container, false);
 
-        LogMPDBViewModel viewModel = new ViewModelProvider(this).get(LogMPDBViewModel.class);
-
-        ComposeView composeView = v.findViewById(R.id.compose_view);
-        composeView.setViewCompositionStrategy(
-                ViewCompositionStrategy.DisposeOnDetachedFromWindow.INSTANCE
-        );
-
-        composeView.setContent(
-                () -> {
-                    // Вызов вашей Composable функции
-                    MyComposeFunKt.MyComposeFun();
-                    return null;
-                }
-        );
+//        TovarDBViewModel viewModel = new ViewModelProvider(this).get(TovarDBViewModel.class);
+//        viewModel.updateContent();
+//
+//        ComposeView composeView = v.findViewById(R.id.compose_view);
+//        composeView.setViewCompositionStrategy(
+//                ViewCompositionStrategy.DisposeOnDetachedFromWindow.INSTANCE
+//        );
+//
+//        MainUIKt.setContentInComposeView(composeView, viewModel, requireContext());
 
         try {
             recyclerView = v.findViewById(R.id.RecyclerViewWorkPlan);

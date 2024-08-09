@@ -1,9 +1,11 @@
 package ua.com.merchik.merchik.dialogs.DialogAchievement;
 
+import static ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity.NEED_UPDATE_UI_REQUEST;
 import static ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportTab.detailedReportOptionsFrag;
 import static ua.com.merchik.merchik.Globals.HELPDESK_PHONE_NUMBER;
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
+import android.app.Activity;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.Intent;
@@ -25,6 +27,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.RequiresApi;
+import androidx.core.app.ActivityCompat;
 
 import com.google.gson.Gson;
 
@@ -59,6 +62,8 @@ public class DialogCreateAchievement {
 
     public static Clicks.click clickVoidAchievement;
 
+    public static Clicks.OnUpdateUI onUpdateUI;
+
     private Dialog dialog;
     private Context context;
 //    private WpDataDB wpDataDB;
@@ -71,7 +76,7 @@ public class DialogCreateAchievement {
     private StackPhotoDB stackPhotoDBTo, stackPhotoDBAfter;
 
     private ImageButton close, help, videoHelp, call, addSotr;
-    private TextView title, client, address, visit, theme, offerFromClient;
+    private TextView title, client, address, visit, theme, offerFromClient, tovarTextView;
     private EditText comment;
     private Button photoTo, photoAfter, save;
     private ImageView photoToIV, photoAfterIV;
@@ -127,7 +132,8 @@ public class DialogCreateAchievement {
             spinnerTheme = dialog.findViewById(R.id.spinner_theme);
             spinnerClient = dialog.findViewById(R.id.spinner_client);
 
-            dialog.findViewById(R.id.tovar).setOnClickListener(view -> {
+            tovarTextView = dialog.findViewById(R.id.tovar);
+            tovarTextView.setOnClickListener(view -> {
                 Intent intent = new Intent(context, FeaturesActivity.class);
                 Bundle bundle = new Bundle();
                 bundle.putString("viewModel", TovarDBViewModel.class.getCanonicalName());
@@ -135,7 +141,7 @@ public class DialogCreateAchievement {
                 bundle.putString("subTitle", "Подзаголовок Подзаг Подво Подво Подзаголовок njh");
                 bundle.putInt("idResImage", R.drawable.ic_caution);
                 intent.putExtras(bundle);
-                context.startActivity(intent, bundle);
+                ActivityCompat.startActivityForResult((Activity) context, intent, NEED_UPDATE_UI_REQUEST, null);
             });
 
         } catch (Exception e) {
@@ -572,6 +578,8 @@ public class DialogCreateAchievement {
 
         putTextData();
         buttonSave();
+
+        onUpdateUI = () -> tovarTextView.setText(AchievementDataHolder.Companion.instance().getTovarName());
     }
 
     public void setData(AchievementsSDB data) {
@@ -588,5 +596,7 @@ public class DialogCreateAchievement {
 
         putTextData();
         buttonSave();
+
+        onUpdateUI = () -> tovarTextView.setText(AchievementDataHolder.Companion.instance().getTovarName());
     }
 }

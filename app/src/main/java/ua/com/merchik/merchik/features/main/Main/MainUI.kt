@@ -42,7 +42,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -51,7 +51,6 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.rememberAsyncImagePainter
-import coil.compose.rememberImagePainter
 import my.nanihadesuka.compose.LazyColumnScrollbar
 import my.nanihadesuka.compose.ScrollbarSettings
 import ua.com.merchik.merchik.R
@@ -343,7 +342,9 @@ fun MainUI(viewModel: MainViewModel, context: Context) {
                                                 if (images.size <= 1) {
                                                     Image(
                                                         painter = images[0],
-                                                        modifier = Modifier.padding(5.dp).size(100.dp),
+                                                        modifier = Modifier
+                                                            .padding(5.dp)
+                                                            .size(100.dp),
                                                         contentScale = ContentScale.FillWidth,
                                                         contentDescription = null
                                                     )
@@ -352,7 +353,9 @@ fun MainUI(viewModel: MainViewModel, context: Context) {
                                                         items(images) { image ->
                                                             Image(
                                                                 painter = image,
-                                                                modifier = Modifier.padding(5.dp).size(100.dp),
+                                                                modifier = Modifier
+                                                                    .padding(5.dp)
+                                                                    .size(100.dp),
                                                                 contentScale = ContentScale.FillWidth,
                                                                 contentDescription = null
                                                             )
@@ -484,6 +487,7 @@ fun MainUI(viewModel: MainViewModel, context: Context) {
                             onClick = {
                                 if (selectedItems.isNotEmpty()) {
                                     viewModel.onSelectedItemsUI(selectedItems)
+                                    (context as? Activity)?.setResult(Activity.RESULT_OK)
                                     (context as? Activity)?.finish()
                                 }
                             },
@@ -524,5 +528,11 @@ fun MainUI(viewModel: MainViewModel, context: Context) {
                 showFilteringDialog = false
             }
         )
+    }
+}
+
+fun setContentInComposeView(composeView: ComposeView, viewModel: MainViewModel, context: Context) {
+    composeView.setContent {
+        MainUI(viewModel, context)
     }
 }

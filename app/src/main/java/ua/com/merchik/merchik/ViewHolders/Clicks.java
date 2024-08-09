@@ -30,6 +30,10 @@ public interface Clicks<T> {
         <T> void click(T data);
     }
 
+    interface OnUpdateUI{
+        void update();
+    }
+
     interface clickText{
         void click(String data);
     }

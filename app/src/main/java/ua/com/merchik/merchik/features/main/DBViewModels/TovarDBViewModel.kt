@@ -35,8 +35,9 @@ class TovarDBViewModel @Inject constructor(
     }
 
     override fun onSelectedItemsUI(itemsUI: List<ItemUI>) {
-        (itemsUI.first().rawObj.firstOrNull { it is TovarDB } as? TovarDB)?.getiD()?.let {
-            AchievementDataHolder.instance().tovarId = it.toInt()
+        (itemsUI.first().rawObj.firstOrNull { it is TovarDB } as? TovarDB)?.let {
+            AchievementDataHolder.instance().tovarId = it.getiD().toInt()
+            AchievementDataHolder.instance().tovarName = it.nm
         }
     }
 

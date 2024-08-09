@@ -94,11 +94,14 @@ import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.ReportPrepareRealm;
 import ua.com.merchik.merchik.database.realm.tables.StackPhotoRealm;
 import ua.com.merchik.merchik.database.realm.tables.WpDataRealm;
+import ua.com.merchik.merchik.dialogs.DialogAchievement.DialogCreateAchievement;
 import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
 import ua.com.merchik.merchik.toolbar_menus;
 
 public class DetailedReportActivity extends toolbar_menus {
+
+    public static final int NEED_UPDATE_UI_REQUEST = 333;
 
     private Translate translate = new Translate();
     private WorkPlan workPlan = new WorkPlan();
@@ -761,6 +764,10 @@ public class DetailedReportActivity extends toolbar_menus {
 
         try {
             Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult", "requestCode / resultCode / data: " + requestCode + "/" + resultCode + "/" + data);
+
+            if (requestCode == NEED_UPDATE_UI_REQUEST && resultCode == RESULT_OK) {
+                DialogCreateAchievement.onUpdateUI.update();
+            }
 
             if (requestCode == PICK_GALLERY_IMAGE_REQUEST && resultCode == RESULT_OK && data != null && data.getData() != null) {
                 try {
