@@ -31,7 +31,7 @@ class TovarDBViewModel @Inject constructor(
         get() = TovarDB::class
 
     override fun getItems(): List<ItemUI> {
-        val clientId = Gson().fromJson(dataJson, JsonObject::class.java).get("clientId").asString
+//        val clientId = Gson().fromJson(dataJson, JsonObject::class.java).get("clientId").asString
         val codeDad2 = Gson().fromJson(dataJson, JsonObject::class.java).get("codeDad2").asLong
         val test = RealmManager.getTovarListFromReportPrepareByDad2Copy(codeDad2)
 //        val test = TovarRealm.getByCliIds(arrayOf(clientId))

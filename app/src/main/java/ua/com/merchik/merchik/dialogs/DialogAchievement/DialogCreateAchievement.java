@@ -143,7 +143,7 @@ public class DialogCreateAchievement {
                 Bundle bundle = new Bundle();
                 bundle.putString("viewModel", TovarDBViewModel.class.getCanonicalName());
 //                bundle.putString("dataJson", new Gson().toJson(MY_JSON));
-                bundle.putString("dataJson", "{\"clientId\":\""+clientId+"\"}");
+                bundle.putString("dataJson", "{\"codeDad2\":\""+codeDad2+"\"}");
                 bundle.putString("title", "Товари");
                 bundle.putString("subTitle", "Оберіть Товар");
 //                bundle.putString('req', "");
