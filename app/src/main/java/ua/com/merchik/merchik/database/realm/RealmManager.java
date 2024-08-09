@@ -1168,6 +1168,49 @@ public class RealmManager {
         return realmResults2;
     }
 
+    /**
+     * 09.08.2024
+     * Тоже самое что и
+     * */
+    public static List<TovarDB> getTovarListFromReportPrepareByDad2Copy(long dad2) {
+        ArrayList<String> listRpTovId = new ArrayList<>();
+        ArrayList<String> listTovId = new ArrayList<>();
+        RealmResults<ReportPrepareDB> realmResults = INSTANCE.where(ReportPrepareDB.class).equalTo("codeDad2", String.valueOf(dad2)).findAll();
+        List<ReportPrepareDB> reportPrepareDBList = INSTANCE.copyFromRealm(realmResults);
+        String[] list = new String[reportPrepareDBList.size()];
+        for (int i = 0; i < reportPrepareDBList.size(); i++) {
+            list[i] = reportPrepareDBList.get(i).getTovarId();
+            listRpTovId.add(reportPrepareDBList.get(i).getTovarId());
+        }
+        RealmResults<TovarDB> realmResults2 = INSTANCE.where(TovarDB.class).in("iD", list).equalTo("deleted", 0)      // Не показывать удалённые Товары
+                .findAll();
+        try {
+            for (TovarDB item : realmResults2) {
+                listTovId.add(item.getiD());
+            }
+        } catch (Exception e) {
+            Globals.writeToMLOG("ERROR", "getTovarListFromReportPrepareByDad2", "Exception e: " + e);
+            return null;
+        }
+
+        for (TovarDB item : RealmManager.INSTANCE.copyFromRealm(realmResults2)) {
+            if (item.getManufacturer() == null) {
+                String id = item.getManufacturerId();
+                TradeMarkDB tm = TradeMarkRealm.getTradeMarkRowById(id);
+                String sortCol = item.getSortcol();
+                String data = sortCol.toLowerCase();
+
+                INSTANCE.executeTransaction(realm -> {
+                    item.setSortcol(data);
+                    item.setManufacturer(tm);
+                    INSTANCE.copyToRealmOrUpdate(item);
+                });
+            }
+        }
+        realmResults2 = realmResults2.sort("manufacturer.nm", Sort.ASCENDING, "sortcol", Sort.ASCENDING);
+        return RealmManager.INSTANCE.copyFromRealm(realmResults2);
+    }
+
 
     private static ArrayList<String> neededTovars(ArrayList<String> listRpTovId, ArrayList<String> listTovId) {
         ArrayList<String> res = new ArrayList<>(listRpTovId);

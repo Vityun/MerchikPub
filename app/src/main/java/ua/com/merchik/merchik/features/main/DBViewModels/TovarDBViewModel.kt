@@ -10,6 +10,7 @@ import ua.com.merchik.merchik.dataLayer.DataObjectUI
 import ua.com.merchik.merchik.dataLayer.MainRepository
 import ua.com.merchik.merchik.dataLayer.NameUIRepository
 import ua.com.merchik.merchik.dataLayer.model.ItemUI
+import ua.com.merchik.merchik.database.realm.RealmManager
 import ua.com.merchik.merchik.database.realm.tables.TovarRealm
 import ua.com.merchik.merchik.dialogs.DialogAchievement.AchievementDataHolder
 import ua.com.merchik.merchik.features.main.Main.MainViewModel
@@ -31,7 +32,9 @@ class TovarDBViewModel @Inject constructor(
 
     override fun getItems(): List<ItemUI> {
         val clientId = Gson().fromJson(dataJson, JsonObject::class.java).get("clientId").asString
-        val test = TovarRealm.getByCliIds(arrayOf(clientId))
+        val codeDad2 = Gson().fromJson(dataJson, JsonObject::class.java).get("codeDad2").asLong
+        val test = RealmManager.getTovarListFromReportPrepareByDad2Copy(codeDad2)
+//        val test = TovarRealm.getByCliIds(arrayOf(clientId))
             .filter { it is DataObjectUI }
             .map { it as DataObjectUI }
         return repository.toItemUIList(TovarDB::class, test, contextUI)
