@@ -728,6 +728,19 @@ public class Options {
             // 14110 Кр Ингредиентс
             // 88939 Ничога ПП
 
+            // 14072 Сирена Екохім
+            // 14526 Юкрейн Трейдинг
+            // 10393 Вока-Д
+            // 14693 Живий квас
+            // 45632 Світ Україна
+            // 14156 Ренклод
+            // 8219  ВГП ПАО
+            // 14839 Вега Украина ТД
+            // 14611 Им Текстиль ООО
+            // 14365 Флеш
+            // 91373 Сондак Роман Михайлович ФОП
+            // 91206 ТС Плюс ТОВ
+
             if (option.getClientId().equals("14301") ||     // трегуб
                     option.getClientId().equals("14840") || // Авто комфорт плюс
                     option.getClientId().equals("14843") || // Джокер
@@ -778,10 +791,23 @@ public class Options {
                     option.getClientId().equals("8767")  ||    // Сл Дистрибьюшн
                     option.getClientId().equals("45748")  ||    // Бико
                     option.getClientId().equals("32246")  ||    // Ласунка
-                    option.getClientId().equals("8463")  ||    // Житомирський маслозавод
+                    option.getClientId().equals("8463")  ||    // Житомирський маслозавод;;;
                     option.getClientId().equals("10426")  ||    // Драйд Фудз
                     option.getClientId().equals("14110")  ||    // Кр Ингредиентс
-                    option.getClientId().equals("88939")        // Ничога ПП
+                    option.getClientId().equals("88939")  ||    // Ничога ПП
+
+                    option.getClientId().equals("14072")  ||    // Сирена Екохім
+                    option.getClientId().equals("14526")  ||    // Юкрейн Трейдинг
+                    option.getClientId().equals("10393")  ||    // Вока-Д
+                    option.getClientId().equals("14693")  ||    // Живий квасmkjjj
+                    option.getClientId().equals("45632")  ||    // Світ Україна
+                    option.getClientId().equals("14156")  ||    // Ренклод
+                    option.getClientId().equals("8219")  ||     // ВГП ПАО
+                    option.getClientId().equals("14839")  ||    // Вега Украина ТД
+                    option.getClientId().equals("14611")  ||    // Им Текстиль ООО
+                    option.getClientId().equals("14365")  ||    // Флеш
+                    option.getClientId().equals("91373")  ||    // Сондак Роман Михайлович ФОП
+                    option.getClientId().equals("91206")        // ТС Плюс ТОВ
             ) {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                     optionControlNewAlgo(getOptionsToControl(option), context, dataDB, option, optionList, type, mode, false, click);

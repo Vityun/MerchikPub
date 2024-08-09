@@ -8,12 +8,7 @@ import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.os.Handler;
-import android.os.Looper;
-import android.os.Message;
 import android.util.Log;
-
-import androidx.annotation.NonNull;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
@@ -166,18 +161,18 @@ public class Exchange {
      * 26.02.2021
      * Начало Обмена. Внутри находятся все Обмены
      */    public void startExchange() {
-        Handler handler = new Handler(Looper.getMainLooper()){
-            @Override
-            public void handleMessage(@NonNull Message msg) {
-                if (msg.what == 0){
+//        Handler handler = new Handler(Looper.getMainLooper()){
+//            @Override
+//            public void handleMessage(@NonNull Message msg) {
+//                if (msg.what == 0){
+//
+//                }else {
+//
+//                }
+//            }
+//        };
 
-                }else {
-
-                }
-            }
-        };
-
-        new Thread(() -> {
+//        new Thread(() -> {
             try {
                 Log.e("startExchange", "start");
 
@@ -1070,7 +1065,7 @@ public class Exchange {
             } catch (Exception e) {
                 Globals.writeToMLOG("ERROR", "startExchange", "Exception e: " + e);
             }
-        }).start();
+//        }).start();
     }
 
     // ====================================^=^=^=^=^================================================
