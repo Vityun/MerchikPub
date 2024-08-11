@@ -106,6 +106,7 @@ import ua.com.merchik.merchik.Options.Controls.OptionControlCheckingReasonOutOfS
 import ua.com.merchik.merchik.Options.Controls.OptionControlEKL;
 import ua.com.merchik.merchik.Options.Controls.OptionControlEndAnotherWork;
 import ua.com.merchik.merchik.Options.Controls.OptionControlFacePlan;
+import ua.com.merchik.merchik.Options.Controls.OptionControlMP;
 import ua.com.merchik.merchik.Options.Controls.OptionControlPercentageOfThePrize;
 import ua.com.merchik.merchik.Options.Controls.OptionControlPhoto;
 import ua.com.merchik.merchik.Options.Controls.OptionControlPhotoBeforeStartWork;
@@ -414,7 +415,19 @@ public class Options {
                 case 8299:
                     Log.e("OPTION_CONTROL", "checkMP: " + optionsDB.getOptionControlId());
 //                checkMP(context, dataDB, optionsDB, type, mode);
-                    optionControlMP_8299(context, dataDB, optionsDB, type, mode, unlockCodeResultListener);
+//                    optionControlMP_8299(context, dataDB, optionsDB, type, mode, unlockCodeResultListener);
+                    OptionControlMP optionControlMP = new OptionControlMP(context, dataDB, optionsDB, type, mode, unlockCodeResultListener);
+//                    optionControlMP.showMassage(new Clicks.clickStatusMsg() {
+//                        @Override
+//                        public void onSuccess(String data) {
+//
+//                        }
+//
+//                        @Override
+//                        public void onFailure(String error) {
+//
+//                        }
+//                    });
                     break;
 
                 case 141911:
@@ -1859,7 +1872,19 @@ public class Options {
                 return optionControlReceivingAnOrder_587(context, dataDB, option, type, mode, unlockCodeResultListener) ? 1 : 0;
 
             case 8299:
-                optionControlMP_8299(context, dataDB, option, type, mode, unlockCodeResultListener);
+//                optionControlMP_8299(context, dataDB, option, type, mode, unlockCodeResultListener);
+                OptionControlMP optionControlMP = new OptionControlMP(context, dataDB, option, type, mode, unlockCodeResultListener);
+                optionControlMP.showMassage(new Clicks.clickStatusMsg() {
+                    @Override
+                    public void onSuccess(String data) {
+
+                    }
+
+                    @Override
+                    public void onFailure(String error) {
+
+                    }
+                });
                 break;
 
 

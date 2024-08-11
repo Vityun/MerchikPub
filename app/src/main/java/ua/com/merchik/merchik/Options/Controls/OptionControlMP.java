@@ -41,6 +41,8 @@ public class OptionControlMP<T> extends OptionControl {
     private StringBuilder stringBuilder = new StringBuilder();
     private String period = "";
 
+    private boolean signal = true;
+
     public OptionControlMP(Context context, T document, OptionsDB optionDB, OptionMassageType msgType, Options.NNKMode nnkMode, UnlockCodeResultListener unlockCodeResultListener) {
         this.context = context;
         this.document = document;
@@ -153,6 +155,7 @@ public class OptionControlMP<T> extends OptionControl {
                             stringBuilder.append("Ви визначені на торговій точці. Зауважень немає.");
                             okMP = true;
                             click.onSuccess("");
+                            signal = false;
                         } else {
                             String distanceType = " м ";
                             if (distance > 1000) {
@@ -192,6 +195,9 @@ public class OptionControlMP<T> extends OptionControl {
                 dialog.setClose(dialog::dismiss);
                 dialog.show();
             }
+
+            setIsBlockOption(signal);
+            checkUnlockCode(optionDB);
         } catch (Exception e) {
             Globals.writeToMLOG("ERROR", "OptionControlMP/showMassage", "Exception e: " + e);
         }

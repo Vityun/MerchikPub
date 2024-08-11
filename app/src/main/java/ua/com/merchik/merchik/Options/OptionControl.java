@@ -176,7 +176,6 @@ public class OptionControl<T> {
 
     public boolean checkUnlockCode(OptionsDB optionDB) {
         try {
-
             if (optionDB != null && optionDB.getIsSignal().equals("1") && optionDB.getBlockPns().equals("1")) {
                 if (nnkMode.equals(Options.NNKMode.CHECK) || nnkMode.equals(Options.NNKMode.CHECK_CLICK)){
                     optionDB = OptionsRealm.getOption(optionDB.getCodeDad2(), optionDB.getOptionControlId());
@@ -201,7 +200,7 @@ public class OptionControl<T> {
                 }
                 return false;
             }else {
-                setIsBlockOption(true);
+                setIsBlockOption(false);
                 return true;
             }
         } catch (Exception e) {
