@@ -184,12 +184,13 @@ public class Exchange {
 
                     try {
                         globals.fixMP(null, null);    //
-                        Globals.writeToMLOG("ERROR", "startExchange/globals.fixMP();", "locationGPS: " + Globals.locationGPS);
+                        Globals.writeToMLOG("INFO", "startExchange/globals.fixMP();", "locationGPS: " + Globals.locationGPS);
                     } catch (Exception e) {
                         Globals.writeToMLOG("ERROR", "startExchange/globals.fixMP();", "Exception e: " + e);
                     }
 
                     try {
+                        Globals.writeToMLOG("INFO", "startExchange/uploadLodMp", "START");
                         TablesLoadingUnloading tablesLoadingUnloading = new TablesLoadingUnloading();
                         tablesLoadingUnloading.uploadLodMp(new ExchangeInterface.ExchangeRes() {
                             @Override
@@ -207,6 +208,7 @@ public class Exchange {
                     }
 
                     try {
+                        Globals.writeToMLOG("INFO", "startExchange/downloadLocationTable", "START");
                         new LocationExchange().downloadLocationTable(new ExchangeInterface.ExchangeResponseInterface() {
                             @Override
                             public <T> void onSuccess(List<T> data) {
@@ -286,6 +288,7 @@ public class Exchange {
                     }
 
                     try {
+                        Globals.writeToMLOG("INFO", "startExchange/uploadAchievemnts", "START");
                         uploadAchievemnts();
                     }catch (Exception e){
                         Globals.writeToMLOG("ERROR", "startExchange/uploadAchievemnts", "Exception e: " + e);
@@ -294,6 +297,7 @@ public class Exchange {
 
 
                     try {
+                        Globals.writeToMLOG("INFO", "startExchange/downloadAdditionalMaterials", "START");
                         downloadAdditionalMaterials();
                     } catch (Exception e) {
                         Globals.writeToMLOG("ERROR", "startExchange/downloadAdditionalMaterials", "Exception e: " + e);
