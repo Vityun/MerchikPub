@@ -176,6 +176,9 @@ public class OptionControl<T> {
 
     public boolean checkUnlockCode(OptionsDB optionDB) {
         try {
+            // 12.08.24. Виктор. Для будущих поколений.
+            // Обращайте внимание - сохраняет ли опция контроля сигнал. Был случай когда не было
+            // сохранения/обновления сигнала в БД изза чего мерчер НЕ БЛОКИРОВАЛО то что должно было блокировать.
             if (optionDB != null && optionDB.getIsSignal().equals("1") && optionDB.getBlockPns().equals("1")) {
                 if (nnkMode.equals(Options.NNKMode.CHECK) || nnkMode.equals(Options.NNKMode.CHECK_CLICK)){
                     optionDB = OptionsRealm.getOption(optionDB.getCodeDad2(), optionDB.getOptionControlId());
