@@ -1885,7 +1885,7 @@ public class Options {
 
                     }
                 });
-                break;
+                return optionControlMP.isBlockOption2() ? 1 : 0;
 
 
             // Контроль Опции Доп. Требований
