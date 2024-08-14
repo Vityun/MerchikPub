@@ -22,6 +22,7 @@ import ua.com.merchik.merchik.data.RealmModels.AppUsersDB;
 import ua.com.merchik.merchik.data.RealmModels.LogMPDB;
 import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
+import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.AppUserRealm;
 import ua.com.merchik.merchik.database.realm.tables.LogMPRealm;
 import ua.com.merchik.merchik.dialogs.DialogData;
@@ -125,7 +126,7 @@ public class OptionControlMP<T> extends OptionControl {
         }
     }
 
-    public void showMassage(Clicks.clickStatusMsg click) {
+    public void showMassage(boolean showMassage, Clicks.clickStatusMsg click) {
         try {
             DialogData dialog = new DialogData(context);
             StringBuilder title = new StringBuilder();
@@ -187,7 +188,7 @@ public class OptionControlMP<T> extends OptionControl {
             }
 
 
-            if (!okMP) {
+            if (showMassage && !okMP) {
                 dialog.setImgBtnCall(context);
                 dialog.setTitle(title);
                 dialog.setText(stringBuilder);
@@ -195,6 +196,20 @@ public class OptionControlMP<T> extends OptionControl {
                 dialog.setClose(dialog::dismiss);
                 dialog.show();
             }
+
+            stringBuilderMsg = stringBuilder;
+
+            RealmManager.INSTANCE.executeTransaction(realm -> {
+                if (optionDB != null) {
+                    if (signal){
+                        optionDB.setIsSignal("1");
+                    }else {
+                        optionDB.setIsSignal("2");
+                    }
+                    realm.insertOrUpdate(optionDB);
+                }
+            });
+
 
             setIsBlockOption(signal);
             checkUnlockCode(optionDB);
