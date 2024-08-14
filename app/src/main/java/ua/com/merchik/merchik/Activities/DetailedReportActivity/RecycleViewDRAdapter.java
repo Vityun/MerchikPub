@@ -669,7 +669,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
 //                            int pass = Integer.parseInt(String.format("%03d", (int) (passwordD * 100)));
                             String pass = CodeGenerator.getCode();
 
-                            if (res == pass) {
+                            if (res.equals(pass)) {
                                 longClickButton(test, optionId, detailedReportButtons, optionsButtons, view.getContext());
                             } else {
                                 Toast.makeText(dialog.context, "Внесите корректный пароль", Toast.LENGTH_SHORT).show();
