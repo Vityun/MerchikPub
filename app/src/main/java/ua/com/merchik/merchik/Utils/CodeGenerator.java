@@ -20,7 +20,13 @@ public class CodeGenerator {
         String hash = sha256(input);
 
         // Берем первые 6 цифр из хэша
-        return extractDigits(hash, 6);
+        String digits = extractDigits(hash, 6);
+
+        // Берем 3 текстовых символа из хэша
+        String text = extractLetters(hash, 3);
+
+        // Объединяем 6 цифр и 3 текстовых символа
+        return digits + text;
     }
 
     private static String sha256(String base) {
@@ -50,16 +56,19 @@ public class CodeGenerator {
         return digits.toString();
     }
 
-
-
-    public static void main(String[] args) {
-        String secretKey = "SecretKey"; // Замените на свой секретный ключ
-        String code = generateCode(secretKey);
-        System.out.println("Generated Code: " + code);
+    private static String extractLetters(String hash, int length) {
+        StringBuilder letters = new StringBuilder();
+        for (char c : hash.toCharArray()) {
+            if (Character.isLetter(c)) {
+                letters.append(c);
+                if (letters.length() == length) break;
+            }
+        }
+        return letters.toString();
     }
 
     public static String getCode(){
-        String secretKey = "SecretKey"; // Замените на свой секретный ключ
+        String secretKey = "Merchik"; // Замените на свой секретный ключ
         return generateCode(secretKey);
     }
 }
