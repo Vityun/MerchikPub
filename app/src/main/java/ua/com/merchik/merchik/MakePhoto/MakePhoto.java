@@ -612,7 +612,7 @@ public class MakePhoto {
      */
     private <T> void photoDialogsNEW(Activity activity, WPDataObj wpDataObj, T data, OptionsDB optionsDB, Clicks.clickVoid clickVoid) {
         OptionControlMP optionControlMP = new OptionControlMP(activity.getBaseContext(), (WpDataDB) data, optionsDB, null, null, null);
-        optionControlMP.showMassage(new Clicks.clickStatusMsg() {
+        optionControlMP.showMassage(true, new Clicks.clickStatusMsg() {
             @Override
             public void onSuccess(String string) {
                 makePhoto(activity, data, clickVoid); // Метод который запускает камеру и создаёт файл фото.

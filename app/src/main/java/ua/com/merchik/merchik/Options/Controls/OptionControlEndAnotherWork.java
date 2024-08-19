@@ -39,15 +39,19 @@ public class OptionControlEndAnotherWork<T> extends OptionControl {
     private long codeDad2;
 
     public OptionControlEndAnotherWork(Context context, T document, OptionsDB optionDB, OptionMassageType msgType, Options.NNKMode nnkMode, UnlockCodeResultListener unlockCodeResultListener) {
-        this.context = context;
-        this.document = document;
-        this.optionDB = optionDB;
-        this.msgType = msgType;
-        this.nnkMode = nnkMode;
-        this.unlockCodeResultListener = unlockCodeResultListener;
+        try {
+            this.context = context;
+            this.document = document;
+            this.optionDB = optionDB;
+            this.msgType = msgType;
+            this.nnkMode = nnkMode;
+            this.unlockCodeResultListener = unlockCodeResultListener;
 
-        getDocumentVar();
-        executeOption();
+            getDocumentVar();
+            executeOption();
+        }catch (Exception e){
+            Globals.writeToMLOG("ERROR", "OptionControlEndAnotherWork/OptionControlEndAnotherWork", "Exception e: " + e);
+        }
     }
 
     private void getDocumentVar() {
@@ -128,6 +132,18 @@ public class OptionControlEndAnotherWork<T> extends OptionControl {
 //            unlockCodeResultListener.onUnlockCodeSuccess();
 //            unlockCodeResultListener.onUnlockCodeFailure();
         }
+
+        RealmManager.INSTANCE.executeTransaction(realm -> {
+            if (optionDB != null) {
+                if (signal){
+                    optionDB.setIsSignal("1");
+                }else {
+                    optionDB.setIsSignal("2");
+                }
+                realm.insertOrUpdate(optionDB);
+            }
+        });
+
         setIsBlockOption(signal);
         checkUnlockCode(optionDB);
         Log.d("test", "spannableStringBuilder: " + spannableStringBuilder);

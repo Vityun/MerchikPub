@@ -416,18 +416,28 @@ public class Options {
                     Log.e("OPTION_CONTROL", "checkMP: " + optionsDB.getOptionControlId());
 //                checkMP(context, dataDB, optionsDB, type, mode);
 //                    optionControlMP_8299(context, dataDB, optionsDB, type, mode, unlockCodeResultListener);
-                    OptionControlMP optionControlMP = new OptionControlMP(context, dataDB, optionsDB, type, mode, unlockCodeResultListener);
-//                    optionControlMP.showMassage(new Clicks.clickStatusMsg() {
-//                        @Override
-//                        public void onSuccess(String data) {
-//
-//                        }
-//
-//                        @Override
-//                        public void onFailure(String error) {
-//
-//                        }
-//                    });
+                    OptionMassageType optionControlMPTypeMsg = new OptionMassageType();
+                    switch (mode) {
+                        case NULL:
+                            break;
+
+                        case CHECK_CLICK:
+                            optionControlMPTypeMsg.type = DIALOG;
+                            break;
+                    }
+                    OptionControlMP optionControlMP = new OptionControlMP(context, dataDB, optionsDB, optionControlMPTypeMsg, mode, unlockCodeResultListener);
+                    optionControlMP.showMassage(false, new Clicks.clickStatusMsg() {
+                        @Override
+                        public void onSuccess(String data) {
+
+                        }
+
+                        @Override
+                        public void onFailure(String error) {
+
+                        }
+                    });
+                    optionControlMP.showOptionMassage("");
                     break;
 
                 case 141911:
@@ -1814,9 +1824,9 @@ public class Options {
             case 156928:
                 OptionControlEndAnotherWork optionControlEndAnotherWork =
                         new OptionControlEndAnotherWork(context, dataDB, option, type, mode, unlockCodeResultListener);
-                if (mode.equals(NNKMode.MAKE) || (mode.equals(NNKMode.CHECK)/* && optionControlEndAnotherWork.isBlockOption()*/))
+                if (mode.equals(NNKMode.MAKE) || (mode.equals(NNKMode.CHECK) && optionControlEndAnotherWork.isBlockOption()))
                     optionControlEndAnotherWork.showOptionMassage(block);
-                if (mode.equals(NNKMode.BLOCK) && optionControlEndAnotherWork.signal/* && optionControlEndAnotherWork.isBlockOption()*/) {
+                if (mode.equals(NNKMode.BLOCK) && optionControlEndAnotherWork.signal && optionControlEndAnotherWork.isBlockOption()) {
                     optionControlEndAnotherWork.showOptionMassage(block);
                 }
                 return optionControlEndAnotherWork.isBlockOption2() ? 1 : 0;
@@ -1873,7 +1883,6 @@ public class Options {
             case 138520:
                 if (dataDB instanceof WpDataDB) {
                     optionEndWork_138520(context, (WpDataDB) dataDB, option, type, mode, unlockCodeResultListener);
-//                        sendWpData2();
                 } else if (dataDB instanceof TasksAndReclamationsSDB) {
                     optionEndWork_138520(context, (TasksAndReclamationsSDB) dataDB, option, type, mode, unlockCodeResultListener);
                 }
@@ -1898,7 +1907,7 @@ public class Options {
             case 8299:
 //                optionControlMP_8299(context, dataDB, option, type, mode, unlockCodeResultListener);
                 OptionControlMP optionControlMP = new OptionControlMP(context, dataDB, option, type, mode, unlockCodeResultListener);
-                optionControlMP.showMassage(new Clicks.clickStatusMsg() {
+                optionControlMP.showMassage(true, new Clicks.clickStatusMsg() {
                     @Override
                     public void onSuccess(String data) {
 
@@ -1909,7 +1918,7 @@ public class Options {
 
                     }
                 });
-                break;
+                return optionControlMP.isBlockOption2() ? 1 : 0;
 
 
             // Контроль Опции Доп. Требований
@@ -2781,7 +2790,6 @@ public class Options {
         Globals.writeToMLOG("INFO", "DetailedReportButtons.class.pressEndWork", "OUT. wpDataDB.codeDAD2: " + wpDataDB.getCode_dad2());
 
 
-//        conductOptCheck(mode, result, optionsDB);
         return result;
     }
 
