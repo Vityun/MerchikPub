@@ -754,6 +754,18 @@ public class Options {
             // 91373 Сондак Роман Михайлович ФОП
             // 91206 ТС Плюс ТОВ
 
+//            14017 Акмега
+//            91409 Деревянко
+//            89863 Альтернатива-СВ
+//            14176 ТСЦ Инженеринг
+//            91488 Рікко Трейдінг
+//            10822 Єгмонт Україна
+//            77764 2К СУНП ТОВ
+//            14611 Им Текстиль ООО
+//            10275 Прошанский коньячный завод - Украина ООО
+//            11060 Фабрика Мороженого Хладопром ООО
+//            11165 Энерлайт ООО
+
             if (option.getClientId().equals("14301") ||     // трегуб
                     option.getClientId().equals("14840") || // Авто комфорт плюс
                     option.getClientId().equals("14843") || // Джокер
@@ -820,7 +832,19 @@ public class Options {
                     option.getClientId().equals("14611")  ||    // Им Текстиль ООО
                     option.getClientId().equals("14365")  ||    // Флеш
                     option.getClientId().equals("91373")  ||    // Сондак Роман Михайлович ФОП
-                    option.getClientId().equals("91206")        // ТС Плюс ТОВ
+                    option.getClientId().equals("91206")  ||      // ТС Плюс ТОВ
+
+                    option.getClientId().equals("14017")  ||    // Акмега
+                    option.getClientId().equals("91409")  ||    // Деревянко
+                    option.getClientId().equals("89863")  ||    // Альтернатива-СВ
+                    option.getClientId().equals("14176")  ||    // ТСЦ Инженеринг
+                    option.getClientId().equals("91488")  ||    // Рікко Трейдінг
+                    option.getClientId().equals("10822")  ||    // Єгмонт Україна
+                    option.getClientId().equals("77764")  ||    // СУНП ТОВ
+                    option.getClientId().equals("14611")  ||    // Им Текстиль ООО
+                    option.getClientId().equals("10275")  ||    // Прошанский коньячный завод - Украина ООО
+                    option.getClientId().equals("11060")  ||    // Фабрика Мороженого Хладопром ООО
+                    option.getClientId().equals("11165")        // Энерлайт ООО
             ) {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                     optionControlNewAlgo(getOptionsToControl(option), context, dataDB, option, optionList, type, mode, false, click);
