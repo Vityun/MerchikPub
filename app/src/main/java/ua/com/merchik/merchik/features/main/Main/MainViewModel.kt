@@ -10,10 +10,11 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import ua.com.merchik.merchik.dataLayer.ContextUI
+import ua.com.merchik.merchik.dataLayer.ModeUI
 import ua.com.merchik.merchik.dataLayer.DataObjectUI
 import ua.com.merchik.merchik.dataLayer.MainRepository
 import ua.com.merchik.merchik.dataLayer.NameUIRepository
-import ua.com.merchik.merchik.dataLayer.model.ItemUI
+import ua.com.merchik.merchik.dataLayer.model.DataItemUI
 import ua.com.merchik.merchik.dataLayer.model.SettingsItemUI
 import java.time.LocalDate
 import kotlin.reflect.KClass
@@ -22,7 +23,9 @@ data class StateUI(
     val title: String? = null,
     val subTitle: String? = null,
     val idResImage: Int? = null,
-    val items: List<ItemUI> = emptyList(),
+    val itemsHeader: List<DataItemUI> = emptyList(),
+    val items: List<DataItemUI> = emptyList(),
+    val itemsFooter: List<DataItemUI> = emptyList(),
     val settingsItems: List<SettingsItemUI> = emptyList(),
     var sortingFields: List<SortingField> = emptyList(),
     val filters: Filters? = null,
@@ -61,13 +64,20 @@ abstract class MainViewModel(
     var title: String? = null
     var subTitle: String? = null
     var idResImage: Int? = null
+    var modeUI: ModeUI = ModeUI.DEFAULT
+    var contextUI: ContextUI = ContextUI.DEFAULT
 
-    abstract val contextUI: ContextUI
     abstract val table: KClass<out DataObjectUI>
-    abstract fun getItems(): List<ItemUI>
+
+    open fun getItemsHeader(): List<DataItemUI> = emptyList()
+
+    open fun getItemsFooter(): List<DataItemUI> = emptyList()
+
+    abstract fun getItems(): List<DataItemUI>
+    open fun onClickItem(itemUI: DataItemUI, context: Context) {}
+
     open var filters: Filters? = null
-    open fun onClickItem(itemUI: ItemUI, context: Context) {}
-    open fun onSelectedItemsUI(itemsUI: List<ItemUI>) {}
+    open fun onSelectedItemsUI(itemsUI: List<DataItemUI>) {}
 
     private val _uiState = MutableStateFlow(StateUI())
     val uiState: StateFlow<StateUI>
@@ -117,7 +127,9 @@ abstract class MainViewModel(
                     title = title,
                     subTitle = subTitle,
                     idResImage = idResImage,
+                    itemsHeader = getItemsHeader(),
                     items = getItems(),
+                    itemsFooter = getItemsFooter(),
                     settingsItems = settingsItems,
                     sortingFields = sortingFields,
                     lastUpdate = System.currentTimeMillis()
@@ -137,14 +149,26 @@ abstract class MainViewModel(
         }
     }
 
-    fun updateItemSelect(checked: Boolean, itemUI: ItemUI){
+    fun updateItemSelect(checked: Boolean, itemUI: DataItemUI){
         viewModelScope.launch {
             _uiState.update {
-                it.copy(items = it.items.map { oldItemUI ->
-                    oldItemUI.copy(selected =
-                    if (itemUI === oldItemUI) checked
-                    else if (contextUI == ContextUI.ONE_SELECT) false else oldItemUI.selected)
-                })
+                it.copy(
+                    itemsHeader = it.itemsHeader.map { oldItemUI ->
+                        oldItemUI.copy(selected =
+                        if (itemUI === oldItemUI) checked
+                        else if (modeUI == ModeUI.ONE_SELECT) false else oldItemUI.selected)
+                    },
+                    items = it.items.map { oldItemUI ->
+                        oldItemUI.copy(selected =
+                        if (itemUI === oldItemUI) checked
+                        else if (modeUI == ModeUI.ONE_SELECT) false else oldItemUI.selected)
+                    },
+                    itemsFooter = it.itemsFooter.map { oldItemUI ->
+                        oldItemUI.copy(selected =
+                        if (itemUI === oldItemUI) checked
+                        else if (modeUI == ModeUI.ONE_SELECT) false else oldItemUI.selected)
+                    },
+                )
             }
         }
     }

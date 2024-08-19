@@ -1,8 +1,19 @@
 package ua.com.merchik.merchik.dialogs.DialogAchievement
 
 class AchievementDataHolder private constructor() {
-    var tovarId: Int = 0
-    var tovarName: String = ""
+    var tovarId: Int? = null
+    var tovarName: String? = null
+    var requirementClientId: Int? = null
+    var requirementClientName: String? = null
+    var manufactureId: Int? = null
+    var manufactureName: String? = null
+    var themeId: Int? = null
+    var themeName: String? = null
+    var photoToId: Int? = null
+    var photoToURI: String? = null
+    var photoAfterId: Int? = null
+    var photoAfterURI: String? = null
+
 
     companion object {
         private var instance: AchievementDataHolder? = null
@@ -15,7 +26,17 @@ class AchievementDataHolder private constructor() {
     }
 
     fun init() {
-        tovarId = 0
-        tovarName = ""
+        tovarId = null
+        tovarName = null
+        requirementClientId = null
+        requirementClientName = null
+        manufactureId = null
+        manufactureName = null
+        themeId = null
+        themeName = null
+        photoToId = null
+        photoToURI = null
+        photoAfterId = null
+        photoAfterURI = null
     }
 }

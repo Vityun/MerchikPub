@@ -1,10 +1,19 @@
 package ua.com.merchik.merchik.data.RealmModels;
 
+import androidx.annotation.NonNull;
+
+import org.jetbrains.annotations.Nullable;
+import org.json.JSONObject;
+
 import io.realm.RealmObject;
 import io.realm.annotations.Ignore;
 import io.realm.annotations.PrimaryKey;
+import ua.com.merchik.merchik.R;
+import ua.com.merchik.merchik.data.Database.Room.AdditionalRequirementsDBOverride;
+import ua.com.merchik.merchik.dataLayer.DataObjectUI;
+import ua.com.merchik.merchik.dataLayer.model.MerchModifier;
 
-public class StackPhotoDB extends RealmObject {
+public class StackPhotoDB extends RealmObject implements DataObjectUI {
 
     public static final int PHOTO_TOV_LEFT = 4;   // Фото Остатков Товаров
     public static final int PHOTO_CART_WITH_GOODS = 10;   // Фото Тележки с Товаром
@@ -548,4 +557,54 @@ public class StackPhotoDB extends RealmObject {
     }
 
 
+    @NonNull
+    @Override
+    public String getHidedFieldsOnUI() {
+        return "addr_id, approve, code_dad2, create_time, dvi, dviUpload, errorTime," +
+                "get_on_server, id, markUpload, object_id, photoServerId, photo_hash, photo_num, photo_type, " +
+                "premiyaUpload, specialCol, status, upload_status, upload_time, upload_to_server, vpi, " +
+                "client_id, dt, photoServerURL, showcase_id, time_event, tovar_id, user_id";
+    }
+
+    @Nullable
+    @Override
+    public Long getFieldTranslateId(@NonNull String key) {
+        return DataObjectUI.DefaultImpls.getFieldTranslateId(this, key);
+    }
+
+    @NonNull
+    @Override
+    public String getValueUI(@NonNull String key, @NonNull Object value) {
+        return DataObjectUI.DefaultImpls.getValueUI(this, key, value);
+    }
+
+    @Nullable
+    @Override
+    public MerchModifier getFieldModifier(@NonNull String key, @NonNull JSONObject jsonObject) {
+        return DataObjectUI.DefaultImpls.getFieldModifier(this, key, jsonObject);
+    }
+
+    @Nullable
+    @Override
+    public MerchModifier getValueModifier(@NonNull String key, @NonNull JSONObject jsonObject) {
+        return AdditionalRequirementsDBOverride.INSTANCE.getValueModifier(key, jsonObject);
+    }
+
+    @Nullable
+    @Override
+    public MerchModifier getContainerModifier(@NonNull JSONObject jsonObject) {
+        return DataObjectUI.DefaultImpls.getContainerModifier(this, jsonObject);
+    }
+
+    @Nullable
+    @Override
+    public Integer getIdResImage() {
+        return R.drawable.merchik;
+    }
+
+    @NonNull
+    @Override
+    public String getFieldsImageOnUI() {
+        return "photoServerId";
+    }
 }

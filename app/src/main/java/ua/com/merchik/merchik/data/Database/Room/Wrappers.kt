@@ -126,6 +126,12 @@ object AdditionalRequirementsDBOverride {
     }
 }
 
+object TradeMarkDB {
+    fun getValueModifier(key: String, jsonObject: JSONObject): MerchModifier? = when (key) {
+        else -> MerchModifier(padding = Padding(start = 10.dp))
+    }
+}
+
 object LogMPDBOverride {
     fun getTranslateId(key: String): Long? = when (key) {
         "CoordAccuracy" -> 5562

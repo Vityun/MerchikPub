@@ -8,7 +8,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import ua.com.merchik.merchik.dataLayer.DataObjectUI
 
-data class ItemUI(
+data class DataItemUI(
     val rawObj: List<DataObjectUI>,
     val fields: List<FieldValue>,
     val images: List<String>? = null,

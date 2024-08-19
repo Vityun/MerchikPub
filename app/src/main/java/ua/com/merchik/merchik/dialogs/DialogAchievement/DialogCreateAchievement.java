@@ -53,13 +53,19 @@ import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
 import ua.com.merchik.merchik.data.RealmModels.TovarDB;
 import ua.com.merchik.merchik.data.RealmModels.TradeMarkDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
+import ua.com.merchik.merchik.dataLayer.ContextUI;
+import ua.com.merchik.merchik.dataLayer.ModeUI;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsRealm;
 import ua.com.merchik.merchik.database.realm.tables.TradeMarkRealm;
 import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.dialogs.DialogFullPhotoR;
 import ua.com.merchik.merchik.dialogs.DialogVideo;
+import ua.com.merchik.merchik.features.main.DBViewModels.AdditionalRequirementsDBViewModel;
+import ua.com.merchik.merchik.features.main.DBViewModels.StackPhotoDBViewModel;
+import ua.com.merchik.merchik.features.main.DBViewModels.ThemeDBViewModel;
 import ua.com.merchik.merchik.features.main.DBViewModels.TovarDBViewModel;
+import ua.com.merchik.merchik.features.main.DBViewModels.TradeMarkDBViewModel;
 
 public class DialogCreateAchievement {
 
@@ -79,20 +85,22 @@ public class DialogCreateAchievement {
     private StackPhotoDB stackPhotoDBTo, stackPhotoDBAfter;
 
     private ImageButton close, help, videoHelp, call, addSotr;
-    private TextView title, client, address, visit, theme, offerFromClient, tovarTxt, tovarTextView;
+    private TextView title, client, address, visit, theme, offerFromClient, offerFromClientItem, tovarTxt, tradeMarkItem, themeItem;
     private EditText comment;
-    private Button photoTo, photoAfter, save;
+    private Button save;
+//    private Button photoTo, photoAfter;
     private ImageView photoToIV, photoAfterIV;
 
-    private Spinner spinnerTheme, spinnerClient, spinnerManufacture;
-    public static String[] themeList = new String[]{
-            "Досягнення (покращення розташування товару в ТТ)",     // 595
-            "Замовлення на фінансування нового Досягнення",         // 1252
-            "Утримання викладки на полиці (досягнутого раніше)"};   // 1251
+//    private Spinner spinnerTheme;
+//    private Spinner spinnerClient, spinnerManufacture;
+//    public static String[] themeList = new String[]{
+//            "Досягнення (покращення розташування товару в ТТ)",     // 595
+//            "Замовлення на фінансування нового Досягнення",         // 1252
+//            "Утримання викладки на полиці (досягнутого раніше)"};   // 1251
 
-    private Integer spinnerThemeResult, spinnerClientResult, spinnerManufactureResult;
+//    private Integer spinnerThemeResult, spinnerClientResult, spinnerManufactureResult;
     private OptionsDB optionDB;
-    private TovarDB tovarDB;
+//    private TovarDB tovarDB;
 
     public DialogCreateAchievement(Context context/*, WpDataDB wpDataDB*/) {
         this.context = context;
@@ -123,26 +131,65 @@ public class DialogCreateAchievement {
             visit = dialog.findViewById(R.id.visit);
             theme = dialog.findViewById(R.id.theme);
             offerFromClient = dialog.findViewById(R.id.offer_from_the_client);
+            offerFromClientItem = dialog.findViewById(R.id.offer_from_the_client_item);
+            offerFromClientItem.setOnClickListener(view -> {
+                Intent intent = new Intent(context, FeaturesActivity.class);
+                Bundle bundle = new Bundle();
+                bundle.putString("viewModel", AdditionalRequirementsDBViewModel.class.getCanonicalName());
+                bundle.putString("contextUI", ContextUI.ADD_REQUIREMENTS_FROM_ACHIEVEMENT.toString());
+                bundle.putString("modeUI", ModeUI.ONE_SELECT.toString());
+                bundle.putString("dataJson", new Gson().toJson(clientId));
+                bundle.putString("title", "title");
+                bundle.putString("subTitle", "subTitle");
+                intent.putExtras(bundle);
+                ActivityCompat.startActivityForResult((Activity) context, intent, NEED_UPDATE_UI_REQUEST, null);
+            });
 
             comment = dialog.findViewById(R.id.comment);
 
-            photoTo = dialog.findViewById(R.id.photo_to);
-            photoAfter = dialog.findViewById(R.id.photo_after);
+//            photoTo = dialog.findViewById(R.id.photo_to);
+//            photoAfter = dialog.findViewById(R.id.photo_after);
             save = dialog.findViewById(R.id.save);
 
             photoToIV = dialog.findViewById(R.id.photoTo);
             photoAfterIV = dialog.findViewById(R.id.photoAfter);
 
-            spinnerTheme = dialog.findViewById(R.id.spinner_theme);
-            spinnerClient = dialog.findViewById(R.id.spinner_client);
-            spinnerManufacture = dialog.findViewById(R.id.spinner_trade_mark);
-
+//            spinnerTheme = dialog.findViewById(R.id.spinner_theme);
+            themeItem = dialog.findViewById(R.id.themeItem);
+            themeItem.setOnClickListener(view -> {
+                Intent intent = new Intent(context, FeaturesActivity.class);
+                Bundle bundle = new Bundle();
+                bundle.putString("viewModel", ThemeDBViewModel.class.getCanonicalName());
+                bundle.putString("contextUI", ContextUI.THEME_FROM_ACHIEVEMENT.toString());
+                bundle.putString("modeUI", ModeUI.ONE_SELECT.toString());
+                bundle.putString("dataJson", new Gson().toJson(new String[]{"595", "1252", "1251"}));
+                bundle.putString("title", "title");
+                bundle.putString("subTitle", "subTitle");
+                intent.putExtras(bundle);
+                ActivityCompat.startActivityForResult((Activity) context, intent, NEED_UPDATE_UI_REQUEST, null);
+            });
+//            spinnerClient = dialog.findViewById(R.id.spinner_client);
+//            spinnerManufacture = dialog.findViewById(R.id.spinner_trade_mark);
+            tradeMarkItem = dialog.findViewById(R.id.tradeMarkItem);
+            tradeMarkItem.setOnClickListener(view -> {
+                Intent intent = new Intent(context, FeaturesActivity.class);
+                Bundle bundle = new Bundle();
+                bundle.putString("viewModel", TradeMarkDBViewModel.class.getCanonicalName());
+                bundle.putString("contextUI", ContextUI.TRADE_MARK_FROM_ACHIEVEMENT.toString());
+                bundle.putString("modeUI", ModeUI.ONE_SELECT.toString());
+                bundle.putString("dataJson", new Gson().toJson(codeDad2));
+                bundle.putString("title", "title");
+                bundle.putString("subTitle", "subTitle");
+                intent.putExtras(bundle);
+                ActivityCompat.startActivityForResult((Activity) context, intent, NEED_UPDATE_UI_REQUEST, null);
+            });
             tovarTxt = dialog.findViewById(R.id.tovar_choose);
             tovarTxt.setOnClickListener(view -> {
                 Intent intent = new Intent(context, FeaturesActivity.class);
                 Bundle bundle = new Bundle();
                 bundle.putString("viewModel", TovarDBViewModel.class.getCanonicalName());
 //                bundle.putString("dataJson", new Gson().toJson(MY_JSON));
+                bundle.putString("modeUI", ModeUI.ONE_SELECT.toString());
                 bundle.putString("dataJson", "{\"codeDad2\":\""+codeDad2+"\"}");
                 bundle.putString("title", "Товари");
                 bundle.putString("subTitle", "Оберіть Товар");
@@ -187,23 +234,23 @@ public class DialogCreateAchievement {
                 }
 
 //                achievementsSDB.themeId = 595;
-                if (spinnerTheme != null && spinnerThemeResult != null) {
-                    achievementsSDB.themeId = spinnerThemeResult;
+                if (AchievementDataHolder.Companion.instance().getThemeId() != null) {
+                    achievementsSDB.themeId = AchievementDataHolder.Companion.instance().getThemeId();
                 } else {
                     Toast.makeText(v.getContext(), "Ви не вказали тему досягнення, досягнення створено не буде", Toast.LENGTH_LONG).show();
                     return;
                 }
 
-                if (spinnerClientResult != null) {
-                    achievementsSDB.addRequirementId = spinnerClientResult;
+                if (AchievementDataHolder.Companion.instance().getRequirementClientId() != null) {
+                    achievementsSDB.addRequirementId = AchievementDataHolder.Companion.instance().getRequirementClientId();
                 } else {
                     achievementsSDB.addRequirementId = 0;
                     Toast.makeText(v.getContext(), "Ви не вказали пропозицію клієнта, досягнення створено не буде", Toast.LENGTH_LONG).show();
                     return;
                 }
 
-                if (spinnerManufactureResult != null) {
-                    achievementsSDB.manufacturer = spinnerManufactureResult;
+                if (AchievementDataHolder.Companion.instance().getManufactureId() != null) {
+                    achievementsSDB.manufacturer = AchievementDataHolder.Companion.instance().getManufactureId();
                 }
 
                 if (stackPhotoDBTo != null && stackPhotoDBTo.photo_hash != null) {
@@ -395,11 +442,11 @@ public class DialogCreateAchievement {
         visit.setText(Html.fromHtml("<b>Відвідування: </b> " + codeDad2 + ""));
         theme.setText(Html.fromHtml("<b>Тема: </b> "));
 
-        createSpinnerTheme();
+//        createSpinnerTheme();
 
-        createSpinnerClient();
+//        createSpinnerClient();
 
-        createSpinnerManufacture();
+//        createSpinnerManufacture();
 
         offerFromClient.setText(Html.fromHtml("<b>Пропозиція від клієнта: </b> " + "" + ""));
     }
@@ -424,214 +471,240 @@ public class DialogCreateAchievement {
     }
 
     public void buttonPhotoTo() {
-        photoTo.setVisibility(View.VISIBLE);
-        photoTo.setOnClickListener(v -> {
-            try {
-                Intent intentPhotoLog = new Intent(v.getContext(), PhotoLogActivity.class);
-                intentPhotoLog.putExtra("achievements", true);
-                intentPhotoLog.putExtra("choise", true);
-                intentPhotoLog.putExtra("dad2", codeDad2);
-                intentPhotoLog.putExtra("photoType", 14);
-                v.getContext().startActivity(intentPhotoLog);
-
-                photoTo.setVisibility(View.GONE);
-
-                clickVoidAchievement = new Clicks.click() {
-                    @Override
-                    public <T> void click(T data) {
-                        stackPhotoDBTo = (StackPhotoDB) data;
-                        photoToIV.setVisibility(View.VISIBLE);
-                        photoToIV.setImageURI(Uri.parse(stackPhotoDBTo.photo_num));
-                        photoToIV.setOnClickListener(v1 -> {
-                            try {
-                                DialogFullPhotoR dialogFullPhoto = new DialogFullPhotoR(v1.getContext());
-                                dialogFullPhoto.setPhoto(Uri.parse(stackPhotoDBTo.photo_num));
-                                dialogFullPhoto.setClose(dialogFullPhoto::dismiss);
-                                dialogFullPhoto.show();
-                            } catch (Exception e) {
-                                Globals.writeToMLOG("ERROR", "DialogAchievement/buttonPhotoTo", "Exception e: " + e);
-                            }
-                        });
-                    }
-                };
-
-            } catch (Exception e) {
-                Globals.writeToMLOG("ERROR", "buttonPhotoTo", "Exception e: " + Arrays.toString(e.getStackTrace()));
-            }
+//        photoTo.setVisibility(View.GONE);
+        photoToIV.setVisibility(View.VISIBLE);
+        photoToIV.setOnClickListener(v -> {
+            Intent intent = new Intent(context, FeaturesActivity.class);
+            Bundle bundle = new Bundle();
+            bundle.putString("viewModel", StackPhotoDBViewModel.class.getCanonicalName());
+            bundle.putString("contextUI", ContextUI.STACK_PHOTO_TO_FROM_ACHIEVEMENT.toString());
+            bundle.putString("modeUI", ModeUI.ONE_SELECT.toString());
+            bundle.putString("dataJson", new Gson().toJson(codeDad2));
+            bundle.putString("title", "title");
+            bundle.putString("subTitle", "subTitle");
+            intent.putExtras(bundle);
+            ActivityCompat.startActivityForResult((Activity) context, intent, NEED_UPDATE_UI_REQUEST, null);
         });
+//        photoTo.setOnClickListener(v -> {
+//            try {
+//                Intent intentPhotoLog = new Intent(v.getContext(), PhotoLogActivity.class);
+//                intentPhotoLog.putExtra("achievements", true);
+//                intentPhotoLog.putExtra("choise", true);
+//                intentPhotoLog.putExtra("dad2", codeDad2);
+//                intentPhotoLog.putExtra("photoType", 14);
+//                v.getContext().startActivity(intentPhotoLog);
+//
+//                photoTo.setVisibility(View.GONE);
+//
+//                clickVoidAchievement = new Clicks.click() {
+//                    @Override
+//                    public <T> void click(T data) {
+//                        stackPhotoDBTo = (StackPhotoDB) data;
+//                        photoToIV.setVisibility(View.VISIBLE);
+//                        photoToIV.setImageURI(Uri.parse(stackPhotoDBTo.photo_num));
+//                        photoToIV.setOnClickListener(v1 -> {
+//                            try {
+//                                DialogFullPhotoR dialogFullPhoto = new DialogFullPhotoR(v1.getContext());
+//                                dialogFullPhoto.setPhoto(Uri.parse(stackPhotoDBTo.photo_num));
+//                                dialogFullPhoto.setClose(dialogFullPhoto::dismiss);
+//                                dialogFullPhoto.show();
+//                            } catch (Exception e) {
+//                                Globals.writeToMLOG("ERROR", "DialogAchievement/buttonPhotoTo", "Exception e: " + e);
+//                            }
+//                        });
+//                    }
+//                };
+//
+//            } catch (Exception e) {
+//                Globals.writeToMLOG("ERROR", "buttonPhotoTo", "Exception e: " + Arrays.toString(e.getStackTrace()));
+//            }
+//        });
     }
 
     public void buttonPhotoAfter() {
-        photoAfter.setVisibility(View.VISIBLE);
-        photoAfter.setOnClickListener(v -> {
-            try {
-                Intent intentPhotoLog = new Intent(v.getContext(), PhotoLogActivity.class);
-                intentPhotoLog.putExtra("achievements", true);
-                intentPhotoLog.putExtra("choise", true);
-                intentPhotoLog.putExtra("dad2", codeDad2);
-                intentPhotoLog.putExtra("photoType", 0);
-                v.getContext().startActivity(intentPhotoLog);
-
-                photoAfter.setVisibility(View.GONE);
-
-                clickVoidAchievement = new Clicks.click() {
-                    @Override
-                    public <T> void click(T data) {
-                        stackPhotoDBAfter = (StackPhotoDB) data;
-                        photoAfterIV.setVisibility(View.VISIBLE);
-                        photoAfterIV.setImageURI(Uri.parse(stackPhotoDBAfter.photo_num));
-                        photoAfterIV.setOnClickListener(v1 -> {
-                            try {
-                                DialogFullPhotoR dialogFullPhoto = new DialogFullPhotoR(v1.getContext());
-                                dialogFullPhoto.setPhoto(Uri.parse(stackPhotoDBTo.photo_num));
-                                dialogFullPhoto.setClose(dialogFullPhoto::dismiss);
-                                dialogFullPhoto.show();
-                            } catch (Exception e) {
-                                Globals.writeToMLOG("ERROR", "DialogAchievement/buttonPhotoAfter", "Exception e: " + e);
-                            }
-                        });
-                    }
-                };
-
-            } catch (Exception e) {
-                Globals.writeToMLOG("ERROR", "buttonPhotoTo", "Exception e: " + Arrays.toString(e.getStackTrace()));
-            }
+//        photoAfter.setVisibility(View.GONE);
+        photoAfterIV.setVisibility(View.VISIBLE);
+        photoAfterIV.setOnClickListener(v -> {
+            Intent intent = new Intent(context, FeaturesActivity.class);
+            Bundle bundle = new Bundle();
+            bundle.putString("viewModel", StackPhotoDBViewModel.class.getCanonicalName());
+            bundle.putString("contextUI", ContextUI.STACK_PHOTO_AFTER_FROM_ACHIEVEMENT.toString());
+            bundle.putString("modeUI", ModeUI.ONE_SELECT.toString());
+            bundle.putString("dataJson", new Gson().toJson(codeDad2));
+            bundle.putString("title", "title");
+            bundle.putString("subTitle", "subTitle");
+            intent.putExtras(bundle);
+            ActivityCompat.startActivityForResult((Activity) context, intent, NEED_UPDATE_UI_REQUEST, null);
         });
+//        photoAfterIV.setOnClickListener(v -> {
+//            try {
+//                Intent intentPhotoLog = new Intent(v.getContext(), PhotoLogActivity.class);
+//                intentPhotoLog.putExtra("achievements", true);
+//                intentPhotoLog.putExtra("choise", true);
+//                intentPhotoLog.putExtra("dad2", codeDad2);
+//                intentPhotoLog.putExtra("photoType", 0);
+//                v.getContext().startActivity(intentPhotoLog);
+//
+////                photoAfter.setVisibility(View.GONE);
+//
+//                clickVoidAchievement = new Clicks.click() {
+//                    @Override
+//                    public <T> void click(T data) {
+//                        stackPhotoDBAfter = (StackPhotoDB) data;
+//                        photoAfterIV.setVisibility(View.VISIBLE);
+//                        photoAfterIV.setImageURI(Uri.parse(stackPhotoDBAfter.photo_num));
+//                        photoAfterIV.setOnClickListener(v1 -> {
+//                            try {
+//                                DialogFullPhotoR dialogFullPhoto = new DialogFullPhotoR(v1.getContext());
+//                                dialogFullPhoto.setPhoto(Uri.parse(stackPhotoDBTo.photo_num));
+//                                dialogFullPhoto.setClose(dialogFullPhoto::dismiss);
+//                                dialogFullPhoto.show();
+//                            } catch (Exception e) {
+//                                Globals.writeToMLOG("ERROR", "DialogAchievement/buttonPhotoAfter", "Exception e: " + e);
+//                            }
+//                        });
+//                    }
+//                };
+//
+//            } catch (Exception e) {
+//                Globals.writeToMLOG("ERROR", "buttonPhotoTo", "Exception e: " + Arrays.toString(e.getStackTrace()));
+//            }
+//        });
     }
 
-    public void createSpinnerTheme() {
-//        ArrayAdapter adapter = new ArrayAdapter(context, android.R.layout.simple_spinner_item, themeList);
-//        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+//    public void createSpinnerTheme() {
+////        ArrayAdapter adapter = new ArrayAdapter(context, android.R.layout.simple_spinner_item, themeList);
+////        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+//
+//        SpinnerAdapter adapter1 = new SpinnerAdapter(context, themeList, "Выберите тему");
+//        spinnerTheme.setAdapter(adapter1);
+//        spinnerTheme.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+//            @Override
+//            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+//                String data = adapterView.getItemAtPosition(i).toString();
+//                Toast.makeText(adapterView.getContext(), "Выбрали: " + data, Toast.LENGTH_SHORT).show();
+//
+//                if (data.equals(themeList[0])) {
+//                    spinnerThemeResult = 595;
+//                } else if (data.equals(themeList[1])) {
+//                    spinnerThemeResult = 1252;
+//                } else if (data.equals(themeList[2])) {
+//                    spinnerThemeResult = 1251;
+//                }/*else {
+//                    spinnerThemeResult = 595;
+//                }*/
+//            }
+//
+//            @Override
+//            public void onNothingSelected(AdapterView<?> adapterView) {
+//                Toast.makeText(adapterView.getContext(), "Ничего не выбрано", Toast.LENGTH_SHORT).show();
+////                spinnerThemeResult = 595;
+//            }
+//        });
+//    }
 
-        SpinnerAdapter adapter1 = new SpinnerAdapter(context, themeList, "Выберите тему");
-        spinnerTheme.setAdapter(adapter1);
-        spinnerTheme.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
-                String data = adapterView.getItemAtPosition(i).toString();
-                Toast.makeText(adapterView.getContext(), "Выбрали: " + data, Toast.LENGTH_SHORT).show();
+//    public void createSpinnerClient() {
+//        List<AdditionalRequirementsDB> additionalRequirementsDBList = AdditionalRequirementsRealm.getADByClientAll(clientId, "1253");
+//
+//        if (additionalRequirementsDBList == null) return;
+//
+//        String[] clientList = new String[additionalRequirementsDBList.size() + 1];
+//        clientList[0] = "це досягнення не відноситься до жодної з пропозицій замовника";
+//        for (int i = 0; i < additionalRequirementsDBList.size(); i++) {
+//            clientList[i + 1] = additionalRequirementsDBList.get(i).getNotes();
+//        }
+//
+//
+////        ArrayAdapter adapter = new ArrayAdapter(context, android.R.layout.simple_spinner_item, clientList);
+////        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+//
+//        SpinnerAdapter adapter1 = new SpinnerAdapter(context, clientList, additionalRequirementsDBList.size() > 0 ? "От клиента есть (" + additionalRequirementsDBList.size() + ") предложений" : "Предложений от клиента НЕТ");
+//        spinnerClient.setAdapter(adapter1);
+//        spinnerClient.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+//            @RequiresApi(api = Build.VERSION_CODES.N)
+//            @Override
+//            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+//                String data = adapterView.getItemAtPosition(i).toString();
+//                Toast.makeText(adapterView.getContext(), "Выбрали: " + data, Toast.LENGTH_SHORT).show();
+//
+//                // Используем Stream для поиска объекта в списке по значению notes
+//                Optional<AdditionalRequirementsDB> foundObject = additionalRequirementsDBList.stream()
+//                        .filter(item -> data.equals(item.getNotes()))
+//                        .findFirst();
+//
+//                // Проверяем, найден ли объект
+//                if (foundObject.isPresent()) {
+//                    // Объект найден, можно получить его id или выполнить другие действия
+//                    int objectId = foundObject.get().getId();
+//                    spinnerClientResult = objectId;
+//                    Toast.makeText(adapterView.getContext(), "Выбрали: " + data + ", id: " + objectId, Toast.LENGTH_SHORT).show();
+//                } else if (data.equals("це досягнення не відноситься до жодної з пропозицій замовника")) {
+//                    spinnerClientResult = 1;
+//                } else {
+//                    // Объект не найден
+//                    Toast.makeText(adapterView.getContext(), "Объект не найден", Toast.LENGTH_SHORT).show();
+//                }
+//            }
+//
+//            @Override
+//            public void onNothingSelected(AdapterView<?> adapterView) {
+//                Toast.makeText(adapterView.getContext(), "Ничего не выбрано", Toast.LENGTH_SHORT).show();
+//                spinnerClientResult = 0;
+//            }
+//        });
+//    }
 
-                if (data.equals(themeList[0])) {
-                    spinnerThemeResult = 595;
-                } else if (data.equals(themeList[1])) {
-                    spinnerThemeResult = 1252;
-                } else if (data.equals(themeList[2])) {
-                    spinnerThemeResult = 1251;
-                }/*else {
-                    spinnerThemeResult = 595;
-                }*/
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> adapterView) {
-                Toast.makeText(adapterView.getContext(), "Ничего не выбрано", Toast.LENGTH_SHORT).show();
-//                spinnerThemeResult = 595;
-            }
-        });
-    }
-
-    public void createSpinnerClient() {
-        List<AdditionalRequirementsDB> additionalRequirementsDBList = AdditionalRequirementsRealm.getADByClientAll(clientId, "1253");
-
-        if (additionalRequirementsDBList == null) return;
-
-        String[] clientList = new String[additionalRequirementsDBList.size() + 1];
-        clientList[0] = "це досягнення не відноситься до жодної з пропозицій замовника";
-        for (int i = 0; i < additionalRequirementsDBList.size(); i++) {
-            clientList[i + 1] = additionalRequirementsDBList.get(i).getNotes();
-        }
-
-
-//        ArrayAdapter adapter = new ArrayAdapter(context, android.R.layout.simple_spinner_item, clientList);
-//        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-
-        SpinnerAdapter adapter1 = new SpinnerAdapter(context, clientList, additionalRequirementsDBList.size() > 0 ? "От клиента есть (" + additionalRequirementsDBList.size() + ") предложений" : "Предложений от клиента НЕТ");
-        spinnerClient.setAdapter(adapter1);
-        spinnerClient.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @RequiresApi(api = Build.VERSION_CODES.N)
-            @Override
-            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
-                String data = adapterView.getItemAtPosition(i).toString();
-                Toast.makeText(adapterView.getContext(), "Выбрали: " + data, Toast.LENGTH_SHORT).show();
-
-                // Используем Stream для поиска объекта в списке по значению notes
-                Optional<AdditionalRequirementsDB> foundObject = additionalRequirementsDBList.stream()
-                        .filter(item -> data.equals(item.getNotes()))
-                        .findFirst();
-
-                // Проверяем, найден ли объект
-                if (foundObject.isPresent()) {
-                    // Объект найден, можно получить его id или выполнить другие действия
-                    int objectId = foundObject.get().getId();
-                    spinnerClientResult = objectId;
-                    Toast.makeText(adapterView.getContext(), "Выбрали: " + data + ", id: " + objectId, Toast.LENGTH_SHORT).show();
-                } else if (data.equals("це досягнення не відноситься до жодної з пропозицій замовника")) {
-                    spinnerClientResult = 1;
-                } else {
-                    // Объект не найден
-                    Toast.makeText(adapterView.getContext(), "Объект не найден", Toast.LENGTH_SHORT).show();
-                }
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> adapterView) {
-                Toast.makeText(adapterView.getContext(), "Ничего не выбрано", Toast.LENGTH_SHORT).show();
-                spinnerClientResult = 0;
-            }
-        });
-    }
-
-    public void createSpinnerManufacture() {
-        List<TovarDB> tovarDBList = RealmManager.INSTANCE.copyFromRealm(RealmManager.getTovarListFromReportPrepareByDad2(codeDad2));
-
-        String[] ids = new String[tovarDBList.size()];
-        int j = 0;
-        for (TovarDB item : tovarDBList) {
-            ids[j++] = item.getManufacturerId();
-        }
-
-        List<TradeMarkDB> tradeMarkDBList = TradeMarkRealm.getTradeMarkByIds(ids);
-
-        String[] list = new String[tradeMarkDBList.size()];
-        for (int i = 0; i < tradeMarkDBList.size(); i++) {
-            list[i] = tradeMarkDBList.get(i).getNm();
-        }
-
-        SpinnerAdapter adapter1 = new SpinnerAdapter(context, list, "Оберіть торгівельну марку товару");
-        spinnerManufacture.setAdapter(adapter1);
-        spinnerManufacture.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @RequiresApi(api = Build.VERSION_CODES.N)
-            @Override
-            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
-                String data = adapterView.getItemAtPosition(i).toString();
-                Toast.makeText(adapterView.getContext(), "Выбрали: " + data, Toast.LENGTH_SHORT).show();
-
-                // Используем Stream для поиска объекта в списке по значению notes
-                Optional<TradeMarkDB> foundObject = tradeMarkDBList.stream()
-                        .filter(item -> data.equals(item.getNm()))
-                        .findFirst();
-
-                // Проверяем, найден ли объект
-                if (foundObject.isPresent()) {
-                    // Объект найден, можно получить его id или выполнить другие действия
-                    int objectId = Integer.parseInt(foundObject.get().getID());
-                    spinnerManufactureResult = objectId;
-                    Toast.makeText(adapterView.getContext(), "Выбрали: " + data + ", id: " + objectId, Toast.LENGTH_SHORT).show();
-                }/* else if (data.equals("це досягнення не відноситься до жодної з пропозицій замовника")) {
-                    spinnerManufactureResult = 1;
-                }*/ else {
-                    // Объект не найден
-                    Toast.makeText(adapterView.getContext(), "Объект не найден", Toast.LENGTH_SHORT).show();
-                }
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> adapterView) {
-                Toast.makeText(adapterView.getContext(), "Ничего не выбрано", Toast.LENGTH_SHORT).show();
-//                spinnerManufactureResult = 0;
-            }
-        });
-    }
+//    public void createSpinnerManufacture() {
+//        List<TovarDB> tovarDBList = RealmManager.INSTANCE.copyFromRealm(RealmManager.getTovarListFromReportPrepareByDad2(codeDad2));
+//
+//        String[] ids = new String[tovarDBList.size()];
+//        int j = 0;
+//        for (TovarDB item : tovarDBList) {
+//            ids[j++] = item.getManufacturerId();
+//        }
+//
+//        List<TradeMarkDB> tradeMarkDBList = TradeMarkRealm.getTradeMarkByIds(ids);
+//
+//        String[] list = new String[tradeMarkDBList.size()];
+//        for (int i = 0; i < tradeMarkDBList.size(); i++) {
+//            list[i] = tradeMarkDBList.get(i).getNm();
+//        }
+//
+//        SpinnerAdapter adapter1 = new SpinnerAdapter(context, list, "Оберіть торгівельну марку товару");
+//        spinnerManufacture.setAdapter(adapter1);
+//        spinnerManufacture.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+//            @RequiresApi(api = Build.VERSION_CODES.N)
+//            @Override
+//            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+//                String data = adapterView.getItemAtPosition(i).toString();
+//                Toast.makeText(adapterView.getContext(), "Выбрали: " + data, Toast.LENGTH_SHORT).show();
+//
+//                // Используем Stream для поиска объекта в списке по значению notes
+//                Optional<TradeMarkDB> foundObject = tradeMarkDBList.stream()
+//                        .filter(item -> data.equals(item.getNm()))
+//                        .findFirst();
+//
+//                // Проверяем, найден ли объект
+//                if (foundObject.isPresent()) {
+//                    // Объект найден, можно получить его id или выполнить другие действия
+//                    int objectId = Integer.parseInt(foundObject.get().getID());
+//                    spinnerManufactureResult = objectId;
+//                    Toast.makeText(adapterView.getContext(), "Выбрали: " + data + ", id: " + objectId, Toast.LENGTH_SHORT).show();
+//                }/* else if (data.equals("це досягнення не відноситься до жодної з пропозицій замовника")) {
+//                    spinnerManufactureResult = 1;
+//                }*/ else {
+//                    // Объект не найден
+//                    Toast.makeText(adapterView.getContext(), "Объект не найден", Toast.LENGTH_SHORT).show();
+//                }
+//            }
+//
+//            @Override
+//            public void onNothingSelected(AdapterView<?> adapterView) {
+//                Toast.makeText(adapterView.getContext(), "Ничего не выбрано", Toast.LENGTH_SHORT).show();
+////                spinnerManufactureResult = 0;
+//            }
+//        });
+//    }
 
     public void setData(WpDataDB wpDataDB) {
         AchievementDataHolder.Companion.instance().init();
@@ -647,7 +720,34 @@ public class DialogCreateAchievement {
         putTextData();
         buttonSave();
 
-        onUpdateUI = () -> tovarTxt.setText(AchievementDataHolder.Companion.instance().getTovarName());
+        onUpdateUI = () -> {
+            offerFromClientItem.setText(
+                    AchievementDataHolder.Companion.instance().getRequirementClientName() == null ?
+                            "Натисніть для обрання Пропозиції" : AchievementDataHolder.Companion.instance().getRequirementClientName()
+            );
+            tovarTxt.setText(
+                    AchievementDataHolder.Companion.instance().getTovarName() == null ?
+                            "Натисніть для обрання Товару" : AchievementDataHolder.Companion.instance().getTovarName()
+            );
+            tradeMarkItem.setText(
+                    AchievementDataHolder.Companion.instance().getManufactureName() == null ?
+                            "Натисніть для обрання Марки товару" : AchievementDataHolder.Companion.instance().getManufactureName()
+            );
+            themeItem.setText(
+                    AchievementDataHolder.Companion.instance().getThemeName() == null ?
+                            "Натисніть для обрання Теми" : AchievementDataHolder.Companion.instance().getThemeName()
+            );
+            if (AchievementDataHolder.Companion.instance().getPhotoToURI() != null) {
+                photoToIV.setImageURI(
+                        Uri.parse(AchievementDataHolder.Companion.instance().getPhotoToURI())
+                );
+            }
+            if (AchievementDataHolder.Companion.instance().getPhotoAfterURI() != null) {
+                photoAfterIV.setImageURI(
+                        Uri.parse(AchievementDataHolder.Companion.instance().getPhotoAfterURI())
+                );
+            }
+        };
     }
 
     public void setData(AchievementsSDB data) {
@@ -665,6 +765,33 @@ public class DialogCreateAchievement {
         putTextData();
         buttonSave();
 
-        onUpdateUI = () -> tovarTxt.setText(AchievementDataHolder.Companion.instance().getTovarName());
+        onUpdateUI = () -> {
+            offerFromClientItem.setText(
+                    AchievementDataHolder.Companion.instance().getRequirementClientName() == null ?
+                            "Натисніть для обрання Пропозиції" : AchievementDataHolder.Companion.instance().getRequirementClientName()
+            );
+            tovarTxt.setText(
+                    AchievementDataHolder.Companion.instance().getTovarName() == null ?
+                            "Натисніть для обрання Товару" : AchievementDataHolder.Companion.instance().getTovarName()
+            );
+            tradeMarkItem.setText(
+                    AchievementDataHolder.Companion.instance().getManufactureName() == null ?
+                            "Натисніть для обрання Марки товару" : AchievementDataHolder.Companion.instance().getManufactureName()
+            );
+            themeItem.setText(
+                    AchievementDataHolder.Companion.instance().getThemeName() == null ?
+                            "Натисніть для обрання Теми" : AchievementDataHolder.Companion.instance().getThemeName()
+            );
+            if (AchievementDataHolder.Companion.instance().getPhotoToURI() != null) {
+                photoToIV.setImageURI(
+                        Uri.parse(AchievementDataHolder.Companion.instance().getPhotoToURI())
+                );
+            }
+            if (AchievementDataHolder.Companion.instance().getPhotoAfterURI() != null) {
+                photoAfterIV.setImageURI(
+                        Uri.parse(AchievementDataHolder.Companion.instance().getPhotoAfterURI())
+                );
+            }
+        };
     }
 }

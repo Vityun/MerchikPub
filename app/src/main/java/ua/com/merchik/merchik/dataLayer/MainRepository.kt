@@ -1,7 +1,6 @@
 package ua.com.merchik.merchik.dataLayer
 
 import com.google.gson.Gson
-import com.google.gson.JsonObject
 import io.realm.RealmChangeListener
 import io.realm.RealmObject
 import io.realm.RealmResults
@@ -15,14 +14,12 @@ import ua.com.merchik.merchik.data.Database.Room.CustomerSDB
 import ua.com.merchik.merchik.data.Database.Room.Planogram.PlanogrammSDB
 import ua.com.merchik.merchik.data.Database.Room.SettingsUISDB
 import ua.com.merchik.merchik.data.Database.Room.UsersSDB
-import ua.com.merchik.merchik.data.RealmModels.LogMPDB
 import ua.com.merchik.merchik.dataLayer.model.FieldValue
-import ua.com.merchik.merchik.dataLayer.model.ItemUI
+import ua.com.merchik.merchik.dataLayer.model.DataItemUI
 import ua.com.merchik.merchik.dataLayer.model.SettingsItemUI
 import ua.com.merchik.merchik.database.realm.RealmManager
 import ua.com.merchik.merchik.database.room.RoomManager
 import ua.com.merchik.merchik.features.main.Main.SettingsUI
-import ua.com.merchik.merchik.features.main.Main.SortingField
 import kotlin.reflect.KClass
 
 fun <T : RealmObject> RealmResults<T>.toFlow(): Flow<RealmResults<T>> = callbackFlow {
@@ -111,8 +108,8 @@ class MainRepository(
         RoomManager.SQL_DB.settingsUIDao().insert(settingsUISDB)
     }
 
-    fun <T: RealmObject> getAllRealm(kClass: KClass<T>, contextUI: ContextUI?): List<ItemUI> {
-        return getAllRealmDataObjectUI(kClass).toItemUI(kClass, contextUI)
+    fun <T: RealmObject> getAllRealm(kClass: KClass<T>, contextUI: ContextUI?, typePhoto: Int?): List<DataItemUI> {
+        return getAllRealmDataObjectUI(kClass).toItemUI(kClass, contextUI, typePhoto)
     }
 
 
@@ -121,8 +118,9 @@ class MainRepository(
         fieldName: String,
         startTime: Long,
         endTime: Long,
-        contextUI: ContextUI?
-    ): List<ItemUI> {
+        contextUI: ContextUI?,
+        typePhoto: Int?
+    ): List<DataItemUI> {
         var query = RealmManager.INSTANCE.where( kClass.java )
         query = query.greaterThanOrEqualTo("CoordTime", startTime)
         query = query.and().lessThanOrEqualTo("CoordTime", endTime)
@@ -135,7 +133,7 @@ class MainRepository(
         return RealmManager.INSTANCE.copyFromRealm(results)
             .filter { it is DataObjectUI }
             .map { it as DataObjectUI }
-            .toItemUI(kClass, contextUI)
+            .toItemUI(kClass, contextUI, typePhoto)
     }
 
 
@@ -148,8 +146,8 @@ class MainRepository(
             .map { it as DataObjectUI }
     }
 
-    fun <T: DataObjectUI> getAllRoom(kClass: KClass<T>, contextUI: ContextUI?): List<ItemUI> {
-        return getAllRoomDataObjectUI(kClass).toItemUI(kClass, contextUI)
+    fun <T: DataObjectUI> getAllRoom(kClass: KClass<T>, contextUI: ContextUI?, typePhoto: Int?): List<DataItemUI> {
+        return getAllRoomDataObjectUI(kClass).toItemUI(kClass, contextUI, typePhoto)
     }
 
     fun <T: DataObjectUI> getAllRoomDataObjectUI(kClass: KClass<T>): List<DataObjectUI> {
@@ -163,24 +161,24 @@ class MainRepository(
         }
     }
 
-    fun <T: DataObjectUI>toItemUIList(kClass: KClass<T>, data: List<DataObjectUI>, contextUI: ContextUI?): List<ItemUI> {
-        return data.map { it.toItemUI(nameUIRepository, getSettingsUI(kClass.java, contextUI)?.hideFields?.joinToString { "," }) }
+    fun <T: DataObjectUI>toItemUIList(kClass: KClass<T>, data: List<DataObjectUI>, contextUI: ContextUI?, typePhoto: Int?): List<DataItemUI> {
+        return data.map { it.toItemUI(nameUIRepository, getSettingsUI(kClass.java, contextUI)?.hideFields?.joinToString { "," }, typePhoto) }
     }
 
-    private fun <T: DataObjectUI> List<T>.toItemUI(kClass: KClass<*>, contextUI: ContextUI?): List<ItemUI> {
-        return this.map { (it as DataObjectUI).toItemUI(nameUIRepository, getSettingsUI(kClass.java, contextUI)?.hideFields?.joinToString { "," }) }
+    private fun <T: DataObjectUI> List<T>.toItemUI(kClass: KClass<*>, contextUI: ContextUI?, typePhoto: Int?): List<DataItemUI> {
+        return this.map { (it as DataObjectUI).toItemUI(nameUIRepository, getSettingsUI(kClass.java, contextUI)?.hideFields?.joinToString { "," }, typePhoto) }
     }
 
 }
 
-fun List<ItemUI>.join(rightTable: List<ItemUI>, query: String): List<ItemUI> {
+fun List<DataItemUI>.join(rightTable: List<DataItemUI>, query: String): List<DataItemUI> {
     val keyLeft = query.split(":")[0].trim().split("=")[0].trim()
     val keyRight = query.split(":")[0].trim().split("=")[1].trim()
     val expFields = query.split(":")[1].replace(" ", "").split(",")
 
     return this.map { itemLeftUI ->
         val joinedFields: MutableList<FieldValue> = mutableListOf()
-        var itemRightUI: ItemUI? = null
+        var itemRightUI: DataItemUI? = null
         itemLeftUI.fields.firstOrNull { it.key.equals(keyLeft, true) }?.let { fieldLeftUI ->
             itemRightUI = rightTable.firstOrNull { it.fields.firstOrNull { it.key.equals(keyRight, true) }?.value == fieldLeftUI.value }
             expFields.forEach { expField ->

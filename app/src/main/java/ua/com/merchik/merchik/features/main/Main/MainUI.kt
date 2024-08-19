@@ -55,8 +55,9 @@ import my.nanihadesuka.compose.LazyColumnScrollbar
 import my.nanihadesuka.compose.ScrollbarSettings
 import ua.com.merchik.merchik.R
 import ua.com.merchik.merchik.data.RealmModels.AdditionalRequirementsMarkDB
-import ua.com.merchik.merchik.dataLayer.ContextUI
-import ua.com.merchik.merchik.dataLayer.model.ItemUI
+import ua.com.merchik.merchik.dataLayer.ModeUI
+import ua.com.merchik.merchik.dataLayer.model.DataItemUI
+import ua.com.merchik.merchik.dataLayer.model.SettingsItemUI
 import ua.com.merchik.merchik.features.main.componentsUI.ImageButton
 import ua.com.merchik.merchik.features.main.componentsUI.RoundCheckbox
 import ua.com.merchik.merchik.features.main.componentsUI.TextFieldInputRounded
@@ -134,17 +135,17 @@ fun MainUI(viewModel: MainViewModel, context: Context) {
             Column {
 
                 val searchStrList = uiState.filters?.searchText?.split(" ")
-                val visibilityField =
+                val visibilityColumName =
                     if (uiState.settingsItems.firstOrNull { it.key == "column_name" }?.isEnabled == true) View.VISIBLE else View.GONE
 
                 var _isActiveFiltered = false
 
-                fun getSortValue(it: ItemUI, sortingField: SortingField) =
+                fun getSortValue(it: DataItemUI, sortingField: SortingField) =
                     it.fields.firstOrNull { fieldValue ->
                         fieldValue.key.equals(sortingField.key, true)
                     }?.value?.value
 
-                fun comparator(sortingField: SortingField?): Comparator<ItemUI> =
+                fun comparator(sortingField: SortingField?): Comparator<DataItemUI> =
                     if (sortingField?.order == 1)
                         compareBy { getSortValue(it, sortingField) }
                     else if (sortingField?.order == -1)
@@ -152,45 +153,53 @@ fun MainUI(viewModel: MainViewModel, context: Context) {
                     else
                         compareBy { 0 }
 
-                val itemsUI = uiState.items.filter { itemUI ->
-                    uiState.filters?.let { filters ->
-                        filters.rangeDataByKey?.let { rangeDataByKey ->
-                            itemUI.fields.forEach { fieldValue ->
-                                if (fieldValue.key.equals(rangeDataByKey.key, true)) {
-                                    if (((fieldValue.value.rawValue as? Long)?: 0) < (rangeDataByKey.start?.atStartOfDay(ZoneId.systemDefault())
-                                            ?.toInstant()?.toEpochMilli() ?: 0)
-                                        || ((fieldValue.value.rawValue as? Long)?: 0) > (rangeDataByKey.end?.atTime(LocalTime.MAX)
-                                            ?.atZone(ZoneId.systemDefault())?.toInstant()
-                                            ?.toEpochMilli() ?: 0)
-                                    ) {
-                                        _isActiveFiltered = true
-                                        return@filter false
+                val dataItemsUI = mutableListOf<DataItemUI>()
+
+                dataItemsUI.addAll(uiState.itemsHeader)
+
+                dataItemsUI.addAll(
+                    uiState.items.filter { dataItemUI ->
+                        uiState.filters?.let { filters ->
+                            filters.rangeDataByKey?.let { rangeDataByKey ->
+                                dataItemUI.fields.forEach { fieldValue ->
+                                    if (fieldValue.key.equals(rangeDataByKey.key, true)) {
+                                        if (((fieldValue.value.rawValue as? Long)?: 0) < (rangeDataByKey.start?.atStartOfDay(ZoneId.systemDefault())
+                                                ?.toInstant()?.toEpochMilli() ?: 0)
+                                            || ((fieldValue.value.rawValue as? Long)?: 0) > (rangeDataByKey.end?.atTime(LocalTime.MAX)
+                                                ?.atZone(ZoneId.systemDefault())?.toInstant()
+                                                ?.toEpochMilli() ?: 0)
+                                        ) {
+                                            _isActiveFiltered = true
+                                            return@filter false
+                                        }
                                     }
                                 }
                             }
                         }
-                    }
 
-                    var isFound: Boolean
-                    searchStrList?.forEach {
-                        isFound = false
-                        itemUI.fields.forEach inner@{ fieldValue ->
-                            if (fieldValue.value.value.contains(it, true)) {
-                                isFound = true
-                                return@inner
+                        var isFound: Boolean
+                        searchStrList?.forEach {
+                            isFound = false
+                            dataItemUI.fields.forEach inner@{ fieldValue ->
+                                if (fieldValue.value.value.contains(it, true)) {
+                                    isFound = true
+                                    return@inner
+                                }
+                            }
+                            if (!isFound) {
+                                _isActiveFiltered = true
+                                return@filter false
                             }
                         }
-                        if (!isFound) {
-                            _isActiveFiltered = true
-                            return@filter false
-                        }
-                    }
-                    return@filter true
-                }.sortedWith(
-                    comparator(uiState.sortingFields.getOrNull(0))
-                        .thenComparing(comparator(uiState.sortingFields.getOrNull(1)))
-                        .thenComparing(comparator(uiState.sortingFields.getOrNull(2)))
+                        return@filter true
+                    }.sortedWith(
+                        comparator(uiState.sortingFields.getOrNull(0))
+                            .thenComparing(comparator(uiState.sortingFields.getOrNull(1)))
+                            .thenComparing(comparator(uiState.sortingFields.getOrNull(2)))
+                    )
                 )
+
+                dataItemsUI.addAll(uiState.itemsFooter)
 
                 isActiveFiltered = _isActiveFiltered
 
@@ -288,140 +297,23 @@ fun MainUI(viewModel: MainViewModel, context: Context) {
                         LazyColumn(
                             state = listState,
                         ) {
-                            items(itemsUI) { item ->
-                                Box(
-                                    modifier = Modifier
-                                        .clickable {
-                                            viewModel.onClickItem(
-                                                item,
-                                                context
-                                            )
-                                        }
-                                        .fillMaxWidth()
-                                        .padding(end = 10.dp, bottom = 7.dp)
-                                        .shadow(4.dp, RoundedCornerShape(8.dp))
-                                        .clip(RoundedCornerShape(8.dp))
-                                        .border(1.dp, Color.LightGray)
-                                        .then(item.modifierContainer?.background?.let {
-                                            Modifier.background(it)
-                                        } ?: Modifier.background(
-                                            if (item.selected) colorResource(id = R.color.selected_item) else Color.White
-                                        ))
-                                ) {
-                                    Row(Modifier.padding(7.dp)) {
-                                        item.fields.firstOrNull {
-                                            it.key.equals(
-                                                "id_res_image",
-                                                true
-                                            )
-                                        }?.let {
-                                            val idResImage = (it.value.rawValue as? Int)
-                                                ?: R.drawable.merchik
-                                            Box(
-                                                modifier = Modifier
-                                                    .weight(1f)
-                                                    .padding(end = 5.dp)
-                                                    .border(1.dp, Color.LightGray)
-                                                    .background(Color.White)
-                                                    .align(alignment = Alignment.Top)
-                                            ) {
-                                                val images = mutableListOf<Painter>()
-                                                if (item.images.isNullOrEmpty()) {
-                                                    images.add(painterResource(idResImage))
-                                                } else {
-                                                    item.images.forEach { pathImage ->
-                                                        val file = File(pathImage)
-                                                        if (file.exists()) {
-                                                            images.add(
-                                                                rememberAsyncImagePainter(model = file)
-                                                            )
-                                                        }
-                                                    }
-                                                }
-
-                                                if (images.size <= 1) {
-                                                    Image(
-                                                        painter = images[0],
-                                                        modifier = Modifier
-                                                            .padding(5.dp)
-                                                            .size(100.dp),
-                                                        contentScale = ContentScale.FillWidth,
-                                                        contentDescription = null
-                                                    )
-                                                } else {
-                                                    LazyRow {
-                                                        items(images) { image ->
-                                                            Image(
-                                                                painter = image,
-                                                                modifier = Modifier
-                                                                    .padding(5.dp)
-                                                                    .size(100.dp),
-                                                                contentScale = ContentScale.FillWidth,
-                                                                contentDescription = null
-                                                            )
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                        }
-
-                                        Column(modifier = Modifier.weight(2f)) {
-                                            item.fields.forEachIndexed { index, field ->
-                                                if (!field.key.equals("id_res_image",true)) {
-                                                    ItemFieldValue(field, visibilityField)
-                                                    if (index < item.fields.size - 1) HorizontalDivider()
-                                                }
-                                            }
-                                        }
-                                    }
-
-                                    Column(modifier = Modifier.align(Alignment.TopEnd)) {
-
-                                        if (viewModel.contextUI == ContextUI.ONE_SELECT || viewModel.contextUI == ContextUI.MULTI_SELECT) {
-                                            RoundCheckbox(
-                                                modifier = Modifier.padding(
-                                                    top = 3.dp,
-                                                    end = 3.dp
-                                                ),
-                                                checked = item.selected,
-                                                aroundColor = if (item.selected) colorResource(
-                                                    id = R.color.selected_item
-                                                ) else Color.White,
-                                                onCheckedChange = { checked ->
-                                                    viewModel.updateItemSelect(checked, item)
-                                                }
-                                            )
-                                        }
-
-                                        item.rawObj.firstOrNull { it is AdditionalRequirementsMarkDB }
-                                            ?.let {
-                                                it as AdditionalRequirementsMarkDB
-                                                val text = it.score ?: "0"
-                                                TextInStrokeCircle(
-                                                    modifier = Modifier.padding(
-                                                        top = 3.dp,
-                                                        end = 3.dp
-                                                    ),
-                                                    text = text,
-                                                    circleColor = if (text == "0") Color.Red else Color.Gray,
-                                                    textColor = if (text == "0") Color.Red else Color.Gray,
-                                                    aroundColor = if (item.selected) colorResource(
-                                                        id = R.color.selected_item
-                                                    ) else Color.White,
-                                                    circleSize = 30.dp,
-                                                    textSize = 20f.toPx(),
-                                                )
-                                            }
-                                    }
-                                }
+                            items(dataItemsUI) { item ->
+                                ItemUI(
+                                    item = item,
+                                    visibilityColumName =visibilityColumName,
+                                    settingsItemUI = uiState.settingsItems,
+                                    contextUI = viewModel.modeUI,
+                                    onClickItem = { viewModel.onClickItem(it, context) },
+                                    onCheckItem = { checked, it -> viewModel.updateItemSelect(checked, it) }
+                                )
                             }
                         }
                     }
 
                     Row {
-                        Tooltip(text = viewModel.getTranslateString(stringResource(id = R.string.total_number_selected, itemsUI.size))) {
+                        Tooltip(text = viewModel.getTranslateString(stringResource(id = R.string.total_number_selected, dataItemsUI.size))) {
                             Text(
-                                text = "\u2211 ${itemsUI.size}",
+                                text = "\u2211 ${dataItemsUI.size}",
                                 fontSize = 16.sp,
                                 textDecoration = TextDecoration.Underline,
                                 modifier = Modifier
@@ -451,8 +343,8 @@ fun MainUI(viewModel: MainViewModel, context: Context) {
 
                         Spacer(modifier = Modifier.weight(1f))
 
-                        if (viewModel.contextUI == ContextUI.ONE_SELECT || viewModel.contextUI == ContextUI.MULTI_SELECT) {
-                            val selectedCount = itemsUI.filter { it.selected }.size
+                        if (viewModel.modeUI == ModeUI.ONE_SELECT || viewModel.modeUI == ModeUI.MULTI_SELECT) {
+                            val selectedCount = dataItemsUI.filter { it.selected }.size
                             Tooltip(text = viewModel.getTranslateString(stringResource(id = R.string.total_number_marked, selectedCount))) {
                                 Text(
                                     text = "\u2713 $selectedCount",
@@ -467,7 +359,7 @@ fun MainUI(viewModel: MainViewModel, context: Context) {
                     }
                 }
 
-                if (viewModel.contextUI == ContextUI.ONE_SELECT || viewModel.contextUI == ContextUI.MULTI_SELECT) {
+                if (viewModel.modeUI == ModeUI.ONE_SELECT || viewModel.modeUI == ModeUI.MULTI_SELECT) {
                     Row {
                         Button(
                             onClick = {
@@ -482,7 +374,7 @@ fun MainUI(viewModel: MainViewModel, context: Context) {
                             Text(viewModel.getTranslateString(stringResource(id = R.string.cancel)))
                         }
 
-                        val selectedItems = itemsUI.filter { it.selected }
+                        val selectedItems = dataItemsUI.filter { it.selected }
                         Button(
                             onClick = {
                                 if (selectedItems.isNotEmpty()) {
@@ -528,6 +420,132 @@ fun MainUI(viewModel: MainViewModel, context: Context) {
                 showFilteringDialog = false
             }
         )
+    }
+}
+
+@Composable
+fun ItemUI(item: DataItemUI, settingsItemUI: List<SettingsItemUI>, visibilityColumName: Int, contextUI: ModeUI, onClickItem: (DataItemUI) -> Unit, onCheckItem: (Boolean, DataItemUI) -> Unit) {
+    Box(
+        modifier = Modifier
+            .clickable { onClickItem(item) }
+            .fillMaxWidth()
+            .padding(end = 10.dp, bottom = 7.dp)
+            .shadow(4.dp, RoundedCornerShape(8.dp))
+            .clip(RoundedCornerShape(8.dp))
+            .border(1.dp, Color.LightGray)
+            .then(
+                Modifier.background(
+                    if (item.selected) colorResource(id = R.color.selected_item)
+                    else item.modifierContainer?.background ?: Color.White
+                )
+            )
+    ) {
+        Row(Modifier.padding(7.dp)) {
+            item.fields.firstOrNull {
+                it.key.equals(
+                    "id_res_image",
+                    true
+                )
+            }?.let {
+                val idResImage = (it.value.rawValue as? Int)
+                    ?: R.drawable.merchik
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(end = 5.dp)
+                        .border(1.dp, Color.LightGray)
+                        .background(Color.White)
+                        .align(alignment = Alignment.Top)
+                ) {
+                    val images = mutableListOf<Painter>()
+                    if (item.images.isNullOrEmpty()) {
+                        images.add(painterResource(idResImage))
+                    } else {
+                        item.images.forEach { pathImage ->
+                            val file = File(pathImage)
+                            if (file.exists()) {
+                                images.add(
+                                    rememberAsyncImagePainter(model = file)
+                                )
+                            }
+                        }
+                    }
+
+                    if (images.size <= 1) {
+                        Image(
+                            painter = images[0],
+                            modifier = Modifier
+                                .padding(5.dp)
+                                .size(100.dp),
+                            contentScale = ContentScale.FillWidth,
+                            contentDescription = null
+                        )
+                    } else {
+                        LazyRow {
+                            items(images) { image ->
+                                Image(
+                                    painter = image,
+                                    modifier = Modifier
+                                        .padding(5.dp)
+                                        .size(100.dp),
+                                    contentScale = ContentScale.FillWidth,
+                                    contentDescription = null
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
+            Column(modifier = Modifier.weight(2f)) {
+                item.fields.forEachIndexed { index, field ->
+                    if (settingsItemUI.firstOrNull { it.key.equals(field.key, true) }?.isEnabled == false) {}
+                    else {
+                        if (!field.key.equals("id_res_image", true)) {
+                            ItemFieldValue(field, visibilityColumName)
+                            if (index < item.fields.size - 1) HorizontalDivider()
+                        }
+                    }
+                }
+            }
+        }
+
+        Column(modifier = Modifier.align(Alignment.TopEnd)) {
+
+            if (contextUI == ModeUI.ONE_SELECT || contextUI == ModeUI.MULTI_SELECT) {
+                RoundCheckbox(
+                    modifier = Modifier.padding(
+                        top = 3.dp,
+                        end = 3.dp
+                    ),
+                    checked = item.selected,
+                    aroundColor =
+                    if (item.selected) colorResource(id = R.color.selected_item)
+                    else item.modifierContainer?.background ?: Color.White,
+                    onCheckedChange = { onCheckItem(it, item) }
+                )
+            }
+
+            item.rawObj.firstOrNull { it is AdditionalRequirementsMarkDB }
+                ?.let {
+                    it as AdditionalRequirementsMarkDB
+                    val text = it.score ?: "0"
+                    TextInStrokeCircle(
+                        modifier = Modifier.padding(
+                            top = 3.dp,
+                            end = 3.dp
+                        ),
+                        text = text,
+                        circleColor = if (text == "0") Color.Red else Color.Gray,
+                        textColor = if (text == "0") Color.Red else Color.Gray,
+                        aroundColor =
+                        if (item.selected) colorResource(id = R.color.selected_item)
+                        else item.modifierContainer?.background ?: Color.White,
+                        circleSize = 30.dp,
+                        textSize = 20f.toPx(),
+                    )
+                }
+        }
     }
 }
 

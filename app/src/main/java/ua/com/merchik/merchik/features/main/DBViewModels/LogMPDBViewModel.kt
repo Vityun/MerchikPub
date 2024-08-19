@@ -8,12 +8,12 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import ua.com.merchik.merchik.data.Database.Room.AddressSDB
 import ua.com.merchik.merchik.data.RealmModels.LogMPDB
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB
-import ua.com.merchik.merchik.dataLayer.ContextUI
+import ua.com.merchik.merchik.dataLayer.ModeUI
 import ua.com.merchik.merchik.dataLayer.DataObjectUI
 import ua.com.merchik.merchik.dataLayer.MainRepository
 import ua.com.merchik.merchik.dataLayer.NameUIRepository
 import ua.com.merchik.merchik.dataLayer.join
-import ua.com.merchik.merchik.dataLayer.model.ItemUI
+import ua.com.merchik.merchik.dataLayer.model.DataItemUI
 import ua.com.merchik.merchik.database.room.RoomManager
 import ua.com.merchik.merchik.dialogs.DialogMap
 import ua.com.merchik.merchik.features.main.Main.MainViewModel
@@ -27,13 +27,10 @@ class LogMPDBViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle
 ) : MainViewModel(repository, nameUIRepository, savedStateHandle) {
 
-    override val contextUI: ContextUI
-        get() = ContextUI.DEFAULT
-
     override val table: KClass<out DataObjectUI>
         get() = LogMPDB::class
 
-    override fun getItems(): List<ItemUI> {
+    override fun getItems(): List<DataItemUI> {
         var startTime = System.currentTimeMillis()
         var endTime = System.currentTimeMillis()
 
@@ -53,13 +50,13 @@ class LogMPDBViewModel @Inject constructor(
         } catch (e: Exception) {}
 
         val logMPDBUI = repository
-            .getByRangeDateRealmDataObjectUI(LogMPDB::class, "CoordTime", startTime*1000, endTime*1000, contextUI)
-        val addressSDB = repository.getAllRoom(AddressSDB::class, contextUI)
+            .getByRangeDateRealmDataObjectUI(LogMPDB::class, "CoordTime", startTime*1000, endTime*1000, contextUI, null)
+        val addressSDB = repository.getAllRoom(AddressSDB::class, contextUI, null)
 
         return logMPDBUI.join(addressSDB, "address = addr_id: nm")
     }
 
-    override fun onClickItem(itemUI: ItemUI, context: Context) {
+    override fun onClickItem(itemUI: DataItemUI, context: Context) {
         val activity = (context as? AppCompatActivity) ?: return
 
         val logMPDB = (itemUI.rawObj.firstOrNull { it is LogMPDB } as? LogMPDB)

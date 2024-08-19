@@ -5,7 +5,7 @@ import androidx.compose.ui.unit.dp
 import com.google.gson.Gson
 import org.json.JSONObject
 import ua.com.merchik.merchik.dataLayer.model.FieldValue
-import ua.com.merchik.merchik.dataLayer.model.ItemUI
+import ua.com.merchik.merchik.dataLayer.model.DataItemUI
 import ua.com.merchik.merchik.dataLayer.model.MerchModifier
 import ua.com.merchik.merchik.dataLayer.model.Padding
 import ua.com.merchik.merchik.dataLayer.model.TextField
@@ -45,7 +45,7 @@ interface DataObjectUI {
     }
 }
 
-fun DataObjectUI.toItemUI(nameUIRepository: NameUIRepository, hideUserFields: String?): ItemUI {
+fun DataObjectUI.toItemUI(nameUIRepository: NameUIRepository, hideUserFields: String?, typePhoto: Int?): DataItemUI {
     val jsonObject = JSONObject(Gson().toJson(this))
     val fields = mutableListOf<FieldValue>()
     this.getIdResImage()?.let {
@@ -71,11 +71,10 @@ fun DataObjectUI.toItemUI(nameUIRepository: NameUIRepository, hideUserFields: St
     this.getFieldsImageOnUI().split(",").forEach {
         if (it.isNotEmpty()) {
             RealmManager
-                .getTovarPhotoByIdAndType(
+                .getPhotoByIdAndType(
                     null,
                     jsonObject.get(it.trim()).toString(),
-                    18,
-                    false
+                    typePhoto ?: -1,
                 )
                 ?.getPhoto_num()?.let { pathPhoto ->
                     images.add(pathPhoto)
@@ -103,7 +102,7 @@ fun DataObjectUI.toItemUI(nameUIRepository: NameUIRepository, hideUserFields: St
         }
     }
 
-    return ItemUI(
+    return DataItemUI(
         rawObj = listOf(this),
         fields = fields,
         images = images,
@@ -112,8 +111,17 @@ fun DataObjectUI.toItemUI(nameUIRepository: NameUIRepository, hideUserFields: St
     )
 }
 
+enum class ModeUI{
+    DEFAULT, ONE_SELECT, MULTI_SELECT
+}
+
 enum class ContextUI{
-    MAIN, DEFAULT, ONE_SELECT, MULTI_SELECT
+    DEFAULT, ONE_SELECT, MULTI_SELECT,
+    ADD_REQUIREMENTS_FROM_ACHIEVEMENT,
+    TRADE_MARK_FROM_ACHIEVEMENT,
+    THEME_FROM_ACHIEVEMENT,
+    STACK_PHOTO_TO_FROM_ACHIEVEMENT,
+    STACK_PHOTO_AFTER_FROM_ACHIEVEMENT
 }
 
 

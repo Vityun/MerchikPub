@@ -98,7 +98,7 @@ public class ThemeDB extends RealmObject implements DataObjectUI {
     @NonNull
     @Override
     public String getHidedFieldsOnUI() {
-        return DataObjectUI.DefaultImpls.getHidedFieldsOnUI(this);
+        return "dt_update, grp_id, ID, need_photo, need_report, tp";
     }
 
     @Nullable

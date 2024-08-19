@@ -39,6 +39,14 @@ public class ThemeRealm {
         return themeDB;
     }
 
+    public static List<ThemeDB> getThemeByIds(String[] ids){
+        List<ThemeDB> themeDB = INSTANCE.where(ThemeDB.class)
+                .in("id", ids)
+                .findAll();
+        if (themeDB != null) themeDB = INSTANCE.copyFromRealm(themeDB);
+        return themeDB;
+    }
+
     public static List<ThemeDB> getTARTheme(){
         return INSTANCE.where(ThemeDB.class)
 //                .equalTo("tp", "2")

@@ -756,6 +756,33 @@ public class RealmManager {
         return st;
     }
 
+    public static StackPhotoDB getPhotoByIdAndType(Integer id, String photoServerId, int photoType) {
+
+        Log.e("GET_TOV_PHOTO", "Data: " + id + "/" + photoServerId + "/" + photoType);
+
+        RealmQuery<StackPhotoDB> query = INSTANCE.where(StackPhotoDB.class);
+        if (photoServerId != null && !photoServerId.equals("0")) {
+            query.equalTo("photoServerId", photoServerId)
+                    .equalTo("photo_type", photoType);
+//                    .equalTo("comment", photoSize)
+//                    .sort("approve", Sort.DESCENDING, "photoServerId", Sort.DESCENDING);
+        } else {
+            query.equalTo("object_id", id)
+                    .equalTo("photo_type", photoType);
+//                    .equalTo("comment", photoSize)
+//                    .sort("approve", Sort.DESCENDING, "photoServerId", Sort.DESCENDING);
+        }
+
+        StackPhotoDB st;
+        if (query.findFirst() != null) {
+            st = INSTANCE.copyFromRealm(query.findFirst());
+        } else {
+            st = null;
+        }
+
+        return st;
+    }
+
 
     public static ArrayList<TovarDB> getTovarListPhotoToDownload(List<TovarDB> list, String photoSize) {
         ArrayList<TovarDB> res = new ArrayList<>();
