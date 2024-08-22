@@ -3,6 +3,7 @@ package ua.com.merchik.merchik.features.main.Main
 import android.app.Activity
 import android.content.Context
 import android.os.Build
+import android.provider.Settings
 import android.view.View
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
@@ -29,6 +30,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -43,6 +45,7 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -50,14 +53,22 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.LifecycleOwner
 import coil.compose.rememberAsyncImagePainter
+import com.google.gson.Gson
+import com.google.gson.JsonObject
 import my.nanihadesuka.compose.LazyColumnScrollbar
 import my.nanihadesuka.compose.ScrollbarSettings
+import org.json.JSONObject
 import ua.com.merchik.merchik.R
 import ua.com.merchik.merchik.data.RealmModels.AdditionalRequirementsMarkDB
 import ua.com.merchik.merchik.dataLayer.ModeUI
 import ua.com.merchik.merchik.dataLayer.model.DataItemUI
 import ua.com.merchik.merchik.dataLayer.model.SettingsItemUI
+import ua.com.merchik.merchik.dataLayer.toItemUI
+import ua.com.merchik.merchik.dialogs.DialogAchievement.FilteringDialogDataHolder
 import ua.com.merchik.merchik.features.main.componentsUI.ImageButton
 import ua.com.merchik.merchik.features.main.componentsUI.RoundCheckbox
 import ua.com.merchik.merchik.features.main.componentsUI.TextFieldInputRounded
@@ -82,6 +93,18 @@ fun MainUI(viewModel: MainViewModel, context: Context) {
     var showFilteringDialog by remember { mutableStateOf(false) }
 
     val listState = rememberLazyListState()
+
+
+    ComposableLifecycle { source, event ->
+        when (event) {
+            Lifecycle.Event.ON_RESUME -> {
+                FilteringDialogDataHolder.instance().filters?.let {
+                    viewModel.updateFilters(it)
+                }
+            }
+            else -> {}
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -191,7 +214,20 @@ fun MainUI(viewModel: MainViewModel, context: Context) {
                                 return@filter false
                             }
                         }
+
+                        uiState.filters?.items?.let { filters ->
+                            val filter = filters[0]
+                            if (filter.rightValuesRaw.isNotEmpty()) {
+                                dataItemUI.fields.forEach { fieldValue ->
+                                    if (fieldValue.key.equals(filter.leftField, true)) {
+                                        return@filter filter.rightValuesRaw.contains(fieldValue.value.rawValue)
+                                    }
+                                }
+                            }
+                        }
+
                         return@filter true
+
                     }.sortedWith(
                         comparator(uiState.sortingFields.getOrNull(0))
                             .thenComparing(comparator(uiState.sortingFields.getOrNull(1)))
@@ -549,8 +585,20 @@ fun ItemUI(item: DataItemUI, settingsItemUI: List<SettingsItemUI>, visibilityCol
     }
 }
 
-fun setContentInComposeView(composeView: ComposeView, viewModel: MainViewModel, context: Context) {
-    composeView.setContent {
-        MainUI(viewModel, context)
+@Composable
+fun ComposableLifecycle(
+    lifecycleOwner: LifecycleOwner = LocalLifecycleOwner.current,
+    onEvent: (LifecycleOwner, Lifecycle.Event) -> Unit
+) {
+
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { source, event ->
+            onEvent(source, event)
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
     }
 }

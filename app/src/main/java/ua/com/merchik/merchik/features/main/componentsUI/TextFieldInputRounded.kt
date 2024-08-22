@@ -45,7 +45,7 @@ fun TextFieldInputRounded(
             .background(color = Color.White)
             .onFocusChanged { isFocusedSearchView = it.isFocused }
     ) {
-        if (!isFocusedSearchView)
+        if (!isFocusedSearchView && value.isEmpty())
             Text(
                 modifier = Modifier
                     .align(Alignment.CenterStart)

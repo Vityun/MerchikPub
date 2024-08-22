@@ -17,6 +17,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import ua.com.merchik.merchik.Activities.Features.ui.theme.MerchikTheme
 import ua.com.merchik.merchik.dataLayer.ContextUI
 import ua.com.merchik.merchik.dataLayer.ModeUI
+import ua.com.merchik.merchik.dialogs.DialogAchievement.FilteringDialogDataHolder
 import ua.com.merchik.merchik.features.main.DBViewModels.AdditionalRequirementsDBViewModel
 import ua.com.merchik.merchik.features.main.DBViewModels.CustomerSDBViewModel
 import ua.com.merchik.merchik.features.main.DBViewModels.LogMPDBViewModel
@@ -24,6 +25,7 @@ import ua.com.merchik.merchik.features.main.DBViewModels.StackPhotoDBViewModel
 import ua.com.merchik.merchik.features.main.DBViewModels.ThemeDBViewModel
 import ua.com.merchik.merchik.features.main.DBViewModels.TovarDBViewModel
 import ua.com.merchik.merchik.features.main.DBViewModels.TradeMarkDBViewModel
+import ua.com.merchik.merchik.features.main.DBViewModels.UsersSDBViewModel
 import ua.com.merchik.merchik.features.main.Main.MainUI
 
 @AndroidEntryPoint
@@ -50,6 +52,7 @@ class FeaturesActivity: AppCompatActivity() {
                                     ThemeDBViewModel::class -> viewModel() as ThemeDBViewModel
                                     StackPhotoDBViewModel::class -> viewModel() as StackPhotoDBViewModel
                                     CustomerSDBViewModel::class -> viewModel() as CustomerSDBViewModel
+                                    UsersSDBViewModel::class -> viewModel() as UsersSDBViewModel
                                     else -> null
                                 }?.let { viewModel ->
                                     viewModel.dataJson = bundle.getString("dataJson")
@@ -68,6 +71,7 @@ class FeaturesActivity: AppCompatActivity() {
                                     viewModel.title = bundle.getString("title")
                                     viewModel.subTitle = bundle.getString("subTitle")
                                     viewModel.idResImage = if (bundle.getInt("idResImage") == 0) null else bundle.getInt("idResImage")
+                                    viewModel.context = LocalContext.current
                                     viewModel.updateContent()
                                     MainUI(viewModel = viewModel, LocalContext.current)
                                 } ?: {

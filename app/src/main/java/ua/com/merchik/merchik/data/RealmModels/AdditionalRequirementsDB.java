@@ -251,9 +251,10 @@ public class AdditionalRequirementsDB extends RealmObject implements DataObjectU
     @NonNull
     @Override
     public String getHidedFieldsOnUI() {
-        return "addr_id, author_id, disable_score, dt_change, exam_id, grp_id, hide_client, " +
-                "hide_user, ID, not_approve, options_id, showcase_tp_id, site_id, summ, theme_id," +
-                "tovar_id, user_id, option_id, dt_end, dt_start, client_id, color";
+        return "";
+//        return "addr_id, author_id, disable_score, dt_change, exam_id, grp_id, hide_client, " +
+//                "hide_user, ID, not_approve, options_id, showcase_tp_id, site_id, summ, theme_id," +
+//                "tovar_id, user_id, option_id, dt_end, dt_start, client_id, color";
     }
 
     @Nullable
@@ -265,7 +266,7 @@ public class AdditionalRequirementsDB extends RealmObject implements DataObjectU
     @NonNull
     @Override
     public String getValueUI(@NonNull String key, @NonNull Object value) {
-        return DataObjectUI.DefaultImpls.getValueUI(this, key, value);
+        return AdditionalRequirementsDBOverride.INSTANCE.getValueUI(key, value);
     }
 
     @Nullable

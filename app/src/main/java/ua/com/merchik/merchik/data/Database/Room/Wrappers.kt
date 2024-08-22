@@ -110,6 +110,15 @@ object CustomerSDBOverride {
 }
 
 object AdditionalRequirementsDBOverride {
+    fun getValueUI(key: String, value: Any): String = when (key) {
+        "dt_change" -> {
+            value.toString().toLongOrNull()?.let {
+                SimpleDateFormat("dd MMMM YYYY").format(Date(it))
+            } ?: value.toString()
+        }
+        else -> value.toString()
+    }
+
     fun getContainerModifier(jsonObject: JSONObject): MerchModifier {
         val color =
             try {

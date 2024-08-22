@@ -34,7 +34,25 @@ data class StateUI(
 
 data class Filters(
     val rangeDataByKey: RangeDate? = null,
-    val searchText: String
+    val searchText: String,
+    val items: List<ItemFilter>? = null
+
+//    val clients: List<String>? = null,
+//    val addresses: List<String>? = null,
+//    val persons: List<String>? = null,
+//    val visits: List<String>? = null,
+//    val typePhoto: List<Int>? = null,
+//    val showcases: List<String>? = null,
+//    val planogramms: List<String>? = null,
+)
+
+data class ItemFilter(
+    val title: String,
+    val leftField: String,
+    val rightField: String,
+    val rightValuesRaw: List<Any>,
+    val rightValuesUI: List<Any>,
+    val onSelect: (() -> Unit)?
 )
 
 data class RangeDate(
@@ -60,6 +78,7 @@ abstract class MainViewModel(
     protected val savedStateHandle: SavedStateHandle
 ): ViewModel() {
 
+    var context: Context? = null
     var dataJson: String? = null
     var title: String? = null
     var subTitle: String? = null
@@ -76,8 +95,9 @@ abstract class MainViewModel(
     abstract fun getItems(): List<DataItemUI>
     open fun onClickItem(itemUI: DataItemUI, context: Context) {}
 
-    open var filters: Filters? = null
     open fun onSelectedItemsUI(itemsUI: List<DataItemUI>) {}
+
+    var filters: Filters? = null
 
     private val _uiState = MutableStateFlow(StateUI())
     val uiState: StateFlow<StateUI>
@@ -132,6 +152,7 @@ abstract class MainViewModel(
                     itemsFooter = getItemsFooter(),
                     settingsItems = settingsItems,
                     sortingFields = sortingFields,
+                    filters = filters,
                     lastUpdate = System.currentTimeMillis()
                 )
             }

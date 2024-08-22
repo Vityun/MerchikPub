@@ -1,25 +1,28 @@
 package ua.com.merchik.merchik.features.main.DBViewModels
 
+import android.app.Activity
 import android.content.Context
+import android.content.Intent
+import android.os.Bundle
 import android.text.Html
 import android.util.Log
+import androidx.core.app.ActivityCompat
 import androidx.lifecycle.SavedStateHandle
 import com.google.gson.Gson
 import dagger.hilt.android.lifecycle.HiltViewModel
+import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity
+import ua.com.merchik.merchik.Activities.Features.FeaturesActivity
 import ua.com.merchik.merchik.Clock
 import ua.com.merchik.merchik.Globals
 import ua.com.merchik.merchik.data.RealmModels.AdditionalRequirementsDB
 import ua.com.merchik.merchik.data.RealmModels.AdditionalRequirementsMarkDB
-import ua.com.merchik.merchik.data.RealmModels.TovarDB
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB
 import ua.com.merchik.merchik.dataLayer.ContextUI
-import ua.com.merchik.merchik.dataLayer.ModeUI
 import ua.com.merchik.merchik.dataLayer.DataObjectUI
 import ua.com.merchik.merchik.dataLayer.MainRepository
+import ua.com.merchik.merchik.dataLayer.ModeUI
 import ua.com.merchik.merchik.dataLayer.NameUIRepository
 import ua.com.merchik.merchik.dataLayer.model.DataItemUI
-import ua.com.merchik.merchik.dataLayer.model.FieldValue
-import ua.com.merchik.merchik.dataLayer.toItemUI
 import ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsMarkRealm
 import ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsRealm
 import ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsRealm.AdditionalRequirementsModENUM
@@ -28,8 +31,13 @@ import ua.com.merchik.merchik.database.realm.tables.CustomerRealm
 import ua.com.merchik.merchik.database.realm.tables.UsersRealm
 import ua.com.merchik.merchik.database.room.RoomManager
 import ua.com.merchik.merchik.dialogs.DialogAchievement.AchievementDataHolder
+import ua.com.merchik.merchik.dialogs.DialogAchievement.FilteringDialogDataHolder
 import ua.com.merchik.merchik.dialogs.DialogAdditionalRequirements.DialogARMark.DialogARMark
+import ua.com.merchik.merchik.features.main.Main.Filters
+import ua.com.merchik.merchik.features.main.Main.ItemFilter
 import ua.com.merchik.merchik.features.main.Main.MainViewModel
+import ua.com.merchik.merchik.features.main.Main.RangeDate
+import java.time.LocalDate
 import javax.inject.Inject
 import kotlin.reflect.KClass
 
@@ -39,6 +47,46 @@ class AdditionalRequirementsDBViewModel @Inject constructor(
     nameUIRepository: NameUIRepository,
     savedStateHandle: SavedStateHandle
 ) : MainViewModel(repository, nameUIRepository, savedStateHandle) {
+
+    init {
+        val filterUsersSDB = ItemFilter(
+            "Сотрудники",
+            "author_id",
+            "id",
+            emptyList(),
+            emptyList()
+        ) {
+            val intent = Intent(context, FeaturesActivity::class.java)
+            val bundle = Bundle()
+            bundle.putString("viewModel", UsersSDBViewModel::class.java.canonicalName)
+            bundle.putString("modeUI", ModeUI.MULTI_SELECT.toString())
+            bundle.putString("title", "title")
+            bundle.putString("subTitle", "subTitle")
+            intent.putExtras(bundle)
+            ActivityCompat.startActivityForResult(
+                (context as Activity?)!!,
+                intent,
+                DetailedReportActivity.NEED_UPDATE_UI_REQUEST,
+                null
+            )
+        }
+
+        FilteringDialogDataHolder.instance().filters = Filters(
+            RangeDate("dt_change", LocalDate.now().minusYears(55), LocalDate.now()),
+            "по",
+            mutableListOf(
+                filterUsersSDB,
+                filterUsersSDB,
+                filterUsersSDB,
+                filterUsersSDB,
+                filterUsersSDB,
+                filterUsersSDB,
+                filterUsersSDB,
+                filterUsersSDB,
+                filterUsersSDB
+            )
+        )
+    }
 
     override val table: KClass<out DataObjectUI>
         get() = AdditionalRequirementsDB::class

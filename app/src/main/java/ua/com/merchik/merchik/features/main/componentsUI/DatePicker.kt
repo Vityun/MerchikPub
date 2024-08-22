@@ -1,7 +1,10 @@
 package ua.com.merchik.merchik.features.main.componentsUI
 
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -11,6 +14,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentWidth
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -23,9 +27,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.colorResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.window.Dialog
+import ua.com.merchik.merchik.R
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
@@ -42,9 +49,25 @@ fun DatePicker(title: String, date: LocalDate?, dateChange: (date: LocalDate) ->
         verticalArrangement = Arrangement.Center
     ) {
         Text(
-            text = "${title}:\n${selectedDate.format(dateFormat)}",
-            modifier = Modifier.clickable { showDialog = true }
+            text = "${title}:",
+            fontWeight = FontWeight.Bold
         )
+
+        Box(
+            modifier = Modifier
+                .clickable { showDialog = true }
+                .border(
+                    BorderStroke(
+                        1.dp,
+                        colorResource(id = R.color.borderContextMenu)
+                    ), RoundedCornerShape(8.dp)
+                )
+        ) {
+            Text(
+                text = selectedDate.format(dateFormat),
+                modifier = Modifier.padding(7.dp)
+            )
+        }
 
         if (showDialog) {
             Dialog(onDismissRequest = { showDialog = false }) {
