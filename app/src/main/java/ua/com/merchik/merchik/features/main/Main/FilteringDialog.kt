@@ -1,5 +1,6 @@
 package ua.com.merchik.merchik.features.main.Main
 
+import android.util.Log
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -12,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -22,6 +24,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -36,12 +39,15 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import androidx.lifecycle.Lifecycle
 import my.nanihadesuka.compose.LazyColumnScrollbar
 import my.nanihadesuka.compose.ScrollbarSettings
 import ua.com.merchik.merchik.R
+import ua.com.merchik.merchik.dialogs.DialogAchievement.FilteringDialogDataHolder
 import ua.com.merchik.merchik.features.main.componentsUI.DatePicker
 import ua.com.merchik.merchik.features.main.componentsUI.ImageButton
 import ua.com.merchik.merchik.features.main.componentsUI.TextFieldInputRounded
+import ua.com.merchik.merchik.features.main.componentsUI.Tooltip
 import java.time.LocalDate
 
 @Composable
@@ -49,11 +55,26 @@ fun FilteringDialog(viewModel: MainViewModel,
                     onDismiss: () -> Unit,
                     onChanged: (Filters) -> Unit) {
 
-    var searchStr by remember { mutableStateOf(viewModel.filters?.searchText ?: "") }
-    var selectedFilterDateStart by remember { mutableStateOf(viewModel.filters?.rangeDataByKey?.start ?: LocalDate.now()) }
-    var selectedFilterDateEnd by remember { mutableStateOf(viewModel.filters?.rangeDataByKey?.end ?: LocalDate.now()) }
+    val selectedFilterDateStart by remember { mutableStateOf(viewModel.filters?.rangeDataByKey?.start ?: LocalDate.now()) }
+    val selectedFilterDateEnd by remember { mutableStateOf(viewModel.filters?.rangeDataByKey?.end ?: LocalDate.now()) }
+
+    val uiState by viewModel.uiState.collectAsState()
 
     val listState = rememberLazyListState()
+
+    ComposableLifecycle { source, event ->
+        when (event) {
+            Lifecycle.Event.ON_CREATE -> {
+                FilteringDialogDataHolder.instance().filters = uiState.filters?.copy()
+            }
+            Lifecycle.Event.ON_RESUME -> {
+                FilteringDialogDataHolder.instance().filters?.let {
+                    viewModel.updateFilters(it)
+                }
+            }
+            else -> {}
+        }
+    }
 
     Dialog(onDismissRequest = onDismiss) {
         Column(
@@ -82,24 +103,30 @@ fun FilteringDialog(viewModel: MainViewModel,
                     modifier = Modifier.padding(10.dp)
                 ) {
                     Text(
+                        modifier = Modifier
+                            .padding(start = 10.dp, bottom = 7.dp, end = 10.dp),
                         fontWeight = FontWeight.Bold,
-                        text = viewModel.getTranslateString(stringResource(id = R.string.filters))
+                        text = viewModel.uiState.value.filters?.title ?: "Фільтри"
                     )
 
-                    if (viewModel.filters?.rangeDataByKey != null) {
-                        Row {
-                            DatePicker(
-                                "Дата з",
-                                selectedFilterDateStart
-                            ) { selectedFilterDateStart = it }
-                            DatePicker(
-                                "Дата по",
-                                selectedFilterDateEnd
-                            ) { selectedFilterDateEnd = it }
-                        }
+                    uiState.subTitle?.let {
+                        Text(
+                            text = it,
+                            modifier = Modifier
+                                .padding(start = 10.dp, bottom = 7.dp, end = 10.dp)
+                        )
                     }
 
-                    viewModel.filters?.items?.let {
+                    uiState.filters?.rangeDataByKey?.let {
+                        if (it.enabled)
+                            ItemDateFilterUI(it, selectedFilterDateStart, selectedFilterDateEnd)
+                        else
+                            Tooltip(text = "Фільтр недоступний для редагування") {
+                                ItemDateFilterUI(it, selectedFilterDateStart, selectedFilterDateEnd)
+                            }
+                    }
+
+                    uiState.filters?.items?.let {
                         LazyColumnScrollbar(
                             modifier = Modifier
                                 .padding(start = 10.dp, top = 10.dp, bottom = 7.dp)
@@ -117,28 +144,11 @@ fun FilteringDialog(viewModel: MainViewModel,
                                 state = listState,
                             ) {
                                 items(it) {
-                                    Column(Modifier.padding(end = 10.dp)) {
-                                        Text(
-                                            text = it.title,
-                                            fontWeight = FontWeight.Bold
-                                        )
-                                        Box(
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .border(
-                                                    BorderStroke(
-                                                        1.dp,
-                                                        colorResource(id = R.color.borderContextMenu)
-                                                    ), RoundedCornerShape(8.dp)
-                                                )
-                                                .clickable { it.onSelect?.invoke() },
-                                        ) {
-                                            Text(
-                                                modifier = Modifier.padding(7.dp),
-                                                text = if (it.rightValuesUI.isEmpty()) "Додати фільтр" else it.rightValuesUI.joinToString(
-                                                    ","
-                                                )
-                                            )
+                                    if (it.enabled)
+                                        ItemFilterUI(it)
+                                    else {
+                                        Tooltip(text = "Фільтр недоступний для редагування!") {
+                                            ItemFilterUI(it)
                                         }
                                     }
                                     Spacer(modifier = Modifier.padding(10.dp))
@@ -151,18 +161,9 @@ fun FilteringDialog(viewModel: MainViewModel,
                     Row {
                         Button(
                             onClick = {
-                                onChanged.invoke(
-                                    Filters(
-                                        viewModel.filters?.let {
-                                            RangeDate(
-                                                it.rangeDataByKey?.key,
-                                                selectedFilterDateStart,
-                                                selectedFilterDateEnd
-                                            )
-                                        },
-                                        searchStr
-                                    )
-                                )
+                                FilteringDialogDataHolder.instance().filters?.let {
+                                    onChanged.invoke(it)
+                                }
                             },
                             shape = RoundedCornerShape(8.dp),
                             colors = ButtonDefaults.buttonColors(containerColor = colorResource(id = R.color.blue)),
@@ -174,18 +175,28 @@ fun FilteringDialog(viewModel: MainViewModel,
                         Spacer(modifier = Modifier.padding(10.dp))
                         Button(
                             onClick = {
-                                onChanged.invoke(
-                                    Filters(
-                                        viewModel.filters?.let {
-                                            RangeDate(
-                                                it.rangeDataByKey?.key,
-                                                LocalDate.now(),
-                                                LocalDate.now()
+                                FilteringDialogDataHolder.instance().filters?.let {
+                                    onChanged.invoke(it.copy(
+                                        rangeDataByKey =
+                                        if (it.rangeDataByKey?.enabled == true)
+                                            it.rangeDataByKey.copy(
+                                                start = LocalDate.now(),
+                                                end = LocalDate.now()
                                             )
-                                        },
-                                        ""
-                                    )
-                                )
+                                        else
+                                            it.rangeDataByKey,
+                                        searchText = "",
+                                        items = it.items?.map {
+                                            if (it.enabled)
+                                                it.copy(
+                                                    rightValuesRaw = emptyList(),
+                                                    rightValuesUI = emptyList()
+                                                )
+                                            else
+                                                it
+                                        }
+                                    ))
+                                }
                             },
                             shape = RoundedCornerShape(8.dp),
                             colors = ButtonDefaults.buttonColors(containerColor = colorResource(id = R.color.orange)),
@@ -197,6 +208,53 @@ fun FilteringDialog(viewModel: MainViewModel,
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun ItemDateFilterUI(
+    it: RangeDate,
+    selectedFilterDateStart: LocalDate?,
+    selectedFilterDateEnd: LocalDate?
+) {
+    var selectedFilterDateStart1 = selectedFilterDateStart
+    var selectedFilterDateEnd1 = selectedFilterDateEnd
+    Row {
+        DatePicker(
+            "Дата з",
+            it.enabled,
+            selectedFilterDateStart1
+        ) { selectedFilterDateStart1 = it }
+        DatePicker(
+            "Дата по",
+            it.enabled,
+            selectedFilterDateEnd1
+        ) { selectedFilterDateEnd1 = it }
+    }
+}
+
+@Composable
+private fun ItemFilterUI(it: ItemFilter) {
+    Column(Modifier.padding(end = 10.dp)) {
+        Text(text = it.title)
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .border(
+                    BorderStroke(
+                        1.dp,
+                        colorResource(id = R.color.borderContextMenu)
+                    ), RoundedCornerShape(8.dp)
+                )
+                .then(if (it.enabled) Modifier.clickable { it.onSelect?.invoke() } else Modifier),
+//                .clickable { it.onSelect?.invoke() },
+        ) {
+            Text(
+                modifier = Modifier.padding(7.dp),
+                text = if (it.rightValuesUI.isEmpty()) "Додати фільтр" else it.rightValuesUI.joinToString("\n"),
+                color = if (it.rightValuesUI.isEmpty()) colorResource(id = R.color.hintColorDefault) else Color.Black
+            )
         }
     }
 }

@@ -37,7 +37,7 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 @Composable
-fun DatePicker(title: String, date: LocalDate?, dateChange: (date: LocalDate) -> Unit) {
+fun DatePicker(title: String, enabled: Boolean, date: LocalDate?, dateChange: (date: LocalDate) -> Unit) {
     var selectedDate by remember { mutableStateOf(date ?: LocalDate.now()) }
     var showDialog by remember { mutableStateOf(false) }
     val context = LocalContext.current
@@ -48,20 +48,18 @@ fun DatePicker(title: String, date: LocalDate?, dateChange: (date: LocalDate) ->
             .padding(16.dp),
         verticalArrangement = Arrangement.Center
     ) {
-        Text(
-            text = "${title}:",
-            fontWeight = FontWeight.Bold
-        )
+        Text(text = "${title}:")
 
         Box(
             modifier = Modifier
-                .clickable { showDialog = true }
                 .border(
                     BorderStroke(
                         1.dp,
                         colorResource(id = R.color.borderContextMenu)
                     ), RoundedCornerShape(8.dp)
                 )
+                .then(if (enabled) Modifier.clickable {showDialog = true} else Modifier)
+
         ) {
             Text(
                 text = selectedDate.format(dateFormat),

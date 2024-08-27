@@ -503,6 +503,10 @@ public class RealmManager {
         return INSTANCE.where(WpDataDB.class).equalTo("ID", id).findFirst();
     }
 
+    public static WpDataDB getWorkPlanRowByCodeDad2(long codeDad2) {
+        return INSTANCE.where(WpDataDB.class).equalTo("code_dad2", codeDad2).findFirst();
+    }
+
 
     public static int getWpDataDate(String dt) {
         Date date = Clock.stringDateConvertToDate(dt);

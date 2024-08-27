@@ -17,6 +17,7 @@ import ua.com.merchik.merchik.dataLayer.NameUIRepository
 import ua.com.merchik.merchik.dataLayer.model.DataItemUI
 import ua.com.merchik.merchik.dataLayer.model.SettingsItemUI
 import java.time.LocalDate
+import java.util.UUID
 import kotlin.reflect.KClass
 
 data class StateUI(
@@ -33,32 +34,29 @@ data class StateUI(
 )
 
 data class Filters(
+    val title: String = "Фільтри",
+    val subTitle: String? = null,
     val rangeDataByKey: RangeDate? = null,
     val searchText: String,
-    val items: List<ItemFilter>? = null
-
-//    val clients: List<String>? = null,
-//    val addresses: List<String>? = null,
-//    val persons: List<String>? = null,
-//    val visits: List<String>? = null,
-//    val typePhoto: List<Int>? = null,
-//    val showcases: List<String>? = null,
-//    val planogramms: List<String>? = null,
+    var items: List<ItemFilter>? = null
 )
 
 data class ItemFilter(
     val title: String,
+    val clazz: KClass<out DataObjectUI>,
     val leftField: String,
     val rightField: String,
-    val rightValuesRaw: List<Any>,
-    val rightValuesUI: List<Any>,
+    val rightValuesRaw: List<String>,
+    val rightValuesUI: List<String>,
+    val enabled: Boolean,
     val onSelect: (() -> Unit)?
 )
 
 data class RangeDate(
     val key: String? = null,
     val start: LocalDate? = null,
-    val end: LocalDate? = null
+    val end: LocalDate? = null,
+    val enabled: Boolean
 )
 
 data class SortingField(
@@ -91,6 +89,8 @@ abstract class MainViewModel(
     open fun getItemsHeader(): List<DataItemUI> = emptyList()
 
     open fun getItemsFooter(): List<DataItemUI> = emptyList()
+
+    open fun updateFilters() {}
 
     abstract fun getItems(): List<DataItemUI>
     open fun onClickItem(itemUI: DataItemUI, context: Context) {}
@@ -141,6 +141,7 @@ abstract class MainViewModel(
 
             val settingsItems = repository.getSettingsItemList(table, contextUI)
             val sortingFields = repository.getSortingFields(table, contextUI)
+            updateFilters()
 
             _uiState.update {
                 it.copy(
@@ -164,7 +165,8 @@ abstract class MainViewModel(
         viewModelScope.launch {
             _uiState.update {
                 it.copy(
-                    filters = filters
+                    filters = filters,
+                    lastUpdate = System.currentTimeMillis()
                 )
             }
         }

@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
@@ -39,6 +40,7 @@ fun TextFieldInputRounded(
     var isFocusedSearchView by remember { mutableStateOf(false) }
 
     Box(
+        contentAlignment = Alignment.CenterStart,
         modifier = modifier
             .shadow(4.dp, RoundedCornerShape(8.dp))
             .clip(RoundedCornerShape(8.dp))
@@ -55,7 +57,7 @@ fun TextFieldInputRounded(
                 color = colorResource(id = R.color.hintColorDefault),
             )
 
-        Row{
+        Row(verticalAlignment = Alignment.CenterVertically){
             BasicTextField(
                 value = value,
                 onValueChange = onValueChange,
@@ -70,13 +72,11 @@ fun TextFieldInputRounded(
 
             Image(
                 modifier = Modifier
-                    .align(Alignment.CenterVertically)
                     .padding(end = 7.dp, start = 7.dp)
-                    .fillMaxHeight(),
-                painter = painterResource(id = R.drawable.ic_82),
-//                painter = painterResource(id = com.google.android.material.R.drawable.ic_search_black_24),
+                    .size(30.dp),
+                painter = painterResource(id = R.drawable.ic_search),
                 contentDescription = "",
-                colorFilter = ColorFilter.tint(colorResource(id = R.color.hintColorDefault))
+                colorFilter = ColorFilter.tint(Color.Black)
             )
         }
     }

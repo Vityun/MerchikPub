@@ -14,6 +14,7 @@ import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportAc
 import ua.com.merchik.merchik.Activities.Features.FeaturesActivity
 import ua.com.merchik.merchik.Clock
 import ua.com.merchik.merchik.Globals
+import ua.com.merchik.merchik.data.Database.Room.UsersSDB
 import ua.com.merchik.merchik.data.RealmModels.AdditionalRequirementsDB
 import ua.com.merchik.merchik.data.RealmModels.AdditionalRequirementsMarkDB
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB
@@ -48,13 +49,15 @@ class AdditionalRequirementsDBViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle
 ) : MainViewModel(repository, nameUIRepository, savedStateHandle) {
 
-    init {
+    override fun updateFilters() {
         val filterUsersSDB = ItemFilter(
             "Сотрудники",
+            UsersSDB::class,
             "author_id",
             "id",
             emptyList(),
-            emptyList()
+            emptyList(),
+            true
         ) {
             val intent = Intent(context, FeaturesActivity::class.java)
             val bundle = Bundle()
@@ -64,26 +67,18 @@ class AdditionalRequirementsDBViewModel @Inject constructor(
             bundle.putString("subTitle", "subTitle")
             intent.putExtras(bundle)
             ActivityCompat.startActivityForResult(
-                (context as Activity?)!!,
+                (context as Activity),
                 intent,
                 DetailedReportActivity.NEED_UPDATE_UI_REQUEST,
                 null
             )
         }
 
-        FilteringDialogDataHolder.instance().filters = Filters(
-            RangeDate("dt_change", LocalDate.now().minusYears(55), LocalDate.now()),
-            "по",
-            mutableListOf(
+        filters = Filters(
+            rangeDataByKey = RangeDate("dt_change", LocalDate.now().minusYears(55), LocalDate.now(), false),
+            searchText = "",
+            items = mutableListOf(
                 filterUsersSDB,
-                filterUsersSDB,
-                filterUsersSDB,
-                filterUsersSDB,
-                filterUsersSDB,
-                filterUsersSDB,
-                filterUsersSDB,
-                filterUsersSDB,
-                filterUsersSDB
             )
         )
     }

@@ -95,17 +95,6 @@ fun MainUI(viewModel: MainViewModel, context: Context) {
     val listState = rememberLazyListState()
 
 
-    ComposableLifecycle { source, event ->
-        when (event) {
-            Lifecycle.Event.ON_RESUME -> {
-                FilteringDialogDataHolder.instance().filters?.let {
-                    viewModel.updateFilters(it)
-                }
-            }
-            else -> {}
-        }
-    }
-
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -220,7 +209,12 @@ fun MainUI(viewModel: MainViewModel, context: Context) {
                             if (filter.rightValuesRaw.isNotEmpty()) {
                                 dataItemUI.fields.forEach { fieldValue ->
                                     if (fieldValue.key.equals(filter.leftField, true)) {
-                                        return@filter filter.rightValuesRaw.contains(fieldValue.value.rawValue)
+                                        if (filter.rightValuesRaw.contains(fieldValue.value.rawValue.toString())) {
+                                            return@filter true
+                                        } else {
+                                            _isActiveFiltered = true
+                                            return@filter false
+                                        }
                                     }
                                 }
                             }
@@ -276,8 +270,8 @@ fun MainUI(viewModel: MainViewModel, context: Context) {
                         value = uiState.filters?.searchText ?: "",
                         onValueChange = {
                             val filters = Filters(
-                                uiState.filters?.rangeDataByKey,
-                                it
+                                rangeDataByKey = uiState.filters?.rangeDataByKey,
+                                searchText = it
                             )
                             viewModel.updateFilters(filters)
                         },

@@ -26,6 +26,7 @@ import ua.com.merchik.merchik.features.main.DBViewModels.ThemeDBViewModel
 import ua.com.merchik.merchik.features.main.DBViewModels.TovarDBViewModel
 import ua.com.merchik.merchik.features.main.DBViewModels.TradeMarkDBViewModel
 import ua.com.merchik.merchik.features.main.DBViewModels.UsersSDBViewModel
+import ua.com.merchik.merchik.features.main.DBViewModels.WpDataDBViewModel
 import ua.com.merchik.merchik.features.main.Main.MainUI
 
 @AndroidEntryPoint
@@ -53,6 +54,7 @@ class FeaturesActivity: AppCompatActivity() {
                                     StackPhotoDBViewModel::class -> viewModel() as StackPhotoDBViewModel
                                     CustomerSDBViewModel::class -> viewModel() as CustomerSDBViewModel
                                     UsersSDBViewModel::class -> viewModel() as UsersSDBViewModel
+                                    WpDataDBViewModel::class -> viewModel() as WpDataDBViewModel
                                     else -> null
                                 }?.let { viewModel ->
                                     viewModel.dataJson = bundle.getString("dataJson")
