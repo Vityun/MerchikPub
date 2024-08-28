@@ -150,7 +150,7 @@ fun MainUI(viewModel: MainViewModel, context: Context) {
                 val visibilityColumName =
                     if (uiState.settingsItems.firstOrNull { it.key == "column_name" }?.isEnabled == true) View.VISIBLE else View.GONE
 
-                var _isActiveFiltered = false
+                var _isActiveFiltered = uiState.filters?.searchText?.isNotEmpty() == true
 
                 fun getSortValue(it: DataItemUI, sortingField: SortingField) =
                     it.fields.firstOrNull { fieldValue ->
@@ -199,7 +199,6 @@ fun MainUI(viewModel: MainViewModel, context: Context) {
                                 }
                             }
                             if (!isFound) {
-                                _isActiveFiltered = true
                                 return@filter false
                             }
                         }
@@ -209,10 +208,10 @@ fun MainUI(viewModel: MainViewModel, context: Context) {
                             if (filter.rightValuesRaw.isNotEmpty()) {
                                 dataItemUI.fields.forEach { fieldValue ->
                                     if (fieldValue.key.equals(filter.leftField, true)) {
+                                        if (filter.rightValuesRaw.isNotEmpty()) _isActiveFiltered = true
                                         if (filter.rightValuesRaw.contains(fieldValue.value.rawValue.toString())) {
                                             return@filter true
                                         } else {
-                                            _isActiveFiltered = true
                                             return@filter false
                                         }
                                     }

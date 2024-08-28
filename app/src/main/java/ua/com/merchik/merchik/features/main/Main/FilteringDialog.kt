@@ -1,7 +1,9 @@
 package ua.com.merchik.merchik.features.main.Main
 
-import android.util.Log
+import android.app.Activity
+import android.content.Context
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -10,10 +12,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -21,32 +21,33 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import my.nanihadesuka.compose.LazyColumnScrollbar
 import my.nanihadesuka.compose.ScrollbarSettings
 import ua.com.merchik.merchik.R
 import ua.com.merchik.merchik.dialogs.DialogAchievement.FilteringDialogDataHolder
 import ua.com.merchik.merchik.features.main.componentsUI.DatePicker
 import ua.com.merchik.merchik.features.main.componentsUI.ImageButton
-import ua.com.merchik.merchik.features.main.componentsUI.TextFieldInputRounded
 import ua.com.merchik.merchik.features.main.componentsUI.Tooltip
 import java.time.LocalDate
 
@@ -145,10 +146,20 @@ fun FilteringDialog(viewModel: MainViewModel,
                             ) {
                                 items(it) {
                                     if (it.enabled)
-                                        ItemFilterUI(it)
+                                        ItemFilterUI(viewModel.context, it) { changedItemFilter ->
+                                            uiState.filters?.copy(
+                                                items = uiState.filters?.items?.map {
+                                                    if (it.clazz == changedItemFilter.clazz) changedItemFilter
+                                                    else it
+                                                }
+                                            )?.let { filters ->
+                                                FilteringDialogDataHolder.instance().filters = filters
+                                                viewModel.updateFilters(filters)
+                                            }
+                                        }
                                     else {
                                         Tooltip(text = "Фільтр недоступний для редагування!") {
-                                            ItemFilterUI(it)
+                                            ItemFilterUI(viewModel.context, it)
                                         }
                                     }
                                     Spacer(modifier = Modifier.padding(10.dp))
@@ -235,9 +246,9 @@ private fun ItemDateFilterUI(
 }
 
 @Composable
-private fun ItemFilterUI(it: ItemFilter) {
+private fun ItemFilterUI(context: Context?, itemFilter: ItemFilter, onChanged: ((ItemFilter) -> Unit)? = null) {
     Column(Modifier.padding(end = 10.dp)) {
-        Text(text = it.title)
+        Text(text = itemFilter.title)
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -247,14 +258,62 @@ private fun ItemFilterUI(it: ItemFilter) {
                         colorResource(id = R.color.borderContextMenu)
                     ), RoundedCornerShape(8.dp)
                 )
-                .then(if (it.enabled) Modifier.clickable { it.onSelect?.invoke() } else Modifier),
-//                .clickable { it.onSelect?.invoke() },
+                .then(if (itemFilter.enabled) Modifier.clickable {
+                    (context as? Activity)?.let { itemFilter.onSelect(it) }
+                } else Modifier),
         ) {
-            Text(
-                modifier = Modifier.padding(7.dp),
-                text = if (it.rightValuesUI.isEmpty()) "Додати фільтр" else it.rightValuesUI.joinToString("\n"),
-                color = if (it.rightValuesUI.isEmpty()) colorResource(id = R.color.hintColorDefault) else Color.Black
-            )
+            if (itemFilter.rightValuesUI.isEmpty()) {
+                Text(
+                    modifier = Modifier.padding(7.dp),
+                    text = "Додати фільтр",
+                    color = colorResource(id = R.color.hintColorDefault)
+                )
+            } else {
+                Column {
+                    itemFilter.rightValuesUI.forEachIndexed { index, item ->
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .padding(2.dp)
+                                .background(
+                                    color = colorResource(id = R.color.background_item_filter),
+                                    shape = RoundedCornerShape(8.dp)
+                                )
+                                .border(
+                                    BorderStroke(
+                                        1.dp,
+                                        colorResource(id = R.color.borderContextMenu)
+                                    ), RoundedCornerShape(8.dp)
+                                )
+                        ) {
+                            Text(
+                                modifier = Modifier.padding(start = 7.dp, top = 3.dp, bottom = 3.dp, end = 7.dp),
+                                text = item
+                            )
+                            if (itemFilter.enabled) {
+                                Image(
+                                    modifier = Modifier
+                                        .size(25.dp)
+                                        .padding(end = 7.dp)
+                                        .clickable {
+                                            onChanged?.invoke(
+                                                itemFilter.copy(
+                                                    rightValuesRaw = itemFilter.rightValuesRaw.filterIndexed { index1, _ -> index != index1 },
+                                                    rightValuesUI = itemFilter.rightValuesUI.filterIndexed { index1, _ -> index != index1 }
+                                                )
+                                            )
+                                        },
+                                    contentScale = ContentScale.Inside,
+                                    painter = painterResource(id = R.drawable.ic_letter_x),
+                                    contentDescription = "",
+                                    colorFilter = ColorFilter.tint(color = colorResource(id = R.color.hintColorDefault))
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
         }
     }
 }

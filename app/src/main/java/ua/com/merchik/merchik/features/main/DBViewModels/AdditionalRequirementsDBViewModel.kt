@@ -53,26 +53,16 @@ class AdditionalRequirementsDBViewModel @Inject constructor(
         val filterUsersSDB = ItemFilter(
             "Сотрудники",
             UsersSDB::class,
+            UsersSDBViewModel::class,
+            ModeUI.MULTI_SELECT,
+            "title",
+            "subTitle",
             "author_id",
             "id",
             emptyList(),
             emptyList(),
             true
-        ) {
-            val intent = Intent(context, FeaturesActivity::class.java)
-            val bundle = Bundle()
-            bundle.putString("viewModel", UsersSDBViewModel::class.java.canonicalName)
-            bundle.putString("modeUI", ModeUI.MULTI_SELECT.toString())
-            bundle.putString("title", "title")
-            bundle.putString("subTitle", "subTitle")
-            intent.putExtras(bundle)
-            ActivityCompat.startActivityForResult(
-                (context as Activity),
-                intent,
-                DetailedReportActivity.NEED_UPDATE_UI_REQUEST,
-                null
-            )
-        }
+        )
 
         filters = Filters(
             rangeDataByKey = RangeDate("dt_change", LocalDate.now().minusYears(55), LocalDate.now(), false),

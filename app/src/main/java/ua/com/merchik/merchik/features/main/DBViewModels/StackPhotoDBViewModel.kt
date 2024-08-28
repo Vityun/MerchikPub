@@ -40,63 +40,28 @@ class StackPhotoDBViewModel @Inject constructor(
         get() = StackPhotoDB::class
 
     override fun updateFilters() {
-        val filterUsersSDB = ItemFilter(
-            "Сотрудники",
-            UsersSDB::class,
-            "user_id",
-            "id",
-            emptyList(),
-            emptyList(),
-            false
-        ) {
-            val intent = Intent(context, FeaturesActivity::class.java)
-            val bundle = Bundle()
-            bundle.putString("viewModel", UsersSDBViewModel::class.java.canonicalName)
-            bundle.putString("modeUI", ModeUI.MULTI_SELECT.toString())
-            bundle.putString("title", "title")
-            bundle.putString("subTitle", "subTitle")
-            intent.putExtras(bundle)
-            ActivityCompat.startActivityForResult(
-                (context as Activity),
-                intent,
-                DetailedReportActivity.NEED_UPDATE_UI_REQUEST,
-                null
-            )
-        }
-
-
         val codeDad2 = Gson().fromJson(dataJson, Long::class.java)
         val wpDataDB = RealmManager.INSTANCE.copyFromRealm(RealmManager.getWorkPlanRowByCodeDad2(codeDad2))
 
         val filterWpDataDB = ItemFilter(
             "Відвідування",
             WpDataDB::class,
+            WpDataDBViewModel::class,
+            ModeUI.MULTI_SELECT,
+            "title",
+            "subTitle",
             "code_dad2",
             "code_dad2",
             mutableListOf(wpDataDB.code_dad2.toString()),
             mutableListOf(wpDataDB.code_dad2.toString()),
-            true
-        ) {
-            val intent = Intent(context, FeaturesActivity::class.java)
-            val bundle = Bundle()
-            bundle.putString("viewModel", WpDataDBViewModel::class.java.canonicalName)
-            bundle.putString("modeUI", ModeUI.MULTI_SELECT.toString())
-            bundle.putString("title", "title")
-            bundle.putString("subTitle", "subTitle")
-            intent.putExtras(bundle)
-            ActivityCompat.startActivityForResult(
-                (context as Activity),
-                intent,
-                DetailedReportActivity.NEED_UPDATE_UI_REQUEST,
-                null
-            )
-        }
+            false
+        )
 
         filters = Filters(
-            rangeDataByKey = RangeDate("dt", LocalDate.now().minusYears(55), LocalDate.now(), false),
+//            rangeDataByKey = RangeDate("dt", LocalDate.now().minusYears(55), LocalDate.now(), false),
+            rangeDataByKey = null,
             searchText = "",
             items = mutableListOf(
-                filterUsersSDB,
                 filterWpDataDB
             )
         )

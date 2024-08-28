@@ -1,6 +1,10 @@
 package ua.com.merchik.merchik.features.main.Main
 
+import android.app.Activity
 import android.content.Context
+import android.content.Intent
+import android.os.Bundle
+import androidx.core.app.ActivityCompat
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -9,6 +13,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity
+import ua.com.merchik.merchik.Activities.Features.FeaturesActivity
 import ua.com.merchik.merchik.dataLayer.ContextUI
 import ua.com.merchik.merchik.dataLayer.ModeUI
 import ua.com.merchik.merchik.dataLayer.DataObjectUI
@@ -16,6 +22,7 @@ import ua.com.merchik.merchik.dataLayer.MainRepository
 import ua.com.merchik.merchik.dataLayer.NameUIRepository
 import ua.com.merchik.merchik.dataLayer.model.DataItemUI
 import ua.com.merchik.merchik.dataLayer.model.SettingsItemUI
+import ua.com.merchik.merchik.features.main.DBViewModels.UsersSDBViewModel
 import java.time.LocalDate
 import java.util.UUID
 import kotlin.reflect.KClass
@@ -44,13 +51,32 @@ data class Filters(
 data class ItemFilter(
     val title: String,
     val clazz: KClass<out DataObjectUI>,
+    val clazzViewModel: KClass<out MainViewModel>,
+    val modeUI: ModeUI,
+    val titleContext: String,
+    val subTitleContext: String,
     val leftField: String,
     val rightField: String,
     val rightValuesRaw: List<String>,
     val rightValuesUI: List<String>,
     val enabled: Boolean,
-    val onSelect: (() -> Unit)?
-)
+) {
+    fun onSelect(activity: Activity) {
+        val intent = Intent(activity, FeaturesActivity::class.java)
+        val bundle = Bundle()
+        bundle.putString("viewModel", clazzViewModel.java.canonicalName)
+        bundle.putString("modeUI", modeUI.toString())
+        bundle.putString("title", titleContext)
+        bundle.putString("subTitle", subTitleContext)
+        intent.putExtras(bundle)
+        ActivityCompat.startActivityForResult(
+            activity,
+            intent,
+            DetailedReportActivity.NEED_UPDATE_UI_REQUEST,
+            null
+        )
+    }
+}
 
 data class RangeDate(
     val key: String? = null,

@@ -3,6 +3,7 @@ package ua.com.merchik.merchik.features.main.DBViewModels
 import androidx.lifecycle.SavedStateHandle
 import dagger.hilt.android.lifecycle.HiltViewModel
 import ua.com.merchik.merchik.data.Database.Room.UsersSDB
+import ua.com.merchik.merchik.data.RealmModels.WpDataDB
 import ua.com.merchik.merchik.dataLayer.ModeUI
 import ua.com.merchik.merchik.dataLayer.DataObjectUI
 import ua.com.merchik.merchik.dataLayer.MainRepository
@@ -38,25 +39,23 @@ class UsersSDBViewModel @Inject constructor(
 
     override fun onSelectedItemsUI(itemsUI: List<DataItemUI>) {
         FilteringDialogDataHolder.instance().filters.apply {
-            this?.let {
-                this?.let {filters ->
-                    filters.items = filters.items?.map { itemFilter ->
-                        if (itemFilter.clazz == table) {
-                            val rightValuesRaw = mutableListOf<String>()
-                            val rightValuesUI = mutableListOf<String>()
-                            itemsUI.forEach {
-                                (it.rawObj.firstOrNull() as? UsersSDB)?.let {
-                                    rightValuesRaw.add(it.id.toString())
-                                    rightValuesUI.add(it.fio)
-                                }
+            this?.let {filters ->
+                filters.items = filters.items?.map { itemFilter ->
+                    if (itemFilter.clazz == table) {
+                        val rightValuesRaw = mutableListOf<String>()
+                        val rightValuesUI = mutableListOf<String>()
+                        itemsUI.forEach {
+                            (it.rawObj.firstOrNull() as? UsersSDB)?.let {
+                                rightValuesRaw.add(it.id.toString())
+                                rightValuesUI.add(it.fio)
                             }
-                            itemFilter.copy(
-                                rightValuesRaw = rightValuesRaw,
-                                rightValuesUI = rightValuesUI
-                            )
-                        } else {
-                            itemFilter
                         }
+                        itemFilter.copy(
+                            rightValuesRaw = rightValuesRaw,
+                            rightValuesUI = rightValuesUI
+                        )
+                    } else {
+                        itemFilter
                     }
                 }
             }
