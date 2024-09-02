@@ -17,47 +17,36 @@ import android.text.Html;
 import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
-import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
-import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.annotation.RequiresApi;
 import androidx.core.app.ActivityCompat;
 
 import com.google.gson.Gson;
 
-import java.util.Arrays;
+import org.json.JSONObject;
+
 import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
 
 import ua.com.merchik.merchik.Activities.Features.FeaturesActivity;
-import ua.com.merchik.merchik.Activities.PhotoLogActivity.PhotoLogActivity;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.R;
-import ua.com.merchik.merchik.Utils.Spinner.SpinnerAdapter;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.Database.Room.AchievementsSDB;
 import ua.com.merchik.merchik.data.Database.Room.CustomerSDB;
 import ua.com.merchik.merchik.data.Database.Room.UsersSDB;
 import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteHintsDB;
 import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteObjects.SiteObjectsDB;
-import ua.com.merchik.merchik.data.RealmModels.AdditionalRequirementsDB;
 import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
-import ua.com.merchik.merchik.data.RealmModels.TovarDB;
-import ua.com.merchik.merchik.data.RealmModels.TradeMarkDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.dataLayer.ContextUI;
 import ua.com.merchik.merchik.dataLayer.ModeUI;
 import ua.com.merchik.merchik.database.realm.RealmManager;
-import ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsRealm;
-import ua.com.merchik.merchik.database.realm.tables.TradeMarkRealm;
 import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.dialogs.DialogFullPhotoR;
 import ua.com.merchik.merchik.dialogs.DialogVideo;
@@ -163,9 +152,10 @@ public class DialogCreateAchievement {
                 bundle.putString("contextUI", ContextUI.THEME_FROM_ACHIEVEMENT.toString());
                 bundle.putString("modeUI", ModeUI.ONE_SELECT.toString());
                 bundle.putString("dataJson", new Gson().toJson(new String[]{"595", "1252", "1251"}));
-                bundle.putString("title", "title");
+                bundle.putString("title", "Темы");
                 bundle.putString("subTitle", "subTitle");
                 intent.putExtras(bundle);
+                FilteringDialogDataHolder.Companion.instance().init();
                 ActivityCompat.startActivityForResult((Activity) context, intent, NEED_UPDATE_UI_REQUEST, null);
             });
 //            spinnerClient = dialog.findViewById(R.id.spinner_client);
@@ -188,9 +178,15 @@ public class DialogCreateAchievement {
                 Intent intent = new Intent(context, FeaturesActivity.class);
                 Bundle bundle = new Bundle();
                 bundle.putString("viewModel", TovarDBViewModel.class.getCanonicalName());
-//                bundle.putString("dataJson", new Gson().toJson(MY_JSON));
                 bundle.putString("modeUI", ModeUI.ONE_SELECT.toString());
-                bundle.putString("dataJson", "{\"codeDad2\":\""+codeDad2+"\"}");
+//                bundle.putString("dataJson", "{\"codeDad2\":\""+codeDad2+"\"}");
+                try {
+                    bundle.putString("dataJson", new Gson().toJson(
+                            new JSONObject()
+                                    .put("codeDad2", Long.toString(codeDad2))
+                                    .put("clientId", clientId))
+                    );
+                } catch (Exception ignored) { }
                 bundle.putString("title", "Товари");
                 bundle.putString("subTitle", "Оберіть Товар");
 //                bundle.putString('req', "");

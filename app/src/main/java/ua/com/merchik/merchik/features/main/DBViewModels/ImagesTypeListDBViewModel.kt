@@ -1,11 +1,9 @@
 package ua.com.merchik.merchik.features.main.DBViewModels
 
-import android.content.Context
 import androidx.lifecycle.SavedStateHandle
 import dagger.hilt.android.lifecycle.HiltViewModel
-import ua.com.merchik.merchik.data.Database.Room.CustomerSDB
-import ua.com.merchik.merchik.data.Database.Room.UsersSDB
-import ua.com.merchik.merchik.dataLayer.ModeUI
+import ua.com.merchik.merchik.data.RealmModels.ImagesTypeListDB
+import ua.com.merchik.merchik.data.RealmModels.LogDB
 import ua.com.merchik.merchik.dataLayer.DataObjectUI
 import ua.com.merchik.merchik.dataLayer.MainRepository
 import ua.com.merchik.merchik.dataLayer.NameUIRepository
@@ -16,30 +14,26 @@ import javax.inject.Inject
 import kotlin.reflect.KClass
 
 @HiltViewModel
-class CustomerSDBViewModel @Inject constructor(
+class ImagesTypeListDBViewModel @Inject constructor(
     repository: MainRepository,
     nameUIRepository: NameUIRepository,
     savedStateHandle: SavedStateHandle
 ) : MainViewModel(repository, nameUIRepository, savedStateHandle) {
 
     override val table: KClass<out DataObjectUI>
-        get() = CustomerSDB::class
+        get() = ImagesTypeListDB::class
 
     override fun getItems(): List<DataItemUI> {
-        val data = repository.getAllRoom(CustomerSDB::class, contextUI, null)
+        return repository.getAllRealm(ImagesTypeListDB::class, contextUI, null)
             .map {
                 val selected = FilteringDialogDataHolder.instance()
                     .filters
                     ?.items
                     ?.firstOrNull { it.clazz == table }
                     ?.rightValuesRaw
-                    ?.contains((it.rawObj.firstOrNull { it is CustomerSDB } as? CustomerSDB)?.id.toString())
+                    ?.contains((it.rawObj.firstOrNull { it is ImagesTypeListDB } as? ImagesTypeListDB)?.id.toString())
                 it.copy(selected = selected == true)
             }
-        return data
-    }
-
-    override fun onClickItem(itemUI: DataItemUI, context: Context) {
     }
 
     override fun onSelectedItemsUI(itemsUI: List<DataItemUI>) {
@@ -50,8 +44,8 @@ class CustomerSDBViewModel @Inject constructor(
                         val rightValuesRaw = mutableListOf<String>()
                         val rightValuesUI = mutableListOf<String>()
                         itemsUI.forEach {
-                            (it.rawObj.firstOrNull() as? CustomerSDB)?.let {
-                                rightValuesRaw.add(it.id)
+                            (it.rawObj.firstOrNull() as? ImagesTypeListDB)?.let {
+                                rightValuesRaw.add(it.id.toString())
                                 rightValuesUI.add(it.nm)
                             }
                         }

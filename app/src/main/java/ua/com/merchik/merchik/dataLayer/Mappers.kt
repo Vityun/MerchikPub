@@ -48,6 +48,8 @@ interface DataObjectUI {
 fun DataObjectUI.toItemUI(nameUIRepository: NameUIRepository, hideUserFields: String?, typePhoto: Int?): DataItemUI {
     val jsonObject = JSONObject(Gson().toJson(this))
     val fields = mutableListOf<FieldValue>()
+    val rawFields = mutableListOf<FieldValue>()
+
     this.getIdResImage()?.let {
         val keyIdResImage = "id_res_image"
         if (!("${hideUserFields}").contains(keyIdResImage)) {
@@ -83,6 +85,21 @@ fun DataObjectUI.toItemUI(nameUIRepository: NameUIRepository, hideUserFields: St
     }
 
     jsonObject.keys().forEach { key ->
+        rawFields.add(
+            FieldValue(
+                key,
+                TextField(
+                    key,
+                    "${nameUIRepository.getTranslateString(key, this.getFieldTranslateId(key))}: ",
+                    this.getFieldModifier(key, jsonObject)
+                ),
+                TextField(
+                    jsonObject.get(key),
+                    this.getValueUI(key, jsonObject.get(key)),
+                    this.getValueModifier(key, jsonObject)
+                )
+            )
+        )
         if (!("${hideUserFields}, ${this.getHidedFieldsOnUI()}").contains(key)) {
             fields.add(
                 FieldValue(
@@ -104,6 +121,7 @@ fun DataObjectUI.toItemUI(nameUIRepository: NameUIRepository, hideUserFields: St
 
     return DataItemUI(
         rawObj = listOf(this),
+        rawFields = rawFields,
         fields = fields,
         images = images,
         modifierContainer = getContainerModifier(jsonObject),

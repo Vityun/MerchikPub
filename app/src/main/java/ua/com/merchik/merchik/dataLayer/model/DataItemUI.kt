@@ -10,6 +10,7 @@ import ua.com.merchik.merchik.dataLayer.DataObjectUI
 
 data class DataItemUI(
     val rawObj: List<DataObjectUI>,
+    val rawFields: List<FieldValue>,
     val fields: List<FieldValue>,
     val images: List<String>? = null,
     val modifierContainer: MerchModifier? = null,

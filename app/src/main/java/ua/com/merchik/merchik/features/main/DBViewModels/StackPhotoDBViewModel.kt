@@ -1,15 +1,9 @@
 package ua.com.merchik.merchik.features.main.DBViewModels
 
-import android.app.Activity
-import android.content.Intent
-import android.os.Bundle
-import androidx.core.app.ActivityCompat
 import androidx.lifecycle.SavedStateHandle
 import com.google.gson.Gson
 import dagger.hilt.android.lifecycle.HiltViewModel
-import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity
-import ua.com.merchik.merchik.Activities.Features.FeaturesActivity
-import ua.com.merchik.merchik.data.Database.Room.UsersSDB
+import ua.com.merchik.merchik.data.RealmModels.ImagesTypeListDB
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB
 import ua.com.merchik.merchik.dataLayer.ContextUI
@@ -19,13 +13,12 @@ import ua.com.merchik.merchik.dataLayer.ModeUI
 import ua.com.merchik.merchik.dataLayer.NameUIRepository
 import ua.com.merchik.merchik.dataLayer.model.DataItemUI
 import ua.com.merchik.merchik.database.realm.RealmManager
+import ua.com.merchik.merchik.database.realm.tables.PhotoTypeRealm
 import ua.com.merchik.merchik.database.realm.tables.StackPhotoRealm
 import ua.com.merchik.merchik.dialogs.DialogAchievement.AchievementDataHolder
 import ua.com.merchik.merchik.features.main.Main.Filters
 import ua.com.merchik.merchik.features.main.Main.ItemFilter
 import ua.com.merchik.merchik.features.main.Main.MainViewModel
-import ua.com.merchik.merchik.features.main.Main.RangeDate
-import java.time.LocalDate
 import javax.inject.Inject
 import kotlin.reflect.KClass
 
@@ -57,12 +50,29 @@ class StackPhotoDBViewModel @Inject constructor(
             false
         )
 
+        val typePhotoId = if (contextUI == ContextUI.STACK_PHOTO_TO_FROM_ACHIEVEMENT) 14 else 0
+        val imagesType = RealmManager.INSTANCE.copyFromRealm(PhotoTypeRealm.getPhotoTypeById(typePhotoId))
+        val filterImagesTypeListDB = ItemFilter(
+            "Тип фото",
+            ImagesTypeListDB::class,
+            ImagesTypeListDBViewModel::class,
+            ModeUI.MULTI_SELECT,
+            "title",
+            "subTitle",
+            "photo_type",
+            "id",
+            mutableListOf(imagesType.id.toString()),
+            mutableListOf(imagesType.nm),
+            true
+        )
+
         filters = Filters(
 //            rangeDataByKey = RangeDate("dt", LocalDate.now().minusYears(55), LocalDate.now(), false),
             rangeDataByKey = null,
             searchText = "",
             items = mutableListOf(
-                filterWpDataDB
+                filterWpDataDB,
+                filterImagesTypeListDB
             )
         )
 

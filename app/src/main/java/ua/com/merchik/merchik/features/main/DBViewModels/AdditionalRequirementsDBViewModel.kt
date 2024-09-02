@@ -14,9 +14,11 @@ import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportAc
 import ua.com.merchik.merchik.Activities.Features.FeaturesActivity
 import ua.com.merchik.merchik.Clock
 import ua.com.merchik.merchik.Globals
+import ua.com.merchik.merchik.data.Database.Room.CustomerSDB
 import ua.com.merchik.merchik.data.Database.Room.UsersSDB
 import ua.com.merchik.merchik.data.RealmModels.AdditionalRequirementsDB
 import ua.com.merchik.merchik.data.RealmModels.AdditionalRequirementsMarkDB
+import ua.com.merchik.merchik.data.RealmModels.ThemeDB
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB
 import ua.com.merchik.merchik.dataLayer.ContextUI
 import ua.com.merchik.merchik.dataLayer.DataObjectUI
@@ -29,6 +31,7 @@ import ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsRealm
 import ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsRealm.AdditionalRequirementsModENUM
 import ua.com.merchik.merchik.database.realm.tables.AddressRealm
 import ua.com.merchik.merchik.database.realm.tables.CustomerRealm
+import ua.com.merchik.merchik.database.realm.tables.ThemeRealm
 import ua.com.merchik.merchik.database.realm.tables.UsersRealm
 import ua.com.merchik.merchik.database.room.RoomManager
 import ua.com.merchik.merchik.dialogs.DialogAchievement.AchievementDataHolder
@@ -50,25 +53,42 @@ class AdditionalRequirementsDBViewModel @Inject constructor(
 ) : MainViewModel(repository, nameUIRepository, savedStateHandle) {
 
     override fun updateFilters() {
-        val filterUsersSDB = ItemFilter(
-            "Сотрудники",
-            UsersSDB::class,
-            UsersSDBViewModel::class,
+        val clientId = Gson().fromJson(dataJson, String::class.java)
+        val client = CustomerRealm.getCustomerById(clientId)
+        val filterCustomerSDB = ItemFilter(
+            "Клиент",
+            CustomerSDB::class,
+            CustomerSDBViewModel::class,
             ModeUI.MULTI_SELECT,
             "title",
             "subTitle",
-            "author_id",
+            "client_id",
             "id",
-            emptyList(),
-            emptyList(),
+            mutableListOf(client.id),
+            mutableListOf(client.nm),
+            true
+        )
+
+        val theme = ThemeRealm.getByID("1253")
+        val filterThemeDB = ItemFilter(
+            "Тема",
+            ThemeDB::class,
+            ThemeDBViewModel::class,
+            ModeUI.MULTI_SELECT,
+            "title",
+            "subTitle",
+            "theme_id",
+            "id",
+            mutableListOf(theme.id),
+            mutableListOf(theme.nm),
             true
         )
 
         filters = Filters(
-            rangeDataByKey = RangeDate("dt_change", LocalDate.now().minusYears(55), LocalDate.now(), false),
             searchText = "",
             items = mutableListOf(
-                filterUsersSDB,
+                filterCustomerSDB,
+                filterThemeDB
             )
         )
     }

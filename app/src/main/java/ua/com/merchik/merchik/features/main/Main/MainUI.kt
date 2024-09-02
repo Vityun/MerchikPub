@@ -206,7 +206,7 @@ fun MainUI(viewModel: MainViewModel, context: Context) {
                         uiState.filters?.items?.let { filters ->
                             val filter = filters[0]
                             if (filter.rightValuesRaw.isNotEmpty()) {
-                                dataItemUI.fields.forEach { fieldValue ->
+                                dataItemUI.rawFields.forEach { fieldValue ->
                                     if (fieldValue.key.equals(filter.leftField, true)) {
                                         if (filter.rightValuesRaw.isNotEmpty()) _isActiveFiltered = true
                                         if (filter.rightValuesRaw.contains(fieldValue.value.rawValue.toString())) {

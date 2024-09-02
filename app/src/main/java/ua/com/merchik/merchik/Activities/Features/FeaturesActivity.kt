@@ -20,7 +20,9 @@ import ua.com.merchik.merchik.dataLayer.ModeUI
 import ua.com.merchik.merchik.dialogs.DialogAchievement.FilteringDialogDataHolder
 import ua.com.merchik.merchik.features.main.DBViewModels.AdditionalRequirementsDBViewModel
 import ua.com.merchik.merchik.features.main.DBViewModels.CustomerSDBViewModel
+import ua.com.merchik.merchik.features.main.DBViewModels.ImagesTypeListDBViewModel
 import ua.com.merchik.merchik.features.main.DBViewModels.LogMPDBViewModel
+import ua.com.merchik.merchik.features.main.DBViewModels.ReportPrepareDBViewModel
 import ua.com.merchik.merchik.features.main.DBViewModels.StackPhotoDBViewModel
 import ua.com.merchik.merchik.features.main.DBViewModels.ThemeDBViewModel
 import ua.com.merchik.merchik.features.main.DBViewModels.TovarDBViewModel
@@ -55,6 +57,8 @@ class FeaturesActivity: AppCompatActivity() {
                                     CustomerSDBViewModel::class -> viewModel() as CustomerSDBViewModel
                                     UsersSDBViewModel::class -> viewModel() as UsersSDBViewModel
                                     WpDataDBViewModel::class -> viewModel() as WpDataDBViewModel
+                                    ImagesTypeListDBViewModel::class -> viewModel() as ImagesTypeListDBViewModel
+                                    ReportPrepareDBViewModel::class -> viewModel() as ReportPrepareDBViewModel
                                     else -> null
                                 }?.let { viewModel ->
                                     viewModel.dataJson = bundle.getString("dataJson")
