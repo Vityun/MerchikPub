@@ -137,8 +137,8 @@ public class OptionControlEKL<T> extends OptionControl {
 
         Log.e("OptionControlEKL", "HERE TEST OptionControlEKL 3");
 
-        if (addressSDB.tpId == 434 && !optionDB.getOptionControlId().equals("132629") && documentDt < 1756684800) { // 1756684800 == 01.09.2025 / 434 = АТБ
-            optionMsg.append("Не проверяем для АТБ до 01.09.2024");
+        if ((addressSDB.tpId == 434 || addressSDB.tpId == 6767) && !optionDB.getOptionControlId().equals("132629") && documentDt < 1756684800) { // 1756684800 == 01.09.2025 / 434 = АТБ или 676 = Акварель
+            optionMsg.append("Не проверяем для АТБ или Акварель до 01.09.2025");
             signal = false;
         } else {
             // Определем Группу Товаров

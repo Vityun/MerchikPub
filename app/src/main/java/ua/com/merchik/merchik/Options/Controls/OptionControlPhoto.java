@@ -1,5 +1,7 @@
 package ua.com.merchik.merchik.Options.Controls;
 
+import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
+
 import android.content.Context;
 import android.util.Log;
 
@@ -7,6 +9,7 @@ import io.realm.RealmResults;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.Options.OptionControl;
 import ua.com.merchik.merchik.Options.Options;
+import ua.com.merchik.merchik.data.Database.Room.AddressSDB;
 import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
 import ua.com.merchik.merchik.data.OptionMassageType;
 import ua.com.merchik.merchik.data.RealmModels.ImagesTypeListDB;
@@ -24,6 +27,7 @@ public class OptionControlPhoto<T> extends OptionControl {
 
     private WpDataDB wpDataDB;
     private Long dad2;
+    private AddressSDB addressSDB;
 
     public OptionControlPhoto(Context context, T document, OptionsDB optionDB, OptionMassageType msgType, Options.NNKMode nnkMode, UnlockCodeResultListener unlockCodeResultListener) {
         try {
@@ -44,6 +48,7 @@ public class OptionControlPhoto<T> extends OptionControl {
 
     private void getDocumentVar() {
         if (document instanceof WpDataDB) {
+            this.addressSDB = SQL_DB.addressDao().getById(((WpDataDB) document).getAddr_id());
             this.wpDataDB = (WpDataDB) document;
             this.dad2 = wpDataDB.getCode_dad2();
         }else if (document instanceof TasksAndReclamationsSDB){
@@ -135,6 +140,19 @@ public class OptionControlPhoto<T> extends OptionControl {
             stringBuilderMsg.append("Жалоб по фыполнению фото нет. Сделано: ").append(stackPhotoDB.size()).append(" фото.");
             signal = false;
 //            unlockCodeResultListener.onUnlockCodeSuccess();
+        }
+
+        // Исключения
+        if (addressSDB.tpId == 383){   // Для АШАН-ов(8196 - у петрова такое тут, странно) ФЗ ФТС НЕ проверяем
+            if (optionId.equals("141361")) {
+                signal = false;
+                stringBuilderMsg.append(", але для Ашанів, наявність ФЗ ФТС не перевіряємо.");
+            }
+        }else if (addressSDB.tpId == 434) {   // Для АТБ ФЗ ФТС НЕ проверяем
+            if (optionId.equals("141361")) {
+                signal = false;
+                stringBuilderMsg.append(", але для АТБ, наявність ФЗ ФТС не перевіряємо.");
+            }
         }
 
         //7.0. сохраним сигнал
