@@ -504,9 +504,9 @@ public class RealmManager {
     }
 
     public static WpDataDB getWorkPlanRowByCodeDad2(long codeDad2) {
+        //"SELECT * FROM wp_data WHERE id = " + wpId + ";"
         return INSTANCE.where(WpDataDB.class).equalTo("code_dad2", codeDad2).findFirst();
     }
-
 
     public static int getWpDataDate(String dt) {
         Date date = Clock.stringDateConvertToDate(dt);

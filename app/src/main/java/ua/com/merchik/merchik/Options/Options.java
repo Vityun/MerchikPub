@@ -417,18 +417,28 @@ public class Options {
                     Log.e("OPTION_CONTROL", "checkMP: " + optionsDB.getOptionControlId());
 //                checkMP(context, dataDB, optionsDB, type, mode);
 //                    optionControlMP_8299(context, dataDB, optionsDB, type, mode, unlockCodeResultListener);
-                    OptionControlMP optionControlMP = new OptionControlMP(context, dataDB, optionsDB, type, mode, unlockCodeResultListener);
-//                    optionControlMP.showMassage(new Clicks.clickStatusMsg() {
-//                        @Override
-//                        public void onSuccess(String data) {
-//
-//                        }
-//
-//                        @Override
-//                        public void onFailure(String error) {
-//
-//                        }
-//                    });
+                    OptionMassageType optionControlMPTypeMsg = new OptionMassageType();
+                    switch (mode) {
+                        case NULL:
+                            break;
+
+                        case CHECK_CLICK:
+                            optionControlMPTypeMsg.type = DIALOG;
+                            break;
+                    }
+                    OptionControlMP optionControlMP = new OptionControlMP(context, dataDB, optionsDB, optionControlMPTypeMsg, mode, unlockCodeResultListener);
+                    optionControlMP.showMassage(false, new Clicks.clickStatusMsg() {
+                        @Override
+                        public void onSuccess(String data) {
+
+                        }
+
+                        @Override
+                        public void onFailure(String error) {
+
+                        }
+                    });
+                    optionControlMP.showOptionMassage("");
                     break;
 
                 case 141911:
@@ -755,6 +765,18 @@ public class Options {
             // 91373 Сондак Роман Михайлович ФОП
             // 91206 ТС Плюс ТОВ
 
+//            14017 Акмега
+//            91409 Деревянко
+//            89863 Альтернатива-СВ
+//            14176 ТСЦ Инженеринг
+//            91488 Рікко Трейдінг
+//            10822 Єгмонт Україна
+//            77764 2К СУНП ТОВ
+//            14611 Им Текстиль ООО
+//            10275 Прошанский коньячный завод - Украина ООО
+//            11060 Фабрика Мороженого Хладопром ООО
+//            11165 Энерлайт ООО
+
             if (option.getClientId().equals("14301") ||     // трегуб
                     option.getClientId().equals("14840") || // Авто комфорт плюс
                     option.getClientId().equals("14843") || // Джокер
@@ -821,7 +843,19 @@ public class Options {
                     option.getClientId().equals("14611")  ||    // Им Текстиль ООО
                     option.getClientId().equals("14365")  ||    // Флеш
                     option.getClientId().equals("91373")  ||    // Сондак Роман Михайлович ФОП
-                    option.getClientId().equals("91206")        // ТС Плюс ТОВ
+                    option.getClientId().equals("91206")  ||      // ТС Плюс ТОВ
+
+                    option.getClientId().equals("14017")  ||    // Акмега
+                    option.getClientId().equals("91409")  ||    // Деревянко
+                    option.getClientId().equals("89863")  ||    // Альтернатива-СВ
+                    option.getClientId().equals("14176")  ||    // ТСЦ Инженеринг
+                    option.getClientId().equals("91488")  ||    // Рікко Трейдінг
+                    option.getClientId().equals("10822")  ||    // Єгмонт Україна
+                    option.getClientId().equals("77764")  ||    // СУНП ТОВ
+                    option.getClientId().equals("14611")  ||    // Им Текстиль ООО
+                    option.getClientId().equals("10275")  ||    // Прошанский коньячный завод - Украина ООО
+                    option.getClientId().equals("11060")  ||    // Фабрика Мороженого Хладопром ООО
+                    option.getClientId().equals("11165")        // Энерлайт ООО
             ) {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                     optionControlNewAlgo(getOptionsToControl(option), context, dataDB, option, optionList, type, mode, false, click);
@@ -1791,9 +1825,9 @@ public class Options {
             case 156928:
                 OptionControlEndAnotherWork optionControlEndAnotherWork =
                         new OptionControlEndAnotherWork(context, dataDB, option, type, mode, unlockCodeResultListener);
-                if (mode.equals(NNKMode.MAKE) || (mode.equals(NNKMode.CHECK)/* && optionControlEndAnotherWork.isBlockOption()*/))
+                if (mode.equals(NNKMode.MAKE) || (mode.equals(NNKMode.CHECK) && optionControlEndAnotherWork.isBlockOption()))
                     optionControlEndAnotherWork.showOptionMassage(block);
-                if (mode.equals(NNKMode.BLOCK) && optionControlEndAnotherWork.signal/* && optionControlEndAnotherWork.isBlockOption()*/) {
+                if (mode.equals(NNKMode.BLOCK) && optionControlEndAnotherWork.signal && optionControlEndAnotherWork.isBlockOption()) {
                     optionControlEndAnotherWork.showOptionMassage(block);
                 }
                 return optionControlEndAnotherWork.isBlockOption2() ? 1 : 0;
@@ -1850,7 +1884,6 @@ public class Options {
             case 138520:
                 if (dataDB instanceof WpDataDB) {
                     optionEndWork_138520(context, (WpDataDB) dataDB, option, type, mode, unlockCodeResultListener);
-//                        sendWpData2();
                 } else if (dataDB instanceof TasksAndReclamationsSDB) {
                     optionEndWork_138520(context, (TasksAndReclamationsSDB) dataDB, option, type, mode, unlockCodeResultListener);
                 }
@@ -1875,7 +1908,7 @@ public class Options {
             case 8299:
 //                optionControlMP_8299(context, dataDB, option, type, mode, unlockCodeResultListener);
                 OptionControlMP optionControlMP = new OptionControlMP(context, dataDB, option, type, mode, unlockCodeResultListener);
-                optionControlMP.showMassage(new Clicks.clickStatusMsg() {
+                optionControlMP.showMassage(true, new Clicks.clickStatusMsg() {
                     @Override
                     public void onSuccess(String data) {
 
@@ -1886,7 +1919,7 @@ public class Options {
 
                     }
                 });
-                break;
+                return optionControlMP.isBlockOption2() ? 1 : 0;
 
 
             // Контроль Опции Доп. Требований
@@ -2759,7 +2792,6 @@ public class Options {
         Globals.writeToMLOG("INFO", "DetailedReportButtons.class.pressEndWork", "OUT. wpDataDB.codeDAD2: " + wpDataDB.getCode_dad2());
 
 
-//        conductOptCheck(mode, result, optionsDB);
         return result;
     }
 

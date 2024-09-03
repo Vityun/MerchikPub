@@ -25,8 +25,10 @@ import ua.com.merchik.merchik.ServerExchange.ExchangeInterface;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.UsersExchange;
 import ua.com.merchik.merchik.Utils.CodeGenerator;
 import ua.com.merchik.merchik.data.Database.Room.UsersSDB;
+import ua.com.merchik.merchik.data.RealmModels.AppUsersDB;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.ShowcaseResponse;
 import ua.com.merchik.merchik.data.TestJsonUpload.StandartData;
+import ua.com.merchik.merchik.database.realm.tables.AppUserRealm;
 import ua.com.merchik.merchik.dialogs.DialogShowcase.DialogShowcase;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
 import ua.com.merchik.merchik.toolbar_menus;
@@ -67,16 +69,11 @@ public class MenuMainActivity extends toolbar_menus {
     }
 
     private void testLong() {
-/*        Calendar calendar = Calendar.getInstance();
-        int year = calendar.get(Calendar.YEAR);
-        int dayOfYear = calendar.get(Calendar.DAY_OF_YEAR);
-        int dayOfWeek = calendar.get(Calendar.DAY_OF_WEEK);
-        int dayOfMonth = calendar.get(Calendar.DAY_OF_MONTH);
-        double pass = (double) year / (dayOfYear + dayOfWeek + dayOfMonth);*/
-//        int res = Integer.parseInt(String.format("%03d", (int) (pass * 100)));
-
-        String res = CodeGenerator.getCode();
-        Toast.makeText(getApplicationContext(), "" + res, Toast.LENGTH_LONG).show();
+        AppUsersDB appUsersDB = AppUserRealm.getAppUser();
+        if (appUsersDB != null && appUsersDB.getUserId() == 172906){
+            String res = CodeGenerator.getCode();
+            Toast.makeText(getApplicationContext(), "" + res, Toast.LENGTH_LONG).show();
+        }
     }
 
     private void test() {
