@@ -26,6 +26,7 @@ import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.Options.OptionControl;
 import ua.com.merchik.merchik.Options.Options;
+import ua.com.merchik.merchik.data.Database.Room.AddressSDB;
 import ua.com.merchik.merchik.data.Database.Room.SMS.SMSLogSDB;
 import ua.com.merchik.merchik.data.Database.Room.SMS.SMSPlanSDB;
 import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
@@ -47,6 +48,8 @@ public class OptionControlAvailabilityDetailedReport<T> extends OptionControl {
     private int docStatus;  // Проведён ли документ
     private String comment;
     private WpDataDB wp;
+    private AddressSDB addressSDB;
+
 
     public boolean signal = false;
     private int find = 0;
@@ -74,6 +77,7 @@ public class OptionControlAvailabilityDetailedReport<T> extends OptionControl {
             clientId = wp.getClient_id();
             docStatus = wp.getStatus();
             comment = wp.user_comment;
+            addressSDB = SQL_DB.addressDao().getById(wp.getAddr_id());
             this.wp = wp;
         } else if (document instanceof TasksAndReclamationsSDB) {
             TasksAndReclamationsSDB tasksAndReclamationsSDB = (TasksAndReclamationsSDB) document;
@@ -174,6 +178,11 @@ public class OptionControlAvailabilityDetailedReport<T> extends OptionControl {
             }else if (smsLogSDBS != null && smsLogSDBS.size() > 0){
                 signal = false;
                 spannableStringBuilder.append("\n").append("СМС об ОТСУТСТВИИ товара заказчику отправлено, сигнал отменён!");
+            }else if (addressSDB.tpId == 383){   // Для АШАН-ов(8196 - у петрова такое тут, странно) которые работают через ДОТ ОФС ДЗ НЕ проверяем
+                if (wpDataDB.getDot_user_id() > 0) {
+                    signal = false;
+                    stringBuilderMsg.append(", але для Ашанів, по котрим праюємо з ДОТ, ОФС ДЗ не перевіряємо.");
+                }
             }else {
                 spannableStringBuilder.append("\n\nВы можете снять сигнал, если полностью и правильно заполните детализированный отчет! \n" +
                         "В случае, если на витрине (и на складе) реально нет части товара напишите об этом в комментарии (см. на кнопку \"Комментарий\")");

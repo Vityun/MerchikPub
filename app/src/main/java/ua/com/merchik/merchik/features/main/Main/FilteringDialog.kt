@@ -41,6 +41,7 @@ import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.Lifecycle
@@ -305,7 +306,9 @@ private fun ItemFilterUI(context: Context?, itemFilter: ItemFilter, onChanged: (
                                             bottom = 3.dp,
                                             end = 7.dp
                                         ),
-                                    text = item
+                                    overflow = TextOverflow.Ellipsis,
+                                    maxLines = 2,
+                                    text = item ?: itemFilter.rightValuesRaw[index] ?: ""
                                 )
                                 if (itemFilter.enabled) {
                                     Image(
@@ -337,7 +340,7 @@ private fun ItemFilterUI(context: Context?, itemFilter: ItemFilter, onChanged: (
                                             end = 7.dp
                                         )
                                         .clickable { isExpanded = !isExpanded },
-                                    text = "Більше (${itemFilter.rightValuesUI.size-3})..."
+                                    text = "Ще (${itemFilter.rightValuesUI.size-3}) елементів..."
                                 )
                             }
                         }

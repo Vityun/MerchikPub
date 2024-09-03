@@ -57,8 +57,8 @@ data class ItemFilter(
     val subTitleContext: String,
     val leftField: String,
     val rightField: String,
-    val rightValuesRaw: List<String>,
-    val rightValuesUI: List<String>,
+    val rightValuesRaw: List<String?>,
+    val rightValuesUI: List<String?>,
     val enabled: Boolean,
 ) {
     fun onSelect(activity: Activity) {
@@ -93,7 +93,8 @@ data class SortingField(
 
 data class SettingsUI(
     val hideFields: List<String>? = null,
-    val sortFields: List<SortingField>? = null
+    val sortFields: List<SortingField>? = null,
+    val sizeFonts: Int? = null
 )
 
 abstract class MainViewModel(

@@ -146,6 +146,7 @@ import ua.com.merchik.merchik.data.RealmModels.TovarDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.data.RetrofitResponse.ReportHintList;
 import ua.com.merchik.merchik.data.TovarOptions;
+import ua.com.merchik.merchik.dataLayer.ContextUI;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsMarkRealm;
 import ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsRealm;
@@ -2032,6 +2033,7 @@ public class Options {
         Intent intent = new Intent(context, FeaturesActivity.class);
         Bundle bundle = new Bundle();
         bundle.putString("viewModel", AdditionalRequirementsDBViewModel.class.getCanonicalName());
+        bundle.putString("contextUI", ContextUI.ADD_REQUIREMENTS_FROM_OPTIONS.toString());
         bundle.putString("dataJson", new Gson().toJson(dataDB));
         bundle.putString("title", "Доп. требования");
         intent.putExtras(bundle);

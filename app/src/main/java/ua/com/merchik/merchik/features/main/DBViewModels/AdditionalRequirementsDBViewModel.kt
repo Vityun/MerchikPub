@@ -1,21 +1,14 @@
 package ua.com.merchik.merchik.features.main.DBViewModels
 
-import android.app.Activity
 import android.content.Context
-import android.content.Intent
-import android.os.Bundle
 import android.text.Html
 import android.util.Log
-import androidx.core.app.ActivityCompat
 import androidx.lifecycle.SavedStateHandle
 import com.google.gson.Gson
 import dagger.hilt.android.lifecycle.HiltViewModel
-import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity
-import ua.com.merchik.merchik.Activities.Features.FeaturesActivity
 import ua.com.merchik.merchik.Clock
 import ua.com.merchik.merchik.Globals
 import ua.com.merchik.merchik.data.Database.Room.CustomerSDB
-import ua.com.merchik.merchik.data.Database.Room.UsersSDB
 import ua.com.merchik.merchik.data.RealmModels.AdditionalRequirementsDB
 import ua.com.merchik.merchik.data.RealmModels.AdditionalRequirementsMarkDB
 import ua.com.merchik.merchik.data.RealmModels.ThemeDB
@@ -35,13 +28,10 @@ import ua.com.merchik.merchik.database.realm.tables.ThemeRealm
 import ua.com.merchik.merchik.database.realm.tables.UsersRealm
 import ua.com.merchik.merchik.database.room.RoomManager
 import ua.com.merchik.merchik.dialogs.DialogAchievement.AchievementDataHolder
-import ua.com.merchik.merchik.dialogs.DialogAchievement.FilteringDialogDataHolder
 import ua.com.merchik.merchik.dialogs.DialogAdditionalRequirements.DialogARMark.DialogARMark
 import ua.com.merchik.merchik.features.main.Main.Filters
 import ua.com.merchik.merchik.features.main.Main.ItemFilter
 import ua.com.merchik.merchik.features.main.Main.MainViewModel
-import ua.com.merchik.merchik.features.main.Main.RangeDate
-import java.time.LocalDate
 import javax.inject.Inject
 import kotlin.reflect.KClass
 
@@ -53,44 +43,87 @@ class AdditionalRequirementsDBViewModel @Inject constructor(
 ) : MainViewModel(repository, nameUIRepository, savedStateHandle) {
 
     override fun updateFilters() {
-        val clientId = Gson().fromJson(dataJson, String::class.java)
-        val client = CustomerRealm.getCustomerById(clientId)
-        val filterCustomerSDB = ItemFilter(
-            "Клиент",
-            CustomerSDB::class,
-            CustomerSDBViewModel::class,
-            ModeUI.MULTI_SELECT,
-            "title",
-            "subTitle",
-            "client_id",
-            "id",
-            mutableListOf(client.id),
-            mutableListOf(client.nm),
-            true
-        )
+        when (contextUI) {
+            ContextUI.ADD_REQUIREMENTS_FROM_ACHIEVEMENT -> {
+                val clientId = Gson().fromJson(dataJson, String::class.java)
+                val client = CustomerRealm.getCustomerById(clientId)
+                val filterCustomerSDB = ItemFilter(
+                    "Клиент",
+                    CustomerSDB::class,
+                    CustomerSDBViewModel::class,
+                    ModeUI.MULTI_SELECT,
+                    "title",
+                    "subTitle",
+                    "client_id",
+                    "id",
+                    mutableListOf(client.id),
+                    mutableListOf(client.nm),
+                    true
+                )
 
-        val theme = ThemeRealm.getByID("1253")
-        val filterThemeDB = ItemFilter(
-            "Тема",
-            ThemeDB::class,
-            ThemeDBViewModel::class,
-            ModeUI.MULTI_SELECT,
-            "title",
-            "subTitle",
-            "theme_id",
-            "id",
-            mutableListOf(theme.id),
-            mutableListOf(theme.nm),
-            true
-        )
+                val theme = ThemeRealm.getByID("1253")
+                val filterThemeDB = ItemFilter(
+                    "Тема",
+                    ThemeDB::class,
+                    ThemeDBViewModel::class,
+                    ModeUI.MULTI_SELECT,
+                    "title",
+                    "subTitle",
+                    "theme_id",
+                    "id",
+                    mutableListOf(theme.id),
+                    mutableListOf(theme.nm),
+                    true
+                )
 
-        filters = Filters(
-            searchText = "",
-            items = mutableListOf(
-                filterCustomerSDB,
-                filterThemeDB
-            )
-        )
+                filters = Filters(
+                    searchText = "",
+                    items = mutableListOf(
+                        filterCustomerSDB,
+                        filterThemeDB
+                    )
+                )
+            }
+            ContextUI.ADD_REQUIREMENTS_FROM_OPTIONS -> {
+                val wpDataDB = Gson().fromJson(dataJson, WpDataDB::class.java)
+
+                var ttCategory: Int? = null
+                val addressSDB = RoomManager.SQL_DB.addressDao().getById(wpDataDB.addr_id)
+                if (addressSDB != null) {
+                    ttCategory = addressSDB.ttId
+                }
+
+                val data = AdditionalRequirementsRealm.getData3(
+                    wpDataDB,
+                    AdditionalRequirementsModENUM.HIDE_FOR_USER,
+                    ttCategory,
+                    null,
+                    0
+                )
+
+                val filterAdditionalRequirementsDB = ItemFilter(
+                    "Доп. фильтр",
+                    AdditionalRequirementsDB::class,
+                    AdditionalRequirementsDBViewModel::class,
+                    ModeUI.MULTI_SELECT,
+                    "title",
+                    "subTitle",
+                    "id",
+                    "id",
+                    data.map { it.id.toString() },
+                    data.map { it.notes },
+                    true
+                )
+
+                filters = Filters(
+                    searchText = "",
+                    items = mutableListOf(
+                        filterAdditionalRequirementsDB,
+                    )
+                )
+            }
+            else -> {}
+        }
     }
 
     override val table: KClass<out DataObjectUI>
@@ -126,7 +159,7 @@ class AdditionalRequirementsDBViewModel @Inject constructor(
                             it.copy(selected = selected)
                         }
                 }
-                ContextUI.DEFAULT -> {
+                ContextUI.ADD_REQUIREMENTS_FROM_OPTIONS -> {
                     val wpDataDB = Gson().fromJson(dataJson, WpDataDB::class.java)
 
                     var ttCategory: Int? = null
@@ -171,7 +204,7 @@ class AdditionalRequirementsDBViewModel @Inject constructor(
 
     override fun onClickItem(itemUI: DataItemUI, context: Context) {
         when (contextUI) {
-            ContextUI.DEFAULT -> {
+            ContextUI.ADD_REQUIREMENTS_FROM_OPTIONS -> {
                 val data = itemUI.rawObj.firstOrNull { it is AdditionalRequirementsDB }?.let {
                     it as AdditionalRequirementsDB
                 } ?: return
