@@ -140,7 +140,9 @@ public class DetailedReportTovarsFrag extends Fragment {
             tasksAndReclamationsSDB = args.getParcelable("tasksAndReclamationsSDB");
             if (wpDataDB == null && tasksAndReclamationsSDB != null) {
                 WpDataDB t = RealmManager.getWorkPlanRowByCodeDad2(tasksAndReclamationsSDB.codeDad2SrcDoc);
-                wpDataDB = RealmManager.INSTANCE.copyFromRealm(t);
+                try {
+                    wpDataDB = RealmManager.INSTANCE.copyFromRealm(t);
+                } catch (Exception ignored) {}
             }
             Globals.writeToMLOG("INFO", "DetailedReportTovarsFrag", "onCreate/tasksAndReclamationsSDB: " + tasksAndReclamationsSDB);
         }
