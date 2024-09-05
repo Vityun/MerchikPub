@@ -96,8 +96,8 @@ fun SettingsItemView(item: SettingsItemUI) {
 }
 
 @Composable
-fun FontSizeSlider(modifier: Modifier = Modifier) {
-    var fontSize by remember { mutableStateOf(18f) }
+fun FontSizeSlider(modifier: Modifier = Modifier, size: Float, onChanged: (Float) -> Unit) {
+    var fontSize by remember { mutableStateOf(size) }
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -130,7 +130,10 @@ fun FontSizeSlider(modifier: Modifier = Modifier) {
             Slider(
                 modifier = Modifier.padding(top = 18.dp),
                 value = fontSize,
-                onValueChange = { fontSize = it },
+                onValueChange = {
+                    fontSize = it
+                    onChanged(it)
+                },
                 valueRange = 14f..30f,
             )
         }

@@ -92,6 +92,8 @@ fun MainUI(viewModel: MainViewModel, context: Context) {
 
     var showFilteringDialog by remember { mutableStateOf(false) }
 
+    val offsetSizeFont by viewModel.offsetSizeFonts.collectAsState()
+
     val listState = rememberLazyListState()
 
 
@@ -234,7 +236,7 @@ fun MainUI(viewModel: MainViewModel, context: Context) {
 
                 uiState.title?.let {
                     Text(
-                        text = it, fontSize = 16.sp, modifier = Modifier
+                        text = it, fontSize = (16 + offsetSizeFont).sp, modifier = Modifier
                             .padding(start = 10.dp, bottom = 7.dp, end = 10.dp, top = 10.dp)
                             .align(Alignment.CenterHorizontally),
                         fontWeight = FontWeight.Bold

@@ -1,5 +1,6 @@
 package ua.com.merchik.merchik.features.main.DBViewModels
 
+import android.app.Application
 import androidx.lifecycle.SavedStateHandle
 import dagger.hilt.android.lifecycle.HiltViewModel
 import ua.com.merchik.merchik.data.Database.Room.AddressSDB
@@ -14,10 +15,11 @@ import kotlin.reflect.KClass
 
 @HiltViewModel
 class AddressSDBViewModel @Inject constructor(
+    application: Application,
     repository: MainRepository,
     nameUIRepository: NameUIRepository,
     savedStateHandle: SavedStateHandle
-) : MainViewModel(repository, nameUIRepository, savedStateHandle) {
+) : MainViewModel(application, repository, nameUIRepository, savedStateHandle) {
 
     override val table: KClass<out DataObjectUI>
         get() = AddressSDB::class

@@ -21,6 +21,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -43,6 +46,8 @@ import ua.com.merchik.merchik.features.main.componentsUI.ImageButton
 fun SettingsDialog(viewModel: MainViewModel, onDismiss: () -> Unit) {
 
     val uiState by viewModel.uiState.collectAsState()
+
+    var offsetSizeFont by remember { mutableStateOf(viewModel.offsetSizeFonts.value) }
 
     Dialog(onDismissRequest = onDismiss) {
         Column(
@@ -131,7 +136,7 @@ fun SettingsDialog(viewModel: MainViewModel, onDismiss: () -> Unit) {
 
                     Spacer(modifier = Modifier.height(10.dp))
 
-                    FontSizeSlider()
+                    FontSizeSlider(size = 16 + offsetSizeFont) { offsetSizeFont = it - 16 }
 
                     Row {
                         Button(
@@ -152,6 +157,7 @@ fun SettingsDialog(viewModel: MainViewModel, onDismiss: () -> Unit) {
                             onClick = {
                                 viewModel.saveSettings()
                                 viewModel.updateContent()
+                                viewModel.updateOffsetSizeFonts(offsetSizeFont)
                                 onDismiss.invoke()
                             },
                             shape = RoundedCornerShape(8.dp),

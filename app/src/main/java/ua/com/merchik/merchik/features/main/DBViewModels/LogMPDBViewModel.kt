@@ -1,5 +1,6 @@
 package ua.com.merchik.merchik.features.main.DBViewModels
 
+import android.app.Application
 import android.content.Context
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.SavedStateHandle
@@ -22,10 +23,11 @@ import kotlin.reflect.KClass
 
 @HiltViewModel
 class LogMPDBViewModel @Inject constructor(
+    application: Application,
     repository: MainRepository,
     nameUIRepository: NameUIRepository,
     savedStateHandle: SavedStateHandle
-) : MainViewModel(repository, nameUIRepository, savedStateHandle) {
+) : MainViewModel(application, repository, nameUIRepository, savedStateHandle) {
 
     override val table: KClass<out DataObjectUI>
         get() = LogMPDB::class

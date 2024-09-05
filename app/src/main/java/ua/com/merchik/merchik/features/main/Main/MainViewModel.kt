@@ -1,12 +1,14 @@
 package ua.com.merchik.merchik.features.main.Main
 
 import android.app.Activity
+import android.app.Application
 import android.content.Context
 import android.content.Intent
+import android.content.SharedPreferences
 import android.os.Bundle
 import androidx.core.app.ActivityCompat
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.SavedStateHandle
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -15,6 +17,8 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity
 import ua.com.merchik.merchik.Activities.Features.FeaturesActivity
+import ua.com.merchik.merchik.Globals.APP_OFFSET_SIZE_FONTS
+import ua.com.merchik.merchik.Globals.APP_PREFERENCES
 import ua.com.merchik.merchik.dataLayer.ContextUI
 import ua.com.merchik.merchik.dataLayer.ModeUI
 import ua.com.merchik.merchik.dataLayer.DataObjectUI
@@ -22,9 +26,7 @@ import ua.com.merchik.merchik.dataLayer.MainRepository
 import ua.com.merchik.merchik.dataLayer.NameUIRepository
 import ua.com.merchik.merchik.dataLayer.model.DataItemUI
 import ua.com.merchik.merchik.dataLayer.model.SettingsItemUI
-import ua.com.merchik.merchik.features.main.DBViewModels.UsersSDBViewModel
 import java.time.LocalDate
-import java.util.UUID
 import kotlin.reflect.KClass
 
 data class StateUI(
@@ -98,10 +100,17 @@ data class SettingsUI(
 )
 
 abstract class MainViewModel(
+    application: Application,
     val repository: MainRepository,
     val nameUIRepository: NameUIRepository,
-    protected val savedStateHandle: SavedStateHandle
-): ViewModel() {
+    protected val savedStateHandle: SavedStateHandle,
+    ): AndroidViewModel(application) {
+
+    private val sharedPreferences: SharedPreferences =
+        application.getSharedPreferences(APP_PREFERENCES, Context.MODE_PRIVATE)
+
+    private val _offsetSizeFonts = MutableStateFlow(0.0f)
+    val offsetSizeFonts: StateFlow<Float> = _offsetSizeFonts
 
     var context: Context? = null
     var dataJson: String? = null
@@ -129,6 +138,21 @@ abstract class MainViewModel(
     private val _uiState = MutableStateFlow(StateUI())
     val uiState: StateFlow<StateUI>
         get() = _uiState.asStateFlow()
+
+    init {
+        loadPreferences()
+    }
+
+    private fun loadPreferences() {
+        _offsetSizeFonts.value = sharedPreferences.getFloat(APP_OFFSET_SIZE_FONTS, 0f)
+    }
+
+    fun updateOffsetSizeFonts(offsetSizeFont: Float) {
+        viewModelScope.launch {
+            sharedPreferences.edit().putFloat(APP_OFFSET_SIZE_FONTS, offsetSizeFont).apply()
+            _offsetSizeFonts.value = offsetSizeFont
+        }
+    }
 
     fun getTranslateString(text: String, translateId: Long? = null) =
         nameUIRepository.getTranslateString(text, translateId)

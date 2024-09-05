@@ -89,6 +89,7 @@ public class Globals {
 
 
     public static final String APP_PREFERENCES = "mysettings";
+    public static final String APP_OFFSET_SIZE_FONTS = "app_offset_size_fonts";
     public static final String APP_PREFERENCES_REALM = "realm";
 
     final Handler handlerCount = new Handler();

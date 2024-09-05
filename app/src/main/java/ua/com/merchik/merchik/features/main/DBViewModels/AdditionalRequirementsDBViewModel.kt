@@ -1,5 +1,6 @@
 package ua.com.merchik.merchik.features.main.DBViewModels
 
+import android.app.Application
 import android.content.Context
 import android.text.Html
 import android.util.Log
@@ -37,10 +38,11 @@ import kotlin.reflect.KClass
 
 @HiltViewModel
 class AdditionalRequirementsDBViewModel @Inject constructor(
+    application: Application,
     repository: MainRepository,
     nameUIRepository: NameUIRepository,
     savedStateHandle: SavedStateHandle
-) : MainViewModel(repository, nameUIRepository, savedStateHandle) {
+) : MainViewModel(application, repository, nameUIRepository, savedStateHandle) {
 
     override fun updateFilters() {
         when (contextUI) {
