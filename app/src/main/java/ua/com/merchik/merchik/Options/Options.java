@@ -776,6 +776,8 @@ public class Options {
 //            11060 Фабрика Мороженого Хладопром ООО
 //            11165 Энерлайт ООО
 
+            // 91468 Комарницька
+
             if (option.getClientId().equals("14301") ||     // трегуб
                     option.getClientId().equals("14840") || // Авто комфорт плюс
                     option.getClientId().equals("14843") || // Джокер
@@ -854,7 +856,9 @@ public class Options {
                     option.getClientId().equals("14611")  ||    // Им Текстиль ООО
                     option.getClientId().equals("10275")  ||    // Прошанский коньячный завод - Украина ООО
                     option.getClientId().equals("11060")  ||    // Фабрика Мороженого Хладопром ООО
-                    option.getClientId().equals("11165")        // Энерлайт ООО
+                    option.getClientId().equals("11165")  ||      // Энерлайт ООО
+
+                    option.getClientId().equals("91468")        // Комарницька
             ) {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                     optionControlNewAlgo(getOptionsToControl(option), context, dataDB, option, optionList, type, mode, false, click);
