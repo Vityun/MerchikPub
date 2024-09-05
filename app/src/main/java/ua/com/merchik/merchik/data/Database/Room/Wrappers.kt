@@ -87,7 +87,7 @@ object AddressSDBOverride {
 
 object CustomerSDBOverride {
     fun getHidedFieldsOnUI(): String =
-        "dt_update, ppa_auto, recl_reply_mode, main_tov_grp, client_id"
+        "dt_update, ppa_auto, recl_reply_mode, main_tov_grp"
 
     fun getTranslateId(key: String): Long? = when (key) {
         "nm" -> 1102

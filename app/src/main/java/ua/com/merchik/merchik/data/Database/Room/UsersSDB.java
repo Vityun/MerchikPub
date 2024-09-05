@@ -164,9 +164,7 @@ public class UsersSDB implements DataObjectUI{
     @NonNull
     @Override
     public String getHidedFieldsOnUI() {
-        return "author_id, city_id, client_id, department, fired, fired_dt, " +
-                "user_id, img_personal_photo, img_personal_photo_thumb, " +
-                "otdel_id, work_addr_id";
+        return "";
     }
 
     @Nullable

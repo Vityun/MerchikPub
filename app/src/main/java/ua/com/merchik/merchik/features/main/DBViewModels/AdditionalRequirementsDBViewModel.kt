@@ -10,6 +10,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import ua.com.merchik.merchik.Clock
 import ua.com.merchik.merchik.Globals
 import ua.com.merchik.merchik.data.Database.Room.CustomerSDB
+import ua.com.merchik.merchik.data.Database.Room.UsersSDB
 import ua.com.merchik.merchik.data.RealmModels.AdditionalRequirementsDB
 import ua.com.merchik.merchik.data.RealmModels.AdditionalRequirementsMarkDB
 import ua.com.merchik.merchik.data.RealmModels.ThemeDB
@@ -19,6 +20,7 @@ import ua.com.merchik.merchik.dataLayer.DataObjectUI
 import ua.com.merchik.merchik.dataLayer.MainRepository
 import ua.com.merchik.merchik.dataLayer.ModeUI
 import ua.com.merchik.merchik.dataLayer.NameUIRepository
+import ua.com.merchik.merchik.dataLayer.join
 import ua.com.merchik.merchik.dataLayer.model.DataItemUI
 import ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsMarkRealm
 import ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsRealm
@@ -178,7 +180,11 @@ class AdditionalRequirementsDBViewModel @Inject constructor(
                         1
                     )
 
-                    repository.toItemUIList(AdditionalRequirementsDB::class, data, contextUI, null).map { itemUI ->
+                    val themeDBUI = repository.getAllRealm(ThemeDB::class, contextUI, null)
+                    val customerSDBUI = repository.getAllRoom(CustomerSDB::class, contextUI, null)
+                    val usersSDBBUI = repository.getAllRoom(UsersSDB::class, contextUI, null)
+
+                    val result = repository.toItemUIList(AdditionalRequirementsDB::class, data, contextUI, null).map { itemUI ->
                         itemUI.rawObj.firstOrNull { it is AdditionalRequirementsDB }?.let { elementDB ->
                             elementDB as AdditionalRequirementsDB
 
@@ -195,6 +201,11 @@ class AdditionalRequirementsDBViewModel @Inject constructor(
                                 ?: itemUI.copy(rawObj = listOf(elementDB, AdditionalRequirementsMarkDB()))
                         } ?: itemUI.copy()
                     }
+                        .join(themeDBUI, "theme_id = id: nm")
+                        .join(customerSDBUI, "client_id = client_id: nm")
+                        .join(usersSDBBUI, "author_id = user_id: fio")
+
+                    result
                 }
                 else -> { emptyList() }
             }

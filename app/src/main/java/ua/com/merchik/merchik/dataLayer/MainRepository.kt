@@ -1,5 +1,6 @@
 package ua.com.merchik.merchik.dataLayer
 
+import android.util.Log
 import com.google.gson.Gson
 import io.realm.RealmChangeListener
 import io.realm.RealmObject
@@ -180,7 +181,7 @@ fun List<DataItemUI>.join(rightTable: List<DataItemUI>, query: String): List<Dat
         val joinedFields: MutableList<FieldValue> = mutableListOf()
         var itemRightUI: DataItemUI? = null
         itemLeftUI.fields.firstOrNull { it.key.equals(keyLeft, true) }?.let { fieldLeftUI ->
-            itemRightUI = rightTable.firstOrNull { it.fields.firstOrNull { it.key.equals(keyRight, true) }?.value == fieldLeftUI.value }
+            itemRightUI = rightTable.firstOrNull { it.fields.firstOrNull { it.key.equals(keyRight, true) }?.value?.value == fieldLeftUI.value.value }
             expFields.forEach { expField ->
                 itemRightUI?.fields?.firstOrNull { it.key.equals(expField, true) }?.let { fieldRightUI ->
                     joinedFields.add(
