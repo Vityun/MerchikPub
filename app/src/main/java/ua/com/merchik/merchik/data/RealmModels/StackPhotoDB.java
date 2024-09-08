@@ -587,7 +587,7 @@ public class StackPhotoDB extends RealmObject implements DataObjectUI {
     @Nullable
     @Override
     public MerchModifier getValueModifier(@NonNull String key, @NonNull JSONObject jsonObject) {
-        return AdditionalRequirementsDBOverride.INSTANCE.getValueModifier(key, jsonObject);
+        return DataObjectUI.DefaultImpls.getValueModifier(this, key, jsonObject);
     }
 
     @Nullable

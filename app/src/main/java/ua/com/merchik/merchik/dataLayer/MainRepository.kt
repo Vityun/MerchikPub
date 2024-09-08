@@ -48,7 +48,7 @@ class MainRepository(
     fun <T: DataObjectUI> getSortingFields(klass: KClass<T>, contextUI: ContextUI?) =
         getSettingsUI(klass.java, contextUI)?.sortFields ?: emptyList()
 
-    fun <T: DataObjectUI> getSettingsItemList(klass: KClass<T>, contextUI: ContextUI?): List<SettingsItemUI> {
+    fun <T: DataObjectUI> getSettingsItemList(klass: KClass<T>, contextUI: ContextUI?, defaultHideUserFields: List<String>?): List<SettingsItemUI> {
 
         val item = (klass.java.newInstance() as? RealmObject)?.let {
             (RealmManager.INSTANCE
@@ -76,8 +76,8 @@ class MainRepository(
                 fields.add("id_res_image")
             }
             jsonObject.keys().forEach { key -> fields.add(key) }
-            val hideUserFields = getSettingsUI(obj::class.java, contextUI)?.hideFields
-            val hidedFieldsOnUI = obj.getHidedFieldsOnUI()
+            val hideUserFields = (getSettingsUI(obj::class.java, contextUI)?.hideFields ?: defaultHideUserFields)?.map{ it.trim() }
+            val hidedFieldsOnUI = obj.getHidedFieldsOnUI().split(",").map { it.trim() }
 
             return fields
                 .filter { !hidedFieldsOnUI.contains(it) }

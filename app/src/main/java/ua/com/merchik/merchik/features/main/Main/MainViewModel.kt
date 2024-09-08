@@ -133,6 +133,8 @@ abstract class MainViewModel(
 
     open fun onSelectedItemsUI(itemsUI: List<DataItemUI>) {}
 
+    open fun getDefaultHideUserFields(): List<String>? { return null }
+
     var filters: Filters? = null
 
     private val _uiState = MutableStateFlow(StateUI())
@@ -190,7 +192,7 @@ abstract class MainViewModel(
     fun updateContent() {
         viewModelScope.launch {
 
-            val settingsItems = repository.getSettingsItemList(table, contextUI)
+            val settingsItems = repository.getSettingsItemList(table, contextUI, getDefaultHideUserFields())
             val sortingFields = repository.getSortingFields(table, contextUI)
             updateFilters()
 

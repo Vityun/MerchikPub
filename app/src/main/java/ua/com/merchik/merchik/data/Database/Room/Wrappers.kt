@@ -95,8 +95,8 @@ object CustomerSDBOverride {
     }
 
     fun getFieldModifier(key: String, jsonObject: JSONObject): MerchModifier? = when (key) {
-        "nm" -> MerchModifier(fontWeight = FontWeight.Bold, padding = Padding(end = 10.dp))
-        else -> MerchModifier(fontWeight = FontWeight.Bold, padding = Padding(end = 20.dp))
+//        "nm" -> MerchModifier(fontWeight = FontWeight.Bold, padding = Padding(end = 10.dp))
+        else -> MerchModifier(padding = Padding(end = 10.dp))
     }
 
     fun getValueUI(key: String, value: Any): String = when (key) {

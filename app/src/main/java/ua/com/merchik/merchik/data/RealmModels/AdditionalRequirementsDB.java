@@ -278,7 +278,8 @@ public class AdditionalRequirementsDB extends RealmObject implements DataObjectU
     @Nullable
     @Override
     public MerchModifier getValueModifier(@NonNull String key, @NonNull JSONObject jsonObject) {
-        return AdditionalRequirementsDBOverride.INSTANCE.getValueModifier(key, jsonObject);
+        return DataObjectUI.DefaultImpls.getValueModifier(this, key, jsonObject);
+//        return AdditionalRequirementsDBOverride.INSTANCE.getValueModifier(key, jsonObject);
     }
 
     @Nullable

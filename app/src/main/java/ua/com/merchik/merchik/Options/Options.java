@@ -2069,6 +2069,7 @@ public class Options {
         bundle.putString("contextUI", ContextUI.ADD_REQUIREMENTS_FROM_OPTIONS.toString());
         bundle.putString("dataJson", new Gson().toJson(dataDB));
         bundle.putString("title", "Доп. требования");
+        bundle.putString("subTitle", "Список дополнительных требований, которые должен выполнить исполнитель во время посещения");
         intent.putExtras(bundle);
         context.startActivity(intent);
 

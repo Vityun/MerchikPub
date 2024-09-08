@@ -46,6 +46,17 @@ class AdditionalRequirementsDBViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle
 ) : MainViewModel(application, repository, nameUIRepository, savedStateHandle) {
 
+    override fun getDefaultHideUserFields(): List<String>? {
+        return when (contextUI) {
+            ContextUI.ADD_REQUIREMENTS_FROM_ACHIEVEMENT,
+            ContextUI.ADD_REQUIREMENTS_FROM_OPTIONS ->
+                ("addr_id, author_id, disable_score, dt_change, exam_id, grp_id, hide_client, " +
+                "hide_user, ID, not_approve, options_id, showcase_tp_id, site_id, summ, theme_id," +
+                "tovar_id, user_id, option_id, dt_end, dt_start, client_id, color").split(",")
+            else -> null
+        }
+    }
+
     override fun updateFilters() {
         when (contextUI) {
             ContextUI.ADD_REQUIREMENTS_FROM_ACHIEVEMENT -> {
