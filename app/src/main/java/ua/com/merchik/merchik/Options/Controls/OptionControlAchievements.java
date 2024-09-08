@@ -20,10 +20,12 @@ import ua.com.merchik.merchik.data.Database.Room.CustomerSDB;
 import ua.com.merchik.merchik.data.Database.Room.UsersSDB;
 import ua.com.merchik.merchik.data.Database.Room.VoteSDB;
 import ua.com.merchik.merchik.data.OptionMassageType;
+import ua.com.merchik.merchik.data.RealmModels.AdditionalRequirementsDB;
 import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
 import ua.com.merchik.merchik.data.RealmModels.ThemeDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.database.realm.RealmManager;
+import ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsRealm;
 import ua.com.merchik.merchik.database.realm.tables.ThemeRealm;
 
 public class OptionControlAchievements<T> extends OptionControl {
@@ -108,6 +110,17 @@ public class OptionControlAchievements<T> extends OptionControl {
                             .append(addressSDBDocument.nm).append(" не проверяем. Там у них только брендовые стойки без основного места рподаж.");
                 }
             }
+
+//            List<String> spisTovOSV = new ArrayList<>();
+//
+//            if (optionDB.getOptionId().equals("157278") || optionDB.getOptionControlId().equals("157278")) {
+//                // Получение Доп. Требований с дополнительными фильтрами.
+//                List<AdditionalRequirementsDB> additionalRequirements = AdditionalRequirementsRealm.getDocumentAdditionalRequirements(document, true, OPTION_CONTROL_PROMOTION_ID, null, null, null);
+//                for (AdditionalRequirementsDB item : additionalRequirements) {
+//                    spisTovOSV.add(item.getTovarId());
+//                }
+//                spisTovOSV.sort(null);  // Сортирует по возрастанию // аналог Collections.sort(spisTovOSV);
+//            }
 
             // 3.1. Получим данные о достижениях.
             // Сразу отсортировали (свежие должны быть сверху)
