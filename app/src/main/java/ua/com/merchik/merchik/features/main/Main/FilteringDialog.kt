@@ -40,7 +40,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
@@ -114,7 +116,7 @@ fun FilteringDialog(viewModel: MainViewModel,
                         text = viewModel.uiState.value.filters?.title ?: "Фільтри"
                     )
 
-                    uiState.subTitle?.let {
+                    viewModel.uiState.collectAsState().value.filters?.subTitle?.let {
                         Text(
                             text = it,
                             modifier = Modifier
@@ -254,7 +256,20 @@ private fun ItemFilterUI(context: Context?, itemFilter: ItemFilter, onChanged: (
     var isExpanded by remember { mutableStateOf(false) }
 
     Column(Modifier.padding(end = 10.dp)) {
-        Text(text = itemFilter.title)
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(text = itemFilter.title)
+            Spacer(modifier = Modifier.weight(1f))
+            Text(
+                modifier = Modifier
+                    .clickable { if (itemFilter.rightValuesUI.size > 3) isExpanded = !isExpanded },
+                text = if (isExpanded) "${itemFilter.rightValuesUI.size} элементов"
+                else "${if(itemFilter.rightValuesUI.size >= 3) 3 else itemFilter.rightValuesUI.size} элемента из ${itemFilter.rightValuesUI.size}",
+                style = TextStyle(
+                    color = colorResource(id = R.color.blue),
+                    textDecoration = TextDecoration.Underline
+                )
+            )
+        }
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -268,84 +283,96 @@ private fun ItemFilterUI(context: Context?, itemFilter: ItemFilter, onChanged: (
                     (context as? Activity)?.let { itemFilter.onSelect(it) }
                 } else Modifier),
         ) {
-            if (itemFilter.rightValuesUI.isEmpty()) {
-                Text(
-                    modifier = Modifier.padding(7.dp),
-                    text = "Додати фільтр",
-                    color = colorResource(id = R.color.hintColorDefault)
-                )
-            } else {
-                Column {
-                    Spacer(modifier = Modifier.height(3.dp))
-                    itemFilter.rightValuesUI.forEachIndexed { index, item ->
-                        if (!isExpanded && index > 3) return@forEachIndexed
+            Column {
+                Spacer(modifier = Modifier.height(3.dp))
 
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier
-                                .wrapContentWidth()
-                                .padding(start = 3.dp, end = 25.dp)
-                                .background(
-                                    color = colorResource(id = R.color.background_item_filter),
-                                    shape = RoundedCornerShape(8.dp)
-                                )
-                                .border(
-                                    BorderStroke(
-                                        1.dp,
-                                        colorResource(id = R.color.borderContextMenu)
-                                    ), RoundedCornerShape(8.dp)
-                                )
-                        ) {
-                            if (isExpanded || index < 3) {
-                                Text(
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .wrapContentWidth()
+                        .padding(start = 3.dp, end = 25.dp)
+                        .background(
+                            color = colorResource(id = R.color.background_item_filter),
+                            shape = RoundedCornerShape(8.dp)
+                        )
+                        .border(
+                            BorderStroke(
+                                1.dp,
+                                colorResource(id = R.color.borderContextMenu)
+                            ), RoundedCornerShape(8.dp)
+                        )
+                ) {
+                    Text(
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(
+                                start = 7.dp,
+                                top = 3.dp,
+                                bottom = 3.dp,
+                                end = 7.dp
+                            ),
+                        text = "Добавить..."
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(3.dp))
+
+                itemFilter.rightValuesUI.forEachIndexed { index, item ->
+                    if (!isExpanded && index > 3) return@forEachIndexed
+
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .wrapContentWidth()
+                            .padding(start = 3.dp, end = 25.dp)
+                            .background(
+                                color = colorResource(id = R.color.background_item_filter),
+                                shape = RoundedCornerShape(8.dp)
+                            )
+                            .border(
+                                BorderStroke(
+                                    1.dp,
+                                    colorResource(id = R.color.borderContextMenu)
+                                ), RoundedCornerShape(8.dp)
+                            )
+                    ) {
+                        if (isExpanded || index < 3) {
+                            Text(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .padding(
+                                        start = 7.dp,
+                                        top = 3.dp,
+                                        bottom = 3.dp,
+                                        end = 7.dp
+                                    ),
+                                overflow = TextOverflow.Ellipsis,
+                                maxLines = 2,
+                                text = item ?: itemFilter.rightValuesRaw[index] ?: ""
+                            )
+                            if (itemFilter.enabled) {
+                                Image(
                                     modifier = Modifier
-                                        .weight(1f)
-                                        .padding(
-                                            start = 7.dp,
-                                            top = 3.dp,
-                                            bottom = 3.dp,
-                                            end = 7.dp
-                                        ),
-                                    overflow = TextOverflow.Ellipsis,
-                                    maxLines = 2,
-                                    text = item ?: itemFilter.rightValuesRaw[index] ?: ""
-                                )
-                                if (itemFilter.enabled) {
-                                    Image(
-                                        modifier = Modifier
-                                            .size(25.dp)
-                                            .padding(top = 7.dp, bottom = 7.dp, end = 7.dp)
-                                            .clickable {
-                                                onChanged?.invoke(
-                                                    itemFilter.copy(
-                                                        rightValuesRaw = itemFilter.rightValuesRaw.filterIndexed { index1, _ -> index != index1 },
-                                                        rightValuesUI = itemFilter.rightValuesUI.filterIndexed { index1, _ -> index != index1 }
-                                                    )
+                                        .size(25.dp)
+                                        .padding(top = 7.dp, bottom = 7.dp, end = 7.dp)
+                                        .clickable {
+                                            onChanged?.invoke(
+                                                itemFilter.copy(
+                                                    rightValuesRaw = itemFilter.rightValuesRaw.filterIndexed { index1, _ -> index != index1 },
+                                                    rightValuesUI = itemFilter.rightValuesUI.filterIndexed { index1, _ -> index != index1 }
                                                 )
-                                            },
-                                        contentScale = ContentScale.Inside,
-                                        painter = painterResource(id = R.drawable.ic_letter_x),
-                                        contentDescription = "",
-                                        colorFilter = ColorFilter.tint(color = colorResource(id = R.color.hintColorDefault))
-                                    )
-                                }
-                            } else {
-                                Text(
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .padding(
-                                            start = 7.dp,
-                                            top = 3.dp,
-                                            bottom = 3.dp,
-                                            end = 7.dp
-                                        )
-                                        .clickable { isExpanded = !isExpanded },
-                                    text = "Ще (${itemFilter.rightValuesUI.size-3}) елементів..."
+                                            )
+                                            if (itemFilter.rightValuesUI.size <= 3+1) isExpanded = false
+                                        },
+                                    contentScale = ContentScale.Inside,
+                                    painter = painterResource(id = R.drawable.ic_letter_x),
+                                    contentDescription = "",
+                                    colorFilter = ColorFilter.tint(color = colorResource(id = R.color.hintColorDefault))
                                 )
                             }
                         }
-                        Spacer(modifier = Modifier.height(3.dp))
                     }
+                    Spacer(modifier = Modifier.height(3.dp))
                 }
             }
 

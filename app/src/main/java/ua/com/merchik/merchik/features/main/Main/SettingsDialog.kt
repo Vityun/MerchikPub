@@ -41,6 +41,7 @@ import ua.com.merchik.merchik.dataLayer.model.MerchModifier
 import ua.com.merchik.merchik.dataLayer.model.Padding
 import ua.com.merchik.merchik.dataLayer.model.TextField
 import ua.com.merchik.merchik.features.main.componentsUI.ImageButton
+import ua.com.merchik.merchik.features.main.componentsUI.Tooltip
 
 @Composable
 fun SettingsDialog(viewModel: MainViewModel, onDismiss: () -> Unit) {
@@ -136,7 +137,9 @@ fun SettingsDialog(viewModel: MainViewModel, onDismiss: () -> Unit) {
 
                     Spacer(modifier = Modifier.height(10.dp))
 
-                    FontSizeSlider(size = 16 + offsetSizeFont) { offsetSizeFont = it - 16 }
+                    Tooltip(text = "Данная опция находится в стадии разработки") {
+                        FontSizeSlider(size = 16 + offsetSizeFont) { offsetSizeFont = it - 16 }
+                    }
 
                     Row {
                         Button(

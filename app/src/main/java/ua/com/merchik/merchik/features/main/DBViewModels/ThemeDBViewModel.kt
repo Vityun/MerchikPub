@@ -32,6 +32,10 @@ class ThemeDBViewModel @Inject constructor(
     override val table: KClass<out DataObjectUI>
         get() = ThemeDB::class
 
+    override fun getDefaultHideUserFields(): List<String>? {
+        return "ID, comment, column_name".split(",")
+    }
+
     override fun updateFilters() {
         val data = when(contextUI) {
             ContextUI.THEME_FROM_ACHIEVEMENT -> {
@@ -46,8 +50,8 @@ class ThemeDBViewModel @Inject constructor(
             ThemeDB::class,
             ThemeDBViewModel::class,
             ModeUI.MULTI_SELECT,
-            "Tемы",
-            "subTitle",
+            "Вид достижения",
+            "Выберите характер достижения, которое Вы выполнили",
             "id",
             "id",
             data.map { it.id },

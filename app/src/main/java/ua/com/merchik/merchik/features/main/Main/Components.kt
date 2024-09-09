@@ -130,6 +130,7 @@ fun FontSizeSlider(modifier: Modifier = Modifier, size: Float, onChanged: (Float
             Slider(
                 modifier = Modifier.padding(top = 18.dp),
                 value = fontSize,
+                enabled = false,
                 onValueChange = {
                     fontSize = it
                     onChanged(it)
