@@ -23,10 +23,14 @@ import ua.com.merchik.merchik.data.OptionMassageType;
 import ua.com.merchik.merchik.data.RealmModels.AdditionalRequirementsDB;
 import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
 import ua.com.merchik.merchik.data.RealmModels.ThemeDB;
+import ua.com.merchik.merchik.data.RealmModels.TovarDB;
+import ua.com.merchik.merchik.data.RealmModels.TradeMarkDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsRealm;
 import ua.com.merchik.merchik.database.realm.tables.ThemeRealm;
+import ua.com.merchik.merchik.database.realm.tables.TovarRealm;
+import ua.com.merchik.merchik.database.realm.tables.TradeMarkRealm;
 
 public class OptionControlAchievements<T> extends OptionControl {
     public int OPTION_CONTROL_ACHIEVEMENTS_ID = 590;
@@ -111,16 +115,20 @@ public class OptionControlAchievements<T> extends OptionControl {
                 }
             }
 
-//            List<String> spisTovOSV = new ArrayList<>();
-//
-//            if (optionDB.getOptionId().equals("157278") || optionDB.getOptionControlId().equals("157278")) {
-//                // Получение Доп. Требований с дополнительными фильтрами.
-//                List<AdditionalRequirementsDB> additionalRequirements = AdditionalRequirementsRealm.getDocumentAdditionalRequirements(document, true, OPTION_CONTROL_PROMOTION_ID, null, null, null);
-//                for (AdditionalRequirementsDB item : additionalRequirements) {
-//                    spisTovOSV.add(item.getTovarId());
-//                }
-//                spisTovOSV.sort(null);  // Сортирует по возрастанию // аналог Collections.sort(spisTovOSV);
-//            }
+            List<String> spisTovOSV = new ArrayList<>();
+            List<String> spisTMOSV = new ArrayList<>();
+
+            if (optionDB.getOptionId().equals("590") || optionDB.getOptionControlId().equals("590")) {
+                // Получение Доп. Требований с дополнительными фильтрами.
+                Long dateChangeTo = Clock.getDatePeriodLong(dateDocument * 1000, -2) / 1000;
+
+                List<AdditionalRequirementsDB> additionalRequirements = AdditionalRequirementsRealm.getDocumentAdditionalRequirements(document, true, 590, null, null, null, null, dateChangeTo);
+                for (AdditionalRequirementsDB item : additionalRequirements) {
+                    if (!item.getTovarId().equals("0")) spisTovOSV.add(item.getTovarId());
+                    if (!item.getManufacturerId().equals("0")) spisTMOSV.add(item.getManufacturerId());
+                }
+                spisTovOSV.sort(null);  // Сортирует по возрастанию // аналог Collections.sort(spisTovOSV);
+            }
 
             // 3.1. Получим данные о достижениях.
             // Сразу отсортировали (свежие должны быть сверху)
@@ -170,6 +178,30 @@ public class OptionControlAchievements<T> extends OptionControl {
                                 .append(" (").append("595").append("-").append(theme595Txt)
                                 .append(")");
                         continue;
+                    }
+
+                    //09.09.2024 якщо по даному клієнту є товари (або ТМ) по котрим встановлени признак ОсобливаУвага (ОСВ) то перевіряємо виготовлення Досягнень конкретно по ДАНИМ Товарам/ТМ
+                    if ((!spisTovOSV.isEmpty() || !spisTMOSV.isEmpty()) &&
+                            (!spisTovOSV.contains(item.tovar_id.toString())) &&
+                            (!spisTMOSV.contains(item.manufacturer.toString()))) {
+
+                        List<TovarDB> spisTovarDBOSV = TovarRealm.getByIds(spisTovOSV.toArray(new String[spisTovOSV.size()]));
+                        String spisTovarName = "";
+                        for (TovarDB tovar:  spisTovarDBOSV) {
+                            spisTovarName = spisTovarName + tovar.getNm() + ",";
+                        }
+
+                        List<TradeMarkDB> spisTradeMarkDBOSV = TradeMarkRealm.getTradeMarkByIds(spisTMOSV.toArray(new String[spisTMOSV.size()]));
+                        String spisTMName = "";
+                        for (TradeMarkDB tm:  spisTradeMarkDBOSV) {
+                            spisTMName = spisTMName + tm.getNm() + ",";
+                        }
+
+                        item.error = 1;
+                        item.note = new StringBuilder()
+                                .append("Клієнт вимагає створення Досягнення по ")
+                                .append(!spisTovarDBOSV.isEmpty() ? ("Товару: " + spisTovarName) : " ")
+                                .append(!spisTMOSV.isEmpty() ? ("ТМ: " + spisTMName) : " ");
                     }
 
                     if ((optionDB.getOptionId().equals("160209") || optionDB.getOptionControlId().equals("160209"))) {

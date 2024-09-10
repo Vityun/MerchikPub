@@ -104,7 +104,7 @@ public class OptionControlPhotoPromotion<T> extends OptionControl {
 
         if (optionDB.getOptionId().equals("157278") || optionDB.getOptionControlId().equals("157278")) {
             // Получение Доп. Требований с дополнительными фильтрами.
-            List<AdditionalRequirementsDB> additionalRequirements = AdditionalRequirementsRealm.getDocumentAdditionalRequirements(document, true, OPTION_CONTROL_PROMOTION_ID, null, null, null);
+            List<AdditionalRequirementsDB> additionalRequirements = AdditionalRequirementsRealm.getDocumentAdditionalRequirements(document, true, OPTION_CONTROL_PROMOTION_ID, null, null, null, null, null);
             for (AdditionalRequirementsDB item : additionalRequirements) {
                 spisTovOSV.add(item.getTovarId());
             }

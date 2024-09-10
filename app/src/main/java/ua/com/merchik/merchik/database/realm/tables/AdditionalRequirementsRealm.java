@@ -49,7 +49,15 @@ public class AdditionalRequirementsRealm {
         return res;
     }
 
-    public static <T> List<AdditionalRequirementsDB> getDocumentAdditionalRequirements(Object document, boolean tovExist, Integer optionId, String dateFrom, String dateTo, Object dt) {
+    public static <T> List<AdditionalRequirementsDB> getDocumentAdditionalRequirements(
+            Object document,
+            boolean tovExist,
+            Integer optionId,
+            String dateFrom,
+            String dateTo,
+            Object dt,
+            Long dateChangeFrom,
+            Long dateChangeTo) {
         BaseBusinessData data = getAdditionalRequirementsDocumentData(document);
         AddressDB addressDB = AddressRealm.getAddressById(data.addressId);
 
@@ -96,6 +104,9 @@ public class AdditionalRequirementsRealm {
                 res = res.where()
                         .isNotEmpty("tovarId")
                         .notEqualTo("tovarId", "0")
+                        .or()
+                        .isNotEmpty("tovarManufacturerId")
+                        .notEqualTo("tovarManufacturerId", "0")
                         .findAll();
             }
             // --------------------
@@ -110,7 +121,30 @@ public class AdditionalRequirementsRealm {
 
         List<AdditionalRequirementsDB> result = new ArrayList<>();
         if (res != null) result = INSTANCE.copyFromRealm(res);
-        return result;
+
+        List<AdditionalRequirementsDB> newResult = new ArrayList<>();
+
+        if (dateChangeFrom != null && dateChangeTo != null) {
+            for (AdditionalRequirementsDB item: result) {
+                if (Long.parseLong(item.getDtChange()) >= dateChangeFrom &&
+                        Long.parseLong(item.getDtChange()) <= dateChangeTo)
+                    newResult.add(item);
+            }
+        } else if (dateChangeFrom != null) {
+            for (AdditionalRequirementsDB item: result) {
+                if (Long.parseLong(item.getDtChange()) >= dateChangeFrom)
+                    newResult.add(item);
+            }
+        } else if (dateChangeTo != null) {
+            for (AdditionalRequirementsDB item: result) {
+                if (Long.parseLong(item.getDtChange()) <= dateChangeTo)
+                    newResult.add(item);
+            }
+        } else {
+            newResult.addAll(result);
+        }
+
+        return newResult;
     }
 
     /**
