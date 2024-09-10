@@ -43,6 +43,9 @@ public class AdditionalRequirementsDB extends RealmObject implements DataObjectU
     @SerializedName("tovar_id")
     @Expose
     private String tovarId;
+    @SerializedName("tovar_manufacturer_id")
+    @Expose
+    private String tovarManufacturerId;
     @SerializedName("exam_id")
     @Expose
     private String examId;
@@ -174,6 +177,14 @@ public class AdditionalRequirementsDB extends RealmObject implements DataObjectU
 
     public void setTovarId(String tovarId) {
         this.tovarId = tovarId;
+    }
+
+    public String getManufacturerId() {
+        return tovarManufacturerId;
+    }
+
+    public void setManufacturerId(String tovarManufacturerId) {
+        this.tovarManufacturerId = tovarManufacturerId;
     }
 
     public String getExamId() {

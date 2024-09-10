@@ -114,7 +114,7 @@ public class OptionControlPromotion<T> extends OptionControl {
         List<AdditionalRequirementsDB> additionalRequirements;
         String[] tovIds;
         if (optionDB.getOptionId().equals("80977") || optionDB.getOptionControlId().equals("80977")) {
-            additionalRequirements = AdditionalRequirementsRealm.getDocumentAdditionalRequirements(document, true, OPTION_CONTROL_PROMOTION_ID, null, null, null);
+            additionalRequirements = AdditionalRequirementsRealm.getDocumentAdditionalRequirements(document, true, OPTION_CONTROL_PROMOTION_ID, null, null, null, null, null);
             tovIds = new String[additionalRequirements.size()];
 
             for (int i = 0; i < additionalRequirements.size(); i++) {

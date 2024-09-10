@@ -777,85 +777,94 @@ public class Options {
 //            11060 Фабрика Мороженого Хладопром ООО
 //            11165 Энерлайт ООО
 
-            if (option.getClientId().equals("14301") ||     // трегуб
-                    option.getClientId().equals("14840") || // Авто комфорт плюс
-                    option.getClientId().equals("14843") || // Джокер
-                    option.getClientId().equals("91276") || // БВІ
-                    option.getClientId().equals("16898") || // Ямуна
-                    option.getClientId().equals("13633") || // ВС-Импэкс ООО
-                    option.getClientId().equals("8523") ||  // Альянс Краси ПП
-                    option.getClientId().equals("91429") || // Петровська Елла Олександрівна ФОП
-                    option.getClientId().equals("10076") || // Триплекс
-                    option.getClientId().equals("78230") || // Триумф
-                    option.getClientId().equals("14463") || // Креатив
-                    option.getClientId().equals("11034") || // Блумі
-                    option.getClientId().equals("82339") || // Профекс Груп
-                    option.getClientId().equals("14798") || // Еудуко
-                    option.getClientId().equals("91332") || // Фуд Воркс,
-                    option.getClientId().equals("84186") || // Уикенд,
-                    option.getClientId().equals("69842") || // Мега Крисп,
-                    option.getClientId().equals("9261") ||  // фабрика бакалійних,
-                    option.getClientId().equals("10349") || // Гифт-К,
-                    option.getClientId().equals("91419") || // Чміль Валерій Васильович ФОП
-                    option.getClientId().equals("78171") || // Артхим,
-                    option.getClientId().equals("82575") || // Профит Плюс,
-                    option.getClientId().equals("90749") || // Буко,
-                    option.getClientId().equals("75411") || // Йозера,
-                    option.getClientId().equals("10919") || // Маруся,
-                    option.getClientId().equals("10291") || // Натурпродукт-вега
-                    option.getClientId().equals("9443") || // Кохавинка
-                    option.getClientId().equals("91434") || // Хім опт
-                    option.getClientId().equals("38297") || // Юкойл СП
-                    option.getClientId().equals("14504") || // Традиции вкуса ООО
-                    option.getClientId().equals("84677") || // Парк трейдинг ООО
-                    option.getClientId().equals("9029") || // Родная еда Компания ООО
-                    option.getClientId().equals("80786") || // Марко Продукт ТОВ
-                    option.getClientId().equals("91484") || // Нешнл Трейдинг
-                    option.getClientId().equals("14888") || // Техно-Груп
-                    option.getClientId().equals("86566") || // Троянда-захід .......... вже була
-                    option.getClientId().equals("78286") || // Аумі
-                    option.getClientId().equals("14133") ||   // ЗБС
-                    option.getClientId().equals("8804")  ||  //  львовский хладокомбинат
+            // 91468 Комарницька
 
-                    option.getClientId().equals("45654")  ||    // Аванта-Трейд ПП
-                    option.getClientId().equals("82359")  ||    // Вертикаль-Київ ТОВ
-                    option.getClientId().equals("78280")  ||    // Веранта ООО
-                    option.getClientId().equals("38475")  ||    // Глобал Трейд ЮА
-                    option.getClientId().equals("70484")  ||    // Кідді-Ко ПП
-                    option.getClientId().equals("14023")  ||    // Лаки Шуз ТОВ
-                    option.getClientId().equals("9029")  ||    // Родная еда Компания ООО ?? Походу манагеры проебались, прошу прощения
-                    option.getClientId().equals("8767")  ||    // Сл Дистрибьюшн
-                    option.getClientId().equals("45748")  ||    // Бико
-                    option.getClientId().equals("32246")  ||    // Ласунка
-                    option.getClientId().equals("8463")  ||    // Житомирський маслозавод;;;
-                    option.getClientId().equals("10426")  ||    // Драйд Фудз
-                    option.getClientId().equals("14110")  ||    // Кр Ингредиентс
-                    option.getClientId().equals("88939")  ||    // Ничога ПП
+            if (
+                    !option.getClientId().equals("9295") &&     //Бетта
+                    !option.getClientId().equals("9382") &&     //Витмарк
+                    !option.getClientId().equals("38283")       //Юнилайф
 
-                    option.getClientId().equals("14072")  ||    // Сирена Екохім
-                    option.getClientId().equals("14526")  ||    // Юкрейн Трейдинг
-                    option.getClientId().equals("10393")  ||    // Вока-Д
-                    option.getClientId().equals("14693")  ||    // Живий квасmkjjj
-                    option.getClientId().equals("45632")  ||    // Світ Україна
-                    option.getClientId().equals("14156")  ||    // Ренклод
-                    option.getClientId().equals("8219")  ||     // ВГП ПАО
-                    option.getClientId().equals("14839")  ||    // Вега Украина ТД
-                    option.getClientId().equals("14611")  ||    // Им Текстиль ООО
-                    option.getClientId().equals("14365")  ||    // Флеш
-                    option.getClientId().equals("91373")  ||    // Сондак Роман Михайлович ФОП
-                    option.getClientId().equals("91206")  ||      // ТС Плюс ТОВ
-
-                    option.getClientId().equals("14017")  ||    // Акмега
-                    option.getClientId().equals("91409")  ||    // Деревянко
-                    option.getClientId().equals("89863")  ||    // Альтернатива-СВ
-                    option.getClientId().equals("14176")  ||    // ТСЦ Инженеринг
-                    option.getClientId().equals("91488")  ||    // Рікко Трейдінг
-                    option.getClientId().equals("10822")  ||    // Єгмонт Україна
-                    option.getClientId().equals("77764")  ||    // СУНП ТОВ
-                    option.getClientId().equals("14611")  ||    // Им Текстиль ООО
-                    option.getClientId().equals("10275")  ||    // Прошанский коньячный завод - Украина ООО
-                    option.getClientId().equals("11060")  ||    // Фабрика Мороженого Хладопром ООО
-                    option.getClientId().equals("11165")        // Энерлайт ООО
+//                    option.getClientId().equals("14301") ||     // трегуб
+//                    option.getClientId().equals("14840") || // Авто комфорт плюс
+//                    option.getClientId().equals("14843") || // Джокер
+//                    option.getClientId().equals("91276") || // БВІ
+//                    option.getClientId().equals("16898") || // Ямуна
+//                    option.getClientId().equals("13633") || // ВС-Импэкс ООО
+//                    option.getClientId().equals("8523") ||  // Альянс Краси ПП
+//                    option.getClientId().equals("91429") || // Петровська Елла Олександрівна ФОП
+//                    option.getClientId().equals("10076") || // Триплекс
+//                    option.getClientId().equals("78230") || // Триумф
+//                    option.getClientId().equals("14463") || // Креатив
+//                    option.getClientId().equals("11034") || // Блумі
+//                    option.getClientId().equals("82339") || // Профекс Груп
+//                    option.getClientId().equals("14798") || // Еудуко
+//                    option.getClientId().equals("91332") || // Фуд Воркс,
+//                    option.getClientId().equals("84186") || // Уикенд,
+//                    option.getClientId().equals("69842") || // Мега Крисп,
+//                    option.getClientId().equals("9261") ||  // фабрика бакалійних,
+//                    option.getClientId().equals("10349") || // Гифт-К,
+//                    option.getClientId().equals("91419") || // Чміль Валерій Васильович ФОП
+//                    option.getClientId().equals("78171") || // Артхим,
+//                    option.getClientId().equals("82575") || // Профит Плюс,
+//                    option.getClientId().equals("90749") || // Буко,
+//                    option.getClientId().equals("75411") || // Йозера,
+//                    option.getClientId().equals("10919") || // Маруся,
+//                    option.getClientId().equals("10291") || // Натурпродукт-вега
+//                    option.getClientId().equals("9443") || // Кохавинка
+//                    option.getClientId().equals("91434") || // Хім опт
+//                    option.getClientId().equals("38297") || // Юкойл СП
+//                    option.getClientId().equals("14504") || // Традиции вкуса ООО
+//                    option.getClientId().equals("84677") || // Парк трейдинг ООО
+//                    option.getClientId().equals("9029") || // Родная еда Компания ООО
+//                    option.getClientId().equals("80786") || // Марко Продукт ТОВ
+//                    option.getClientId().equals("91484") || // Нешнл Трейдинг
+//                    option.getClientId().equals("14888") || // Техно-Груп
+//                    option.getClientId().equals("86566") || // Троянда-захід .......... вже була
+//                    option.getClientId().equals("78286") || // Аумі
+//                    option.getClientId().equals("14133") ||   // ЗБС
+//                    option.getClientId().equals("8804")  ||  //  львовский хладокомбинат
+//
+//                    option.getClientId().equals("45654")  ||    // Аванта-Трейд ПП
+//                    option.getClientId().equals("82359")  ||    // Вертикаль-Київ ТОВ
+//                    option.getClientId().equals("78280")  ||    // Веранта ООО
+//                    option.getClientId().equals("38475")  ||    // Глобал Трейд ЮА
+//                    option.getClientId().equals("70484")  ||    // Кідді-Ко ПП
+//                    option.getClientId().equals("14023")  ||    // Лаки Шуз ТОВ
+//                    option.getClientId().equals("9029")  ||    // Родная еда Компания ООО ?? Походу манагеры проебались, прошу прощения
+//                    option.getClientId().equals("8767")  ||    // Сл Дистрибьюшн
+//                    option.getClientId().equals("45748")  ||    // Бико
+//                    option.getClientId().equals("32246")  ||    // Ласунка
+//                    option.getClientId().equals("8463")  ||    // Житомирський маслозавод;;;
+//                    option.getClientId().equals("10426")  ||    // Драйд Фудз
+//                    option.getClientId().equals("14110")  ||    // Кр Ингредиентс
+//                    option.getClientId().equals("88939")  ||    // Ничога ПП
+//
+//                    option.getClientId().equals("14072")  ||    // Сирена Екохім
+//                    option.getClientId().equals("14526")  ||    // Юкрейн Трейдинг
+//                    option.getClientId().equals("10393")  ||    // Вока-Д
+//                    option.getClientId().equals("14693")  ||    // Живий квасmkjjj
+//                    option.getClientId().equals("45632")  ||    // Світ Україна
+//                    option.getClientId().equals("14156")  ||    // Ренклод
+//                    option.getClientId().equals("8219")  ||     // ВГП ПАО
+//                    option.getClientId().equals("14839")  ||    // Вега Украина ТД
+//                    option.getClientId().equals("14611")  ||    // Им Текстиль ООО
+//                    option.getClientId().equals("14365")  ||    // Флеш
+//                    option.getClientId().equals("91373")  ||    // Сондак Роман Михайлович ФОП
+//                    option.getClientId().equals("91206")  ||      // ТС Плюс ТОВ
+//
+//                    option.getClientId().equals("14017")  ||    // Акмега
+//                    option.getClientId().equals("91409")  ||    // Деревянко
+//                    option.getClientId().equals("89863")  ||    // Альтернатива-СВ
+//                    option.getClientId().equals("14176")  ||    // ТСЦ Инженеринг
+//                    option.getClientId().equals("91488")  ||    // Рікко Трейдінг
+//                    option.getClientId().equals("10822")  ||    // Єгмонт Україна
+//                    option.getClientId().equals("77764")  ||    // СУНП ТОВ
+//                    option.getClientId().equals("14611")  ||    // Им Текстиль ООО
+//                    option.getClientId().equals("10275")  ||    // Прошанский коньячный завод - Украина ООО
+//                    option.getClientId().equals("11060")  ||    // Фабрика Мороженого Хладопром ООО
+//                    option.getClientId().equals("11165")  ||      // Энерлайт ООО
+//
+//                    option.getClientId().equals("91468")        // Комарницька
             ) {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                     optionControlNewAlgo(getOptionsToControl(option), context, dataDB, option, optionList, type, mode, false, click);
