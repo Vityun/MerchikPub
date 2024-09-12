@@ -6,6 +6,7 @@ import android.content.Context;
 import android.util.Log;
 
 import io.realm.RealmResults;
+import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.Options.OptionControl;
 import ua.com.merchik.merchik.Options.Options;
@@ -18,6 +19,7 @@ import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.ImagesTypeListRealm;
+import ua.com.merchik.merchik.database.realm.tables.PhotoTypeRealm;
 import ua.com.merchik.merchik.database.realm.tables.StackPhotoRealm;
 
 public class OptionControlPhoto<T> extends OptionControl {
@@ -28,6 +30,7 @@ public class OptionControlPhoto<T> extends OptionControl {
     private WpDataDB wpDataDB;
     private Long dad2;
     private AddressSDB addressSDB;
+    private String clientName;
 
     public OptionControlPhoto(Context context, T document, OptionsDB optionDB, OptionMassageType msgType, Options.NNKMode nnkMode, UnlockCodeResultListener unlockCodeResultListener) {
         try {
@@ -51,6 +54,7 @@ public class OptionControlPhoto<T> extends OptionControl {
             this.addressSDB = SQL_DB.addressDao().getById(((WpDataDB) document).getAddr_id());
             this.wpDataDB = (WpDataDB) document;
             this.dad2 = wpDataDB.getCode_dad2();
+            this.clientName = SQL_DB.customerDao().getById(((WpDataDB) document).getClient_id()).nm;
         }else if (document instanceof TasksAndReclamationsSDB){
             this.dad2 = ((TasksAndReclamationsSDB) document).codeDad2SrcDoc;
         }
@@ -77,6 +81,10 @@ public class OptionControlPhoto<T> extends OptionControl {
         }
         int photoType = 0;
 
+        long dad2ForGetStackPhotoDB = dad2;
+        long dateFromForGetStackPhotoDB = 0;
+        long dateToForGetStackPhotoDB = 0;
+
         switch (optionId) {
             case "164354":  // Фото Планограмми ТТ
                 photoType = 5;
@@ -99,6 +107,13 @@ public class OptionControlPhoto<T> extends OptionControl {
                 break;
 
             case "141361":
+                int quantityMax = Integer.parseInt(optionDB.getAmountMax());
+                if (quantityMax > 0) {
+                    dad2ForGetStackPhotoDB = 0;
+                    dateFromForGetStackPhotoDB = Clock.getDatePeriodLong(wpDataDB.getDt().getTime(), -quantityMax);
+                    dateToForGetStackPhotoDB = Clock.getDatePeriodLong(wpDataDB.getDt().getTime(), 2);
+                }
+
                 photoType = 31; // Фото товара на скалде
 //                m = 1;
                 break;
@@ -130,7 +145,13 @@ public class OptionControlPhoto<T> extends OptionControl {
 
         }
 
-        RealmResults<StackPhotoDB> stackPhotoDB = StackPhotoRealm.getPhotosByDAD2(dad2, photoType);
+        String photoTypeName = ImagesTypeListRealm.getByID(photoType).getNm();
+
+        RealmResults<StackPhotoDB> stackPhotoDB =
+                dad2ForGetStackPhotoDB > 0 ?
+                        StackPhotoRealm.getPhotosByDAD2(dad2, photoType) :
+                        StackPhotoRealm.getPhotosByRangeDt(dateFromForGetStackPhotoDB, dateToForGetStackPhotoDB, photoType);
+
         if (stackPhotoDB != null && stackPhotoDB.size() < m) {
             ImagesTypeListDB item = ImagesTypeListRealm.getByID(photoType);
             stringBuilderMsg.append("Вы должны сделать: ").append(m).append(" фото с типом: ").append(item != null ? item.getNm() : typeNm).append(", а сделали: ").append(stackPhotoDB.size()).append(" - доделайте фотографии.");
@@ -153,6 +174,19 @@ public class OptionControlPhoto<T> extends OptionControl {
                 signal = false;
                 stringBuilderMsg.append(", але для АТБ, наявність ФЗ ФТС не перевіряємо.");
             }
+        }else if (Integer.parseInt(wpDataDB.getClient_id()) == 91478 ||
+                Integer.parseInt(wpDataDB.getClient_id()) == 10822 ||
+                Integer.parseInt(wpDataDB.getClient_id()) == 70484 ||
+                Integer.parseInt(wpDataDB.getClient_id()) == 14365 ||
+                Integer.parseInt(wpDataDB.getClient_id()) == 10349) {
+            signal = false;
+            stringBuilderMsg.append("Обнаружено (")
+                    .append(stackPhotoDB.size())
+                    .append(")")
+                    .append(photoTypeName)
+                    .append(" но, для ")
+                    .append(clientName)
+                    .append(" сделано исключение.");
         }
 
         //7.0. сохраним сигнал

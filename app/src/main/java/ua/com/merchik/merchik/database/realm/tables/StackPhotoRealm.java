@@ -271,6 +271,13 @@ public class StackPhotoRealm {
                 .findAll();
     }
 
+    public static RealmResults<StackPhotoDB> getPhotosByRangeDt(long dtFrom, long dtTo, int photoType) {
+        return INSTANCE.where(StackPhotoDB.class)
+                .between("dt", dtFrom, dtTo)
+                .equalTo("photo_type", photoType)
+                .findAll();
+    }
+
     public static RealmResults<StackPhotoDB> getPhotosByDAD2(long dad2, int photoType) {
         return INSTANCE.where(StackPhotoDB.class)
                 .equalTo("code_dad2", dad2)
