@@ -150,7 +150,7 @@ public class OptionControlPhoto<T> extends OptionControl {
         RealmResults<StackPhotoDB> stackPhotoDB =
                 dad2ForGetStackPhotoDB > 0 ?
                         StackPhotoRealm.getPhotosByDAD2(dad2, photoType) :
-                        StackPhotoRealm.getPhotosByRangeDt(dateFromForGetStackPhotoDB, dateToForGetStackPhotoDB, photoType);
+                        StackPhotoRealm.getPhotosByRangeDt(dateFromForGetStackPhotoDB / 1000, dateToForGetStackPhotoDB / 1000, ((WpDataDB) document).getClient_id(), ((WpDataDB) document).getAddr_id(), photoType);
 
         if (stackPhotoDB != null && stackPhotoDB.size() < m) {
             ImagesTypeListDB item = ImagesTypeListRealm.getByID(photoType);
@@ -174,19 +174,21 @@ public class OptionControlPhoto<T> extends OptionControl {
                 signal = false;
                 stringBuilderMsg.append(", але для АТБ, наявність ФЗ ФТС не перевіряємо.");
             }
-        }else if (Integer.parseInt(wpDataDB.getClient_id()) == 91478 ||
-                Integer.parseInt(wpDataDB.getClient_id()) == 10822 ||
-                Integer.parseInt(wpDataDB.getClient_id()) == 70484 ||
-                Integer.parseInt(wpDataDB.getClient_id()) == 14365 ||
-                Integer.parseInt(wpDataDB.getClient_id()) == 10349) {
-            signal = false;
-            stringBuilderMsg.append("Обнаружено (")
-                    .append(stackPhotoDB.size())
-                    .append(")")
-                    .append(photoTypeName)
-                    .append(" но, для ")
-                    .append(clientName)
-                    .append(" сделано исключение.");
+        }else if (Integer.parseInt(wpDataDB.getClient_id()) == 91478 || //91478-Уяви
+                Integer.parseInt(wpDataDB.getClient_id()) == 10822 ||   //10822-Эгмонт
+                Integer.parseInt(wpDataDB.getClient_id()) == 70484 ||   //70484-Кідді Ко
+                Integer.parseInt(wpDataDB.getClient_id()) == 14365 ||   //14365-флеш
+                Integer.parseInt(wpDataDB.getClient_id()) == 10349) {   //10349-Гифт-К
+            if (optionId.equals("141361")) {
+                signal = false;
+                stringBuilderMsg.append("Обнаружено (")
+                        .append(stackPhotoDB.size())
+                        .append(")")
+                        .append(photoTypeName)
+                        .append(" но, для ")
+                        .append(clientName)
+                        .append(" сделано исключение.");
+            }
         }
 
         //7.0. сохраним сигнал
