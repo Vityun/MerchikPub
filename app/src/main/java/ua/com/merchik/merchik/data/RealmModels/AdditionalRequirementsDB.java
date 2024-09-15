@@ -78,9 +78,14 @@ public class AdditionalRequirementsDB extends RealmObject implements DataObjectU
     @SerializedName("author_id")
     @Expose
     private String authorId;
+
     @SerializedName("dt_change")
     @Expose
-    private String dtChange;
+    private Long dtChange;
+
+    @SerializedName("dt_change_2")
+    @Expose
+    private Date dtChange2;
 
     @SerializedName("user_id")
     @Expose

@@ -39,6 +39,7 @@ import androidx.preference.PreferenceManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+//import com.google.firebase.crashlytics.FirebaseCrashlytics;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -260,6 +261,12 @@ public class menu_login extends AppCompatActivity {
 
     }//---------------------------------------------------------------------------------------------
 
+//    @Override
+//    protected void onStart(){
+//        super.onStart();
+//        FirebaseCrashlytics.getInstance().log("Test crash");
+//        throw new RuntimeException("Test Crash");
+//    }
 
     @Override
     protected void onResume() {

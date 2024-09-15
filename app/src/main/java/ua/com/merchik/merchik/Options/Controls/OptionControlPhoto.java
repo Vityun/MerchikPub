@@ -19,7 +19,6 @@ import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.ImagesTypeListRealm;
-import ua.com.merchik.merchik.database.realm.tables.PhotoTypeRealm;
 import ua.com.merchik.merchik.database.realm.tables.StackPhotoRealm;
 
 public class OptionControlPhoto<T> extends OptionControl {
@@ -72,7 +71,8 @@ public class OptionControlPhoto<T> extends OptionControl {
         String typeNm = "";
         int m = Integer.parseInt(optionDB.getAmountMin());
         if (m == 0) {
-            m = 1;  // Большая кака, но народ попросил так, надо будет у Петрова уточнить как именно оно должно работать ибо у него вроде как так же работатет 29.07.24
+//            m = 1;  // Большая кака, но народ попросил так, надо будет у Петрова уточнить как именно оно должно работать ибо у него вроде как так же работатет 29.07.24
+            m = 3; // Народ свооден, Мы ТАК решили 15.09.24
 //            if (optionId.equals("164352")){
 //                m = 1;
 //            }else {
