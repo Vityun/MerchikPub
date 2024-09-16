@@ -70,15 +70,14 @@ public class OptionControlPhoto<T> extends OptionControl {
 
         String typeNm = "";
         int m = Integer.parseInt(optionDB.getAmountMin());
-        if (m == 0) {
+//        if (m == 0) {
 //            m = 1;  // Большая кака, но народ попросил так, надо будет у Петрова уточнить как именно оно должно работать ибо у него вроде как так же работатет 29.07.24
-            m = 3; // Народ свооден, Мы ТАК решили 15.09.24
-//            if (optionId.equals("164352")){
-//                m = 1;
-//            }else {
-//                m = 3;
-//            }
-        }
+////            if (optionId.equals("164352")){
+////                m = 1;
+////            }else {
+////                m = 3;
+////            }
+//        }
         int photoType = 0;
 
         long dad2ForGetStackPhotoDB = dad2;
@@ -86,24 +85,31 @@ public class OptionControlPhoto<T> extends OptionControl {
         long dateToForGetStackPhotoDB = 0;
 
         switch (optionId) {
+            case "151594":  // Контроль наличия фото витрины (до начала работ) !smarti!
+                photoType = 14;
+                m = m > 0 ? m : 3;
+                break;
+
             case "164354":  // Фото Планограмми ТТ
                 photoType = 5;
-//                m = 1;
+                m = m > 0 ? m : 1;
                 break;
 
             case "164352":  // Контроль наявності світлини прикасової зони
                 photoType = 45;
                 typeNm = "світлина прикасової зони";
+                m = m > 0 ? m : 1;
                 break;
 
+            case "134583": //!smarti!
             case "84932":
                 photoType = 0;
-//                m = 3;
+                m = m > 0 ? m : 3;
                 break;
 
-            case "132971":
+            case "132971": // !smarti!
                 photoType = 10; // Проверка наличия Фото тележка с товаром (тип 10)
-//                m = 1;
+                m = m > 0 ? m : 1;
                 break;
 
             case "141361":
@@ -115,32 +121,38 @@ public class OptionControlPhoto<T> extends OptionControl {
                 }
 
                 photoType = 31; // Фото товара на скалде
-//                m = 1;
+                m = m > 0 ? m : 1;
                 break;
 
             case "158606":  // Корпоративный блок
                 photoType = 40;
+                m = m > 0 ? m : 3;
                 break;
 
             case "158607":  // Наполненность полки
                 photoType = 41;
+                m = m > 0 ? m : 3;
                 break;
 
             case "158608":  // Приближенная фото
                 photoType = 39;
+                m = m > 0 ? m : 3;
                 break;
 
             case "158609":  // Дополнительное место продаж
                 photoType = 42;
+                m = m > 0 ? m : 3;
                 break;
 
             case "159726":  // Фото торговой точки
-            case "159725":  // Кнопка "Фото Торговой Точки (ФТТ)"
+            case "159725":  // Кнопка "Фото Торговой Точки (ФТТ)" !smarti!
                 photoType = 37;
+                m = m > 0 ? m : 3;
                 break;
 
             case "165482":  // Контроль наличия Фото - скан посещения в приложении Эффи
                 photoType = 46; // 46 - фото скан посещения в приложении эффи
+                m = m > 0 ? m : 1;
                 break;
 
         }

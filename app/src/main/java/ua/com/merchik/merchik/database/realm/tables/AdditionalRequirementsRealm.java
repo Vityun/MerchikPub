@@ -109,6 +109,21 @@ public class AdditionalRequirementsRealm {
                         .notEqualTo("tovarManufacturerId", "0")
                         .findAll();
             }
+
+            // --------------------
+            if (dateChangeFrom != null) {
+                res = res.where()
+                        .greaterThanOrEqualTo("dtChange", dateChangeFrom)
+                        .findAll();
+            }
+
+            // --------------------
+            if (dateChangeTo != null) {
+                res = res.where()
+                        .lessThanOrEqualTo("dtChange", dateChangeTo)
+                        .findAll();
+            }
+
             // --------------------
             if (optionId != null && optionId != 0) {
                 res = res.where()
@@ -122,29 +137,31 @@ public class AdditionalRequirementsRealm {
         List<AdditionalRequirementsDB> result = new ArrayList<>();
         if (res != null) result = INSTANCE.copyFromRealm(res);
 
-        List<AdditionalRequirementsDB> newResult = new ArrayList<>();
+//        List<AdditionalRequirementsDB> newResult = new ArrayList<>();
+//
+//        if (dateChangeFrom != null && dateChangeTo != null) {
+//            for (AdditionalRequirementsDB item: result) {
+//                if (Long.parseLong(item.getDtChange()) >= dateChangeFrom &&
+//                        Long.parseLong(item.getDtChange()) <= dateChangeTo)
+//                    newResult.add(item);
+//            }
+//        } else if (dateChangeFrom != null) {
+//            for (AdditionalRequirementsDB item: result) {
+//                if (Long.parseLong(item.getDtChange()) >= dateChangeFrom)
+//                    newResult.add(item);
+//            }
+//        } else if (dateChangeTo != null) {
+//            for (AdditionalRequirementsDB item: result) {
+//                if (Long.parseLong(item.getDtChange()) <= dateChangeTo)
+//                    newResult.add(item);
+//            }
+//        } else {
+//            newResult.addAll(result);
+//        }
+//
+//        return newResult;
 
-        if (dateChangeFrom != null && dateChangeTo != null) {
-            for (AdditionalRequirementsDB item: result) {
-                if (Long.parseLong(item.getDtChange()) >= dateChangeFrom &&
-                        Long.parseLong(item.getDtChange()) <= dateChangeTo)
-                    newResult.add(item);
-            }
-        } else if (dateChangeFrom != null) {
-            for (AdditionalRequirementsDB item: result) {
-                if (Long.parseLong(item.getDtChange()) >= dateChangeFrom)
-                    newResult.add(item);
-            }
-        } else if (dateChangeTo != null) {
-            for (AdditionalRequirementsDB item: result) {
-                if (Long.parseLong(item.getDtChange()) <= dateChangeTo)
-                    newResult.add(item);
-            }
-        } else {
-            newResult.addAll(result);
-        }
-
-        return newResult;
+        return result;
     }
 
     /**

@@ -83,10 +83,6 @@ public class AdditionalRequirementsDB extends RealmObject implements DataObjectU
     @Expose
     private Long dtChange;
 
-    @SerializedName("dt_change_2")
-    @Expose
-    private Date dtChange2;
-
     @SerializedName("user_id")
     @Expose
     public String userId;
@@ -256,11 +252,11 @@ public class AdditionalRequirementsDB extends RealmObject implements DataObjectU
         this.authorId = authorId;
     }
 
-    public String getDtChange() {
+    public Long getDtChange() {
         return dtChange;
     }
 
-    public void setDtChange(String dtChange) {
+    public void setDtChange(Long dtChange) {
         this.dtChange = dtChange;
     }
 
