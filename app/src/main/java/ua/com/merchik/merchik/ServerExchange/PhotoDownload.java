@@ -746,6 +746,34 @@ public class PhotoDownload {
         });
     }
 
+    public void getPhotoInfoAndSaveItToDB(PhotoTableRequest data) {
+        Log.e("getPhotoInfo2", "HERE");
+        JsonObject object = new Gson().fromJson(new Gson().toJson(data), JsonObject.class);
+        retrofit2.Call<ModImagesView> call = RetrofitBuilder.getRetrofitInterface().MOD_IMAGES_VIEW_CALL(RetrofitBuilder.contentType, object);
+        call.enqueue(new retrofit2.Callback<ModImagesView>() {
+            @Override
+            public void onResponse(retrofit2.Call<ModImagesView> call, retrofit2.Response<ModImagesView> response) {
+                try {
+                    if (response.isSuccessful()) {
+                        if (response.body() != null) {
+                            if (response.body().getState() && response.body().getList() != null && response.body().getList().size() > 0) {
+                                savePhotoInfoToDB(response.body().getList());
+                            }
+                        }
+                    }
+
+                } catch (Exception e) {
+                    Globals.writeToMLOG("ERROR", "getPhotoInfoAndSaveItToDB", "Не удалось сохранить фото в БД. Exception e: " + e);
+                }
+            }
+
+            @Override
+            public void onFailure(retrofit2.Call<ModImagesView> call, Throwable t) {
+                Log.e("getPhotoInfo2", "test.t:" + t);
+            }
+        });
+    }
+
 
     /**
      * 17.03.2021
@@ -771,6 +799,8 @@ public class PhotoDownload {
             if (StackPhotoRealm.stackPhotoDBGetPhotoBySiteId(item.getID()) == null) {
                 StackPhotoDB stackPhotoDB = new StackPhotoDB();
                 stackPhotoDB.setId(id);
+
+                stackPhotoDB.setDt(item.getDt());
 
                 stackPhotoDB.setCreate_time(item.getDt() * 1000);// реквизиты что б фотки не выгружались обратно на сервер
                 stackPhotoDB.setUpload_to_server(item.getDt() * 1000);// реквизиты что б фотки не выгружались обратно на сервер
@@ -799,6 +829,48 @@ public class PhotoDownload {
         }
         RealmManager.stackPhotoSavePhoto(stackList);
         clickUpdatePhoto.onSuccess(stackList.get(0));   // TODO Это стоит сделать адекватнее. Сделано это только для частного случая.
+    }
+
+    public void savePhotoInfoToDB(List<ModImagesViewList> list) {
+        List<StackPhotoDB> stackList = new ArrayList<>();   // Создаём список для записи в БД
+        int id = RealmManager.stackPhotoGetLastId() + 1;    // Для новой записи добавляем ID
+
+        // Перебираем полученные от сервера данные и формируем список для записи.
+        for (ModImagesViewList item : list) {
+
+            // Если у меня в БД нет записи с таким `photo site ID` - создаю новую
+            if (StackPhotoRealm.stackPhotoDBGetPhotoBySiteId(item.getID()) == null) {
+                StackPhotoDB stackPhotoDB = new StackPhotoDB();
+                stackPhotoDB.setId(id);
+
+                stackPhotoDB.setDt(item.getDt());
+
+                stackPhotoDB.setCreate_time(item.getDt() * 1000);// реквизиты что б фотки не выгружались обратно на сервер
+                stackPhotoDB.setUpload_to_server(item.getDt() * 1000);// реквизиты что б фотки не выгружались обратно на сервер
+                stackPhotoDB.setGet_on_server(item.getDt() * 1000);// реквизиты что б фотки не выгружались обратно на сервер
+
+                stackPhotoDB.setPhotoServerId(item.getID());
+                stackPhotoDB.setPhotoServerURL(item.getPhotoUrl());
+
+                stackPhotoDB.setUser_id(Integer.valueOf(item.getMerchikId()));
+                stackPhotoDB.setUserTxt(item.getMerchikIdTxt());
+
+                stackPhotoDB.setAddr_id(Integer.valueOf(item.getAddrId()));
+                stackPhotoDB.setAddressTxt(item.getAddrIdTxt());
+
+                stackPhotoDB.setClient_id(item.getClientId());
+                stackPhotoDB.setCustomerTxt(item.getClientIdTxt());
+
+                stackPhotoDB.setPhoto_type(Integer.valueOf(item.getPhotoTp()));
+                stackPhotoDB.setPhoto_typeTxt(String.valueOf(item.getPhotoTpTxt()));
+
+                stackPhotoDB.setDvi(Integer.valueOf(item.getDvi()));
+                stackList.add(stackPhotoDB);
+
+                id++;
+            }
+        }
+        RealmManager.stackPhotoSavePhoto(stackList);
     }
 
 

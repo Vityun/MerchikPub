@@ -713,6 +713,9 @@ public class Exchange {
                         globals.writeToMLOG(Clock.getHumanTime() + "_INFO.Exchange.class.startExchange.Ошибка.1." + e + "\n");
                     }
 
+                    try {
+                        tovarNaSklade();
+                    } catch (Exception e) {}
 
                     try {
                     /*                    ReclamationPointExchange tarExchange = new ReclamationPointExchange();
@@ -1491,6 +1494,23 @@ public class Exchange {
 //                server.getPhotoFromServer(data);
                 break;
         }
+    }
+
+    /**
+     * 20.09.2024
+     * Получение с Сайта данных(ссылок) для загрузки фото товаров в приложение только типа 31 за больший период
+     */
+    public void tovarNaSklade() {
+        PhotoDownload server = new PhotoDownload();
+        PhotoTableRequest data = new PhotoTableRequest();
+        data.mod = "images_view";
+        data.act = "list_image";
+        data.date_from = Clock.today_30;
+        data.date_to = Clock.today_7;
+        data.photo_type = "31";
+        data.nolimit = "1";
+
+        server.getPhotoInfoAndSaveItToDB(data);
     }
 
 

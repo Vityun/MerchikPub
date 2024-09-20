@@ -19,7 +19,7 @@ public class PhotoTableRequest {
     public String clientId;     // Фильтр. Клиент
     public String cityId;       // Фильтр. Город
     public String groupId;      // Фильтр. Группа(Например: АТБ, Сильпо, Ашан)
-    public String photoType;    // Фильтр. Тип фото(передаётся ID типа фото)
+    public String photo_type;    // Фильтр. Тип фото(передаётся ID типа фото)
     public String codeDAD2;     // Фильтр. Код ДАД 2 - реквизит по которому можно синхронизовать данные между таблицами
     public String planogram_only;
 
