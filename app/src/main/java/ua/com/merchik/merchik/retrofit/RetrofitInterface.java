@@ -39,6 +39,7 @@ import ua.com.merchik.merchik.data.RetrofitResponse.ArticleTableResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.ConductWpDataResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.CustomerGroups;
 import ua.com.merchik.merchik.data.RetrofitResponse.CustomerTableResponse;
+import ua.com.merchik.merchik.data.RetrofitResponse.DossierSotrResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.EDRPOUResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.ErrorTableResponce;
 import ua.com.merchik.merchik.data.RetrofitResponse.FragmentsResponse;
@@ -896,6 +897,11 @@ public interface RetrofitInterface {
     //    ModImagesView
     @POST("mobile_app.php?")
     Call<ModImagesView> MOD_IMAGES_VIEW_CALL(
+            @Header("ContentType") String content,
+            @Body JsonObject json);
+
+    @POST("mobile_app.php?")
+    Call<DossierSotrResponse> dossierSotr(
             @Header("ContentType") String content,
             @Body JsonObject json);
 

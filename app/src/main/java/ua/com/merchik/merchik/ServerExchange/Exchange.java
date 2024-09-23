@@ -56,6 +56,7 @@ import ua.com.merchik.merchik.data.Database.Room.AddressSDB;
 import ua.com.merchik.merchik.data.Database.Room.CitySDB;
 import ua.com.merchik.merchik.data.Database.Room.ContentSDB;
 import ua.com.merchik.merchik.data.Database.Room.CustomerSDB;
+import ua.com.merchik.merchik.data.Database.Room.DossierSotrSDB;
 import ua.com.merchik.merchik.data.Database.Room.EKL_SDB;
 import ua.com.merchik.merchik.data.Database.Room.LanguagesSDB;
 import ua.com.merchik.merchik.data.Database.Room.OblastSDB;
@@ -80,6 +81,8 @@ import ua.com.merchik.merchik.data.RetrofitResponse.AdditionalMaterialsGroupsRes
 import ua.com.merchik.merchik.data.RetrofitResponse.AdditionalMaterialsLinksResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.AdditionalMaterialsResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.ConductWpDataResponse;
+import ua.com.merchik.merchik.data.RetrofitResponse.DossierSotrItemResponse;
+import ua.com.merchik.merchik.data.RetrofitResponse.DossierSotrResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.Location.LocationList;
 import ua.com.merchik.merchik.data.RetrofitResponse.TovarImgList;
 import ua.com.merchik.merchik.data.RetrofitResponse.TovarImgResponse;
@@ -715,6 +718,10 @@ public class Exchange {
 
                     try {
                         tovarNaSklade();
+                    } catch (Exception e) {}
+
+                    try {
+                        updateDossierSotr();
                     } catch (Exception e) {}
 
                     try {
@@ -1511,6 +1518,39 @@ public class Exchange {
         data.nolimit = "1";
 
         server.getPhotoInfoAndSaveItToDB(data);
+    }
+
+    public void updateDossierSotr() {
+        Log.d("smarti", "updateDossierSotr: " + SQL_DB.dossierSotrDao().getData(null, null, null));
+
+        SynchronizationTimetableDB synchronizationTimetableDB = RealmManager.INSTANCE.copyFromRealm(RealmManager.getSynchronizationTimetableRowByTable("dossier_sotr"));
+        long dt_change_from = synchronizationTimetableDB.getVpi_app();
+        synchronizationTimetableDB.setVpi_app(System.currentTimeMillis() / 1000);
+        RealmManager.setToSynchronizationTimetableDB(synchronizationTimetableDB);
+
+        JsonObject requestJson = new JsonObject();
+        requestJson.addProperty("mod", "data_list");
+        requestJson.addProperty("act", "spissotr_dosie");
+        requestJson.addProperty("dt_change_from", dt_change_from);
+
+        retrofit2.Call<DossierSotrResponse> call = RetrofitBuilder.getRetrofitInterface().dossierSotr(RetrofitBuilder.contentType, requestJson);
+        call.enqueue(new Callback<DossierSotrResponse>() {
+            @Override
+            public void onResponse(Call<DossierSotrResponse> call, Response<DossierSotrResponse> response) {
+                if (response.isSuccessful() && response.body() != null && response.body().state) {
+                    ArrayList<DossierSotrSDB> dossierSotrSDBList = new ArrayList<>();
+                    for (DossierSotrItemResponse item: response.body().list ) {
+                        dossierSotrSDBList.add(new DossierSotrSDB(item));
+                    }
+                    SQL_DB.dossierSotrDao().insertAll(dossierSotrSDBList);
+                }
+            }
+
+            @Override
+            public void onFailure(Call<DossierSotrResponse> call, Throwable t) {
+            }
+        });
+
     }
 
 

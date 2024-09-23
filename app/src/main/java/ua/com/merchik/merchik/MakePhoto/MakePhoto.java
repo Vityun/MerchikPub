@@ -441,6 +441,7 @@ public class MakePhoto {
      * Эксперемент с выполнением фото и моментальным его сохранением в БД
      */
     public static String photoNum; // URI фотографии
+    public static Long dt;
     public static String photoType = "0";
     public static String tovarId = "";
     public static String photoCustomerGroup = "";
@@ -459,6 +460,7 @@ public class MakePhoto {
             } else {
                 WpDataDB wpDataDB = (WpDataDB) data;
                 wpDataObj = workPlan.getKPS(wpDataDB.getId());
+                dt = wpDataDB.getDt().getTime() / 1000;
             }
             wpDataObj.setPhotoType(photoType);
             wpDataObj.setCustomerTypeGrpS(photoCustomerGroup);
@@ -471,6 +473,7 @@ public class MakePhoto {
             intent.putExtra(MediaStore.EXTRA_OUTPUT, uri);
 
             photoNum = photoFile.getAbsolutePath();
+
             boolean isSavePhoto = PhotoReportActivity.savePhoto(activity, wpDataObj, photoFile, clickVoid);
 
             Globals.writeToMLOG("INFO", "makePhoto", "photoType: " + photoType);
