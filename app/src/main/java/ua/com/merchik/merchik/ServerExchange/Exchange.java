@@ -1521,8 +1521,6 @@ public class Exchange {
     }
 
     public void updateDossierSotr() {
-        Log.d("smarti", "updateDossierSotr: " + SQL_DB.dossierSotrDao().getData(null, null, null));
-
         SynchronizationTimetableDB synchronizationTimetableDB = RealmManager.INSTANCE.copyFromRealm(RealmManager.getSynchronizationTimetableRowByTable("dossier_sotr"));
         long dt_change_from = synchronizationTimetableDB.getVpi_app();
         synchronizationTimetableDB.setVpi_app(System.currentTimeMillis() / 1000);

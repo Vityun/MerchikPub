@@ -7,13 +7,17 @@ import android.os.Build;
 
 import androidx.annotation.RequiresApi;
 
+import java.text.SimpleDateFormat;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.Options.OptionControl;
 import ua.com.merchik.merchik.Options.Options;
+import ua.com.merchik.merchik.data.Database.Room.DossierSotrSDB;
 import ua.com.merchik.merchik.data.Database.Room.ShowcaseSDB;
 import ua.com.merchik.merchik.data.Database.Room.UsersSDB;
 import ua.com.merchik.merchik.data.OptionMassageType;
@@ -242,6 +246,27 @@ public class OptionControlPhotoShowcase<T> extends OptionControl {
                 }
             });
 
+            //4.1. Виключення на випадок, якщо це перша/друга робота у даній ТТ з даним кліснтом
+            if (signal) {
+                List<DossierSotrSDB> dossierSotrSDBList = SQL_DB.dossierSotrDao().getData(null, 982L, Long.getLong(wpDataDB.getCode_iza(), 0L));
+                if (!dossierSotrSDBList.isEmpty()) {
+                    Long dataNR;
+                    if (dossierSotrSDBList.get(0).priznak > 31536000) { //31536000 -> 1971 год
+                        dataNR = dossierSotrSDBList.get(0).priznak;
+                    } else {
+                        dataNR = wpDataDB.getDt().getTime();
+                    }
+                    if (dataNR > dataNR - (86400 * 14)) { // 86400 - 1 день в сек.
+                        stringBuilderMsg.append(" але, робоnи з цим ІЗА почали ");
+                        stringBuilderMsg.append(new SimpleDateFormat("dd.MM.yyyy", Locale.getDefault()).format(new Date(dataNR)));
+                        stringBuilderMsg.append(". З цього моменту минуло менше двох тижнів, тому зроблено виключення.");
+                        signal = false;
+                    }
+                } else {
+                    stringBuilderMsg.append(" але, це перша робота поточного виконавця з зазначеним ІЗА, тому зроблено виключення.");
+                    signal = false;
+                }
+            }
 
 
             if (signal) {
