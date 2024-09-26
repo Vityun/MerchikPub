@@ -467,14 +467,14 @@ public class RoomManager {
                     "`theme_id` INTEGER, " +
                     "`doc_num` TEXT, " +
                     "`controller_id` INTEGER, " +
-                    "`exam_id` INTEGER, " +
+                    "`exam_id` TEXT, " +
                     "`addr_id` INTEGER, " +
                     "`addr_tp_id` INTEGER, " +
                     "`client_id` TEXT, " +
                     "`staj_duration` INTEGER, " +
                     "`notes` TEXT, " +
                     "`status` INTEGER, " +
-                    "`dt` INTEGER, " +
+                    "`dt` TEXT, " +
                     "`coord_id` INTEGER, " +
                     "`priznak` INTEGER, " +
                     "`dt_change` INTEGER, " +

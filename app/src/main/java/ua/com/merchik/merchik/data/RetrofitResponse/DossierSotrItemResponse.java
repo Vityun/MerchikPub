@@ -32,7 +32,7 @@ public class DossierSotrItemResponse {
     @SerializedName("exam_id")
     @Expose
     @ColumnInfo(name = "exam_id")
-    public Long examId;
+    public String examId;
 
     @SerializedName("addr_id")
     @Expose
@@ -67,7 +67,7 @@ public class DossierSotrItemResponse {
     @SerializedName("dt")
     @Expose
     @ColumnInfo(name = "dt")
-    public Long dt;
+    public String dt;
 
     @SerializedName("coord_id")
     @Expose

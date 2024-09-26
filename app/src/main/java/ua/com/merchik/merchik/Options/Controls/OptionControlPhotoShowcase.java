@@ -234,6 +234,29 @@ public class OptionControlPhotoShowcase<T> extends OptionControl {
                 signal = false;
             }
 
+            //4.1. Виключення на випадок, якщо це перша/друга робота у даній ТТ з даним кліснтом
+            if (signal) {
+                List<DossierSotrSDB> dossierSotrSDBList = SQL_DB.dossierSotrDao().getData(null, 982L, wpDataDB.getCode_iza());
+                if (!dossierSotrSDBList.isEmpty()) {
+                    Long dataNR;
+                    long dataWP = wpDataDB.getDt().getTime() / 1000;
+                    if (dossierSotrSDBList.get(0).priznak > 31536000) { //31536000 -> 1971 год
+                        dataNR = dossierSotrSDBList.get(0).priznak;
+                    } else {
+                        dataNR = dataWP;
+                    }
+                    if (dataNR > dataWP - (14 * 86400)) { // 86400 - 1 день в сек.
+                        stringBuilderMsg.append(" але, робоnи з цим ІЗА почали ");
+                        stringBuilderMsg.append(new SimpleDateFormat("dd.MM.yyyy", Locale.getDefault()).format(new Date(dataNR * 1000)));
+                        stringBuilderMsg.append(". З цього моменту минуло менше двох тижнів, тому зроблено виключення.");
+                        signal = false;
+                    }
+                } else {
+                    stringBuilderMsg.append(" але, це перша робота поточного виконавця з зазначеним ІЗА, тому зроблено виключення.");
+                    signal = false;
+                }
+            }
+
             // Сохранение
             RealmManager.INSTANCE.executeTransaction(realm -> {
                 if (optionDB != null) {
@@ -245,29 +268,6 @@ public class OptionControlPhotoShowcase<T> extends OptionControl {
                     realm.insertOrUpdate(optionDB);
                 }
             });
-
-            //4.1. Виключення на випадок, якщо це перша/друга робота у даній ТТ з даним кліснтом
-            if (signal) {
-                List<DossierSotrSDB> dossierSotrSDBList = SQL_DB.dossierSotrDao().getData(null, 982L, Long.getLong(wpDataDB.getCode_iza(), 0L));
-                if (!dossierSotrSDBList.isEmpty()) {
-                    Long dataNR;
-                    if (dossierSotrSDBList.get(0).priznak > 31536000) { //31536000 -> 1971 год
-                        dataNR = dossierSotrSDBList.get(0).priznak;
-                    } else {
-                        dataNR = wpDataDB.getDt().getTime();
-                    }
-                    if (dataNR > dataNR - (86400 * 14)) { // 86400 - 1 день в сек.
-                        stringBuilderMsg.append(" але, робоnи з цим ІЗА почали ");
-                        stringBuilderMsg.append(new SimpleDateFormat("dd.MM.yyyy", Locale.getDefault()).format(new Date(dataNR)));
-                        stringBuilderMsg.append(". З цього моменту минуло менше двох тижнів, тому зроблено виключення.");
-                        signal = false;
-                    }
-                } else {
-                    stringBuilderMsg.append(" але, це перша робота поточного виконавця з зазначеним ІЗА, тому зроблено виключення.");
-                    signal = false;
-                }
-            }
-
 
             if (signal) {
                 if (optionDB.getBlockPns().equals("1")) {
