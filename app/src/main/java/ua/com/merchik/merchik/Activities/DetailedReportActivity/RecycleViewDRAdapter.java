@@ -747,6 +747,10 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
         }
     }
 
+    public void setDataButtons(List<OptionsDB> butt) {
+        this.butt = butt;
+        notifyDataSetChanged();
+    }
 
     /*Определяем конструктор*/
     public RecycleViewDRAdapter(Context context, T dataDB, List<OptionsDB> dataButtons, List<OptionsDB> allReportOption, List<SiteObjectsSDB> list, Clicks.click click) {
