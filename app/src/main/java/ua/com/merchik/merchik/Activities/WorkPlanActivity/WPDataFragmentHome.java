@@ -18,10 +18,7 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import androidx.compose.ui.platform.ComposeView;
-import androidx.compose.ui.platform.ViewCompositionStrategy;
 import androidx.fragment.app.Fragment;
-import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -108,7 +105,7 @@ public class WPDataFragmentHome extends Fragment {
             cal.set(Calendar.MILLISECOND, 0);
 
             dateFrom = cal.getTime();
-            dateTo = Clock.timeLongToDAte(Clock.getDatePeriodLong(cal.getTime().getTime(), +7) / 1000);
+            dateTo = Clock.timeLongToDAte(Clock.getDatePeriodLong(cal.getTime().getTime(), +3) / 1000);
 
             workPlan = RealmManager.getAllWorkPlan();
             try {
@@ -223,13 +220,17 @@ public class WPDataFragmentHome extends Fragment {
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext(), LinearLayoutManager.VERTICAL, false));
 
         // Устанавливаю признай "Свой/Чужой"
-        userOwnership = checkUser(workPlan.get(0));
-
-        if (userOwnership){
-            searchView.setText("");
-            searchView.clearFocus();
-        }else {
+        boolean userFromLasunka = checkLasunka(workPlan.get(0));
+        if (userFromLasunka) {
             searchView.setText(Clock.today);
+            dateTo = dateFrom;
+        } else {
+            if (userOwnership) {
+                searchView.setText("");
+                searchView.clearFocus();
+            } else {
+                dateTo = dateFrom;
+            }
         }
 
         adapter.getFilter().filter(searchView.getText());
@@ -370,18 +371,16 @@ public class WPDataFragmentHome extends Fragment {
      * Будет проверять пользователя. Свой(true)/Чужой(false)
      * В данном контексте будет отображаться План работ в зависимости от его состояния.
      * Для своих отображается по дефолтным правилам. Для чужих - будет подставляться Сегодняшняя Дата.
+     * 29.09.24.
+     * Поменяли только для юзера Ласунки
      */
-    private boolean checkUser(WpDataDB wpDataDB) {
-        boolean res = true;
+    private boolean checkLasunka(WpDataDB wpDataDB) {
+        boolean res = false;
         try {
             UsersSDB user = SQL_DB.usersDao().getUserById(wpDataDB.getUser_id());
-//        if (user.clientId.equals(wpDataDB.getClient_id())) {
-//            res = false;
-//        }
-
             // Ласунка
             if (user.clientId.equals("32246")) {
-                res = false;
+                res = true;
             }
         }catch (Exception e){
 
