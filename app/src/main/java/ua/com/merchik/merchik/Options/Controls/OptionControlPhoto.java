@@ -81,6 +81,7 @@ public class OptionControlPhoto<T> extends OptionControl {
         int photoType = 0;
 
         long dad2ForGetStackPhotoDB = dad2;
+        String codeIZAForGetStackPhotoDB = "";
         long dateFromForGetStackPhotoDB = 0;
         long dateToForGetStackPhotoDB = 0;
 
@@ -107,15 +108,25 @@ public class OptionControlPhoto<T> extends OptionControl {
                 m = m > 0 ? m : 3;
                 break;
 
-            case "132971": // !smarti!
-                photoType = 10; // Проверка наличия Фото тележка с товаром (тип 10)
-                m = m > 0 ? m : 1;
-                break;
-
-            case "141361":
+            case "132971": {
                 int quantityMax = Integer.parseInt(optionDB.getAmountMax());
                 if (quantityMax > 0) {
                     dad2ForGetStackPhotoDB = 0;
+                    codeIZAForGetStackPhotoDB = wpDataDB.getCode_iza();
+                    dateFromForGetStackPhotoDB = Clock.getDatePeriodLong(wpDataDB.getDt().getTime(), -quantityMax);
+                    dateToForGetStackPhotoDB = Clock.getDatePeriodLong(wpDataDB.getDt().getTime(), 2);
+                }
+
+                photoType = 10; // Проверка наличия Фото тележка с товаром (тип 10)
+                m = m > 0 ? m : 1;
+                break;
+            }
+
+            case "141361": {
+                int quantityMax = Integer.parseInt(optionDB.getAmountMax());
+                if (quantityMax > 0) {
+                    dad2ForGetStackPhotoDB = 0;
+                    codeIZAForGetStackPhotoDB = wpDataDB.getCode_iza();
                     dateFromForGetStackPhotoDB = Clock.getDatePeriodLong(wpDataDB.getDt().getTime(), -quantityMax);
                     dateToForGetStackPhotoDB = Clock.getDatePeriodLong(wpDataDB.getDt().getTime(), 2);
                 }
@@ -123,6 +134,7 @@ public class OptionControlPhoto<T> extends OptionControl {
                 photoType = 31; // Фото товара на скалде
                 m = m > 0 ? m : 1;
                 break;
+            }
 
             case "158606":  // Корпоративный блок
                 photoType = 40;
@@ -162,7 +174,7 @@ public class OptionControlPhoto<T> extends OptionControl {
         RealmResults<StackPhotoDB> stackPhotoDB =
                 dad2ForGetStackPhotoDB > 0 ?
                         StackPhotoRealm.getPhotosByDAD2(dad2, photoType) :
-                        StackPhotoRealm.getPhotosByRangeDt(dateFromForGetStackPhotoDB / 1000, dateToForGetStackPhotoDB / 1000, ((WpDataDB) document).getClient_id(), ((WpDataDB) document).getAddr_id(), photoType);
+                        StackPhotoRealm.getPhotosByRangeDt(dateFromForGetStackPhotoDB / 1000, dateToForGetStackPhotoDB / 1000, codeIZAForGetStackPhotoDB, ((WpDataDB) document).getAddr_id(), photoType);
 
         if (stackPhotoDB != null && stackPhotoDB.size() < m) {
             ImagesTypeListDB item = ImagesTypeListRealm.getByID(photoType);

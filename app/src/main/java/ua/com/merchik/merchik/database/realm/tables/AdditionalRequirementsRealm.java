@@ -53,8 +53,10 @@ public class AdditionalRequirementsRealm {
             Object document,
             boolean tovExist,
             Integer optionId,
-            String dateFrom,
-            String dateTo,
+            Date dateStartFrom,
+            Date dateStartTo,
+            Date dateEndFrom,
+            Date dateEndTo,
             Object dt,
             Long dateChangeFrom,
             Long dateChangeTo) {
@@ -111,6 +113,34 @@ public class AdditionalRequirementsRealm {
             }
 
             // --------------------
+            if (dateStartFrom != null) {
+                res = res.where()
+                        .greaterThanOrEqualTo("dtStart", dateStartFrom)
+                        .findAll();
+            }
+
+            // --------------------
+            if (dateStartTo != null) {
+                res = res.where()
+                        .lessThanOrEqualTo("dtStart", dateStartTo)
+                        .findAll();
+            }
+
+            // --------------------
+            if (dateEndFrom != null) {
+                res = res.where()
+                        .greaterThanOrEqualTo("dtEnd", dateEndFrom)
+                        .findAll();
+            }
+
+            // --------------------
+            if (dateEndTo != null) {
+                res = res.where()
+                        .lessThanOrEqualTo("dtEnd", dateEndTo)
+                        .findAll();
+            }
+
+            // --------------------
             if (dateChangeFrom != null) {
                 res = res.where()
                         .greaterThanOrEqualTo("dtChange", dateChangeFrom)
@@ -136,30 +166,6 @@ public class AdditionalRequirementsRealm {
 
         List<AdditionalRequirementsDB> result = new ArrayList<>();
         if (res != null) result = INSTANCE.copyFromRealm(res);
-
-//        List<AdditionalRequirementsDB> newResult = new ArrayList<>();
-//
-//        if (dateChangeFrom != null && dateChangeTo != null) {
-//            for (AdditionalRequirementsDB item: result) {
-//                if (Long.parseLong(item.getDtChange()) >= dateChangeFrom &&
-//                        Long.parseLong(item.getDtChange()) <= dateChangeTo)
-//                    newResult.add(item);
-//            }
-//        } else if (dateChangeFrom != null) {
-//            for (AdditionalRequirementsDB item: result) {
-//                if (Long.parseLong(item.getDtChange()) >= dateChangeFrom)
-//                    newResult.add(item);
-//            }
-//        } else if (dateChangeTo != null) {
-//            for (AdditionalRequirementsDB item: result) {
-//                if (Long.parseLong(item.getDtChange()) <= dateChangeTo)
-//                    newResult.add(item);
-//            }
-//        } else {
-//            newResult.addAll(result);
-//        }
-//
-//        return newResult;
 
         return result;
     }

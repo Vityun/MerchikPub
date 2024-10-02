@@ -576,6 +576,8 @@ public class PhotoDownload {
 
                                 stackPhotoDB.showcase_id = item.showcase_id;
 
+                                stackPhotoDB.code_iza = item.codeIZA;
+
                                 stackPhotoDB.setDvi(Integer.valueOf(item.getDvi()));
 
                                 try {
@@ -865,6 +867,9 @@ public class PhotoDownload {
                 stackPhotoDB.setPhoto_typeTxt(String.valueOf(item.getPhotoTpTxt()));
 
                 stackPhotoDB.setDvi(Integer.valueOf(item.getDvi()));
+
+                stackPhotoDB.code_iza = item.codeIZA;
+
                 stackList.add(stackPhotoDB);
 
                 id++;

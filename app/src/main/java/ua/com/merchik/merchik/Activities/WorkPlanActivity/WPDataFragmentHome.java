@@ -105,7 +105,7 @@ public class WPDataFragmentHome extends Fragment {
             cal.set(Calendar.MILLISECOND, 0);
 
             dateFrom = cal.getTime();
-            dateTo = Clock.timeLongToDAte(Clock.getDatePeriodLong(cal.getTime().getTime(), +3) / 1000);
+            dateTo = Clock.timeLongToDAte(Clock.getDatePeriodLong(cal.getTime().getTime(), +7) / 1000);
 
             workPlan = RealmManager.getAllWorkPlan();
             try {

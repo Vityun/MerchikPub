@@ -122,7 +122,7 @@ public class OptionControlAchievements<T> extends OptionControl {
                 // Получение Доп. Требований с дополнительными фильтрами.
                 Long dateChangeTo = Clock.getDatePeriodLong(dateDocument * 1000, -2) / 1000;
 
-                List<AdditionalRequirementsDB> additionalRequirements = AdditionalRequirementsRealm.getDocumentAdditionalRequirements(document, true, Integer.parseInt(optionDB.getOptionControlId()), null, null, null, null, dateChangeTo);
+                List<AdditionalRequirementsDB> additionalRequirements = AdditionalRequirementsRealm.getDocumentAdditionalRequirements(document, true, Integer.parseInt(optionDB.getOptionControlId()), null, null,null, null, null, null, dateChangeTo);
                 for (AdditionalRequirementsDB item : additionalRequirements) {
                     if (!item.getTovarId().equals("0")) spisTovOSV.add(item.getTovarId());
                     if (!item.getManufacturerId().equals("0")) spisTMOSV.add(item.getManufacturerId());
