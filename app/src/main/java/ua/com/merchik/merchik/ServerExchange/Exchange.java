@@ -717,7 +717,11 @@ public class Exchange {
                     }
 
                     try {
-                        tovarNaSklade();
+                        updateStackPhotoDBByType("31");
+                    } catch (Exception e) {}
+
+                    try {
+                        updateStackPhotoDBByType("10");
                     } catch (Exception e) {}
 
                     try {
@@ -1505,16 +1509,16 @@ public class Exchange {
 
     /**
      * 20.09.2024
-     * Получение с Сайта данных(ссылок) для загрузки фото товаров в приложение только типа 31 за больший период
+     * Получение с Сайта данных(ссылок) для загрузки фото товаров в приложение переданного типа за больший период
      */
-    public void tovarNaSklade() {
+    public void updateStackPhotoDBByType(String type) {
         PhotoDownload server = new PhotoDownload();
         PhotoTableRequest data = new PhotoTableRequest();
         data.mod = "images_view";
         data.act = "list_image";
         data.date_from = Clock.today_30;
         data.date_to = Clock.today_7;
-        data.photo_type = "31";
+        data.photo_type = type;
         data.nolimit = "1";
 
         server.getPhotoInfoAndSaveItToDB(data);

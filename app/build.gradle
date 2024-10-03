@@ -21,8 +21,8 @@ android {
         minSdkVersion 21
         targetSdkVersion 34
         //noinspection HighAppVersionCode
-        versionCode  2024100300
-        versionName "2024100300"
+        versionCode  2024100400
+        versionName "2024100400"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
         multiDexEnabled true
@@ -186,6 +186,7 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-reflect:1.8.21")
 
     // firebase
+    implementation 'com.google.firebase:firebase-crashlytics:19.1.0'
 
 
 //    implementation(platform("com.google.firebase:firebase-bom:33.2.0"))

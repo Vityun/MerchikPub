@@ -5,6 +5,8 @@ import android.content.Context;
 
 //import com.google.firebase.FirebaseApp;
 
+import com.google.firebase.FirebaseApp;
+
 import dagger.hilt.android.HiltAndroidApp;
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.database.realm.RealmManager;
@@ -18,12 +20,15 @@ public class MyApplication extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
-//        FirebaseApp.initializeApp(this);
+        FirebaseApp.initializeApp(this);
         RealmManager.init(this);
         RoomManager.init(this);
         Clock.initTime();
 
         MyApplication.context = getApplicationContext();
+
+//        throw new RuntimeException("Test Crash"); // Force a crash
+
     }
 
     public static Context getAppContext() {
