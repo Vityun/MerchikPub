@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "169995436535",
+    "project_id": "merchik-35781",
+    "storage_bucket": "merchik-35781.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:169995436535:android:cee58b22667fba49a92ef2",
+        "android_client_info": {
+          "package_name": "ua.com.merchik.merchik_test"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAB7cwmnvkwH2Tf4azQkTrBKmocG1LffOY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

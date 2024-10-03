@@ -110,7 +110,7 @@ public class OptionControlAvailabilityControlPhotoRemainingGoods<T> extends Opti
             List<ReportPrepareDB> reportPrepare = RealmManager.INSTANCE.copyFromRealm(ReportPrepareRealm.getReportPrepareByDad2(dad2));
 
             //3.0. получим список товаров с особым вниманием (хранится в Доп.Требованиях)
-            List<AdditionalRequirementsDB> additionalRequirements = AdditionalRequirementsRealm.getDocumentAdditionalRequirements(document, true, OPTION_CONTROL_AVAILABILITY_CONTROL_PHOTO_REMAINING_GOODS_ID, null, null, null, null, null);
+            List<AdditionalRequirementsDB> additionalRequirements = AdditionalRequirementsRealm.getDocumentAdditionalRequirements(document, true, OPTION_CONTROL_AVAILABILITY_CONTROL_PHOTO_REMAINING_GOODS_ID, null, null,null, null, null, null, null);
 
             //3.1. получаем список товаров для которых установлен признак ОСВ
             if (additionalRequirements != null && additionalRequirements.size() > 0) {

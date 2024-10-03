@@ -118,6 +118,8 @@ public class RealmManager {
         INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(27, "upload_ekl", 86400, 0, 0, 0, 0, "Вивантажити ЄКЛ", 1));
         INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(28, "photo_tar", 86400, 0, 0, 0, 0, "Фото Задач та Рекламацій", 1));
 
+        INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(29, "dossier_sotr", 86400, 0, 0, 0, 0, "Досье сотрудника", 1));
+
         INSTANCE.commitTransaction();
     }
 

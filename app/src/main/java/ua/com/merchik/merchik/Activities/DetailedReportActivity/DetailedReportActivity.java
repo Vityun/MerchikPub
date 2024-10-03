@@ -859,6 +859,8 @@ public class DetailedReportActivity extends toolbar_menus {
                     photo.setPhoto_num(photoFile.getAbsolutePath());
                     photo.setPhoto_type(Integer.valueOf(MakePhoto.photoType));
 
+                    photo.dt = MakePhoto.dt;
+
                     photo.img_src_id = MakePhoto.img_src_id;
                     photo.showcase_id = MakePhoto.showcase_id;
                     photo.planogram_id = MakePhoto.planogram_id;

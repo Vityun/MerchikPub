@@ -56,6 +56,7 @@ import ua.com.merchik.merchik.data.Database.Room.AddressSDB;
 import ua.com.merchik.merchik.data.Database.Room.CitySDB;
 import ua.com.merchik.merchik.data.Database.Room.ContentSDB;
 import ua.com.merchik.merchik.data.Database.Room.CustomerSDB;
+import ua.com.merchik.merchik.data.Database.Room.DossierSotrSDB;
 import ua.com.merchik.merchik.data.Database.Room.EKL_SDB;
 import ua.com.merchik.merchik.data.Database.Room.LanguagesSDB;
 import ua.com.merchik.merchik.data.Database.Room.OblastSDB;
@@ -80,6 +81,8 @@ import ua.com.merchik.merchik.data.RetrofitResponse.AdditionalMaterialsGroupsRes
 import ua.com.merchik.merchik.data.RetrofitResponse.AdditionalMaterialsLinksResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.AdditionalMaterialsResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.ConductWpDataResponse;
+import ua.com.merchik.merchik.data.RetrofitResponse.DossierSotrItemResponse;
+import ua.com.merchik.merchik.data.RetrofitResponse.DossierSotrResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.Location.LocationList;
 import ua.com.merchik.merchik.data.RetrofitResponse.TovarImgList;
 import ua.com.merchik.merchik.data.RetrofitResponse.TovarImgResponse;
@@ -713,6 +716,17 @@ public class Exchange {
                         globals.writeToMLOG(Clock.getHumanTime() + "_INFO.Exchange.class.startExchange.Ошибка.1." + e + "\n");
                     }
 
+                    try {
+                        updateStackPhotoDBByType("31");
+                    } catch (Exception e) {}
+
+                    try {
+                        updateStackPhotoDBByType("10");
+                    } catch (Exception e) {}
+
+                    try {
+                        updateDossierSotr();
+                    } catch (Exception e) {}
 
                     try {
                     /*                    ReclamationPointExchange tarExchange = new ReclamationPointExchange();
@@ -1493,6 +1507,54 @@ public class Exchange {
         }
     }
 
+    /**
+     * 20.09.2024
+     * Получение с Сайта данных(ссылок) для загрузки фото товаров в приложение переданного типа за больший период
+     */
+    public void updateStackPhotoDBByType(String type) {
+        PhotoDownload server = new PhotoDownload();
+        PhotoTableRequest data = new PhotoTableRequest();
+        data.mod = "images_view";
+        data.act = "list_image";
+        data.date_from = Clock.today_30;
+        data.date_to = Clock.today_7;
+        data.photo_type = type;
+        data.nolimit = "1";
+
+        server.getPhotoInfoAndSaveItToDB(data);
+    }
+
+    public void updateDossierSotr() {
+        SynchronizationTimetableDB synchronizationTimetableDB = RealmManager.INSTANCE.copyFromRealm(RealmManager.getSynchronizationTimetableRowByTable("dossier_sotr"));
+        long dt_change_from = synchronizationTimetableDB.getVpi_app();
+        synchronizationTimetableDB.setVpi_app(System.currentTimeMillis() / 1000);
+        RealmManager.setToSynchronizationTimetableDB(synchronizationTimetableDB);
+
+        JsonObject requestJson = new JsonObject();
+        requestJson.addProperty("mod", "data_list");
+        requestJson.addProperty("act", "spissotr_dosie");
+        requestJson.addProperty("dt_change_from", dt_change_from);
+
+        retrofit2.Call<DossierSotrResponse> call = RetrofitBuilder.getRetrofitInterface().dossierSotr(RetrofitBuilder.contentType, requestJson);
+        call.enqueue(new Callback<DossierSotrResponse>() {
+            @Override
+            public void onResponse(Call<DossierSotrResponse> call, Response<DossierSotrResponse> response) {
+                if (response.isSuccessful() && response.body() != null && response.body().state) {
+                    ArrayList<DossierSotrSDB> dossierSotrSDBList = new ArrayList<>();
+                    for (DossierSotrItemResponse item: response.body().list ) {
+                        dossierSotrSDBList.add(new DossierSotrSDB(item));
+                    }
+                    SQL_DB.dossierSotrDao().insertAll(dossierSotrSDBList);
+                }
+            }
+
+            @Override
+            public void onFailure(Call<DossierSotrResponse> call, Throwable t) {
+            }
+        });
+
+    }
+
 
     /**
      * 09.03.2021
@@ -1646,6 +1708,7 @@ public class Exchange {
                             stackPhotoDB.addr_id = Integer.valueOf(item.getAddrId());
                             stackPhotoDB.approve = Integer.valueOf(item.getApprove());
                             stackPhotoDB.dvi = Integer.valueOf(item.getDvi());
+                            stackPhotoDB.code_iza = item.codeIZA;
                             stackPhotoDB.setVpi(0);
                             stackPhotoDB.setCreate_time(Long.parseLong(item.getDt()) * 1000);
                             stackPhotoDB.setUpload_to_server(0);

@@ -6,6 +6,7 @@ import android.content.Context;
 import android.util.Log;
 
 import io.realm.RealmResults;
+import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.Options.OptionControl;
 import ua.com.merchik.merchik.Options.Options;
@@ -28,6 +29,7 @@ public class OptionControlPhoto<T> extends OptionControl {
     private WpDataDB wpDataDB;
     private Long dad2;
     private AddressSDB addressSDB;
+    private String clientName;
 
     public OptionControlPhoto(Context context, T document, OptionsDB optionDB, OptionMassageType msgType, Options.NNKMode nnkMode, UnlockCodeResultListener unlockCodeResultListener) {
         try {
@@ -51,6 +53,7 @@ public class OptionControlPhoto<T> extends OptionControl {
             this.addressSDB = SQL_DB.addressDao().getById(((WpDataDB) document).getAddr_id());
             this.wpDataDB = (WpDataDB) document;
             this.dad2 = wpDataDB.getCode_dad2();
+            this.clientName = SQL_DB.customerDao().getById(((WpDataDB) document).getClient_id()).nm;
         }else if (document instanceof TasksAndReclamationsSDB){
             this.dad2 = ((TasksAndReclamationsSDB) document).codeDad2SrcDoc;
         }
@@ -67,70 +70,112 @@ public class OptionControlPhoto<T> extends OptionControl {
 
         String typeNm = "";
         int m = Integer.parseInt(optionDB.getAmountMin());
-        if (m == 0) {
-            m = 1;  // Большая кака, но народ попросил так, надо будет у Петрова уточнить как именно оно должно работать ибо у него вроде как так же работатет 29.07.24
-//            if (optionId.equals("164352")){
-//                m = 1;
-//            }else {
-//                m = 3;
-//            }
-        }
+//        if (m == 0) {
+//            m = 1;  // Большая кака, но народ попросил так, надо будет у Петрова уточнить как именно оно должно работать ибо у него вроде как так же работатет 29.07.24
+////            if (optionId.equals("164352")){
+////                m = 1;
+////            }else {
+////                m = 3;
+////            }
+//        }
         int photoType = 0;
 
+        long dad2ForGetStackPhotoDB = dad2;
+        String codeIZAForGetStackPhotoDB = "";
+        long dateFromForGetStackPhotoDB = 0;
+        long dateToForGetStackPhotoDB = 0;
+
         switch (optionId) {
+            case "151594":  // Контроль наличия фото витрины (до начала работ) !smarti!
+                photoType = 14;
+                m = m > 0 ? m : 3;
+                break;
+
             case "164354":  // Фото Планограмми ТТ
                 photoType = 5;
-//                m = 1;
+                m = m > 0 ? m : 1;
                 break;
 
             case "164352":  // Контроль наявності світлини прикасової зони
                 photoType = 45;
                 typeNm = "світлина прикасової зони";
+                m = m > 0 ? m : 1;
                 break;
 
+            case "134583": //!smarti!
             case "84932":
                 photoType = 0;
-//                m = 3;
+                m = m > 0 ? m : 3;
                 break;
 
-            case "132971":
+            case "132971": {
+                int quantityMax = Integer.parseInt(optionDB.getAmountMax());
+                if (quantityMax > 0) {
+                    dad2ForGetStackPhotoDB = 0;
+                    codeIZAForGetStackPhotoDB = wpDataDB.getCode_iza();
+                    dateFromForGetStackPhotoDB = Clock.getDatePeriodLong(wpDataDB.getDt().getTime(), -quantityMax);
+                    dateToForGetStackPhotoDB = Clock.getDatePeriodLong(wpDataDB.getDt().getTime(), 2);
+                }
+
                 photoType = 10; // Проверка наличия Фото тележка с товаром (тип 10)
-//                m = 1;
+                m = m > 0 ? m : 1;
                 break;
+            }
 
-            case "141361":
+            case "141361": {
+                int quantityMax = Integer.parseInt(optionDB.getAmountMax());
+                if (quantityMax > 0) {
+                    dad2ForGetStackPhotoDB = 0;
+                    codeIZAForGetStackPhotoDB = wpDataDB.getCode_iza();
+                    dateFromForGetStackPhotoDB = Clock.getDatePeriodLong(wpDataDB.getDt().getTime(), -quantityMax);
+                    dateToForGetStackPhotoDB = Clock.getDatePeriodLong(wpDataDB.getDt().getTime(), 2);
+                }
+
                 photoType = 31; // Фото товара на скалде
-//                m = 1;
+                m = m > 0 ? m : 1;
                 break;
+            }
 
             case "158606":  // Корпоративный блок
                 photoType = 40;
+                m = m > 0 ? m : 3;
                 break;
 
             case "158607":  // Наполненность полки
                 photoType = 41;
+                m = m > 0 ? m : 3;
                 break;
 
             case "158608":  // Приближенная фото
                 photoType = 39;
+                m = m > 0 ? m : 3;
                 break;
 
             case "158609":  // Дополнительное место продаж
                 photoType = 42;
+                m = m > 0 ? m : 3;
                 break;
 
             case "159726":  // Фото торговой точки
-            case "159725":  // Кнопка "Фото Торговой Точки (ФТТ)"
+            case "159725":  // Кнопка "Фото Торговой Точки (ФТТ)" !smarti!
                 photoType = 37;
+                m = m > 0 ? m : 3;
                 break;
 
             case "165482":  // Контроль наличия Фото - скан посещения в приложении Эффи
                 photoType = 46; // 46 - фото скан посещения в приложении эффи
+                m = m > 0 ? m : 1;
                 break;
 
         }
 
-        RealmResults<StackPhotoDB> stackPhotoDB = StackPhotoRealm.getPhotosByDAD2(dad2, photoType);
+        String photoTypeName = ImagesTypeListRealm.getByID(photoType).getNm();
+
+        RealmResults<StackPhotoDB> stackPhotoDB =
+                dad2ForGetStackPhotoDB > 0 ?
+                        StackPhotoRealm.getPhotosByDAD2(dad2, photoType) :
+                        StackPhotoRealm.getPhotosByRangeDt(dateFromForGetStackPhotoDB / 1000, dateToForGetStackPhotoDB / 1000, codeIZAForGetStackPhotoDB, ((WpDataDB) document).getAddr_id(), photoType);
+
         if (stackPhotoDB != null && stackPhotoDB.size() < m) {
             ImagesTypeListDB item = ImagesTypeListRealm.getByID(photoType);
             stringBuilderMsg.append("Вы должны сделать: ").append(m).append(" фото с типом: ").append(item != null ? item.getNm() : typeNm).append(", а сделали: ").append(stackPhotoDB.size()).append(" - доделайте фотографии.");
@@ -152,6 +197,21 @@ public class OptionControlPhoto<T> extends OptionControl {
             if (optionId.equals("141361")) {
                 signal = false;
                 stringBuilderMsg.append(", але для АТБ, наявність ФЗ ФТС не перевіряємо.");
+            }
+        }else if (Integer.parseInt(wpDataDB.getClient_id()) == 91478 || //91478-Уяви
+                Integer.parseInt(wpDataDB.getClient_id()) == 10822 ||   //10822-Эгмонт
+                Integer.parseInt(wpDataDB.getClient_id()) == 70484 ||   //70484-Кідді Ко
+                Integer.parseInt(wpDataDB.getClient_id()) == 14365 ||   //14365-флеш
+                Integer.parseInt(wpDataDB.getClient_id()) == 10349) {   //10349-Гифт-К
+            if (optionId.equals("141361")) {
+                signal = false;
+                stringBuilderMsg.append("Обнаружено (")
+                        .append(stackPhotoDB.size())
+                        .append(")")
+                        .append(photoTypeName)
+                        .append(" но, для ")
+                        .append(clientName)
+                        .append(" сделано исключение.");
             }
         }
 

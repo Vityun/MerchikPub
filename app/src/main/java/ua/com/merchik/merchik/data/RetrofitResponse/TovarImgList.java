@@ -112,6 +112,9 @@ public class TovarImgList {
     @SerializedName("photo_user_id_txt")
     @Expose
     private String photoUserIdTxt;
+    @SerializedName("code_iza")
+    @Expose
+    public String codeIZA;
 
     public String getID() {
         return iD;

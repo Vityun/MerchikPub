@@ -24,7 +24,8 @@ public class RoomManager {
                         MIGRATION_41_42,
                         MIGRATION_42_51,
                         MIGRATION_51_52,
-                        MIGRATION_52_53
+                        MIGRATION_52_53,
+                        MIGRATION_53_54
                 )
 
                 .build();
@@ -455,6 +456,36 @@ public class RoomManager {
         @Override
         public void migrate(@NonNull SupportSQLiteDatabase database) {
             database.execSQL("ALTER TABLE tasks_and_reclamations ADD COLUMN voteDtUpload INTEGER");
+        }
+    };
+
+    static final Migration MIGRATION_53_54 = new Migration(53, 54) {
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase database) {
+            database.execSQL("CREATE TABLE IF NOT EXISTS `dossier_sotr` (" +
+                    "`id` INTEGER NOT NULL, " +
+                    "`theme_id` INTEGER, " +
+                    "`doc_num` TEXT, " +
+                    "`controller_id` INTEGER, " +
+                    "`exam_id` TEXT, " +
+                    "`addr_id` INTEGER, " +
+                    "`addr_tp_id` INTEGER, " +
+                    "`client_id` TEXT, " +
+                    "`staj_duration` INTEGER, " +
+                    "`notes` TEXT, " +
+                    "`status` INTEGER, " +
+                    "`dt` TEXT, " +
+                    "`coord_id` INTEGER, " +
+                    "`priznak` INTEGER, " +
+                    "`dt_change` INTEGER, " +
+                    "`doljnost` INTEGER, " +
+                    "`option_id` INTEGER, " +
+                    "`stajirovka_id` INTEGER, " +
+                    "`lesson_id` INTEGER, " +
+                    "`license` INTEGER, " +
+                    "`menu_template_id` INTEGER, " +
+                    "`opinion_id` INTEGER, " +
+                    "PRIMARY KEY(`id`))");
         }
     };
 }

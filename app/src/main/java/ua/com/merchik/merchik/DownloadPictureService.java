@@ -164,6 +164,7 @@ public class DownloadPictureService extends Service {
                                 stackPhotoDB.addr_id = Integer.valueOf(item.getAddrId());
                                 stackPhotoDB.approve = Integer.valueOf(item.getApprove());
                                 stackPhotoDB.dvi = Integer.valueOf(item.getDvi());
+                                stackPhotoDB.code_iza = item.codeIZA;
                                 stackPhotoDB.setVpi(0);
                                 stackPhotoDB.setCreate_time(Long.parseLong(item.getDt()) * 1000);
                                 stackPhotoDB.setUpload_to_server(0);

@@ -19,6 +19,7 @@ import ua.com.merchik.merchik.data.Database.Room.CitySDB;
 import ua.com.merchik.merchik.data.Database.Room.ContentSDB;
 import ua.com.merchik.merchik.data.Database.Room.CustomerSDB;
 import ua.com.merchik.merchik.data.Database.Room.DateConverter;
+import ua.com.merchik.merchik.data.Database.Room.DossierSotrSDB;
 import ua.com.merchik.merchik.data.Database.Room.EKL_SDB;
 import ua.com.merchik.merchik.data.Database.Room.FragmentSDB;
 import ua.com.merchik.merchik.data.Database.Room.LanguagesSDB;
@@ -58,6 +59,7 @@ import ua.com.merchik.merchik.database.room.DaoInterfaces.ChatGrpDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.CityDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.ContentDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.CustomerDao;
+import ua.com.merchik.merchik.database.room.DaoInterfaces.DossierSotrDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.EKLDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.FragmentDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.LanguagesDao;
@@ -129,9 +131,10 @@ import ua.com.merchik.merchik.database.room.DaoInterfaces.VotesDao;
                 PlanogrammImagesSDB.class,   // Планограми Идентификаторы
                 SMSPlanSDB.class,       //  СМС А (тут типо должны быть те кто в очереди или недавно отправленные)
                 SMSLogSDB.class,         //  СМС Б
-                SettingsUISDB.class
+                SettingsUISDB.class,
+                DossierSotrSDB.class
         },
-        version = 53
+        version = 54
 )
 
 
@@ -215,6 +218,8 @@ public abstract class AppDatabase extends RoomDatabase {
     public abstract SMSPlanDao smsPlanDao();
 
     public abstract SMSLogDao smsLogDao();
+
+    public abstract DossierSotrDao dossierSotrDao();
 
     public class MyAutoMigration {
     }

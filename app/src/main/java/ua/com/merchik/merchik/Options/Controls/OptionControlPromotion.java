@@ -69,6 +69,9 @@ public class OptionControlPromotion<T> extends OptionControl {
         try {
             this.context = context;
             this.document = document;
+            if (document instanceof WpDataDB) {
+                this.wpDataDB = (WpDataDB) document;
+            }
             this.optionDB = optionDB;
             this.msgType = msgType;
             this.nnkMode = nnkMode;
@@ -114,7 +117,7 @@ public class OptionControlPromotion<T> extends OptionControl {
         List<AdditionalRequirementsDB> additionalRequirements;
         String[] tovIds;
         if (optionDB.getOptionId().equals("80977") || optionDB.getOptionControlId().equals("80977")) {
-            additionalRequirements = AdditionalRequirementsRealm.getDocumentAdditionalRequirements(document, true, OPTION_CONTROL_PROMOTION_ID, null, null, null, null, null);
+            additionalRequirements = AdditionalRequirementsRealm.getDocumentAdditionalRequirements(document, true, OPTION_CONTROL_PROMOTION_ID, null, wpDataDB.getDt(), wpDataDB.getDt(), null, null, null, null);
             tovIds = new String[additionalRequirements.size()];
 
             for (int i = 0; i < additionalRequirements.size(); i++) {

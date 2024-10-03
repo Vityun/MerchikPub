@@ -118,17 +118,17 @@ public class OptionControlAchievements<T> extends OptionControl {
             List<String> spisTovOSV = new ArrayList<>();
             List<String> spisTMOSV = new ArrayList<>();
 
-            if (optionDB.getOptionId().equals("590") || optionDB.getOptionControlId().equals("590")) {
+//            if (optionDB.getOptionId().equals("590") || optionDB.getOptionControlId().equals("590")) {
                 // Получение Доп. Требований с дополнительными фильтрами.
                 Long dateChangeTo = Clock.getDatePeriodLong(dateDocument * 1000, -2) / 1000;
 
-                List<AdditionalRequirementsDB> additionalRequirements = AdditionalRequirementsRealm.getDocumentAdditionalRequirements(document, true, 590, null, null, null, null, dateChangeTo);
+                List<AdditionalRequirementsDB> additionalRequirements = AdditionalRequirementsRealm.getDocumentAdditionalRequirements(document, true, Integer.parseInt(optionDB.getOptionControlId()), null, null,null, null, null, null, dateChangeTo);
                 for (AdditionalRequirementsDB item : additionalRequirements) {
                     if (!item.getTovarId().equals("0")) spisTovOSV.add(item.getTovarId());
                     if (!item.getManufacturerId().equals("0")) spisTMOSV.add(item.getManufacturerId());
                 }
                 spisTovOSV.sort(null);  // Сортирует по возрастанию // аналог Collections.sort(spisTovOSV);
-            }
+//            }
 
             // 3.1. Получим данные о достижениях.
             // Сразу отсортировали (свежие должны быть сверху)

@@ -127,6 +127,10 @@ public class ModImagesViewList {
     @Expose
     public String showcase_id;
 
+    @SerializedName("code_iza")
+    @Expose
+    public String codeIZA;
+
     public String getID() {
         return iD;
     }

@@ -77,6 +77,7 @@ public class StackPhotoDB extends RealmObject implements DataObjectUI {
 
     public String img_src_id;
     public String showcase_id;
+    public String code_iza;
     public String planogram_id;
     public String planogram_img_id;
 
@@ -88,45 +89,45 @@ public class StackPhotoDB extends RealmObject implements DataObjectUI {
 
 
     /*для сохранения фото Сотрудников*/
-    public StackPhotoDB(int id, Integer user_id, long vpi, long create_time, long upload_to_server, long get_on_server, String photo_num, Integer photo_type, String photo_size, String photo_user_id, String userTxt, String photoServerURL) {
-        this.id = id;
-        this.user_id = user_id;
-        this.vpi = vpi;
-        this.create_time = create_time;
-        this.upload_to_server = upload_to_server;
-        this.get_on_server = get_on_server;
-        this.photo_num = photo_num;
-        this.photo_type = photo_type;
-        this.photo_size = photo_size;
-        this.photo_user_id = photo_user_id;
-        this.userTxt = userTxt;
-        this.photoServerURL = photoServerURL;
-    }
-
-    public StackPhotoDB(int id, Integer user_id, Integer addr_id, String client_id, Integer theme_id, String time_event, long vpi, long create_time, long upload_to_server, long get_on_server, long code_dad2, String photo_num, String photo_hash, Integer photo_type, String photo_user_id, String photo_group_id, String doc_id, String comment, String gp, long upload_time, long upload_status, boolean status) {
-        this.id = id;
-        this.user_id = user_id;
-        this.addr_id = addr_id;
-        this.client_id = client_id;
-        this.theme_id = theme_id;
-        this.time_event = time_event;
-        this.vpi = vpi;
-        this.create_time = create_time;
-        this.upload_to_server = upload_to_server;
-        this.get_on_server = get_on_server;
-        this.code_dad2 = code_dad2;
-        this.photo_num = photo_num;
-        this.photo_hash = photo_hash;
-        this.photo_type = photo_type;
-        this.photo_user_id = photo_user_id;
-        this.photo_group_id = photo_group_id;
-        this.doc_id = doc_id;
-        this.comment = comment;
-        this.gp = gp;
-        this.upload_time = upload_time;
-        this.upload_status = upload_status;
-        this.status = status;
-    }
+//    public StackPhotoDB(int id, Integer user_id, long vpi, long create_time, long upload_to_server, long get_on_server, String photo_num, Integer photo_type, String photo_size, String photo_user_id, String userTxt, String photoServerURL) {
+//        this.id = id;
+//        this.user_id = user_id;
+//        this.vpi = vpi;
+//        this.create_time = create_time;
+//        this.upload_to_server = upload_to_server;
+//        this.get_on_server = get_on_server;
+//        this.photo_num = photo_num;
+//        this.photo_type = photo_type;
+//        this.photo_size = photo_size;
+//        this.photo_user_id = photo_user_id;
+//        this.userTxt = userTxt;
+//        this.photoServerURL = photoServerURL;
+//    }
+//
+//    public StackPhotoDB(int id, Integer user_id, Integer addr_id, String client_id, Integer theme_id, String time_event, long vpi, long create_time, long upload_to_server, long get_on_server, long code_dad2, String photo_num, String photo_hash, Integer photo_type, String photo_user_id, String photo_group_id, String doc_id, String comment, String gp, long upload_time, long upload_status, boolean status) {
+//        this.id = id;
+//        this.user_id = user_id;
+//        this.addr_id = addr_id;
+//        this.client_id = client_id;
+//        this.theme_id = theme_id;
+//        this.time_event = time_event;
+//        this.vpi = vpi;
+//        this.create_time = create_time;
+//        this.upload_to_server = upload_to_server;
+//        this.get_on_server = get_on_server;
+//        this.code_dad2 = code_dad2;
+//        this.photo_num = photo_num;
+//        this.photo_hash = photo_hash;
+//        this.photo_type = photo_type;
+//        this.photo_user_id = photo_user_id;
+//        this.photo_group_id = photo_group_id;
+//        this.doc_id = doc_id;
+//        this.comment = comment;
+//        this.gp = gp;
+//        this.upload_time = upload_time;
+//        this.upload_status = upload_status;
+//        this.status = status;
+//    }
 
     public StackPhotoDB(int id, String photoServerId, Integer object_id, Integer user_id, Integer addr_id, String client_id, Integer theme_id, String time_event, long vpi, long create_time, long upload_to_server, long get_on_server, long code_dad2, String photo_num, String photo_hash, Integer photo_type, String photo_user_id, String photo_group_id, String doc_id, String comment, String gp, long upload_time, long upload_status, boolean status, String userTxt, String customerTxt, String addressTxt) {
         this.id = id;

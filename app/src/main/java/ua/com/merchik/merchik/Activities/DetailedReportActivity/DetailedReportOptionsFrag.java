@@ -354,8 +354,27 @@ public class DetailedReportOptionsFrag extends Fragment {
                 }
             });
 
+        } catch (Exception e) {
+            Log.e("R_TRANSLATES", "convertedObjectERROR: " + e);
+            e.printStackTrace();
+        }
+
+        return v;
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+
+        try {
 
             Log.e("R_TRANSLATES", "convertedObject: START");
+
+            WorkPlan workPlan = new WorkPlan();
+
+            Options options = new Options();
+
+            List<OptionsDB> optionsButtons = workPlan.getOptionButtons2(workPlan.getWpOpchetId(wpDataDB), wpDataDB.getId());
 
             List<Integer> ids = new ArrayList<>();
             for (OptionsDB item : optionsButtons) {
@@ -394,12 +413,12 @@ public class DetailedReportOptionsFrag extends Fragment {
                     }
                 });
             }
+
+            recycleViewDRAdapter.setDataButtons(optionsButtons);
         } catch (Exception e) {
             Log.e("R_TRANSLATES", "convertedObjectERROR: " + e);
             e.printStackTrace();
         }
-
-        return v;
     }
 
     @Override

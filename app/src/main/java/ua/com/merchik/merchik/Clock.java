@@ -15,6 +15,7 @@ public class Clock {
     public static String tomorrow;
     public static String tomorrow7; // +7 дней
     public static String today_7; // -7 дней
+    public static String today_30; // -30 дней
 
     public static void initTime() {
         yesterday = getYesterdayDateString();
@@ -22,6 +23,7 @@ public class Clock {
         tomorrow = getTomorrowDateString();
         tomorrow7 = getTomorrowDateString7();
         today_7 = getTomorrowDateString_7();
+        today_30 = getTomorrowDateString_30();
 
 
         Log.e("initTime", "yesterday: " + yesterday);
@@ -56,6 +58,13 @@ public class Clock {
         DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
         Calendar cal = Calendar.getInstance();
         cal.add(Calendar.DATE, -7);
+        return dateFormat.format(cal.getTime());
+    }
+
+    public static String getTomorrowDateString_30() {
+        DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+        Calendar cal = Calendar.getInstance();
+        cal.add(Calendar.DATE, -30);
         return dateFormat.format(cal.getTime());
     }
 
