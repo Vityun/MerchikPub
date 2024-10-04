@@ -39,7 +39,7 @@ class ThemeDBViewModel @Inject constructor(
     override fun updateFilters() {
         val data = when(contextUI) {
             ContextUI.THEME_FROM_ACHIEVEMENT -> {
-                val themeIDs: Array<String> = Gson().fromJson(dataJson, object : TypeToken<Array<String>>() {}.type)
+                val themeIDs: Array<String> = Gson().fromJson(dataJson, Array<String>::class.java)
                 ThemeRealm.getThemeByIds(themeIDs)
             }
             else -> { emptyList() }
