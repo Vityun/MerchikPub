@@ -25,14 +25,17 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import ua.com.merchik.merchik.R
+import ua.com.merchik.merchik.features.main.Main.MainViewModel
 
 @Composable
 fun TextFieldInputRounded(
+    viewModel: MainViewModel,
     modifier: Modifier = Modifier,
     value: String,
     onValueChange: (String) -> Unit
@@ -52,7 +55,7 @@ fun TextFieldInputRounded(
                 modifier = Modifier
                     .align(Alignment.CenterStart)
                     .padding(start = 7.dp),
-                text = "Пошук",
+                text = viewModel.getTranslateString(stringResource(id = R.string.text_find)),
                 fontSize = 16.sp,
                 color = colorResource(id = R.color.hintColorDefault),
             )

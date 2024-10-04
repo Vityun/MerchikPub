@@ -219,6 +219,13 @@
     <string name="total_number_selected">Загальна кількість елементів %s шт.</string>
     <string name="total_number_marked">Загальна кількість помічених елементів %s шт.</string>
 
+    <string name="filter_not_available_edit">Фільтр недоступний для редагування</string>
+    <string name="font_size">Розмір шрифтів</string>
+    <string name="text_add">Добавить...</string>
+    <string name="option_in_progress">Данная опция находится в стадии разработки</string>
+    <string name="text_find">Пошук</string>
+
+
 </resources>
 
     <!--

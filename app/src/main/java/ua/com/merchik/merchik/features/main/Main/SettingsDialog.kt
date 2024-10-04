@@ -137,8 +137,8 @@ fun SettingsDialog(viewModel: MainViewModel, onDismiss: () -> Unit) {
 
                     Spacer(modifier = Modifier.height(10.dp))
 
-                    Tooltip(text = "Данная опция находится в стадии разработки") {
-                        FontSizeSlider(size = 16 + offsetSizeFont) { offsetSizeFont = it - 16 }
+                    Tooltip(text = viewModel.getTranslateString(stringResource(id = R.string.option_in_progress))) {
+                        FontSizeSlider(viewModel, size = 16 + offsetSizeFont) { offsetSizeFont = it - 16 }
                     }
 
                     Row {

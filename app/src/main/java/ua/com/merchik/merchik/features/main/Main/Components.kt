@@ -24,11 +24,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import ua.com.merchik.merchik.R
 import ua.com.merchik.merchik.dataLayer.model.FieldValue
 import ua.com.merchik.merchik.dataLayer.model.SettingsItemUI
 import ua.com.merchik.merchik.dataLayer.model.TextField
@@ -96,7 +98,7 @@ fun SettingsItemView(item: SettingsItemUI) {
 }
 
 @Composable
-fun FontSizeSlider(modifier: Modifier = Modifier, size: Float, onChanged: (Float) -> Unit) {
+fun FontSizeSlider(viewModel: MainViewModel, modifier: Modifier = Modifier, size: Float, onChanged: (Float) -> Unit) {
     var fontSize by remember { mutableStateOf(size) }
 
     Column(
@@ -116,7 +118,7 @@ fun FontSizeSlider(modifier: Modifier = Modifier, size: Float, onChanged: (Float
 
                 Text(
                     modifier = Modifier.weight(1f),
-                    text = "Розмір шрифтів",
+                    text = viewModel.getTranslateString(stringResource(id = R.string.font_size)),
                     textAlign = TextAlign.Center,
                     style = TextStyle(fontSize = fontSize.sp)
                 )

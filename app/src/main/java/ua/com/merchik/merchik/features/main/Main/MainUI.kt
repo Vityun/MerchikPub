@@ -268,6 +268,7 @@ fun MainUI(viewModel: MainViewModel, context: Context) {
                 ) {
 
                     TextFieldInputRounded(
+                        viewModel,
                         value = uiState.filters?.searchText ?: "",
                         onValueChange = {
                             val filters = Filters(

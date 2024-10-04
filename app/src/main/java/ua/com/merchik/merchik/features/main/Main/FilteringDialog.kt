@@ -128,7 +128,7 @@ fun FilteringDialog(viewModel: MainViewModel,
                         if (it.enabled)
                             ItemDateFilterUI(it, selectedFilterDateStart, selectedFilterDateEnd)
                         else
-                            Tooltip(text = "Фільтр недоступний для редагування") {
+                            Tooltip(text = viewModel.getTranslateString(stringResource(id = R.string.filter_not_available_edit))) {
                                 ItemDateFilterUI(it, selectedFilterDateStart, selectedFilterDateEnd)
                             }
                     }
@@ -152,7 +152,7 @@ fun FilteringDialog(viewModel: MainViewModel,
                             ) {
                                 items(it) {
                                     if (it.enabled)
-                                        ItemFilterUI(viewModel.context, it) { changedItemFilter ->
+                                        ItemFilterUI(viewModel, viewModel.context, it) { changedItemFilter ->
                                             uiState.filters?.copy(
                                                 items = uiState.filters?.items?.map {
                                                     if (it.clazz == changedItemFilter.clazz) changedItemFilter
@@ -164,8 +164,8 @@ fun FilteringDialog(viewModel: MainViewModel,
                                             }
                                         }
                                     else {
-                                        Tooltip(text = "Фільтр недоступний для редагування!") {
-                                            ItemFilterUI(viewModel.context, it)
+                                        Tooltip(text = viewModel.getTranslateString(stringResource(id = R.string.filter_not_available_edit))) {
+                                            ItemFilterUI(viewModel, viewModel.context, it)
                                         }
                                     }
                                     Spacer(modifier = Modifier.padding(10.dp))
@@ -252,7 +252,7 @@ private fun ItemDateFilterUI(
 }
 
 @Composable
-private fun ItemFilterUI(context: Context?, itemFilter: ItemFilter, onChanged: ((ItemFilter) -> Unit)? = null) {
+private fun ItemFilterUI(viewModel: MainViewModel, context: Context?, itemFilter: ItemFilter, onChanged: ((ItemFilter) -> Unit)? = null) {
     var isExpanded by remember { mutableStateOf(false) }
 
     Column(Modifier.padding(end = 10.dp)) {
@@ -311,7 +311,7 @@ private fun ItemFilterUI(context: Context?, itemFilter: ItemFilter, onChanged: (
                                 bottom = 3.dp,
                                 end = 7.dp
                             ),
-                        text = "Добавить..."
+                        text = viewModel.getTranslateString(stringResource(id = R.string.text_add))
                     )
                 }
 
