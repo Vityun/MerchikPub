@@ -582,6 +582,8 @@ public class Options {
     @RequiresApi(api = Build.VERSION_CODES.N)
     public <T> void optionControlNewAlgo(List<OptionsDB> optionsDBList, Context context, T dataDB, OptionsDB option, List<OptionsDB> optionList, OptionMassageType type, NNKMode mode, boolean check, Clicks.clickVoid click) {
         count = 0;
+        List<OptionsDB> success = new ArrayList<>();
+        List<OptionsDB> failure = new ArrayList<>();
         int optionId2 = Integer.parseInt(option.getOptionId());
         if (optionsDBList != null && optionsDBList.size() > 0) {
             for (OptionsDB item : optionsDBList) {
@@ -604,8 +606,9 @@ public class Options {
                     @Override
                     public void onUnlockCodeSuccess() {
 //                        Toast.makeText(context, "Option: " + item.getOptionTxt() + " execute Success", Toast.LENGTH_LONG).show();
-//                        click.click();
+//                        click.click(); +84932/+158608/+8299/+157352/+160568/+134583/139577/+158607
                         count++;
+                        success.add(item);
                         if (count == optionsDBList.size()) {
                             click.click();
                             // Обычное выполнение нажатия на кнопку.
@@ -625,6 +628,7 @@ public class Options {
 
                     @Override
                     public void onUnlockCodeFailure() {
+                        failure.add(item);
                         click.click();
                     }
                 });
@@ -2701,104 +2705,110 @@ public class Options {
      * Нажатие на кнопку Для установки окончания рабочего дня ( 138520 )
      */
     private boolean optionEndWork_138520(Context context, WpDataDB wpDataDB, OptionsDB optionsDB, OptionMassageType type, NNKMode mode, OptionControl.UnlockCodeResultListener unlockCodeResultListener) {
-        boolean result;
-        Globals.writeToMLOG("INFO", "DetailedReportButtons.class.pressEndWork", "ENTER. wpDataDB.codeDAD2: " + wpDataDB.getCode_dad2());
-        if (wpDataDB.getVisit_end_dt() > 0) {
-            Toast.makeText(context, "Работа уже окончена!", Toast.LENGTH_SHORT).show();
-            Globals.writeToMLOG("INFO", "DetailedReportButtons.class.pressEndWork", "Работа уже окончена!. wpDataDB.codeDAD2: " + wpDataDB.getCode_dad2());
-            unlockCodeResultListener.onUnlockCodeSuccess();
-            result = true;
-        } else {
-            if (wpDataDB.getVisit_start_dt() > 0) {
-                try {
-                    long endTime = System.currentTimeMillis() / 1000;
-                    RealmManager.INSTANCE.executeTransaction(realm -> {
-                        wpDataDB.setDt_update(System.currentTimeMillis() / 1000);
-                        wpDataDB.setVisit_end_dt(endTime);
-                        wpDataDB.setClient_end_dt(endTime);
-                        wpDataDB.startUpdate = true;
-                        wpDataDB.client_work_duration = (endTime - wpDataDB.getClient_start_dt());
-                        realm.insertOrUpdate(wpDataDB);
-                    });
+        boolean result = false;
+        try {
+            Globals.writeToMLOG("INFO", "DetailedReportButtons.class.pressEndWork", "ENTER. wpDataDB.codeDAD2: " + wpDataDB.getCode_dad2());
+            if (wpDataDB.getVisit_end_dt() > 0) {
+                Toast.makeText(context, "Работа уже окончена!", Toast.LENGTH_SHORT).show();
+                Globals.writeToMLOG("INFO", "DetailedReportButtons.class.pressEndWork", "Работа уже окончена!. wpDataDB.codeDAD2: " + wpDataDB.getCode_dad2());
+                unlockCodeResultListener.onUnlockCodeSuccess();
+                result = true;
+            } else {
+                if (wpDataDB.getVisit_start_dt() > 0) {
+                    try {
+                        // Сохраняю время
+                        long endTime = System.currentTimeMillis() / 1000;
+                        RealmManager.INSTANCE.executeTransaction(realm -> {
+                            wpDataDB.setDt_update(System.currentTimeMillis() / 1000);
+                            wpDataDB.setVisit_end_dt(endTime);
+                            wpDataDB.setClient_end_dt(endTime);
+                            wpDataDB.startUpdate = true;
+                            wpDataDB.client_work_duration = (endTime - wpDataDB.getClient_start_dt());
+                            realm.insertOrUpdate(wpDataDB);
+                        });
 
-                    // Это жосткие костыли
-                    Exchange exchange = new Exchange();
-                    exchange.sendWpDataToServer(new Click() {
-                        @Override
-                        public <T> void onSuccess(T data) {
-                            String msg = (String) data;
-                            Globals.writeToMLOG("INFO", "DetailedReportButtons.class.pressStartWork.onSuccess", "msg: " + msg);
-                            WorkPlan workPlan = new WorkPlan();
-                            List<OptionsDB> opt = workPlan.getOptionButtons2(workPlan.getWpOpchetId(wpDataDB), wpDataDB.getId());
-                            new Options().conduct(context, wpDataDB, opt, DEFAULT_CONDUCT, new Clicks.click() {
-                                @Override
-                                public <T> void click(T data) {
-                                    OptionsDB optionsDB = (OptionsDB) data;
-                                    OptionMassageType msgType = new OptionMassageType();
-                                    msgType.type = OptionMassageType.Type.DIALOG;
-                                    new Options().optControl(context, wpDataDB, optionsDB, Integer.parseInt(optionsDB.getOptionControlId()), null, msgType, Options.NNKMode.CHECK, new OptionControl.UnlockCodeResultListener() {
-                                        @Override
-                                        public void onUnlockCodeSuccess() {
+                        // Это жосткие костыли
+                        // При нажатии на "Конец работы" - начинаю выгружать данные палана работ,
+                        // что б мерчик не ждал следующего автоматического обмена
+                        Exchange exchange = new Exchange();
+                        exchange.sendWpDataToServer(new Click() {
+                            @Override
+                            public <T> void onSuccess(T data) {
+                                String msg = (String) data;
+                                Globals.writeToMLOG("INFO", "DetailedReportButtons.class.pressStartWork.onSuccess", "msg: " + msg);
+                                WorkPlan workPlan = new WorkPlan();
+                                List<OptionsDB> opt = workPlan.getOptionButtons2(workPlan.getWpOpchetId(wpDataDB), wpDataDB.getId());
+                                new Options().conduct(context, wpDataDB, opt, DEFAULT_CONDUCT, new Clicks.click() {
+                                    @Override
+                                    public <T> void click(T data) {
+                                        OptionsDB optionsDB = (OptionsDB) data;
+                                        OptionMassageType msgType = new OptionMassageType();
+                                        msgType.type = OptionMassageType.Type.DIALOG;
+                                        new Options().optControl(context, wpDataDB, optionsDB, Integer.parseInt(optionsDB.getOptionControlId()), null, msgType, Options.NNKMode.CHECK, new OptionControl.UnlockCodeResultListener() {
+                                            @Override
+                                            public void onUnlockCodeSuccess() {
 
-                                        }
+                                            }
 
-                                        @Override
-                                        public void onUnlockCodeFailure() {
+                                            @Override
+                                            public void onUnlockCodeFailure() {
 
-                                        }
-                                    });
-                                }
-                            });
-                        }
+                                            }
+                                        });
+                                    }
+                                });
+                            }
 
-                        @Override
-                        public void onFailure(String error) {
-                            Globals.writeToMLOG("INFO", "DetailedReportButtons.class.pressStartWork.onFailure", "error: " + error);
-                            WorkPlan workPlan = new WorkPlan();
-                            List<OptionsDB> opt = workPlan.getOptionButtons2(workPlan.getWpOpchetId(wpDataDB), wpDataDB.getId());
-                            new Options().conduct(context, wpDataDB, opt, DEFAULT_CONDUCT, new Clicks.click() {
-                                @Override
-                                public <T> void click(T data) {
-                                    OptionsDB optionsDB = (OptionsDB) data;
-                                    OptionMassageType msgType = new OptionMassageType();
-                                    msgType.type = OptionMassageType.Type.DIALOG;
-                                    new Options().optControl(context, wpDataDB, optionsDB, Integer.parseInt(optionsDB.getOptionControlId()), null, msgType, Options.NNKMode.CHECK, new OptionControl.UnlockCodeResultListener() {
-                                        @Override
-                                        public void onUnlockCodeSuccess() {
+                            @Override
+                            public void onFailure(String error) {
+                                Globals.writeToMLOG("INFO", "DetailedReportButtons.class.pressStartWork.onFailure", "error: " + error);
+                                WorkPlan workPlan = new WorkPlan();
+                                List<OptionsDB> opt = workPlan.getOptionButtons2(workPlan.getWpOpchetId(wpDataDB), wpDataDB.getId());
+                                new Options().conduct(context, wpDataDB, opt, DEFAULT_CONDUCT, new Clicks.click() {
+                                    @Override
+                                    public <T> void click(T data) {
+                                        OptionsDB optionsDB = (OptionsDB) data;
+                                        OptionMassageType msgType = new OptionMassageType();
+                                        msgType.type = OptionMassageType.Type.DIALOG;
+                                        new Options().optControl(context, wpDataDB, optionsDB, Integer.parseInt(optionsDB.getOptionControlId()), null, msgType, Options.NNKMode.CHECK, new OptionControl.UnlockCodeResultListener() {
+                                            @Override
+                                            public void onUnlockCodeSuccess() {
 
-                                        }
+                                            }
 
-                                        @Override
-                                        public void onUnlockCodeFailure() {
+                                            @Override
+                                            public void onUnlockCodeFailure() {
 
-                                        }
-                                    });
-                                }
-                            });
-                        }
-                    });
+                                            }
+                                        });
+                                    }
+                                });
+                            }
+                        });
 
-                    Globals.writeToMLOG("INFO", "_INFO.DetailedReportButtons.class.pressEndWork", "Вы закончили работу в: " + endTime + " / отчёт: " + wpDataDB.getDoc_num_otchet());
-                    Toast.makeText(context, "Вы окончили работу в: " + Clock.getHumanTimeOpt(endTime * 1000) + "\n\nНе забудьте нажать 'Провести', что б система проверила текущий документ и начислила Вам премиальные", Toast.LENGTH_SHORT).show();
-                    unlockCodeResultListener.onUnlockCodeSuccess();
-                    result = true;
-                } catch (Exception e) {
-                    // Set to log error
-                    Toast.makeText(context, "Возникла ошибка: " + e, Toast.LENGTH_SHORT).show();
-                    Globals.writeToMLOG("ERROR", "DetailedReportButtons.class.pressEndWork", "wpDataDB.codeDAD2: " + wpDataDB.getCode_dad2() + "Exception e: " + e);
+                        Globals.writeToMLOG("INFO", "_INFO.DetailedReportButtons.class.pressEndWork", "Вы закончили работу в: " + endTime + " / отчёт: " + wpDataDB.getDoc_num_otchet());
+                        Toast.makeText(context, "Вы окончили работу в: " + Clock.getHumanTimeOpt(endTime * 1000) + "\n\nНе забудьте нажать 'Провести', что б система проверила текущий документ и начислила Вам премиальные", Toast.LENGTH_SHORT).show();
+                        unlockCodeResultListener.onUnlockCodeSuccess();
+                        result = true;
+                    } catch (Exception e) {
+                        // Set to log error
+                        Toast.makeText(context, "Возникла ошибка: " + e, Toast.LENGTH_SHORT).show();
+                        Globals.writeToMLOG("ERROR", "DetailedReportButtons.class.pressEndWork", "wpDataDB.codeDAD2: " + wpDataDB.getCode_dad2() + "Exception e: " + e);
+                        unlockCodeResultListener.onUnlockCodeFailure();
+                        result = false;
+                    }
+                } else {
+                    Toast.makeText(context, "Вы не можете закончить работу не начав её", Toast.LENGTH_SHORT).show();
+                    Globals.writeToMLOG("INFO", "DetailedReportButtons.class.pressEndWork", "Вы не можете закончить работу не начав её. wpDataDB.codeDAD2: " + wpDataDB.getCode_dad2());
                     unlockCodeResultListener.onUnlockCodeFailure();
                     result = false;
                 }
-            } else {
-                Toast.makeText(context, "Вы не можете закончить работу не начав её", Toast.LENGTH_SHORT).show();
-                Globals.writeToMLOG("INFO", "DetailedReportButtons.class.pressEndWork", "Вы не можете закончить работу не начав её. wpDataDB.codeDAD2: " + wpDataDB.getCode_dad2());
-                unlockCodeResultListener.onUnlockCodeFailure();
-                result = false;
             }
+            Globals.writeToMLOG("INFO", "DetailedReportButtons.class.pressEndWork", "OUT. wpDataDB.codeDAD2: " + wpDataDB.getCode_dad2());
+
+        }catch (Exception e){
+            Log.e("optionEndWork_138520", "Exception e: " + e);
         }
-        Globals.writeToMLOG("INFO", "DetailedReportButtons.class.pressEndWork", "OUT. wpDataDB.codeDAD2: " + wpDataDB.getCode_dad2());
-
-
         return result;
     }
 
@@ -3189,6 +3199,7 @@ public class Options {
                         realm.insertOrUpdate(optionsDB);
                     }
                 });
+                unlockCodeResultListener.onUnlockCodeSuccess();
             } else {
                 RealmManager.INSTANCE.executeTransaction(realm -> {
                     if (optionsDB != null) {
@@ -3196,8 +3207,23 @@ public class Options {
                         realm.insertOrUpdate(optionsDB);
                     }
                 });
+
+                DialogData dialog = new DialogData(context);
+                dialog.setTitle("Версія додатку");
+                dialog.setText("У вас СТАРА версія додатку(" + currentVer + "), Вам потрібно оновитися до: " + minimalVer + "!");
+                dialog.setClose(dialog::dismiss);
+                dialog.show();
+
+                unlockCodeResultListener.onUnlockCodeFailure();
             }
+
         } catch (Exception e) {
+            DialogData dialog = new DialogData(context);
+            dialog.setTitle("Версія додатку");
+            dialog.setText("При обрахунку опції виникла помилка, зверніться до Вашого керівника\n\nПомилка: " + e);
+            dialog.setClose(dialog::dismiss);
+            dialog.show();
+            unlockCodeResultListener.onUnlockCodeFailure();
             Globals.writeToMLOG("ERROR", "optionControlVersion_139577", "Проблема с версией приложения в опции контроля. : " + e);
         }
 

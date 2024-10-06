@@ -73,6 +73,7 @@ public class VersionApp {
 
             @Override
             public void onFailure(retrofit2.Call<AppVersion> call, Throwable t) {
+                VERSION_APP = 0L;
                 Log.e("getVer", "onFailure: " + t);
                 callback.onFailure("Получить номер актуальной версии не получилось. Проверьте наличие интернета и повторите попытку позже.\n\n" + t.toString());
             }
