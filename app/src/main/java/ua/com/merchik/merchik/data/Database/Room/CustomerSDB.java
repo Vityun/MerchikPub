@@ -15,6 +15,7 @@ import java.sql.Date;
 
 import ua.com.merchik.merchik.dataLayer.DataObjectUI;
 import ua.com.merchik.merchik.dataLayer.model.MerchModifier;
+import ua.com.merchik.merchik.features.main.CustomerSDBOverride;
 
 @Entity(tableName = "client")
 public class CustomerSDB implements DataObjectUI {

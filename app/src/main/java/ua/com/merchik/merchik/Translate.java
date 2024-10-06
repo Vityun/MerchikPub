@@ -311,70 +311,90 @@ public class Translate {
         *
         * */
 
-        AddTranslation data = new AddTranslation(
-                "1",
-                "AR_name",
-                "Требование",
-                "WP",
-                "",
-                ""
-        );
-
-        AddTranslation data1 = new AddTranslation(
-                "2",
-                "coord_accuracy",
-                "Точность",
-                "app",
-                "all",
-                ""
-        );
-
-        AddTranslation data2 = new AddTranslation(
-                "3",
-                "coord_time_ddMM_hhmm",
-                "Время GPS/GSM (д.м ч:м)",
-                "app",
-                "all",
-                ""
-        );
-
-
-        AddTranslation data3 = new AddTranslation(
-                "4",
-                "coord_distance_m",
-                "Расстояние до ТТ (м)",
-                "app",
-                "all",
-                ""
-        );
-
-
-        AddTranslation data4 = new AddTranslation(
-                "5",
-                "coord_distance_km",
-                "Расстояние до ТТ (км)",
-                "app",
-                "all",
-                ""
-        );
+//        AddTranslation data = new AddTranslation(
+//                "1",
+//                "AR_name",
+//                "Требование",
+//                "WP",
+//                "",
+//                ""
+//        );
+//
+//        AddTranslation data1 = new AddTranslation(
+//                "2",
+//                "coord_accuracy",
+//                "Точность",
+//                "app",
+//                "all",
+//                ""
+//        );
+//
+//        AddTranslation data2 = new AddTranslation(
+//                "3",
+//                "coord_time_ddMM_hhmm",
+//                "Время GPS/GSM (д.м ч:м)",
+//                "app",
+//                "all",
+//                ""
+//        );
+//
+//
+//        AddTranslation data3 = new AddTranslation(
+//                "4",
+//                "coord_distance_m",
+//                "Расстояние до ТТ (м)",
+//                "app",
+//                "all",
+//                ""
+//        );
+//
+//
+//        AddTranslation data4 = new AddTranslation(
+//                "5",
+//                "coord_distance_km",
+//                "Расстояние до ТТ (км)",
+//                "app",
+//                "all",
+//                ""
+//        );
 
 
         AddTranslation data5 = new AddTranslation(
-                "6",
-                "provider",
-                "Источник",
+                "1",
+                "ThemeDB_comment",
+                "Комментарий",
+                "app",
+                "all",
+                ""
+        );
+
+        AddTranslation data6 = new AddTranslation(
+                "2",
+                "ThemeDB_id",
+                "Идентификатор",
+                "app",
+                "all",
+                ""
+        );
+
+        AddTranslation data7 = new AddTranslation(
+                "3",
+                "ThemeDB_nm",
+                "Наименование",
                 "app",
                 "all",
                 ""
         );
 
 
-        res.add(data);
-        res.add(data1);
-        res.add(data2);
-        res.add(data3);
-        res.add(data4);
+//        res.add(data);
+//        res.add(data1);
+//        res.add(data2);
+//        res.add(data3);
+//        res.add(data4);
         res.add(data5);
+        res.add(data6);
+        res.add(data7);
 
         return res;
     }

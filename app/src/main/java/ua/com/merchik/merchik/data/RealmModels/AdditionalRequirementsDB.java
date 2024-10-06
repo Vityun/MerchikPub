@@ -11,7 +11,7 @@ import org.json.JSONObject;
 import java.util.Date;
 
 import io.realm.RealmObject;
-import ua.com.merchik.merchik.data.Database.Room.AdditionalRequirementsDBOverride;
+import ua.com.merchik.merchik.features.main.AdditionalRequirementsDBOverride;
 import ua.com.merchik.merchik.dataLayer.DataObjectUI;
 import ua.com.merchik.merchik.dataLayer.model.MerchModifier;
 

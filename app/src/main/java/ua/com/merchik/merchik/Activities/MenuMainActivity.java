@@ -23,6 +23,7 @@ import retrofit2.Response;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.ServerExchange.ExchangeInterface;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.UsersExchange;
+import ua.com.merchik.merchik.Translate;
 import ua.com.merchik.merchik.Utils.CodeGenerator;
 import ua.com.merchik.merchik.data.Database.Room.UsersSDB;
 import ua.com.merchik.merchik.data.RealmModels.AppUsersDB;
@@ -77,6 +78,8 @@ public class MenuMainActivity extends toolbar_menus {
     }
 
     private void test() {
+//        new Translate().uploadNewTranslate();
+
         try {
             new UsersExchange().downloadUsersTable(new ExchangeInterface.ExchangeResponseInterface() {
                 @Override

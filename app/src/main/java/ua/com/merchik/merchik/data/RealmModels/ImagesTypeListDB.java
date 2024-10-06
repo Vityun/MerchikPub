@@ -10,7 +10,7 @@ import org.json.JSONObject;
 
 import io.realm.RealmObject;
 import io.realm.annotations.PrimaryKey;
-import ua.com.merchik.merchik.data.Database.Room.AddressSDBOverride;
+import ua.com.merchik.merchik.features.main.AddressSDBOverride;
 import ua.com.merchik.merchik.dataLayer.DataObjectUI;
 import ua.com.merchik.merchik.dataLayer.model.MerchModifier;
 

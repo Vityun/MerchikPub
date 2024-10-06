@@ -11,6 +11,8 @@ import org.json.JSONObject;
 import io.realm.RealmObject;
 import ua.com.merchik.merchik.dataLayer.DataObjectUI;
 import ua.com.merchik.merchik.dataLayer.model.MerchModifier;
+import ua.com.merchik.merchik.features.main.AddressSDBOverride;
+import ua.com.merchik.merchik.features.main.ThemeDBOverride;
 
 public class ThemeDB extends RealmObject implements DataObjectUI {
 
@@ -104,7 +106,7 @@ public class ThemeDB extends RealmObject implements DataObjectUI {
     @Nullable
     @Override
     public Long getFieldTranslateId(@NonNull String key) {
-        return DataObjectUI.DefaultImpls.getFieldTranslateId(this, key);
+        return ThemeDBOverride.INSTANCE.getTranslateId(key);
     }
 
     @NonNull

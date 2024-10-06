@@ -12,7 +12,7 @@ import io.realm.RealmObject;
 import io.realm.annotations.Ignore;
 import io.realm.annotations.PrimaryKey;
 import ua.com.merchik.merchik.R;
-import ua.com.merchik.merchik.data.Database.Room.TovarDBOverride;
+import ua.com.merchik.merchik.features.main.TovarDBOverride;
 import ua.com.merchik.merchik.dataLayer.DataObjectUI;
 import ua.com.merchik.merchik.dataLayer.model.MerchModifier;
 

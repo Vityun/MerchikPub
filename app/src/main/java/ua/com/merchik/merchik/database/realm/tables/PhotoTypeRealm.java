@@ -2,21 +2,12 @@ package ua.com.merchik.merchik.database.realm.tables;
 
 import static ua.com.merchik.merchik.database.realm.RealmManager.INSTANCE;
 
-import androidx.annotation.NonNull;
-
-import org.jetbrains.annotations.Nullable;
-import org.json.JSONObject;
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import io.realm.RealmResults;
-import ua.com.merchik.merchik.data.Database.Room.AddressSDBOverride;
-import ua.com.merchik.merchik.data.RealmModels.CustomerDB;
 import ua.com.merchik.merchik.data.RealmModels.ImagesTypeListDB;
-import ua.com.merchik.merchik.dataLayer.DataObjectUI;
-import ua.com.merchik.merchik.dataLayer.model.MerchModifier;
 
 public class PhotoTypeRealm {
 

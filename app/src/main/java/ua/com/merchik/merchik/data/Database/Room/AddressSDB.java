@@ -13,6 +13,7 @@ import org.json.JSONObject;
 
 import ua.com.merchik.merchik.dataLayer.DataObjectUI;
 import ua.com.merchik.merchik.dataLayer.model.MerchModifier;
+import ua.com.merchik.merchik.features.main.AddressSDBOverride;
 
 @Entity(tableName = "address")
 public class AddressSDB implements DataObjectUI {

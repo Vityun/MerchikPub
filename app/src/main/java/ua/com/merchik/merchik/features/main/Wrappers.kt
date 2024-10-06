@@ -1,4 +1,4 @@
-package ua.com.merchik.merchik.data.Database.Room
+package ua.com.merchik.merchik.features.main
 
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
@@ -59,6 +59,15 @@ object LogDBOverride {
         }
         "dt_update", "dt_start", "dt", "dt_action" -> MerchModifier(fontStyle = FontStyle.Italic)
         "comments" -> MerchModifier(fontStyle = FontStyle.Italic)
+        else -> null
+    }
+}
+
+object ThemeDBOverride {
+    fun getTranslateId(key: String): Long? = when (key) {
+        "nm" -> 5864
+        "comment" -> 5862
+        "ID" -> 5863
         else -> null
     }
 }
