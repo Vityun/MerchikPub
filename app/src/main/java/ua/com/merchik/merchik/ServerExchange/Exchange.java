@@ -67,6 +67,7 @@ import ua.com.merchik.merchik.data.Database.Room.StandartSDB;
 import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
 import ua.com.merchik.merchik.data.Database.Room.TranslatesSDB;
 import ua.com.merchik.merchik.data.Database.Room.UsersSDB;
+import ua.com.merchik.merchik.data.Database.Room.VacancySDB;
 import ua.com.merchik.merchik.data.Database.Room.ViewListSDB;
 import ua.com.merchik.merchik.data.Database.Room.VoteSDB;
 import ua.com.merchik.merchik.data.RealmModels.AdditionalRequirementsMarkDB;
@@ -86,6 +87,8 @@ import ua.com.merchik.merchik.data.RetrofitResponse.DossierSotrResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.Location.LocationList;
 import ua.com.merchik.merchik.data.RetrofitResponse.TovarImgList;
 import ua.com.merchik.merchik.data.RetrofitResponse.TovarImgResponse;
+import ua.com.merchik.merchik.data.RetrofitResponse.VacancyItemResponse;
+import ua.com.merchik.merchik.data.RetrofitResponse.VacancyResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.photos.ImagesViewListImageList;
 import ua.com.merchik.merchik.data.RetrofitResponse.photos.ImagesViewListImageResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.photos.PhotoInfoResponse;
@@ -726,6 +729,10 @@ public class Exchange {
 
                     try {
                         updateDossierSotr();
+                    } catch (Exception e) {}
+
+                    try {
+                        updateVacancy();
                     } catch (Exception e) {}
 
                     try {
@@ -1550,6 +1557,37 @@ public class Exchange {
 
             @Override
             public void onFailure(Call<DossierSotrResponse> call, Throwable t) {
+            }
+        });
+
+    }
+
+    public void updateVacancy() {
+        SynchronizationTimetableDB synchronizationTimetableDB = RealmManager.INSTANCE.copyFromRealm(RealmManager.getSynchronizationTimetableRowByTable("vacancy"));
+        long dt_change_from = synchronizationTimetableDB.getVpi_app();
+        synchronizationTimetableDB.setVpi_app(System.currentTimeMillis() / 1000);
+        RealmManager.setToSynchronizationTimetableDB(synchronizationTimetableDB);
+
+        JsonObject requestJson = new JsonObject();
+        requestJson.addProperty("mod", "vacancy");
+        requestJson.addProperty("act", "list");
+        requestJson.addProperty("dt_change_from", dt_change_from);
+
+        retrofit2.Call<VacancyResponse> call = RetrofitBuilder.getRetrofitInterface().vacancy(RetrofitBuilder.contentType, requestJson);
+        call.enqueue(new Callback<VacancyResponse>() {
+            @Override
+            public void onResponse(Call<VacancyResponse> call, Response<VacancyResponse> response) {
+                if (response.isSuccessful() && response.body() != null && response.body().state) {
+                    ArrayList<VacancySDB> vacancySDBList = new ArrayList<>();
+                    for (VacancyItemResponse item: response.body().list ) {
+                        vacancySDBList.add(new VacancySDB(item));
+                    }
+                    SQL_DB.vacancyDao().insertAll(vacancySDBList);
+                }
+            }
+
+            @Override
+            public void onFailure(Call<VacancyResponse> call, Throwable t) {
             }
         });
 

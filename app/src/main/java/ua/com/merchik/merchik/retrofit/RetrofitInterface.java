@@ -68,6 +68,7 @@ import ua.com.merchik.merchik.data.RetrofitResponse.ThemeTableRespose;
 import ua.com.merchik.merchik.data.RetrofitResponse.TovarImgResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.TovarTableResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.TradeMarkResponse;
+import ua.com.merchik.merchik.data.RetrofitResponse.VacancyResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.ViewListResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.WpDataServer;
 import ua.com.merchik.merchik.data.RetrofitResponse.photos.ImagesViewListImageResponse;
@@ -902,6 +903,11 @@ public interface RetrofitInterface {
 
     @POST("mobile_app.php?")
     Call<DossierSotrResponse> dossierSotr(
+            @Header("ContentType") String content,
+            @Body JsonObject json);
+
+    @POST("mobile_app.php?")
+    Call<VacancyResponse> vacancy(
             @Header("ContentType") String content,
             @Body JsonObject json);
 

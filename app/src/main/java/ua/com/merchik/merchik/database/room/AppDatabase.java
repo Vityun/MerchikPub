@@ -46,6 +46,7 @@ import ua.com.merchik.merchik.data.Database.Room.TovarGroupClientSDB;
 import ua.com.merchik.merchik.data.Database.Room.TovarGroupSDB;
 import ua.com.merchik.merchik.data.Database.Room.TranslatesSDB;
 import ua.com.merchik.merchik.data.Database.Room.UsersSDB;
+import ua.com.merchik.merchik.data.Database.Room.VacancySDB;
 import ua.com.merchik.merchik.data.Database.Room.ViewListSDB;
 import ua.com.merchik.merchik.data.Database.Room.VoteSDB;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.AchievementsDao;
@@ -86,6 +87,7 @@ import ua.com.merchik.merchik.database.room.DaoInterfaces.TovarGroupClientDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.TovarGroupDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.TranslatesDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.UsersDao;
+import ua.com.merchik.merchik.database.room.DaoInterfaces.VacancyDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.VideoViewDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.VotesDao;
 
@@ -132,9 +134,10 @@ import ua.com.merchik.merchik.database.room.DaoInterfaces.VotesDao;
                 SMSPlanSDB.class,       //  СМС А (тут типо должны быть те кто в очереди или недавно отправленные)
                 SMSLogSDB.class,         //  СМС Б
                 SettingsUISDB.class,
-                DossierSotrSDB.class
+                DossierSotrSDB.class,
+                VacancySDB.class
         },
-        version = 54
+        version = 55
 )
 
 
@@ -220,6 +223,8 @@ public abstract class AppDatabase extends RoomDatabase {
     public abstract SMSLogDao smsLogDao();
 
     public abstract DossierSotrDao dossierSotrDao();
+
+    public abstract VacancyDao vacancyDao();
 
     public class MyAutoMigration {
     }
