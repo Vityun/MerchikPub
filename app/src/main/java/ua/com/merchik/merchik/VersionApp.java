@@ -46,7 +46,7 @@ public class VersionApp {
     /**
      * 05.02.2021
      * */
-    public static Long VERSION_APP;
+    public static Long VERSION_APP = 0L;
     public void getMinVer(Globals.getVersionInterface callback){
         String mod = "constant_list";
         String act = "get";

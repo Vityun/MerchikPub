@@ -3218,11 +3218,12 @@ public class Options {
             }
 
         } catch (Exception e) {
-            DialogData dialog = new DialogData(context);
-            dialog.setTitle("Версія додатку");
-            dialog.setText("При обрахунку опції виникла помилка, зверніться до Вашого керівника\n\nПомилка: " + e);
-            dialog.setClose(dialog::dismiss);
-            dialog.show();
+//            DialogData dialog = new DialogData(context);
+//            dialog.setTitle("Версія додатку");
+//            dialog.setText("При обрахунку опції виникла помилка, зверніться до Вашого керівника\n\nПомилка: " + e);
+//            dialog.setClose(dialog::dismiss);
+//            dialog.show();
+            Toast.makeText(context, "Версія додатку не визначена!", Toast.LENGTH_LONG).show();
             unlockCodeResultListener.onUnlockCodeFailure();
             Globals.writeToMLOG("ERROR", "optionControlVersion_139577", "Проблема с версией приложения в опции контроля. : " + e);
         }
