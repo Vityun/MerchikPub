@@ -36,6 +36,7 @@ import ua.com.merchik.merchik.data.RetrofitResponse.AdditionalMaterialsLinksResp
 import ua.com.merchik.merchik.data.RetrofitResponse.AdditionalMaterialsResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.AddressTableResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.ArticleTableResponse;
+import ua.com.merchik.merchik.data.RetrofitResponse.BonusResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.ConductWpDataResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.CustomerGroups;
 import ua.com.merchik.merchik.data.RetrofitResponse.CustomerTableResponse;
@@ -908,6 +909,11 @@ public interface RetrofitInterface {
 
     @POST("mobile_app.php?")
     Call<VacancyResponse> vacancy(
+            @Header("ContentType") String content,
+            @Body JsonObject json);
+
+    @POST("mobile_app.php?")
+    Call<BonusResponse> bonus(
             @Header("ContentType") String content,
             @Body JsonObject json);
 

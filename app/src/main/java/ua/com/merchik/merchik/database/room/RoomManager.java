@@ -26,7 +26,8 @@ public class RoomManager {
                         MIGRATION_51_52,
                         MIGRATION_52_53,
                         MIGRATION_53_54,
-                        MIGRATION_54_55
+                        MIGRATION_54_55,
+                        MIGRATION_55_56
                 )
 
                 .build();
@@ -506,6 +507,21 @@ public class RoomManager {
                     "`salary` INTEGER, " +
                     "`theme_id` INTEGER, " +
                     "`work_time` TEXT, " +
+                    "PRIMARY KEY(`id`))");
+        }
+    };
+
+    static final Migration MIGRATION_55_56 = new Migration(55, 56) {
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase database) {
+            database.execSQL("CREATE TABLE IF NOT EXISTS `bonus` (" +
+                    "`id` INTEGER NOT NULL, " +
+                    "`author_id` INTEGER, " +
+                    "`dt_change` INTEGER, " +
+                    "`percent` TEXT, " +
+                    "`theme_id` INTEGER, " +
+                    "`option_id` INTEGER, " +
+                    "`so` INTEGER, " +
                     "PRIMARY KEY(`id`))");
         }
     };
