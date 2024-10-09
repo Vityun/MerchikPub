@@ -358,6 +358,14 @@ public class Translate {
 //                ""
 //        );
 
+        AddTranslation data4 = new AddTranslation(
+                "1",
+                "ThemeDB_comment",
+                "Комментарий",
+                "app",
+                "all",
+                ""
+        );
 
         AddTranslation data5 = new AddTranslation(
                 "1",
