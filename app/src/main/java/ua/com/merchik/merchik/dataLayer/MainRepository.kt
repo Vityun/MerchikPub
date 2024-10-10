@@ -1,7 +1,6 @@
 package ua.com.merchik.merchik.dataLayer
 
 import com.google.gson.Gson
-import com.google.gson.JsonObject
 import io.realm.RealmChangeListener
 import io.realm.RealmObject
 import io.realm.RealmResults
@@ -11,18 +10,18 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import org.json.JSONObject
 import ua.com.merchik.merchik.data.Database.Room.AddressSDB
+import ua.com.merchik.merchik.data.Database.Room.BonusSDB
 import ua.com.merchik.merchik.data.Database.Room.CustomerSDB
 import ua.com.merchik.merchik.data.Database.Room.Planogram.PlanogrammSDB
 import ua.com.merchik.merchik.data.Database.Room.SettingsUISDB
 import ua.com.merchik.merchik.data.Database.Room.UsersSDB
-import ua.com.merchik.merchik.data.RealmModels.LogMPDB
 import ua.com.merchik.merchik.dataLayer.model.FieldValue
 import ua.com.merchik.merchik.dataLayer.model.ItemUI
 import ua.com.merchik.merchik.dataLayer.model.SettingsItemUI
 import ua.com.merchik.merchik.database.realm.RealmManager
+import ua.com.merchik.merchik.database.realm.tables.ThemeRealm
 import ua.com.merchik.merchik.database.room.RoomManager
 import ua.com.merchik.merchik.features.main.Main.SettingsUI
-import ua.com.merchik.merchik.features.main.Main.SortingField
 import kotlin.reflect.KClass
 
 fun <T : RealmObject> RealmResults<T>.toFlow(): Flow<RealmResults<T>> = callbackFlow {
@@ -171,6 +170,18 @@ class MainRepository(
         return this.map { (it as DataObjectUI).toItemUI(nameUIRepository, getSettingsUI(kClass.java, contextUI)?.hideFields?.joinToString { "," }) }
     }
 
+}
+
+fun List<BonusSDB>.getBonusText(): Pair<String, Float> {
+    val baseZP = 15000
+    var result = ""
+    var sumPrem = 0f
+    this.forEach {
+        val themeComment = ThemeRealm.getThemeById(it.themeId.toString()).comment
+        sumPrem += Math.round((it.percent.toFloatOrNull() ?: 0f) * baseZP)
+        result += "\n- $sumPrem грн. $themeComment"
+    }
+    return result to sumPrem
 }
 
 fun List<ItemUI>.join(rightTable: List<ItemUI>, query: String): List<ItemUI> {

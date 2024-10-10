@@ -226,6 +226,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                         || optionId == 151139   // Фото планограммы
                         || optionId == 132623   // Комментарий
                         || optionId == 133382   // Потенциальный клиент
+//                        || optionId == 136100   // Пригласи друга
                         || optionId == 157275   // 1.
                         || optionId == 157276   // 2. Две опции контроля тут на всяк случай. Тестим.
                         || optionId == 157274   // 3. ..три

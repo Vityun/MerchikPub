@@ -8,6 +8,7 @@ import static ua.com.merchik.merchik.Activities.TaskAndReclamations.TasksActivit
 import static ua.com.merchik.merchik.MakePhoto.MakePhoto.CAMERA_REQUEST_PROMOTION_TOV_PHOTO;
 import static ua.com.merchik.merchik.MakePhoto.MakePhoto.CAMERA_REQUEST_TAR_COMMENT_PHOTO;
 import static ua.com.merchik.merchik.MakePhoto.MakePhoto.PICK_GALLERY_IMAGE_REQUEST;
+import static ua.com.merchik.merchik.MakePhoto.MakePhoto.wp;
 import static ua.com.merchik.merchik.MakePhoto.MakePhotoFromGalery.MakePhotoFromGaleryWpDataDB;
 import static ua.com.merchik.merchik.Options.Controls.OptionControlPhotoPromotion.tovarDBOPTION_CONTROL_PROMOTION_ID;
 import static ua.com.merchik.merchik.Options.Controls.OptionControlPhotoPromotion.wpDataDBOPTION_CONTROL_PROMOTION_ID;
@@ -860,6 +861,7 @@ public class DetailedReportActivity extends toolbar_menus {
                     photo.setPhoto_type(Integer.valueOf(MakePhoto.photoType));
 
                     photo.dt = MakePhoto.dt;
+                    photo.code_iza = wpDataDB.getCode_iza();
 
                     photo.img_src_id = MakePhoto.img_src_id;
                     photo.showcase_id = MakePhoto.showcase_id;
