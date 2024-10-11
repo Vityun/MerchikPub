@@ -51,27 +51,6 @@ public class OptionButtonAddNewClient<T> extends OptionControl {
         DialogData dialog = new DialogData(context);
         dialog.setTitle("Добавление потенциального клиента");
         dialog.setText("Вы хотите добавить потенциального клиента? \n\n" + additionalText());
-//        StringBuilder text = new StringBuilder();
-//        text.append("Пригласить Друга на работу в нашей компании\n" +
-//                "За sms-приглашение, которое вы отправите кандидату, автоматически начисляются следующие премии:\n");
-//
-//        List<BonusSDB> bonusList = SQL_DB.bonusDao().getData(null, null, Long.valueOf(optionDB.getOptionId()));
-//        Pair<String, Float> bonus = MainRepositoryKt.getBonusText(bonusList);
-//
-//        text.append(bonus.getFirst());
-//
-//        text.append("\n");
-//
-//        text.append("Общая сумма премии (при выполнении указанных условий) составит ")
-//                .append(bonus.getSecond()).append(" грн.\n")
-//                .append("Обмеження по кількості відправлених запрошень:\n")
-//                .append("- до 3-х \"СМС-запрошень\" на день\n")
-//                .append("- до 10-ти \"СМС-запрошень\" на тиждень\n")
-//                .append("- до 20-ї \"СМС-запрошень\" на місяць\n")
-//                .append("- якщо ваші \"СМС-запрошення\" не призводять до початку співпраці протягом місяця, преміальні за НОВІ \"СМС-запрошення\" знижуються в 10-ть разів");
-//
-//        dialog.setText(text);
-
         dialog.setOk("Да", () -> {
 //            Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://merchik.com.ua/mobile.php?mod=potential_clients"));
             Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(createAddNewClientLink()));

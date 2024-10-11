@@ -37,6 +37,7 @@ import com.google.gson.Gson;
 import java.util.Arrays;
 import java.util.List;
 
+import kotlin.Pair;
 import ua.com.merchik.merchik.Activities.PhotoLogActivity.PhotoLogActivity;
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
@@ -50,6 +51,7 @@ import ua.com.merchik.merchik.Utils.CodeGenerator;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.Database.Room.AchievementsSDB;
 import ua.com.merchik.merchik.data.Database.Room.AddressSDB;
+import ua.com.merchik.merchik.data.Database.Room.BonusSDB;
 import ua.com.merchik.merchik.data.Database.Room.SamplePhotoSDB;
 import ua.com.merchik.merchik.data.Database.Room.SiteObjectsSDB;
 import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
@@ -60,6 +62,7 @@ import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
 import ua.com.merchik.merchik.data.RealmModels.ReportPrepareDB;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
+import ua.com.merchik.merchik.dataLayer.MainRepositoryKt;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsRealm;
 import ua.com.merchik.merchik.database.realm.tables.ReportPrepareRealm;
@@ -226,7 +229,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                         || optionId == 151139   // Фото планограммы
                         || optionId == 132623   // Комментарий
                         || optionId == 133382   // Потенциальный клиент
-//                        || optionId == 136100   // Пригласи друга
+                        || optionId == 136100   // Пригласи друга
                         || optionId == 157275   // 1.
                         || optionId == 157276   // 2. Две опции контроля тут на всяк случай. Тестим.
                         || optionId == 157274   // 3. ..три
@@ -269,6 +272,42 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                             textInteger2.setVisibility(View.GONE);
                         }
                     }
+
+                    if (optionId == 136100) {
+                        textInteger2.setVisibility(View.VISIBLE);
+                        List<BonusSDB> bonusList = SQL_DB.bonusDao().getData(null, null, (long) optionId);
+                        Pair<String, Float> bonus = MainRepositoryKt.getBonusText(bonusList);
+                        textInteger2.setText("" + bonus.getSecond());
+                        textInteger2.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View view) {
+                                DialogData dialog = new DialogData(mContext);
+                                dialog.setTitle("Пригласить Друга");
+
+                                StringBuilder text = new StringBuilder();
+                                text.append("Пригласить Друга на работу в нашей компании\n" +
+                                        "За sms-приглашение, которое вы отправите кандидату, автоматически начисляются следующие премии:\n");
+
+                                text.append(bonus.getFirst());
+
+                                text.append("\n\n");
+
+                                text.append("Общая сумма премии (при выполнении указанных условий) составит ")
+                                        .append(bonus.getSecond()).append(" грн.\n")
+                                        .append("Обмеження по кількості відправлених запрошень:\n")
+                                        .append("- до 3-х \"СМС-запрошень\" на день\n")
+                                        .append("- до 10-ти \"СМС-запрошень\" на тиждень\n")
+                                        .append("- до 20-ї \"СМС-запрошень\" на місяць\n")
+                                        .append("- якщо ваші \"СМС-запрошення\" не призводять до початку співпраці протягом місяця, преміальні за НОВІ \"СМС-запрошення\" знижуються в 10-ть разів");
+
+                                dialog.setText(Html.fromHtml(text.toString().replaceAll("strong", "b").replaceAll("\n", "<br>")));
+                                dialog.show();
+                            }
+                        });
+                    } else {
+                        textInteger2.setOnClickListener(null);
+                    }
+
                 } else {
                     describedOption = false;
                     textInteger2.setVisibility(View.GONE);
@@ -591,7 +630,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                         OptionMassageType msgType = new OptionMassageType();
                         msgType.type = OptionMassageType.Type.DIALOG;
                         options.setOptionFromDetailedReport(allReportOption);
-                        msgType = options.NNK(mContext, dataDB, optionsButtons, butt, msgType, Options.NNKMode.MAKE, () -> {
+                        msgType = options.NNK(view, mContext, dataDB, optionsButtons, butt, msgType, Options.NNKMode.MAKE, () -> {
                             try {
                                 int test1 = getAdapterPosition();
                                 int test2 = getBindingAdapterPosition();

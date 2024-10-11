@@ -734,13 +734,13 @@ public class Exchange {
                         updateDossierSotr();
                     } catch (Exception e) {}
 
-//                    try {
-//                        updateVacancy();
-//                    } catch (Exception e) {}
-//
-//                    try {
-//                        updateBonus();
-//                    } catch (Exception e) {}
+                    try {
+                        updateVacancy();
+                    } catch (Exception e) {}
+
+                    try {
+                        updateBonus();
+                    } catch (Exception e) {}
 
                     try {
                     /*                    ReclamationPointExchange tarExchange = new ReclamationPointExchange();

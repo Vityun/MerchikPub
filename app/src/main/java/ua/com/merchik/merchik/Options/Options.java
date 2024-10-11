@@ -657,7 +657,7 @@ public class Options {
      * */
     private int res = 0;    // Счётчик для накапливания "блокировок" у данной опции
 
-    public <T> OptionMassageType NNK(Context context, T dataDB, OptionsDB option, List<OptionsDB> optionList, OptionMassageType type, NNKMode mode, Clicks.clickVoid click) {
+    public <T> OptionMassageType NNK(View view, Context context, T dataDB, OptionsDB option, List<OptionsDB> optionList, OptionMassageType type, NNKMode mode, Clicks.clickVoid click) {
         OptionMassageType result = new OptionMassageType();
         try {
             option.setIsSignal("0");
@@ -1105,7 +1105,7 @@ public class Options {
                     switch (mode) {
                         case MAKE:
                             Log.e("NNK", "5. Проверяю опцмю: " + option.getOptionBlock1());
-                            optControl(context, dataDB, option, Integer.parseInt(option.getOptionId()), null, type, mode, new OptionControl.UnlockCodeResultListener() {
+                            optControl(view, context, dataDB, option, Integer.parseInt(option.getOptionId()), null, type, mode, new OptionControl.UnlockCodeResultListener() {
                                 @Override
                                 public void onUnlockCodeSuccess() {
                                     Log.e("NNK", "onUnlockCodeSuccess Потеряли 2 опции");
@@ -1377,8 +1377,12 @@ public class Options {
         return res;
     }
 
-    /*Проверка Опции*/
     public <T> int optControl(Context context, T dataDB, OptionsDB optionCurrent, int optionId, OptionsDB optionBlock, OptionMassageType type, NNKMode mode, OptionControl.UnlockCodeResultListener unlockCodeResultListener) {
+        return optControl(null, context, dataDB, optionCurrent, optionId, optionBlock, type, mode, unlockCodeResultListener);
+    }
+
+        /*Проверка Опции*/
+    public <T> int optControl(View view, Context context, T dataDB, OptionsDB optionCurrent, int optionId, OptionsDB optionBlock, OptionMassageType type, NNKMode mode, OptionControl.UnlockCodeResultListener unlockCodeResultListener) {
         OptionsDB option = optionCurrent;   // Текущая Опция на которую нажали
 
         String block = "";
@@ -1701,10 +1705,10 @@ public class Options {
                 OptionButtonAddNewClient<?> optionButtonAddNewClient = new OptionButtonAddNewClient<>(context, dataDB, option, type, mode, unlockCodeResultListener);
                 break;
 
-//            // Пригласи друга
-//            case 136100:
-//                OptionButtonAddNewFriend<?> optionButtonAddNewFriend = new OptionButtonAddNewFriend<>(context, dataDB, option, type, mode, unlockCodeResultListener);
-//                break;
+            // Пригласи друга
+            case 136100:
+                OptionButtonAddNewFriend<?> optionButtonAddNewFriend = new OptionButtonAddNewFriend<>(view, context, dataDB, option, type, mode, unlockCodeResultListener);
+                break;
 
 
             case 157243:

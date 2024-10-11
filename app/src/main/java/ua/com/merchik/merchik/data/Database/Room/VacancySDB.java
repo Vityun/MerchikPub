@@ -9,10 +9,15 @@ import androidx.room.PrimaryKey;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
+import org.jetbrains.annotations.Nullable;
+import org.json.JSONObject;
+
 import ua.com.merchik.merchik.data.RetrofitResponse.VacancyItemResponse;
+import ua.com.merchik.merchik.dataLayer.DataObjectUI;
+import ua.com.merchik.merchik.dataLayer.model.MerchModifier;
 
 @Entity(tableName = "vacancy")
-public class VacancySDB {
+public class VacancySDB implements DataObjectUI {
 
     @SerializedName("id")
     @Expose
@@ -91,5 +96,53 @@ public class VacancySDB {
         salary = from.salary;
         themeId = from.themeId;
         work_time = from.work_time;
+    }
+
+    @NonNull
+    @Override
+    public String getHidedFieldsOnUI() {
+        return DataObjectUI.DefaultImpls.getHidedFieldsOnUI(this);
+    }
+
+    @Nullable
+    @Override
+    public Long getFieldTranslateId(@NonNull String key) {
+        return DataObjectUI.DefaultImpls.getFieldTranslateId(this, key);
+    }
+
+    @NonNull
+    @Override
+    public String getValueUI(@NonNull String key, @NonNull Object value) {
+        return DataObjectUI.DefaultImpls.getValueUI(this, key, value);
+    }
+
+    @Nullable
+    @Override
+    public MerchModifier getFieldModifier(@NonNull String key, @NonNull JSONObject jsonObject) {
+        return DataObjectUI.DefaultImpls.getFieldModifier(this, key, jsonObject);
+    }
+
+    @Nullable
+    @Override
+    public MerchModifier getValueModifier(@NonNull String key, @NonNull JSONObject jsonObject) {
+        return DataObjectUI.DefaultImpls.getValueModifier(this, key, jsonObject);
+    }
+
+    @Nullable
+    @Override
+    public MerchModifier getContainerModifier(@NonNull JSONObject jsonObject) {
+        return DataObjectUI.DefaultImpls.getContainerModifier(this, jsonObject);
+    }
+
+    @Nullable
+    @Override
+    public Integer getIdResImage() {
+        return DataObjectUI.DefaultImpls.getIdResImage(this);
+    }
+
+    @NonNull
+    @Override
+    public String getFieldsImageOnUI() {
+        return DataObjectUI.DefaultImpls.getFieldsImageOnUI(this);
     }
 }

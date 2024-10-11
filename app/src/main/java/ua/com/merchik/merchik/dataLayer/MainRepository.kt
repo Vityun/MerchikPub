@@ -178,8 +178,9 @@ fun List<BonusSDB>.getBonusText(): Pair<String, Float> {
     var sumPrem = 0f
     this.forEach {
         val themeComment = ThemeRealm.getThemeById(it.themeId.toString()).comment
-        sumPrem += Math.round((it.percent.toFloatOrNull() ?: 0f) * baseZP)
-        result += "\n- $sumPrem грн. $themeComment"
+        val bonus = Math.round((it.percent.toFloatOrNull() ?: 0f) * baseZP)
+        sumPrem += bonus
+        result += "\n- $bonus грн. $themeComment"
     }
     return result to sumPrem
 }
