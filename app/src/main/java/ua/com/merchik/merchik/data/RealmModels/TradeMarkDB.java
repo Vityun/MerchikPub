@@ -12,6 +12,7 @@ import io.realm.RealmObject;
 import io.realm.annotations.PrimaryKey;
 import ua.com.merchik.merchik.dataLayer.DataObjectUI;
 import ua.com.merchik.merchik.dataLayer.model.MerchModifier;
+import ua.com.merchik.merchik.features.main.TradeMarkDBOverride;
 
 public class TradeMarkDB extends RealmObject implements DataObjectUI {
 
@@ -70,7 +71,7 @@ public class TradeMarkDB extends RealmObject implements DataObjectUI {
     @Nullable
     @Override
     public Long getFieldTranslateId(@NonNull String key) {
-        return DataObjectUI.DefaultImpls.getFieldTranslateId(this, key);
+        return TradeMarkDBOverride.INSTANCE.getTranslateId(key);
     }
 
     @NonNull

@@ -272,7 +272,7 @@ public class AdditionalRequirementsDB extends RealmObject implements DataObjectU
     @Nullable
     @Override
     public Long getFieldTranslateId(@NonNull String key) {
-        return DataObjectUI.DefaultImpls.getFieldTranslateId(this, key);
+        return AdditionalRequirementsDBOverride.INSTANCE.getTranslateId(key);
     }
 
     @NonNull

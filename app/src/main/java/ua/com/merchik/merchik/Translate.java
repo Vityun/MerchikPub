@@ -11,9 +11,12 @@ import androidx.appcompat.widget.PopupMenu;
 import androidx.preference.PreferenceManager;
 
 import com.google.gson.JsonObject;
+import com.google.gson.annotations.Expose;
+import com.google.gson.annotations.SerializedName;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import ua.com.merchik.merchik.ServerExchange.Exchange;
@@ -358,43 +361,298 @@ public class Translate {
 //                ""
 //        );
 
+//        String str1="AdditionalRequirementsDB";
+//        String str2="addr_id-Код адреса, id-ИД, color-Цвет";
+
+        String[] str1 = new String[20];
+        String[] str2 = new String[20];
+        String str3="";
+        String str4="";
+        String[] dparts;
+        String[] parts;
+        int i;
+        int kol=0;
+
+        str1[kol]="LogDB";
+        str2[kol]="id-ИД,dt_action-Дата действия,comments-Коммент,tp-Тип,client_id-Код зак.,addr_id-Код адр.," +
+                "obj_id-Код оъекта,author-Код автора,dt-Время,session-Сессия,obj_date-дата объекта";
+        kol=kol+1;
+
+        str1[kol]="AddressSDB";
+        str2[kol]="id-Код адреса,nm-Название,city_id-Код города,tp_id-Код сети,obl_id-Код области,tt_id-Код ТТ,dt_update-ВПИ," +
+                "location_xd-Широта,location_yd-Долгота,kol_kass-Кол. касс,nomer_tt-Номер ТТ";
+        kol=kol+1;
+
+        str1[kol]="CustomerSDB";
+        str2[kol]="id-ИД,nm-Название,edrpou-Код ОКПО,main_tov_grp-Код осн. группы тов.,dt_update-ВПИ,recl_reply_mode-Режим ответа на ЗиР," +
+                "ppa_auto-Авто корр. ППА,work_start_date-Дата нач. работ,work_restart_date-Дата возобн. работ";
+        kol=kol+1;
+
+        str1[kol]="TradeMarkDB";
+        str2[kol]="ID-ИД,nm-Название,dt_update-ВПИ,sort_type-Тип сортировки";
+        kol=kol+1;
+
+        str1[kol]="LogMPDB";
+        str2[kol]="id-ИД,serverId-ИД сервера,gp-ГП,provider-Поставщик усл.,CoordX-Коо Х,CoordY-Коо У,CoordAltitude-Коо отн.," +
+                "CoordTime-Время изм. коо,CoordSpeed-Коо скор.,CoordAccuracy-Точность,mocking-Подделка коо,codeDad2-Код ДАД," +
+                "vpi-ВПИ,address-Код адр.,distance-Рассотяние,inPlace-На месте,upload-Время загр.,locationUniqueString-Уник. строка местопол.";
+        kol=kol+1;
+
+        str1[kol]="TovarDB";
+        str2[kol]="ID-ИД,client_id-Код зак.,client_id2-Код зак.2,nm-Название,weight-Вес,weight_gr-Вес гр.,group_id-Код группы," +
+                "manufacturer_id-Код произв.,barcode-Штрихкод,related_tovar_id-Код соп. тов.,dt_update-ВПИ," +
+                "sortcol-Порядок сорт.,photo_id-Код фото,height-Ширина,width-Длина,depth-Высота,deleted-Удален,expire_period-Срок год.";
+        kol=kol+1;
+
+        str1[kol]="ThemeDB";
+        str2[kol]="grp_id-Код группы,tp-Тип,need_photo-Нужна ФО,need_report-Нужна ДО,dt_update-ВПИ";
+        kol=kol+1;
+
+        i=1;
+        for (int j = 0; j < kol; j++) {
+            dparts = str2[j].split(",");
+            for (String word : dparts) {
+                parts=word.split("-");
+                str3=str1[j]+"_"+parts[0].trim();
+                str4=parts[1].trim();
+                AddTranslation data = new AddTranslation(
+                        Integer.toString(i),
+                        str3,
+                        str4,
+                        "app",
+                        "all",
+                        ""
+                );
+                res.add(data);
+                i=i+1;
+            }
+        }
+
+
+        /*
+        AddTranslation data1 = new AddTranslation(
+                "1",
+                "AdditionalRequirementsDB_addr_id",
+                "Код адреса",
+                "app",
+                "all",
+                ""
+        );
+
+        AddTranslation data2 = new AddTranslation(
+                "2",
+                "AdditionalRequirementsDB_author_id",
+                "Код автора",
+                "app",
+                "all",
+                ""
+        );
+
+        AddTranslation data3 = new AddTranslation(
+                "3",
+                "AdditionalRequirementsDB_disable_score",
+                "Без оценки",
+                "app",
+                "all",
+                ""
+        );
+
+        AddTranslation data4 = new AddTranslation(
+                "4",
+                "AdditionalRequirementsDB_dt_change",
+                "ВПИ",
+                "app",
+                "all",
+                ""
+        );
 
         AddTranslation data5 = new AddTranslation(
-                "1",
-                "ThemeDB_comment",
-                "Комментарий",
+                "5",
+                "AdditionalRequirementsDB_exam_id",
+                "ИД экзамена",
                 "app",
                 "all",
                 ""
         );
 
         AddTranslation data6 = new AddTranslation(
-                "2",
-                "ThemeDB_id",
-                "Идентификатор",
+                "6",
+                "AdditionalRequirementsDB_grp_id",
+                "Код группы",
                 "app",
                 "all",
                 ""
         );
 
         AddTranslation data7 = new AddTranslation(
-                "3",
-                "ThemeDB_nm",
-                "Наименование",
+                "7",
+                "AdditionalRequirementsDB_hide_client",
+                "Не показ. заказчику",
                 "app",
                 "all",
                 ""
         );
 
+        AddTranslation data8 = new AddTranslation(
+                "8",
+                "AdditionalRequirementsDB_hide_user",
+                "Не показ. сотруднику",
+                "app",
+                "all",
+                ""
+        );
+
+        AddTranslation data9 = new AddTranslation(
+                "9",
+                "AdditionalRequirementsDB_ID",
+                "ИД",
+                "app",
+                "all",
+                ""
+        );
+
+        AddTranslation data10 = new AddTranslation(
+                "10",
+                "AdditionalRequirementsDB_not_approve",
+                "Не утверждено",
+                "app",
+                "all",
+                ""
+        );
+
+        AddTranslation data11 = new AddTranslation(
+                "11",
+                "AdditionalRequirementsDB_options_id",
+                "ИД опций",
+                "app",
+                "all",
+                ""
+        );
+
+        AddTranslation data12 = new AddTranslation(
+                "12",
+                "AdditionalRequirementsDB_showcase_tp_id",
+                "ИД типа витрины",
+                "app",
+                "all",
+                ""
+        );
+
+        AddTranslation data13 = new AddTranslation(
+                "13",
+                "AdditionalRequirementsDB_site_id",
+                "ИД на сайте",
+                "app",
+                "all",
+                ""
+        );
+
+        AddTranslation data14 = new AddTranslation(
+                "14",
+                "AdditionalRequirementsDB_summ",
+                "Сумма",
+                "app",
+                "all",
+                ""
+        );
+
+        AddTranslation data15 = new AddTranslation(
+                "15",
+                "AdditionalRequirementsDB_theme_id",
+                "Код темы",
+                "app",
+                "all",
+                ""
+        );
+
+        AddTranslation data16 = new AddTranslation(
+                "16",
+                "AdditionalRequirementsDB_tovar_id",
+                "Код товара",
+                "app",
+                "all",
+                ""
+        );
+
+        AddTranslation data17 = new AddTranslation(
+                "17",
+                "AdditionalRequirementsDB_user_id",
+                "Код сотрудника",
+                "app",
+                "all",
+                ""
+        );
+
+        AddTranslation data18 = new AddTranslation(
+                "18",
+                "AdditionalRequirementsDB_option_id",
+                "Код опции",
+                "app",
+                "all",
+                ""
+        );
+
+        AddTranslation data19 = new AddTranslation(
+                "19",
+                "AdditionalRequirementsDB_dt_end",
+                "Дата конца",
+                "app",
+                "all",
+                ""
+        );
+
+        AddTranslation data20 = new AddTranslation(
+                "20",
+                "AdditionalRequirementsDB_dt_start",
+                "Дата начала",
+                "app",
+                "all",
+                ""
+        );
+
+        AddTranslation data21 = new AddTranslation(
+                "21",
+                "AdditionalRequirementsDB_client_id",
+                "Код заказчика",
+                "app",
+                "all",
+                ""
+        );
+
+        AddTranslation data22 = new AddTranslation(
+                "22",
+                "AdditionalRequirementsDB_color",
+                "Цвет",
+                "app",
+                "all",
+                ""
+        );
 
 //        res.add(data);
-//        res.add(data1);
-//        res.add(data2);
-//        res.add(data3);
-//        res.add(data4);
+        res.add(data1);
+        res.add(data2);
+        res.add(data3);
+        res.add(data4);
         res.add(data5);
         res.add(data6);
         res.add(data7);
+        res.add(data8);
+        res.add(data9);
+        res.add(data10);
+        res.add(data11);
+        res.add(data12);
+        res.add(data13);
+        res.add(data14);
+        res.add(data15);
+        res.add(data16);
+        res.add(data17);
+        res.add(data18);
+        res.add(data19);
+        res.add(data20);
+        res.add(data21);
+        res.add(data22);
+
+        */
 
         return res;
     }

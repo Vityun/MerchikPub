@@ -203,7 +203,7 @@ public class TovarDB extends RealmObject implements DataObjectUI {
     @Nullable
     @Override
     public Long getFieldTranslateId(@NonNull String key) {
-        return DataObjectUI.DefaultImpls.getFieldTranslateId(this, key);
+        return TovarDBOverride.INSTANCE.getTranslateId(key);
     }
 
     @NonNull
