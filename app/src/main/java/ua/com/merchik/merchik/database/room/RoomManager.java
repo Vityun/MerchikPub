@@ -25,7 +25,9 @@ public class RoomManager {
                         MIGRATION_42_51,
                         MIGRATION_51_52,
                         MIGRATION_52_53,
-                        MIGRATION_53_54
+                        MIGRATION_53_54,
+                        MIGRATION_54_55,
+                        MIGRATION_55_56
                 )
 
                 .build();
@@ -485,6 +487,41 @@ public class RoomManager {
                     "`license` INTEGER, " +
                     "`menu_template_id` INTEGER, " +
                     "`opinion_id` INTEGER, " +
+                    "PRIMARY KEY(`id`))");
+        }
+    };
+
+    static final Migration MIGRATION_54_55 = new Migration(54, 55) {
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase database) {
+            database.execSQL("CREATE TABLE IF NOT EXISTS `vacancy` (" +
+                    "`id` INTEGER NOT NULL, " +
+                    "`city_id` INTEGER, " +
+                    "`district_id` INTEGER, " +
+                    "`doljnost_id` INTEGER, " +
+                    "`dt_change` INTEGER, " +
+                    "`dt_create` TEXT, " +
+                    "`occupancy_id` INTEGER, " +
+                    "`premium_start` INTEGER, " +
+                    "`route_id` INTEGER, " +
+                    "`salary` INTEGER, " +
+                    "`theme_id` INTEGER, " +
+                    "`work_time` TEXT, " +
+                    "PRIMARY KEY(`id`))");
+        }
+    };
+
+    static final Migration MIGRATION_55_56 = new Migration(55, 56) {
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase database) {
+            database.execSQL("CREATE TABLE IF NOT EXISTS `bonus` (" +
+                    "`id` INTEGER NOT NULL, " +
+                    "`author_id` INTEGER, " +
+                    "`dt_change` INTEGER, " +
+                    "`percent` TEXT, " +
+                    "`theme_id` INTEGER, " +
+                    "`option_id` INTEGER, " +
+                    "`so` INTEGER, " +
                     "PRIMARY KEY(`id`))");
         }
     };

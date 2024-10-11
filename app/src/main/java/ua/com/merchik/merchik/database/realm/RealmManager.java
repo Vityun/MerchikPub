@@ -119,6 +119,8 @@ public class RealmManager {
         INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(28, "photo_tar", 86400, 0, 0, 0, 0, "Фото Задач та Рекламацій", 1));
 
         INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(29, "dossier_sotr", 86400, 0, 0, 0, 0, "Досье сотрудника", 1));
+        INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(30, "vacancy", 86400, 0, 0, 0, 0, "Вакансии", 1));
+        INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(31, "bonus", 86400, 0, 0, 0, 0, "Бонусы", 1));
 
         INSTANCE.commitTransaction();
     }

@@ -6,6 +6,11 @@ import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
+import android.text.Html;
+import android.view.MenuItem;
+import android.view.View;
+import android.widget.PopupMenu;
+import android.widget.Toast;
 
 import java.util.List;
 
@@ -19,24 +24,24 @@ import ua.com.merchik.merchik.data.RealmModels.AppUsersDB;
 import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.dataLayer.MainRepositoryKt;
-import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.AppUserRealm;
 import ua.com.merchik.merchik.database.realm.tables.WpDataRealm;
-import ua.com.merchik.merchik.database.room.RoomManager;
 import ua.com.merchik.merchik.dialogs.DialogData;
 
-public class OptionButtonAddNewClient<T> extends OptionControl {
-    public int OPTION_BUTTON_ADD_NEW_CLIENT_ID = 133382;
+public class OptionButtonAddNewFriend<T> extends OptionControl {
+    public int OPTION_BUTTON_ADD_NEW_FRIEND_ID = 136100;
 
+    private View view;
     private WpDataDB wpDataDB;
 
-    public OptionButtonAddNewClient(Context context, T document, OptionsDB optionDB, OptionMassageType msgType, Options.NNKMode nnkMode, UnlockCodeResultListener unlockCodeResultListener) {
+    public OptionButtonAddNewFriend(View view, Context context, T document, OptionsDB optionDB, OptionMassageType msgType, Options.NNKMode nnkMode, UnlockCodeResultListener unlockCodeResultListener) {
         this.context = context;
         this.document = document;
         this.optionDB = optionDB;
         this.msgType = msgType;
         this.nnkMode = nnkMode;
         this.unlockCodeResultListener = unlockCodeResultListener;
+        this.view = view;
         getDocumentVar();
         executeOption();
     }
@@ -48,41 +53,34 @@ public class OptionButtonAddNewClient<T> extends OptionControl {
     }
 
     private void executeOption() {
-        DialogData dialog = new DialogData(context);
-        dialog.setTitle("Добавление потенциального клиента");
-        dialog.setText("Вы хотите добавить потенциального клиента? \n\n" + additionalText());
-        dialog.setOk("Да", () -> {
-//            Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://merchik.com.ua/mobile.php?mod=potential_clients"));
-            Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(createAddNewClientLink()));
-            context.startActivity(browserIntent);
+        PopupMenu popupMenu = new PopupMenu(this.context, view);
+
+        popupMenu.getMenu().add(1, 101, 1, "Вакансии >");
+        popupMenu.getMenu().add(1, 102, 2, "Отправить SMS приглашение >");
+        popupMenu.getMenu().add(1, 103, 3, "Инструкции по поиску >");
+
+        popupMenu.setOnMenuItemClickListener(menuItem -> {
+            switch (menuItem.getItemId()) {
+                case 101:
+
+                    return true;
+                case 102:
+                    sendSMS();
+                    return true;
+                case 103:
+                    return true;
+                default:
+                    return false;
+            }
         });
-        dialog.setClose(dialog::dismiss);
-        dialog.show();
+
+        popupMenu.show();
     }
 
-    /*
-    * Создаю ссылку для того что б пользователь смог перейти в Мобильную Версию Сайта без перелогиниваний
-    * и в последствии смог зарегестрировать нового клиента
-    *
-    *   https://merchik.net/sa.php?&u=USERID&s=PASSWORDHASH&l=/client-reg
-    *   https://merchik.net/sa.php?&u=222388&s=4600a1857c7008ab0ebfa8d1a168f26ebe7315b8&l=/client-reg
-    *   https://merchik.net/sa.php?&u=222388&s=222388fwwk96662AvgrgsYihSHp6Ok9yQXfSHp6Ok9nXdXr3OSHp6Ok9UPBTzTjrF20Nsz3&l=client-reg
-    *   https://merchik.net/sa.php?&u=222388&s=222388fwwk96662AvgrgsYihSHp6Ok9yQXfSHp6Ok9nXdXr3OSHp6Ok9UPBTzTjrF20Nsz3&l=/potential_clients
-    *
-    *   https://merchik.net/sa.php?&u=222388&s=222388fwwk96662AvgrgsYihSHp6Ok9yQXfSHp6Ok9nXdXr3OSHp6Ok9UPBTzTjrF20Nsz3&l=/merchik.com.ua/mobile.php?mod=potential_clients
-    *   https://merchik.net/sa.php?&u=222388&s=222388fwwk96662AvgrgsYihSHp6Ok9yQXfSHp6Ok9nXdXr3OSHp6Ok9UPBTzTjrF20Nsz3&l=/merchik.com.ua/mobile.php?mod=/client-reg
-        u - ID сотрудника
-        s - хэш (описание как считается ниже)
-        l - сылка, по которой будет перенаправлен пользователь после авторизации
-        Хэш считается как SHA1 от строки (без пробелов между параметрами) (соль для хэша AvgrgsYihSHp6Ok9yQXfSHp6Ok9nXdXr3OSHp6Ok9UPBTzTjrF20Nsz3)
-        USERID USERPASSWORD AvgrgsYihSHp6Ok9yQXfSHp6Ok9nXdXr3OSHp6Ok9UPBTzTjrF20Nsz3
-    *
-    * !!!
-    * в комментарии только просил тебя указать, что если нужно будет перейти на merchik.net  - то
-    * сначала нужно будет найти на стороне сервере место редиректа на com.ua
-    * !!!
-    *
-    * */
+    private void sendSMS() {
+        Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(createAddNewClientLink()));
+        context.startActivity(browserIntent);
+    }
 
     public String createAddNewClientLink() {
         String link = "https://merchik.com.ua/mobile.php?mod=potential_clients";

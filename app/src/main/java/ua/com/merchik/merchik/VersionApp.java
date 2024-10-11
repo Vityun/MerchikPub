@@ -46,7 +46,7 @@ public class VersionApp {
     /**
      * 05.02.2021
      * */
-    public static Long VERSION_APP;
+    public static Long VERSION_APP = 0L;
     public void getMinVer(Globals.getVersionInterface callback){
         String mod = "constant_list";
         String act = "get";
@@ -73,6 +73,7 @@ public class VersionApp {
 
             @Override
             public void onFailure(retrofit2.Call<AppVersion> call, Throwable t) {
+                VERSION_APP = 0L;
                 Log.e("getVer", "onFailure: " + t);
                 callback.onFailure("Получить номер актуальной версии не получилось. Проверьте наличие интернета и повторите попытку позже.\n\n" + t.toString());
             }

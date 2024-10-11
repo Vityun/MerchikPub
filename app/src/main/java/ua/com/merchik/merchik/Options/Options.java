@@ -73,6 +73,7 @@ import ua.com.merchik.merchik.Options.Buttons.OptionButPhotoPlanogramm;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtAchievements;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonAddComment;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonAddNewClient;
+import ua.com.merchik.merchik.Options.Buttons.OptionButtonAddNewFriend;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonAvailabilityDetailedReport;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonHistoryMP;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonPhotoAktionTovar;
@@ -170,7 +171,7 @@ public class Options {
 
     public static int[] describedOptionsButt = new int[]{135809, 132968, 135158, 132969, 138518,
             138520, 138773, 137797, 138339, 141360, 141910, 141888, 141885, 84007, 132666, 139576,
-            138767, 135742, 132621, 84003, 138340, 135327, 135328, 156882, 151139, 132623, 133382,
+            138767, 135742, 132621, 84003, 138340, 135327, 135328, 156882, 151139, 132623, 133382, 136100,
             157275, 157276, 157274, 135159, 157277, 157353, 138643, 158243, 135412, 151748, 158309,
             158308, 158604, 158605, 158606, 157354, 157242, 159725, 135413, 135719, 143969, 160567,
             164351, 164355, 165481
@@ -178,7 +179,7 @@ public class Options {
 
 
     public static int[] describedOptions = new int[]{132624, 76815, 157241, 157243, 84006, 156928,
-            151594, 80977, 135330, 133381, 135329, 138518, 151139, 132623, 133382, 137797, 135809,
+            151594, 80977, 135330, 133381, 135329, 138518, 151139, 132623, 133382, 136100, 137797, 135809,
             135328, 135327, 157275, 138341, 590, 84932, 134583, 157352, 1470, 138644, 1455, 135061,
             158361, 159707, 575, 132971, 135591, 135708, 135595, 143968, 160568, 164352, 164354,
             84005, 84967, 164985, 165276, 165275, 165482, 166528, 157288};
@@ -583,6 +584,8 @@ public class Options {
     @RequiresApi(api = Build.VERSION_CODES.N)
     public <T> void optionControlNewAlgo(List<OptionsDB> optionsDBList, Context context, T dataDB, OptionsDB option, List<OptionsDB> optionList, OptionMassageType type, NNKMode mode, boolean check, Clicks.clickVoid click) {
         count = 0;
+        List<OptionsDB> success = new ArrayList<>();
+        List<OptionsDB> failure = new ArrayList<>();
         int optionId2 = Integer.parseInt(option.getOptionId());
         if (optionsDBList != null && optionsDBList.size() > 0) {
             for (OptionsDB item : optionsDBList) {
@@ -605,8 +608,9 @@ public class Options {
                     @Override
                     public void onUnlockCodeSuccess() {
 //                        Toast.makeText(context, "Option: " + item.getOptionTxt() + " execute Success", Toast.LENGTH_LONG).show();
-//                        click.click();
+//                        click.click(); +84932/+158608/+8299/+157352/+160568/+134583/139577/+158607
                         count++;
+                        success.add(item);
                         if (count == optionsDBList.size()) {
                             click.click();
                             // Обычное выполнение нажатия на кнопку.
@@ -626,6 +630,7 @@ public class Options {
 
                     @Override
                     public void onUnlockCodeFailure() {
+                        failure.add(item);
                         click.click();
                     }
                 });
@@ -653,7 +658,7 @@ public class Options {
      * */
     private int res = 0;    // Счётчик для накапливания "блокировок" у данной опции
 
-    public <T> OptionMassageType NNK(Context context, T dataDB, OptionsDB option, List<OptionsDB> optionList, OptionMassageType type, NNKMode mode, Clicks.clickVoid click) {
+    public <T> OptionMassageType NNK(View view, Context context, T dataDB, OptionsDB option, List<OptionsDB> optionList, OptionMassageType type, NNKMode mode, Clicks.clickVoid click) {
         OptionMassageType result = new OptionMassageType();
         try {
             option.setIsSignal("0");
@@ -1101,7 +1106,7 @@ public class Options {
                     switch (mode) {
                         case MAKE:
                             Log.e("NNK", "5. Проверяю опцмю: " + option.getOptionBlock1());
-                            optControl(context, dataDB, option, Integer.parseInt(option.getOptionId()), null, type, mode, new OptionControl.UnlockCodeResultListener() {
+                            optControl(view, context, dataDB, option, Integer.parseInt(option.getOptionId()), null, type, mode, new OptionControl.UnlockCodeResultListener() {
                                 @Override
                                 public void onUnlockCodeSuccess() {
                                     Log.e("NNK", "onUnlockCodeSuccess Потеряли 2 опции");
@@ -1373,8 +1378,12 @@ public class Options {
         return res;
     }
 
-    /*Проверка Опции*/
     public <T> int optControl(Context context, T dataDB, OptionsDB optionCurrent, int optionId, OptionsDB optionBlock, OptionMassageType type, NNKMode mode, OptionControl.UnlockCodeResultListener unlockCodeResultListener) {
+        return optControl(null, context, dataDB, optionCurrent, optionId, optionBlock, type, mode, unlockCodeResultListener);
+    }
+
+        /*Проверка Опции*/
+    public <T> int optControl(View view, Context context, T dataDB, OptionsDB optionCurrent, int optionId, OptionsDB optionBlock, OptionMassageType type, NNKMode mode, OptionControl.UnlockCodeResultListener unlockCodeResultListener) {
         OptionsDB option = optionCurrent;   // Текущая Опция на которую нажали
 
         String block = "";
@@ -1695,6 +1704,11 @@ public class Options {
             // Потенциальный клиент
             case 133382:
                 OptionButtonAddNewClient<?> optionButtonAddNewClient = new OptionButtonAddNewClient<>(context, dataDB, option, type, mode, unlockCodeResultListener);
+                break;
+
+            // Пригласи друга
+            case 136100:
+                OptionButtonAddNewFriend<?> optionButtonAddNewFriend = new OptionButtonAddNewFriend<>(view, context, dataDB, option, type, mode, unlockCodeResultListener);
                 break;
 
 
@@ -2704,104 +2718,110 @@ public class Options {
      * Нажатие на кнопку Для установки окончания рабочего дня ( 138520 )
      */
     private boolean optionEndWork_138520(Context context, WpDataDB wpDataDB, OptionsDB optionsDB, OptionMassageType type, NNKMode mode, OptionControl.UnlockCodeResultListener unlockCodeResultListener) {
-        boolean result;
-        Globals.writeToMLOG("INFO", "DetailedReportButtons.class.pressEndWork", "ENTER. wpDataDB.codeDAD2: " + wpDataDB.getCode_dad2());
-        if (wpDataDB.getVisit_end_dt() > 0) {
-            Toast.makeText(context, "Работа уже окончена!", Toast.LENGTH_SHORT).show();
-            Globals.writeToMLOG("INFO", "DetailedReportButtons.class.pressEndWork", "Работа уже окончена!. wpDataDB.codeDAD2: " + wpDataDB.getCode_dad2());
-            unlockCodeResultListener.onUnlockCodeSuccess();
-            result = true;
-        } else {
-            if (wpDataDB.getVisit_start_dt() > 0) {
-                try {
-                    long endTime = System.currentTimeMillis() / 1000;
-                    RealmManager.INSTANCE.executeTransaction(realm -> {
-                        wpDataDB.setDt_update(System.currentTimeMillis() / 1000);
-                        wpDataDB.setVisit_end_dt(endTime);
-                        wpDataDB.setClient_end_dt(endTime);
-                        wpDataDB.startUpdate = true;
-                        wpDataDB.client_work_duration = (endTime - wpDataDB.getClient_start_dt());
-                        realm.insertOrUpdate(wpDataDB);
-                    });
+        boolean result = false;
+        try {
+            Globals.writeToMLOG("INFO", "DetailedReportButtons.class.pressEndWork", "ENTER. wpDataDB.codeDAD2: " + wpDataDB.getCode_dad2());
+            if (wpDataDB.getVisit_end_dt() > 0) {
+                Toast.makeText(context, "Работа уже окончена!", Toast.LENGTH_SHORT).show();
+                Globals.writeToMLOG("INFO", "DetailedReportButtons.class.pressEndWork", "Работа уже окончена!. wpDataDB.codeDAD2: " + wpDataDB.getCode_dad2());
+                unlockCodeResultListener.onUnlockCodeSuccess();
+                result = true;
+            } else {
+                if (wpDataDB.getVisit_start_dt() > 0) {
+                    try {
+                        // Сохраняю время
+                        long endTime = System.currentTimeMillis() / 1000;
+                        RealmManager.INSTANCE.executeTransaction(realm -> {
+                            wpDataDB.setDt_update(System.currentTimeMillis() / 1000);
+                            wpDataDB.setVisit_end_dt(endTime);
+                            wpDataDB.setClient_end_dt(endTime);
+                            wpDataDB.startUpdate = true;
+                            wpDataDB.client_work_duration = (endTime - wpDataDB.getClient_start_dt());
+                            realm.insertOrUpdate(wpDataDB);
+                        });
 
-                    // Это жосткие костыли
-                    Exchange exchange = new Exchange();
-                    exchange.sendWpDataToServer(new Click() {
-                        @Override
-                        public <T> void onSuccess(T data) {
-                            String msg = (String) data;
-                            Globals.writeToMLOG("INFO", "DetailedReportButtons.class.pressStartWork.onSuccess", "msg: " + msg);
-                            WorkPlan workPlan = new WorkPlan();
-                            List<OptionsDB> opt = workPlan.getOptionButtons2(workPlan.getWpOpchetId(wpDataDB), wpDataDB.getId());
-                            new Options().conduct(context, wpDataDB, opt, DEFAULT_CONDUCT, new Clicks.click() {
-                                @Override
-                                public <T> void click(T data) {
-                                    OptionsDB optionsDB = (OptionsDB) data;
-                                    OptionMassageType msgType = new OptionMassageType();
-                                    msgType.type = OptionMassageType.Type.DIALOG;
-                                    new Options().optControl(context, wpDataDB, optionsDB, Integer.parseInt(optionsDB.getOptionControlId()), null, msgType, Options.NNKMode.CHECK, new OptionControl.UnlockCodeResultListener() {
-                                        @Override
-                                        public void onUnlockCodeSuccess() {
+                        // Это жосткие костыли
+                        // При нажатии на "Конец работы" - начинаю выгружать данные палана работ,
+                        // что б мерчик не ждал следующего автоматического обмена
+                        Exchange exchange = new Exchange();
+                        exchange.sendWpDataToServer(new Click() {
+                            @Override
+                            public <T> void onSuccess(T data) {
+                                String msg = (String) data;
+                                Globals.writeToMLOG("INFO", "DetailedReportButtons.class.pressStartWork.onSuccess", "msg: " + msg);
+                                WorkPlan workPlan = new WorkPlan();
+                                List<OptionsDB> opt = workPlan.getOptionButtons2(workPlan.getWpOpchetId(wpDataDB), wpDataDB.getId());
+                                new Options().conduct(context, wpDataDB, opt, DEFAULT_CONDUCT, new Clicks.click() {
+                                    @Override
+                                    public <T> void click(T data) {
+                                        OptionsDB optionsDB = (OptionsDB) data;
+                                        OptionMassageType msgType = new OptionMassageType();
+                                        msgType.type = OptionMassageType.Type.DIALOG;
+                                        new Options().optControl(context, wpDataDB, optionsDB, Integer.parseInt(optionsDB.getOptionControlId()), null, msgType, Options.NNKMode.CHECK, new OptionControl.UnlockCodeResultListener() {
+                                            @Override
+                                            public void onUnlockCodeSuccess() {
 
-                                        }
+                                            }
 
-                                        @Override
-                                        public void onUnlockCodeFailure() {
+                                            @Override
+                                            public void onUnlockCodeFailure() {
 
-                                        }
-                                    });
-                                }
-                            });
-                        }
+                                            }
+                                        });
+                                    }
+                                });
+                            }
 
-                        @Override
-                        public void onFailure(String error) {
-                            Globals.writeToMLOG("INFO", "DetailedReportButtons.class.pressStartWork.onFailure", "error: " + error);
-                            WorkPlan workPlan = new WorkPlan();
-                            List<OptionsDB> opt = workPlan.getOptionButtons2(workPlan.getWpOpchetId(wpDataDB), wpDataDB.getId());
-                            new Options().conduct(context, wpDataDB, opt, DEFAULT_CONDUCT, new Clicks.click() {
-                                @Override
-                                public <T> void click(T data) {
-                                    OptionsDB optionsDB = (OptionsDB) data;
-                                    OptionMassageType msgType = new OptionMassageType();
-                                    msgType.type = OptionMassageType.Type.DIALOG;
-                                    new Options().optControl(context, wpDataDB, optionsDB, Integer.parseInt(optionsDB.getOptionControlId()), null, msgType, Options.NNKMode.CHECK, new OptionControl.UnlockCodeResultListener() {
-                                        @Override
-                                        public void onUnlockCodeSuccess() {
+                            @Override
+                            public void onFailure(String error) {
+                                Globals.writeToMLOG("INFO", "DetailedReportButtons.class.pressStartWork.onFailure", "error: " + error);
+                                WorkPlan workPlan = new WorkPlan();
+                                List<OptionsDB> opt = workPlan.getOptionButtons2(workPlan.getWpOpchetId(wpDataDB), wpDataDB.getId());
+                                new Options().conduct(context, wpDataDB, opt, DEFAULT_CONDUCT, new Clicks.click() {
+                                    @Override
+                                    public <T> void click(T data) {
+                                        OptionsDB optionsDB = (OptionsDB) data;
+                                        OptionMassageType msgType = new OptionMassageType();
+                                        msgType.type = OptionMassageType.Type.DIALOG;
+                                        new Options().optControl(context, wpDataDB, optionsDB, Integer.parseInt(optionsDB.getOptionControlId()), null, msgType, Options.NNKMode.CHECK, new OptionControl.UnlockCodeResultListener() {
+                                            @Override
+                                            public void onUnlockCodeSuccess() {
 
-                                        }
+                                            }
 
-                                        @Override
-                                        public void onUnlockCodeFailure() {
+                                            @Override
+                                            public void onUnlockCodeFailure() {
 
-                                        }
-                                    });
-                                }
-                            });
-                        }
-                    });
+                                            }
+                                        });
+                                    }
+                                });
+                            }
+                        });
 
-                    Globals.writeToMLOG("INFO", "_INFO.DetailedReportButtons.class.pressEndWork", "Вы закончили работу в: " + endTime + " / отчёт: " + wpDataDB.getDoc_num_otchet());
-                    Toast.makeText(context, "Вы окончили работу в: " + Clock.getHumanTimeOpt(endTime * 1000) + "\n\nНе забудьте нажать 'Провести', что б система проверила текущий документ и начислила Вам премиальные", Toast.LENGTH_SHORT).show();
-                    unlockCodeResultListener.onUnlockCodeSuccess();
-                    result = true;
-                } catch (Exception e) {
-                    // Set to log error
-                    Toast.makeText(context, "Возникла ошибка: " + e, Toast.LENGTH_SHORT).show();
-                    Globals.writeToMLOG("ERROR", "DetailedReportButtons.class.pressEndWork", "wpDataDB.codeDAD2: " + wpDataDB.getCode_dad2() + "Exception e: " + e);
+                        Globals.writeToMLOG("INFO", "_INFO.DetailedReportButtons.class.pressEndWork", "Вы закончили работу в: " + endTime + " / отчёт: " + wpDataDB.getDoc_num_otchet());
+                        Toast.makeText(context, "Вы окончили работу в: " + Clock.getHumanTimeOpt(endTime * 1000) + "\n\nНе забудьте нажать 'Провести', что б система проверила текущий документ и начислила Вам премиальные", Toast.LENGTH_SHORT).show();
+                        unlockCodeResultListener.onUnlockCodeSuccess();
+                        result = true;
+                    } catch (Exception e) {
+                        // Set to log error
+                        Toast.makeText(context, "Возникла ошибка: " + e, Toast.LENGTH_SHORT).show();
+                        Globals.writeToMLOG("ERROR", "DetailedReportButtons.class.pressEndWork", "wpDataDB.codeDAD2: " + wpDataDB.getCode_dad2() + "Exception e: " + e);
+                        unlockCodeResultListener.onUnlockCodeFailure();
+                        result = false;
+                    }
+                } else {
+                    Toast.makeText(context, "Вы не можете закончить работу не начав её", Toast.LENGTH_SHORT).show();
+                    Globals.writeToMLOG("INFO", "DetailedReportButtons.class.pressEndWork", "Вы не можете закончить работу не начав её. wpDataDB.codeDAD2: " + wpDataDB.getCode_dad2());
                     unlockCodeResultListener.onUnlockCodeFailure();
                     result = false;
                 }
-            } else {
-                Toast.makeText(context, "Вы не можете закончить работу не начав её", Toast.LENGTH_SHORT).show();
-                Globals.writeToMLOG("INFO", "DetailedReportButtons.class.pressEndWork", "Вы не можете закончить работу не начав её. wpDataDB.codeDAD2: " + wpDataDB.getCode_dad2());
-                unlockCodeResultListener.onUnlockCodeFailure();
-                result = false;
             }
+            Globals.writeToMLOG("INFO", "DetailedReportButtons.class.pressEndWork", "OUT. wpDataDB.codeDAD2: " + wpDataDB.getCode_dad2());
+
+        }catch (Exception e){
+            Log.e("optionEndWork_138520", "Exception e: " + e);
         }
-        Globals.writeToMLOG("INFO", "DetailedReportButtons.class.pressEndWork", "OUT. wpDataDB.codeDAD2: " + wpDataDB.getCode_dad2());
-
-
         return result;
     }
 
@@ -3192,6 +3212,7 @@ public class Options {
                         realm.insertOrUpdate(optionsDB);
                     }
                 });
+                unlockCodeResultListener.onUnlockCodeSuccess();
             } else {
                 RealmManager.INSTANCE.executeTransaction(realm -> {
                     if (optionsDB != null) {
@@ -3199,8 +3220,24 @@ public class Options {
                         realm.insertOrUpdate(optionsDB);
                     }
                 });
+
+                DialogData dialog = new DialogData(context);
+                dialog.setTitle("Версія додатку");
+                dialog.setText("У вас СТАРА версія додатку(" + currentVer + "), Вам потрібно оновитися до: " + minimalVer + "!");
+                dialog.setClose(dialog::dismiss);
+                dialog.show();
+
+                unlockCodeResultListener.onUnlockCodeFailure();
             }
+
         } catch (Exception e) {
+//            DialogData dialog = new DialogData(context);
+//            dialog.setTitle("Версія додатку");
+//            dialog.setText("При обрахунку опції виникла помилка, зверніться до Вашого керівника\n\nПомилка: " + e);
+//            dialog.setClose(dialog::dismiss);
+//            dialog.show();
+            Toast.makeText(context, "Версія додатку не визначена!", Toast.LENGTH_LONG).show();
+            unlockCodeResultListener.onUnlockCodeFailure();
             Globals.writeToMLOG("ERROR", "optionControlVersion_139577", "Проблема с версией приложения в опции контроля. : " + e);
         }
 

@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import org.json.JSONObject
 import ua.com.merchik.merchik.data.Database.Room.AddressSDB
+import ua.com.merchik.merchik.data.Database.Room.BonusSDB
 import ua.com.merchik.merchik.data.Database.Room.CustomerSDB
 import ua.com.merchik.merchik.data.Database.Room.Planogram.PlanogrammSDB
 import ua.com.merchik.merchik.data.Database.Room.SettingsUISDB
@@ -19,6 +20,7 @@ import ua.com.merchik.merchik.dataLayer.model.FieldValue
 import ua.com.merchik.merchik.dataLayer.model.DataItemUI
 import ua.com.merchik.merchik.dataLayer.model.SettingsItemUI
 import ua.com.merchik.merchik.database.realm.RealmManager
+import ua.com.merchik.merchik.database.realm.tables.ThemeRealm
 import ua.com.merchik.merchik.database.room.RoomManager
 import ua.com.merchik.merchik.features.main.Main.SettingsUI
 import kotlin.reflect.KClass
@@ -170,6 +172,19 @@ class MainRepository(
         return this.map { (it as DataObjectUI).toItemUI(nameUIRepository, getSettingsUI(kClass.java, contextUI)?.hideFields?.joinToString { "," }, typePhoto) }
     }
 
+}
+
+fun List<BonusSDB>.getBonusText(): Pair<String, Float> {
+    val baseZP = 15000
+    var result = ""
+    var sumPrem = 0f
+    this.forEach {
+        val themeComment = ThemeRealm.getThemeById(it.themeId.toString()).comment
+        val bonus = Math.round((it.percent.toFloatOrNull() ?: 0f) * baseZP)
+        sumPrem += bonus
+        result += "\n- $bonus грн. $themeComment"
+    }
+    return result to sumPrem
 }
 
 fun List<DataItemUI>.join(rightTable: List<DataItemUI>, query: String): List<DataItemUI> {

@@ -36,6 +36,7 @@ import ua.com.merchik.merchik.data.RetrofitResponse.AdditionalMaterialsLinksResp
 import ua.com.merchik.merchik.data.RetrofitResponse.AdditionalMaterialsResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.AddressTableResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.ArticleTableResponse;
+import ua.com.merchik.merchik.data.RetrofitResponse.BonusResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.ConductWpDataResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.CustomerGroups;
 import ua.com.merchik.merchik.data.RetrofitResponse.CustomerTableResponse;
@@ -68,6 +69,7 @@ import ua.com.merchik.merchik.data.RetrofitResponse.ThemeTableRespose;
 import ua.com.merchik.merchik.data.RetrofitResponse.TovarImgResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.TovarTableResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.TradeMarkResponse;
+import ua.com.merchik.merchik.data.RetrofitResponse.VacancyResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.ViewListResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.WpDataServer;
 import ua.com.merchik.merchik.data.RetrofitResponse.photos.ImagesViewListImageResponse;
@@ -902,6 +904,16 @@ public interface RetrofitInterface {
 
     @POST("mobile_app.php?")
     Call<DossierSotrResponse> dossierSotr(
+            @Header("ContentType") String content,
+            @Body JsonObject json);
+
+    @POST("mobile_app.php?")
+    Call<VacancyResponse> vacancy(
+            @Header("ContentType") String content,
+            @Body JsonObject json);
+
+    @POST("mobile_app.php?")
+    Call<BonusResponse> bonus(
             @Header("ContentType") String content,
             @Body JsonObject json);
 
