@@ -6,27 +6,35 @@ import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
+import android.os.Bundle;
 import android.text.Html;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.PopupMenu;
 import android.widget.Toast;
 
+import com.google.gson.Gson;
+
 import java.util.List;
 
 import kotlin.Pair;
+import ua.com.merchik.merchik.Activities.Features.FeaturesActivity;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.Options.OptionControl;
 import ua.com.merchik.merchik.Options.Options;
 import ua.com.merchik.merchik.data.Database.Room.BonusSDB;
+import ua.com.merchik.merchik.data.Database.Room.VacancySDB;
 import ua.com.merchik.merchik.data.OptionMassageType;
 import ua.com.merchik.merchik.data.RealmModels.AppUsersDB;
 import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
+import ua.com.merchik.merchik.dataLayer.ContextUI;
 import ua.com.merchik.merchik.dataLayer.MainRepositoryKt;
 import ua.com.merchik.merchik.database.realm.tables.AppUserRealm;
 import ua.com.merchik.merchik.database.realm.tables.WpDataRealm;
 import ua.com.merchik.merchik.dialogs.DialogData;
+import ua.com.merchik.merchik.features.main.DBViewModels.AdditionalRequirementsDBViewModel;
+import ua.com.merchik.merchik.features.main.DBViewModels.VacancySDBViewModel;
 
 public class OptionButtonAddNewFriend<T> extends OptionControl {
     public int OPTION_BUTTON_ADD_NEW_FRIEND_ID = 136100;
@@ -62,7 +70,7 @@ public class OptionButtonAddNewFriend<T> extends OptionControl {
         popupMenu.setOnMenuItemClickListener(menuItem -> {
             switch (menuItem.getItemId()) {
                 case 101:
-
+                    openVacancy();
                     return true;
                 case 102:
                     sendSMS();
@@ -75,6 +83,17 @@ public class OptionButtonAddNewFriend<T> extends OptionControl {
         });
 
         popupMenu.show();
+    }
+
+    private void openVacancy(){
+        Intent intent = new Intent(context, FeaturesActivity.class);
+        Bundle bundle = new Bundle();
+        bundle.putString("viewModel", VacancySDBViewModel.class.getCanonicalName());
+        bundle.putString("contextUI", ContextUI.DEFAULT.toString());
+        bundle.putString("title", "Вакансии");
+        bundle.putString("subTitle", "Список вакансий");
+        intent.putExtras(bundle);
+        context.startActivity(intent);
     }
 
     private void sendSMS() {

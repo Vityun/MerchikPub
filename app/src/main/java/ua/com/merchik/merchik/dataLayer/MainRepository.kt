@@ -16,6 +16,7 @@ import ua.com.merchik.merchik.data.Database.Room.CustomerSDB
 import ua.com.merchik.merchik.data.Database.Room.Planogram.PlanogrammSDB
 import ua.com.merchik.merchik.data.Database.Room.SettingsUISDB
 import ua.com.merchik.merchik.data.Database.Room.UsersSDB
+import ua.com.merchik.merchik.data.Database.Room.VacancySDB
 import ua.com.merchik.merchik.dataLayer.model.FieldValue
 import ua.com.merchik.merchik.dataLayer.model.DataItemUI
 import ua.com.merchik.merchik.dataLayer.model.SettingsItemUI
@@ -65,6 +66,7 @@ class MainRepository(
                 PlanogrammSDB::class-> roomManager.planogrammDao().all.first() as DataObjectUI
                 CustomerSDB::class -> roomManager.customerDao().all.first() as DataObjectUI
                 UsersSDB::class -> roomManager.usersDao().all2.first() as DataObjectUI
+                VacancySDB::class -> roomManager.vacancyDao().all.first() as DataObjectUI
                 AddressSDB::class -> roomManager.addressDao().all.first() as DataObjectUI
                 else -> { null }
             }
@@ -159,6 +161,7 @@ class MainRepository(
             PlanogrammSDB::class-> roomManager.planogrammDao().all
             CustomerSDB::class -> roomManager.customerDao().all
             UsersSDB::class -> roomManager.usersDao().all2
+            VacancySDB::class -> roomManager.vacancyDao().all
             AddressSDB::class -> roomManager.addressDao().all
             else -> { return emptyList() }
         }
