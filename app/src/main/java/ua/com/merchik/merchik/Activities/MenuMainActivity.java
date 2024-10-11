@@ -78,8 +78,9 @@ public class MenuMainActivity extends toolbar_menus {
     }
 
     private void test() {
-//        new Translate().uploadNewTranslate();
+        new Translate().uploadNewTranslate();
 
+        /*
         try {
             new UsersExchange().downloadUsersTable(new ExchangeInterface.ExchangeResponseInterface() {
                 @Override
@@ -112,6 +113,8 @@ public class MenuMainActivity extends toolbar_menus {
         }catch (Exception e){
             Log.e("testLong", "Exception e: " + e);
         }
+        */
+
     }
 
 /*
