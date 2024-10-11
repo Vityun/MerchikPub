@@ -65,7 +65,7 @@ public class OptionButtonAddNewFriend<T> extends OptionControl {
 
         popupMenu.getMenu().add(1, 101, 1, "Вакансии >");
         popupMenu.getMenu().add(1, 102, 2, "Отправить SMS приглашение >");
-        popupMenu.getMenu().add(1, 103, 3, "Инструкции по поиску >");
+        popupMenu.getMenu().add(1, 103, 3, "Аккаунты >");
 
         popupMenu.setOnMenuItemClickListener(menuItem -> {
             switch (menuItem.getItemId()) {
@@ -102,17 +102,7 @@ public class OptionButtonAddNewFriend<T> extends OptionControl {
     }
 
     public String createAddNewClientLink() {
-        String link = "https://merchik.com.ua/mobile.php?mod=potential_clients";
-        AppUsersDB appUser = AppUserRealm.getAppUserById(userId);
-        if (appUser != null){
-            String hash = String.format("%s%s%s", appUser.getUserId(), appUser.getPassword(), "AvgrgsYihSHp6Ok9yQXfSHp6Ok9nXdXr3OSHp6Ok9UPBTzTjrF20Nsz3");
-            hash = Globals.getSha1Hex(hash);
-
-            String format = String.format("https://merchik.com.ua/sa.php?&u=%s&s=%s&l=/client-reg", userId, hash, link);
-            return format;
-        }else {
-            return link;
-        }
+        return "https://merchik.com.ua/mobile.php?mod=sotr_list&act=sotr_invite";
     }
 
     /*Дополнительная подсказка: Потенциальный клиент*/
