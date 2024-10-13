@@ -7,6 +7,25 @@
   "client": [
     {
       "client_info": {
+        "mobilesdk_app_id": "1:169995436535:android:3d4f64ec4deda06da92ef2",
+        "android_client_info": {
+          "package_name": "ua.com.merchik.merchik"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAB7cwmnvkwH2Tf4azQkTrBKmocG1LffOY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
         "mobilesdk_app_id": "1:169995436535:android:cee58b22667fba49a92ef2",
         "android_client_info": {
           "package_name": "ua.com.merchik.merchik_test"
