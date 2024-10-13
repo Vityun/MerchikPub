@@ -128,8 +128,8 @@ public class DialogCreateAchievement {
                 bundle.putString("contextUI", ContextUI.ADD_REQUIREMENTS_FROM_ACHIEVEMENT.toString());
                 bundle.putString("modeUI", ModeUI.ONE_SELECT.toString());
                 bundle.putString("dataJson", new Gson().toJson(clientId));
-                bundle.putString("title", "title");
-                bundle.putString("subTitle", "subTitle");
+                bundle.putString("title", "Предложение");
+                bundle.putString("subTitle", "Предложение от клиента, которое нужно выполнить для получения дополнительных бонусов");
                 intent.putExtras(bundle);
                 ActivityCompat.startActivityForResult((Activity) context, intent, NEED_UPDATE_UI_REQUEST, null);
             });
@@ -168,8 +168,8 @@ public class DialogCreateAchievement {
                 bundle.putString("contextUI", ContextUI.TRADE_MARK_FROM_ACHIEVEMENT.toString());
                 bundle.putString("modeUI", ModeUI.ONE_SELECT.toString());
                 bundle.putString("dataJson", new Gson().toJson(codeDad2));
-                bundle.putString("title", "title");
-                bundle.putString("subTitle", "subTitle");
+                bundle.putString("title", "Торговые марки");
+                bundle.putString("subTitle", "Выберите торговые марки");
                 intent.putExtras(bundle);
                 ActivityCompat.startActivityForResult((Activity) context, intent, NEED_UPDATE_UI_REQUEST, null);
             });
@@ -178,6 +178,7 @@ public class DialogCreateAchievement {
                 Intent intent = new Intent(context, FeaturesActivity.class);
                 Bundle bundle = new Bundle();
                 bundle.putString("viewModel", TovarDBViewModel.class.getCanonicalName());
+                bundle.putString("contextUI", ContextUI.TOVAR_FROM_ACHIEVEMENT.toString());
                 bundle.putString("modeUI", ModeUI.ONE_SELECT.toString());
 //                bundle.putString("dataJson", "{\"codeDad2\":\""+codeDad2+"\"}");
                 try {
@@ -188,7 +189,7 @@ public class DialogCreateAchievement {
                     );
                 } catch (Exception ignored) { }
                 bundle.putString("title", "Товари");
-                bundle.putString("subTitle", "Оберіть Товар");
+                bundle.putString("subTitle", "Выберите товар");
 //                bundle.putString('req', "");
 //                bundle.putInt("idResImage", R.drawable.ic_caution);
                 intent.putExtras(bundle);

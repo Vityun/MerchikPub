@@ -205,26 +205,34 @@
     <string name="data_download_wait">Зачекайте, йде завантаження інформації</string>
 
 
-    <string name="comments">Коментарі:</string>
-    <string name="setting_table">Налаштування таблиці</string>
-    <string name="setting_column_visibility_desc">Щоб приховати якісь стовпці, клацніть на полі</string>
-    <string name="column_name">Назва стовпця</string>
-    <string name="visibility">Видимість</string>
-    <string name="sorting">Сортування</string>
-    <string name="cancel">Скасувати</string>
-    <string name="filters">Фільтри</string>
-    <string name="apply">Застосувати</string>
-    <string name="clear">Очистити</string>
-    <string name="choice">Вибрати</string>
+
+
     <string name="total_number_selected">Загальна кількість елементів %s шт.</string>
     <string name="total_number_marked">Загальна кількість помічених елементів %s шт.</string>
 
-    <string name="filter_not_available_edit">Фільтр недоступний для редагування</string>
-    <string name="font_size">Розмір шрифтів</string>
-    <string name="text_add">Добавить...</string>
-    <string name="option_in_progress">Данная опция находится в стадии разработки</string>
-    <string name="text_find">Пошук</string>
+    <string name="ui_setting_table">Налаштування таблиці</string>
+    <string name="ui_setting_column_visibility_desc">Щоб приховати якісь стовпці, клацніть на полі</string>
+    <string name="ui_column_name">Назва стовпця</string>
+    <string name="ui_visibility">Видимість</string>
+    <string name="ui_cancel">Скасувати</string>
+    <string name="ui_apply">Застосувати</string>
+    <string name="ui_clear">Очистити</string>
+    <string name="ui_choice">Вибрати</string>
 
+    <string name="ui_filter_not_available_edit">Фільтр недоступний для редагування</string>
+    <string name="ui_font_size">Розмір шрифтів</string>
+    <string name="ui_text_add">Добавить...</string>
+    <string name="ui_option_in_progress">Данная опция находится в стадии разработки</string>
+    <string name="ui_text_find">Пошук</string>
+
+    <string name="title_themedb_from_achievement">Вид достижения</string>
+    <string name="sub_title_themedb_from_achievement">Выберите характер достижения, которое Вы выполнили</string>
+    <string name="title_trademarkdb_from_achievement">Торговые марки</string>
+    <string name="sub_title_trademarkdb_from_achievement">Выберите торговые марки</string>
+    <string name="title_tovardb_from_achievement">Товари</string>
+    <string name="sub_title_tovardb_from_achievement">Выберите товар</string>
+    <string name="title_additionalrequirementsdb_from_achievement">Предложение</string>
+    <string name="sub_title_additionalrequirementsdb_from_achievement">Предложение от клиента, которое нужно выполнить для получения дополнительных бонусов</string>
 
 </resources>
 

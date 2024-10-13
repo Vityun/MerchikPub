@@ -36,7 +36,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -47,7 +46,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import my.nanihadesuka.compose.LazyColumnScrollbar
 import my.nanihadesuka.compose.ScrollbarSettings
 import ua.com.merchik.merchik.R
@@ -128,7 +126,7 @@ fun FilteringDialog(viewModel: MainViewModel,
                         if (it.enabled)
                             ItemDateFilterUI(it, selectedFilterDateStart, selectedFilterDateEnd)
                         else
-                            Tooltip(text = viewModel.getTranslateString(stringResource(id = R.string.filter_not_available_edit))) {
+                            Tooltip(text = viewModel.getTranslateString(stringResource(id = R.string.ui_filter_not_available_edit))) {
                                 ItemDateFilterUI(it, selectedFilterDateStart, selectedFilterDateEnd)
                             }
                     }
@@ -164,7 +162,7 @@ fun FilteringDialog(viewModel: MainViewModel,
                                             }
                                         }
                                     else {
-                                        Tooltip(text = viewModel.getTranslateString(stringResource(id = R.string.filter_not_available_edit))) {
+                                        Tooltip(text = viewModel.getTranslateString(stringResource(id = R.string.ui_filter_not_available_edit))) {
                                             ItemFilterUI(viewModel, viewModel.context, it)
                                         }
                                     }
@@ -187,7 +185,7 @@ fun FilteringDialog(viewModel: MainViewModel,
                             modifier = Modifier
                                 .weight(1f)
                         ) {
-                            Text(viewModel.getTranslateString(stringResource(id = R.string.apply)))
+                            Text(viewModel.getTranslateString(stringResource(id = R.string.ui_apply)))
                         }
                         Spacer(modifier = Modifier.padding(10.dp))
                         Button(
@@ -220,7 +218,7 @@ fun FilteringDialog(viewModel: MainViewModel,
                             modifier = Modifier
                                 .weight(1f)
                         ) {
-                            Text(viewModel.getTranslateString(stringResource(id = R.string.clear)))
+                            Text(viewModel.getTranslateString(stringResource(id = R.string.ui_clear)))
                         }
                     }
                 }
@@ -311,7 +309,7 @@ private fun ItemFilterUI(viewModel: MainViewModel, context: Context?, itemFilter
                                 bottom = 3.dp,
                                 end = 7.dp
                             ),
-                        text = viewModel.getTranslateString(stringResource(id = R.string.text_add))
+                        text = viewModel.getTranslateString(stringResource(id = R.string.ui_text_add))
                     )
                 }
 

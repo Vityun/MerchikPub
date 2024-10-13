@@ -4,7 +4,6 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -55,7 +54,7 @@ fun TextFieldInputRounded(
                 modifier = Modifier
                     .align(Alignment.CenterStart)
                     .padding(start = 7.dp),
-                text = viewModel.getTranslateString(stringResource(id = R.string.text_find)),
+                text = viewModel.getTranslateString(stringResource(id = R.string.ui_text_find)),
                 fontSize = 16.sp,
                 color = colorResource(id = R.color.hintColorDefault),
             )

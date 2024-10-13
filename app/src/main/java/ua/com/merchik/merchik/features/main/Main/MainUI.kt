@@ -3,7 +3,6 @@ package ua.com.merchik.merchik.features.main.Main
 import android.app.Activity
 import android.content.Context
 import android.os.Build
-import android.provider.Settings
 import android.view.View
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
@@ -44,7 +43,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
@@ -57,18 +55,13 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
 import coil.compose.rememberAsyncImagePainter
-import com.google.gson.Gson
-import com.google.gson.JsonObject
 import my.nanihadesuka.compose.LazyColumnScrollbar
 import my.nanihadesuka.compose.ScrollbarSettings
-import org.json.JSONObject
 import ua.com.merchik.merchik.R
 import ua.com.merchik.merchik.data.RealmModels.AdditionalRequirementsMarkDB
 import ua.com.merchik.merchik.dataLayer.ModeUI
 import ua.com.merchik.merchik.dataLayer.model.DataItemUI
 import ua.com.merchik.merchik.dataLayer.model.SettingsItemUI
-import ua.com.merchik.merchik.dataLayer.toItemUI
-import ua.com.merchik.merchik.dialogs.DialogAchievement.FilteringDialogDataHolder
 import ua.com.merchik.merchik.features.main.componentsUI.ImageButton
 import ua.com.merchik.merchik.features.main.componentsUI.RoundCheckbox
 import ua.com.merchik.merchik.features.main.componentsUI.TextFieldInputRounded
@@ -403,7 +396,7 @@ fun MainUI(viewModel: MainViewModel, context: Context) {
                                 .weight(1f)
                                 .padding(start = 10.dp, end = 10.dp, bottom = 10.dp)
                         ) {
-                            Text(viewModel.getTranslateString(stringResource(id = R.string.cancel)))
+                            Text(viewModel.getTranslateString(stringResource(id = R.string.ui_cancel)))
                         }
 
                         val selectedItems = dataItemsUI.filter { it.selected }
@@ -426,7 +419,7 @@ fun MainUI(viewModel: MainViewModel, context: Context) {
                                 .padding(start = 10.dp, end = 10.dp, bottom = 10.dp)
                         ) {
                             Text(
-                                "${viewModel.getTranslateString(stringResource(id = R.string.choice))} " +
+                                "${viewModel.getTranslateString(stringResource(id = R.string.ui_choice))} " +
                                         if (selectedItems.isNotEmpty()) "(${selectedItems.size})" else ""
                             )
                         }

@@ -96,11 +96,11 @@ fun SortingDialog(viewModel: MainViewModel, onDismiss: () -> Unit) {
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier
                             .align(alignment = Alignment.CenterHorizontally),
-                        text = viewModel.getTranslateString(stringResource(id = R.string.setting_table))
+                        text = viewModel.getTranslateString(stringResource(id = R.string.ui_setting_table))
                     )
                     Spacer(modifier = Modifier.padding(8.dp))
                     Text(
-                        text = viewModel.getTranslateString(stringResource(id = R.string.setting_column_visibility_desc))
+                        text = viewModel.getTranslateString(stringResource(id = R.string.ui_setting_column_visibility_desc))
                     )
                     Spacer(modifier = Modifier.padding(8.dp))
                     Box(
@@ -172,7 +172,7 @@ fun SortingDialog(viewModel: MainViewModel, onDismiss: () -> Unit) {
                                 .weight(1f)
                                 .padding(5.dp)
                         ) {
-                            Text(viewModel.getTranslateString(stringResource(id = R.string.cancel)))
+                            Text(viewModel.getTranslateString(stringResource(id = R.string.ui_cancel)))
                         }
 
                         Button(

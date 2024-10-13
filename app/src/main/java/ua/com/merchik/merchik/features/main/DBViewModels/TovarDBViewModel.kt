@@ -22,6 +22,7 @@ import ua.com.merchik.merchik.dataLayer.model.DataItemUI
 import ua.com.merchik.merchik.database.realm.RealmManager
 import ua.com.merchik.merchik.database.realm.tables.CustomerRealm
 import ua.com.merchik.merchik.database.realm.tables.ReportPrepareRealm
+import ua.com.merchik.merchik.database.realm.tables.ThemeRealm
 import ua.com.merchik.merchik.database.realm.tables.TovarRealm
 import ua.com.merchik.merchik.dialogs.DialogAchievement.AchievementDataHolder
 import ua.com.merchik.merchik.dialogs.DialogAchievement.FilteringDialogDataHolder
@@ -90,11 +91,11 @@ class TovarDBViewModel @Inject constructor(
         return try {
             val codeDad2 = Gson().fromJson(dataJson, JSONObject::class.java).getString("codeDad2").toLong()
             val data = RealmManager.getTovarListFromReportPrepareByDad2Copy(codeDad2)
-            repository.toItemUIList(TovarDB::class, data, contextUI, null)
+            repository.toItemUIList(TovarDB::class, data, contextUI, 18)
                 .map {
                     when (contextUI) {
-                        ContextUI.THEME_FROM_ACHIEVEMENT -> {
-                            val selected = (it.rawObj.firstOrNull { it is TovarDB } as? TovarDB)?.getiD()?.toIntOrNull() == AchievementDataHolder.instance().themeId
+                        ContextUI.TOVAR_FROM_ACHIEVEMENT -> {
+                            val selected = (it.rawObj.firstOrNull { it is TovarDB } as? TovarDB)?.getiD()?.toIntOrNull() == AchievementDataHolder.instance().tovarId
                             it.copy(selected = selected)
                         }
                         ContextUI.DEFAULT -> {
@@ -116,7 +117,7 @@ class TovarDBViewModel @Inject constructor(
 
     override fun onSelectedItemsUI(itemsUI: List<DataItemUI>) {
         when (contextUI) {
-            ContextUI.THEME_FROM_ACHIEVEMENT -> {
+            ContextUI.TOVAR_FROM_ACHIEVEMENT -> {
                 (itemsUI.first().rawObj.firstOrNull { it is TovarDB } as? TovarDB)?.let {
                     AchievementDataHolder.instance().tovarId = it.getiD().toInt()
                     AchievementDataHolder.instance().tovarName = it.nm
