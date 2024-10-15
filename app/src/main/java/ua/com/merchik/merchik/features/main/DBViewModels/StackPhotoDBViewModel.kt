@@ -115,10 +115,12 @@ class StackPhotoDBViewModel @Inject constructor(
                 ContextUI.STACK_PHOTO_TO_FROM_ACHIEVEMENT -> {
                     AchievementDataHolder.instance().photoToId = it.id
                     AchievementDataHolder.instance().photoToURI = it.photo_num
+                    AchievementDataHolder.instance().photoHashTo = it.photo_hash
                 }
                 ContextUI.STACK_PHOTO_AFTER_FROM_ACHIEVEMENT -> {
                     AchievementDataHolder.instance().photoAfterId = it.id
                     AchievementDataHolder.instance().photoAfterURI = it.photo_num
+                    AchievementDataHolder.instance().photoHashAfter = it.photo_hash
                 }
                 else ->{}
             }

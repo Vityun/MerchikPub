@@ -11,8 +11,10 @@ class AchievementDataHolder private constructor() {
     var themeName: String? = null
     var photoToId: Int? = null
     var photoToURI: String? = null
+    var photoHashTo: String? = null
     var photoAfterId: Int? = null
     var photoAfterURI: String? = null
+    var photoHashAfter: String? = null
 
 
     companion object {
@@ -36,7 +38,9 @@ class AchievementDataHolder private constructor() {
         themeName = null
         photoToId = null
         photoToURI = null
+        photoHashTo = null
         photoAfterId = null
         photoAfterURI = null
+        photoHashAfter = null
     }
 }

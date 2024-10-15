@@ -250,15 +250,17 @@ public class DialogCreateAchievement {
                     achievementsSDB.manufacturer = AchievementDataHolder.Companion.instance().getManufactureId();
                 }
 
-                if (stackPhotoDBTo != null && stackPhotoDBTo.photo_hash != null) {
-                    achievementsSDB.img_before_hash = stackPhotoDBTo.photo_hash;
+                if (AchievementDataHolder.Companion.instance().getPhotoHashTo() != null) {
+//                    achievementsSDB.img_before_hash = stackPhotoDBTo.photo_hash;
+                    achievementsSDB.img_before_hash = AchievementDataHolder.Companion.instance().getPhotoHashTo();
                 } else {
                     Toast.makeText(v.getContext(), "Виберіть фото До, досягнення створено не буде", Toast.LENGTH_LONG).show();
                     return;
                 }
 
-                if (stackPhotoDBAfter != null && stackPhotoDBAfter.photo_hash != null) {
-                    achievementsSDB.img_after_hash = stackPhotoDBAfter.photo_hash;
+                if (AchievementDataHolder.Companion.instance().getPhotoHashAfter() != null) {
+//                    achievementsSDB.img_after_hash = stackPhotoDBAfter.photo_hash;
+                    achievementsSDB.img_after_hash = AchievementDataHolder.Companion.instance().getPhotoHashAfter();
                 } else {
                     Toast.makeText(v.getContext(), "Виберіть фото Після, досягнення створено не буде", Toast.LENGTH_LONG).show();
                     return;
