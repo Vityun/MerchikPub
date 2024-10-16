@@ -116,7 +116,7 @@ fun FontSizeSlider(viewModel: MainViewModel, modifier: Modifier = Modifier, size
 
                 Text(
                     modifier = Modifier.weight(1f),
-                    text = viewModel.getTranslateString(stringResource(id = R.string.ui_font_size)),
+                    text = viewModel.getTranslateString(stringResource(id = R.string.ui_font_size), 5999),
                     textAlign = TextAlign.Center,
                     style = TextStyle(fontSize = fontSize.sp)
                 )

@@ -40,7 +40,9 @@ import ua.com.merchik.merchik.data.Database.Room.SamplePhotoSDB;
 import ua.com.merchik.merchik.data.Database.Room.SettingsUISDB;
 import ua.com.merchik.merchik.data.Database.Room.ShelfSizeSDB;
 import ua.com.merchik.merchik.data.Database.Room.ShowcaseSDB;
+import ua.com.merchik.merchik.data.Database.Room.SiteAccountSDB;
 import ua.com.merchik.merchik.data.Database.Room.SiteObjectsSDB;
+import ua.com.merchik.merchik.data.Database.Room.SiteUrlSDB;
 import ua.com.merchik.merchik.data.Database.Room.StandartSDB;
 import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
 import ua.com.merchik.merchik.data.Database.Room.TovarGroupClientSDB;
@@ -82,7 +84,9 @@ import ua.com.merchik.merchik.database.room.DaoInterfaces.SamplePhotoDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.SettingsUIDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.ShelfSizeDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.ShowcaseDao;
+import ua.com.merchik.merchik.database.room.DaoInterfaces.SiteAccountDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.SiteObjectsDao;
+import ua.com.merchik.merchik.database.room.DaoInterfaces.SiteUrlDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.StandartDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.TarDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.TovarGroupClientDao;
@@ -138,9 +142,11 @@ import ua.com.merchik.merchik.database.room.DaoInterfaces.VotesDao;
                 SettingsUISDB.class,
                 DossierSotrSDB.class,
                 VacancySDB.class,
-                BonusSDB.class
+                BonusSDB.class,
+                SiteUrlSDB.class,
+                SiteAccountSDB.class
         },
-        version = 56
+        version = 57
 )
 
 
@@ -230,6 +236,10 @@ public abstract class AppDatabase extends RoomDatabase {
     public abstract VacancyDao vacancyDao();
 
     public abstract BonusDao bonusDao();
+
+    public abstract SiteUrlDao siteUrlDao();
+
+    public abstract SiteAccountDao siteAccountDao();
 
     public class MyAutoMigration {
     }

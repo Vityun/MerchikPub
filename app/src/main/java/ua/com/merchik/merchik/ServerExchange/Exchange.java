@@ -8,6 +8,7 @@ import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.provider.Settings;
 import android.util.Log;
 
 import com.google.gson.Gson;
@@ -63,7 +64,9 @@ import ua.com.merchik.merchik.data.Database.Room.LanguagesSDB;
 import ua.com.merchik.merchik.data.Database.Room.OblastSDB;
 import ua.com.merchik.merchik.data.Database.Room.SamplePhotoSDB;
 import ua.com.merchik.merchik.data.Database.Room.ShowcaseSDB;
+import ua.com.merchik.merchik.data.Database.Room.SiteAccountSDB;
 import ua.com.merchik.merchik.data.Database.Room.SiteObjectsSDB;
+import ua.com.merchik.merchik.data.Database.Room.SiteUrlSDB;
 import ua.com.merchik.merchik.data.Database.Room.StandartSDB;
 import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
 import ua.com.merchik.merchik.data.Database.Room.TranslatesSDB;
@@ -88,6 +91,10 @@ import ua.com.merchik.merchik.data.RetrofitResponse.ConductWpDataResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.DossierSotrItemResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.DossierSotrResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.Location.LocationList;
+import ua.com.merchik.merchik.data.RetrofitResponse.SiteAccountItemResponse;
+import ua.com.merchik.merchik.data.RetrofitResponse.SiteAccountResponse;
+import ua.com.merchik.merchik.data.RetrofitResponse.SiteURLItemResponse;
+import ua.com.merchik.merchik.data.RetrofitResponse.SiteURLResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.TovarImgList;
 import ua.com.merchik.merchik.data.RetrofitResponse.TovarImgResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.VacancyItemResponse;
@@ -740,6 +747,18 @@ public class Exchange {
 
                     try {
                         updateBonus();
+                    } catch (Exception e) {}
+
+                    try {
+                        updateSiteURL();
+                    } catch (Exception e) {}
+
+                    try {
+                        updateSiteAccount();
+                    } catch (Exception e) {}
+
+                    try {
+                        updateAverageSalary();
                     } catch (Exception e) {}
 
                     try {
@@ -1629,6 +1648,92 @@ public class Exchange {
             }
         });
 
+    }
+
+    void updateSiteURL() {
+        SynchronizationTimetableDB synchronizationTimetableDB = RealmManager.INSTANCE.copyFromRealm(RealmManager.getSynchronizationTimetableRowByTable("site_url"));
+        long dt_change_from = synchronizationTimetableDB.getVpi_app();
+        synchronizationTimetableDB.setVpi_app(System.currentTimeMillis() / 1000);
+        RealmManager.setToSynchronizationTimetableDB(synchronizationTimetableDB);
+
+        JsonObject requestJson = new JsonObject();
+        requestJson.addProperty("mod", "site_url");
+        requestJson.addProperty("act", "list");
+        requestJson.addProperty("dt_change_from", dt_change_from);
+
+        retrofit2.Call<SiteURLResponse> call = RetrofitBuilder.getRetrofitInterface().siteUrl(RetrofitBuilder.contentType, requestJson);
+        call.enqueue(new Callback<SiteURLResponse>() {
+            @Override
+            public void onResponse(Call<SiteURLResponse> call, Response<SiteURLResponse> response) {
+                if (response.isSuccessful() && response.body() != null && response.body().state) {
+                    ArrayList<SiteUrlSDB> siteUrlSDBList = new ArrayList<>();
+                    for (SiteURLItemResponse item: response.body().list ) {
+                        siteUrlSDBList.add(new SiteUrlSDB(item));
+                    }
+                    SQL_DB.siteUrlDao().insertAll(siteUrlSDBList);
+                }
+            }
+
+            @Override
+            public void onFailure(Call<SiteURLResponse> call, Throwable t) {
+            }
+        });
+    }
+
+    void updateSiteAccount() {
+        SynchronizationTimetableDB synchronizationTimetableDB = RealmManager.INSTANCE.copyFromRealm(RealmManager.getSynchronizationTimetableRowByTable("site_account"));
+        long dt_change_from = synchronizationTimetableDB.getVpi_app();
+        synchronizationTimetableDB.setVpi_app(System.currentTimeMillis() / 1000);
+        RealmManager.setToSynchronizationTimetableDB(synchronizationTimetableDB);
+
+        JsonObject requestJson = new JsonObject();
+        requestJson.addProperty("mod", "site_account");
+        requestJson.addProperty("act", "list");
+        requestJson.addProperty("dt_change_from", dt_change_from);
+
+        retrofit2.Call<SiteAccountResponse> call = RetrofitBuilder.getRetrofitInterface().siteAccount(RetrofitBuilder.contentType, requestJson);
+        call.enqueue(new Callback<SiteAccountResponse>() {
+            @Override
+            public void onResponse(Call<SiteAccountResponse> call, Response<SiteAccountResponse> response) {
+                if (response.isSuccessful() && response.body() != null && response.body().state) {
+                    ArrayList<SiteAccountSDB> siteAccountSDBList = new ArrayList<>();
+                    for (SiteAccountItemResponse item: response.body().list ) {
+                        siteAccountSDBList.add(new SiteAccountSDB(item));
+                    }
+                    SQL_DB.siteAccountDao().insertAll(siteAccountSDBList);
+                }
+            }
+
+            @Override
+            public void onFailure(Call<SiteAccountResponse> call, Throwable t) {
+            }
+        });
+    }
+
+    void updateAverageSalary() {
+        JsonObject requestJson = new JsonObject();
+        requestJson.addProperty("mod", "data_list");
+        requestJson.addProperty("act", "get_avg_salary");
+
+        retrofit2.Call<JsonObject> call = RetrofitBuilder.getRetrofitInterface().averageSalary(RetrofitBuilder.contentType, requestJson);
+        call.enqueue(new Callback<JsonObject>() {
+            @Override
+            public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
+                Log.d("smarti", "onResponse: ");
+                if (response.isSuccessful() && response.body() != null) {
+                    try {
+                        JsonObject data = response.body();
+                        if (data.get("state").getAsBoolean()) {
+                            Globals.setAverageSalary(data.get("salary").getAsInt());
+                        }
+                    } catch (Exception e) {}
+                }
+            }
+
+            @Override
+            public void onFailure(Call<JsonObject> call, Throwable t) {
+            }
+        });
     }
 
 

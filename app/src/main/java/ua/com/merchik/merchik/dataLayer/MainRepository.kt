@@ -10,6 +10,7 @@ import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import org.json.JSONObject
+import ua.com.merchik.merchik.Globals
 import ua.com.merchik.merchik.data.Database.Room.AddressSDB
 import ua.com.merchik.merchik.data.Database.Room.BonusSDB
 import ua.com.merchik.merchik.data.Database.Room.CustomerSDB
@@ -178,7 +179,7 @@ class MainRepository(
 }
 
 fun List<BonusSDB>.getBonusText(): Pair<String, Float> {
-    val baseZP = 15000
+    val baseZP = Globals.getAverageSalary()
     var result = ""
     var sumPrem = 0f
     this.forEach {

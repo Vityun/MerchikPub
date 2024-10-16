@@ -84,11 +84,11 @@ fun SettingsDialog(viewModel: MainViewModel, onDismiss: () -> Unit) {
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier
                             .align(alignment = Alignment.CenterHorizontally),
-                        text = viewModel.getTranslateString(stringResource(id = R.string.ui_setting_table))
+                        text = viewModel.getTranslateString(stringResource(id = R.string.ui_setting_table), 5990)
                     )
                     Spacer(modifier = Modifier.padding(8.dp))
                     Text(
-                        text = viewModel.getTranslateString(stringResource(id = R.string.ui_setting_column_visibility_desc))
+                        text = viewModel.getTranslateString(stringResource(id = R.string.ui_setting_column_visibility_desc), 5991)
                     )
                     Spacer(modifier = Modifier.padding(8.dp))
 
@@ -106,7 +106,7 @@ fun SettingsDialog(viewModel: MainViewModel, onDismiss: () -> Unit) {
                                     key = "",
                                     TextField(
                                         "",
-                                        viewModel.getTranslateString(stringResource(id = R.string.ui_column_name)),
+                                        viewModel.getTranslateString(stringResource(id = R.string.ui_column_name), 5992),
                                         MerchModifier(
                                             fontWeight = FontWeight.Bold,
                                             padding = Padding(10.dp, 7.dp, 10.dp, 7.dp)
@@ -114,7 +114,7 @@ fun SettingsDialog(viewModel: MainViewModel, onDismiss: () -> Unit) {
                                     ),
                                     TextField(
                                         "",
-                                        viewModel.getTranslateString(stringResource(id = R.string.ui_visibility)),
+                                        viewModel.getTranslateString(stringResource(id = R.string.ui_visibility), 5993),
                                         MerchModifier(
                                             fontWeight = FontWeight.Bold,
                                             padding = Padding(10.dp, 7.dp, 10.dp, 7.dp),
@@ -137,7 +137,7 @@ fun SettingsDialog(viewModel: MainViewModel, onDismiss: () -> Unit) {
 
                     Spacer(modifier = Modifier.height(10.dp))
 
-                    Tooltip(text = viewModel.getTranslateString(stringResource(id = R.string.ui_option_in_progress))) {
+                    Tooltip(text = viewModel.getTranslateString(stringResource(id = R.string.ui_option_in_progress), 6001)) {
                         FontSizeSlider(viewModel, size = 16 + offsetSizeFont) { offsetSizeFont = it - 16 }
                     }
 
@@ -153,7 +153,7 @@ fun SettingsDialog(viewModel: MainViewModel, onDismiss: () -> Unit) {
                                 .weight(1f)
                                 .padding(5.dp)
                         ) {
-                            Text(viewModel.getTranslateString(stringResource(id = R.string.ui_cancel)))
+                            Text(viewModel.getTranslateString(stringResource(id = R.string.ui_cancel), 5994))
                         }
 
                         Button(

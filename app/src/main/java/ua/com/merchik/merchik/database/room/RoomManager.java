@@ -27,7 +27,8 @@ public class RoomManager {
                         MIGRATION_52_53,
                         MIGRATION_53_54,
                         MIGRATION_54_55,
-                        MIGRATION_55_56
+                        MIGRATION_55_56,
+                        MIGRATION_56_57
                 )
 
                 .build();
@@ -522,6 +523,38 @@ public class RoomManager {
                     "`theme_id` INTEGER, " +
                     "`option_id` INTEGER, " +
                     "`so` INTEGER, " +
+                    "PRIMARY KEY(`id`))");
+        }
+    };
+
+    static final Migration MIGRATION_56_57 = new Migration(56, 57) {
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase database) {
+            database.execSQL("CREATE TABLE IF NOT EXISTS `site_url` (" +
+                    "`id` INTEGER NOT NULL, " +
+                    "`author_id` INTEGER, " +
+                    "`comment` TEXT, " +
+                    "`country_id` INTEGER, " +
+                    "`dt_change` INTEGER, " +
+                    "`import` TEXT, " +
+                    "`phrase` TEXT, " +
+                    "`tovar_grp_id` INTEGER, " +
+                    "`url` TEXT, " +
+                    "`whitelist` TEXT, " +
+                    "PRIMARY KEY(`id`))");
+
+            database.execSQL("CREATE TABLE IF NOT EXISTS `site_account` (" +
+                    "`id` INTEGER NOT NULL, " +
+                    "`author_id` INTEGER, " +
+                    "`buy_sell` TEXT, " +
+                    "`dt_change` INTEGER, " +
+                    "`import` TEXT, " +
+                    "`login` TEXT, " +
+                    "`nm` TEXT, " +
+                    "`pass` TEXT, " +
+                    "`phrase` TEXT, " +
+                    "`prefix` TEXT, " +
+                    "`site_url_id` INTEGER, " +
                     "PRIMARY KEY(`id`))");
         }
     };

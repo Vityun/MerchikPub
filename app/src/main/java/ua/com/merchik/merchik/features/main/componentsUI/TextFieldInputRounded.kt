@@ -54,7 +54,7 @@ fun TextFieldInputRounded(
                 modifier = Modifier
                     .align(Alignment.CenterStart)
                     .padding(start = 7.dp),
-                text = viewModel.getTranslateString(stringResource(id = R.string.ui_text_find)),
+                text = viewModel.getTranslateString(stringResource(id = R.string.ui_text_find), 6002),
                 fontSize = 16.sp,
                 color = colorResource(id = R.color.hintColorDefault),
             )

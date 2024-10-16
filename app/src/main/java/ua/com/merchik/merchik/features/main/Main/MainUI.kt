@@ -396,7 +396,7 @@ fun MainUI(viewModel: MainViewModel, context: Context) {
                                 .weight(1f)
                                 .padding(start = 10.dp, end = 10.dp, bottom = 10.dp)
                         ) {
-                            Text(viewModel.getTranslateString(stringResource(id = R.string.ui_cancel)))
+                            Text(viewModel.getTranslateString(stringResource(id = R.string.ui_cancel), 5994))
                         }
 
                         val selectedItems = dataItemsUI.filter { it.selected }
@@ -419,7 +419,7 @@ fun MainUI(viewModel: MainViewModel, context: Context) {
                                 .padding(start = 10.dp, end = 10.dp, bottom = 10.dp)
                         ) {
                             Text(
-                                "${viewModel.getTranslateString(stringResource(id = R.string.ui_choice))} " +
+                                "${viewModel.getTranslateString(stringResource(id = R.string.ui_choice), 5997)} " +
                                         if (selectedItems.isNotEmpty()) "(${selectedItems.size})" else ""
                             )
                         }

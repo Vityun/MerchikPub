@@ -61,7 +61,9 @@ import ua.com.merchik.merchik.data.RetrofitResponse.SMSLogResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.SMSPlanResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.SamplePhotoResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.ServerConnection;
+import ua.com.merchik.merchik.data.RetrofitResponse.SiteAccountResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.SiteObjectsResponse;
+import ua.com.merchik.merchik.data.RetrofitResponse.SiteURLResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.SotrTable;
 import ua.com.merchik.merchik.data.RetrofitResponse.TARCommentsResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.TasksAndReclamationsResponce;
@@ -914,6 +916,21 @@ public interface RetrofitInterface {
 
     @POST("mobile_app.php?")
     Call<BonusResponse> bonus(
+            @Header("ContentType") String content,
+            @Body JsonObject json);
+
+    @POST("mobile_app.php?")
+    Call<SiteURLResponse> siteUrl(
+            @Header("ContentType") String content,
+            @Body JsonObject json);
+
+    @POST("mobile_app.php?")
+    Call<SiteAccountResponse> siteAccount(
+            @Header("ContentType") String content,
+            @Body JsonObject json);
+
+    @POST("mobile_app.php?")
+    Call<JsonObject> averageSalary(
             @Header("ContentType") String content,
             @Body JsonObject json);
 

@@ -97,12 +97,19 @@ public class OptionButtonAddNewFriend<T> extends OptionControl {
     }
 
     private void sendSMS() {
-        Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(createAddNewClientLink()));
+        Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(createAddNewFriendLink()));
         context.startActivity(browserIntent);
     }
 
-    public String createAddNewClientLink() {
-        return "https://merchik.com.ua/mobile.php?mod=sotr_list&act=sotr_invite";
+    public String createAddNewFriendLink() {
+        String link = "/merchik.com.ua/mobile.php?mod=sotr_list&act=sotr_invite";
+        AppUsersDB appUser = AppUserRealm.getAppUserById(userId);
+        String hash = String.format("%s%s%s", appUser.getUserId(), appUser.getPassword(), "AvgrgsYihSHp6Ok9yQXfSHp6Ok9nXdXr3OSHp6Ok9UPBTzTjrF20Nsz3");
+        hash = Globals.getSha1Hex(hash);
+
+        link = link.replace("&", "**");
+
+        return String.format("https://merchik.com.ua/sa.php?&u=%s&s=%s&l=/%s", userId, hash, link);
     }
 
     /*Дополнительная подсказка: Потенциальный клиент*/

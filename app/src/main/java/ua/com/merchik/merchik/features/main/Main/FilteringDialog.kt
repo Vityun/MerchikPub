@@ -126,7 +126,7 @@ fun FilteringDialog(viewModel: MainViewModel,
                         if (it.enabled)
                             ItemDateFilterUI(it, selectedFilterDateStart, selectedFilterDateEnd)
                         else
-                            Tooltip(text = viewModel.getTranslateString(stringResource(id = R.string.ui_filter_not_available_edit))) {
+                            Tooltip(text = viewModel.getTranslateString(stringResource(id = R.string.ui_filter_not_available_edit), 5998)) {
                                 ItemDateFilterUI(it, selectedFilterDateStart, selectedFilterDateEnd)
                             }
                     }
@@ -162,7 +162,7 @@ fun FilteringDialog(viewModel: MainViewModel,
                                             }
                                         }
                                     else {
-                                        Tooltip(text = viewModel.getTranslateString(stringResource(id = R.string.ui_filter_not_available_edit))) {
+                                        Tooltip(text = viewModel.getTranslateString(stringResource(id = R.string.ui_filter_not_available_edit), 5998)) {
                                             ItemFilterUI(viewModel, viewModel.context, it)
                                         }
                                     }
@@ -185,7 +185,7 @@ fun FilteringDialog(viewModel: MainViewModel,
                             modifier = Modifier
                                 .weight(1f)
                         ) {
-                            Text(viewModel.getTranslateString(stringResource(id = R.string.ui_apply)))
+                            Text(viewModel.getTranslateString(stringResource(id = R.string.ui_apply), 5995))
                         }
                         Spacer(modifier = Modifier.padding(10.dp))
                         Button(
@@ -218,7 +218,7 @@ fun FilteringDialog(viewModel: MainViewModel,
                             modifier = Modifier
                                 .weight(1f)
                         ) {
-                            Text(viewModel.getTranslateString(stringResource(id = R.string.ui_clear)))
+                            Text(viewModel.getTranslateString(stringResource(id = R.string.ui_clear), 5996))
                         }
                     }
                 }
@@ -309,7 +309,7 @@ private fun ItemFilterUI(viewModel: MainViewModel, context: Context?, itemFilter
                                 bottom = 3.dp,
                                 end = 7.dp
                             ),
-                        text = viewModel.getTranslateString(stringResource(id = R.string.ui_text_add))
+                        text = viewModel.getTranslateString(stringResource(id = R.string.ui_text_add), 6000)
                     )
                 }
 

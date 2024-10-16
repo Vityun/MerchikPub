@@ -205,6 +205,14 @@
     <string name="data_download_wait">Зачекайте, йде завантаження інформації</string>
 
 
+<!--    "title_additionalrequirementsdb_from_achievement" -> 6009-->
+<!--    "sub_title_additionalrequirementsdb_from_achievement" -> 6010-->
+<!--    "title_themedb_from_achievement" -> 6003-->
+<!--    "sub_title_themedb_from_achievement" -> 6004-->
+<!--    "title_tovardb_from_achievement" -> 6007-->
+<!--    "sub_title_tovardb_from_achievement" -> 6008-->
+<!--    "title_trademarkdb_from_achievement" -> 6005-->
+<!--    "sub_title_trademarkdb_from_achievement" -> 6006-->
 
 
     <string name="total_number_selected">Загальна кількість елементів %s шт.</string>

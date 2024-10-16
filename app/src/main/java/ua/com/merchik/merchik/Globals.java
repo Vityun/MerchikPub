@@ -36,6 +36,7 @@ import android.view.inputmethod.InputMethodManager;
 
 import androidx.annotation.NonNull;
 import androidx.core.content.FileProvider;
+import androidx.preference.PreferenceManager;
 
 import com.google.gson.Gson;
 import com.google.i18n.phonenumbers.PhoneNumberMatch;
@@ -442,6 +443,16 @@ public class Globals {
         String path = cursor.getString(columnIndex);
         cursor.close();
         return path;
+    }
+
+    public static void setAverageSalary(int averageSalary) {
+        PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).edit()
+                .putInt("average_salary", averageSalary).apply();
+    }
+
+    public static int getAverageSalary() {
+        return PreferenceManager.getDefaultSharedPreferences(getApplicationContext())
+                .getInt("average_salary", 0);
     }
 
     /**17.01 test*/
