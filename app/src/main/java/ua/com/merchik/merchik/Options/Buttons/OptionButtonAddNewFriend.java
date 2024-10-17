@@ -111,24 +111,4 @@ public class OptionButtonAddNewFriend<T> extends OptionControl {
 
         return String.format("https://merchik.com.ua/sa.php?&u=%s&s=%s&l=/%s", userId, hash, link);
     }
-
-    /*Дополнительная подсказка: Потенциальный клиент*/
-    public String additionalText() {
-        int test = 11000;   // TODO будут мне норм значение передавать "ЗП мерчика"
-        String res;
-
-        double requestSend = test * 0.0005;
-        double requestRegistered = test * 0.005;
-        double presentation = test * 0.01;
-        double clientStart = test * 0.1;
-
-
-        res = String.format("- За регистрацию потенциального клиента (ПК) начисляются следующие премии:\n" +
-                "1. При подаче заявки: %s грн.\n" +
-                "2. Если и менеджер (после проверки реквизитов) регистрирует этого ПК в нашей базе данных: %s грн.\n" +
-                "3. Если для этого ПК проводится презентация: %s грн.\n" +
-                "4. Основная премия, при \"запуске\" клиента в работу: %s грн.", requestSend, requestRegistered, presentation, clientStart);
-
-        return res;
-    }
 }

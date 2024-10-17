@@ -28,4 +28,16 @@ public interface SMSLogDao {
 
     @Query("SELECT * FROM sms_log WHERE addr_id = :addr AND client_to = :client AND tp = :tp AND dt BETWEEN :dtFrom AND :dtTo")
     List<SMSLogSDB> getAll(Long dtFrom, Long dtTo, Integer tp, Integer addr, String client);
+
+    @Query("SELECT * FROM sms_log " +
+            "WHERE (:id IS NULL OR id = :id) " +
+            "AND (:dtFrom IS NULL OR dt >= :dtFrom) " +
+            "AND (:dtTo IS NULL OR dt <= :dtTo) " +
+            "AND (:tp IS NULL OR tp = :tp) " +
+            "AND (:addr IS NULL OR addr_id = :addr) " +
+            "AND (:client IS NULL OR client_to = :client) " +
+            "AND (:userId IS NULL OR recipient_id = :userId) " +
+            "AND (:txt IS NULL OR txt LIKE '%' || :txt || '%') "  )
+    List<SMSLogSDB> getAll(Long id, Long dtFrom, Long dtTo, Integer tp, Integer addr, String client, String txt, int userId);
+
 }

@@ -119,6 +119,7 @@ import ua.com.merchik.merchik.Options.Controls.OptionControlPhotoTovarsLeftClien
 import ua.com.merchik.merchik.Options.Controls.OptionControlPromotion;
 import ua.com.merchik.merchik.Options.Controls.OptionControlReclamationAnswer;
 import ua.com.merchik.merchik.Options.Controls.OptionControlRegistrationPotentialClient;
+import ua.com.merchik.merchik.Options.Controls.OptionControlRegistrationPotentialFriend;
 import ua.com.merchik.merchik.Options.Controls.OptionControlReturnOfGoods;
 import ua.com.merchik.merchik.Options.Controls.OptionControlTaskAnswer;
 import ua.com.merchik.merchik.PhotoReports;
@@ -179,7 +180,7 @@ public class Options {
 
 
     public static int[] describedOptions = new int[]{132624, 76815, 157241, 157243, 84006, 156928,
-            151594, 80977, 135330, 133381, 135329, 138518, 151139, 132623, 133382, 136100, 137797, 135809,
+            151594, 80977, 135330, 133381, 136101, 135329, 138518, 151139, 132623, 133382, 136100, 137797, 135809,
             135328, 135327, 157275, 138341, 590, 84932, 134583, 157352, 1470, 138644, 1455, 135061,
             158361, 159707, 575, 132971, 135591, 135708, 135595, 143968, 160568, 164352, 164354,
             84005, 84967, 164985, 165276, 165275, 165482, 166528, 157288};
@@ -312,6 +313,11 @@ public class Options {
                 case 133381:
                     OptionControlRegistrationPotentialClient<?> optionControlRegistrationPotentialClient = new OptionControlRegistrationPotentialClient<>(context, dataDB, optionsDB, newOptionType, mode, unlockCodeResultListener);
                     optionControlRegistrationPotentialClient.showOptionMassage("");
+                    break;
+
+                case 136101:
+                    OptionControlRegistrationPotentialFriend<?> optionControlRegistrationPotentialFriend = new OptionControlRegistrationPotentialFriend<>(context, dataDB, optionsDB, newOptionType, mode, unlockCodeResultListener);
+                    optionControlRegistrationPotentialFriend.showOptionMassage("");
                     break;
 
                 case 151594:
@@ -1705,6 +1711,16 @@ public class Options {
             case 133382:
                 OptionButtonAddNewClient<?> optionButtonAddNewClient = new OptionButtonAddNewClient<>(context, dataDB, option, type, mode, unlockCodeResultListener);
                 break;
+
+            case 136101:
+                OptionControlRegistrationPotentialFriend<?> optionControlRegistrationPotentialFriend =
+                        new OptionControlRegistrationPotentialFriend<>(context, dataDB, option, type, mode, unlockCodeResultListener);
+                if (mode.equals(NNKMode.MAKE) || (mode.equals(NNKMode.CHECK) && optionControlRegistrationPotentialFriend.isBlockOption()))
+                    optionControlRegistrationPotentialFriend.showOptionMassage(block);
+                if (mode.equals(NNKMode.BLOCK) && optionControlRegistrationPotentialFriend.signal && optionControlRegistrationPotentialFriend.isBlockOption()) {
+                    optionControlRegistrationPotentialFriend.showOptionMassage(block);
+                }
+                return optionControlRegistrationPotentialFriend.isBlockOption2() ? 1 : 0;
 
             // Пригласи друга
             case 136100:
