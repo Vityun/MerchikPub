@@ -11,7 +11,6 @@ import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.Options.OptionControl;
 import ua.com.merchik.merchik.Options.Options;
-import ua.com.merchik.merchik.data.Database.Room.PotentialClientSDB;
 import ua.com.merchik.merchik.data.Database.Room.SMS.SMSLogSDB;
 import ua.com.merchik.merchik.data.Database.Room.SMS.SMSPlanSDB;
 import ua.com.merchik.merchik.data.Database.Room.UsersSDB;
@@ -107,8 +106,6 @@ public class OptionControlRegistrationPotentialFriend<T> extends OptionControl {
             }
         });
         checkUnlockCode(optionDB);
-
-        showOptionMassage("");
     }
 
 //    private void formatMsg(List<PotentialClientSDB> potentialClients) {
