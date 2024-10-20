@@ -185,6 +185,7 @@ public class RetrofitBuilder {
 
                 Selector selector = new Selector();
                 selector.platformId = 5;
+                selector.sessionId = Globals.session;
 
                 websocketParam.selector = selector;
 
