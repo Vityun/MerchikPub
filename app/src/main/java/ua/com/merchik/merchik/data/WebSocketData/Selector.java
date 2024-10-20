@@ -7,4 +7,8 @@ public class Selector {
     @SerializedName("platform_id")
     @Expose
     public Integer platformId;
+
+    @SerializedName("session_id")
+    @Expose
+    public String sessionId;
 }
