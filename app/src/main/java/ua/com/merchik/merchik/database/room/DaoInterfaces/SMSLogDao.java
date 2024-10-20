@@ -36,7 +36,7 @@ public interface SMSLogDao {
             "AND (:tp IS NULL OR tp = :tp) " +
             "AND (:addr IS NULL OR addr_id = :addr) " +
             "AND (:client IS NULL OR client_to = :client) " +
-            "AND (:userId IS NULL OR recipient_id = :userId) " +
+            "AND (:userId IS NULL OR sender = :userId) " +
             "AND (:txt IS NULL OR txt LIKE '%' || :txt || '%') "  )
     List<SMSLogSDB> getAll(Long id, Long dtFrom, Long dtTo, Integer tp, Integer addr, String client, String txt, int userId);
 
