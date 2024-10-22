@@ -3,6 +3,7 @@ package ua.com.merchik.merchik.Activities.Features
 import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -23,6 +24,7 @@ import ua.com.merchik.merchik.features.main.DBViewModels.CustomerSDBViewModel
 import ua.com.merchik.merchik.features.main.DBViewModels.ImagesTypeListDBViewModel
 import ua.com.merchik.merchik.features.main.DBViewModels.LogMPDBViewModel
 import ua.com.merchik.merchik.features.main.DBViewModels.ReportPrepareDBViewModel
+import ua.com.merchik.merchik.features.main.DBViewModels.SamplePhotoSDBViewModel
 import ua.com.merchik.merchik.features.main.DBViewModels.StackPhotoDBViewModel
 import ua.com.merchik.merchik.features.main.DBViewModels.ThemeDBViewModel
 import ua.com.merchik.merchik.features.main.DBViewModels.TovarDBViewModel
@@ -40,9 +42,7 @@ class FeaturesActivity: AppCompatActivity() {
             MerchikTheme {
                 Surface(
                     modifier = Modifier
-                        .fillMaxSize()
-                        .padding(20.dp)
-                        .clip(RoundedCornerShape(8.dp)),
+                        .fillMaxSize(),
                     color = Color.Transparent,
                 ) {
                     intent?.let { intent ->
@@ -58,6 +58,7 @@ class FeaturesActivity: AppCompatActivity() {
                                     CustomerSDBViewModel::class -> viewModel() as CustomerSDBViewModel
                                     UsersSDBViewModel::class -> viewModel() as UsersSDBViewModel
                                     VacancySDBViewModel::class -> viewModel() as VacancySDBViewModel
+                                    SamplePhotoSDBViewModel::class -> viewModel() as SamplePhotoSDBViewModel
                                     WpDataDBViewModel::class -> viewModel() as WpDataDBViewModel
                                     ImagesTypeListDBViewModel::class -> viewModel() as ImagesTypeListDBViewModel
                                     ReportPrepareDBViewModel::class -> viewModel() as ReportPrepareDBViewModel
@@ -77,11 +78,23 @@ class FeaturesActivity: AppCompatActivity() {
                                             ModeUI.DEFAULT
                                         }
                                     viewModel.title = bundle.getString("title")
+                                    viewModel.typeWindow = bundle.getString("typeWindow") ?: ""
                                     viewModel.subTitle = bundle.getString("subTitle")
                                     viewModel.idResImage = if (bundle.getInt("idResImage") == 0) null else bundle.getInt("idResImage")
                                     viewModel.context = LocalContext.current
                                     viewModel.updateContent()
-                                    MainUI(viewModel = viewModel, LocalContext.current)
+                                    MainUI(
+                                        modifier = Modifier
+                                            .then(if ((bundle.getString("typeWindow") ?: "").equals("full", true))
+                                                Modifier
+                                            else
+                                                Modifier
+                                                    .padding(20.dp)
+                                                    .clip(RoundedCornerShape(8.dp))
+                                            ),
+                                        viewModel = viewModel,
+                                        LocalContext.current
+                                    )
                                 } ?: {
                                     finish()
                                 }

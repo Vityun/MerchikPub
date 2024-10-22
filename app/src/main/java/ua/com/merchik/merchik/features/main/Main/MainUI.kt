@@ -71,9 +71,54 @@ import java.io.File
 import java.time.LocalTime
 import java.time.ZoneId
 
+@Composable
+fun TopButton(
+    modifier: Modifier,
+    onSettings: () -> Unit,
+    onRefresh: () -> Unit,
+    onClose: () -> Unit
+) {
+    Row(
+        modifier = modifier
+    ) {
+        ImageButton(
+            id = R.drawable.ic_settings,
+            shape = CircleShape,
+            colorImage = ColorFilter.tint(color = Color.Gray),
+            sizeButton = 40.dp,
+            sizeImage = 25.dp,
+            modifier = Modifier
+                .padding(start = 15.dp, bottom = 10.dp),
+            onClick = { onSettings.invoke() }
+        )
+
+        ImageButton(
+            id = R.drawable.ic_refresh,
+            shape = CircleShape,
+            colorImage = ColorFilter.tint(color = Color.Gray),
+            sizeButton = 40.dp,
+            sizeImage = 25.dp,
+            modifier = Modifier
+                .padding(start = 15.dp, bottom = 10.dp),
+            onClick = { onRefresh.invoke() }
+        )
+
+        ImageButton(
+            id = R.drawable.ic_letter_x,
+            shape = CircleShape,
+            colorImage = ColorFilter.tint(color = Color.Gray),
+            sizeButton = 40.dp,
+            sizeImage = 25.dp,
+            modifier = Modifier
+                .padding(start = 15.dp, bottom = 10.dp),
+            onClick = { onClose.invoke() }
+        )
+    }
+}
+
 @RequiresApi(Build.VERSION_CODES.N)
 @Composable
-fun MainUI(viewModel: MainViewModel, context: Context) {
+fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
 
     val uiState by viewModel.uiState.collectAsState()
 
@@ -91,45 +136,17 @@ fun MainUI(viewModel: MainViewModel, context: Context) {
 
 
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .background(color = Color.Transparent)
     ) {
 
-        Row(
-            modifier = Modifier.align(alignment = Alignment.End)
-        ) {
-            ImageButton(
-                id = R.drawable.ic_settings,
-                shape = CircleShape,
-                colorImage = ColorFilter.tint(color = Color.Gray),
-                sizeButton = 40.dp,
-                sizeImage = 25.dp,
-                modifier = Modifier
-                    .padding(start = 15.dp, bottom = 10.dp),
-                onClick = { showSettingsDialog = true }
-            )
-
-            ImageButton(
-                id = R.drawable.ic_refresh,
-                shape = CircleShape,
-                colorImage = ColorFilter.tint(color = Color.Gray),
-                sizeButton = 40.dp,
-                sizeImage = 25.dp,
-                modifier = Modifier
-                    .padding(start = 15.dp, bottom = 10.dp),
-                onClick = { viewModel.updateContent() }
-            )
-
-            ImageButton(
-                id = R.drawable.ic_letter_x,
-                shape = CircleShape,
-                colorImage = ColorFilter.tint(color = Color.Gray),
-                sizeButton = 40.dp,
-                sizeImage = 25.dp,
-                modifier = Modifier
-                    .padding(start = 15.dp, bottom = 10.dp),
-                onClick = { (context as? Activity)?.finish() }
+        if (!(viewModel.typeWindow ?: "").equals("full", true)) {
+            TopButton(
+                modifier = Modifier.align(alignment = Alignment.End),
+                onSettings = { showSettingsDialog = true },
+                onRefresh = { viewModel.updateContent() },
+                onClose = { (context as? Activity)?.finish() }
             )
         }
 
@@ -140,6 +157,17 @@ fun MainUI(viewModel: MainViewModel, context: Context) {
                 .background(color = colorResource(id = R.color.main_form))
         ) {
             Column {
+
+                if ((viewModel.typeWindow ?: "").equals("full", true)) {
+                    TopButton(
+                        modifier = Modifier.align(alignment = Alignment.End).padding(top = 10.dp, end = 10.dp),
+                        onSettings = { showSettingsDialog = true },
+                        onRefresh = { viewModel.updateContent() },
+                        onClose = { (context as? Activity)?.finish() }
+                    )
+
+                    HorizontalDivider()
+                }
 
                 val searchStrList = uiState.filters?.searchText?.split(" ")
                 val visibilityColumName =

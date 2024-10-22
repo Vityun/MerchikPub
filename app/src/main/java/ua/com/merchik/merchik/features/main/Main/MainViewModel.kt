@@ -115,6 +115,7 @@ abstract class MainViewModel(
     var context: Context? = null
     var dataJson: String? = null
     var title: String? = null
+    var typeWindow: String? = null
     var subTitle: String? = null
     var idResImage: Int? = null
     var modeUI: ModeUI = ModeUI.DEFAULT
