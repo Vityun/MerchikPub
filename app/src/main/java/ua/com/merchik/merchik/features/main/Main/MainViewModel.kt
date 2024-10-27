@@ -22,7 +22,11 @@ import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportAc
 import ua.com.merchik.merchik.Activities.Features.FeaturesActivity
 import ua.com.merchik.merchik.Globals.APP_OFFSET_SIZE_FONTS
 import ua.com.merchik.merchik.Globals.APP_PREFERENCES
+import ua.com.merchik.merchik.MakePhoto.MakePhoto
+import ua.com.merchik.merchik.WorkPlan
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB
+import ua.com.merchik.merchik.data.RealmModels.WpDataDB
+import ua.com.merchik.merchik.data.WPDataObj
 import ua.com.merchik.merchik.dataLayer.ContextUI
 import ua.com.merchik.merchik.dataLayer.DataObjectUI
 import ua.com.merchik.merchik.dataLayer.MainRepository
@@ -172,6 +176,19 @@ abstract class MainViewModel(
 
                         // Pika
                         dialogFullPhoto.setComment(photoDB.getComment())
+                        dialogFullPhoto.setCamera({
+                            val workPlan = WorkPlan()
+                            val wpDataObj: WPDataObj = workPlan.getKPS(wpDataDB.getId())
+                            wpDataObj.setPhotoType("4")
+
+                            val makePhoto = MakePhoto()
+                            makePhoto.pressedMakePhotoOldStyle<WpDataDB>(
+                                context as Activity,
+                                wpDataObj,
+                                wpDataDB,
+                                optionDB
+                            )
+                        });
 
                         dialogFullPhoto.setClose { dialogFullPhoto.dismiss() }
                         dialogFullPhoto.show()

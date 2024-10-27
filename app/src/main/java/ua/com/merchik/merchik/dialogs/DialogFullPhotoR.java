@@ -11,7 +11,6 @@ import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ImageView;
-import android.widget.Toast;
 
 import com.ortiz.touchview.TouchImageView;
 
@@ -19,8 +18,8 @@ import java.io.File;
 import java.util.List;
 
 import ua.com.merchik.merchik.Activities.FullScreenPhotoActivity.PhotoFragments;
-import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.R;
+import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.Database.Room.FragmentSDB;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
 
@@ -112,6 +111,12 @@ public class DialogFullPhotoR {
     }
 
     // ---------------------------------------------------------------------------------------------
+
+    public void setCamera(Clicks.clickVoid clickVoid){
+        camera.setOnClickListener((view) -> {
+            clickVoid.click();
+        });
+    }
 
     // Pika Виктор добавил этот метод чтоб при создании диалога можно было установить масштабирование
     public void scaleType(ImageView.ScaleType type){

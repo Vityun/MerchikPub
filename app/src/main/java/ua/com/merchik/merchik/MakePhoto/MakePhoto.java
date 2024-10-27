@@ -609,6 +609,9 @@ public class MakePhoto {
             globals.alertDialogMsg(activity, "Не выбрано посещение\n\nЗайдите в раздел План работ, выберите посещение и повторите попытку.");
         }
     }
+    private <T> void photoDialogsNEW2(Activity activity, WPDataObj wpDataObj, T data, Clicks.clickVoid clickVoid){
+        makePhoto(activity, data, clickVoid); // Метод который запускает камеру и создаёт файл фото.
+    }
 
     /**
      * 28.08.23
