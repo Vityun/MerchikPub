@@ -53,7 +53,7 @@ class TradeMarkDBViewModel @Inject constructor(
                 }
                 TradeMarkRealm.getTradeMarkByIds(ids)
             }
-            else -> { emptyList() }
+            else -> { TradeMarkRealm.getAll() }
         }
 
         val filterTradeMarDB = ItemFilter(

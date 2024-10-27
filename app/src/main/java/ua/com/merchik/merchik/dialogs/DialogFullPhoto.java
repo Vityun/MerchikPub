@@ -207,10 +207,10 @@ public class DialogFullPhoto {
         Log.e("setPhotos", "position: " + position);
         Log.e("setPhotos", "photoLogData: " + photoLogData.get(position).getId());
 
-        openFullSize.setOnClickListener(view -> {
-            mOnPhotoClickListener.onPhotoClicked(view.getContext(), data.get(pos));
-//            dialog.dismiss();
-        });
+//        openFullSize.setOnClickListener(view -> {
+//            mOnPhotoClickListener.onPhotoClicked(view.getContext(), data.get(pos));
+////            dialog.dismiss();
+//        });
 
         PhotoLogPhotoAdapter adapter = new PhotoLogPhotoAdapter(list, (v, event) -> {
             boolean result = true;
@@ -269,6 +269,9 @@ public class DialogFullPhoto {
 
                     //update ui
 
+                    openFullSize.setOnClickListener(view -> {
+                        mOnPhotoClickListener.onPhotoClicked(view.getContext(), photoLogData.get(visiblePosition));
+                    });
 
                     comment.setText(photoLogData.get(visiblePosition).getComment());
 

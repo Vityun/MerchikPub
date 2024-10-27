@@ -54,6 +54,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.rememberAsyncImagePainter
 import my.nanihadesuka.compose.LazyColumnScrollbar
 import my.nanihadesuka.compose.ScrollbarSettings
@@ -70,51 +71,6 @@ import ua.com.merchik.merchik.features.main.componentsUI.Tooltip
 import java.io.File
 import java.time.LocalTime
 import java.time.ZoneId
-
-@Composable
-fun TopButton(
-    modifier: Modifier,
-    onSettings: () -> Unit,
-    onRefresh: () -> Unit,
-    onClose: () -> Unit
-) {
-    Row(
-        modifier = modifier
-    ) {
-        ImageButton(
-            id = R.drawable.ic_settings,
-            shape = CircleShape,
-            colorImage = ColorFilter.tint(color = Color.Gray),
-            sizeButton = 40.dp,
-            sizeImage = 25.dp,
-            modifier = Modifier
-                .padding(start = 15.dp, bottom = 10.dp),
-            onClick = { onSettings.invoke() }
-        )
-
-        ImageButton(
-            id = R.drawable.ic_refresh,
-            shape = CircleShape,
-            colorImage = ColorFilter.tint(color = Color.Gray),
-            sizeButton = 40.dp,
-            sizeImage = 25.dp,
-            modifier = Modifier
-                .padding(start = 15.dp, bottom = 10.dp),
-            onClick = { onRefresh.invoke() }
-        )
-
-        ImageButton(
-            id = R.drawable.ic_letter_x,
-            shape = CircleShape,
-            colorImage = ColorFilter.tint(color = Color.Gray),
-            sizeButton = 40.dp,
-            sizeImage = 25.dp,
-            modifier = Modifier
-                .padding(start = 15.dp, bottom = 10.dp),
-            onClick = { onClose.invoke() }
-        )
-    }
-}
 
 @RequiresApi(Build.VERSION_CODES.N)
 @Composable
@@ -227,17 +183,21 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
                         }
 
                         uiState.filters?.items?.let { filters ->
-                            val filter = filters[0]
-                            if (filter.rightValuesRaw.isNotEmpty()) {
-                                dataItemUI.rawFields.forEach { fieldValue ->
-                                    if (fieldValue.key.equals(filter.leftField, true)) {
-                                        if (filter.rightValuesRaw.isNotEmpty()) _isActiveFiltered = true
-                                        if (filter.rightValuesRaw.contains(fieldValue.value.rawValue.toString())) {
-                                            return@filter true
-                                        } else {
-                                            return@filter false
+                            filters.forEach { filter ->
+                                isFound = false
+                                if (filter.rightValuesRaw.isNotEmpty()) {
+                                    dataItemUI.rawFields.forEach inner@{ fieldValue ->
+                                        if (fieldValue.key.equals(filter.leftField, true)) {
+                                            if (filter.rightValuesRaw.isNotEmpty()) _isActiveFiltered = true
+                                            if (filter.rightValuesRaw.contains(fieldValue.value.rawValue.toString())) {
+                                                isFound = true
+                                                return@inner
+                                            }
                                         }
                                     }
+                                }
+                                if (!isFound) {
+                                    return@filter false
                                 }
                             }
                         }
@@ -357,6 +317,7 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
                                     settingsItemUI = uiState.settingsItems,
                                     contextUI = viewModel.modeUI,
                                     onClickItem = { viewModel.onClickItem(it, context) },
+                                    onClickItemImage = { viewModel.onClickItemImage(it, context) },
                                     onCheckItem = { checked, it -> viewModel.updateItemSelect(checked, it) }
                                 )
                             }
@@ -477,7 +438,14 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
 }
 
 @Composable
-fun ItemUI(item: DataItemUI, settingsItemUI: List<SettingsItemUI>, visibilityColumName: Int, contextUI: ModeUI, onClickItem: (DataItemUI) -> Unit, onCheckItem: (Boolean, DataItemUI) -> Unit) {
+fun ItemUI(
+    item: DataItemUI,
+    settingsItemUI: List<SettingsItemUI>,
+    visibilityColumName: Int,
+    contextUI: ModeUI,
+    onClickItem: (DataItemUI) -> Unit,
+    onClickItemImage: (DataItemUI) -> Unit,
+    onCheckItem: (Boolean, DataItemUI) -> Unit) {
     Box(
         modifier = Modifier
             .clickable { onClickItem(item) }
@@ -529,7 +497,8 @@ fun ItemUI(item: DataItemUI, settingsItemUI: List<SettingsItemUI>, visibilityCol
                             painter = images[0],
                             modifier = Modifier
                                 .padding(5.dp)
-                                .size(100.dp),
+                                .size(100.dp)
+                                .clickable { onClickItemImage(item) },
                             contentScale = ContentScale.FillWidth,
                             contentDescription = null
                         )
@@ -540,7 +509,8 @@ fun ItemUI(item: DataItemUI, settingsItemUI: List<SettingsItemUI>, visibilityCol
                                     painter = image,
                                     modifier = Modifier
                                         .padding(5.dp)
-                                        .size(100.dp),
+                                        .size(100.dp)
+                                        .clickable { onClickItemImage(item) },
                                     contentScale = ContentScale.FillWidth,
                                     contentDescription = null
                                 )
@@ -599,6 +569,51 @@ fun ItemUI(item: DataItemUI, settingsItemUI: List<SettingsItemUI>, visibilityCol
                     )
                 }
         }
+    }
+}
+
+@Composable
+fun TopButton(
+    modifier: Modifier,
+    onSettings: () -> Unit,
+    onRefresh: () -> Unit,
+    onClose: () -> Unit
+) {
+    Row(
+        modifier = modifier
+    ) {
+        ImageButton(
+            id = R.drawable.ic_settings,
+            shape = CircleShape,
+            colorImage = ColorFilter.tint(color = Color.Gray),
+            sizeButton = 40.dp,
+            sizeImage = 25.dp,
+            modifier = Modifier
+                .padding(start = 15.dp, bottom = 10.dp),
+            onClick = { onSettings.invoke() }
+        )
+
+        ImageButton(
+            id = R.drawable.ic_refresh,
+            shape = CircleShape,
+            colorImage = ColorFilter.tint(color = Color.Gray),
+            sizeButton = 40.dp,
+            sizeImage = 25.dp,
+            modifier = Modifier
+                .padding(start = 15.dp, bottom = 10.dp),
+            onClick = { onRefresh.invoke() }
+        )
+
+        ImageButton(
+            id = R.drawable.ic_letter_x,
+            shape = CircleShape,
+            colorImage = ColorFilter.tint(color = Color.Gray),
+            sizeButton = 40.dp,
+            sizeImage = 25.dp,
+            modifier = Modifier
+                .padding(start = 15.dp, bottom = 10.dp),
+            onClick = { onClose.invoke() }
+        )
     }
 }
 

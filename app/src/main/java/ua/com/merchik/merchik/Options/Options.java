@@ -145,6 +145,7 @@ import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
 import ua.com.merchik.merchik.data.RealmModels.ReportPrepareDB;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
 import ua.com.merchik.merchik.data.RealmModels.TovarDB;
+import ua.com.merchik.merchik.data.RealmModels.TradeMarkDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.data.RetrofitResponse.ReportHintList;
 import ua.com.merchik.merchik.data.TovarOptions;
@@ -157,6 +158,7 @@ import ua.com.merchik.merchik.database.realm.tables.CustomerRealm;
 import ua.com.merchik.merchik.database.realm.tables.LogMPRealm;
 import ua.com.merchik.merchik.database.realm.tables.OptionsRealm;
 import ua.com.merchik.merchik.database.realm.tables.ReportPrepareRealm;
+import ua.com.merchik.merchik.database.realm.tables.TradeMarkRealm;
 import ua.com.merchik.merchik.database.realm.tables.WpDataRealm;
 import ua.com.merchik.merchik.dialogs.DialogAdditionalRequirements.DialogARMark.DialogARMark;
 import ua.com.merchik.merchik.dialogs.DialogAdditionalRequirements.DialogAdditionalRequirements;
@@ -164,6 +166,7 @@ import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.dialogs.DialogFilter.Click;
 import ua.com.merchik.merchik.dialogs.EKL.DialogEKL;
 import ua.com.merchik.merchik.features.main.DBViewModels.AdditionalRequirementsDBViewModel;
+import ua.com.merchik.merchik.features.main.DBViewModels.SamplePhotoSDBViewModel;
 import ua.com.merchik.merchik.toolbar_menus;
 
 public class Options {
@@ -1540,6 +1543,23 @@ public class Options {
                 return optionControlPhotoCartWithGoods.isBlockOption2() ? 1 : 0;
 
             case 135158:
+                try {
+                    WpDataDB wpdata = (WpDataDB) dataDB;
+
+                    AddressSDB addr = SQL_DB.addressDao().getById(wpdata.getAddr_id());
+                    TradeMarkDB tradeMarkDB = TradeMarkRealm.getTradeMarkRowById(String.valueOf(addr.tpId));
+
+                    Intent intent = new Intent(context, FeaturesActivity.class);
+                    Bundle bundle = new Bundle();
+                    bundle.putString("viewModel", SamplePhotoSDBViewModel.class.getCanonicalName());
+                    bundle.putString("contextUI", ContextUI.SAMPLE_PHOTO_FROM_OST_TOVARA.toString());
+                    bundle.putString("dataJson", new Gson().toJson(tradeMarkDB.getID()));
+                    bundle.putString("title", "Образцы фото отчетов");
+                    bundle.putString("subTitle", "Комментарий");
+                    intent.putExtras(bundle);
+                    context.startActivity(intent);
+                } catch (Exception e) {}
+
                 OptionButtonPhotoFOT<?> optionButtonPhotoFOT = new OptionButtonPhotoFOT<>(context, dataDB, option, type, mode, unlockCodeResultListener);
                 break;
 

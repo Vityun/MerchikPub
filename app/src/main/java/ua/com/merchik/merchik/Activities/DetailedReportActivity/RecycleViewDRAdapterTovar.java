@@ -347,7 +347,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                 imageView.setImageResource(R.mipmap.merchik);
 
                 String weightString = String.format("%s, %s", list.getWeight(), list.getBarcode());
-                name.setText(list.getNm());
+                name.setText(list.getNm() + " (" + list.getiD() + ")");
                 name.setTextSize(16);
                 weight.setText(weightString);
                 weight.setTextSize(16);

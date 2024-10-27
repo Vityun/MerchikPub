@@ -6,26 +6,33 @@ import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import android.os.Bundle
+import android.util.Log
 import androidx.core.app.ActivityCompat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
+import com.google.gson.Gson
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import org.json.JSONObject
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity
 import ua.com.merchik.merchik.Activities.Features.FeaturesActivity
 import ua.com.merchik.merchik.Globals.APP_OFFSET_SIZE_FONTS
 import ua.com.merchik.merchik.Globals.APP_PREFERENCES
+import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB
 import ua.com.merchik.merchik.dataLayer.ContextUI
-import ua.com.merchik.merchik.dataLayer.ModeUI
 import ua.com.merchik.merchik.dataLayer.DataObjectUI
 import ua.com.merchik.merchik.dataLayer.MainRepository
+import ua.com.merchik.merchik.dataLayer.ModeUI
 import ua.com.merchik.merchik.dataLayer.NameUIRepository
 import ua.com.merchik.merchik.dataLayer.model.DataItemUI
 import ua.com.merchik.merchik.dataLayer.model.SettingsItemUI
+import ua.com.merchik.merchik.database.realm.RealmManager
+import ua.com.merchik.merchik.dialogs.DialogFullPhoto
+import ua.com.merchik.merchik.dialogs.DialogFullPhotoR
 import java.time.LocalDate
 import kotlin.reflect.KClass
 
@@ -137,6 +144,48 @@ abstract class MainViewModel(
     open fun getDefaultHideUserFields(): List<String>? { return null }
 
     var filters: Filters? = null
+
+    fun onClickItemImage(clickedDataItemUI: DataItemUI, context: Context) {
+        val dialog = DialogFullPhoto(context)
+        val photoLogData = mutableListOf<StackPhotoDB>()
+        var selectedIndex = -1
+        _uiState.value.items.map { dataItemUI ->
+            val jsonObject = JSONObject(Gson().toJson(dataItemUI.rawObj[0]))
+            dataItemUI.rawObj[0].getFieldsImageOnUI().split(",").forEach {
+                if (it.isNotEmpty()) {
+                    RealmManager.getPhotoById( null, jsonObject.get(it.trim()).toString())
+                        ?.let {
+                            photoLogData.add(it)
+                            if (clickedDataItemUI == dataItemUI) selectedIndex = photoLogData.count() - 1
+                        }
+                }
+            }
+        }
+
+        if (selectedIndex > -1) {
+            dialog.setPhotos(selectedIndex, photoLogData,
+                { context, photoDB ->
+                    Log.d("smarti", "onClickItemImage: ")
+                    try {
+                        val dialogFullPhoto = DialogFullPhotoR(context)
+                        dialogFullPhoto.setPhoto(photoDB)
+
+                        // Pika
+                        dialogFullPhoto.setComment(photoDB.getComment())
+
+                        dialogFullPhoto.setClose { dialogFullPhoto.dismiss() }
+                        dialogFullPhoto.show()
+                    } catch (e: Exception) {
+                        Log.e("ShowcaseAdapter", "Exception e: $e")
+                    }
+                },
+                { }
+            )
+
+            dialog.setClose { dialog.dismiss() }
+            dialog.show()
+        }
+    }
 
     private val _uiState = MutableStateFlow(StateUI())
     val uiState: StateFlow<StateUI>
