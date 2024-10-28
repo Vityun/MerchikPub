@@ -1,13 +1,23 @@
 package ua.com.merchik.merchik.features.main.DBViewModels
 
+import android.app.Activity
 import android.app.Application
+import android.content.Context
+import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import com.google.gson.Gson
+import com.google.gson.JsonObject
 import dagger.hilt.android.lifecycle.HiltViewModel
+import ua.com.merchik.merchik.MakePhoto.MakePhoto
+import ua.com.merchik.merchik.WorkPlan
 import ua.com.merchik.merchik.data.Database.Room.SamplePhotoSDB
 import ua.com.merchik.merchik.data.RealmModels.ImagesTypeListDB
+import ua.com.merchik.merchik.data.RealmModels.OptionsDB
+import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB
 import ua.com.merchik.merchik.data.RealmModels.TovarDB
 import ua.com.merchik.merchik.data.RealmModels.TradeMarkDB
+import ua.com.merchik.merchik.data.RealmModels.WpDataDB
+import ua.com.merchik.merchik.data.WPDataObj
 import ua.com.merchik.merchik.dataLayer.ContextUI
 import ua.com.merchik.merchik.dataLayer.DataObjectUI
 import ua.com.merchik.merchik.dataLayer.MainRepository
@@ -15,9 +25,12 @@ import ua.com.merchik.merchik.dataLayer.ModeUI
 import ua.com.merchik.merchik.dataLayer.NameUIRepository
 import ua.com.merchik.merchik.dataLayer.model.DataItemUI
 import ua.com.merchik.merchik.database.realm.RealmManager
+import ua.com.merchik.merchik.database.realm.tables.OptionsRealm
 import ua.com.merchik.merchik.database.realm.tables.PhotoTypeRealm
 import ua.com.merchik.merchik.database.realm.tables.TradeMarkRealm
+import ua.com.merchik.merchik.database.realm.tables.WpDataRealm
 import ua.com.merchik.merchik.database.room.RoomManager
+import ua.com.merchik.merchik.dialogs.DialogFullPhotoR
 import ua.com.merchik.merchik.features.main.Main.Filters
 import ua.com.merchik.merchik.features.main.Main.ItemFilter
 import ua.com.merchik.merchik.features.main.Main.MainViewModel
@@ -34,6 +47,40 @@ class SamplePhotoSDBViewModel @Inject constructor(
 
     override val table: KClass<out DataObjectUI>
         get() = SamplePhotoSDB::class
+
+    override fun onClickFullImage(stackPhotoDB: StackPhotoDB) {
+        try {
+            val dialogFullPhoto = DialogFullPhotoR(context)
+            dialogFullPhoto.setPhoto(stackPhotoDB)
+
+            // Pika
+            dialogFullPhoto.setComment(stackPhotoDB.getComment())
+
+            val dataJsonObject = Gson().fromJson(dataJson, JsonObject::class.java)
+            val wpDataDB = WpDataRealm.getWpDataRowById(dataJsonObject.get("wpDataDBId").asString.toLong())
+            val optionDB = RealmManager.INSTANCE.copyFromRealm(OptionsRealm.getOptionById(dataJsonObject.get("optionDBId").asString))
+            if (wpDataDB != null && optionDB != null) {
+                dialogFullPhoto.setCamera {
+                    val workPlan = WorkPlan()
+                    val wpDataObj: WPDataObj = workPlan.getKPS(wpDataDB.id)
+                    wpDataObj.setPhotoType("4")
+                    val makePhoto = MakePhoto()
+                    makePhoto.pressedMakePhotoOldStyle<WpDataDB>(
+                        context as Activity,
+                        wpDataObj,
+                        wpDataDB,
+                        optionDB
+                    )
+                    dialogFullPhoto.dismiss()
+                }
+            }
+
+            dialogFullPhoto.setClose { dialogFullPhoto.dismiss() }
+            dialogFullPhoto.show()
+        } catch (e: Exception) {
+            Log.e("ShowcaseAdapter", "Exception e: $e")
+        }
+    }
 
     override fun updateFilters() {
         when (contextUI) {
@@ -59,7 +106,8 @@ class SamplePhotoSDBViewModel @Inject constructor(
 //                TradeMarkDB tradeMarkDB = TradeMarkRealm.getTradeMarkRowById(String.valueOf(addr.tpId));
 //                groupText.setText(tradeMarkDB.getNm());
 
-                val tradeMarkId = Gson().fromJson(dataJson, String::class.java)
+                val dataJsonObject = Gson().fromJson(dataJson, JsonObject::class.java)
+                val tradeMarkId = dataJsonObject.get("tradeMarkDBId").asString
                 val tradeMarkDB = TradeMarkRealm.getTradeMarkRowById(tradeMarkId.toString())
 
                 val filterTradeMarDB = ItemFilter(

@@ -45,6 +45,7 @@ import androidx.annotation.RequiresApi;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
 
 import org.apache.commons.lang3.ArrayUtils;
@@ -1553,14 +1554,18 @@ public class Options {
                     Bundle bundle = new Bundle();
                     bundle.putString("viewModel", SamplePhotoSDBViewModel.class.getCanonicalName());
                     bundle.putString("contextUI", ContextUI.SAMPLE_PHOTO_FROM_OST_TOVARA.toString());
-                    bundle.putString("dataJson", new Gson().toJson(tradeMarkDB.getID()));
+                    JsonObject dataJson = new JsonObject();
+                    dataJson.addProperty("tradeMarkDBId", tradeMarkDB.getID());
+                    dataJson.addProperty("wpDataDBId", String.valueOf(wpdata.getId()));
+                    dataJson.addProperty("optionDBId", String.valueOf(option.getID()));
+                    bundle.putString("dataJson", new Gson().toJson(dataJson));
                     bundle.putString("title", "Образцы фото отчетов");
                     bundle.putString("subTitle", "Комментарий");
                     intent.putExtras(bundle);
                     context.startActivity(intent);
                 } catch (Exception e) {}
 
-                OptionButtonPhotoFOT<?> optionButtonPhotoFOT = new OptionButtonPhotoFOT<>(context, dataDB, option, type, mode, unlockCodeResultListener);
+//                OptionButtonPhotoFOT<?> optionButtonPhotoFOT = new OptionButtonPhotoFOT<>(context, dataDB, option, type, mode, unlockCodeResultListener);
                 break;
 
             case 159725:

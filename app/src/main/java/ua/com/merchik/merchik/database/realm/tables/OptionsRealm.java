@@ -21,6 +21,12 @@ public class OptionsRealm {
                 .findAll();
     }
 
+    public static OptionsDB getOptionById(String id){
+        return INSTANCE.where(OptionsDB.class)
+                .equalTo("iD", id)
+                .findFirst();
+    }
+
     public static OptionsDB getOptionByOptionId(String optId){
         return INSTANCE.where(OptionsDB.class)
                 .equalTo("optionControlId", optId)

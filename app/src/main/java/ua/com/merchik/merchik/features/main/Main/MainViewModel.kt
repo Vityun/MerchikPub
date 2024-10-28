@@ -12,11 +12,13 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import com.google.gson.Gson
+import com.google.gson.JsonObject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import org.apache.commons.lang3.ObjectUtils.Null
 import org.json.JSONObject
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity
 import ua.com.merchik.merchik.Activities.Features.FeaturesActivity
@@ -24,6 +26,7 @@ import ua.com.merchik.merchik.Globals.APP_OFFSET_SIZE_FONTS
 import ua.com.merchik.merchik.Globals.APP_PREFERENCES
 import ua.com.merchik.merchik.MakePhoto.MakePhoto
 import ua.com.merchik.merchik.WorkPlan
+import ua.com.merchik.merchik.data.RealmModels.OptionsDB
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB
 import ua.com.merchik.merchik.data.WPDataObj
@@ -35,6 +38,8 @@ import ua.com.merchik.merchik.dataLayer.NameUIRepository
 import ua.com.merchik.merchik.dataLayer.model.DataItemUI
 import ua.com.merchik.merchik.dataLayer.model.SettingsItemUI
 import ua.com.merchik.merchik.database.realm.RealmManager
+import ua.com.merchik.merchik.database.realm.tables.OptionsRealm
+import ua.com.merchik.merchik.database.realm.tables.WpDataRealm
 import ua.com.merchik.merchik.dialogs.DialogFullPhoto
 import ua.com.merchik.merchik.dialogs.DialogFullPhotoR
 import java.time.LocalDate
@@ -141,7 +146,10 @@ abstract class MainViewModel(
     open fun updateFilters() {}
 
     abstract fun getItems(): List<DataItemUI>
+
     open fun onClickItem(itemUI: DataItemUI, context: Context) {}
+
+    open fun onClickFullImage(stackPhotoDB: StackPhotoDB) {}
 
     open fun onSelectedItemsUI(itemsUI: List<DataItemUI>) {}
 
@@ -168,33 +176,9 @@ abstract class MainViewModel(
 
         if (selectedIndex > -1) {
             dialog.setPhotos(selectedIndex, photoLogData,
-                { context, photoDB ->
-                    Log.d("smarti", "onClickItemImage: ")
-                    try {
-                        val dialogFullPhoto = DialogFullPhotoR(context)
-                        dialogFullPhoto.setPhoto(photoDB)
-
-                        // Pika
-                        dialogFullPhoto.setComment(photoDB.getComment())
-                        dialogFullPhoto.setCamera({
-                            val workPlan = WorkPlan()
-                            val wpDataObj: WPDataObj = workPlan.getKPS(wpDataDB.getId())
-                            wpDataObj.setPhotoType("4")
-
-                            val makePhoto = MakePhoto()
-                            makePhoto.pressedMakePhotoOldStyle<WpDataDB>(
-                                context as Activity,
-                                wpDataObj,
-                                wpDataDB,
-                                optionDB
-                            )
-                        });
-
-                        dialogFullPhoto.setClose { dialogFullPhoto.dismiss() }
-                        dialogFullPhoto.show()
-                    } catch (e: Exception) {
-                        Log.e("ShowcaseAdapter", "Exception e: $e")
-                    }
+                { _, photoDB ->
+                    onClickFullImage(photoDB)
+                    dialog.dismiss()
                 },
                 { }
             )
