@@ -20,6 +20,11 @@ interface DataObjectUI {
         return ""
     }
 
+    fun getFieldsForOrderOnUI(): List<String>? {
+        return null
+    }
+
+
     fun getHidedFieldsOnUI(): String {
         return ""
     }
@@ -84,7 +89,7 @@ fun DataObjectUI.toItemUI(nameUIRepository: NameUIRepository, hideUserFields: St
         }
     }
 
-    jsonObject.keys().forEach { key ->
+    fun updateFields(key: String) {
         rawFields.add(
             FieldValue(
                 key,
@@ -117,6 +122,14 @@ fun DataObjectUI.toItemUI(nameUIRepository: NameUIRepository, hideUserFields: St
                 )
             )
         }
+    }
+
+    this.getFieldsForOrderOnUI()?.forEach { key ->
+        if (jsonObject.keys().asSequence().toList().contains(key)) updateFields(key)
+    }
+
+    jsonObject.keys().forEach { key ->
+        if (this.getFieldsForOrderOnUI()?.contains(key) != true) updateFields(key)
     }
 
     return DataItemUI(

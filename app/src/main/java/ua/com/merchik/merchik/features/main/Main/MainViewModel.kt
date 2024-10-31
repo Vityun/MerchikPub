@@ -149,9 +149,11 @@ abstract class MainViewModel(
 
     open fun onClickItem(itemUI: DataItemUI, context: Context) {}
 
-    open fun onClickFullImage(stackPhotoDB: StackPhotoDB) {}
+    open fun onClickFullImage(stackPhotoDB: StackPhotoDB, comment: String?) {}
 
     open fun onSelectedItemsUI(itemsUI: List<DataItemUI>) {}
+
+    open fun getFieldsForCommentsImage(): List<String>? { return null }
 
     open fun getDefaultHideUserFields(): List<String>? { return null }
 
@@ -161,12 +163,19 @@ abstract class MainViewModel(
         val dialog = DialogFullPhoto(context)
         val photoLogData = mutableListOf<StackPhotoDB>()
         var selectedIndex = -1
+        val fieldsForCommentsImage = getFieldsForCommentsImage()
+        val photoDBWithComments = HashMap<StackPhotoDB, String>()
         _uiState.value.items.map { dataItemUI ->
             val jsonObject = JSONObject(Gson().toJson(dataItemUI.rawObj[0]))
+            var comments = ""
+            fieldsForCommentsImage?.forEach {
+                comments += "${jsonObject.get(it)} \n\n"
+            }
             dataItemUI.rawObj[0].getFieldsImageOnUI().split(",").forEach {
                 if (it.isNotEmpty()) {
                     RealmManager.getPhotoById( null, jsonObject.get(it.trim()).toString())
                         ?.let {
+                            photoDBWithComments[it] = comments
                             photoLogData.add(it)
                             if (clickedDataItemUI == dataItemUI) selectedIndex = photoLogData.count() - 1
                         }
@@ -177,7 +186,7 @@ abstract class MainViewModel(
         if (selectedIndex > -1) {
             dialog.setPhotos(selectedIndex, photoLogData,
                 { _, photoDB ->
-                    onClickFullImage(photoDB)
+                    onClickFullImage(photoDB, photoDBWithComments[photoDB])
                     dialog.dismiss()
                 },
                 { }

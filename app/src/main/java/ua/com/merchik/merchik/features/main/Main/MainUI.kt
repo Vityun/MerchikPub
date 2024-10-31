@@ -5,6 +5,7 @@ import android.content.Context
 import android.os.Build
 import android.view.View
 import androidx.annotation.RequiresApi
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -49,6 +50,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
@@ -87,6 +89,8 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
     var showFilteringDialog by remember { mutableStateOf(false) }
 
     val offsetSizeFont by viewModel.offsetSizeFonts.collectAsState()
+
+    var maxLinesSubTitle by remember { mutableStateOf(1) }
 
     val listState = rememberLazyListState()
 
@@ -236,11 +240,17 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
                 }
 
                 uiState.subTitle?.let {
-                    Text(
-                        text = it,
-                        modifier = Modifier
-                            .padding(start = 10.dp, bottom = 7.dp, end = 10.dp)
-                    )
+                    Box(modifier = Modifier.animateContentSize()) {
+                        Text(
+                            text = it,
+                            maxLines = maxLinesSubTitle,
+                            overflow = TextOverflow.Ellipsis,
+                            textDecoration = if (maxLinesSubTitle == 1) TextDecoration.Underline else null,
+                            modifier = Modifier
+                                .padding(start = 10.dp, bottom = 7.dp, end = 10.dp)
+                                .clickable { maxLinesSubTitle = if (maxLinesSubTitle == 1) 99 else 1 }
+                        )
+                    }
                 }
 
                 Row(

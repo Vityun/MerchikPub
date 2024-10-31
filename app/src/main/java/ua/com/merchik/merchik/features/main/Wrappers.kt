@@ -275,6 +275,10 @@ object LogMPDBOverride {
     }
 }
 
+object SamplePhotoSDBOverride {
+    fun getFieldsForOrderOnUI(): List<String> = "nm, about".split(",").map { it.trim() }
+}
+
 object TovarDBOverride {
     fun getHidedFieldsOnUI(): String =
         "barcode, client_id, client_id2, deleted, depth, dt_update, expire_period, group_id, " +

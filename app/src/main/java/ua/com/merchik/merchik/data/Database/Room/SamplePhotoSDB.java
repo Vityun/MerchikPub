@@ -11,9 +11,12 @@ import com.google.gson.annotations.SerializedName;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
 
+import java.util.List;
+
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.dataLayer.DataObjectUI;
 import ua.com.merchik.merchik.dataLayer.model.MerchModifier;
+import ua.com.merchik.merchik.features.main.SamplePhotoSDBOverride;
 
 @Entity(tableName = "sample_photo")
 public class SamplePhotoSDB implements DataObjectUI {
@@ -115,5 +118,11 @@ public class SamplePhotoSDB implements DataObjectUI {
     @Override
     public String getFieldsImageOnUI() {
         return "photo_id";
+    }
+
+    @Nullable
+    @Override
+    public List<String> getFieldsForOrderOnUI() {
+        return SamplePhotoSDBOverride.INSTANCE.getFieldsForOrderOnUI();
     }
 }

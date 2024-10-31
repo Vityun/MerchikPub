@@ -11,6 +11,8 @@ import com.google.gson.annotations.SerializedName;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
 
+import java.util.List;
+
 import ua.com.merchik.merchik.dataLayer.DataObjectUI;
 import ua.com.merchik.merchik.dataLayer.model.MerchModifier;
 import ua.com.merchik.merchik.features.main.AddressSDBOverride;
@@ -121,5 +123,11 @@ public class AddressSDB implements DataObjectUI {
     @Override
     public String getFieldsImageOnUI() {
         return DataObjectUI.DefaultImpls.getFieldsImageOnUI(this);
+    }
+
+    @Nullable
+    @Override
+    public List<String> getFieldsForOrderOnUI() {
+        return DataObjectUI.DefaultImpls.getFieldsForOrderOnUI(this);
     }
 }

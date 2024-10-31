@@ -9,6 +9,7 @@ import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
 
 import java.util.Date;
+import java.util.List;
 
 import io.realm.RealmObject;
 import io.realm.annotations.PrimaryKey;
@@ -1328,5 +1329,11 @@ public class WpDataDB extends RealmObject implements Parcelable, DataObjectUI {
     @Override
     public String getFieldsImageOnUI() {
         return DataObjectUI.DefaultImpls.getFieldsImageOnUI(this);
+    }
+
+    @Nullable
+    @Override
+    public List<String> getFieldsForOrderOnUI() {
+        return DataObjectUI.DefaultImpls.getFieldsForOrderOnUI(this);
     }
 }

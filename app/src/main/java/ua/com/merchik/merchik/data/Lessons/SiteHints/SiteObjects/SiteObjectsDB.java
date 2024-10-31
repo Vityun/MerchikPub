@@ -8,6 +8,8 @@ import com.google.gson.annotations.SerializedName;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
 
+import java.util.List;
+
 import io.realm.RealmObject;
 import io.realm.annotations.PrimaryKey;
 import ua.com.merchik.merchik.dataLayer.DataObjectUI;
@@ -221,5 +223,11 @@ public class SiteObjectsDB extends RealmObject implements DataObjectUI {
     @Override
     public String getFieldsImageOnUI() {
         return DataObjectUI.DefaultImpls.getFieldsImageOnUI(this);
+    }
+
+    @Nullable
+    @Override
+    public List<String> getFieldsForOrderOnUI() {
+        return DataObjectUI.DefaultImpls.getFieldsForOrderOnUI(this);
     }
 }

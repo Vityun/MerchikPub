@@ -1560,7 +1560,9 @@ public class Options {
                     dataJson.addProperty("optionDBId", String.valueOf(option.getID()));
                     bundle.putString("dataJson", new Gson().toJson(dataJson));
                     bundle.putString("title", "Образцы фото отчетов");
-                    bundle.putString("subTitle", "Комментарий");
+                    bundle.putString("subTitle", "В списке представлены образцы фотоотчетов. " +
+                            "Для того, чтобы изготовить 'Фото Остатков Товаров (ФОТ)' нажмите на соответствующую фотографию. " +
+                            "Затем увеличьте ее до размера экрана и выполните фото, нажав на кнопку фотоаппарата в правом нижнем углу. ");
                     intent.putExtras(bundle);
                     context.startActivity(intent);
                 } catch (Exception e) {}
