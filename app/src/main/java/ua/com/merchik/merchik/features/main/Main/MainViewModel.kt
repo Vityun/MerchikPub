@@ -7,6 +7,7 @@ import android.content.Intent
 import android.content.SharedPreferences
 import android.os.Bundle
 import android.util.Log
+import androidx.compose.ui.res.stringResource
 import androidx.core.app.ActivityCompat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.SavedStateHandle
@@ -25,6 +26,7 @@ import ua.com.merchik.merchik.Activities.Features.FeaturesActivity
 import ua.com.merchik.merchik.Globals.APP_OFFSET_SIZE_FONTS
 import ua.com.merchik.merchik.Globals.APP_PREFERENCES
 import ua.com.merchik.merchik.MakePhoto.MakePhoto
+import ua.com.merchik.merchik.R
 import ua.com.merchik.merchik.WorkPlan
 import ua.com.merchik.merchik.data.RealmModels.OptionsDB
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB
@@ -257,6 +259,14 @@ abstract class MainViewModel(
             updateFilters()
 
             _uiState.update {
+                val title = title?.split(",")?.map { it.trim() }?.let {
+                    it[0].toIntOrNull()?.let { intRes ->
+                        context?.let { cont ->
+                            getTranslateString(cont.getString(intRes), it[1].toLongOrNull())
+                        }
+                    }
+                } ?: title
+
                 it.copy(
                     title = title,
                     subTitle = subTitle,

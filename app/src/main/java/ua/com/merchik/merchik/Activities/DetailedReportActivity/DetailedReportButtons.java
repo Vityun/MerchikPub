@@ -1,41 +1,47 @@
 package ua.com.merchik.merchik.Activities.DetailedReportActivity;
 
-import static ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsRealm.AdditionalRequirementsModENUM.HIDE_FOR_USER;
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Bundle;
 import android.util.Log;
 import android.widget.Toast;
 
 import androidx.preference.PreferenceManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+
 import java.util.List;
 
+import ua.com.merchik.merchik.Activities.Features.FeaturesActivity;
 import ua.com.merchik.merchik.Activities.PhotoLogActivity.PhotoLogActivity;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.MakePhoto.MakePhoto;
 import ua.com.merchik.merchik.Options.Options;
 import ua.com.merchik.merchik.PhotoReportActivity;
+import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.Utils.UniversalAdapter.UniversalAdapter;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.WorkPlan;
 import ua.com.merchik.merchik.data.Database.Room.AddressSDB;
 import ua.com.merchik.merchik.data.Database.Room.ContentSDB;
 import ua.com.merchik.merchik.data.Database.Room.StandartSDB;
-import ua.com.merchik.merchik.data.RealmModels.AdditionalRequirementsDB;
 import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
 import ua.com.merchik.merchik.data.RealmModels.ReportPrepareDB;
+import ua.com.merchik.merchik.data.RealmModels.TradeMarkDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.data.WPDataObj;
+import ua.com.merchik.merchik.dataLayer.ContextUI;
 import ua.com.merchik.merchik.database.realm.RealmManager;
-import ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsRealm;
 import ua.com.merchik.merchik.database.realm.tables.ReportPrepareRealm;
-import ua.com.merchik.merchik.dialogs.DialogAdditionalRequirements.DialogAdditionalRequirements;
+import ua.com.merchik.merchik.database.realm.tables.TradeMarkRealm;
 import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.dialogs.EKL.DialogEKL;
+import ua.com.merchik.merchik.features.main.DBViewModels.SamplePhotoSDBViewModel;
 import ua.com.merchik.merchik.toolbar_menus;
 
 public class DetailedReportButtons {
@@ -120,8 +126,29 @@ public class DetailedReportButtons {
                     intentPhotoReport.putExtra("dataFromWPObj", wpDataObj);
                     context.startActivity(intentPhotoReport);
                 } else {
-                    MakePhoto makePhoto = new MakePhoto();
-                    makePhoto.pressedMakePhotoOldStyle((Activity) context, wpDataObj, wpDataDB, optionsDB);
+                    try {
+                        AddressSDB addr = SQL_DB.addressDao().getById(wpDataDB.getAddr_id());
+                        TradeMarkDB tradeMarkDB = TradeMarkRealm.getTradeMarkRowById(String.valueOf(addr.tpId));
+
+                        Intent intent = new Intent(context, FeaturesActivity.class);
+                        Bundle bundle = new Bundle();
+                        bundle.putString("viewModel", SamplePhotoSDBViewModel.class.getCanonicalName());
+                        bundle.putString("contextUI", ContextUI.SAMPLE_PHOTO_FROM_OPTION_141360.toString());
+                        JsonObject dataJson = new JsonObject();
+                        dataJson.addProperty("tradeMarkDBId", tradeMarkDB.getID());
+                        dataJson.addProperty("wpDataDBId", String.valueOf(wpDataDB.getId()));
+                        dataJson.addProperty("optionDBId", String.valueOf(optionsDB.getID()));
+                        bundle.putString("dataJson", new Gson().toJson(dataJson));
+                        bundle.putString("title", R.string.title_samplephotosdb + ", ");
+                        bundle.putString("subTitle", "В списке представлены образцы фотоотчетов. " +
+                                "Для того, чтобы изготовить 'Фото Тележ. с Тов. на Складе (ФТС)' нажмите на соответствующую фотографию. " +
+                                "Затем увеличьте ее до размера экрана и выполните фото, нажав на кнопку фотоаппарата в правом нижнем углу. ");
+                        intent.putExtras(bundle);
+                        context.startActivity(intent);
+                    } catch (Exception e) {}
+
+//                    MakePhoto makePhoto = new MakePhoto();
+//                    makePhoto.pressedMakePhotoOldStyle((Activity) context, wpDataObj, wpDataDB, optionsDB);
                 }
                 break;
 

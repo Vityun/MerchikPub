@@ -82,7 +82,6 @@ import ua.com.merchik.merchik.Options.Buttons.OptionButtonPhotoBeforeStartWork;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonPhotoCassZone;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonPhotoDMP;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonPhotoEFFIE;
-import ua.com.merchik.merchik.Options.Buttons.OptionButtonPhotoFOT;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonPhotoOfACartWithGoods;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonPhotoShowcaseCorporateBlock;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonPhotoShowcaseFullness;
@@ -124,6 +123,7 @@ import ua.com.merchik.merchik.Options.Controls.OptionControlRegistrationPotentia
 import ua.com.merchik.merchik.Options.Controls.OptionControlReturnOfGoods;
 import ua.com.merchik.merchik.Options.Controls.OptionControlTaskAnswer;
 import ua.com.merchik.merchik.PhotoReports;
+import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.ServerExchange.Exchange;
 import ua.com.merchik.merchik.ServerExchange.TablesLoadingUnloading;
 import ua.com.merchik.merchik.VersionApp;
@@ -1553,13 +1553,13 @@ public class Options {
                     Intent intent = new Intent(context, FeaturesActivity.class);
                     Bundle bundle = new Bundle();
                     bundle.putString("viewModel", SamplePhotoSDBViewModel.class.getCanonicalName());
-                    bundle.putString("contextUI", ContextUI.SAMPLE_PHOTO_FROM_OST_TOVARA.toString());
+                    bundle.putString("contextUI", ContextUI.SAMPLE_PHOTO_FROM_OPTION_135158.toString());
                     JsonObject dataJson = new JsonObject();
                     dataJson.addProperty("tradeMarkDBId", tradeMarkDB.getID());
                     dataJson.addProperty("wpDataDBId", String.valueOf(wpdata.getId()));
                     dataJson.addProperty("optionDBId", String.valueOf(option.getID()));
                     bundle.putString("dataJson", new Gson().toJson(dataJson));
-                    bundle.putString("title", "Образцы фото отчетов");
+                    bundle.putString("title", R.string.title_samplephotosdb + ", ");
                     bundle.putString("subTitle", "В списке представлены образцы фотоотчетов. " +
                             "Для того, чтобы изготовить 'Фото Остатков Товаров (ФОТ)' нажмите на соответствующую фотографию. " +
                             "Затем увеличьте ее до размера экрана и выполните фото, нажав на кнопку фотоаппарата в правом нижнем углу. ");

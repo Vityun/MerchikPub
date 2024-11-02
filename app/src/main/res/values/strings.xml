@@ -241,6 +241,8 @@
     <string name="sub_title_tovardb_from_achievement">Выберите товар</string>
     <string name="title_additionalrequirementsdb_from_achievement">Предложение</string>
     <string name="sub_title_additionalrequirementsdb_from_achievement">Предложение от клиента, которое нужно выполнить для получения дополнительных бонусов</string>
+    <string name="title_samplephotosdb">Образцы фото отчетов</string>
+    <string name="sub_title_samplephotosdb">В списке представлены образцы фотоотчетов. "Для того, чтобы изготовить '%s' нажмите на соответствующую фотографию. Затем увеличьте ее до размера экрана и выполните фото, нажав на кнопку фотоаппарата в правом нижнем углу.</string>
 
 </resources>
 

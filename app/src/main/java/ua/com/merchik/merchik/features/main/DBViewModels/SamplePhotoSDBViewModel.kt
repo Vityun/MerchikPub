@@ -14,7 +14,6 @@ import ua.com.merchik.merchik.data.Database.Room.SamplePhotoSDB
 import ua.com.merchik.merchik.data.RealmModels.ImagesTypeListDB
 import ua.com.merchik.merchik.data.RealmModels.ReportPrepareDB
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB
-import ua.com.merchik.merchik.data.RealmModels.TovarDB
 import ua.com.merchik.merchik.data.RealmModels.TradeMarkDB
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB
 import ua.com.merchik.merchik.data.WPDataObj
@@ -67,38 +66,44 @@ class SamplePhotoSDBViewModel @Inject constructor(
             val optionDB = RealmManager.INSTANCE.copyFromRealm(OptionsRealm.getOptionById(dataJsonObject.get("optionDBId").asString))
             if (wpDataDB != null && optionDB != null) {
                 dialogFullPhoto.setCamera {
+                    when(contextUI) {
+                        ContextUI.SAMPLE_PHOTO_FROM_OPTION_135158 -> {
+                            var reportPrepareDB: ReportPrepareDB? = null
+                            val tovarDB = TovarRealm.getById(stackPhotoDB.tovar_id)
+                            if (tovarDB != null)
+                                reportPrepareDB = ReportPrepareRealm.getReportPrepareByTov(wpDataDB.code_dad2.toString(), stackPhotoDB.tovar_id)
 
-//                    val workPlan = WorkPlan()
-//                    val wpDataObj: WPDataObj = workPlan.getKPS(wpDataDB.id)
-//                    wpDataObj.setPhotoType("4")
-//                    val makePhoto = MakePhoto()
-//                    makePhoto.pressedMakePhotoOldStyle<WpDataDB>(
-//                        context as Activity,
-//                        wpDataObj,
-//                        wpDataDB,
-//                        optionDB
-//                    )
-//                    dialogFullPhoto.dismiss()
+                            val tovarRequisites = if (tovarDB == null || reportPrepareDB == null)
+                                TovarRequisites()
+                            else
+                                TovarRequisites(tovarDB, reportPrepareDB)
 
-                    var reportPrepareDB: ReportPrepareDB? = null
-                    val tovarDB = TovarRealm.getById(stackPhotoDB.tovar_id)
-                    if (tovarDB != null)
-                        reportPrepareDB = ReportPrepareRealm.getReportPrepareByTov(wpDataDB.code_dad2.toString(), stackPhotoDB.tovar_id)
+                            tovarRequisites
+                                .createDialog(
+                                    context,
+                                    wpDataDB,
+                                    optionDB
+                                ) {}
+                                .show()
 
-                    val tovarRequisites = if (tovarDB == null || reportPrepareDB == null)
-                        TovarRequisites()
-                    else
-                        TovarRequisites(tovarDB, reportPrepareDB)
-
-                    tovarRequisites
-                        .createDialog(
-                            context,
-                            wpDataDB,
-                            optionDB
-                        ) {}
-                        .show()
-
-                    dialogFullPhoto.dismiss()
+                            dialogFullPhoto.dismiss()
+                        }
+                        ContextUI.SAMPLE_PHOTO_FROM_OPTION_141360,
+                        ContextUI.SAMPLE_PHOTO_FROM_OPTION_132969,-> {
+                            val workPlan = WorkPlan()
+                            val wpDataObj: WPDataObj = workPlan.getKPS(wpDataDB.id)
+                            wpDataObj.setPhotoType("4")
+                            val makePhoto = MakePhoto()
+                            makePhoto.pressedMakePhotoOldStyle<WpDataDB>(
+                                context as Activity,
+                                wpDataObj,
+                                wpDataDB,
+                                optionDB
+                            )
+                            dialogFullPhoto.dismiss()
+                        }
+                        else -> {}
+                    }
                 }
             }
 
@@ -110,58 +115,65 @@ class SamplePhotoSDBViewModel @Inject constructor(
     }
 
     override fun updateFilters() {
+
+        var typePhotoId: Int? = null
         when (contextUI) {
-            ContextUI.SAMPLE_PHOTO_FROM_OST_TOVARA -> {
-                val typePhotoId = 4
-                val imagesType = RealmManager.INSTANCE.copyFromRealm(PhotoTypeRealm.getPhotoTypeById(typePhotoId))
-                val filterImagesTypeListDB = ItemFilter(
-                    "Тип фото",
-                    ImagesTypeListDB::class,
-                    ImagesTypeListDBViewModel::class,
-                    ModeUI.MULTI_SELECT,
-                    "title",
-                    "subTitle",
-                    "photo_tp",
-                    "id",
-                    mutableListOf(imagesType.id.toString()),
-                    mutableListOf(imagesType.nm),
-                    true
-                )
+            ContextUI.SAMPLE_PHOTO_FROM_OPTION_135158 -> typePhotoId = 4
+            ContextUI.SAMPLE_PHOTO_FROM_OPTION_141360 -> typePhotoId = 31
+            ContextUI.SAMPLE_PHOTO_FROM_OPTION_132969 -> typePhotoId = 10
+            else -> { }
+        }
 
+        val itemsFilter = mutableListOf<ItemFilter>()
 
+        typePhotoId?.let {
+            val imagesType = RealmManager.INSTANCE.copyFromRealm(PhotoTypeRealm.getPhotoTypeById(it))
+            val filterImagesTypeListDB = ItemFilter(
+                "Тип фото",
+                ImagesTypeListDB::class,
+                ImagesTypeListDBViewModel::class,
+                ModeUI.MULTI_SELECT,
+                "title",
+                "subTitle",
+                "photo_tp",
+                "id",
+                mutableListOf(imagesType.id.toString()),
+                mutableListOf(imagesType.nm),
+                true
+            )
+            itemsFilter.add(filterImagesTypeListDB)
+        }
+
+        try {
 //                AddressSDB addr = SQL_DB.addressDao().getById(wpDataDB.getAddr_id());
 //                TradeMarkDB tradeMarkDB = TradeMarkRealm.getTradeMarkRowById(String.valueOf(addr.tpId));
 //                groupText.setText(tradeMarkDB.getNm());
 
-                val dataJsonObject = Gson().fromJson(dataJson, JsonObject::class.java)
-                val tradeMarkId = dataJsonObject.get("tradeMarkDBId").asString
-                val tradeMarkDB = TradeMarkRealm.getTradeMarkRowById(tradeMarkId.toString())
+            val dataJsonObject = Gson().fromJson(dataJson, JsonObject::class.java)
+            val tradeMarkId = dataJsonObject.get("tradeMarkDBId").asString
+            val tradeMarkDB = TradeMarkRealm.getTradeMarkRowById(tradeMarkId.toString())
 
-                val filterTradeMarDB = ItemFilter(
-                    "Торгова марка",
-                    TradeMarkDB::class,
-                    TradeMarkDBViewModel::class,
-                    ModeUI.MULTI_SELECT,
-                    "Торгова марка",
-                    "subTitle",
-                    "grp_id",
-                    "iD",
-                    mutableListOf(tradeMarkDB.id.toString()),
-                    mutableListOf(tradeMarkDB.nm),
-                    true
-                )
+            val filterTradeMarkDB = ItemFilter(
+                "Торгова марка",
+                TradeMarkDB::class,
+                TradeMarkDBViewModel::class,
+                ModeUI.MULTI_SELECT,
+                "Торгова марка",
+                "subTitle",
+                "grp_id",
+                "iD",
+                mutableListOf(tradeMarkDB.id.toString()),
+                mutableListOf(tradeMarkDB.nm),
+                true
+            )
+            itemsFilter.add(filterTradeMarkDB)
+        } catch (e: Exception) {}
 
-                filters = Filters(
-                    rangeDataByKey = null,
-                    searchText = "",
-                    items = mutableListOf(
-                        filterImagesTypeListDB,
-                        filterTradeMarDB
-                    )
-                )
-            }
-            else -> {}
-        }
+        filters = Filters(
+            rangeDataByKey = null,
+            searchText = "",
+            items = itemsFilter
+        )
     }
 
     override fun getDefaultHideUserFields(): List<String>? {
@@ -170,6 +182,7 @@ class SamplePhotoSDBViewModel @Inject constructor(
 
     override fun getItems(): List<DataItemUI> {
         val data = RoomManager.SQL_DB.samplePhotoDao().getPhotoLogActive(1)
-        return repository.toItemUIList(TovarDB::class, data, contextUI, 35)
+        val typePhoto = 35
+        return repository.toItemUIList(SamplePhotoSDB::class, data, contextUI, typePhoto)
     }
 }
