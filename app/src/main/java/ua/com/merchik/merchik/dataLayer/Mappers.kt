@@ -158,6 +158,10 @@ enum class ContextUI{
     SAMPLE_PHOTO_FROM_OPTION_135158,
     SAMPLE_PHOTO_FROM_OPTION_141360,
     SAMPLE_PHOTO_FROM_OPTION_132969,
+    SAMPLE_PHOTO_FROM_OPTION_135809,    // Фото витрины до начала работ (14)
+    SAMPLE_PHOTO_FROM_OPTION_158309,    // Фото витрины наближене (39)
+    SAMPLE_PHOTO_FROM_OPTION_158604,    // Фото витрины наполненности (41)
+    SAMPLE_PHOTO_FROM_OPTION_157277     // Фото акционного товра + ценник (28)
 }
 
 
