@@ -66,6 +66,17 @@ class SamplePhotoSDBViewModel @Inject constructor(
             val optionDB = RealmManager.INSTANCE.copyFromRealm(OptionsRealm.getOptionById(dataJsonObject.get("optionDBId").asString))
             if (wpDataDB != null && optionDB != null) {
                 dialogFullPhoto.setCamera {
+                    val typePhotoId = when (contextUI) {
+                        ContextUI.SAMPLE_PHOTO_FROM_OPTION_135158 -> 4
+                        ContextUI.SAMPLE_PHOTO_FROM_OPTION_141360 -> 31
+                        ContextUI.SAMPLE_PHOTO_FROM_OPTION_132969 -> 10
+                        ContextUI.SAMPLE_PHOTO_FROM_OPTION_135809 -> 14
+                        ContextUI.SAMPLE_PHOTO_FROM_OPTION_158309 -> 39
+                        ContextUI.SAMPLE_PHOTO_FROM_OPTION_158604 -> 41
+                        ContextUI.SAMPLE_PHOTO_FROM_OPTION_157277 -> 28
+                        else -> { null }
+                    }
+
                     when(contextUI) {
                         ContextUI.SAMPLE_PHOTO_FROM_OPTION_135158 -> {
                             var reportPrepareDB: ReportPrepareDB? = null
@@ -93,18 +104,20 @@ class SamplePhotoSDBViewModel @Inject constructor(
                         ContextUI.SAMPLE_PHOTO_FROM_OPTION_135809,
                         ContextUI.SAMPLE_PHOTO_FROM_OPTION_158309,
                         ContextUI.SAMPLE_PHOTO_FROM_OPTION_158604,
-                        ContextUI.SAMPLE_PHOTO_FROM_OPTION_157277,-> {
-                            val workPlan = WorkPlan()
-                            val wpDataObj: WPDataObj = workPlan.getKPS(wpDataDB.id)
-                            wpDataObj.setPhotoType("4")
-                            val makePhoto = MakePhoto()
-                            makePhoto.pressedMakePhotoOldStyle<WpDataDB>(
-                                context as Activity,
-                                wpDataObj,
-                                wpDataDB,
-                                optionDB
-                            )
-                            dialogFullPhoto.dismiss()
+                        ContextUI.SAMPLE_PHOTO_FROM_OPTION_157277, -> {
+                            typePhotoId?.let {
+                                val workPlan = WorkPlan()
+                                val wpDataObj: WPDataObj = workPlan.getKPS(wpDataDB.id)
+                                wpDataObj.setPhotoType(it.toString())
+                                val makePhoto = MakePhoto()
+                                makePhoto.pressedMakePhotoOldStyle<WpDataDB>(
+                                    context as Activity,
+                                    wpDataObj,
+                                    wpDataDB,
+                                    optionDB
+                                )
+                                dialogFullPhoto.dismiss()
+                            }
                         }
                         else -> {}
                     }
@@ -120,16 +133,15 @@ class SamplePhotoSDBViewModel @Inject constructor(
 
     override fun updateFilters() {
 
-        var typePhotoId: Int? = null
-        when (contextUI) {
-            ContextUI.SAMPLE_PHOTO_FROM_OPTION_135158 -> typePhotoId = 4
-            ContextUI.SAMPLE_PHOTO_FROM_OPTION_141360 -> typePhotoId = 31
-            ContextUI.SAMPLE_PHOTO_FROM_OPTION_132969 -> typePhotoId = 10
-            ContextUI.SAMPLE_PHOTO_FROM_OPTION_135809 -> typePhotoId = 14
-            ContextUI.SAMPLE_PHOTO_FROM_OPTION_158309 -> typePhotoId = 39
-            ContextUI.SAMPLE_PHOTO_FROM_OPTION_158604 -> typePhotoId = 41
-            ContextUI.SAMPLE_PHOTO_FROM_OPTION_157277 -> typePhotoId = 28
-            else -> { }
+        val typePhotoId = when (contextUI) {
+            ContextUI.SAMPLE_PHOTO_FROM_OPTION_135158 -> 4
+            ContextUI.SAMPLE_PHOTO_FROM_OPTION_141360 -> 31
+            ContextUI.SAMPLE_PHOTO_FROM_OPTION_132969 -> 10
+            ContextUI.SAMPLE_PHOTO_FROM_OPTION_135809 -> 14
+            ContextUI.SAMPLE_PHOTO_FROM_OPTION_158309 -> 39
+            ContextUI.SAMPLE_PHOTO_FROM_OPTION_158604 -> 41
+            ContextUI.SAMPLE_PHOTO_FROM_OPTION_157277 -> 28
+            else -> { null }
         }
 
         val itemsFilter = mutableListOf<ItemFilter>()
@@ -170,8 +182,8 @@ class SamplePhotoSDBViewModel @Inject constructor(
                 "subTitle",
                 "grp_id",
                 "iD",
-                mutableListOf(tradeMarkDB.id.toString()),
-                mutableListOf(tradeMarkDB.nm),
+                mutableListOf(tradeMarkDB.id.toString(), "0"),
+                mutableListOf(tradeMarkDB.nm, "Все не указанные"),
                 true
             )
             itemsFilter.add(filterTradeMarkDB)
