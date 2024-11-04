@@ -89,7 +89,11 @@ class SamplePhotoSDBViewModel @Inject constructor(
                             dialogFullPhoto.dismiss()
                         }
                         ContextUI.SAMPLE_PHOTO_FROM_OPTION_141360,
-                        ContextUI.SAMPLE_PHOTO_FROM_OPTION_132969,-> {
+                        ContextUI.SAMPLE_PHOTO_FROM_OPTION_132969,
+                        ContextUI.SAMPLE_PHOTO_FROM_OPTION_135809,
+                        ContextUI.SAMPLE_PHOTO_FROM_OPTION_158309,
+                        ContextUI.SAMPLE_PHOTO_FROM_OPTION_158604,
+                        ContextUI.SAMPLE_PHOTO_FROM_OPTION_157277,-> {
                             val workPlan = WorkPlan()
                             val wpDataObj: WPDataObj = workPlan.getKPS(wpDataDB.id)
                             wpDataObj.setPhotoType("4")
@@ -121,6 +125,10 @@ class SamplePhotoSDBViewModel @Inject constructor(
             ContextUI.SAMPLE_PHOTO_FROM_OPTION_135158 -> typePhotoId = 4
             ContextUI.SAMPLE_PHOTO_FROM_OPTION_141360 -> typePhotoId = 31
             ContextUI.SAMPLE_PHOTO_FROM_OPTION_132969 -> typePhotoId = 10
+            ContextUI.SAMPLE_PHOTO_FROM_OPTION_135809 -> typePhotoId = 14
+            ContextUI.SAMPLE_PHOTO_FROM_OPTION_158309 -> typePhotoId = 39
+            ContextUI.SAMPLE_PHOTO_FROM_OPTION_158604 -> typePhotoId = 41
+            ContextUI.SAMPLE_PHOTO_FROM_OPTION_157277 -> typePhotoId = 28
             else -> { }
         }
 
