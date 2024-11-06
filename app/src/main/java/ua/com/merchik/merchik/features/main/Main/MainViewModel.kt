@@ -167,6 +167,7 @@ abstract class MainViewModel(
         var selectedIndex = -1
         val fieldsForCommentsImage = getFieldsForCommentsImage()
         val photoDBWithComments = HashMap<StackPhotoDB, String>()
+        val photoDBWithRawObj = HashMap<StackPhotoDB, Any>()
         _uiState.value.items.map { dataItemUI ->
             val jsonObject = JSONObject(Gson().toJson(dataItemUI.rawObj[0]))
             var comments = ""
@@ -178,6 +179,7 @@ abstract class MainViewModel(
                     RealmManager.getPhotoById( null, jsonObject.get(it.trim()).toString())
                         ?.let {
                             photoDBWithComments[it] = comments
+                            photoDBWithRawObj[it] = dataItemUI.rawObj[0]
                             photoLogData.add(it)
                             if (clickedDataItemUI == dataItemUI) selectedIndex = photoLogData.count() - 1
                         }

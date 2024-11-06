@@ -449,6 +449,8 @@ public class MakePhoto {
     public static String showcase_id = "";
     public static String planogram_id = "";
     public static String planogram_img_id = "";
+    public static String example_id = "";
+    public static String example_img_id = "";
 
     public <T> void makePhoto(Activity activity, T data, Clicks.clickVoid clickVoid) {
         try {
