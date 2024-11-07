@@ -791,7 +791,7 @@ public class Options {
             // 91468 Комарницька
 
             if (
-                    !option.getClientId().equals("9295") &&     //Бетта
+//                    !option.getClientId().equals("9295") &&     //Бетта
                     !option.getClientId().equals("9382") &&     //Витмарк
                     !option.getClientId().equals("38283")       //Юнилайф
 
