@@ -232,6 +232,8 @@ public class DialogData {
     public void setTextScroll(){
         if (text != null && !text.equals("")){
             text.setMovementMethod(new ScrollingMovementMethod());
+            text.setVerticalScrollBarEnabled(true);
+            text.setScrollbarFadingEnabled(false);
         }
     }
 

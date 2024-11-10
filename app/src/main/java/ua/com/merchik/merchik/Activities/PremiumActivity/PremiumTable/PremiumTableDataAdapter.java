@@ -160,7 +160,7 @@ public class PremiumTableDataAdapter extends RecyclerView.Adapter<PremiumTableDa
                     // эта структура заменена на текст HTML
                     String newData=Globals.PrepareLinkedTextForMVS(data);
                     dialogData.setText(Html.fromHtml(newData));
-
+                    dialogData.setTextScroll();
                     dialogData.setClose(dialogData::dismiss);
                     dialogData.show();
 
@@ -451,7 +451,11 @@ public class PremiumTableDataAdapter extends RecyclerView.Adapter<PremiumTableDa
                             // так стало...
                             // (получаю текст основания премии для вывода в TextView из поля result_list, которое в салю очередь представлено массивом
                             // JSON в котором один элемент и свои поля и нас интересует поле osnovanie)
-                            String res=response.body().result_list.get(0).osnovanie;
+                            String res = "";
+                            for (PremiumResponse.Result item : response.body().result_list) {
+                                res += item.osnovanie.replaceAll("<", "(").replaceAll(">", ")") + "<br><br>";
+                            }
+//                            String res=response.body().result_list.get(0).osnovanie;
 
                             clickText.click(res);
                         } else {

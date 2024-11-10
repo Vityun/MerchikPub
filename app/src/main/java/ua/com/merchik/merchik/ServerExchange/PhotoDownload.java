@@ -510,6 +510,21 @@ public class PhotoDownload {
 
         Globals.writeToMLOG("INFO", "" + getClass().getName() + "/getPhotoFromServer/convertedObject", "convertedObject: " + convertedObject);
 
+        {
+            retrofit2.Call<JsonObject> call = RetrofitBuilder.getRetrofitInterface().MOD_IMAGES_VIEW_CALL_JSON(contentType, convertedObject);
+            call.enqueue(new Callback<JsonObject>() {
+                @Override
+                public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
+                    Log.d("smarti", "onResponse: ");
+                }
+
+                @Override
+                public void onFailure(Call<JsonObject> call, Throwable t) {
+                    Log.d("smarti", "onResponse: ");
+                }
+            });
+        }
+
         retrofit2.Call<ModImagesView> call = RetrofitBuilder.getRetrofitInterface().MOD_IMAGES_VIEW_CALL(contentType, convertedObject);
         call.enqueue(new retrofit2.Callback<ModImagesView>() {
             @Override
@@ -713,6 +728,22 @@ public class PhotoDownload {
     public void getPhotoInfoAndSaveItToDB(PhotoTableRequest data, Clicks.clickObjectAndStatus<StackPhotoDB> clickUpdatePhoto) {
         Log.e("getPhotoInfo2", "HERE");
         JsonObject object = new Gson().fromJson(new Gson().toJson(data), JsonObject.class);
+
+        {
+            retrofit2.Call<JsonObject> call = RetrofitBuilder.getRetrofitInterface().MOD_IMAGES_VIEW_CALL_JSON(RetrofitBuilder.contentType, object);
+            call.enqueue(new Callback<JsonObject>() {
+                @Override
+                public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
+                    Log.d("smarti", "onResponse: ");
+                }
+
+                @Override
+                public void onFailure(Call<JsonObject> call, Throwable t) {
+                    Log.d("smarti", "onResponse: ");
+                }
+            });
+        }
+
         retrofit2.Call<ModImagesView> call = RetrofitBuilder.getRetrofitInterface().MOD_IMAGES_VIEW_CALL(RetrofitBuilder.contentType, object);
         call.enqueue(new retrofit2.Callback<ModImagesView>() {
             @Override
@@ -751,6 +782,22 @@ public class PhotoDownload {
     public void getPhotoInfoAndSaveItToDB(PhotoTableRequest data) {
         Log.e("getPhotoInfo2", "HERE");
         JsonObject object = new Gson().fromJson(new Gson().toJson(data), JsonObject.class);
+
+        {
+            retrofit2.Call<JsonObject> call = RetrofitBuilder.getRetrofitInterface().MOD_IMAGES_VIEW_CALL_JSON(RetrofitBuilder.contentType, object);
+            call.enqueue(new Callback<JsonObject>() {
+                @Override
+                public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
+                    Log.d("smarti", "onResponse: ");
+                }
+
+                @Override
+                public void onFailure(Call<JsonObject> call, Throwable t) {
+                    Log.d("smarti", "onResponse: ");
+                }
+            });
+        }
+
         retrofit2.Call<ModImagesView> call = RetrofitBuilder.getRetrofitInterface().MOD_IMAGES_VIEW_CALL(RetrofitBuilder.contentType, object);
         call.enqueue(new retrofit2.Callback<ModImagesView>() {
             @Override
