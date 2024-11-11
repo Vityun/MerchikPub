@@ -369,6 +369,7 @@ public class Options {
                 case 165482:    // Контроль ЭФФИ
                 case 164352:    // Фото Планограмми ТТ
                 case 164354:    // Фото Планограмми ТТ
+                case 132971:    // Фото товара біля вітрини
                     //                    checkPhotoReport(context, dataDB, optionsDB, type, mode);
                     OptionControlPhoto<?> optionControlPhoto = new OptionControlPhoto<>(context, dataDB, optionsDB, newOptionType, mode, unlockCodeResultListener);
                     optionControlPhoto.showOptionMassage("");
@@ -383,10 +384,10 @@ public class Options {
 //                    checkPhoto(dataDB, optionsDB, "4");
 //                    break;
 
-                case 132971:  // Проверка наличия Фото тележка с товаром (тип 10)
-                    OptionControlPhotoCartWithGoods<?> optionControlPhotoCartWithGoods = new OptionControlPhotoCartWithGoods<>(context, dataDB, optionsDB, newOptionType, mode, unlockCodeResultListener);
-                    optionControlPhotoCartWithGoods.showOptionMassage("");
-                    break;
+//                case 132971:  // Проверка наличия Фото тележка с товаром (тип 10)
+//                    OptionControlPhotoCartWithGoods<?> optionControlPhotoCartWithGoods = new OptionControlPhotoCartWithGoods<>(context, dataDB, optionsDB, newOptionType, mode, unlockCodeResultListener);
+//                    optionControlPhotoCartWithGoods.showOptionMassage("");
+//                    break;
 
 //                case 141361:  // Проверка наличия Фото тележка с товаром (тип 31)
 //                    checkPhoto(dataDB, optionsDB, "31");
