@@ -61,7 +61,7 @@ public class OptionControlRegistrationPotentialClient<T> extends OptionControl {
         }
 
         dtFrom = dt - 2592000;  // -30 дней
-        dtTo = dt + 86400;      // +1 день
+        dtTo = dt + (86400 * 2);      // +2 дня
         dateDiapason = "За период с " + Clock.getHumanTime3(dtFrom) + " по " + Clock.getHumanTime3(dtTo);
     }
 
