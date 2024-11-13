@@ -111,7 +111,6 @@ import ua.com.merchik.merchik.Options.Controls.OptionControlMP;
 import ua.com.merchik.merchik.Options.Controls.OptionControlPercentageOfThePrize;
 import ua.com.merchik.merchik.Options.Controls.OptionControlPhoto;
 import ua.com.merchik.merchik.Options.Controls.OptionControlPhotoBeforeStartWork;
-import ua.com.merchik.merchik.Options.Controls.OptionControlPhotoCartWithGoods;
 import ua.com.merchik.merchik.Options.Controls.OptionControlPhotoPromotion;
 import ua.com.merchik.merchik.Options.Controls.OptionControlPhotoShowcase;
 import ua.com.merchik.merchik.Options.Controls.OptionControlPhotoTovarsLeft;
@@ -1534,15 +1533,15 @@ public class Options {
                 }
                 return optionControlReturnOfGoods.isBlockOption2() ? 1 : 0;
 
-            case 132971:  // Проверка наличия Фото тележка с товаром (тип 10)
-                OptionControlPhotoCartWithGoods<?> optionControlPhotoCartWithGoods =
-                        new OptionControlPhotoCartWithGoods<>(context, dataDB, option, type, mode, unlockCodeResultListener);
-                if (mode.equals(NNKMode.MAKE) || (mode.equals(NNKMode.CHECK) && optionControlPhotoCartWithGoods.isBlockOption()))
-                    optionControlPhotoCartWithGoods.showOptionMassage(block);
-                if (mode.equals(NNKMode.BLOCK) && optionControlPhotoCartWithGoods.signal && optionControlPhotoCartWithGoods.isBlockOption()) {
-                    optionControlPhotoCartWithGoods.showOptionMassage(block);
-                }
-                return optionControlPhotoCartWithGoods.isBlockOption2() ? 1 : 0;
+//            case 132971:  // Проверка наличия Фото тележка с товаром (тип 10)
+//                OptionControlPhotoCartWithGoods<?> optionControlPhotoCartWithGoods =
+//                        new OptionControlPhotoCartWithGoods<>(context, dataDB, option, type, mode, unlockCodeResultListener);
+//                if (mode.equals(NNKMode.MAKE) || (mode.equals(NNKMode.CHECK) && optionControlPhotoCartWithGoods.isBlockOption()))
+//                    optionControlPhotoCartWithGoods.showOptionMassage(block);
+//                if (mode.equals(NNKMode.BLOCK) && optionControlPhotoCartWithGoods.signal && optionControlPhotoCartWithGoods.isBlockOption()) {
+//                    optionControlPhotoCartWithGoods.showOptionMassage(block);
+//                }
+//                return optionControlPhotoCartWithGoods.isBlockOption2() ? 1 : 0;
 
             case 135158:
                 try {
@@ -1621,7 +1620,7 @@ public class Options {
                 return optionControlPercentageOfThePrize.isBlockOption2() ? 1 : 0;
 
             // Контроль фотоотчётов
-//            case 132971:    // Проверка наличия Фото тележка с товаром (тип 10)
+            case 132971:    // Проверка наличия Фото тележка с товаром (тип 10)
             case 134583:
             case 141361:
             case 158606:
