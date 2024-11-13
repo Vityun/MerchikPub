@@ -38,6 +38,10 @@ public interface Clicks<T> {
         void click(String data);
     }
 
+    interface clickObject<T>{
+        void click(T data);
+    }
+
     interface clickList{
         <T> void click(List<T> data);
     }

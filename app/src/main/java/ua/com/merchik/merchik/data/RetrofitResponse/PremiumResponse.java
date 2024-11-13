@@ -61,6 +61,21 @@ public class PremiumResponse {
         public float sumNZPSotrDoc;
 //        public long sumNZPSotrDoc;
 
+
+        @Override
+        public String toString() {
+            return "Result{" +
+                    "docNom='" + docNom + '\'' +
+                    ", docDat='" + docDat + '\'' +
+                    ", otvKod='" + otvKod + '\'' +
+                    ", otvNaim='" + otvNaim + '\'' +
+                    ", temaStr='" + temaStr + '\'' +
+                    ", osnovanie='" + osnovanie + '\'' +
+                    ", zakStr='" + zakStr + '\'' +
+                    ", adrStr='" + adrStr + '\'' +
+                    ", sumNZPSotrDoc=" + sumNZPSotrDoc +
+                    '}';
+        }
     }
 }
 

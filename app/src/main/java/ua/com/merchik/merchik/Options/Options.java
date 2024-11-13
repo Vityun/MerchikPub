@@ -181,7 +181,7 @@ public class Options {
             164351, 164355, 165481
     };
 
-
+// Провести отчет
     public static int[] describedOptions = new int[]{132624, 76815, 157241, 157243, 84006, 156928,
             151594, 80977, 135330, 133381, 136101, 135329, 138518, 151139, 132623, 133382, 136100, 137797, 135809,
             135328, 135327, 157275, 138341, 590, 84932, 134583, 157352, 1470, 138644, 1455, 135061,
@@ -203,7 +203,7 @@ public class Options {
 
 
     // =============================================================================================
-    // КОНТРОЛЬ ОПЦИЙ
+    // КОНТРОЛЬ ОПЦИЙ - закладинка або сигнал
     public <T> void optionControl(Context context, T dataDB, OptionsDB optionsDB, OptionMassageType type, NNKMode mode, OptionControl.UnlockCodeResultListener unlockCodeResultListener) {
 
         try {
@@ -1392,7 +1392,7 @@ public class Options {
         return optControl(null, context, dataDB, optionCurrent, optionId, optionBlock, type, mode, unlockCodeResultListener);
     }
 
-        /*Проверка Опции*/
+    /* Проверка Опции - кнопка, провести отчет */
     public <T> int optControl(View view, Context context, T dataDB, OptionsDB optionCurrent, int optionId, OptionsDB optionBlock, OptionMassageType type, NNKMode mode, OptionControl.UnlockCodeResultListener unlockCodeResultListener) {
         OptionsDB option = optionCurrent;   // Текущая Опция на которую нажали
 
