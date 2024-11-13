@@ -109,8 +109,7 @@ public class OptionControlRegistrationPotentialClient<T> extends OptionControl {
             }
         });
         checkUnlockCode(optionDB);
-
-        showOptionMassage("");
+//        showOptionMassage("");
     }
 
     private void formatMsg(List<PotentialClientSDB> potentialClients) {
