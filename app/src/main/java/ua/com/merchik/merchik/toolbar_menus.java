@@ -108,6 +108,8 @@ import ua.com.merchik.merchik.data.RetrofitResponse.ServerConnection;
 import ua.com.merchik.merchik.data.UploadPhotoData.Move;
 import ua.com.merchik.merchik.data.WPDataObj;
 import ua.com.merchik.merchik.data.WebSocketData.WebSocketData;
+import ua.com.merchik.merchik.dataLayer.ContextUI;
+import ua.com.merchik.merchik.dataLayer.ModeUI;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.AppUserRealm;
 import ua.com.merchik.merchik.dialogs.BlockingProgressDialog;
@@ -115,6 +117,8 @@ import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.dialogs.DialogMap;
 import ua.com.merchik.merchik.features.main.DBViewModels.CustomerSDBViewModel;
 import ua.com.merchik.merchik.features.main.DBViewModels.LogMPDBViewModel;
+import ua.com.merchik.merchik.features.main.DBViewModels.SamplePhotoSDBViewModel;
+import ua.com.merchik.merchik.features.main.DBViewModels.StackPhotoDBViewModel;
 import ua.com.merchik.merchik.retrofit.CheckInternet.CheckServer;
 import ua.com.merchik.merchik.retrofit.CheckInternet.NetworkUtil;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
@@ -340,10 +344,23 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
 
             case 162:
                 Toast.makeText(this, "Образцы ФотоОтчетов", Toast.LENGTH_SHORT).show();
-                Intent intent = new Intent(this, PhotoLogActivity.class);
-                intent.putExtra("SamplePhoto", true);
-                intent.putExtra("SamplePhotoActivity", true);
+            {
+                Intent intent = new Intent(this, FeaturesActivity.class);
+                Bundle bundle = new Bundle();
+                bundle.putString("viewModel", SamplePhotoSDBViewModel.class.getCanonicalName());
+                bundle.putString("typeWindow", "full");
+                bundle.putString("title", "Образцы фото отчетов");
+                bundle.putString("subTitle", "Комментарий");
+                intent.putExtras(bundle);
                 startActivity(intent);
+            }
+
+//            {
+//                Intent intent = new Intent(this, PhotoLogActivity.class);
+//                intent.putExtra("SamplePhoto", true);
+//                intent.putExtra("SamplePhotoActivity", true);
+//                startActivity(intent);
+//            }
                 break;
 
             case 164:

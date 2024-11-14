@@ -45,6 +45,7 @@ import androidx.annotation.RequiresApi;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
 
 import org.apache.commons.lang3.ArrayUtils;
@@ -81,7 +82,6 @@ import ua.com.merchik.merchik.Options.Buttons.OptionButtonPhotoBeforeStartWork;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonPhotoCassZone;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonPhotoDMP;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonPhotoEFFIE;
-import ua.com.merchik.merchik.Options.Buttons.OptionButtonPhotoFOT;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonPhotoOfACartWithGoods;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonPhotoShowcaseCorporateBlock;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonPhotoShowcaseFullness;
@@ -111,7 +111,6 @@ import ua.com.merchik.merchik.Options.Controls.OptionControlMP;
 import ua.com.merchik.merchik.Options.Controls.OptionControlPercentageOfThePrize;
 import ua.com.merchik.merchik.Options.Controls.OptionControlPhoto;
 import ua.com.merchik.merchik.Options.Controls.OptionControlPhotoBeforeStartWork;
-import ua.com.merchik.merchik.Options.Controls.OptionControlPhotoCartWithGoods;
 import ua.com.merchik.merchik.Options.Controls.OptionControlPhotoPromotion;
 import ua.com.merchik.merchik.Options.Controls.OptionControlPhotoShowcase;
 import ua.com.merchik.merchik.Options.Controls.OptionControlPhotoTovarsLeft;
@@ -123,6 +122,7 @@ import ua.com.merchik.merchik.Options.Controls.OptionControlRegistrationPotentia
 import ua.com.merchik.merchik.Options.Controls.OptionControlReturnOfGoods;
 import ua.com.merchik.merchik.Options.Controls.OptionControlTaskAnswer;
 import ua.com.merchik.merchik.PhotoReports;
+import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.ServerExchange.Exchange;
 import ua.com.merchik.merchik.ServerExchange.TablesLoadingUnloading;
 import ua.com.merchik.merchik.VersionApp;
@@ -145,6 +145,7 @@ import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
 import ua.com.merchik.merchik.data.RealmModels.ReportPrepareDB;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
 import ua.com.merchik.merchik.data.RealmModels.TovarDB;
+import ua.com.merchik.merchik.data.RealmModels.TradeMarkDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.data.RetrofitResponse.ReportHintList;
 import ua.com.merchik.merchik.data.TovarOptions;
@@ -157,6 +158,7 @@ import ua.com.merchik.merchik.database.realm.tables.CustomerRealm;
 import ua.com.merchik.merchik.database.realm.tables.LogMPRealm;
 import ua.com.merchik.merchik.database.realm.tables.OptionsRealm;
 import ua.com.merchik.merchik.database.realm.tables.ReportPrepareRealm;
+import ua.com.merchik.merchik.database.realm.tables.TradeMarkRealm;
 import ua.com.merchik.merchik.database.realm.tables.WpDataRealm;
 import ua.com.merchik.merchik.dialogs.DialogAdditionalRequirements.DialogARMark.DialogARMark;
 import ua.com.merchik.merchik.dialogs.DialogAdditionalRequirements.DialogAdditionalRequirements;
@@ -164,6 +166,7 @@ import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.dialogs.DialogFilter.Click;
 import ua.com.merchik.merchik.dialogs.EKL.DialogEKL;
 import ua.com.merchik.merchik.features.main.DBViewModels.AdditionalRequirementsDBViewModel;
+import ua.com.merchik.merchik.features.main.DBViewModels.SamplePhotoSDBViewModel;
 import ua.com.merchik.merchik.toolbar_menus;
 
 public class Options {
@@ -178,7 +181,7 @@ public class Options {
             164351, 164355, 165481
     };
 
-
+// Провести отчет
     public static int[] describedOptions = new int[]{132624, 76815, 157241, 157243, 84006, 156928,
             151594, 80977, 135330, 133381, 136101, 135329, 138518, 151139, 132623, 133382, 136100, 137797, 135809,
             135328, 135327, 157275, 138341, 590, 84932, 134583, 157352, 1470, 138644, 1455, 135061,
@@ -200,7 +203,7 @@ public class Options {
 
 
     // =============================================================================================
-    // КОНТРОЛЬ ОПЦИЙ
+    // КОНТРОЛЬ ОПЦИЙ - закладинка або сигнал
     public <T> void optionControl(Context context, T dataDB, OptionsDB optionsDB, OptionMassageType type, NNKMode mode, OptionControl.UnlockCodeResultListener unlockCodeResultListener) {
 
         try {
@@ -365,6 +368,7 @@ public class Options {
                 case 165482:    // Контроль ЭФФИ
                 case 164352:    // Фото Планограмми ТТ
                 case 164354:    // Фото Планограмми ТТ
+                case 132971:    // Фото товара біля вітрини
                     //                    checkPhotoReport(context, dataDB, optionsDB, type, mode);
                     OptionControlPhoto<?> optionControlPhoto = new OptionControlPhoto<>(context, dataDB, optionsDB, newOptionType, mode, unlockCodeResultListener);
                     optionControlPhoto.showOptionMassage("");
@@ -379,10 +383,10 @@ public class Options {
 //                    checkPhoto(dataDB, optionsDB, "4");
 //                    break;
 
-                case 132971:  // Проверка наличия Фото тележка с товаром (тип 10)
-                    OptionControlPhotoCartWithGoods<?> optionControlPhotoCartWithGoods = new OptionControlPhotoCartWithGoods<>(context, dataDB, optionsDB, newOptionType, mode, unlockCodeResultListener);
-                    optionControlPhotoCartWithGoods.showOptionMassage("");
-                    break;
+//                case 132971:  // Проверка наличия Фото тележка с товаром (тип 10)
+//                    OptionControlPhotoCartWithGoods<?> optionControlPhotoCartWithGoods = new OptionControlPhotoCartWithGoods<>(context, dataDB, optionsDB, newOptionType, mode, unlockCodeResultListener);
+//                    optionControlPhotoCartWithGoods.showOptionMassage("");
+//                    break;
 
 //                case 141361:  // Проверка наличия Фото тележка с товаром (тип 31)
 //                    checkPhoto(dataDB, optionsDB, "31");
@@ -1388,7 +1392,7 @@ public class Options {
         return optControl(null, context, dataDB, optionCurrent, optionId, optionBlock, type, mode, unlockCodeResultListener);
     }
 
-        /*Проверка Опции*/
+    /* Проверка Опции - кнопка, провести отчет */
     public <T> int optControl(View view, Context context, T dataDB, OptionsDB optionCurrent, int optionId, OptionsDB optionBlock, OptionMassageType type, NNKMode mode, OptionControl.UnlockCodeResultListener unlockCodeResultListener) {
         OptionsDB option = optionCurrent;   // Текущая Опция на которую нажали
 
@@ -1529,18 +1533,41 @@ public class Options {
                 }
                 return optionControlReturnOfGoods.isBlockOption2() ? 1 : 0;
 
-            case 132971:  // Проверка наличия Фото тележка с товаром (тип 10)
-                OptionControlPhotoCartWithGoods<?> optionControlPhotoCartWithGoods =
-                        new OptionControlPhotoCartWithGoods<>(context, dataDB, option, type, mode, unlockCodeResultListener);
-                if (mode.equals(NNKMode.MAKE) || (mode.equals(NNKMode.CHECK) && optionControlPhotoCartWithGoods.isBlockOption()))
-                    optionControlPhotoCartWithGoods.showOptionMassage(block);
-                if (mode.equals(NNKMode.BLOCK) && optionControlPhotoCartWithGoods.signal && optionControlPhotoCartWithGoods.isBlockOption()) {
-                    optionControlPhotoCartWithGoods.showOptionMassage(block);
-                }
-                return optionControlPhotoCartWithGoods.isBlockOption2() ? 1 : 0;
+//            case 132971:  // Проверка наличия Фото тележка с товаром (тип 10)
+//                OptionControlPhotoCartWithGoods<?> optionControlPhotoCartWithGoods =
+//                        new OptionControlPhotoCartWithGoods<>(context, dataDB, option, type, mode, unlockCodeResultListener);
+//                if (mode.equals(NNKMode.MAKE) || (mode.equals(NNKMode.CHECK) && optionControlPhotoCartWithGoods.isBlockOption()))
+//                    optionControlPhotoCartWithGoods.showOptionMassage(block);
+//                if (mode.equals(NNKMode.BLOCK) && optionControlPhotoCartWithGoods.signal && optionControlPhotoCartWithGoods.isBlockOption()) {
+//                    optionControlPhotoCartWithGoods.showOptionMassage(block);
+//                }
+//                return optionControlPhotoCartWithGoods.isBlockOption2() ? 1 : 0;
 
             case 135158:
-                OptionButtonPhotoFOT<?> optionButtonPhotoFOT = new OptionButtonPhotoFOT<>(context, dataDB, option, type, mode, unlockCodeResultListener);
+                try {
+                    WpDataDB wpdata = (WpDataDB) dataDB;
+
+                    AddressSDB addr = SQL_DB.addressDao().getById(wpdata.getAddr_id());
+                    TradeMarkDB tradeMarkDB = TradeMarkRealm.getTradeMarkRowById(String.valueOf(addr.tpId));
+
+                    Intent intent = new Intent(context, FeaturesActivity.class);
+                    Bundle bundle = new Bundle();
+                    bundle.putString("viewModel", SamplePhotoSDBViewModel.class.getCanonicalName());
+                    bundle.putString("contextUI", ContextUI.SAMPLE_PHOTO_FROM_OPTION_135158.toString());
+                    JsonObject dataJson = new JsonObject();
+                    dataJson.addProperty("tradeMarkDBId", tradeMarkDB.getID());
+                    dataJson.addProperty("wpDataDBId", String.valueOf(wpdata.getId()));
+                    dataJson.addProperty("optionDBId", String.valueOf(option.getID()));
+                    bundle.putString("dataJson", new Gson().toJson(dataJson));
+                    bundle.putString("title", R.string.title_samplephotosdb + ", ");
+                    bundle.putString("subTitle", "В списке представлены образцы фотоотчетов. " +
+                            "Для того, чтобы изготовить 'Фото Остатков Товаров (ФОТ)' нажмите на соответствующую фотографию. " +
+                            "Затем увеличьте ее до размера экрана и выполните фото, нажав на кнопку фотоаппарата в правом нижнем углу. ");
+                    intent.putExtras(bundle);
+                    context.startActivity(intent);
+                } catch (Exception e) {}
+
+//                OptionButtonPhotoFOT<?> optionButtonPhotoFOT = new OptionButtonPhotoFOT<>(context, dataDB, option, type, mode, unlockCodeResultListener);
                 break;
 
             case 159725:
@@ -1593,7 +1620,7 @@ public class Options {
                 return optionControlPercentageOfThePrize.isBlockOption2() ? 1 : 0;
 
             // Контроль фотоотчётов
-//            case 132971:    // Проверка наличия Фото тележка с товаром (тип 10)
+            case 132971:    // Проверка наличия Фото тележка с товаром (тип 10)
             case 134583:
             case 141361:
             case 158606:

@@ -35,49 +35,54 @@ class StackPhotoDBViewModel @Inject constructor(
         get() = StackPhotoDB::class
 
     override fun updateFilters() {
-        val codeDad2 = Gson().fromJson(dataJson, Long::class.java)
-        val wpDataDB = RealmManager.INSTANCE.copyFromRealm(RealmManager.getWorkPlanRowByCodeDad2(codeDad2))
+        when (contextUI) {
+            ContextUI.STACK_PHOTO_TO_FROM_ACHIEVEMENT,
+            ContextUI.STACK_PHOTO_AFTER_FROM_ACHIEVEMENT -> {
+                val codeDad2 = Gson().fromJson(dataJson, Long::class.java)
+                val wpDataDB = RealmManager.INSTANCE.copyFromRealm(RealmManager.getWorkPlanRowByCodeDad2(codeDad2))
 
-        val filterWpDataDB = ItemFilter(
-            "Відвідування",
-            WpDataDB::class,
-            WpDataDBViewModel::class,
-            ModeUI.MULTI_SELECT,
-            "title",
-            "subTitle",
-            "code_dad2",
-            "code_dad2",
-            mutableListOf(wpDataDB.code_dad2.toString()),
-            mutableListOf(wpDataDB.code_dad2.toString()),
-            false
-        )
+                val filterWpDataDB = ItemFilter(
+                    "Відвідування",
+                    WpDataDB::class,
+                    WpDataDBViewModel::class,
+                    ModeUI.MULTI_SELECT,
+                    "title",
+                    "subTitle",
+                    "code_dad2",
+                    "code_dad2",
+                    mutableListOf(wpDataDB.code_dad2.toString()),
+                    mutableListOf(wpDataDB.code_dad2.toString()),
+                    false
+                )
 
-        val typePhotoId = if (contextUI == ContextUI.STACK_PHOTO_TO_FROM_ACHIEVEMENT) 14 else 0
-        val imagesType = RealmManager.INSTANCE.copyFromRealm(PhotoTypeRealm.getPhotoTypeById(typePhotoId))
-        val filterImagesTypeListDB = ItemFilter(
-            "Тип фото",
-            ImagesTypeListDB::class,
-            ImagesTypeListDBViewModel::class,
-            ModeUI.MULTI_SELECT,
-            "title",
-            "subTitle",
-            "photo_type",
-            "id",
-            mutableListOf(imagesType.id.toString()),
-            mutableListOf(imagesType.nm),
-            true
-        )
+                val typePhotoId = if (contextUI == ContextUI.STACK_PHOTO_TO_FROM_ACHIEVEMENT) 14 else 0
+                val imagesType = RealmManager.INSTANCE.copyFromRealm(PhotoTypeRealm.getPhotoTypeById(typePhotoId))
+                val filterImagesTypeListDB = ItemFilter(
+                    "Тип фото",
+                    ImagesTypeListDB::class,
+                    ImagesTypeListDBViewModel::class,
+                    ModeUI.MULTI_SELECT,
+                    "title",
+                    "subTitle",
+                    "photo_type",
+                    "id",
+                    mutableListOf(imagesType.id.toString()),
+                    mutableListOf(imagesType.nm),
+                    true
+                )
 
-        filters = Filters(
+                filters = Filters(
 //            rangeDataByKey = RangeDate("dt", LocalDate.now().minusYears(55), LocalDate.now(), false),
-            rangeDataByKey = null,
-            searchText = "",
-            items = mutableListOf(
-                filterWpDataDB,
-                filterImagesTypeListDB
-            )
-        )
-
+                    rangeDataByKey = null,
+                    searchText = "",
+                    items = mutableListOf(
+                        filterWpDataDB,
+                        filterImagesTypeListDB
+                    )
+                )
+            }
+            else -> {}
+        }
     }
 
     override fun getItems(): List<DataItemUI> {

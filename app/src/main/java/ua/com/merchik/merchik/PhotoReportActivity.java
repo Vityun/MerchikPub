@@ -1369,6 +1369,8 @@ public class PhotoReportActivity extends toolbar_menus {
                     stackPhotoDB.showcase_id = MakePhoto.showcase_id;
                     stackPhotoDB.planogram_id = MakePhoto.planogram_id;
                     stackPhotoDB.planogram_img_id = MakePhoto.planogram_img_id;
+                    stackPhotoDB.example_id = MakePhoto.example_id;
+                    stackPhotoDB.example_img_id = MakePhoto.example_img_id;
 
                     if (MakePhoto.photoType.equals("4")) {
                         stackPhotoDB.tovar_id = MakePhoto.tovarId;

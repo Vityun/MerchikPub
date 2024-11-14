@@ -1,8 +1,8 @@
 <resources>
     <string name="app_name">merchik</string>
-    <string name="ver">102100</string>
-    <string name="debug_status">0</string>
-    <string name="debug_date">2024-10-21</string>
+    <string name="ver">111300</string>
+    <string name="debug_status">1</string>
+    <string name="debug_date">2024-11-11</string>
 
     <string name="test">TEST HINT</string>
 
@@ -241,6 +241,8 @@
     <string name="sub_title_tovardb_from_achievement">Выберите товар</string>
     <string name="title_additionalrequirementsdb_from_achievement">Предложение</string>
     <string name="sub_title_additionalrequirementsdb_from_achievement">Предложение от клиента, которое нужно выполнить для получения дополнительных бонусов</string>
+    <string name="title_samplephotosdb">Образцы фото отчетов</string>
+    <string name="sub_title_samplephotosdb">В списке представлены образцы фотоотчетов. "Для того, чтобы изготовить '%s' нажмите на соответствующую фотографию. Затем увеличьте ее до размера экрана и выполните фото, нажав на кнопку фотоаппарата в правом нижнем углу.</string>
 
 </resources>
 

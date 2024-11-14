@@ -148,7 +148,7 @@ public class PremiumTableDataAdapter extends RecyclerView.Adapter<PremiumTableDa
                 Toast.makeText(v.getContext(), "Завантажуються данні...", Toast.LENGTH_SHORT).show();
                 getPremiumTextList(detailed, data -> {
                     DialogData dialogData = new DialogData(v.getContext());
-                    dialogData.setTitle("");
+                    dialogData.setTitle(data.getTitlle());
 
                     // Pika
                     // так было...
@@ -158,9 +158,9 @@ public class PremiumTableDataAdapter extends RecyclerView.Adapter<PremiumTableDa
                     // теперь строка с основанием data прогоняется через PrepareLinkedTextForMVS и если там есть структура
                     // которую надр превратить в кликабельную ссылку для открытия в МВС, то это выполеяктся и возвращается строка в которой
                     // эта структура заменена на текст HTML
-                    String newData=Globals.PrepareLinkedTextForMVS(data);
+                    String newData=Globals.PrepareLinkedTextForMVS(data.getText());
+                    dialogData.setTextScroll();
                     dialogData.setText(Html.fromHtml(newData));
-
                     dialogData.setClose(dialogData::dismiss);
                     dialogData.show();
 
@@ -411,7 +411,7 @@ public class PremiumTableDataAdapter extends RecyclerView.Adapter<PremiumTableDa
             });
         }
 
-        private void getPremiumTextList(Detailed detailed, Clicks.clickText clickText) {
+        private void getPremiumTextList(Detailed detailed, Clicks.clickObject<MessageData> clickText) {
             StandartData data = new StandartData();
             data.mod = "premium";
             data.act = "get_salary_basis";
@@ -451,21 +451,29 @@ public class PremiumTableDataAdapter extends RecyclerView.Adapter<PremiumTableDa
                             // так стало...
                             // (получаю текст основания премии для вывода в TextView из поля result_list, которое в салю очередь представлено массивом
                             // JSON в котором один элемент и свои поля и нас интересует поле osnovanie)
-                            String res=response.body().result_list.get(0).osnovanie;
+                            String res = "";
+                            String title = "";
+                            for (PremiumResponse.Result item : response.body().result_list) {
+                                if (title.isEmpty()) {
+                                    title += item.docNom + " от " + item.docDat;
+                                }
+                                res += item.sumNZPSotrDoc + " грн. " + item.osnovanie.replaceAll("<", "(").replaceAll(">", ")") + "<br><br>";
+                            }
+//                            String res=response.body().result_list.get(0).osnovanie;
 
-                            clickText.click(res);
+                            clickText.click(new MessageData(title, res));
                         } else {
-                            clickText.click("Дані отримати не вийшло. Повторіть спробу або зверніться до вашого керівника.");
+                            clickText.click(new MessageData("Дані отримати не вийшло. Повторіть спробу або зверніться до вашого керівника."));
                         }
                     } else {
-                        clickText.click("Проблема із зв'язком. Спробуйте пізніше.");
+                        clickText.click(new MessageData("Проблема із зв'язком. Спробуйте пізніше."));
                     }
                 }
 
                 @Override
                 public void onFailure(Call<PremiumResponse> call, Throwable t) {
                     Globals.writeToMLOG("ERROR", "getPremiumText", "Throwable t: " + t);
-                    clickText.click("Отримати дані не вийшло. Зверніться до керівника за допомогою.");
+                    clickText.click(new MessageData("Отримати дані не вийшло. Зверніться до керівника за допомогою."));
                 }
             });
         }
@@ -475,5 +483,36 @@ public class PremiumTableDataAdapter extends RecyclerView.Adapter<PremiumTableDa
     /*Обработчик кликов по заголовку ПУНКТУ премии*/
     public interface PremiumListener {
         void onClick(View view, Detailed item);
+    }
+}
+
+class MessageData {
+
+    public MessageData(String titlle, String text) {
+        this.titlle = titlle;
+        this.text = text;
+    }
+
+    public MessageData(String text) {
+        this.text = text;
+    }
+
+    private String titlle;
+    private String text;
+
+    public String getTitlle() {
+        return titlle;
+    }
+
+    public void setTitlle(String titlle) {
+        this.titlle = titlle;
+    }
+
+    public String getText() {
+        return text;
+    }
+
+    public void setText(String text) {
+        this.text = text;
     }
 }

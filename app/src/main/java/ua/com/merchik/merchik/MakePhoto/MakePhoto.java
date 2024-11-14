@@ -449,6 +449,8 @@ public class MakePhoto {
     public static String showcase_id = "";
     public static String planogram_id = "";
     public static String planogram_img_id = "";
+    public static String example_id = "";
+    public static String example_img_id = "";
 
     public <T> void makePhoto(Activity activity, T data, Clicks.clickVoid clickVoid) {
         try {
@@ -608,6 +610,9 @@ public class MakePhoto {
         } else {
             globals.alertDialogMsg(activity, "Не выбрано посещение\n\nЗайдите в раздел План работ, выберите посещение и повторите попытку.");
         }
+    }
+    private <T> void photoDialogsNEW2(Activity activity, WPDataObj wpDataObj, T data, Clicks.clickVoid clickVoid){
+        makePhoto(activity, data, clickVoid); // Метод который запускает камеру и создаёт файл фото.
     }
 
     /**

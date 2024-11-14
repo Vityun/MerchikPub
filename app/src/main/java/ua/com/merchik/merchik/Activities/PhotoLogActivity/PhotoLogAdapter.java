@@ -430,6 +430,7 @@ public class PhotoLogAdapter extends RecyclerView.Adapter<PhotoLogAdapter.ViewHo
                     Log.e("setPhotos", "2position: " + getAdapterPosition());
                     Log.e("setPhotos", "2photoLogData: " + photoLogData.get(getAdapterPosition()).getId());
 
+
                     DialogFullPhoto dialog = new DialogFullPhoto(mContext);
                     Collections.reverse(photoLogData);
                     dialog.setPhotos(getAdapterPosition(), photoLogData, mOnPhotoClickListener, dialog::dismiss);

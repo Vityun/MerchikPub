@@ -905,6 +905,11 @@ public interface RetrofitInterface {
             @Body JsonObject json);
 
     @POST("mobile_app.php?")
+    Call<JsonObject> MOD_IMAGES_VIEW_CALL_JSON(
+            @Header("ContentType") String content,
+            @Body JsonObject json);
+
+    @POST("mobile_app.php?")
     Call<DossierSotrResponse> dossierSotr(
             @Header("ContentType") String content,
             @Body JsonObject json);

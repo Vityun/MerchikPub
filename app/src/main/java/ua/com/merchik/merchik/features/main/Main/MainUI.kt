@@ -5,6 +5,7 @@ import android.content.Context
 import android.os.Build
 import android.view.View
 import androidx.annotation.RequiresApi
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -49,11 +50,13 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.rememberAsyncImagePainter
 import my.nanihadesuka.compose.LazyColumnScrollbar
 import my.nanihadesuka.compose.ScrollbarSettings
@@ -73,7 +76,7 @@ import java.time.ZoneId
 
 @RequiresApi(Build.VERSION_CODES.N)
 @Composable
-fun MainUI(viewModel: MainViewModel, context: Context) {
+fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
 
     val uiState by viewModel.uiState.collectAsState()
 
@@ -87,49 +90,23 @@ fun MainUI(viewModel: MainViewModel, context: Context) {
 
     val offsetSizeFont by viewModel.offsetSizeFonts.collectAsState()
 
+    var maxLinesSubTitle by remember { mutableStateOf(1) }
+
     val listState = rememberLazyListState()
 
 
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .background(color = Color.Transparent)
     ) {
 
-        Row(
-            modifier = Modifier.align(alignment = Alignment.End)
-        ) {
-            ImageButton(
-                id = R.drawable.ic_settings,
-                shape = CircleShape,
-                colorImage = ColorFilter.tint(color = Color.Gray),
-                sizeButton = 40.dp,
-                sizeImage = 25.dp,
-                modifier = Modifier
-                    .padding(start = 15.dp, bottom = 10.dp),
-                onClick = { showSettingsDialog = true }
-            )
-
-            ImageButton(
-                id = R.drawable.ic_refresh,
-                shape = CircleShape,
-                colorImage = ColorFilter.tint(color = Color.Gray),
-                sizeButton = 40.dp,
-                sizeImage = 25.dp,
-                modifier = Modifier
-                    .padding(start = 15.dp, bottom = 10.dp),
-                onClick = { viewModel.updateContent() }
-            )
-
-            ImageButton(
-                id = R.drawable.ic_letter_x,
-                shape = CircleShape,
-                colorImage = ColorFilter.tint(color = Color.Gray),
-                sizeButton = 40.dp,
-                sizeImage = 25.dp,
-                modifier = Modifier
-                    .padding(start = 15.dp, bottom = 10.dp),
-                onClick = { (context as? Activity)?.finish() }
+        if (!(viewModel.typeWindow ?: "").equals("full", true)) {
+            TopButton(
+                modifier = Modifier.align(alignment = Alignment.End),
+                onSettings = { showSettingsDialog = true },
+                onRefresh = { viewModel.updateContent() },
+                onClose = { (context as? Activity)?.finish() }
             )
         }
 
@@ -140,6 +117,17 @@ fun MainUI(viewModel: MainViewModel, context: Context) {
                 .background(color = colorResource(id = R.color.main_form))
         ) {
             Column {
+
+                if ((viewModel.typeWindow ?: "").equals("full", true)) {
+                    TopButton(
+                        modifier = Modifier.align(alignment = Alignment.End).padding(top = 10.dp, end = 10.dp),
+                        onSettings = { showSettingsDialog = true },
+                        onRefresh = { viewModel.updateContent() },
+                        onClose = { (context as? Activity)?.finish() }
+                    )
+
+                    HorizontalDivider()
+                }
 
                 val searchStrList = uiState.filters?.searchText?.split(" ")
                 val visibilityColumName =
@@ -199,17 +187,21 @@ fun MainUI(viewModel: MainViewModel, context: Context) {
                         }
 
                         uiState.filters?.items?.let { filters ->
-                            val filter = filters[0]
-                            if (filter.rightValuesRaw.isNotEmpty()) {
-                                dataItemUI.rawFields.forEach { fieldValue ->
-                                    if (fieldValue.key.equals(filter.leftField, true)) {
-                                        if (filter.rightValuesRaw.isNotEmpty()) _isActiveFiltered = true
-                                        if (filter.rightValuesRaw.contains(fieldValue.value.rawValue.toString())) {
-                                            return@filter true
-                                        } else {
-                                            return@filter false
+                            filters.forEach { filter ->
+                                isFound = false
+                                if (filter.rightValuesRaw.isNotEmpty()) {
+                                    dataItemUI.rawFields.forEach inner@{ fieldValue ->
+                                        if (fieldValue.key.equals(filter.leftField, true)) {
+                                            if (filter.rightValuesRaw.isNotEmpty()) _isActiveFiltered = true
+                                            if (filter.rightValuesRaw.contains(fieldValue.value.rawValue.toString())) {
+                                                isFound = true
+                                                return@inner
+                                            }
                                         }
                                     }
+                                }
+                                if (!isFound) {
+                                    return@filter false
                                 }
                             }
                         }
@@ -248,11 +240,17 @@ fun MainUI(viewModel: MainViewModel, context: Context) {
                 }
 
                 uiState.subTitle?.let {
-                    Text(
-                        text = it,
-                        modifier = Modifier
-                            .padding(start = 10.dp, bottom = 7.dp, end = 10.dp)
-                    )
+                    Box(modifier = Modifier.animateContentSize()) {
+                        Text(
+                            text = it,
+                            maxLines = maxLinesSubTitle,
+                            overflow = TextOverflow.Ellipsis,
+                            textDecoration = if (maxLinesSubTitle == 1) TextDecoration.Underline else null,
+                            modifier = Modifier
+                                .padding(start = 10.dp, bottom = 7.dp, end = 10.dp)
+                                .clickable { maxLinesSubTitle = if (maxLinesSubTitle == 1) 99 else 1 }
+                        )
+                    }
                 }
 
                 Row(
@@ -329,6 +327,7 @@ fun MainUI(viewModel: MainViewModel, context: Context) {
                                     settingsItemUI = uiState.settingsItems,
                                     contextUI = viewModel.modeUI,
                                     onClickItem = { viewModel.onClickItem(it, context) },
+                                    onClickItemImage = { viewModel.onClickItemImage(it, context) },
                                     onCheckItem = { checked, it -> viewModel.updateItemSelect(checked, it) }
                                 )
                             }
@@ -449,7 +448,14 @@ fun MainUI(viewModel: MainViewModel, context: Context) {
 }
 
 @Composable
-fun ItemUI(item: DataItemUI, settingsItemUI: List<SettingsItemUI>, visibilityColumName: Int, contextUI: ModeUI, onClickItem: (DataItemUI) -> Unit, onCheckItem: (Boolean, DataItemUI) -> Unit) {
+fun ItemUI(
+    item: DataItemUI,
+    settingsItemUI: List<SettingsItemUI>,
+    visibilityColumName: Int,
+    contextUI: ModeUI,
+    onClickItem: (DataItemUI) -> Unit,
+    onClickItemImage: (DataItemUI) -> Unit,
+    onCheckItem: (Boolean, DataItemUI) -> Unit) {
     Box(
         modifier = Modifier
             .clickable { onClickItem(item) }
@@ -501,7 +507,8 @@ fun ItemUI(item: DataItemUI, settingsItemUI: List<SettingsItemUI>, visibilityCol
                             painter = images[0],
                             modifier = Modifier
                                 .padding(5.dp)
-                                .size(100.dp),
+                                .size(100.dp)
+                                .clickable { onClickItemImage(item) },
                             contentScale = ContentScale.FillWidth,
                             contentDescription = null
                         )
@@ -512,7 +519,8 @@ fun ItemUI(item: DataItemUI, settingsItemUI: List<SettingsItemUI>, visibilityCol
                                     painter = image,
                                     modifier = Modifier
                                         .padding(5.dp)
-                                        .size(100.dp),
+                                        .size(100.dp)
+                                        .clickable { onClickItemImage(item) },
                                     contentScale = ContentScale.FillWidth,
                                     contentDescription = null
                                 )
@@ -571,6 +579,51 @@ fun ItemUI(item: DataItemUI, settingsItemUI: List<SettingsItemUI>, visibilityCol
                     )
                 }
         }
+    }
+}
+
+@Composable
+fun TopButton(
+    modifier: Modifier,
+    onSettings: () -> Unit,
+    onRefresh: () -> Unit,
+    onClose: () -> Unit
+) {
+    Row(
+        modifier = modifier
+    ) {
+        ImageButton(
+            id = R.drawable.ic_settings,
+            shape = CircleShape,
+            colorImage = ColorFilter.tint(color = Color.Gray),
+            sizeButton = 40.dp,
+            sizeImage = 25.dp,
+            modifier = Modifier
+                .padding(start = 15.dp, bottom = 10.dp),
+            onClick = { onSettings.invoke() }
+        )
+
+        ImageButton(
+            id = R.drawable.ic_refresh,
+            shape = CircleShape,
+            colorImage = ColorFilter.tint(color = Color.Gray),
+            sizeButton = 40.dp,
+            sizeImage = 25.dp,
+            modifier = Modifier
+                .padding(start = 15.dp, bottom = 10.dp),
+            onClick = { onRefresh.invoke() }
+        )
+
+        ImageButton(
+            id = R.drawable.ic_letter_x,
+            shape = CircleShape,
+            colorImage = ColorFilter.tint(color = Color.Gray),
+            sizeButton = 40.dp,
+            sizeImage = 25.dp,
+            modifier = Modifier
+                .padding(start = 15.dp, bottom = 10.dp),
+            onClick = { onClose.invoke() }
+        )
     }
 }
 

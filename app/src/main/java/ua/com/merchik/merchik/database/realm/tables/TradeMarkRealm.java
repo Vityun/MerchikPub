@@ -23,4 +23,11 @@ public class TradeMarkRealm {
         if (tradeMarkDB != null) tradeMarkDB = INSTANCE.copyFromRealm(tradeMarkDB);
         return tradeMarkDB;
     }
+
+    public static List<TradeMarkDB> getAll(){
+        List<TradeMarkDB> tradeMarkDB = INSTANCE.where(TradeMarkDB.class)
+                .findAll();
+        if (tradeMarkDB != null) tradeMarkDB = INSTANCE.copyFromRealm(tradeMarkDB);
+        return tradeMarkDB;
+    }
 }

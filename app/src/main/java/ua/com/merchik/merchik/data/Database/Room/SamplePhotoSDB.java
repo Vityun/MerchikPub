@@ -8,8 +8,18 @@ import androidx.room.PrimaryKey;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
+import org.jetbrains.annotations.Nullable;
+import org.json.JSONObject;
+
+import java.util.List;
+
+import ua.com.merchik.merchik.R;
+import ua.com.merchik.merchik.dataLayer.DataObjectUI;
+import ua.com.merchik.merchik.dataLayer.model.MerchModifier;
+import ua.com.merchik.merchik.features.main.SamplePhotoSDBOverride;
+
 @Entity(tableName = "sample_photo")
-public class SamplePhotoSDB {
+public class SamplePhotoSDB implements DataObjectUI {
     @PrimaryKey
     @NonNull
     @SerializedName("ID")
@@ -61,4 +71,58 @@ public class SamplePhotoSDB {
     @Expose
     @ColumnInfo(name = "dtUpdate")
     public Long dtUpdate;
+
+    @NonNull
+    @Override
+    public String getHidedFieldsOnUI() {
+        return "active, dt_update, id_1c";
+    }
+
+    @Nullable
+    @Override
+    public Long getFieldTranslateId(@NonNull String key) {
+        return DataObjectUI.DefaultImpls.getFieldTranslateId(this, key);
+    }
+
+    @NonNull
+    @Override
+    public String getValueUI(@NonNull String key, @NonNull Object value) {
+        return DataObjectUI.DefaultImpls.getValueUI(this, key, value);
+    }
+
+    @Nullable
+    @Override
+    public MerchModifier getFieldModifier(@NonNull String key, @NonNull JSONObject jsonObject) {
+        return DataObjectUI.DefaultImpls.getFieldModifier(this, key, jsonObject);
+    }
+
+    @Nullable
+    @Override
+    public MerchModifier getValueModifier(@NonNull String key, @NonNull JSONObject jsonObject) {
+        return DataObjectUI.DefaultImpls.getValueModifier(this, key, jsonObject);
+    }
+
+    @Nullable
+    @Override
+    public MerchModifier getContainerModifier(@NonNull JSONObject jsonObject) {
+        return DataObjectUI.DefaultImpls.getContainerModifier(this, jsonObject);
+    }
+
+    @Nullable
+    @Override
+    public Integer getIdResImage() {
+        return R.drawable.merchik;
+    }
+
+    @NonNull
+    @Override
+    public String getFieldsImageOnUI() {
+        return "photo_id";
+    }
+
+    @Nullable
+    @Override
+    public List<String> getFieldsForOrderOnUI() {
+        return SamplePhotoSDBOverride.INSTANCE.getFieldsForOrderOnUI();
+    }
 }

@@ -199,6 +199,56 @@ public class Exchange {
 //                Globals.writeToMLOG("INFO", "PetrovExchangeTest/startExchange", "Началась загрузка данных");
 
                     try {
+                        /*Загрузка ОБРАЗЦОВ ФОТО*/
+                        SamplePhotoExchange samplePhotoExchange = new SamplePhotoExchange();
+                        samplePhotoExchange.downloadSamplePhotoTable(new Clicks.clickObjectAndStatus() {
+                            @Override
+                            public void onSuccess(Object data) {
+                                Globals.writeToMLOG("INFO", "Exchange/SamplePhotoExchange()/onSuccess", "data: " + data);
+
+                                List<SamplePhotoSDB> res = (List<SamplePhotoSDB>) data;
+//                            Globals.writeToMLOG("INFO", "PetrovExchangeTest/startExchange/samplePhotoExchange/onSuccess", "Загрузка ОБРАЗЦОВ ФОТО res: " + res.size());
+
+                                try {
+                                    RealmManager.INSTANCE.executeTransaction(realm -> {
+                                        if (samplePhotoExchange.synchronizationTimetableDB != null) {
+                                            samplePhotoExchange.synchronizationTimetableDB.setVpi_app(System.currentTimeMillis() / 1000);
+                                            realm.copyToRealmOrUpdate(samplePhotoExchange.synchronizationTimetableDB);
+                                        }
+                                    });
+                                } catch (Exception e) {
+                                    Globals.writeToMLOG("ERROR", "SamplePhotoExchange/downloadSamplePhotoTable/onResponse/onComplete/synchronizationTimetableDB", "Exception e: " + e);
+                                }
+
+                                try {
+                                    res = SQL_DB.samplePhotoDao().getAll();
+                                    Globals.writeToMLOG("INFO", "2Exchange/SamplePhotoExchange()/", "res: " + res.size());
+                                    samplePhotoExchange.downloadSamplePhotos(res, new Clicks.clickStatusMsg() {
+                                        @Override
+                                        public void onSuccess(String data) {
+                                            Globals.writeToMLOG("INFO", "2Exchange/SamplePhotoExchange()/onSuccess", "data: " + data);
+                                        }
+
+                                        @Override
+                                        public void onFailure(String error) {
+                                            Globals.writeToMLOG("ERROR", "2Exchange/SamplePhotoExchange()/onFailure", "error: " + error);
+                                        }
+                                    });
+                                } catch (Exception e) {
+                                    Globals.writeToMLOG("ERROR", "2Exchange/SamplePhotoExchange()/try", "Exception e: " + e);
+                                }
+                            }
+
+                            @Override
+                            public void onFailure(String error) {
+                                Globals.writeToMLOG("ERROR", "Exchange/SamplePhotoExchange()/onFailure", "error: " + error);
+                            }
+                        });
+                    } catch (Exception e) {
+                        Globals.writeToMLOG("ERROR", "startExchange/SamplePhotoExchange", "Exception e: " + e);
+                    }
+
+                    try {
                         globals.fixMP(null, null);    //
                         Globals.writeToMLOG("INFO", "startExchange/globals.fixMP();", "locationGPS: " + Globals.locationGPS);
                     } catch (Exception e) {
@@ -831,54 +881,54 @@ public class Exchange {
                     }
 
 
-                    try {
-                        /*Загрузка ОБРАЗЦОВ ФОТО*/
-                        SamplePhotoExchange samplePhotoExchange = new SamplePhotoExchange();
-                        samplePhotoExchange.downloadSamplePhotoTable(new Clicks.clickObjectAndStatus() {
-                            @Override
-                            public void onSuccess(Object data) {
-                                Globals.writeToMLOG("INFO", "Exchange/SamplePhotoExchange()/onSuccess", "data: " + data);
-
-                                List<SamplePhotoSDB> res = (List<SamplePhotoSDB>) data;
-//                            Globals.writeToMLOG("INFO", "PetrovExchangeTest/startExchange/samplePhotoExchange/onSuccess", "Загрузка ОБРАЗЦОВ ФОТО res: " + res.size());
-
-                                try {
-                                    RealmManager.INSTANCE.executeTransaction(realm -> {
-                                        if (samplePhotoExchange.synchronizationTimetableDB != null) {
-                                            samplePhotoExchange.synchronizationTimetableDB.setVpi_app(System.currentTimeMillis() / 1000);
-                                            realm.copyToRealmOrUpdate(samplePhotoExchange.synchronizationTimetableDB);
-                                        }
-                                    });
-                                } catch (Exception e) {
-                                    Globals.writeToMLOG("ERROR", "SamplePhotoExchange/downloadSamplePhotoTable/onResponse/onComplete/synchronizationTimetableDB", "Exception e: " + e);
-                                }
-
-                                try {
-                                    Globals.writeToMLOG("INFO", "2Exchange/SamplePhotoExchange()/", "res: " + res.size());
-                                    samplePhotoExchange.downloadSamplePhotos(res, new Clicks.clickStatusMsg() {
-                                        @Override
-                                        public void onSuccess(String data) {
-                                            Globals.writeToMLOG("INFO", "2Exchange/SamplePhotoExchange()/onSuccess", "data: " + data);
-                                        }
-
-                                        @Override
-                                        public void onFailure(String error) {
-                                            Globals.writeToMLOG("ERROR", "2Exchange/SamplePhotoExchange()/onFailure", "error: " + error);
-                                        }
-                                    });
-                                } catch (Exception e) {
-                                    Globals.writeToMLOG("ERROR", "2Exchange/SamplePhotoExchange()/try", "Exception e: " + e);
-                                }
-                            }
-
-                            @Override
-                            public void onFailure(String error) {
-                                Globals.writeToMLOG("ERROR", "Exchange/SamplePhotoExchange()/onFailure", "error: " + error);
-                            }
-                        });
-                    } catch (Exception e) {
-                        Globals.writeToMLOG("ERROR", "startExchange/SamplePhotoExchange", "Exception e: " + e);
-                    }
+//                    try {
+//                        /*Загрузка ОБРАЗЦОВ ФОТО*/
+//                        SamplePhotoExchange samplePhotoExchange = new SamplePhotoExchange();
+//                        samplePhotoExchange.downloadSamplePhotoTable(new Clicks.clickObjectAndStatus() {
+//                            @Override
+//                            public void onSuccess(Object data) {
+//                                Globals.writeToMLOG("INFO", "Exchange/SamplePhotoExchange()/onSuccess", "data: " + data);
+//
+//                                List<SamplePhotoSDB> res = (List<SamplePhotoSDB>) data;
+////                            Globals.writeToMLOG("INFO", "PetrovExchangeTest/startExchange/samplePhotoExchange/onSuccess", "Загрузка ОБРАЗЦОВ ФОТО res: " + res.size());
+//
+//                                try {
+//                                    RealmManager.INSTANCE.executeTransaction(realm -> {
+//                                        if (samplePhotoExchange.synchronizationTimetableDB != null) {
+//                                            samplePhotoExchange.synchronizationTimetableDB.setVpi_app(System.currentTimeMillis() / 1000);
+//                                            realm.copyToRealmOrUpdate(samplePhotoExchange.synchronizationTimetableDB);
+//                                        }
+//                                    });
+//                                } catch (Exception e) {
+//                                    Globals.writeToMLOG("ERROR", "SamplePhotoExchange/downloadSamplePhotoTable/onResponse/onComplete/synchronizationTimetableDB", "Exception e: " + e);
+//                                }
+//
+//                                try {
+//                                    Globals.writeToMLOG("INFO", "2Exchange/SamplePhotoExchange()/", "res: " + res.size());
+//                                    samplePhotoExchange.downloadSamplePhotos(res, new Clicks.clickStatusMsg() {
+//                                        @Override
+//                                        public void onSuccess(String data) {
+//                                            Globals.writeToMLOG("INFO", "2Exchange/SamplePhotoExchange()/onSuccess", "data: " + data);
+//                                        }
+//
+//                                        @Override
+//                                        public void onFailure(String error) {
+//                                            Globals.writeToMLOG("ERROR", "2Exchange/SamplePhotoExchange()/onFailure", "error: " + error);
+//                                        }
+//                                    });
+//                                } catch (Exception e) {
+//                                    Globals.writeToMLOG("ERROR", "2Exchange/SamplePhotoExchange()/try", "Exception e: " + e);
+//                                }
+//                            }
+//
+//                            @Override
+//                            public void onFailure(String error) {
+//                                Globals.writeToMLOG("ERROR", "Exchange/SamplePhotoExchange()/onFailure", "error: " + error);
+//                            }
+//                        });
+//                    } catch (Exception e) {
+//                        Globals.writeToMLOG("ERROR", "startExchange/SamplePhotoExchange", "Exception e: " + e);
+//                    }
 
 
                     try {

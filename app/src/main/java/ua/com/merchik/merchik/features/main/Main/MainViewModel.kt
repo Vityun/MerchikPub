@@ -6,26 +6,44 @@ import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import android.os.Bundle
+import android.util.Log
+import androidx.compose.ui.res.stringResource
 import androidx.core.app.ActivityCompat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
+import com.google.gson.Gson
+import com.google.gson.JsonObject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import org.apache.commons.lang3.ObjectUtils.Null
+import org.json.JSONObject
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity
 import ua.com.merchik.merchik.Activities.Features.FeaturesActivity
 import ua.com.merchik.merchik.Globals.APP_OFFSET_SIZE_FONTS
 import ua.com.merchik.merchik.Globals.APP_PREFERENCES
+import ua.com.merchik.merchik.MakePhoto.MakePhoto
+import ua.com.merchik.merchik.R
+import ua.com.merchik.merchik.WorkPlan
+import ua.com.merchik.merchik.data.RealmModels.OptionsDB
+import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB
+import ua.com.merchik.merchik.data.RealmModels.WpDataDB
+import ua.com.merchik.merchik.data.WPDataObj
 import ua.com.merchik.merchik.dataLayer.ContextUI
-import ua.com.merchik.merchik.dataLayer.ModeUI
 import ua.com.merchik.merchik.dataLayer.DataObjectUI
 import ua.com.merchik.merchik.dataLayer.MainRepository
+import ua.com.merchik.merchik.dataLayer.ModeUI
 import ua.com.merchik.merchik.dataLayer.NameUIRepository
 import ua.com.merchik.merchik.dataLayer.model.DataItemUI
 import ua.com.merchik.merchik.dataLayer.model.SettingsItemUI
+import ua.com.merchik.merchik.database.realm.RealmManager
+import ua.com.merchik.merchik.database.realm.tables.OptionsRealm
+import ua.com.merchik.merchik.database.realm.tables.WpDataRealm
+import ua.com.merchik.merchik.dialogs.DialogFullPhoto
+import ua.com.merchik.merchik.dialogs.DialogFullPhotoR
 import java.time.LocalDate
 import kotlin.reflect.KClass
 
@@ -115,6 +133,7 @@ abstract class MainViewModel(
     var context: Context? = null
     var dataJson: String? = null
     var title: String? = null
+    var typeWindow: String? = null
     var subTitle: String? = null
     var idResImage: Int? = null
     var modeUI: ModeUI = ModeUI.DEFAULT
@@ -129,13 +148,58 @@ abstract class MainViewModel(
     open fun updateFilters() {}
 
     abstract fun getItems(): List<DataItemUI>
+
     open fun onClickItem(itemUI: DataItemUI, context: Context) {}
 
+    open fun onClickFullImage(stackPhotoDB: StackPhotoDB, comment: String?) {}
+
     open fun onSelectedItemsUI(itemsUI: List<DataItemUI>) {}
+
+    open fun getFieldsForCommentsImage(): List<String>? { return null }
 
     open fun getDefaultHideUserFields(): List<String>? { return null }
 
     var filters: Filters? = null
+
+    fun onClickItemImage(clickedDataItemUI: DataItemUI, context: Context) {
+        val dialog = DialogFullPhoto(context)
+        val photoLogData = mutableListOf<StackPhotoDB>()
+        var selectedIndex = -1
+        val fieldsForCommentsImage = getFieldsForCommentsImage()
+        val photoDBWithComments = HashMap<StackPhotoDB, String>()
+        val photoDBWithRawObj = HashMap<StackPhotoDB, Any>()
+        _uiState.value.items.map { dataItemUI ->
+            val jsonObject = JSONObject(Gson().toJson(dataItemUI.rawObj[0]))
+            var comments = ""
+            fieldsForCommentsImage?.forEach {
+                comments += "${jsonObject.get(it)} \n\n"
+            }
+            dataItemUI.rawObj[0].getFieldsImageOnUI().split(",").forEach {
+                if (it.isNotEmpty()) {
+                    RealmManager.getPhotoById( null, jsonObject.get(it.trim()).toString())
+                        ?.let {
+                            photoDBWithComments[it] = comments
+                            photoDBWithRawObj[it] = dataItemUI.rawObj[0]
+                            photoLogData.add(it)
+                            if (clickedDataItemUI == dataItemUI) selectedIndex = photoLogData.count() - 1
+                        }
+                }
+            }
+        }
+
+        if (selectedIndex > -1) {
+            dialog.setPhotos(selectedIndex, photoLogData,
+                { _, photoDB ->
+                    onClickFullImage(photoDB, photoDBWithComments[photoDB])
+                    dialog.dismiss()
+                },
+                { }
+            )
+
+            dialog.setClose { dialog.dismiss() }
+            dialog.show()
+        }
+    }
 
     private val _uiState = MutableStateFlow(StateUI())
     val uiState: StateFlow<StateUI>
@@ -197,6 +261,14 @@ abstract class MainViewModel(
             updateFilters()
 
             _uiState.update {
+                val title = title?.split(",")?.map { it.trim() }?.let {
+                    it[0].toIntOrNull()?.let { intRes ->
+                        context?.let { cont ->
+                            getTranslateString(cont.getString(intRes), it[1].toLongOrNull())
+                        }
+                    }
+                } ?: title
+
                 it.copy(
                     title = title,
                     subTitle = subTitle,

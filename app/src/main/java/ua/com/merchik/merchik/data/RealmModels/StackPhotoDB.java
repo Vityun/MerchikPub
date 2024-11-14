@@ -5,6 +5,8 @@ import androidx.annotation.NonNull;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
 
+import java.util.List;
+
 import io.realm.RealmObject;
 import io.realm.annotations.Ignore;
 import io.realm.annotations.PrimaryKey;
@@ -79,6 +81,9 @@ public class StackPhotoDB extends RealmObject implements DataObjectUI {
     public String code_iza;
     public String planogram_id;
     public String planogram_img_id;
+
+    public String example_id;
+    public String example_img_id;
 
     @Ignore
     public int specialCol;
@@ -188,6 +193,22 @@ public class StackPhotoDB extends RealmObject implements DataObjectUI {
 
     public void setPlanogram_id(String planogram_id) {
         this.planogram_id = planogram_id;
+    }
+
+    public String getExample_id() {
+        return example_id;
+    }
+
+    public void setExample_id(String example_id) {
+        this.example_id = example_id;
+    }
+
+    public String getExample_img_id() {
+        return example_img_id;
+    }
+
+    public void setExample_img_id(String example_img_id) {
+        this.example_img_id = example_img_id;
     }
 
     public String getPlanogram_img_id() {
@@ -606,5 +627,11 @@ public class StackPhotoDB extends RealmObject implements DataObjectUI {
     @Override
     public String getFieldsImageOnUI() {
         return "photoServerId";
+    }
+
+    @Nullable
+    @Override
+    public List<String> getFieldsForOrderOnUI() {
+        return DataObjectUI.DefaultImpls.getFieldsForOrderOnUI(this);
     }
 }

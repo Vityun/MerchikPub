@@ -1,5 +1,6 @@
 package ua.com.merchik.merchik.Activities.Features
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
@@ -14,15 +15,19 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import dagger.hilt.android.AndroidEntryPoint
+import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity
 import ua.com.merchik.merchik.Activities.Features.ui.theme.MerchikTheme
+import ua.com.merchik.merchik.Globals
+import ua.com.merchik.merchik.MakePhoto.MakePhoto
+import ua.com.merchik.merchik.MakePhoto.MakePhotoFromGalery
 import ua.com.merchik.merchik.dataLayer.ContextUI
 import ua.com.merchik.merchik.dataLayer.ModeUI
-import ua.com.merchik.merchik.dialogs.DialogAchievement.FilteringDialogDataHolder
 import ua.com.merchik.merchik.features.main.DBViewModels.AdditionalRequirementsDBViewModel
 import ua.com.merchik.merchik.features.main.DBViewModels.CustomerSDBViewModel
 import ua.com.merchik.merchik.features.main.DBViewModels.ImagesTypeListDBViewModel
 import ua.com.merchik.merchik.features.main.DBViewModels.LogMPDBViewModel
 import ua.com.merchik.merchik.features.main.DBViewModels.ReportPrepareDBViewModel
+import ua.com.merchik.merchik.features.main.DBViewModels.SamplePhotoSDBViewModel
 import ua.com.merchik.merchik.features.main.DBViewModels.StackPhotoDBViewModel
 import ua.com.merchik.merchik.features.main.DBViewModels.ThemeDBViewModel
 import ua.com.merchik.merchik.features.main.DBViewModels.TovarDBViewModel
@@ -31,6 +36,7 @@ import ua.com.merchik.merchik.features.main.DBViewModels.UsersSDBViewModel
 import ua.com.merchik.merchik.features.main.DBViewModels.VacancySDBViewModel
 import ua.com.merchik.merchik.features.main.DBViewModels.WpDataDBViewModel
 import ua.com.merchik.merchik.features.main.Main.MainUI
+import java.io.File
 
 @AndroidEntryPoint
 class FeaturesActivity: AppCompatActivity() {
@@ -40,9 +46,7 @@ class FeaturesActivity: AppCompatActivity() {
             MerchikTheme {
                 Surface(
                     modifier = Modifier
-                        .fillMaxSize()
-                        .padding(20.dp)
-                        .clip(RoundedCornerShape(8.dp)),
+                        .fillMaxSize(),
                     color = Color.Transparent,
                 ) {
                     intent?.let { intent ->
@@ -58,6 +62,7 @@ class FeaturesActivity: AppCompatActivity() {
                                     CustomerSDBViewModel::class -> viewModel() as CustomerSDBViewModel
                                     UsersSDBViewModel::class -> viewModel() as UsersSDBViewModel
                                     VacancySDBViewModel::class -> viewModel() as VacancySDBViewModel
+                                    SamplePhotoSDBViewModel::class -> viewModel() as SamplePhotoSDBViewModel
                                     WpDataDBViewModel::class -> viewModel() as WpDataDBViewModel
                                     ImagesTypeListDBViewModel::class -> viewModel() as ImagesTypeListDBViewModel
                                     ReportPrepareDBViewModel::class -> viewModel() as ReportPrepareDBViewModel
@@ -77,11 +82,23 @@ class FeaturesActivity: AppCompatActivity() {
                                             ModeUI.DEFAULT
                                         }
                                     viewModel.title = bundle.getString("title")
+                                    viewModel.typeWindow = bundle.getString("typeWindow") ?: ""
                                     viewModel.subTitle = bundle.getString("subTitle")
                                     viewModel.idResImage = if (bundle.getInt("idResImage") == 0) null else bundle.getInt("idResImage")
                                     viewModel.context = LocalContext.current
                                     viewModel.updateContent()
-                                    MainUI(viewModel = viewModel, LocalContext.current)
+                                    MainUI(
+                                        modifier = Modifier
+                                            .then(if ((bundle.getString("typeWindow") ?: "").equals("full", true))
+                                                Modifier
+                                            else
+                                                Modifier
+                                                    .padding(20.dp)
+                                                    .clip(RoundedCornerShape(8.dp))
+                                            ),
+                                        viewModel = viewModel,
+                                        LocalContext.current
+                                    )
                                 } ?: {
                                     finish()
                                 }
@@ -91,6 +108,47 @@ class FeaturesActivity: AppCompatActivity() {
                         finish()
                     }
                 }
+            }
+        }
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+
+        if (requestCode == MakePhoto.PICK_GALLERY_IMAGE_REQUEST && resultCode == RESULT_OK && data != null && data.data != null) {
+            try {
+//                    int photoType = data.getIntExtra("photo_type", 4); // Получаем тип фотографии из Intent
+                val photoType = MakePhotoFromGalery.photoType // Получаем тип фотографии из Intent
+
+
+                val uri = data.data
+                val file = File(
+                    Globals.FileUtils.getRealPathFromUri(
+                        applicationContext, uri
+                    )
+                )
+                val stackPhotoDB = DetailedReportActivity.savePhoto(
+                    file,
+                    MakePhotoFromGalery.MakePhotoFromGaleryWpDataDB,
+                    photoType,
+                    MakePhotoFromGalery.tovarId,
+                    applicationContext
+                )
+
+                if (stackPhotoDB != null) {
+                    // Сохраняем результат что фото сохранено
+                    val resultIntent = Intent()
+                    resultIntent.putExtra(
+                        "photo_saved",
+                        true
+                    ) // Передайте информацию о сохраненном фото
+                    setResult(RESULT_OK, resultIntent)
+                }
+            } catch (e: java.lang.Exception) {
+                Globals.writeToMLOG(
+                    "INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST",
+                    "Exception e: $e"
+                )
             }
         }
     }

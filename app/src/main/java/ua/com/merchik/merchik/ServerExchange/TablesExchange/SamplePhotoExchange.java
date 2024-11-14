@@ -80,7 +80,7 @@ public class SamplePhotoExchange {
                                                 public void onComplete() {
                                                     Log.d("test", "test");
                                                     Globals.writeToMLOG("INFO", "SamplePhotoExchange/downloadSamplePhotoTable/onResponse/onComplete", "OK: " + response.body().list.size());
-//                                                    click.onSuccess(response.body().list);
+                                                    click.onSuccess(response.body().list);
                                                 }
 
                                                 @Override
@@ -90,12 +90,11 @@ public class SamplePhotoExchange {
                                                     click.onFailure("onError SQL_DB.potentialClientDao().insertAll Throwable e: " + e);
                                                 }
                                             });
-
-                                    click.onSuccess(response.body().list);
                                 }
 
                             } else {
-                                click.onFailure("Ошибка запроса. State=false");
+                                click.onSuccess(null);
+//                                click.onFailure("Ошибка запроса. State=false");
                             }
                         } else {
                             click.onFailure("Ошибка запроса. Тело пришло пустым.");
@@ -129,7 +128,7 @@ public class SamplePhotoExchange {
             List<StackPhotoDB> stack = StackPhotoRealm.getByServerIds(dataList);
 
             for (StackPhotoDB item : stack) {
-                dataList.remove(item.getPhotoServerId());
+                dataList.remove(Integer.valueOf(item.getPhotoServerId()));
             }
 
             Globals.writeToMLOG("INFO", "downloadSamplePhotos", "start downloadPhotoByIds dataList: " + dataList.size());

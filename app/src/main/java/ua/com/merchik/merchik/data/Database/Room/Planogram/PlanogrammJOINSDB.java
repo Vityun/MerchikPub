@@ -12,6 +12,7 @@ import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
 
 import java.sql.Date;
+import java.util.List;
 
 import ua.com.merchik.merchik.dataLayer.DataObjectUI;
 import ua.com.merchik.merchik.dataLayer.model.MerchModifier;
@@ -125,4 +126,9 @@ public class PlanogrammJOINSDB implements DataObjectUI {
         }
     }
 
+    @Nullable
+    @Override
+    public List<String> getFieldsForOrderOnUI() {
+        return DataObjectUI.DefaultImpls.getFieldsForOrderOnUI(this);
+    }
 }

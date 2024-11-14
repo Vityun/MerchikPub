@@ -2,6 +2,7 @@ package ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportT
 
 
 import static ua.com.merchik.merchik.MakePhoto.MakePhotoFromGalery.MakePhotoFromGaleryWpDataDB;
+import static ua.com.merchik.merchik.MakePhoto.MakePhotoFromGalery.tovarId;
 
 import android.app.Activity;
 import android.content.Context;
@@ -13,6 +14,7 @@ import java.util.Arrays;
 
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity;
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportOptionsFrag;
+import ua.com.merchik.merchik.Activities.Features.FeaturesActivity;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.MakePhoto.MakePhoto;
 import ua.com.merchik.merchik.MakePhoto.MakePhotoFromGalery;
@@ -57,17 +59,22 @@ public class TovarRequisites {
         res.setClose(res::dismiss);
         res.setLesson(context, true, 802);
         res.setVideoLesson(context, true, 803, null, null);
-        res.setImage(true, getPhotoFromDB(tovar));
-        res.setAdditionalText(setPhotoInfo(reportPrepareDB, new TovarOptions().createTovarOptionPhoto(), tovar, "", ""));
 
-        // Сделано для того что б можно было контролировать какая опция сейчас открыта
-        res.tovarOptions = new TovarOptions().createTovarOptionPhoto();
-        res.reportPrepareDB = reportPrepareDB;
+        tovarId = "";
+        if (tovar != null) {
+            res.setImage(true, getPhotoFromDB(tovar));
+            res.setAdditionalText(setPhotoInfo(reportPrepareDB, new TovarOptions().createTovarOptionPhoto(), tovar, "", ""));
+
+            // Сделано для того что б можно было контролировать какая опция сейчас открыта
+            res.tovarOptions = new TovarOptions().createTovarOptionPhoto();
+            res.reportPrepareDB = reportPrepareDB;
+            tovarId = reportPrepareDB.tovarId;
+        }
 
         res.setOperationButtons(
                 "Зробити фото",
                 () -> {
-                    new MakePhoto().pressedMakePhoto((Activity) context, wpDataDB, optionsDB,"4", reportPrepareDB.tovarId, click);
+                    new MakePhoto().pressedMakePhoto((Activity) context, wpDataDB, optionsDB,"4", tovarId, click);
                 },
                 "Вибрати з галереї",
                 () -> {
@@ -75,11 +82,16 @@ public class TovarRequisites {
                         if (DetailedReportOptionsFrag.PermissionUtils.checkReadExternalStoragePermission(context)) {
                             Globals.writeToMLOG("INFO", "Вибрати з галереї", "DetailedReportOptionsFrag.PermissionUtils.checkReadExternalStoragePermission(context)");
                             MakePhotoFromGaleryWpDataDB = wpDataDB;
-                            MakePhotoFromGalery.tovarId = reportPrepareDB.tovarId;
+//                            MakePhotoFromGalery.tovarId = reportPrepareDB.tovarId;
                             MakePhotoFromGalery.photoType = 4;
                             Intent intent = new Intent(Intent.ACTION_PICK);
                             intent.setType("image/*");
-                            ((DetailedReportActivity) context).startActivityForResult(Intent.createChooser(intent, "Select Picture"), 500);
+                            if (context instanceof DetailedReportActivity) {
+                                ((DetailedReportActivity) context).startActivityForResult(Intent.createChooser(intent, "Select Picture"), 500);
+                            } else if (context instanceof FeaturesActivity) {
+                                ((FeaturesActivity) context).startActivityForResult(Intent.createChooser(intent, "Select Picture"), 500);
+                                res.dismiss();
+                            }
                         } else {
                             DetailedReportOptionsFrag.PermissionUtils.requestReadExternalStoragePermission(context, (DetailedReportActivity) context);
                             Globals.writeToMLOG("INFO", "Вибрати з галереї", "Запрос доступа");
