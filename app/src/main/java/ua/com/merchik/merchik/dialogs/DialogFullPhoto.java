@@ -78,6 +78,8 @@ public class DialogFullPhoto {
     public List<StackPhotoDB> photoLogData;
     public int position;
 
+    private ImageButton camera;
+
     // ------------------------
     private RecyclerView recycler;
     private ImageView photo;
@@ -113,11 +115,18 @@ public class DialogFullPhoto {
         recycler = dialog.findViewById(R.id.photos_recycler);
 
         indicatorRatingBar = dialog.findViewById(R.id.ratingBar3);
+        camera  = dialog.findViewById(R.id.camera_hand);
 
         close = dialog.findViewById(R.id.imageButtonClose);
 
         next.setOnClickListener(v -> recyclerScroll(MoveTo.NEXT));
         previous.setOnClickListener(v -> recyclerScroll(MoveTo.PREVIOUS));
+    }
+
+    public void setCamera(Clicks.clickVoid clickVoid){
+        camera.setOnClickListener((view) -> {
+            clickVoid.click();
+        });
     }
 
     public void show() {

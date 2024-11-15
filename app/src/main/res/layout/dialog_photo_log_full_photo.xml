@@ -226,6 +226,19 @@
             app:srcCompat="@drawable/ic_angle_right_solid" />
 
         <ImageButton
+            android:id="@+id/camera_hand"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="8dp"
+            android:layout_marginRight="8dp"
+            android:layout_marginBottom="8dp"
+            android:visibility="visible"
+            android:elevation="10dp"
+            app:layout_constraintBottom_toBottomOf="@+id/photos_recycler"
+            app:layout_constraintEnd_toEndOf="@+id/photos_recycler"
+            app:srcCompat="@android:drawable/ic_menu_camera" />
+
+        <ImageButton
             android:id="@+id/open_full_size"
             android:layout_width="50dp"
             android:layout_height="50dp"
@@ -239,7 +252,7 @@
             android:scaleType="centerInside"
             android:elevation="10dp"
             app:layout_constraintBottom_toBottomOf="@+id/photos_recycler"
-            app:layout_constraintEnd_toEndOf="@+id/photos_recycler"
+            app:layout_constraintEnd_toStartOf="@+id/camera_hand"
             app:srcCompat="@android:drawable/ic_menu_search" />
 
         <TextView
