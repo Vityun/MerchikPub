@@ -5,6 +5,8 @@ import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.text.TextUtils;
+import android.util.Log;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
@@ -50,19 +52,20 @@ public class OptionButtonPhotoOfACartWithGoods<T> extends OptionControl {
     }
 
     private void executeOption() {
-        new Globals().fixMP(wpDataDB, null);// Фиксация Местоположения в таблице ЛогМп
+        Globals.fixMP(wpDataDB, null);// Фиксация Местоположения в таблице ЛогМп
         try {
 
             try {
                 AddressSDB addr = SQL_DB.addressDao().getById(wpDataDB.getAddr_id());
                 TradeMarkDB tradeMarkDB = TradeMarkRealm.getTradeMarkRowById(String.valueOf(addr.tpId));
+                String tradeMarkId = tradeMarkDB == null ? "" : tradeMarkDB.getID();
 
                 Intent intent = new Intent(context, FeaturesActivity.class);
                 Bundle bundle = new Bundle();
                 bundle.putString("viewModel", SamplePhotoSDBViewModel.class.getCanonicalName());
                 bundle.putString("contextUI", ContextUI.SAMPLE_PHOTO_FROM_OPTION_132969.toString());
                 JsonObject dataJson = new JsonObject();
-                dataJson.addProperty("tradeMarkDBId", tradeMarkDB.getID());
+                dataJson.addProperty("tradeMarkDBId", tradeMarkId);
                 dataJson.addProperty("wpDataDBId", String.valueOf(wpDataDB.getId()));
                 dataJson.addProperty("optionDBId", String.valueOf(optionDB.getID()));
                 bundle.putString("dataJson", new Gson().toJson(dataJson));
@@ -72,7 +75,9 @@ public class OptionButtonPhotoOfACartWithGoods<T> extends OptionControl {
                         "Затем увеличьте ее до размера экрана и выполните фото, нажав на кнопку фотоаппарата в правом нижнем углу. ");
                 intent.putExtras(bundle);
                 context.startActivity(intent);
-            } catch (Exception e) {}
+            } catch (Exception e) {
+                Log.e("2222", "error1", e);
+            }
 
 //            WPDataObj wpDataObj = workPlan.getKPS(wpDataDB.getId());
 //            wpDataObj.setPhotoType("10");
@@ -83,6 +88,7 @@ public class OptionButtonPhotoOfACartWithGoods<T> extends OptionControl {
 //            makePhoto.pressedMakePhoto((DetailedReportActivity) context, wpDataDB, optionDB, "10"); // Фото тележка с товаром
 
         }catch (Exception e){
+            Log.e("2222", "error2", e);
             Globals.writeToMLOG("ERROR", "OptionButtonPhotoBeforeStartWork/executeOption/Exception", "Exception e: " + e);
         }
     }
