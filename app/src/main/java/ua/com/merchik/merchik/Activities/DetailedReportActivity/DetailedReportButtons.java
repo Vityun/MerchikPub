@@ -145,7 +145,7 @@ public class DetailedReportButtons {
                                 "Затем увеличьте ее до размера экрана и выполните фото, нажав на кнопку фотоаппарата в правом нижнем углу. ");
                         intent.putExtras(bundle);
                         context.startActivity(intent);
-                    } catch (Exception e) {}
+                    } catch (Exception e) { Log.e("2222", "error", e); }
 
 //                    MakePhoto makePhoto = new MakePhoto();
 //                    makePhoto.pressedMakePhotoOldStyle((Activity) context, wpDataObj, wpDataDB, optionsDB);

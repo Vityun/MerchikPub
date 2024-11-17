@@ -818,7 +818,7 @@ public class MakePhoto {
             Log.e("UnlockCode", "unlockCode: " + unlockCode);
             Log.e("UnlockCode", "unlockCode2: " + unlockCode2);
 
-            if (res.equals(unlockCode)) {
+            if (unlockCode.equals(res)) {
                 Toast.makeText(context, "Код прийнято", Toast.LENGTH_LONG).show();
                 click.click();
                 dialog.dismiss();

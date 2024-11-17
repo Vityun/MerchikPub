@@ -161,8 +161,10 @@ abstract class MainViewModel(
 
     var filters: Filters? = null
 
-    fun onClickItemImage(clickedDataItemUI: DataItemUI, context: Context) {
-        val dialog = DialogFullPhoto(context)
+    protected var dialog: DialogFullPhoto? = null
+
+    open fun onClickItemImage(clickedDataItemUI: DataItemUI, context: Context) {
+        dialog = DialogFullPhoto(context)
         val photoLogData = mutableListOf<StackPhotoDB>()
         var selectedIndex = -1
         val fieldsForCommentsImage = getFieldsForCommentsImage()
@@ -188,16 +190,20 @@ abstract class MainViewModel(
         }
 
         if (selectedIndex > -1) {
-            dialog.setPhotos(selectedIndex, photoLogData,
+            dialog?.setPhotos(selectedIndex, photoLogData,
                 { _, photoDB ->
                     onClickFullImage(photoDB, photoDBWithComments[photoDB])
-                    dialog.dismiss()
+                    dialog?.dismiss()
+                    dialog = null
                 },
                 { }
             )
 
-            dialog.setClose { dialog.dismiss() }
-            dialog.show()
+            dialog?.setClose {
+                dialog?.dismiss()
+                dialog = null
+            }
+            dialog?.show()
         }
     }
 

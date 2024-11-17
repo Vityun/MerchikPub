@@ -1549,13 +1549,14 @@ public class Options {
 
                     AddressSDB addr = SQL_DB.addressDao().getById(wpdata.getAddr_id());
                     TradeMarkDB tradeMarkDB = TradeMarkRealm.getTradeMarkRowById(String.valueOf(addr.tpId));
+                    String tradeMarkId = tradeMarkDB == null ? "" : tradeMarkDB.getID();
 
                     Intent intent = new Intent(context, FeaturesActivity.class);
                     Bundle bundle = new Bundle();
                     bundle.putString("viewModel", SamplePhotoSDBViewModel.class.getCanonicalName());
                     bundle.putString("contextUI", ContextUI.SAMPLE_PHOTO_FROM_OPTION_135158.toString());
                     JsonObject dataJson = new JsonObject();
-                    dataJson.addProperty("tradeMarkDBId", tradeMarkDB.getID());
+                    dataJson.addProperty("tradeMarkDBId", tradeMarkId);
                     dataJson.addProperty("wpDataDBId", String.valueOf(wpdata.getId()));
                     dataJson.addProperty("optionDBId", String.valueOf(option.getID()));
                     bundle.putString("dataJson", new Gson().toJson(dataJson));
@@ -1565,7 +1566,7 @@ public class Options {
                             "Затем увеличьте ее до размера экрана и выполните фото, нажав на кнопку фотоаппарата в правом нижнем углу. ");
                     intent.putExtras(bundle);
                     context.startActivity(intent);
-                } catch (Exception e) {}
+                } catch (Exception e) { Log.e("2222", "error", e); }
 
 //                OptionButtonPhotoFOT<?> optionButtonPhotoFOT = new OptionButtonPhotoFOT<>(context, dataDB, option, type, mode, unlockCodeResultListener);
                 break;

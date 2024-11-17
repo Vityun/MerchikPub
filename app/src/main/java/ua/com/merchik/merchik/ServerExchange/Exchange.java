@@ -781,35 +781,35 @@ public class Exchange {
 
                     try {
                         updateStackPhotoDBByType("31");
-                    } catch (Exception e) {}
+                    } catch (Exception e) { Log.e("2222", "error", e); }
 
                     try {
                         updateStackPhotoDBByType("10");
-                    } catch (Exception e) {}
+                    } catch (Exception e) { Log.e("2222", "error", e); }
 
                     try {
                         updateDossierSotr();
-                    } catch (Exception e) {}
+                    } catch (Exception e) { Log.e("2222", "error", e); }
 
                     try {
                         updateVacancy();
-                    } catch (Exception e) {}
+                    } catch (Exception e) { Log.e("2222", "error", e); }
 
                     try {
                         updateBonus();
-                    } catch (Exception e) {}
+                    } catch (Exception e) { Log.e("2222", "error", e); }
 
                     try {
                         updateSiteURL();
-                    } catch (Exception e) {}
+                    } catch (Exception e) { Log.e("2222", "error", e); }
 
                     try {
                         updateSiteAccount();
-                    } catch (Exception e) {}
+                    } catch (Exception e) { Log.e("2222", "error", e); }
 
                     try {
                         updateAverageSalary();
-                    } catch (Exception e) {}
+                    } catch (Exception e) { Log.e("2222", "error", e); }
 
                     try {
                     /*                    ReclamationPointExchange tarExchange = new ReclamationPointExchange();
@@ -1776,7 +1776,7 @@ public class Exchange {
                         if (data.get("state").getAsBoolean()) {
                             Globals.setAverageSalary(data.get("salary").getAsInt());
                         }
-                    } catch (Exception e) {}
+                    } catch (Exception e) { Log.e("2222", "error", e); }
                 }
             }
 

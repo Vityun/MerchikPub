@@ -507,7 +507,7 @@ public class DetailedReportOptionsFrag extends Fragment {
             return permissionStatus == PackageManager.PERMISSION_GRANTED;
         }
 
-        public static void requestReadExternalStoragePermission(Context context, Activity activity) {
+        public static void requestReadExternalStoragePermission(Activity activity) {
             try {
 
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {

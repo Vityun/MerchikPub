@@ -2,6 +2,7 @@ package ua.com.merchik.merchik.features.main.DBViewModels
 
 import android.app.Activity
 import android.app.Application
+import android.content.Context
 import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import com.google.gson.Gson
@@ -53,6 +54,15 @@ class SamplePhotoSDBViewModel @Inject constructor(
         return "nm, about".split(",").map { it.trim() }
     }
 
+    override fun onClickItemImage(clickedDataItemUI: DataItemUI, context: Context) {
+        super.onClickItemImage(clickedDataItemUI, context)
+        dialog?.setCamera {
+            openCamera(null) {
+                dialog?.dismiss()
+            }
+        }
+    }
+
     override fun onClickFullImage(stackPhotoDB: StackPhotoDB, comment: String?) {
         try {
             val dialogFullPhoto = DialogFullPhotoR(context)
@@ -61,66 +71,9 @@ class SamplePhotoSDBViewModel @Inject constructor(
             // Pika
             comment?.let { dialogFullPhoto.setComment(it) }
 
-            val dataJsonObject = Gson().fromJson(dataJson, JsonObject::class.java)
-            val wpDataDB = WpDataRealm.getWpDataRowById(dataJsonObject.get("wpDataDBId").asString.toLong())
-            val optionDB = RealmManager.INSTANCE.copyFromRealm(OptionsRealm.getOptionById(dataJsonObject.get("optionDBId").asString))
-            if (wpDataDB != null && optionDB != null) {
-                dialogFullPhoto.setCamera {
-                    val typePhotoId = when (contextUI) {
-                        ContextUI.SAMPLE_PHOTO_FROM_OPTION_135158 -> 4
-                        ContextUI.SAMPLE_PHOTO_FROM_OPTION_141360 -> 31
-                        ContextUI.SAMPLE_PHOTO_FROM_OPTION_132969 -> 10
-                        ContextUI.SAMPLE_PHOTO_FROM_OPTION_135809 -> 14
-                        ContextUI.SAMPLE_PHOTO_FROM_OPTION_158309 -> 39
-                        ContextUI.SAMPLE_PHOTO_FROM_OPTION_158604 -> 41
-                        ContextUI.SAMPLE_PHOTO_FROM_OPTION_157277 -> 28
-                        else -> { null }
-                    }
-
-                    when(contextUI) {
-                        ContextUI.SAMPLE_PHOTO_FROM_OPTION_135158 -> {
-                            var reportPrepareDB: ReportPrepareDB? = null
-                            val tovarDB = TovarRealm.getById(stackPhotoDB.tovar_id)
-                            if (tovarDB != null)
-                                reportPrepareDB = ReportPrepareRealm.getReportPrepareByTov(wpDataDB.code_dad2.toString(), stackPhotoDB.tovar_id)
-
-                            val tovarRequisites = if (tovarDB == null || reportPrepareDB == null)
-                                TovarRequisites()
-                            else
-                                TovarRequisites(tovarDB, reportPrepareDB)
-
-                            tovarRequisites
-                                .createDialog(
-                                    context,
-                                    wpDataDB,
-                                    optionDB
-                                ) {}
-                                .show()
-
-                            dialogFullPhoto.dismiss()
-                        }
-                        ContextUI.SAMPLE_PHOTO_FROM_OPTION_141360,
-                        ContextUI.SAMPLE_PHOTO_FROM_OPTION_132969,
-                        ContextUI.SAMPLE_PHOTO_FROM_OPTION_135809,
-                        ContextUI.SAMPLE_PHOTO_FROM_OPTION_158309,
-                        ContextUI.SAMPLE_PHOTO_FROM_OPTION_158604,
-                        ContextUI.SAMPLE_PHOTO_FROM_OPTION_157277, -> {
-                            typePhotoId?.let {
-                                val workPlan = WorkPlan()
-                                val wpDataObj: WPDataObj = workPlan.getKPS(wpDataDB.id)
-                                wpDataObj.setPhotoType(it.toString())
-                                val makePhoto = MakePhoto()
-                                makePhoto.pressedMakePhotoOldStyle<WpDataDB>(
-                                    context as Activity,
-                                    wpDataObj,
-                                    wpDataDB,
-                                    optionDB
-                                )
-                                dialogFullPhoto.dismiss()
-                            }
-                        }
-                        else -> {}
-                    }
+            dialogFullPhoto.setCamera {
+                openCamera(stackPhotoDB) {
+                    dialogFullPhoto.dismiss()
                 }
             }
 
@@ -128,6 +81,73 @@ class SamplePhotoSDBViewModel @Inject constructor(
             dialogFullPhoto.show()
         } catch (e: Exception) {
             Log.e("ShowcaseAdapter", "Exception e: $e")
+        }
+    }
+
+    private fun openCamera(stackPhotoDB: StackPhotoDB?, callback:() -> Unit) {
+        val dataJsonObject = Gson().fromJson(dataJson, JsonObject::class.java)
+        val wpDataDB = WpDataRealm.getWpDataRowById(dataJsonObject.get("wpDataDBId").asString.toLong())
+        val optionDB = RealmManager.INSTANCE.copyFromRealm(OptionsRealm.getOptionById(dataJsonObject.get("optionDBId").asString))
+        if (wpDataDB != null && optionDB != null) {
+            val typePhotoId = when (contextUI) {
+                ContextUI.SAMPLE_PHOTO_FROM_OPTION_135158 -> 4
+                ContextUI.SAMPLE_PHOTO_FROM_OPTION_141360 -> 31
+                ContextUI.SAMPLE_PHOTO_FROM_OPTION_132969 -> 10
+                ContextUI.SAMPLE_PHOTO_FROM_OPTION_135809 -> 14
+                ContextUI.SAMPLE_PHOTO_FROM_OPTION_158309 -> 39
+                ContextUI.SAMPLE_PHOTO_FROM_OPTION_158604 -> 41
+                ContextUI.SAMPLE_PHOTO_FROM_OPTION_157277 -> 28
+                else -> { null }
+            }
+
+            when(contextUI) {
+                ContextUI.SAMPLE_PHOTO_FROM_OPTION_135158 -> {
+                    val req = if (stackPhotoDB == null) {
+                        TovarRequisites()
+                    } else {
+                        var reportPrepareDB: ReportPrepareDB? = null
+                        val tovarDB = TovarRealm.getById(stackPhotoDB.tovar_id)
+                        if (tovarDB != null)
+                            reportPrepareDB = ReportPrepareRealm.getReportPrepareByTov(wpDataDB.code_dad2.toString(), stackPhotoDB.tovar_id)
+
+                        if (tovarDB == null || reportPrepareDB == null)
+                            TovarRequisites()
+                        else
+                            TovarRequisites(tovarDB, reportPrepareDB)
+                    }
+
+                    req
+                        .createDialog(
+                            context,
+                            wpDataDB,
+                            optionDB
+                        ) {}
+                        .show()
+
+                    callback.invoke()
+                }
+                ContextUI.SAMPLE_PHOTO_FROM_OPTION_141360,
+                ContextUI.SAMPLE_PHOTO_FROM_OPTION_132969,
+                ContextUI.SAMPLE_PHOTO_FROM_OPTION_135809,
+                ContextUI.SAMPLE_PHOTO_FROM_OPTION_158309,
+                ContextUI.SAMPLE_PHOTO_FROM_OPTION_158604,
+                ContextUI.SAMPLE_PHOTO_FROM_OPTION_157277, -> {
+                    typePhotoId?.let {
+                        val workPlan = WorkPlan()
+                        val wpDataObj: WPDataObj = workPlan.getKPS(wpDataDB.id)
+                        wpDataObj.setPhotoType(it.toString())
+                        val makePhoto = MakePhoto()
+                        makePhoto.pressedMakePhotoOldStyle<WpDataDB>(
+                            context as Activity,
+                            wpDataObj,
+                            wpDataDB,
+                            optionDB
+                        )
+                        callback.invoke()
+                    }
+                }
+                else -> {}
+            }
         }
     }
 
