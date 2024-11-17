@@ -5,6 +5,8 @@ import static ua.com.merchik.merchik.MakePhoto.MakePhotoFromGalery.MakePhotoFrom
 import android.content.Context;
 import android.content.Intent;
 
+import androidx.appcompat.app.AppCompatActivity;
+
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity;
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportOptionsFrag;
 import ua.com.merchik.merchik.Globals;
@@ -57,7 +59,7 @@ public class OptionButtonPhotoEFFIE<T> extends OptionControl {
                 intent.putExtra("photo_type", 46); // Добавляем тип фотографии в интент
                 ((DetailedReportActivity) context).startActivityForResult(Intent.createChooser(intent, "Select Picture"), 500);
             } else {
-                DetailedReportOptionsFrag.PermissionUtils.requestReadExternalStoragePermission(context, (DetailedReportActivity) context);
+                DetailedReportOptionsFrag.PermissionUtils.requestReadExternalStoragePermission((AppCompatActivity) context);
             }
 
         } catch (Exception e) {

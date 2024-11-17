@@ -9,6 +9,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
 
+import androidx.appcompat.app.AppCompatActivity;
+
 import java.io.File;
 import java.util.Arrays;
 
@@ -93,7 +95,7 @@ public class TovarRequisites {
                                 res.dismiss();
                             }
                         } else {
-                            DetailedReportOptionsFrag.PermissionUtils.requestReadExternalStoragePermission(context, (DetailedReportActivity) context);
+                            DetailedReportOptionsFrag.PermissionUtils.requestReadExternalStoragePermission((AppCompatActivity) context);
                             Globals.writeToMLOG("INFO", "Вибрати з галереї", "Запрос доступа");
                         }
                     }catch (Exception e){
