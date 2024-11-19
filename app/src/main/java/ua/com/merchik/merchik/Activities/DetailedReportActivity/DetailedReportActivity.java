@@ -9,7 +9,6 @@ import static ua.com.merchik.merchik.MakePhoto.MakePhoto.CAMERA_REQUEST_PROMOTIO
 import static ua.com.merchik.merchik.MakePhoto.MakePhoto.CAMERA_REQUEST_TAKE_PHOTO_TEST;
 import static ua.com.merchik.merchik.MakePhoto.MakePhoto.CAMERA_REQUEST_TAR_COMMENT_PHOTO;
 import static ua.com.merchik.merchik.MakePhoto.MakePhoto.PICK_GALLERY_IMAGE_REQUEST;
-import static ua.com.merchik.merchik.MakePhoto.MakePhoto.wp;
 import static ua.com.merchik.merchik.MakePhoto.MakePhotoFromGalery.MakePhotoFromGaleryWpDataDB;
 import static ua.com.merchik.merchik.Options.Controls.OptionControlPhotoPromotion.tovarDBOPTION_CONTROL_PROMOTION_ID;
 import static ua.com.merchik.merchik.Options.Controls.OptionControlPhotoPromotion.wpDataDBOPTION_CONTROL_PROMOTION_ID;
@@ -825,7 +824,7 @@ public class DetailedReportActivity extends toolbar_menus {
 
             if (requestCode == CAMERA_REQUEST_TAKE_PHOTO_TEST && resultCode == RESULT_OK) {
                 Toast.makeText(this, "Фото сохранено", Toast.LENGTH_SHORT).show();
-                savePhoto(globals, this, wpDataDB.getCode_iza());
+                savePhoto(globals, this);
             } else if (requestCode == 201 && resultCode == RESULT_CANCELED) {
                 StackPhotoRealm.deleteByPhotoNum(MakePhoto.photoNum);
             }
@@ -902,7 +901,7 @@ public class DetailedReportActivity extends toolbar_menus {
         }
     }
 
-    public static void savePhoto(Globals globals, Activity activity, String codeIza) {
+    public static void savePhoto(Globals globals, Activity activity) {
         try {
             Globals.writeToMLOG("INFO", "requestCode == 201 && resultCode == RESULT_OK/MakePhoto_photoNum", "MakePhoto.photoNum: " + MakePhoto.photoNum);
 
@@ -939,14 +938,12 @@ public class DetailedReportActivity extends toolbar_menus {
             }
 
             Log.e("2222", "hash2 = " + photo.getPhoto_hash());
+            Globals.writeToMLOG("INFO", "A_YA_GOVORIL", "HASH: " + photo.getPhoto_hash());
 
             photo.setPhoto_num(photoFile.getAbsolutePath());
             photo.setPhoto_type(Integer.valueOf(MakePhoto.photoType));
 
             photo.dt = MakePhoto.dt;
-            if (codeIza != null) {
-                photo.code_iza = codeIza;
-            }
 
             photo.img_src_id = MakePhoto.img_src_id;
             photo.showcase_id = MakePhoto.showcase_id;

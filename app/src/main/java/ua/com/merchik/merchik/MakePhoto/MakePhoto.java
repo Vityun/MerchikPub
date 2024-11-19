@@ -441,7 +441,7 @@ public class MakePhoto {
      * Эксперемент с выполнением фото и моментальным его сохранением в БД
      */
     public static String photoNum; // URI фотографии
-    public static String codeIza; // URI фотографии
+//    public static String codeIza; // URI фотографии
     public static Long dt;
     public static String photoType = "0";
     public static String tovarId = "";
@@ -464,7 +464,6 @@ public class MakePhoto {
                 WpDataDB wpDataDB = (WpDataDB) data;
                 wpDataObj = workPlan.getKPS(wpDataDB.getId());
                 dt = wpDataDB.getDt().getTime() / 1000;
-                codeIza = wpDataDB.getCode_iza();
             }
             wpDataObj.setPhotoType(photoType);
             wpDataObj.setCustomerTypeGrpS(photoCustomerGroup);

@@ -153,7 +153,7 @@ class FeaturesActivity: AppCompatActivity() {
                 )
             }
         } else if (requestCode == MakePhoto.CAMERA_REQUEST_TAKE_PHOTO_TEST && resultCode == RESULT_OK) {
-            DetailedReportActivity.savePhoto(Globals(), this, MakePhoto.codeIza)
+            DetailedReportActivity.savePhoto(Globals(), this)
         } else if (requestCode == MakePhoto.CAMERA_REQUEST_TAKE_PHOTO_TEST && resultCode == RESULT_CANCELED) {
             StackPhotoRealm.deleteByPhotoNum(MakePhoto.photoNum)
         }
