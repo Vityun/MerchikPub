@@ -868,17 +868,17 @@ public class RealmManager {
     }
 
     public static List<StackPhotoDB> stackPhotoDBListGetDVIToUpload() {
-        return INSTANCE.where(StackPhotoDB.class).isNotNull("photoServerId").notEqualTo("photoServerId", "").equalTo("dviUpload", true).findAll();
+        return INSTANCE.copyFromRealm(INSTANCE.where(StackPhotoDB.class).isNotNull("photoServerId").notEqualTo("photoServerId", "").equalTo("dviUpload", true).findAll());
     }
 
 
     public static List<StackPhotoDB> stackPhotoDBListGetCommentToUpload() {
-        return INSTANCE.where(StackPhotoDB.class).isNotNull("photoServerId").notEqualTo("photoServerId", "").equalTo("commentUpload", true).findAll();
+        return INSTANCE.copyFromRealm(INSTANCE.where(StackPhotoDB.class).isNotNull("photoServerId").notEqualTo("photoServerId", "").equalTo("commentUpload", true).findAll());
     }
 
 
     public static List<StackPhotoDB> stackPhotoDBListGetRatingToUpload() {
-        return INSTANCE.where(StackPhotoDB.class).isNotNull("photoServerId").notEqualTo("photoServerId", "").equalTo("markUpload", true).findAll();
+        return INSTANCE.copyFromRealm(INSTANCE.where(StackPhotoDB.class).isNotNull("photoServerId").notEqualTo("photoServerId", "").equalTo("markUpload", true).findAll());
     }
 
     //==============================================================================================
