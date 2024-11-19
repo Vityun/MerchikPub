@@ -6,9 +6,9 @@ import static ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedR
 import static ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportTovarsFrag.DETAILED_REPORT_FRAGMENT_TOVAR_VIDEO_LESSONS;
 import static ua.com.merchik.merchik.Activities.TaskAndReclamations.TasksActivity.Tab3Fragment.TARCommentIndex;
 import static ua.com.merchik.merchik.MakePhoto.MakePhoto.CAMERA_REQUEST_PROMOTION_TOV_PHOTO;
+import static ua.com.merchik.merchik.MakePhoto.MakePhoto.CAMERA_REQUEST_TAKE_PHOTO_TEST;
 import static ua.com.merchik.merchik.MakePhoto.MakePhoto.CAMERA_REQUEST_TAR_COMMENT_PHOTO;
 import static ua.com.merchik.merchik.MakePhoto.MakePhoto.PICK_GALLERY_IMAGE_REQUEST;
-import static ua.com.merchik.merchik.MakePhoto.MakePhoto.wp;
 import static ua.com.merchik.merchik.MakePhoto.MakePhotoFromGalery.MakePhotoFromGaleryWpDataDB;
 import static ua.com.merchik.merchik.Options.Controls.OptionControlPhotoPromotion.tovarDBOPTION_CONTROL_PROMOTION_ID;
 import static ua.com.merchik.merchik.Options.Controls.OptionControlPhotoPromotion.wpDataDBOPTION_CONTROL_PROMOTION_ID;
@@ -36,6 +36,7 @@ import android.os.Environment;
 import android.provider.MediaStore;
 import android.provider.Settings;
 import android.text.Html;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
@@ -821,68 +822,9 @@ public class DetailedReportActivity extends toolbar_menus {
                     break;
             }
 
-
-            if (requestCode == 201 && resultCode == RESULT_OK) {
+            if (requestCode == CAMERA_REQUEST_TAKE_PHOTO_TEST && resultCode == RESULT_OK) {
                 Toast.makeText(this, "Фото сохранено", Toast.LENGTH_SHORT).show();
-                try {
-                    Globals.writeToMLOG("INFO", "requestCode == 201 && resultCode == RESULT_OK/MakePhoto_photoNum", "MakePhoto.photoNum: " + MakePhoto.photoNum);
-
-                    StackPhotoDB photo = RealmManager.INSTANCE.copyFromRealm(StackPhotoRealm.getByPhotoNum(MakePhoto.photoNum));
-                    File photoFile = new File(MakePhoto.photoNum);
-
-                    JsonObject jsonObject = new Gson().fromJson(new Gson().toJson(photo), JsonObject.class);
-
-                    Globals.writeToMLOG("INFO", "requestCode == 201 && resultCode == RESULT_OK/photo", "photo: " + jsonObject);
-                    Globals.writeToMLOG("INFO", "requestCode == 201 && resultCode == RESULT_OK/photoFile", "photoFile: " + photoFile);
-
-                    final int rotation = getImageOrientation(photoFile.getPath()); //Проверка на сколько градусов повёрнуто изображение
-                    if (rotation > 0) {
-                        photoFile = resaveBitmap(photoFile, rotation);  // ДляСамсунгов и тп.. Разворачиваем как надо.
-                    }
-
-                    try {
-                        photoFile = resizeImageFile(this, photoFile);
-                    } catch (Exception e) {
-                        globals.alertDialogMsg(this, "Ошибка В ужатии: " + e);
-                    }
-
-                    exifPhotoData(photoFile);
-
-                    if (photo.getPhoto_hash() == null || photo.getPhoto_hash().equals("")){
-                        String hash;
-                        hash = globals.getHashMD5FromFile2(photoFile, this);
-                        if (hash == null || hash.equals("")) {
-                            hash = globals.getHashMD5FromFile(photoFile, this);
-                        }
-                        photo.setPhoto_hash(hash);
-                    }
-
-                    photo.setPhoto_num(photoFile.getAbsolutePath());
-                    photo.setPhoto_type(Integer.valueOf(MakePhoto.photoType));
-
-                    photo.dt = MakePhoto.dt;
-                    photo.code_iza = wpDataDB.getCode_iza();
-
-                    photo.img_src_id = MakePhoto.img_src_id;
-                    photo.showcase_id = MakePhoto.showcase_id;
-                    photo.planogram_id = MakePhoto.planogram_id;
-                    photo.planogram_img_id = MakePhoto.planogram_img_id;
-                    photo.example_id = MakePhoto.example_id;
-                    photo.example_img_id = MakePhoto.example_img_id;
-
-                    if (MakePhoto.photoType.equals("4")) {
-                        photo.tovar_id = MakePhoto.tovarId;
-                        Globals.writeToMLOG("INFO", "requestCode == 201 && resultCode == RESULT_OK/photo_save", "MakePhoto.tovarId: " + MakePhoto.tovarId);
-                    }
-
-                    JsonObject jsonObject2 = new Gson().fromJson(new Gson().toJson(photo), JsonObject.class);
-
-                    Globals.writeToMLOG("INFO", "requestCode == 201 && resultCode == RESULT_OK/photo_save", "photoSave: " + jsonObject2);
-
-                    StackPhotoRealm.setAll(Collections.singletonList(photo));
-                } catch (Exception e) {
-                    Globals.writeToMLOG("ERROR", "requestCode == 201 && resultCode == RESULT_OK", "Exception e: " + e);
-                }
+                savePhoto(globals, this);
             } else if (requestCode == 201 && resultCode == RESULT_CANCELED) {
                 StackPhotoRealm.deleteByPhotoNum(MakePhoto.photoNum);
             }
@@ -956,6 +898,73 @@ public class DetailedReportActivity extends toolbar_menus {
             refreshAdapterFragmentB();
         } catch (Exception e) {
             Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult", "Exception e: " + e);
+        }
+    }
+
+    public static void savePhoto(Globals globals, Activity activity) {
+        try {
+            Globals.writeToMLOG("INFO", "requestCode == 201 && resultCode == RESULT_OK/MakePhoto_photoNum", "MakePhoto.photoNum: " + MakePhoto.photoNum);
+
+            StackPhotoDB photo = RealmManager.INSTANCE.copyFromRealm(StackPhotoRealm.getByPhotoNum(MakePhoto.photoNum));
+            File photoFile = new File(MakePhoto.photoNum);
+
+            JsonObject jsonObject = new Gson().fromJson(new Gson().toJson(photo), JsonObject.class);
+
+            Globals.writeToMLOG("INFO", "requestCode == 201 && resultCode == RESULT_OK/photo", "photo: " + jsonObject);
+            Globals.writeToMLOG("INFO", "requestCode == 201 && resultCode == RESULT_OK/photoFile", "photoFile: " + photoFile);
+
+            final int rotation = getImageOrientation(photoFile.getPath()); //Проверка на сколько градусов повёрнуто изображение
+            if (rotation > 0) {
+                photoFile = resaveBitmap(photoFile, rotation);  // ДляСамсунгов и тп.. Разворачиваем как надо.
+            }
+
+            try {
+                photoFile = resizeImageFile(activity, photoFile);
+            } catch (Exception e) {
+                globals.alertDialogMsg(activity, "Ошибка В ужатии: " + e);
+            }
+
+            exifPhotoData(photoFile);
+
+            Log.e("2222", "hash1 = " + photo.getPhoto_hash());
+
+            if (TextUtils.isEmpty(photo.getPhoto_hash())){
+                String hash;
+                hash = globals.getHashMD5FromFile2(photoFile, activity);
+                if (hash == null || hash.equals("")) {
+                    hash = globals.getHashMD5FromFile(photoFile, activity);
+                }
+                photo.setPhoto_hash(hash);
+            }
+
+            Log.e("2222", "hash2 = " + photo.getPhoto_hash());
+            Globals.writeToMLOG("INFO", "A_YA_GOVORIL", "HASH: " + photo.getPhoto_hash());
+
+            photo.setPhoto_num(photoFile.getAbsolutePath());
+            photo.setPhoto_type(Integer.valueOf(MakePhoto.photoType));
+
+            photo.dt = MakePhoto.dt;
+
+            photo.img_src_id = MakePhoto.img_src_id;
+            photo.showcase_id = MakePhoto.showcase_id;
+            photo.planogram_id = MakePhoto.planogram_id;
+            photo.planogram_img_id = MakePhoto.planogram_img_id;
+            photo.example_id = MakePhoto.example_id;
+            photo.example_img_id = MakePhoto.example_img_id;
+
+            if (MakePhoto.photoType.equals("4")) {
+                photo.tovar_id = MakePhoto.tovarId;
+                Globals.writeToMLOG("INFO", "requestCode == 201 && resultCode == RESULT_OK/photo_save", "MakePhoto.tovarId: " + MakePhoto.tovarId);
+            }
+
+            JsonObject jsonObject2 = new Gson().fromJson(new Gson().toJson(photo), JsonObject.class);
+
+            Globals.writeToMLOG("INFO", "requestCode == 201 && resultCode == RESULT_OK/photo_save", "photoSave: " + jsonObject2);
+
+            StackPhotoRealm.setAll(Collections.singletonList(photo));
+        } catch (Exception e) {
+            Log.i("2222", "Exception ", e);
+            Globals.writeToMLOG("ERROR", "requestCode == 201 && resultCode == RESULT_OK", "Exception e: " + e);
         }
     }
 

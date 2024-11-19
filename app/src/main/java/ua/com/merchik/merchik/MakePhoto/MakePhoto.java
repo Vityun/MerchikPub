@@ -441,6 +441,7 @@ public class MakePhoto {
      * Эксперемент с выполнением фото и моментальным его сохранением в БД
      */
     public static String photoNum; // URI фотографии
+//    public static String codeIza; // URI фотографии
     public static Long dt;
     public static String photoType = "0";
     public static String tovarId = "";
