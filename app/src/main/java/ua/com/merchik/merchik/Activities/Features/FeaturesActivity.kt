@@ -2,6 +2,7 @@ package ua.com.merchik.merchik.Activities.Features
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.layout.fillMaxSize
@@ -22,6 +23,7 @@ import ua.com.merchik.merchik.MakePhoto.MakePhoto
 import ua.com.merchik.merchik.MakePhoto.MakePhotoFromGalery
 import ua.com.merchik.merchik.dataLayer.ContextUI
 import ua.com.merchik.merchik.dataLayer.ModeUI
+import ua.com.merchik.merchik.database.realm.tables.StackPhotoRealm
 import ua.com.merchik.merchik.features.main.DBViewModels.AdditionalRequirementsDBViewModel
 import ua.com.merchik.merchik.features.main.DBViewModels.CustomerSDBViewModel
 import ua.com.merchik.merchik.features.main.DBViewModels.ImagesTypeListDBViewModel
@@ -150,6 +152,10 @@ class FeaturesActivity: AppCompatActivity() {
                     "Exception e: $e"
                 )
             }
+        } else if (requestCode == MakePhoto.CAMERA_REQUEST_TAKE_PHOTO_TEST && resultCode == RESULT_OK) {
+            DetailedReportActivity.savePhoto(Globals(), this, MakePhoto.codeIza)
+        } else if (requestCode == MakePhoto.CAMERA_REQUEST_TAKE_PHOTO_TEST && resultCode == RESULT_CANCELED) {
+            StackPhotoRealm.deleteByPhotoNum(MakePhoto.photoNum)
         }
     }
 }
