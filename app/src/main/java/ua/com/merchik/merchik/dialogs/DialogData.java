@@ -724,7 +724,12 @@ public class DialogData {
             case TEXT:
                 ok.setVisibility(View.GONE);
                 editText.setVisibility(View.VISIBLE);
-                editText.setHint(data);
+                if (data.contains("Ваш")){
+                    editText.setHint(data);
+                } else {
+                    editText.setText(data);
+                }
+
                 editText.addTextChangedListener(new TextWatcher() {
                     @Override
                     public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
