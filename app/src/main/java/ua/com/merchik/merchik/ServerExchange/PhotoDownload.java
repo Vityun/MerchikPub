@@ -45,13 +45,20 @@ import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
  * Класс создан с целью получения от сервера фотографий по разным фильтрам. И сохранением их
  * в БД StackPhotoDB.
  */
+/**MERCHIK_1
+ * Тут іде основна робота із завантаження фізичних фотографій.
+ * Якщо в додатку якась фотка фізично попадає в память телефону - то через якусь із функцій описаних нижче
+ * */
 public class PhotoDownload {
 //    public final Globals globals = new Globals();
 
     /**
-     * 09.09.20022
+     * 09.09.2022
      * Загрузка фотографий по ID.
      */
+    /**MERCHIK_1
+     * Походу тут ти її і качаєш
+     * */
     @SuppressWarnings("rawtypes")
     public void downloadPhotoByIds(String photoDir, String photoTypeDir, List<Integer> dataIds, Clicks.clickStatusMsg result) {
 
@@ -77,6 +84,9 @@ public class PhotoDownload {
 //        data.image_type = "full";   // small (То шо тут было)
         data.image_type = "small";   // small (То шо тут было)
 
+        /**MERCHIK_1
+         * Зверни увагу, якого фіга?
+         * */
         data.photo_type = "35";
 
         data.id_list = idStringList;
@@ -708,6 +718,7 @@ public class PhotoDownload {
     }
 
 
+    // TODO )
     //... посмотрел я на код который писал ранее.. это конечно жесть. Сейчас попробую написать
     // более гибкий, но не менее жёсткий код )). Этот раздел в любом случае надо будет
     // пересматривать и редактировать
@@ -837,6 +848,9 @@ public class PhotoDownload {
      * была возможность вернуть фотку которую только что загрузили. На момент написания коммента,
      * понимаю что надо будет потом сделать адекватнее и возращать список.
      */
+    /**MERCHIK_1 24.11.2024
+     * Можливо через саме це місце треба буде грейдити інтерфейс користувача коли йому завантажилися фото, які його цікавлять
+     * */
     public void savePhotoInfoToDB(List<ModImagesViewList> list, Clicks.clickObjectAndStatus<StackPhotoDB> clickUpdatePhoto) {
         List<StackPhotoDB> stackList = new ArrayList<>();   // Создаём список для записи в БД
         int id = RealmManager.stackPhotoGetLastId() + 1;    // Для новой записи добавляем ID

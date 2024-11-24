@@ -27,6 +27,9 @@ import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.StackPhotoRealm;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
 
+/**MERCHIK_1
+ * Якщо я правий - ДИВИТИСЯ ЦЕЙ КЛАСС
+ * */
 public class SamplePhotoExchange {
 
     public SynchronizationTimetableDB synchronizationTimetableDB;

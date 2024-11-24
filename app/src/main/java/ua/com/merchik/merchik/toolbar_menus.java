@@ -640,6 +640,9 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
 //        pingServer(1);
         synchronizationSignal("SIGNAL", null);
 
+        /**MERCHIK_1
+         * Довгий клік по синхронізації. Запускає модальне віконечко в якому можна обрати що саме я
+         * хочу синхронізовувати(це в мене костиляка, на неї можна не зациклюватись)*/
         item.getActionView().setOnLongClickListener(v -> {
             synchronizationSignal("SIGNAL", null);
             synchronizationSignal("SHOW_MASSAGE", 1);
@@ -653,6 +656,9 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
             return false;
         });
 
+        /**MERCHIK_1
+         * При натисканні - відкривається попап в якому можна обрати: перевірка наявності серверу,
+         * вивантаження фото, повна синхронізація таблиць*/
         item.getActionView().setOnClickListener(v -> {
             synchronizationSignal("SIGNAL", null);
             synchronizationSignal("SHOW_MASSAGE", 2);
@@ -702,8 +708,14 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                         Globals.writeToMLOG("ERROR", "TOOBAR/CLICK_EXCHANGE/Exchange", "Exception e: " + Arrays.toString(e.getStackTrace()));
                     }
 
+                    /**MERCHIK_1
+                     * Походу сюди комтилями треба прикрутити ЗАВАНТАЖЕННЯ фоток образцов*/
+
                     // 08.11.23. Загрузка принудительная ФОТОГРАФИЙ Витрин. (Идентификаторов Витрин)
                     try {
+                        /**MERCHIK_1
+                         * Зверни увагу на примусове завантаження цих типів фото
+                         * А може сюди*/
                         SamplePhotoExchange samplePhotoExchange = new SamplePhotoExchange();
                         List<Integer> listPhotosToDownload = samplePhotoExchange.getSamplePhotosToDownload();
                         if (listPhotosToDownload != null && listPhotosToDownload.size() > 0) {
@@ -735,6 +747,9 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
 
                     // 08.11.23. Загрузка принудительная Образцов фото.
                     try {
+                        /**MERCHIK_1
+                         * Зверни увагу на примусове завантаження і цих типів фото
+                         * Мені прям дуже кажется що сюди треба дивитись в першу чергу*/
                         ShowcaseExchange showcaseExchange = new ShowcaseExchange();
                         List<ShowcaseSDB> list = showcaseExchange.getSamplePhotosToDownload();
                         if (list != null && list.size() > 0) {
@@ -749,6 +764,9 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                     }
 
                     try {
+                        /**MERCHIK_1
+                         * А це наче завантажуються фото за минулі роботи які виконував мерчандайзер,
+                         * але перевстановив додаток та загубив ці фото*/
                         PhotoMerchikExchange photoMerchikExchange = new PhotoMerchikExchange();
                         photoMerchikExchange.getPhotoFromSite();
                     } catch (Exception e) {
