@@ -58,7 +58,7 @@ public class OptionButtonPhotoOfACartWithGoods<T> extends OptionControl {
             try {
                 AddressSDB addr = SQL_DB.addressDao().getById(wpDataDB.getAddr_id());
                 TradeMarkDB tradeMarkDB = TradeMarkRealm.getTradeMarkRowById(String.valueOf(addr.tpId));
-                String tradeMarkId = tradeMarkDB == null ? "1533" : tradeMarkDB.getID();
+                String tradeMarkId = tradeMarkDB == null ? "" : tradeMarkDB.getID();
                 Log.i("3333", "getTradeMarkRowById = " + addr.tpId + ", " + tradeMarkId);
 
                 Intent intent = new Intent(context, FeaturesActivity.class);

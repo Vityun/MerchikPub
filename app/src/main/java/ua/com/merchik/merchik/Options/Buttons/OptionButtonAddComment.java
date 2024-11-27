@@ -73,8 +73,9 @@ public class OptionButtonAddComment<T> extends OptionControl {
 
             if (comment != null && comment.length() > 1){
                 final Long curTime = System.currentTimeMillis()/1000;
-                final long minute = 360;
-                if (wpDataDB.user_comment_dt_update == 0 || ((curTime - wpDataDB.user_comment_dt_update) < minute)) {
+                final long hourInSeconds = 3600;
+                long passedTimeSeconds = curTime - wpDataDB.user_comment_dt_update;
+                if (wpDataDB.user_comment_dt_update == 0 || (passedTimeSeconds < hourInSeconds)) {
                     RealmManager.INSTANCE.executeTransaction(realm -> {
                         wpDataDB.setDt_update(System.currentTimeMillis() / 1000);
                         wpDataDB.user_comment = comment;
@@ -87,7 +88,7 @@ public class OptionButtonAddComment<T> extends OptionControl {
                     Toast.makeText(dialog.context, "Комментарий: '" + comment + "' сохранён", Toast.LENGTH_LONG).show();
                     dialog.dismiss();
                 } else {
-                    Toast.makeText(dialog.context, "Разрешенное время для комментария (1ч) закончилось! Прошло " + (curTime - wpDataDB.user_comment_dt_update)/60 + " минут", Toast.LENGTH_LONG).show();
+                    Toast.makeText(dialog.context, "Разрешенное время для комментария (1ч) закончилось! Прошло " + passedTimeSeconds /60 + " минут", Toast.LENGTH_LONG).show();
                 }
             }else {
                 Toast.makeText(dialog.context, "Комментарий НЕ сохранён. Заполните корректно поле для комментария!", Toast.LENGTH_LONG).show();
