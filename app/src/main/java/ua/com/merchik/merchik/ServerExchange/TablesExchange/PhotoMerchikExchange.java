@@ -53,6 +53,8 @@ public class PhotoMerchikExchange {
                     Globals.writeToMLOG("INFO", "PhotoMerchikExchange/getPhotoFromSite", "EMPTY");
                     break;
 
+                /**MERCHIK_1
+                 * Саме тут завантажуються фото за минулі роботи*/
                 case SUBORDINATE:
                     data.sotr_id = String.valueOf(Globals.userId);
                     Globals.writeToMLOG("INFO", "PhotoMerchikExchange/getPhotoFromSite", "SUBORDINATE: " + data.sotr_id);

@@ -72,17 +72,23 @@ public class OptionButtonAddComment<T> extends OptionControl {
             String comment = dialog.getOperationResult();
 
             if (comment != null && comment.length() > 1){
-                RealmManager.INSTANCE.executeTransaction(realm -> {
-                    wpDataDB.setDt_update(System.currentTimeMillis()/1000);
-                    wpDataDB.user_comment = comment;
-                    wpDataDB.user_comment_author_id = wpDataDB.getUser_id();
-                    wpDataDB.user_comment_dt_update = System.currentTimeMillis()/1000;
-                    wpDataDB.startUpdate = true;
+                final Long curTime = System.currentTimeMillis()/1000;
+                final long minute = 360;
+                if (wpDataDB.user_comment_dt_update == 0 || ((curTime - wpDataDB.user_comment_dt_update) < minute)) {
+                    RealmManager.INSTANCE.executeTransaction(realm -> {
+                        wpDataDB.setDt_update(System.currentTimeMillis() / 1000);
+                        wpDataDB.user_comment = comment;
+                        wpDataDB.user_comment_author_id = wpDataDB.getUser_id();
+                        wpDataDB.user_comment_dt_update = System.currentTimeMillis() / 1000;
+                        wpDataDB.startUpdate = true;
 
-                    realm.copyToRealmOrUpdate(wpDataDB);
-                });
-                Toast.makeText(dialog.context, "Комментарий: '" + comment + "' сохранён", Toast.LENGTH_LONG).show();
-                dialog.dismiss();
+                        realm.copyToRealmOrUpdate(realm.copyFromRealm(wpDataDB));
+                    });
+                    Toast.makeText(dialog.context, "Комментарий: '" + comment + "' сохранён", Toast.LENGTH_LONG).show();
+                    dialog.dismiss();
+                } else {
+                    Toast.makeText(dialog.context, "Разрешенное время для комментария (1ч) закончилось! Прошло " + (curTime - wpDataDB.user_comment_dt_update)/60 + " минут", Toast.LENGTH_LONG).show();
+                }
             }else {
                 Toast.makeText(dialog.context, "Комментарий НЕ сохранён. Заполните корректно поле для комментария!", Toast.LENGTH_LONG).show();
             }

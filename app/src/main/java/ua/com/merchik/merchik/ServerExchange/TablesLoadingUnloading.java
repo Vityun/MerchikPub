@@ -113,6 +113,8 @@ import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
  * Начинаю считать этот класс устаревающим.
  * Надо переносить с него обмены в Exchange и архитектурить Там уже нормально
  */
+/**MERCHIK_1
+ * НА 99% працює із базою данних РЕАЛМ*/
 public class TablesLoadingUnloading {
 
     private String timeYesterday7 = Clock.today_7;

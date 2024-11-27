@@ -8,7 +8,6 @@ import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.provider.Settings;
 import android.util.Log;
 
 import com.google.gson.Gson;
@@ -192,15 +191,23 @@ public class Exchange {
             try {
                 Log.e("startExchange", "start");
 
+                /**MERCHIK_1
+                 * Механізм для того що б синхронізація не запускалася частіше 10 ХВИЛИН !!*/
                 if (exchange + retryTime < System.currentTimeMillis()) {
                     Log.e("startExchange", "start/Время обновлять наступило");
                     exchange = System.currentTimeMillis();
 
 //                Globals.writeToMLOG("INFO", "PetrovExchangeTest/startExchange", "Началась загрузка данных");
 
+                    /**MERCHIK_1
+                     * Походу сюди треба додати завантаження самих ОБРАЗЦОВ, а НЕ!!!! їх ФОТО!
+                     * Тоді коли завантажиться інфа - до неї нормально завантажаться фотки
+                     * */
+
                     try {
                         /*Загрузка ОБРАЗЦОВ ФОТО*/
                         SamplePhotoExchange samplePhotoExchange = new SamplePhotoExchange();
+                        Globals.writeToMLOG("INFO", "startExchange/SamplePhotoExchange", "OK");
                         samplePhotoExchange.downloadSamplePhotoTable(new Clicks.clickObjectAndStatus() {
                             @Override
                             public void onSuccess(Object data) {
@@ -247,6 +254,10 @@ public class Exchange {
                     } catch (Exception e) {
                         Globals.writeToMLOG("ERROR", "startExchange/SamplePhotoExchange", "Exception e: " + e);
                     }
+
+                    /**MERCHIK_1
+                     * Сюди додати завантаження ФОТОК образцов
+                     * */
 
                     try {
                         globals.fixMP(null, null);    //
@@ -781,35 +792,38 @@ public class Exchange {
 
                     try {
                         updateStackPhotoDBByType("31");
-                    } catch (Exception e) { Log.e("2222", "error", e); }
+                    } catch (Exception e) {
+                        Log.e("updateSPDBByType31", "error", e);
+                        Globals.writeToMLOG("ERROR", "Exchange/updateSPDBByType31", "error:" + e);
+                    }
 
                     try {
                         updateStackPhotoDBByType("10");
-                    } catch (Exception e) { Log.e("2222", "error", e); }
+                    } catch (Exception e) { Log.e("updateSPDBByType10", "error", e); }
 
                     try {
                         updateDossierSotr();
-                    } catch (Exception e) { Log.e("2222", "error", e); }
+                    } catch (Exception e) { Log.e("updateDossierSotr", "error", e); }
 
                     try {
                         updateVacancy();
-                    } catch (Exception e) { Log.e("2222", "error", e); }
+                    } catch (Exception e) { Log.e("updateVacancy", "error", e); }
 
                     try {
                         updateBonus();
-                    } catch (Exception e) { Log.e("2222", "error", e); }
+                    } catch (Exception e) { Log.e("updateBonus", "error", e); }
 
                     try {
                         updateSiteURL();
-                    } catch (Exception e) { Log.e("2222", "error", e); }
+                    } catch (Exception e) { Log.e("updateSiteURL", "error", e); }
 
                     try {
                         updateSiteAccount();
-                    } catch (Exception e) { Log.e("2222", "error", e); }
+                    } catch (Exception e) { Log.e("updateSiteAccount", "error", e); }
 
                     try {
                         updateAverageSalary();
-                    } catch (Exception e) { Log.e("2222", "error", e); }
+                    } catch (Exception e) { Log.e("updateAverageSalary", "error", e); }
 
                     try {
                     /*                    ReclamationPointExchange tarExchange = new ReclamationPointExchange();
