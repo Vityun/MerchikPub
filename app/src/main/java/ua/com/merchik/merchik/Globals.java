@@ -257,7 +257,7 @@ public class Globals {
 
 
     // Вызов диалогового окна(просто Предупреждение)
-    public void alertDialogMsg(Context context, String msg) {
+    public static void alertDialogMsg(Context context, String msg) {
         AlertDialog.Builder builder = new AlertDialog.Builder(context);
         builder.setCancelable(false);
         builder.setMessage(msg);
@@ -1025,6 +1025,7 @@ public class Globals {
             TablesLoadingUnloading.readyErrorTable = false;
             TablesLoadingUnloading.readyAkciyTable = false;
             TablesLoadingUnloading.readyTradeMarksTable = false;
+            TablesLoadingUnloading.readySamplePhotos = false;
 
             alertDialogMsg(context, "Синхронизация окончена");
         }

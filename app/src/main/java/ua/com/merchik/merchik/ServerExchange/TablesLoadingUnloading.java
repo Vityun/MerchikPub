@@ -144,6 +144,8 @@ public class TablesLoadingUnloading {
     public static boolean readyAkciyTable = false;
     public static boolean readyTradeMarksTable = false;
 
+    public static boolean readySamplePhotos = false;
+
 
     /**
      * 18.08.2020
