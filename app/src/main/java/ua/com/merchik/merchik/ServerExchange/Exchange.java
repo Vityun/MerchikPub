@@ -8,10 +8,7 @@ import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.os.Handler;
-import android.os.Looper;
 import android.util.Log;
-import android.widget.Toast;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
@@ -237,39 +234,39 @@ public class Exchange {
                                     if (listPhotosToDownload != null && listPhotosToDownload.size() > 0) {
                                         photoCount = listPhotosToDownload.size();
                                         Log.i("````", "listPhotosToDownload: " + listPhotosToDownload.size());
-                                        new Handler(Looper.getMainLooper()).post(new Runnable() {
-                                            @Override
-                                            public void run() {
-                                                Globals.alertDialogMsg(context, "Загрузка фото..");
-                                            }
-                                        });
+//                                        new Handler(Looper.getMainLooper()).post(new Runnable() {
+//                                            @Override
+//                                            public void run() {
+//                                                Globals.alertDialogMsg(context, "Загрузка фото..");
+//                                            }
+//                                        });
                                         samplePhotoExchange.downloadSamplePhotosByPhotoIds(listPhotosToDownload, new Clicks.clickStatusMsg() {
                                             @Override
                                             public void onSuccess(String data) {
-                                                photoCount--;
-                                                if (photoCount == 30) {
-                                                    new Handler(Looper.getMainLooper()).post(new Runnable() {
-                                                        @Override
-                                                        public void run() {
-                                                            Globals.alertDialogMsg(context, "Фото загружены");
-                                                        }
-                                                    });
-                                                }
+//                                                photoCount--;
+//                                                if (photoCount == 30) {
+//                                                    new Handler(Looper.getMainLooper()).post(new Runnable() {
+//                                                        @Override
+//                                                        public void run() {
+//                                                            Globals.alertDialogMsg(context, "Фото загружены");
+//                                                        }
+//                                                    });
+//                                                }
                                                 Log.i("````", "....onSuccess " + photoCount);
                                             }
 
                                             @Override
                                             public void onFailure(String error) {
-                                                photoCount--;
-                                                if (photoCount == 74) {
-                                                    new Handler(Looper.getMainLooper()).post(new Runnable() {
-                                                        @Override
-                                                        public void run() {
-                                                            Globals.alertDialogMsg(context, "Фото загружены");
-                                                        }
-                                                    });
-                                                }
-                                                Log.i("````", "....error " + photoCount);
+//                                                photoCount--;
+//                                                if (photoCount == 74) {
+//                                                    new Handler(Looper.getMainLooper()).post(new Runnable() {
+//                                                        @Override
+//                                                        public void run() {
+//                                                            Globals.alertDialogMsg(context, "Фото загружены");
+//                                                        }
+//                                                    });
+//                                                }
+//                                                Log.i("````", "....error " + photoCount);
                                             }
                                         });
                                     } else {

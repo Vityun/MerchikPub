@@ -1416,47 +1416,47 @@ public class Globals {
      * Запись в лог
      */
     public static void writeToMLOG(String type, String place, String msg) {
-//        try {
-//            File root = MyApplication.getAppContext().getExternalFilesDir(Environment.DIRECTORY_NOTIFICATIONS);
-//            if (!root.exists()) {
-//                root.mkdirs();
-//            }
-//
-//            String fname = "M_LOG.txt";
-//            File file = new File(root, fname);
-///*
-//            // Проверка количества записей
-//            int maxEntries = 100000; // Максимальное количество записей
-//            List<String> lines = new ArrayList<>();
-//
-//            if (file.exists()) {
-//                BufferedReader reader = new BufferedReader(new FileReader(file));
-//                String line;
-//                while ((line = reader.readLine()) != null) {
-//                    lines.add(line);
-//                }
-//                reader.close();
-//
-//                if (lines.size() >= maxEntries) {
-//                    lines.subList(0, lines.size() - maxEntries).clear(); // Удалить старые записи
-//                }
-//            }*/
-//
-//            FileOutputStream stream = new FileOutputStream(file, true);
-//            try {
-//                String time = Clock.getHumanTime();
-//                String space = " ";
-//                String delimiter = "\n";
-//
-//                String data = time + space + type + space + place + space + msg + delimiter;
-//
-//                stream.write(data.getBytes());
-//            } finally {
-//                stream.close();
-//            }
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
+        try {
+            File root = MyApplication.getAppContext().getExternalFilesDir(Environment.DIRECTORY_NOTIFICATIONS);
+            if (!root.exists()) {
+                root.mkdirs();
+            }
+
+            String fname = "M_LOG.txt";
+            File file = new File(root, fname);
+/*
+            // Проверка количества записей
+            int maxEntries = 100000; // Максимальное количество записей
+            List<String> lines = new ArrayList<>();
+
+            if (file.exists()) {
+                BufferedReader reader = new BufferedReader(new FileReader(file));
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    lines.add(line);
+                }
+                reader.close();
+
+                if (lines.size() >= maxEntries) {
+                    lines.subList(0, lines.size() - maxEntries).clear(); // Удалить старые записи
+                }
+            }*/
+
+            FileOutputStream stream = new FileOutputStream(file, true);
+            try {
+                String time = Clock.getHumanTime();
+                String space = " ";
+                String delimiter = "\n";
+
+                String data = time + space + type + space + place + space + msg + delimiter;
+
+                stream.write(data.getBytes());
+            } finally {
+                stream.close();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
 
