@@ -188,22 +188,24 @@ public class OptionControlPhoto<T> extends OptionControl {
         }
 
         // Исключения
-        if (addressSDB.tpId == 383){   // Для АШАН-ов(8196 - у петрова такое тут, странно) ФЗ ФТС НЕ проверяем
-            if (optionId.equals("141361")) {
+        if (optionId.equals("141361") || optionId.equals("132971")) {
+            if (addressSDB.tpId == 383) {   // Для АШАН-ов(8196 - у петрова такое тут, странно) ФЗ ФТС НЕ проверяем
                 signal = false;
                 stringBuilderMsg.append(", але для Ашанів, наявність ФЗ ФТС не перевіряємо.");
-            }
-        }else if (addressSDB.tpId == 434) {   // Для АТБ ФЗ ФТС НЕ проверяем
-            if (optionId.equals("141361")) {
+            } else if (addressSDB.tpId == 434) {   // Для АТБ ФЗ ФТС НЕ проверяем
                 signal = false;
                 stringBuilderMsg.append(", але для АТБ, наявність ФЗ ФТС не перевіряємо.");
-            }
-        }else if (Integer.parseInt(wpDataDB.getClient_id()) == 91478 || //91478-Уяви
-                Integer.parseInt(wpDataDB.getClient_id()) == 10822 ||   //10822-Эгмонт
-                Integer.parseInt(wpDataDB.getClient_id()) == 70484 ||   //70484-Кідді Ко
-                Integer.parseInt(wpDataDB.getClient_id()) == 14365 ||   //14365-флеш
-                Integer.parseInt(wpDataDB.getClient_id()) == 10349) {   //10349-Гифт-К
-            if (optionId.equals("141361")) {
+            } else if (Integer.parseInt(wpDataDB.getClient_id()) == 14607) {   // Для КОЛО ФЗ ФТС НЕ проверяем
+                signal = false;
+                stringBuilderMsg.append(", але для КОЛО, наявність ФЗ ФТС не перевіряємо.");
+            } else if (Integer.parseInt(wpDataDB.getClient_id()) == 91481) {   // Для БОКС-маркет ФЗ ФТС НЕ проверяем
+                signal = false;
+                stringBuilderMsg.append(", але для БОКС-маркет, наявність ФЗ ФТС не перевіряємо.");
+            } else if (Integer.parseInt(wpDataDB.getClient_id()) == 91478 || //91478-Уяви
+                    Integer.parseInt(wpDataDB.getClient_id()) == 10822 ||   //10822-Эгмонт
+                    Integer.parseInt(wpDataDB.getClient_id()) == 70484 ||   //70484-Кідді Ко
+                    Integer.parseInt(wpDataDB.getClient_id()) == 14365 ||   //14365-флеш
+                    Integer.parseInt(wpDataDB.getClient_id()) == 10349) {   //10349-Гифт-К
                 signal = false;
                 stringBuilderMsg.append("Обнаружено (")
                         .append(stackPhotoDB.size())
