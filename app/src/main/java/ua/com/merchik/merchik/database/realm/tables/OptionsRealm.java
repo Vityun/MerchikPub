@@ -46,7 +46,7 @@ public class OptionsRealm {
         RealmResults<OptionsDB> realmResults = INSTANCE.where(OptionsDB.class)
                 .equalTo("codeDad2", dad2)
                 .and()
-                .notEqualTo("optionGroup", "3161")
+                .notEqualTo("optionGroup", "3161") // НЕ Опция контроля
                 .findAll();
 
         if (realmResults != null && realmResults.size() > 0){

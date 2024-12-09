@@ -13,31 +13,18 @@ import com.google.android.material.navigation.NavigationView;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-
-import io.reactivex.rxjava3.observers.DisposableCompletableObserver;
-import io.reactivex.rxjava3.schedulers.Schedulers;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.ServerExchange.Exchange;
-import ua.com.merchik.merchik.ServerExchange.ExchangeInterface;
-import ua.com.merchik.merchik.ServerExchange.TablesExchange.UsersExchange;
-import ua.com.merchik.merchik.Translate;
 import ua.com.merchik.merchik.Utils.CodeGenerator;
-import ua.com.merchik.merchik.data.Database.Room.UsersSDB;
 import ua.com.merchik.merchik.data.RealmModels.AppUsersDB;
-import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
-import ua.com.merchik.merchik.data.RetrofitResponse.photos.PhotoInfoResponseList;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.ShowcaseResponse;
 import ua.com.merchik.merchik.data.TestJsonUpload.StandartData;
-import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.AppUserRealm;
-import ua.com.merchik.merchik.database.realm.tables.StackPhotoRealm;
+import ua.com.merchik.merchik.dialogs.DialogFilter.Click;
 import ua.com.merchik.merchik.dialogs.DialogShowcase.DialogShowcase;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
 import ua.com.merchik.merchik.toolbar_menus;
@@ -86,57 +73,20 @@ public class MenuMainActivity extends toolbar_menus {
     }
 
     private void test() {
-//        new Translate().uploadNewTranslate();
-
-        new Exchange().sendPhotoInformation(new Exchange().getPhotoInfoToUpload(Exchange.UploadPhotoInfo.COMMENT), new ExchangeInterface.ExchangeResponseInterface() {
+//        new TablesLoadingUnloading().downloadOptions(this);
+        Exchange exchange = new Exchange();
+        exchange.sendWpDataToServer(new Click() {
             @Override
-            public <T> void onSuccess(List<T> data) {
-                try {
-                    List<PhotoInfoResponseList> photo = (List<PhotoInfoResponseList>) data;
-                    if (photo.size() > 0) {
-                        Integer[] ids = new Integer[photo.size()];
-                        int count = 0;
-                        for (PhotoInfoResponseList item : photo) {
-                            ids[count++] = item.elementId;
-                        }
-
-                        Log.e("sendPhotoInformation", "photo.size(): " + photo.size());
-
-                        Log.e("sendPhotoInformation", "photoIds: " + Arrays.toString(ids));
-
-                        List<StackPhotoDB> stackPhoto = RealmManager.INSTANCE.copyFromRealm(StackPhotoRealm.getById(ids));
-                        Log.e("sendPhotoInformation", "stackPhoto: " + stackPhoto.size());
-
-                        for (StackPhotoDB item : stackPhoto) {
-                            for (PhotoInfoResponseList listItem : photo) {
-                                if (listItem.elementId.equals(item.getId())) {
-                                    if (listItem.state) {
-                                        item.setCommentUpload(false);
-                                        Log.e("sendPhotoInformation", "listItem.state: " + listItem.state);
-                                    } else {
-                                        item.setCommentUpload(false);
-                                        item.setComment(listItem.error);
-                                        Log.e("sendPhotoInformation", "listItem.state: " + listItem.state);
-                                        Log.e("sendPhotoInformation", "listItem.error: " + listItem.error);
-                                    }
-                                    Log.e("sendPhotoInformation", "stackPhoto item save: " + item.photoServerId);
-                                    StackPhotoRealm.setAll(Collections.singletonList(item));
-                                }
-                            }
-                        }
-                    }
-                } catch (Exception e) {
-                    Globals.writeToMLOG("ERROR", "sendPhotoInformation(getPhotoInfoToUpload(UploadPhotoInfo.COMMENT)", "Exception e: " + e);
-                }
+            public <T> void onSuccess(T data) {
+                String msg = (String) data;
+                Toast.makeText(getApplicationContext(), msg, Toast.LENGTH_LONG).show();
             }
 
             @Override
             public void onFailure(String error) {
-                Log.e("1111", "test");
+                Toast.makeText(getApplicationContext(), error, Toast.LENGTH_LONG).show();
             }
-        });    // Выгрузка изменённых комментариев
-
-
+        });
     }
 
 /*

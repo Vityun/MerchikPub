@@ -16,7 +16,6 @@ import ua.com.merchik.merchik.data.OptionMassageType;
 import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.database.realm.RealmManager;
-import ua.com.merchik.merchik.database.realm.tables.WpDataRealm;
 import ua.com.merchik.merchik.dialogs.DialogData;
 
 public class OptionButtonAddComment<T> extends OptionControl {
@@ -37,7 +36,8 @@ public class OptionButtonAddComment<T> extends OptionControl {
 
     private void getDocumentVar() {
         if (document instanceof WpDataDB) {
-            this.wpDataDB = WpDataRealm.getWpDataRowByDad2Id(((WpDataDB) document).getCode_dad2());
+            this.wpDataDB = (WpDataDB) document;
+//            this.wpDataDB = WpDataRealm.getWpDataRowByDad2Id(((WpDataDB) document).getCode_dad2());
         }
     }
 
@@ -83,7 +83,8 @@ public class OptionButtonAddComment<T> extends OptionControl {
                         wpDataDB.user_comment_dt_update = System.currentTimeMillis() / 1000;
                         wpDataDB.startUpdate = true;
 
-                        realm.copyToRealmOrUpdate(realm.copyFromRealm(wpDataDB));
+                        realm.copyToRealmOrUpdate(wpDataDB);
+//                        realm.copyToRealmOrUpdate(realm.copyFromRealm(wpDataDB));
                     });
                     Toast.makeText(dialog.context, "Комментарий: '" + comment + "' сохранён", Toast.LENGTH_LONG).show();
                     dialog.dismiss();
