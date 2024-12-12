@@ -37,6 +37,7 @@ public class AddressSDB implements DataObjectUI {
     @ColumnInfo(name = "city_id")
     public Integer cityId;
 
+//    группа юрлиц (торговая марка)
     @SerializedName("tp_id")
     @Expose
     @ColumnInfo(name = "tp_id")

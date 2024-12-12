@@ -158,6 +158,7 @@ public class SamplePhotoExchange {
         try {
             Globals.writeToMLOG("INFO", "downloadSamplePhotos", "Получил айдишек list: " + list.size());
 
+//            Вот место где ошибки
             new PhotoDownload().downloadPhotoByIds("/Sample", "SAMPLE_", list, new Clicks.clickStatusMsg() {
                 @Override
                 public void onSuccess(String data) {

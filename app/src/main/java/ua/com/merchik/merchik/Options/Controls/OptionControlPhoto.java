@@ -54,7 +54,7 @@ public class OptionControlPhoto<T> extends OptionControl {
             this.wpDataDB = (WpDataDB) document;
             this.dad2 = wpDataDB.getCode_dad2();
             this.clientName = SQL_DB.customerDao().getById(((WpDataDB) document).getClient_id()).nm;
-        }else if (document instanceof TasksAndReclamationsSDB){
+        } else if (document instanceof TasksAndReclamationsSDB) {
             this.dad2 = ((TasksAndReclamationsSDB) document).codeDad2SrcDoc;
         }
     }
@@ -84,6 +84,13 @@ public class OptionControlPhoto<T> extends OptionControl {
         String codeIZAForGetStackPhotoDB = "";
         long dateFromForGetStackPhotoDB = 0;
         long dateToForGetStackPhotoDB = 0;
+
+        RealmResults<StackPhotoDB> stackPhotoDB =
+                dad2ForGetStackPhotoDB > 0 ?
+                        StackPhotoRealm.getPhotosByDAD2(dad2, photoType) :
+                        StackPhotoRealm.getPhotosByRangeDt(dateFromForGetStackPhotoDB / 1000, dateToForGetStackPhotoDB / 1000, codeIZAForGetStackPhotoDB, ((WpDataDB) document).getAddr_id(), photoType);
+
+        String photoTypeName = ImagesTypeListRealm.getByID(photoType).getNm();
 
         switch (optionId) {
             case "151594":  // Контроль наличия фото витрины (до начала работ) !smarti!
@@ -169,12 +176,6 @@ public class OptionControlPhoto<T> extends OptionControl {
 
         }
 
-        String photoTypeName = ImagesTypeListRealm.getByID(photoType).getNm();
-
-        RealmResults<StackPhotoDB> stackPhotoDB =
-                dad2ForGetStackPhotoDB > 0 ?
-                        StackPhotoRealm.getPhotosByDAD2(dad2, photoType) :
-                        StackPhotoRealm.getPhotosByRangeDt(dateFromForGetStackPhotoDB / 1000, dateToForGetStackPhotoDB / 1000, codeIZAForGetStackPhotoDB, ((WpDataDB) document).getAddr_id(), photoType);
 
         if (stackPhotoDB != null && stackPhotoDB.size() < m) {
             ImagesTypeListDB item = ImagesTypeListRealm.getByID(photoType);
@@ -195,10 +196,10 @@ public class OptionControlPhoto<T> extends OptionControl {
             } else if (addressSDB.tpId == 434) {   // Для АТБ ФЗ ФТС НЕ проверяем
                 signal = false;
                 stringBuilderMsg.append(", але для АТБ, наявність ФЗ ФТС не перевіряємо.");
-            } else if (Integer.parseInt(wpDataDB.getClient_id()) == 14607) {   // Для КОЛО ФЗ ФТС НЕ проверяем
+            } else if (addressSDB.tpId == 6698) {   // Для КОЛО ФЗ ФТС НЕ проверяем
                 signal = false;
                 stringBuilderMsg.append(", але для КОЛО, наявність ФЗ ФТС не перевіряємо.");
-            } else if (Integer.parseInt(wpDataDB.getClient_id()) == 91481) {   // Для БОКС-маркет ФЗ ФТС НЕ проверяем
+            } else if (addressSDB.tpId  == 7135) {   // Для БОКС-маркет ФЗ ФТС НЕ проверяем
                 signal = false;
                 stringBuilderMsg.append(", але для БОКС-маркет, наявність ФЗ ФТС не перевіряємо.");
             } else if (Integer.parseInt(wpDataDB.getClient_id()) == 91478 || //91478-Уяви
@@ -217,6 +218,7 @@ public class OptionControlPhoto<T> extends OptionControl {
             }
         }
 
+
         //7.0. сохраним сигнал
         RealmManager.INSTANCE.executeTransaction(realm -> {
             if (optionDB != null) {
@@ -229,7 +231,6 @@ public class OptionControlPhoto<T> extends OptionControl {
                 realm.insertOrUpdate(optionDB);
             }
         });
-
 
         //8.0. блокировка проведения
         // Установка блокирует ли опция работу приложения или нет

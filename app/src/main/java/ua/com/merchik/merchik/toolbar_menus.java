@@ -161,6 +161,7 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
     TextView serverStat;
     public static int internetStatus;
 
+    private Exchange exchange;
 
     //---------------------------
 
@@ -169,6 +170,7 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        this.exchange = new Exchange();
         try {
             Log.e("MIGRATION_2_3", "TOOLBAR");
             Log.e("MIGRATION_2_3", "SQL_DB" + SQL_DB.oborotVedDao().toString());
@@ -361,7 +363,7 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
 //                intent.putExtra("SamplePhotoActivity", true);
 //                startActivity(intent);
 //            }
-                break;
+            break;
 
             case 164:
                 try {
@@ -685,20 +687,23 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                 // Синхронизовать Таблици
                 if (i.getItemId() == R.id.exchange_db_action) {
                     Toast.makeText(toolbar_menus.this, "Синхронизаци таблиц", Toast.LENGTH_SHORT).show();
-                    if (!TablesLoadingUnloading.sync) {
-                        Exchange.sendWpData2();
-                        Exchange.chatExchange();
-                        Exchange.chatGroupExchange();
-                        tablesLoadingUnloading.uploadAllTables(toolbar_menus.this);     // Выгрузка таблиц
-                        tablesLoadingUnloading.downloadAllTables(toolbar_menus.this);   // Скачивание таблиц
-                    } else {
-                        globals.alertDialogMsg(toolbar_menus.this, "Синхронизация уже запущена! Подождите сообщения об окончании.");
-                    }
+
+//                    if (!TablesLoadingUnloading.sync) {
+//                        Exchange.sendWpData2();
+//                        Exchange.chatExchange();
+//                        Exchange.chatGroupExchange();
+//                        tablesLoadingUnloading.uploadAllTables(toolbar_menus.this);     // Выгрузка таблиц
+//                        tablesLoadingUnloading.downloadAllTables(toolbar_menus.this);   // Скачивание таблиц
+//                    } else {
+//                        globals.alertDialogMsg(toolbar_menus.this, "Синхронизация уже запущена! Подождите сообщения об окончании.");
+//                    }
 
                     try {
                         // Новый обмен. Нужно ещё донастроить для нормальной работы.
-                        Exchange exchange = new Exchange();
-                        exchange.context = toolbar_menus.this;
+                        if (exchange == null) {
+                            exchange = new Exchange();
+                            exchange.context = toolbar_menus.this;
+                        }
                         exchange.startExchange();
 
                         exchange.uploadTARComments(null);
@@ -1067,8 +1072,10 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
 
 
                     // Новый обмен. Нужно ещё донастроить для нормальной работы.
-                    Exchange exchange = new Exchange();
-                    exchange.context = toolbar_menus.this;
+                    if (exchange == null) {
+                        exchange = new Exchange();
+                        exchange.context = toolbar_menus.this;
+                    }
                     exchange.startExchange();
 
 
@@ -1714,7 +1721,7 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
             case (1):
                 if (menu != null)
 //                    light.setIcon(ContextCompat.getDrawable(this, R.mipmap.light_green));
-                    if (drawable != null){
+                    if (drawable != null) {
                         drawable = DrawableCompat.wrap(drawable);
                         DrawableCompat.setTint(drawable, ContextCompat.getColor(toolbar_menus.this, R.color.greenCol));
                         light.setIcon(drawable);
@@ -1724,11 +1731,11 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
             case (2):
                 if (menu != null)
 //                    light.setIcon(ContextCompat.getDrawable(this, R.mipmap.light_yellow));
-                if (drawable != null){
-                    drawable = DrawableCompat.wrap(drawable);
-                    DrawableCompat.setTint(drawable, ContextCompat.getColor(toolbar_menus.this, R.color.colorInetYellow));
-                    light.setIcon(drawable);
-                }
+                    if (drawable != null) {
+                        drawable = DrawableCompat.wrap(drawable);
+                        DrawableCompat.setTint(drawable, ContextCompat.getColor(toolbar_menus.this, R.color.colorInetYellow));
+                        light.setIcon(drawable);
+                    }
                 break;
 
             case (3):
@@ -1736,21 +1743,21 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
             case (4):
                 if (menu != null)
 //                    light.setIcon(ContextCompat.getDrawable(this, R.mipmap.light_red));
-                if (drawable != null){
-                    drawable = DrawableCompat.wrap(drawable);
-                    DrawableCompat.setTint(drawable, ContextCompat.getColor(toolbar_menus.this, R.color.red_error));
-                    light.setIcon(drawable);
-                }
+                    if (drawable != null) {
+                        drawable = DrawableCompat.wrap(drawable);
+                        DrawableCompat.setTint(drawable, ContextCompat.getColor(toolbar_menus.this, R.color.red_error));
+                        light.setIcon(drawable);
+                    }
                 break;
 
             default:
                 if (menu != null)
 //                    light.setIcon(ContextCompat.getDrawable(this, R.mipmap.light_gray));
-                if (drawable != null){
-                    drawable = DrawableCompat.wrap(drawable);
-                    DrawableCompat.setTint(drawable, ContextCompat.getColor(toolbar_menus.this, R.color.colotSelectedTab));
-                    light.setIcon(drawable);
-                }
+                    if (drawable != null) {
+                        drawable = DrawableCompat.wrap(drawable);
+                        DrawableCompat.setTint(drawable, ContextCompat.getColor(toolbar_menus.this, R.color.colotSelectedTab));
+                        light.setIcon(drawable);
+                    }
         }
 
 
@@ -1779,7 +1786,7 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                 // нет определения (выкл/нули возвращает)
                 if (Globals.CoordX == 0 || Globals.CoordY == 0) {
 //                    item.setIcon(ContextCompat.getDrawable(this, R.mipmap.light_red));
-                    if (drawable != null){
+                    if (drawable != null) {
                         drawable = DrawableCompat.wrap(drawable);
                         DrawableCompat.setTint(drawable, ContextCompat.getColor(toolbar_menus.this, R.color.red_error));
                         item.setIcon(drawable);
@@ -1787,7 +1794,7 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                     return 3; // Не на месте/Данные устарели
                 } else if (!onTT() || Globals.delayGPS > Globals.dalayMaxTimeGPS) {
 //                    item.setIcon(ContextCompat.getDrawable(this, R.mipmap.light_yellow));
-                    if (drawable != null){
+                    if (drawable != null) {
                         drawable = DrawableCompat.wrap(drawable);
                         DrawableCompat.setTint(drawable, ContextCompat.getColor(toolbar_menus.this, R.color.colorInetYellow));
                         item.setIcon(drawable);
@@ -1795,7 +1802,7 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                     return 2; // Опознан не на месте/срок определения истёк
                 } else {
 //                    item.setIcon(ContextCompat.getDrawable(this, R.mipmap.light_green));
-                    if (drawable != null){
+                    if (drawable != null) {
                         drawable = DrawableCompat.wrap(drawable);
                         DrawableCompat.setTint(drawable, ContextCompat.getColor(toolbar_menus.this, R.color.greenCol));
                         item.setIcon(drawable);
@@ -1805,7 +1812,7 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
 
             } else {
 //                item.setIcon(ContextCompat.getDrawable(this, R.mipmap.light_red));
-                if (drawable != null){
+                if (drawable != null) {
                     drawable = DrawableCompat.wrap(drawable);
                     DrawableCompat.setTint(drawable, ContextCompat.getColor(toolbar_menus.this, R.color.red_error));
                     item.setIcon(drawable);
@@ -2153,6 +2160,7 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
      * Смена сигналов Обмена.
      */
     private Globals.InternetStatus internetStatusG;
+
     public void synchronizationSignal(String extra, Integer mode) {
         try {
             if (ib != null) {
@@ -2208,7 +2216,7 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                     }
                 }
             }
-        }catch (Exception e){
+        } catch (Exception e) {
             Log.e("toolbar", "Exception e: " + e);
             e.printStackTrace();
             Globals.writeToMLOG("ERROR", "synchronizationSignal", "Exception e: " + e);

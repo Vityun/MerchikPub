@@ -72,8 +72,8 @@ android:theme="@style/Theme.AppCompat.Light.NoActionBar"
         android:supportsRtl="true"
         android:label="@string/app_name"
         android:theme="@style/AppTheme"
-        android:versionCode="2024113000"
-        android:versionName="2024113000"
+        android:versionCode="2024121301"
+        android:versionName="2024121301"
         tools:targetApi="m">
 
 <!--        <meta-data-->
@@ -188,6 +188,7 @@ android:theme="@style/Theme.AppCompat.Light.NoActionBar"
         <activity
             android:name="ua.com.merchik.merchik.Activities.PremiumActivity.PremiumActivity"
             android:theme="@style/AppTheme.NoActionBar"
+            android:configChanges="touchscreen|keyboard|keyboardHidden|orientation|screenLayout|uiMode|screenSize|smallestScreenSize|layoutDirection"
             >
         </activity>
 

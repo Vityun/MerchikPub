@@ -1,9 +1,15 @@
 package ua.com.merchik.merchik.Options.Buttons;
 
 import android.content.Context;
+import android.os.Handler;
+import android.os.Message;
+import android.util.Log;
 import android.widget.Toast;
 
 import androidx.recyclerview.widget.LinearLayoutManager;
+
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -15,6 +21,7 @@ import ua.com.merchik.merchik.ViewHolders.TextViewClickAdapter;
 import ua.com.merchik.merchik.data.OptionMassageType;
 import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
+import ua.com.merchik.merchik.data.TestJsonUpload.StratEndWork.UploadDataSEWork;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.WpDataRealm;
 import ua.com.merchik.merchik.dialogs.DialogData;
@@ -37,27 +44,26 @@ public class OptionButtonAddComment<T> extends OptionControl {
 
     private void getDocumentVar() {
         if (document instanceof WpDataDB) {
-            this.wpDataDB = WpDataRealm.getWpDataRowByDad2Id(((WpDataDB) document).getCode_dad2());
+            this.wpDataDB = (WpDataDB) document;
         }
     }
 
     private void executeOption() {
 
         String text = "Ваш комментарий";
-        if (wpDataDB.user_comment != null && wpDataDB.user_comment.length() > 0){
+        if (wpDataDB.user_comment != null && wpDataDB.user_comment.length() > 0) {
             text = wpDataDB.user_comment;
         }
-
         showDefaultDialog(text);
     }
 
-    private void showDefaultDialog(String text){
+    private void showDefaultDialog(String text) {
         DialogData dialog = new DialogData(context);
         dialog.setTitle("Внесите комментарий");
         dialog.setText("Внесите комментарий к отчёту и нажмите 'Сохранить'");
         dialog.setOperation(DialogData.Operations.TEXT, text, null, null);
 
-        if (wpDataDB.getClient_id().equals("14874")){
+        if (wpDataDB.getClient_id().equals("14874")) {
             dialog.setAdditionalOperation(new TextViewClickAdapter(getStringsTetaMarket(), new Clicks.click() {
                 @Override
                 public <T> void click(T data) {
@@ -67,15 +73,16 @@ public class OptionButtonAddComment<T> extends OptionControl {
             }), new LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false));
         }
 
-
-        dialog.setOk("Сохранить", ()->{
+        dialog.setOk("Сохранить", () -> {
             String comment = dialog.getOperationResult();
 
-            if (comment != null && comment.length() > 1){
-                final Long curTime = System.currentTimeMillis()/1000;
+            if (comment != null && comment.length() > 1) {
+                final long curTime = System.currentTimeMillis() / 1000;
                 final long hourInSeconds = 3600;
                 long passedTimeSeconds = curTime - wpDataDB.user_comment_dt_update;
+
                 if (wpDataDB.user_comment_dt_update == 0 || (passedTimeSeconds < hourInSeconds)) {
+
                     RealmManager.INSTANCE.executeTransaction(realm -> {
                         wpDataDB.setDt_update(System.currentTimeMillis() / 1000);
                         wpDataDB.user_comment = comment;
@@ -83,22 +90,30 @@ public class OptionButtonAddComment<T> extends OptionControl {
                         wpDataDB.user_comment_dt_update = System.currentTimeMillis() / 1000;
                         wpDataDB.startUpdate = true;
 
-                        realm.copyToRealmOrUpdate(realm.copyFromRealm(wpDataDB));
+                        realm.copyToRealmOrUpdate(wpDataDB);
+
+
                     });
+//startUpdate: true
                     Toast.makeText(dialog.context, "Комментарий: '" + comment + "' сохранён", Toast.LENGTH_LONG).show();
+
                     dialog.dismiss();
                 } else {
-                    Toast.makeText(dialog.context, "Разрешенное время для комментария (1ч) закончилось! Прошло " + passedTimeSeconds /60 + " минут", Toast.LENGTH_LONG).show();
+                    Toast.makeText(dialog.context, "Разрешенное время для комментария (1ч) закончилось! Прошло " + passedTimeSeconds / 60 + " минут", Toast.LENGTH_LONG).show();
                 }
-            }else {
+            } else {
                 Toast.makeText(dialog.context, "Комментарий НЕ сохранён. Заполните корректно поле для комментария!", Toast.LENGTH_LONG).show();
             }
         });
-        dialog.setClose(dialog::dismiss);
-        dialog.show();
+        dialog.
+
+                setClose(dialog::dismiss);
+        dialog.
+
+                show();
     }
 
-    private List<String> getStringsTetaMarket(){
+    private List<String> getStringsTetaMarket() {
         List<String> comments = new ArrayList<>();
         comments.add("Всі товари в наявності, більше 5 шт на кожне місце викладки.");
         comments.add("Деякі товари відсутні на складі.");
@@ -108,6 +123,5 @@ public class OptionButtonAddComment<T> extends OptionControl {
 
         return comments;
     }
-
 
 }

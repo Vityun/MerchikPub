@@ -1417,7 +1417,8 @@ public class Globals {
      */
     public static void writeToMLOG(String type, String place, String msg) {
         try {
-            File root = MyApplication.getAppContext().getExternalFilesDir(Environment.DIRECTORY_NOTIFICATIONS);
+//            File root = MyApplication.getAppContext().getExternalFilesDir(Environment.DIRECTORY_NOTIFICATIONS);
+            File root = MyApplication.getAppContext().getCacheDir();
             if (!root.exists()) {
                 root.mkdirs();
             }
