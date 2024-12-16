@@ -958,13 +958,13 @@ public class Globals {
      * @param image_name Имя файла.
      * @param bitmap     Сама фотка для сохранения
      */
+//    TODO #### сделать сохранение в памяти асинхроным
     public static String savePhotoToPhoneMemory(String folderPath, String image_name, Bitmap bitmap) {
 
         Log.e("savePhotoToPhoneMemory", "Размер фотографии для сохранения. (bitmap.getByteCount()): " + bitmap.getByteCount());
 
 //        String root = Environment.getExternalStorageDirectory().toString() + APP_DIR + folderPath;
 //        File myDir = new File(root);
-
 
         File myDir = MyApplication.getAppContext().getExternalFilesDir(Environment.DIRECTORY_PICTURES + folderPath);
         myDir.mkdirs(); // Если такой папки не создано - создать

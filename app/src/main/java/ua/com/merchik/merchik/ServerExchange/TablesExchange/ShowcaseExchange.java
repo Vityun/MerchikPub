@@ -87,7 +87,7 @@ public class ShowcaseExchange {
 //            exchange.onFailure("Ошибка при обновлении Сотрудников. Передайте код ошибки Вашему руководителю. Код ошибки: " + e);
         }
     }
-
+// TODO #### надо сделать ассинхроным
     public void downloadShowcasePhoto(List<ShowcaseSDB> data) {
         for (ShowcaseSDB item : data) {
             Log.e("checkRequest", "downloadShowcasePhoto/item: " + item.id);

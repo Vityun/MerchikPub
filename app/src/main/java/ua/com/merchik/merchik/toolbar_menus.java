@@ -171,6 +171,8 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         this.exchange = new Exchange();
+
+
         try {
             Log.e("MIGRATION_2_3", "TOOLBAR");
             Log.e("MIGRATION_2_3", "SQL_DB" + SQL_DB.oborotVedDao().toString());

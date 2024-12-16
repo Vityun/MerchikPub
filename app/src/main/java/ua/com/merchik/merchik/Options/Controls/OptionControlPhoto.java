@@ -3,7 +3,18 @@ package ua.com.merchik.merchik.Options.Controls;
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
 import android.content.Context;
+import android.os.Build;
 import android.util.Log;
+
+import androidx.annotation.RequiresApi;
+
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.ZoneOffset;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.TimeZone;
 
 import io.realm.RealmResults;
 import ua.com.merchik.merchik.Clock;
@@ -59,6 +70,7 @@ public class OptionControlPhoto<T> extends OptionControl {
         }
     }
 
+
     private void executeOption() {
 
         String optionId;
@@ -82,15 +94,14 @@ public class OptionControlPhoto<T> extends OptionControl {
 
         long dad2ForGetStackPhotoDB = dad2;
         String codeIZAForGetStackPhotoDB = "";
+        long date = 0;
         long dateFromForGetStackPhotoDB = 0;
         long dateToForGetStackPhotoDB = 0;
 
-        RealmResults<StackPhotoDB> stackPhotoDB =
-                dad2ForGetStackPhotoDB > 0 ?
-                        StackPhotoRealm.getPhotosByDAD2(dad2, photoType) :
-                        StackPhotoRealm.getPhotosByRangeDt(dateFromForGetStackPhotoDB / 1000, dateToForGetStackPhotoDB / 1000, codeIZAForGetStackPhotoDB, ((WpDataDB) document).getAddr_id(), photoType);
 
-        String photoTypeName = ImagesTypeListRealm.getByID(photoType).getNm();
+//        Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+//        Instant instant = null;
+//        long timestamp = 0;
 
         switch (optionId) {
             case "151594":  // Контроль наличия фото витрины (до начала работ) !smarti!
@@ -119,9 +130,10 @@ public class OptionControlPhoto<T> extends OptionControl {
                 int quantityMax = Integer.parseInt(optionDB.getAmountMax());
                 if (quantityMax > 0) {
                     dad2ForGetStackPhotoDB = 0;
+                    date = wpDataDB.getDt().getTime() + 7200000L;
                     codeIZAForGetStackPhotoDB = wpDataDB.getCode_iza();
-                    dateFromForGetStackPhotoDB = Clock.getDatePeriodLong(wpDataDB.getDt().getTime(), -quantityMax);
-                    dateToForGetStackPhotoDB = Clock.getDatePeriodLong(wpDataDB.getDt().getTime(), 2);
+                    dateFromForGetStackPhotoDB = Clock.getDatePeriodLong(date, -quantityMax);
+                    dateToForGetStackPhotoDB = Clock.getDatePeriodLong(date, 2);
                 }
 
                 photoType = 10; // Проверка наличия Фото тележка с товаром (тип 10)
@@ -134,8 +146,9 @@ public class OptionControlPhoto<T> extends OptionControl {
                 if (quantityMax > 0) {
                     dad2ForGetStackPhotoDB = 0;
                     codeIZAForGetStackPhotoDB = wpDataDB.getCode_iza();
-                    dateFromForGetStackPhotoDB = Clock.getDatePeriodLong(wpDataDB.getDt().getTime(), -quantityMax);
-                    dateToForGetStackPhotoDB = Clock.getDatePeriodLong(wpDataDB.getDt().getTime(), 2);
+                    date = wpDataDB.getDt().getTime() + 7200000L;
+                    dateFromForGetStackPhotoDB = Clock.getDatePeriodLong(date, -quantityMax);
+                    dateToForGetStackPhotoDB = Clock.getDatePeriodLong(date, 2);
                 }
 
                 photoType = 31; // Фото товара на скалде
@@ -176,7 +189,16 @@ public class OptionControlPhoto<T> extends OptionControl {
 
         }
 
+//        получаем данные из таблицы фото
+        RealmResults<StackPhotoDB> stackPhotoDB =
+                dad2ForGetStackPhotoDB > 0 ?
+                        StackPhotoRealm.getPhotosByDAD2(dad2, photoType) :
+                        StackPhotoRealm.getPhotosByRangeDt(dateFromForGetStackPhotoDB / 1000, dateToForGetStackPhotoDB / 1000, codeIZAForGetStackPhotoDB, ((WpDataDB) document).getAddr_id(), photoType);
 
+
+        String photoTypeName = ImagesTypeListRealm.getByID(photoType).getNm();
+
+//        подводим итог
         if (stackPhotoDB != null && stackPhotoDB.size() < m) {
             ImagesTypeListDB item = ImagesTypeListRealm.getByID(photoType);
             stringBuilderMsg.append("Вы должны сделать: ").append(m).append(" фото с типом: ").append(item != null ? item.getNm() : typeNm).append(", а сделали: ").append(stackPhotoDB.size()).append(" - доделайте фотографии.");

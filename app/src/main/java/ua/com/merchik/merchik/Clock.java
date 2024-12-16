@@ -1,12 +1,19 @@
 package ua.com.merchik.merchik;
 
+import android.os.Build;
 import android.util.Log;
+
+import androidx.annotation.RequiresApi;
 
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.TimeZone;
 
 public class Clock {
 
@@ -89,11 +96,21 @@ public class Clock {
      *
      * 05.10.2022
      * P.S. work in milliseconds
+     *
+     * 16.12.2024
+     * Заменил старую логику на Calendar с учетом часовых поясов и зимнего/летнего времени
      * */
     public static long getDatePeriodLong(long date, int day) {
-        long res;
-        res = date + (day * 86400000L);
-        return res;
+//        long res;
+//        res = date + (day * 86400000L);
+//        return res;
+        // Получаем время в миллисекундах и учитываем часовой пояс
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTimeInMillis(date); // Устанавливаем время из wpDataDB.getDt().getTime()
+        // Добавляем или вычитаем дни с учетом часового пояса
+        calendar.add(Calendar.DAY_OF_YEAR, day);
+        // Возвращаем новое время в миллисекундах
+        return calendar.getTimeInMillis();
     }
 
 
