@@ -22,6 +22,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -1587,9 +1588,9 @@ public class TablesLoadingUnloading {
                     public void onResponse(retrofit2.Call<ResponseBody> call, retrofit2.Response<ResponseBody> response) {
                         if (response.isSuccessful() && response.body() != null) {
                             Log.e("TAG_TABLE", "PHOTO_TOVAR_URL_res: " + response.body().byteStream());
+
                             Bitmap bmp = BitmapFactory.decodeStream(response.body().byteStream());
                             String path = globals.saveImage1(bmp, imageType + "-" + list.get(finalI).getTovarId());
-
 
                             Log.e("TESTING", "2_SAVE PHOTO");
                             Log.e("TESTING", "2_SAVE PHOTO/path: " + path);
@@ -1624,6 +1625,7 @@ public class TablesLoadingUnloading {
                                     null,
                                     null,
                                     null);
+                            stackPhotoDB.setCode_iza(list.get(finalI).codeIZA);
 
                             RealmManager.stackPhotoSavePhoto(stackPhotoDB);
                         }
@@ -2670,9 +2672,9 @@ public class TablesLoadingUnloading {
             TasksAndReclamationsRequest data = new TasksAndReclamationsRequest();
             data.mod = "reclamation";
             data.act = "list_comment";
-
+// добавил 1 день!
             data.date_from = Clock.getHumanTimeYYYYMMDD(Clock.getDateLong(-20).getTime() / 1000);
-            data.date_to = Clock.getHumanTimeYYYYMMDD(Clock.getDateLong(2).getTime() / 1000);
+            data.date_to = Clock.getHumanTimeYYYYMMDD(Clock.getDateLong(3).getTime() / 1000);
 
             Gson gson = new Gson();
             String json = gson.toJson(data);

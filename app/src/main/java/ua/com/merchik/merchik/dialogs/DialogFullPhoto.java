@@ -7,14 +7,17 @@ import static ua.com.merchik.merchik.Globals.generateUniqueNumber;
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 import static ua.com.merchik.merchik.menu_main.decodeSampledBitmapFromResource;
 
+import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.text.InputType;
 import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
 import android.view.MotionEvent;
+import android.view.View;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
@@ -94,6 +97,8 @@ public class DialogFullPhoto {
     // ------------------------
     private ImageButton close, help, videoHelp, call;
 
+    public boolean isCommentSave = false;
+
     /**
      * Длинная рука
      */
@@ -115,7 +120,7 @@ public class DialogFullPhoto {
         recycler = dialog.findViewById(R.id.photos_recycler);
 
         indicatorRatingBar = dialog.findViewById(R.id.ratingBar3);
-        camera  = dialog.findViewById(R.id.camera_hand);
+        camera = dialog.findViewById(R.id.camera_hand);
 
         close = dialog.findViewById(R.id.imageButtonClose);
 
@@ -123,7 +128,7 @@ public class DialogFullPhoto {
         previous.setOnClickListener(v -> recyclerScroll(MoveTo.PREVIOUS));
     }
 
-    public void setCamera(Clicks.clickVoid clickVoid){
+    public void setCamera(Clicks.clickVoid clickVoid) {
         camera.setOnClickListener((view) -> {
             clickVoid.click();
         });
@@ -139,12 +144,42 @@ public class DialogFullPhoto {
 
     public void setClose(DialogData.DialogClickListener clickListener) {
         close.setOnClickListener(v -> {
-            clickListener.clicked();
+            Log.e("!!!!!!!!!!!!", "setClose: " + isCommentSave);
+            if (!comment.getText().toString().isEmpty() && !isCommentSave)
+                saveCommentAlert(clickListener);
+            else
+                clickListener.clicked();
         });
     }
 
+
     // ---------------------------------------------------------------------------------------------
 
+    private void saveCommentAlert(DialogData.DialogClickListener clickListener) {
+        new AlertDialog.Builder(context)
+                .setTitle("Коментар не збережено!")
+                .setMessage("Зберегти?")
+                .setCancelable(false)
+                .setNegativeButton("Нi", (it, which) -> {
+                    it.dismiss();
+                    clickListener.clicked();
+                })
+                .setPositiveButton("Так", (it, which) -> {
+                    StackPhotoDB row = photoLogData.get(POSITION_ADAPTER);
+                    RealmManager.INSTANCE.executeTransaction(realm -> {
+                        row.setComment(comment.getText().toString());
+                        row.setCommentUpload(true);
+                        row.setVpi(System.currentTimeMillis() / 1000);
+                        isCommentSave = true;
+                    });
+                    RealmManager.stackPhotoSavePhoto(row);
+                    it.dismiss();
+                    clickListener.clicked();
+                })
+                .show();
+//        Dialog alertDialog = new Dialog(context);
+
+    }
 
     public RatingType getRatingType() {
         return ratingType;
@@ -172,7 +207,7 @@ public class DialogFullPhoto {
     }
 
     public void getComment(String data, DialogData.DialogClickListener clickListener) {
-//        comment.setText(data);
+        comment.setText(data);
         comment.setSelection(comment.getText().length()); // Устанавливаем курсор
 
         comment.setSelectAllOnFocus(true);
@@ -180,6 +215,12 @@ public class DialogFullPhoto {
 
         comment.setImeOptions(EditorInfo.IME_ACTION_DONE);
         comment.setRawInputType(InputType.TYPE_CLASS_TEXT);
+
+        comment.setOnFocusChangeListener((v, hasFocus) -> {
+            if (!hasFocus && !comment.getText().toString().isEmpty()) {
+                Log.e("!!!!!!!!!!!!!", "+++++");
+            }
+        });
         comment.setOnEditorActionListener((v, actionId, event) -> {
             if (actionId == EditorInfo.IME_ACTION_DONE) {
                 String coment = v.getText().toString();
@@ -193,6 +234,7 @@ public class DialogFullPhoto {
                     row.setComment(coment);
                     row.setCommentUpload(true);
                     row.setVpi(System.currentTimeMillis() / 1000);
+                    isCommentSave = true;
                 });
                 RealmManager.stackPhotoSavePhoto(row);
 
@@ -206,22 +248,30 @@ public class DialogFullPhoto {
     }
 
     public void setPhotos(int pos, List<StackPhotoDB> data, PhotoLogPhotoAdapter.OnPhotoClickListener mOnPhotoClickListener, Clicks.clickVoid clickVoid) {
-        List<StackPhotoDB> list = data;
+//        List<StackPhotoDB> list = data;
 
-        photoLogData = list;
+        photoLogData = data;
         position = pos;
+        ratingType = RatingType.PHOTO;
 
         Log.e("setPhotos", "ratingType: " + ratingType);
 
         Log.e("setPhotos", "position: " + position);
         Log.e("setPhotos", "photoLogData: " + photoLogData.get(position).getId());
 
+        Log.e("setPhotos", "commentResult: " + commentResult);
+
+//        for (StackPhotoDB l : data) {
+//            Log.e("!!!!!!!!!!","getComment: " + l.getComment());
+//            Log.e("!!!!!!!!!!","comment: " + l.comment);
+//            Log.e("!!!!!!!!!!","commentUpload: " + l.commentUpload);
+//        }
 //        openFullSize.setOnClickListener(view -> {
 //            mOnPhotoClickListener.onPhotoClicked(view.getContext(), data.get(pos));
 ////            dialog.dismiss();
 //        });
 
-        PhotoLogPhotoAdapter adapter = new PhotoLogPhotoAdapter(list, (v, event) -> {
+        PhotoLogPhotoAdapter adapter = new PhotoLogPhotoAdapter(data, (v, event) -> {
             boolean result = true;
             //can scroll horizontally checks if there's still a part of the image
             //that can be scrolled until you reach the edge
@@ -251,7 +301,6 @@ public class DialogFullPhoto {
         }, mOnPhotoClickListener, clickVoid);
 
         LinearLayoutManager manager = new LinearLayoutManager(context, RecyclerView.HORIZONTAL, false);
-
 
         recycler.setLayoutManager(manager);
         recycler.setAdapter(adapter);
@@ -339,7 +388,6 @@ public class DialogFullPhoto {
                         Globals.writeToMLOG("ERROR", "DialogFullPhoto/setDVI", "Exception e: " + e);
                     }
 
-
                     // УСТАНОВКА РЕЙТИНГА И СОХРАНЕНИЕ ЕГО В БД
                     try {
                         if (photoLogData.get(visiblePosition).getMark() != null) {
@@ -384,6 +432,7 @@ public class DialogFullPhoto {
 
                         });
                     } catch (Exception e) {
+                        Log.e("!!!!!!!!", ">> " + e.getMessage());
                         Globals.writeToMLOG("ERROR", "DialogFullPhoto.Установка рейтинга фото", "Exception e: " + e);
                     }
 
@@ -458,6 +507,7 @@ public class DialogFullPhoto {
                     if (comment != null && !comment.equals("") && comment.length() > 1) {
                         row.setComment(comment);
                         row.setCommentUpload(true);
+                        isCommentSave = true;
                     }
                 });
                 RealmManager.stackPhotoSavePhoto(row);

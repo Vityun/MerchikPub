@@ -793,6 +793,7 @@ public class MakePhoto {
     public void showDialogPass(Context context, WPDataObj wpDataObj, OptionsDB option, Clicks.clickVoid click) {
 
         WpDataDB wp = WpDataRealm.getWpDataRowByDad2Id(wpDataObj.dad2);
+//        Log.e("!!!!!!!!!","wpDataObj -> user_comment: " + wpDataObj.);
 
         DialogData dialog = new DialogData(context);
         dialog.setTitle("Внесіть пароль!");
@@ -808,6 +809,7 @@ public class MakePhoto {
             UsersSDB user = SQL_DB.usersDao().getUserById(wp.getUser_id());
             long dad2 = wp.getCode_dad2();
 
+
             Log.e("UnlockCode", "date: " + Clock.getHumanTimeYYYYMMDD(date));
             Log.e("UnlockCode", "user: " + user.id);
             Log.e("UnlockCode", "dad2: " + dad2);
@@ -818,6 +820,7 @@ public class MakePhoto {
 
             Log.e("UnlockCode", "unlockCode: " + unlockCode);
             Log.e("UnlockCode", "unlockCode2: " + unlockCode2);
+            Log.e("!!!!!!!!!","wp -> user_comment: " + wp.user_comment);
 
             if (unlockCode.equals(res)) {
                 Toast.makeText(context, "Код прийнято", Toast.LENGTH_LONG).show();

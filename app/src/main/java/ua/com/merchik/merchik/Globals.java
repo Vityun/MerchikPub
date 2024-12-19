@@ -1415,6 +1415,7 @@ public class Globals {
     /**
      * Запись в лог
      */
+//    TODO сделать не в основном потоке
     public static void writeToMLOG(String type, String place, String msg) {
         try {
 //            File root = MyApplication.getAppContext().getExternalFilesDir(Environment.DIRECTORY_NOTIFICATIONS);
@@ -1820,6 +1821,38 @@ public class Globals {
         return Integer.parseInt(uniqueString);
     }
 
+    public static String generateIzaCode(String isp, String clientId, int addr_id) {
+        isp = padWithZeros(isp, 5);
+        clientId = padWithZeros(clientId, 5);
+        String addrId = padWithZeros(String.valueOf(addr_id), 5);
+
+        // Конструируем iza: "1" + первые 5 символов из каждой части
+        String iza = "1" + isp.substring(0, 5) + clientId.substring(0, 5) + addrId.substring(0, 5);
+
+        return iza;
+    }
+
+    public static String generateIzaCode(WpDataDB wpDataDB){
+        String isp = padWithZeros(wpDataDB.getIsp(), 5);
+        String clientId = padWithZeros(wpDataDB.getClient_id(), 5);
+        String addrId = padWithZeros(String.valueOf(wpDataDB.getAddr_id()), 5);
+
+        // Конструируем iza: "1" + первые 5 символов из каждой части
+        String iza = "1" + isp.substring(0, 5) + clientId.substring(0, 5) + addrId.substring(0, 5);
+
+        return iza;
+    }
+
+    // Метод для добавления ведущих нулей
+    private static String padWithZeros(String value, int length) {
+        if (value == null) {
+            value = ""; // Если значение null, задаём пустую строку
+        }
+        while (value.length() < length) {
+            value = "0" + value; // Добавляем ведущие нули
+        }
+        return value;
+    }
 
 }//--------------
 

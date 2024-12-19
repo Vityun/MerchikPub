@@ -11,6 +11,7 @@ import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.TimeZone;
@@ -105,8 +106,8 @@ public class Clock {
 //        res = date + (day * 86400000L);
 //        return res;
         // Получаем время в миллисекундах и учитываем часовой пояс
-        Calendar calendar = Calendar.getInstance();
-        calendar.setTimeInMillis(date); // Устанавливаем время из wpDataDB.getDt().getTime()
+        Calendar calendar = Calendar.getInstance(TimeZone.getDefault());
+        calendar.setTimeInMillis(date);
         // Добавляем или вычитаем дни с учетом часового пояса
         calendar.add(Calendar.DAY_OF_YEAR, day);
         // Возвращаем новое время в миллисекундах

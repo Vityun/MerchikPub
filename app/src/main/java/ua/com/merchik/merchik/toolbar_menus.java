@@ -706,6 +706,7 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                             exchange = new Exchange();
                             exchange.context = toolbar_menus.this;
                         }
+                        Exchange.exchange = 0;
                         exchange.startExchange();
 
                         exchange.uploadTARComments(null);

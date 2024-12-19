@@ -595,10 +595,15 @@ public class RealmManager {
     // STACK PHOTO:---------------------------------------------------------------------------------
     public static void stackPhotoSavePhoto(StackPhotoDB stackPhotoDB) {
         INSTANCE.beginTransaction();
-        Log.e("TAG_TABLE", "PHOTO_TOVAR_URL_path_id: " + stackPhotoDB.getId());
+//        Log.e("TAG_TABLE", "PHOTO_TOVAR_URL_path_id: " + stackPhotoDB.getId());
+//        Log.e("TAG_TABLE","PHOTO_TOVAR_URL_comment: " + stackPhotoDB.comment);
+//        Log.e("TAG_TABLE","PHOTO_TOVAR_URL_photo_id: " + stackPhotoDB.getId());
+//        Log.e("TAG_TABLE","PHOTO_TOVAR_URL_commentUpload: " + stackPhotoDB.isCommentUpload());
+//        Log.e("TAG_TABLE","PHOTO_TOVAR_URL_photo_num: " + stackPhotoDB.photo_num);
         INSTANCE.copyToRealmOrUpdate(stackPhotoDB);
         INSTANCE.commitTransaction();
     }
+//    20241217_162210249_2954396291348853998
 
     public static void stackPhotoSavePhoto(List<StackPhotoDB> stackPhotoDB) {
         INSTANCE.beginTransaction();

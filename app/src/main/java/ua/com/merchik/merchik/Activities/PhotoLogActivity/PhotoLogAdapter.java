@@ -311,8 +311,8 @@ public class PhotoLogAdapter extends RecyclerView.Adapter<PhotoLogAdapter.ViewHo
 
                 if (photoLogMode.equals(PhotoLogMode.SAMPLE_PHOTO) && openDefaultStarDialog) {
                     if (getBindingAdapterPosition() == 0) {
-//                        Toast.makeText(mContext, "2222222222222222222222222222", Toast.LENGTH_SHORT).show();
-                        openDialog(photoLogMode, photoLogDat, mOnPhotoClickListener);
+                        Toast.makeText(mContext, "2222222222222222222222222222", Toast.LENGTH_SHORT).show();
+                        openDialog(photoLogMode, photoLogDat, mOnPhotoClickListener, 0);
                         openDefaultStarDialog = false;
                     }
                 }
@@ -320,7 +320,7 @@ public class PhotoLogAdapter extends RecyclerView.Adapter<PhotoLogAdapter.ViewHo
                 // 13/08/2020 Выгрузка фоток из Журнала фото
                 imageView.setOnClickListener(v -> {
 //                    Toast.makeText(mContext, "11111111111111111111111111111111111", Toast.LENGTH_SHORT).show();
-                    openDialog(photoLogMode, photoLogDat, mOnPhotoClickListener);
+                    openDialog(photoLogMode, photoLogDat, mOnPhotoClickListener, getBindingAdapterPosition());
                 });
 
                 //04.01.2021 Долгое нажатие - выгрузка фото
@@ -399,7 +399,7 @@ public class PhotoLogAdapter extends RecyclerView.Adapter<PhotoLogAdapter.ViewHo
             }
         }
 
-        public void openDialog(PhotoLogMode photoLogMode, StackPhotoDB photoLogDat, PhotoLogPhotoAdapter.OnPhotoClickListener mOnPhotoClickListener) {
+        public void openDialog(PhotoLogMode photoLogMode, StackPhotoDB photoLogDat, PhotoLogPhotoAdapter.OnPhotoClickListener mOnPhotoClickListener, int position) {
 
             if (photoLogMode.equals(PhotoLogMode.SAMPLE_PHOTO)) {
 
@@ -427,13 +427,13 @@ public class PhotoLogAdapter extends RecyclerView.Adapter<PhotoLogAdapter.ViewHo
             } else {
 
                 try {
-                    Log.e("setPhotos", "2position: " + getAdapterPosition());
-                    Log.e("setPhotos", "2photoLogData: " + photoLogData.get(getAdapterPosition()).getId());
-
-
+                    Log.e("setPhotos", "2position: " + getBindingAdapterPosition());
+                    Log.e("setPhotos", "2photoLogData: " + photoLogData.get(position).getId());
+//коректно
                     DialogFullPhoto dialog = new DialogFullPhoto(mContext);
                     Collections.reverse(photoLogData);
-                    dialog.setPhotos(getAdapterPosition(), photoLogData, mOnPhotoClickListener, dialog::dismiss);
+
+                    dialog.setPhotos(position, photoLogData, mOnPhotoClickListener, dialog::dismiss);
 
                     dialog.setTextInfo(photoData(photoLogDat));
                     dialog.getComment(photoLogDat.getComment(), () -> {
@@ -446,6 +446,7 @@ public class PhotoLogAdapter extends RecyclerView.Adapter<PhotoLogAdapter.ViewHo
                         RealmManager.stackPhotoSavePhoto(photoLogDat);
                         Toast.makeText(mContext, "Комментарий сохранён", Toast.LENGTH_LONG).show();
                     });
+
 
                     try {
                         dialog.setTask(photoLogDat.getUser_id(), photoLogDat.getAddr_id(), photoLogDat.getClient_id(), photoLogDat.getCode_dad2(), photoLogDat);
@@ -490,6 +491,7 @@ public class PhotoLogAdapter extends RecyclerView.Adapter<PhotoLogAdapter.ViewHo
     public void onBindViewHolder(@NonNull PhotoLogAdapter.ViewHolder viewHolder, int i) {
         int c = getItemCount() - i - 1; // Отобразить снизу вверх
         StackPhotoDB photoLogDat = photoLogData.get(c);
+//        StackPhotoDB photoLogDat = photoLogData.get(i); // Используем прямой индекс
         viewHolder.bind(photoLogDat);
     }
 

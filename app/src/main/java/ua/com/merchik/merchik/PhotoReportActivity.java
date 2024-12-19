@@ -1176,6 +1176,7 @@ public class PhotoReportActivity extends toolbar_menus {
                     String customerNmText = "";
                     String addressNmText = "";
 
+
                     try {
                         if (RealmManager.getUsersNm(user_id) != null)
                             userNmText = RealmManager.getUsersNm(user_id);
@@ -1189,6 +1190,12 @@ public class PhotoReportActivity extends toolbar_menus {
                         // Ошибка NPE при получении имени пользователя с БД
                         globals.alertDialogMsg(this, "Фото сохранено, но возникли некоторые проблемы: " + e);
                     }
+
+                    String iza = Globals.generateIzaCode(
+                            userNmText,
+                            wpDataObj.getCustomerId(),
+                            wpDataObj.getAddressId()
+                    );
 
                     StackPhotoDB stackPhotoDB = new StackPhotoDB(
                             id,
@@ -1217,8 +1224,9 @@ public class PhotoReportActivity extends toolbar_menus {
                             false,
                             userNmText,
                             customerNmText,
-                            addressNmText
-                    );
+                            addressNmText);
+
+                    stackPhotoDB.setCode_iza(iza);
 
                     // Проверка - есть ли что-то NULL для сохранения в БД
                     RealmManager.stackPhotoSavePhoto(stackPhotoDB);
@@ -1361,8 +1369,7 @@ public class PhotoReportActivity extends toolbar_menus {
                             false,
                             userNmText,
                             customerNmText,
-                            addressNmText
-                    );
+                            addressNmText);
 
                     stackPhotoDB.setPhoto_type(Integer.valueOf(MakePhoto.photoType));
                     stackPhotoDB.img_src_id = MakePhoto.img_src_id;
@@ -1372,7 +1379,7 @@ public class PhotoReportActivity extends toolbar_menus {
                     stackPhotoDB.example_id = MakePhoto.example_id;
                     stackPhotoDB.example_img_id = MakePhoto.example_img_id;
 
-                    stackPhotoDB.code_iza = wp.getCode_iza();   // Вмазал код ИЗА что б не крашился тип 31 фото в своей опции контроля (и всегда был с фоткой)
+                    stackPhotoDB.setCode_iza(wp.getCode_iza());   // Вмазал код ИЗА что б не крашился тип 31 фото в своей опции контроля (и всегда был с фоткой)
 
                     if (MakePhoto.photoType.equals("4")) {
                         stackPhotoDB.tovar_id = MakePhoto.tovarId;

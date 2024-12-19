@@ -21,6 +21,7 @@ import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.Options.OptionControl;
 import ua.com.merchik.merchik.Options.Options;
+import ua.com.merchik.merchik.data.Data;
 import ua.com.merchik.merchik.data.Database.Room.AddressSDB;
 import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
 import ua.com.merchik.merchik.data.OptionMassageType;
@@ -93,15 +94,10 @@ public class OptionControlPhoto<T> extends OptionControl {
         int photoType = 0;
 
         long dad2ForGetStackPhotoDB = dad2;
-        String codeIZAForGetStackPhotoDB = "";
-        long date = 0;
+        String[] codeIZAForGetStackPhotoDB = null;
         long dateFromForGetStackPhotoDB = 0;
         long dateToForGetStackPhotoDB = 0;
-
-
-//        Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
-//        Instant instant = null;
-//        long timestamp = 0;
+        String isp = wpDataDB.getIsp_fact();
 
         switch (optionId) {
             case "151594":  // Контроль наличия фото витрины (до начала работ) !smarti!
@@ -127,13 +123,18 @@ public class OptionControlPhoto<T> extends OptionControl {
                 break;
 
             case "132971": {
+                Log.e("!!!!!!!!!!!!!!!!!!","132971+++");
                 int quantityMax = Integer.parseInt(optionDB.getAmountMax());
+                Log.e("!!!!!!!!!!!!!!!!!!","quantityMax: " + quantityMax);
+
                 if (quantityMax > 0) {
                     dad2ForGetStackPhotoDB = 0;
-                    date = wpDataDB.getDt().getTime() + 7200000L;
-                    codeIZAForGetStackPhotoDB = wpDataDB.getCode_iza();
-                    dateFromForGetStackPhotoDB = Clock.getDatePeriodLong(date, -quantityMax);
-                    dateToForGetStackPhotoDB = Clock.getDatePeriodLong(date, 2);
+                    long date = wpDataDB.getDt().getTime();
+//                    codeIZAForGetStackPhotoDB = wpDataDB.getCode_iza();
+                    codeIZAForGetStackPhotoDB = new String[] {wpDataDB.getCode_iza(),
+                            replaceSubstring(wpDataDB.getCode_iza(), wpDataDB.getIsp_fact(), 1, 5)};
+                    dateFromForGetStackPhotoDB = Clock.getDatePeriodLong(date, -(quantityMax-1));
+                    dateToForGetStackPhotoDB = Clock.getDatePeriodLong(date, 4);
                 }
 
                 photoType = 10; // Проверка наличия Фото тележка с товаром (тип 10)
@@ -141,14 +142,15 @@ public class OptionControlPhoto<T> extends OptionControl {
                 break;
             }
 
-            case "141361": {
+           case "141361": {
                 int quantityMax = Integer.parseInt(optionDB.getAmountMax());
                 if (quantityMax > 0) {
                     dad2ForGetStackPhotoDB = 0;
-                    codeIZAForGetStackPhotoDB = wpDataDB.getCode_iza();
-                    date = wpDataDB.getDt().getTime() + 7200000L;
-                    dateFromForGetStackPhotoDB = Clock.getDatePeriodLong(date, -quantityMax);
-                    dateToForGetStackPhotoDB = Clock.getDatePeriodLong(date, 2);
+                    long date = wpDataDB.getDt().getTime();
+                    codeIZAForGetStackPhotoDB = new String[] {wpDataDB.getCode_iza(),
+                            replaceSubstring(wpDataDB.getCode_iza(), wpDataDB.getIsp_fact(), 1, 5)};
+                    dateFromForGetStackPhotoDB = Clock.getDatePeriodLong(date, -(quantityMax-1));
+                    dateToForGetStackPhotoDB = Clock.getDatePeriodLong(date, 4);
                 }
 
                 photoType = 31; // Фото товара на скалде
@@ -189,12 +191,13 @@ public class OptionControlPhoto<T> extends OptionControl {
 
         }
 
+
+        int adress = ((WpDataDB) document).getAddr_id();
 //        получаем данные из таблицы фото
         RealmResults<StackPhotoDB> stackPhotoDB =
                 dad2ForGetStackPhotoDB > 0 ?
                         StackPhotoRealm.getPhotosByDAD2(dad2, photoType) :
-                        StackPhotoRealm.getPhotosByRangeDt(dateFromForGetStackPhotoDB / 1000, dateToForGetStackPhotoDB / 1000, codeIZAForGetStackPhotoDB, ((WpDataDB) document).getAddr_id(), photoType);
-
+                        StackPhotoRealm.getPhotosByRangeDt(dateFromForGetStackPhotoDB / 1000, dateToForGetStackPhotoDB / 1000, codeIZAForGetStackPhotoDB, adress, photoType);
 
         String photoTypeName = ImagesTypeListRealm.getByID(photoType).getNm();
 
@@ -221,7 +224,7 @@ public class OptionControlPhoto<T> extends OptionControl {
             } else if (addressSDB.tpId == 6698) {   // Для КОЛО ФЗ ФТС НЕ проверяем
                 signal = false;
                 stringBuilderMsg.append(", але для КОЛО, наявність ФЗ ФТС не перевіряємо.");
-            } else if (addressSDB.tpId  == 7135) {   // Для БОКС-маркет ФЗ ФТС НЕ проверяем
+            } else if (addressSDB.tpId == 7135) {   // Для БОКС-маркет ФЗ ФТС НЕ проверяем
                 signal = false;
                 stringBuilderMsg.append(", але для БОКС-маркет, наявність ФЗ ФТС не перевіряємо.");
             } else if (Integer.parseInt(wpDataDB.getClient_id()) == 91478 || //91478-Уяви
@@ -265,5 +268,20 @@ public class OptionControlPhoto<T> extends OptionControl {
             }
         }
         checkUnlockCode(optionDB);
+    }
+
+    // Метод для замены символов
+    public static String replaceSubstring(String original, String replacement, int start, int end) {
+        // Проверяем, что строки достаточно длинные для операции
+        if (original == null || replacement == null || start < 0 || end >= original.length() || end - start + 1 != replacement.length()) {
+            throw new IllegalArgumentException("Некорректные данные");
+        }
+
+        // Разделяем исходную строку на части
+        String part1 = original.substring(0, start);  // Часть до замены
+        String part2 = original.substring(end + 1);   // Часть после замены
+
+        // Возвращаем новую строку, объединяя части и замену
+        return part1 + replacement + part2;
     }
 }

@@ -1407,6 +1407,16 @@ public class menu_main extends AppCompatActivity {
                         // Ошибка NPE при получении имени пользователя с БД
                         globals.alertDialogMsg(this, "Фото сохранено, но возникли некоторые проблемы: " + e);
                     }
+                    String iza = "";
+                    try {
+                         iza = Globals.generateIzaCode(
+                                user_id,
+                                customer_id,
+                                addrId
+                        );
+                    } catch (Exception e){
+                        Log.e("Exception",e.getMessage());
+                    }
 
                     StackPhotoDB stackPhotoDB = new StackPhotoDB(
                             id,
@@ -1435,8 +1445,8 @@ public class menu_main extends AppCompatActivity {
                             false,
                             userNmText,
                             customerNmText,
-                            addressNmText
-                    );
+                            addressNmText);
+                    stackPhotoDB.setCode_iza(iza);
 
                     // Проверка - есть ли что-то NULL для сохранения в БД
                     RealmManager.stackPhotoSavePhoto(stackPhotoDB);

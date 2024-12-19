@@ -176,6 +176,7 @@ public class PlanogramAdapter extends RecyclerView.Adapter<PlanogramAdapter.View
                                 RealmManager.INSTANCE.executeTransaction(realm -> {
                                     stackPhotoDB.setComment(dialog.commentResult);
                                     stackPhotoDB.setCommentUpload(true);
+                                    dialog.isCommentSave = true;
                                 });
                                 RealmManager.stackPhotoSavePhoto(stackPhotoDB);
                                 Toast.makeText(image.getContext(), "Комментарий сохранён", Toast.LENGTH_LONG).show();

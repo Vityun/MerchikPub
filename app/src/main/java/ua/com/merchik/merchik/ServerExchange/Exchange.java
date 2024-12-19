@@ -148,7 +148,7 @@ public class Exchange {
 
     private final Globals globals = new Globals();
     public Context context;
-    private static long exchange = 0;
+    public static long exchange = 0;
     //    private int retryTime = 120000;   // 2
     private final int retryTime = 600000;     // 10
 //    private int retryTime = 60000;     // 1
@@ -189,6 +189,7 @@ public class Exchange {
 //        };
 
 //        new Thread(() -> {
+
         try {
             Log.e("startExchange", "start");
 
@@ -1465,7 +1466,7 @@ public class Exchange {
     }
 
 
-    /**/
+    /* выгрузка доп информации к фото */
     public void sendPhotoInformation(PhotoInformation data, ExchangeInterface.ExchangeResponseInterface exchange) {
         if (data != null) {
             if (data.data != null && data.data.size() > 0) {
@@ -2001,7 +2002,7 @@ public class Exchange {
                             stackPhotoDB.addr_id = Integer.valueOf(item.getAddrId());
                             stackPhotoDB.approve = Integer.valueOf(item.getApprove());
                             stackPhotoDB.dvi = Integer.valueOf(item.getDvi());
-                            stackPhotoDB.code_iza = item.codeIZA;
+                            stackPhotoDB.setCode_iza(item.codeIZA);
                             stackPhotoDB.setVpi(0);
                             stackPhotoDB.setCreate_time(Long.parseLong(item.getDt()) * 1000);
                             stackPhotoDB.setUpload_to_server(0);

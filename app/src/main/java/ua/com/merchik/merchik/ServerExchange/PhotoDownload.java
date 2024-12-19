@@ -171,6 +171,8 @@ public class PhotoDownload {
                                     stackPhotoDB.setUpload_time(0);
                                     stackPhotoDB.setUpload_status(0);
                                     stackPhotoDB.setStatus(false);
+                                    stackPhotoDB.setCode_iza(item.codeIZA);
+
 
                                     RealmManager.stackPhotoSavePhoto(stackPhotoDB);
                                     result.onSuccess("photo id = " + id +
@@ -506,7 +508,6 @@ public class PhotoDownload {
 
 //        Globals.writeToMLOG("INFO", "PetrovExchangeTest/startExchange/getPhotoURLFromServer/downloadPhoto", "Фоток с типом 18: " + count);
 
-
         result.onSuccess("Фоток с типом 18: " + count);
     }
 
@@ -601,7 +602,7 @@ public class PhotoDownload {
 
                                 stackPhotoDB.showcase_id = item.showcase_id;
 
-                                stackPhotoDB.code_iza = item.codeIZA;
+                                stackPhotoDB.setCode_iza(item.codeIZA);
 
                                 stackPhotoDB.setDvi(Integer.valueOf(item.getDvi()));
 
@@ -610,7 +611,6 @@ public class PhotoDownload {
                                 } catch (Exception e) {
                                     Globals.writeToMLOG("INFO", "PhotoMerchikExchange/getPhotoFromSite/savePhotoToDB", "Exception e: " + e);
                                 }
-
 
                                 RealmManager.stackPhotoSavePhoto(stackPhotoDB);
 
@@ -716,7 +716,6 @@ public class PhotoDownload {
             }
         });
     }
-
 
     // TODO )
     //... посмотрел я на код который писал ранее.. это конечно жесть. Сейчас попробую написать
@@ -929,7 +928,7 @@ public class PhotoDownload {
 
                 stackPhotoDB.setDvi(Integer.valueOf(item.getDvi()));
 
-                stackPhotoDB.code_iza = item.codeIZA;
+                stackPhotoDB.setCode_iza(item.codeIZA);
 
                 stackList.add(stackPhotoDB);
 

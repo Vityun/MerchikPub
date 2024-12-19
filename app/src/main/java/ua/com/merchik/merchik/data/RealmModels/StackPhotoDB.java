@@ -78,7 +78,7 @@ public class StackPhotoDB extends RealmObject implements DataObjectUI {
 
     public String img_src_id;
     public String showcase_id;
-    public String code_iza;
+    private String code_iza;
     public String planogram_id;
     public String planogram_img_id;
 
@@ -633,5 +633,13 @@ public class StackPhotoDB extends RealmObject implements DataObjectUI {
     @Override
     public List<String> getFieldsForOrderOnUI() {
         return DataObjectUI.DefaultImpls.getFieldsForOrderOnUI(this);
+    }
+
+    public String getCode_iza() {
+        return code_iza;
+    }
+
+    public void setCode_iza(String code_iza) {
+        this.code_iza = code_iza;
     }
 }

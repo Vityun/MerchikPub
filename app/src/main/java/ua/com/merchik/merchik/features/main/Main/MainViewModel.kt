@@ -155,6 +155,7 @@ abstract class MainViewModel(
 
     open fun onSelectedItemsUI(itemsUI: List<DataItemUI>) {}
 
+//    TODO разобраться, как так получается что возвращает пустые списки
     open fun getFieldsForCommentsImage(): List<String>? { return null }
 
     open fun getDefaultHideUserFields(): List<String>? { return null }

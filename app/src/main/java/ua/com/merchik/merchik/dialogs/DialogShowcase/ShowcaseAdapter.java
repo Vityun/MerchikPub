@@ -134,6 +134,7 @@ public class ShowcaseAdapter extends RecyclerView.Adapter<ShowcaseAdapter.ViewHo
                     SpannableString spannableString = new SpannableString(pl);
                     spannableString.setSpan(new StyleSpan(android.graphics.Typeface.BOLD), 0, pl.length(), SpannableString.SPAN_EXCLUSIVE_EXCLUSIVE);
 
+                    Log.e("CASE: 1 $$$$$$$$$","+");
                     SpannableString spannableString2 = new SpannableString(createLinkedString(showcase, planogram));
 
                     SpannableStringBuilder spannableStringRes = new SpannableStringBuilder();
@@ -188,12 +189,14 @@ public class ShowcaseAdapter extends RecyclerView.Adapter<ShowcaseAdapter.ViewHo
                             }, ()->{});
 
                             dialog.setTextInfo(photoData(stackPhotoDB));
+                            Log.e("CASE: 1 $$$$$$$$$","+");
                             dialog.getComment(stackPhotoDB.getComment(), () -> {
                                 Globals.writeToMLOG("INFO", "SAVE_PHOTO_COMMENT", "stackPhotoDB: " + new Gson().toJson(stackPhotoDB));
                                 Globals.writeToMLOG("INFO", "SAVE_PHOTO_COMMENT", "stackPhotoDB.getComment(): " + stackPhotoDB.getComment());
                                 RealmManager.INSTANCE.executeTransaction(realm -> {
                                     stackPhotoDB.setComment(dialog.commentResult);
                                     stackPhotoDB.setCommentUpload(true);
+                                    dialog.isCommentSave = true;
                                 });
                                 RealmManager.stackPhotoSavePhoto(stackPhotoDB);
                                 Toast.makeText(image.getContext(), "Комментарий сохранён", Toast.LENGTH_LONG).show();
@@ -285,6 +288,7 @@ public class ShowcaseAdapter extends RecyclerView.Adapter<ShowcaseAdapter.ViewHo
                                 RealmManager.INSTANCE.executeTransaction(realm -> {
                                     stackPhotoDB.setComment(dialog.commentResult);
                                     stackPhotoDB.setCommentUpload(true);
+                                    dialog.isCommentSave = true;
                                 });
                                 RealmManager.stackPhotoSavePhoto(stackPhotoDB);
                                 Toast.makeText(textView.getContext(), "Комментарий сохранён", Toast.LENGTH_LONG).show();
