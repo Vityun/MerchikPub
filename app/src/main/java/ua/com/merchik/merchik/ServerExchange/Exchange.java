@@ -302,7 +302,7 @@ public class Exchange {
                  * */
 
                 try {
-                    globals.fixMP(null, null);    //
+                    globals.fixMP(null, null);
                     Globals.writeToMLOG("INFO", "startExchange/globals.fixMP();", "locationGPS: " + Globals.locationGPS);
                 } catch (Exception e) {
                     Globals.writeToMLOG("ERROR", "startExchange/globals.fixMP();", "Exception e: " + e);
