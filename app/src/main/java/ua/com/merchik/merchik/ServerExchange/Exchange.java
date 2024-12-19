@@ -287,7 +287,6 @@ public class Exchange {
                                 Log.e("````", "err", e);
                             }
                         }
-
                         @Override
                         public void onFailure(String error) {
                             Globals.writeToMLOG("ERROR", "Exchange/SamplePhotoExchange()/onFailure", "error: " + error);
