@@ -97,7 +97,6 @@ public class OptionControlPhoto<T> extends OptionControl {
         String[] codeIZAForGetStackPhotoDB = null;
         long dateFromForGetStackPhotoDB = 0;
         long dateToForGetStackPhotoDB = 0;
-        String isp = wpDataDB.getIsp_fact();
 
         switch (optionId) {
             case "151594":  // Контроль наличия фото витрины (до начала работ) !smarti!
@@ -123,20 +122,15 @@ public class OptionControlPhoto<T> extends OptionControl {
                 break;
 
             case "132971": {
-                Log.e("!!!!!!!!!!!!!!!!!!","132971+++");
                 int quantityMax = Integer.parseInt(optionDB.getAmountMax());
-                Log.e("!!!!!!!!!!!!!!!!!!","quantityMax: " + quantityMax);
-
                 if (quantityMax > 0) {
                     dad2ForGetStackPhotoDB = 0;
                     long date = wpDataDB.getDt().getTime();
-//                    codeIZAForGetStackPhotoDB = wpDataDB.getCode_iza();
                     codeIZAForGetStackPhotoDB = new String[] {wpDataDB.getCode_iza(),
                             replaceSubstring(wpDataDB.getCode_iza(), wpDataDB.getIsp_fact(), 1, 5)};
                     dateFromForGetStackPhotoDB = Clock.getDatePeriodLong(date, -(quantityMax-1));
                     dateToForGetStackPhotoDB = Clock.getDatePeriodLong(date, 4);
                 }
-
                 photoType = 10; // Проверка наличия Фото тележка с товаром (тип 10)
                 m = m > 0 ? m : 1;
                 break;
