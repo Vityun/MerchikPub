@@ -5,7 +5,8 @@ import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 import android.content.Context;
 import android.util.Log;
 
-import java.sql.Date;
+
+import java.util.Date;
 
 import io.realm.RealmResults;
 import ua.com.merchik.merchik.Clock;
@@ -92,6 +93,8 @@ public class OptionControlPhoto<T> extends OptionControl {
         String[] codeIZAForGetStackPhotoDB = null;
         long dateFromForGetStackPhotoDB = 0;
         long dateToForGetStackPhotoDB = 0;
+        Date data05report = usersSDB.reportDate05; // Дата проведения 20й отчетности
+        Date documentDate = wpDataDB.getDt();
 
         switch (optionId) {
             case "151594":  // Контроль наличия фото витрины (до начала работ) !smarti!
@@ -229,6 +232,9 @@ public class OptionControlPhoto<T> extends OptionControl {
                         .append(" но, для ")
                         .append(clientName)
                         .append(" сделано исключение.");
+            } else if (data05report == null || data05report.after(documentDate)) {
+                signal = false;
+                stringBuilderMsg.append(", але виконавець ще не провiв свого 5го звiту, наявність ФЗ ФТС не перевіряємо.");
             }
         }
 
