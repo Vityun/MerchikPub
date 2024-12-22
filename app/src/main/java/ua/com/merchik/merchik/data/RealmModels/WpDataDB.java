@@ -26,7 +26,7 @@ public class WpDataDB extends RealmObject implements Parcelable, DataObjectUI {
     private String isp_fact;
     private int tech_sup_active;
     private int addr_id;
-    private int user_id;
+    private int user_id;// пользователь который выполняет работы (ИСПОЛНИТЕЛЬ работ)
     private long dt_start;
     private long dt_stop;
     private int action;

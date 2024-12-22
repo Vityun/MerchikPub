@@ -82,6 +82,7 @@ import ua.com.merchik.merchik.data.Database.Room.AddressSDB;
 import ua.com.merchik.merchik.data.Database.Room.CustomerSDB;
 import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
 import ua.com.merchik.merchik.data.Database.Room.TranslatesSDB;
+import ua.com.merchik.merchik.data.Database.Room.UsersSDB;
 import ua.com.merchik.merchik.data.Database.Room.ViewListSDB;
 import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteHintsDB;
 import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteObjects.SiteObjectsDB;
@@ -131,8 +132,12 @@ public class DetailedReportActivity extends toolbar_menus {
     public static double SKUFact = 0;
     public static double OFS = 0;   // % сколько нет товаров
     public static double OOS = 0;   // Представленность %
-    public static List<TovarDB> detailedReportTovList = null;
-    public static List<ReportPrepareDB> detailedReportRPList = null;
+    public static List<TovarDB> detailedReportTovList = null; // список ВСЕХ товаров клиента из этого посещения
+    public static List<ReportPrepareDB> detailedReportRPList = null;    // список "ТОВАРОВ" которые исполнитель должен выложить на полки
+
+    public static int userId;
+    public static UsersSDB usersSDB = null;
+
     //==================================
 
 
@@ -461,6 +466,11 @@ public class DetailedReportActivity extends toolbar_menus {
         }
 
         wpDataDB = rowWP;
+        TasksAndReclamationsSDB tasksAndReclamationsSDB;
+
+        //userId = wpDataDB.getUser_id() OR tasksAndReclamationsSDB.vinovnik;
+
+        usersSDB = SQL_DB.usersDao().getUserById(wpDataDB.getUser_id());
 
 //        Data D = new Data(
 //                rowWP.getId(),

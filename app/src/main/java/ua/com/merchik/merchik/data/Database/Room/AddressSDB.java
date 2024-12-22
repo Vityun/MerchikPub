@@ -17,6 +17,9 @@ import ua.com.merchik.merchik.dataLayer.DataObjectUI;
 import ua.com.merchik.merchik.dataLayer.model.MerchModifier;
 import ua.com.merchik.merchik.features.main.AddressSDBOverride;
 
+/**
+ * Таблица Адресов
+ * */
 @Entity(tableName = "address")
 public class AddressSDB implements DataObjectUI {
 

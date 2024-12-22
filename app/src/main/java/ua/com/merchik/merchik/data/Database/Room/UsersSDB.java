@@ -17,6 +17,9 @@ import java.util.List;
 import ua.com.merchik.merchik.dataLayer.DataObjectUI;
 import ua.com.merchik.merchik.dataLayer.model.MerchModifier;
 
+/**
+ * Таблица в которой хронятся ВСЕ сотрудники ДОСТУПНЫЕ данному пользователю (который залогинен)
+ * */
 @Entity(tableName = "sotr")
 public class UsersSDB implements DataObjectUI{
     @SerializedName("user_id")

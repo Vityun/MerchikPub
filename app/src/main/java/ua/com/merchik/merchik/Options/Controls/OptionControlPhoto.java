@@ -3,27 +3,18 @@ package ua.com.merchik.merchik.Options.Controls;
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
 import android.content.Context;
-import android.os.Build;
 import android.util.Log;
 
-import androidx.annotation.RequiresApi;
-
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.LocalTime;
-import java.time.ZoneOffset;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.TimeZone;
+import java.sql.Date;
 
 import io.realm.RealmResults;
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.Options.OptionControl;
 import ua.com.merchik.merchik.Options.Options;
-import ua.com.merchik.merchik.data.Data;
 import ua.com.merchik.merchik.data.Database.Room.AddressSDB;
 import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
+import ua.com.merchik.merchik.data.Database.Room.UsersSDB;
 import ua.com.merchik.merchik.data.OptionMassageType;
 import ua.com.merchik.merchik.data.RealmModels.ImagesTypeListDB;
 import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
@@ -39,6 +30,7 @@ public class OptionControlPhoto<T> extends OptionControl {
     private StringBuilder optionResultStr = new StringBuilder();
 
     private WpDataDB wpDataDB;
+    private UsersSDB usersSDB;
     private Long dad2;
     private AddressSDB addressSDB;
     private String clientName;
@@ -66,6 +58,9 @@ public class OptionControlPhoto<T> extends OptionControl {
             this.wpDataDB = (WpDataDB) document;
             this.dad2 = wpDataDB.getCode_dad2();
             this.clientName = SQL_DB.customerDao().getById(((WpDataDB) document).getClient_id()).nm;
+
+            usersSDB = SQL_DB.usersDao().getUserById(((WpDataDB) document).getUser_id());
+            Date data = usersSDB.reportDate20; // Дата проведения 20й отчетности
         } else if (document instanceof TasksAndReclamationsSDB) {
             this.dad2 = ((TasksAndReclamationsSDB) document).codeDad2SrcDoc;
         }

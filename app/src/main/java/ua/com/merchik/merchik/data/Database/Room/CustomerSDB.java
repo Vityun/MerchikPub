@@ -17,7 +17,9 @@ import java.util.List;
 import ua.com.merchik.merchik.dataLayer.DataObjectUI;
 import ua.com.merchik.merchik.dataLayer.model.MerchModifier;
 import ua.com.merchik.merchik.features.main.CustomerSDBOverride;
-
+/**
+ * Таблица КЛИЕНТОВ доступных данному пользователю
+ * */
 @Entity(tableName = "client")
 public class CustomerSDB implements DataObjectUI {
     @SerializedName("client_id")
