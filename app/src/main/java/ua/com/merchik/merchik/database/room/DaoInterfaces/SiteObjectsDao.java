@@ -18,6 +18,9 @@ public interface SiteObjectsDao {
     @Query("SELECT * FROM site_objects WHERE additional_id IN (:additionalId)")
     List<SiteObjectsSDB> getObjectsById(List<Integer> additionalId);
 
+    @Query("SELECT * FROM site_objects WHERE id = :id")
+    SiteObjectsSDB getObjectsByRealId(int id);
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     void insertAll(List<SiteObjectsSDB> data);
 
