@@ -407,7 +407,7 @@ public class PhotoReports {
 //        MultipartBody.Part photo = MultipartBody.Part.createFormData("photos[]", file.getName(), RequestBody.create(MEDIA_TYPE_JPG, file));
         Globals.writeToMLOG("INFO", "PhotoReports.buildCall", "photo: " + photo);
 
-        // Создание вызова
+        // Создание вызова выгрузка фото
         retrofit2.Call<JsonObject> call = RetrofitBuilder.getRetrofitInterface()
                 .SEND_PHOTO_2_BODY(mod2, act2, client_id2, addr_id2, date2, img_type_id2, photo_user_id2, client_tovar_group2, doc_num2, theme_id2, comment2, dvi2, codeDad2, gp2, tov2, img_src_id2, showcase_id2, planogram_id2, planogram_img_id2, photo);
 

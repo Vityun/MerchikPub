@@ -1,5 +1,6 @@
 package ua.com.merchik.merchik.Activities.DetailedReportActivity;
 
+import static ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity.NEED_UPDATE_UI_REQUEST;
 import static ua.com.merchik.merchik.Options.Options.NNKMode.CHECK_CLICK;
 import static ua.com.merchik.merchik.Options.Options.NNKMode.NULL;
 import static ua.com.merchik.merchik.data.OptionMassageType.Type.DIALOG;
@@ -9,17 +10,21 @@ import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
 import android.animation.ArgbEvaluator;
 import android.animation.ValueAnimator;
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.Typeface;
+import android.os.Bundle;
 import android.text.Html;
+import android.text.Spannable;
 import android.text.SpannableString;
 import android.text.SpannableStringBuilder;
 import android.text.Spanned;
 import android.text.TextPaint;
 import android.text.style.ClickableSpan;
 import android.text.style.ForegroundColorSpan;
+import android.text.style.UnderlineSpan;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -30,6 +35,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.constraintlayout.widget.ConstraintLayout;
+import androidx.core.app.ActivityCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.gson.Gson;
@@ -38,6 +44,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import kotlin.Pair;
+import ua.com.merchik.merchik.Activities.Features.FeaturesActivity;
 import ua.com.merchik.merchik.Activities.PhotoLogActivity.PhotoLogActivity;
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
@@ -62,7 +69,9 @@ import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
 import ua.com.merchik.merchik.data.RealmModels.ReportPrepareDB;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
+import ua.com.merchik.merchik.dataLayer.ContextUI;
 import ua.com.merchik.merchik.dataLayer.MainRepositoryKt;
+import ua.com.merchik.merchik.dataLayer.ModeUI;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsRealm;
 import ua.com.merchik.merchik.database.realm.tables.ReportPrepareRealm;
@@ -70,6 +79,7 @@ import ua.com.merchik.merchik.database.realm.tables.StackPhotoRealm;
 import ua.com.merchik.merchik.database.realm.tables.WpDataRealm;
 import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.dialogs.DialogFullPhotoR;
+import ua.com.merchik.merchik.features.main.DBViewModels.StackPhotoDBViewModel;
 
 public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRAdapter.ViewHolder> {
 
@@ -531,10 +541,27 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
 
                         case (135809):  // Вставляем количество выполненных Фото витрины ДО начала работ
 //                        textInteger.setText("" + RealmManager.stackPhotoShowcasePhotoCount(dad2, 14));
-                            textInteger.setText(
-                                    setPhotoCountsMakeAndMust(optionsButtons, RealmManager.stackPhotoShowcasePhotoCount(dad2, 14)),
-                                    TextView.BufferType.SPANNABLE
-                            );
+                            SpannableString spannableString = new SpannableString(setPhotoCountsMakeAndMust(optionsButtons, RealmManager.stackPhotoShowcasePhotoCount(dad2, 14)));
+                            spannableString.setSpan(new UnderlineSpan(), 0, spannableString.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+
+                            textInteger.setText(spannableString);
+                            textInteger.setOnClickListener(v -> {
+                                Intent intent = new Intent(mContext, FeaturesActivity.class);
+                                Bundle bundle = new Bundle();
+                                bundle.putString("viewModel", StackPhotoDBViewModel.class.getCanonicalName());
+                                bundle.putString("contextUI", ContextUI.STACK_PHOTO_TO_FROM_ACHIEVEMENT.toString());
+                                bundle.putString("modeUI", ModeUI.DEFAULT.toString());
+                                bundle.putString("dataJson", new Gson().toJson(dad2));
+                                bundle.putString("title", "title");
+                                bundle.putString("subTitle", "subTitle");
+                                intent.putExtras(bundle);
+                                ActivityCompat.startActivityForResult((Activity) mContext, intent, NEED_UPDATE_UI_REQUEST, null);
+                            });
+//                            textInteger.setText(
+//                                    setPhotoCountsMakeAndMust(optionsButtons, RealmManager.stackPhotoShowcasePhotoCount(dad2, 14)),
+//                                    TextView.BufferType.SPANNABLE
+//                            );
+
                             break;
                         case (135158):  // Вставляем количество выполненных Фото Остатков Товаров (ФОТ)
                             textInteger.setText("" + RealmManager.stackPhotoShowcasePhotoCount(dad2, 4));

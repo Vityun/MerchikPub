@@ -878,7 +878,11 @@ public class RealmManager {
 
 
     public static List<StackPhotoDB> stackPhotoDBListGetCommentToUpload() {
-        return INSTANCE.copyFromRealm(INSTANCE.where(StackPhotoDB.class).isNotNull("photoServerId").notEqualTo("photoServerId", "").equalTo("commentUpload", true).findAll());
+        return INSTANCE.copyFromRealm(INSTANCE.where(StackPhotoDB.class)
+//                .isNotNull("photoServerId")
+//                .notEqualTo("photoServerId", "")
+                .equalTo("commentUpload", true)
+                .findAll());
     }
 
 

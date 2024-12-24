@@ -788,25 +788,25 @@ public class PhotoDownload {
             }
         });
     }
-
+// ####################### date_to = 2024-12-16 ???? какого х!
     public void getPhotoInfoAndSaveItToDB(PhotoTableRequest data) {
         Log.e("getPhotoInfo2", "HERE");
         JsonObject object = new Gson().fromJson(new Gson().toJson(data), JsonObject.class);
 
-        {
-            retrofit2.Call<JsonObject> call = RetrofitBuilder.getRetrofitInterface().MOD_IMAGES_VIEW_CALL_JSON(RetrofitBuilder.contentType, object);
-            call.enqueue(new Callback<JsonObject>() {
-                @Override
-                public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
-                    Log.d("smarti", "onResponse: ");
-                }
-
-                @Override
-                public void onFailure(Call<JsonObject> call, Throwable t) {
-                    Log.d("smarti", "onResponse: ");
-                }
-            });
-        }
+//        {
+//            retrofit2.Call<JsonObject> call = RetrofitBuilder.getRetrofitInterface().MOD_IMAGES_VIEW_CALL_JSON(RetrofitBuilder.contentType, object);
+//            call.enqueue(new Callback<JsonObject>() {
+//                @Override
+//                public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
+//                    Log.d("smarti", "onResponse: ");
+//                }
+//
+//                @Override
+//                public void onFailure(Call<JsonObject> call, Throwable t) {
+//                    Log.d("smarti", "onResponse: ");
+//                }
+//            });
+//        }
 
         retrofit2.Call<ModImagesView> call = RetrofitBuilder.getRetrofitInterface().MOD_IMAGES_VIEW_CALL(RetrofitBuilder.contentType, object);
         call.enqueue(new retrofit2.Callback<ModImagesView>() {

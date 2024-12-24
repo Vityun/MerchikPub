@@ -14,6 +14,11 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.text.Html;
+import android.text.Spannable;
+import android.text.SpannableString;
+import android.text.Spanned;
+import android.text.style.ForegroundColorSpan;
+import android.text.style.UnderlineSpan;
 import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
@@ -77,7 +82,7 @@ public class DialogCreateAchievement {
     private TextView title, client, address, visit, theme, offerFromClient, offerFromClientItem, tovarTxt, tradeMarkItem, themeItem;
     private EditText comment;
     private Button save;
-//    private Button photoTo, photoAfter;
+    //    private Button photoTo, photoAfter;
     private ImageView photoToIV, photoAfterIV;
 
 //    private Spinner spinnerTheme;
@@ -87,7 +92,7 @@ public class DialogCreateAchievement {
 //            "Замовлення на фінансування нового Досягнення",         // 1252
 //            "Утримання викладки на полиці (досягнутого раніше)"};   // 1251
 
-//    private Integer spinnerThemeResult, spinnerClientResult, spinnerManufactureResult;
+    //    private Integer spinnerThemeResult, spinnerClientResult, spinnerManufactureResult;
     private OptionsDB optionDB;
 //    private TovarDB tovarDB;
 
@@ -100,12 +105,11 @@ public class DialogCreateAchievement {
             dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
             dialog.setContentView(R.layout.dialog_create_achievement);
             int width = (int) (context.getResources().getDisplayMetrics().widthPixels * 0.95);
-            int height = (int) (context.getResources().getDisplayMetrics().heightPixels * 1);
+//            int height = (int) (context.getResources().getDisplayMetrics().heightPixels * 1);
 //            dialog.getWindow().setLayout(width, height);
 
 //            dialog.getWindow().setLayout(width, WindowManager.LayoutParams.MATCH_PARENT);
             dialog.getWindow().setLayout(width, WindowManager.LayoutParams.WRAP_CONTENT);
-
 //            dialog.getWindow().setLayout(height, WindowManager.LayoutParams.MATCH_PARENT);
 
             close = dialog.findViewById(R.id.imageButtonClose);
@@ -187,7 +191,8 @@ public class DialogCreateAchievement {
                                     .put("codeDad2", Long.toString(codeDad2))
                                     .put("clientId", clientId))
                     );
-                } catch (Exception ignored) { }
+                } catch (Exception ignored) {
+                }
                 bundle.putString("title", "Товари");
                 bundle.putString("subTitle", "Выберите товар");
 //                bundle.putString('req', "");
@@ -196,11 +201,12 @@ public class DialogCreateAchievement {
                 ActivityCompat.startActivityForResult((Activity) context, intent, NEED_UPDATE_UI_REQUEST, null);
             });
 
+            setTextUI();
+
         } catch (Exception e) {
             Globals.writeToMLOG("ERROR", "DialogCreateAchievement", "Exception e: " + e);
         }
     }
-
 
 
     private void buttonSave() {
@@ -720,22 +726,8 @@ public class DialogCreateAchievement {
         buttonSave();
 
         onUpdateUI = () -> {
-            offerFromClientItem.setText(
-                    AchievementDataHolder.Companion.instance().getRequirementClientName() == null ?
-                            "Натисніть для обрання Пропозиції" : AchievementDataHolder.Companion.instance().getRequirementClientName()
-            );
-            tovarTxt.setText(
-                    AchievementDataHolder.Companion.instance().getTovarName() == null ?
-                            "Натисніть для обрання Товару" : AchievementDataHolder.Companion.instance().getTovarName()
-            );
-            tradeMarkItem.setText(
-                    AchievementDataHolder.Companion.instance().getManufactureName() == null ?
-                            "Натисніть для обрання Марки товару" : AchievementDataHolder.Companion.instance().getManufactureName()
-            );
-            themeItem.setText(
-                    AchievementDataHolder.Companion.instance().getThemeName() == null ?
-                            "Натисніть для обрання Теми" : AchievementDataHolder.Companion.instance().getThemeName()
-            );
+
+            setTextUI();
             if (AchievementDataHolder.Companion.instance().getPhotoToURI() != null) {
                 photoToIV.setImageURI(
                         Uri.parse(AchievementDataHolder.Companion.instance().getPhotoToURI())
@@ -765,22 +757,9 @@ public class DialogCreateAchievement {
         buttonSave();
 
         onUpdateUI = () -> {
-            offerFromClientItem.setText(
-                    AchievementDataHolder.Companion.instance().getRequirementClientName() == null ?
-                            "Натисніть для обрання Пропозиції" : AchievementDataHolder.Companion.instance().getRequirementClientName()
-            );
-            tovarTxt.setText(
-                    AchievementDataHolder.Companion.instance().getTovarName() == null ?
-                            "Натисніть для обрання Товару" : AchievementDataHolder.Companion.instance().getTovarName()
-            );
-            tradeMarkItem.setText(
-                    AchievementDataHolder.Companion.instance().getManufactureName() == null ?
-                            "Натисніть для обрання Марки товару" : AchievementDataHolder.Companion.instance().getManufactureName()
-            );
-            themeItem.setText(
-                    AchievementDataHolder.Companion.instance().getThemeName() == null ?
-                            "Натисніть для обрання Теми" : AchievementDataHolder.Companion.instance().getThemeName()
-            );
+
+            setTextUI();
+
             if (AchievementDataHolder.Companion.instance().getPhotoToURI() != null) {
                 photoToIV.setImageURI(
                         Uri.parse(AchievementDataHolder.Companion.instance().getPhotoToURI())
@@ -792,5 +771,31 @@ public class DialogCreateAchievement {
                 );
             }
         };
+    }
+
+    private void setTextUI() {
+
+        offerFromClientItem.setText(underLineText(AchievementDataHolder.Companion.instance().getRequirementClientName() == null ?
+                "Натисніть для обрання Пропозиції" : AchievementDataHolder.Companion.instance().getRequirementClientName()));
+
+        tovarTxt.setText(underLineText(
+                AchievementDataHolder.Companion.instance().getTovarName() == null ?
+                        "Натисніть для обрання Товару" : AchievementDataHolder.Companion.instance().getTovarName()));
+        tradeMarkItem.setText(underLineText(
+                AchievementDataHolder.Companion.instance().getManufactureName() == null ?
+                        "Натисніть для обрання Марки товару" : AchievementDataHolder.Companion.instance().getManufactureName())
+        );
+        themeItem.setText(underLineText(
+                AchievementDataHolder.Companion.instance().getThemeName() == null ?
+                        "Натисніть для обрання Теми" : AchievementDataHolder.Companion.instance().getThemeName())
+        );
+    }
+
+    private SpannableString underLineText(String text) {
+        SpannableString spannableString = new SpannableString(text);
+        spannableString.setSpan(new UnderlineSpan(), 0, spannableString.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+        spannableString.setSpan(new ForegroundColorSpan(context.getResources().getColor(android.R.color.holo_blue_dark)), 0, spannableString.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+
+        return spannableString;
     }
 }

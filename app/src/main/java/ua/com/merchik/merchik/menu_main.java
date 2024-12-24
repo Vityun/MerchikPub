@@ -2374,7 +2374,7 @@ public class menu_main extends AppCompatActivity {
                 String act = "list_image";
                 String noLimit = "no_limit";
                 String date_from = Clock.lastWeek();
-                String date_to = Clock.tomorrow;
+                String date_to = Clock.tomorrow7;
                 ArrayList<String> listHash = new ArrayList<>();
 
                 for (int i = 0; i < realmResults.size(); i++) {

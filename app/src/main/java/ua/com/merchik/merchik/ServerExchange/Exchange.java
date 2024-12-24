@@ -1660,7 +1660,7 @@ public class Exchange {
         data.mod = "images_view";
         data.act = "list_image";
         data.date_from = Clock.today_30;
-        data.date_to = Clock.today_7;
+        data.date_to = Clock.tomorrow7;
         data.photo_type = type;
         data.nolimit = "1";
 

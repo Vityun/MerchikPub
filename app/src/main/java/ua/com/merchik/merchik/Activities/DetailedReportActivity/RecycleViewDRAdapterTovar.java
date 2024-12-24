@@ -774,6 +774,8 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                     recyclerView.setVisibility(View.GONE);
                 }
 
+                Log.e("!!!!!!!!!!!!!!!!!","TEXT: " + s);
+                Log.e("!!!!!!!!!!!!!!!!!","TEXT: " + Html.fromHtml("<u>" + s + "</u>"));
 
                 textViewItemTovarOptLine.setText(Html.fromHtml("<u>" + s + "</u>"));
                 textViewItemTovarOptLine.setOnClickListener(v -> {

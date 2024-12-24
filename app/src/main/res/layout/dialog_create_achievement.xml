@@ -71,7 +71,7 @@
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/contentLayout"
         android:layout_width="match_parent"
-        android:layout_height="400dp"
+        android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
         android:layout_marginEnd="8dp"
@@ -282,23 +282,73 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/tovar_choose">
 
-                <ImageView
-                    android:id="@+id/photoTo"
-                    android:layout_width="100dp"
-                    android:layout_height="100dp"
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/cardPhotoTo"
+                    android:layout_width="110dp"
+                    android:layout_height="110dp"
+                    app:cardCornerRadius="8dp"
+                    app:cardUseCompatPadding="true"
+                    app:layout_constraintEnd_toStartOf="@id/cardAfter"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintEnd_toStartOf="@id/photoAfter"
-                    app:layout_constraintTop_toTopOf="parent"
-                    app:srcCompat="@mipmap/merchik" />
+                    app:layout_constraintTop_toTopOf="parent">
 
-                <ImageView
-                    android:id="@+id/photoAfter"
-                    android:layout_width="100dp"
-                    android:layout_height="100dp"
+                    <TextView
+                        android:id="@+id/photoToText"
+                        android:text="фото до початку робiт"
+                        android:gravity="center"
+                        android:textColor="@color/hintColorDefault"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"/>
+                    <ImageView
+                        android:id="@+id/photoTo"
+                        android:layout_width="100dp"
+                        android:layout_height="100dp"
+                        app:layout_constraintEnd_toStartOf="@id/photoAfter"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:srcCompat="@mipmap/merchik" />
+
+                </androidx.cardview.widget.CardView>
+
+
+
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/cardAfter"
+                    android:layout_width="110dp"
+                    android:layout_height="110dp"
+                    app:cardCornerRadius="8dp"
+                    app:cardUseCompatPadding="true"
                     app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toEndOf="@id/photoTo"
-                    app:layout_constraintTop_toTopOf="parent"
-                    app:srcCompat="@mipmap/merchik" />
+                    app:layout_constraintStart_toEndOf="@id/cardPhotoTo"
+                    app:layout_constraintTop_toTopOf="parent">
+
+                    <TextView
+                        android:id="@+id/photoToTextAfter"
+                        android:text="фото пiсля початку робiт"
+                        android:gravity="center"
+                        android:textColor="@color/hintColorDefault"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"/>
+
+                    <ImageView
+                        android:id="@+id/photoAfter"
+                        android:layout_width="100dp"
+                        android:layout_height="100dp"
+                        app:layout_constraintEnd_toStartOf="@id/photoAfter"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:srcCompat="@mipmap/merchik" />
+
+                </androidx.cardview.widget.CardView>
+
+<!--                <ImageView-->
+<!--                    android:id="@+id/photoAfter"-->
+<!--                    android:layout_width="100dp"-->
+<!--                    android:layout_height="100dp"-->
+<!--                    app:layout_constraintEnd_toEndOf="parent"-->
+<!--                    app:layout_constraintStart_toEndOf="@id/cardPhotoTo"-->
+<!--                    app:layout_constraintTop_toTopOf="parent"-->
+<!--                    app:srcCompat="@mipmap/merchik" />-->
 
             </androidx.constraintlayout.widget.ConstraintLayout>
 
