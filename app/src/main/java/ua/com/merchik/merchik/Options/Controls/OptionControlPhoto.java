@@ -16,6 +16,7 @@ import ua.com.merchik.merchik.Options.OptionControl;
 import ua.com.merchik.merchik.Options.Options;
 import ua.com.merchik.merchik.data.Database.Room.AddressSDB;
 import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
+import ua.com.merchik.merchik.data.Database.Room.UsersSDB;
 import ua.com.merchik.merchik.data.OptionMassageType;
 import ua.com.merchik.merchik.data.RealmModels.ImagesTypeListDB;
 import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
@@ -31,7 +32,7 @@ public class OptionControlPhoto<T> extends OptionControl {
     private StringBuilder optionResultStr = new StringBuilder();
 
     private WpDataDB wpDataDB;
-//    private UsersSDB usersSDB;
+    private UsersSDB usersSDB;
     private Long dad2;
     private AddressSDB addressSDB;
     private String clientName;
@@ -60,8 +61,8 @@ public class OptionControlPhoto<T> extends OptionControl {
             this.dad2 = wpDataDB.getCode_dad2();
             this.clientName = SQL_DB.customerDao().getById(((WpDataDB) document).getClient_id()).nm;
 
-//            usersSDB = SQL_DB.usersDao().getUserById(((WpDataDB) document).getUser_id());
-            Date data = DetailedReportActivity.usersSDB.reportDate05; // Дата проведения 5й отчетности
+            usersSDB = SQL_DB.usersDao().getUserById(((WpDataDB) document).getUser_id());
+//            Date data = DetailedReportActivity.usersSDB.reportDate05; // Дата проведения 5й отчетности
         } else if (document instanceof TasksAndReclamationsSDB) {
             this.dad2 = ((TasksAndReclamationsSDB) document).codeDad2SrcDoc;
         }
