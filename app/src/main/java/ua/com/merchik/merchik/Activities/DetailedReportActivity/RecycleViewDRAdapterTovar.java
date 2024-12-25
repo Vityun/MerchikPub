@@ -647,6 +647,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                     reportPrepareTovar2 = reportPrepareTovar;
                 }
 
+                // TODO Обрати внимание что тут по опциям
                 String s = options.getOptionString(optionsList2, reportPrepareTovar2, deletePromoOption);
 
                 try {

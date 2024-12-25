@@ -11,12 +11,9 @@ import androidx.appcompat.widget.PopupMenu;
 import androidx.preference.PreferenceManager;
 
 import com.google.gson.JsonObject;
-import com.google.gson.annotations.Expose;
-import com.google.gson.annotations.SerializedName;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 import ua.com.merchik.merchik.ServerExchange.Exchange;
@@ -232,9 +229,9 @@ public class Translate {
 //                    if (list != null) {
 //                        Globals.translatesList = list;
 //                    } else {
-                        Globals.writeToMLOG("INFO", "Translate.getTranslates.onFailure", "String error: " + error);
+                    Globals.writeToMLOG("INFO", "Translate.getTranslates.onFailure", "String error: " + error);
 //                    }
-                }catch (Exception e){
+                } catch (Exception e) {
                     // todo DB is locked
                 }
             }
@@ -268,7 +265,7 @@ public class Translate {
 
     /**
      * 12.02.2021
-     * Отправка на сервер новых переводов.
+     * Отправка на сервер новых переводов. (заготовок под обьекты)
      * <p>
      * Отправка на сервер новых тестовок на перевод. Отправляются только под Петровым.
      */
@@ -299,6 +296,32 @@ public class Translate {
      */
     private List<AddTranslation> getAddTarnslationData() {
         List<AddTranslation> res = new ArrayList<>();
+
+        // Справочник Фото.
+        // Список фотоотчётов с типом:
+
+        // Для создания достижения выберите...
+
+//        AddTranslation data = new AddTranslation(
+//                "1",
+//                "title_universal_list_create_achievement",
+//                "Справочник Фото",
+//                "app",
+//                "all",
+//                ""
+//        );
+//
+//        AddTranslation data1 = new AddTranslation(
+//                "2",
+//                "sub_title_universal_list_create_achievement",
+//                "Список фотоотчётов с типом",
+//                "app",
+//                "all",
+//                ""
+//        );
+//
+//        res.add(data);
+//        res.add(data1);
 
         /*
         *
@@ -364,6 +387,7 @@ public class Translate {
 //        String str1="AdditionalRequirementsDB";
 //        String str2="addr_id-Код адреса, id-ИД, color-Цвет";
 
+/*
         String[] str1 = new String[20];
         String[] str2 = new String[20];
         String str3="";
@@ -427,6 +451,7 @@ public class Translate {
                 i=i+1;
             }
         }
+*/
 
 
         /*

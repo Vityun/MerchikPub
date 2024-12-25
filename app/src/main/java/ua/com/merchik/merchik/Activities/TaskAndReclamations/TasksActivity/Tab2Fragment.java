@@ -62,6 +62,17 @@ public class Tab2Fragment extends Fragment {
         List<OptionsDB> list = RealmManager.INSTANCE.copyFromRealm(OptionsRealm.getOptionsButtonByDAD2(String.valueOf(data.codeDad2)));
         List<OptionsDB> allReportOption = RealmManager.INSTANCE.copyFromRealm(OptionsRealm.getOptionsByDAD2(String.valueOf(data.codeDad2)));
 
+//        // Псевдокод
+//        if(list == null || list.size()==0){
+//            // Загружаю в таблицу Опций данные ТОЛЬКО по текущему коду дад2
+//            new TablesLoadingUnloading().downloadOptionsByDAD2(data.codeDad2SrcDoc, new Clicks.click() {
+//                @Override
+//                public <T> void click(T data) {
+//
+//                }
+//            });
+//        }
+
         Log.e("Tab2Fragment_L", "list: " + list.size());
 
         Collections.sort(list, (o1, o2) -> o1.getSo().compareTo(o2.getSo()));
