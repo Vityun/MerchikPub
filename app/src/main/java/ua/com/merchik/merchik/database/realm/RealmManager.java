@@ -773,10 +773,12 @@ public class RealmManager {
 
     public static StackPhotoDB getPhotoByIdAndType(Integer id, String photoServerId, int photoType) {
 
-        Log.e("GET_TOV_PHOTO", "Data: " + id + "/" + photoServerId + "/" + photoType);
+        Log.e("GET_TOV_PHOTO 2", "Data: " + id + "/" + photoServerId + "/" + photoType);
 
         RealmQuery<StackPhotoDB> query = INSTANCE.where(StackPhotoDB.class);
-        if (photoServerId != null && !photoServerId.equals("0")) {
+        if (photoServerId != null
+                && !photoServerId.equals("0")
+        ) {
             query.equalTo("photoServerId", photoServerId)
                     .equalTo("photo_type", photoType);
 //                    .equalTo("comment", photoSize)
@@ -879,8 +881,8 @@ public class RealmManager {
 
     public static List<StackPhotoDB> stackPhotoDBListGetCommentToUpload() {
         return INSTANCE.copyFromRealm(INSTANCE.where(StackPhotoDB.class)
-//                .isNotNull("photoServerId")
-//                .notEqualTo("photoServerId", "")
+                .isNotNull("photoServerId")
+                .notEqualTo("photoServerId", "")
                 .equalTo("commentUpload", true)
                 .findAll());
     }

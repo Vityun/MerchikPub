@@ -19,6 +19,7 @@ import java.util.List;
 
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.RecycleViewDRAdapter;
 import ua.com.merchik.merchik.R;
+import ua.com.merchik.merchik.ServerExchange.TablesLoadingUnloading;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.Database.Room.SiteObjectsSDB;
 import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
@@ -58,22 +59,30 @@ public class Tab2Fragment extends Fragment {
      * 22.03.2021
      * Установка Опций для Задач И Рекламаций (ЗИР) по коду ДАД2
      * */
+    List<OptionsDB> list = new ArrayList<>();
     private void setRecycler(){
-        List<OptionsDB> list = RealmManager.INSTANCE.copyFromRealm(OptionsRealm.getOptionsButtonByDAD2(String.valueOf(data.codeDad2)));
-        List<OptionsDB> allReportOption = RealmManager.INSTANCE.copyFromRealm(OptionsRealm.getOptionsByDAD2(String.valueOf(data.codeDad2)));
+        list = RealmManager.INSTANCE.copyFromRealm(OptionsRealm.getOptionsButtonByDAD2(String.valueOf(data.codeDad2)));
 
-//        // Псевдокод
-//        if(list == null || list.size()==0){
-//            // Загружаю в таблицу Опций данные ТОЛЬКО по текущему коду дад2
-//            new TablesLoadingUnloading().downloadOptionsByDAD2(data.codeDad2SrcDoc, new Clicks.click() {
-//                @Override
-//                public <T> void click(T data) {
-//
-//                }
-//            });
-//        }
+        Log.e("!!!!!!!!!!!!!!!!!!!!!!!","list: " + list);
+
+        if(list == null || list.isEmpty()){
+            // Загружаю в таблицу Опций данные ТОЛЬКО по текущему коду дад2
+            new TablesLoadingUnloading().downloadOptionsByDAD2(data.codeDad2SrcDoc, new Clicks.click() {
+                @Override
+                public <T> void click(T d) {
+                    list = RealmManager.INSTANCE.copyFromRealm(OptionsRealm.getOptionsButtonByDAD2(String.valueOf(data.codeDad2)));
+                    Log.e("!!!!!!!!!!!!!!!!!!!!!!!","222 list: " + list);
+                    updateList(list);
+                }
+            });
+        } else updateList(list);
 
         Log.e("Tab2Fragment_L", "list: " + list.size());
+
+    }
+
+    private void updateList(List<OptionsDB> list) {
+        List<OptionsDB> allReportOption = RealmManager.INSTANCE.copyFromRealm(OptionsRealm.getOptionsByDAD2(String.valueOf(data.codeDad2)));
 
         Collections.sort(list, (o1, o2) -> o1.getSo().compareTo(o2.getSo()));
 
@@ -102,3 +111,4 @@ public class Tab2Fragment extends Fragment {
         recyclerView.setLayoutManager(new LinearLayoutManager(mContext, LinearLayoutManager.VERTICAL, false));
     }
 }
+

@@ -301,27 +301,82 @@ public class Translate {
         // Список фотоотчётов с типом:
 
         // Для создания достижения выберите...
+        AddTranslation data1 = new AddTranslation(
+                "1",
+                "sub_title_umfd_ufmd_photo_universal",
+                "Список фотоотчётов с типом",
+                "app",
+                "all",
+                ""
+        );
 
-//        AddTranslation data = new AddTranslation(
-//                "1",
-//                "title_universal_list_create_achievement",
-//                "Справочник Фото",
-//                "app",
-//                "all",
-//                ""
-//        );
-//
-//        AddTranslation data1 = new AddTranslation(
-//                "2",
-//                "sub_title_universal_list_create_achievement",
-//                "Список фотоотчётов с типом",
-//                "app",
-//                "all",
-//                ""
-//        );
-//
-//        res.add(data);
-//        res.add(data1);
+        AddTranslation data = new AddTranslation(
+                "2",
+                "title_ufmd_photo_option_135158",
+                "Фото Остатков Товаров",
+                "app",
+                "all",
+                ""
+        );
+
+        AddTranslation data2 = new AddTranslation(
+                "3",
+                "title_ufmd_photo_option_141360",
+                "Фото товара на складе",
+                "app",
+                "all",
+                ""
+        );
+        AddTranslation data3 = new AddTranslation(
+                "4",
+                "title_ufmd_photo_option_132969",
+                "Фото Тележка с Товаром",
+                "app",
+                "all",
+                ""
+        );
+        AddTranslation data4 = new AddTranslation(
+                "5",
+                "title_ufmd_photo_option_135809",
+                "Фото витрины до начала работ",
+                "app",
+                "all",
+                ""
+        );
+        AddTranslation data5 = new AddTranslation(
+                "6",
+                "title_ufmd_photo_option_158309",
+                "Фото витрины наближене",
+                "app",
+                "all",
+                ""
+        );
+        AddTranslation data6 = new AddTranslation(
+                "7",
+                "title_ufmd_photo_option_158604",
+                "Фото витрины наполненности",
+                "app",
+                "all",
+                ""
+        );
+        AddTranslation data7 = new AddTranslation(
+                "8",
+                "title_ufmd_photo_option_157277",
+                "Фото акционного товра и ценник",
+                "app",
+                "all",
+                ""
+        );
+
+
+        res.add(data);
+        res.add(data1);
+        res.add(data2);
+        res.add(data3);
+        res.add(data4);
+        res.add(data5);
+        res.add(data6);
+        res.add(data7);
 
         /*
         *

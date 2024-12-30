@@ -304,16 +304,16 @@ public class OptionControlEKL<T> extends OptionControl {
                             optionMsg.append(", но ").append("ПТТ работает в отделе ").append(SQL_DB.tovarGroupDao().getById(usersSDBPTT.otdelId).nm).append(" и не может подписывать ЭКЛ для: ")
                                     .append(TG.getNmFromList(tovarGroupSDB)).append(" (но исполнитель не провел свой 20-й отчет и эту блокировку пропускаем)");
                         } else {
-                            signal = false;
+                            signal = true;
                             optionMsg.append(", но ").append("ПТТ работает в отделе ").append(SQL_DB.tovarGroupDao().getById(usersSDBPTT.otdelId).nm).append(" и не может подписывать ЭКЛ для: ")
-                                    .append(TG.getNmFromList(tovarGroupSDB)).append(" (для магазина в котором более 5 касс и исполнитель провел 5-й отчет)");
+                                    .append(TG.getNmFromList(tovarGroupSDB)).append(" (для магазина в котором более 5 касс и исполнитель провел 20-й отчет)");
                         }
                     } else if (tovarGroupSDB.stream().filter(item -> item.id.equals(usersSDBPTT.otdelId)).findFirst().orElse(null) == null
                             && !optionDB.getOptionControlId().equals("132629") && (addressSDB.kolKass > 0 && addressSDB.kolKass <= 5)) {
                         if (documentUser.reportDate40 != null && documentUser.reportDate40.getTime() >= wpDataDB.getDt().getTime()) {
                             signal = false;
                             optionMsg.append(", но ").append("ПТТ работает в отделе ").append(SQL_DB.tovarGroupDao().getById(usersSDBPTT.otdelId).nm).append(" и не может подписывать ЭКЛ для: ")
-                                    .append(TG.getNmFromList(tovarGroupSDB)).append(" (но исполнитель не провел свой 20-й отчет и эту блокировку пропускаем)");
+                                    .append(TG.getNmFromList(tovarGroupSDB)).append(" (но исполнитель не провел свой 40-й отчет и эту блокировку пропускаем)");
                         } else {
                             signal = false;
                             optionMsg.append(", но ").append("ПТТ работает в отделе ").append(SQL_DB.tovarGroupDao().getById(usersSDBPTT.otdelId).nm).append(" и не может подписывать ЭКЛ для: ")

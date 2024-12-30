@@ -39,6 +39,7 @@ import androidx.core.app.ActivityCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 
 import java.util.Arrays;
 import java.util.List;
@@ -55,6 +56,7 @@ import ua.com.merchik.merchik.Options.OptionControl;
 import ua.com.merchik.merchik.Options.Options;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.Utils.CodeGenerator;
+import ua.com.merchik.merchik.Utils.CustomString;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.Database.Room.AchievementsSDB;
 import ua.com.merchik.merchik.data.Database.Room.AddressSDB;
@@ -68,14 +70,17 @@ import ua.com.merchik.merchik.data.RealmModels.AdditionalRequirementsDB;
 import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
 import ua.com.merchik.merchik.data.RealmModels.ReportPrepareDB;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
+import ua.com.merchik.merchik.data.RealmModels.TradeMarkDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.dataLayer.ContextUI;
 import ua.com.merchik.merchik.dataLayer.MainRepositoryKt;
 import ua.com.merchik.merchik.dataLayer.ModeUI;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsRealm;
+import ua.com.merchik.merchik.database.realm.tables.ImagesTypeListRealm;
 import ua.com.merchik.merchik.database.realm.tables.ReportPrepareRealm;
 import ua.com.merchik.merchik.database.realm.tables.StackPhotoRealm;
+import ua.com.merchik.merchik.database.realm.tables.TradeMarkRealm;
 import ua.com.merchik.merchik.database.realm.tables.WpDataRealm;
 import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.dialogs.DialogFullPhotoR;
@@ -399,57 +404,120 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                             break;
 
                         case (158309):  // Фото витрины Приближённое
-                            textInteger.setText(
-                                    setPhotoCountsMakeAndMust(optionsButtons, RealmManager.stackPhotoShowcasePhotoCount(dad2, 39)),
-                                    TextView.BufferType.SPANNABLE
-                            );
+//                            textInteger.setText(
+//                                    setPhotoCountsMakeAndMust(optionsButtons, RealmManager.stackPhotoShowcasePhotoCount(dad2, 39)),
+//                                    TextView.BufferType.SPANNABLE
+//                            );
+
+                            SpannableString spannableString158309 = setPhotoCountsMakeAndMust(optionsButtons, RealmManager.stackPhotoShowcasePhotoCount(dad2, 39));
+                            spannableString158309.setSpan(new UnderlineSpan(), 0, spannableString158309.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+
+                            textInteger.setText(spannableString158309);
 
                             textInteger.setOnClickListener(view -> {
-                                Intent intent = new Intent(view.getContext(), PhotoLogActivity.class);
-                                intent.putExtra("report_prepare", true);
-                                intent.putExtra("dad2", dad2);
-                                view.getContext().startActivity(intent);
+                                Intent intent = new Intent(mContext, FeaturesActivity.class);
+                                Bundle bundle = new Bundle();
+                                bundle.putString("viewModel", StackPhotoDBViewModel.class.getCanonicalName());
+                                bundle.putString("contextUI", ContextUI.SAMPLE_PHOTO_FROM_OPTION_158309.toString());
+                                bundle.putString("modeUI", ModeUI.DEFAULT.toString());
+                                bundle.putString("dataJson", new Gson().toJson(dad2));
+                                bundle.putString("title", "Перелік фото звітів");
+                                bundle.putString("subTitle", "Справочник Фото" + ": " + ImagesTypeListRealm.getByID(39).getNm());
+                                intent.putExtras(bundle);
+                                ActivityCompat.startActivityForResult((Activity) mContext, intent, NEED_UPDATE_UI_REQUEST, null);
                             });
                             break;
                         case (158605):
-                            textInteger.setText(
-                                    setPhotoCountsMakeAndMust(optionsButtons, RealmManager.stackPhotoShowcasePhotoCount(dad2, 40)),
-                                    TextView.BufferType.SPANNABLE
-                            );
+//                            textInteger.setText(
+//                                    setPhotoCountsMakeAndMust(optionsButtons, RealmManager.stackPhotoShowcasePhotoCount(dad2, 40)),
+//                                    TextView.BufferType.SPANNABLE
+//                            );
+//
+//                            textInteger.setOnClickListener(view -> {
+//                                Intent intent = new Intent(view.getContext(), PhotoLogActivity.class);
+//                                intent.putExtra("report_prepare", true);
+//                                intent.putExtra("dad2", dad2);
+//                                view.getContext().startActivity(intent);
+//                            });
+                            SpannableString spannableString158605 = setPhotoCountsMakeAndMust(optionsButtons, RealmManager.stackPhotoShowcasePhotoCount(dad2, 40));
+                            spannableString158605.setSpan(new UnderlineSpan(), 0, spannableString158605.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+
+                            textInteger.setText(spannableString158605);
 
                             textInteger.setOnClickListener(view -> {
-                                Intent intent = new Intent(view.getContext(), PhotoLogActivity.class);
-                                intent.putExtra("report_prepare", true);
-                                intent.putExtra("dad2", dad2);
-                                view.getContext().startActivity(intent);
+                                Intent intent = new Intent(mContext, FeaturesActivity.class);
+                                Bundle bundle = new Bundle();
+                                bundle.putString("viewModel", StackPhotoDBViewModel.class.getCanonicalName());
+                                bundle.putString("contextUI", ContextUI.STACK_PHOTO_FROM_OPTION_158605.toString());
+                                bundle.putString("modeUI", ModeUI.DEFAULT.toString());
+                                bundle.putString("dataJson", new Gson().toJson(dad2));
+                                bundle.putString("title", "Перелік фото звітів");
+                                bundle.putString("subTitle", "Справочник Фото" + ": " + ImagesTypeListRealm.getByID(40).getNm());
+                                intent.putExtras(bundle);
+                                ActivityCompat.startActivityForResult((Activity) mContext, intent, NEED_UPDATE_UI_REQUEST, null);
                             });
                             break;
                         case (158308):  // Фото витрины отдалённое
+
                         case (132968):  // Вставляем количество выполненных Фоток Витрин
-                            textInteger.setText(
-                                    setPhotoCountsMakeAndMust(optionsButtons, RealmManager.stackPhotoShowcasePhotoCount(dad2, 0)),
-                                    TextView.BufferType.SPANNABLE
-                            );
+//                            textInteger.setText(
+//                                    setPhotoCountsMakeAndMust(optionsButtons, RealmManager.stackPhotoShowcasePhotoCount(dad2, 0)),
+//                                    TextView.BufferType.SPANNABLE
+//                            );
+//
+//                            textInteger.setOnClickListener(view -> {
+//                                Intent intent = new Intent(view.getContext(), PhotoLogActivity.class);
+//                                intent.putExtra("report_prepare", true);
+//                                intent.putExtra("dad2", dad2);
+//                                view.getContext().startActivity(intent);
+//                            });
+                            SpannableString spannableString132968 = setPhotoCountsMakeAndMust(optionsButtons, RealmManager.stackPhotoShowcasePhotoCount(dad2, 0));
+                            spannableString132968.setSpan(new UnderlineSpan(), 0, spannableString132968.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+
+                            textInteger.setText(spannableString132968);
 
                             textInteger.setOnClickListener(view -> {
-                                Intent intent = new Intent(view.getContext(), PhotoLogActivity.class);
-                                intent.putExtra("report_prepare", true);
-                                intent.putExtra("dad2", dad2);
-                                view.getContext().startActivity(intent);
+                                Intent intent = new Intent(mContext, FeaturesActivity.class);
+                                Bundle bundle = new Bundle();
+                                bundle.putString("viewModel", StackPhotoDBViewModel.class.getCanonicalName());
+                                bundle.putString("contextUI", ContextUI.STACK_PHOTO_AFTER_FROM_ACHIEVEMENT.toString());
+                                bundle.putString("modeUI", ModeUI.DEFAULT.toString());
+                                bundle.putString("dataJson", new Gson().toJson(dad2));
+                                bundle.putString("title", "Перелік фото звітів");
+                                bundle.putString("subTitle", "Справочник Фото" + ": " + ImagesTypeListRealm.getByID(0).getNm());
+                                intent.putExtras(bundle);
+                                ActivityCompat.startActivityForResult((Activity) mContext, intent, NEED_UPDATE_UI_REQUEST, null);
                             });
                             break;
 
                         case (157277):  // Вставляем количество выполненных Фото Акционного Товара
-                            textInteger.setText(
-                                    setPhotoCountsMakeAndMust(optionsButtons, RealmManager.stackPhotoShowcasePhotoCount(dad2, 28)),
-                                    TextView.BufferType.SPANNABLE
-                            );
+//                            textInteger.setText(
+//                                    setPhotoCountsMakeAndMust(optionsButtons, RealmManager.stackPhotoShowcasePhotoCount(dad2, 28)),
+//                                    TextView.BufferType.SPANNABLE
+//                            );
+
+//                            textInteger.setOnClickListener(view -> {
+//                                Intent intent = new Intent(view.getContext(), PhotoLogActivity.class);
+//                                intent.putExtra("report_prepare", true);
+//                                intent.putExtra("dad2", dad2);
+//                                view.getContext().startActivity(intent);
+//                            });
+                            SpannableString spannableString157277 = setPhotoCountsMakeAndMust(optionsButtons, RealmManager.stackPhotoShowcasePhotoCount(dad2, 26));
+                            spannableString157277.setSpan(new UnderlineSpan(), 0, spannableString157277.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+
+                            textInteger.setText(spannableString157277);
 
                             textInteger.setOnClickListener(view -> {
-                                Intent intent = new Intent(view.getContext(), PhotoLogActivity.class);
-                                intent.putExtra("report_prepare", true);
-                                intent.putExtra("dad2", dad2);
-                                view.getContext().startActivity(intent);
+                                Intent intent = new Intent(mContext, FeaturesActivity.class);
+                                Bundle bundle = new Bundle();
+                                bundle.putString("viewModel", StackPhotoDBViewModel.class.getCanonicalName());
+                                bundle.putString("contextUI", ContextUI.SAMPLE_PHOTO_FROM_OPTION_157277.toString());
+                                bundle.putString("modeUI", ModeUI.DEFAULT.toString());
+                                bundle.putString("dataJson", new Gson().toJson(dad2));
+                                bundle.putString("title", "Перелік фото звітів");
+                                bundle.putString("subTitle", "Справочник Фото" + ": " + ImagesTypeListRealm.getByID(26).getNm());
+                                intent.putExtras(bundle);
+                                ActivityCompat.startActivityForResult((Activity) mContext, intent, NEED_UPDATE_UI_REQUEST, null);
                             });
                             break;
 
@@ -469,30 +537,62 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                             break;
 
                         case (158606):
-                            textInteger.setText(
-                                    setPhotoCountsMakeAndMust(optionsButtons, RealmManager.stackPhotoShowcasePhotoCount(dad2, 36)),
-                                    TextView.BufferType.SPANNABLE
-                            );
+//                            textInteger.setText(
+//                                    setPhotoCountsMakeAndMust(optionsButtons, RealmManager.stackPhotoShowcasePhotoCount(dad2, 36)),
+//                                    TextView.BufferType.SPANNABLE
+//                            );
+//
+//                            textInteger.setOnClickListener(view -> {
+//                                Intent intent = new Intent(view.getContext(), PhotoLogActivity.class);
+//                                intent.putExtra("report_prepare", true);
+//                                intent.putExtra("dad2", dad2);
+//                                view.getContext().startActivity(intent);
+//                            });
+                            SpannableString spannableString158606 = setPhotoCountsMakeAndMust(optionsButtons, RealmManager.stackPhotoShowcasePhotoCount(dad2, 36));
+                            spannableString158606.setSpan(new UnderlineSpan(), 0, spannableString158606.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
 
-                            textInteger.setOnClickListener(view -> {
-                                Intent intent = new Intent(view.getContext(), PhotoLogActivity.class);
-                                intent.putExtra("report_prepare", true);
-                                intent.putExtra("dad2", dad2);
-                                view.getContext().startActivity(intent);
+                            textInteger.setText(spannableString158606);
+                            textInteger.setOnClickListener(v -> {
+                                Intent intent = new Intent(mContext, FeaturesActivity.class);
+                                Bundle bundle = new Bundle();
+                                bundle.putString("viewModel", StackPhotoDBViewModel.class.getCanonicalName());
+                                bundle.putString("contextUI", ContextUI.SAMPLE_PHOTO_FROM_OPTION_157354.toString());
+                                bundle.putString("modeUI", ModeUI.DEFAULT.toString());
+                                bundle.putString("dataJson", new Gson().toJson(dad2));
+                                bundle.putString("title", "Перелік фото звітів");
+                                bundle.putString("subTitle", "Справочник Фото" + ": " + ImagesTypeListRealm.getByID(36).getNm());
+                                intent.putExtras(bundle);
+                                ActivityCompat.startActivityForResult((Activity) mContext, intent, NEED_UPDATE_UI_REQUEST, null);
                             });
                             break;
 
                         case (157354):
-                            textInteger.setText(
-                                    setPhotoCountsMakeAndMust(optionsButtons, RealmManager.stackPhotoShowcasePhotoCount(dad2, 42)),
-                                    TextView.BufferType.SPANNABLE
-                            );
+//                            textInteger.setText(
+//                                    setPhotoCountsMakeAndMust(optionsButtons, RealmManager.stackPhotoShowcasePhotoCount(dad2, 42)),
+//                                    TextView.BufferType.SPANNABLE
+//                            );
+//
+//                            textInteger.setOnClickListener(view -> {
+//                                Intent intent = new Intent(view.getContext(), PhotoLogActivity.class);
+//                                intent.putExtra("report_prepare", true);
+//                                intent.putExtra("dad2", dad2);
+//                                view.getContext().startActivity(intent);
+//                            });
+                            SpannableString spannableString157354 = setPhotoCountsMakeAndMust(optionsButtons, RealmManager.stackPhotoShowcasePhotoCount(dad2, 42));
+                            spannableString157354.setSpan(new UnderlineSpan(), 0, spannableString157354.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
 
-                            textInteger.setOnClickListener(view -> {
-                                Intent intent = new Intent(view.getContext(), PhotoLogActivity.class);
-                                intent.putExtra("report_prepare", true);
-                                intent.putExtra("dad2", dad2);
-                                view.getContext().startActivity(intent);
+                            textInteger.setText(spannableString157354);
+                            textInteger.setOnClickListener(v -> {
+                                Intent intent = new Intent(mContext, FeaturesActivity.class);
+                                Bundle bundle = new Bundle();
+                                bundle.putString("viewModel", StackPhotoDBViewModel.class.getCanonicalName());
+                                bundle.putString("contextUI", ContextUI.SAMPLE_PHOTO_FROM_OPTION_157354.toString());
+                                bundle.putString("modeUI", ModeUI.DEFAULT.toString());
+                                bundle.putString("dataJson", new Gson().toJson(dad2));
+                                bundle.putString("title", "Перелік фото звітів");
+                                bundle.putString("subTitle", "Справочник Фото" + ": " + ImagesTypeListRealm.getByID(42).getNm());
+                                intent.putExtras(bundle);
+                                ActivityCompat.startActivityForResult((Activity) mContext, intent, NEED_UPDATE_UI_REQUEST, null);
                             });
                             break;
 
@@ -526,22 +626,38 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                             break;
 
                         case (158604):
-                            textInteger.setText(
-                                    setPhotoCountsMakeAndMust(optionsButtons, RealmManager.stackPhotoShowcasePhotoCount(dad2, 41)),
-                                    TextView.BufferType.SPANNABLE
-                            );
+//                            textInteger.setText(
+//                                    setPhotoCountsMakeAndMust(optionsButtons, RealmManager.stackPhotoShowcasePhotoCount(dad2, 41)),
+//                                    TextView.BufferType.SPANNABLE
+//                            );
+                            SpannableString spannableString158604 = setPhotoCountsMakeAndMust(optionsButtons, RealmManager.stackPhotoShowcasePhotoCount(dad2, 41));
+                            spannableString158604.setSpan(new UnderlineSpan(), 0, spannableString158604.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
 
-                            textInteger.setOnClickListener(view -> {
-                                Intent intent = new Intent(view.getContext(), PhotoLogActivity.class);
-                                intent.putExtra("report_prepare", true);
-                                intent.putExtra("dad2", dad2);
-                                view.getContext().startActivity(intent);
+                            textInteger.setText(spannableString158604);
+                            textInteger.setOnClickListener(v -> {
+                                Intent intent = new Intent(mContext, FeaturesActivity.class);
+                                Bundle bundle = new Bundle();
+                                bundle.putString("viewModel", StackPhotoDBViewModel.class.getCanonicalName());
+                                bundle.putString("contextUI", ContextUI.SAMPLE_PHOTO_FROM_OPTION_158604.toString());
+                                bundle.putString("modeUI", ModeUI.DEFAULT.toString());
+                                bundle.putString("dataJson", new Gson().toJson(dad2));
+                                bundle.putString("title", "Перелік фото звітів");
+                                bundle.putString("subTitle", "Справочник Фото" + ": " + ImagesTypeListRealm.getByID(41).getNm());
+                                intent.putExtras(bundle);
+                                ActivityCompat.startActivityForResult((Activity) mContext, intent, NEED_UPDATE_UI_REQUEST, null);
                             });
+
+//                            textInteger.setOnClickListener(view -> {
+//                                Intent intent = new Intent(view.getContext(), PhotoLogActivity.class);
+//                                intent.putExtra("report_prepare", true);
+//                                intent.putExtra("dad2", dad2);
+//                                view.getContext().startActivity(intent);
+//                            });
                             break;
 
                         case (135809):  // Вставляем количество выполненных Фото витрины ДО начала работ
 //                        textInteger.setText("" + RealmManager.stackPhotoShowcasePhotoCount(dad2, 14));
-                            SpannableString spannableString = new SpannableString(setPhotoCountsMakeAndMust(optionsButtons, RealmManager.stackPhotoShowcasePhotoCount(dad2, 14)));
+                            SpannableString spannableString = setPhotoCountsMakeAndMust(optionsButtons, RealmManager.stackPhotoShowcasePhotoCount(dad2, 14));
                             spannableString.setSpan(new UnderlineSpan(), 0, spannableString.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
 
                             textInteger.setText(spannableString);
@@ -552,8 +668,8 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                                 bundle.putString("contextUI", ContextUI.STACK_PHOTO_TO_FROM_ACHIEVEMENT.toString());
                                 bundle.putString("modeUI", ModeUI.DEFAULT.toString());
                                 bundle.putString("dataJson", new Gson().toJson(dad2));
-                                bundle.putString("title", "title");
-                                bundle.putString("subTitle", "subTitle");
+                                bundle.putString("title", "Перелік фото звітів");
+                                bundle.putString("subTitle", "Справочник Фото" + ": " + ImagesTypeListRealm.getByID(14).getNm());
                                 intent.putExtras(bundle);
                                 ActivityCompat.startActivityForResult((Activity) mContext, intent, NEED_UPDATE_UI_REQUEST, null);
                             });
@@ -564,13 +680,64 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
 
                             break;
                         case (135158):  // Вставляем количество выполненных Фото Остатков Товаров (ФОТ)
-                            textInteger.setText("" + RealmManager.stackPhotoShowcasePhotoCount(dad2, 4));
+//                            textInteger.setText("" + RealmManager.stackPhotoShowcasePhotoCount(dad2, 4));
+                            textInteger.setText(CustomString.underlineString("" + RealmManager.stackPhotoShowcasePhotoCount(dad2, 4)));
+                            textInteger.setOnClickListener(v -> {
+                                Intent intent = new Intent(mContext, FeaturesActivity.class);
+                                Bundle bundle = new Bundle();
+                                bundle.putString("viewModel", StackPhotoDBViewModel.class.getCanonicalName());
+                                bundle.putString("contextUI", ContextUI.SAMPLE_PHOTO_FROM_OPTION_135158.toString());
+                                bundle.putString("modeUI", ModeUI.DEFAULT.toString());
+                                bundle.putString("dataJson", new Gson().toJson(dad2));
+                                bundle.putString("title", "Перелік фото звітів");
+                                bundle.putString("subTitle", "Справочник Фото" + ": " + ImagesTypeListRealm.getByID(4).getNm());
+                                intent.putExtras(bundle);
+                                ActivityCompat.startActivityForResult((Activity) mContext, intent, NEED_UPDATE_UI_REQUEST, null);
+                            });
+
                             break;
                         case (132969):  // Вставляем количество выполненных Фото Тележка с Товаром (ФТТ)
-                            textInteger.setText("" + RealmManager.stackPhotoShowcasePhotoCount(dad2, 10));
+//                            textInteger.setText("" + RealmManager.stackPhotoShowcasePhotoCount(dad2, 10));
+//                            WpDataDB wpDataDB = (WpDataDB) dataDB;
+//                            AddressSDB addr = SQL_DB.addressDao().getById(wpDataDB.getAddr_id());
+//                            TradeMarkDB tradeMarkDB = TradeMarkRealm.getTradeMarkRowById(String.valueOf(addr.tpId));
+//                            String tradeMarkId = tradeMarkDB == null ? "" : tradeMarkDB.getID();
+
+                            textInteger.setText(CustomString.underlineString("" + RealmManager.stackPhotoShowcasePhotoCount(dad2, 10)));
+                            textInteger.setOnClickListener(v -> {
+                                Intent intent = new Intent(mContext, FeaturesActivity.class);
+                                Bundle bundle = new Bundle();
+                                bundle.putString("viewModel", StackPhotoDBViewModel.class.getCanonicalName());
+                                bundle.putString("contextUI", ContextUI.SAMPLE_PHOTO_FROM_OPTION_132969.toString());
+                                bundle.putString("modeUI", ModeUI.DEFAULT.toString());
+//                                JsonObject dataJson = new JsonObject();
+//                                dataJson.addProperty("tradeMarkDBId", tradeMarkId);
+//                                dataJson.addProperty("wpDataDBId", String.valueOf(wpDataDB.getId()));
+//                                dataJson.addProperty("optionDBId", optionId);
+//                                bundle.putString("dataJson", new Gson().toJson(dataJson));
+                                bundle.putString("dataJson", new Gson().toJson(dad2));
+                                bundle.putString("title", "Перелік фото звітів");
+                                bundle.putString("subTitle", "Справочник Фото" + ": " + ImagesTypeListRealm.getByID(10).getNm());
+                                intent.putExtras(bundle);
+                                ActivityCompat.startActivityForResult((Activity) mContext, intent, NEED_UPDATE_UI_REQUEST, null);
+                            });
+
                             break;
                         case (141360):
-                            textInteger.setText("" + RealmManager.stackPhotoShowcasePhotoCount(dad2, 31));
+                            textInteger.setText(CustomString.underlineString("" + RealmManager.stackPhotoShowcasePhotoCount(dad2, 31)));
+                            textInteger.setOnClickListener(v -> {
+                                Intent intent = new Intent(mContext, FeaturesActivity.class);
+                                Bundle bundle = new Bundle();
+                                bundle.putString("viewModel", StackPhotoDBViewModel.class.getCanonicalName());
+                                bundle.putString("contextUI", ContextUI.SAMPLE_PHOTO_FROM_OPTION_141360.toString());
+                                bundle.putString("modeUI", ModeUI.DEFAULT.toString());
+                                bundle.putString("dataJson", new Gson().toJson(dad2));
+                                bundle.putString("title", "Перелік фото звітів");
+                                bundle.putString("subTitle", "Справочник Фото" + ": " + ImagesTypeListRealm.getByID(31).getNm());
+                                intent.putExtras(bundle);
+                                ActivityCompat.startActivityForResult((Activity) mContext, intent, NEED_UPDATE_UI_REQUEST, null);
+                            });
+
                             break;
 
                         case 137797:    // Остатки
@@ -927,7 +1094,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
         buttText = buttText.replace("Кнопка ", "");
 
         /*
-         * 132968 - 0  - фото витрины
+         * 132968 - 0  - фото витрины Панорамне
          * 135809 - 14 - Фото витрины До начала работ
          * 135158 - 4  - Фото остатков товаров
          * 132969 - 10 - Фото тележка с товаром
@@ -1180,7 +1347,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
      * Отображение кол-ва фоток которые были сделаны и нужно сделать по каждому типу фото.
      */
     private SpannableString setPhotoCountsMakeAndMust(OptionsDB option, int dataBaseCount) {
-        SpannableString res;
+        SpannableString res = new SpannableString("");
         String data = "";
 
         // Если не указано минимальное кол-во фоток у опции, считаем что фоток надо зделать 3шт.
@@ -1222,20 +1389,21 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
             }
         }
 
+
         int maxPhotos = Integer.parseInt(min);
 
         data = "" + dataBaseCount + "/" + maxPhotos;
 
         res = new SpannableString(data);
 
-        ForegroundColorSpan foregroundSpan158309;
+        ForegroundColorSpan foregroundSpan;
         if (dataBaseCount >= maxPhotos) {
-            foregroundSpan158309 = new ForegroundColorSpan(Color.GREEN);
+            foregroundSpan = new ForegroundColorSpan(Color.GREEN);
         } else {
-            foregroundSpan158309 = new ForegroundColorSpan(mContext.getResources().getColor(R.color.red_error));
+            foregroundSpan = new ForegroundColorSpan(mContext.getResources().getColor(R.color.red_error));
         }
 
-        res.setSpan(foregroundSpan158309, 0, res.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        res.setSpan(foregroundSpan, 0, res.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         return res;
     }
 

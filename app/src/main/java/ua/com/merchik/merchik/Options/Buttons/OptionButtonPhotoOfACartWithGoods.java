@@ -61,6 +61,8 @@ public class OptionButtonPhotoOfACartWithGoods<T> extends OptionControl {
                 String tradeMarkId = tradeMarkDB == null ? "" : tradeMarkDB.getID();
                 Log.i("3333", "getTradeMarkRowById = " + addr.tpId + ", " + tradeMarkId);
 
+                wpDataDB.getAddr_id();
+                wpDataDB.getClient_id();
                 Intent intent = new Intent(context, FeaturesActivity.class);
                 Bundle bundle = new Bundle();
                 bundle.putString("viewModel", SamplePhotoSDBViewModel.class.getCanonicalName());

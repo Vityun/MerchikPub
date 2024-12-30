@@ -19,6 +19,7 @@ import retrofit2.Response;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.ServerExchange.Exchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.SiteObjectsExchange;
+import ua.com.merchik.merchik.Translate;
 import ua.com.merchik.merchik.Utils.CodeGenerator;
 import ua.com.merchik.merchik.data.RealmModels.AppUsersDB;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.ShowcaseResponse;
@@ -76,20 +77,22 @@ public class MenuMainActivity extends toolbar_menus {
 //        new Translate().uploadNewTranslate();
 
         // Обучение
-        String title = SQL_DB.siteObjectsDao().getObjectsByRealId(2599).comments;
-        String subtitle = SQL_DB.siteObjectsDao().getObjectsByRealId(2600).comments + ": " + ImagesTypeListRealm.getByID(14).getNm();
+//        String title = SQL_DB.siteObjectsDao().getObjectsByRealId(2599).comments;
+        String subtitle = SQL_DB.siteObjectsDao().getObjectsByRealId(6941).comments + ": " + ImagesTypeListRealm.getByID(14).getNm();
 
-        new SiteObjectsExchange().downloadSiteObjects(new Exchange.ExchangeInt() {
-            @Override
-            public void onSuccess(String msg) {
-
-            }
-
-            @Override
-            public void onFailure(String error) {
-
-            }
-        });
+        Log.e("!!!!!!!!",">>> " + subtitle);
+//
+//        new SiteObjectsExchange().downloadSiteObjects(new Exchange.ExchangeInt() {
+//            @Override
+//            public void onSuccess(String msg) {
+//
+//            }
+//
+//            @Override
+//            public void onFailure(String error) {
+//
+//            }
+//        });
     }
 
 /*

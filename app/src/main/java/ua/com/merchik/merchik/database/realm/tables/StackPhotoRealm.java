@@ -185,6 +185,22 @@ public class StackPhotoRealm {
         }
     }
 
+    public static RealmResults<StackPhotoDB> getPhotoByAddrCustomer(int addr, String customer, int type) {
+        if (addr != 0 && !customer.equals("")) {
+            RealmResults<StackPhotoDB> query = INSTANCE.where(StackPhotoDB.class)
+                    .isNotNull("photoServerId")
+                    .equalTo("addr_id", addr)
+                    .equalTo("client_id", customer)
+                    .equalTo("photo_type", type)
+                    .sort("dt", Sort.DESCENDING)
+                    .limit(10)
+                    .findAll();
+            if (query != null && query.size() > 0) {
+                return query;
+            }
+        }
+        return null;
+    }
 
     public static RealmResults<StackPhotoDB> getPlanogramPhoto(int addr, String customer) {
         if (addr != 0 && !customer.equals("")) {
