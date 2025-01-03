@@ -76,11 +76,14 @@ public class MenuMainActivity extends toolbar_menus {
     private void test() {
 //        new Translate().uploadNewTranslate();
 
+//        Exchange exchange = new Exchange();
+//        exchange.updateSiteObj();
+
         // Обучение
 //        String title = SQL_DB.siteObjectsDao().getObjectsByRealId(2599).comments;
-        String subtitle = SQL_DB.siteObjectsDao().getObjectsByRealId(6941).comments + ": " + ImagesTypeListRealm.getByID(14).getNm();
+//        String subtitle = SQL_DB.siteObjectsDao().getObjectsByRealId(6941).comments + ": " + ImagesTypeListRealm.getByID(14).getNm();
 
-        Log.e("!!!!!!!!",">>> " + subtitle);
+//        Log.e("!!!!!!!!",">>> " + subtitle);
 //
 //        new SiteObjectsExchange().downloadSiteObjects(new Exchange.ExchangeInt() {
 //            @Override

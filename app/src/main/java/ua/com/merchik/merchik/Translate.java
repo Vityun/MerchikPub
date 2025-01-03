@@ -303,80 +303,139 @@ public class Translate {
         // Для создания достижения выберите...
         AddTranslation data1 = new AddTranslation(
                 "1",
-                "sub_title_umfd_ufmd_photo_universal",
-                "Список фотоотчётов с типом",
+                "message_no_data_to_show_need_synchronization",
+                "На даний момент немає даних для відображення. Зачекайте завершення обміну даними або знайдіть місце з кращим інтернет-з'єднанням, натисніть 'Синхронізація' і дочекайтеся завершення обміну даними. Дані мають відобразитися.",
                 "app",
                 "all",
                 ""
         );
 
-        AddTranslation data = new AddTranslation(
-                "2",
-                "title_ufmd_photo_option_135158",
-                "Фото Остатков Товаров",
-                "app",
-                "all",
-                ""
-        );
+//        AddTranslation data = new AddTranslation(
+//                "2",
+//                "sub_title_umfd_photo_option_141360",
+//                "Фото товару на складі, якi зробив виконавець під час відвідування",
+//                "app",
+//                "all",
+//                ""
+//        );
+//
+//        AddTranslation data2 = new AddTranslation(
+//                "3",
+//                "sub_title_umfd_photo_option_135809",
+//                "Фото вітрини До початку робіт, якi зробив виконавець під час відвідування",
+//                "app",
+//                "all",
+//                ""
+//        );
+//        AddTranslation data3 = new AddTranslation(
+//                "4",
+//                "sub_title_umfd_photo_option_135158",
+//                "Фото залишків товарів, якi зробив виконавець під час відвідування",
+//                "app",
+//                "all",
+//                ""
+//        );
+//        AddTranslation data4 = new AddTranslation(
+//                "5",
+//                "sub_title_umfd_photo_option_158308",
+//                "Фото Вітрини Панорамне, якi зробив виконавець під час відвідування",
+//                "app",
+//                "all",
+//                ""
+//        );
+//        AddTranslation data5 = new AddTranslation(
+//                "6",
+//                "sub_title_umfd_photo_option_158309",
+//                "Фото Вітрини Наближене, якi зробив виконавець під час відвідування",
+//                "app",
+//                "all",
+//                ""
+//        );
+//        AddTranslation data6 = new AddTranslation(
+//                "7",
+//                "sub_title_umfd_photo_option_158605",
+//                "Фото Вітрини Корпоративний блок, якi зробив виконавець під час відвідування",
+//                "app",
+//                "all",
+//                ""
+//        );
+//        AddTranslation data7 = new AddTranslation(
+//                "8",
+//                "sub_title_umfd_photo_option_157277",
+//                "Фото Акційного Товару, якi зробив виконавець під час відвідування",
+//                "app",
+//                "all",
+//                ""
+//        );
+//
+//        AddTranslation data8 = new AddTranslation(
+//                "9",
+//                "dialog_options_control_main_part",
+//                "ПТТ работает в отделе",
+//                "app",
+//                "all",
+//                ""
+//        );
+//
+//        AddTranslation data9 = new AddTranslation(
+//                "10",
+//                "dialog_options_control_cancel_part",
+//                " и не может подписывать ЭКЛ для: ",
+//                "app",
+//                "all",
+//                ""
+//        );
+//
+//        AddTranslation data10 = new AddTranslation(
+//                "11",
+//                "dialog_options_control_accept_20_report",
+//                " (но исполнитель не провел свой 20-й отчет и эту блокировку пропускаем)",
+//                "app",
+//                "all",
+//                ""
+//        );
+//
+//        AddTranslation data11 = new AddTranslation(
+//                "12",
+//                "dialog_options_control_accept_40_report",
+//                " (но исполнитель не провел свой 40-й отчет и эту блокировку пропускаем)",
+//                "app",
+//                "all",
+//                ""
+//        );
+//
+//        AddTranslation data12 = new AddTranslation(
+//                "13",
+//                "dialog_options_control_accept_5_cash_register",
+//                " (но в данном магазине меньше 5 касс и это допустимо)",
+//                "app",
+//                "all",
+//                ""
+//        );
+//
+//        AddTranslation data13 = new AddTranslation(
+//                "14",
+//                "dialog_options_control_cancel_end",
+//                " (для магазина в котором более 5 касс и исполнитель провел 20-й отчет)",
+//                "app",
+//                "all",
+//                ""
+//        );
 
-        AddTranslation data2 = new AddTranslation(
-                "3",
-                "title_ufmd_photo_option_141360",
-                "Фото товара на складе",
-                "app",
-                "all",
-                ""
-        );
-        AddTranslation data3 = new AddTranslation(
-                "4",
-                "title_ufmd_photo_option_132969",
-                "Фото Тележка с Товаром",
-                "app",
-                "all",
-                ""
-        );
-        AddTranslation data4 = new AddTranslation(
-                "5",
-                "title_ufmd_photo_option_135809",
-                "Фото витрины до начала работ",
-                "app",
-                "all",
-                ""
-        );
-        AddTranslation data5 = new AddTranslation(
-                "6",
-                "title_ufmd_photo_option_158309",
-                "Фото витрины наближене",
-                "app",
-                "all",
-                ""
-        );
-        AddTranslation data6 = new AddTranslation(
-                "7",
-                "title_ufmd_photo_option_158604",
-                "Фото витрины наполненности",
-                "app",
-                "all",
-                ""
-        );
-        AddTranslation data7 = new AddTranslation(
-                "8",
-                "title_ufmd_photo_option_157277",
-                "Фото акционного товра и ценник",
-                "app",
-                "all",
-                ""
-        );
-
-
-        res.add(data);
+//        res.add(data);
         res.add(data1);
-        res.add(data2);
-        res.add(data3);
-        res.add(data4);
-        res.add(data5);
-        res.add(data6);
-        res.add(data7);
+//        res.add(data2);
+//        res.add(data3);
+//        res.add(data4);
+//        res.add(data5);
+//        res.add(data6);
+//        res.add(data7);
+//        res.add(data8);
+//        res.add(data9);
+//        res.add(data10);
+//        res.add(data11);
+//        res.add(data12);
+//        res.add(data13);
 
         /*
         *

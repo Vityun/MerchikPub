@@ -8,10 +8,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.platform.ComposeView
 import ua.com.merchik.merchik.dialogs.features.dialogLoading.LoadingDialog
 import ua.com.merchik.merchik.dialogs.features.dialogLoading.ProgressViewModel
+import ua.com.merchik.merchik.dialogs.features.dialogMessage.MessageDialog
 
 
-class LoadingDialogWithPercent(val context: Activity,
-                               private val progressViewModel: ProgressViewModel) {
+class AlertDialogMessage(val context: Activity,
+                         private val title: String,
+                         private val message: String) {
 
     private val isDialogVisible = mutableStateOf(false)
 
@@ -20,17 +22,17 @@ class LoadingDialogWithPercent(val context: Activity,
         val composeView = ComposeView(context).apply {
             setContent {
                 if (isDialogVisible.value) {
-                    LoadingDialog(
-                        viewModel = progressViewModel,
+                    MessageDialog(
+                        title = title,
+                        message = message,
                         onDismiss = {
                             isDialogVisible.value = false
-                            onDialogDismissed() // Обрабатываем завершение загрузки
+                            onDialogDismissed()
                         }
                     )
                 }
             }
         }
-        // Вставляем ComposeView в корневой layout
         context.findViewById<ViewGroup>(android.R.id.content).addView(composeView)
     }
 

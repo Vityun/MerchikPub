@@ -1009,101 +1009,102 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
     // ===== КРОНЧИК ===== КРОНЧИК ===== КРОНЧИК ===== КРОНЧИК ===== КРОНЧИК ===== КРОНЧИК =====
     private Runnable runnableCron10 = new Runnable() {
         public void run() {
-            try {
-                Log.e("КРОНЧИК", "Time: " + Clock.getHumanTime());
+//            if (false)
+                try {
+                    Log.e("КРОНЧИК", "Time: " + Clock.getHumanTime());
 
-                synchronizationSignal("SIGNAL", null);
+                    synchronizationSignal("SIGNAL", null);
 
 //                globals.fixMP(null);
 
 //            Log.e("КРОНЧИК", "stackPhotoDBAll: " + StackPhotoRealm.getAll().size());
 
-                // 22.04.2021 Ужасная хрень. Если нет данных от GPS -- оно начинает его слушать.
-                ua.com.merchik.merchik.trecker.switchedOff = !ua.com.merchik.merchik.trecker.enabledGPS;
+                    // 22.04.2021 Ужасная хрень. Если нет данных от GPS -- оно начинает его слушать.
+                    ua.com.merchik.merchik.trecker.switchedOff = !ua.com.merchik.merchik.trecker.enabledGPS;
 
-                if (ua.com.merchik.merchik.trecker.switchedOff) {
-                    Log.e("КРОНЧИК", "Запускаю слушатель GPS-а");
-                    ua.com.merchik.merchik.trecker.SetUpLocationListener(toolbar_menus.this);
-                }
+                    if (ua.com.merchik.merchik.trecker.switchedOff) {
+                        Log.e("КРОНЧИК", "Запускаю слушатель GPS-а");
+                        ua.com.merchik.merchik.trecker.SetUpLocationListener(toolbar_menus.this);
+                    }
 
-                Log.e("КРОНЧИК", "SESSION: " + Globals.session);
-                Log.e("КРОНЧИК", "login: " + login);
-                Log.e("КРОНЧИК", "password: " + password);
+                    Log.e("КРОНЧИК", "SESSION: " + Globals.session);
+                    Log.e("КРОНЧИК", "login: " + login);
+                    Log.e("КРОНЧИК", "password: " + password);
 
-                server.sessionCheckAndLogin(toolbar_menus.this, login, password);   // Проверка активности сессии и логин, если сессия протухла
-                internetStatus = server.internetStatus();       // Обновление статуса интеренета
+                    server.sessionCheckAndLogin(toolbar_menus.this, login, password);   // Проверка активности сессии и логин, если сессия протухла
+                    internetStatus = server.internetStatus();       // Обновление статуса интеренета
 //            pingServer(1);                            // ОБМЕН ЦВЕТ
 //                RealmManager.stackPhotoDeletePhoto();           // Удаление фото < 2 дня
-                lightStatus();                                  // Обновление статуса Светофоров
-                setupBadge(RealmManager.stackPhotoNotUploadedPhotosCount()); // Подсчёт кол-ва фоток в БД & Установка числа в счётчик
+                    lightStatus();                                  // Обновление статуса Светофоров
+                    setupBadge(RealmManager.stackPhotoNotUploadedPhotosCount()); // Подсчёт кол-ва фоток в БД & Установка числа в счётчик
 
-                Log.e("КРОНЧИК", "stackPhotoNotUploadedPhotosCount(): " + RealmManager.stackPhotoNotUploadedPhotosCount());
+                    Log.e("КРОНЧИК", "stackPhotoNotUploadedPhotosCount(): " + RealmManager.stackPhotoNotUploadedPhotosCount());
 
-                globals.testMSG(toolbar_menus.this);
+                    globals.testMSG(toolbar_menus.this);
 
-                Log.e("КРОНЧИК", "internetStatus: " + internetStatus);
+                    Log.e("КРОНЧИК", "internetStatus: " + internetStatus);
 
-                globals.writeToMLOG(Clock.getHumanTime() + " CRON.internetStatus: " + internetStatus + "\n");
+                    globals.writeToMLOG(Clock.getHumanTime() + " CRON.internetStatus: " + internetStatus + "\n");
 
-                cronCheckUploadsPhotoOnServer();                // Получение инфы о "загруженности" фоток
+                    cronCheckUploadsPhotoOnServer();                // Получение инфы о "загруженности" фоток
 
 
-                // Если включена Автовыгрузка/Автообмен
-                if (Globals.autoSend && internetStatus == 1) {
+                    // Если включена Автовыгрузка/Автообмен
+                    if (Globals.autoSend && internetStatus == 1) {
 //                getPhotoAndUpload(1);   // Выгрузка фото
 
 
-                    try {
-                        tablesLoadingUnloading.sendAndUpdateLog();
-                    } catch (Exception e) {
-                        Globals.writeToMLOG("ERROR", "CRON LOG MP", "Exception e: " + e);
-                    }
+                        try {
+                            tablesLoadingUnloading.sendAndUpdateLog();
+                        } catch (Exception e) {
+                            Globals.writeToMLOG("ERROR", "CRON LOG MP", "Exception e: " + e);
+                        }
 
-                    tablesLoadingUnloading.cronUpdateTables();
+                        tablesLoadingUnloading.cronUpdateTables();
 
-                    try {
-                        Globals.writeToMLOG("INFO", "CRON uploadReportPrepare", "Start");
-                        tablesLoadingUnloading.uploadReportPrepareToServer();
-                    } catch (Exception e) {
-                        Globals.writeToMLOG("ERROR", "CRON uploadReportPrepare", "Exception e: " + e);
-                    }
+                        try {
+                            Globals.writeToMLOG("INFO", "CRON uploadReportPrepare", "Start");
+                            tablesLoadingUnloading.uploadReportPrepareToServer();
+                        } catch (Exception e) {
+                            Globals.writeToMLOG("ERROR", "CRON uploadReportPrepare", "Exception e: " + e);
+                        }
 
-                    try {
+                        try {
 //                    tablesLoadingUnloading.updateWpData();
-                    } catch (Exception e) {
+                        } catch (Exception e) {
+                        }
+
+
+                        // Новый обмен. Нужно ещё донастроить для нормальной работы.
+                        if (exchange == null) {
+                            exchange = new Exchange();
+                            exchange.context = toolbar_menus.this;
+                        }
+                        exchange.startExchange();
+
+
+                        PhotoReports photoReports = new PhotoReports(toolbar_menus.this);
+                        if (photoReports.permission) {
+                            Globals.writeToMLOG("INFO", "CRON/PhotoReports", "Start upload photo reports. upload permission: true");
+                            photoReports.uploadPhotoReports(PhotoReports.UploadType.AUTO);
+                        } else {
+                            Globals.writeToMLOG("INFO", "CRON/PhotoReports", "Start upload photo reports. upload permission: false");
+                        }
+
                     }
 
 
-                    // Новый обмен. Нужно ещё донастроить для нормальной работы.
-                    if (exchange == null) {
-                        exchange = new Exchange();
-                        exchange.context = toolbar_menus.this;
-                    }
-                    exchange.startExchange();
-
-
-                    PhotoReports photoReports = new PhotoReports(toolbar_menus.this);
-                    if (photoReports.permission) {
-                        Globals.writeToMLOG("INFO", "CRON/PhotoReports", "Start upload photo reports. upload permission: true");
-                        photoReports.uploadPhotoReports(PhotoReports.UploadType.AUTO);
-                    } else {
-                        Globals.writeToMLOG("INFO", "CRON/PhotoReports", "Start upload photo reports. upload permission: false");
-                    }
-
-                }
-
-
-                // Пишет статус логина. Или режим работы приложения
-                toolbarMwnuItemServer = "Тест";
+                    // Пишет статус логина. Или режим работы приложения
+                    toolbarMwnuItemServer = "Тест";
 //                if (Globals.onlineStatus) {
 //                    toolbarMwnuItemServer = getResources().getString(R.string.txt_sever) + "(" + getResources().getString(R.string.txt_online) + ")";
 //                } else {
 //                    toolbarMwnuItemServer = getResources().getString(R.string.txt_sever) + "(" + getResources().getString(R.string.txt_offline) + ")";
 //                }
-                Log.e("КРОНЧИК", "Globals.onlineStatus: " + toolbarMwnuItemServer);
-            } catch (Exception e) {
-                Log.e("КРОНЧИК", "Exception" + e);
-            }
+                    Log.e("КРОНЧИК", "Globals.onlineStatus: " + toolbarMwnuItemServer);
+                } catch (Exception e) {
+                    Log.e("КРОНЧИК", "Exception" + e);
+                }
 
 
             globals.handlerCount.postDelayed(this, 10000);  //повтор раз в 10 секунд

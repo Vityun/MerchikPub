@@ -21,6 +21,7 @@ import ua.com.merchik.merchik.dialogs.DialogAchievement.AchievementDataHolder
 import ua.com.merchik.merchik.features.main.Main.Filters
 import ua.com.merchik.merchik.features.main.Main.ItemFilter
 import ua.com.merchik.merchik.features.main.Main.MainViewModel
+import java.text.SimpleDateFormat
 import javax.inject.Inject
 import kotlin.reflect.KClass
 
@@ -146,29 +147,45 @@ class StackPhotoDBViewModel @Inject constructor(
                     }
 
 
-                    val data = when (typePhoto) {
-                        10, 31 -> {
-                            RealmManager.INSTANCE.copyFromRealm(
-                                StackPhotoRealm.getPhotoByAddrCustomer(
-                                    wpDataDB.addr_id,
-                                    wpDataDB.client_id,
-                                    typePhoto
-                                )
-                            )
-                        }
+//                    val data = when (typePhoto) {
+//                        10, 31 -> {
+//                            RealmManager.INSTANCE.copyFromRealm(
+//                                StackPhotoRealm.getPhotoByAddrCustomer(
+//                                    wpDataDB.addr_id,
+//                                    wpDataDB.client_id,
+//                                    typePhoto
+//                                )
+//                            )
+//                        }
+//
+//                        else -> {
+//                            RealmManager.INSTANCE.copyFromRealm(
+//                                StackPhotoRealm.getPhotosByDAD2(
+//                                    codeDad2,
+//                                    typePhoto
+//                                )
+//                            )
+//                        }
+//                    }
 
-                        else -> {
-                            RealmManager.INSTANCE.copyFromRealm(
+                    val data = RealmManager.INSTANCE.copyFromRealm(
                                 StackPhotoRealm.getPhotosByDAD2(
                                     codeDad2,
                                     typePhoto
-                                )
-                            )
-                        }
+                                ))
+                    val format = SimpleDateFormat("yyyy.MM.dd HH:mm")
+
+                    for (i in data) {
+                        Log.e("~~~~~~~~~~~","~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+                        Log.e("!!!!!!!!!!!", "id: ${i.id}")
+                        Log.e("!!!!!!!!!!!", "PhotoServerId: ${i.getPhotoServerId()}")
+                        Log.e("!!!!!!!!!!!", "photo_user_id: ${i.photo_user_id}")
+                        Log.e("!!!!!!!!!!!", "photo_type: ${i.photo_type}")
+                        Log.e("!!!!!!!!!!!", "time: ${format.format(i.dt * 1000)}")
+                        Log.e("!!!!!!!!!!!", "photo_num: ${i.photo_num}")
+
                     }
-
                     Log.e("!!!!!!!!!!!", "data: ${data.size}")
-
 
                     repository.toItemUIList(StackPhotoDB::class, data, contextUI, typePhoto)
                         .map {

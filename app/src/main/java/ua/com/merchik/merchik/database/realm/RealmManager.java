@@ -780,8 +780,9 @@ public class RealmManager {
                 && !photoServerId.equals("0")
         ) {
             query.equalTo("photoServerId", photoServerId)
-                    .equalTo("photo_type", photoType);
-//                    .equalTo("comment", photoSize)
+                    .equalTo("photo_type", photoType)
+                    .isNotNull("photo_num")
+;//                    .equalTo("comment", photoSize)
 //                    .sort("approve", Sort.DESCENDING, "photoServerId", Sort.DESCENDING);
         } else {
             query.equalTo("object_id", id)
@@ -796,7 +797,6 @@ public class RealmManager {
         } else {
             st = null;
         }
-
         return st;
     }
 

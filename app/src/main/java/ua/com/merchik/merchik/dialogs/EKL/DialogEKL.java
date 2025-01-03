@@ -26,6 +26,8 @@ import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.daimajia.androidanimations.library.Techniques;
+import com.daimajia.androidanimations.library.YoYo;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.annotations.Expose;
@@ -107,9 +109,9 @@ public class DialogEKL {
             call = dialog.findViewById(R.id.imageButtonCall);
             addSotr = dialog.findViewById(R.id.add_sotr);
 
-            buttonSend = dialog.findViewById(R.id.buttonSend);
+            buttonSend = dialog.findViewById(R.id.buttonSend3);
             buttonSend2 = dialog.findViewById(R.id.buttonSend2);
-            buttonSend3 = dialog.findViewById(R.id.buttonSend3);
+            buttonSend3 = dialog.findViewById(R.id.buttonSend);
 
             buttonCheck = dialog.findViewById(R.id.buttonCheck);
             editText = dialog.findViewById(R.id.editText);
@@ -534,7 +536,17 @@ public class DialogEKL {
                 }
             });
 
-            buttonSend.setBackgroundResource(R.drawable.bg_temp);
+            YoYo.with(Techniques.Bounce)
+                    .duration(700)
+                    .repeat(2)
+                    .playOn(buttonSend3);
+            YoYo.with(Techniques.Bounce)
+                    .duration(700)
+                    .repeat(2)
+                    .delay(1550)
+                    .playOn(buttonSend2);
+
+//            buttonSend.setBackgroundResource(R.drawable.bg_temp);
             buttonSend.setOnClickListener(v -> {
                 pressButtonSend();
             });

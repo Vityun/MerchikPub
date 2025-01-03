@@ -919,9 +919,9 @@ public class Exchange {
                 }
 
 
-//                updateLanguages();  // Обновление языков
-//                updateSiteObj();    // Обновление Обьектов Сайта
-//                updateTranslates();  // Обновление Переводов
+                updateLanguages();  // Обновление языков
+                updateSiteObj();    // Обновление Обьектов Сайта
+                updateTranslates();  // Обновление Переводов
 
 
                 try {
@@ -1308,7 +1308,7 @@ public class Exchange {
         try {
             Log.e("updateLanguages", "OK");
             // Отображение прогресса обена таблиц.
-            BlockingProgressDialog progressDialog = BlockingProgressDialog.show(context, "Обмен данными с сервером.", "Обновление таблицы: " + "Языки");
+//            BlockingProgressDialog progressDialog = BlockingProgressDialog.show(context, "Обмен данными с сервером.", "Обновление таблицы: " + "Языки");
             new LanguagesExchange().downloadLanguages(new ExchangeInterface.Languages() {
                 @Override
                 public void onSuccess(List<LanguagesSDB> data) {
@@ -1317,10 +1317,10 @@ public class Exchange {
                     SQL_DB.langListDao().insertAll(data);
 
                     // Скрытие текущего прогресса
-                    if (progressDialog != null) {
-                        if (progressDialog.isShowing())
-                            progressDialog.dismiss();
-                    }
+//                    if (progressDialog != null) {
+//                        if (progressDialog.isShowing())
+//                            progressDialog.dismiss();
+//                    }
 
 
                     // ОПЦИОНАЛЬНО! Отображение сообщения пользователю
@@ -1335,10 +1335,10 @@ public class Exchange {
                 public void onFailure(String error) {
 
                     // Скрытие текущего прогресса
-                    if (progressDialog != null) {
-                        if (progressDialog.isShowing())
-                            progressDialog.dismiss();
-                    }
+//                    if (progressDialog != null) {
+//                        if (progressDialog.isShowing())
+//                            progressDialog.dismiss();
+//                    }
 
                     // ОПЦИОНАЛЬНО! Отображение сообщения пользователю
                     DialogData dialog = new DialogData(context);
@@ -1361,10 +1361,11 @@ public class Exchange {
      * Обновление таблички Обьекты сайта. Запись идёт в SQL
      */
     private void updateSiteObj() {
-        List<SiteObjectsSDB> data = SQL_DB.siteObjectsDao().getAll();
+//        List<SiteObjectsSDB> data = SQL_DB.siteObjectsDao().getAll();
 
+        Log.e("SiteObjectsExchange","0");
         // Отобрадение прогресса
-        BlockingProgressDialog progressDialog = BlockingProgressDialog.show(context, "Обмен данными с сервером.", "Обновление таблицы: " + "ОбьектыСайта");
+//        BlockingProgressDialog progressDialog = BlockingProgressDialog.show(context, "Обмен данными с сервером.", "Обновление таблицы: " + "ОбьектыСайта");
 
         new SiteObjectsExchange().downloadSiteObjects(new ExchangeInt() {
             @Override
@@ -1373,10 +1374,10 @@ public class Exchange {
                 Log.e("SiteObjectsExchange", "S");
 
 
-                if (progressDialog != null) {
-                    if (progressDialog.isShowing())
-                        progressDialog.dismiss();
-                }
+//                if (progressDialog != null) {
+//                    if (progressDialog.isShowing())
+//                        progressDialog.dismiss();
+//                }
 
 //                DialogData dialog = new DialogData(context);
 //                dialog.setTitle("ОбьектыСайта");
@@ -1391,10 +1392,10 @@ public class Exchange {
                 Log.e("SiteObjectsExchange", "F");
 
 
-                if (progressDialog != null) {
-                    if (progressDialog.isShowing())
-                        progressDialog.dismiss();
-                }
+//                if (progressDialog != null) {
+//                    if (progressDialog.isShowing())
+//                        progressDialog.dismiss();
+//                }
 
                 DialogData dialog = new DialogData(context);
                 dialog.setTitle("ОбьектыСайта");
@@ -1416,7 +1417,7 @@ public class Exchange {
             Log.e("updateTranslates", "OK");
 
             // Отображение прогресса обена таблиц.
-            BlockingProgressDialog progressDialog = BlockingProgressDialog.show(context, "Обмен данными с сервером.", "Обновление таблицы: " + "Переводы");
+//            BlockingProgressDialog progressDialog = BlockingProgressDialog.show(context, "Обмен данными с сервером.", "Обновление таблицы: " + "Переводы");
 
             new TranslationsExchange().downloadTranslations(new ExchangeInterface.Translates() {
                 @Override
@@ -1426,10 +1427,10 @@ public class Exchange {
                     SQL_DB.translatesDao().insertAll(data);
 
                     // Скрытие текущего прогресса
-                    if (progressDialog != null) {
-                        if (progressDialog.isShowing())
-                            progressDialog.dismiss();
-                    }
+//                    if (progressDialog != null) {
+//                        if (progressDialog.isShowing())
+//                            progressDialog.dismiss();
+//                    }
 
 
                     // ОПЦИОНАЛЬНО! Отображение сообщения пользователю
@@ -1444,10 +1445,10 @@ public class Exchange {
                 public void onFailure(String error) {
 
                     // Скрытие текущего прогресса
-                    if (progressDialog != null) {
-                        if (progressDialog.isShowing())
-                            progressDialog.dismiss();
-                    }
+//                    if (progressDialog != null) {
+//                        if (progressDialog.isShowing())
+//                            progressDialog.dismiss();
+//                    }
 
                     // ОПЦИОНАЛЬНО! Отображение сообщения пользователю
                     DialogData dialog = new DialogData(context);
@@ -1464,11 +1465,10 @@ public class Exchange {
         }
     }
 
-
     /* выгрузка доп информации к фото */
     public void sendPhotoInformation(PhotoInformation data, ExchangeInterface.ExchangeResponseInterface exchange) {
         if (data != null) {
-            if (data.data != null && data.data.size() > 0) {
+            if (data.data != null && !data.data.isEmpty()) {
                 String json = new Gson().toJson(data); // TODO: УЗНАТЬ У МЕНТОРА: Можно ли эти 2 строчки выделить в отдельный метод как-то и где это сделать? в утильном Globals?
                 JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
 

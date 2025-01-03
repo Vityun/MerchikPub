@@ -545,7 +545,7 @@ public class menu_login extends AppCompatActivity {
             dialogReg.setClose(dialogReg::dismiss);
             dialogReg.setCancel("Отменить", dialogReg::dismiss);
             dialogReg.setOk("Зарегистрироваться", () -> {
-                autoText.setText(dialog.getTelephone());
+//                autoText.setText(dialog.getTelephone());
                 dialog.dismiss();
 
                 Toast.makeText(this, "Внесли телефон: " + dialog.getTelephone(), Toast.LENGTH_SHORT).show();
@@ -574,6 +574,9 @@ public class menu_login extends AppCompatActivity {
                         Log.e("regestration", "response: " + response.body());
                         if (response.isSuccessful()) {
                             if (response.body() != null) {
+                                String fio = response.body().get("fio").getAsString();
+                                autoText.setText(fio);
+                                Log.e("!!!!!!!!!!!!!!!!!!", "FIO: " + fio);
                                 Toast.makeText(menu_login.this, "response.body(): " + response.body(), Toast.LENGTH_SHORT).show();
                             } else {
                                 Toast.makeText(menu_login.this, "response.body(): NULL", Toast.LENGTH_SHORT).show();

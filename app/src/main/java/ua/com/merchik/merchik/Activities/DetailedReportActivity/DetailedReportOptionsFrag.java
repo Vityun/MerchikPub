@@ -60,6 +60,7 @@ import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.OptionsRealm;
 import ua.com.merchik.merchik.database.realm.tables.WpDataRealm;
 import ua.com.merchik.merchik.dialogs.DialogFilter.Click;
+import ua.com.merchik.merchik.dialogs.features.AlertDialogMessage;
 
 @SuppressLint("ValidFragment")
 public class DetailedReportOptionsFrag extends Fragment {
@@ -376,45 +377,53 @@ public class DetailedReportOptionsFrag extends Fragment {
 
             List<OptionsDB> optionsButtons = workPlan.getOptionButtons2(workPlan.getWpOpchetId(wpDataDB), wpDataDB.getId());
 
-            List<Integer> ids = new ArrayList<>();
-            for (OptionsDB item : optionsButtons) {
-                ids.add(Integer.parseInt(item.getOptionId()));
+            if (optionsButtons.isEmpty()){
+                AlertDialogMessage alertDialogMessage = new AlertDialogMessage(requireActivity(),
+                        "",
+                        "На даний момент немає даних для відображення. Можливо вони ще не завантаженi з боку сервера. Зачекайте завершення обміну даними з сервером, якщо завантаження не вiдбулося знайдіть місце з кращим інтернет-з'єднанням, натисніть 'Синхронізація' (у правому вехньому кутку) і дочекайтеся завершення процесу. Дані мають відобразитися." +
+                                "\nЯкщо це не допомогло, звернiться до керiвника");
+                alertDialogMessage.show();
+            } else {
+                List<Integer> ids = new ArrayList<>();
+                for (OptionsDB item : optionsButtons) {
+                    ids.add(Integer.parseInt(item.getOptionId()));
+                }
+
+                Log.e("R_TRANSLATES", "item: " + ids.size());
+
+                for (Integer item : ids) {
+                    Log.e("R_TRANSLATES", "Integeritem: " + item);
+                }
+
+                // Запрос к SQL БДшке. Получаем список обьектов сайта
+                List<SiteObjectsSDB> list = SQL_DB.siteObjectsDao().getObjectsById(ids);
+
+                // Получаю все опции по данному отчёту.
+                List<OptionsDB> allReportOption = RealmManager.INSTANCE.copyFromRealm(OptionsRealm.getOptionsByDAD2(String.valueOf(wpDataDB.getCode_dad2())));
+
+                Log.e("R_TRANSLATES", "item: " + list.size());
+
+                for (SiteObjectsSDB item : list) {
+                    Log.e("R_TRANSLATES", "SiteObjectsSDBitem: " + item.id);
+                }
+
+                Log.e("TEST_OPTIONS", "optionsButtons SIZE: " + optionsButtons.size());
+                for (OptionsDB item : optionsButtons) {
+                    options.optionControl(mContext, wpDataDB, item, null, Options.NNKMode.NULL, new OptionControl.UnlockCodeResultListener() {
+                        @Override
+                        public void onUnlockCodeSuccess() {
+
+                        }
+
+                        @Override
+                        public void onUnlockCodeFailure() {
+
+                        }
+                    });
+                }
+
+                recycleViewDRAdapter.setDataButtons(optionsButtons);
             }
-
-            Log.e("R_TRANSLATES", "item: " + ids.size());
-
-            for (Integer item : ids) {
-                Log.e("R_TRANSLATES", "Integeritem: " + item);
-            }
-
-            // Запрос к SQL БДшке. Получаем список обьектов сайта
-            List<SiteObjectsSDB> list = SQL_DB.siteObjectsDao().getObjectsById(ids);
-
-            // Получаю все опции по данному отчёту.
-            List<OptionsDB> allReportOption = RealmManager.INSTANCE.copyFromRealm(OptionsRealm.getOptionsByDAD2(String.valueOf(wpDataDB.getCode_dad2())));
-
-            Log.e("R_TRANSLATES", "item: " + list.size());
-
-            for (SiteObjectsSDB item : list) {
-                Log.e("R_TRANSLATES", "SiteObjectsSDBitem: " + item.id);
-            }
-
-            Log.e("TEST_OPTIONS", "optionsButtons SIZE: " + optionsButtons.size());
-            for (OptionsDB item : optionsButtons) {
-                options.optionControl(mContext, wpDataDB, item, null, Options.NNKMode.NULL, new OptionControl.UnlockCodeResultListener() {
-                    @Override
-                    public void onUnlockCodeSuccess() {
-
-                    }
-
-                    @Override
-                    public void onUnlockCodeFailure() {
-
-                    }
-                });
-            }
-
-            recycleViewDRAdapter.setDataButtons(optionsButtons);
         } catch (Exception e) {
             Log.e("R_TRANSLATES", "convertedObjectERROR: " + e);
             e.printStackTrace();
