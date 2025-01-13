@@ -303,30 +303,66 @@ public class Translate {
         // Для создания достижения выберите...
         AddTranslation data1 = new AddTranslation(
                 "1",
-                "message_no_data_to_show_need_synchronization",
-                "На даний момент немає даних для відображення. Зачекайте завершення обміну даними або знайдіть місце з кращим інтернет-з'єднанням, натисніть 'Синхронізація' і дочекайтеся завершення обміну даними. Дані мають відобразитися.",
+                "title_umfd_list_ptt",
+                "Список ПТТ",
                 "app",
                 "all",
                 ""
         );
 
-//        AddTranslation data = new AddTranslation(
-//                "2",
-//                "sub_title_umfd_photo_option_141360",
-//                "Фото товару на складі, якi зробив виконавець під час відвідування",
-//                "app",
-//                "all",
-//                ""
-//        );
-//
-//        AddTranslation data2 = new AddTranslation(
-//                "3",
-//                "sub_title_umfd_photo_option_135809",
-//                "Фото вітрини До початку робіт, якi зробив виконавець під час відвідування",
-//                "app",
-//                "all",
-//                ""
-//        );
+
+        AddTranslation data2 = new AddTranslation(
+                "2",
+                "sub_title_umfd_list_ptt",
+                "Виберіть ТПП (Представника Торгової точки) якому ви відправите код для підтвердження факту виконаних робіт з даної ТТ та Вашої присутності",
+                "app",
+                "all",
+                ""
+        );
+
+        AddTranslation data3 = new AddTranslation(
+                "3",
+                "users_sbs_ufmd_fio",
+                "Представник ТТ",
+                "app",
+                "all",
+                ""
+        );
+        AddTranslation data4 = new AddTranslation(
+                "4",
+                "users_sbs_ufmd_tel",
+                "Номер",
+                "app",
+                "all",
+                ""
+        );
+        AddTranslation data5 = new AddTranslation(
+                "5",
+                "users_sbs_ufmd_tel2",
+                "Додатковий номер",
+                "app",
+                "all",
+                ""
+        );
+
+        AddTranslation data6 = new AddTranslation(
+                "6",
+                "users_sbs_ufmd_otdel_id",
+                "Відділ",
+                "app",
+                "all",
+                ""
+        );
+
+        AddTranslation data7 = new AddTranslation(
+                "7",
+                "ptt_dialog_ekl",
+                "Виберіть ТПП (Представника Торгової точки)",
+                "app",
+                "all",
+                ""
+        );
+
 //        AddTranslation data3 = new AddTranslation(
 //                "4",
 //                "sub_title_umfd_photo_option_135158",
@@ -424,12 +460,12 @@ public class Translate {
 
 //        res.add(data);
         res.add(data1);
-//        res.add(data2);
-//        res.add(data3);
-//        res.add(data4);
-//        res.add(data5);
-//        res.add(data6);
-//        res.add(data7);
+        res.add(data2);
+        res.add(data3);
+        res.add(data4);
+        res.add(data5);
+        res.add(data6);
+        res.add(data7);
 //        res.add(data8);
 //        res.add(data9);
 //        res.add(data10);

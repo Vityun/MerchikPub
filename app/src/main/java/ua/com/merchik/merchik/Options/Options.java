@@ -796,7 +796,7 @@ public class Options {
 
             if (
 //                    !option.getClientId().equals("9295") &&     //Бетта
-                    !option.getClientId().equals("9382") &&     //Витмарк
+//                    !option.getClientId().equals("9382") &&     //Витмарк
                     !option.getClientId().equals("38283")       //Юнилайф
 
 //                    option.getClientId().equals("14301") ||     // трегуб

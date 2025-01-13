@@ -1,5 +1,7 @@
 package ua.com.merchik.merchik.data.Database.Room;
 
+import android.util.Log;
+
 import androidx.annotation.NonNull;
 import androidx.room.ColumnInfo;
 import androidx.room.Entity;
@@ -16,6 +18,8 @@ import java.util.List;
 
 import ua.com.merchik.merchik.dataLayer.DataObjectUI;
 import ua.com.merchik.merchik.dataLayer.model.MerchModifier;
+import ua.com.merchik.merchik.features.main.AdditionalRequirementsDBOverride;
+import ua.com.merchik.merchik.features.main.UsersSDBOverride;
 
 /**
  * Таблица в которой хронятся ВСЕ сотрудники ДОСТУПНЫЕ данному пользователю (который залогинен)
@@ -168,19 +172,19 @@ public class UsersSDB implements DataObjectUI{
     @NonNull
     @Override
     public String getHidedFieldsOnUI() {
-        return "";
+        return UsersSDBOverride.INSTANCE.getHidedFieldsOnUI();
     }
 
     @Nullable
     @Override
     public Long getFieldTranslateId(@NonNull String key) {
-        return DataObjectUI.DefaultImpls.getFieldTranslateId(this, key);
+        return UsersSDBOverride.INSTANCE.getTranslateId(key);
     }
 
     @NonNull
     @Override
     public String getValueUI(@NonNull String key, @NonNull Object value) {
-        return DataObjectUI.DefaultImpls.getValueUI(this, key, value);
+        return UsersSDBOverride.INSTANCE.getValueUI(key, value);
     }
 
     @Nullable
@@ -198,7 +202,8 @@ public class UsersSDB implements DataObjectUI{
     @Nullable
     @Override
     public MerchModifier getContainerModifier(@NonNull JSONObject jsonObject) {
-        return DataObjectUI.DefaultImpls.getContainerModifier(this, jsonObject);
+        Log.e("%%%%%%%%%%%%%%%%%","getContainerModifier");
+        return UsersSDBOverride.INSTANCE.getContainerModifier(jsonObject);
     }
 
     @Nullable

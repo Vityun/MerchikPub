@@ -1491,7 +1491,8 @@ public class Globals {
     public static void telephoneCall(Context context, String tel, String title) {
         DialogData d = new DialogData(context);
         d.setTitle(title);
-        d.setText("Сейчас будет набран номер: " + tel);
+        String maskedTel = tel.replaceAll(".(?=.{4})", "*");
+        d.setText("Сейчас будет набран номер: " + maskedTel);
         d.setOk("Позвонить", () -> {
             Intent intent = new Intent(Intent.ACTION_CALL);
             intent.setData(Uri.parse("tel:" + tel));

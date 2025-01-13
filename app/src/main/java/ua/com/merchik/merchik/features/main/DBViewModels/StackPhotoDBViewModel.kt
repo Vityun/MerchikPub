@@ -128,9 +128,9 @@ class StackPhotoDBViewModel @Inject constructor(
                 ContextUI.STACK_PHOTO_FROM_OPTION_158605
                 -> {
                     val codeDad2 = Gson().fromJson(dataJson, Long::class.java)
-                    val wpDataDB = RealmManager.INSTANCE.copyFromRealm(
-                        RealmManager.getWorkPlanRowByCodeDad2(codeDad2)
-                    )
+//                    val wpDataDB = RealmManager.INSTANCE.copyFromRealm(
+//                        RealmManager.getWorkPlanRowByCodeDad2(codeDad2)
+//                    )
 
                     val typePhoto = when (contextUI) {
                         ContextUI.STACK_PHOTO_TO_FROM_ACHIEVEMENT -> 14
@@ -173,19 +173,7 @@ class StackPhotoDBViewModel @Inject constructor(
                                     codeDad2,
                                     typePhoto
                                 ))
-                    val format = SimpleDateFormat("yyyy.MM.dd HH:mm")
 
-                    for (i in data) {
-                        Log.e("~~~~~~~~~~~","~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
-                        Log.e("!!!!!!!!!!!", "id: ${i.id}")
-                        Log.e("!!!!!!!!!!!", "PhotoServerId: ${i.getPhotoServerId()}")
-                        Log.e("!!!!!!!!!!!", "photo_user_id: ${i.photo_user_id}")
-                        Log.e("!!!!!!!!!!!", "photo_type: ${i.photo_type}")
-                        Log.e("!!!!!!!!!!!", "time: ${format.format(i.dt * 1000)}")
-                        Log.e("!!!!!!!!!!!", "photo_num: ${i.photo_num}")
-
-                    }
-                    Log.e("!!!!!!!!!!!", "data: ${data.size}")
 
                     repository.toItemUIList(StackPhotoDB::class, data, contextUI, typePhoto)
                         .map {

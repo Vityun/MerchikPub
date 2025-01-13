@@ -120,6 +120,7 @@ public class EKLRequests {
         public Integer sendSms;
     }
 
+//    получение сотрудников из 1С если нет в базе данных
     public void getPTTByAddress(int addressId, Clicks.clickObjectAndStatus click) {
         Test data = new Test();
         data.mod = "data_list";

@@ -2,6 +2,7 @@ package ua.com.merchik.merchik.features.main.componentsUI
 
 import android.graphics.Paint
 import android.text.TextPaint
+import android.util.Log
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -29,6 +30,7 @@ fun TextInStrokeCircle(
     circleSize: Dp,
     textSize: Float,
 ) {
+    Log.e("%%%%%%%%%%","text: $text")
     Box(
         modifier = Modifier
             .size(45.dp)

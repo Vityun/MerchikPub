@@ -77,6 +77,7 @@ public class MenuMainActivity extends toolbar_menus {
 //        new Translate().uploadNewTranslate();
 
 //        Exchange exchange = new Exchange();
+//        exchange.updateAverageSalary();
 //        exchange.updateSiteObj();
 
         // Обучение

@@ -1,5 +1,6 @@
 package ua.com.merchik.merchik.features.main
 
+import android.util.Log
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontStyle
@@ -8,6 +9,9 @@ import androidx.compose.ui.unit.dp
 import org.json.JSONObject
 import ua.com.merchik.merchik.dataLayer.model.MerchModifier
 import ua.com.merchik.merchik.dataLayer.model.Padding
+import ua.com.merchik.merchik.dataLayer.toItemUI
+import ua.com.merchik.merchik.database.realm.RealmManager
+import ua.com.merchik.merchik.database.room.RoomManager
 import java.text.SimpleDateFormat
 import java.util.Date
 
@@ -39,6 +43,7 @@ object LogDBOverride {
                 "${SimpleDateFormat("dd MMMM HH:mm:ss.SSS").format(Date(it))} $value"
             } ?: value.toString()
         }
+
         else -> value.toString()
     }
 
@@ -48,6 +53,7 @@ object LogDBOverride {
             fontWeight = FontWeight.Bold,
             padding = Padding(end = 10.dp)
         )
+
         "comments" -> {
             if (!jsonObject.get("obj_id").toString().contains("20"))
                 MerchModifier(
@@ -58,16 +64,23 @@ object LogDBOverride {
             else
                 MerchModifier(fontWeight = FontWeight.Bold, padding = Padding(end = 10.dp))
         }
+
         else -> null
     }
 
     fun getValueModifier(key: String, jsonObject: JSONObject): MerchModifier? = when (key) {
         "obj_id" -> {
             if (jsonObject.get("obj_id").toString().contains("20"))
-                MerchModifier(fontStyle = FontStyle.Italic, background = Color.Red, alignment = Alignment.End, weight = 1f)
+                MerchModifier(
+                    fontStyle = FontStyle.Italic,
+                    background = Color.Red,
+                    alignment = Alignment.End,
+                    weight = 1f
+                )
             else
                 MerchModifier(fontStyle = FontStyle.Italic)
         }
+
         "dt_update", "dt_start", "dt", "dt_action" -> MerchModifier(fontStyle = FontStyle.Italic)
         "comments" -> MerchModifier(fontStyle = FontStyle.Italic)
         else -> null
@@ -117,6 +130,7 @@ object AddressSDBOverride {
             fontWeight = FontWeight.Bold,
             padding = Padding(end = 10.dp)
         )
+
         else -> null
     }
 
@@ -150,6 +164,7 @@ object CustomerSDBOverride {
                 "${SimpleDateFormat("dd MMMM HH:mm:ss.SSS").format(Date(it))} $value"
             } ?: value.toString()
         }
+
         else -> value.toString()
     }
 }
@@ -161,6 +176,7 @@ object AdditionalRequirementsDBOverride {
                 SimpleDateFormat("dd MMMM YYYY").format(Date(it))
             } ?: value.toString()
         }
+
         else -> value.toString()
     }
 
@@ -199,7 +215,7 @@ object AdditionalRequirementsDBOverride {
             try {
                 val colorHex = jsonObject.optString("color", "")
                 Color(android.graphics.Color.parseColor("#$colorHex"))
-            } catch (e: Exception){
+            } catch (e: Exception) {
                 null
             }
         return MerchModifier(background = color)
@@ -260,7 +276,7 @@ object LogMPDBOverride {
 
         "distance" ->
             (value as? Int)?.let {
-                if (it > 1000) "${it / 1000} км." else  "$it м."
+                if (it > 1000) "${it / 1000} км." else "$it м."
             } ?: "0 м."
 
         "provider" -> if (value == 1) "GPS" else "GSM"
@@ -307,4 +323,64 @@ object TovarDBOverride {
         "width" -> 5976
         else -> null
     }
+}
+
+object UsersSDBOverride {
+
+    fun getHidedFieldsOnUI(): String =
+//        ""
+        "user_id, author_id, report_date_01, report_date_05, report_date_20, report_date_40, report_date_200, img_personal_photo_thumb, " +
+                "img_personal_photo, img_personal_photo_path, department, dt_update, city_id, inn, send_sms, fired, fired_reason, " +
+                "fired_dt, report_count, tel_corp, tel2_corp, flag" +
+                ""
+
+    fun getValueUI(key: String, value: Any): String = when (key) {
+        "tel" -> {
+            value.toString().takeIf { it.isNotEmpty() }?.let {
+                it.replace(Regex(".(?=.{4})"), "*")
+            } ?: value.toString()
+        }
+
+        "tel2" -> {
+            value.toString().takeIf { it.isNotEmpty() }?.let {
+                it.replace(Regex(".(?=.{4})"), "*")
+            } ?: value.toString()
+        }
+
+        "otdel_id" -> {
+//            Log.e("%%%%%%%%%%%%","otdel_id: $value")
+            RoomManager.SQL_DB.tovarGroupDao().getById(value as Int)?.nm ?: "Відділ не визначено"
+        }
+
+        else -> value.toString()
+    }
+
+    fun getTranslateId(key: String): Long? = when (key) {
+        "fio" -> 7789
+        "tel" -> 7790
+        "tel2" -> 7791
+        "otdel_id" -> 7792
+        "work_addr_id" -> 5879
+        else -> null
+    }
+
+    fun getContainerModifier(jsonObject: JSONObject): MerchModifier {
+        val color =
+            try {
+                val colorHex = jsonObject.optString("flag", "")
+//                Log.e("%%%%%%%%%%%%%%%%","color: $colorHex")
+                Color(android.graphics.Color.parseColor("#$colorHex"))
+            } catch (e: Exception) {
+                null
+            }
+        return MerchModifier(background = color)
+    }
+
+//    fun getFieldsForOrderOnUI(jsonObject: JSONObject): List<String> {
+//         val js = jsonObject.keys().forEach { key ->
+//            if (this.getFieldsForOrderOnUI()?.contains(key) != true) updateFields(key)
+//        }
+//        return js
+//    }
+
 }

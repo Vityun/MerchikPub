@@ -51,7 +51,7 @@ public class OptionButtonAddNewClient<T> extends OptionControl {
         DialogData dialog = new DialogData(context);
         dialog.setTitle("Добавление потенциального клиента");
         dialog.setText("Вы хотите добавить потенциального клиента? \n\n" + additionalText());
-        dialog.setOk("Да", () -> {
+        dialog.setOk("Подключить", () -> {
 //            Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://merchik.com.ua/mobile.php?mod=potential_clients"));
             Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(createAddNewClientLink()));
             context.startActivity(browserIntent);
@@ -99,15 +99,22 @@ public class OptionButtonAddNewClient<T> extends OptionControl {
     }
 
     /*Дополнительная подсказка: Потенциальный клиент*/
-    public String additionalText() {
-        int test = 11000;   // TODO будут мне норм значение передавать "ЗП мерчика"
+    public static String additionalText() {
+
+        int salary = Globals.getAverageSalary();
+        if (salary == 0)
+            salary = 15700;
         String res;
 
-        double requestSend = test * 0.0005;
-        double requestRegistered = test * 0.005;
-        double presentation = test * 0.01;
-        double clientStart = test * 0.1;
-
+//        double requestSend = salary * 0.0005;
+//        double requestRegistered = salary * 0.005;
+//        double presentation = salary * 0.01;
+//        double clientStart = salary * 0.1;
+//        Изменил логику, что бы ограничить двумя цифрами после запятой
+        double requestSend = Math.round(salary * 0.0005 * 100.0) / 100.0;
+        double requestRegistered = Math.round(salary * 0.005 * 100.0) / 100.0;
+        double presentation = Math.round(salary * 0.01 * 100.0) / 100.0;
+        double clientStart = Math.round(salary * 0.1 * 100.0) / 100.0;
 
         res = String.format("- За регистрацию потенциального клиента (ПК) начисляются следующие премии:\n" +
                 "1. При подаче заявки: %s грн.\n" +

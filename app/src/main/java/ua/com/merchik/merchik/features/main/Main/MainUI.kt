@@ -3,6 +3,7 @@ package ua.com.merchik.merchik.features.main.Main
 import android.app.Activity
 import android.content.Context
 import android.os.Build
+import android.util.Log
 import android.view.View
 import androidx.annotation.RequiresApi
 import androidx.compose.animation.animateContentSize
@@ -81,6 +82,8 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
     val uiState by viewModel.uiState.collectAsState()
 
     var isActiveFiltered by remember { mutableStateOf(false) }
+
+    var showAdditionalContent by remember { mutableStateOf(false) }
 
     var showSettingsDialog by remember { mutableStateOf(false) }
 
@@ -278,7 +281,7 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
                         sizeButton = 40.dp,
                         sizeImage = 20.dp,
                         modifier = Modifier.padding(start = 7.dp),
-                        onClick = {  }
+                        onClick = { showAdditionalContent = true }
                     )
 
                     ImageButton(id = R.drawable.ic_sort_down,
@@ -426,6 +429,9 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
                 }
             }
         }
+    }
+    if (showAdditionalContent) {
+        Log.e("showAdditionalContent","+")
     }
 
     if (showSettingsDialog) {

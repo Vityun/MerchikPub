@@ -99,6 +99,7 @@ import ua.com.merchik.merchik.database.realm.tables.StackPhotoRealm;
 import ua.com.merchik.merchik.database.realm.tables.WpDataRealm;
 import ua.com.merchik.merchik.dialogs.DialogAchievement.DialogCreateAchievement;
 import ua.com.merchik.merchik.dialogs.DialogData;
+import ua.com.merchik.merchik.dialogs.EKL.DialogEKL;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
 import ua.com.merchik.merchik.toolbar_menus;
 
@@ -778,7 +779,12 @@ public class DetailedReportActivity extends toolbar_menus {
             Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult", "requestCode / resultCode / data: " + requestCode + "/" + resultCode + "/" + data);
 
             if (requestCode == NEED_UPDATE_UI_REQUEST && resultCode == RESULT_OK) {
-                DialogCreateAchievement.onUpdateUI.update();
+
+                if (DialogCreateAchievement.onUpdateUI != null)
+                    DialogCreateAchievement.onUpdateUI.update();
+
+                if (DialogEKL.onUpdateUI != null)
+                    DialogEKL.onUpdateUI.update();
             }
 
             if (requestCode == PICK_GALLERY_IMAGE_REQUEST && resultCode == RESULT_OK && data != null && data.getData() != null) {
@@ -791,7 +797,7 @@ public class DetailedReportActivity extends toolbar_menus {
                     File file = new File(Globals.FileUtils.getRealPathFromUri(getApplicationContext(), uri));
                     StackPhotoDB stackPhotoDB = savePhoto(file, MakePhotoFromGaleryWpDataDB, photoType, MakePhotoFromGalery.tovarId, getApplicationContext());
 
-                    if (stackPhotoDB != null){
+                    if (stackPhotoDB != null) {
                         // Сохраняем результат что фото сохранено
                         Intent resultIntent = new Intent();
                         resultIntent.putExtra("photo_saved", true); // Передайте информацию о сохраненном фото
@@ -881,7 +887,8 @@ public class DetailedReportActivity extends toolbar_menus {
                             wpDataObj = MakePhoto.wp;
                             Log.e("getPhotoType", "wpDataObj.getPhotoType(): " + wpDataObj.getPhotoType());
 
-                            PhotoReportActivity.savePhoto(this, wpDataObj, image, ()->{});
+                            PhotoReportActivity.savePhoto(this, wpDataObj, image, () -> {
+                            });
 
                             refreshAdapterFragmentB();
 
@@ -938,7 +945,7 @@ public class DetailedReportActivity extends toolbar_menus {
 
             Log.e("2222", "hash1 = " + photo.getPhoto_hash());
 
-            if (TextUtils.isEmpty(photo.getPhoto_hash())){
+            if (TextUtils.isEmpty(photo.getPhoto_hash())) {
                 String hash;
                 hash = globals.getHashMD5FromFile2(photoFile, activity);
                 if (hash == null || hash.equals("")) {

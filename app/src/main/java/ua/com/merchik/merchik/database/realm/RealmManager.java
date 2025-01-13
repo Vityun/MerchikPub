@@ -693,7 +693,10 @@ public class RealmManager {
     public static RealmResults<StackPhotoDB> getStackPhoto() {
         return INSTANCE.where(StackPhotoDB.class)
 //                .notEqualTo("photo_type", 18)
-                .notEqualTo("photo_type", 29).notEqualTo("photo_type", 5).notEqualTo("photo_type", 35).isNotNull("client_id").isNotNull("addr_id")
+                .notEqualTo("photo_type", 29)
+//                .notEqualTo("photo_type", 5)
+                .notEqualTo("photo_type", 35)
+                .isNotNull("client_id").isNotNull("addr_id")
 //                .isNull("showcase_id")  // Показываем мерчу в ЖФ фото НЕ "ВИТРИН"
                 .findAll();
     }

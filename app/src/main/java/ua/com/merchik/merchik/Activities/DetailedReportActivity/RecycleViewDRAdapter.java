@@ -15,6 +15,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.Typeface;
+import android.net.Uri;
 import android.os.Bundle;
 import android.text.Html;
 import android.text.Spannable;
@@ -49,6 +50,7 @@ import ua.com.merchik.merchik.Activities.Features.FeaturesActivity;
 import ua.com.merchik.merchik.Activities.PhotoLogActivity.PhotoLogActivity;
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
+import ua.com.merchik.merchik.Options.Buttons.OptionButtonAddNewClient;
 import ua.com.merchik.merchik.Options.Controls.OptionControlAvailabilityControlPhotoRemainingGoods;
 import ua.com.merchik.merchik.Options.Controls.OptionControlReclamationAnswer;
 import ua.com.merchik.merchik.Options.Controls.OptionControlTaskAnswer;
@@ -282,7 +284,21 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                     } else {
                         if (optionId == 133382) {
                             textInteger2.setVisibility(View.VISIBLE);
-                            textInteger2.setText("+1100 грн.");
+                            int salary = Globals.getAverageSalary();
+                            if (salary == 0)
+                                salary = 15700;
+
+                            SpannableString text = new SpannableString("+" + salary / 10 + ".0 грн.");
+                            text.setSpan(new UnderlineSpan(), 0, text.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+
+                            textInteger2.setText(text);
+                            textInteger2.setOnClickListener(v -> {
+                                DialogData dialog = new DialogData(mContext);
+                                dialog.setTitle("Добавление потенциального клиента");
+                                dialog.setText("Расчет за потенциального клиента \n\n" + OptionButtonAddNewClient.additionalText());
+                                dialog.setClose(dialog::dismiss);
+                                dialog.show();
+                            });
                         } else {
                             textInteger2.setVisibility(View.GONE);
                         }
@@ -292,7 +308,9 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                         textInteger2.setVisibility(View.VISIBLE);
                         List<BonusSDB> bonusList = SQL_DB.bonusDao().getData(null, null, (long) optionId);
                         Pair<String, Float> bonus = MainRepositoryKt.getBonusText(bonusList);
-                        textInteger2.setText("" + bonus.getSecond());
+                        SpannableString text = new SpannableString("+" + bonus.getSecond() + " грн.");
+                        text.setSpan(new UnderlineSpan(), 0, text.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+                        textInteger2.setText(text);
                         textInteger2.setOnClickListener(new View.OnClickListener() {
                             @Override
                             public void onClick(View view) {
@@ -320,7 +338,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                             }
                         });
                     } else {
-                        textInteger2.setOnClickListener(null);
+//                        textInteger2.setOnClickListener(null);
                     }
 
                 } else {

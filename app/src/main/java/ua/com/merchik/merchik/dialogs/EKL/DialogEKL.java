@@ -1,19 +1,26 @@
 package ua.com.merchik.merchik.dialogs.EKL;
 
 import static android.view.MotionEvent.ACTION_UP;
+import static ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity.NEED_UPDATE_UI_REQUEST;
 import static ua.com.merchik.merchik.Globals.HELPDESK_PHONE_NUMBER;
 import static ua.com.merchik.merchik.Globals.userId;
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 import static ua.com.merchik.merchik.toolbar_menus.internetStatus;
 
+import android.app.Activity;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Build;
+import android.os.Bundle;
 import android.text.Editable;
+import android.text.Spannable;
+import android.text.SpannableString;
 import android.text.TextWatcher;
+import android.text.style.ForegroundColorSpan;
+import android.text.style.UnderlineSpan;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
@@ -26,6 +33,8 @@ import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.core.app.ActivityCompat;
+
 import com.daimajia.androidanimations.library.Techniques;
 import com.daimajia.androidanimations.library.YoYo;
 import com.google.gson.Gson;
@@ -33,34 +42,47 @@ import com.google.gson.JsonObject;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
+import org.json.JSONObject;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
+import ua.com.merchik.merchik.Activities.Features.FeaturesActivity;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.ServerExchange.ExchangeInterface;
 import ua.com.merchik.merchik.ViewHolders.AutoTextUsersViewHolder;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.Database.Room.EKL_SDB;
+import ua.com.merchik.merchik.data.Database.Room.UsersSDB;
 import ua.com.merchik.merchik.data.Database.Room.UsersSDBDat.UserSDBJoin;
 import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteHintsDB;
 import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteObjects.SiteObjectsDB;
 import ua.com.merchik.merchik.data.RealmModels.AdditionalRequirementsDB;
 import ua.com.merchik.merchik.data.RealmModels.AppUsersDB;
+import ua.com.merchik.merchik.data.RealmModels.UsersDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.data.TestJsonUpload.DataEKL;
 import ua.com.merchik.merchik.data.TestJsonUpload.StandartData;
+import ua.com.merchik.merchik.dataLayer.ContextUI;
+import ua.com.merchik.merchik.dataLayer.ModeUI;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsRealm;
 import ua.com.merchik.merchik.database.realm.tables.AppUserRealm;
+import ua.com.merchik.merchik.dialogs.DialogAchievement.AchievementDataHolder;
 import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.dialogs.DialogVideo;
+import ua.com.merchik.merchik.dialogs.features.LoadingDialogWithPercent;
+import ua.com.merchik.merchik.dialogs.features.dialogLoading.ProgressViewModel;
+import ua.com.merchik.merchik.features.main.DBViewModels.SamplePhotoSDBViewModel;
+import ua.com.merchik.merchik.features.main.DBViewModels.UsersSDBViewModel;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
 
 public class DialogEKL {
@@ -68,11 +90,15 @@ public class DialogEKL {
     private Context context;
     private Dialog dialog;
 
-    public ImageButton close, help, videoHelp, call, addSotr;
+    public static Clicks.OnUpdateUI onUpdateUI;
+
+    public ImageButton close, help, videoHelp, call, addSotr, refresh;
     private TextView title;
     private Button buttonSend, buttonCheck, buttonSend2, buttonSend3;
     private EditText editText;
-    private AutoCompleteTextView sotr, tel;
+
+    private TextView sotr;
+    private AutoCompleteTextView tel;
 
     //---------------------------
     private WpDataDB wp;
@@ -88,7 +114,13 @@ public class DialogEKL {
     private String telephone = "";
     private int cnt = 0;
 
+    private LoadingDialogWithPercent loadingDialog;
+    private ProgressViewModel progress;
+
+    private AutoTextUsersViewHolder adapterUser;
     //---------------------------
+
+    private List<UserSDBJoin> allUsersLJoinTovGrps;
 
     public DialogEKL(Context context, WpDataDB wp) {
         this.context = context;
@@ -108,6 +140,7 @@ public class DialogEKL {
             videoHelp = dialog.findViewById(R.id.imageButtonVideoLesson);
             call = dialog.findViewById(R.id.imageButtonCall);
             addSotr = dialog.findViewById(R.id.add_sotr);
+            refresh = dialog.findViewById(R.id.refresh);
 
             buttonSend = dialog.findViewById(R.id.buttonSend3);
             buttonSend2 = dialog.findViewById(R.id.buttonSend2);
@@ -298,8 +331,15 @@ public class DialogEKL {
         try {
             setAddSotr();   // Установка иконочки добавления/редактирования сотрудника
 
+            Log.e("##############", "getTheme_grp: " + wp.getTheme_grp());
+            Log.e("##############", "getDoc_num_grp: " + wp.getDoc_num_grp());
+
+            EKLDataHolder.Companion.instance().init();
+
             int id = wp.getAddr_id();
-            List<UserSDBJoin> data = SQL_DB.usersDao().getAllUsersLJoinTovGrps(id);
+//            List<UserSDBJoin> data = SQL_DB.usersDao().getAllUsersLJoinTovGrps(id);
+            allUsersLJoinTovGrps = SQL_DB.usersDao().getAllUsersLJoinTovGrps(id);
+            Log.e("!!!!!!!!!", "allUsersLJoinTovGrps: " + allUsersLJoinTovGrps);
 
             AdditionalRequirementsDB additionalRequirementsDB = AdditionalRequirementsRealm.getADByClientAdr(String.valueOf(wp.getAddr_id()), wp.getClient_id());
 
@@ -320,36 +360,85 @@ public class DialogEKL {
                 if (test != null) {
                     additionalRequirementsDB = RealmManager.INSTANCE.copyFromRealm(test);
                     int us = Integer.parseInt(additionalRequirementsDB.userId);
-                    data = SQL_DB.usersDao().getUserLJoinTovGrps(us);
+                    allUsersLJoinTovGrps = SQL_DB.usersDao().getUserLJoinTovGrps(us);
                 }
             }
+            Log.e("!!!!!!!!@@@@", "+");
 
 
-            Log.e("DialogEKL", "showData/data: " + data);
-            Log.e("DialogEKL", "showData/data.size: " + data.size());
+            Log.e("DialogEKL", "showData/data: " + allUsersLJoinTovGrps);
+            Log.e("DialogEKL", "showData/data.size: " + allUsersLJoinTovGrps.size());
 
-            UserSDBJoin lastItem = new UserSDBJoin();
-            lastItem.id = -1111;
-            lastItem.fio = "Оновити ПТТ";
-            data.add(lastItem);
+//            UserSDBJoin lastItem = new UserSDBJoin();
+//            lastItem.id = -1111;
+//            lastItem.fio = "Оновити ПТТ";
+//            data.add(lastItem);
 
-            AutoTextUsersViewHolder adapterUser = new AutoTextUsersViewHolder(
+            adapterUser = new AutoTextUsersViewHolder(
                     context,
                     android.R.layout.simple_dropdown_item_1line,
-                    data
+                    allUsersLJoinTovGrps
             );
-            sotr.setDropDownHeight(9 * sotr.getLineHeight());
+//            sotr.setDropDownHeight(9 * sotr.getLineHeight());
 
             adapterUser.setAdditionalInformation(AutoTextUsersViewHolder.AutoTextUserEnum.DEPARTMENT);
 
-            sotr.setHint("Выберите ПТТ (Представителя Торговой Точки)");
+//            sotr.setHint("Выберите ПТТ (Представителя Торговой Точки)");
+
+            onUpdateUI = () -> {
+                sotr.setText(underLineText(EKLDataHolder.Companion.instance().getUsersPTTName() == null ?
+                        "Виберіть ТПП (Представника Торгової точки)" : EKLDataHolder.Companion.instance().getUsersPTTName(), Color.BLACK));
+                Log.e("onUpdateUI", "0");
+                setTel();
+
+//                if (EKLDataHolder.Companion.instance().getUsersPTTid() != null) {
+//                    int targetId = EKLDataHolder.Companion.instance().getUsersPTTid(); // Искомый ID
+//                    Log.e("onUpdateUI", "targetId: " + targetId);
+//
+//                    UserSDBJoin res = null;
+//                    Log.e("onUpdateUI", "1");
+//                    Log.e("onUpdateUI", "allUsersLJoinTovGrps.size: " + allUsersLJoinTovGrps.size());
+//
+//                    for (UserSDBJoin user : allUsersLJoinTovGrps) {
+//                        Log.e("onUpdateUI", "user.id: " + user.id);
+//                        if (user.id == targetId) {
+//                            res = user;
+//                            Log.e("onUpdateUI", "1.+");
+//                            break;
+//                        }
+//                    }
+//                    Log.e("onUpdateUI", "2");
+//
+//                    Globals.userEKLId = res.id;
+//
+//                    try {
+//                        if (res.nm == null) {
+//                            res.nm = "Отдел не определён";
+//                        }
+//                    } catch (Exception e) {
+//                        e.printStackTrace();
+//                        Globals.writeToMLOG("ERROR", "DialogEKL/EXCEPTION/5", "Exception e: " + e);
+//                    }
+////                sotr.setText(res.fio + " (" + res.nm + ") ");
+//                    Log.e("onUpdateUI", "3");
+//
+//                    enterCode = true;
+//                    user = res;
+//                    // Установка телефонов
+//                    Log.e("onUpdateUI", "4");
+//                    setTel();
+//                }
+            };
+
+            sotr.setText(underLineText(EKLDataHolder.Companion.instance().getUsersPTTName() == null ?
+                    "Виберіть ТПП (Представника Торгової точки)" : EKLDataHolder.Companion.instance().getUsersPTTName(), Color.GRAY));
 
 //            if (additionalRequirementsDB != null) {
 //                UsersSDB user = SQL_DB.usersDao().getUserById(Integer.parseInt(additionalRequirementsDB.userId));
 //                sotr.setText("" + user.fio);
 //            } else {
             if (Globals.userEKLId != null && Globals.userEKLId != 0) {
-                for (UserSDBJoin item : data) {
+                for (UserSDBJoin item : allUsersLJoinTovGrps) {
                     if (item.id.equals(Globals.userEKLId)) {
 
                         Globals.writeToMLOG("INFO", "DialogEKL/showData/UserSDBJoin", "item.fio: " + item.fio);
@@ -374,44 +463,46 @@ public class DialogEKL {
             tel.setHint("Выберите телефон");
             tel.setInputType(0);    // Запрещаю изменять номер
 
-            sotr.setAdapter(adapterUser);
-            sotr.addTextChangedListener(new TextWatcher() {
-                @Override
-                public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+//            sotr.setAdapter(adapterUser);
+//            sotr.addTextChangedListener(new TextWatcher() {
+//                @Override
+//                public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+//
+//                }
+//
+//                @Override
+//                public void onTextChanged(CharSequence s, int start, int before, int count) {
+//
+//                }
+//
+//                @Override
+//                public void afterTextChanged(Editable s) {
+//                    Log.e("DialogEKL", "Editable s: " + s.length());
+//
+//                    if (s.length() == 0) {
+//                        Log.e("DialogEKL", "Editable s: NULL");
+//                        sotr.showDropDown();
+//                        tel.setVisibility(View.GONE);
+//                    }
+//                }
+//            });
 
-                }
 
-                @Override
-                public void onTextChanged(CharSequence s, int start, int before, int count) {
-
-                }
-
-                @Override
-                public void afterTextChanged(Editable s) {
-                    Log.e("DialogEKL", "Editable s: " + s.length());
-
-                    if (s.length() == 0) {
-                        Log.e("DialogEKL", "Editable s: NULL");
-                        sotr.showDropDown();
-                        tel.setVisibility(View.GONE);
-                    }
-                }
-            });
-
-
-            sotr.setOnTouchListener(new View.OnTouchListener() {
-                @Override
-                public boolean onTouch(View view, MotionEvent motionEvent) {
-                    if (motionEvent.getAction() == ACTION_UP) {
-                        sotr.showDropDown();
-                        Globals.hideKeyboard(view.getContext());
-                    }
-                    return false;
-                }
-            });
+//            sotr.setOnTouchListener(new View.OnTouchListener() {
+//                @Override
+//                public boolean onTouch(View view, MotionEvent motionEvent) {
+//                    if (motionEvent.getAction() == ACTION_UP) {
+//                        sotr.showDropDown();
+//                        Globals.hideKeyboard(view.getContext());
+//                    }
+//                    return false;
+//                }
+//            });
 
 
             sotr.setOnClickListener(arg0 -> {
+                Log.e("!!!!!!!", "onUpdateUI: " + EKLDataHolder.Companion.instance().getUsersPTTName());
+                startUFMD();
 //            Log.e("DialogEKL", "setOnClickListener: " + sotr.getText());
 //            Globals.hideKeyboard(context);
 //
@@ -424,139 +515,239 @@ public class DialogEKL {
 //            Toast.makeText(arg0.getContext(), "Нажал", Toast.LENGTH_SHORT).show();
 
 //            sotr.showDropDown();
-                Globals.showKeyboard(context);
+//                Globals.showKeyboard(context);
             });
 
+
             sotr.setOnLongClickListener((v) -> {
-                Log.e("DialogEKL", "setOnLongClickListener");
-                sotr.showDropDown();
-                Globals.showKeyboard(context);
+//                Log.e("DialogEKL", "setOnLongClickListener");
+//                sotr.showDropDown();
+//                Globals.showKeyboard(context);
+                startUFMD();
                 return true;
             });
 
 
-            sotr.setOnItemClickListener((parent, arg1, position, arg3) -> {
-                Object item = parent.getItemAtPosition(position);
-                Log.e("TestObj", "item: " + item);
-                if (item instanceof UserSDBJoin) {
-                    UserSDBJoin res = (UserSDBJoin) item;
-                    if (res.id == -1111) {
-//                        new EKLRequests().getPTTByAddress(wp.getAddr_id(), data1 -> {
-//                            DialogData dialogData = new DialogData(context);
-//                            dialogData.setTitle("Оновлення списку ПТТ");
-//                            dialogData.setText(data1);
-//                            dialogData.setClose(dialogData::dismiss);
-//                            dialogData.show();
-//                        });
+            refresh.setOnClickListener(v -> {
+                progress = new ProgressViewModel(1);
+                loadingDialog = new LoadingDialogWithPercent((Activity) context, progress);
+                loadingDialog.show();
 
-                        new EKLRequests().getPTTByAddress(wp.getAddr_id(), new Clicks.clickObjectAndStatus() {
-                            @Override
-                            public void onSuccess(Object data) {
-                                try {
-                                    EKLRequests.PTTRequest pttRequest = (EKLRequests.PTTRequest) data;
+                progress.onNextEvent("Оновлюю список ТПП", 6_600);
 
-                                    if (pttRequest.state) {
-                                        if (pttRequest.list != null && pttRequest.list.size() > 0) {
-                                            List<UserSDBJoin> newPttList = new ArrayList<>();
+                new EKLRequests().getPTTByAddress(wp.getAddr_id(), new Clicks.clickObjectAndStatus() {
+                    @Override
+                    public void onSuccess(Object data) {
+                        try {
+                            EKLRequests.PTTRequest pttRequest = (EKLRequests.PTTRequest) data;
 
-                                            for (EKLRequests.PTT item : pttRequest.list) {
-                                                UserSDBJoin userSDBJoin = new UserSDBJoin();
+                            if (pttRequest.state) {
+                                if (pttRequest.list != null && pttRequest.list.size() > 0) {
+                                    List<UserSDBJoin> newPttList = new ArrayList<>();
+                                    for (EKLRequests.PTT item : pttRequest.list) {
+                                        UserSDBJoin userSDBJoin = new UserSDBJoin();
 
-                                                userSDBJoin.id = Integer.valueOf(item.userId);
-                                                userSDBJoin.fio = item.fio;
-                                                userSDBJoin.tel = item.tel;
-                                                userSDBJoin.tel2 = item.tel2;
-                                                userSDBJoin.authorId = (Integer) item.authorId;
-                                                userSDBJoin.clientId = Integer.valueOf(item.clientId);
-                                                userSDBJoin.otdelId = (Integer) item.otdelId;
-                                                userSDBJoin.department = (Integer) item.department;
-                                                userSDBJoin.workAddrId = (Integer) item.workAddrId;
-                                                userSDBJoin.sendSms = item.sendSms;
-
-                                                newPttList.add(userSDBJoin);
-                                            }
-
-                                            AutoTextUsersViewHolder adapterUser = new AutoTextUsersViewHolder(
-                                                    context,
-                                                    android.R.layout.simple_dropdown_item_1line,
-                                                    newPttList
-                                            );
-                                            adapterUser.setAdditionalInformation(AutoTextUsersViewHolder.AutoTextUserEnum.DEPARTMENT);
-                                            sotr.setAdapter(adapterUser);
-
-                                            Toast.makeText(context, "Список ПТТ Оновлено!", Toast.LENGTH_SHORT).show();
-                                        }
+                                        userSDBJoin.id = Integer.valueOf(item.userId);
+                                        userSDBJoin.fio = item.fio;
+                                        userSDBJoin.tel = item.tel;
+                                        userSDBJoin.tel2 = item.tel2;
+                                        userSDBJoin.authorId = (Integer) item.authorId;
+                                        userSDBJoin.clientId = Integer.valueOf(item.clientId);
+                                        userSDBJoin.otdelId = (Integer) item.otdelId;
+                                        userSDBJoin.department = (Integer) item.department;
+                                        userSDBJoin.sendSms = item.sendSms;
+                                        userSDBJoin.workAddrId = wp.getAddr_id();
+                                        Log.e("userSDB", "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+                                        Log.e("userSDB", "id: " + userSDBJoin.id);
+                                        Log.e("userSDB", "tel: " + userSDBJoin.tel);
+                                        Log.e("userSDB", "workAddrId: " + userSDBJoin.workAddrId);
+                                        newPttList.add(userSDBJoin);
                                     }
-                                } catch (Exception e) {
-                                    Log.e("EKLRequests", "Exception e: " + e);
-                                    e.printStackTrace();
+                                    List<UsersSDB> usersSDBList = new ArrayList<>();
+                                    for (UserSDBJoin userSDBJoin : newPttList) {
+                                        usersSDBList.add(mapToUsersSDB(userSDBJoin));
+                                    }
+
+                                    allUsersLJoinTovGrps.addAll(newPttList);
+
+                                    SQL_DB.usersDao().insertAll(usersSDBList);
+
+                                    Log.e("userSDB!!!", "size: " + newPttList.size());
+
+                                    adapterUser = new AutoTextUsersViewHolder(
+                                            context,
+                                            android.R.layout.simple_dropdown_item_1line,
+                                            newPttList
+                                    );
+                                    adapterUser.setAdditionalInformation(AutoTextUsersViewHolder.AutoTextUserEnum.DEPARTMENT);
+//                                    sotr.setAdapter(adapterUser);
+
+                                    progress.onCompleted();
+                                    Toast.makeText(context, "Список ПТТ Оновлено!", Toast.LENGTH_SHORT).show();
+
+                                    startUFMD();
+
                                 }
                             }
+                        } catch (Exception e) {
+                            progress.onCanceled();
+                            Log.e("EKLRequests", "Exception e: " + e);
+                            e.printStackTrace();
+                        }
+                    }
 
-                            @Override
-                            public void onFailure(String error) {
-                                Globals.writeToMLOG("INFO", "getPTTByAddress/RES/onFailure", "String error: " + error);
-                                DialogData dialogData = new DialogData(context);
-                                dialogData.setTitle("Виникла помилка при отриманні переліку ПТТ");
-                                dialogData.setText(error);
-                                dialogData.setClose(dialogData::dismiss);
-                                dialogData.show();
-                            }
-                        });
-                        sotr.setText("");
+                    @Override
+                    public void onFailure(String error) {
+                        Globals.writeToMLOG("INFO", "getPTTByAddress/RES/onFailure", "String error: " + error);
                         DialogData dialogData = new DialogData(context);
-                        dialogData.setTitle("Оновлення списку ПТТ");
-                        dialogData.setText("Запит на отримання повного переліку ПТТ відправлено. Він може оброблятися деякий час, заждіть закінчення оновляння.");
+                        dialogData.setTitle("Виникла помилка при отриманні переліку ПТТ");
+                        dialogData.setText(error);
                         dialogData.setClose(dialogData::dismiss);
                         dialogData.show();
-                    } else {
-                        if (res.sendSms == 0) {
-                            String msg = "У сотрудника " + res.fio + " отключена возможность отправки СМС. Если Вам это необходимо сделать, обратитесь к своему руководителю.";
-                            Toast.makeText(arg1.getContext(), msg, Toast.LENGTH_LONG).show();
-                            sotr.setText("");
-                            return;
-                        }
-
-                        Globals.userEKLId = res.id;
-
-                        try {
-                            if (res.nm == null) {
-                                res.nm = "Отдел не определён";
-                            }
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                            Globals.writeToMLOG("ERROR", "DialogEKL/EXCEPTION/5", "Exception e: " + e);
-                        }
-                        sotr.setText(res.fio + " (" + res.nm + ") ");
-                        enterCode = true;
-                        user = res;
-                        // Установка телефонов
-                        setTel(res);
                     }
-                }
+                });
             });
+//            sotr.setOnItemClickListener((parent, arg1, position, arg3) -> {
+//                Object item = parent.getItemAtPosition(position);
+//                Log.e("TestObj", "item: " + item);
+//                if (item instanceof UserSDBJoin) {
+//                    UserSDBJoin res = (UserSDBJoin) item;
+//                    if (res.id == -1111) {
+////                        new EKLRequests().getPTTByAddress(wp.getAddr_id(), data1 -> {
+////                            DialogData dialogData = new DialogData(context);
+////                            dialogData.setTitle("Оновлення списку ПТТ");
+////                            dialogData.setText(data1);
+////                            dialogData.setClose(dialogData::dismiss);
+////                            dialogData.show();
+////                        });
+//
+//                        new EKLRequests().getPTTByAddress(wp.getAddr_id(), new Clicks.clickObjectAndStatus() {
+//                            @Override
+//                            public void onSuccess(Object data) {
+//                                try {
+//                                    EKLRequests.PTTRequest pttRequest = (EKLRequests.PTTRequest) data;
+//
+//
+//                                    if (pttRequest.state) {
+//                                        if (pttRequest.list != null && pttRequest.list.size() > 0) {
+//                                            List<UserSDBJoin> newPttList = new ArrayList<>();
+//
+//                                            for (EKLRequests.PTT item : pttRequest.list) {
+//                                                UserSDBJoin userSDBJoin = new UserSDBJoin();
+//
+////                                                userSDBJoin.id = Integer.valueOf(item.userId);
+//                                                userSDBJoin.fio = item.fio;
+////                                                userSDBJoin.tel = item.tel;
+////                                                userSDBJoin.tel2 = item.tel2;
+////                                                userSDBJoin.authorId = (Integer) item.authorId;
+////                                                userSDBJoin.clientId = Integer.valueOf(item.clientId);
+//                                                userSDBJoin.otdelId = (Integer) item.otdelId;
+//                                                userSDBJoin.department = (Integer) item.department;
+//                                                userSDBJoin.workAddrId = (Integer) item.workAddrId;
+////                                                userSDBJoin.sendSms = item.sendSms;
+//
+//                                                newPttList.add(userSDBJoin);
+//                                            }
+//
+////                                            AutoTextUsersViewHolder adapterUser = new AutoTextUsersViewHolder(
+////                                                    context,
+////                                                    android.R.layout.simple_dropdown_item_1line,
+////                                                    newPttList
+////                                            );
+////                                            adapterUser.setAdditionalInformation(AutoTextUsersViewHolder.AutoTextUserEnum.DEPARTMENT);
+////                                            sotr.setAdapter(adapterUser);
+//
+//                                            Toast.makeText(context, "Список ПТТ Оновлено!", Toast.LENGTH_SHORT).show();
+//                                            Log.e("!!!!!!!!!!!!!!", "+");
+//                                            Log.e("!!!!!!!!!!!!!!", "wp.getAddr_id(): " + wp.getAddr_id());
+//                                            Log.e("!!!!!!!!!!!!!!", "" + newPttList.size());
+//
+//                                            Gson gson = new Gson();
+//                                            String jsonString = gson.toJson(newPttList);
+//                                            Log.e("!!!!!!!!!!!!!!", "jsonString: " + jsonString);
+////                                            JsonObject dataJson = new Gson().fromJson(jsonString, JsonObject.class);
+//
+//                                        }
+//                                    }
+//                                } catch (Exception e) {
+//                                    Log.e("EKLRequests", "Exception e: " + e);
+//                                    e.printStackTrace();
+//                                }
+//                            }
+//
+//                            @Override
+//                            public void onFailure(String error) {
+//                                Globals.writeToMLOG("INFO", "getPTTByAddress/RES/onFailure", "String error: " + error);
+//                                DialogData dialogData = new DialogData(context);
+//                                dialogData.setTitle("Виникла помилка при отриманні переліку ПТТ");
+//                                dialogData.setText(error);
+//                                dialogData.setClose(dialogData::dismiss);
+//                                dialogData.show();
+//                            }
+//                        });
+//                        sotr.setText("");
+//                        DialogData dialogData = new DialogData(context);
+//                        dialogData.setTitle("Оновлення списку ПТТ");
+//                        dialogData.setText("Запит на отримання повного переліку ПТТ відправлено. Він може оброблятися деякий час, заждіть закінчення оновляння.");
+//                        dialogData.setClose(dialogData::dismiss);
+//                        dialogData.show();
+//                    } else {
+//                        if (res.sendSms == 0) {
+//                            String msg = "У сотрудника " + res.fio + " отключена возможность отправки СМС. Если Вам это необходимо сделать, обратитесь к своему руководителю.";
+//                            Toast.makeText(arg1.getContext(), msg, Toast.LENGTH_LONG).show();
+//                            sotr.setText("");
+//                            return;
+//                        }
+//
+//                        Globals.userEKLId = res.id;
+//
+//                        try {
+//                            if (res.nm == null) {
+//                                res.nm = "Отдел не определён";
+//                            }
+//                        } catch (Exception e) {
+//                            e.printStackTrace();
+//                            Globals.writeToMLOG("ERROR", "DialogEKL/EXCEPTION/5", "Exception e: " + e);
+//                        }
+//                        sotr.setText(res.fio + " (" + res.nm + ") ");
+//                        enterCode = true;
+//                        user = res;
+//                        // Установка телефонов
+//                        setTel(res);
+//                    }
+//                }
+//            });
 
             YoYo.with(Techniques.Bounce)
-                    .duration(700)
+                    .duration(750)
                     .repeat(2)
                     .playOn(buttonSend3);
             YoYo.with(Techniques.Bounce)
-                    .duration(700)
+                    .duration(750)
                     .repeat(2)
-                    .delay(1550)
+                    .delay(1700)
                     .playOn(buttonSend2);
 
 //            buttonSend.setBackgroundResource(R.drawable.bg_temp);
             buttonSend.setOnClickListener(v -> {
-                pressButtonSend();
+                if (EKLDataHolder.Companion.instance().getUsersPTTNumberTel1() != null)
+                    pressButtonSend();
+                else
+                    Toast.makeText(context, "Вы не выбрали ПТТ", Toast.LENGTH_LONG).show();
             });
 
             buttonSend2.setOnClickListener(v -> {
-                sendEKL(v.getContext(), "telegram");
+                if (EKLDataHolder.Companion.instance().getUsersPTTNumberTel1() != null)
+                    sendEKL(v.getContext(), "telegram");
+                else
+                    Toast.makeText(context, "Вы не выбрали ПТТ", Toast.LENGTH_LONG).show();
             });
 
             buttonSend3.setOnClickListener(v -> {
-                sendEKL(v.getContext(), "viber");
+                if (EKLDataHolder.Companion.instance().getUsersPTTNumberTel1() != null)
+                    sendEKL(v.getContext(), "viber");
+                else
+                    Toast.makeText(context, "Вы не выбрали ПТТ", Toast.LENGTH_LONG).show();
             });
 
             editText.addTextChangedListener(new TextWatcher() {
@@ -647,6 +838,31 @@ public class DialogEKL {
         }
     }
 
+    private void startUFMD() {
+        Intent intent = new Intent(context, FeaturesActivity.class);
+        Bundle bundle = new Bundle();
+        bundle.putString("viewModel", UsersSDBViewModel.class.getCanonicalName());
+        bundle.putString("contextUI", ContextUI.USERS_SDB_FROM_EKL.toString());
+        bundle.putString("modeUI", ModeUI.ONE_SELECT.toString());
+//                                            JsonObject dataJson = new JsonObject(newPttList);
+//                                            bundle.putString("dataJson", jsonString);
+        bundle.putString("dataJson", new Gson().toJson(wp.getAddr_id()));
+//                try {
+//                    bundle.putString("dataJson", new Gson().toJson(
+//                            new JSONObject()
+//                                    .put("addr_id", wp.getAddr_id())
+//                                    .put("clientId", wp.getClient_id()))
+//                    );
+//                } catch (Exception ignored) {
+//                }
+        bundle.putString("title", "Список ПТТ");
+        bundle.putString("subTitle", "Виберіть ТПП (Представника Торгової точки) якому ви відправите код для підтвердження факту виконаних робіт з даної ТТ та Вашої присутності");
+        intent.putExtras(bundle);
+        ActivityCompat.startActivityForResult((Activity) context, intent, NEED_UPDATE_UI_REQUEST, null);
+
+        EKLDataHolder.Companion.instance().init();
+    }
+
     private void sendEKL(Context context, String telType) {
         responseSendPTTEKLCode(telType, new ExchangeInterface.ExchangeResponseInterfaceSingle() {
             @Override
@@ -671,7 +887,7 @@ public class DialogEKL {
                     ekl_sdb.clientId = wp.getClient_id();
                     ekl_sdb.addressId = wp.getAddr_id();
                     ekl_sdb.dad2 = wp.getCode_dad2();
-                    ekl_sdb.department = user.otdelId;   // Добавлен отдел, при отправке ЭКЛ
+                    ekl_sdb.department = user.otdelId != null ? user.otdelId : 0;   // Добавлен отдел, при отправке ЭКЛ
                     ekl_sdb.state = true;
                     ekl_sdb.eklHashCode = resp.codeHash;
                     ekl_sdb.vpi = System.currentTimeMillis() / 1000;
@@ -1196,72 +1412,74 @@ public class DialogEKL {
      * Устанавливает в поле "Номер телефона" телефон или телефоны(выпадающий список если больше
      * одного телефона) у пользователя.
      */
-    private void setTel(UserSDBJoin res) {
-        tel.setVisibility(View.VISIBLE);
+    private void setTel() {
+        String telNumber1 = EKLDataHolder.Companion.instance().getUsersPTTNumberTel1();
+        String telNumber2 = EKLDataHolder.Companion.instance().getUsersPTTNumberTel2();
 
-        Log.e("DialogEKL", "setTel");
-        Log.e("DialogEKL", "tel_1: " + res.tel);
-        Log.e("DialogEKL", "tel_2: " + res.tel2);
-        if (!res.tel.equals("") && !res.tel2.equals("")) {
-            tel.setOnClickListener(arg0 -> {
-                Log.e("DialogEKL", "Click dropdown TEL : " + tel.getText().length());
-                if (tel.getText().length() > 0) {
-                    tel.setText("");
-                }
-                tel.showDropDown();
-            });
+        if (telNumber1 != null) {
+            tel.setVisibility(View.VISIBLE);
+            if (!telNumber1.isEmpty() && telNumber2 != null && !telNumber2.isEmpty()) {
+                tel.setOnClickListener(arg0 -> {
+                    Log.e("DialogEKL", "Click dropdown TEL : " + tel.getText().length());
+                    if (tel.getText().length() > 0) {
+                        tel.setText("");
+                    }
+                    tel.showDropDown();
+                });
 
-            // Создаю адаптер
-            Log.e("DialogEKL", "create adapter");
+                // Создаю адаптер
+                Log.e("DialogEKL", "create adapter");
 
-            tel.setHint("Кликните для выбора телефона");
+                tel.setHint("Кликните для выбора телефона");
 
-            String[] telNumber = new String[2];
-            telNumber[0] = hideTelephone(res.tel);
-            telNumber[1] = hideTelephone(res.tel2);
+                String[] telNumber = new String[2];
+                telNumber[0] = hideTelephone(telNumber1);
+                telNumber[1] = hideTelephone(telNumber2);
 //            telNumber[2] = "телеграм";
 //            telNumber[3] = "вайбер";
 
-            ArrayAdapter<String> adapter = new ArrayAdapter<String>(context,
-                    android.R.layout.simple_list_item_1, telNumber);
+                ArrayAdapter<String> adapter = new ArrayAdapter<String>(context,
+                        android.R.layout.simple_list_item_1, telNumber);
 
-            tel.setAdapter(adapter);
-            tel.showDropDown();
-            tel.setOnItemClickListener((parent, arg1, position, arg3) -> {
-                Object item = parent.getItemAtPosition(position);
-                if (item instanceof String) {
-                    tel.setText(hideTelephone((String) item));
-                    Log.e("DialogEKL", "setTel position: " + position);
-                    if (position == 0) {
-                        telType = "tel1";
-                    } else if (position == 1) {
-                        telType = "tel2";
+                tel.setAdapter(adapter);
+                tel.showDropDown();
+                tel.setOnItemClickListener((parent, arg1, position, arg3) -> {
+                    Object item = parent.getItemAtPosition(position);
+                    if (item instanceof String) {
+                        tel.setText(hideTelephone((String) item));
+                        Log.e("DialogEKL", "setTel position: " + position);
+                        if (position == 0) {
+                            telType = "tel1";
+                        } else if (position == 1) {
+                            telType = "tel2";
+                        }
+
+                        telephone = (String) item;
                     }
+                });
 
-                    telephone = (String) item;
+
+            } else if ((telNumber1 != null && !telNumber1.isEmpty())
+                    || (telNumber2 != null && !telNumber2.isEmpty())) {
+                // Должен написать НЕ пустое значение
+                Log.e("DialogEKL", "set not null data");
+                if (!telNumber1.isEmpty()) {
+                    tel.setText(hideTelephone(telNumber1));
+                    telType = "tel1";
+                    telephone = telNumber1;
+                } else {
+                    tel.setText(hideTelephone(telNumber2));
+                    telType = "tel2";
+                    telephone = telNumber2;
                 }
-            });
-
-
-        } else if (!res.tel.equals("") || !res.tel2.equals("")) {
-            // Должен написать НЕ пустое значение
-            Log.e("DialogEKL", "set not null data");
-            if (!res.tel.equals("")) {
-                tel.setText(hideTelephone(res.tel));
-                telType = "tel1";
-                telephone = res.tel;
             } else {
-                tel.setText(hideTelephone(res.tel2));
-                telType = "tel2";
-                telephone = res.tel2;
+                // Написать что у ПТТ НЕТ телефонов
+                Log.e("DialogEKL", "set text when data equals null");
+                tel.setHint("У ПТТ нет телефонов");
             }
-        } else {
-            // Написать что у ПТТ НЕТ телефонов
-            Log.e("DialogEKL", "set text when data equals null");
-            tel.setHint("У ПТТ нет телефонов");
-        }
 
-        callPTT();
+            callPTT();
+        }
     }
 
     private void callPTT() {
@@ -1348,17 +1566,17 @@ public class DialogEKL {
                                             // TODO Разобраться почему не всегда принимаются ЭКЛ
                                             if (item.state) {
                                                 Globals.writeToMLOG("RESP", "DialogEKL.sendEKL/onResponse", "item.state: " + item.state);
-                                                ekl_sdb.dt = System.currentTimeMillis()/1000;
+                                                ekl_sdb.dt = System.currentTimeMillis() / 1000;
                                                 ekl_sdb.eklCode = ekl_sdb.eklHashCode;
                                                 ekl_sdb.upload = true;
                                                 ekl_sdb.codeVerify = 1;
                                             } else if (item.error.equals("Ця заявка вже успішно перевірена раніше")) {
-                                                ekl_sdb.dt = System.currentTimeMillis()/1000;
+                                                ekl_sdb.dt = System.currentTimeMillis() / 1000;
                                                 ekl_sdb.eklCode = ekl_sdb.eklHashCode;
                                                 ekl_sdb.upload = true;
                                                 ekl_sdb.codeVerify = 1;
                                             } else {
-                                                ekl_sdb.dt = System.currentTimeMillis()/1000;
+                                                ekl_sdb.dt = System.currentTimeMillis() / 1000;
                                                 ekl_sdb.comment = item.error;
                                                 ekl_sdb.codeVerify = 1;
                                             }
@@ -1372,6 +1590,38 @@ public class DialogEKL {
                             )
             );
         }
+    }
+
+    private SpannableString underLineText(String text, int color) {
+        SpannableString spannableString = new SpannableString(text);
+        spannableString.setSpan(new UnderlineSpan(), 0, spannableString.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+        spannableString.setSpan(new ForegroundColorSpan(color), 0, spannableString.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+
+        return spannableString;
+    }
+
+    private UsersSDB mapToUsersSDB(UserSDBJoin userSDBJoin) {
+        UsersSDB usersSDB = new UsersSDB();
+        usersSDB.id = userSDBJoin.id;
+        usersSDB.fio = userSDBJoin.fio;
+        usersSDB.tel = userSDBJoin.tel;
+        usersSDB.tel2 = userSDBJoin.tel2;
+        usersSDB.clientId = userSDBJoin.clientId != null ? String.valueOf(userSDBJoin.clientId) : null;
+        usersSDB.department = userSDBJoin.department;
+        usersSDB.otdelId = userSDBJoin.otdelId;
+        usersSDB.dtUpdate = userSDBJoin.dtUpdate;
+        usersSDB.authorId = userSDBJoin.authorId;
+        usersSDB.cityId = userSDBJoin.cityId;
+        usersSDB.workAddrId = userSDBJoin.workAddrId;
+        usersSDB.inn = userSDBJoin.inn;
+        usersSDB.sendSms = userSDBJoin.sendSms;
+        usersSDB.reportCount = userSDBJoin.reportCount;
+        usersSDB.reportDate01 = userSDBJoin.reportDate01;
+        usersSDB.reportDate05 = userSDBJoin.reportDate05;
+        usersSDB.reportDate20 = userSDBJoin.reportDate20;
+        usersSDB.reportDate40 = userSDBJoin.reportDate40;
+        // Добавьте преобразование других полей, если необходимо.
+        return usersSDB;
     }
 
 

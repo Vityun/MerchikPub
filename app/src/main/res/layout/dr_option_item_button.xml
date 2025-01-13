@@ -64,7 +64,7 @@
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@+id/imageViewCheck"
             app:layout_constraintTop_toBottomOf="@+id/textViewInteger"
-            tools:visibility="gone" />
+            />
 
         <ImageView
             android:id="@+id/imageViewCheck"

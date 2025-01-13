@@ -177,18 +177,6 @@ public class Exchange {
      * Начало Обмена. Внутри находятся все Обмены
      */
     public void startExchange() {
-//        Handler handler = new Handler(Looper.getMainLooper()){
-//            @Override
-//            public void handleMessage(@NonNull Message msg) {
-//                if (msg.what == 0){
-//
-//                }else {
-//
-//                }
-//            }
-//        };
-
-//        new Thread(() -> {
 
         try {
             Log.e("startExchange", "start");
@@ -243,12 +231,7 @@ public class Exchange {
                                 if (listPhotosToDownload != null && listPhotosToDownload.size() > 0) {
                                     photoCount = listPhotosToDownload.size();
                                     Log.i("````", "listPhotosToDownload: " + listPhotosToDownload.size());
-//                                        new Handler(Looper.getMainLooper()).post(new Runnable() {
-//                                            @Override
-//                                            public void run() {
-//                                                Globals.alertDialogMsg(context, "Загрузка фото..");
-//                                            }
-//                                        });
+
                                     samplePhotoExchange.downloadSamplePhotosByPhotoIds(listPhotosToDownload, new Clicks.clickStatusMsg() {
                                         @Override
                                         public void onSuccess(String data) {
@@ -1820,7 +1803,7 @@ public class Exchange {
         });
     }
 
-    void updateAverageSalary() {
+    public void updateAverageSalary() {
         JsonObject requestJson = new JsonObject();
         requestJson.addProperty("mod", "data_list");
         requestJson.addProperty("act", "get_avg_salary");

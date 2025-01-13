@@ -87,7 +87,10 @@ class MainRepository(
             val hidedFieldsOnUI = obj.getHidedFieldsOnUI().split(",").map { it.trim() }
 
             return fields
-                .filter { !hidedFieldsOnUI.contains(it) }
+                .filter { field ->
+                    hidedFieldsOnUI.none { it == field }
+                }
+//                .filter { !hidedFieldsOnUI.contains(it) }
                 .map {
                     SettingsItemUI(
                         it,
