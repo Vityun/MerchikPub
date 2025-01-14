@@ -53,7 +53,7 @@ private fun ItemTextField(it: TextField, modifier: Modifier? = null) {
         fontWeight = it.modifierValue?.fontWeight,
         fontStyle = it.modifierValue?.fontStyle,
         color = it.modifierValue?.textColor ?: Color.Black,
-        maxLines = 25,
+        maxLines = it.modifierValue?.maxLine ?: 3,
         overflow = TextOverflow.Ellipsis,
         modifier = (modifier ?: Modifier)
             .padding(

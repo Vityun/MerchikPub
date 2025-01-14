@@ -64,6 +64,7 @@ class UsersSDBViewModel @Inject constructor(
     }
 
 
+
     override fun updateFilters() {
 //        val dataAddress = when(contextUI) {
 //            ContextUI.USERS_SDB_FROM_EKL -> {
@@ -78,9 +79,10 @@ class UsersSDBViewModel @Inject constructor(
 
         Log.e("!!!!!!!!!", "updateFilters")
 
-        uiState
+        val clientId = Gson().fromJson(dataJson, JSONObject::class.java)?.getString("clientId")
+            ?: EKLDataHolder.instance().usersPTTClientId
 
-        val addrId = Gson().fromJson(dataJson, Int::class.java)
+        val addrId = Gson().fromJson(dataJson, JSONObject::class.java)?.getInt("addr_id")
             ?: EKLDataHolder.instance().usersPTTWorkAddressId
 
         if (addrId != null) {

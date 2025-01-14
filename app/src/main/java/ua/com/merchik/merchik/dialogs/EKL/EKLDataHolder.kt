@@ -5,6 +5,7 @@ class EKLDataHolder private constructor() {
     var usersPTTid: Int? = null
     var usersPTTName: String? = null
     var usersPTTWorkAddressId: Int? = null
+    var usersPTTClientId: Int? = null
     var usersPTTNumberTel1: String? = null
     var usersPTTNumberTel2: String? = null
 
@@ -24,6 +25,7 @@ class EKLDataHolder private constructor() {
         usersPTTid = null
         usersPTTName = null
         usersPTTWorkAddressId = null
+        usersPTTClientId = null
         usersPTTNumberTel1 = null
         usersPTTNumberTel2 = null
     }

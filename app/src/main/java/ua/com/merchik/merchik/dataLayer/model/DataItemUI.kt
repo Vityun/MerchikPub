@@ -27,6 +27,7 @@ data class MerchModifier(
     val alignment: Alignment.Horizontal? = null,
     val weight: Float? = null,
     val visibility: Int? = null,
+    val maxLine: Int? = null
 )
 
 data class Padding(

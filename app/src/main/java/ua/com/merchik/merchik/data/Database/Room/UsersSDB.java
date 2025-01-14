@@ -159,6 +159,16 @@ public class UsersSDB implements DataObjectUI{
     @ColumnInfo(name = "report_date_200")
     public Date reportDate200;
 
+//    @SerializedName("number_tel_corp")
+//    @Expose
+//    @ColumnInfo(name = "number_tel_corp")
+//    public Integer numberTelCorp;
+//
+//    @SerializedName("number2_tel_corp")
+//    @Expose
+//    @ColumnInfo(name = "number2_tel_corp")
+//    public Integer number2TelCorp;
+
     @SerializedName("tel_corp")
     @Expose
     @ColumnInfo(name = "tel_corp")
@@ -196,13 +206,12 @@ public class UsersSDB implements DataObjectUI{
     @Nullable
     @Override
     public MerchModifier getValueModifier(@NonNull String key, @NonNull JSONObject jsonObject) {
-        return DataObjectUI.DefaultImpls.getValueModifier(this, key, jsonObject);
+        return UsersSDBOverride.INSTANCE.getValueModifier(key, jsonObject);
     }
 
     @Nullable
     @Override
     public MerchModifier getContainerModifier(@NonNull JSONObject jsonObject) {
-        Log.e("%%%%%%%%%%%%%%%%%","getContainerModifier");
         return UsersSDBOverride.INSTANCE.getContainerModifier(jsonObject);
     }
 

@@ -331,7 +331,9 @@ object UsersSDBOverride {
 //        ""
         "user_id, author_id, report_date_01, report_date_05, report_date_20, report_date_40, report_date_200, img_personal_photo_thumb, " +
                 "img_personal_photo, img_personal_photo_path, department, dt_update, city_id, inn, send_sms, fired, fired_reason, " +
-                "fired_dt, report_count, tel_corp, tel2_corp, flag" +
+                "fired_dt, report_count, " +
+                "number_corp, number2_corp, " +
+                "flag" +
                 ""
 
     fun getValueUI(key: String, value: Any): String = when (key) {
@@ -374,6 +376,31 @@ object UsersSDBOverride {
                 null
             }
         return MerchModifier(background = color)
+    }
+
+    fun getValueModifier(key: String, jsonObject: JSONObject): MerchModifier? = when (key) {
+//        "obj_id" -> {
+//            if (jsonObject.get("obj_id").toString().contains("20"))
+//                MerchModifier(
+//                    fontStyle = FontStyle.Italic,
+//                    background = Color.Red,
+//                    alignment = Alignment.End,
+//                    weight = 1f
+//                )
+//            else
+//                MerchModifier(fontStyle = FontStyle.Italic)
+//        }
+
+        "tel", "tel2" -> {
+            MerchModifier(fontStyle = FontStyle.Italic)
+        }
+        "notes" -> {
+            MerchModifier(
+                maxLine = 25
+            )
+        }
+
+        else -> null
     }
 
 //    fun getFieldsForOrderOnUI(jsonObject: JSONObject): List<String> {

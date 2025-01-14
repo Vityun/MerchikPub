@@ -389,45 +389,45 @@ public class DialogEKL {
                 sotr.setText(underLineText(EKLDataHolder.Companion.instance().getUsersPTTName() == null ?
                         "Виберіть ТПП (Представника Торгової точки)" : EKLDataHolder.Companion.instance().getUsersPTTName(), Color.BLACK));
                 Log.e("onUpdateUI", "0");
-                setTel();
+//                setTel();
 
-//                if (EKLDataHolder.Companion.instance().getUsersPTTid() != null) {
-//                    int targetId = EKLDataHolder.Companion.instance().getUsersPTTid(); // Искомый ID
-//                    Log.e("onUpdateUI", "targetId: " + targetId);
-//
-//                    UserSDBJoin res = null;
-//                    Log.e("onUpdateUI", "1");
-//                    Log.e("onUpdateUI", "allUsersLJoinTovGrps.size: " + allUsersLJoinTovGrps.size());
-//
-//                    for (UserSDBJoin user : allUsersLJoinTovGrps) {
-//                        Log.e("onUpdateUI", "user.id: " + user.id);
-//                        if (user.id == targetId) {
-//                            res = user;
-//                            Log.e("onUpdateUI", "1.+");
-//                            break;
-//                        }
-//                    }
-//                    Log.e("onUpdateUI", "2");
-//
-//                    Globals.userEKLId = res.id;
-//
-//                    try {
-//                        if (res.nm == null) {
-//                            res.nm = "Отдел не определён";
-//                        }
-//                    } catch (Exception e) {
-//                        e.printStackTrace();
-//                        Globals.writeToMLOG("ERROR", "DialogEKL/EXCEPTION/5", "Exception e: " + e);
-//                    }
-////                sotr.setText(res.fio + " (" + res.nm + ") ");
-//                    Log.e("onUpdateUI", "3");
-//
-//                    enterCode = true;
-//                    user = res;
+                if (EKLDataHolder.Companion.instance().getUsersPTTid() != null) {
+                    int targetId = EKLDataHolder.Companion.instance().getUsersPTTid(); // Искомый ID
+                    Log.e("onUpdateUI", "targetId: " + targetId);
+
+                    UserSDBJoin res = null;
+                    Log.e("onUpdateUI", "1");
+                    Log.e("onUpdateUI", "allUsersLJoinTovGrps.size: " + allUsersLJoinTovGrps.size());
+
+                    for (UserSDBJoin user : allUsersLJoinTovGrps) {
+                        Log.e("onUpdateUI", "user.id: " + user.id);
+                        if (user.id == targetId) {
+                            res = user;
+                            Log.e("onUpdateUI", "1.+");
+                            break;
+                        }
+                    }
+                    Log.e("onUpdateUI", "2");
+
+                    Globals.userEKLId = res.id;
+
+                    try {
+                        if (res.nm == null) {
+                            res.nm = "Отдел не определён";
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        Globals.writeToMLOG("ERROR", "DialogEKL/EXCEPTION/5", "Exception e: " + e);
+                    }
+//                sotr.setText(res.fio + " (" + res.nm + ") ");
+                    Log.e("onUpdateUI", "3");
+
+                    enterCode = true;
+                    user = res;
 //                    // Установка телефонов
 //                    Log.e("onUpdateUI", "4");
-//                    setTel();
-//                }
+                    setTel();
+                }
             };
 
             sotr.setText(underLineText(EKLDataHolder.Companion.instance().getUsersPTTName() == null ?
@@ -730,21 +730,24 @@ public class DialogEKL {
 
 //            buttonSend.setBackgroundResource(R.drawable.bg_temp);
             buttonSend.setOnClickListener(v -> {
-                if (EKLDataHolder.Companion.instance().getUsersPTTNumberTel1() != null)
+                if (EKLDataHolder.Companion.instance().getUsersPTTNumberTel1() != null &&
+                        !EKLDataHolder.Companion.instance().getUsersPTTNumberTel1().isEmpty())
                     pressButtonSend();
                 else
                     Toast.makeText(context, "Вы не выбрали ПТТ", Toast.LENGTH_LONG).show();
             });
 
             buttonSend2.setOnClickListener(v -> {
-                if (EKLDataHolder.Companion.instance().getUsersPTTNumberTel1() != null)
+                if (EKLDataHolder.Companion.instance().getUsersPTTNumberTel1() != null &&
+                        !EKLDataHolder.Companion.instance().getUsersPTTNumberTel1().isEmpty())
                     sendEKL(v.getContext(), "telegram");
                 else
                     Toast.makeText(context, "Вы не выбрали ПТТ", Toast.LENGTH_LONG).show();
             });
 
             buttonSend3.setOnClickListener(v -> {
-                if (EKLDataHolder.Companion.instance().getUsersPTTNumberTel1() != null)
+                if (EKLDataHolder.Companion.instance().getUsersPTTNumberTel1() != null &&
+                        !EKLDataHolder.Companion.instance().getUsersPTTNumberTel1().isEmpty())
                     sendEKL(v.getContext(), "viber");
                 else
                     Toast.makeText(context, "Вы не выбрали ПТТ", Toast.LENGTH_LONG).show();
@@ -846,15 +849,15 @@ public class DialogEKL {
         bundle.putString("modeUI", ModeUI.ONE_SELECT.toString());
 //                                            JsonObject dataJson = new JsonObject(newPttList);
 //                                            bundle.putString("dataJson", jsonString);
-        bundle.putString("dataJson", new Gson().toJson(wp.getAddr_id()));
-//                try {
-//                    bundle.putString("dataJson", new Gson().toJson(
-//                            new JSONObject()
-//                                    .put("addr_id", wp.getAddr_id())
-//                                    .put("clientId", wp.getClient_id()))
-//                    );
-//                } catch (Exception ignored) {
-//                }
+//        bundle.putString("dataJson", new Gson().toJson(wp.getAddr_id()));
+        try {
+            bundle.putString("dataJson", new Gson().toJson(
+                    new JSONObject()
+                            .put("addr_id", wp.getAddr_id())
+                            .put("clientId", wp.getClient_id()))
+            );
+        } catch (Exception ignored) {
+        }
         bundle.putString("title", "Список ПТТ");
         bundle.putString("subTitle", "Виберіть ТПП (Представника Торгової точки) якому ви відправите код для підтвердження факту виконаних робіт з даної ТТ та Вашої присутності");
         intent.putExtras(bundle);

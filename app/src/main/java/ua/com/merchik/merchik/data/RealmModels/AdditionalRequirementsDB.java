@@ -15,6 +15,7 @@ import io.realm.RealmObject;
 import ua.com.merchik.merchik.features.main.AdditionalRequirementsDBOverride;
 import ua.com.merchik.merchik.dataLayer.DataObjectUI;
 import ua.com.merchik.merchik.dataLayer.model.MerchModifier;
+import ua.com.merchik.merchik.features.main.UsersSDBOverride;
 
 public class AdditionalRequirementsDB extends RealmObject implements DataObjectUI {
     @SerializedName("ID")
@@ -291,9 +292,11 @@ public class AdditionalRequirementsDB extends RealmObject implements DataObjectU
     @Nullable
     @Override
     public MerchModifier getValueModifier(@NonNull String key, @NonNull JSONObject jsonObject) {
-        return DataObjectUI.DefaultImpls.getValueModifier(this, key, jsonObject);
+//        return DataObjectUI.DefaultImpls.getValueModifier(this, key, jsonObject);
+        return UsersSDBOverride.INSTANCE.getValueModifier(key, jsonObject);
 //        return AdditionalRequirementsDBOverride.INSTANCE.getValueModifier(key, jsonObject);
     }
+
 
     @Nullable
     @Override
