@@ -5,10 +5,13 @@ class EKLDataHolder private constructor() {
     var usersPTTid: Int? = null
     var usersPTTName: String? = null
     var usersPTTWorkAddressId: Int? = null
-    var usersPTTClientId: Int? = null
+    var usersPTTWPClientId: String? = null
+    var usersPTTWPPttUserId: Int? = null
+    var usersPTTWPDataUserId: Int? = null
+    var usersPTTWPDataTime: Long? = null
     var usersPTTNumberTel1: String? = null
     var usersPTTNumberTel2: String? = null
-
+    var usersPTTtovarIdList: List<Int> = emptyList()
 
 
     companion object {
@@ -25,8 +28,12 @@ class EKLDataHolder private constructor() {
         usersPTTid = null
         usersPTTName = null
         usersPTTWorkAddressId = null
-        usersPTTClientId = null
+        usersPTTWPClientId = null
+        usersPTTWPPttUserId = null
+        usersPTTWPDataUserId = null
+        usersPTTWPDataTime = null
         usersPTTNumberTel1 = null
         usersPTTNumberTel2 = null
+        usersPTTtovarIdList = emptyList()
     }
 }

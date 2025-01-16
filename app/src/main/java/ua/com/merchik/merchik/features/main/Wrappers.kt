@@ -7,11 +7,11 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import org.json.JSONObject
+import ua.com.merchik.merchik.Utils.ValidatorEKL
 import ua.com.merchik.merchik.dataLayer.model.MerchModifier
 import ua.com.merchik.merchik.dataLayer.model.Padding
-import ua.com.merchik.merchik.dataLayer.toItemUI
-import ua.com.merchik.merchik.database.realm.RealmManager
 import ua.com.merchik.merchik.database.room.RoomManager
+import ua.com.merchik.merchik.dialogs.EKL.EKLDataHolder
 import java.text.SimpleDateFormat
 import java.util.Date
 
@@ -293,6 +293,12 @@ object LogMPDBOverride {
 
 object SamplePhotoSDBOverride {
     fun getFieldsForOrderOnUI(): List<String> = "nm, about".split(",").map { it.trim() }
+
+    fun getValueModifier(key: String, jsonObject: JSONObject): MerchModifier {
+        return MerchModifier(
+            maxLine = 50
+        )
+    }
 }
 
 object TovarDBOverride {
@@ -329,28 +335,29 @@ object UsersSDBOverride {
 
     fun getHidedFieldsOnUI(): String =
 //        ""
-        "user_id, author_id, report_date_01, report_date_05, report_date_20, report_date_40, report_date_200, img_personal_photo_thumb, " +
-                "img_personal_photo, img_personal_photo_path, department, dt_update, city_id, inn, send_sms, fired, fired_reason, " +
-                "fired_dt, report_count, " +
-                "number_corp, number2_corp, " +
+        "user_id, author_id, report_date_01, report_date_05, report_date_20, report_date_40, report_date_200, " +
+                "img_personal_photo_thumb, img_personal_photo, img_personal_photo_path, " +
+                "department, dt_update, city_id, inn, send_sms, fired, fired_reason, fired_dt, report_count, " +
+                "tel_corp, " +
+                "tel2_corp, " +
+//                "tel, tel2" +
                 "flag" +
                 ""
 
     fun getValueUI(key: String, value: Any): String = when (key) {
-        "tel" -> {
-            value.toString().takeIf { it.isNotEmpty() }?.let {
-                it.replace(Regex(".(?=.{4})"), "*")
-            } ?: value.toString()
-        }
-
-        "tel2" -> {
-            value.toString().takeIf { it.isNotEmpty() }?.let {
-                it.replace(Regex(".(?=.{4})"), "*")
-            } ?: value.toString()
-        }
+//        "tel" -> {
+//            value.toString().takeIf { it.isNotEmpty() }?.let {
+//                it.replace(Regex(".(?=.{4})"), "*")
+//            } ?: value.toString()
+//        }
+//
+//        "tel2" -> {
+//            value.toString().takeIf { it.isNotEmpty() }?.let {
+//                it.replace(Regex(".(?=.{4})"), "*")
+//            } ?: value.toString()
+//        }
 
         "otdel_id" -> {
-//            Log.e("%%%%%%%%%%%%","otdel_id: $value")
             RoomManager.SQL_DB.tovarGroupDao().getById(value as Int)?.nm ?: "Відділ не визначено"
         }
 
@@ -367,14 +374,32 @@ object UsersSDBOverride {
     }
 
     fun getContainerModifier(jsonObject: JSONObject): MerchModifier {
-        val color =
-            try {
-                val colorHex = jsonObject.optString("flag", "")
-//                Log.e("%%%%%%%%%%%%%%%%","color: $colorHex")
-                Color(android.graphics.Color.parseColor("#$colorHex"))
-            } catch (e: Exception) {
-                null
+        val color = try {
+            val otdelId =
+                jsonObject.optInt("otdel_id", -1) // Получаем значение "otdel_id", по умолчанию -1
+            Log.d(
+                "getContainerModifier",
+                "otdel_id: $otdelId usersPTTtovarIdList: ${EKLDataHolder.instance().usersPTTtovarIdList}"
+            )
+            // Проверка на пустоту или наличие только одного элемента 0
+            if (EKLDataHolder.instance().usersPTTtovarIdList.isEmpty() || EKLDataHolder.instance().usersPTTtovarIdList.size == 1 && EKLDataHolder.instance().usersPTTtovarIdList[0] == 0) {
+                Log.d("getContainerModifier", "usersPTTtovarIdList is empty or contains only 0")
+                Color(android.graphics.Color.parseColor("#00FF77")) // Цвет для совпадения
+            } else if (otdelId in EKLDataHolder.instance().usersPTTtovarIdList) {
+                Log.d("getContainerModifier", "otdel_id in usersPTTtovarIdList: $otdelId")
+                Color(android.graphics.Color.parseColor("#00FF77")) // Цвет для совпадения
+            } else {
+                Log.d("getContainerModifier", "otdel_id out usersPTTtovarIdList: $otdelId")
+                if (ValidatorEKL.controlEKL().result)
+                    Color(android.graphics.Color.parseColor("#00FF77")) // Цвет для совпадения
+                else
+                    Color(android.graphics.Color.parseColor("#FFC4C4")) // Цвет для несовпадения
             }
+        } catch (e: Exception) {
+            Log.e("getContainerModifier", "Error: ${e.message}", e)
+            null // Обработка ошибок
+        }
+        Log.d("getContainerModifier", "Color: $color")
         return MerchModifier(background = color)
     }
 
@@ -394,6 +419,7 @@ object UsersSDBOverride {
         "tel", "tel2" -> {
             MerchModifier(fontStyle = FontStyle.Italic)
         }
+
         "notes" -> {
             MerchModifier(
                 maxLine = 25

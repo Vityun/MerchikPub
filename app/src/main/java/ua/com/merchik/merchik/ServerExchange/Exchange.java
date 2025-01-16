@@ -1380,11 +1380,11 @@ public class Exchange {
 //                        progressDialog.dismiss();
 //                }
 
-                DialogData dialog = new DialogData(context);
-                dialog.setTitle("ОбьектыСайта");
-                dialog.setText(error);
-                dialog.setClose(dialog::dismiss);
-                dialog.show();
+//                DialogData dialog = new DialogData(context);
+//                dialog.setTitle("ОбьектыСайта");
+//                dialog.setText(error);
+//                dialog.setClose(dialog::dismiss);
+//                dialog.show();
             }
         });
 //        }

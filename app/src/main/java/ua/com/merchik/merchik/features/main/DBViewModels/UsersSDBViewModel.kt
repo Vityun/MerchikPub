@@ -1,19 +1,15 @@
 package ua.com.merchik.merchik.features.main.DBViewModels
 
 import android.app.Application
-import android.graphics.Color
 import android.util.Log
-import androidx.compose.foundation.text2.input.rememberTextFieldState
 import androidx.lifecycle.SavedStateHandle
-import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.gson.Gson
+import com.google.gson.JsonObject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.launch
-import org.json.JSONObject
+import ua.com.merchik.merchik.Utils.ValidatorEKL
 import ua.com.merchik.merchik.data.Database.Room.AddressSDB
 import ua.com.merchik.merchik.data.Database.Room.UsersSDB
 import ua.com.merchik.merchik.data.RealmModels.AdditionalRequirementsDB
@@ -23,7 +19,7 @@ import ua.com.merchik.merchik.dataLayer.MainRepository
 import ua.com.merchik.merchik.dataLayer.ModeUI
 import ua.com.merchik.merchik.dataLayer.NameUIRepository
 import ua.com.merchik.merchik.dataLayer.model.DataItemUI
-import ua.com.merchik.merchik.database.realm.RealmManager
+import ua.com.merchik.merchik.database.realm.tables.WpDataRealm
 import ua.com.merchik.merchik.database.room.RoomManager
 import ua.com.merchik.merchik.dialogs.DialogAchievement.AchievementDataHolder
 import ua.com.merchik.merchik.dialogs.DialogAchievement.FilteringDialogDataHolder
@@ -31,7 +27,6 @@ import ua.com.merchik.merchik.dialogs.EKL.EKLDataHolder
 import ua.com.merchik.merchik.features.main.Main.Filters
 import ua.com.merchik.merchik.features.main.Main.ItemFilter
 import ua.com.merchik.merchik.features.main.Main.MainViewModel
-import ua.com.merchik.merchik.features.main.Main.StateUI
 import javax.inject.Inject
 import kotlin.reflect.KClass
 
@@ -64,7 +59,6 @@ class UsersSDBViewModel @Inject constructor(
     }
 
 
-
     override fun updateFilters() {
 //        val dataAddress = when(contextUI) {
 //            ContextUI.USERS_SDB_FROM_EKL -> {
@@ -78,14 +72,31 @@ class UsersSDBViewModel @Inject constructor(
 //        }
 
         Log.e("!!!!!!!!!", "updateFilters")
+        val dataJsonObject = Gson().fromJson(dataJson, JsonObject::class.java)
+        Log.e("!!!!!!!!!", "updateFilters ${dataJsonObject.get("wpDataDBId")}")
 
-        val clientId = Gson().fromJson(dataJson, JSONObject::class.java)?.getString("clientId")
-            ?: EKLDataHolder.instance().usersPTTClientId
+        Log.e("!!!!!!!!!", "updateFilters1")
 
-        val addrId = Gson().fromJson(dataJson, JSONObject::class.java)?.getInt("addr_id")
+        Log.e("!!!!!!!!!", "updateFilters2")
+
+        val addrId = dataJsonObject.get("addr_id")?.asInt
             ?: EKLDataHolder.instance().usersPTTWorkAddressId
 
-        if (addrId != null) {
+        val wpClientId = dataJsonObject.get("wpDataClientId")?.asString
+            ?: EKLDataHolder.instance().usersPTTWPClientId
+
+        val wpPttUserId = dataJsonObject.get("wpDataPttUserId")?.asInt
+            ?: EKLDataHolder.instance().usersPTTWPPttUserId
+
+        val wpDataUserId = dataJsonObject.get("wpDataUserId")?.asInt
+            ?: EKLDataHolder.instance().usersPTTWPDataUserId
+
+        val wpDataTime = dataJsonObject.get("wpDataTime")?.asLong
+            ?: EKLDataHolder.instance().usersPTTWPDataTime
+
+        if (addrId != null && wpClientId != null && wpPttUserId != null
+            && wpDataTime != null && wpDataUserId != null
+        ) {
 
 //            val codeDad2 = Gson().fromJson(dataJson, JSONObject::class.java).getString("codeDad2").toLong()
 //            val tovar = RealmManager.getTovarListFromReportPrepareByDad2Copy(codeDad2)
@@ -93,7 +104,24 @@ class UsersSDBViewModel @Inject constructor(
 
             if (EKLDataHolder.instance().usersPTTWorkAddressId == null)
                 EKLDataHolder.instance().usersPTTWorkAddressId = addrId
+            if (EKLDataHolder.instance().usersPTTWPClientId == null)
+                EKLDataHolder.instance().usersPTTWPClientId = wpClientId
+            if (EKLDataHolder.instance().usersPTTWPPttUserId == null)
+                EKLDataHolder.instance().usersPTTWPPttUserId = wpPttUserId
+            if (EKLDataHolder.instance().usersPTTWPDataUserId == null)
+                EKLDataHolder.instance().usersPTTWPDataUserId = wpDataUserId
+            if (EKLDataHolder.instance().usersPTTWPDataTime == null)
+                EKLDataHolder.instance().usersPTTWPDataTime = wpDataTime
+
             val address = RoomManager.SQL_DB.addressDao().getById(addrId)
+
+            val tovarGroupClientSDB = RoomManager.SQL_DB.tovarGroupClientDao()
+                .getAllBy(wpClientId, address.tpId)
+
+//
+//            val ids: List<Int> = tovarGroupClientSDB?.map { it.tovarGrpId } ?: emptyList()
+//
+//             = ids
 
             Log.e("updateFilters", "addrId: $addrId")
 
@@ -111,13 +139,21 @@ class UsersSDBViewModel @Inject constructor(
                 false
             )
 
+
+//            Validator2EKL.bla(wpId)
+
+            val control = ValidatorEKL.controlEKL()
+            Log.e("ValidatorEKL", ">>> ${control.message} + ${control.result}")
+
+
             val data = RoomManager.SQL_DB.usersDao().getPTT(addrId)
 
             if (data.isNullOrEmpty()) {
                 val header = AdditionalRequirementsDB::class.java.newInstance()
-                header.notes = "Системе не удалось найти представителей торговой точки (птт) у которых вы можете подписать  электронно-контрольный лист (экл). \n" +
-                        "Для того что бы просмотреть список всех ТПП зарегистрированных на данной Торговой точке (ТТ) нажмите на кнопку рефреш \n" +
-                        "Если нужный вам птт в этом списке отсутствует нажмите кнопку + для того что бы зарегистрировать нового представителей торговой точки"
+                header.notes =
+                    "Системе не удалось найти представителей торговой точки (птт) у которых вы можете подписать  электронно-контрольный лист (экл). \n" +
+                            "Для того что бы просмотреть список всех ТПП зарегистрированных на данной Торговой точке (ТТ) нажмите на кнопку рефреш \n" +
+                            "Если нужный вам птт в этом списке отсутствует нажмите кнопку + для того что бы зарегистрировать нового представителей торговой точки"
                 _uiItemsHeader.value = repository.toItemUIList(
                     AdditionalRequirementsDB::class,
                     listOf(header),
@@ -161,7 +197,6 @@ class UsersSDBViewModel @Inject constructor(
     }
 
     override fun getItems(): List<DataItemUI> {
-        Log.e("getItems", "+ !!!!!!!!!!!!!!!!!!!!!!  824")
         val data = repository.getAllRoom(table, contextUI, null)
 //            .map {
 //                val selected = FilteringDialogDataHolder.instance()

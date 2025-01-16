@@ -159,16 +159,6 @@ public class UsersSDB implements DataObjectUI{
     @ColumnInfo(name = "report_date_200")
     public Date reportDate200;
 
-//    @SerializedName("number_tel_corp")
-//    @Expose
-//    @ColumnInfo(name = "number_tel_corp")
-//    public Integer numberTelCorp;
-//
-//    @SerializedName("number2_tel_corp")
-//    @Expose
-//    @ColumnInfo(name = "number2_tel_corp")
-//    public Integer number2TelCorp;
-
     @SerializedName("tel_corp")
     @Expose
     @ColumnInfo(name = "tel_corp")

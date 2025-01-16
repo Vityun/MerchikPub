@@ -61,4 +61,7 @@
     <color name="backgroundToolTip">#FAF8DB</color>
     <color name="black70">#4D000000</color>
 
+    <color name="ufmd_accept">#00FF77</color>
+
+
 </resources>

@@ -1,6 +1,5 @@
 package ua.com.merchik.merchik.dialogs.EKL;
 
-import static android.view.MotionEvent.ACTION_UP;
 import static ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity.NEED_UPDATE_UI_REQUEST;
 import static ua.com.merchik.merchik.Globals.HELPDESK_PHONE_NUMBER;
 import static ua.com.merchik.merchik.Globals.userId;
@@ -22,7 +21,6 @@ import android.text.TextWatcher;
 import android.text.style.ForegroundColorSpan;
 import android.text.style.UnderlineSpan;
 import android.util.Log;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.ArrayAdapter;
@@ -47,7 +45,6 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
@@ -60,14 +57,15 @@ import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.ServerExchange.ExchangeInterface;
 import ua.com.merchik.merchik.ViewHolders.AutoTextUsersViewHolder;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
+import ua.com.merchik.merchik.data.Database.Room.AddressSDB;
 import ua.com.merchik.merchik.data.Database.Room.EKL_SDB;
+import ua.com.merchik.merchik.data.Database.Room.TovarGroupClientSDB;
 import ua.com.merchik.merchik.data.Database.Room.UsersSDB;
 import ua.com.merchik.merchik.data.Database.Room.UsersSDBDat.UserSDBJoin;
 import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteHintsDB;
 import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteObjects.SiteObjectsDB;
 import ua.com.merchik.merchik.data.RealmModels.AdditionalRequirementsDB;
 import ua.com.merchik.merchik.data.RealmModels.AppUsersDB;
-import ua.com.merchik.merchik.data.RealmModels.UsersDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.data.TestJsonUpload.DataEKL;
 import ua.com.merchik.merchik.data.TestJsonUpload.StandartData;
@@ -76,12 +74,10 @@ import ua.com.merchik.merchik.dataLayer.ModeUI;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsRealm;
 import ua.com.merchik.merchik.database.realm.tables.AppUserRealm;
-import ua.com.merchik.merchik.dialogs.DialogAchievement.AchievementDataHolder;
 import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.dialogs.DialogVideo;
 import ua.com.merchik.merchik.dialogs.features.LoadingDialogWithPercent;
 import ua.com.merchik.merchik.dialogs.features.dialogLoading.ProgressViewModel;
-import ua.com.merchik.merchik.features.main.DBViewModels.SamplePhotoSDBViewModel;
 import ua.com.merchik.merchik.features.main.DBViewModels.UsersSDBViewModel;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
 
@@ -396,8 +392,6 @@ public class DialogEKL {
                     Log.e("onUpdateUI", "targetId: " + targetId);
 
                     UserSDBJoin res = null;
-                    Log.e("onUpdateUI", "1");
-                    Log.e("onUpdateUI", "allUsersLJoinTovGrps.size: " + allUsersLJoinTovGrps.size());
 
                     for (UserSDBJoin user : allUsersLJoinTovGrps) {
                         Log.e("onUpdateUI", "user.id: " + user.id);
@@ -419,11 +413,11 @@ public class DialogEKL {
                         e.printStackTrace();
                         Globals.writeToMLOG("ERROR", "DialogEKL/EXCEPTION/5", "Exception e: " + e);
                     }
-//                sotr.setText(res.fio + " (" + res.nm + ") ");
+                    user = res;
+
                     Log.e("onUpdateUI", "3");
 
                     enterCode = true;
-                    user = res;
 //                    // Установка телефонов
 //                    Log.e("onUpdateUI", "4");
                     setTel();
@@ -545,21 +539,37 @@ public class DialogEKL {
                                 if (pttRequest.list != null && pttRequest.list.size() > 0) {
                                     List<UserSDBJoin> newPttList = new ArrayList<>();
                                     for (EKLRequests.PTT item : pttRequest.list) {
+
+                                        boolean userExists = allUsersLJoinTovGrps.stream()
+                                                .anyMatch(existingUser -> existingUser.fio.equals(item.fio));
+
+                                        if (userExists) {
+                                            Log.e("userSDB", "Пользователь с fio " + item.fio + " уже существует, пропускаем.");
+                                            continue;
+                                        }
+
                                         UserSDBJoin userSDBJoin = new UserSDBJoin();
 
                                         userSDBJoin.id = Integer.valueOf(item.userId);
                                         userSDBJoin.fio = item.fio;
-                                        userSDBJoin.tel = item.tel;
+                                        userSDBJoin.tel = item.tel != null ? item.tel : "";
                                         userSDBJoin.tel2 = item.tel2;
                                         userSDBJoin.authorId = (Integer) item.authorId;
                                         userSDBJoin.clientId = Integer.valueOf(item.clientId);
-                                        userSDBJoin.otdelId = (Integer) item.otdelId;
+                                        if (item.otdelId instanceof Number) {
+                                            userSDBJoin.otdelId = ((Number) item.otdelId).intValue();
+                                        } else {
+                                            userSDBJoin.otdelId = 0; // Значение по умолчанию
+                                        }
+//                                        userSDBJoin.otdelId = item.otdelId != null ? (Integer) item.otdelId : 0;
                                         userSDBJoin.department = (Integer) item.department;
                                         userSDBJoin.sendSms = item.sendSms;
                                         userSDBJoin.workAddrId = wp.getAddr_id();
+
                                         Log.e("userSDB", "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
                                         Log.e("userSDB", "id: " + userSDBJoin.id);
                                         Log.e("userSDB", "tel: " + userSDBJoin.tel);
+                                        Log.e("userSDB", "otdel_id: " + userSDBJoin.otdelId);
                                         Log.e("userSDB", "workAddrId: " + userSDBJoin.workAddrId);
                                         newPttList.add(userSDBJoin);
                                     }
@@ -842,6 +852,9 @@ public class DialogEKL {
     }
 
     private void startUFMD() {
+        Log.e("ValidatorEKL", "startUFMD wp ptt: " + wp.getPtt_user_id());
+        Log.e("ValidatorEKL", "startUFMD wp dad2: " + wp.getCode_dad2());
+
         Intent intent = new Intent(context, FeaturesActivity.class);
         Bundle bundle = new Bundle();
         bundle.putString("viewModel", UsersSDBViewModel.class.getCanonicalName());
@@ -850,15 +863,25 @@ public class DialogEKL {
 //                                            JsonObject dataJson = new JsonObject(newPttList);
 //                                            bundle.putString("dataJson", jsonString);
 //        bundle.putString("dataJson", new Gson().toJson(wp.getAddr_id()));
-        try {
-            bundle.putString("dataJson", new Gson().toJson(
-                    new JSONObject()
-                            .put("addr_id", wp.getAddr_id())
-                            .put("clientId", wp.getClient_id()))
-            );
-        } catch (Exception ignored) {
-        }
-        bundle.putString("title", "Список ПТТ");
+//        try {
+//            bundle.putString("dataJson", new Gson().toJson(
+//                    new JSONObject()
+//                            .put("addr_id", wp.getAddr_id())
+//                            .put("wpDataDBId", String.valueOf(wp.getId()))));
+////                            .put("codeDad2", wp.getId()))
+//
+//        } catch (Exception ignored) {
+//        }
+        JsonObject dataJson = new JsonObject();
+        dataJson.addProperty("addr_id", wp.getAddr_id());
+//        dataJson.addProperty("wpDataDBId", String.valueOf(wp.getId()));
+        dataJson.addProperty("wpDataClientId", wp.getClient_id());
+        dataJson.addProperty("wpDataPttUserId", wp.getPtt_user_id());
+        dataJson.addProperty("wpDataUserId", wp.getUser_id());
+        dataJson.addProperty("wpDataTime", wp.getDt().getTime());
+        bundle.putString("dataJson", new Gson().toJson(dataJson));
+
+        bundle.putString("title", "Список ПТТ за адресою: " + wp.getAddr_txt());
         bundle.putString("subTitle", "Виберіть ТПП (Представника Торгової точки) якому ви відправите код для підтвердження факту виконаних робіт з даної ТТ та Вашої присутності");
         intent.putExtras(bundle);
         ActivityCompat.startActivityForResult((Activity) context, intent, NEED_UPDATE_UI_REQUEST, null);

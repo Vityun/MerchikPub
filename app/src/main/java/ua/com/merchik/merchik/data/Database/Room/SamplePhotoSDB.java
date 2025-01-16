@@ -99,7 +99,7 @@ public class SamplePhotoSDB implements DataObjectUI {
     @Nullable
     @Override
     public MerchModifier getValueModifier(@NonNull String key, @NonNull JSONObject jsonObject) {
-        return DataObjectUI.DefaultImpls.getValueModifier(this, key, jsonObject);
+        return SamplePhotoSDBOverride.INSTANCE.getValueModifier(key, jsonObject);
     }
 
     @Nullable
