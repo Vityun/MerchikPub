@@ -878,26 +878,39 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
             dialog.setTitle("Настройки");
             dialog.setText("Отправить служебный файл?");
             dialog.setOk("Отправить", () -> {
-                Intent emailIntent = new Intent(Intent.ACTION_SEND);
-                emailIntent.setType("text/plain");
-                emailIntent.putExtra(Intent.EXTRA_EMAIL, new String[]{"support@merchik.com.ua"});
-                emailIntent.putExtra(Intent.EXTRA_SUBJECT, "Приложение. M_LOG.");
-                emailIntent.putExtra(Intent.EXTRA_TEXT, "Отправка отладочного файла");
-                File root = MyApplication.getAppContext().getExternalFilesDir(Environment.DIRECTORY_NOTIFICATIONS);
-                String fName = "M_LOG.txt";
-                File file = new File(root, fName);
-                if (!file.exists() || !file.canRead()) {
-                    return;
-                }
-                Uri contentUri;
-                try {
-                    contentUri = FileProvider.getUriForFile(this, "ua.com.merchik.merchik.provider", file);
-                } catch (Exception e) {
-                    contentUri = Uri.fromFile(file);
-                }
+                File file = new File(getCacheDir(), "M_LOG.txt");
+                Uri fileUri = FileProvider.getUriForFile(
+                        this,
+                        "ua.com.merchik.merchik.provider",
+                        file
+                );
 
-                emailIntent.putExtra(Intent.EXTRA_STREAM, contentUri);
-                startActivity(Intent.createChooser(emailIntent, "Как отправить файл?"));
+                Intent intent = new Intent(Intent.ACTION_SEND);
+                intent.setType("text/plain");
+                intent.putExtra(Intent.EXTRA_STREAM, fileUri);
+                intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                startActivity(Intent.createChooser(intent, "Share File"));
+
+//                Intent emailIntent = new Intent(Intent.ACTION_SEND);
+//                emailIntent.setType("text/plain");
+//                emailIntent.putExtra(Intent.EXTRA_EMAIL, new String[]{"support@merchik.com.ua"});
+//                emailIntent.putExtra(Intent.EXTRA_SUBJECT, "Приложение. M_LOG.");
+//                emailIntent.putExtra(Intent.EXTRA_TEXT, "Отправка отладочного файла");
+//                File root = MyApplication.getAppContext().getExternalFilesDir(Environment.DIRECTORY_NOTIFICATIONS);
+//                String fName = "M_LOG.txt";
+//                File file = new File(root, fName);
+//                if (!file.exists() || !file.canRead()) {
+//                    return;
+//                }
+//                Uri contentUri;
+//                try {
+//                    contentUri = FileProvider.getUriForFile(this, "ua.com.merchik.merchik.provider", file);
+//                } catch (Exception e) {
+//                    contentUri = Uri.fromFile(file);
+//                }
+//
+//                emailIntent.putExtra(Intent.EXTRA_STREAM, contentUri);
+//                startActivity(Intent.createChooser(emailIntent, "Как отправить файл?"));
             });
             dialog.setClose(dialog::dismiss);
             dialog.show();

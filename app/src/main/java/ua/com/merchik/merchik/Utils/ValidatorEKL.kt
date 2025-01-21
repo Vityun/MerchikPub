@@ -148,6 +148,7 @@ object ValidatorEKL {
 //                return control
 //            }
 
+
             val usersSDBPTT =
                 userCache.getOrPut(ptt_user_id) {
                     RoomManager.SQL_DB.usersDao().getById(ptt_user_id)

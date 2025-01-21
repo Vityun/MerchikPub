@@ -13,15 +13,44 @@
 </paths>-->
 
 
+<!--закомитил 21.01.25-->
+<!--<paths xmlns:android="http://schemas.android.com/apk/res/android">-->
+<!--    <external-path name="external_files" path="." />-->
+<!--    <external-files-path name="external_files_path" path="." />-->
+<!--    <external-path name="images" path="/" />-->
+<!--</paths>-->
+
+
+<!--Алёна Шпинеева-->
+<!--Не подходит Лере Валерьевне, такая же ошибка как у Алёны, но НА ЭТОМ подходе-->
+<!--<paths>-->
+<!--    <external-path name="images" path="."/>-->
+<!--</paths>-->
+
+<!--добавил 21.01.25-->
 <paths xmlns:android="http://schemas.android.com/apk/res/android">
-    <external-path name="external_files" path="." />
-    <external-files-path name="external_files_path" path="." />
-    <external-path name="images" path="/" />
+
+    <!-- Для внешних файлов -->
+    <external-path
+        name="external_files"
+        path="." />
+    <external-files-path
+        name="external_files_path"
+        path="." />
+
+    <!-- Для изображений на внешнем хранилище -->
+    <external-path
+        name="images"
+        path="/" />
+
+    <!-- Для кэшированных файлов приложения -->
+    <cache-path
+        name="cache"
+        path="." />
+
+    <!-- Для файлов внутри директории files/ вашего приложения -->
+    <files-path
+        name="files"
+        path="." />
+
 </paths>
-
-
-    <!--Алёна Шпинеева-->
-    <!--Не подходит Лере Валерьевне, такая же ошибка как у Алёны, но НА ЭТОМ подходе-->
-    <!--<paths>-->
-    <!--    <external-path name="images" path="."/>-->
-    <!--</paths>-->

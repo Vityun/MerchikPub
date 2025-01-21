@@ -408,7 +408,8 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                             startTime = ((TasksAndReclamationsSDB) dataDB).dt_start_fact;
                         }*/
                             startTime = WpDataRealm.getWpDataRowByDad2Id(Long.parseLong(optionsButtons.getCodeDad2())).getVisit_start_dt();
-                            textInteger.setText(CustomString.coloredString("" + Clock.getHumanTimeOpt(startTime * 1000), optionsButtons));
+//                            textInteger.setText(CustomString.coloredString("" + Clock.getHumanTimeOpt(startTime * 1000), optionsButtons));
+                            textInteger.setText("" + Clock.getHumanTimeOpt(startTime * 1000));
                             break;
                         case (138520):
                             long endTime;
@@ -418,7 +419,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                             endTime = ((TasksAndReclamationsSDB) dataDB).dt_end_fact;
                         }*/
                             endTime = WpDataRealm.getWpDataRowByDad2Id(Long.parseLong(optionsButtons.getCodeDad2())).getVisit_end_dt();
-                            textInteger.setText(CustomString.coloredString("" + Clock.getHumanTimeOpt(endTime * 1000), optionsButtons));
+                            textInteger.setText("" + Clock.getHumanTimeOpt(endTime * 1000));
                             break;
 
                         case (158309):  // Фото витрины Приближённое

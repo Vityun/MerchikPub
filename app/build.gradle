@@ -21,8 +21,8 @@ android {
         minSdkVersion 21
         targetSdkVersion 34
         //noinspection HighAppVersionCode
-        versionCode  2025012201
-        versionName "2025012201"
+        versionCode  2025012202
+        versionName "2025012202"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
         multiDexEnabled true
@@ -183,7 +183,7 @@ dependencies {
     implementation("jakarta.inject:jakarta.inject-api:2.0.1")
 //    kapt 'androidx.hilt:hilt-compiler:1.0.0'
 
-    implementation("io.realm.kotlin:library-base:1.11.0")
+    implementation("io.realm.kotlin:library-base:1.16.0")
     implementation("org.jetbrains.kotlin:kotlin-reflect:1.8.21")
 
     implementation 'com.daimajia.androidanimations:library:2.4@aar'
