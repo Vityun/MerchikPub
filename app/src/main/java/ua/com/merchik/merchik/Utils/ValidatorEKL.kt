@@ -134,22 +134,31 @@ object ValidatorEKL {
         if (client_id != null && addr_id != null && ptt_user_id != null
             && user_id != null && time != null) {
 
-
             val addressSDB =
                 addressCache.getOrPut(addr_id) {
                     RoomManager.SQL_DB.addressDao().getById(addr_id)
                 }
 
+            Log.e("ValidatorEKL", "ptt_user_id: $ptt_user_id")
+            Log.e("ValidatorEKL", "client_id: $client_id")
+            Log.e("ValidatorEKL", "tpId: ${addressSDB?.tpId}")
+
+//            if (ptt_user_id == 0){
+//                control.result = true
+//                return control
+//            }
+
             val usersSDBPTT =
                 userCache.getOrPut(ptt_user_id) {
                     RoomManager.SQL_DB.usersDao().getById(ptt_user_id)
-
                 }
+
+            Log.e("ValidatorEKL", "usersSDBPTT id: ${usersSDBPTT?.id}")
+
             val documentUser: UsersSDB? =
                 userDocumentCache.getOrPut(user_id) {
                     RoomManager.SQL_DB.usersDao().getUserById(user_id)
                 }
-
             val tovarGroupClientSDB =
                 tovarGroupCache.getOrPut(client_id)
                 {
@@ -158,6 +167,8 @@ object ValidatorEKL {
                         addressSDB?.tpId ?: 0
                     )
                 }
+            Log.e("ValidatorEKL", "tovarGroupClientSDB size: ${tovarGroupClientSDB?.size}")
+
 
             Log.e("ValidatorEKL", "addressSDB cityId: ${addressSDB?.cityId}")
 
@@ -173,7 +184,15 @@ object ValidatorEKL {
                     ids.add(item.tovarGrpId)
                 }
             }
-            ids.add(usersSDBPTT?.otdelId ?: 0)
+
+            if (ids.isEmpty()) {
+                ids.add(usersSDBPTT?.otdelId ?: 0)
+            } else {
+                usersSDBPTT?.otdelId?.takeIf { it != 0 }?.let {
+                    ids.add(it)
+                }
+            }
+
             EKLDataHolder.instance().usersPTTtovarIdList = ids
 
             Log.e("ValidatorEKL", "tovarGroupClientSDB id: $ids")

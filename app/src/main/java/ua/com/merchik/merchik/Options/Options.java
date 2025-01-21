@@ -323,10 +323,10 @@ public class Options {
                     optionControlRegistrationPotentialFriend.showOptionMassage("");
                     break;
 
-                case 151594:
-                    OptionControlPhotoBeforeStartWork<?> optionControlPhotoBeforeStartWork = new OptionControlPhotoBeforeStartWork<>(context, dataDB, optionsDB, newOptionType, mode, unlockCodeResultListener);
-                    optionControlPhotoBeforeStartWork.showOptionMassage("");
-                    break;
+//                case 151594:
+//                    OptionControlPhotoBeforeStartWork<?> optionControlPhotoBeforeStartWork = new OptionControlPhotoBeforeStartWork<>(context, dataDB, optionsDB, newOptionType, mode, unlockCodeResultListener);
+//                    optionControlPhotoBeforeStartWork.showOptionMassage("");
+//                    break;
 
                 case 132624:
                     OptionControlAddComment<?> optionControlAddComment = new OptionControlAddComment<>(context, dataDB, optionsDB, newOptionType, mode, unlockCodeResultListener);
@@ -356,6 +356,7 @@ public class Options {
                     break;
 
 //                case 132971:    // Проверка наличия Фото тележка с товаром (тип 10)
+                case 151594:    // 20.01 перевел Контроль наличия фото витрины (до начала работ) на общую схему
                 case 134583:
                 case 84932:     // Проверка наличия ФотоОтчётов (id мне дали из 1С) (тип 0)
                 case 141361:
@@ -1621,6 +1622,7 @@ public class Options {
                 return optionControlPercentageOfThePrize.isBlockOption2() ? 1 : 0;
 
             // Контроль фотоотчётов
+            case 151594:    // 20.01 перевел Контроль наличия фото витрины (до начала работ) на общую схему
             case 132971:    // Проверка наличия Фото тележка с товаром (тип 10)
             case 134583:
             case 141361:
@@ -1787,17 +1789,17 @@ public class Options {
                 new OptionButtonPhotoOfACartWithGoods<>(context, dataDB, option, type, mode, unlockCodeResultListener);
                 break;
 
-            case 151594:
-                OptionControlPhotoBeforeStartWork<?> optionControlPhotoBeforeStartWork =
-                        new OptionControlPhotoBeforeStartWork<>(context, dataDB, option, type, mode, unlockCodeResultListener);
-                if (optionControlPhotoBeforeStartWork.isBlockOption()) {
-                    if (mode.equals(NNKMode.MAKE) || (mode.equals(NNKMode.CHECK) && optionControlPhotoBeforeStartWork.isBlockOption()))
-                        optionControlPhotoBeforeStartWork.showOptionMassage(block);
-                    if (mode.equals(NNKMode.BLOCK) && optionControlPhotoBeforeStartWork.signal && optionControlPhotoBeforeStartWork.isBlockOption()) {
-                        optionControlPhotoBeforeStartWork.showOptionMassage(block);
-                    }
-                }
-                return optionControlPhotoBeforeStartWork.isBlockOption2() ? 1 : 0;
+//            case 151594:
+//                OptionControlPhotoBeforeStartWork<?> optionControlPhotoBeforeStartWork =
+//                        new OptionControlPhotoBeforeStartWork<>(context, dataDB, option, type, mode, unlockCodeResultListener);
+//                if (optionControlPhotoBeforeStartWork.isBlockOption()) {
+//                    if (mode.equals(NNKMode.MAKE) || (mode.equals(NNKMode.CHECK) && optionControlPhotoBeforeStartWork.isBlockOption()))
+//                        optionControlPhotoBeforeStartWork.showOptionMassage(block);
+//                    if (mode.equals(NNKMode.BLOCK) && optionControlPhotoBeforeStartWork.signal && optionControlPhotoBeforeStartWork.isBlockOption()) {
+//                        optionControlPhotoBeforeStartWork.showOptionMassage(block);
+//                    }
+//                }
+//                return optionControlPhotoBeforeStartWork.isBlockOption2() ? 1 : 0;
 
             case 135328:
                 OptionButtonReclamationAnswer<?> optionButtonReclamationAnswer =

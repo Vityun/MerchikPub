@@ -556,10 +556,25 @@ public class DialogEKL {
                                         userSDBJoin.tel2 = item.tel2;
                                         userSDBJoin.authorId = (Integer) item.authorId;
                                         userSDBJoin.clientId = Integer.valueOf(item.clientId);
-                                        if (item.otdelId instanceof Number) {
-                                            userSDBJoin.otdelId = ((Number) item.otdelId).intValue();
+                                        if (item.otdelId != null) {
+                                            try {
+                                                if (item.otdelId instanceof Number) {
+                                                    // Если это Number (Integer, Double и т.д.)
+                                                    userSDBJoin.otdelId = ((Number) item.otdelId).intValue();
+                                                } else if (item.otdelId instanceof String) {
+                                                    // Если это строка, пытаемся конвертировать в Integer
+                                                    userSDBJoin.otdelId = Integer.parseInt((String) item.otdelId);
+                                                } else {
+                                                    // Если тип неизвестен, устанавливаем значение по умолчанию
+                                                    userSDBJoin.otdelId = 0;
+                                                }
+                                            } catch (NumberFormatException e) {
+                                                // Если строка не может быть преобразована в число
+                                                userSDBJoin.otdelId = 0;
+                                            }
                                         } else {
-                                            userSDBJoin.otdelId = 0; // Значение по умолчанию
+                                            // Если значение null, устанавливаем значение по умолчанию
+                                            userSDBJoin.otdelId = 0;
                                         }
 //                                        userSDBJoin.otdelId = item.otdelId != null ? (Integer) item.otdelId : 0;
                                         userSDBJoin.department = (Integer) item.department;
@@ -852,8 +867,9 @@ public class DialogEKL {
     }
 
     private void startUFMD() {
-        Log.e("ValidatorEKL", "startUFMD wp ptt: " + wp.getPtt_user_id());
+        Log.e("ValidatorEKL", "startUFMD wp ptt: " + wp.ptt_user_id);
         Log.e("ValidatorEKL", "startUFMD wp dad2: " + wp.getCode_dad2());
+        Log.e("ValidatorEKL", "startUFMD wp client_id: " + wp.getClient_id());
 
         Intent intent = new Intent(context, FeaturesActivity.class);
         Bundle bundle = new Bundle();
@@ -876,7 +892,7 @@ public class DialogEKL {
         dataJson.addProperty("addr_id", wp.getAddr_id());
 //        dataJson.addProperty("wpDataDBId", String.valueOf(wp.getId()));
         dataJson.addProperty("wpDataClientId", wp.getClient_id());
-        dataJson.addProperty("wpDataPttUserId", wp.getPtt_user_id());
+        dataJson.addProperty("wpDataPttUserId", wp.ptt_user_id);
         dataJson.addProperty("wpDataUserId", wp.getUser_id());
         dataJson.addProperty("wpDataTime", wp.getDt().getTime());
         bundle.putString("dataJson", new Gson().toJson(dataJson));
@@ -1057,7 +1073,7 @@ public class DialogEKL {
                                     ekl_sdb.clientId = wp.getClient_id();
                                     ekl_sdb.addressId = wp.getAddr_id();
                                     ekl_sdb.dad2 = wp.getCode_dad2();
-                                    ekl_sdb.department = user.otdelId;   // Добавлен отдел, при отправке ЭКЛ
+                                    ekl_sdb.department = user.otdelId != null ? user.otdelId : 0;   // Добавлен отдел, при отправке ЭКЛ
                                     ekl_sdb.state = true;
                                     ekl_sdb.eklHashCode = resp.codeHash;
                                     ekl_sdb.vpi = System.currentTimeMillis() / 1000;

@@ -1434,11 +1434,11 @@ public class Exchange {
 //                    }
 
                     // ОПЦИОНАЛЬНО! Отображение сообщения пользователю
-                    DialogData dialog = new DialogData(context);
-                    dialog.setTitle("Таблица Переводов");
-                    dialog.setText(error);
-                    dialog.setClose(dialog::dismiss);
-                    dialog.show();
+//                    DialogData dialog = new DialogData(context);
+//                    dialog.setTitle("Таблица Переводов");
+//                    dialog.setText(error);
+//                    dialog.setClose(dialog::dismiss);
+//                    dialog.show();
                 }
             });
 

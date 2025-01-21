@@ -13,6 +13,8 @@ import com.google.android.material.navigation.NavigationView;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 
+import io.realm.DynamicRealm;
+import io.realm.RealmConfiguration;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -73,7 +75,24 @@ public class MenuMainActivity extends toolbar_menus {
         }
     }
 
+    public long getRealmSchemaVersion() {
+        RealmConfiguration config = new RealmConfiguration.Builder()
+                .name("myrealm.realm")
+                .allowWritesOnUiThread(true)
+                .allowQueriesOnUiThread(true)
+                .deleteRealmIfMigrationNeeded()
+                .build();
+
+        DynamicRealm realm = DynamicRealm.getInstance(config);
+        long schemaVersion = realm.getVersion();
+        realm.close();
+        return schemaVersion;
+    }
+
     private void test() {
+        Log.d("Realm", "Current schema version: " + getRealmSchemaVersion());
+
+
 //        new Translate().uploadNewTranslate();
 
 //        Exchange exchange = new Exchange();

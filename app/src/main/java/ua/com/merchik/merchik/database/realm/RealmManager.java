@@ -64,8 +64,9 @@ public class RealmManager {
     public static void init(Context context) {
         Realm.init(context);
 
-        RealmConfiguration config = new RealmConfiguration.Builder().name("myrealm.realm").deleteRealmIfMigrationNeeded()
-//                .schemaVersion(18)
+        RealmConfiguration config = new RealmConfiguration.Builder().name("myrealm.realm")
+                .deleteRealmIfMigrationNeeded()
+//                .schemaVersion(19)
                 .allowWritesOnUiThread(true)
                 .allowQueriesOnUiThread(true)
                 .migration(new MyMigration()).build();
@@ -569,9 +570,9 @@ public class RealmManager {
                 .equalTo("isSignal", "1")
                 .findAll();
 
-        if (realmResults != null && realmResults.size() > 0){
+        if (realmResults != null && realmResults.size() > 0) {
             return INSTANCE.copyFromRealm(realmResults);
-        }else {
+        } else {
             return null;
         }
     }
@@ -785,7 +786,7 @@ public class RealmManager {
             query.equalTo("photoServerId", photoServerId)
                     .equalTo("photo_type", photoType)
                     .isNotNull("photo_num")
-;//                    .equalTo("comment", photoSize)
+            ;//                    .equalTo("comment", photoSize)
 //                    .sort("approve", Sort.DESCENDING, "photoServerId", Sort.DESCENDING);
         } else {
             query.equalTo("object_id", id)
@@ -1241,7 +1242,7 @@ public class RealmManager {
     /**
      * 09.08.2024
      * Тоже самое что и
-     * */
+     */
     public static List<TovarDB> getTovarListFromReportPrepareByDad2Copy(long dad2) {
         ArrayList<String> listRpTovId = new ArrayList<>();
         ArrayList<String> listTovId = new ArrayList<>();

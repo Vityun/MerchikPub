@@ -1,8 +1,8 @@
 <resources>
     <string name="app_name">merchik</string>
-    <string name="ver">011702</string>
+    <string name="ver">012201</string>
     <string name="debug_status">1</string>
-    <string name="debug_date">2025-01-17</string>
+    <string name="debug_date">2025-01-22</string>
 
     <string name="test">TEST HINT</string>
 

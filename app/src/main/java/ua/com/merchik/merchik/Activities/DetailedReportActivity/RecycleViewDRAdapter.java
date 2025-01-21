@@ -396,7 +396,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                                 achievementSum = achievementsSDBList.size();
                             }
 
-                            textInteger.setText("" + achievementSum);
+                            textInteger.setText(CustomString.coloredString("" + achievementSum, optionsButtons));
                             break;
 
                         // Start Work
@@ -408,7 +408,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                             startTime = ((TasksAndReclamationsSDB) dataDB).dt_start_fact;
                         }*/
                             startTime = WpDataRealm.getWpDataRowByDad2Id(Long.parseLong(optionsButtons.getCodeDad2())).getVisit_start_dt();
-                            textInteger.setText("" + Clock.getHumanTimeOpt(startTime * 1000));
+                            textInteger.setText(CustomString.coloredString("" + Clock.getHumanTimeOpt(startTime * 1000), optionsButtons));
                             break;
                         case (138520):
                             long endTime;
@@ -418,7 +418,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                             endTime = ((TasksAndReclamationsSDB) dataDB).dt_end_fact;
                         }*/
                             endTime = WpDataRealm.getWpDataRowByDad2Id(Long.parseLong(optionsButtons.getCodeDad2())).getVisit_end_dt();
-                            textInteger.setText("" + Clock.getHumanTimeOpt(endTime * 1000));
+                            textInteger.setText(CustomString.coloredString("" + Clock.getHumanTimeOpt(endTime * 1000), optionsButtons));
                             break;
 
                         case (158309):  // Фото витрины Приближённое
@@ -699,7 +699,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                             break;
                         case (135158):  // Вставляем количество выполненных Фото Остатков Товаров (ФОТ)
 //                            textInteger.setText("" + RealmManager.stackPhotoShowcasePhotoCount(dad2, 4));
-                            textInteger.setText(CustomString.underlineString("" + RealmManager.stackPhotoShowcasePhotoCount(dad2, 4)));
+                            textInteger.setText(CustomString.underlineString("" + RealmManager.stackPhotoShowcasePhotoCount(dad2, 4), optionsButtons));
                             textInteger.setOnClickListener(v -> {
                                 Intent intent = new Intent(mContext, FeaturesActivity.class);
                                 Bundle bundle = new Bundle();
@@ -721,7 +721,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
 //                            TradeMarkDB tradeMarkDB = TradeMarkRealm.getTradeMarkRowById(String.valueOf(addr.tpId));
 //                            String tradeMarkId = tradeMarkDB == null ? "" : tradeMarkDB.getID();
 
-                            textInteger.setText(CustomString.underlineString("" + RealmManager.stackPhotoShowcasePhotoCount(dad2, 10)));
+                            textInteger.setText(CustomString.underlineString("" + RealmManager.stackPhotoShowcasePhotoCount(dad2, 10), optionsButtons));
                             textInteger.setOnClickListener(v -> {
                                 Intent intent = new Intent(mContext, FeaturesActivity.class);
                                 Bundle bundle = new Bundle();
@@ -742,7 +742,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
 
                             break;
                         case (141360):
-                            textInteger.setText(CustomString.underlineString("" + RealmManager.stackPhotoShowcasePhotoCount(dad2, 31)));
+                            textInteger.setText(CustomString.underlineString("" + RealmManager.stackPhotoShowcasePhotoCount(dad2, 31), optionsButtons));
                             textInteger.setOnClickListener(v -> {
                                 Intent intent = new Intent(mContext, FeaturesActivity.class);
                                 Bundle bundle = new Bundle();
@@ -785,7 +785,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                             if (addressSDB != null) {
                                 ttCategory = addressSDB.ttId;
                             }
-                            textInteger.setText("" + AdditionalRequirementsRealm.getData3(dataDB, HIDE_FOR_USER, ttCategory, null, 1).size());
+                            textInteger.setText(CustomString.coloredString("" + AdditionalRequirementsRealm.getData3(dataDB, HIDE_FOR_USER, ttCategory, null, 1).size(), optionsButtons));
                             break;
 
                         case 138340:    // Доп Требования
@@ -793,7 +793,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
 //                        String expire = Clock.getHumanTimeYYYYMMDD(System.currentTimeMillis() / 1000);
 //                        textInteger.setText("" + SQL_DB.additionalMaterialsDao().getAllForOptionTEST(optionsButtons.getClientId(), Integer.parseInt(optionsButtons.getAddrId()), "1", "0").size());
 //                        textInteger.setText("" + SQL_DB.additionalMaterialsDao().getAllForOptionTEST(optionsButtons.getClientId(), Integer.parseInt(optionsButtons.getAddrId()), "0").size());
-                            textInteger.setText("" + SQL_DB.additionalMaterialsDao().getAllForOptionTEST2(optionsButtons.getClientId(), "0").size());
+                            textInteger.setText(CustomString.coloredString("" + SQL_DB.additionalMaterialsDao().getAllForOptionTEST2(optionsButtons.getClientId(), "0").size(), optionsButtons));
                             break;
 
                         case 135328:    // Рекламация
@@ -801,7 +801,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                             type.type = OptionMassageType.Type.STRING;
                             OptionControlReclamationAnswer<?> optionControlReclamationAnswer = new OptionControlReclamationAnswer<>(itemView.getContext(), dataDB, optionsButtons, type, NULL, null);
 
-                            textInteger.setText("" + optionControlReclamationAnswer.problemReclamationCount());
+                            textInteger.setText(CustomString.coloredString("" + optionControlReclamationAnswer.problemReclamationCount(), optionsButtons));
                             break;
 
                         case 135327:    // Задачи
@@ -809,7 +809,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                             type.type = OptionMassageType.Type.STRING;
                             OptionControlTaskAnswer<?> optionControlTask = new OptionControlTaskAnswer<>(itemView.getContext(), dataDB, optionsButtons, type, NULL, null);
 
-                            textInteger.setText("" + optionControlTask.problemTaskCount());
+                            textInteger.setText(CustomString.coloredString("" + optionControlTask.problemTaskCount(), optionsButtons));
                             break;
 
                         default:
@@ -1368,6 +1368,10 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
         SpannableString res = new SpannableString("");
         String data = "";
 
+        String isSignal = option.getIsSignal();
+
+        Log.e("setPhotoCountsMakeAndM", "OptionId: " + option.getOptionId() + " | OptionControlId: " + option.getOptionControlId());
+        Log.e("setPhotoCountsMakeAndM", "isSignal: " + option.getIsSignal());
         // Если не указано минимальное кол-во фоток у опции, считаем что фоток надо зделать 3шт.
         String min = option.getAmountMin();
         if (min.equals("0")) {
@@ -1414,12 +1418,19 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
 
         res = new SpannableString(data);
 
-        ForegroundColorSpan foregroundSpan;
-        if (dataBaseCount >= maxPhotos) {
-            foregroundSpan = new ForegroundColorSpan(Color.GREEN);
-        } else {
-            foregroundSpan = new ForegroundColorSpan(mContext.getResources().getColor(R.color.red_error));
-        }
+        ForegroundColorSpan foregroundSpan = switch (isSignal) {
+            case "0" -> new ForegroundColorSpan(Color.GRAY);
+            case "1" ->
+                    new ForegroundColorSpan(mContext.getResources().getColor(R.color.red_error));
+            case "2" ->
+                    new ForegroundColorSpan(mContext.getResources().getColor(R.color.green_default));
+            default -> new ForegroundColorSpan(Color.YELLOW);
+        };
+        //        if (dataBaseCount >= maxPhotos) {
+//            foregroundSpan = new ForegroundColorSpan(Color.GREEN);
+//        } else {
+//            foregroundSpan = new ForegroundColorSpan(mContext.getResources().getColor(R.color.red_error));
+//        }
 
         res.setSpan(foregroundSpan, 0, res.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         return res;

@@ -143,6 +143,11 @@ public class ReportPrepareDB extends RealmObject implements DataObjectUI {
     @Expose
     public Integer facesPlan;
 
+    @SerializedName("akciya_plan_id")
+    @Expose
+    public String akciya_plan_id;
+
+
     private int uploadStatus;       // Необходимость выгрузки записи
     private String serverResponce;      // Ответ от сервера (в основном тут будет ответ почему запись не принята сервером)
 

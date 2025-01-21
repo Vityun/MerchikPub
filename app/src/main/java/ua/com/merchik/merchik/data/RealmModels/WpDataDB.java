@@ -128,7 +128,7 @@ public class WpDataDB extends RealmObject implements Parcelable, DataObjectUI {
     public long user_comment_dt_update;
 
     // 19.09.22
-    private int ptt_user_id; // Поле ПТТ-шника
+    public int ptt_user_id; // Поле ПТТ-шника
     public double sku_plan;
     public double sku_fact;
     public double oos;
@@ -1146,7 +1146,7 @@ public class WpDataDB extends RealmObject implements Parcelable, DataObjectUI {
         user_comment = in.readString();
         user_comment_author_id = in.readInt();
         user_comment_dt_update = in.readLong();
-        setPtt_user_id(in.readInt());
+        ptt_user_id = in.readInt();
         sku_plan = in.readDouble();
         sku_fact = in.readDouble();
         oos = in.readDouble();
@@ -1261,7 +1261,7 @@ public class WpDataDB extends RealmObject implements Parcelable, DataObjectUI {
         dest.writeString(user_comment);
         dest.writeInt(user_comment_author_id);
         dest.writeLong(user_comment_dt_update);
-        dest.writeInt(getPtt_user_id());
+        dest.writeInt(ptt_user_id);
         dest.writeDouble(sku_plan);
         dest.writeDouble(sku_fact);
         dest.writeDouble(oos);
@@ -1337,11 +1337,4 @@ public class WpDataDB extends RealmObject implements Parcelable, DataObjectUI {
         return DataObjectUI.DefaultImpls.getFieldsForOrderOnUI(this);
     }
 
-    public int getPtt_user_id() {
-        return ptt_user_id;
-    }
-
-    public void setPtt_user_id(int ptt_user_id) {
-        this.ptt_user_id = ptt_user_id;
-    }
 }

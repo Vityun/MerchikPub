@@ -357,8 +357,9 @@ object UsersSDBOverride {
 //            } ?: value.toString()
 //        }
 
+
         "otdel_id" -> {
-            RoomManager.SQL_DB.tovarGroupDao().getById(value as Int)?.nm ?: "Відділ не визначено"
+            RoomManager.SQL_DB.tovarGroupDao().getById(value as Int)?.nm ?: "Відділ не визначено ($value)"
         }
 
         else -> value.toString()
@@ -381,9 +382,14 @@ object UsersSDBOverride {
                 "getContainerModifier",
                 "otdel_id: $otdelId usersPTTtovarIdList: ${EKLDataHolder.instance().usersPTTtovarIdList}"
             )
+//            Log.d(
+//                "getContainerModifier",
+//                "JSONObject: $jsonObject"
+//            )
             // Проверка на пустоту или наличие только одного элемента 0
-            if (EKLDataHolder.instance().usersPTTtovarIdList.isEmpty() || EKLDataHolder.instance().usersPTTtovarIdList.size == 1 && EKLDataHolder.instance().usersPTTtovarIdList[0] == 0) {
+            if (EKLDataHolder.instance().usersPTTtovarIdList.isEmpty() || (EKLDataHolder.instance().usersPTTtovarIdList.size == 1 && EKLDataHolder.instance().usersPTTtovarIdList[0] == 0)) {
                 Log.d("getContainerModifier", "usersPTTtovarIdList is empty or contains only 0")
+//                Color(android.graphics.Color.parseColor("#FFC4C4")) // Цвет для несовпадения
                 Color(android.graphics.Color.parseColor("#00FF77")) // Цвет для совпадения
             } else if (otdelId in EKLDataHolder.instance().usersPTTtovarIdList) {
                 Log.d("getContainerModifier", "otdel_id in usersPTTtovarIdList: $otdelId")
@@ -396,10 +402,10 @@ object UsersSDBOverride {
                     Color(android.graphics.Color.parseColor("#FFC4C4")) // Цвет для несовпадения
             }
         } catch (e: Exception) {
-            Log.e("getContainerModifier", "Error: ${e.message}", e)
+//            Log.e("getContainerModifier", "Error: ${e.message}", e)
             null // Обработка ошибок
         }
-        Log.d("getContainerModifier", "Color: $color")
+//        Log.d("getContainerModifier", "Color: $color")
         return MerchModifier(background = color)
     }
 
@@ -422,7 +428,7 @@ object UsersSDBOverride {
 
         "notes" -> {
             MerchModifier(
-                maxLine = 25
+                maxLine = 50
             )
         }
 

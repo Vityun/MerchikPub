@@ -146,6 +146,21 @@ public class MyMigration implements RealmMigration {
             oldVersion++;
         }
 
+
+
+        if (oldVersion >= 10 && oldVersion <= 18) {
+            RealmObjectSchema reportPrepareDBSchema = schema.get("ReportPrepareDB");
+
+            if (reportPrepareDBSchema != null) {
+                // Добавляем новый столбец akciya_plan_id
+                reportPrepareDBSchema.addField("akciya_plan_id", String.class);
+            } else {
+                Globals.writeToMLOG("ERROR", "MyMigration/migrate", "ReportPrepareDB schema is null");
+            }
+
+            oldVersion++;
+        }
+
     }
 }
 

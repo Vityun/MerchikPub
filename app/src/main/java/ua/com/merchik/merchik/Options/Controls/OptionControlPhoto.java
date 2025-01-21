@@ -168,7 +168,7 @@ public class OptionControlPhoto<T> extends OptionControl {
 
             case "158609":  // Дополнительное место продаж
                 photoType = 42;
-                m = m > 0 ? m : 3;
+                m = m > 0 ? m : 0; // 20.01 изменил как в 1С (3.1)
                 break;
 
             case "159726":  // Фото торговой точки
@@ -204,6 +204,14 @@ public class OptionControlPhoto<T> extends OptionControl {
             stringBuilderMsg.append("Жалоб по фыполнению фото нет. Сделано: ").append(stackPhotoDB.size()).append(" фото.");
             signal = false;
 //            unlockCodeResultListener.onUnlockCodeSuccess();
+        }
+
+        if (optionId.equals("158609")) {
+            if (addressSDB.tpId == 320){
+                ImagesTypeListDB item = ImagesTypeListRealm.getByID(photoType);
+                stringBuilderMsg.append("Вы должны сделать: ").append("3").append(" фото с типом: ").append(item != null ? item.getNm() : typeNm).append(", а сделали: ").append(stackPhotoDB.size()).append(" - доделайте фотографии.");
+                signal = true;
+            }
         }
 
         // Исключения

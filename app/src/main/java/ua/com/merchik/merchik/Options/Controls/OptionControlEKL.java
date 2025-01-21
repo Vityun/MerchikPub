@@ -85,7 +85,7 @@ public class OptionControlEKL<T> extends OptionControl {
 
             addressSDB = SQL_DB.addressDao().getById(wpDataDB.getAddr_id());
             customerSDB = SQL_DB.customerDao().getById(wpDataDB.getClient_id());
-            usersSDBPTT = SQL_DB.usersDao().getById(wpDataDB.getPtt_user_id());
+            usersSDBPTT = SQL_DB.usersDao().getById(wpDataDB.ptt_user_id);
             documentUser = SQL_DB.usersDao().getUserById(wpDataDB.getUser_id());
         }
     }
@@ -194,7 +194,7 @@ public class OptionControlEKL<T> extends OptionControl {
                         ids.add(item.id);
                     }
                     Globals.writeToMLOG("INFO", "OptionControlEKL/createTZN", "TovarGroupSDB ids: " + ids);
-                    String msgDebug = String.format("dateFrom: %s/dateTo: %s/ids: %s/addr: %s/user: %s/ptt: %s", dateFrom, dateTo, ids, wpDataDB.getAddr_id(), wpDataDB.getUser_id(), wpDataDB.getPtt_user_id());
+                    String msgDebug = String.format("dateFrom: %s/dateTo: %s/ids: %s/addr: %s/user: %s/ptt: %s", dateFrom, dateTo, ids, wpDataDB.getAddr_id(), wpDataDB.getUser_id(), wpDataDB.ptt_user_id);
                     Globals.writeToMLOG("INFO", "OptionControlEKL/createTZN", msgDebug);
 
                     eklSDB = SQL_DB.eklDao().getBy(dateFrom, dateTo, ids, wpDataDB.getAddr_id(), wpDataDB.getUser_id());
