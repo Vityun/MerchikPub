@@ -11,6 +11,7 @@ import com.google.gson.Gson;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.List;
 
@@ -123,7 +124,6 @@ public class OptionControlEKL<T> extends OptionControl {
 //        }
         // -----------------------
 
-        Log.e("OptionControlEKL", "HERE TEST OptionControlEKL 2");
 
         int userId = wpDataDB.getUser_id();
         String ptt = PTT;
@@ -134,8 +134,6 @@ public class OptionControlEKL<T> extends OptionControl {
             dateFrom = Clock.getDatePeriodLong(documentDt * 1000, -11) / 1000;
             dateTo = Clock.getDatePeriodLong(documentDt * 1000, 5) / 1000;
         }
-
-        Log.e("OptionControlEKL", "HERE TEST OptionControlEKL 3");
 
         if ((addressSDB.tpId == 434 || addressSDB.tpId == 6767) && !optionDB.getOptionControlId().equals("132629") && documentDt < 1756684800) { // 1756684800 == 01.09.2025 / 434 = АТБ или 676 = Акварель
             optionMsg.append("Не проверяем для АТБ или Акварель до 01.09.2025");
@@ -316,7 +314,7 @@ public class OptionControlEKL<T> extends OptionControl {
                                     .append(TG.getNmFromList(tovarGroupSDB)).append(" (но исполнитель не провел свой 40-й отчет и эту блокировку пропускаем)");
                         } else {
                             signal = false;
-                            optionMsg.append(", но ").append("ПТТ работает в отделе ").append(SQL_DB.tovarGroupDao().getById(usersSDBPTT.otdelId).nm).append(" и не может подписывать ЭКЛ для: ")
+                            optionMsg.append("                    RoomManager.SQL_DB.tovarGroupClientDao().getAllBy(client_id, 0)\n").append("ПТТ работает в отделе ").append(SQL_DB.tovarGroupDao().getById(usersSDBPTT.otdelId).nm).append(" и не может подписывать ЭКЛ для: ")
                                     .append(TG.getNmFromList(tovarGroupSDB)).append(" (но в данном магазине ").append(addressSDB.kolKass).append(" касс и это допустимо)");
                         }
                     }
@@ -333,6 +331,15 @@ public class OptionControlEKL<T> extends OptionControl {
         if (signal && (documentUser.reportDate20 == null || documentUser.reportDate20.getTime() > wpDataDB.getDt().getTime())) {
             signal = false;
             stringBuilderMsg.append("Исполнитель еще не провел свою двадцатую отчетность! ЭКЛ не подписан!").append("\n\n");
+        }
+
+
+//                    добавил 24.01.25 пропускаем если сотр. провел более 2000 отчетов
+        Calendar compareDate = Calendar.getInstance();
+        compareDate.set(2025, Calendar.MARCH, 1); // 1 марта 2025 года
+        if (signal && documentUser.reportCount >= 2000 && wpDataDB.getDt().before(compareDate.getTime())) {
+            signal = false;
+            optionMsg.append(", но сотрудник провел более 2000 отчетов и эту блокировку пропускаем до 01.03.2025.");
         }
 
         Log.e("OptionControlEKL", "HERE TEST OptionControlEKL 9");

@@ -25,6 +25,7 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -39,7 +40,6 @@ import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
 import androidx.core.app.TaskStackBuilder;
 import androidx.core.content.ContextCompat;
-import androidx.core.content.FileProvider;
 import androidx.core.graphics.drawable.DrawableCompat;
 import androidx.core.view.GravityCompat;
 import androidx.core.view.MenuItemCompat;
@@ -56,6 +56,7 @@ import com.google.gson.JsonObject;
 import org.json.JSONObject;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -70,15 +71,16 @@ import java.util.List;
 
 import io.realm.Realm;
 import io.realm.RealmResults;
+import kotlin.Unit;
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
 import okhttp3.RequestBody;
 import okhttp3.WebSocket;
 import retrofit2.Call;
+import retrofit2.Callback;
 import retrofit2.Response;
 import ua.com.merchik.merchik.Activities.Features.FeaturesActivity;
 import ua.com.merchik.merchik.Activities.MenuMainActivity;
-import ua.com.merchik.merchik.Activities.MyApplication;
 import ua.com.merchik.merchik.Activities.PhotoLogActivity.PhotoLogActivity;
 import ua.com.merchik.merchik.Activities.PremiumActivity.PremiumActivity;
 import ua.com.merchik.merchik.Activities.ReferencesActivity.ReferencesActivity;
@@ -93,9 +95,9 @@ import ua.com.merchik.merchik.ServerExchange.TablesExchange.PhotoMerchikExchange
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.SamplePhotoExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.ShowcaseExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesLoadingUnloading;
+import ua.com.merchik.merchik.Utils.FileCompressor;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.Database.Room.Chat.ChatSDB;
-import ua.com.merchik.merchik.data.Database.Room.CustomerSDB;
 import ua.com.merchik.merchik.data.Database.Room.ShowcaseSDB;
 import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteObjects.SiteObjectsDB;
 import ua.com.merchik.merchik.data.RealmModels.AppUsersDB;
@@ -108,19 +110,20 @@ import ua.com.merchik.merchik.data.RetrofitResponse.ServerConnection;
 import ua.com.merchik.merchik.data.UploadPhotoData.Move;
 import ua.com.merchik.merchik.data.WPDataObj;
 import ua.com.merchik.merchik.data.WebSocketData.WebSocketData;
-import ua.com.merchik.merchik.dataLayer.ContextUI;
-import ua.com.merchik.merchik.dataLayer.ModeUI;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.AppUserRealm;
 import ua.com.merchik.merchik.dialogs.BlockingProgressDialog;
 import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.dialogs.DialogMap;
-import ua.com.merchik.merchik.features.main.DBViewModels.CustomerSDBViewModel;
-import ua.com.merchik.merchik.features.main.DBViewModels.LogMPDBViewModel;
+import ua.com.merchik.merchik.dialogs.features.AlertDialogOneButton;
+import ua.com.merchik.merchik.dialogs.features.AlertDialogMessage;
+import ua.com.merchik.merchik.dialogs.features.LoadingDialogWithPercent;
+import ua.com.merchik.merchik.dialogs.features.dialogLoading.ProgressViewModel;
+import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus;
 import ua.com.merchik.merchik.features.main.DBViewModels.SamplePhotoSDBViewModel;
-import ua.com.merchik.merchik.features.main.DBViewModels.StackPhotoDBViewModel;
 import ua.com.merchik.merchik.retrofit.CheckInternet.CheckServer;
 import ua.com.merchik.merchik.retrofit.CheckInternet.NetworkUtil;
+import ua.com.merchik.merchik.retrofit.ProgressRequestBody;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
 
 
@@ -146,6 +149,7 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
 
     private Drawable drawable;
     private ImageButton ib;
+    private FrameLayout composeContainer;
 
     boolean logFromOffline; // Залогинились ли мы или нет
     long count = 0;
@@ -641,6 +645,8 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
 
         ib = actionView.findViewById(R.id.imageViewExchange);
 
+        composeContainer = actionView.findViewById(R.id.composeContainer);
+
 //        pingServer(1);
         synchronizationSignal("SIGNAL", null);
 
@@ -709,7 +715,7 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                         Exchange.exchange = 0;
                         exchange.startExchange();
 
-                        exchange.uploadTARComments(null);
+//                        exchange.uploadTARComments(null);
                     } catch (Exception e) {
                         Log.d("test", "test" + e);
                         Globals.writeToMLOG("ERROR", "TOOBAR/CLICK_EXCHANGE/Exchange", "Exception e: " + e);
@@ -859,6 +865,7 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
 
         // ... Настройки
         if (id == R.id.action_settings) {
+            internetStatus = server.internetStatus();
 
             try {
                 AppUsersDB appUsersDB = AppUserRealm.getAppUser();
@@ -874,46 +881,39 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                 Globals.writeToMLOG("INFO", "USER_INFO", "Exception e: " + e);
             }
 
-            DialogData dialog = new DialogData(this);
-            dialog.setTitle("Настройки");
-            dialog.setText("Отправить служебный файл?");
-            dialog.setOk("Отправить", () -> {
-                File file = new File(getCacheDir(), "M_LOG.txt");
-                Uri fileUri = FileProvider.getUriForFile(
-                        this,
-                        "ua.com.merchik.merchik.provider",
-                        file
-                );
+            AlertDialogOneButton alertDialogMessage = new AlertDialogOneButton(this,
+                    "Вiдправити лог файл",
+                    "Надіслати файл з логом рoботы застосунку розробнику.",
+                    () -> {
+//                        ib.setVisibility(View.GONE); // Скрываем ImageButton
+//                        new LoadingIndicator(composeContainer).show();
+                        if (internetStatus == 1)
+                            sendEmail();
+                        else {
+                            alertErrorNoInternet();
+                        }
+                        return Unit.INSTANCE; // Для совместимости с Kotlin
+                    });
+            alertDialogMessage.show();
 
-                Intent intent = new Intent(Intent.ACTION_SEND);
-                intent.setType("text/plain");
-                intent.putExtra(Intent.EXTRA_STREAM, fileUri);
-                intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                startActivity(Intent.createChooser(intent, "Share File"));
-
-//                Intent emailIntent = new Intent(Intent.ACTION_SEND);
-//                emailIntent.setType("text/plain");
-//                emailIntent.putExtra(Intent.EXTRA_EMAIL, new String[]{"support@merchik.com.ua"});
-//                emailIntent.putExtra(Intent.EXTRA_SUBJECT, "Приложение. M_LOG.");
-//                emailIntent.putExtra(Intent.EXTRA_TEXT, "Отправка отладочного файла");
-//                File root = MyApplication.getAppContext().getExternalFilesDir(Environment.DIRECTORY_NOTIFICATIONS);
-//                String fName = "M_LOG.txt";
-//                File file = new File(root, fName);
-//                if (!file.exists() || !file.canRead()) {
-//                    return;
-//                }
-//                Uri contentUri;
-//                try {
-//                    contentUri = FileProvider.getUriForFile(this, "ua.com.merchik.merchik.provider", file);
-//                } catch (Exception e) {
-//                    contentUri = Uri.fromFile(file);
-//                }
 //
-//                emailIntent.putExtra(Intent.EXTRA_STREAM, contentUri);
-//                startActivity(Intent.createChooser(emailIntent, "Как отправить файл?"));
-            });
-            dialog.setClose(dialog::dismiss);
-            dialog.show();
+//            DialogData dialog = new DialogData(this);
+//            dialog.setTitle("Настройки");
+//            dialog.setText("Отправить служебный файл?");
+//            dialog.setOk("Отправить", () -> {
+//
+//                // Создание Intent для отправки письма
+//
+//
+////                Intent intent = new Intent(Intent.ACTION_SEND);
+////                intent.setType("text/plain");
+////                intent.putExtra(Intent.EXTRA_STREAM, fileUri);
+////                intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+////                startActivity(Intent.createChooser(intent, "Share File"));
+//
+//            });
+//            dialog.setClose(dialog::dismiss);
+//            dialog.show();
         }
 
         // ... Автовыгрузка
@@ -983,6 +983,105 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
         return super.onOptionsItemSelected(item);
     }
 
+    private void sendEmail() {
+
+        try {
+            File firstFile = new File(getCacheDir(), "M_LOG.txt");
+            File file = new File(getCacheDir(), "M_LOG_COPIED.txt");
+
+            copy(firstFile, file);
+            // Формируем дату
+            String currentDate = new SimpleDateFormat("dd.MM.yy").format(new Date());
+
+            // Путь для сжатого файла
+            String outputFilePath = new File(getCacheDir(), "m_log_" + currentDate + ".v01.gz").getPath();
+
+            // Вызываем метод для сжатия
+            File uploadFile = FileCompressor.compressFile(file.getPath(), outputFilePath);
+
+
+            if (uploadFile != null) {
+                System.out.println("File_Size:: " + uploadFile.getAbsolutePath() + " | " + uploadFile.length());
+
+
+                ProgressViewModel progress = new ProgressViewModel(99);
+                LoadingDialogWithPercent loadingDialog = new LoadingDialogWithPercent(this, progress);
+                loadingDialog.show();
+
+                progress.onNextEvent("Пiдготовлюю файл", 10);
+
+
+                ProgressRequestBody progressRequestBody = new ProgressRequestBody(
+                        file,
+                        "application/gzip",
+                        percentage -> {
+                            // Обновляем прогресс, например, в UI
+                            progress.onNextEvent("Завантажую файл з логами на сервер", 0);
+
+                            Log.e("Loading_progres", "%: " + percentage + "%");
+                        }
+                );
+
+//        MultipartBody.Part part = createMultipart(uploadFile, "m_log_" + currentDate + ".gz");
+                MultipartBody.Part part = MultipartBody.Part.createFormData(
+                        "file",
+                        file.getName(),
+                        progressRequestBody
+                );
+
+                retrofit2.Call<Void> call = RetrofitBuilder.getRetrofitInterface().UPLOAD_ZIP_FILE("debug_log_file",
+                        "send",
+                        part);
+
+                call.enqueue(new Callback<Void>() {
+                    @Override
+                    public void onResponse(Call<Void> call, Response<Void> response) {
+                        Log.e("!!!!!!!!!!!!", "+++++");
+                        progress.onCompleted();
+
+                        file.deleteOnExit();
+                        uploadFile.deleteOnExit();
+                    }
+
+                    @Override
+                    public void onFailure(Call<Void> call, Throwable t) {
+                        Log.e("!!!!!!!!!!!!", "----- " + t.getMessage());
+                        progress.onCanceled();
+
+                        file.deleteOnExit();
+                        uploadFile.deleteOnExit();
+
+                    }
+                });
+            } else {
+                alertErrorNoInternet();
+            }
+
+        } catch (Exception e) {
+            alertErrorNoInternet();
+        }
+    }
+
+    private void alertErrorNoInternet() {
+        new AlertDialogMessage(this,
+                "Нема інтернет з'єднання",
+                "Зв`язок з сервером на поточний момент встановити не вдалось! Файл не був вiдправлений. " +
+                        "Знайдіть місце з кращим інтернет-з'єднанням і повторіть спробу",
+                DialogStatus.ERROR).show();
+    }
+
+    public static void copy(File src, File dst) throws IOException {
+        try (InputStream in = new FileInputStream(src)) {
+            try (OutputStream out = new FileOutputStream(dst)) {
+                // Transfer bytes from in to out
+                byte[] buf = new byte[1024];
+                int len;
+                while ((len = in.read(buf)) > 0) {
+                    out.write(buf, 0, len);
+                }
+            }
+        }
+    }
 
     /**
      * 09.07.2020
@@ -1012,8 +1111,6 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
         } catch (Exception e) {
             globals.writeToMLOG(Clock.getHumanTime() + "TOOLBAR.photoUpload.catch: " + e + "\n");
         }
-
-
     }
 
 
@@ -1023,101 +1120,101 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
     private Runnable runnableCron10 = new Runnable() {
         public void run() {
 //            if (false)
-                try {
-                    Log.e("КРОНЧИК", "Time: " + Clock.getHumanTime());
+            try {
+                Log.e("КРОНЧИК", "Time: " + Clock.getHumanTime());
 
-                    synchronizationSignal("SIGNAL", null);
+                synchronizationSignal("SIGNAL", null);
 
 //                globals.fixMP(null);
 
 //            Log.e("КРОНЧИК", "stackPhotoDBAll: " + StackPhotoRealm.getAll().size());
 
-                    // 22.04.2021 Ужасная хрень. Если нет данных от GPS -- оно начинает его слушать.
-                    ua.com.merchik.merchik.trecker.switchedOff = !ua.com.merchik.merchik.trecker.enabledGPS;
+                // 22.04.2021 Ужасная хрень. Если нет данных от GPS -- оно начинает его слушать.
+                ua.com.merchik.merchik.trecker.switchedOff = !ua.com.merchik.merchik.trecker.enabledGPS;
 
-                    if (ua.com.merchik.merchik.trecker.switchedOff) {
-                        Log.e("КРОНЧИК", "Запускаю слушатель GPS-а");
-                        ua.com.merchik.merchik.trecker.SetUpLocationListener(toolbar_menus.this);
-                    }
+                if (ua.com.merchik.merchik.trecker.switchedOff) {
+                    Log.e("КРОНЧИК", "Запускаю слушатель GPS-а");
+                    ua.com.merchik.merchik.trecker.SetUpLocationListener(toolbar_menus.this);
+                }
 
-                    Log.e("КРОНЧИК", "SESSION: " + Globals.session);
-                    Log.e("КРОНЧИК", "login: " + login);
-                    Log.e("КРОНЧИК", "password: " + password);
+                Log.e("КРОНЧИК", "SESSION: " + Globals.session);
+                Log.e("КРОНЧИК", "login: " + login);
+                Log.e("КРОНЧИК", "password: " + password);
 
-                    server.sessionCheckAndLogin(toolbar_menus.this, login, password);   // Проверка активности сессии и логин, если сессия протухла
-                    internetStatus = server.internetStatus();       // Обновление статуса интеренета
+                server.sessionCheckAndLogin(toolbar_menus.this, login, password);   // Проверка активности сессии и логин, если сессия протухла
+                internetStatus = server.internetStatus();       // Обновление статуса интеренета
 //            pingServer(1);                            // ОБМЕН ЦВЕТ
 //                RealmManager.stackPhotoDeletePhoto();           // Удаление фото < 2 дня
-                    lightStatus();                                  // Обновление статуса Светофоров
-                    setupBadge(RealmManager.stackPhotoNotUploadedPhotosCount()); // Подсчёт кол-ва фоток в БД & Установка числа в счётчик
+                lightStatus();                                  // Обновление статуса Светофоров
+                setupBadge(RealmManager.stackPhotoNotUploadedPhotosCount()); // Подсчёт кол-ва фоток в БД & Установка числа в счётчик
 
-                    Log.e("КРОНЧИК", "stackPhotoNotUploadedPhotosCount(): " + RealmManager.stackPhotoNotUploadedPhotosCount());
+                Log.e("КРОНЧИК", "stackPhotoNotUploadedPhotosCount(): " + RealmManager.stackPhotoNotUploadedPhotosCount());
 
-                    globals.testMSG(toolbar_menus.this);
+                globals.testMSG(toolbar_menus.this);
 
-                    Log.e("КРОНЧИК", "internetStatus: " + internetStatus);
+                Log.e("КРОНЧИК", "internetStatus: " + internetStatus);
 
-                    globals.writeToMLOG(Clock.getHumanTime() + " CRON.internetStatus: " + internetStatus + "\n");
+                globals.writeToMLOG(Clock.getHumanTime() + " CRON.internetStatus: " + internetStatus + "\n");
 
-                    cronCheckUploadsPhotoOnServer();                // Получение инфы о "загруженности" фоток
+                cronCheckUploadsPhotoOnServer();                // Получение инфы о "загруженности" фоток
 
 
-                    // Если включена Автовыгрузка/Автообмен
-                    if (Globals.autoSend && internetStatus == 1) {
+                // Если включена Автовыгрузка/Автообмен
+                if (Globals.autoSend && internetStatus == 1) {
 //                getPhotoAndUpload(1);   // Выгрузка фото
 
 
-                        try {
-                            tablesLoadingUnloading.sendAndUpdateLog();
-                        } catch (Exception e) {
-                            Globals.writeToMLOG("ERROR", "CRON LOG MP", "Exception e: " + e);
-                        }
+                    try {
+                        tablesLoadingUnloading.sendAndUpdateLog();
+                    } catch (Exception e) {
+                        Globals.writeToMLOG("ERROR", "CRON LOG MP", "Exception e: " + e);
+                    }
 
-                        tablesLoadingUnloading.cronUpdateTables();
+                    tablesLoadingUnloading.cronUpdateTables();
 
-                        try {
-                            Globals.writeToMLOG("INFO", "CRON uploadReportPrepare", "Start");
-                            tablesLoadingUnloading.uploadReportPrepareToServer();
-                        } catch (Exception e) {
-                            Globals.writeToMLOG("ERROR", "CRON uploadReportPrepare", "Exception e: " + e);
-                        }
+                    try {
+                        Globals.writeToMLOG("INFO", "CRON uploadReportPrepare", "Start");
+                        tablesLoadingUnloading.uploadReportPrepareToServer();
+                    } catch (Exception e) {
+                        Globals.writeToMLOG("ERROR", "CRON uploadReportPrepare", "Exception e: " + e);
+                    }
 
-                        try {
+                    try {
 //                    tablesLoadingUnloading.updateWpData();
-                        } catch (Exception e) {
-                        }
-
-
-                        // Новый обмен. Нужно ещё донастроить для нормальной работы.
-                        if (exchange == null) {
-                            exchange = new Exchange();
-                            exchange.context = toolbar_menus.this;
-                        }
-                        exchange.startExchange();
-
-
-                        PhotoReports photoReports = new PhotoReports(toolbar_menus.this);
-                        if (photoReports.permission) {
-                            Globals.writeToMLOG("INFO", "CRON/PhotoReports", "Start upload photo reports. upload permission: true");
-                            photoReports.uploadPhotoReports(PhotoReports.UploadType.AUTO);
-                        } else {
-                            Globals.writeToMLOG("INFO", "CRON/PhotoReports", "Start upload photo reports. upload permission: false");
-                        }
-
+                    } catch (Exception e) {
                     }
 
 
-                    // Пишет статус логина. Или режим работы приложения
-                    toolbarMwnuItemServer = "Тест";
+                    // Новый обмен. Нужно ещё донастроить для нормальной работы.
+                    if (exchange == null) {
+                        exchange = new Exchange();
+                        exchange.context = toolbar_menus.this;
+                    }
+                    exchange.startExchange();
+
+
+                    PhotoReports photoReports = new PhotoReports(toolbar_menus.this);
+                    if (photoReports.permission) {
+                        Globals.writeToMLOG("INFO", "CRON/PhotoReports", "Start upload photo reports. upload permission: true");
+                        photoReports.uploadPhotoReports(PhotoReports.UploadType.AUTO);
+                    } else {
+                        Globals.writeToMLOG("INFO", "CRON/PhotoReports", "Start upload photo reports. upload permission: false");
+                    }
+
+                }
+
+
+                // Пишет статус логина. Или режим работы приложения
+                toolbarMwnuItemServer = "Тест";
 //                if (Globals.onlineStatus) {
 //                    toolbarMwnuItemServer = getResources().getString(R.string.txt_sever) + "(" + getResources().getString(R.string.txt_online) + ")";
 //                } else {
 //                    toolbarMwnuItemServer = getResources().getString(R.string.txt_sever) + "(" + getResources().getString(R.string.txt_offline) + ")";
 //                }
-                    Log.e("КРОНЧИК", "Globals.onlineStatus: " + toolbarMwnuItemServer);
-                } catch (Exception e) {
-                    Log.e("КРОНЧИК", "Exception" + e);
-                }
+                Log.e("КРОНЧИК", "Globals.onlineStatus: " + toolbarMwnuItemServer);
+            } catch (Exception e) {
+                Log.e("КРОНЧИК", "Exception" + e);
+            }
 
 
             globals.handlerCount.postDelayed(this, 10000);  //повтор раз в 10 секунд

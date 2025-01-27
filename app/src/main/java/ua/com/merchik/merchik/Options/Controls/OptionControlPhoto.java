@@ -206,7 +206,8 @@ public class OptionControlPhoto<T> extends OptionControl {
 //            unlockCodeResultListener.onUnlockCodeSuccess();
         }
 
-        if (optionId.equals("158609")) {
+//        исключение для Метро и Витмарк
+        if (optionId.equals("158609") && stackPhotoDB.size() < 3) {
             if (addressSDB.tpId == 320){
                 ImagesTypeListDB item = ImagesTypeListRealm.getByID(photoType);
                 stringBuilderMsg.append("Вы должны сделать: ").append("3").append(" фото с типом: ").append(item != null ? item.getNm() : typeNm).append(", а сделали: ").append(stackPhotoDB.size()).append(" - доделайте фотографии.");

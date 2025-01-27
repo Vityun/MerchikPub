@@ -61,6 +61,7 @@ import ua.com.merchik.merchik.database.realm.tables.OptionsRealm;
 import ua.com.merchik.merchik.database.realm.tables.WpDataRealm;
 import ua.com.merchik.merchik.dialogs.DialogFilter.Click;
 import ua.com.merchik.merchik.dialogs.features.AlertDialogMessage;
+import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus;
 
 @SuppressLint("ValidFragment")
 public class DetailedReportOptionsFrag extends Fragment {
@@ -381,7 +382,8 @@ public class DetailedReportOptionsFrag extends Fragment {
                 AlertDialogMessage alertDialogMessage = new AlertDialogMessage(requireActivity(),
                         "",
                         "На даний момент немає даних для відображення. Можливо вони ще не завантаженi з боку сервера. Зачекайте завершення обміну даними з сервером, якщо завантаження не вiдбулося знайдіть місце з кращим інтернет-з'єднанням, натисніть 'Синхронізація' (у правому вехньому кутку) і дочекайтеся завершення процесу. Дані мають відобразитися." +
-                                "\nЯкщо це не допомогло, звернiться до керiвника");
+                                "\nЯкщо це не допомогло, звернiться до керiвника",
+                        DialogStatus.ALERT);
                 alertDialogMessage.show();
             } else {
                 List<Integer> ids = new ArrayList<>();

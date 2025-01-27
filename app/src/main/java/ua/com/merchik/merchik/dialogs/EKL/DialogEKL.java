@@ -2,6 +2,7 @@ package ua.com.merchik.merchik.dialogs.EKL;
 
 import static ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity.NEED_UPDATE_UI_REQUEST;
 import static ua.com.merchik.merchik.Globals.HELPDESK_PHONE_NUMBER;
+import static ua.com.merchik.merchik.Globals.generateUniqueNumber;
 import static ua.com.merchik.merchik.Globals.userId;
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 import static ua.com.merchik.merchik.toolbar_menus.internetStatus;
@@ -48,6 +49,7 @@ import java.util.List;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
+import kotlin.Unit;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -76,8 +78,11 @@ import ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsRealm;
 import ua.com.merchik.merchik.database.realm.tables.AppUserRealm;
 import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.dialogs.DialogVideo;
+import ua.com.merchik.merchik.dialogs.features.AlertDialogOneButton;
+import ua.com.merchik.merchik.dialogs.features.AlertDialogTwoButtons;
 import ua.com.merchik.merchik.dialogs.features.LoadingDialogWithPercent;
 import ua.com.merchik.merchik.dialogs.features.dialogLoading.ProgressViewModel;
+import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus;
 import ua.com.merchik.merchik.features.main.DBViewModels.UsersSDBViewModel;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
 
@@ -382,45 +387,65 @@ public class DialogEKL {
 //            sotr.setHint("Выберите ПТТ (Представителя Торговой Точки)");
 
             onUpdateUI = () -> {
+
                 sotr.setText(underLineText(EKLDataHolder.Companion.instance().getUsersPTTName() == null ?
                         "Виберіть ТПП (Представника Торгової точки)" : EKLDataHolder.Companion.instance().getUsersPTTName(), Color.BLACK));
                 Log.e("onUpdateUI", "0");
 //                setTel();
 
                 if (EKLDataHolder.Companion.instance().getUsersPTTid() != null) {
-                    int targetId = EKLDataHolder.Companion.instance().getUsersPTTid(); // Искомый ID
-                    Log.e("onUpdateUI", "targetId: " + targetId);
+                    if ((EKLDataHolder.Companion.instance().getUsersPTTOtdelId() == null ||
+                            EKLDataHolder.Companion.instance().getUsersPTTOtdelId() == 0) && (context instanceof Activity) ) {
+                        AlertDialogTwoButtons alertDialogMessage = new AlertDialogTwoButtons((Activity) context,
+                                "У ПТТ не вказано відділу",
+                                "У обраного вами представника торгової точки (ПТТ) не вказано відділ, тому він не може підписувати ЕКЛ, виберіть іншого ПТТ, або додайте відділ для цього представника",
+                                () -> {
+                                    Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(createAddNewPTTLinkVersion2()));
+                                    context.startActivity(browserIntent);
+                                    return Unit.INSTANCE; // Для совместимости с Kotlin
+                                },
+                                () -> {
+                                    startUFMD();
+                                    return Unit.INSTANCE; // Для совместимости с Kotlin
+                                },
+                                DialogStatus.ERROR);
+                        alertDialogMessage.show();
+                        tel.setVisibility(View.GONE);
+                    } else {
+                        int targetId = EKLDataHolder.Companion.instance().getUsersPTTid(); // Искомый ID
+                        Log.e("onUpdateUI", "targetId: " + targetId);
 
-                    UserSDBJoin res = null;
+                        UserSDBJoin res = null;
 
-                    for (UserSDBJoin user : allUsersLJoinTovGrps) {
-                        Log.e("onUpdateUI", "user.id: " + user.id);
-                        if (user.id == targetId) {
-                            res = user;
-                            Log.e("onUpdateUI", "1.+");
-                            break;
+                        for (UserSDBJoin user : allUsersLJoinTovGrps) {
+                            Log.e("onUpdateUI", "user.id: " + user.id);
+                            if (user.id == targetId) {
+                                res = user;
+                                Log.e("onUpdateUI", "1.+");
+                                break;
+                            }
                         }
-                    }
-                    Log.e("onUpdateUI", "2");
+                        Log.e("onUpdateUI", "2");
 
-                    Globals.userEKLId = res.id;
+                        Globals.userEKLId = res.id;
 
-                    try {
-                        if (res.nm == null) {
-                            res.nm = "Отдел не определён";
+                        try {
+                            if (res.nm == null) {
+                                res.nm = "Отдел не определён";
+                            }
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                            Globals.writeToMLOG("ERROR", "DialogEKL/EXCEPTION/5", "Exception e: " + e);
                         }
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                        Globals.writeToMLOG("ERROR", "DialogEKL/EXCEPTION/5", "Exception e: " + e);
-                    }
-                    user = res;
+                        user = res;
 
-                    Log.e("onUpdateUI", "3");
+                        Log.e("onUpdateUI", "3");
 
-                    enterCode = true;
+                        enterCode = true;
 //                    // Установка телефонов
 //                    Log.e("onUpdateUI", "4");
-                    setTel();
+                        setTel();
+                    }
                 }
             };
 
@@ -1137,7 +1162,7 @@ public class DialogEKL {
             try {
                 Toast.makeText(context, "Добавление нового ПТТ находится в разработке!", Toast.LENGTH_LONG).show();
 
-                Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(createAddNewPTTLink()));
+                Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(createAddNewPTTLinkVersion2()));
                 context.startActivity(browserIntent);
             } catch (Exception e) {
                 Globals.writeToMLOG("ERROR", "DialogEKL/setAddSotr", "Exception e: " + e);
@@ -1154,8 +1179,48 @@ public class DialogEKL {
 
             String format = String.format("https://merchik.com.ua/sa.php?&u=%s&s=%s&l=%s", userId, hash, link);
             Globals.writeToMLOG("INFO", "DialogEKL/setAddSotr/createAddNewPTTLink", "format: " + format);
+            Log.e("LINK_FORMA", ">> " + format);
             return format;
         } else {
+            Globals.writeToMLOG("INFO", "DialogEKL/setAddSotr/createAddNewPTTLink", "link: " + link);
+            return link;
+        }
+    }
+
+    private String createAddNewPTTLinkVersion2() {
+        // Формирование основного пути с параметрами
+        String link = String.format(
+                "/mobile.php?mod=sotr_list&act=add_sotr&filter[addr_id]=%s&theme_id=%s&menu_close_only",
+                wp.getAddr_id(),
+                wp.getTheme_id()
+        );
+
+        // Получаем данные пользователя
+        AppUsersDB appUser = AppUserRealm.getAppUserById(userId);
+        if (appUser != null) {
+            // Формируем hash
+            String hash = String.format(
+                    "%s%s%s",
+                    appUser.getUserId(),
+                    appUser.getPassword(),
+                    "AvgrgsYihSHp6Ok9yQXfSHp6Ok9nXdXr3OSHp6Ok9UPBTzTjrF20Nsz3"
+            );
+            hash = Globals.getSha1Hex(hash);
+
+            // Формируем итоговую ссылку
+            String format = String.format(
+                    "https://merchik.com.ua/sa.php?&u=%s&s=%s&l=%s",
+                    userId,
+                    hash,
+                    link
+            );
+
+            // Логируем результат
+            Globals.writeToMLOG("INFO", "DialogEKL/setAddSotr/createAddNewPTTLink", "format: " + format);
+            Log.e("LINK_FORMA", ">> " + format);
+            return format;
+        } else {
+            // Если пользователя нет, возвращаем только путь
             Globals.writeToMLOG("INFO", "DialogEKL/setAddSotr/createAddNewPTTLink", "link: " + link);
             return link;
         }

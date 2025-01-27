@@ -245,6 +245,7 @@ class UsersSDBViewModel @Inject constructor(
             EKLDataHolder.instance().usersPTTid = it.id
             EKLDataHolder.instance().usersPTTNumberTel1 = it.tel
             EKLDataHolder.instance().usersPTTNumberTel2 = it.tel2
+            EKLDataHolder.instance().usersPTTOtdelId = it.otdelId
 
             Log.e("onSelectedItemsUI", "it.fio: ${it.fio}")
             Log.e("onSelectedItemsUI", "usersPTTName: ${EKLDataHolder.instance().usersPTTName}")

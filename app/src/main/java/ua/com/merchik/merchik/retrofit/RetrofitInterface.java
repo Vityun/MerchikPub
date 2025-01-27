@@ -1079,6 +1079,13 @@ public interface RetrofitInterface {
             @Body JsonObject json);
 
 
+    @Multipart
+    @POST("mobile_app.php?")
+    Call<Void> UPLOAD_ZIP_FILE(
+            @Query("mod") String mod,
+            @Query("act") String act,
+            @Part MultipartBody.Part file);
+
 }//------ E N D ------
 
 

@@ -359,7 +359,8 @@ object UsersSDBOverride {
 
 
         "otdel_id" -> {
-            RoomManager.SQL_DB.tovarGroupDao().getById(value as Int)?.nm ?: "Відділ не визначено ($value)"
+            RoomManager.SQL_DB.tovarGroupDao().getById(value as Int)?.nm
+                ?: "Відділ не визначено ($value)"
         }
 
         else -> value.toString()
@@ -386,21 +387,24 @@ object UsersSDBOverride {
 //                "getContainerModifier",
 //                "JSONObject: $jsonObject"
 //            )
+            if (otdelId == 0 || otdelId == -1) {
+                Color(android.graphics.Color.parseColor("#FFC4C4")) // Цвет для несовпадения
+            } else
             // Проверка на пустоту или наличие только одного элемента 0
-            if (EKLDataHolder.instance().usersPTTtovarIdList.isEmpty() || (EKLDataHolder.instance().usersPTTtovarIdList.size == 1 && EKLDataHolder.instance().usersPTTtovarIdList[0] == 0)) {
-                Log.d("getContainerModifier", "usersPTTtovarIdList is empty or contains only 0")
+                if (EKLDataHolder.instance().usersPTTtovarIdList.isEmpty() || (EKLDataHolder.instance().usersPTTtovarIdList.size == 1 && EKLDataHolder.instance().usersPTTtovarIdList[0] == 0)) {
+                    Log.d("getContainerModifier", "usersPTTtovarIdList is empty or contains only 0")
 //                Color(android.graphics.Color.parseColor("#FFC4C4")) // Цвет для несовпадения
-                Color(android.graphics.Color.parseColor("#00FF77")) // Цвет для совпадения
-            } else if (otdelId in EKLDataHolder.instance().usersPTTtovarIdList) {
-                Log.d("getContainerModifier", "otdel_id in usersPTTtovarIdList: $otdelId")
-                Color(android.graphics.Color.parseColor("#00FF77")) // Цвет для совпадения
-            } else {
-                Log.d("getContainerModifier", "otdel_id out usersPTTtovarIdList: $otdelId")
-                if (ValidatorEKL.controlEKL().result)
                     Color(android.graphics.Color.parseColor("#00FF77")) // Цвет для совпадения
-                else
-                    Color(android.graphics.Color.parseColor("#FFC4C4")) // Цвет для несовпадения
-            }
+                } else if (otdelId in EKLDataHolder.instance().usersPTTtovarIdList) {
+                    Log.d("getContainerModifier", "otdel_id in usersPTTtovarIdList: $otdelId")
+                    Color(android.graphics.Color.parseColor("#00FF77")) // Цвет для совпадения
+                } else {
+                    Log.d("getContainerModifier", "otdel_id out usersPTTtovarIdList: $otdelId")
+                    if (ValidatorEKL.controlEKL().result)
+                        Color(android.graphics.Color.parseColor("#00FF77")) // Цвет для совпадения
+                    else
+                        Color(android.graphics.Color.parseColor("#FFC4C4")) // Цвет для несовпадения
+                }
         } catch (e: Exception) {
 //            Log.e("getContainerModifier", "Error: ${e.message}", e)
             null // Обработка ошибок

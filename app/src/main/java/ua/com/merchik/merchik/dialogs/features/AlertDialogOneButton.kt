@@ -2,21 +2,15 @@ package ua.com.merchik.merchik.dialogs.features
 
 import android.app.Activity
 import android.view.ViewGroup
-import android.widget.Toast
-import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.platform.ComposeView
-import ua.com.merchik.merchik.dialogs.features.dialogLoading.LoadingDialog
-import ua.com.merchik.merchik.dialogs.features.dialogLoading.ProgressViewModel
-import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.MessageDialog
 
-
-class AlertDialogMessage(
+class AlertDialogOneButton(
     val context: Activity,
     private val title: String,
     private val message: String,
-    private val status: DialogStatus? = DialogStatus.NORMAL
+    private val onConfirmAction: (() -> Unit)? = null // Значение по умолчанию
 ) {
 
     private val isDialogVisible = mutableStateOf(false)
@@ -33,7 +27,10 @@ class AlertDialogMessage(
                             isDialogVisible.value = false
                             onDialogDismissed()
                         },
-                        status = status
+                        onConfirmAction = {
+                            isDialogVisible.value = false
+                            onConfirmAction?.invoke() // Выполняется только если передано действие
+                        }
                     )
                 }
             }
@@ -45,11 +42,7 @@ class AlertDialogMessage(
         return isDialogVisible.value
     }
 
-    fun onDialogDismissed() {
-
-
-        // Логика завершения или отмены загрузки
-//        Toast.makeText(context, "Загрузка отменена или завершена", Toast.LENGTH_SHORT).show()
-
+    private fun onDialogDismissed() {
+        // Логика при закрытии
     }
 }

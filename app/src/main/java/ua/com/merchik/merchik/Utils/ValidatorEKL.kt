@@ -9,6 +9,7 @@ import ua.com.merchik.merchik.data.RealmModels.WpDataDB
 import ua.com.merchik.merchik.database.realm.tables.WpDataRealm
 import ua.com.merchik.merchik.database.room.RoomManager
 import ua.com.merchik.merchik.dialogs.EKL.EKLDataHolder
+import java.util.Calendar
 import java.util.function.Predicate
 
 
@@ -132,7 +133,8 @@ object ValidatorEKL {
         val time = EKLDataHolder.instance().usersPTTWPDataTime
 
         if (client_id != null && addr_id != null && ptt_user_id != null
-            && user_id != null && time != null) {
+            && user_id != null && time != null
+        ) {
 
             val addressSDB =
                 addressCache.getOrPut(addr_id) {
@@ -160,7 +162,7 @@ object ValidatorEKL {
                 userDocumentCache.getOrPut(user_id) {
                     RoomManager.SQL_DB.usersDao().getUserById(user_id)
                 }
-            val tovarGroupClientSDB =
+            var tovarGroupClientSDB =
                 tovarGroupCache.getOrPut(client_id)
                 {
                     RoomManager.SQL_DB.tovarGroupClientDao().getAllBy(
@@ -168,6 +170,15 @@ object ValidatorEKL {
                         addressSDB?.tpId ?: 0
                     )
                 }
+
+            if (tovarGroupClientSDB.isNullOrEmpty()) {
+                tovarGroupClientSDB =
+                    tovarGroupCache.getOrPut(client_id)
+                    {
+                        RoomManager.SQL_DB.tovarGroupClientDao().getAllBy(client_id, 0)
+                    }
+            }
+
             Log.e("ValidatorEKL", "tovarGroupClientSDB size: ${tovarGroupClientSDB?.size}")
 
 
@@ -271,6 +282,12 @@ object ValidatorEKL {
                     }
                 }
             }
+
+            //                    добавил 24.01.25 пропускаем если сотр. провел более 2000 отчетов
+//            if (control.result && documentUser!!.reportCount >= 2000) {
+//                control.result = false
+//                optionMsg.append(", но сотрудник провел более 2000 отчетов и эту блокировку пропускаем до 01.03.2025.")
+//            }
             control.message = optionMsg.toString()
         }
         return control

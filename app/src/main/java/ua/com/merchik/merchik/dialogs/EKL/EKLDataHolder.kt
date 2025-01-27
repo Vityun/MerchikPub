@@ -11,6 +11,7 @@ class EKLDataHolder private constructor() {
     var usersPTTWPDataTime: Long? = null
     var usersPTTNumberTel1: String? = null
     var usersPTTNumberTel2: String? = null
+    var usersPTTOtdelId: Int? = null
     var usersPTTtovarIdList: List<Int> = emptyList()
 
 
@@ -34,6 +35,7 @@ class EKLDataHolder private constructor() {
         usersPTTWPDataTime = null
         usersPTTNumberTel1 = null
         usersPTTNumberTel2 = null
+        usersPTTOtdelId = null
         usersPTTtovarIdList = emptyList()
     }
 }

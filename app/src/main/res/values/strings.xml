@@ -1,8 +1,8 @@
 <resources>
     <string name="app_name">merchik</string>
-    <string name="ver">012202</string>
+    <string name="ver">012802</string>
     <string name="debug_status">1</string>
-    <string name="debug_date">2025-01-22</string>
+    <string name="debug_date">2025-01-28</string>
 
     <string name="test">TEST HINT</string>
 
@@ -61,7 +61,7 @@
     <string name="go_to_main">Перейти на главную</string>
     <string name="go_to_wpdata">План работ</string>
     <string name="info">Информация</string>
-    <string name="settings">Настройки</string>
+    <string name="settings">Вiдправити лог</string>
     <string name="check_coord">ТЕСТ</string>
 
     <!--    <string name="t_check_internet">Интернет</string>-->

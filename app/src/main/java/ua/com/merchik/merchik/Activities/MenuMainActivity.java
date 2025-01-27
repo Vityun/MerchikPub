@@ -90,10 +90,9 @@ public class MenuMainActivity extends toolbar_menus {
     }
 
     private void test() {
-        Log.d("Realm", "Current schema version: " + getRealmSchemaVersion());
 
 
-//        new Translate().uploadNewTranslate();
+        new Translate().uploadNewTranslate();
 
 //        Exchange exchange = new Exchange();
 //        exchange.updateAverageSalary();
