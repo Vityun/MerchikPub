@@ -169,46 +169,48 @@ public class UnlockCode {
             dialog.setOkNotClose("Ok", () -> {
                 String res = dialog.getOperationResult();
 
+                if (res != null) {
 //            long date = wp.getDt().getTime() / 1000;
 //            UsersSDB user = SQL_DB.usersDao().getUserById(wp.getUser_id());
 //            long dad2 = wp.getCode_dad2();
 
-                Log.e("UnlockCode", "date: " + Clock.getHumanTimeYYYYMMDD(date));
-                Log.e("UnlockCode", "user: " + user.id);
-                Log.e("UnlockCode", "dad2: " + dad2);
-                Log.e("UnlockCode", "option: " + option.getOptionId());
+                    Log.e("UnlockCode", "date: " + Clock.getHumanTimeYYYYMMDD(date));
+                    Log.e("UnlockCode", "user: " + user.id);
+                    Log.e("UnlockCode", "dad2: " + dad2);
+                    Log.e("UnlockCode", "option: " + option.getOptionId());
 
-                String unlockCode = new UnlockCode().unlockCode(date, user, dad2, option, mode);
+                    String unlockCode = new UnlockCode().unlockCode(date, user, dad2, option, mode);
 
 //            String unlockCode = new UnlockCode().unlockCode(date, user, dad2, option, CODE_DAD_2_AND_OPTION);
 //            String unlockCode2 = new UnlockCode().unlockCode(date, user, dad2, option, DATE_AND_USER);
 //
-                Log.e("UnlockCode", "unlockCode: " + unlockCode);
+                    Log.e("UnlockCode", "unlockCode: " + unlockCode);
 //            Log.e("UnlockCode", "unlockCode2: " + unlockCode2);
 
-                if (res.equals(unlockCode)) {
-                    // Pika сохраняю код в лог приложения
-                    RealmManager.setRowToLog(Collections.singletonList(
-                            new LogDB(
-                                    RealmManager.getLastIdLogDB() + 1,
-                                    System.currentTimeMillis() / 1000,
-                                    "використання коду розблокування " + res,
-                                    tema_id,
-                                    client_id,
-                                    addr_id,
-                                    kodOb,
-                                    user_id,
-                                    null,
-                                    Globals.session,
-                                    String.valueOf(wpDate))));
+                    if (res.equals(unlockCode)) {
+                        // Pika сохраняю код в лог приложения
+                        RealmManager.setRowToLog(Collections.singletonList(
+                                new LogDB(
+                                        RealmManager.getLastIdLogDB() + 1,
+                                        System.currentTimeMillis() / 1000,
+                                        "використання коду розблокування " + res,
+                                        tema_id,
+                                        client_id,
+                                        addr_id,
+                                        kodOb,
+                                        user_id,
+                                        null,
+                                        Globals.session,
+                                        String.valueOf(wpDate))));
 
-                    Toast.makeText(context, "Код прийнято", Toast.LENGTH_LONG).show();
-                    click.onSuccess("");
-                    dialog.dismiss();
-                } else {
-                    Toast.makeText(context, "Код не вірний!", Toast.LENGTH_LONG).show();
-                    click.onFailure("");
-                    dialog.dismiss();
+                        Toast.makeText(context, "Код прийнято", Toast.LENGTH_LONG).show();
+                        click.onSuccess("");
+                        dialog.dismiss();
+                    } else {
+                        Toast.makeText(context, "Код не вірний!", Toast.LENGTH_LONG).show();
+                        click.onFailure("");
+                        dialog.dismiss();
+                    }
                 }
             });
             dialog.show();

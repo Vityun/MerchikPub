@@ -411,7 +411,7 @@ public class Exchange {
                             try {
 //                                Globals.writeToMLOG("INFO", "PetrovExchangeTest/startExchange/planogram/onSuccess", "(List<T> data: " + data.size());
                                 List<ImagesViewListImageList> datalist = (List<ImagesViewListImageList>) data;
-                                PhotoDownload.savePhotoToDB2(datalist);
+                                new PhotoDownload().savePhotoToDB2(datalist);
                                 Globals.writeToMLOG("INFO", "startExchange/planogram.onSuccess", "OK: " + datalist.size());
                             } catch (Exception e) {
                                 Globals.writeToMLOG("ERROR", "startExchange/planogram.onSuccess", "Exception e: " + e);
@@ -1058,7 +1058,8 @@ public class Exchange {
 
 
                 try {
-                    new ShowcaseExchange().downloadShowcaseTable(new ExchangeInterface.ExchangeResponseInterface() {
+                    ShowcaseExchange showcaseExchange = new ShowcaseExchange();
+                    showcaseExchange.downloadShowcaseTable(new ExchangeInterface.ExchangeResponseInterface() {
                         @Override
                         public <T> void onSuccess(List<T> data) {
 //                            Globals.writeToMLOG("INFO", "PetrovExchangeTest/startExchange/ShowcaseExchange/onSuccess", "(data: " + data.size());
@@ -1068,7 +1069,7 @@ public class Exchange {
                                         @Override
                                         public void onComplete() {
                                             Log.e("ShowcaseExchange", "OK");
-                                            new ShowcaseExchange().downloadShowcasePhoto((List<ShowcaseSDB>) data);
+                                            showcaseExchange.downloadShowcasePhoto((List<ShowcaseSDB>) data);
                                         }
 
                                         @Override
@@ -2578,7 +2579,7 @@ public class Exchange {
             @Override
             public void onFailure(Call<JsonObject> call, Throwable t) {
                 Log.e("chatMarkRead", "Throwable t: " + t);
-                exchange.onFailure(t.toString());
+                exchange.onFailure("",t.toString());
             }
         });
     }
@@ -3157,7 +3158,9 @@ public class Exchange {
         call.enqueue(new Callback<ConductWpDataResponse>() {
             @Override
             public void onResponse(Call<ConductWpDataResponse> call, Response<ConductWpDataResponse> response) {
-                Log.e("conductingOnServer", "response: " + response.body());
+                Log.e("conductingOnServer", "response: " + response);
+                String text = response.body().notice;
+                Log.e("conductingOnServer", "response: " + text);
                 if (response.isSuccessful()) {
                     if (response.body() != null) {
                         if (response.body().state) {

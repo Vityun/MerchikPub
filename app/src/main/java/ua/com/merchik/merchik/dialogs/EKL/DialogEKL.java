@@ -10,6 +10,7 @@ import static ua.com.merchik.merchik.toolbar_menus.internetStatus;
 import android.app.Activity;
 import android.app.Dialog;
 import android.content.Context;
+import android.content.ContextWrapper;
 import android.content.Intent;
 import android.graphics.Color;
 import android.net.Uri;
@@ -81,6 +82,7 @@ import ua.com.merchik.merchik.dialogs.DialogVideo;
 import ua.com.merchik.merchik.dialogs.features.AlertDialogOneButton;
 import ua.com.merchik.merchik.dialogs.features.AlertDialogTwoButtons;
 import ua.com.merchik.merchik.dialogs.features.LoadingDialogWithPercent;
+import ua.com.merchik.merchik.dialogs.features.MessageDialogBuilder;
 import ua.com.merchik.merchik.dialogs.features.dialogLoading.ProgressViewModel;
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus;
 import ua.com.merchik.merchik.features.main.DBViewModels.UsersSDBViewModel;
@@ -370,11 +372,6 @@ public class DialogEKL {
             Log.e("DialogEKL", "showData/data: " + allUsersLJoinTovGrps);
             Log.e("DialogEKL", "showData/data.size: " + allUsersLJoinTovGrps.size());
 
-//            UserSDBJoin lastItem = new UserSDBJoin();
-//            lastItem.id = -1111;
-//            lastItem.fio = "Оновити ПТТ";
-//            data.add(lastItem);
-
             adapterUser = new AutoTextUsersViewHolder(
                     context,
                     android.R.layout.simple_dropdown_item_1line,
@@ -388,30 +385,30 @@ public class DialogEKL {
 
             onUpdateUI = () -> {
 
-                sotr.setText(underLineText(EKLDataHolder.Companion.instance().getUsersPTTName() == null ?
-                        "Виберіть ТПП (Представника Торгової точки)" : EKLDataHolder.Companion.instance().getUsersPTTName(), Color.BLACK));
-                Log.e("onUpdateUI", "0");
-//                setTel();
-
                 if (EKLDataHolder.Companion.instance().getUsersPTTid() != null) {
                     if ((EKLDataHolder.Companion.instance().getUsersPTTOtdelId() == null ||
-                            EKLDataHolder.Companion.instance().getUsersPTTOtdelId() == 0) && (context instanceof Activity) ) {
-                        AlertDialogTwoButtons alertDialogMessage = new AlertDialogTwoButtons((Activity) context,
-                                "У ПТТ не вказано відділу",
-                                "У обраного вами представника торгової точки (ПТТ) не вказано відділ, тому він не може підписувати ЕКЛ, виберіть іншого ПТТ, або додайте відділ для цього представника",
-                                () -> {
+                            EKLDataHolder.Companion.instance().getUsersPTTOtdelId() == 0) && (context instanceof Activity)) {
+                        sotr.setText(underLineText("Виберіть ТПП (Представника Торгової точки)", Color.GRAY));
+                        new MessageDialogBuilder(unwrap(context))
+                                .setTitle("У ПТТ не вказано відділу")
+                                .setStatus(DialogStatus.ALERT)
+                                .setMessage("У обраного вами представника торгової точки (ПТТ) не вказано відділ, тому він не може підписувати ЕКЛ, виберіть іншого ПТТ, або додайте відділ для цього представника")
+                                .setOnConfirmAction("Редагувати ПТТ", () -> {
                                     Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(createAddNewPTTLinkVersion2()));
                                     context.startActivity(browserIntent);
                                     return Unit.INSTANCE; // Для совместимости с Kotlin
-                                },
-                                () -> {
+                                })
+                                .setOnCancelAction("Змiнити ПТТ", () -> {
                                     startUFMD();
                                     return Unit.INSTANCE; // Для совместимости с Kotlin
-                                },
-                                DialogStatus.ERROR);
-                        alertDialogMessage.show();
+                                })
+                                .show();
+
                         tel.setVisibility(View.GONE);
                     } else {
+
+                        sotr.setText(underLineText(EKLDataHolder.Companion.instance().getUsersPTTName() == null ?
+                                "Виберіть ТПП (Представника Торгової точки)" : EKLDataHolder.Companion.instance().getUsersPTTName(), Color.BLACK));
                         int targetId = EKLDataHolder.Companion.instance().getUsersPTTid(); // Искомый ID
                         Log.e("onUpdateUI", "targetId: " + targetId);
 
@@ -482,59 +479,11 @@ public class DialogEKL {
             tel.setHint("Выберите телефон");
             tel.setInputType(0);    // Запрещаю изменять номер
 
-//            sotr.setAdapter(adapterUser);
-//            sotr.addTextChangedListener(new TextWatcher() {
-//                @Override
-//                public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-//
-//                }
-//
-//                @Override
-//                public void onTextChanged(CharSequence s, int start, int before, int count) {
-//
-//                }
-//
-//                @Override
-//                public void afterTextChanged(Editable s) {
-//                    Log.e("DialogEKL", "Editable s: " + s.length());
-//
-//                    if (s.length() == 0) {
-//                        Log.e("DialogEKL", "Editable s: NULL");
-//                        sotr.showDropDown();
-//                        tel.setVisibility(View.GONE);
-//                    }
-//                }
-//            });
-
-
-//            sotr.setOnTouchListener(new View.OnTouchListener() {
-//                @Override
-//                public boolean onTouch(View view, MotionEvent motionEvent) {
-//                    if (motionEvent.getAction() == ACTION_UP) {
-//                        sotr.showDropDown();
-//                        Globals.hideKeyboard(view.getContext());
-//                    }
-//                    return false;
-//                }
-//            });
-
 
             sotr.setOnClickListener(arg0 -> {
                 Log.e("!!!!!!!", "onUpdateUI: " + EKLDataHolder.Companion.instance().getUsersPTTName());
                 startUFMD();
-//            Log.e("DialogEKL", "setOnClickListener: " + sotr.getText());
-//            Globals.hideKeyboard(context);
-//
-//            if (sotr.getText().length() > 0){
-//                Log.e("DialogEKL", "setOnClickListener1: " + sotr.getText());
-//                sotr.setText("");
-//            }else {
-//                sotr.showDropDown();
-//            }
-//            Toast.makeText(arg0.getContext(), "Нажал", Toast.LENGTH_SHORT).show();
 
-//            sotr.showDropDown();
-//                Globals.showKeyboard(context);
             });
 
 
@@ -549,7 +498,7 @@ public class DialogEKL {
 
             refresh.setOnClickListener(v -> {
                 progress = new ProgressViewModel(1);
-                loadingDialog = new LoadingDialogWithPercent((Activity) context, progress);
+                loadingDialog = new LoadingDialogWithPercent(unwrap(context), progress);
                 loadingDialog.show();
 
                 progress.onNextEvent("Оновлюю список ТПП", 6_600);
@@ -649,124 +598,23 @@ public class DialogEKL {
                     @Override
                     public void onFailure(String error) {
                         Globals.writeToMLOG("INFO", "getPTTByAddress/RES/onFailure", "String error: " + error);
-                        DialogData dialogData = new DialogData(context);
-                        dialogData.setTitle("Виникла помилка при отриманні переліку ПТТ");
-                        dialogData.setText(error);
-                        dialogData.setClose(dialogData::dismiss);
-                        dialogData.show();
+                        MessageDialogBuilder builder = new MessageDialogBuilder(unwrap(context));
+
+                        builder.setTitle("Виникла помилка при отриманні переліку ПТТ")
+                                .setStatus(DialogStatus.ERROR)
+                                .setMessage(error)
+                                .setOnCancelAction(() -> Unit.INSTANCE
+                                )
+                                .show();
+//                        DialogData dialogData = new DialogData(context);
+//                        dialogData.setTitle("Виникла помилка при отриманні переліку ПТТ");
+//                        dialogData.setText(error);
+//                        dialogData.setClose(dialogData::dismiss);
+//                        dialogData.show();
                     }
                 });
             });
-//            sotr.setOnItemClickListener((parent, arg1, position, arg3) -> {
-//                Object item = parent.getItemAtPosition(position);
-//                Log.e("TestObj", "item: " + item);
-//                if (item instanceof UserSDBJoin) {
-//                    UserSDBJoin res = (UserSDBJoin) item;
-//                    if (res.id == -1111) {
-////                        new EKLRequests().getPTTByAddress(wp.getAddr_id(), data1 -> {
-////                            DialogData dialogData = new DialogData(context);
-////                            dialogData.setTitle("Оновлення списку ПТТ");
-////                            dialogData.setText(data1);
-////                            dialogData.setClose(dialogData::dismiss);
-////                            dialogData.show();
-////                        });
 //
-//                        new EKLRequests().getPTTByAddress(wp.getAddr_id(), new Clicks.clickObjectAndStatus() {
-//                            @Override
-//                            public void onSuccess(Object data) {
-//                                try {
-//                                    EKLRequests.PTTRequest pttRequest = (EKLRequests.PTTRequest) data;
-//
-//
-//                                    if (pttRequest.state) {
-//                                        if (pttRequest.list != null && pttRequest.list.size() > 0) {
-//                                            List<UserSDBJoin> newPttList = new ArrayList<>();
-//
-//                                            for (EKLRequests.PTT item : pttRequest.list) {
-//                                                UserSDBJoin userSDBJoin = new UserSDBJoin();
-//
-////                                                userSDBJoin.id = Integer.valueOf(item.userId);
-//                                                userSDBJoin.fio = item.fio;
-////                                                userSDBJoin.tel = item.tel;
-////                                                userSDBJoin.tel2 = item.tel2;
-////                                                userSDBJoin.authorId = (Integer) item.authorId;
-////                                                userSDBJoin.clientId = Integer.valueOf(item.clientId);
-//                                                userSDBJoin.otdelId = (Integer) item.otdelId;
-//                                                userSDBJoin.department = (Integer) item.department;
-//                                                userSDBJoin.workAddrId = (Integer) item.workAddrId;
-////                                                userSDBJoin.sendSms = item.sendSms;
-//
-//                                                newPttList.add(userSDBJoin);
-//                                            }
-//
-////                                            AutoTextUsersViewHolder adapterUser = new AutoTextUsersViewHolder(
-////                                                    context,
-////                                                    android.R.layout.simple_dropdown_item_1line,
-////                                                    newPttList
-////                                            );
-////                                            adapterUser.setAdditionalInformation(AutoTextUsersViewHolder.AutoTextUserEnum.DEPARTMENT);
-////                                            sotr.setAdapter(adapterUser);
-//
-//                                            Toast.makeText(context, "Список ПТТ Оновлено!", Toast.LENGTH_SHORT).show();
-//                                            Log.e("!!!!!!!!!!!!!!", "+");
-//                                            Log.e("!!!!!!!!!!!!!!", "wp.getAddr_id(): " + wp.getAddr_id());
-//                                            Log.e("!!!!!!!!!!!!!!", "" + newPttList.size());
-//
-//                                            Gson gson = new Gson();
-//                                            String jsonString = gson.toJson(newPttList);
-//                                            Log.e("!!!!!!!!!!!!!!", "jsonString: " + jsonString);
-////                                            JsonObject dataJson = new Gson().fromJson(jsonString, JsonObject.class);
-//
-//                                        }
-//                                    }
-//                                } catch (Exception e) {
-//                                    Log.e("EKLRequests", "Exception e: " + e);
-//                                    e.printStackTrace();
-//                                }
-//                            }
-//
-//                            @Override
-//                            public void onFailure(String error) {
-//                                Globals.writeToMLOG("INFO", "getPTTByAddress/RES/onFailure", "String error: " + error);
-//                                DialogData dialogData = new DialogData(context);
-//                                dialogData.setTitle("Виникла помилка при отриманні переліку ПТТ");
-//                                dialogData.setText(error);
-//                                dialogData.setClose(dialogData::dismiss);
-//                                dialogData.show();
-//                            }
-//                        });
-//                        sotr.setText("");
-//                        DialogData dialogData = new DialogData(context);
-//                        dialogData.setTitle("Оновлення списку ПТТ");
-//                        dialogData.setText("Запит на отримання повного переліку ПТТ відправлено. Він може оброблятися деякий час, заждіть закінчення оновляння.");
-//                        dialogData.setClose(dialogData::dismiss);
-//                        dialogData.show();
-//                    } else {
-//                        if (res.sendSms == 0) {
-//                            String msg = "У сотрудника " + res.fio + " отключена возможность отправки СМС. Если Вам это необходимо сделать, обратитесь к своему руководителю.";
-//                            Toast.makeText(arg1.getContext(), msg, Toast.LENGTH_LONG).show();
-//                            sotr.setText("");
-//                            return;
-//                        }
-//
-//                        Globals.userEKLId = res.id;
-//
-//                        try {
-//                            if (res.nm == null) {
-//                                res.nm = "Отдел не определён";
-//                            }
-//                        } catch (Exception e) {
-//                            e.printStackTrace();
-//                            Globals.writeToMLOG("ERROR", "DialogEKL/EXCEPTION/5", "Exception e: " + e);
-//                        }
-//                        sotr.setText(res.fio + " (" + res.nm + ") ");
-//                        enterCode = true;
-//                        user = res;
-//                        // Установка телефонов
-//                        setTel(res);
-//                    }
-//                }
-//            });
 
             YoYo.with(Techniques.Bounce)
                     .duration(750)
@@ -780,8 +628,10 @@ public class DialogEKL {
 
 //            buttonSend.setBackgroundResource(R.drawable.bg_temp);
             buttonSend.setOnClickListener(v -> {
-                if (EKLDataHolder.Companion.instance().getUsersPTTNumberTel1() != null &&
-                        !EKLDataHolder.Companion.instance().getUsersPTTNumberTel1().isEmpty())
+                if (EKLDataHolder.Companion.instance().getUsersPTTNumberTel1() != null
+                        && !EKLDataHolder.Companion.instance().getUsersPTTNumberTel1().isEmpty()
+                        && EKLDataHolder.Companion.instance().getUsersPTTOtdelId() != null
+                        && EKLDataHolder.Companion.instance().getUsersPTTOtdelId() != 0)
                     pressButtonSend();
                 else
                     Toast.makeText(context, "Вы не выбрали ПТТ", Toast.LENGTH_LONG).show();
@@ -789,7 +639,9 @@ public class DialogEKL {
 
             buttonSend2.setOnClickListener(v -> {
                 if (EKLDataHolder.Companion.instance().getUsersPTTNumberTel1() != null &&
-                        !EKLDataHolder.Companion.instance().getUsersPTTNumberTel1().isEmpty())
+                        !EKLDataHolder.Companion.instance().getUsersPTTNumberTel1().isEmpty()
+                        && EKLDataHolder.Companion.instance().getUsersPTTOtdelId() != null
+                        && EKLDataHolder.Companion.instance().getUsersPTTOtdelId() != 0)
                     sendEKL(v.getContext(), "telegram");
                 else
                     Toast.makeText(context, "Вы не выбрали ПТТ", Toast.LENGTH_LONG).show();
@@ -797,7 +649,9 @@ public class DialogEKL {
 
             buttonSend3.setOnClickListener(v -> {
                 if (EKLDataHolder.Companion.instance().getUsersPTTNumberTel1() != null &&
-                        !EKLDataHolder.Companion.instance().getUsersPTTNumberTel1().isEmpty())
+                        !EKLDataHolder.Companion.instance().getUsersPTTNumberTel1().isEmpty()
+                        && EKLDataHolder.Companion.instance().getUsersPTTOtdelId() != null
+                        && EKLDataHolder.Companion.instance().getUsersPTTOtdelId() != 0)
                     sendEKL(v.getContext(), "viber");
                 else
                     Toast.makeText(context, "Вы не выбрали ПТТ", Toast.LENGTH_LONG).show();
@@ -877,11 +731,12 @@ public class DialogEKL {
                     }
 
                     @Override
-                    public void onFailure(String error) {
+                    public void onFailure(String error_type, String error) {
                         Globals.writeToMLOG("FAIL", "DialogEKL.sendEKL/onFailure", "t: " + error);
                         Log.e("DialogEKL", "sendEKL/onFailure: " + error);
                         Toast.makeText(context, "Код проверен. Запрос прошел с ошибкой: " + error, Toast.LENGTH_LONG).show();
                     }
+
                 }, Globals.AppWorkMode.ONLINE, false);
 
             });
@@ -925,89 +780,118 @@ public class DialogEKL {
         bundle.putString("title", "Список ПТТ за адресою: " + wp.getAddr_txt());
         bundle.putString("subTitle", "Виберіть ТПП (Представника Торгової точки) якому ви відправите код для підтвердження факту виконаних робіт з даної ТТ та Вашої присутності");
         intent.putExtras(bundle);
-        ActivityCompat.startActivityForResult((Activity) context, intent, NEED_UPDATE_UI_REQUEST, null);
+        ActivityCompat.startActivityForResult(unwrap(context), intent, NEED_UPDATE_UI_REQUEST, null);
 
         EKLDataHolder.Companion.instance().init();
     }
 
     private void sendEKL(Context context, String telType) {
-        responseSendPTTEKLCode(telType, new ExchangeInterface.ExchangeResponseInterfaceSingle() {
-            @Override
-            public <T> void onSuccess(T data) {
-                try {
-                    enterCode = false;
-                    EKLRespData resp = (EKLRespData) data;
+        if (internetStatus == 1)
+            responseSendPTTEKLCode(telType, new ExchangeInterface.ExchangeResponseInterfaceSingle() {
+                @Override
+                public <T> void onSuccess(T data) {
+                    try {
+                        enterCode = false;
+                        EKLRespData resp = (EKLRespData) data;
 
-                    Gson gson = new Gson();
-                    String json = gson.toJson(resp);
-                    JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
+                        Gson gson = new Gson();
+                        String json = gson.toJson(resp);
+                        JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
 
-                    Globals.writeToMLOG("RESP", "DialogEKL.sendStartEKL/onResponse/onSuccess", "convertedObject: " + convertedObject);
-                    Log.e("DialogEKL", "sendStartEKL/onResponse: " + convertedObject);
+                        Globals.writeToMLOG("RESP", "DialogEKL.sendStartEKL/onResponse/onSuccess", "convertedObject: " + convertedObject);
+                        Log.e("DialogEKL", "sendStartEKL/onResponse: " + convertedObject);
 
+                        // Создание в БД нового ЭКЛ-а
+                        EKL_SDB ekl_sdb = new EKL_SDB();
+                        ekl_sdb.id = resp.requestId;
+                        ekl_sdb.userId = wp.getUser_id();    // App User
+                        ekl_sdb.sotrId = user.id;   // PTT
+                        ekl_sdb.clientId = wp.getClient_id();
+                        ekl_sdb.addressId = wp.getAddr_id();
+                        ekl_sdb.dad2 = wp.getCode_dad2();
+                        ekl_sdb.department = user.otdelId != null ? user.otdelId : 0;   // Добавлен отдел, при отправке ЭКЛ
+                        ekl_sdb.state = true;
+                        ekl_sdb.eklHashCode = resp.codeHash;
+                        ekl_sdb.vpi = System.currentTimeMillis() / 1000;
 
-                    // Создание в БД нового ЭКЛ-а
-                    EKL_SDB ekl_sdb = new EKL_SDB();
-                    ekl_sdb.id = resp.requestId;
-                    ekl_sdb.userId = wp.getUser_id();    // App User
-                    ekl_sdb.sotrId = user.id;   // PTT
-                    ekl_sdb.clientId = wp.getClient_id();
-                    ekl_sdb.addressId = wp.getAddr_id();
-                    ekl_sdb.dad2 = wp.getCode_dad2();
-                    ekl_sdb.department = user.otdelId != null ? user.otdelId : 0;   // Добавлен отдел, при отправке ЭКЛ
-                    ekl_sdb.state = true;
-                    ekl_sdb.eklHashCode = resp.codeHash;
-                    ekl_sdb.vpi = System.currentTimeMillis() / 1000;
+                        // Запись ЭКЛ-а для текущего окна
+                        ekl = ekl_sdb;
 
-                    // Запись ЭКЛ-а для текущего окна
-                    ekl = ekl_sdb;
+                        Log.e("DialogEKL", "ekl_sdb: " + ekl_sdb.id);
+                        Log.e("DialogEKL", "ekl_sdb: " + ekl_sdb.dad2);
 
-                    Log.e("DialogEKL", "ekl_sdb: " + ekl_sdb.id);
-                    Log.e("DialogEKL", "ekl_sdb: " + ekl_sdb.dad2);
+                        Globals.writeToMLOG("RESP", "DialogEKL.sendStartEKL/onResponse/onSuccess/Хочу_понимать_какой_экл_я_сохраняю", "ekl_sdb: " + new Gson().toJson(ekl_sdb));
 
-                    Globals.writeToMLOG("RESP", "DialogEKL.sendStartEKL/onResponse/onSuccess/Хочу_понимать_какой_экл_я_сохраняю", "ekl_sdb: " + new Gson().toJson(ekl_sdb));
-
-                    // Запись ЭКЛ-а в базу данных
-                    SQL_DB.eklDao().insertAll(Collections.singletonList(ekl_sdb));
+                        // Запись ЭКЛ-а в базу данных
+                        SQL_DB.eklDao().insertAll(Collections.singletonList(ekl_sdb));
 
 //                                Toast.makeText(context, "Код отправлен. Ответ: " + convertedObject, Toast.LENGTH_LONG).show();
 
-                    Toast.makeText(context, "Код Представителю Торговой Точки отправлен", Toast.LENGTH_SHORT).show();
-                } catch (Exception e) {
-                    Globals.writeToMLOG("RESP", "DialogEKL.sendStartEKL/onResponse/onSuccess/Exception", "Exception e: " + e);
-                }
-            }
-
-            @Override
-            public void onFailure(String error) {
-                try {
-                    if (error.equals("register_messenger")) {
-                        DialogData dialogData = new DialogData(context);
-                        dialogData.setTitle("Внимание! Получатель сообщения (ПТТ) ещё не подключён к нашему боту.");
-                        dialogData.setText("Для того, чтобы он подключился, нажмите кнопку ОК. На телефон ПТТ будет отправлена SMS с ссылкой, " +
-                                "перейдя по которой он автоматически подключится к нашему боту и Вы сможете отправлять сообщения ему через мессенджер.");
-                        dialogData.setOk("Ok", () -> {
-                            sendRegistrationInTelegram(telType);
-                        });
-                        dialogData.setCancel("Нет", dialogData::dismiss);
-                        dialogData.setClose(dialogData::dismiss);
-                        dialogData.show();
-                    } else {
-                        Globals.writeToMLOG("FAIL", "DialogEKL.sendStartEKL/onFailure", "t: " + error);
-                        Log.e("DialogEKL", "sendStartEKL/onFailure: " + error);
-                        Toast.makeText(context, "При отправке кода ЭКЛ возникла ошибка, повторите попытку позже или обратитесь к Вашему руководителю. Ошибка: " + error, Toast.LENGTH_LONG).show();
-
-                        DialogData dialogData = new DialogData(context);
-                        dialogData.setTitle("Виникла помилка: ");
-                        dialogData.setText(error);
-                        dialogData.setClose(dialogData::dismiss);
-                        dialogData.show();
+                        Toast.makeText(context, "Код Представителю Торговой Точки отправлен", Toast.LENGTH_SHORT).show();
+                    } catch (Exception e) {
+                        Globals.writeToMLOG("RESP", "DialogEKL.sendStartEKL/onResponse/onSuccess/Exception", "Exception e: " + e);
                     }
-                } catch (Exception e) {
-                    Globals.writeToMLOG("RESP", "DialogEKL.sendStartEKL/onResponse/onFailure/Exception", "Exception e: " + e);
                 }
-            }
-        });
+
+                @Override
+                public void onFailure(String error_type, String error) {
+                    if (error_type.equals("error_messenger_not_registered")) {
+                        new MessageDialogBuilder(unwrap(context))
+                                .setTitle("Внимание")
+                                .setStatus(DialogStatus.ERROR)
+                                .setMessage(error)
+                                .setOnConfirmAction(() -> {
+                                    sendRegistrationInTelegram(telType);
+                                    return Unit.INSTANCE;
+                                })
+                                .setOnCancelAction(() -> Unit.INSTANCE)
+                                .show();
+                    } else
+                        new MessageDialogBuilder(unwrap(context))
+                                .setTitle("Внимание")
+                                .setStatus(DialogStatus.ERROR)
+                                .setMessage(error)
+                                .setOnConfirmAction(() -> Unit.INSTANCE)
+                                .show();
+                }
+
+//            @Override
+//            public void onFailure(String error) {
+//                try {
+//                    if (error.equals("register_messenger")) {
+//                        DialogData dialogData = new DialogData(context);
+//                        dialogData.setTitle("Внимание! Получатель сообщения (ПТТ) ещё не подключён к нашему боту.");
+//                        dialogData.setText("Для того, чтобы он подключился, нажмите кнопку ОК. На телефон ПТТ будет отправлена SMS с ссылкой, " +
+//                                "перейдя по которой он автоматически подключится к нашему боту и Вы сможете отправлять сообщения ему через мессенджер.");
+//                        dialogData.setOk("Ok", () -> {
+//                            sendRegistrationInTelegram(telType);
+//                        });
+//                        dialogData.setCancel("Нет", dialogData::dismiss);
+//                        dialogData.setClose(dialogData::dismiss);
+//                        dialogData.show();
+//                    } else {
+//                        Globals.writeToMLOG("FAIL", "DialogEKL.sendStartEKL/onFailure", "t: " + error);
+//                        Log.e("DialogEKL", "sendStartEKL/onFailure: " + error);
+//                        Toast.makeText(context, "При отправке кода ЭКЛ возникла ошибка, повторите попытку позже или обратитесь к Вашему руководителю. Ошибка: " + error, Toast.LENGTH_LONG).show();
+//
+//                        DialogData dialogData = new DialogData(context);
+//                        dialogData.setTitle("Виникла помилка: ");
+//                        dialogData.setText(error);
+//                        dialogData.setClose(dialogData::dismiss);
+//                        dialogData.show();
+//                    }
+//                } catch (Exception e) {
+//                    Globals.writeToMLOG("RESP", "DialogEKL.sendStartEKL/onResponse/onFailure/Exception", "Exception e: " + e);
+//                }
+//            }
+            });
+        else
+            new MessageDialogBuilder(unwrap(context))
+                    .setTitle("Помилка!")
+                    .setStatus(DialogStatus.ERROR)
+                    .setMessage("Обнаружена проблема с сетью, проверьте интернет соединение и повторите попытку позже.")
+                    .setOnConfirmAction(() -> Unit.INSTANCE)
+                    .show();
     }
 
 
@@ -1049,16 +933,17 @@ public class DialogEKL {
      * Нажатие на кнопку "Отправить код птт".
      */
     private void pressButtonSend() {
-        DialogData dialog = new DialogData(context);
-        dialog.setTitle("");
-        dialog.setText("Для відправлення ЄКЛ краще використовувати Вайбер чи Телеграмм. \n\nВідмовитись від відправлення ЄКЛ за допомогою СМС?");
-        dialog.setOk("Так", dialog::dismiss);
-        dialog.setCancel("Ні", () -> {
-            sendSMSToPTT();
-            dialog.dismiss();
-        });
-        dialog.setClose(dialog::dismiss);
-        dialog.show();
+        new MessageDialogBuilder(unwrap(context))
+                .setTitle("Увага!")
+                .setStatus(DialogStatus.ALERT)
+                .setMessage("Для відправлення ЄКЛ краще використовувати Вайбер чи Телеграмм. \n\nВідмовитись від відправлення ЄКЛ за допомогою СМС?")
+                .setOnCancelAction("Ні", () -> {
+                            sendSMSToPTT();
+                            return Unit.INSTANCE;
+                        }
+                )
+                .setOnConfirmAction("Так", () -> Unit.INSTANCE)
+                .show();
     }
 
     /**
@@ -1122,18 +1007,33 @@ public class DialogEKL {
                             }
 
                             @Override
-                            public void onFailure(String error) {
+                            public void onFailure(String error_type, String error) {
                                 Globals.writeToMLOG("FAIL", "DialogEKL.sendStartEKL/onFailure", "t: " + error);
                                 Log.e("DialogEKL", "sendStartEKL/onFailure: " + error);
                                 Toast.makeText(context, "При отправке кода ЭКЛ возникла ошибка, повторите попытку позже или обратитесь к Вашему руководителю. Ошибка: " + error, Toast.LENGTH_LONG).show();
                             }
+
+//                            @Override
+//                            public void onFailure(String error) {
+//                                Globals.writeToMLOG("FAIL", "DialogEKL.sendStartEKL/onFailure", "t: " + error);
+//                                Log.e("DialogEKL", "sendStartEKL/onFailure: " + error);
+//                                Toast.makeText(context, "При отправке кода ЭКЛ возникла ошибка, повторите попытку позже или обратитесь к Вашему руководителю. Ошибка: " + error, Toast.LENGTH_LONG).show();
+//                            }
                         });
                     } else {
-                        DialogData dialogData = new DialogData(context);
-                        dialogData.setTitle("Помилка!");
-                        dialogData.setText("Обнаружена проблема с сетью, проверьте интернет соединение и повторите попытку позже.");
-                        dialogData.setClose(dialogData::dismiss);
-                        dialogData.show();
+
+                        new MessageDialogBuilder(unwrap(context))
+                                .setTitle("Помилка!")
+                                .setStatus(DialogStatus.ERROR)
+                                .setMessage("Обнаружена проблема с сетью, проверьте интернет соединение и повторите попытку позже.")
+                                .setOnConfirmAction(() -> Unit.INSTANCE)
+                                .show();
+
+//                        DialogData dialogData = new DialogData(context);
+//                        dialogData.setTitle("Помилка!");
+//                        dialogData.setText("Обнаружена проблема с сетью, проверьте интернет соединение и повторите попытку позже.");
+//                        dialogData.setClose(dialogData::dismiss);
+//                        dialogData.show();
                         Toast.makeText(context, "Обнаружена проблема с сетью, проверьте интернет соединение и повторите попытку позже.", Toast.LENGTH_SHORT).show();
                         Globals.writeToMLOG("RESP", "DialogEKL.sendStartEKL/", "Обнаружена проблема с сетью, проверьте интернет соединение и повторите попытку позже.");
                     }
@@ -1258,16 +1158,18 @@ public class DialogEKL {
                     if (response.body().state) {
                         exchange.onSuccess(response.body());
                     } else {
-                        exchange.onFailure("Ошибка со стороны сервера: " + response.body().error);
+                        String errorType = response.body().error_type != null ? response.body().error_type : "unknown_error";
+                        String error = response.body().error != null ? response.body().error : "Не удалось отправить сообщение. Попробуйте повторить отправку через 5 минут.";
+                        exchange.onFailure(errorType, error);
                     }
                 } else {
-                    exchange.onFailure("Ответ с сервера пустой. Повторите попытку позже.");
+                    exchange.onFailure("error_send_failed", "Не удалось отправить сообщение. Попробуйте повторить отправку через 5 минут.");
                 }
             }
 
             @Override
             public void onFailure(Call<EKLRespData> call, Throwable t) {
-                exchange.onFailure(t.toString());
+                exchange.onFailure("unknown_error", t.toString());
             }
         });
     }
@@ -1304,12 +1206,14 @@ public class DialogEKL {
                             exchange.onSuccess(response.body());
                         } else {
                             if (response.body().additional_action != null && response.body().additional_action.equals("register_messenger")) {
-                                exchange.onFailure("register_messenger");
+                                exchange.onFailure("register_messenger", "");
                             }
-                            exchange.onFailure("Ошибка со стороны сервера: " + response.body().error);
+                            String errorType = response.body().error_type != null ? response.body().error_type : "unknown_error";
+                            String error = response.body().error != null ? response.body().error : "Не удалось отправить сообщение. Попробуйте повторить отправку через 5 минут.";
+                            exchange.onFailure(errorType, error);
                         }
                     } else {
-                        exchange.onFailure("Ответ с сервера пустой. Повторите попытку позже.");
+                        exchange.onFailure("error_send_failed", "Не удалось отправить сообщение. Попробуйте повторить отправку через 5 минут.");
                     }
                 } catch (Exception e) {
                     Globals.writeToMLOG("INFO", "responseSendPTTEKLCode/TELEGRAM", "Exception e: " + e);
@@ -1318,7 +1222,7 @@ public class DialogEKL {
 
             @Override
             public void onFailure(Call<EKLRespData> call, Throwable t) {
-                exchange.onFailure(t.toString());
+                exchange.onFailure("unknown_error", t.toString());
             }
         });
     }
@@ -1424,16 +1328,19 @@ public class DialogEKL {
                         Log.e("DialogEKL", "LOOP.POS7");
                         exchange.onSuccess((EKLCheckData) response.body());
                     } else {
-                        exchange.onFailure("Ошибка со стороны сервера: " + response.body().error);
+
+                        String errorType = response.body().error_type != null ? response.body().error_type : "unknown_error";
+                        String error = response.body().error != null ? response.body().error : "Не удалось отправить сообщение. Попробуйте повторить отправку через 5 минут.";
+                        exchange.onFailure(errorType, error);
                     }
                 } else {
-                    exchange.onFailure("Ответ с сервера пустой. Повторите попытку позже.");
+                    exchange.onFailure("error_send_failed", "Не удалось отправить сообщение. Попробуйте повторить отправку через 5 минут.");
                 }
             }
 
             @Override
             public void onFailure(Call<EKLCheckData> call, Throwable t) {
-                exchange.onFailure(t.toString());
+                exchange.onFailure("unknown_error", t.toString());
             }
         });
     }
@@ -1458,16 +1365,18 @@ public class DialogEKL {
                     if (response.body().state) {
                         exchange.onSuccess((EKLCheckData) response.body());
                     } else {
-                        exchange.onFailure("Ошибка со стороны сервера: " + response.body().error);
+                        String errorType = response.body().error_type != null ? response.body().error_type : "unknown_error";
+                        String error = response.body().error != null ? response.body().error : "Не удалось отправить сообщение. Попробуйте повторить отправку через 5 минут.";
+                        exchange.onFailure(errorType, error);
                     }
                 } else {
-                    exchange.onFailure("Ответ с сервера пустой. Повторите попытку позже.");
+                    exchange.onFailure("error_send_failed", "Не удалось отправить сообщение. Попробуйте повторить отправку через 5 минут.");
                 }
             }
 
             @Override
             public void onFailure(Call<EKLCheckData> call, Throwable t) {
-                exchange.onFailure(t.toString());
+                exchange.onFailure("unknown_error", t.toString());
             }
         });
     }
@@ -1732,6 +1641,14 @@ public class DialogEKL {
     }
 
 
+    private Activity unwrap(Context context) {
+        while (!(context instanceof Activity) && context instanceof ContextWrapper) {
+            context = ((ContextWrapper) context).getBaseContext();
+        }
+        assert context instanceof Activity;
+        return (Activity) context;
+    }
+
     /**
      * 14.07.2021
      * POJO данных которые приходят от сервера в ответ на "Нужно отправить СМС ПТТшнику"
@@ -1754,6 +1671,11 @@ public class DialogEKL {
         @SerializedName("additional_action")
         @Expose
         public String additional_action;
+
+        // добавил 30.01.25
+        @SerializedName("error_type")
+        @Expose
+        public String error_type;
     }
 
     public class EKLCheckData {
@@ -1766,6 +1688,10 @@ public class DialogEKL {
         @SerializedName("error")
         @Expose
         public String error;
+        // добавил 30.01.25
+        @SerializedName("error_type")
+        @Expose
+        public String error_type;
 
         public class EKLCheckDataList {
             @SerializedName("state")

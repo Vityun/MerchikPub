@@ -113,7 +113,8 @@ public class ChatMassagesAdapter extends RecyclerView.Adapter<ChatMassagesAdapte
             }
 
             @Override
-            public void onFailure(String error) {
+            public void onFailure(String error_type, String error) {
+
             }
         });
     }

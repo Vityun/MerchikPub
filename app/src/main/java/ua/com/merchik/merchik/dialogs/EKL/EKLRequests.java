@@ -28,7 +28,7 @@ import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
 
 public class EKLRequests {
 
-    class Test{
+    class Test {
         public String mod;
         public String act;
         public String addr_id;
@@ -48,7 +48,7 @@ public class EKLRequests {
         public String error;
     }
 
-    public class PTT{
+    public class PTT {
         @SerializedName("user_id")
         @Expose
         public String userId;
@@ -120,7 +120,7 @@ public class EKLRequests {
         public Integer sendSms;
     }
 
-//    получение сотрудников из 1С если нет в базе данных
+    //    получение сотрудников из 1С если нет в базе данных
     public void getPTTByAddress(int addressId, Clicks.clickObjectAndStatus click) {
         Test data = new Test();
         data.mod = "data_list";
@@ -171,9 +171,13 @@ public class EKLRequests {
                 }
 
                 @Override
-                public void onFailure(String error) {
-                    Globals.writeToMLOG("RESP", "EKLRequests.responseCheckEKLList/onFailure", "String error: " + error);
+                public void onFailure(String error_type, String error) {
+                    Globals.writeToMLOG("RESP", "EKLRequests.responseCheckEKLList/onFailure",
+                            "String error_type: " + error_type +
+                                    " | String error: " + error);
+
                 }
+
             }, Globals.AppWorkMode.OFFLINE, true);
         } catch (Exception e) {
             Globals.writeToMLOG("ERROR", "EKLRequests.responseCheckEKLList", "Exception e: " + e);
@@ -232,16 +236,18 @@ public class EKLRequests {
                         Log.e("DialogEKL", "LOOP.POS7");
                         exchange.onSuccess((DialogEKL.EKLCheckData) response.body());
                     } else {
-                        exchange.onFailure("Ошибка со стороны сервера: " + response.body().error);
+                        String errorType = response.body().error_type != null ? response.body().error_type : "unknown_error";
+                        String error = response.body().error != null ? response.body().error : "Не удалось отправить сообщение. Попробуйте повторить отправку через 5 минут.";
+                        exchange.onFailure(errorType, error);
                     }
                 } else {
-                    exchange.onFailure("Ответ с сервера пустой. Повторите попытку позже.");
+                    exchange.onFailure("error_send_failed","Не удалось отправить сообщение. Попробуйте повторить отправку через 5 минут.");
                 }
             }
 
             @Override
             public void onFailure(Call<DialogEKL.EKLCheckData> call, Throwable t) {
-                exchange.onFailure(t.toString());
+                exchange.onFailure("unknown_error", t.toString());
             }
         });
     }
@@ -282,7 +288,6 @@ public class EKLRequests {
             Globals.writeToMLOG("RESP", "EKLRequests.updateEKLData/", "Exception e: " + e);
         }
     }
-
 
 
     /**

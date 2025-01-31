@@ -278,7 +278,7 @@ public class AdapterUtil extends RecyclerView.Adapter<RecyclerView.ViewHolder> i
                 Log.e("AdapterUtil", "(" + data.id + ") надо качать?");
                 image.setImageResource(R.mipmap.merchik);
                 Log.e("AdapterUtil", "(" + data.id + ")скачиваю");
-                PhotoDownload.downloadPhoto(data.img_personal_photo_thumb, new ExchangeInterface.ExchangePhoto() {
+                new PhotoDownload().downloadPhoto(data.img_personal_photo_thumb, new ExchangeInterface.ExchangePhoto() {
                     @Override
                     public void onSuccess(Bitmap bitmap) {
 
@@ -429,7 +429,7 @@ public class AdapterUtil extends RecyclerView.Adapter<RecyclerView.ViewHolder> i
                             }
 
                             @Override
-                            public void onFailure(String error) {
+                            public void onFailure(String error_type, String error) {
 
                             }
                         });

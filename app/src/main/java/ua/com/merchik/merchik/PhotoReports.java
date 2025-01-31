@@ -75,6 +75,7 @@ public class PhotoReports {
         getDataToUpload();  // Подготовка данных к выгрузке
 //        }
 
+
         Globals.writeToMLOG("INFO", "PhotoReports/upload_photo/uploadPhotoReports", "START. Upload type: " + type);
         Globals.writeToMLOG("INFO", "PhotoReports/upload_photo/uploadPhotoReports", "START. size to unload: " + realmResults.size() + " /permission: " + permission);
 

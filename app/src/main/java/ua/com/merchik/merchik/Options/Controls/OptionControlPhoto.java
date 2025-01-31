@@ -168,7 +168,7 @@ public class OptionControlPhoto<T> extends OptionControl {
 
             case "158609":  // Дополнительное место продаж
                 photoType = 42;
-                m = m > 0 ? m : 0; // 20.01 изменил как в 1С (3.1)
+                m = m > 0 ? m : 3; // 20.01 изменил как в 1С (3.1)
                 break;
 
             case "159726":  // Фото торговой точки
@@ -206,14 +206,7 @@ public class OptionControlPhoto<T> extends OptionControl {
 //            unlockCodeResultListener.onUnlockCodeSuccess();
         }
 
-//        исключение для Метро и Витмарк
-        if (optionId.equals("158609") && stackPhotoDB.size() < 3) {
-            if (addressSDB.tpId == 320){
-                ImagesTypeListDB item = ImagesTypeListRealm.getByID(photoType);
-                stringBuilderMsg.append("Вы должны сделать: ").append("3").append(" фото с типом: ").append(item != null ? item.getNm() : typeNm).append(", а сделали: ").append(stackPhotoDB.size()).append(" - доделайте фотографии.");
-                signal = true;
-            }
-        }
+
 
         // Исключения
         if (optionId.equals("141361") || optionId.equals("132971")) {
@@ -248,6 +241,14 @@ public class OptionControlPhoto<T> extends OptionControl {
             }
         }
 
+        //        исключение для Метро и Витмарк
+        if (optionId.equals("158609") && stackPhotoDB.size() < 3) {
+            if (addressSDB.tpId == 320){
+                ImagesTypeListDB item = ImagesTypeListRealm.getByID(photoType);
+                stringBuilderMsg.append("Вы должны сделать: ").append("3").append(" фото с типом: ").append(item != null ? item.getNm() : typeNm).append(", а сделали: ").append(stackPhotoDB.size()).append(" - доделайте фотографии.");
+                signal = true;
+            }
+        }
 
         //7.0. сохраним сигнал
         RealmManager.INSTANCE.executeTransaction(realm -> {

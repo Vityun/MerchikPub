@@ -26,7 +26,9 @@ import static ua.com.merchik.merchik.trecker.Coordinates;
 import static ua.com.merchik.merchik.trecker.coordinatesDistanse;
 import static ua.com.merchik.merchik.trecker.enabledGPS;
 
+import android.app.Activity;
 import android.content.Context;
+import android.content.ContextWrapper;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Build;
@@ -58,10 +60,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import io.reactivex.rxjava3.observers.DisposableCompletableObserver;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 import io.realm.RealmResults;
+import kotlin.Unit;
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity;
 import ua.com.merchik.merchik.Activities.Features.FeaturesActivity;
 import ua.com.merchik.merchik.Activities.TaskAndReclamations.TasksActivity.TARSecondFrag;
@@ -165,6 +170,8 @@ import ua.com.merchik.merchik.dialogs.DialogAdditionalRequirements.DialogAdditio
 import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.dialogs.DialogFilter.Click;
 import ua.com.merchik.merchik.dialogs.EKL.DialogEKL;
+import ua.com.merchik.merchik.dialogs.features.MessageDialogBuilder;
+import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus;
 import ua.com.merchik.merchik.features.main.DBViewModels.AdditionalRequirementsDBViewModel;
 import ua.com.merchik.merchik.features.main.DBViewModels.SamplePhotoSDBViewModel;
 import ua.com.merchik.merchik.toolbar_menus;
@@ -181,7 +188,7 @@ public class Options {
             164351, 164355, 165481
     };
 
-// Провести отчет
+    // Провести отчет
     public static int[] describedOptions = new int[]{132624, 76815, 157241, 157243, 84006, 156928,
             151594, 80977, 135330, 133381, 136101, 135329, 138518, 151139, 132623, 133382, 136100, 137797, 135809,
             135328, 135327, 157275, 138341, 590, 84932, 134583, 157352, 1470, 138644, 1455, 135061,
@@ -1282,7 +1289,7 @@ public class Options {
                     break;
 
                 case DEFAULT_CONDUCT:
-                    if (optionNotConduct.size() > 0) {
+                    if (!optionNotConduct.isEmpty()) {
                         // Не все опции(действия) выполнены
                         // Не выполнены:
                         dialog.setDialogIco();
@@ -1307,46 +1314,91 @@ public class Options {
                         });
 
                     } else {
-                        dialog.setTitle("Блокирующие опции не обнаружены.");
-                        dialog.setText("Создаю запрос на проведение документа.");
+//                        dialog.setTitle("Блокирующие опции не обнаружены.");
+//                        dialog.setText("Создаю запрос на проведение документа.");
 
                         Toast.makeText(context, "Запрос на проведение создан", Toast.LENGTH_SHORT).show();
-                        DialogData dialogData = new DialogData(context);
-                        dialogData.setClose(dialogData::dismiss);
-                        new PhotoReports(context).uploadPhotoReports(PhotoReports.UploadType.AUTO);
-                        new TablesLoadingUnloading().uploadReportPrepareToServer();
+//                        DialogData dialogData = new DialogData(context);
+//                        dialogData.setClose(dialogData::dismiss);
+
                         Exchange exchange = new Exchange();
-                        exchange.startExchange();
-                        Exchange.conductingOnServerWpData(wp, wp.getCode_dad2(), new Click() {
-                            @Override
-                            public <T> void onSuccess(T data) {
-                                dialogData.setTitle("Команда на проведення звіту. ");
-                                try {
-                                    Spanned spanned = Html.fromHtml((String) data);
-                                    dialogData.setText(spanned);
-                                }catch (Exception e){
 
-                                }
-                                dialogData.show();
-                            }
+                        List<StackPhotoDB> res = RealmManager.INSTANCE.copyFromRealm(RealmManager.getStackPhotoPhotoToUpload());
+                        if (!res.isEmpty()) {
+                            new MessageDialogBuilder(unwrap(context))
+                                    .setTitle("НЕ ОБ'ЄКТ! Заголовок")
+                                    .setStatus(DialogStatus.ERROR)
+                                    .setMessage("НЕ ОБ'ЄКТ! Есть не выгруженные фотографии, нажать на кнопку СИНХРОНИЗАЦИЯ, подождать минуту, если плохая связь - найти место с лучшим прийомом и повторить")
+                                    .setOnCancelAction(() -> Unit.INSTANCE)
+                                    .setOnConfirmAction("синхронизация", () -> {
+                                        new PhotoReports(context).uploadPhotoReports(PhotoReports.UploadType.AUTO);
+                                        new TablesLoadingUnloading().uploadReportPrepareToServer();
+                                        exchange.startExchange();
+                                        return Unit.INSTANCE;
+                                            }
+                                    )
+                                    .show();
+                        } else {
+//                            new PhotoReports(context).uploadPhotoReports(PhotoReports.UploadType.AUTO);
+                            new TablesLoadingUnloading().uploadReportPrepareToServer();
+                            exchange.startExchange();
+                            Exchange.conductingOnServerWpData(wp, wp.getCode_dad2(), new Click() {
+                                @Override
+                                public <T> void onSuccess(T data) {
+//                                    dialogData.setTitle("Команда на проведення звіту. ");
+                                    try {
+                                        Spanned spanned = Html.fromHtml((String) data);
 
-                            @Override
-                            public void onFailure(String error) {
-                                Globals.writeToMLOG("ERROR", "Exchange.conductingOnServerWpData", "error: " + error);
-                                dialogData.setTitle("Проведення звіту...");
-                                dialogData.setText("Зараз передати команду на проведення звіту на сервер не вдалося. Але ця команда збережена на вашому пристрої та буде передана на сервер під час наступного обміну данними.");
-                                dialogData.show();
+                                        new MessageDialogBuilder(unwrap(context))
+                                                .setTitle("Команда на проведення звіту.")
+//                                                .setStatus(DialogStatus.ERROR)
+                                                .setMessage(spanned)
+                                                .setOnConfirmAction(() -> Unit.INSTANCE)
+                                                .show();
+//                                    String regex = "- ?[Oo]пц[иi]я";
+//                                    // Компилируем регулярное выражение
+//                                    Pattern pattern = Pattern.compile(regex);
+//                                    Matcher matcher = pattern.matcher(spanned);
+//
+//                                    // Строим новую строку с заменами
+//                                    StringBuffer result = new StringBuffer();
+//                                    while (matcher.find()) {
+//                                        matcher.appendReplacement(result, "\n" + matcher.group());
+//                                    }
+//                                    matcher.appendTail(result);
 
-                                RealmManager.INSTANCE.executeTransaction(realm -> {
-                                    if (wp != null) {
-                                        wp.startUpdate = true;
-                                        wp.setSetStatus(1);
-                                        wp.setDt_update(System.currentTimeMillis() / 1000);
-                                        realm.insertOrUpdate(wp);
+//                                        dialogData.setText(spanned);
+                                    } catch (Exception e) {
+
                                     }
-                                });
-                            }
-                        });
+//                                    dialogData.show();
+                                }
+
+                                @Override
+                                public void onFailure(String error) {
+                                    Globals.writeToMLOG("ERROR", "Exchange.conductingOnServerWpData", "error: " + error);
+                                    new MessageDialogBuilder(unwrap(context))
+                                            .setTitle("Проведення звіту...")
+                                                .setStatus(DialogStatus.ERROR)
+                                            .setMessage("Зараз передати команду на проведення звіту на сервер не вдалося. Але ця команда збережена на вашому пристрої та буде передана на сервер під час наступного обміну данними.")
+                                            .setOnConfirmAction(() -> Unit.INSTANCE)
+                                            .show();
+
+//                                    dialogData.setTitle("Проведення звіту...");
+//                                    dialogData.setText("Зараз передати команду на проведення звіту на сервер не вдалося. Але ця команда збережена на вашому пристрої та буде передана на сервер під час наступного обміну данними.");
+//                                    dialogData.show();
+
+                                    RealmManager.INSTANCE.executeTransaction(realm -> {
+                                        if (wp != null) {
+                                            wp.startUpdate = true;
+                                            wp.setSetStatus(1);
+                                            wp.setDt_update(System.currentTimeMillis() / 1000);
+                                            realm.insertOrUpdate(wp);
+                                        }
+                                    });
+                                }
+                            });
+                        }
                     }
                     break;
 
@@ -1567,7 +1619,9 @@ public class Options {
                             "Затем увеличьте ее до размера экрана и выполните фото, нажав на кнопку фотоаппарата в правом нижнем углу. ");
                     intent.putExtras(bundle);
                     context.startActivity(intent);
-                } catch (Exception e) { Log.e("2222", "error", e); }
+                } catch (Exception e) {
+                    Log.e("2222", "error", e);
+                }
 
 //                OptionButtonPhotoFOT<?> optionButtonPhotoFOT = new OptionButtonPhotoFOT<>(context, dataDB, option, type, mode, unlockCodeResultListener);
                 break;
@@ -2865,7 +2919,7 @@ public class Options {
             }
             Globals.writeToMLOG("INFO", "DetailedReportButtons.class.pressEndWork", "OUT. wpDataDB.codeDAD2: " + wpDataDB.getCode_dad2());
 
-        }catch (Exception e){
+        } catch (Exception e) {
             Log.e("optionEndWork_138520", "Exception e: " + e);
         }
         return result;
@@ -3981,6 +4035,13 @@ public class Options {
         }
     }
 
+    private Activity unwrap(Context context) {
+        while (!(context instanceof Activity) && context instanceof ContextWrapper) {
+            context = ((ContextWrapper) context).getBaseContext();
+        }
+        assert context instanceof Activity;
+        return (Activity) context;
+    }
 
 }
 

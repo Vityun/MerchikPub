@@ -255,7 +255,6 @@ public class OptionControlEKL<T> extends OptionControl {
 					КонецЕсли;
 				КонецЕсли;*/
 
-                Log.e("OptionControlEKL", "HERE TEST OptionControlEKL 7");
             } else {
                 if (usersSDBPTT == null) {
                     usersSDBPTT = SQL_DB.usersDao().getById(eklSDB.get(0).sotrId);
@@ -278,7 +277,8 @@ public class OptionControlEKL<T> extends OptionControl {
                     signal = false;
                     optionMsg.append(", но ").append("ПТТ не работает по адресу: ").append(addressSDB.nm);
                 } else if (usersSDBPTT.otdelId == null || usersSDBPTT.otdelId == 0) {
-                    signal = false;
+//                  29.01.2025 изменил сигнал
+                    signal = true;
                     optionMsg.append(", но ").append("у ПТТ ").append(usersSDBPTT.fio).append(" не указан отдел в котором он работает!");
                 } else if (usersSDBPTT.otdelId != null && tovarGroupSDB1 != null && tovarGroupSDB1.parent != null && tovarGroupSDB1.parent == 0) {    // нет у меня понятия УРОВЕНЬ
                     signal = false;
@@ -322,8 +322,6 @@ public class OptionControlEKL<T> extends OptionControl {
                     signal = true;
                 }
             }
-
-            Log.e("OptionControlEKL", "HERE TEST OptionControlEKL 8");
         }
 
         // "подводим итог"

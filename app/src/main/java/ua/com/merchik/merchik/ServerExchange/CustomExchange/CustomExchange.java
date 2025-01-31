@@ -179,7 +179,7 @@ public class CustomExchange {
                         public <T> void onSuccess(List<T> data) {
                             try {
                                 List<ImagesViewListImageList> datalist = (List<ImagesViewListImageList>) data;
-                                PhotoDownload.savePhotoToDB2(datalist);
+                                new PhotoDownload().savePhotoToDB2(datalist);
                                 Globals.writeToMLOG("INFO", "startExchange/planogram.onSuccess", "OK: " + datalist.size());
                             } catch (Exception e) {
                                 Globals.writeToMLOG("ERROR", "startExchange/planogram.onSuccess", "Exception e: " + e);

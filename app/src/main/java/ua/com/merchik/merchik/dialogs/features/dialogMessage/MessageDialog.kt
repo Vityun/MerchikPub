@@ -1,5 +1,7 @@
 package ua.com.merchik.merchik.dialogs.features.dialogMessage
 
+import android.text.Html
+import android.text.Spanned
 import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -15,8 +17,10 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentWidth
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
@@ -37,10 +41,17 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import com.airbnb.lottie.compose.LottieAnimation
+import com.airbnb.lottie.compose.LottieCompositionSpec
+import com.airbnb.lottie.compose.LottieConstants
+import com.airbnb.lottie.compose.animateLottieCompositionAsState
+import com.airbnb.lottie.compose.rememberLottieComposition
 import kotlinx.coroutines.delay
 import ua.com.merchik.merchik.R
 import ua.com.merchik.merchik.dialogs.DialogAchievement.FilteringDialogDataHolder
@@ -50,17 +61,31 @@ import java.time.LocalDate
 
 @Composable
 fun MessageDialog(
-    title: String,
-    message: String,
+    title: String = "",
+    message: String = "",
+    messageHtml: Spanned = Html.fromHtml(""),
     onDismiss: () -> Unit,
+    okButtonName: String = "Ok",
     onConfirmAction: (() -> Unit)? = null, // Опциональный параметр для действия на кнопке "OK"
+    cancelButtonName: String = "Отмена",
     onCancelAction: (() -> Unit)? = null, // Опциональный параметр для действия на кнопке "Oтмена"
     status: DialogStatus? = DialogStatus.NORMAL
 ) {
     // Для управления состоянием подтверждающего диалога
 //    val isCompleted by remember { derivedStateOf { viewModel.isCompleted } }
 
-    Log.e("STATUS!!!", "status: ${status?.name}")
+    val scrollState = rememberScrollState()
+
+    val composition by rememberLottieComposition(
+        if (status == DialogStatus.ERROR) LottieCompositionSpec.RawRes(
+            R.raw.error
+        ) else LottieCompositionSpec.RawRes(R.raw.alert)
+    )
+    val progress by animateLottieCompositionAsState(
+        composition,
+        iterations = LottieConstants.IterateForever,
+        isPlaying = true
+    )
 
     var isCompleted by remember { mutableStateOf(false) }
 
@@ -86,14 +111,11 @@ fun MessageDialog(
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically // Для выравнивания текста и кнопки по вертикали
             ) {
-                Text(
-                    text = title,
-                    style = MaterialTheme.typography.labelLarge,
+                Spacer(
                     modifier = Modifier
                         .weight(1f)
-                        .padding(top = 16.dp),
-                    color = Color.White
                 )
+
                 ImageButton(
                     id = R.drawable.ic_letter_x,
                     shape = CircleShape,
@@ -112,6 +134,7 @@ fun MessageDialog(
             Box(
                 modifier = Modifier
                     .wrapContentWidth()
+                    .verticalScroll(scrollState)
                     .clip(RoundedCornerShape(8.dp))
                     .background(color = Color.White)
             )
@@ -123,33 +146,45 @@ fun MessageDialog(
                         .fillMaxWidth()
                         .padding(16.dp)
                 ) {
-                    if (status != DialogStatus.NORMAL)
-                        Image(
+                    if (title.isNotEmpty())
+                        Text(
+                            text = title,
+                            style = MaterialTheme.typography.titleLarge,
                             modifier = Modifier
-                                .size(60.dp)
-                                .padding(bottom = 8.dp),
-                            painter = if (status == DialogStatus.ALERT) painterResource(id = R.drawable.ic_caution)
-                            else painterResource(id = R.drawable.ic_exclamation_mark_in_a_circle),
-                            colorFilter = if (status == DialogStatus.ERROR) ColorFilter.tint(color = Color.Red) else null,
-                            contentDescription = null
+                                .padding(horizontal = 16.dp, vertical = 8.dp)
                         )
-                    Text(
-//                        modifier = Modifier
-//                            .padding(bottom = 8.dp),
-                        text = message,
-                        style = MaterialTheme.typography.titleMedium,
-//                        fontFamily = FontFamily.Monospace,
-                        color = Color(0xCC1E201D),
-                        textAlign = TextAlign.Center
-                    )
+
+                    if (status != DialogStatus.NORMAL)
+                        LottieAnimation(
+                            modifier = Modifier
+                                .size(68.dp)
+                                .padding(bottom = 8.dp),
+                            composition = composition,
+                            progress = { progress },
+
+                            )
+                    if (messageHtml.isNotEmpty())
+                        Text(
+                            modifier = Modifier
+                                .padding(bottom = 4.dp),
+                            text = spannedToAnnotatedString(messageHtml),
+                            style = MaterialTheme.typography.titleMedium,
+                            color = Color(0xCC1E201D),
+                            textAlign = TextAlign.Center
+                        ) else
+                        Text(
+                            modifier = Modifier
+                                .padding(bottom = 4.dp),
+                            text = message,
+                            style = MaterialTheme.typography.titleMedium,
+                            color = Color(0xCC1E201D),
+                            textAlign = TextAlign.Center
+                        )
 
                     // Если есть действие, показываем кнопку "OK"
-                    if (onConfirmAction != null) {
-                        Spacer(modifier = Modifier.padding(16.dp))
-//                        Box(
-//                            modifier = Modifier.fillMaxWidth(),
-//                            contentAlignment = Alignment.BottomEnd // Располагаем кнопку в правом нижнем углу
-//                        ) {
+                    if (onConfirmAction != null || onCancelAction != null) {
+                        Spacer(modifier = Modifier.padding(4.dp))
+
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             verticalAlignment = Alignment.Bottom,
@@ -168,41 +203,50 @@ fun MessageDialog(
                                         )
                                     ),
                                     modifier = Modifier
+                                        .padding(horizontal = 5.dp)
                                         .weight(1f),
                                 ) {
-                                    Text("Змiниты ПТТ")
+                                    Text(cancelButtonName)
                                 }
-                                Spacer(modifier = Modifier.padding(10.dp))
+//                                Spacer(modifier = Modifier.padding(10.dp))
                             } else {
-                                Spacer(modifier = Modifier
-                                    .weight(1f)
-                                    .padding(10.dp))
+                                Spacer(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .padding(10.dp)
+                                )
                             }
 
-                            Button(
-                                onClick = {
-                                    onConfirmAction()
-                                    isCompleted = true
+                            if (onConfirmAction != null)
+                                Button(
+                                    onClick = {
+                                        onConfirmAction()
+                                        isCompleted = true
 
-                                },
-                                shape = RoundedCornerShape(8.dp),
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = colorResource(
-                                        id = R.color.orange
-                                    )
-                                ),
-                                modifier = Modifier
-                                    .weight(1f)
-                            ) {
-                                if (onCancelAction != null) {
-                                    Text("Редагувати ПТТ")
-                                } else
-                                    Text("Вiдправити")
-                            }
+                                    },
+                                    shape = RoundedCornerShape(8.dp),
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = colorResource(
+                                            id = R.color.orange
+                                        )
+                                    ),
+                                    modifier = Modifier
+                                        .padding(horizontal = 5.dp)
+                                        .weight(1f)
+                                ) {
+                                    Text(okButtonName)
+                                }
                         }
                     }
                 }
             }
         }
+    }
+}
+
+fun spannedToAnnotatedString(spanned: Spanned): AnnotatedString {
+    return buildAnnotatedString {
+        append(spanned.toString()) // Пока просто текст, без обработки стилей
+        // Можно вручную парсить Spanned и добавлять стили, если нужно
     }
 }

@@ -15,6 +15,8 @@ import com.google.gson.JsonObject;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import okhttp3.ResponseBody;
 import retrofit2.Call;
@@ -51,6 +53,8 @@ import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
  * */
 public class PhotoDownload {
 //    public final Globals globals = new Globals();
+
+    private final ExecutorService executorService = Executors.newFixedThreadPool(8);  // Максимум 4 потока
 
     /**
      * 09.09.2022
@@ -1003,50 +1007,57 @@ public class PhotoDownload {
      * <p>
      * Отправляю на сервер ссылку, в ответ фотографию, возвращаю дальше в приложение фото
      */
-    public static void downloadPhoto(String photoUrl, ExchangeInterface.ExchangePhoto exchange) {
-        try {
-            retrofit2.Call<ResponseBody> call = RetrofitBuilder.getRetrofitInterface().DOWNLOAD_PHOTO_BY_URL(photoUrl.replace("thumb_", ""));
-            call.enqueue(new Callback<ResponseBody>() {
-                @Override
-                public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
-                    try {
-                        if (response.isSuccessful()) {
-                            if (response.body() != null) {
-                                Globals.writeToMLOG("INFO", "downloadPhoto/onResponse", "response.body(): " + response.body());
-                                InputStream data = response.body().byteStream(); // <--- TODO BUG    java.lang.NullPointerException: Attempt to invoke virtual method 'java.io.InputStream okhttp3.ResponseBody.byteStream()' on a null object reference at ua.com.merchik.merchik.ServerExchange.PhotoDownload$8.onResponse(PhotoDownload.java:574)
 
-                                if (data.toString().length() > 0) {
-                                    Bitmap bmp = BitmapFactory.decodeStream(data);
-                                    if (bmp != null) {
-                                        exchange.onSuccess(bmp);
+    public void downloadPhoto(String photoUrl, ExchangeInterface.ExchangePhoto exchange) {
+        executorService.submit(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    retrofit2.Call<ResponseBody> call = RetrofitBuilder.getRetrofitInterface().DOWNLOAD_PHOTO_BY_URL(photoUrl.replace("thumb_", ""));
+                    call.enqueue(new Callback<ResponseBody>() {
+                        @Override
+                        public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                            try {
+                                if (response.isSuccessful()) {
+                                    if (response.body() != null) {
+                                        Globals.writeToMLOG("INFO", "downloadPhoto/onResponse", "response.body(): " + response.body());
+                                        InputStream data = response.body().byteStream(); // <--- TODO BUG    java.lang.NullPointerException: Attempt to invoke virtual method 'java.io.InputStream okhttp3.ResponseBody.byteStream()' on a null object reference at ua.com.merchik.merchik.ServerExchange.PhotoDownload$8.onResponse(PhotoDownload.java:574)
+
+                                        if (data.toString().length() > 0) {
+                                            Bitmap bmp = BitmapFactory.decodeStream(data);
+                                            if (bmp != null) {
+                                                exchange.onSuccess(bmp);
+                                            } else {
+                                                exchange.onFailure("Фото нет");
+                                            }
+                                        } else {
+                                            exchange.onFailure("Фото нет");
+                                        }
+                                        data.close();
                                     } else {
-                                        exchange.onFailure("Фото нет");
+                                        exchange.onFailure("response.body() == 0");
                                     }
                                 } else {
-                                    exchange.onFailure("Фото нет");
+                                    exchange.onFailure("Код: " + response.code());
                                 }
-                            } else {
-                                exchange.onFailure("response.body() == 0");
+                            } catch (Exception e) {
+                                Globals.writeToMLOG("ERROR", "downloadPhoto/onResponse", "Exception e: " + e);
                             }
-                        } else {
-                            exchange.onFailure("Код: " + response.code());
                         }
-                    } catch (Exception e) {
-                        Globals.writeToMLOG("ERROR", "downloadPhoto/onResponse", "Exception e: " + e);
-                    }
-                }
 
-                @Override
-                public void onFailure(Call<ResponseBody> call, Throwable t) {
-                    exchange.onFailure("Ошибка: " + t);
+                        @Override
+                        public void onFailure(Call<ResponseBody> call, Throwable t) {
+                            exchange.onFailure("Ошибка: " + t);
+                        }
+                    });
+                }catch (Exception e){
+                    Globals.writeToMLOG("ERROR", "downloadPhoto", "Exception e: " + e);
                 }
-            });
-        }catch (Exception e){
-            Globals.writeToMLOG("ERROR", "downloadPhoto", "Exception e: " + e);
-        }
+            }
+        });
     }
 
-    public static void savePhotoToDB2(List<ImagesViewListImageList> data) {
+    public void savePhotoToDB2(List<ImagesViewListImageList> data) {
         for (ImagesViewListImageList item : data) {
             if (StackPhotoRealm.stackPhotoDBGetPhotoBySiteId(String.valueOf(item.id)) == null) {
                 downloadPhoto(item.photoUrl, new ExchangeInterface.ExchangePhoto() {

@@ -988,15 +988,21 @@ public class Globals {
         File file = new File(myDir, fname); // Создание файла
 
         if (file.exists())
-            file.delete();   // Если такой файл уже есть - удаляем его (это вообще тут надо?)
+            // Если размеры файлов совпадают, не делаем ничего и возвращаем путь
+            if (file.length() > 1000) {
+                return file.getAbsolutePath();
+            } else {
+                // Если размеры не совпадают, удаляем файл и продолжаем
+                file.delete();
+            }
 
         // Запись в файл фотки.
         // Если удачно сохранило фотку - возвращает её путь, иначе - возвразает пустоту.
-        try {
-            FileOutputStream out = new FileOutputStream(file);
+        try (FileOutputStream out = new FileOutputStream(file)) {
             bitmap.compress(Bitmap.CompressFormat.JPEG, 100, out);
             out.flush();
-            out.close();
+            // Освобождаем память после сохранения
+            bitmap.recycle(); // Освобождение памяти, занятой изображением
             return file.getAbsolutePath();
         } catch (Exception e) {
             e.printStackTrace();
@@ -1367,27 +1373,27 @@ public class Globals {
      * Запись данных в файлик
      */
     public void writeToMLOG(String logRow) {
-//        try {
-////            File root = new File(Environment.getExternalStorageDirectory(), "/Merchik");
-//            File root = MyApplication.getAppContext().getExternalFilesDir(Environment.DIRECTORY_NOTIFICATIONS);
-//
-//            if (!root.exists()) {
-//                root.mkdirs();
-//            }
-//
-//            String fname = "M_LOG.txt";
-//            File file = new File(root, fname);
-//
-//            FileOutputStream stream = new FileOutputStream(file, true);
-//            try {
-//                stream.write(logRow.getBytes());
-//            } finally {
-//                stream.close();
-//            }
-//            Log.e("writeToMLOG", "ENTER_DATA");
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
+        try {
+            File root = MyApplication.getAppContext().getCacheDir();
+            if (!root.exists()) {
+                root.mkdirs();
+            }
+
+            String fname = "M_LOG.txt";
+            File file = new File(root, fname);
+
+            try (FileOutputStream stream = new FileOutputStream(file, true)) {
+                String time = Clock.getHumanTime();
+                String space = " ";
+                String delimiter = "\n";
+
+                String data = time + space + logRow + space + delimiter;
+
+                stream.write(data.getBytes());
+            }
+        } catch (IOException e) {
+            Log.e("LogError","type: " + e.getMessage());
+        }
     }
 
 
@@ -1432,7 +1438,6 @@ public class Globals {
 //    TODO сделать не в основном потоке
     public static void writeToMLOG(String type, String place, String msg) {
         try {
-//            File root = MyApplication.getAppContext().getExternalFilesDir(Environment.DIRECTORY_NOTIFICATIONS);
             File root = MyApplication.getAppContext().getCacheDir();
             if (!root.exists()) {
                 root.mkdirs();
@@ -1440,26 +1445,8 @@ public class Globals {
 
             String fname = "M_LOG.txt";
             File file = new File(root, fname);
-/*
-            // Проверка количества записей
-            int maxEntries = 100000; // Максимальное количество записей
-            List<String> lines = new ArrayList<>();
 
-            if (file.exists()) {
-                BufferedReader reader = new BufferedReader(new FileReader(file));
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    lines.add(line);
-                }
-                reader.close();
-
-                if (lines.size() >= maxEntries) {
-                    lines.subList(0, lines.size() - maxEntries).clear(); // Удалить старые записи
-                }
-            }*/
-
-            FileOutputStream stream = new FileOutputStream(file, true);
-            try {
+            try (FileOutputStream stream = new FileOutputStream(file, true)) {
                 String time = Clock.getHumanTime();
                 String space = " ";
                 String delimiter = "\n";
@@ -1467,11 +1454,9 @@ public class Globals {
                 String data = time + space + type + space + place + space + msg + delimiter;
 
                 stream.write(data.getBytes());
-            } finally {
-                stream.close();
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            Log.e("LogError","type: " + e.getMessage());
         }
     }
 

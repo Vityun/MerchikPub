@@ -118,6 +118,8 @@ import ua.com.merchik.merchik.dialogs.DialogMap;
 import ua.com.merchik.merchik.dialogs.features.AlertDialogOneButton;
 import ua.com.merchik.merchik.dialogs.features.AlertDialogMessage;
 import ua.com.merchik.merchik.dialogs.features.LoadingDialogWithPercent;
+import ua.com.merchik.merchik.dialogs.features.LoadingIndicator;
+import ua.com.merchik.merchik.dialogs.features.MessageDialogBuilder;
 import ua.com.merchik.merchik.dialogs.features.dialogLoading.ProgressViewModel;
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus;
 import ua.com.merchik.merchik.features.main.DBViewModels.SamplePhotoSDBViewModel;
@@ -867,6 +869,9 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
         if (id == R.id.action_settings) {
             internetStatus = server.internetStatus();
 
+//            ib.setVisibility(View.GONE);
+//            new LoadingIndicator(composeContainer).show();
+
             try {
                 AppUsersDB appUsersDB = AppUserRealm.getAppUser();
                 StringBuilder sb = new StringBuilder();
@@ -881,20 +886,22 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                 Globals.writeToMLOG("INFO", "USER_INFO", "Exception e: " + e);
             }
 
-            AlertDialogOneButton alertDialogMessage = new AlertDialogOneButton(this,
-                    "Вiдправити лог файл",
-                    "Надіслати файл з логом рoботы застосунку розробнику.",
-                    () -> {
-//                        ib.setVisibility(View.GONE); // Скрываем ImageButton
-//                        new LoadingIndicator(composeContainer).show();
+            new MessageDialogBuilder(this)
+                    .setTitle("Вiдправити лог файл")
+//                    .setMessage(Html.fromHtml("<font color='RED'>По даному замовнику КАТЕГОРИЧНО ЗАБОРОНЕНО додавати товари! <br><br>Відмовитися від додавання товарів?</font>"))
+                    .setMessage("Надіслати файл з логом рoботы застосунку розробнику.")
+//                    .setOnCancelAction(() -> Unit.INSTANCE)
+                    .setOnConfirmAction("Вiдправити",() -> {
                         if (internetStatus == 1)
                             sendEmail();
                         else {
                             alertErrorNoInternet();
                         }
                         return Unit.INSTANCE; // Для совместимости с Kotlin
-                    });
-            alertDialogMessage.show();
+                    })
+                    .setOnCancelAction(() -> null)
+                    .show();
+
 
 //
 //            DialogData dialog = new DialogData(this);
