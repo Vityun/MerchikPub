@@ -13,7 +13,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Global.UnlockCode;
@@ -148,11 +150,25 @@ public class OptionControlEKL<T> extends OptionControl {
                 //для 151140-Контроль ЭКЛ между исполнителем и КОНКРЕТНЫМ ПТТ (ИНДИВИДУАЛЬНЫЙ электронный контрольный лист) НЕ имеет значения в каком отделе ПТТ. Отдел НЕ важен, если ПТТ для подписания ИЭКЛ определен, а если НЕТ то все-таки нужно определить отдел
                 //ГрупТов.ДобавитьЗначение(ПТТ.Отдел); //если мы уже определились с ПТТ в этом режиме то и отдел получим из ПТТ ... клиент сам решил использовать ЭТОГО ПТТ независимо от отдела
             } else if (optionDB.getOptionControlId().equals("84006") || (nnkMode.equals(Options.NNKMode.BLOCK) && optionDB.getOptionId().equals("84006"))) {
-                tovarGroupClientSDB = SQL_DB.tovarGroupClientDao().getAllBy(wpDataDB.getClient_id(), addressSDB.tpId);  // Получаю ГруппыТоваров по Адресу и Сети!
+//                tovarGroupClientSDB = SQL_DB.tovarGroupClientDao().getAllBy(wpDataDB.getClient_id(), addressSDB.tpId);  // Получаю ГруппыТоваров по Адресу и Сети!
+//
+//                if (tovarGroupClientSDB == null || tovarGroupClientSDB.size() == 0){
+//                    tovarGroupClientSDB = SQL_DB.tovarGroupClientDao().getAllBy(wpDataDB.getClient_id(), 0);
+//                }
 
-                if (tovarGroupClientSDB == null || tovarGroupClientSDB.size() == 0){
-                    tovarGroupClientSDB = SQL_DB.tovarGroupClientDao().getAllBy(wpDataDB.getClient_id(), 0);
-                }
+                // 03.02.2025 изменил получение групп товаров, потому что были проблемы когда по некоторой сети получал только 1 товар
+                List<TovarGroupClientSDB> list1 = SQL_DB.tovarGroupClientDao().getAllBy(wpDataDB.getClient_id(), addressSDB.tpId);
+                List<TovarGroupClientSDB> list2 = SQL_DB.tovarGroupClientDao().getAllBy(wpDataDB.getClient_id(), 0);
+
+                Set<TovarGroupClientSDB> resultSet = new LinkedHashSet<>(list1);
+                resultSet.addAll(list2);
+
+                tovarGroupClientSDB = new ArrayList<>(resultSet);
+
+
+//                tovarGroupClientSDB.addAll(list1);
+//                tovarGroupClientSDB.addAll(list2);
+
 
                 if (tovarGroupClientSDB != null && tovarGroupClientSDB.size() > 0) {
                     List<Integer> ids = new ArrayList<>();
@@ -322,6 +338,8 @@ public class OptionControlEKL<T> extends OptionControl {
                     signal = true;
                 }
             }
+
+            Log.e("OptionControlEKL", "HERE TEST OptionControlEKL 8");
         }
 
         // "подводим итог"

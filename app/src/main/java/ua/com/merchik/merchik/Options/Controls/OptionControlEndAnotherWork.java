@@ -2,17 +2,23 @@ package ua.com.merchik.merchik.Options.Controls;
 
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Color;
+import android.text.Spannable;
 import android.text.SpannableString;
 import android.text.Spanned;
 import android.text.TextPaint;
 import android.text.style.ClickableSpan;
+import android.text.style.ForegroundColorSpan;
+import android.text.style.UnderlineSpan;
 import android.util.Log;
 import android.view.View;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 import io.realm.RealmResults;
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity;
@@ -106,11 +112,16 @@ public class OptionControlEndAnotherWork<T> extends OptionControl {
             if (item.getVisit_start_dt() > 0 && item.getVisit_end_dt() == 0) {
                 result.add(item);
 
+                SimpleDateFormat formatter = new SimpleDateFormat("dd.MM.yyyy", Locale.getDefault());
+                String formattedDate = formatter.format(item.getDt());
                 // Dialog massage
                 spannableStringBuilder
-                        .append("Вы еще не закончили (не указали время окончания) ПРЕДЫДУЩУЮ работу!")
-                        .append(": ")
-                        .append(createLinkedString(item.getAddr_txt() + item.getClient_txt(), item))
+                        .append("Вы еще не закончили (не указали время окончания) ПРЕДЫДУЩЕЙ работы!")
+                        .append("\n")
+                        .append(createLinkedString(
+                                "Перейдіть до цього візиту:\n" +
+                                        formattedDate + ", " + item.getAddr_txt() + ", " + item.getClient_txt() +
+                                " та натисніть копку 'Закінчення роботи' або введіть код розблокування", item))
                         .append("\n");
             }
         }
@@ -158,16 +169,16 @@ public class OptionControlEndAnotherWork<T> extends OptionControl {
         SpannableString res = new SpannableString(msg);
 
         try {
-            long otchetId;
-            int action = wpDataDB.getAction();
-            if (action == 1 || action == 94) {
-                otchetId = wpDataDB.getDoc_num_otchet_id();
-            } else {
-                otchetId = wpDataDB.getDoc_num_1c_id();
-            }
+//            long otchetId;
+//            int action = wpDataDB.getAction();
+//            if (action == 1 || action == 94) {
+//                otchetId = wpDataDB.getDoc_num_otchet_id();
+//            } else {
+//                otchetId = wpDataDB.getDoc_num_1c_id();
+//            }
 
-            WorkPlan workPlan = new WorkPlan();
-            WPDataObj wpDataObj = workPlan.getKPS(wpDataDB.getId());
+//            WorkPlan workPlan = new WorkPlan();
+//            WPDataObj wpDataObj = workPlan.getKPS(wpDataDB.getId());
 
 
             ClickableSpan clickableSpan = new ClickableSpan() {
@@ -188,6 +199,8 @@ public class OptionControlEndAnotherWork<T> extends OptionControl {
                 }
             };
             int count = msg.length();
+            res.setSpan(new ForegroundColorSpan(Color.BLUE), 0, count, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+            res.setSpan(new UnderlineSpan(), 0, count, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
             res.setSpan(clickableSpan, 0, count, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         } catch (Exception e) {
             Globals.writeToMLOG("ERROR", "OptionControlEndAnotherWork/createLinkedString/Exception", "Exception e: " + e);

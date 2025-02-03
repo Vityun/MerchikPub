@@ -43,6 +43,7 @@ public class OptionControlCheckDetailedReport<T> extends OptionControl {
     // document data
     private long dad2 = 0;
     private Date date;
+    private long startWorkTime = 0;
 
 
     public OptionControlCheckDetailedReport(Context context, T document, OptionsDB optionDB, OptionMassageType msgType, Options.NNKMode nnkMode, UnlockCodeResultListener unlockCodeResultListener) {
@@ -71,8 +72,10 @@ public class OptionControlCheckDetailedReport<T> extends OptionControl {
 
             dad2 = wp.getCode_dad2();
             date = wp.getDt();
-
-            time = Clock.getDatePeriodLong(date.getTime(), -4) / 1000;    // работает в миллисекундах, по этому перевёл в секунды
+// 03.02.2025 изменил на время начала работ
+            startWorkTime = wp.getVisit_start_dt();
+//            time = Clock.getDatePeriodLong(date.getTime(), -4) / 1000;    // работает в миллисекундах, по этому перевёл в секунды
+            time = Clock.getDatePeriodLong(startWorkTime, -4) / 1000;    // работает в миллисекундах, по этому перевёл в секунды
 
             try {
                 if (!optionDB.getAmountMin().equals("0")) {
@@ -104,7 +107,10 @@ public class OptionControlCheckDetailedReport<T> extends OptionControl {
             correctionPercentage = 0;
         }
 
-        if (reportPrepare.size() == 0) {
+        if (time < 0) {
+            stringBuilderMsg.append("Роботи по поточному кпс (клієнто/відвідуванню) ще не були початі. Почніть роботи, відредагуйте ДЗ (дет. звіт) та повторіть спробу.");
+            signal = true;
+        } else if (reportPrepare.size() == 0) {
             stringBuilderMsg.append("Товарів, по котрим треба перевірити виправлені ДЗ, не знайдено.");
             signal = true;
         } else if (colSKU == 0) {

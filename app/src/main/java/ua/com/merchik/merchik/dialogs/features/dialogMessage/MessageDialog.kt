@@ -44,6 +44,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.fromHtml
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
@@ -63,7 +64,6 @@ import java.time.LocalDate
 fun MessageDialog(
     title: String = "",
     message: String = "",
-    messageHtml: Spanned = Html.fromHtml(""),
     onDismiss: () -> Unit,
     okButtonName: String = "Ok",
     onConfirmAction: (() -> Unit)? = null, // Опциональный параметр для действия на кнопке "OK"
@@ -75,6 +75,8 @@ fun MessageDialog(
 //    val isCompleted by remember { derivedStateOf { viewModel.isCompleted } }
 
     val scrollState = rememberScrollState()
+    val styledAnnotatedString = AnnotatedString.fromHtml(htmlString = message)
+
 
     val composition by rememberLottieComposition(
         if (status == DialogStatus.ERROR) LottieCompositionSpec.RawRes(
@@ -163,19 +165,10 @@ fun MessageDialog(
                             progress = { progress },
 
                             )
-                    if (messageHtml.isNotEmpty())
                         Text(
                             modifier = Modifier
                                 .padding(bottom = 4.dp),
-                            text = spannedToAnnotatedString(messageHtml),
-                            style = MaterialTheme.typography.titleMedium,
-                            color = Color(0xCC1E201D),
-                            textAlign = TextAlign.Center
-                        ) else
-                        Text(
-                            modifier = Modifier
-                                .padding(bottom = 4.dp),
-                            text = message,
+                            text = styledAnnotatedString,
                             style = MaterialTheme.typography.titleMedium,
                             color = Color(0xCC1E201D),
                             textAlign = TextAlign.Center

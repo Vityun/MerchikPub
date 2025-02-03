@@ -105,7 +105,7 @@ public class DialogCreateAchievement {
             dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
             dialog.setContentView(R.layout.dialog_create_achievement);
             int width = (int) (context.getResources().getDisplayMetrics().widthPixels * 0.95);
-//            int height = (int) (context.getResources().getDisplayMetrics().heightPixels * 1);
+//            int height = (int) (context.getResources().getDisplayMetrics().heightPixels * 0.90);
 //            dialog.getWindow().setLayout(width, height);
 
 //            dialog.getWindow().setLayout(width, WindowManager.LayoutParams.MATCH_PARENT);

@@ -54,7 +54,7 @@ import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
 public class PhotoDownload {
 //    public final Globals globals = new Globals();
 
-    private final ExecutorService executorService = Executors.newFixedThreadPool(8);  // Максимум 4 потока
+    private final ExecutorService executorService = Executors.newFixedThreadPool(8);  // Максимум 8 потока
 
     /**
      * 09.09.2022
@@ -1006,6 +1006,8 @@ public class PhotoDownload {
      * Скачивание фото по ссылке.
      * <p>
      * Отправляю на сервер ссылку, в ответ фотографию, возвращаю дальше в приложение фото
+     * 30.01.2025
+     * Добавил executorService который ограничивает кол-во одновременных запросов до 8 штук
      */
 
     public void downloadPhoto(String photoUrl, ExchangeInterface.ExchangePhoto exchange) {

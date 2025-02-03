@@ -7,6 +7,7 @@ import android.util.Log;
 
 
 import java.util.Date;
+import java.util.Objects;
 
 import io.realm.RealmResults;
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity;
@@ -15,6 +16,7 @@ import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.Options.OptionControl;
 import ua.com.merchik.merchik.Options.Options;
 import ua.com.merchik.merchik.data.Database.Room.AddressSDB;
+import ua.com.merchik.merchik.data.Database.Room.CustomerSDB;
 import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
 import ua.com.merchik.merchik.data.Database.Room.UsersSDB;
 import ua.com.merchik.merchik.data.OptionMassageType;
@@ -36,6 +38,8 @@ public class OptionControlPhoto<T> extends OptionControl {
     private Long dad2;
     private AddressSDB addressSDB;
     private String clientName;
+    private String clientId;
+    private CustomerSDB client;
 
     public OptionControlPhoto(Context context, T document, OptionsDB optionDB, OptionMassageType msgType, Options.NNKMode nnkMode, UnlockCodeResultListener unlockCodeResultListener) {
         try {
@@ -59,7 +63,9 @@ public class OptionControlPhoto<T> extends OptionControl {
             this.addressSDB = SQL_DB.addressDao().getById(((WpDataDB) document).getAddr_id());
             this.wpDataDB = (WpDataDB) document;
             this.dad2 = wpDataDB.getCode_dad2();
-            this.clientName = SQL_DB.customerDao().getById(((WpDataDB) document).getClient_id()).nm;
+            this.client = SQL_DB.customerDao().getById(((WpDataDB) document).getClient_id());
+            this.clientName = client.nm;
+            this.clientId = client.id;
 
             usersSDB = SQL_DB.usersDao().getUserById(((WpDataDB) document).getUser_id());
 //            Date data = DetailedReportActivity.usersSDB.reportDate05; // Дата проведения 5й отчетности
@@ -70,6 +76,9 @@ public class OptionControlPhoto<T> extends OptionControl {
 
 
     private void executeOption() {
+
+
+
 
         String optionId;
         if (nnkMode.equals(Options.NNKMode.BLOCK)) {
@@ -185,6 +194,7 @@ public class OptionControlPhoto<T> extends OptionControl {
         }
 
 
+
         int adress = ((WpDataDB) document).getAddr_id();
 //        получаем данные из таблицы фото
         RealmResults<StackPhotoDB> stackPhotoDB =
@@ -206,7 +216,19 @@ public class OptionControlPhoto<T> extends OptionControl {
 //            unlockCodeResultListener.onUnlockCodeSuccess();
         }
 
-
+        /*
+        * 3.1. сперва получим данные о ДТ по текущей опции ... это нам нужно для того, чтобы исключить из выборки Сети/Адреса, если ДАННОЕ ДТ определено НЕ для всех мест работ. Логика такая: Если для данной опции ЕСТЬ запись в ДТ то, значит, что нам надо ИСКЛЮЧИТЬ из проверки ДРУГИЕ адреса/сети, а если в ДТ НЕТ записей об это опции, то проверяем ПО ВСЕМ адресам/сетям
+ТзнОСВ=ТзнДопТребований_SQL(,,Тзн.Клиент,,,,,,0,,,,,,,,,Опц,,,,,,,,); //=0-только НЕ удаленные, //внимание! фильтр по Адресу и/или Сети НЕ ПРИМЕНЯЕМ, для того, чтобы отличить случай, когда ОСВ нет, от случая, когда они установлены но для ДРУГОЙ Сети/Адреса
+//ПоказатьТЗ(ТзнОСВ,"ТзнОСВ 856394");
+Если ТзнОСВ.КоличествоСтрок()>0 Тогда
+Стр=0;
+Стр2=0;
+Если (ТзнОСВ.НайтиЗначение(Гру,Стр,"Гру")=0) и (ТзнОСВ.НайтиЗначение(Адр,Стр2,"Адр")=0) Тогда
+Продолжить; // 09.03.2023 ... Значит ОСВ по данной опции установлен НО, НЕ ДЛЯ ЭТОЙ Сети/Адреса ... значит проверять наличие фото не надо
+КонецЕсли;
+КонецЕсли;
+        *
+        * */
 
         // Исключения
         if (optionId.equals("141361") || optionId.equals("132971")) {
@@ -242,7 +264,9 @@ public class OptionControlPhoto<T> extends OptionControl {
         }
 
         //        исключение для Метро и Витмарк
-        if (optionId.equals("158609") && stackPhotoDB.size() < 3) {
+        if (optionId.equals("158609") && stackPhotoDB.size() < m) {
+            if (Objects.equals(clientId, "9382"))
+                signal = false;
             if (addressSDB.tpId == 320){
                 ImagesTypeListDB item = ImagesTypeListRealm.getByID(photoType);
                 stringBuilderMsg.append("Вы должны сделать: ").append("3").append(" фото с типом: ").append(item != null ? item.getNm() : typeNm).append(", а сделали: ").append(stackPhotoDB.size()).append(" - доделайте фотографии.");

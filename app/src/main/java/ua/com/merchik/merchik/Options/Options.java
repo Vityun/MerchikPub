@@ -1347,12 +1347,12 @@ public class Options {
                                 public <T> void onSuccess(T data) {
 //                                    dialogData.setTitle("Команда на проведення звіту. ");
                                     try {
-                                        Spanned spanned = Html.fromHtml((String) data);
+//                                        Spanned spanned = Html.fromHtml((String) data);
 
                                         new MessageDialogBuilder(unwrap(context))
                                                 .setTitle("Команда на проведення звіту.")
 //                                                .setStatus(DialogStatus.ERROR)
-                                                .setMessage(spanned)
+                                                .setMessage((String) data)
                                                 .setOnConfirmAction(() -> Unit.INSTANCE)
                                                 .show();
 //                                    String regex = "- ?[Oo]пц[иi]я";

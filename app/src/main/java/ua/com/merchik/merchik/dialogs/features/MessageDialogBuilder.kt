@@ -14,7 +14,7 @@ class MessageDialogBuilder(private val context: Activity) {
 
     private var title: String = ""
     private var message: String = ""
-    private var messageSpanned: Spanned = Html.fromHtml("");
+//    private var messageSpanned: Spanned = Html.fromHtml("");
     private var status: DialogStatus = DialogStatus.NORMAL
     private var okButtonName: String = "OK"
     private var onConfirmAction: (() -> Unit)? = null
@@ -26,7 +26,7 @@ class MessageDialogBuilder(private val context: Activity) {
 
     fun setTitle(title: String) = apply { this.title = title }
     fun setMessage(message: String) = apply { this.message = message }
-    fun setMessage(messageSpanned: Spanned) = apply { this.messageSpanned = messageSpanned }
+//    fun setMessage(messageSpanned: Spanned) = apply { this.messageSpanned = messageSpanned }
     fun setStatus(status: DialogStatus) = apply { this.status = status }
 
     fun setOnConfirmAction(actionConfirm: (() -> Unit)?) =
@@ -57,7 +57,6 @@ class MessageDialogBuilder(private val context: Activity) {
                     MessageDialog(
                         title = title,
                         message = message,
-                        messageHtml = messageSpanned,
                         onDismiss = {
                             isDialogVisible.value = false
                             onDialogDismissed()
