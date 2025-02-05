@@ -71,7 +71,7 @@ public class OptionControl<T> {
                     case DIALOG:
                         Log.e("OptionControl", "(dialog) Massage to Log: " + stringBuilderMsg);
 
-                        String optionTitle = "Опция: (" + optionDB.getOptionId() + ")\n" + optionDB.getOptionTxt();
+                        String optionTitle = "Опция: (" + optionDB.getOptionControlId() + ")\n" + optionDB.getOptionControlTxt();
 
                         if (stringBuilderMsg.toString().length() > 1) {
                             dialog.setTitle(optionTitle);

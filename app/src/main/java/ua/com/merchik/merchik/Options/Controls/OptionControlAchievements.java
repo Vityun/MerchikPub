@@ -2,6 +2,7 @@ package ua.com.merchik.merchik.Options.Controls;
 
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.os.Build;
 import android.util.Log;
@@ -34,7 +35,7 @@ import ua.com.merchik.merchik.database.realm.tables.TovarRealm;
 import ua.com.merchik.merchik.database.realm.tables.TradeMarkRealm;
 
 public class OptionControlAchievements<T> extends OptionControl {
-    public int OPTION_CONTROL_ACHIEVEMENTS_ID = 590;
+    public int OPTION_CONTROL_ACHIEVEMENTS_ID = 590; // 160209
 
     public boolean signal = true;
 
@@ -104,6 +105,7 @@ public class OptionControlAchievements<T> extends OptionControl {
         }
     }
 
+    @SuppressLint("SuspiciousIndentation")
     @RequiresApi(api = Build.VERSION_CODES.N)
     private void executeOption() {
         try {
@@ -115,8 +117,7 @@ public class OptionControlAchievements<T> extends OptionControl {
                 }
             }
 
-            List<String> spisTovOSV = new ArrayList<>();
-            List<String> spisTMOSV = new ArrayList<>();
+
 
 //            if (optionDB.getOptionId().equals("590") || optionDB.getOptionControlId().equals("590")) {
             // Получение Доп. Требований с дополнительными фильтрами.
@@ -129,13 +130,6 @@ public class OptionControlAchievements<T> extends OptionControl {
             if (wpDataDB.getClient_id().equals("9382") && controlId == 138520)
                 controlId = 160209;
 
-            List<AdditionalRequirementsDB> additionalRequirements = AdditionalRequirementsRealm.getDocumentAdditionalRequirements(document, true, controlId, null, null, null, null, null, null, dateChangeTo);
-            for (AdditionalRequirementsDB item : additionalRequirements) {
-                if (!item.getTovarId().equals("0")) spisTovOSV.add(item.getTovarId());
-                if (!item.getManufacturerId().equals("0")) spisTMOSV.add(item.getManufacturerId());
-            }
-            spisTovOSV.sort(null);  // Сортирует по возрастанию // аналог Collections.sort(spisTovOSV);
-//            }
 
             // 3.1. Получим данные о достижениях.
             // Сразу отсортировали (свежие должны быть сверху)
@@ -148,9 +142,21 @@ public class OptionControlAchievements<T> extends OptionControl {
             }
             List<VoteSDB> voteSDBList = SQL_DB.votesDao().getByIds(ids);
 
-            // 3.2. Не делал. Возможно вернусь. Пока добавляем, как по мне - бестолковые поля.
+            // 3.2.
+            // OCВ Не делал. Возможно вернусь. Пока добавляем, как по мне - бестолковые поля.
+            // 05.04.2025 получаем список товаров и ТМ ОСВ которые есть на ТТ
+            List<String> spisTovOSV = new ArrayList<>();
+            List<String> spisTMOSV = new ArrayList<>();
+            List<AdditionalRequirementsDB> additionalRequirements = AdditionalRequirementsRealm.getDocumentAdditionalRequirements(document, true, controlId, null, null, null, null, null, null, dateChangeTo);
+            for (AdditionalRequirementsDB item : additionalRequirements) {
+                if (!item.getTovarId().equals("0")) spisTovOSV.add(item.getTovarId());
+                if (!item.getManufacturerId().equals("0")) spisTMOSV.add(item.getManufacturerId());
+            }
+            spisTovOSV.sort(null);  // Сортирует по возрастанию // аналог Collections.sort(spisTovOSV);
+            spisTMOSV.sort(null);
 
-            // 3.3. Определим практиканта.
+
+            // 3.3. (3.4) Определим практиканта.
             String trainee = ""; // практикант
             if (usersSDBDocument.reportDate20 == null || dateDocument < usersSDBDocument.reportDate20.getTime() / 1000) {
                 traineeSignal = 1;
@@ -160,7 +166,7 @@ public class OptionControlAchievements<T> extends OptionControl {
                 trainee = "Исполнитель ещё НЕ провёл своего 40-го отчёта. Наличие Достижений не проверяем!";
             }
 
-            // 3.4.
+            // 3.4. (3.5) Расчт результата
             if (achievementsSDBList == null || achievementsSDBList.size() == 0) {
                 sumOptionError = 1;
                 optionMsg.append("Достижение по клиенту ").append(customerSDBDocument.nm).append(" не выполнено. ").append(trainee);
@@ -189,11 +195,14 @@ public class OptionControlAchievements<T> extends OptionControl {
                         continue;
                     } else
 
+                        if (item.tovar_id == null)
+                            item.tovar_id = 0;
+                        if (item.manufacturer == null)
+                            item.manufacturer = 0;
                         //09.09.2024 якщо по даному клієнту є товари (або ТМ) по котрим встановлени признак ОсобливаУвага (ОСВ) то перевіряємо виготовлення Досягнень конкретно по ДАНИМ Товарам/ТМ
                         if ((!spisTovOSV.isEmpty() || !spisTMOSV.isEmpty()) &&
                                 (!spisTovOSV.contains(item.tovar_id.toString())) &&
                                 (!spisTMOSV.contains(item.manufacturer.toString()))) {
-
                             List<TovarDB> spisTovarDBOSV = TovarRealm.getByIds(spisTovOSV.toArray(new String[spisTovOSV.size()]));
                             String spisTovarName = "";
                             for (TovarDB tovar : spisTovarDBOSV) {
@@ -208,7 +217,8 @@ public class OptionControlAchievements<T> extends OptionControl {
 
                             item.error = 1;
                             item.note = new StringBuilder()
-                                    .append("Клієнт вимагає створення Досягнення по ")
+                                    .append("")
+                                    .append("Клієнт вимагає створення Досягнення по")
                                     .append(!spisTovarDBOSV.isEmpty() ? ("Товару: " + spisTovarName) : " ")
                                     .append(!spisTMOSV.isEmpty() ? ("ТМ: " + spisTMName) : " ");
                         } else if ((optionDB.getOptionId().equals("160209") || optionDB.getOptionControlId().equals("160209"))) {
@@ -288,7 +298,9 @@ public class OptionControlAchievements<T> extends OptionControl {
 
             } else if ((optionDB.getOptionId().equals("160209") || optionDB.getOptionControlId().equals("160209")) && achievementsSDBList.size() > 0 && sumError == achievementsSDBList.size()) {
                 Log.e("!","_");
-                stringBuilderMsg.append(resultAchievements.stream()
+                period.append(" є ").append(achievementsSDBList.size()).append(" досягнень, але: ");
+                stringBuilderMsg.append(period)
+                        .append(resultAchievements.stream()
                         .filter(item -> item.error == 1)
                         .map(item -> item.note)
                         .findFirst()

@@ -42,6 +42,7 @@ import io.reactivex.rxjava3.schedulers.Schedulers;
 import ua.com.merchik.merchik.Filter.MyFilter;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.R;
+import ua.com.merchik.merchik.ServerExchange.ErrorData;
 import ua.com.merchik.merchik.ServerExchange.Exchange;
 import ua.com.merchik.merchik.ServerExchange.ExchangeInterface;
 import ua.com.merchik.merchik.ServerExchange.PhotoDownload;
@@ -429,9 +430,11 @@ public class AdapterUtil extends RecyclerView.Adapter<RecyclerView.ViewHolder> i
                             }
 
                             @Override
-                            public void onFailure(String error_type, String error) {
+                            public void onFailure(ErrorData errorData) {
 
                             }
+
+
                         });
                     }
 

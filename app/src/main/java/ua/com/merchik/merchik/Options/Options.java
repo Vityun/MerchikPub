@@ -679,7 +679,8 @@ public class Options {
     public <T> OptionMassageType NNK(View view, Context context, T dataDB, OptionsDB option, List<OptionsDB> optionList, OptionMassageType type, NNKMode mode, Clicks.clickVoid click) {
         OptionMassageType result = new OptionMassageType();
         try {
-            option.setIsSignal("0");
+            if (!Objects.equals(option.getOptionControlId(), "160209"))
+                option.setIsSignal("0");
 
             List<OptionsDB> testDad2 = RealmManager.INSTANCE.copyFromRealm(OptionsRealm.getOptionsByDAD2(option.getCodeDad2()));
 
@@ -1326,15 +1327,20 @@ public class Options {
                         List<StackPhotoDB> res = RealmManager.INSTANCE.copyFromRealm(RealmManager.getStackPhotoPhotoToUpload());
                         if (!res.isEmpty()) {
                             new MessageDialogBuilder(unwrap(context))
-                                    .setTitle("НЕ ОБ'ЄКТ! Заголовок")
-                                    .setStatus(DialogStatus.ERROR)
-                                    .setMessage("НЕ ОБ'ЄКТ! Есть не выгруженные фотографии, нажать на кнопку СИНХРОНИЗАЦИЯ, подождать минуту, если плохая связь - найти место с лучшим прийомом и повторить")
+                                    .setTitle("## Данные не выгружены на сервер")
+                                    .setStatus(DialogStatus.ALERT)
+                                    .setMessage("## " +
+                                            "Внимание! Перед проведением документа, рекомендуем выполнить процедуру выгрузки Фото отчетов (" + res.size() + " шт.) на Сервер. \n" +
+                                            "Пока Вы не выполните эту процедуру, сервер не сможет проверить и провести Ваш отчет.\n" +
+                                            "Для того, чтобы выполнить обмен данными с Сервером, нажмите кнопку \"Синхронизация\" на текущей форме, или воспользуйтесь стандартным пунктом в меню.\n" +
+                                            "Если связь плохая, найдите место с лучшим приёмом и повторите попытку." +
+                                            "")
                                     .setOnCancelAction(() -> Unit.INSTANCE)
-                                    .setOnConfirmAction("синхронизация", () -> {
-                                        new PhotoReports(context).uploadPhotoReports(PhotoReports.UploadType.AUTO);
-                                        new TablesLoadingUnloading().uploadReportPrepareToServer();
-                                        exchange.startExchange();
-                                        return Unit.INSTANCE;
+                                    .setOnConfirmAction("Cинхронизация", () -> {
+                                                new PhotoReports(context).uploadPhotoReports(PhotoReports.UploadType.AUTO);
+                                                new TablesLoadingUnloading().uploadReportPrepareToServer();
+                                                exchange.startExchange();
+                                                return Unit.INSTANCE;
                                             }
                                     )
                                     .show();
@@ -1379,7 +1385,7 @@ public class Options {
                                     Globals.writeToMLOG("ERROR", "Exchange.conductingOnServerWpData", "error: " + error);
                                     new MessageDialogBuilder(unwrap(context))
                                             .setTitle("Проведення звіту...")
-                                                .setStatus(DialogStatus.ERROR)
+                                            .setStatus(DialogStatus.ERROR)
                                             .setMessage("Зараз передати команду на проведення звіту на сервер не вдалося. Але ця команда збережена на вашому пристрої та буде передана на сервер під час наступного обміну данними.")
                                             .setOnConfirmAction(() -> Unit.INSTANCE)
                                             .show();

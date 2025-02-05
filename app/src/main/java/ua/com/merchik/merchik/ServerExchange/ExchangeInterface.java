@@ -72,10 +72,11 @@ public interface ExchangeInterface {
     interface ExchangeResponseInterfaceSingle {
         // Отработка успешного результата
         <T> void onSuccess(T data);
-
         // Отработка ошибки
         // 30.01.25 добавил новый тип используемый в ЭКЛ
-        void onFailure(String error_type, String error);
+        void onFailure(ErrorData errorData);
+
+
 //error_send_send_forbidden - Вы не можете отправить код самому себе
 //error_recipient_details_unavailable - Не удалось получить информацию о получателе, пожалуйста, повторите отправку сообщения через 10 минут
 //error_messenger_not_registered - Внимание! Получатель сообщения (ПТТ) ещё не подключён к нашему боту. Для того, чтобы он подключился, нажмите кнопку OK. На телефон ПТТ будет отправлена SMS с ссылкой, перейдя по которой он автоматичеки подключится к нашему боту и Вы сможете отправлять сообщения ему через мессенджер.

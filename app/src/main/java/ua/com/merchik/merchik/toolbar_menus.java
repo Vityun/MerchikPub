@@ -888,6 +888,7 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
 
             new MessageDialogBuilder(this)
                     .setTitle("Вiдправити лог файл")
+                    .setStatus(DialogStatus.ALERT)
 //                    .setMessage("<font color='RED'>По даному замовнику КАТЕГОРИЧНО ЗАБОРОНЕНО додавати товари! <br><br>Відмовитися від додавання товарів?</font>")
                     .setMessage("Надіслати файл з логом рoботы застосунку розробнику.")
 //                    .setOnCancelAction(() -> Unit.INSTANCE)

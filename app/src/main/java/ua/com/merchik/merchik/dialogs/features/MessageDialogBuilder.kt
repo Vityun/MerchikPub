@@ -13,8 +13,8 @@ import ua.com.merchik.merchik.dialogs.features.dialogMessage.MessageDialog
 class MessageDialogBuilder(private val context: Activity) {
 
     private var title: String = ""
+    private var subTitle: String = ""
     private var message: String = ""
-//    private var messageSpanned: Spanned = Html.fromHtml("");
     private var status: DialogStatus = DialogStatus.NORMAL
     private var okButtonName: String = "OK"
     private var onConfirmAction: (() -> Unit)? = null
@@ -25,6 +25,7 @@ class MessageDialogBuilder(private val context: Activity) {
 
 
     fun setTitle(title: String) = apply { this.title = title }
+    fun setSubTitle(subTitle: String) = apply { this.subTitle = subTitle }
     fun setMessage(message: String) = apply { this.message = message }
 //    fun setMessage(messageSpanned: Spanned) = apply { this.messageSpanned = messageSpanned }
     fun setStatus(status: DialogStatus) = apply { this.status = status }
@@ -56,6 +57,7 @@ class MessageDialogBuilder(private val context: Activity) {
                 if (isDialogVisible.value) {
                     MessageDialog(
                         title = title,
+                        subTitle = subTitle,
                         message = message,
                         onDismiss = {
                             isDialogVisible.value = false

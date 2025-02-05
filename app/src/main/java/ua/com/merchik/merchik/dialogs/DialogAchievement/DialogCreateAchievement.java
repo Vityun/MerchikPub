@@ -8,6 +8,7 @@ import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 import android.app.Activity;
 import android.app.Dialog;
 import android.content.Context;
+import android.content.ContextWrapper;
 import android.content.Intent;
 import android.graphics.Color;
 import android.net.Uri;
@@ -29,6 +30,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 
 import com.google.gson.Gson;
@@ -36,6 +38,7 @@ import com.google.gson.Gson;
 import org.json.JSONObject;
 
 import java.util.Collections;
+import java.util.Objects;
 
 import ua.com.merchik.merchik.Activities.Features.FeaturesActivity;
 import ua.com.merchik.merchik.Globals;
@@ -220,7 +223,7 @@ public class DialogCreateAchievement {
                 achievementsSDB.adresaNm = addressTxt;
                 achievementsSDB.dvi = 1;
                 achievementsSDB.error = 0;
-                achievementsSDB.tovar_id = AchievementDataHolder.Companion.instance().getTovarId();
+                achievementsSDB.tovar_id = Objects.requireNonNullElse(AchievementDataHolder.Companion.instance().getTovarId(), 0);;
                 achievementsSDB.currentVisit = 0;
                 achievementsSDB.score = "0";
                 achievementsSDB.clientId = clientId;
@@ -276,9 +279,9 @@ public class DialogCreateAchievement {
 
                 SQL_DB.achievementsDao().insertAll(Collections.singletonList(achievementsSDB));
                 Toast.makeText(v.getContext(), "Створено нове досягнення", Toast.LENGTH_LONG).show();
-                dialog.dismiss();
+                dismiss();
 
-                detailedReportOptionsFrag.recycleViewDRAdapter.notifyDataSetChanged();
+//                detailedReportOptionsFrag.recycleViewDRAdapter.notifyDataSetChanged();
             } catch (Exception e) {
                 Globals.writeToMLOG("ERROR", "DialogAchievement/buttonSave", "Exception e: " + e);
             }
@@ -297,6 +300,13 @@ public class DialogCreateAchievement {
     }
 
     public void dismiss() {
+        /* 05.02.2025
+         TODO это хреновый костыль довести до ума
+         */
+        Log.e("--------------","+++++++");
+        Intent intent = new Intent(context, FeaturesActivity.class);
+        ActivityCompat.startActivityForResult((Activity) context, intent, NEED_UPDATE_UI_REQUEST, null);
+
         if (dialog != null) dialog.dismiss();
     }
 
@@ -798,4 +808,13 @@ public class DialogCreateAchievement {
 
         return spannableString;
     }
+
+    private Activity unwrap(Context context) {
+        while (!(context instanceof Activity) && context instanceof ContextWrapper) {
+            context = ((ContextWrapper) context).getBaseContext();
+        }
+        assert context instanceof Activity;
+        return (Activity) context;
+    }
+
 }

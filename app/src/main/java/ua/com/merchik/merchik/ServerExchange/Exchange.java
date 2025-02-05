@@ -2579,7 +2579,7 @@ public class Exchange {
             @Override
             public void onFailure(Call<JsonObject> call, Throwable t) {
                 Log.e("chatMarkRead", "Throwable t: " + t);
-                exchange.onFailure("",t.toString());
+                exchange.onFailure(new ErrorData(t.toString()));
             }
         });
     }

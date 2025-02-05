@@ -57,6 +57,8 @@ import retrofit2.Response;
 import ua.com.merchik.merchik.Activities.Features.FeaturesActivity;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.R;
+import ua.com.merchik.merchik.ServerExchange.ErrorData;
+import ua.com.merchik.merchik.ServerExchange.ErrorParams;
 import ua.com.merchik.merchik.ServerExchange.ExchangeInterface;
 import ua.com.merchik.merchik.ViewHolders.AutoTextUsersViewHolder;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
@@ -332,12 +334,13 @@ public class DialogEKL {
 
     private void showData() {
         try {
+            EKLDataHolder.Companion.instance().init();
+
             setAddSotr();   // Установка иконочки добавления/редактирования сотрудника
 
             Log.e("##############", "getTheme_grp: " + wp.getTheme_grp());
             Log.e("##############", "getDoc_num_grp: " + wp.getDoc_num_grp());
 
-            EKLDataHolder.Companion.instance().init();
 
             int id = wp.getAddr_id();
 //            List<UserSDBJoin> data = SQL_DB.usersDao().getAllUsersLJoinTovGrps(id);
@@ -378,6 +381,8 @@ public class DialogEKL {
                     allUsersLJoinTovGrps
             );
 //            sotr.setDropDownHeight(9 * sotr.getLineHeight());
+            sotr.setText(underLineText("Виберіть ТПП (Представника Торгової точки)", Color.GRAY));
+
 
             adapterUser.setAdditionalInformation(AutoTextUsersViewHolder.AutoTextUserEnum.DEPARTMENT);
 
@@ -411,6 +416,7 @@ public class DialogEKL {
                                 "Виберіть ТПП (Представника Торгової точки)" : EKLDataHolder.Companion.instance().getUsersPTTName(), Color.BLACK));
                         int targetId = EKLDataHolder.Companion.instance().getUsersPTTid(); // Искомый ID
                         Log.e("onUpdateUI", "targetId: " + targetId);
+                        Log.e("onUpdateUI", "targetId: " + sotr.getText());
 
                         UserSDBJoin res = null;
 
@@ -446,14 +452,10 @@ public class DialogEKL {
                 }
             };
 
-            sotr.setText(underLineText(EKLDataHolder.Companion.instance().getUsersPTTName() == null ?
-                    "Виберіть ТПП (Представника Торгової точки)" : EKLDataHolder.Companion.instance().getUsersPTTName(), Color.GRAY));
-
-//            if (additionalRequirementsDB != null) {
-//                UsersSDB user = SQL_DB.usersDao().getUserById(Integer.parseInt(additionalRequirementsDB.userId));
-//                sotr.setText("" + user.fio);
-//            } else {
-            if (Globals.userEKLId != null && Globals.userEKLId != 0) {
+            if (EKLDataHolder.Companion.instance().getUsersPTTName() == null)
+                sotr.setText(underLineText(
+                        "Виберіть ТПП (Представника Торгової точки)", Color.GRAY));
+            else if (Globals.userEKLId != null && Globals.userEKLId != 0) {
                 for (UserSDBJoin item : allUsersLJoinTovGrps) {
                     if (item.id.equals(Globals.userEKLId)) {
 
@@ -590,17 +592,22 @@ public class DialogEKL {
                             }
                         } catch (Exception e) {
                             progress.onCanceled();
-                            Log.e("EKLRequests", "Exception e: " + e);
-                            e.printStackTrace();
+                            Log.e("EKLRequests", "Exception e: " + e.getMessage());
+                            new MessageDialogBuilder(unwrap(context))
+                                    .setTitle("Виникла помилка при отриманні переліку ПТТ")
+                                    .setStatus(DialogStatus.ERROR)
+                                    .setMessage(e.getMessage() != null ? e.getMessage() : "Помилка не визначена")
+                                    .setOnCancelAction(() -> Unit.INSTANCE
+                                    )
+                                    .show();
                         }
                     }
 
                     @Override
                     public void onFailure(String error) {
                         Globals.writeToMLOG("INFO", "getPTTByAddress/RES/onFailure", "String error: " + error);
-                        MessageDialogBuilder builder = new MessageDialogBuilder(unwrap(context));
-
-                        builder.setTitle("Виникла помилка при отриманні переліку ПТТ")
+                        new MessageDialogBuilder(unwrap(context))
+                                .setTitle("Виникла помилка при отриманні переліку ПТТ")
                                 .setStatus(DialogStatus.ERROR)
                                 .setMessage(error)
                                 .setOnCancelAction(() -> Unit.INSTANCE
@@ -731,11 +738,21 @@ public class DialogEKL {
                     }
 
                     @Override
-                    public void onFailure(String error_type, String error) {
-                        Globals.writeToMLOG("FAIL", "DialogEKL.sendEKL/onFailure", "t: " + error);
-                        Log.e("DialogEKL", "sendEKL/onFailure: " + error);
-                        Toast.makeText(context, "Код проверен. Запрос прошел с ошибкой: " + error, Toast.LENGTH_LONG).show();
+                    public void onFailure(ErrorData errorData) {
+                        String subTitle = "";
+                        if (errorData.getErrorMessage() != null && !errorData.getErrorMessage().isEmpty())
+                            subTitle = "Відповідь від сервера";
+                        new MessageDialogBuilder(unwrap(context))
+                                .setTitle(errorData.getErrorParams().getTitle() != null ?
+                                        errorData.getErrorParams().getTitle() : "Виникла помилка")
+                                .setSubTitle(subTitle)
+                                .setStatus(DialogStatus.ERROR)
+                                .setMessage(errorData.getErrorMessage() != null ? errorData.getErrorMessage() : "Помилка не визначена")
+                                .setOnCancelAction(() -> Unit.INSTANCE
+                                )
+                                .show();
                     }
+
 
                 }, Globals.AppWorkMode.ONLINE, false);
 
@@ -834,26 +851,38 @@ public class DialogEKL {
                 }
 
                 @Override
-                public void onFailure(String error_type, String error) {
-                    if (error_type.equals("error_messenger_not_registered")) {
+                public void onFailure(ErrorData errorData) {
+                    String subTitle = "";
+                    if (errorData.getErrorMessage() != null && !errorData.getErrorMessage().isEmpty())
+                        subTitle = "Відповідь від сервера";
+
+                    if (errorData.getErrorType().equals("error_messenger_not_registered")) {
                         new MessageDialogBuilder(unwrap(context))
-                                .setTitle("Внимание")
+                                .setTitle(errorData.getErrorParams().getTitle() != null ?
+                                        errorData.getErrorParams().getTitle() : "УВАГА!")
+                                .setSubTitle(subTitle)
                                 .setStatus(DialogStatus.ERROR)
-                                .setMessage(error)
+                                .setMessage(errorData.getErrorMessage())
                                 .setOnConfirmAction(() -> {
                                     sendRegistrationInTelegram(telType);
+                                    Toast.makeText(context,"СМС з посиланням відправлений представнику ПТТ, у разі потреби допоможіть йому завершити налаштування",Toast.LENGTH_LONG).show();
                                     return Unit.INSTANCE;
                                 })
                                 .setOnCancelAction(() -> Unit.INSTANCE)
                                 .show();
                     } else
+
                         new MessageDialogBuilder(unwrap(context))
-                                .setTitle("Внимание")
+                                .setTitle(errorData.getErrorParams().getTitle() != null ?
+                                        errorData.getErrorParams().getTitle() : "Виникла помилка")
+                                .setSubTitle(subTitle)
                                 .setStatus(DialogStatus.ERROR)
-                                .setMessage(error)
-                                .setOnConfirmAction(() -> Unit.INSTANCE)
+                                .setMessage(errorData.getErrorMessage() != null ? errorData.getErrorMessage() : "Помилка не визначена")
+                                .setOnCancelAction(() -> Unit.INSTANCE
+                                )
                                 .show();
                 }
+
 
 //            @Override
 //            public void onFailure(String error) {
@@ -946,6 +975,7 @@ public class DialogEKL {
                 .show();
     }
 
+
     /**
      * 06.06.23.
      * Функционал который отправляет SMS Сообщение ПТТшнику на телефон.
@@ -1007,18 +1037,24 @@ public class DialogEKL {
                             }
 
                             @Override
-                            public void onFailure(String error_type, String error) {
-                                Globals.writeToMLOG("FAIL", "DialogEKL.sendStartEKL/onFailure", "t: " + error);
-                                Log.e("DialogEKL", "sendStartEKL/onFailure: " + error);
-                                Toast.makeText(context, "При отправке кода ЭКЛ возникла ошибка, повторите попытку позже или обратитесь к Вашему руководителю. Ошибка: " + error, Toast.LENGTH_LONG).show();
+                            public void onFailure(ErrorData errorData) {
+                                Globals.writeToMLOG("FAIL", "DialogEKL.sendStartEKL/onFailure", "t: " + errorData.getErrorMessage());
+                                Log.e("DialogEKL", "sendStartEKL/onFailure: " + errorData.getErrorMessage());
+//                                Toast.makeText(context, "При отправке кода ЭКЛ возникла ошибка, повторите попытку позже или обратитесь к Вашему руководителю. Ошибка: " + error, Toast.LENGTH_LONG).show();
+                                String subTitle = "";
+                                if (errorData.getErrorMessage() != null && !errorData.getErrorMessage().isEmpty())
+                                    subTitle = "Відповідь від сервера";
+                                new MessageDialogBuilder(unwrap(context))
+                                        .setTitle(errorData.getErrorParams().getTitle() != null ?
+                                                errorData.getErrorParams().getTitle() : "При отправке кода ЭКЛ возникла ошибка, повторите попытку позже или обратитесь к Вашему руководителю.")
+                                        .setSubTitle(subTitle)
+                                        .setStatus(DialogStatus.ERROR)
+                                        .setMessage(errorData.getErrorMessage() != null ? errorData.getErrorMessage() : "Помилка не визначена")
+                                        .setOnCancelAction(() -> Unit.INSTANCE
+                                        )
+                                        .show();
                             }
 
-//                            @Override
-//                            public void onFailure(String error) {
-//                                Globals.writeToMLOG("FAIL", "DialogEKL.sendStartEKL/onFailure", "t: " + error);
-//                                Log.e("DialogEKL", "sendStartEKL/onFailure: " + error);
-//                                Toast.makeText(context, "При отправке кода ЭКЛ возникла ошибка, повторите попытку позже или обратитесь к Вашему руководителю. Ошибка: " + error, Toast.LENGTH_LONG).show();
-//                            }
                         });
                     } else {
 
@@ -1029,11 +1065,6 @@ public class DialogEKL {
                                 .setOnConfirmAction(() -> Unit.INSTANCE)
                                 .show();
 
-//                        DialogData dialogData = new DialogData(context);
-//                        dialogData.setTitle("Помилка!");
-//                        dialogData.setText("Обнаружена проблема с сетью, проверьте интернет соединение и повторите попытку позже.");
-//                        dialogData.setClose(dialogData::dismiss);
-//                        dialogData.show();
                         Toast.makeText(context, "Обнаружена проблема с сетью, проверьте интернет соединение и повторите попытку позже.", Toast.LENGTH_SHORT).show();
                         Globals.writeToMLOG("RESP", "DialogEKL.sendStartEKL/", "Обнаружена проблема с сетью, проверьте интернет соединение и повторите попытку позже.");
                     }
@@ -1156,20 +1187,21 @@ public class DialogEKL {
             public void onResponse(Call<EKLRespData> call, Response<EKLRespData> response) {
                 if (response.body() != null) {
                     if (response.body().state) {
+                        Log.e("Result", "response: " + response.toString());
                         exchange.onSuccess(response.body());
                     } else {
                         String errorType = response.body().error_type != null ? response.body().error_type : "unknown_error";
                         String error = response.body().error != null ? response.body().error : "Не удалось отправить сообщение. Попробуйте повторить отправку через 5 минут.";
-                        exchange.onFailure(errorType, error);
+                        exchange.onFailure(new ErrorData(errorType, error));
                     }
                 } else {
-                    exchange.onFailure("error_send_failed", "Не удалось отправить сообщение. Попробуйте повторить отправку через 5 минут.");
+                    exchange.onFailure(new ErrorData("error_send_failed", "Не удалось отправить сообщение. Попробуйте повторить отправку через 5 минут."));
                 }
             }
 
             @Override
             public void onFailure(Call<EKLRespData> call, Throwable t) {
-                exchange.onFailure("unknown_error", t.toString());
+                exchange.onFailure(new ErrorData("unknown_error", t.toString()));
             }
         });
     }
@@ -1205,15 +1237,17 @@ public class DialogEKL {
                         if (response.body().state) {
                             exchange.onSuccess(response.body());
                         } else {
-                            if (response.body().additional_action != null && response.body().additional_action.equals("register_messenger")) {
-                                exchange.onFailure("register_messenger", "");
-                            }
+//                            if (response.body().additional_action != null && response.body().additional_action.equals("register_messenger")) {
+//                                exchange.onFailure("register_messenger", "");
+//                            }
                             String errorType = response.body().error_type != null ? response.body().error_type : "unknown_error";
                             String error = response.body().error != null ? response.body().error : "Не удалось отправить сообщение. Попробуйте повторить отправку через 5 минут.";
-                            exchange.onFailure(errorType, error);
+                            ErrorParams errorParams = response.body().errorParams.toErrorParams();
+
+                            exchange.onFailure(new ErrorData(errorType, error, errorParams));
                         }
                     } else {
-                        exchange.onFailure("error_send_failed", "Не удалось отправить сообщение. Попробуйте повторить отправку через 5 минут.");
+                        exchange.onFailure(new ErrorData("error_send_failed", "Не удалось отправить сообщение. Попробуйте повторить отправку через 5 минут."));
                     }
                 } catch (Exception e) {
                     Globals.writeToMLOG("INFO", "responseSendPTTEKLCode/TELEGRAM", "Exception e: " + e);
@@ -1222,7 +1256,7 @@ public class DialogEKL {
 
             @Override
             public void onFailure(Call<EKLRespData> call, Throwable t) {
-                exchange.onFailure("unknown_error", t.toString());
+                exchange.onFailure(new ErrorData("unknown_error", t.toString()));
             }
         });
     }
@@ -1331,16 +1365,17 @@ public class DialogEKL {
 
                         String errorType = response.body().error_type != null ? response.body().error_type : "unknown_error";
                         String error = response.body().error != null ? response.body().error : "Не удалось отправить сообщение. Попробуйте повторить отправку через 5 минут.";
-                        exchange.onFailure(errorType, error);
+
+                        exchange.onFailure(new ErrorData(errorType, error));
                     }
                 } else {
-                    exchange.onFailure("error_send_failed", "Не удалось отправить сообщение. Попробуйте повторить отправку через 5 минут.");
+                    exchange.onFailure(new ErrorData("error_send_failed", "Не удалось отправить сообщение. Попробуйте повторить отправку через 5 минут."));
                 }
             }
 
             @Override
             public void onFailure(Call<EKLCheckData> call, Throwable t) {
-                exchange.onFailure("unknown_error", t.toString());
+                exchange.onFailure(new ErrorData("unknown_error", t.toString()));
             }
         });
     }
@@ -1367,16 +1402,16 @@ public class DialogEKL {
                     } else {
                         String errorType = response.body().error_type != null ? response.body().error_type : "unknown_error";
                         String error = response.body().error != null ? response.body().error : "Не удалось отправить сообщение. Попробуйте повторить отправку через 5 минут.";
-                        exchange.onFailure(errorType, error);
+                        exchange.onFailure(new ErrorData(errorType, error));
                     }
                 } else {
-                    exchange.onFailure("error_send_failed", "Не удалось отправить сообщение. Попробуйте повторить отправку через 5 минут.");
+                    exchange.onFailure(new ErrorData("error_send_failed", "Не удалось отправить сообщение. Попробуйте повторить отправку через 5 минут."));
                 }
             }
 
             @Override
             public void onFailure(Call<EKLCheckData> call, Throwable t) {
-                exchange.onFailure("unknown_error", t.toString());
+                exchange.onFailure(new ErrorData("unknown_error", t.toString()));
             }
         });
     }
@@ -1676,6 +1711,25 @@ public class DialogEKL {
         @SerializedName("error_type")
         @Expose
         public String error_type;
+
+        // 04.02.2025 добавляем новый объект для error_params
+        @SerializedName("error_params")
+        @Expose
+        public ErrorParamsWrapper errorParams;
+
+        public static class ErrorParamsWrapper {
+            @SerializedName("title")
+            @Expose
+            public String title;
+
+            @SerializedName("icon")
+            @Expose
+            public String icon;
+
+            public ErrorParams toErrorParams() {
+                return new ErrorParams(title, DialogStatus.Companion.fromString(icon));
+            }
+        }
     }
 
     public class EKLCheckData {

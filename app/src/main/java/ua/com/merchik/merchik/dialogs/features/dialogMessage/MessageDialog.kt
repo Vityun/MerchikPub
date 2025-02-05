@@ -36,6 +36,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.colorResource
@@ -44,6 +45,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.fromHtml
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -63,6 +65,7 @@ import java.time.LocalDate
 @Composable
 fun MessageDialog(
     title: String = "",
+    subTitle: String = "",
     message: String = "",
     onDismiss: () -> Unit,
     okButtonName: String = "Ok",
@@ -151,23 +154,36 @@ fun MessageDialog(
                     if (title.isNotEmpty())
                         Text(
                             text = title,
-                            style = MaterialTheme.typography.titleLarge,
+                            style = MaterialTheme.typography.titleMedium,
                             modifier = Modifier
                                 .padding(horizontal = 16.dp, vertical = 8.dp)
+                                .scale(1.1f),
+                            textAlign = TextAlign.Center,
+                            fontWeight = FontWeight.Bold
                         )
 
-                    if (status != DialogStatus.NORMAL)
+                    if (status != DialogStatus.EMPTY && status != DialogStatus.NORMAL)
                         LottieAnimation(
                             modifier = Modifier
                                 .size(68.dp)
-                                .padding(bottom = 8.dp),
+                                .padding(bottom = 4.dp),
                             composition = composition,
                             progress = { progress },
-
                             )
+                    if (subTitle.isNotEmpty())
                         Text(
                             modifier = Modifier
-                                .padding(bottom = 4.dp),
+                                .padding(horizontal = 16.dp, vertical = 4.dp)
+                                .scale(1.1f),
+                            text = subTitle,
+                            style = MaterialTheme.typography.titleMedium,
+                            color = Color.Gray,
+                            textAlign = TextAlign.Center
+                        )
+
+                        Text(
+                            modifier = Modifier
+                                .padding(vertical = 4.dp),
                             text = styledAnnotatedString,
                             style = MaterialTheme.typography.titleMedium,
                             color = Color(0xCC1E201D),
@@ -196,7 +212,7 @@ fun MessageDialog(
                                         )
                                     ),
                                     modifier = Modifier
-                                        .padding(horizontal = 5.dp)
+                                        .padding(horizontal = 2.dp)
                                         .weight(1f),
                                 ) {
                                     Text(cancelButtonName)
@@ -206,7 +222,7 @@ fun MessageDialog(
                                 Spacer(
                                     modifier = Modifier
                                         .weight(1f)
-                                        .padding(10.dp)
+                                        .padding(16.dp)
                                 )
                             }
 
@@ -224,7 +240,7 @@ fun MessageDialog(
                                         )
                                     ),
                                     modifier = Modifier
-                                        .padding(horizontal = 5.dp)
+                                        .padding(horizontal = 2.dp)
                                         .weight(1f)
                                 ) {
                                     Text(okButtonName)
@@ -234,12 +250,5 @@ fun MessageDialog(
                 }
             }
         }
-    }
-}
-
-fun spannedToAnnotatedString(spanned: Spanned): AnnotatedString {
-    return buildAnnotatedString {
-        append(spanned.toString()) // Пока просто текст, без обработки стилей
-        // Можно вручную парсить Spanned и добавлять стили, если нужно
     }
 }

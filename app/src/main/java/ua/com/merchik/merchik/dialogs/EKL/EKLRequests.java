@@ -19,6 +19,7 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 import ua.com.merchik.merchik.Globals;
+import ua.com.merchik.merchik.ServerExchange.ErrorData;
 import ua.com.merchik.merchik.ServerExchange.ExchangeInterface;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.Database.Room.EKL_SDB;
@@ -171,12 +172,10 @@ public class EKLRequests {
                 }
 
                 @Override
-                public void onFailure(String error_type, String error) {
-                    Globals.writeToMLOG("RESP", "EKLRequests.responseCheckEKLList/onFailure",
-                            "String error_type: " + error_type +
-                                    " | String error: " + error);
+                public void onFailure(ErrorData errorData) {
 
                 }
+
 
             }, Globals.AppWorkMode.OFFLINE, true);
         } catch (Exception e) {
@@ -238,16 +237,16 @@ public class EKLRequests {
                     } else {
                         String errorType = response.body().error_type != null ? response.body().error_type : "unknown_error";
                         String error = response.body().error != null ? response.body().error : "Не удалось отправить сообщение. Попробуйте повторить отправку через 5 минут.";
-                        exchange.onFailure(errorType, error);
+                        exchange.onFailure(new ErrorData(errorType, error));
                     }
                 } else {
-                    exchange.onFailure("error_send_failed","Не удалось отправить сообщение. Попробуйте повторить отправку через 5 минут.");
+                    exchange.onFailure(new ErrorData("error_send_failed","Не удалось отправить сообщение. Попробуйте повторить отправку через 5 минут."));
                 }
             }
 
             @Override
             public void onFailure(Call<DialogEKL.EKLCheckData> call, Throwable t) {
-                exchange.onFailure("unknown_error", t.toString());
+                exchange.onFailure(new ErrorData("unknown_error", t.toString()));
             }
         });
     }

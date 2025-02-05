@@ -29,6 +29,7 @@ import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.database.realm.tables.AppUserRealm;
 import ua.com.merchik.merchik.database.realm.tables.StackPhotoRealm;
+import ua.com.merchik.merchik.dialogs.DialogAchievement.DialogAchievement;
 import ua.com.merchik.merchik.dialogs.DialogAchievement.DialogCreateAchievement;
 import ua.com.merchik.merchik.dialogs.DialogData;
 
@@ -87,7 +88,8 @@ public class OptionButtAchievements<T> extends OptionControl {
         dialog.setRecyclerFilterSearch();
         dialog.setClose(dialog::dismiss);
         dialog.setOkRv("Створення досягнення (додаток)", () -> {
-//            DialogAchievement dialogAchievement = new DialogAchievement(context, wpDataDB);
+
+
             DialogCreateAchievement dialogCreateAchievement = new DialogCreateAchievement(context);
             dialogCreateAchievement.setData(wpDataDB);
             dialogCreateAchievement.setClose(dialogCreateAchievement::dismiss);
