@@ -804,9 +804,10 @@ public class Options {
             // 91468 Комарницька
 
             if (
+                    !option.getClientId().equals("-9999999")
 //                    !option.getClientId().equals("9295") &&     //Бетта
 //                    !option.getClientId().equals("9382") &&     //Витмарк
-                    !option.getClientId().equals("38283")       //Юнилайф
+//                    !option.getClientId().equals("38283")       //Юнилайф
 
 //                    option.getClientId().equals("14301") ||     // трегуб
 //                    option.getClientId().equals("14840") || // Авто комфорт плюс
@@ -1358,6 +1359,7 @@ public class Options {
                                         new MessageDialogBuilder(unwrap(context))
                                                 .setTitle("Команда на проведення звіту.")
 //                                                .setStatus(DialogStatus.ERROR)
+                                                .setSubTitle("## Ответ от сервера")
                                                 .setMessage((String) data)
                                                 .setOnConfirmAction(() -> Unit.INSTANCE)
                                                 .show();

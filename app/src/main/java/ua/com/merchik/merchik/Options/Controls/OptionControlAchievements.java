@@ -1,5 +1,6 @@
 package ua.com.merchik.merchik.Options.Controls;
 
+import static ua.com.merchik.merchik.database.realm.RealmManager.getTovarListFromReportPrepareByDad2;
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
 import android.annotation.SuppressLint;
@@ -11,6 +12,9 @@ import androidx.annotation.RequiresApi;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
@@ -35,7 +39,7 @@ import ua.com.merchik.merchik.database.realm.tables.TovarRealm;
 import ua.com.merchik.merchik.database.realm.tables.TradeMarkRealm;
 
 public class OptionControlAchievements<T> extends OptionControl {
-    public int OPTION_CONTROL_ACHIEVEMENTS_ID = 590; // 160209
+    public int OPTION_CONTROL_ACHIEVEMENTS_ID = 590; //
 
     public boolean signal = true;
 
@@ -97,7 +101,7 @@ public class OptionControlAchievements<T> extends OptionControl {
                 int minusDay = Integer.parseInt(optionDB.getAmountMax()) > 0 ? Integer.parseInt(optionDB.getAmountMax()) : 30;
 //                minusDay = minusDay + 1;
                 dateFrom = Clock.getDatePeriodLong(dateDocument * 1000, -minusDay) / 1000;
-                dateTo = Clock.getDatePeriodLong(dateDocument * 1000, 2) / 1000;    // Тут надо указывать на +1 день, потому что функция работает до НАЧАЛА дня, а не до конца
+                dateTo = Clock.getDatePeriodLong(dateDocument * 1000, 3) / 1000;    // Тут надо указывать на +1 день, потому что функция работает до НАЧАЛА дня, а не до конца
             }
 
         } catch (Exception e) {
@@ -113,7 +117,7 @@ public class OptionControlAchievements<T> extends OptionControl {
             if (addressSDBDocument.id == 22011) {    // дом игрушек
                 if (customerSDBDocument.id.equals("11165")) {    // Энерлайт
                     optionMsg.append("Достижение по клиенту ").append(customerSDBDocument.nm).append(" по адресу ")
-                            .append(addressSDBDocument.nm).append(" не проверяем. Там у них только брендовые стойки без основного места рподаж.");
+                            .append(addressSDBDocument.nm).append(" не проверяем. Там у них только брендовые стойки без основного места продаж.");
                 }
             }
 
@@ -147,8 +151,22 @@ public class OptionControlAchievements<T> extends OptionControl {
             // 05.04.2025 получаем список товаров и ТМ ОСВ которые есть на ТТ
             List<String> spisTovOSV = new ArrayList<>();
             List<String> spisTMOSV = new ArrayList<>();
+            List<TovarDB> tovarFromReportPrepare = RealmManager.INSTANCE.copyFromRealm(Objects.requireNonNull(RealmManager.getTovarListFromReportPrepareByDad2(wpDataDB.getCode_dad2())));
+            Log.e("Tovar", "size: " + tovarFromReportPrepare.size());
+            for (TovarDB tovarDB: tovarFromReportPrepare) {
+                Log.e("!!!DBOSV!!!", "tovar name: " + tovarDB.getNm() + " | id: " + tovarDB.getiD());
+            }
             List<AdditionalRequirementsDB> additionalRequirements = AdditionalRequirementsRealm.getDocumentAdditionalRequirements(document, true, controlId, null, null, null, null, null, null, dateChangeTo);
-            for (AdditionalRequirementsDB item : additionalRequirements) {
+
+            // 06.02.2025 добавил проверку что бы товар был в репорт препеа, что бы исключить случай когда товара вообще нет в ТТ, а требуют достижение по нему
+            Set<String> manufacturerIds = tovarFromReportPrepare.stream()
+                    .map(TovarDB::getManufacturerId)
+                    .collect(Collectors.toSet());
+            List<AdditionalRequirementsDB> filteredAdditionalRequirements = new ArrayList<>(additionalRequirements).stream()
+                    .filter(req -> manufacturerIds.contains(req.getManufacturerId()))
+                    .collect(Collectors.toList());
+
+            for (AdditionalRequirementsDB item : filteredAdditionalRequirements) {
                 if (!item.getTovarId().equals("0")) spisTovOSV.add(item.getTovarId());
                 if (!item.getManufacturerId().equals("0")) spisTMOSV.add(item.getManufacturerId());
             }
@@ -204,15 +222,19 @@ public class OptionControlAchievements<T> extends OptionControl {
                                 (!spisTovOSV.contains(item.tovar_id.toString())) &&
                                 (!spisTMOSV.contains(item.manufacturer.toString()))) {
                             List<TovarDB> spisTovarDBOSV = TovarRealm.getByIds(spisTovOSV.toArray(new String[spisTovOSV.size()]));
+
                             String spisTovarName = "";
                             for (TovarDB tovar : spisTovarDBOSV) {
                                 spisTovarName = spisTovarName + tovar.getNm() + ",";
+                                Log.e("!!!DBOSV!!!", "tovar name: " + tovar.getNm() + " | id: " + tovar.getiD());
                             }
 
                             List<TradeMarkDB> spisTradeMarkDBOSV = TradeMarkRealm.getTradeMarkByIds(spisTMOSV.toArray(new String[spisTMOSV.size()]));
+
                             String spisTMName = "";
                             for (TradeMarkDB tm : spisTradeMarkDBOSV) {
                                 spisTMName = spisTMName + tm.getNm() + ",";
+                                Log.e("!!!DBOSV!!!", "tovar name: " + tm.getNm() + " | id: " + tm.getID());
                             }
 
                             item.error = 1;
@@ -281,7 +303,7 @@ public class OptionControlAchievements<T> extends OptionControl {
             }
 
             StringBuilder period = new StringBuilder();
-            period.append("За період з ").append(Clock.getHumanTimeYYYYMMDD(dateFrom)).append(" по ").append(Clock.getHumanTimeYYYYMMDD(dateTo));
+            period.append("За період з ").append(Clock.getHumanTimeYYYYMMDD(dateFrom)).append(" по ").append(Clock.getHumanTimeYYYYMMDD(dateTo - 86400L)); // добавил вычитание 1 дня, что бы привести к 1С потому, что функция работает до НАЧАЛА дня, а не до конца
             //4.0. готовим сообщение и сигнал
             if (sumOptionError == 0 && traineeSignal == 0) {
                 stringBuilderMsg.append(period).append(" Є досягнення (з оцінкою ").append(minScore).append(" чи більш) ")

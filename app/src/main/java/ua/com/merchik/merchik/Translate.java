@@ -323,7 +323,7 @@ public class Translate {
         AddTranslation data3 = new AddTranslation(
                 "3",
                 "alert_dialog_message_photo_not_created",
-                "Фото не было создано, повторите попытку",
+                "Данные не выгружены на сервер",
                 "app",
                 "all",
                 ""

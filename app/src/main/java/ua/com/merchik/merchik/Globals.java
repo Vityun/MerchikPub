@@ -63,6 +63,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import kotlin.Unit;
 import ua.com.merchik.merchik.Activities.MyApplication;
 import ua.com.merchik.merchik.ServerExchange.TablesLoadingUnloading;
 import ua.com.merchik.merchik.data.AppData.AppData;
@@ -79,6 +80,7 @@ import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.AppUserRealm;
 import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.dialogs.features.AlertDialogMessage;
+import ua.com.merchik.merchik.dialogs.features.MessageDialogBuilder;
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus;
 
 public class Globals {
@@ -259,11 +261,13 @@ public class Globals {
 
     public static void alertDialogMsg(Context context, String msg) {
         if (context instanceof Activity) {
-            AlertDialogMessage alertDialogMessage = new AlertDialogMessage((Activity) context,
-                    "",
-                    msg,
-                    DialogStatus.NORMAL);
-            alertDialogMessage.show();
+
+            new MessageDialogBuilder((Activity)context)
+//                    .setTitle("Увага")
+//                    .setStatus(DialogStatus.ALERT)
+                    .setMessage(msg)
+                    .setOnConfirmAction(()-> Unit.INSTANCE)
+                    .show();
         } else {
             AlertDialog.Builder builder = new AlertDialog.Builder(context);
             builder.setCancelable(false);
