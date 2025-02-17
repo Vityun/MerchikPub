@@ -22,6 +22,7 @@ import io.realm.RealmResults;
 import io.realm.Sort;
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
+import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteHintsDB;
 import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteObjects.SiteObjectsDB;
 import ua.com.merchik.merchik.data.RealmModels.AddressDB;
@@ -384,11 +385,47 @@ public class RealmManager {
             Log.e("REALM_DB_UPDATE", "setTovar Ошибка2: " + e);
         }
 
-
         INSTANCE.commitTransaction();
 
         Log.e("REALM_DB_UPDATE", "setTovar_E");
         return true;
+    }
+
+    public static void setTovarAsync(List<TovarDB> list) {
+        Log.e("REALM_DB_UPDATE", "setTovar_S");
+
+        try {
+            globals.writeToMLOG(Clock.getHumanTime() + "_INFO.RealmManager.class.setTovar.Размер списка: " + list.size() + "\n");
+            Log.e("REALM_DB_UPDATE", "setTovar list.size(): " + list.size());
+        } catch (Exception e) {
+            globals.writeToMLOG(Clock.getHumanTime() + "_INFO.RealmManager.class.setTovar.Ошибка1: " + e + "\n");
+            Log.e("REALM_DB_UPDATE", "setTovar Ошибка1: " + e);
+        }
+
+        // Асинхронная транзакция
+        Realm.getInstanceAsync(Realm.getDefaultConfiguration(), new Realm.Callback() {
+            @Override
+            public void onSuccess(Realm realm) {
+                realm.executeTransactionAsync(bgRealm -> {
+                    // Сохраняем данные в фоновом потоке
+                    bgRealm.copyToRealmOrUpdate(list);
+                }, () -> {
+                    // Успешное завершение транзакции
+                    Log.e("REALM_DB_UPDATE", "setTovar_E: Данные успешно сохранены");
+                    globals.writeToMLOG(Clock.getHumanTime() + "_INFO.RealmManager.class.setTovar.Данные успешно сохранены\n");
+
+                    // Закрываем Realm после завершения
+                    realm.close();
+                }, error -> {
+                    // Обработка ошибки
+                    Log.e("REALM_DB_UPDATE", "setTovar_E: Ошибка при сохранении данных", error);
+                    globals.writeToMLOG(Clock.getHumanTime() + "_INFO.RealmManager.class.setTovar.Ошибка при сохранении данных: " + error + "\n");
+
+                    // Закрываем Realm в случае ошибки
+                    realm.close();
+                });
+            }
+        });
     }
 
     /**

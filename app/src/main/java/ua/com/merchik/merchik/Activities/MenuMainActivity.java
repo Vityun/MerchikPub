@@ -1,34 +1,55 @@
 package ua.com.merchik.merchik.Activities;
 
+import static ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity.NEED_UPDATE_UI_REQUEST;
+import static ua.com.merchik.merchik.database.realm.RealmManager.getAllWorkPlan;
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
+import android.app.Activity;
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.widget.Toolbar;
+import androidx.core.app.ActivityCompat;
 
+import com.google.android.gms.common.api.Api;
 import com.google.android.material.navigation.NavigationView;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 import io.realm.DynamicRealm;
 import io.realm.RealmConfiguration;
+import io.realm.RealmResults;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
+import ua.com.merchik.merchik.Activities.Features.FeaturesActivity;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.ServerExchange.Exchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.SiteObjectsExchange;
+import ua.com.merchik.merchik.ServerExchange.TablesLoadingUnloading;
 import ua.com.merchik.merchik.Translate;
 import ua.com.merchik.merchik.Utils.CodeGenerator;
 import ua.com.merchik.merchik.data.RealmModels.AppUsersDB;
+import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.ShowcaseResponse;
 import ua.com.merchik.merchik.data.TestJsonUpload.StandartData;
+import ua.com.merchik.merchik.dataLayer.ContextUI;
+import ua.com.merchik.merchik.dataLayer.ModeUI;
+import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.AppUserRealm;
 import ua.com.merchik.merchik.database.realm.tables.ImagesTypeListRealm;
+import ua.com.merchik.merchik.dialogs.DialogAchievement.FilteringDialogDataHolder;
 import ua.com.merchik.merchik.dialogs.DialogShowcase.DialogShowcase;
+import ua.com.merchik.merchik.features.main.DBViewModels.OpinionSDBViewModel;
+import ua.com.merchik.merchik.features.main.DBViewModels.ThemeDBViewModel;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
 import ua.com.merchik.merchik.toolbar_menus;
 
@@ -89,14 +110,63 @@ public class MenuMainActivity extends toolbar_menus {
         return schemaVersion;
     }
 
+    public static List<WpDataDB> getWorkPlanList() {
+        RealmResults<WpDataDB> realmResults = getAllWorkPlan(); // Получаем RealmResults
+        return realmResults != null ? new ArrayList<>(realmResults) : new ArrayList<>(); // Преобразуем в List
+    }
+
+    public static List<WpDataDB> getUniqueClientAndAddrId(List<WpDataDB> workPlanList) {
+        Set<String> uniqueClientAddrSet = new HashSet<>(); // Храним уникальные комбинации client_id и addr_id
+        List<WpDataDB> uniqueList = new ArrayList<>(); // Результирующий список
+        // Список для формирования строки для лога
+        List<String> logEntries = new ArrayList<>();
+
+        for (WpDataDB wpDataDB : workPlanList) {
+            String clientId = wpDataDB.getClient_id();
+            int addrId = wpDataDB.getAddr_id();
+            String uniqueKey = clientId + "_" + addrId; // Создаем уникальный ключ для пары (client_id, addr_id)
+
+            if (!uniqueClientAddrSet.contains(uniqueKey)) {  // Если такая пара еще не встречалась
+                uniqueClientAddrSet.add(uniqueKey);  // Добавляем в Set
+                uniqueList.add(wpDataDB);  // Добавляем элемент в результирующий список
+
+                // Добавляем запись для лога в формате "client_id-addr_id"
+                logEntries.add(clientId + "-" + addrId);
+            }
+        }
+
+        // Формируем строку для лога с уникальными клиентами и адресами через запятую
+        String logMessage = String.join(", ", logEntries);
+
+        // Выводим строку в лог
+        Log.d("UniqueClientAddrLog", "Unique clients and addresses: " + logMessage);
+
+        return uniqueList;
+    }
+
     private void test() {
 
 
-        new Translate().uploadNewTranslate();
+        Intent intent = new Intent(this, FeaturesActivity.class);
+        Bundle bundle = new Bundle();
+        bundle.putString("viewModel", OpinionSDBViewModel.class.getCanonicalName());
+        bundle.putString("contextUI", ContextUI.ADD_OPINION_FROM_DETAILED_REPORT.toString());
+        bundle.putString("modeUI", ModeUI.ONE_SELECT.toString());
+        bundle.putString("dataJson", new Gson().toJson(998));
+        bundle.putString("title", "Вид достижения");
+        bundle.putString("subTitle", "Выберите характер достижения, которое Вы выполнили");
+        intent.putExtras(bundle);
+        FilteringDialogDataHolder.Companion.instance().init();
+        ActivityCompat.startActivityForResult(this, intent, NEED_UPDATE_UI_REQUEST, null);
+
+
+//        new TablesLoadingUnloading().downloadWPData(this);
+
+//        new Translate().uploadNewTranslate();
 
 //        Exchange exchange = new Exchange();
 //        exchange.updateAverageSalary();
-//        exchange.updateSiteObj();
+//        exchange.updateSiteObjкрон);
 
         // Обучение
 //        String title = SQL_DB.siteObjectsDao().getObjectsByRealId(2599).comments;

@@ -302,6 +302,9 @@ public interface RetrofitInterface {
     Call<ResponseBody> DOWNLOAD_PHOTO_BY_URL(@Url String url);
 
     @GET
+    Call<ResponseBody> DOWNLOAD_PHOTO_BY_URL_WORKER(@Url String url); // метод для workManager
+
+    @GET
     Single<ResponseBody> DOWNLOAD_PHOTO_BY_URL_TEST(@Url String url);
 
     @GET

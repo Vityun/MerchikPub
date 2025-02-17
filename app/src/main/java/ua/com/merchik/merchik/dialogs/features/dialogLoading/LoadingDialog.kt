@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.shape.CircleShape
@@ -24,6 +25,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import kotlinx.coroutines.delay
@@ -37,6 +39,7 @@ fun LoadingDialog(viewModel: ProgressViewModel,onDismiss: () -> Unit) {
     var showConfirmationDialog by remember { mutableStateOf(false) }
 
     val isCompleted by remember { derivedStateOf { viewModel.isCompleted } }
+    val screenWidth = LocalConfiguration.current.screenWidthDp.dp
 
     // Закрываем диалог, если задача завершена
     LaunchedEffect(isCompleted) {
@@ -49,6 +52,7 @@ fun LoadingDialog(viewModel: ProgressViewModel,onDismiss: () -> Unit) {
         Column(
             modifier = Modifier
                 .wrapContentHeight()
+                .width(screenWidth * 0.9f)
                 .padding(bottom = 44.dp)
                 .background(color = Color.Transparent)
         ) {

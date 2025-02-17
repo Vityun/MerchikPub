@@ -1,5 +1,6 @@
 package ua.com.merchik.merchik.dialogs.features.dialogMessage
 
+import android.annotation.SuppressLint
 import android.text.Html
 import android.text.Spanned
 import android.util.Log
@@ -39,6 +40,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -62,10 +64,11 @@ import ua.com.merchik.merchik.features.main.componentsUI.ImageButton
 import java.time.LocalDate
 
 
+@SuppressLint("SuspiciousIndentation")
 @Composable
 fun MessageDialog(
-    title: String = "",
-    subTitle: String = "",
+    title: String? = "",
+    subTitle: String? = "",
     message: String = "",
     onDismiss: () -> Unit,
     okButtonName: String = "Ok",
@@ -79,12 +82,19 @@ fun MessageDialog(
 
     val scrollState = rememberScrollState()
     val styledAnnotatedString = AnnotatedString.fromHtml(htmlString = message)
+    val screenWidth = LocalConfiguration.current.screenWidthDp.dp
 
 
     val composition by rememberLottieComposition(
-        if (status == DialogStatus.ERROR) LottieCompositionSpec.RawRes(
-            R.raw.error
-        ) else LottieCompositionSpec.RawRes(R.raw.alert)
+        when (status){
+            DialogStatus.ERROR -> LottieCompositionSpec.RawRes(R.raw.error)
+            DialogStatus.ALERT -> LottieCompositionSpec.RawRes(R.raw.alert)
+            else -> LottieCompositionSpec.RawRes(R.raw.status_ok)
+        }
+
+//        if (status == DialogStatus.ERROR) LottieCompositionSpec.RawRes(
+//            R.raw.error
+//        ) else LottieCompositionSpec.RawRes(R.raw.alert)
     )
     val progress by animateLottieCompositionAsState(
         composition,
@@ -105,6 +115,8 @@ fun MessageDialog(
         Column(
             modifier = Modifier
                 .wrapContentHeight()
+                .width(screenWidth * 0.9f)
+//                .fillMaxWidth(0.9f)
                 .padding(bottom = 44.dp)
                 .background(color = Color.Transparent)
         ) {
@@ -142,6 +154,7 @@ fun MessageDialog(
                     .verticalScroll(scrollState)
                     .clip(RoundedCornerShape(8.dp))
                     .background(color = Color.White)
+//                    .background(color = colorResource(id = R.color.main_form))
             )
             {
                 Column(
@@ -151,7 +164,7 @@ fun MessageDialog(
                         .fillMaxWidth()
                         .padding(16.dp)
                 ) {
-                    if (title.isNotEmpty())
+                    if (!title.isNullOrEmpty())
                         Text(
                             text = title,
                             style = MaterialTheme.typography.titleMedium,
@@ -162,7 +175,7 @@ fun MessageDialog(
                             fontWeight = FontWeight.Bold
                         )
 
-                    if (status != DialogStatus.EMPTY && status != DialogStatus.NORMAL)
+                    if (status != DialogStatus.EMPTY)
                         LottieAnimation(
                             modifier = Modifier
                                 .size(68.dp)
@@ -170,7 +183,7 @@ fun MessageDialog(
                             composition = composition,
                             progress = { progress },
                             )
-                    if (subTitle.isNotEmpty())
+                    if (!subTitle.isNullOrEmpty())
                         Text(
                             modifier = Modifier
                                 .padding(horizontal = 16.dp, vertical = 4.dp)
@@ -231,7 +244,6 @@ fun MessageDialog(
                                     onClick = {
                                         onConfirmAction()
                                         isCompleted = true
-
                                     },
                                     shape = RoundedCornerShape(8.dp),
                                     colors = ButtonDefaults.buttonColors(

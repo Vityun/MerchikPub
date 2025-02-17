@@ -5,6 +5,7 @@ import android.view.ViewGroup
 import android.widget.FrameLayout
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ComposeView
+import ua.com.merchik.merchik.Activities.Features.ui.theme.MerchikTheme
 import ua.com.merchik.merchik.dialogs.features.indicator.LineSpinFadeLoaderIndicator
 
 class LoadingIndicator(private val composeContainer: FrameLayout) {
@@ -23,16 +24,14 @@ class LoadingIndicator(private val composeContainer: FrameLayout) {
             )
             // Устанавливаем Composable
             setContent {
-
-//                test()
-//                PacmanIndicator(color = Color.Black, ballDiameter = 50f, canvasSize = 60.dp, animationDuration = 10000)
-
-                LineSpinFadeLoaderIndicator(
-                    penThickness = 10f,
-                    radius = 22f,
-                    elementHeight = 15f,
-                    color = Color.Green
-                )
+                MerchikTheme {
+                    LineSpinFadeLoaderIndicator(
+                        penThickness = 10f,
+                        radius = 22f,
+                        elementHeight = 15f,
+                        color = Color.Green
+                    )
+                }
             }
         }
 

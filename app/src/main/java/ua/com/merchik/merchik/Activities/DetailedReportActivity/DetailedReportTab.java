@@ -18,8 +18,9 @@ public class DetailedReportTab extends FragmentStateAdapter {
     int totalTabs;
 
     public static DetailedReportOptionsFrag detailedReportOptionsFrag;
+    private CommentViewModel viewModel;
 
-    public DetailedReportTab(AppCompatActivity context, FragmentManager fm, Lifecycle lifecycle, int totalTabs, WpDataDB wpDataDBList) {
+    public DetailedReportTab(AppCompatActivity context, FragmentManager fm, Lifecycle lifecycle, int totalTabs, WpDataDB wpDataDBList, CommentViewModel commentViewModel) {
         super(fm, lifecycle);
         Globals.writeToMLOG("INFO", "DetailedReportTab/1", "create");
         Globals.writeToMLOG("INFO", "DetailedReportTab/1", "context: " + context);
@@ -28,6 +29,7 @@ public class DetailedReportTab extends FragmentStateAdapter {
         myContext = context;
         this.totalTabs = totalTabs;
         this.wpDataDB = wpDataDBList;
+        this.viewModel = commentViewModel;
     }
 
 /*    public DetailedReportTab(AppCompatActivity context, FragmentManager fm, int totalTabs, ArrayList<Data> dataArrayList, WpDataDB wpDataDBList) {
@@ -93,7 +95,7 @@ public class DetailedReportTab extends FragmentStateAdapter {
             Globals.writeToMLOG("INFO", "DetailedReportTab/getItem", "position: " + position);
             switch (position) {
                 case 0:
-                    return DetailedReportHomeFrag.newInstance(myContext, wpDataDB);
+                    return DetailedReportHomeFrag.newInstance(myContext, wpDataDB, viewModel);
                 case 1:
                     detailedReportOptionsFrag = DetailedReportOptionsFrag.newInstance(myContext, wpDataDB);
                     return detailedReportOptionsFrag;

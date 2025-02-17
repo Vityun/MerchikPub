@@ -139,10 +139,16 @@ public class WpDataDB extends RealmObject implements Parcelable, DataObjectUI {
     public double cash_fact;
     public double cash_penalty;
 
+    // 13.02.25 Новые поля для мнения пользователя
+    private String user_opinion_id;         // ID мнения
+    private String user_opinion_author_id; // ID автора мнения
+    private long user_opinion_dt_update;    // Дата обновления мнения
+
+
     public WpDataDB() {
     }
 
-    public WpDataDB(long ID, Date dt, String client_id, String isp, String isp_fact, int tech_sup_active, int addr_id, int user_id, long dt_start, long dt_stop, int action, int action_type, String stajirovka_stage, int one_time_work, int theme_grp, int theme_id, long code_dda, String code_ddas, long codedad, long code_dad2, String smeta, String smeta_1c, String doc_num, int doc_num_grp, int doc_type, String doc_num_1c, long doc_num_1c_id, String doc_num_otchet, int signal_cnt, long doc_num_otchet_id, String smeta_active, int super_id, int territorial_id, int regional_id, int nop_id, int starsh_tt_id, int contacter_id, int fot_user_id, int dot_user_id, long visit_start_dt, int visit_start_geo_distance, int visit_start_geo_accuracy, int visit_start_geo_id, long visit_end_dt, int visit_end_geo_distance, int visit_end_geo_accuracy, int visit_end_geo_id, int visit_arrive_dt, int visit_arrive_geo_distance, int visit_arrive_geo_accuracy, int visit_arrive_geo_id, int visit_report_starsh, int visit_report_starsh_quality, long client_start_dt, int client_start_geo_distance, int client_start_geo_accuracy, int client_start_geo_id, int client_start_anybody, long client_end_dt, int client_end_geo_distance, int client_end_geo_accuracy, int client_end_geo_id, int client_end_anybody, int client_report_starsh, int priority, int import_type, long dt_update, String code_aadd, String work_stop_reason, int simple_report, int copy_price_days, double cash_zakaz, double cash_sum_30, double cash_sum_addr_30, double cash_ispolnitel, int visit_per_week, int sku, int duration, int mon, int tue, int wed, int thu, int fri, int sat, int sun, String source_change, int status, String premiya_total, String addr_location_xd, String addr_location_yd, String addr_txt, String client_txt, String user_txt, String action_txt, String action_short_txt) {
+    public WpDataDB(long ID, Date dt, String client_id, String isp, String isp_fact, int tech_sup_active, int addr_id, int user_id, long dt_start, long dt_stop, int action, int action_type, String stajirovka_stage, int one_time_work, int theme_grp, int theme_id, long code_dda, String code_ddas, long codedad, long code_dad2, String smeta, String smeta_1c, String doc_num, int doc_num_grp, int doc_type, String doc_num_1c, long doc_num_1c_id, String doc_num_otchet, int signal_cnt, long doc_num_otchet_id, String smeta_active, int super_id, int territorial_id, int regional_id, int nop_id, int starsh_tt_id, int contacter_id, int fot_user_id, int dot_user_id, long visit_start_dt, int visit_start_geo_distance, int visit_start_geo_accuracy, int visit_start_geo_id, long visit_end_dt, int visit_end_geo_distance, int visit_end_geo_accuracy, int visit_end_geo_id, int visit_arrive_dt, int visit_arrive_geo_distance, int visit_arrive_geo_accuracy, int visit_arrive_geo_id, int visit_report_starsh, int visit_report_starsh_quality, long client_start_dt, int client_start_geo_distance, int client_start_geo_accuracy, int client_start_geo_id, int client_start_anybody, long client_end_dt, int client_end_geo_distance, int client_end_geo_accuracy, int client_end_geo_id, int client_end_anybody, int client_report_starsh, int priority, int import_type, long dt_update, String code_aadd, String work_stop_reason, int simple_report, int copy_price_days, double cash_zakaz, double cash_sum_30, double cash_sum_addr_30, double cash_ispolnitel, int visit_per_week, int sku, int duration, int mon, int tue, int wed, int thu, int fri, int sat, int sun, String source_change, int status, String premiya_total, String addr_location_xd, String addr_location_yd, String addr_txt, String client_txt, String user_txt, String action_txt, String action_short_txt, String user_opinion_id, String user_opinion_author_id, Long user_opinion_dt_update) {
         this.ID = ID;
         this.dt = dt;
         this.client_id = client_id;
@@ -238,6 +244,9 @@ public class WpDataDB extends RealmObject implements Parcelable, DataObjectUI {
         this.user_txt = user_txt;
         this.action_txt = action_txt;
         this.action_short_txt = action_short_txt;
+        this.user_opinion_id = user_opinion_id;
+        this.user_opinion_author_id = user_opinion_author_id;
+        this.user_opinion_dt_update = user_opinion_dt_update;
     }
 
     @Override
@@ -247,7 +256,7 @@ public class WpDataDB extends RealmObject implements Parcelable, DataObjectUI {
 //        if (o == null || getClass() != o.getClass()) return false;
         if (o == null) return false;
         WpDataDB wpDataDB = (WpDataDB) o;
-        return  isp == wpDataDB.isp &&
+        return isp == wpDataDB.isp &&
                 user_id == wpDataDB.user_id &&
                 code_dad2 == wpDataDB.code_dad2 &&
                 client_id.equals(wpDataDB.client_id);
@@ -1034,12 +1043,34 @@ public class WpDataDB extends RealmObject implements Parcelable, DataObjectUI {
         this.code_iza = code_iza;
     }
 
+    public String getUser_opinion_id() {
+        return user_opinion_id;
+    }
+
+    public void setUser_opinion_id(String user_opinion_id) {
+        this.user_opinion_id = user_opinion_id;
+    }
+
+    public String getUser_opinion_author_id() {
+        return user_opinion_author_id;
+    }
+
+    public void setUser_opinion_author_id(String opinionAuthorId) {
+        this.user_opinion_author_id = opinionAuthorId;
+    }
+
+    public Long getUser_opinion_dt_update () {
+        return user_opinion_dt_update;
+    }
+
+    public void setUser_opinion_dt_update (Long userOpinionDtUpdate) {
+        this.user_opinion_dt_update = userOpinionDtUpdate;
+    }
+
     @Override
     public int describeContents() {
         return 0;
     }
-
-
 
 
     protected WpDataDB(Parcel in) {
@@ -1154,6 +1185,9 @@ public class WpDataDB extends RealmObject implements Parcelable, DataObjectUI {
         startUpdate = in.readByte() != 0;
         cash_fact = in.readDouble();
         cash_penalty = in.readDouble();
+        user_opinion_id = in.readString();
+        user_opinion_author_id = in.readString();
+        user_opinion_dt_update = in.readLong();
     }
 
     @Override
@@ -1269,6 +1303,9 @@ public class WpDataDB extends RealmObject implements Parcelable, DataObjectUI {
         dest.writeByte((byte) (startUpdate ? 1 : 0));
         dest.writeDouble(cash_fact);
         dest.writeDouble(cash_penalty);
+        dest.writeString(user_opinion_id);
+        dest.writeString(user_opinion_author_id);
+        dest.writeLong(user_opinion_dt_update);
     }
 
     public static final Parcelable.Creator<WpDataDB> CREATOR = new Parcelable.Creator<WpDataDB>() {

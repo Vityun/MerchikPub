@@ -1,18 +1,25 @@
 package ua.com.merchik.merchik.ServerExchange.TablesExchange;
 
+import static ua.com.merchik.merchik.ServerExchange.PhotoDownload.savePhotoAndUpdateStackPhotoDB;
+import static ua.com.merchik.merchik.database.realm.RealmManager.getAllWorkPlan;
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
 import android.graphics.Bitmap;
 import android.util.Log;
 
+import com.airbnb.lottie.L;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
+import io.realm.RealmResults;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -21,6 +28,7 @@ import ua.com.merchik.merchik.ServerExchange.ExchangeInterface;
 import ua.com.merchik.merchik.ServerExchange.PhotoDownload;
 import ua.com.merchik.merchik.data.Database.Room.ShowcaseSDB;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
+import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.ShowcaseResponse;
 import ua.com.merchik.merchik.data.TestJsonUpload.StandartData;
 import ua.com.merchik.merchik.database.realm.RealmManager;
@@ -31,10 +39,29 @@ public class ShowcaseExchange {
 
     public void downloadShowcaseTable(ExchangeInterface.ExchangeResponseInterface exchange) {
         try {
+            List<Integer> addr_id = new ArrayList<>();
+            addr_id.add(27710);
+            List<WpDataDB> wpDataDBList = getWorkPlanList();
+
+            // Используем Set для автоматического удаления дубликатов
+            Set<String> uniqueClientIds = new HashSet<>();
+            Set<String> uniqueAdressId = new HashSet<>();
+
+
+            // Проходим по каждому элементу списка wpDataDBList
+            for (WpDataDB wpDataDB : wpDataDBList) {
+                // Добавляем client_id в Set (дубликаты игнорируются)
+                uniqueClientIds.add(wpDataDB.getClient_id());
+                uniqueAdressId.add(String.valueOf(wpDataDB.getAddr_id()));
+            }
+
             StandartData data = new StandartData();
             data.mod = "rack";
             data.act = "list";
             data.active_only = "1";
+            data.client_id = new ArrayList<>(uniqueClientIds);
+            data.addr_id = new ArrayList<>(uniqueAdressId);;
+            // добавить время отправки,что бы не передавать лишнее
 
             Gson gson = new Gson();
             String json = gson.toJson(data);
@@ -53,6 +80,16 @@ public class ShowcaseExchange {
                         if (response.body() != null && response.body().state != null && response.body().state && response.body().list != null && response.body().list.size() > 0) {
                             Globals.writeToMLOG("INFO", "downloadShowcaseTable/onResponse/isSuccessful", "response.body().list.size(): " + response.body().list.size());
                             List<ShowcaseSDB> serv = response.body().list;
+//                            List<ShowcaseSDB> filteredServ = serv.stream()
+//                                    .filter(showcase -> wpDataDBList.stream()
+//                                            .anyMatch(wpData ->
+//                                                    Objects.equals(wpData.getClient_id(), showcase.clientId) &&
+//                                                            String.valueOf(wpData.getAddr_id()).equals(showcase.addrId)
+//                                            )
+//                                    )
+//                                    .collect(Collectors.toList());
+
+
                             List<ShowcaseSDB> db = SQL_DB.showcaseDao().getAll();
 
                             List<ShowcaseSDB> res = new ArrayList<>();
@@ -63,7 +100,7 @@ public class ShowcaseExchange {
                                 dbIds.add(itemDB.id); // Здесь предполагается, что у класса есть метод getId()
                             }
 
-                            // Выполняем сравнение
+                            // 11.02.2025 были случае когда лезли 10к+ витрин, теперь фильтрую по клиентам и адресам из впдаты. Зачем нам левые фото витрины даже для менеджера? Для этого есть сайт
                             for (ShowcaseSDB itemServ : serv) {
                                 if (!dbIds.contains(itemServ.id)) {
                                     res.add(itemServ);
@@ -111,7 +148,7 @@ public class ShowcaseExchange {
                         photoDB.setUpload_to_server(dt);// реквизиты что б фотки не выгружались обратно на сервер
                         photoDB.setGet_on_server(dt);// реквизиты что б фотки не выгружались обратно на сервер
 
-                        photoDB.setPhoto_num(Globals.savePhotoToPhoneMemory("/Showcase", "" + item.id, bitmap));
+//                        photoDB.setPhoto_num(Globals.savePhotoToPhoneMemory("/Showcase", "" + item.id, bitmap));
 
                         photoDB.setPhotoServerURL(item.photoBig);
 
@@ -120,8 +157,9 @@ public class ShowcaseExchange {
                         photoDB.planogram_id = "";  // Почему нет планограммы?
                         photoDB.planogram_img_id = String.valueOf(item.photoPlanogramId);
 
+                        savePhotoAndUpdateStackPhotoDB("/Showcase", "" + item.id, bitmap, photoDB);
 
-                        RealmManager.stackPhotoSavePhoto(photoDB);
+//                        RealmManager.stackPhotoSavePhoto(photoDB);
 
                         Log.e("checkRequest", "downloadShowcasePhoto/photoDB: " + photoDB.getId());
                         Globals.writeToMLOG("INFO", "savePhotoToDB2/downloadPhoto/ShowcaseSDB/photoDB", "photoDB.getId(): " + photoDB.getId());
@@ -140,7 +178,7 @@ public class ShowcaseExchange {
         }
     }
 
-    public List<ShowcaseSDB> getSamplePhotosToDownload(){
+    public List<ShowcaseSDB> getSamplePhotosToDownload() {
         List<Integer> list = SQL_DB.showcaseDao().getAllPhotosIds();
         List<StackPhotoDB> stack = StackPhotoRealm.getByServerIds(list);
         for (StackPhotoDB item : stack) {
@@ -148,6 +186,11 @@ public class ShowcaseExchange {
         }
         List<ShowcaseSDB> res = SQL_DB.showcaseDao().getAllByPhotosIds(list);
         return res;
+    }
+
+    private List<WpDataDB> getWorkPlanList() {
+        RealmResults<WpDataDB> realmResults = getAllWorkPlan(); // Получаем RealmResults
+        return realmResults != null ? new ArrayList<>(realmResults) : new ArrayList<>(); // Преобразуем в List
     }
 
 }

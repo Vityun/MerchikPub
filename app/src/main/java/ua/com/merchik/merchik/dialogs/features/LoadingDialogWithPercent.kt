@@ -6,6 +6,7 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.platform.ComposeView
+import ua.com.merchik.merchik.Activities.Features.ui.theme.MerchikTheme
 import ua.com.merchik.merchik.dialogs.features.dialogLoading.LoadingDialog
 import ua.com.merchik.merchik.dialogs.features.dialogLoading.ProgressViewModel
 
@@ -19,14 +20,16 @@ class LoadingDialogWithPercent(val context: Activity,
         isDialogVisible.value = true
         val composeView = ComposeView(context).apply {
             setContent {
-                if (isDialogVisible.value) {
-                    LoadingDialog(
-                        viewModel = progressViewModel,
-                        onDismiss = {
-                            isDialogVisible.value = false
-                            onDialogDismissed() // Обрабатываем завершение загрузки
-                        }
-                    )
+                MerchikTheme {
+                    if (isDialogVisible.value) {
+                        LoadingDialog(
+                            viewModel = progressViewModel,
+                            onDismiss = {
+                                isDialogVisible.value = false
+                                onDialogDismissed() // Обрабатываем завершение загрузки
+                            }
+                        )
+                    }
                 }
             }
         }

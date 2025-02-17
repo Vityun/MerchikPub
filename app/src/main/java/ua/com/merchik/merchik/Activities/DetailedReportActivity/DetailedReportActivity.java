@@ -51,6 +51,7 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.viewpager2.widget.ViewPager2;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
@@ -65,7 +66,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import dagger.hilt.android.AndroidEntryPoint;
 import io.realm.RealmResults;
+import kotlin.Unit;
 import retrofit2.Call;
 import retrofit2.Response;
 import ua.com.merchik.merchik.Activities.TaskAndReclamations.TARFragmentHome;
@@ -100,9 +103,12 @@ import ua.com.merchik.merchik.database.realm.tables.WpDataRealm;
 import ua.com.merchik.merchik.dialogs.DialogAchievement.DialogCreateAchievement;
 import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.dialogs.EKL.DialogEKL;
+import ua.com.merchik.merchik.dialogs.features.MessageDialogBuilder;
+import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
 import ua.com.merchik.merchik.toolbar_menus;
 
+@AndroidEntryPoint
 public class DetailedReportActivity extends toolbar_menus {
 
     public static final int NEED_UPDATE_UI_REQUEST = 333;
@@ -151,6 +157,10 @@ public class DetailedReportActivity extends toolbar_menus {
     Button buttonTakeKPSfromDR;
     LinearLayout option_signal_layout2;
     public static ImageView imageView;
+    private CommentViewModel viewModel;
+
+    private boolean isNavigationBlocked = false;
+
 //    public static ImageView imageViewVideoRedDot;
 
 
@@ -178,8 +188,9 @@ public class DetailedReportActivity extends toolbar_menus {
                     }
             );
 
-
             Globals.writeToMLOG("INFO", "DetailedReportActivity/onCreate", "Открыли по новой активность. Смотри Выше лог - после чего именно.");
+
+            viewModel = new ViewModelProvider(this).get(CommentViewModel.class);
 
             setActivityData();
 
@@ -639,15 +650,25 @@ public class DetailedReportActivity extends toolbar_menus {
 //            }
 
             Globals.writeToMLOG("INFO", "DetailedReportTab/0", "setTab create");
-            adapter = new DetailedReportTab(this, getSupportFragmentManager(), getLifecycle(), tabLayout.getTabCount(), rowWP);
+            adapter = new DetailedReportTab(this, getSupportFragmentManager(), getLifecycle(), tabLayout.getTabCount(), rowWP, viewModel);
             viewPager.setAdapter(adapter);
+
 
             viewPager.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
                 @Override
                 public void onPageSelected(int position) {
-                    TabLayout.Tab tab = tabLayout.getTabAt(position);
-                    if (tab != null && !tab.isSelected()) {
-                        tab.select();
+
+//
+                    if (viewModel.isSaved().getValue()) {
+                        // Показываем диалог
+                        showSaveDialog();
+                        // Отменяем перелистывание, возвращаясь на предыдущую страницу
+//                        viewPager.setCurrentItem(0, false);
+                    } else {
+                        TabLayout.Tab tab = tabLayout.getTabAt(position);
+                        if (tab != null && !tab.isSelected()) {
+                            tab.select();
+                        }
                     }
                 }
             });
@@ -658,9 +679,9 @@ public class DetailedReportActivity extends toolbar_menus {
                     Log.e("onTabSelected", "tabLayout.getTabCount(): " + tabLayout.getTabCount());
                     Log.e("onTabSelected", "tab.getPosition(): " + tab.getPosition());
 
+
                     if (tab.getPosition() == 0) {
                         Log.e("onTabSelected", "ГЛАВНАЯ");
-
                         toolbar_menus.textLesson = 818;
 //                    toolbar_menus.videoLesson = 819;
 //                    toolbar_menus.videoLessons = null;
@@ -704,8 +725,8 @@ public class DetailedReportActivity extends toolbar_menus {
                         }); // ЗИР
                         checkVideo(videoLessons);
                     }
-
                     viewPager.setCurrentItem(tab.getPosition());
+
                 }
 
                 @Override
@@ -721,6 +742,36 @@ public class DetailedReportActivity extends toolbar_menus {
         } catch (Exception e) {
             Globals.writeToMLOG("ERROR", "DetailedReportActivity/setTab", "Exception e: " + e);
         }
+    }
+
+
+    private void showSaveDialog() {
+        new MessageDialogBuilder(this)
+                .setTitle("Вы не сохранили комментарий")
+                .setSubTitle("Текст комментария к текущему визиту:")
+                .setMessage(viewModel.getComment().getValue())
+                .setStatus(DialogStatus.ALERT)
+                .setOnCancelAction(() -> {
+                    viewModel.setSave(false);
+                    viewModel.updateComment("");
+                    return Unit.INSTANCE;
+                })
+                .setOnConfirmAction("Сохранить", () -> {
+                    viewModel.setSave(false);
+
+                    long startTime = System.currentTimeMillis() / 1000;
+                    RealmManager.INSTANCE.executeTransaction(realm -> {
+                        wpDataDB.setDt_update(startTime);
+                        wpDataDB.user_comment = viewModel.getComment().getValue();
+                        wpDataDB.user_comment_author_id = wpDataDB.getUser_id();
+                        wpDataDB.user_comment_dt_update = startTime;
+                        wpDataDB.startUpdate = true;
+                        realm.insertOrUpdate(wpDataDB);
+                    });
+
+                    return Unit.INSTANCE;
+                })
+                .show();
     }
 
 
@@ -785,6 +836,7 @@ public class DetailedReportActivity extends toolbar_menus {
 
                 if (DialogEKL.onUpdateUI != null)
                     DialogEKL.onUpdateUI.update();
+
             }
 
             if (requestCode == PICK_GALLERY_IMAGE_REQUEST && resultCode == RESULT_OK && data != null && data.getData() != null) {
@@ -904,12 +956,16 @@ public class DetailedReportActivity extends toolbar_menus {
                             }
                         }
                     } else {
-                        globals.alertDialogMsg(this, "Фото не было создано, повторите попытку");
+                        Globals.alertDialogMsg(this,
+                                "Фото не было создано, повторите попытку");
                     }
                 }
             } catch (Exception e) {
                 e.printStackTrace();
-                globals.alertDialogMsg(this, "Ошибка при выполнении фото: " + e);
+                Globals.alertDialogMsg(this,
+                        DialogStatus.ERROR,
+                        "Произошла ошибка",
+                        "Ошибка при выполнении фото: " + e);
             }
 
             refreshAdapterFragmentB();

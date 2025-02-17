@@ -115,10 +115,8 @@ import ua.com.merchik.merchik.database.realm.tables.AppUserRealm;
 import ua.com.merchik.merchik.dialogs.BlockingProgressDialog;
 import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.dialogs.DialogMap;
-import ua.com.merchik.merchik.dialogs.features.AlertDialogOneButton;
 import ua.com.merchik.merchik.dialogs.features.AlertDialogMessage;
 import ua.com.merchik.merchik.dialogs.features.LoadingDialogWithPercent;
-import ua.com.merchik.merchik.dialogs.features.LoadingIndicator;
 import ua.com.merchik.merchik.dialogs.features.MessageDialogBuilder;
 import ua.com.merchik.merchik.dialogs.features.dialogLoading.ProgressViewModel;
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus;
@@ -169,6 +167,8 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
 
     private Exchange exchange;
 
+    public static Globals.InternetStatus internetStatusG;
+
     //---------------------------
 
     //----------------------------
@@ -177,6 +177,7 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         this.exchange = new Exchange();
+        this.exchange.context = this;
 
 
         try {
@@ -712,9 +713,9 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                         // Новый обмен. Нужно ещё донастроить для нормальной работы.
                         if (exchange == null) {
                             exchange = new Exchange();
-                            exchange.context = toolbar_menus.this;
                         }
-                        Exchange.exchange = 0;
+                        exchange.context = this;
+                        Exchange.exchangeTime = 0;
                         exchange.startExchange();
 
 //                        exchange.uploadTARComments(null);
@@ -1196,8 +1197,8 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                     // Новый обмен. Нужно ещё донастроить для нормальной работы.
                     if (exchange == null) {
                         exchange = new Exchange();
-                        exchange.context = toolbar_menus.this;
                     }
+                    exchange.context = toolbar_menus.this;
                     exchange.startExchange();
 
 
@@ -2281,7 +2282,6 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
      * 28.11.23.
      * Смена сигналов Обмена.
      */
-    private Globals.InternetStatus internetStatusG;
 
     public void synchronizationSignal(String extra, Integer mode) {
         try {

@@ -28,6 +28,7 @@ import ua.com.merchik.merchik.features.main.DBViewModels.AdditionalRequirementsD
 import ua.com.merchik.merchik.features.main.DBViewModels.CustomerSDBViewModel
 import ua.com.merchik.merchik.features.main.DBViewModels.ImagesTypeListDBViewModel
 import ua.com.merchik.merchik.features.main.DBViewModels.LogMPDBViewModel
+import ua.com.merchik.merchik.features.main.DBViewModels.OpinionSDBViewModel
 import ua.com.merchik.merchik.features.main.DBViewModels.ReportPrepareDBViewModel
 import ua.com.merchik.merchik.features.main.DBViewModels.SamplePhotoSDBViewModel
 import ua.com.merchik.merchik.features.main.DBViewModels.StackPhotoDBViewModel
@@ -68,6 +69,7 @@ class FeaturesActivity: AppCompatActivity() {
                                     WpDataDBViewModel::class -> viewModel() as WpDataDBViewModel
                                     ImagesTypeListDBViewModel::class -> viewModel() as ImagesTypeListDBViewModel
                                     ReportPrepareDBViewModel::class -> viewModel() as ReportPrepareDBViewModel
+                                    OpinionSDBViewModel::class -> viewModel() as OpinionSDBViewModel
                                     else -> null
                                 }?.let { viewModel ->
                                     viewModel.dataJson = bundle.getString("dataJson")

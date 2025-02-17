@@ -16,6 +16,7 @@ import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.ContentUris;
 import android.content.Context;
+import android.content.ContextWrapper;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -26,6 +27,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
 import android.os.Handler;
+import android.os.Looper;
 import android.provider.DocumentsContract;
 import android.provider.MediaStore;
 import android.text.Spanned;
@@ -62,6 +64,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import kotlin.Unit;
 import ua.com.merchik.merchik.Activities.MyApplication;
@@ -106,7 +110,7 @@ public class Globals {
 
     // Связь
     static boolean autoSend = true;                 // Автообмен Выкл/Вкл
-    static boolean onlineStatus;
+    static boolean onlineStatus = false;
 
 
     public static boolean isViewClicked = false;    // Нажималась ли кнопка?
@@ -253,20 +257,31 @@ public class Globals {
             TEST[0] = false;
             return TEST[0];
         }
-
-
 //        System.out.println("PRESSED_1: " + state);
         return TEST[0];
     }
 
+    public static void alertDialogMsg(Context context, DialogStatus status, String title, String subTitle, String msg) {
+        showAlertDialog(context, status, title, subTitle, msg);
+    }
+
+    public static void alertDialogMsg(Context context, DialogStatus status, String title, String msg) {
+        showAlertDialog(context, status, title, null, msg);
+    }
+
     public static void alertDialogMsg(Context context, String msg) {
+        showAlertDialog(context, DialogStatus.EMPTY, null, null, msg);
+    }
+
+    private static void showAlertDialog(Context context, DialogStatus status, String title, String subTitle, String msg) {
         if (context instanceof Activity) {
 
-            new MessageDialogBuilder((Activity)context)
-//                    .setTitle("Увага")
-//                    .setStatus(DialogStatus.ALERT)
+            new MessageDialogBuilder((Activity) context)
+                    .setTitle(title)
+                    .setStatus(status)
+                    .setSubTitle(subTitle)
                     .setMessage(msg)
-                    .setOnConfirmAction(()-> Unit.INSTANCE)
+                    .setOnConfirmAction(() -> Unit.INSTANCE)
                     .show();
         } else {
             AlertDialog.Builder builder = new AlertDialog.Builder(context);
@@ -978,42 +993,109 @@ public class Globals {
      */
 //    TODO #### сделать сохранение в памяти асинхроным
     public static String savePhotoToPhoneMemory(String folderPath, String image_name, Bitmap bitmap) {
+        try {
 
-        Log.e("savePhotoToPhoneMemory", "Размер фотографии для сохранения. (bitmap.getByteCount()): " + bitmap.getByteCount());
+            Log.e("savePhotoToPhoneMemory", "Размер фотографии для сохранения. (bitmap.getByteCount()): " + bitmap.getByteCount());
 
 //        String root = Environment.getExternalStorageDirectory().toString() + APP_DIR + folderPath;
 //        File myDir = new File(root);
 
-        File myDir = MyApplication.getAppContext().getExternalFilesDir(Environment.DIRECTORY_PICTURES + folderPath);
-        myDir.mkdirs(); // Если такой папки не создано - создать
+            File myDir = MyApplication.getAppContext().getExternalFilesDir(Environment.DIRECTORY_PICTURES + folderPath);
+            myDir.mkdirs(); // Если такой папки не создано - создать
 
-        String fname = image_name + ".jpg"; // Создание имени файлика
+            String fname = image_name + ".jpg"; // Создание имени файлика
 
-        File file = new File(myDir, fname); // Создание файла
+            File file = new File(myDir, fname); // Создание файла
 
-        if (file.exists())
-            // Если размеры файлов совпадают, не делаем ничего и возвращаем путь
-            if (file.length() > 1000) {
+            if (file.exists())
+                // Если размеры файлов совпадают, не делаем ничего и возвращаем путь
+                if (file.length() > 1000) {
+                    return file.getAbsolutePath();
+                } else {
+                    // Если размеры не совпадают, удаляем файл и продолжаем
+                    file.delete();
+                }
+
+            // Запись в файл фотки.
+            // Если удачно сохранило фотку - возвращает её путь, иначе - возвразает пустоту.
+            try (FileOutputStream out = new FileOutputStream(file)) {
+                bitmap.compress(Bitmap.CompressFormat.JPEG, 100, out);
+                out.flush();
+                return file.getAbsolutePath();
+            } catch (Exception e) {
+                Log.e("savePhotoToPhoneMemory", "Exception: ", e);
+                return null;
+            } finally {
+                bitmap.recycle(); // Освобождаем уменьшенный bitmap
+            }
+        } catch (OutOfMemoryError e) {
+            Log.e("savePhotoToPhoneMemory", "Ошибка: Недостаточно памяти", e);
+            return null;
+        }
+//        try (FileOutputStream out = new FileOutputStream(file)) {
+//            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, out);
+//            out.flush();
+//            // Освобождаем память после сохранения
+//            bitmap.recycle(); // Освобождение памяти, занятой изображением
+//            return file.getAbsolutePath();
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//            return null;
+//        }
+    }
+
+    private static String savePhotoToPhoneMemoryNew(String folderPath, String imageName, Bitmap bitmap) {
+        try {
+            Log.e("savePhotoToPhoneMemory", "Исходный размер (байт): " + bitmap.getByteCount());
+
+            File myDir = MyApplication.getAppContext().getExternalFilesDir(Environment.DIRECTORY_PICTURES + folderPath);
+            if (myDir != null && !myDir.exists()) {
+                myDir.mkdirs();
+            }
+
+            File file = new File(myDir, imageName + ".jpg");
+
+            if (file.exists() && file.length() > 1000) {
                 return file.getAbsolutePath();
             } else {
-                // Если размеры не совпадают, удаляем файл и продолжаем
                 file.delete();
             }
 
-        // Запись в файл фотки.
-        // Если удачно сохранило фотку - возвращает её путь, иначе - возвразает пустоту.
-        try (FileOutputStream out = new FileOutputStream(file)) {
-            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, out);
-            out.flush();
-            // Освобождаем память после сохранения
-            bitmap.recycle(); // Освобождение памяти, занятой изображением
-            return file.getAbsolutePath();
-        } catch (Exception e) {
-            e.printStackTrace();
+            // Уменьшаем изображение перед сохранением (примерно в 2 раза)
+            Bitmap scaledBitmap = Bitmap.createScaledBitmap(bitmap, bitmap.getWidth() / 2, bitmap.getHeight() / 2, true);
+
+            try (FileOutputStream out = new FileOutputStream(file)) {
+                scaledBitmap.compress(Bitmap.CompressFormat.JPEG, 80, out);
+                out.flush();
+                return file.getAbsolutePath();
+            } catch (Exception e) {
+                e.printStackTrace();
+                return null;
+            } finally {
+                bitmap.recycle();
+                scaledBitmap.recycle(); // Освобождаем уменьшенный bitmap
+            }
+        } catch (OutOfMemoryError e) {
+            Log.e("savePhotoToPhoneMemory", "Ошибка: Недостаточно памяти", e);
             return null;
         }
     }
 
+
+//    private static final ExecutorService executor = Executors.newFixedThreadPool(8);
+//
+//    public static void savePhotoAsync(String folderPath, String imageName, Bitmap bitmap, Callback callback) {
+//        executor.execute(() -> {
+//            String result = savePhotoToPhoneMemory(folderPath, imageName, bitmap);
+//            if (callback != null) {
+//                new Handler(Looper.getMainLooper()).post(() -> callback.onComplete(result));
+//            }
+//        });
+//    }
+//
+//    public interface Callback {
+//        void onComplete(String path);
+//    }
 
     /**
      * Добавляет запись в ЛОГ
@@ -1051,7 +1133,11 @@ public class Globals {
             TablesLoadingUnloading.readyTradeMarksTable = false;
             TablesLoadingUnloading.readySamplePhotos = false;
 
-            alertDialogMsg(context, "Синхронизация окончена");
+            alertDialogMsg(context,
+                    DialogStatus.NORMAL,
+                    "Обмен данными с сервером завершен",
+                    "Успешно",
+                    "Синхронизация окончена");
         }
 
         if (TablesLoadingUnloading.syncInternetError) {
@@ -1396,7 +1482,7 @@ public class Globals {
                 stream.write(data.getBytes());
             }
         } catch (IOException e) {
-            Log.e("LogError","type: " + e.getMessage());
+            Log.e("LogError", "type: " + e.getMessage());
         }
     }
 
@@ -1460,7 +1546,7 @@ public class Globals {
                 stream.write(data.getBytes());
             }
         } catch (IOException e) {
-            Log.e("LogError","type: " + e.getMessage());
+            Log.e("LogError", "type: " + e.getMessage());
         }
     }
 
@@ -1606,16 +1692,28 @@ public class Globals {
      * Отображаю сообщение о состоянии интеренета, онлайн режима и тп...
      */
     public static void showInternetStatusMassage(Context context, InternetStatus status) {
-        DialogData dialog = new DialogData(context);
+        MessageDialogBuilder dialog = new MessageDialogBuilder(unwrap(context));
         switch (status) {
-            case INTERNET -> dialog.setTitle("Все нормально, сервер merchik онлайн");
-            case NO_INTERNET -> dialog.setTitle("Нема інтернет з'єднання");
+            case INTERNET -> {
+                dialog.setTitle("Все нормально, сервер merchik онлайн");
+                dialog.setStatus(DialogStatus.NORMAL);
+            }
+            case NO_INTERNET -> {
+                dialog.setTitle("Нема інтернет з'єднання");
+                dialog.setStatus(DialogStatus.ALERT);
+            }
 //            case NO_SERVER -> dialog.setTitle("Нема з'єднання із сервером");
-            case NO_SERVER ->
-                    dialog.setTitle("Інтернет з'єднання працює, але сервер merchik не відповідає");
-            case NULL -> dialog.setTitle("Не зрозуміла помилка зв'язку");
+            case NO_SERVER -> {
+                dialog.setTitle("Інтернет з'єднання працює, але сервер merchik не відповідає");
+                dialog.setStatus(DialogStatus.ERROR);
+            }
+            case NULL -> {
+                dialog.setTitle("Не зрозуміла помилка зв'язку");
+                dialog.setStatus(DialogStatus.ERROR);
+            }
         }
-        dialog.setText("Зв`язок з сервером на поточний момент встановити не вдалось! Додаток буде працювати у режимі off-line. " +
+        dialog.setSubTitle("Статус связи");
+        dialog.setMessage("Зв`язок з сервером на поточний момент встановити не вдалось! Додаток буде працювати у режимі off-line. " +
                 "У цьому режимі він не може отримувати від серверу дані та не може передавати свої дані у зворотньому напрямку але, " +
                 "якщо дані вже завантажені, то ви можете працювати майже без обмеження функціоналу. У випадку, якщо це ваш перший " +
                 "вхід у систему (після встановлення Додатку) то ви не зможете почати роботи, поки не відновите зв`язок з сервером. " +
@@ -1624,10 +1722,11 @@ public class Globals {
                 "а) впевніться що у вас ввімкнений (і працює) і-нет, \n" +
                 "б) натисніть іконку 'обмін даними' у верхній частині додатку. \n\n" +
                 "Допомогу ви можете отримати у свого керівника чи у оператора служби підтримки merchik +380674491265");
-        dialog.setTextScroll();
-        dialog.setImgBtnCall(context);
-        dialog.setClose(dialog::dismiss);
-        dialog.setDialogIco();
+        dialog.setOnConfirmAction(() -> Unit.INSTANCE);
+//        dialog.setTextScroll();
+//        dialog.setImgBtnCall(context);
+//        dialog.setClose(dialog::dismiss);
+//        dialog.setDialogIco();
         dialog.show();
     }
 
@@ -1858,6 +1957,14 @@ public class Globals {
             value = "0" + value; // Добавляем ведущие нули
         }
         return value;
+    }
+
+    private static Activity unwrap(Context context) {
+        while (!(context instanceof Activity) && context instanceof ContextWrapper) {
+            context = ((ContextWrapper) context).getBaseContext();
+        }
+        assert context instanceof Activity;
+        return (Activity) context;
     }
 
 }//--------------

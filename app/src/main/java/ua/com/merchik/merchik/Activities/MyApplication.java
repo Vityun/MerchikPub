@@ -16,6 +16,7 @@ import kotlinx.coroutines.CoroutineStart;
 import kotlinx.coroutines.Dispatchers;
 import kotlinx.coroutines.GlobalScope;
 import ua.com.merchik.merchik.Clock;
+import ua.com.merchik.merchik.ServerExchange.workmager.WorkManagerHelper;
 import ua.com.merchik.merchik.Utils.LogCleaner;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.room.RoomManager;
@@ -39,6 +40,8 @@ public class MyApplication extends Application {
         File cacheDir = getCacheDir();
 
         BuildersKt.launch(GlobalScope.INSTANCE, Dispatchers.getIO(), CoroutineStart.DEFAULT, (coroutineScope, continuation) -> LogCleaner.INSTANCE.cleanOldLogs(cacheDir, continuation));
+
+         WorkManagerHelper.INSTANCE.schedulePhotoDownloadTask(this);
 
     }
 

@@ -100,6 +100,7 @@ import ua.com.merchik.merchik.database.realm.tables.TradeMarkRealm;
 import ua.com.merchik.merchik.dialogs.DialogAdditionalRequirements.AdditionalRequirementsAdapter;
 import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.dialogs.DialogPhotoTovar;
+import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
 
 public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewDRAdapterTovar.ViewHolder> implements Filterable {
@@ -889,7 +890,9 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
 
                             } catch (Exception e) {
                                 Globals.writeToMLOG("ERROR", "RecycleViewDRAdapterTovar.bind_7", "Exception e: " + e);
-                                globals.alertDialogMsg(mContext, "Не удалось открыть Опцию. Если ошибка повторяется - обратитесь к своему руководителю.\n\nОшибка: " + e);
+                                Globals.alertDialogMsg(mContext, DialogStatus.ERROR,
+                                        "Увага",
+                                        "Не удалось открыть Опцию. Если ошибка повторяется - обратитесь к своему руководителю.\n\nОшибка: " + e);
                             }
                         } else {
                             clickTovar.click(list);

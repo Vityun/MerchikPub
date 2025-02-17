@@ -22,7 +22,9 @@ import android.widget.TextView;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.compose.ui.platform.ComposeView;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -39,6 +41,10 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import java.util.ArrayList;
 import java.util.List;
 
+import dagger.hilt.android.AndroidEntryPoint;
+import kotlin.Unit;
+import kotlin.jvm.internal.Intrinsics;
+import ua.com.merchik.merchik.Activities.Features.ui.ComposeFunctions;
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.FabYoutube;
 import ua.com.merchik.merchik.Globals;
@@ -56,7 +62,9 @@ import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.database.realm.tables.ThemeRealm;
 import ua.com.merchik.merchik.database.realm.tables.WpDataRealm;
 
+
 @SuppressLint("ValidFragment")
+//@AndroidEntryPoint // Аннотация для поддержки Hilt
 public class DetailedReportHomeFrag extends Fragment {
 
     private static AppCompatActivity mContext;
@@ -70,7 +78,7 @@ public class DetailedReportHomeFrag extends Fragment {
     private FabYoutube fabYoutube = new FabYoutube();
     private FloatingActionButton fabYouTube;
     private TextView badgeTextView;
-    public static final Integer[]  DetailedReportHomeFrag_VIDEO_LESSONS = new Integer[]{819, 4456};
+    public static final Integer[] DetailedReportHomeFrag_VIDEO_LESSONS = new Integer[]{819, 4456};
 
     // Интерфейс
     TextView activity_title;
@@ -80,16 +88,21 @@ public class DetailedReportHomeFrag extends Fragment {
 
     private ImageView merchikImg;
 
+    private ComposeView composeView;
+    private static CommentViewModel viewModel;
+
     public DetailedReportHomeFrag() {
         Globals.writeToMLOG("INFO", "DetailedReportHomeFrag/1", "create");
     }
 
-    public static DetailedReportHomeFrag newInstance(AppCompatActivity context, WpDataDB wpDataDB) {
+    public static DetailedReportHomeFrag newInstance(AppCompatActivity context, WpDataDB wpDataDB,
+                                                     CommentViewModel commentViewModel) {
         DetailedReportHomeFrag fragment = new DetailedReportHomeFrag();
         Bundle args = new Bundle();
         args.putParcelable("wpDataDB", wpDataDB);
         mContext = context;
         fragment.setArguments(args);
+        viewModel = commentViewModel;
         return fragment;
     }
 
@@ -192,28 +205,18 @@ public class DetailedReportHomeFrag extends Fragment {
             option_signal_layout2 = v.findViewById(R.id.option_signal_layout2);
             option_signal_layout2.setOnClickListener(view -> openConductDialog());
             recycler = v.findViewById(R.id.recycler);
+            composeView = v.findViewById(R.id.composeView);
+
 
             textDRDateV.setText(Clock.getHumanTimeYYYYMMDD(wpDataDB.getDt().getTime() / 1000));
             textDRAddrV.setText(wpDataDB.getAddr_txt());
             textDRCustV.setText(wpDataDB.getClient_txt());
             textDRMercV.setText(wpDataDB.getUser_txt());
+
             option_signal_layout2.addView(ll);
 
             recycler.setAdapter(new KeyValueListAdapter(createKeyValueData(wpDataDB)));
             recycler.setLayoutManager(new LinearLayoutManager(getContext(), LinearLayoutManager.VERTICAL, false));
-
-
-//            textTheme = v.findViewById(R.id.theme);
-//
-//            int themeId = wpDataDB.getTheme_id();
-//            ThemeDB themeDB = ThemeRealm.getByID(String.valueOf(themeId));
-//            if (themeId == 998) {
-//                textTheme.append(themeDB.getNm());
-//            } else {
-//                CharSequence chsr = Html.fromHtml("<font color=red>" + themeDB.getNm() + "</font>");
-//                textTheme.append(chsr);
-//            }
-
 
             spotLat = Float.valueOf(wpDataDB.getAddr_location_xd());
             spotLon = Float.valueOf(wpDataDB.getAddr_location_yd());
@@ -234,6 +237,9 @@ public class DetailedReportHomeFrag extends Fragment {
                 });
             }
 
+            ComposeFunctions.setContent(composeView, wpDataDB, viewModel);
+            Log.e("ComposeFunctions!", "textDRAddrV: " + textDRAddrV.getTextColors().getDefaultColor());
+
             fabYoutube.setFabVideo(fabYouTube, DetailedReportHomeFrag_VIDEO_LESSONS, () -> fabYoutube.showYouTubeFab(fabYouTube, badgeTextView, DetailedReportHomeFrag_VIDEO_LESSONS));
             fabYoutube.showYouTubeFab(fabYouTube, badgeTextView, DetailedReportHomeFrag_VIDEO_LESSONS);
 
@@ -242,6 +248,10 @@ public class DetailedReportHomeFrag extends Fragment {
         }
 
         return v;
+    }
+
+
+    private void Text(String этоТекстовоеПолеВCompose) {
     }
 
     /*Заполнение данных над картой*/
@@ -271,6 +281,7 @@ public class DetailedReportHomeFrag extends Fragment {
         ThemeDB themeDB = ThemeRealm.getByID(String.valueOf(themeId));
         if (themeId == 998) {
             value = themeDB.getNm();
+            Log.d("ADD_OPINION_FROM_DETAIL", "themeId: " + value);
         } else {
             value = Html.fromHtml("<font color=red>" + themeDB.getNm() + "</font>");
         }
@@ -298,6 +309,7 @@ public class DetailedReportHomeFrag extends Fragment {
         Log.e("DetailedReportHomeFrag", "updateMap.spotLon: " + spotLon);
 
         if (map == null) return;
+        map.getUiSettings().setScrollGesturesEnabled(false);
         if (spotLat != null && spotLon != null) {
             LatLng coord = new LatLng(spotLat, spotLon);
             map.addMarker(new MarkerOptions()

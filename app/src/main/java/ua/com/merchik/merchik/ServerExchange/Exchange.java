@@ -4,11 +4,16 @@ package ua.com.merchik.merchik.ServerExchange;
 import static ua.com.merchik.merchik.ServerExchange.TablesLoadingUnloading.downloadSiteHints;
 import static ua.com.merchik.merchik.ServerExchange.TablesLoadingUnloading.downloadVideoLessons;
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
+import static ua.com.merchik.merchik.toolbar_menus.internetStatus;
 
+import android.app.Activity;
 import android.content.Context;
+import android.content.ContextWrapper;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.util.Log;
+
+import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
@@ -18,11 +23,13 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 import io.reactivex.rxjava3.observers.DisposableCompletableObserver;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 import io.realm.RealmResults;
+import kotlin.Unit;
 import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -64,7 +71,6 @@ import ua.com.merchik.merchik.data.Database.Room.OblastSDB;
 import ua.com.merchik.merchik.data.Database.Room.SamplePhotoSDB;
 import ua.com.merchik.merchik.data.Database.Room.ShowcaseSDB;
 import ua.com.merchik.merchik.data.Database.Room.SiteAccountSDB;
-import ua.com.merchik.merchik.data.Database.Room.SiteObjectsSDB;
 import ua.com.merchik.merchik.data.Database.Room.SiteUrlSDB;
 import ua.com.merchik.merchik.data.Database.Room.StandartSDB;
 import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
@@ -130,11 +136,13 @@ import ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsMarkRe
 import ua.com.merchik.merchik.database.realm.tables.StackPhotoRealm;
 import ua.com.merchik.merchik.database.realm.tables.TARCommentsRealm;
 import ua.com.merchik.merchik.database.realm.tables.WpDataRealm;
-import ua.com.merchik.merchik.dialogs.BlockingProgressDialog;
 import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.dialogs.DialogFilter.Click;
 import ua.com.merchik.merchik.dialogs.EKL.EKLRequests;
+import ua.com.merchik.merchik.dialogs.features.MessageDialogBuilder;
+import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
+import ua.com.merchik.merchik.toolbar_menus;
 
 /**
  * 26.02.2021
@@ -148,15 +156,24 @@ public class Exchange {
 
     private final Globals globals = new Globals();
     public Context context;
-    public static long exchange = 0;
+    public static long exchangeTime = 0;
     //    private int retryTime = 120000;   // 2
     private final int retryTime = 600000;     // 10
 //    private int retryTime = 60000;     // 1
+
 
     /**
      * 26.02.2021
      * Енум для опозначения какие данные мы будем отправлять на всервер.
      */
+    public Exchange() {
+
+    }
+
+    Exchange(AppCompatActivity activity) {
+
+    }
+
     public enum UploadPhotoInfo {
         DVI, RATING, COMMENT, PRIZE
     }
@@ -177,15 +194,19 @@ public class Exchange {
      * Начало Обмена. Внутри находятся все Обмены
      */
     public void startExchange() {
+        Log.e("startExchange", "0");
 
         try {
             Log.e("startExchange", "start");
 
             /**MERCHIK_1
              * Механізм для того що б синхронізація не запускалася частіше 10 ХВИЛИН !!*/
-            if (exchange + retryTime < System.currentTimeMillis()) {
+            if (exchangeTime + retryTime < System.currentTimeMillis()
+                    && internetStatus == 1
+//                    && toolbar_menus.internetStatusG == Globals.InternetStatus.INTERNET
+            ) {
                 Log.e("startExchange", "start/Время обновлять наступило");
-                exchange = System.currentTimeMillis();
+                exchangeTime = System.currentTimeMillis();
 
 //                Globals.writeToMLOG("INFO", "PetrovExchangeTest/startExchange", "Началась загрузка данных");
 
@@ -210,7 +231,7 @@ public class Exchange {
                         public void onSuccess(Object data) {
                             Globals.writeToMLOG("INFO", "Exchange/SamplePhotoExchange()/onSuccess", "data: " + data);
 
-                            List<SamplePhotoSDB> res = (List<SamplePhotoSDB>) data;
+//                            List<SamplePhotoSDB> listPhotosToDownload = (List<SamplePhotoSDB>) data;
 //                            Globals.writeToMLOG("INFO", "PetrovExchangeTest/startExchange/samplePhotoExchange/onSuccess", "Загрузка ОБРАЗЦОВ ФОТО res: " + res.size());
 
                             try {
@@ -225,7 +246,7 @@ public class Exchange {
                             }
 
                             try {
-                                SamplePhotoExchange samplePhotoExchange = new SamplePhotoExchange();
+//                                SamplePhotoExchange samplePhotoExchange = new SamplePhotoExchange();
                                 List<Integer> listPhotosToDownload = samplePhotoExchange.getSamplePhotosToDownload();
 
                                 if (listPhotosToDownload != null && listPhotosToDownload.size() > 0) {
@@ -270,6 +291,7 @@ public class Exchange {
                                 Log.e("````", "err", e);
                             }
                         }
+
                         @Override
                         public void onFailure(String error) {
                             Globals.writeToMLOG("ERROR", "Exchange/SamplePhotoExchange()/onFailure", "error: " + error);
@@ -293,6 +315,8 @@ public class Exchange {
                 try {
                     Globals.writeToMLOG("INFO", "startExchange/uploadLodMp", "START");
                     TablesLoadingUnloading tablesLoadingUnloading = new TablesLoadingUnloading();
+
+//                    tablesLoadingUnloading.downloadTovarTable(context, null);
                     tablesLoadingUnloading.uploadLodMp(new ExchangeInterface.ExchangeRes() {
                         @Override
                         public void onSuccess(String ok) {
@@ -1069,7 +1093,8 @@ public class Exchange {
                                         @Override
                                         public void onComplete() {
                                             Log.e("ShowcaseExchange", "OK");
-                                            showcaseExchange.downloadShowcasePhoto((List<ShowcaseSDB>) data);
+                                            if (!data.isEmpty())
+                                                showcaseExchange.downloadShowcasePhoto((List<ShowcaseSDB>) data);
                                         }
 
                                         @Override
@@ -1203,8 +1228,19 @@ public class Exchange {
 
 
                 // --------------------------------------------------------------
+            } else if (exchangeTime + retryTime < System.currentTimeMillis()
+                    && toolbar_menus.internetStatusG == Globals.InternetStatus.NO_SERVER) {
+
+                new MessageDialogBuilder((Activity) context)
+                        .setStatus(DialogStatus.ALERT)
+                        .setTitle("Сервер сейчас занят")
+                        .setSubTitle("Время ответа от сервера может быть больше чем обычно")
+                        .setMessage("На данный момент сервер загружен и время ожидания может быть больше чем обычно. Ни в коем случае не переустанавливайте приложение, так как время ожидания увеличиться во много раз, и вы можете потерять часть данных, которые не были переданы на сервер." +
+                                "Если после ожидания ни чего не изменилось, повторите вашу попытку через несколько минут")
+                        .setOnConfirmAction(() -> Unit.INSTANCE)
+                        .show();
             } else {
-                long time = (System.currentTimeMillis() - exchange) / 1000;
+                long time = (System.currentTimeMillis() - exchangeTime) / 1000;
                 Log.e("startExchange", "start/Время обновлять НЕ наступило. После обновления прошло: " + time + "секунд.");
             }
         } catch (Exception e) {
@@ -1213,6 +1249,15 @@ public class Exchange {
 //        }).start();
     }
 
+    private Activity unwrap(Context context) {
+        Log.d("unwrap!", "Передан контекст: " + context.getClass().getName());
+
+        while (!(context instanceof Activity) && context instanceof ContextWrapper) {
+            context = ((ContextWrapper) context).getBaseContext();
+        }
+        assert context instanceof Activity;
+        return (Activity) context;
+    }
     // ====================================^=^=^=^=^================================================
 
     public void sendTAR() {
@@ -1347,7 +1392,7 @@ public class Exchange {
     private void updateSiteObj() {
 //        List<SiteObjectsSDB> data = SQL_DB.siteObjectsDao().getAll();
 
-        Log.e("SiteObjectsExchange","0");
+        Log.e("SiteObjectsExchange", "0");
         // Отобрадение прогресса
 //        BlockingProgressDialog progressDialog = BlockingProgressDialog.show(context, "Обмен данными с сервером.", "Обновление таблицы: " + "ОбьектыСайта");
 
@@ -1984,7 +2029,7 @@ public class Exchange {
                             stackPhotoDB.setObject_id(Integer.valueOf(item.getTovarId()));
                             stackPhotoDB.addr_id = Integer.valueOf(item.getAddrId());
                             stackPhotoDB.approve = Integer.valueOf(item.getApprove());
-                            stackPhotoDB.dvi = Integer.valueOf(item.getDvi());
+                            stackPhotoDB.dvi = Integer.valueOf(Objects.requireNonNullElse(item.getDvi(), "0"));
                             stackPhotoDB.setCode_iza(item.codeIZA);
                             stackPhotoDB.setVpi(0);
                             stackPhotoDB.setCreate_time(Long.parseLong(item.getDt()) * 1000);
@@ -3273,5 +3318,4 @@ public class Exchange {
             return;
         }
     }
-
 }

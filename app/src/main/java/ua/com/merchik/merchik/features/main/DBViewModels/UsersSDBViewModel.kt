@@ -24,6 +24,7 @@ import ua.com.merchik.merchik.database.room.RoomManager
 import ua.com.merchik.merchik.dialogs.DialogAchievement.AchievementDataHolder
 import ua.com.merchik.merchik.dialogs.DialogAchievement.FilteringDialogDataHolder
 import ua.com.merchik.merchik.dialogs.EKL.EKLDataHolder
+import ua.com.merchik.merchik.dialogs.features.dialogMessage.MessageDialog
 import ua.com.merchik.merchik.features.main.Main.Filters
 import ua.com.merchik.merchik.features.main.Main.ItemFilter
 import ua.com.merchik.merchik.features.main.Main.MainViewModel
@@ -115,8 +116,8 @@ class UsersSDBViewModel @Inject constructor(
 
             val address = RoomManager.SQL_DB.addressDao().getById(addrId)
 
-            val tovarGroupClientSDB = RoomManager.SQL_DB.tovarGroupClientDao()
-                .getAllBy(wpClientId, address.tpId)
+//            val tovarGroupClientSDB = RoomManager.SQL_DB.tovarGroupClientDao()
+//                .getAllBy(wpClientId, address.tpId)
 
 //
 //            val ids: List<Int> = tovarGroupClientSDB?.map { it.tovarGrpId } ?: emptyList()
@@ -152,7 +153,7 @@ class UsersSDBViewModel @Inject constructor(
                 val header = AdditionalRequirementsDB::class.java.newInstance()
                 header.notes =
                     "Системе не удалось найти представителей торговой точки (птт) у которых вы можете подписать  электронно-контрольный лист (экл). \n" +
-                            "Для того что бы просмотреть список всех ТПП зарегистрированных на данной Торговой точке (ТТ) нажмите на кнопку рефреш \n" +
+                            "Для того что бы просмотреть список всех ТПП зарегистрированных на данной Торговой точке (ТТ) нажмите на кнопку обновить \n" +
                             "Если нужный вам птт в этом списке отсутствует нажмите кнопку + для того что бы зарегистрировать нового представителей торговой точки"
                 _uiItemsHeader.value = repository.toItemUIList(
                     AdditionalRequirementsDB::class,
@@ -165,6 +166,7 @@ class UsersSDBViewModel @Inject constructor(
                             (it.rawObj.firstOrNull { it is AdditionalRequirementsDB } as? AdditionalRequirementsDB)?.id == AchievementDataHolder.instance().requirementClientId
                         it.copy(selected = selected)
                     }
+
             }
 
             val filterUsersSDB = ItemFilter(

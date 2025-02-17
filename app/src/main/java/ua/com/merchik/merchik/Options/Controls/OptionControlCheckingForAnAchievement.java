@@ -263,7 +263,6 @@ public class OptionControlCheckingForAnAchievement<T> extends OptionControl {
                 signal = false;
             }
 
-
             resultMsg.append("\n\n");
             for (TovarDB item : tovarResultList) {
                 String msg = String.format("(%s) %s (%s)", item.getBarcode(), item.getNm(), item.getWeight());

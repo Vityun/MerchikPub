@@ -75,6 +75,7 @@ import ua.com.merchik.merchik.data.URLData.URLData;
 import ua.com.merchik.merchik.data.WPDataObj;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.WpDataRealm;
+import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
 
 
@@ -1238,16 +1239,25 @@ public class PhotoReportActivity extends toolbar_menus {
                     }
                     return true;
                 } catch (Exception e) {
-                    globals.alertDialogMsg(this, "Ошибка сохранения в БД: " + e);
+                    Globals.alertDialogMsg(this,
+                            DialogStatus.ERROR,
+                            "Виникла помилка",
+                            "Ошибка сохранения в БД: " + e);
                 }
 
             } else {
-                globals.alertDialogMsg(this, "Такое фото уже существует. Если ошибка повторяется - обратитесь к Вашему руководителю");
+                Globals.alertDialogMsg(this,
+                        DialogStatus.ALERT,
+                        "Увага",
+                        "Такое фото уже существует. Если ошибка повторяется - обратитесь к Вашему руководителю");
                 return false;
             }
 
         } catch (Exception e) {
-            globals.alertDialogMsg(this, "Ошибка при сохранении фото. При возникновении этой ошибки - обратитесь к руководителю. Код ошибки: " + e);
+            Globals.alertDialogMsg(this,
+                    DialogStatus.ERROR,
+                    "Виникла помилка",
+                    "Ошибка при сохранении фото. При возникновении этой ошибки - обратитесь к руководителю. Код ошибки: " + e);
         }
         return false;
     }

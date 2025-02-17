@@ -447,3 +447,10 @@ object UsersSDBOverride {
 //    }
 
 }
+
+object OpinionSDBOverride {
+
+    fun getHidedFieldsOnUI(): String =
+        "dt_change, grp_id, ID"
+
+}

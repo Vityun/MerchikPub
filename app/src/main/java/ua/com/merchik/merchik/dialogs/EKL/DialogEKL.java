@@ -79,6 +79,7 @@ import ua.com.merchik.merchik.dataLayer.ModeUI;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsRealm;
 import ua.com.merchik.merchik.database.realm.tables.AppUserRealm;
+import ua.com.merchik.merchik.database.room.RoomManager;
 import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.dialogs.DialogVideo;
 import ua.com.merchik.merchik.dialogs.features.AlertDialogOneButton;
@@ -499,127 +500,7 @@ public class DialogEKL {
 
 
             refresh.setOnClickListener(v -> {
-                progress = new ProgressViewModel(1);
-                loadingDialog = new LoadingDialogWithPercent(unwrap(context), progress);
-                loadingDialog.show();
-
-                progress.onNextEvent("Оновлюю список ТПП", 6_600);
-
-                new EKLRequests().getPTTByAddress(wp.getAddr_id(), new Clicks.clickObjectAndStatus() {
-                    @Override
-                    public void onSuccess(Object data) {
-                        try {
-                            EKLRequests.PTTRequest pttRequest = (EKLRequests.PTTRequest) data;
-
-                            if (pttRequest.state) {
-                                if (pttRequest.list != null && pttRequest.list.size() > 0) {
-                                    List<UserSDBJoin> newPttList = new ArrayList<>();
-                                    for (EKLRequests.PTT item : pttRequest.list) {
-
-                                        boolean userExists = allUsersLJoinTovGrps.stream()
-                                                .anyMatch(existingUser -> existingUser.fio.equals(item.fio));
-
-                                        if (userExists) {
-                                            Log.e("userSDB", "Пользователь с fio " + item.fio + " уже существует, пропускаем.");
-                                            continue;
-                                        }
-
-                                        UserSDBJoin userSDBJoin = new UserSDBJoin();
-
-                                        userSDBJoin.id = Integer.valueOf(item.userId);
-                                        userSDBJoin.fio = item.fio;
-                                        userSDBJoin.tel = item.tel != null ? item.tel : "";
-                                        userSDBJoin.tel2 = item.tel2;
-                                        userSDBJoin.authorId = (Integer) item.authorId;
-                                        userSDBJoin.clientId = Integer.valueOf(item.clientId);
-                                        if (item.otdelId != null) {
-                                            try {
-                                                if (item.otdelId instanceof Number) {
-                                                    // Если это Number (Integer, Double и т.д.)
-                                                    userSDBJoin.otdelId = ((Number) item.otdelId).intValue();
-                                                } else if (item.otdelId instanceof String) {
-                                                    // Если это строка, пытаемся конвертировать в Integer
-                                                    userSDBJoin.otdelId = Integer.parseInt((String) item.otdelId);
-                                                } else {
-                                                    // Если тип неизвестен, устанавливаем значение по умолчанию
-                                                    userSDBJoin.otdelId = 0;
-                                                }
-                                            } catch (NumberFormatException e) {
-                                                // Если строка не может быть преобразована в число
-                                                userSDBJoin.otdelId = 0;
-                                            }
-                                        } else {
-                                            // Если значение null, устанавливаем значение по умолчанию
-                                            userSDBJoin.otdelId = 0;
-                                        }
-//                                        userSDBJoin.otdelId = item.otdelId != null ? (Integer) item.otdelId : 0;
-                                        userSDBJoin.department = (Integer) item.department;
-                                        userSDBJoin.sendSms = item.sendSms;
-                                        userSDBJoin.workAddrId = wp.getAddr_id();
-
-                                        Log.e("userSDB", "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
-                                        Log.e("userSDB", "id: " + userSDBJoin.id);
-                                        Log.e("userSDB", "tel: " + userSDBJoin.tel);
-                                        Log.e("userSDB", "otdel_id: " + userSDBJoin.otdelId);
-                                        Log.e("userSDB", "workAddrId: " + userSDBJoin.workAddrId);
-                                        newPttList.add(userSDBJoin);
-                                    }
-                                    List<UsersSDB> usersSDBList = new ArrayList<>();
-                                    for (UserSDBJoin userSDBJoin : newPttList) {
-                                        usersSDBList.add(mapToUsersSDB(userSDBJoin));
-                                    }
-
-                                    allUsersLJoinTovGrps.addAll(newPttList);
-
-                                    SQL_DB.usersDao().insertAll(usersSDBList);
-
-                                    Log.e("userSDB!!!", "size: " + newPttList.size());
-
-                                    adapterUser = new AutoTextUsersViewHolder(
-                                            context,
-                                            android.R.layout.simple_dropdown_item_1line,
-                                            newPttList
-                                    );
-                                    adapterUser.setAdditionalInformation(AutoTextUsersViewHolder.AutoTextUserEnum.DEPARTMENT);
-//                                    sotr.setAdapter(adapterUser);
-
-                                    progress.onCompleted();
-                                    Toast.makeText(context, "Список ПТТ Оновлено!", Toast.LENGTH_SHORT).show();
-
-                                    startUFMD();
-
-                                }
-                            }
-                        } catch (Exception e) {
-                            progress.onCanceled();
-                            Log.e("EKLRequests", "Exception e: " + e.getMessage());
-                            new MessageDialogBuilder(unwrap(context))
-                                    .setTitle("Виникла помилка при отриманні переліку ПТТ")
-                                    .setStatus(DialogStatus.ERROR)
-                                    .setMessage(e.getMessage() != null ? e.getMessage() : "Помилка не визначена")
-                                    .setOnCancelAction(() -> Unit.INSTANCE
-                                    )
-                                    .show();
-                        }
-                    }
-
-                    @Override
-                    public void onFailure(String error) {
-                        Globals.writeToMLOG("INFO", "getPTTByAddress/RES/onFailure", "String error: " + error);
-                        new MessageDialogBuilder(unwrap(context))
-                                .setTitle("Виникла помилка при отриманні переліку ПТТ")
-                                .setStatus(DialogStatus.ERROR)
-                                .setMessage(error)
-                                .setOnCancelAction(() -> Unit.INSTANCE
-                                )
-                                .show();
-//                        DialogData dialogData = new DialogData(context);
-//                        dialogData.setTitle("Виникла помилка при отриманні переліку ПТТ");
-//                        dialogData.setText(error);
-//                        dialogData.setClose(dialogData::dismiss);
-//                        dialogData.show();
-                    }
-                });
+                updatePTTClientList();
             });
 //
 
@@ -768,11 +649,30 @@ public class DialogEKL {
         Log.e("ValidatorEKL", "startUFMD wp dad2: " + wp.getCode_dad2());
         Log.e("ValidatorEKL", "startUFMD wp client_id: " + wp.getClient_id());
 
-        Intent intent = new Intent(context, FeaturesActivity.class);
-        Bundle bundle = new Bundle();
-        bundle.putString("viewModel", UsersSDBViewModel.class.getCanonicalName());
-        bundle.putString("contextUI", ContextUI.USERS_SDB_FROM_EKL.toString());
-        bundle.putString("modeUI", ModeUI.ONE_SELECT.toString());
+        int addrId = wp.getAddr_id();
+        List<UsersSDB> usersSDBList = RoomManager.SQL_DB.usersDao().getPTT(addrId);
+        if (usersSDBList.isEmpty()) {
+            new MessageDialogBuilder(unwrap(context))
+                    .setTitle("Не найден подходящий ПТТ")
+                    .setSubTitle("Можно скачать список всех ПТТ для данной точки")
+                    .setStatus(DialogStatus.ALERT)
+                    .setMessage(
+                            "Системе не удалось найти представителей торговой точки (птт) у которых вы можете подписать электронно-контрольный лист (экл).\n" +
+                                    "Для того что бы просмотреть список всех ПТТ зарегистрированных на данной Торговой точке (ТТ) нажмите на кнопку 'Обновить' \n" +
+                                    "Если нужный вам птт в этом списке отсутствует нажмите кнопку + для того что бы зарегистрировать нового представителя торговой точки")
+                    .setOnCancelAction(() -> Unit.INSTANCE)
+                    .setOnConfirmAction("Обновить", () -> {
+                        updatePTTClientList();
+                        return Unit.INSTANCE;
+                    })
+                    .show();
+        } else {
+            usersSDBList.clear();
+            Intent intent = new Intent(context, FeaturesActivity.class);
+            Bundle bundle = new Bundle();
+            bundle.putString("viewModel", UsersSDBViewModel.class.getCanonicalName());
+            bundle.putString("contextUI", ContextUI.USERS_SDB_FROM_EKL.toString());
+            bundle.putString("modeUI", ModeUI.ONE_SELECT.toString());
 //                                            JsonObject dataJson = new JsonObject(newPttList);
 //                                            bundle.putString("dataJson", jsonString);
 //        bundle.putString("dataJson", new Gson().toJson(wp.getAddr_id()));
@@ -785,21 +685,22 @@ public class DialogEKL {
 //
 //        } catch (Exception ignored) {
 //        }
-        JsonObject dataJson = new JsonObject();
-        dataJson.addProperty("addr_id", wp.getAddr_id());
+            JsonObject dataJson = new JsonObject();
+            dataJson.addProperty("addr_id", wp.getAddr_id());
 //        dataJson.addProperty("wpDataDBId", String.valueOf(wp.getId()));
-        dataJson.addProperty("wpDataClientId", wp.getClient_id());
-        dataJson.addProperty("wpDataPttUserId", wp.ptt_user_id);
-        dataJson.addProperty("wpDataUserId", wp.getUser_id());
-        dataJson.addProperty("wpDataTime", wp.getDt().getTime());
-        bundle.putString("dataJson", new Gson().toJson(dataJson));
+            dataJson.addProperty("wpDataClientId", wp.getClient_id());
+            dataJson.addProperty("wpDataPttUserId", addrId);
+            dataJson.addProperty("wpDataUserId", wp.getUser_id());
+            dataJson.addProperty("wpDataTime", wp.getDt().getTime());
+            bundle.putString("dataJson", new Gson().toJson(dataJson));
 
-        bundle.putString("title", "Список ПТТ за адресою: " + wp.getAddr_txt());
-        bundle.putString("subTitle", "Виберіть ТПП (Представника Торгової точки) якому ви відправите код для підтвердження факту виконаних робіт з даної ТТ та Вашої присутності");
-        intent.putExtras(bundle);
-        ActivityCompat.startActivityForResult(unwrap(context), intent, NEED_UPDATE_UI_REQUEST, null);
+            bundle.putString("title", "Список ПТТ за адресою: " + wp.getAddr_txt());
+            bundle.putString("subTitle", "Виберіть ТПП (Представника Торгової точки) якому ви відправите код для підтвердження факту виконаних робіт з даної ТТ та Вашої присутності");
+            intent.putExtras(bundle);
+            ActivityCompat.startActivityForResult(unwrap(context), intent, NEED_UPDATE_UI_REQUEST, null);
 
-        EKLDataHolder.Companion.instance().init();
+            EKLDataHolder.Companion.instance().init();
+        }
     }
 
     private void sendEKL(Context context, String telType) {
@@ -865,7 +766,7 @@ public class DialogEKL {
                                 .setMessage(errorData.getErrorMessage())
                                 .setOnConfirmAction(() -> {
                                     sendRegistrationInTelegram(telType);
-                                    Toast.makeText(context,"СМС з посиланням відправлений представнику ПТТ, у разі потреби допоможіть йому завершити налаштування",Toast.LENGTH_LONG).show();
+                                    Toast.makeText(context, "СМС з посиланням відправлений представнику ПТТ, у разі потреби допоможіть йому завершити налаштування", Toast.LENGTH_LONG).show();
                                     return Unit.INSTANCE;
                                 })
                                 .setOnCancelAction(() -> Unit.INSTANCE)
@@ -956,6 +857,131 @@ public class DialogEKL {
         }
     }
 
+
+    private void updatePTTClientList() {
+        progress = new ProgressViewModel(1);
+        loadingDialog = new LoadingDialogWithPercent(unwrap(context), progress);
+        loadingDialog.show();
+
+        progress.onNextEvent("Оновлюю список ТПП", 6_600);
+
+        new EKLRequests().getPTTByAddress(wp.getAddr_id(), new Clicks.clickObjectAndStatus() {
+            @Override
+            public void onSuccess(Object data) {
+                try {
+                    EKLRequests.PTTRequest pttRequest = (EKLRequests.PTTRequest) data;
+
+                    if (pttRequest.state) {
+                        if (pttRequest.list != null && pttRequest.list.size() > 0) {
+                            List<UserSDBJoin> newPttList = new ArrayList<>();
+                            for (EKLRequests.PTT item : pttRequest.list) {
+
+                                boolean userExists = allUsersLJoinTovGrps.stream()
+                                        .anyMatch(existingUser -> existingUser.fio.equals(item.fio));
+
+                                if (userExists) {
+                                    Log.e("userSDB", "Пользователь с fio " + item.fio + " уже существует, пропускаем.");
+                                    continue;
+                                }
+
+                                UserSDBJoin userSDBJoin = new UserSDBJoin();
+
+                                userSDBJoin.id = Integer.valueOf(item.userId);
+                                userSDBJoin.fio = item.fio;
+                                userSDBJoin.tel = item.tel != null ? item.tel : "";
+                                userSDBJoin.tel2 = item.tel2;
+                                userSDBJoin.authorId = (Integer) item.authorId;
+                                userSDBJoin.clientId = Integer.valueOf(item.clientId);
+                                if (item.otdelId != null) {
+                                    try {
+                                        if (item.otdelId instanceof Number) {
+                                            // Если это Number (Integer, Double и т.д.)
+                                            userSDBJoin.otdelId = ((Number) item.otdelId).intValue();
+                                        } else if (item.otdelId instanceof String) {
+                                            // Если это строка, пытаемся конвертировать в Integer
+                                            userSDBJoin.otdelId = Integer.parseInt((String) item.otdelId);
+                                        } else {
+                                            // Если тип неизвестен, устанавливаем значение по умолчанию
+                                            userSDBJoin.otdelId = 0;
+                                        }
+                                    } catch (NumberFormatException e) {
+                                        // Если строка не может быть преобразована в число
+                                        userSDBJoin.otdelId = 0;
+                                    }
+                                } else {
+                                    // Если значение null, устанавливаем значение по умолчанию
+                                    userSDBJoin.otdelId = 0;
+                                }
+//                                        userSDBJoin.otdelId = item.otdelId != null ? (Integer) item.otdelId : 0;
+                                userSDBJoin.department = (Integer) item.department;
+                                userSDBJoin.sendSms = item.sendSms;
+                                userSDBJoin.workAddrId = wp.getAddr_id();
+
+                                Log.e("userSDB", "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+                                Log.e("userSDB", "id: " + userSDBJoin.id);
+                                Log.e("userSDB", "tel: " + userSDBJoin.tel);
+                                Log.e("userSDB", "otdel_id: " + userSDBJoin.otdelId);
+                                Log.e("userSDB", "workAddrId: " + userSDBJoin.workAddrId);
+                                newPttList.add(userSDBJoin);
+                            }
+                            List<UsersSDB> usersSDBList = new ArrayList<>();
+                            for (UserSDBJoin userSDBJoin : newPttList) {
+                                usersSDBList.add(mapToUsersSDB(userSDBJoin));
+                            }
+
+                            allUsersLJoinTovGrps.addAll(newPttList);
+
+                            SQL_DB.usersDao().insertAll(usersSDBList);
+
+                            Log.e("userSDB!!!", "size: " + newPttList.size());
+
+                            adapterUser = new AutoTextUsersViewHolder(
+                                    context,
+                                    android.R.layout.simple_dropdown_item_1line,
+                                    newPttList
+                            );
+                            adapterUser.setAdditionalInformation(AutoTextUsersViewHolder.AutoTextUserEnum.DEPARTMENT);
+//                                    sotr.setAdapter(adapterUser);
+
+                            progress.onCompleted();
+                            Toast.makeText(context, "Список ПТТ Оновлено!", Toast.LENGTH_SHORT).show();
+
+                            startUFMD();
+
+                        }
+                    }
+                } catch (Exception e) {
+                    progress.onCanceled();
+                    Log.e("EKLRequests", "Exception e: " + e.getMessage());
+                    new MessageDialogBuilder(unwrap(context))
+                            .setTitle("Виникла помилка при отриманні переліку ПТТ")
+                            .setStatus(DialogStatus.ERROR)
+                            .setMessage(e.getMessage() != null ? e.getMessage() : "Помилка не визначена")
+                            .setOnCancelAction(() -> Unit.INSTANCE
+                            )
+                            .show();
+                }
+            }
+
+            @Override
+            public void onFailure(String error) {
+                Globals.writeToMLOG("INFO", "getPTTByAddress/RES/onFailure", "String error: " + error);
+                new MessageDialogBuilder(unwrap(context))
+                        .setTitle("Виникла помилка при отриманні переліку ПТТ")
+                        .setStatus(DialogStatus.ERROR)
+                        .setMessage(error)
+                        .setOnCancelAction(() -> Unit.INSTANCE
+                        )
+                        .show();
+//                        DialogData dialogData = new DialogData(context);
+//                        dialogData.setTitle("Виникла помилка при отриманні переліку ПТТ");
+//                        dialogData.setText(error);
+//                        dialogData.setClose(dialogData::dismiss);
+//                        dialogData.show();
+            }
+        });
+
+    }
 
     /**
      * 06.06.23.

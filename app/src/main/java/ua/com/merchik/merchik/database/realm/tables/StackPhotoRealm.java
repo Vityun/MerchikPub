@@ -5,8 +5,11 @@ import static ua.com.merchik.merchik.database.realm.RealmManager.INSTANCE;
 import android.util.Log;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
+import io.realm.Realm;
 import io.realm.RealmResults;
 import io.realm.Sort;
 import ua.com.merchik.merchik.Globals;
@@ -258,22 +261,60 @@ public class StackPhotoRealm {
      *
      * @return
      */
+//    public static List<Integer> findTovarIds(List<Integer> ids) {
+//        ArrayList<Integer> result = new ArrayList<>(); // id-шники которых нет в БД
+//
+//        Log.e("MY_TIME", "START TIME");
+//
+//        for (Integer tovarId : ids) {
+//            StackPhotoDB stackPhotoDB = INSTANCE.where(StackPhotoDB.class)
+//                    .equalTo("object_id", tovarId)
+//                    .findFirst();
+//
+//            if (stackPhotoDB == null || stackPhotoDB.getPhoto_num() == null || stackPhotoDB.getPhoto_num().equals("")) {
+//                result.add(tovarId);
+//            }
+//        }
+//
+//        Log.e("MY_TIME", "END TIME. После проверки всех Товаров");
+//
+//        return result;
+//    }
+    /**
+     * 12.02.2025
+     *
+     * Прикольно получилось)) ровно через 3 года переписал метод,
+     * немного оптимизировав вместо цикла запросов все получим в одном
+     */
     public static List<Integer> findTovarIds(List<Integer> ids) {
-        ArrayList<Integer> result = new ArrayList<>(); // id-шники которых нет в БД
+        List<Integer> result = new ArrayList<>(); // id-шники которых нет в БД
 
-        Log.e("MY_TIME", "START TIME");
+        // Получаем все StackPhotoDB с object_id из списка ids
+        Realm realm = Realm.getDefaultInstance();
+        try {
+            RealmResults<StackPhotoDB> stackPhotos = realm.where(StackPhotoDB.class)
+                    .in("object_id", ids.toArray(new Integer[0]))
+                    .findAll();
 
-        for (Integer tovarId : ids) {
-            StackPhotoDB stackPhotoDB = INSTANCE.where(StackPhotoDB.class)
-                    .equalTo("object_id", tovarId)
-                    .findFirst();
-
-            if (stackPhotoDB == null || stackPhotoDB.getPhoto_num() == null || stackPhotoDB.getPhoto_num().equals("")) {
-                result.add(tovarId);
+            // Создаем множество object_id, которые уже есть в базе
+            Set<Integer> existingIds = new HashSet<>();
+            for (StackPhotoDB stackPhoto : stackPhotos) {
+                if (stackPhoto.getPhoto_num() != null && !stackPhoto.getPhoto_num().isEmpty()) {
+                    existingIds.add(stackPhoto.getObject_id());
+                }
             }
-        }
 
-        Log.e("MY_TIME", "END TIME. После проверки всех Товаров");
+            // Добавляем в результат только те ID, которых нет в existingIds
+            for (Integer tovarId : ids) {
+                if (!existingIds.contains(tovarId)) {
+                    result.add(tovarId);
+                }
+            }
+        } catch (Exception e){
+            Log.e("!","e: " + e.getMessage());
+        } finally {
+            realm.close();
+        }
 
         return result;
     }

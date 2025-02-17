@@ -25,6 +25,7 @@ class AlertDialogMessage(
         isDialogVisible.value = true
         val composeView = ComposeView(context).apply {
             setContent {
+
                 if (isDialogVisible.value) {
                     MessageDialog(
                         title = title,

@@ -93,6 +93,7 @@ import ua.com.merchik.merchik.data.RetrofitResponse.PhotoHash;
 import ua.com.merchik.merchik.data.RetrofitResponse.PhotoHashList;
 import ua.com.merchik.merchik.data.WPDataObj;
 import ua.com.merchik.merchik.database.realm.RealmManager;
+import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
 
 public class menu_main extends AppCompatActivity {
@@ -922,11 +923,19 @@ public class menu_main extends AppCompatActivity {
         if (id == R.id.check_sever) {
             int status = lightsStatusServer();
             if (status == 1) {
-                globals.alertDialogMsg(this, "С сервером всё впорядке.");
+                Globals.alertDialogMsg(this,
+                        DialogStatus.NORMAL,
+                        "",
+                        "С сервером всё впорядке.");
             } else if (status == 2) {
-                globals.alertDialogMsg(this, "Сервер не доступен. Повторите попытку позже.");
+                Globals.alertDialogMsg(this,DialogStatus.ERROR,
+                        "",
+                        "Сервер не доступен. Повторите попытку позже.");
             } else if (status == 0) {
-                globals.alertDialogMsg(this, "Данные о наличии сервера ещё не получены. Повторите попытку позже.");
+                Globals.alertDialogMsg(this,
+                        DialogStatus.ALERT,
+                        "",
+                        "Данные о наличии сервера ещё не получены. Повторите попытку позже.");
             }
             return true;
         }
@@ -1198,7 +1207,7 @@ public class menu_main extends AppCompatActivity {
                     tablesLoadingUnloading.downloadCustomerTable(context);              // Клиенты
                     tablesLoadingUnloading.downloadAddressTable(context);               // Адреса
                     tablesLoadingUnloading.downloadSotrTable(context);                  // Сотрудники
-                    tablesLoadingUnloading.downloadTovarTable(context, null);                 // Товары
+//                    tablesLoadingUnloading.downloadTovarTable(context, null);                 // Товары
 
                     tablesLoadingUnloading.downloadErrorTable(context);                 // Таблица Ошибок
                     tablesLoadingUnloading.downloadAkciyTable(context);                 // Тфблица Акций

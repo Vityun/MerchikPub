@@ -77,7 +77,7 @@ public class DownloadPictureService extends Service {
 
                 }
             });
-        }catch (Exception e){
+        } catch (Exception e) {
             Globals.writeToMLOG("ERROR", "DownloadPictureService/onStartCommand/", "Exception e: " + Arrays.toString(e.getStackTrace()));
         }
 
@@ -102,6 +102,7 @@ public class DownloadPictureService extends Service {
 
 
     static int count = 0;
+
     public void downloadPhoto(List<TovarImgList> data, Clicks.click click) {
         long start = System.currentTimeMillis() / 1000;
         final int[] cnt = {0};
@@ -116,24 +117,25 @@ public class DownloadPictureService extends Service {
         Observable.fromIterable(data)
                 .filter(tovarImgList -> tovarImgList.getPhotoTp().equals("18") && tovarImgList.getPhotoUrl() != null && tovarImgList.getPhotoUrl().length() > 1)
                 .flatMap(tovarImgList ->
-                        RetrofitBuilder.getRetrofitInterface()
-                                .DOWNLOAD_PHOTO_BY_URL_TEST(tovarImgList.getPhotoUrl())
+                                RetrofitBuilder.getRetrofitInterface()
+                                        .DOWNLOAD_PHOTO_BY_URL_TEST(tovarImgList.getPhotoUrl())
 //                                .map(jsonObject -> new SumTestObj(jsonObject, tovarImgList))
 //                                .map(responseBody -> new SumTestObj(Single.just(responseBody), tovarImgList))
-                                .map(responseBody -> new SumTestObj(responseBody, tovarImgList))
-                                .toObservable()
-
-                ).doOnNext(sumTestObj -> {
+                                        .map(responseBody -> new SumTestObj(responseBody, tovarImgList))
+                                        .subscribeOn(Schedulers.io())
+                                        .toObservable()
+                        , 10)  // добавил ограничение на одновременных 10 запросов
+                .doOnNext(sumTestObj -> {
                     try {
 
                         Globals.writeToMLOG("INFO", "DownloadPictureService/downloadPhoto/doOnNext", "sumTestObj: " + new Gson().toJson(sumTestObj));
+
 
 
                         Bitmap bmp = BitmapFactory.decodeStream(sumTestObj.observable.byteStream());
                         TovarImgList item = sumTestObj.tovarImgList;
 
                         String path = Globals.saveImage1(bmp, "TOVAR_" + item.getTovarId() + "_SID" + item.getID());
-
 
                         Realm realm = Realm.getDefaultInstance();
                         realm.executeTransaction(innerRealm -> {
@@ -163,7 +165,7 @@ public class DownloadPictureService extends Service {
                                 stackPhotoDB.setObject_id(Integer.valueOf(item.getTovarId()));
                                 stackPhotoDB.addr_id = Integer.valueOf(item.getAddrId());
                                 stackPhotoDB.approve = Integer.valueOf(item.getApprove());
-                                stackPhotoDB.dvi = Integer.valueOf(item.getDvi());
+                                stackPhotoDB.dvi = Integer.valueOf(Objects.requireNonNullElse(item.getDvi(), "0"));
                                 stackPhotoDB.setCode_iza(item.codeIZA);
                                 stackPhotoDB.setVpi(0);
                                 stackPhotoDB.setCreate_time(Long.parseLong(item.getDt()) * 1000);

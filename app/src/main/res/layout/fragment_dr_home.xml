@@ -1,299 +1,336 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#CDF5F4F4"
-    xmlns:app="http://schemas.android.com/apk/res-auto">
+    android:background="#CDF5F4F4">
 
-    <FrameLayout
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        tools:context="tablayout.example.com.tablayout.HomeFragment">
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
 
-        <androidx.constraintlayout.widget.ConstraintLayout
+        <FrameLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent">
+            android:layout_height="match_parent"
+            tools:context="tablayout.example.com.tablayout.HomeFragment">
+
 
             <androidx.constraintlayout.widget.ConstraintLayout
-                android:id="@+id/constraintLayout"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintVertical_bias="0.0"
-                tools:ignore="MissingConstraints">
-
-                <TextView
-                    android:id="@+id/badge_text_view_tar"
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
-                    android:alpha="1"
-                    android:background="@drawable/badge_background"
-                    android:gravity="center"
-                    android:minWidth="18dp"
-                    android:minHeight="18dp"
-                    android:padding="2dp"
-                    android:text="0"
-                    android:textColor="#FFFFFF"
-                    android:textSize="12sp"
-                    android:translationZ="8dp"
-                    android:visibility="visible"
-                    app:elevation="10dp"
-                    app:layout_constraintEnd_toEndOf="@+id/fab"
-                    app:layout_constraintTop_toTopOf="@+id/fab" />
-
-                <com.google.android.material.floatingactionbutton.FloatingActionButton
-                    android:id="@+id/fab"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginEnd="16dp"
-                    android:layout_marginRight="16dp"
-                    android:layout_marginBottom="16dp"
-                    android:scaleType="center"
-                    android:translationZ="8dp"
-                    app:backgroundTint="#FFFFFF"
-                    app:elevation="4dp"
-                    app:layout_constraintBottom_toTopOf="@+id/fabAdd3"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:maxImageSize="57dp"
-                    app:srcCompat="@drawable/ic_play_circle_solid" />
-
-
-
-                <com.google.android.material.floatingactionbutton.FloatingActionButton
-                    android:id="@+id/fabAdd3"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginEnd="16dp"
-                    android:layout_marginRight="16dp"
-                    android:layout_marginBottom="16dp"
-                    android:clickable="true"
-                    android:visibility="invisible"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:srcCompat="@drawable/ic_add" />
-
-                <TextView
-                    android:id="@+id/textDRDate"
-                    android:layout_width="wrap_content"
-                    android:layout_height="19dp"
-                    android:layout_marginStart="16dp"
-                    android:layout_marginLeft="16dp"
-                    android:layout_marginTop="16dp"
-                    android:text="@string/date"
-                    android:textStyle="bold"
-                    app:layout_constraintStart_toEndOf="@+id/constraintLayout12"
-                    app:layout_constraintTop_toTopOf="parent" />
-
-                <TextView
-                    android:id="@+id/textDRAddr"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="16dp"
-                    android:layout_marginLeft="16dp"
-                    android:text="@string/address"
-                    android:textStyle="bold"
-                    app:layout_constraintStart_toEndOf="@+id/constraintLayout12"
-                    app:layout_constraintTop_toBottomOf="@+id/textDRDate" />
-
-                <TextView
-                    android:id="@+id/textDRCust"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="16dp"
-                    android:layout_marginLeft="16dp"
-                    android:text="@string/customer"
-                    android:textStyle="bold"
-                    app:layout_constraintStart_toEndOf="@+id/constraintLayout12"
-                    app:layout_constraintTop_toBottomOf="@+id/textDRAddr" />
-
-                <TextView
-                    android:id="@+id/textDRMerc"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="16dp"
-                    android:layout_marginLeft="16dp"
-                    android:text="@string/performer"
-                    android:textStyle="bold"
-                    app:layout_constraintStart_toEndOf="@+id/constraintLayout12"
-                    app:layout_constraintTop_toBottomOf="@+id/textDRCust" />
-
-                <TextView
-                    android:id="@+id/textDROptions"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="16dp"
-                    android:layout_marginLeft="16dp"
-                    android:text="@string/options"
-                    android:textStyle="bold"
-                    app:layout_constraintStart_toEndOf="@+id/constraintLayout12"
-                    app:layout_constraintTop_toBottomOf="@+id/textDRMerc" />
+                android:layout_height="match_parent">
 
                 <androidx.constraintlayout.widget.ConstraintLayout
-                    android:id="@+id/constraintLayout12"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="32dp"
-                    android:layout_marginLeft="32dp"
-                    android:layout_marginTop="24dp"
-                    android:background="@drawable/shadow_test_4"
+                    android:id="@+id/constraintLayout"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="parent">
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintVertical_bias="0.0"
+                    tools:ignore="MissingConstraints">
 
-                    <ImageView
-                        android:id="@+id/merchik"
-                        android:layout_width="75dp"
-                        android:layout_height="75dp"
-                        android:background="@drawable/selector_rounded_button_9"
+                    <TextView
+                        android:id="@+id/badge_text_view_tar"
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:alpha="1"
+                        android:background="@drawable/badge_background"
+                        android:gravity="center"
+                        android:minWidth="18dp"
+                        android:minHeight="18dp"
+                        android:padding="2dp"
+                        android:text="0"
+                        android:textColor="#FFFFFF"
+                        android:textSize="12sp"
+                        android:translationZ="8dp"
+                        android:visibility="visible"
+                        app:elevation="10dp"
+                        app:layout_constraintEnd_toEndOf="@+id/fab"
+                        app:layout_constraintTop_toTopOf="@+id/fab" />
+
+                    <com.google.android.material.floatingactionbutton.FloatingActionButton
+                        android:id="@+id/fab"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="16dp"
+                        android:layout_marginRight="16dp"
+                        android:layout_marginBottom="16dp"
+                        android:scaleType="center"
+                        android:translationZ="1dp"
+                        app:backgroundTint="#FFFFFF"
+                        app:elevation="4dp"
+                        app:layout_constraintBottom_toTopOf="@+id/fabAdd3"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:maxImageSize="57dp"
+                        app:srcCompat="@drawable/ic_play_circle_solid" />
+
+
+                    <com.google.android.material.floatingactionbutton.FloatingActionButton
+                        android:id="@+id/fabAdd3"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="16dp"
+                        android:layout_marginRight="16dp"
+                        android:layout_marginBottom="16dp"
+                        android:clickable="true"
+                        android:visibility="invisible"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:srcCompat="@drawable/ic_add" />
+
+                    <TextView
+                        android:id="@+id/textDRDate"
+                        android:layout_width="wrap_content"
+                        android:layout_height="19dp"
+                        android:layout_marginStart="16dp"
+                        android:layout_marginLeft="16dp"
+                        android:layout_marginTop="16dp"
+                        android:text="@string/date"
+                        android:textStyle="bold"
+                        app:layout_constraintStart_toEndOf="@+id/constraintLayout12"
+                        app:layout_constraintTop_toTopOf="parent" />
+
+                    <TextView
+                        android:id="@+id/textDRAddr"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="16dp"
+                        android:layout_marginLeft="16dp"
+                        android:text="@string/address"
+                        android:textStyle="bold"
+                        app:layout_constraintStart_toEndOf="@+id/constraintLayout12"
+                        app:layout_constraintTop_toBottomOf="@+id/textDRDate" />
+
+                    <TextView
+                        android:id="@+id/textDRCust"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="16dp"
+                        android:layout_marginLeft="16dp"
+                        android:text="@string/customer"
+                        android:textStyle="bold"
+                        app:layout_constraintStart_toEndOf="@+id/constraintLayout12"
+                        app:layout_constraintTop_toBottomOf="@+id/textDRAddr" />
+
+                    <TextView
+                        android:id="@+id/textDRMerc"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="16dp"
+                        android:layout_marginLeft="16dp"
+                        android:text="@string/performer"
+                        android:textStyle="bold"
+                        app:layout_constraintStart_toEndOf="@+id/constraintLayout12"
+                        app:layout_constraintTop_toBottomOf="@+id/textDRCust" />
+
+                    <TextView
+                        android:id="@+id/textDROptions"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="16dp"
+                        android:layout_marginLeft="16dp"
+                        android:text="@string/options"
+                        android:textStyle="bold"
+                        app:layout_constraintStart_toEndOf="@+id/constraintLayout12"
+                        app:layout_constraintTop_toBottomOf="@+id/textDRMerc" />
+
+                    <androidx.constraintlayout.widget.ConstraintLayout
+                        android:id="@+id/constraintLayout12"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="16dp"
+                        android:layout_marginLeft="32dp"
+                        android:layout_marginTop="16dp"
+                        android:background="@drawable/shadow_test_4"
+                        android:padding="10dp"
                         app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toTopOf="parent"
-                        app:srcCompat="@mipmap/merchik" />
-                </androidx.constraintlayout.widget.ConstraintLayout>
+                        app:layout_constraintTop_toTopOf="parent">
 
-                <TextView
-                    android:id="@+id/textDRDateVal"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
-                    android:layout_marginLeft="8dp"
-                    android:layout_marginTop="16dp"
-                    android:layout_marginEnd="32dp"
-                    android:layout_marginRight="32dp"
-                    android:maxLines="1"
-                    android:singleLine="true"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintHorizontal_bias="0.0"
-                    app:layout_constraintStart_toEndOf="@+id/textDRDate"
-                    app:layout_constraintTop_toTopOf="parent" />
+                        <ImageView
+                            android:id="@+id/merchik"
+                            android:layout_width="75dp"
+                            android:layout_height="75dp"
+                            android:background="@drawable/selector_rounded_button_9"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toTopOf="parent"
+                            app:srcCompat="@mipmap/merchik" />
+                    </androidx.constraintlayout.widget.ConstraintLayout>
 
-                <TextView
-                    android:id="@+id/textDRAddrVal"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
-                    android:layout_marginLeft="8dp"
-                    android:layout_marginEnd="32dp"
-                    android:layout_marginRight="32dp"
-                    android:maxLines="1"
-                    android:singleLine="true"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintHorizontal_bias="0.0"
-                    app:layout_constraintStart_toEndOf="@+id/textDRAddr"
-                    app:layout_constraintTop_toBottomOf="@+id/textDRDateVal" />
+                    <TextView
+                        android:id="@+id/textDRDateVal"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:layout_marginLeft="8dp"
+                        android:layout_marginTop="16dp"
+                        android:layout_marginEnd="32dp"
+                        android:layout_marginRight="32dp"
+                        android:maxLines="1"
+                        android:singleLine="true"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintHorizontal_bias="0.0"
+                        app:layout_constraintStart_toEndOf="@+id/textDRDate"
+                        app:layout_constraintTop_toTopOf="parent" />
 
-                <TextView
-                    android:id="@+id/textDRCustVal"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
-                    android:layout_marginLeft="8dp"
-                    android:layout_marginEnd="32dp"
-                    android:layout_marginRight="32dp"
-                    android:maxLines="1"
-                    android:singleLine="true"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintHorizontal_bias="0.0"
-                    app:layout_constraintStart_toEndOf="@+id/textDRCust"
-                    app:layout_constraintTop_toBottomOf="@+id/textDRAddrVal" />
+                    <TextView
+                        android:id="@+id/textDRAddrVal"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:layout_marginLeft="8dp"
+                        android:layout_marginEnd="32dp"
+                        android:layout_marginRight="32dp"
+                        android:maxLines="1"
+                        android:singleLine="true"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintHorizontal_bias="0.0"
+                        app:layout_constraintStart_toEndOf="@+id/textDRAddr"
+                        app:layout_constraintTop_toBottomOf="@+id/textDRDateVal" />
 
-                <TextView
-                    android:id="@+id/textDRMercVal"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
-                    android:layout_marginLeft="8dp"
-                    android:layout_marginEnd="32dp"
-                    android:layout_marginRight="32dp"
-                    android:maxLines="1"
-                    android:singleLine="true"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintHorizontal_bias="0.0"
-                    app:layout_constraintStart_toEndOf="@+id/textDRMerc"
-                    app:layout_constraintTop_toBottomOf="@+id/textDRCustVal" />
+                    <TextView
+                        android:id="@+id/textDRCustVal"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:layout_marginLeft="8dp"
+                        android:layout_marginEnd="32dp"
+                        android:layout_marginRight="32dp"
+                        android:maxLines="1"
+                        android:singleLine="true"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintHorizontal_bias="0.0"
+                        app:layout_constraintStart_toEndOf="@+id/textDRCust"
+                        app:layout_constraintTop_toBottomOf="@+id/textDRAddrVal" />
 
-                <LinearLayout
-                    android:id="@+id/option_signal_layout2"
-                    android:layout_width="220dp"
-                    android:layout_height="15dp"
-                    android:layout_marginStart="8dp"
-                    android:layout_marginLeft="8dp"
-                    android:layout_marginTop="4dp"
-                    android:layout_marginEnd="32dp"
-                    android:layout_marginRight="32dp"
-                    android:orientation="horizontal"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintHorizontal_bias="0.0"
-                    app:layout_constraintStart_toEndOf="@+id/textDROptions"
-                    app:layout_constraintTop_toBottomOf="@+id/textDRMercVal" />
+                    <TextView
+                        android:id="@+id/textDRMercVal"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:layout_marginLeft="8dp"
+                        android:layout_marginEnd="32dp"
+                        android:layout_marginRight="32dp"
+                        android:maxLines="1"
+                        android:singleLine="true"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintHorizontal_bias="0.0"
+                        app:layout_constraintStart_toEndOf="@+id/textDRMerc"
+                        app:layout_constraintTop_toBottomOf="@+id/textDRCustVal" />
 
-                <androidx.constraintlayout.widget.ConstraintLayout
-                    android:id="@+id/constraintLayout18"
-                    android:layout_width="0dp"
-                    android:layout_height="0dp"
-                    android:layout_marginStart="32dp"
-                    android:layout_marginLeft="32dp"
-                    android:layout_marginTop="32dp"
-                    android:layout_marginEnd="32dp"
-                    android:layout_marginRight="32dp"
-                    android:layout_marginBottom="32dp"
-                    android:background="@drawable/border_map"
-                    android:elevation="3dp"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/recycler">
+                    <LinearLayout
+                        android:id="@+id/option_signal_layout2"
+                        android:layout_width="220dp"
+                        android:layout_height="15dp"
+                        android:layout_marginStart="8dp"
+                        android:layout_marginLeft="8dp"
+                        android:layout_marginTop="4dp"
+                        android:layout_marginEnd="32dp"
+                        android:layout_marginRight="32dp"
+                        android:orientation="horizontal"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintHorizontal_bias="0.0"
+                        app:layout_constraintStart_toEndOf="@+id/textDROptions"
+                        app:layout_constraintTop_toBottomOf="@+id/textDRMercVal" />
 
-
-
-                    <fragment
-                        android:id="@+id/mapView2"
-                        android:name="com.google.android.gms.maps.SupportMapFragment"
+                    <androidx.constraintlayout.widget.ConstraintLayout
+                        android:id="@+id/constraintLayout18"
                         android:layout_width="match_parent"
-                        android:layout_height="match_parent"
+                        android:layout_height="350dp"
+                        android:layout_marginStart="32dp"
+                        android:layout_marginLeft="32dp"
+                        android:layout_marginTop="32dp"
+                        android:layout_marginEnd="32dp"
+                        android:layout_marginRight="32dp"
+                        android:layout_marginBottom="32dp"
+                        android:background="@drawable/border_map"
+                        android:elevation="3dp"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toBottomOf="@+id/composeView">
 
+
+                        <fragment
+                            android:id="@+id/mapView2"
+                            android:name="com.google.android.gms.maps.SupportMapFragment"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+
+                            android:layout_marginStart="8dp"
+                            android:layout_marginLeft="8dp"
+                            android:layout_marginTop="8dp"
+                            android:layout_marginEnd="8dp"
+                            android:layout_marginRight="8dp"
+                            android:layout_marginBottom="8dp"
+                            android:background="@drawable/border_imgview"
+                            app:layout_constraintBottom_toBottomOf="parent"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toTopOf="parent"
+                            tools:visibility="visible" />
+                        <!--                    <TextView
+                                                android:id="@+id/textView15"
+                                                android:layout_width="wrap_content"
+                                                android:layout_height="wrap_content"
+                                                android:text="Тут має бути мапа"
+                                                app:layout_constraintBottom_toBottomOf="parent"
+                                                app:layout_constraintEnd_toEndOf="parent"
+                                                app:layout_constraintStart_toStartOf="parent"
+                                                app:layout_constraintTop_toTopOf="parent" />-->
+                    </androidx.constraintlayout.widget.ConstraintLayout>
+
+                    <View
+                        android:id="@+id/divider_up"
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:layout_marginTop="8dp"
+                        android:layout_marginBottom="8dp"
+                        android:layout_marginHorizontal="8dp"
+                        android:background="@color/hintColorDefault"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toBottomOf="@+id/textDROptions"
+                        app:layout_constraintBottom_toTopOf="@+id/recycler"
+                        />
+
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/recycler"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
                         android:layout_marginStart="8dp"
                         android:layout_marginLeft="8dp"
                         android:layout_marginTop="8dp"
                         android:layout_marginEnd="8dp"
                         android:layout_marginRight="8dp"
-                        android:layout_marginBottom="8dp"
-                        android:background="@drawable/border_imgview"
-                        app:layout_constraintBottom_toBottomOf="parent"
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toTopOf="parent"
-                        tools:visibility="visible" />
-<!--                    <TextView
-                        android:id="@+id/textView15"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Тут має бути мапа"
-                        app:layout_constraintBottom_toBottomOf="parent"
-                        app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toTopOf="parent" />-->
-                </androidx.constraintlayout.widget.ConstraintLayout>
+                        app:layout_constraintTop_toBottomOf="@+id/divider_up" />
 
-                <androidx.recyclerview.widget.RecyclerView
-                    android:id="@+id/recycler"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
-                    android:layout_marginLeft="8dp"
-                    android:layout_marginTop="8dp"
-                    android:layout_marginEnd="8dp"
-                    android:layout_marginRight="8dp"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/textDROptions" />
+                    <!-- Добавляем ComposeView -->
+                    <androidx.compose.ui.platform.ComposeView
+                        android:id="@+id/composeView"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:layout_marginLeft="8dp"
+                        android:layout_marginTop="8dp"
+                        android:layout_marginEnd="8dp"
+                        android:layout_marginRight="8dp"
+                        app:layout_constraintBottom_toTopOf="@+id/constraintLayout18"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toBottomOf="@+id/recycler" />
+
+                </androidx.constraintlayout.widget.ConstraintLayout>
 
             </androidx.constraintlayout.widget.ConstraintLayout>
 
-        </androidx.constraintlayout.widget.ConstraintLayout>
 
-    </FrameLayout>
+        </FrameLayout>
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+    </LinearLayout>
+</androidx.core.widget.NestedScrollView>

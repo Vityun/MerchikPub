@@ -7,6 +7,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 
 import com.google.gson.Gson;
@@ -14,9 +16,15 @@ import com.google.gson.JsonObject;
 
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.stream.Collectors;
 
 import okhttp3.ResponseBody;
 import retrofit2.Call;
@@ -47,10 +55,12 @@ import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
  * Класс создан с целью получения от сервера фотографий по разным фильтрам. И сохранением их
  * в БД StackPhotoDB.
  */
-/**MERCHIK_1
+
+/**
+ * MERCHIK_1
  * Тут іде основна робота із завантаження фізичних фотографій.
  * Якщо в додатку якась фотка фізично попадає в память телефону - то через якусь із функцій описаних нижче
- * */
+ */
 public class PhotoDownload {
 //    public final Globals globals = new Globals();
 
@@ -60,9 +70,10 @@ public class PhotoDownload {
      * 09.09.2022
      * Загрузка фотографий по ID.
      */
-    /**MERCHIK_1
+    /**
+     * MERCHIK_1
      * Походу тут ти її і качаєш
-     * */
+     */
     @SuppressWarnings("rawtypes")
     public void downloadPhotoByIds(String photoDir, String photoTypeDir, List<Integer> dataIds, Clicks.clickStatusMsg result) {
 
@@ -211,10 +222,17 @@ public class PhotoDownload {
         StringBuilder res = new StringBuilder();
         try {
             if (dataIds != null && dataIds.size() > 0) {
-                for (Integer item : dataIds) {
+                Set<Integer> uniqueIds = new LinkedHashSet<>(dataIds);
+
+                for (Integer item : uniqueIds) {
                     res.append(item).append(", ");
                 }
-                res = new StringBuilder(res.substring(0, res.length() - 2));   // Убираю последний ", " - для того что б на сервере не произошло каких-то приколов.
+
+                if (res.length() > 2) {
+                    res.setLength(res.length() - 2); // Убираем последний ", "
+                }
+
+//                res = new StringBuilder(res.substring(0, res.length() - 2));   // Убираю последний ", " - для того что б на сервере не произошло каких-то приколов.
             }
         } catch (Exception e) {
             Globals.writeToMLOG("ERROR", "PhotoDownload/createPhotoIdList", "Exception e: " + e);
@@ -231,8 +249,8 @@ public class PhotoDownload {
      * Формирование запроса на получение ссылок для скачивания фотографий.
      */
     public static void getPhotoURLFromServer(List<TovarDB> tovars, Clicks.clickStatusMsg result, Clicks.clickStatusMsgMode result2, Context context) {
+
         List<Integer> tovarIdsList = getTovarIds(tovars);
-//        List<Integer> tovarIdsList = getTovarIds(TovarRealm.getAllTov());
 
         Globals.writeToMLOG("INFO", "getPhotoURLFromServer", "ЗАГРУЗКА ФОТО. ПОЛУЧЕНО ФОТО: " + tovars.size());
 
@@ -245,21 +263,21 @@ public class PhotoDownload {
 
         // Разбивка на группі
         // Нужно для того что б не сразу все 8000 фоток загружалось на сторону приложения
-        int batchSize = 50; // Размер каждой группы
-        List<List<Integer>> batches = new ArrayList<>(); // Список, который будет содержать группы
-
-        for (int i = 0; i < tovarsPhotoToDownload.size(); i += batchSize) {
-            int end = Math.min(tovarsPhotoToDownload.size(), i + batchSize);
-            List<Integer> batch = tovarsPhotoToDownload.subList(i, end);
-            batches.add(batch);
-        }
+//        int batchSize = 50; // Размер каждой группы
+//        List<List<Integer>> batches = new ArrayList<>(); // Список, который будет содержать группы
+//
+//        for (int i = 0; i < tovarsPhotoToDownload.size(); i += batchSize) {
+//            int end = Math.min(tovarsPhotoToDownload.size(), i + batchSize);
+//            List<Integer> batch = tovarsPhotoToDownload.subList(i, end);
+//            batches.add(batch);
+//        }
 
         StandartData data = new StandartData();
         data.mod = "images_view";
         data.act = "list_image";
         data.nolimit = "1";
         data.image_type = "small";
-//        data.tovar_id = tovarsPhotoToDownload;    // Должен сюда записать список ID-шников Товаров которые я хочу загрузить на свою сторону.
+//        data.photo_tovar_id = new ArrayList<>(List.of(141116));    // Должен сюда записать список ID-шников Товаров которые я хочу загрузить на свою сторону.
 //        data.photo_tovar_id = batches.get(0);    // Должен сюда записать список ID-шников Товаров которые я хочу загрузить на свою сторону.
         data.photo_tovar_id = tovarsPhotoToDownload;    // Должен сюда записать список ID-шников Товаров которые я хочу загрузить на свою сторону.
 
@@ -300,7 +318,7 @@ public class PhotoDownload {
                                 Intent serviceIntent = new Intent(context, DownloadPictureService.class);
                                 DownloadPictureService.picList = response.body().getList();
                                 startForegroundService(context, serviceIntent);
-                            }catch (Exception e){
+                            } catch (Exception e) {
                                 Globals.writeToMLOG("ERROR", "DownloadPictureService", "Exception e: " + e);
                                 downloadPhoto(response.body().getList(), result, result2);
                             }
@@ -457,7 +475,8 @@ public class PhotoDownload {
 
                                     stackPhotoDB.addr_id = Integer.valueOf(item.getAddrId());
                                     stackPhotoDB.approve = Integer.valueOf(item.getApprove());
-                                    stackPhotoDB.dvi = Integer.valueOf(item.getDvi());
+                                    // посавил
+                                    stackPhotoDB.dvi = Integer.valueOf(Objects.requireNonNullElse(item.getDvi(), "0"));
 
                                     stackPhotoDB.setVpi(0);
                                     stackPhotoDB.setCreate_time(Long.parseLong(item.getDt()) * 1000);
@@ -474,6 +493,7 @@ public class PhotoDownload {
                                     // 30.01
                                     RealmManager.stackPhotoSavePhoto(stackPhotoDB);
                                     saveNewTovarPhoto++;
+
                                 } catch (Exception e) {
                                     errorSaveTovarPhoto++;
                                 }
@@ -525,20 +545,20 @@ public class PhotoDownload {
 
         Globals.writeToMLOG("INFO", "" + getClass().getName() + "/getPhotoFromServer/convertedObject", "convertedObject: " + convertedObject);
 
-        {
-            retrofit2.Call<JsonObject> call = RetrofitBuilder.getRetrofitInterface().MOD_IMAGES_VIEW_CALL_JSON(contentType, convertedObject);
-            call.enqueue(new Callback<JsonObject>() {
-                @Override
-                public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
-                    Log.d("smarti", "onResponse: ");
-                }
-
-                @Override
-                public void onFailure(Call<JsonObject> call, Throwable t) {
-                    Log.d("smarti", "onResponse: ");
-                }
-            });
-        }
+//        {
+//            retrofit2.Call<JsonObject> call = RetrofitBuilder.getRetrofitInterface().MOD_IMAGES_VIEW_CALL_JSON(contentType, convertedObject);
+//            call.enqueue(new Callback<JsonObject>() {
+//                @Override
+//                public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
+//                    Log.d("smarti", "onResponse: ");
+//                }
+//
+//                @Override
+//                public void onFailure(Call<JsonObject> call, Throwable t) {
+//                    Log.d("smarti", "onResponse: ");
+//                }
+//            });
+//        }
 
         retrofit2.Call<ModImagesView> call = RetrofitBuilder.getRetrofitInterface().MOD_IMAGES_VIEW_CALL(contentType, convertedObject);
         call.enqueue(new retrofit2.Callback<ModImagesView>() {
@@ -551,7 +571,8 @@ public class PhotoDownload {
 //                        Globals.writeToMLOG("INFO", "PetrovExchangeTest/startExchange/getPhotoFromServer/onSuccess", "(фото юзеров которые надо закачать)size: " + size);
                     }
                     Globals.writeToMLOG("INFO", "" + getClass().getName() + "/getPhotoFromServer/onResponse", "size: " + size);
-                    savePhotoToDB(response.body().getList());
+                    if (size > 0)
+                        savePhotoToDB(response.body().getList());
 
                     Log.e("getPhotoFromServer", "response.body().getTotal(): " + response.body().getTotalPages());
                 } catch (Exception e) {
@@ -576,6 +597,7 @@ public class PhotoDownload {
 
             for (ModImagesViewList item : list) {
 //                if (StackPhotoRealm.stackPhotoDBGetPhotoBySiteId(item.getID()) == null) {
+
                 if (StackPhotoRealm.stackPhotoDBGetPhotoByHASH(item.imgHash) == null) {
                     try {
                         downloadPhoto(item.getPhotoUrl(), new ExchangeInterface.ExchangePhoto() {
@@ -595,7 +617,7 @@ public class PhotoDownload {
 
                                 stackPhotoDB.setPhotoServerId(item.getID());
                                 stackPhotoDB.setPhotoServerURL(item.getPhotoUrl());
-                                stackPhotoDB.setPhoto_num(Globals.savePhotoToPhoneMemory("/Manager", item.getID() + "_" + "small", bitmap));
+//                                stackPhotoDB.setPhoto_num(Globals.savePhotoToPhoneMemory("/Manager", item.getID() + "_" + "small", bitmap));
 
                                 stackPhotoDB.setUser_id(Integer.valueOf(item.getMerchikId()));
                                 stackPhotoDB.setAddr_id(Integer.valueOf(item.getAddrId()));
@@ -616,7 +638,9 @@ public class PhotoDownload {
                                     Globals.writeToMLOG("INFO", "PhotoMerchikExchange/getPhotoFromSite/savePhotoToDB", "Exception e: " + e);
                                 }
 
-                                RealmManager.stackPhotoSavePhoto(stackPhotoDB);
+                                savePhotoAndUpdateStackPhotoDB("/Manager", item.getID() + "_small", bitmap, stackPhotoDB);
+
+//                                RealmManager.stackPhotoSavePhoto(stackPhotoDB);
 
                                 stackList.add(stackPhotoDB);
                             }
@@ -792,7 +816,8 @@ public class PhotoDownload {
             }
         });
     }
-// ####################### date_to = 2024-12-16 ???? какого х!
+
+    // ####################### date_to = 2024-12-16 ???? какого х!
     public void getPhotoInfoAndSaveItToDB(PhotoTableRequest data) {
         Log.e("getPhotoInfo2", "HERE");
         JsonObject object = new Gson().fromJson(new Gson().toJson(data), JsonObject.class);
@@ -823,6 +848,11 @@ public class PhotoDownload {
                                 savePhotoInfoToDB(response.body().getList());
                             }
                         }
+                    } else {
+                        Log.e("response", "unSuccessful: " + response.toString());
+                        String rr = response.headers().toString();
+                        Log.e("response", "unSuccessful2: " + rr);
+                        String rrr = response.message();
                     }
 
                 } catch (Exception e) {
@@ -851,9 +881,10 @@ public class PhotoDownload {
      * была возможность вернуть фотку которую только что загрузили. На момент написания коммента,
      * понимаю что надо будет потом сделать адекватнее и возращать список.
      */
-    /**MERCHIK_1 24.11.2024
+    /**
+     * MERCHIK_1 24.11.2024
      * Можливо через саме це місце треба буде грейдити інтерфейс користувача коли йому завантажилися фото, які його цікавлять
-     * */
+     */
     public void savePhotoInfoToDB(List<ModImagesViewList> list, Clicks.clickObjectAndStatus<StackPhotoDB> clickUpdatePhoto) {
         List<StackPhotoDB> stackList = new ArrayList<>();   // Создаём список для записи в БД
         int id = RealmManager.stackPhotoGetLastId() + 1;    // Для новой записи добавляем ID
@@ -1052,7 +1083,7 @@ public class PhotoDownload {
                             exchange.onFailure("Ошибка: " + t);
                         }
                     });
-                }catch (Exception e){
+                } catch (Exception e) {
                     Globals.writeToMLOG("ERROR", "downloadPhoto", "Exception e: " + e);
                 }
             }
@@ -1080,7 +1111,7 @@ public class PhotoDownload {
                             photoDB.setUpload_to_server(item.dt);// реквизиты что б фотки не выгружались обратно на сервер
                             photoDB.setGet_on_server(item.dt);// реквизиты что б фотки не выгружались обратно на сервер
 
-                            photoDB.setPhoto_num(Globals.savePhotoToPhoneMemory("/Planogram", "" + item.id, bitmap));
+//                            photoDB.setPhoto_num(Globals.savePhotoToPhoneMemory("/Planogram", "" + item.id, bitmap));
                             photoDB.setApprove(item.approve);
 
                             photoDB.setDvi(item.dvi);
@@ -1088,7 +1119,9 @@ public class PhotoDownload {
 
 //                        Globals.writeToMLOG("INFO", "savePhotoToDB2/downloadPhoto/Planogram", "photoDB: " + new Gson().toJson(photoDB));
 
-                            RealmManager.stackPhotoSavePhoto(photoDB);
+                            savePhotoAndUpdateStackPhotoDB("/Planogram", "" + item.id, bitmap, photoDB);
+
+//                            RealmManager.stackPhotoSavePhoto(photoDB);
                         } catch (Exception e) {
                             Globals.writeToMLOG("ERR", "savePhotoToDB2/downloadPhoto/Planogram", "Exception e: " + e);
                         }
@@ -1105,5 +1138,25 @@ public class PhotoDownload {
 
     }
 
+
+    private static final ExecutorService executor = Executors.newFixedThreadPool(8);
+
+    public static void savePhotoAndUpdateStackPhotoDB(String folderPath, String imageName, Bitmap bitmap, StackPhotoDB stackPhotoDB) {
+        executor.execute(() -> {
+            String photoPath = Globals.savePhotoToPhoneMemory(folderPath, imageName, bitmap);
+
+            if (photoPath != null) {
+                stackPhotoDB.setPhoto_num(photoPath);
+
+                // Обновляем в базе данных (на основном потоке)
+                new Handler(Looper.getMainLooper()).post(() -> {
+                    RealmManager.stackPhotoSavePhoto(stackPhotoDB);
+                    Log.d("SAVE", "Фото сохранено: " + photoPath);
+                });
+            } else {
+                Log.e("SAVE", "Ошибка при сохранении фото");
+            }
+        });
+    }
 
 }

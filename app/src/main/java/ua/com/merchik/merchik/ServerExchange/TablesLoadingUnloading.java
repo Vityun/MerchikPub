@@ -1,6 +1,7 @@
 package ua.com.merchik.merchik.ServerExchange;
 
 import static ua.com.merchik.merchik.database.realm.RealmManager.INSTANCE;
+import static ua.com.merchik.merchik.database.realm.RealmManager.getAllWorkPlan;
 import static ua.com.merchik.merchik.database.realm.RealmManager.getSynchronizationTimetable;
 import static ua.com.merchik.merchik.database.realm.tables.PPARealm.setPPA;
 import static ua.com.merchik.merchik.database.realm.tables.WpDataRealm.getWpDataAddresses;
@@ -24,11 +25,14 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 import io.reactivex.rxjava3.observers.DisposableCompletableObserver;
 import io.reactivex.rxjava3.schedulers.Schedulers;
@@ -210,7 +214,7 @@ public class TablesLoadingUnloading {
                     downloadReportPrepare(context, 0);
                 }
             });
-            downloadTovarTable(context, null);
+//            downloadTovarTable(context, null);
             globals.writeToMLOG(Clock.getHumanTime() + "_INFO.TablesLoadingUnloading.class.downloadAllTables.Успех.Обязательные таблици." + "\n");
         } catch (Exception e) {
             globals.writeToMLOG(Clock.getHumanTime() + "_INFO.TablesLoadingUnloading.class.downloadAllTables.Ошибка.Обязательные таблици: " + e + "\n");
@@ -375,6 +379,8 @@ public class TablesLoadingUnloading {
                         }
 
                         if (response.body().getState()) {
+                            downloadTovarTable(context, null,response.body().getList());
+
 //                            Globals.writeToMLOG("INFO", "PetrovExchangeTest/startExchange/downloadWPData/onSuccess", "(response.body().getList(): " + response.body().getList().size());
                             if (RealmManager.setWpData(response.body().getList())) {
                                 if (pg != null)
@@ -1093,20 +1099,25 @@ public class TablesLoadingUnloading {
     /**
      * Обновление таблицы: Товаров
      */
-    public void downloadTovarTable(Context context, ArrayList<String> listId) {
+
+    public void downloadTovarTable(Context context, ArrayList<String> listId, List<WpDataDB> wpDataDBList) {
         Log.e("SERVER_REALM_DB_UPDATE", "===================================.downloadTovarTable.START");
 
         String mod = "data_list";
         String act = "tovar_list";
 
+
         String date_from = Clock.getDatePeriod(-30);
         String date_to = Clock.getDatePeriod(1);
 
-        BlockingProgressDialog tovarProgressDialog = null;
-        BlockingProgressDialog pg = null;
-        if (context != null) {
-//            tovarProgressDialog = BlockingProgressDialog.show(context, "Обмен данными с сервером.", "Загрузка фотографий Товаров.");
-//            pg = BlockingProgressDialog.show(context, "Обмен данными с сервером.", "Обновление таблицы: " + "Товаров");
+
+        // Используем Set для автоматического удаления дубликатов
+        Set<String> uniqueClientIds = new HashSet<>();
+
+        // Проходим по каждому элементу списка wpDataDBList
+        for (WpDataDB wpDataDB : wpDataDBList) {
+            // Добавляем client_id в Set (дубликаты игнорируются)
+            uniqueClientIds.add(wpDataDB.getClient_id());
         }
 
 
@@ -1115,6 +1126,8 @@ public class TablesLoadingUnloading {
         data.act = "tovar_list";
         data.date_from = date_from;
         data.date_to = date_to;
+        data.client_id = new ArrayList<>(uniqueClientIds);
+//                Arrays.asList("38283","9382"); //9382
 
         Gson gson = new Gson();
         String json = gson.toJson(data);
@@ -1139,7 +1152,6 @@ public class TablesLoadingUnloading {
                         if (response.body().getState()) {
                             List<TovarDB> list = response.body().getList();
 
-
                             try {
                                 try {
                                     globals.writeToMLOG(Clock.getHumanTime() + "_INFO.TablesLU.class.downloadTovarTable.размер ответа: " + list.size() + "\n");
@@ -1158,41 +1170,40 @@ public class TablesLoadingUnloading {
                                 Log.e("SERVER_REALM_DB_UPDATE", "===================================.TovarTable.SIZE: NuLL");
                             }
 
+//                            list.stream()
+//                                    .filter(tovarDB -> wpDataDBList.stream()
+//                                            .anyMatch(wpDataDB -> Objects.equals(tovarDB.getClientId(), wpDataDB.getClient_id())));
 
-                            if (RealmManager.setTovar(list)) {
+
+                            RealmManager.setTovarAsync(list);
 
                                 // 24/01/2024 Закоментил что б при синхронизации не заваливало фотками обмен
-                                PhotoDownload.getPhotoURLFromServer(list, new Clicks.clickStatusMsg() {
-                                    @Override
-                                    public void onSuccess(String data) {
-                                        Log.e("test", "String data: " + data);
-                                    }
-
-                                    @Override
-                                    public void onFailure(String error) {
-                                        Log.e("test", "String error: " + error);
-                                    }
-                                }, new Clicks.clickStatusMsgMode() {
-                                    @Override
-                                    public void onSuccess(String data, Clicks.MassageMode mode) {
-
-                                    }
-
-                                    @Override
-                                    public void onFailure(String error) {
-
-                                    }
-                                }, context);
+//                                PhotoDownload.getPhotoURLFromServer(list, new Clicks.clickStatusMsg() {
+//                                    @Override
+//                                    public void onSuccess(String data) {
+//                                        Log.e("test", "String data: " + data);
+//                                    }
+//
+//                                    @Override
+//                                    public void onFailure(String error) {
+//                                        Log.e("test", "String error: " + error);
+//                                    }
+//                                }, new Clicks.clickStatusMsgMode() {
+//                                    @Override
+//                                    public void onSuccess(String data, Clicks.MassageMode mode) {
+//
+//                                    }
+//
+//                                    @Override
+//                                    public void onFailure(String error) {
+//
+//                                    }
+//                                }, context);
 
 //                                if (finalPg != null)
 //                                    if (finalPg.isShowing())
 //                                        finalPg.dismiss();
-                            } else {
-//                                if (finalPg != null)
-//                                    if (finalPg.isShowing())
-//                                        finalPg.dismiss();
 
-                            }
                         }
                     } else {
 //                        if (finalPg != null)
@@ -2993,4 +3004,10 @@ public class TablesLoadingUnloading {
             }
         });
     }
+
+//    private List<WpDataDB> getWorkPlanList() {
+//        RealmResults<WpDataDB> realmResults = getAllWorkPlan(); // Получаем RealmResults
+//        return realmResults != null ? new ArrayList<>(realmResults) : new ArrayList<>(); // Преобразуем в List
+//    }
+
 }

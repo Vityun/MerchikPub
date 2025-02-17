@@ -13,6 +13,8 @@ import android.graphics.Color;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.text.Editable;
 import android.text.SpannableString;
 import android.text.SpannableStringBuilder;
@@ -53,6 +55,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 
+import kotlin.Unit;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -84,6 +87,8 @@ import ua.com.merchik.merchik.dialogs.DialogSupport;
 import ua.com.merchik.merchik.dialogs.DialogTelephoneRegistration;
 import ua.com.merchik.merchik.dialogs.DialogsRecyclerViewAdapter.DialogAdapter;
 import ua.com.merchik.merchik.dialogs.DialogsRecyclerViewAdapter.ViewHolderTypeList;
+import ua.com.merchik.merchik.dialogs.features.MessageDialogBuilder;
+import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus;
 import ua.com.merchik.merchik.retrofit.MyCookieJar;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
 
@@ -844,7 +849,7 @@ public class menu_login extends AppCompatActivity {
             data.confirmation_code = confirmationCode;  // код подтверждения, полученный от администратора (если регистрация происходит на компанию, у которой в прошлом шаге confirmation=true)
         }
         if (companyType.equals("new")) {
-            data.client_id = item.clientId;             // код клиента, на которого регистрируется сотрудник
+            data.client_id = Arrays.asList(item.clientId);             // код клиента, на которого регистрируется сотрудник
         }
         data.company_type = companyType;                // может принимать значения new / existing если у тебя осуществляется подключение сотрудника к существующей компании, которая уже зарегистрирована в системе, то ты передаёшь эту переменную со значением existing если пользователь регистрирует новую компанию, которой ещё нет в системе, тогда параметр передаёшь со значение new
 
@@ -878,7 +883,7 @@ public class menu_login extends AppCompatActivity {
 
         data.company_id = item.companyId;          // едрпоу
         data.company_name = item.companyName;      // название компании
-        data.client_id = item.clientId;            // код клиента, на которого регистрируется сотрудник
+        data.client_id = Arrays.asList(item.clientId);            // код клиента, на которого регистрируется сотрудник
 
         Gson gson = new Gson();
         String json = gson.toJson(data);
@@ -1319,12 +1324,28 @@ public class menu_login extends AppCompatActivity {
             if (sess_id != null) {
                 sessId = sess_id;
             }
+            MessageDialogBuilder dialogBuilder = new MessageDialogBuilder(this);
+            Handler handler = new Handler(Looper.getMainLooper());
+            Runnable timeoutRunnable = () ->
+//                Toast.makeText(this, "Сервер сейчас занят, ожидание может быть дольше", Toast.LENGTH_LONG).show();
+                dialogBuilder
+                        .setStatus(DialogStatus.ALERT)
+                        .setTitle("Сервер сейчас занят")
+                        .setSubTitle("Время ответа от сервера может быть больше чем обычно")
+                        .setMessage("На данный момент сервер загружен и время ожидания может быть больше чем обычно. Ни в коем случае не переустанавливайте приложение, так как время ожидания увеличиться во много раз, и вы можете потерять часть данных, которые не были переданы на сервер")
+                        .setOnConfirmAction(() -> Unit.INSTANCE)
+                        .show();
 
+// Запускаем таймер на 5 секунд
+            handler.postDelayed(timeoutRunnable, 10000);
+//            long startTime = System.currentTimeMillis();
             retrofit2.Call<Login> call = RetrofitBuilder.getRetrofitInterface().loginInfo(mod, sessId);
             call.enqueue(new retrofit2.Callback<Login>() {
                 @Override
                 public void onResponse(retrofit2.Call<Login> call, retrofit2.Response<Login> response) {
                     if (response.isSuccessful() && response.body() != null) {
+                        handler.removeCallbacks(timeoutRunnable);
+//                        dialogBuilder.dismiss();
                         if (response.code() == 200) {
                             Log.e("loginOnServer", "response.body(): " + response.body().getState());
                             wil = 0;
@@ -1337,6 +1358,7 @@ public class menu_login extends AppCompatActivity {
 
                 @Override
                 public void onFailure(retrofit2.Call<Login> call, Throwable t) {
+                    handler.removeCallbacks(timeoutRunnable);
                     withoutLogin();
                 }
             });
@@ -1680,6 +1702,7 @@ public class menu_login extends AppCompatActivity {
      * в своем ФИО, если он зарегестрирован на сервере. Механика работы 1:1 как работает подсказка
      * на самом сервере. Начинает работать после внесения 3го символа.
      */
+    private boolean isStatusShow = true;
     private void getUserLogin(String text) {
         String mod = "auth";
         String act = "login_search";
@@ -1710,6 +1733,19 @@ public class menu_login extends AppCompatActivity {
             @Override
             public void onFailure(Call<JsonObject> call, Throwable t) {
                 Log.e("getUserLogin", "onFailure: " + t.toString());
+
+                if (isStatusShow) {
+                    new MessageDialogBuilder(menu_login.this)
+                            .setStatus(DialogStatus.ALERT)
+                            .setTitle("Сервер сейчас занят")
+                            .setSubTitle("Время ответа от сервера может быть больше чем обычно")
+                            .setMessage("На данный момент сервер загружен и время ожидания может быть больше чем обычно. Ни в коем случае не переустанавливайте приложение, так как время ожидания увеличиться во много раз, и вы можете потерять часть данных, которые не были переданы на сервер." +
+                                    "Если после ожидания ни чего не изменилось, повторите вашу попытку через несколько минут")
+                            .setOnConfirmAction(() -> Unit.INSTANCE)
+                            .show();
+                    isStatusShow = false;
+                }
+
             }
         });
 

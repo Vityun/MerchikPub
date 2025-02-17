@@ -303,8 +303,8 @@ public class Translate {
         // Для создания достижения выберите...
         AddTranslation data1 = new AddTranslation(
                 "1",
-                "alert_dialog_title_send_m_log",
-                "Надіслати файл з помилками розробнику",
+                "alert_dialog_title_server_is_busy",
+                "Сервер сейчас занят",
                 "app",
                 "all",
                 ""
@@ -313,8 +313,8 @@ public class Translate {
 
         AddTranslation data2 = new AddTranslation(
                 "2",
-                "alert_dialog_message_send_m_log",
-                "Для відправки файлу натисніть ОК, у з'явленому меню виберіть іконку пошти і далі відправте лист.",
+                "alert_dialog_subtitle_server_is_busy",
+                "Время ответа от сервера может быть больше чем обычно",
                 "app",
                 "all",
                 ""
@@ -322,33 +322,34 @@ public class Translate {
 
         AddTranslation data3 = new AddTranslation(
                 "3",
-                "alert_dialog_message_photo_not_created",
-                "Данные не выгружены на сервер",
+                "alert_dialog_msg_server_is_busy",
+                "На данный момент сервер загружен и время ожидания может быть больше чем обычно. Ни в коем случае не переустанавливайте приложение, так как время ожидания увеличиться во много раз, и вы можете потерять часть данных, которые не были переданы на сервер." +
+                        "Если после ожидания ни чего не изменилось, повторите вашу попытку через несколько минут",
                 "app",
                 "all",
                 ""
         );
-        AddTranslation data4 = new AddTranslation(
-                "4",
-                "alert_dialog_message_tovar_group_empty",
-                "Не обнаружено ни одной группы товаров по данному клиенту. Сообщите об этом Администратору!",
-                "app",
-                "all",
-                ""
-        );
-        AddTranslation data5 = new AddTranslation(
-                "5",
-                "alert_dialog_message_type_photo_erorr",
-                "Список типов фото получить не удалось, попробуйте нажать в меню 3х точек на \"Перейти на главную\". Если после этого ошибка повторится - обратитесь к Вашему руководителю.",
-                "app",
-                "all",
-                ""
-        );
-
+//        AddTranslation data4 = new AddTranslation(
+//                "4",
+//                "alert_dialog_message_tovar_group_empty",
+//                "Не обнаружено ни одной группы товаров по данному клиенту. Сообщите об этом Администратору!",
+//                "app",
+//                "all",
+//                ""
+//        );
+//        AddTranslation data5 = new AddTranslation(
+//                "5",
+//                "alert_dialog_message_type_photo_erorr",
+//                "Список типов фото получить не удалось, попробуйте нажать в меню 3х точек на \"Перейти на главную\". Если после этого ошибка повторится - обратитесь к Вашему руководителю.",
+//                "app",
+//                "all",
+//                ""
+//        );
+//
 //        AddTranslation data6 = new AddTranslation(
 //                "6",
-//                "users_sbs_ufmd_otdel_id",
-//                "Відділ",
+//                "alert_dialog_message_title_no_data",
+//                "Відсутні дані щодо цього відвідування",
 //                "app",
 //                "all",
 //                ""
@@ -356,33 +357,102 @@ public class Translate {
 //
 //        AddTranslation data7 = new AddTranslation(
 //                "7",
-//                "ptt_dialog_ekl",
-//                "Виберіть ТПП (Представника Торгової точки)",
+//                "alert_dialog_message_msg_no_data",
+//                "На даний момент немає даних для відображення. Можливо вони ще не завантаженi з боку сервера. Зачекайте завершення обміну даними з сервером, якщо завантаження не вiдбулося знайдіть місце з кращим інтернет-з'єднанням, натисніть 'Синхронізація' (у правому вехньому кутку) і дочекайтеся завершення процесу. Дані мають відобразитися." +
+//                        "\nЯкщо це не допомогло, звернiться до керiвника",
 //                "app",
 //                "all",
 //                ""
 //        );
-
-//        AddTranslation data3 = new AddTranslation(
-//                "4",
-//                "sub_title_umfd_photo_option_135158",
-//                "Фото залишків товарів, якi зробив виконавець під час відвідування",
+//
+//        AddTranslation data8 = new AddTranslation(
+//                "8",
+//                "option_open_error_msg",
+//                "Не удалось открыть Опцию. Если ошибка повторяется - обратитесь к своему руководителю.\n\nОшибка: ",
 //                "app",
 //                "all",
 //                ""
 //        );
-//        AddTranslation data4 = new AddTranslation(
-//                "5",
-//                "sub_title_umfd_photo_option_158308",
-//                "Фото Вітрини Панорамне, якi зробив виконавець під час відвідування",
+//
+//        AddTranslation data9 = new AddTranslation(
+//                "9",
+//                "alert_dialog_msg_photo_error",
+//                "Ошибка при выполнении фото: ",
 //                "app",
 //                "all",
 //                ""
 //        );
-//        AddTranslation data5 = new AddTranslation(
-//                "6",
-//                "sub_title_umfd_photo_option_158309",
-//                "Фото Вітрини Наближене, якi зробив виконавець під час відвідування",
+//
+//        AddTranslation data10 = new AddTranslation(
+//                "10",
+//                "alert_dialog_msg_synchronization",
+//                "Синхронизация окончена",
+//                "app",
+//                "all",
+//                ""
+//        );
+//        AddTranslation data11 = new AddTranslation(
+//                "11",
+//                "alert_dialog_title_synchronization",
+//                "Обмен данными с сервером завершен",
+//                "app",
+//                "all",
+//                ""
+//        );
+//
+//        AddTranslation data12 = new AddTranslation(
+//                "12",
+//                "alert_dialog_msg_photo_is_there",
+//                "Такое фото уже существует. Если ошибка повторяется - обратитесь к Вашему руководителю",
+//                "app",
+//                "all",
+//                ""
+//        );
+//        AddTranslation data13 = new AddTranslation(
+//                "13",
+//                "alert_dialog_msg_photo_is_there_2",
+//                "Ошибка при сохранении фото. При возникновении этой ошибки - обратитесь к руководителю. Код ошибки: ",
+//                "app",
+//                "all",
+//                ""
+//        );
+//        AddTranslation data14 = new AddTranslation(
+//                "14",
+//                "alert_dialog_msg_bd_error",
+//                "Ошибка сохранения в БД: ",
+//                "app",
+//                "all",
+//                ""
+//        );
+//
+//        AddTranslation data15 = new AddTranslation(
+//                "15",
+//                "alert_dialog_msg_photo_server_error",
+//                "Фото не выгружено. Сообщите об этом руководителю. Ответ от сервера: ",
+//                "app",
+//                "all",
+//                ""
+//        );
+//        AddTranslation data16 = new AddTranslation(
+//                "16",
+//                "alert_dialog_title_default_error",
+//                "Произошла ошибка",
+//                "app",
+//                "all",
+//                ""
+//        );
+//        AddTranslation data17 = new AddTranslation(
+//                "17",
+//                "alert_dialog_sub_title_default_server_response",
+//                "Ответ от сервера",
+//                "app",
+//                "all",
+//                ""
+//        );
+//        AddTranslation data18 = new AddTranslation(
+//                "18",
+//                "alert_dialog_msg_error_photo_not_created",
+//                "Фото не было создано, повторите попытку",
 //                "app",
 //                "all",
 //                ""
@@ -462,8 +532,8 @@ public class Translate {
         res.add(data1);
         res.add(data2);
         res.add(data3);
-        res.add(data4);
-        res.add(data5);
+//        res.add(data4);
+//        res.add(data5);
 //        res.add(data6);
 //        res.add(data7);
 //        res.add(data8);
@@ -472,6 +542,12 @@ public class Translate {
 //        res.add(data11);
 //        res.add(data12);
 //        res.add(data13);
+//        res.add(data14);
+//        res.add(data15);
+//        res.add(data16);
+//        res.add(data17);
+//        res.add(data18);
+
 
         /*
         *

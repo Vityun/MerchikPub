@@ -1,5 +1,8 @@
 package ua.com.merchik.merchik.data.TestJsonUpload;
 
+import com.google.gson.annotations.Expose;
+import com.google.gson.annotations.SerializedName;
+
 import java.util.List;
 
 public class StandartData<T> {
@@ -62,7 +65,7 @@ public class StandartData<T> {
     public String company_id;   // едрпоу
     public String company_name; // название компании
     public String confirmation_code;    // код подтверждения, полученный от администратора (если регистрация происходит на компанию, у которой в прошлом шаге confirmation=true)
-    public String client_id;    // код клиента, на которого регистрируется сотрудник
+    public List<String> client_id;    // код клиента
     public String company_type; // может принимать значения new / existing если у тебя осуществляется подключение сотрудника к существующей компании, которая уже зарегистрирована в системе, то ты передаёшь эту переменную со значением existing если пользователь регистрирует новую компанию, которой ещё нет в системе, тогда параметр передаёшь со значение new
     public String type;         // registration - при регистрации учетной записи recover  - при запросе восстановления пароля
     public String tp;           // тип для того что б получать данные о проценте рекламаций по Киеву и Регионам
@@ -72,6 +75,7 @@ public class StandartData<T> {
     public Long vpo;
     public String active_only;  // 30.10.23. ДЛя витрин. Что б отбирать по статусу.
     public String planogram_only;
+
     // ------------------------------------
 
     public static class Filter {

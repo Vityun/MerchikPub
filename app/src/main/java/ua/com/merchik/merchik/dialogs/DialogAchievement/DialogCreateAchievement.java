@@ -304,8 +304,8 @@ public class DialogCreateAchievement {
          TODO это хреновый костыль довести до ума
          */
         Log.e("--------------","+++++++");
-        Intent intent = new Intent(context, FeaturesActivity.class);
-        ActivityCompat.startActivityForResult((Activity) context, intent, NEED_UPDATE_UI_REQUEST, null);
+//        Intent intent = new Intent(context, FeaturesActivity.class);
+//        ActivityCompat.startActivityForResult((Activity) context, intent, NEED_UPDATE_UI_REQUEST, null);
 
         if (dialog != null) dialog.dismiss();
     }

@@ -21,8 +21,8 @@ android {
         minSdkVersion 21
         targetSdkVersion 34
         //noinspection HighAppVersionCode
-        versionCode  2025020702
-        versionName "2025020702"
+        versionCode  2025021802
+        versionName "2025021802"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
         multiDexEnabled true
@@ -164,7 +164,11 @@ dependencies {
 
     // Notification
     implementation "androidx.core:core:1.6.0"
-//    implementation 'androidx.work:work-runtime:2.7.1'
+
+    // WorkManager
+    def work_version = "2.9.1"
+    implementation "androidx.work:work-runtime:$work_version"
+    implementation "androidx.work:work-runtime-ktx:$work_version"
 
     // Multi State Toggle Button
 //    implementation 'org.honorato.multistatetogglebutton:multistatetogglebutton:0.2.2'

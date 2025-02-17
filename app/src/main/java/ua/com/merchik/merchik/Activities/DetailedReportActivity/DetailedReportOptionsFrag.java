@@ -379,12 +379,17 @@ public class DetailedReportOptionsFrag extends Fragment {
             List<OptionsDB> optionsButtons = workPlan.getOptionButtons2(workPlan.getWpOpchetId(wpDataDB), wpDataDB.getId());
 
             if (optionsButtons.isEmpty()){
-                AlertDialogMessage alertDialogMessage = new AlertDialogMessage(requireActivity(),
-                        "",
-                        "На даний момент немає даних для відображення. Можливо вони ще не завантаженi з боку сервера. Зачекайте завершення обміну даними з сервером, якщо завантаження не вiдбулося знайдіть місце з кращим інтернет-з'єднанням, натисніть 'Синхронізація' (у правому вехньому кутку) і дочекайтеся завершення процесу. Дані мають відобразитися." +
-                                "\nЯкщо це не допомогло, звернiться до керiвника",
-                        DialogStatus.ALERT);
-                alertDialogMessage.show();
+                Globals.alertDialogMsg(requireActivity(),
+                        DialogStatus.ALERT,
+                        "Відсутні дані щодо цього відвідування"
+                ,"На даний момент немає даних для відображення. Можливо вони ще не завантаженi з боку сервера. Зачекайте завершення обміну даними з сервером, якщо завантаження не вiдбулося знайдіть місце з кращим інтернет-з'єднанням, натисніть 'Синхронізація' (у правому вехньому кутку) і дочекайтеся завершення процесу. Дані мають відобразитися." +
+                                "\nЯкщо це не допомогло, звернiться до керiвника");
+//                AlertDialogMessage alertDialogMessage = new AlertDialogMessage(requireActivity(),
+//                        "",
+//                        "На даний момент немає даних для відображення. Можливо вони ще не завантаженi з боку сервера. Зачекайте завершення обміну даними з сервером, якщо завантаження не вiдбулося знайдіть місце з кращим інтернет-з'єднанням, натисніть 'Синхронізація' (у правому вехньому кутку) і дочекайтеся завершення процесу. Дані мають відобразитися." +
+//                                "\nЯкщо це не допомогло, звернiться до керiвника",
+//                        DialogStatus.ALERT);
+//                alertDialogMessage.show();
             } else {
                 List<Integer> ids = new ArrayList<>();
                 for (OptionsDB item : optionsButtons) {
