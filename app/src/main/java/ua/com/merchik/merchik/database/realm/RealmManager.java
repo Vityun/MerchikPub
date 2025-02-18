@@ -1060,7 +1060,12 @@ public class RealmManager {
                         item.status_set = String.valueOf(l.getSetStatus());
 
                         item.user_comment = l.user_comment;
+                        item.user_comment_author_id = l.user_comment_author_id;
                         item.user_comment_dt_update = l.user_comment_dt_update;
+
+                        item.user_opinion_id = l.getUser_opinion_id();
+                        item.user_opinion_author_id = l.getUser_opinion_author_id();
+                        item.user_opinion_dt_update = l.getUser_opinion_dt_update();
                     }
 
                     res.add(item);

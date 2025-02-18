@@ -4,6 +4,7 @@ import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 import static ua.com.merchik.merchik.trecker.coordinatesDistanse;
 import static ua.com.merchik.merchik.trecker.enabledGPS;
 
+import android.app.Application;
 import android.content.Context;
 
 import java.util.ArrayList;
@@ -11,6 +12,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
+import ua.com.merchik.merchik.Activities.MyApplication;
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.Options.OptionControl;
@@ -26,6 +28,7 @@ import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.AppUserRealm;
 import ua.com.merchik.merchik.database.realm.tables.LogMPRealm;
 import ua.com.merchik.merchik.dialogs.DialogData;
+import ua.com.merchik.merchik.dialogs.features.MessageDialogBuilder;
 
 public class OptionControlMP<T> extends OptionControl {
 
@@ -128,6 +131,9 @@ public class OptionControlMP<T> extends OptionControl {
 
     public void showMassage(boolean showMassage, Clicks.clickStatusMsg click) {
         try {
+            if (context == null)
+                context = MyApplication.getAppContext();
+
             DialogData dialog = new DialogData(context);
             StringBuilder title = new StringBuilder();
 

@@ -10,6 +10,7 @@ import com.google.gson.JsonObject;
 import java.util.ArrayList;
 import java.util.List;
 
+import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.observers.DisposableCompletableObserver;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 import retrofit2.Call;
@@ -78,6 +79,7 @@ public class SamplePhotoExchange {
                                 if (response.body().list != null && response.body().list.size() > 0) {
                                     SQL_DB.samplePhotoDao().insertAll(response.body().list)
                                             .subscribeOn(Schedulers.io())
+                                            .observeOn(AndroidSchedulers.mainThread())
                                             .subscribe(new DisposableCompletableObserver() {
                                                 @Override
                                                 public void onComplete() {

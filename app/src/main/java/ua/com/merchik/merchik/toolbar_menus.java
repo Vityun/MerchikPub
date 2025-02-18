@@ -44,9 +44,13 @@ import androidx.core.graphics.drawable.DrawableCompat;
 import androidx.core.view.GravityCompat;
 import androidx.core.view.MenuItemCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
+import androidx.lifecycle.Observer;
 import androidx.preference.PreferenceManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.work.OneTimeWorkRequest;
+import androidx.work.WorkInfo;
+import androidx.work.WorkManager;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.navigation.NavigationView;
@@ -95,6 +99,7 @@ import ua.com.merchik.merchik.ServerExchange.TablesExchange.PhotoMerchikExchange
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.SamplePhotoExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.ShowcaseExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesLoadingUnloading;
+import ua.com.merchik.merchik.ServerExchange.workmager.DownloadImagesWorker;
 import ua.com.merchik.merchik.Utils.FileCompressor;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.Database.Room.Chat.ChatSDB;
@@ -117,6 +122,7 @@ import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.dialogs.DialogMap;
 import ua.com.merchik.merchik.dialogs.features.AlertDialogMessage;
 import ua.com.merchik.merchik.dialogs.features.LoadingDialogWithPercent;
+import ua.com.merchik.merchik.dialogs.features.LoadingIndicator;
 import ua.com.merchik.merchik.dialogs.features.MessageDialogBuilder;
 import ua.com.merchik.merchik.dialogs.features.dialogLoading.ProgressViewModel;
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus;
@@ -169,6 +175,8 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
 
     public static Globals.InternetStatus internetStatusG;
 
+    private WorkManager workManager;
+    private LoadingIndicator loadingIndicator;
     //---------------------------
 
     //----------------------------
@@ -555,6 +563,7 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        loadingIndicator.hide();
         globals.handlerCount.removeCallbacks(runnableCron10);
     }
 
@@ -649,6 +658,8 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
         ib = actionView.findViewById(R.id.imageViewExchange);
 
         composeContainer = actionView.findViewById(R.id.composeContainer);
+        loadingIndicator = new LoadingIndicator(composeContainer);
+        workManager = WorkManager.getInstance(this);
 
 //        pingServer(1);
         synchronizationSignal("SIGNAL", null);
@@ -802,6 +813,40 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
         return true;
     }
 
+    private void startDownload() {
+        // Создаем и запускаем воркер
+        OneTimeWorkRequest workRequest = new OneTimeWorkRequest.Builder(DownloadImagesWorker.class).build();
+        workManager.enqueue(workRequest);
+
+        // Показываем индикатор загрузки
+        ib.setVisibility(View.INVISIBLE);
+        loadingIndicator.show();
+
+        // Наблюдаем за статусом работы
+        workManager.getWorkInfoByIdLiveData(workRequest.getId())
+                .observe(this, new Observer<WorkInfo>() {
+                    @Override
+                    public void onChanged(WorkInfo workInfo) {
+                        if (workInfo != null) {
+                            switch (workInfo.getState()) {
+                                case SUCCEEDED:
+                                    handleSuccess();
+                                    break;
+                                case FAILED:
+                                    handleFailure();
+                                    break;
+                                case CANCELLED:
+                                    handleCancellation();
+                                    break;
+                                default:
+                                    // Другие состояния не обрабатываем
+                                    break;
+                            }
+                        }
+                    }
+                });
+    }
+
 
     /**
      * Устанавливается в счётчик число фоток
@@ -871,7 +916,7 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
             internetStatus = server.internetStatus();
 
 //            ib.setVisibility(View.GONE);
-//            new LoadingIndicator(composeContainer).show();
+//            loadingIndicator.show();
 
             try {
                 AppUsersDB appUsersDB = AppUserRealm.getAppUser();
@@ -886,6 +931,8 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
             } catch (Exception e) {
                 Globals.writeToMLOG("INFO", "USER_INFO", "Exception e: " + e);
             }
+
+//            startDownload();
 
             new MessageDialogBuilder(this)
                     .setTitle("Вiдправити лог файл")
@@ -2346,5 +2393,29 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
         }
     }
 
+
+    private void handleSuccess() {
+        if (loadingIndicator != null && ib != null) {
+            loadingIndicator.hide();
+            ib.setVisibility(View.VISIBLE);
+        }
+        // Дополнительные действия при успехе
+    }
+
+    private void handleFailure() {
+        if (loadingIndicator != null && ib != null) {
+            loadingIndicator.hide();
+            ib.setVisibility(View.VISIBLE);
+        }
+        // Дополнительные действия при ошибке
+    }
+
+    private void handleCancellation() {
+        if (loadingIndicator != null && ib != null) {
+            loadingIndicator.hide();
+            ib.setVisibility(View.VISIBLE);
+        }
+        // Дополнительные действия при отмене
+    }
 
 }//END OF CLASS..

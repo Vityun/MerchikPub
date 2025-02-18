@@ -276,7 +276,7 @@ public class Globals {
     private static void showAlertDialog(Context context, DialogStatus status, String title, String subTitle, String msg) {
         if (context instanceof Activity) {
 
-            new MessageDialogBuilder((Activity) context)
+            new MessageDialogBuilder(unwrap(context))
                     .setTitle(title)
                     .setStatus(status)
                     .setSubTitle(subTitle)
@@ -756,7 +756,7 @@ public class Globals {
     public Uri getFileUri(Context context, File file) {
         try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                return FileProvider.getUriForFile(context, context.getPackageName() + ".provider", file);
+                return FileProvider.getUriForFile(context, "ua.com.merchik.merchik.provider", file);
             } else {
                 return Uri.fromFile(file);
             }
@@ -1133,11 +1133,11 @@ public class Globals {
             TablesLoadingUnloading.readyTradeMarksTable = false;
             TablesLoadingUnloading.readySamplePhotos = false;
 
-            alertDialogMsg(context,
-                    DialogStatus.NORMAL,
-                    "Обмен данными с сервером завершен",
-                    "Успешно",
-                    "Синхронизация окончена");
+//            alertDialogMsg(context,
+//                    DialogStatus.NORMAL,
+//                    "Обмен данными с сервером завершен",
+//                    "Успешно",
+//                    "Синхронизация окончена");
         }
 
         if (TablesLoadingUnloading.syncInternetError) {
@@ -1158,13 +1158,17 @@ public class Globals {
                         " для лучшей связи и повторите попытку";
             }
 
+            alertDialogMsg(context,
+                    DialogStatus.ALERT,
+                    "Внимание!",
+                    msg);
 
-            DialogData dialog = new DialogData(context);
-            dialog.setTitle("Внимание!");
-            dialog.setDialogIco();
-            dialog.setText(msg);
-            dialog.setClose(dialog::dismiss);
-            dialog.show();
+//            DialogData dialog = new DialogData(context);
+//            dialog.setTitle("Внимание!");
+//            dialog.setDialogIco();
+//            dialog.setText(msg);
+//            dialog.setClose(dialog::dismiss);
+//            dialog.show();
 
 
 //            alertDialogMsg(context, "При выполнении Синхронизации возникла ошибка связи. Проверьте интернет соединение или повторите попытку позже.\n\nВнимание, если отсутствует связь с сервером не переустанавливайте приложение! Потому что при переустановке приложения будут удалены все внесённые вами данные(фото, дет. отчёт, доступы, справочники и тп..)\n\nпри необходимости установки новой версии приложения в Плэй Маркете используйте кнопку 'Обновить'.");
@@ -1959,7 +1963,7 @@ public class Globals {
         return value;
     }
 
-    private static Activity unwrap(Context context) {
+    public static Activity unwrap(Context context) {
         while (!(context instanceof Activity) && context instanceof ContextWrapper) {
             context = ((ContextWrapper) context).getBaseContext();
         }

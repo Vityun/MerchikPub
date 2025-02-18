@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.observers.DisposableCompletableObserver;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 import ua.com.merchik.merchik.Globals;
@@ -544,6 +545,7 @@ public class DialogCreateTAR extends DialogData {
 
                 SQL_DB.tarDao().insertData(Collections.singletonList(task))
                         .subscribeOn(Schedulers.io())
+                        .observeOn(AndroidSchedulers.mainThread())
                         .subscribe(new DisposableCompletableObserver() {
                             @Override
                             public void onComplete() {

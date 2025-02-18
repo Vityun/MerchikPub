@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
+import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.observers.DisposableCompletableObserver;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 import io.realm.RealmResults;
@@ -1089,6 +1090,7 @@ public class Exchange {
 //                            Globals.writeToMLOG("INFO", "PetrovExchangeTest/startExchange/ShowcaseExchange/onSuccess", "(data: " + data.size());
                             SQL_DB.showcaseDao().insertAll((List<ShowcaseSDB>) data)
                                     .subscribeOn(Schedulers.io())
+                                    .observeOn(AndroidSchedulers.mainThread())
                                     .subscribe(new DisposableCompletableObserver() {
                                         @Override
                                         public void onComplete() {
@@ -1226,12 +1228,16 @@ public class Exchange {
                     Globals.writeToMLOG("ERROR", "startExchange/VotesTARExchange/", "Exception e: " + e);
                 }
 
-
+                Globals.alertDialogMsg(context,
+                        DialogStatus.NORMAL,
+                        "Обмен данными с сервером завершен",
+                        "Успешно",
+                        "Синхронизация окончена");
                 // --------------------------------------------------------------
             } else if (exchangeTime + retryTime < System.currentTimeMillis()
                     && toolbar_menus.internetStatusG == Globals.InternetStatus.NO_SERVER) {
 
-                new MessageDialogBuilder((Activity) context)
+                new MessageDialogBuilder(unwrap(context))
                         .setStatus(DialogStatus.ALERT)
                         .setTitle("Сервер сейчас занят")
                         .setSubTitle("Время ответа от сервера может быть больше чем обычно")

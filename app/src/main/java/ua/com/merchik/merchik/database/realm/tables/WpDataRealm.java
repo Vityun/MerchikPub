@@ -47,6 +47,16 @@ public class WpDataRealm {
     }
 
     /**
+     * 18.02.2025
+     * Получение плана работ для апдейта
+     */
+    public static RealmResults<WpDataDB> getWpDataToUpdate() {
+        return INSTANCE.where(WpDataDB.class)
+                .equalTo("startUpdate", true)
+                .findAll();
+    }
+
+    /**
      * 03.03.2021
      * Получение строки с Плана работ по её id
      */

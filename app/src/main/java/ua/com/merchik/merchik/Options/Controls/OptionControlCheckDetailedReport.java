@@ -4,6 +4,7 @@ import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
 import android.content.Context;
 import android.os.Build;
+import android.util.Log;
 
 import androidx.annotation.RequiresApi;
 
@@ -94,7 +95,7 @@ public class OptionControlCheckDetailedReport<T> extends OptionControl {
 
 
         // 5.0
-        reportPrepare = prepareOSVData(reportPrepare);
+        reportPrepare = prepareOSVData(reportPrepare, wpDataDB.getDt_start());
 
         // 6.0 готовим сообение и сигнал.
         int colSKU = reportPrepare.stream().map(table -> table.colSKU).reduce(0, Integer::sum);
@@ -102,7 +103,7 @@ public class OptionControlCheckDetailedReport<T> extends OptionControl {
         int fixesNum = reportPrepare.stream().map(table -> table.fixesNum).reduce(0, Integer::sum);
 
         try {
-            correctionPercentage = (int) 100 * (colSKU - err) / colSKU;
+            correctionPercentage = (int) Math.round((100.0 * (colSKU - err)) / colSKU);
         } catch (Exception e) {
             correctionPercentage = 0;
         }
@@ -167,8 +168,37 @@ public class OptionControlCheckDetailedReport<T> extends OptionControl {
                 } else {
                     item.colSKU = 1;
                 }
+
                 long dtChangeTime = item.getDtChange();
                 if (dtChangeTime < time) {
+                    item.errorExist = 1;
+                    item.note = "исправление не внесено";
+                } else {
+                    item.fixesNum = 1;
+                }
+            }
+        }
+        return res;
+    }
+    /**
+     * Заполняем данными с ОСВ изменены от 18.02.25
+     */
+    private List<ReportPrepareDB> prepareOSVData(List<ReportPrepareDB> reportPrepare, long dateStart) {
+        List<ReportPrepareDB> res = null;
+        if (reportPrepare != null && reportPrepare.size() > 0) {
+            res = RealmManager.INSTANCE.copyFromRealm(reportPrepare);
+            for (ReportPrepareDB item : res) {
+                if (calculateSKU(item.getFace()) == 0) {
+                    item.colSKU = 0;
+                    continue;
+                } else {
+                    item.colSKU = 1;
+                }
+
+                int time = Integer.parseInt(item.getDt());
+
+                Log.e("!prepareOSVData!", "item.dtChange: " + item.dtChange + " < " + dateStart + " = " + (item.dtChange < dateStart));
+                if (time < dateStart) {
                     item.errorExist = 1;
                     item.note = "исправление не внесено";
                 } else {

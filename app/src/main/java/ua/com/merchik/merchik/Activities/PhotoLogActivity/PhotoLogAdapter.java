@@ -272,7 +272,7 @@ public class PhotoLogAdapter extends RecyclerView.Adapter<PhotoLogAdapter.ViewHo
                         Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST/PHOTO_LOG", "Exception e1: " + e1);
                         try {
                             File file = new File(photoLogDat.getPhoto_num());
-                            Uri uriFileProvider = FileProvider.getUriForFile(mContext, mContext.getPackageName() + ".provider", file);
+                            Uri uriFileProvider = FileProvider.getUriForFile(mContext,  "ua.com.merchik.merchik.provider", file);
                             imageView.setImageURI(uriFileProvider);
                         } catch (Exception e2) {
                             Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST/PHOTO_LOG", "Exception e2: " + e2);
