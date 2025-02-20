@@ -274,7 +274,8 @@ public class DetailedReportTARFrag extends Fragment {
             badgeTextView.setVisibility(View.GONE);
         } else {
             fab.setVisibility(View.VISIBLE);
-            imageView.setVisibility(View.VISIBLE);
+            if (imageView != null)
+                imageView.setVisibility(View.VISIBLE);
             int must = DETAILED_REPORT_FRAGMENT_TAR_VIDEO_LESSONS.length;
             int have = videos.size();
             int res = must - have;

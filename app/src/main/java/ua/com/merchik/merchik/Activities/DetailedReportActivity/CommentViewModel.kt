@@ -32,21 +32,4 @@ class CommentViewModel() : ViewModel() {
         _isSaved.value = isSave
     }
 
-//    private val _isSavedDialogShow = MutableStateFlow(false)
-//    var isSavedDialogShow: StateFlow<Boolean> = _isSavedDialogShow
-//
-//    fun setSavedDialogShow(isSaveDialog: Boolean) {
-//        _isSavedDialogShow.value = isSaveDialog
-//    }
-
-//    var showDialog by mutableStateOf(false)
-
-//    fun saveComment() {
-//        // Ваша логика сохранения
-//        // Например:
-//        // Repository.saveComment(themeId, comment)
-//        isSaved = true
-//        showDialog = false
-//
-//    }
 }

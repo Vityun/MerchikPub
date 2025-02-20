@@ -5,12 +5,12 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.lifecycle.Lifecycle;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.viewpager2.adapter.FragmentStateAdapter;
 
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 
-//public class DetailedReportTab extends FragmentPagerAdapter {
 public class DetailedReportTab extends FragmentStateAdapter {
 
     private AppCompatActivity myContext;
@@ -47,7 +47,9 @@ public class DetailedReportTab extends FragmentStateAdapter {
     public static void refreshAdapter() {
         try {
             Globals.writeToMLOG("ERROR", "DetailedReportTab/refreshAdapter", "HERE");
-            detailedReportOptionsFrag.recycleViewDRAdapter.notifyDataSetChanged();
+            if (detailedReportOptionsFrag != null)
+                if (detailedReportOptionsFrag.recycleViewDRAdapter != null)
+                    detailedReportOptionsFrag.recycleViewDRAdapter.notifyDataSetChanged();
         } catch (Exception e) {
             Globals.writeToMLOG("ERROR", "DetailedReportTab/refreshAdapter", "Exception e: " + e);
         }
@@ -93,20 +95,22 @@ public class DetailedReportTab extends FragmentStateAdapter {
     public Fragment createFragment(int position) {
         try {
             Globals.writeToMLOG("INFO", "DetailedReportTab/getItem", "position: " + position);
-            switch (position) {
-                case 0:
-                    return DetailedReportHomeFrag.newInstance(myContext, wpDataDB, viewModel);
-                case 1:
-                    detailedReportOptionsFrag = DetailedReportOptionsFrag.newInstance(myContext, wpDataDB);
-                    return detailedReportOptionsFrag;
-                case 2:
-                    return DetailedReportTovarsFrag.newInstance(myContext, wpDataDB);
-                case 3:
-                    return DetailedReportTARFrag.newInstance(myContext, wpDataDB);
-                default:
+            DetailedReportViewModel detailedReportViewModel = new ViewModelProvider((DetailedReportActivity) myContext).get(DetailedReportViewModel.class);
+
+
+            return switch (position) {
+                case 0 -> DetailedReportHomeFrag.newInstance(wpDataDB, viewModel);
+                case 1 -> {
+                    detailedReportOptionsFrag = DetailedReportOptionsFrag.newInstance(detailedReportViewModel);
+                    yield detailedReportOptionsFrag;
+                }
+                case 2 -> DetailedReportTovarsFrag.newInstance(detailedReportViewModel);
+                case 3 -> DetailedReportTARFrag.newInstance(myContext, wpDataDB);
+                default -> {
                     Globals.writeToMLOG("ERROR", "DetailedReportTab/getItem", "default/ Fragment == NULL");
-                    return null;
-            }
+                    yield null;
+                }
+            };
         } catch (Exception e) {
             Globals.writeToMLOG("ERROR", "DetailedReportTab/getItem", "catch/ Fragment == NULL Exception e: " + e);
             return null;

@@ -30,20 +30,14 @@ public class PhotoMerchikExchange {
      */
     public void getPhotoFromSite() {
         try {
-            SynchronizationTimetableDB synchronizationTimetableDB = RealmManager.INSTANCE.copyFromRealm(RealmManager.getSynchronizationTimetableRowByTable("stack_photo"));
 
             PhotoDownload server = new PhotoDownload();
             PhotoTableRequest data = new PhotoTableRequest();
             data.mod = "images_view";
             data.act = "list_image";
             data.nolimit = "1";
-            data.dt_upload = String.valueOf(synchronizationTimetableDB.getVpi_app());
             data.date_from = Clock.today_7;
             data.date_to = Clock.tomorrow7;
-
-            // Типо говорю что я уже обновился, что б мне постоянно не прилетали фотки и я не задалбівал сервер
-            synchronizationTimetableDB.setVpi_app(System.currentTimeMillis() / 1000);
-            RealmManager.setToSynchronizationTimetableDB(synchronizationTimetableDB);
 
             Globals.writeToMLOG("INFO", "PhotoMerchikExchange/getPhotoFromSite", "PhotoTableRequest data: " + new Gson().toJson(data));
 

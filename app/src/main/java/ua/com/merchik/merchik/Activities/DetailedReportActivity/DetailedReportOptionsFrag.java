@@ -68,6 +68,7 @@ public class DetailedReportOptionsFrag extends Fragment {
 
 
     PhotoHandler photoHandler;
+
     public class PhotoHandler {
         private int photoType;
 
@@ -79,6 +80,7 @@ public class DetailedReportOptionsFrag extends Fragment {
             return photoType;
         }
     }
+
     ActivityResultLauncher<String> mGetContent = registerForActivityResult(new ActivityResultContracts.GetContent(),
             new ActivityResultCallback<Uri>() {
                 @Override
@@ -92,8 +94,9 @@ public class DetailedReportOptionsFrag extends Fragment {
                 }
             });
 
-    private static Context mContext;
+    //    private static Context mContext;
     private WpDataDB wpDataDB;
+    private DetailedReportViewModel viewModel;
 
     public static final Integer[] DetailedReportOptionsFrag_VIDEO_LESSONS = new Integer[]{821, 4540};
 
@@ -104,12 +107,13 @@ public class DetailedReportOptionsFrag extends Fragment {
         Globals.writeToMLOG("INFO", "DetailedReportOptionsFrag/1", "create");
     }
 
-    public static DetailedReportOptionsFrag newInstance(AppCompatActivity context, WpDataDB wpDataDB) {
+    public static DetailedReportOptionsFrag newInstance(DetailedReportViewModel viewModel) {
         DetailedReportOptionsFrag fragment = new DetailedReportOptionsFrag();
-        Bundle args = new Bundle();
-        args.putParcelable("wpDataDB", wpDataDB);
-        mContext = context;
-        fragment.setArguments(args);
+        fragment.viewModel = viewModel; // Сохраняем ViewModel
+//        Bundle args = new Bundle();
+//        args.putParcelable("wpDataDB", wpDataDB);
+////        mContext = context;
+//        fragment.setArguments(args);
         return fragment;
     }
 
@@ -175,11 +179,11 @@ public class DetailedReportOptionsFrag extends Fragment {
         super.onCreate(savedInstanceState);
         Globals.writeToMLOG("INFO", "DetailedReportOptionsFrag", "onCreate");
 
-        Bundle args = getArguments();
-        if (args != null) {
-            wpDataDB = args.getParcelable("wpDataDB");
-            Globals.writeToMLOG("INFO", "DetailedReportOptionsFrag", "onCreate/wpDataDB: " + wpDataDB);
-        }
+//        Bundle args = getArguments();
+//        if (args != null) {
+//            wpDataDB = args.getParcelable("wpDataDB");
+//            Globals.writeToMLOG("INFO", "DetailedReportOptionsFrag", "onCreate/wpDataDB: " + wpDataDB);
+//        }
     }
 
     @Override
@@ -245,25 +249,25 @@ public class DetailedReportOptionsFrag extends Fragment {
 
             ImageView check = v.findViewById(R.id.check);
             if (wpDataDB.getSetStatus() == 1) {
-                check.setImageDrawable(mContext.getResources().getDrawable(R.drawable.ic_question_circle_regular));
-                check.setColorFilter(mContext.getResources().getColor(R.color.colorInetYellow));
+                check.setImageDrawable(requireContext().getResources().getDrawable(R.drawable.ic_question_circle_regular));
+                check.setColorFilter(requireContext().getResources().getColor(R.color.colorInetYellow));
             } else {
                 if (wpDataDB.getStatus() == 1) {
-                    check.setImageDrawable(mContext.getResources().getDrawable(R.drawable.ic_check));
-                    check.setColorFilter(mContext.getResources().getColor(R.color.greenCol));
+                    check.setImageDrawable(requireContext().getResources().getDrawable(R.drawable.ic_check));
+                    check.setColorFilter(requireContext().getResources().getColor(R.color.greenCol));
                 } else {
                     if (Clock.dateConvertToLong(Clock.getHumanTimeYYYYMMDD(wpDataDB.getDt().getTime() / 1000)) < System.currentTimeMillis()) { //+TODO CHANGE DATE
-                        check.setImageDrawable(mContext.getResources().getDrawable(R.drawable.ic_exclamation_mark_in_a_circle));
-                        check.setColorFilter(mContext.getResources().getColor(R.color.red_error));
+                        check.setImageDrawable(requireContext().getResources().getDrawable(R.drawable.ic_exclamation_mark_in_a_circle));
+                        check.setColorFilter(requireContext().getResources().getColor(R.color.red_error));
                     } else {
-                        check.setImageDrawable(mContext.getResources().getDrawable(R.drawable.ic_check));
-                        check.setColorFilter(mContext.getResources().getColor(R.color.shadow));
+                        check.setImageDrawable(requireContext().getResources().getDrawable(R.drawable.ic_check));
+                        check.setColorFilter(requireContext().getResources().getColor(R.color.shadow));
                     }
                 }
             }
 
 
-            Options options = new Options();
+//            Options options = new Options();
 
             WorkPlan workPlan = new WorkPlan();
             rvContacts = v.findViewById(R.id.DRRecycleView);
@@ -273,7 +277,7 @@ public class DetailedReportOptionsFrag extends Fragment {
             Collections.sort(optionsButtons, (o1, o2) -> o1.getSo().compareTo(o2.getSo()));
 
             buttonSave.setOnClickListener(b -> {
-                Toast.makeText(mContext, "Данный раздел находится в разработке", Toast.LENGTH_LONG).show();
+                Toast.makeText(requireContext(), "Данный раздел находится в разработке", Toast.LENGTH_LONG).show();
             });
             buttonMakeAReport.setOnClickListener(b -> {
                 try {
@@ -305,7 +309,7 @@ public class DetailedReportOptionsFrag extends Fragment {
 
                             }
                         });
-                    }catch (Exception e){
+                    } catch (Exception e) {
                         Globals.writeToMLOG("ERROR", "buttonMakeAReport.setOnClickListener/", "Exception e: " + e);
                     }
 
@@ -333,8 +337,8 @@ public class DetailedReportOptionsFrag extends Fragment {
                     });
 
                     if (wpDataDB.getSetStatus() == 1) {
-                        check.setImageDrawable(mContext.getResources().getDrawable(R.drawable.ic_question_circle_regular));
-                        check.setColorFilter(mContext.getResources().getColor(R.color.colorInetYellow));
+                        check.setImageDrawable(requireContext().getResources().getDrawable(R.drawable.ic_question_circle_regular));
+                        check.setColorFilter(requireContext().getResources().getColor(R.color.colorInetYellow));
 
 //                    sendWpData2();  // Выгрузка статуса
                         Exchange exchange = new Exchange();
@@ -342,12 +346,12 @@ public class DetailedReportOptionsFrag extends Fragment {
                             @Override
                             public <T> void onSuccess(T data) {
                                 String msg = (String) data;
-                                Toast.makeText(mContext, msg, Toast.LENGTH_LONG).show();
+                                Toast.makeText(requireContext(), msg, Toast.LENGTH_LONG).show();
                             }
 
                             @Override
                             public void onFailure(String error) {
-                                Toast.makeText(mContext, error, Toast.LENGTH_LONG).show();
+                                Toast.makeText(requireContext(), error, Toast.LENGTH_LONG).show();
                             }
                         });
                     }
@@ -378,11 +382,11 @@ public class DetailedReportOptionsFrag extends Fragment {
 
             List<OptionsDB> optionsButtons = workPlan.getOptionButtons2(workPlan.getWpOpchetId(wpDataDB), wpDataDB.getId());
 
-            if (optionsButtons.isEmpty()){
+            if (optionsButtons.isEmpty()) {
                 Globals.alertDialogMsg(requireActivity(),
                         DialogStatus.ALERT,
                         "Відсутні дані щодо цього відвідування"
-                ,"На даний момент немає даних для відображення. Можливо вони ще не завантаженi з боку сервера. Зачекайте завершення обміну даними з сервером, якщо завантаження не вiдбулося знайдіть місце з кращим інтернет-з'єднанням, натисніть 'Синхронізація' (у правому вехньому кутку) і дочекайтеся завершення процесу. Дані мають відобразитися." +
+                        , "На даний момент немає даних для відображення. Можливо вони ще не завантаженi з боку сервера. Зачекайте завершення обміну даними з сервером, якщо завантаження не вiдбулося знайдіть місце з кращим інтернет-з'єднанням, натисніть 'Синхронізація' (у правому вехньому кутку) і дочекайтеся завершення процесу. Дані мають відобразитися." +
                                 "\nЯкщо це не допомогло, звернiться до керiвника");
 //                AlertDialogMessage alertDialogMessage = new AlertDialogMessage(requireActivity(),
 //                        "",
@@ -391,32 +395,32 @@ public class DetailedReportOptionsFrag extends Fragment {
 //                        DialogStatus.ALERT);
 //                alertDialogMessage.show();
             } else {
-                List<Integer> ids = new ArrayList<>();
-                for (OptionsDB item : optionsButtons) {
-                    ids.add(Integer.parseInt(item.getOptionId()));
-                }
+//                List<Integer> ids = new ArrayList<>();
+//                for (OptionsDB item : optionsButtons) {
+//                    ids.add(Integer.parseInt(item.getOptionId()));
+//                }
 
-                Log.e("R_TRANSLATES", "item: " + ids.size());
-
-                for (Integer item : ids) {
-                    Log.e("R_TRANSLATES", "Integeritem: " + item);
-                }
+//                Log.e("R_TRANSLATES", "item: " + ids.size());
+//
+//                for (Integer item : ids) {
+//                    Log.e("R_TRANSLATES", "Integeritem: " + item);
+//                }
 
                 // Запрос к SQL БДшке. Получаем список обьектов сайта
-                List<SiteObjectsSDB> list = SQL_DB.siteObjectsDao().getObjectsById(ids);
+//                List<SiteObjectsSDB> list = SQL_DB.siteObjectsDao().getObjectsById(ids);
 
                 // Получаю все опции по данному отчёту.
-                List<OptionsDB> allReportOption = RealmManager.INSTANCE.copyFromRealm(OptionsRealm.getOptionsByDAD2(String.valueOf(wpDataDB.getCode_dad2())));
+//                List<OptionsDB> allReportOption = RealmManager.INSTANCE.copyFromRealm(OptionsRealm.getOptionsByDAD2(String.valueOf(wpDataDB.getCode_dad2())));
 
-                Log.e("R_TRANSLATES", "item: " + list.size());
+//                Log.e("R_TRANSLATES", "item: " + list.size());
 
-                for (SiteObjectsSDB item : list) {
-                    Log.e("R_TRANSLATES", "SiteObjectsSDBitem: " + item.id);
-                }
+//                for (SiteObjectsSDB item : list) {
+//                    Log.e("R_TRANSLATES", "SiteObjectsSDBitem: " + item.id);
+//                }
 
                 Log.e("TEST_OPTIONS", "optionsButtons SIZE: " + optionsButtons.size());
                 for (OptionsDB item : optionsButtons) {
-                    options.optionControl(mContext, wpDataDB, item, null, Options.NNKMode.NULL, new OptionControl.UnlockCodeResultListener() {
+                    options.optionControl(requireContext(), wpDataDB, item, null, Options.NNKMode.NULL, new OptionControl.UnlockCodeResultListener() {
                         @Override
                         public void onUnlockCodeSuccess() {
 
@@ -429,7 +433,8 @@ public class DetailedReportOptionsFrag extends Fragment {
                     });
                 }
 
-                recycleViewDRAdapter.setDataButtons(optionsButtons);
+                if (recycleViewDRAdapter != null)
+                    recycleViewDRAdapter.setDataButtons(optionsButtons);
             }
         } catch (Exception e) {
             Log.e("R_TRANSLATES", "convertedObjectERROR: " + e);
@@ -443,46 +448,58 @@ public class DetailedReportOptionsFrag extends Fragment {
         try {
             rvContacts = view.findViewById(R.id.DRRecycleView);
             Globals.writeToMLOG("INFO", "DetailedReportOptionsFrag/onViewCreated", "enter");
-            WorkPlan workPlan = new WorkPlan();
-            List<OptionsDB> optionsButtons = workPlan.getOptionButtons2(workPlan.getWpOpchetId(wpDataDB), wpDataDB.getId());
-
-            List<Integer> ids = new ArrayList<>();
-            for (OptionsDB item : optionsButtons) {
-                ids.add(Integer.parseInt(item.getOptionId()));
-            }
-            Collections.sort(optionsButtons, (o1, o2) -> o1.getSo().compareTo(o2.getSo()));
-            // Запрос к SQL БДшке. Получаем список обьектов сайта
-            List<SiteObjectsSDB> list = SQL_DB.siteObjectsDao().getObjectsById(ids);
-            // Получаю все опции по данному отчёту.
-            List<OptionsDB> allReportOption = RealmManager.INSTANCE.copyFromRealm(OptionsRealm.getOptionsByDAD2(String.valueOf(wpDataDB.getCode_dad2())));
-
             Globals.writeToMLOG("INFO", "DetailedReportOptionsFrag/onViewCreated/", "mContext: " + view.getContext());
-            Globals.writeToMLOG("INFO", "DetailedReportOptionsFrag/onViewCreated/", "wpDataDB: " + wpDataDB);
-            Globals.writeToMLOG("INFO", "DetailedReportOptionsFrag/onViewCreated/", "optionsButtons: " + optionsButtons);
-            Globals.writeToMLOG("INFO", "DetailedReportOptionsFrag/onViewCreated/", "allReportOption: " + allReportOption);
-            Globals.writeToMLOG("INFO", "DetailedReportOptionsFrag/onViewCreated/", "list: " + list);
 
-            recycleViewDRAdapter = new RecycleViewDRAdapter(mContext, wpDataDB, optionsButtons, allReportOption, list, new Clicks.click() {
-                @Override
-                public <T> void click(T data) {
-                    try {
-                        int photoType = (int) data;
-                        photoHandler = new PhotoHandler(photoType);
-                        mGetContent.launch("image/*");
-                    } catch (Exception e) {
-                        Globals.writeToMLOG("ERROR", "DetailedReportOptionsFrag/Intent.ACTION_PICK", "Exception e: " + e);
-                    }
+            viewModel.getWpDataDB().observe(getViewLifecycleOwner(), data -> {
+                if (data != null) {
+                    wpDataDB = data; // Получаем данные
+                    setupRecyclerView();
                 }
             });
 
-            rvContacts.setAdapter(recycleViewDRAdapter);
-            rvContacts.setLayoutManager(new LinearLayoutManager(mContext, LinearLayoutManager.VERTICAL, false));
             Globals.writeToMLOG("INFO", "DetailedReportOptionsFrag/onViewCreated", "end");
-        }catch (Exception e){
+        } catch (Exception e) {
             Globals.writeToMLOG("INFO", "DetailedReportOptionsFrag/onViewCreated", "Exception e: " + e);
             Globals.writeToMLOG("INFO", "DetailedReportOptionsFrag/onViewCreated", "Exception exception: " + Arrays.toString(e.getStackTrace()));
         }
     }
+
+    private void setupRecyclerView() {
+        WorkPlan workPlan = new WorkPlan();
+        List<OptionsDB> optionsButtons = workPlan.getOptionButtons2(workPlan.getWpOpchetId(wpDataDB), wpDataDB.getId());
+
+        List<Integer> ids = new ArrayList<>();
+        for (OptionsDB item : optionsButtons) {
+            ids.add(Integer.parseInt(item.getOptionId()));
+        }
+        Collections.sort(optionsButtons, (o1, o2) -> o1.getSo().compareTo(o2.getSo()));
+        // Запрос к SQL БДшке. Получаем список обьектов сайта
+        List<SiteObjectsSDB> list = SQL_DB.siteObjectsDao().getObjectsById(ids);
+        // Получаю все опции по данному отчёту.
+        List<OptionsDB> allReportOption = RealmManager.INSTANCE.copyFromRealm(OptionsRealm.getOptionsByDAD2(String.valueOf(wpDataDB.getCode_dad2())));
+
+        Globals.writeToMLOG("INFO", "DetailedReportOptionsFrag/onViewCreated/", "wpDataDB: " + wpDataDB);
+        Globals.writeToMLOG("INFO", "DetailedReportOptionsFrag/onViewCreated/", "optionsButtons: " + optionsButtons);
+        Globals.writeToMLOG("INFO", "DetailedReportOptionsFrag/onViewCreated/", "allReportOption: " + allReportOption);
+        Globals.writeToMLOG("INFO", "DetailedReportOptionsFrag/onViewCreated/", "list: " + list);
+
+        recycleViewDRAdapter = new RecycleViewDRAdapter(requireContext(), wpDataDB, optionsButtons, allReportOption, list, new Clicks.click() {
+            @Override
+            public <T> void click(T data) {
+                try {
+                    int photoType = (int) data;
+                    photoHandler = new PhotoHandler(photoType);
+                    mGetContent.launch("image/*");
+                } catch (Exception e) {
+                    Globals.writeToMLOG("ERROR", "DetailedReportOptionsFrag/Intent.ACTION_PICK", "Exception e: " + e);
+                }
+            }
+        });
+
+        rvContacts.setAdapter(recycleViewDRAdapter);
+        rvContacts.setLayoutManager(new LinearLayoutManager(requireContext(), LinearLayoutManager.VERTICAL, false));
+    }
+
 
     private void clickDownload(Context context) {
         Toast.makeText(context, "Начинаю загрузку Опций", Toast.LENGTH_SHORT).show();
@@ -515,9 +532,9 @@ public class DetailedReportOptionsFrag extends Fragment {
 
         public static boolean checkReadExternalStoragePermission(Context context) {
             int permissionStatus = -1;
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU){
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                 permissionStatus = ContextCompat.checkSelfPermission(context, Manifest.permission.READ_MEDIA_IMAGES);
-            }else {
+            } else {
                 permissionStatus = ContextCompat.checkSelfPermission(context, Manifest.permission.READ_EXTERNAL_STORAGE);
             }
             return permissionStatus == PackageManager.PERMISSION_GRANTED;

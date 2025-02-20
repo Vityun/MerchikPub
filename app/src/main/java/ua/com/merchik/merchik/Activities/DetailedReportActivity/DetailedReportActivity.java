@@ -116,9 +116,9 @@ public class DetailedReportActivity extends toolbar_menus {
     public static final int NEED_UPDATE_UI_REQUEST = 333;
 
     private Translate translate = new Translate();
-    private WorkPlan workPlan = new WorkPlan();
+//    private WorkPlan workPlan = new WorkPlan();
     private WpDataDB wpDataDB;
-    private WpDataDB rowWP;
+//    private WpDataDB rowWP;
 
     private WPDataObj wpDataObj;
 
@@ -145,7 +145,7 @@ public class DetailedReportActivity extends toolbar_menus {
     public static List<ReportPrepareDB> detailedReportRPList = null;    // список "ТОВАРОВ" которые исполнитель должен выложить на полки
 
     public static int userId;
-    public static UsersSDB usersSDB = null;
+//    public static UsersSDB usersSDB = null;
 
     //==================================
 
@@ -465,26 +465,31 @@ public class DetailedReportActivity extends toolbar_menus {
     private void setActivityData() {
         Intent i = getIntent();
 
-        rowWP = RealmManager.INSTANCE.copyFromRealm(WpDataRealm.getWpDataRowById(i.getLongExtra("WpDataDB_ID", 0)));
+        wpDataDB = RealmManager.INSTANCE.copyFromRealm(WpDataRealm.getWpDataRowById(i.getLongExtra("WpDataDB_ID", 0)));
+
+        // Получаем ViewModel и передаем туда данные
+        DetailedReportViewModel viewModel = new ViewModelProvider(this).get(DetailedReportViewModel.class);
+        viewModel.setWpDataDB(wpDataDB);
+
 
 //        rowWP = i.getParcelableExtra("rowWP");
 //        wp = i.getParcelableExtra("dataFromWP");
 //        WPDataObj test = i.getParcelableExtra("dataFromWPObj");
 
-        long otchetId;
+    /*    long otchetId;
         int action = rowWP.getAction();
         if (action == 1 || action == 94) {
             otchetId = rowWP.getDoc_num_otchet_id();
         } else {
             otchetId = rowWP.getDoc_num_1c_id();
-        }
+        }*/
 
-        wpDataDB = rowWP;
-        TasksAndReclamationsSDB tasksAndReclamationsSDB;
+//        wpDataDB = rowWP;
+//        TasksAndReclamationsSDB tasksAndReclamationsSDB;
 
         //userId = wpDataDB.getUser_id() OR tasksAndReclamationsSDB.vinovnik;
 
-        usersSDB = SQL_DB.usersDao().getUserById(wpDataDB.getUser_id());
+//        usersSDB = SQL_DB.usersDao().getUserById(wpDataDB.getUser_id());
 
 //        Data D = new Data(
 //                rowWP.getId(),
@@ -652,7 +657,7 @@ public class DetailedReportActivity extends toolbar_menus {
 //            }
 
             Globals.writeToMLOG("INFO", "DetailedReportTab/0", "setTab create");
-            adapter = new DetailedReportTab(this, getSupportFragmentManager(), getLifecycle(), tabLayout.getTabCount(), rowWP, viewModel);
+            adapter = new DetailedReportTab(this, getSupportFragmentManager(), getLifecycle(), tabLayout.getTabCount(), wpDataDB, viewModel);
             viewPager.setAdapter(adapter);
 
 

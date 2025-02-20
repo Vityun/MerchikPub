@@ -20,6 +20,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.PopupMenu;
@@ -71,16 +72,17 @@ public class DetailedReportTovarsFrag extends Fragment {
 
     public static final Integer[] DETAILED_REPORT_FRAGMENT_TOVAR_VIDEO_LESSONS = new Integer[]{823, 815};
 
-    private static Context mContext;
+    //    private static Context mContext;
     private WpDataDB wpDataDB;
     private TasksAndReclamationsSDB tasksAndReclamationsSDB;
+    private DetailedReportViewModel viewModel;
 
     private long codeDad2;
     private String clientId;
     private int addressId;
 
     private EditText editText;
-    private TextView allTov;
+    //    private TextView allTov;
     //    private RecyclerView recyclerView;
     private CustomRecyclerView recyclerView;
     private ImageView fullTovList, filter;
@@ -95,29 +97,31 @@ public class DetailedReportTovarsFrag extends Fragment {
         Globals.writeToMLOG("INFO", "DetailedReportTovarsFrag/1", "create");
     }
 
-    public static DetailedReportTovarsFrag newInstance(AppCompatActivity context, WpDataDB wpDataDB) {
+    public static DetailedReportTovarsFrag newInstance(DetailedReportViewModel viewModel) {
         Globals.writeToMLOG("INFO", "DetailedReportTovarsFrag/newInstance", "DetailedReportTovarsFrag newInstance");
         DetailedReportTovarsFrag fragment = new DetailedReportTovarsFrag();
-        Bundle args = new Bundle();
-        args.putParcelable("wpDataDB", wpDataDB);
-        mContext = context;
-        fragment.setArguments(args);
+        fragment.viewModel = viewModel; // Сохраняем ViewModel
+
+//        Bundle args = new Bundle();
+//        args.putParcelable("wpDataDB", wpDataDB);
+////        mContext = context;
+//        fragment.setArguments(args);
         return fragment;
     }
 
-    public static DetailedReportTovarsFrag newInstance(Context context, TasksAndReclamationsSDB tasksAndReclamationsSDB) {
+    public static DetailedReportTovarsFrag newInstance(TasksAndReclamationsSDB tasksAndReclamationsSDB) {
         Globals.writeToMLOG("INFO", "DetailedReportTovarsFrag/newInstance", "DetailedReportTovarsFrag newInstance");
         DetailedReportTovarsFrag fragment = new DetailedReportTovarsFrag();
         Bundle args = new Bundle();
         args.putParcelable("tasksAndReclamationsSDB", tasksAndReclamationsSDB);
-        mContext = context;
+//        mContext = context;
         fragment.setArguments(args);
         return fragment;
     }
 
     public DetailedReportTovarsFrag(Context context, TasksAndReclamationsSDB tasksAndReclamationsSDB) {
         Globals.writeToMLOG("INFO", "DetailedReportTovarsFrag/3", "create");
-        this.mContext = context;
+//        this.mContext = context;
         this.tasksAndReclamationsSDB = tasksAndReclamationsSDB;
         this.codeDad2 = tasksAndReclamationsSDB.codeDad2SrcDoc;
         this.clientId = tasksAndReclamationsSDB.client;
@@ -135,14 +139,19 @@ public class DetailedReportTovarsFrag extends Fragment {
         Globals.writeToMLOG("INFO", "DetailedReportTovarsFrag", "onCreate");
         Bundle args = getArguments();
         if (args != null) {
-            wpDataDB = args.getParcelable("wpDataDB");
-            Globals.writeToMLOG("INFO", "DetailedReportTovarsFrag", "onCreate/wpDataDB: " + wpDataDB);
+//            wpDataDB = args.getParcelable("wpDataDB");
+//            Globals.writeToMLOG("INFO", "DetailedReportTovarsFrag", "onCreate/wpDataDB: " + wpDataDB);
             tasksAndReclamationsSDB = args.getParcelable("tasksAndReclamationsSDB");
-            if (wpDataDB == null && tasksAndReclamationsSDB != null) {
+            if (tasksAndReclamationsSDB != null) {
                 WpDataDB t = RealmManager.getWorkPlanRowByCodeDad2(tasksAndReclamationsSDB.codeDad2SrcDoc);
                 try {
                     wpDataDB = RealmManager.INSTANCE.copyFromRealm(t);
-                } catch (Exception ignored) {}
+                    this.codeDad2 = wpDataDB.getCode_dad2();
+                    this.clientId = wpDataDB.getClient_id();
+                    this.addressId = wpDataDB.getAddr_id();
+
+                } catch (Exception ignored) {
+                }
             }
             Globals.writeToMLOG("INFO", "DetailedReportTovarsFrag", "onCreate/tasksAndReclamationsSDB: " + tasksAndReclamationsSDB);
         }
@@ -212,17 +221,6 @@ public class DetailedReportTovarsFrag extends Fragment {
 
         try {
 
-            // TODO 10.09.23. могут быть проблемы с Товарами в ЗИР изза этого. Проблемы будущего меня
-            if (wpDataDB != null) {
-                this.codeDad2 = wpDataDB.getCode_dad2();
-                this.clientId = wpDataDB.getClient_id();
-                this.addressId = wpDataDB.getAddr_id();
-            } else if (tasksAndReclamationsSDB != null) {
-                this.codeDad2 = tasksAndReclamationsSDB.codeDad2SrcDoc;
-                this.clientId = tasksAndReclamationsSDB.client;
-            }
-
-
             badgeTextView = v.findViewById(R.id.badge_text_view);
             fab = v.findViewById(R.id.fab);
             editText = (EditText) v.findViewById(R.id.drEditTextFindTovar);
@@ -230,15 +228,8 @@ public class DetailedReportTovarsFrag extends Fragment {
             filter = v.findViewById(R.id.filter);
 
             recyclerView = v.findViewById(R.id.DRRecyclerViewTovar);
-            allTov = v.findViewById(R.id.textLikeLink);
+//            allTov = v.findViewById(R.id.textLikeLink);
 
-            setPopup();
-
-            downloadData();
-            addRecycleView(getTovListNew(TovarDisplayType.DETAILED_REPORT));
-
-            setFabVideo(v.getContext(), this::showYouTubeFab);
-            showYouTubeFab();
 
         } catch (Exception e) {
             Globals.writeToMLOG("ERROR", "DetailedReportTovarsFrag/onCreateView", "Exception e: " + e);
@@ -248,6 +239,37 @@ public class DetailedReportTovarsFrag extends Fragment {
         return v;
     }
 
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+        if (viewModel != null && tasksAndReclamationsSDB == null && viewModel.getWpDataDB() != null)
+            viewModel.getWpDataDB().observe(getViewLifecycleOwner(), data -> {
+                if (data != null) {
+                    wpDataDB = data; // Получаем данные
+                    this.codeDad2 = wpDataDB.getCode_dad2();
+                    this.clientId = wpDataDB.getClient_id();
+                    this.addressId = wpDataDB.getAddr_id();
+
+                    setPopup();
+
+                    downloadData();
+                    addRecycleView(getTovListNew(TovarDisplayType.DETAILED_REPORT));
+
+                    setFabVideo(this::showYouTubeFab);
+                    showYouTubeFab();
+                }
+            });
+        else {
+            setPopup();
+
+            downloadData();
+            addRecycleView(getTovListNew(TovarDisplayType.DETAILED_REPORT));
+
+            setFabVideo(this::showYouTubeFab);
+            showYouTubeFab();
+        }
+    }
+
     private void downloadData() {
         List<TovarDB> res = new ArrayList<>();
         res = RealmManager.INSTANCE.copyFromRealm(Objects.requireNonNull(RealmManager.getTovarListFromReportPrepareByDad2(codeDad2)));
@@ -255,7 +277,7 @@ public class DetailedReportTovarsFrag extends Fragment {
             downloadDetailedReportTovarsData(TovarDisplayType.DETAILED_REPORT, new Clicks.clickStatusMsg() {
                 @Override
                 public void onSuccess(String data) {
-                    Toast.makeText(mContext, data, Toast.LENGTH_SHORT).show();
+                    Toast.makeText(requireContext(), data, Toast.LENGTH_SHORT).show();
                     Globals.writeToMLOG("INFO", "DetailedReportTovarsFrag/getTovList.onSuccess", "String data: " + data);
                     addRecycleView(getTovListNew(TovarDisplayType.DETAILED_REPORT));
                     updateTov = false;
@@ -263,7 +285,7 @@ public class DetailedReportTovarsFrag extends Fragment {
 
                 @Override
                 public void onFailure(String error) {
-                    Toast.makeText(mContext, error, Toast.LENGTH_SHORT).show();
+                    Toast.makeText(requireContext(), error, Toast.LENGTH_SHORT).show();
                     Globals.writeToMLOG("INFO", "DetailedReportTovarsFrag/getTovList.onSuccess", "String error: " + error);
                     updateTov = false;
                 }
@@ -271,9 +293,9 @@ public class DetailedReportTovarsFrag extends Fragment {
         }
     }
 
-    private void setFabVideo(Context context, Clicks.clickVoid click) {
+    private void setFabVideo(Clicks.clickVoid click) {
         fab.setOnClickListener(view -> {
-            DialogVideo dialogVideo = new DialogVideo(context);
+            DialogVideo dialogVideo = new DialogVideo(requireContext());
             dialogVideo.setTitle("Перелік відео уроків");
             dialogVideo.setVideos(getSiteHints(DETAILED_REPORT_FRAGMENT_TOVAR_VIDEO_LESSONS), click);
             dialogVideo.setClose(dialogVideo::dismiss);
@@ -290,7 +312,8 @@ public class DetailedReportTovarsFrag extends Fragment {
             badgeTextView.setVisibility(View.GONE);
         } else {
             fab.setVisibility(View.VISIBLE);
-            imageView.setVisibility(View.VISIBLE);
+            if (imageView != null)
+                imageView.setVisibility(View.VISIBLE);
             int must = DETAILED_REPORT_FRAGMENT_TOVAR_VIDEO_LESSONS.length;
             int have = videos.size();
             int res = must - have;
@@ -334,12 +357,12 @@ public class DetailedReportTovarsFrag extends Fragment {
                 if (!flag) {
                     Log.e("setTextLikeLink", "!flag");
                     fullTovList.setRotation(45);
-                    fullTovList.setImageDrawable(this.mContext.getResources().getDrawable(R.drawable.ic_letter_x));
+                    fullTovList.setImageDrawable(requireContext().getResources().getDrawable(R.drawable.ic_letter_x));
                     DetailedReportActivity.additionalRequirementsFilter = true;
                 } else {
                     Log.e("setTextLikeLink", "flag");
                     fullTovList.setRotation(0);
-                    fullTovList.setImageDrawable(this.mContext.getResources().getDrawable(R.drawable.ic_minus));
+                    fullTovList.setImageDrawable(requireContext().getResources().getDrawable(R.drawable.ic_minus));
                     DetailedReportActivity.additionalRequirementsFilter = false;
                 }
                 flag = !flag;
@@ -592,11 +615,11 @@ public class DetailedReportTovarsFrag extends Fragment {
             }
 
             Log.e("TEST_SPEED", "RecycleViewDRAdapterTovar/addRecycleView/adapter");
-            Globals.writeToMLOG("INFO", "DetailedReportTovarsFrag/addRecycleView/RecycleViewDRAdapterTovar", "mContext: " + mContext);
+            Globals.writeToMLOG("INFO", "DetailedReportTovarsFrag/addRecycleView/RecycleViewDRAdapterTovar", "mContext: " + requireContext());
             if (wpDataDB != null) {
-                adapter = new RecycleViewDRAdapterTovar(mContext, list, wpDataDB, RecycleViewDRAdapterTovar.OpenType.DEFAULT);
+                adapter = new RecycleViewDRAdapterTovar(requireContext(), list, wpDataDB, RecycleViewDRAdapterTovar.OpenType.DEFAULT);
             } else {
-                adapter = new RecycleViewDRAdapterTovar(mContext, list, tasksAndReclamationsSDB, RecycleViewDRAdapterTovar.OpenType.DEFAULT);
+                adapter = new RecycleViewDRAdapterTovar(requireContext(), list, tasksAndReclamationsSDB, RecycleViewDRAdapterTovar.OpenType.DEFAULT);
             }
             adapter.setAkciyaTovList(promotionalTov, data);
 
@@ -606,14 +629,14 @@ public class DetailedReportTovarsFrag extends Fragment {
                 adapter.switchTPLView();
                 recyclerView.setAdapter(adapter);
 //                rvTovar.setAdapter(finalRecycleViewDRAdapter);
-                recyclerView.setLayoutManager(new LinearLayoutManager(mContext, LinearLayoutManager.VERTICAL, false));
+                recyclerView.setLayoutManager(new LinearLayoutManager(requireContext(), LinearLayoutManager.VERTICAL, false));
 //                rvTovar.setLayoutManager(new LinearLayoutManager(mContext, LinearLayoutManager.VERTICAL, false));
                 adapter.notifyDataSetChanged();
             });
 
             recyclerView.setAdapter(adapter);
 //            rvTovar.setAdapter(recycleViewDRAdapter);
-            recyclerView.setLayoutManager(new LinearLayoutManager(mContext, LinearLayoutManager.VERTICAL, false));
+            recyclerView.setLayoutManager(new LinearLayoutManager(requireContext(), LinearLayoutManager.VERTICAL, false));
 //            rvTovar.setLayoutManager(new LinearLayoutManager(mContext, LinearLayoutManager.VERTICAL, false));
 
             editText.addTextChangedListener(new TextWatcher() {
@@ -654,10 +677,10 @@ public class DetailedReportTovarsFrag extends Fragment {
             Globals.writeToMLOG("INFO", "DetailedReportTovarsFrag/getTovList", "codeDad2: " + codeDad2);
             if (dataTovar != null && dataTovar.size() > 0) {
                 list = (ArrayList<TovarDB>) RealmManager.INSTANCE.copyFromRealm(dataTovar);
-                Toast.makeText(mContext, "Отображен список только тех товаров, которые установлены в матрице ППА", Toast.LENGTH_SHORT).show();
+                Toast.makeText(requireContext(), "Отображен список только тех товаров, которые установлены в матрице ППА", Toast.LENGTH_SHORT).show();
                 Globals.writeToMLOG("INFO", "DetailedReportTovarsFrag/getTovList", "list: " + list.size());
             } else {
-                Toast.makeText(mContext, "Список товаров по ППА пуст.", Toast.LENGTH_SHORT).show();
+                Toast.makeText(requireContext(), "Список товаров по ППА пуст.", Toast.LENGTH_SHORT).show();
 
                 if (updateTov && codeDad2 != 0) {
                     Log.d("test", "tovars is empty");
@@ -685,7 +708,7 @@ public class DetailedReportTovarsFrag extends Fragment {
         } else {
             List<TovarDB> dataTovar = RealmManager.getTovarListByCustomer(clientId);
             list = (ArrayList<TovarDB>) RealmManager.INSTANCE.copyFromRealm(dataTovar);
-            Toast.makeText(mContext, "Отображен список всех товаров", Toast.LENGTH_SHORT).show();
+            Toast.makeText(requireContext(), "Отображен список всех товаров", Toast.LENGTH_SHORT).show();
             Globals.writeToMLOG("INFO", "DetailedReportTovarsFrag/getTovList", "dataTovar list: " + list.size());
         }
         return list;
@@ -694,7 +717,7 @@ public class DetailedReportTovarsFrag extends Fragment {
     private void downloadDetailedReportTovarsData(TovarDisplayType type, Clicks.clickStatusMsg click) {
         try {
 //            if (tasksAndReclamationsSDB == null){
-            BlockingProgressDialog pg = BlockingProgressDialog.show(mContext, "Загрузка списка товаров", "Подождите окончания загрузки. Это может занять время.");
+            BlockingProgressDialog pg = BlockingProgressDialog.show(requireContext(), "Загрузка списка товаров", "Подождите окончания загрузки. Это может занять время.");
             downloadReportPrepareByDad2(pg, click);
 
 //                BlockingProgressDialog pg2 = BlockingProgressDialog.show(mContext, "Загрузка списка опций", "Подождите окончания загрузки. Это может занять время.");

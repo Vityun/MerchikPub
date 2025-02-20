@@ -93,7 +93,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
     private List<OptionsDB> butt;
     private List<OptionsDB> allReportOption;
     private List<SiteObjectsSDB> translate;
-    private Context mContext;
+    private final Context mContext;
     private Clicks.click click;
     //    private static WpDataDB wpDataDB;
     private T dataDB;
@@ -1007,7 +1007,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
 
     /*Определяем конструктор*/
     public RecycleViewDRAdapter(Context context, T dataDB, List<OptionsDB> dataButtons, List<OptionsDB> allReportOption, List<SiteObjectsSDB> list, Clicks.click click) {
-        try {
+//        try {
             this.click = click;
             this.dataDB = dataDB;
             this.butt = dataButtons;
@@ -1026,10 +1026,10 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                 startDt = tar.dt_start_fact;
                 endDt = tar.dt_end_fact;
             }
-        } catch (Exception e) {
-            Globals.writeToMLOG("INFO", "RecycleViewDRAdapter/RecycleViewDRAdapter", "Exception e: " + e);
-            Globals.writeToMLOG("INFO", "RecycleViewDRAdapter/RecycleViewDRAdapter", "Exception exception: " + Arrays.toString(e.getStackTrace()));
-        }
+//        } catch (Exception e) {
+//            Globals.writeToMLOG("INFO", "RecycleViewDRAdapter/RecycleViewDRAdapter", "Exception e: " + e);
+//            Globals.writeToMLOG("INFO", "RecycleViewDRAdapter/RecycleViewDRAdapter", "Exception exception: " + Arrays.toString(e.getStackTrace()));
+//        }
     }
 
     @Override
@@ -1373,6 +1373,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
 
         Log.e("setPhotoCountsMakeAndM", "OptionId: " + option.getOptionId() + " | OptionControlId: " + option.getOptionControlId());
         Log.e("setPhotoCountsMakeAndM", "isSignal: " + option.getIsSignal());
+        Globals.writeToMLOG("INFO", "RecycleViewDRAdapter/setPhotoCountsMakeAndMust", "OptionId: " + option.getOptionId() + " | OptionControlId: " + option.getOptionControlId());
         // Если не указано минимальное кол-во фоток у опции, считаем что фоток надо зделать 3шт.
         String min = option.getAmountMin();
         if (min.equals("0")) {
@@ -1409,6 +1410,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                     }
                 }
             } catch (Exception e) {
+                Globals.writeToMLOG("INFO", "RecycleViewDRAdapter/setPhotoCountsMakeAndMust", "Exception: " + e.getMessage());
             }
         }
 
@@ -1434,6 +1436,8 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
 //        }
 
         res.setSpan(foregroundSpan, 0, res.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        Globals.writeToMLOG("INFO", "RecycleViewDRAdapter/setPhotoCountsMakeAndMust", "Result: " + data);
+
         return res;
     }
 

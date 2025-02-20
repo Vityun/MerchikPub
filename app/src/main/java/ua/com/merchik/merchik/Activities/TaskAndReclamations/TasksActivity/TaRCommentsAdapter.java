@@ -15,6 +15,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.cardview.widget.CardView;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -53,7 +54,7 @@ public class TaRCommentsAdapter extends RecyclerView.Adapter<TaRCommentsAdapter.
 
     public class ViewHolder extends RecyclerView.ViewHolder {
 
-        private ConstraintLayout layout;
+        private CardView layout;
         private ImageView photo;
         private TextView textLine1, textLine2, textLine3, textLine4, textLine5;
 

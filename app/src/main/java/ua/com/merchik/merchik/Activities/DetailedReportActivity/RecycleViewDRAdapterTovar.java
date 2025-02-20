@@ -105,7 +105,7 @@ import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
 
 public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewDRAdapterTovar.ViewHolder> implements Filterable {
 
-    private Context mContext;
+    private final Context mContext;
     private List<TovarDB> dataList;
     private List<TovarDB> dataFilterable;
     private WpDataDB wpDataDB;
@@ -198,7 +198,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
     @Override
     public RecycleViewDRAdapterTovar.ViewHolder onCreateViewHolder(ViewGroup parent, int i) {
         View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.dr_tovar_item_tovar, parent, false);
-        mContext = parent.getContext();
+//        mContext = parent.getContext();
         return new RecycleViewDRAdapterTovar.ViewHolder(v);
     }
 
@@ -636,7 +636,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                 //================================================
 
 
-                WorkPlan workPlan = new WorkPlan();
+//                WorkPlan workPlan = new WorkPlan();
 
                 Log.e("OPTIONS_TPL", "TOV_ID: " + list.getiD());
 

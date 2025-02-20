@@ -70,7 +70,7 @@ public class TARTab extends FragmentStateAdapter {
                 return tab3Fragment = new Tab3Fragment(data);
             case 2:
 //                return new DetailedReportTovarsFrag(myContext, data);
-                return DetailedReportTovarsFrag.newInstance(myContext, data);
+                return DetailedReportTovarsFrag.newInstance(data);
             default:
                 return null;
         }

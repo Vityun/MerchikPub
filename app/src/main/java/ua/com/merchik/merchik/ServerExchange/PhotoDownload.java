@@ -540,6 +540,9 @@ public class PhotoDownload {
      * Получение списка фотографий(таблички) для дальнейшего скачивания.
      */
     public void getPhotoFromServer(PhotoTableRequest data) {
+        SynchronizationTimetableDB synchronizationTimetableDB = RealmManager.INSTANCE.copyFromRealm(RealmManager.getSynchronizationTimetableRowByTable("stack_photo"));
+        data.dt_upload = String.valueOf(synchronizationTimetableDB.getVpi_app());
+
         String contentType = "application/json";
         JsonObject convertedObject = new Gson().fromJson(new Gson().toJson(data), JsonObject.class);
 
@@ -571,8 +574,11 @@ public class PhotoDownload {
 //                        Globals.writeToMLOG("INFO", "PetrovExchangeTest/startExchange/getPhotoFromServer/onSuccess", "(фото юзеров которые надо закачать)size: " + size);
                     }
                     Globals.writeToMLOG("INFO", "" + getClass().getName() + "/getPhotoFromServer/onResponse", "size: " + size);
-                    if (size > 0)
+                    if (size > 0) {
+                        synchronizationTimetableDB.setVpi_app(System.currentTimeMillis() / 1000);
+                        RealmManager.setToSynchronizationTimetableDB(synchronizationTimetableDB);
                         savePhotoToDB(response.body().getList());
+                    }
 
                     Log.e("getPhotoFromServer", "response.body().getTotal(): " + response.body().getTotalPages());
                 } catch (Exception e) {

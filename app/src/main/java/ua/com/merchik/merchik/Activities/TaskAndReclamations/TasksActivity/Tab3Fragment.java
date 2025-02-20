@@ -56,7 +56,7 @@ public class Tab3Fragment extends Fragment {
     private TextView badgeTextView;
     public static final Integer[]  Tab3Fragment_VIDEO_LESSONS = new Integer[]{3623};
 
-    private Context mContext;
+//    private Context mContext;
     private TasksAndReclamationsSDB tarData;
 
     private TextView textView;
@@ -104,9 +104,6 @@ public class Tab3Fragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View v = inflater.inflate(R.layout.fragment_tab_item_third, container, false);
-
-        mContext = v.getContext();
-
 
         textView = v.findViewById(R.id.text_data);
         recyclerView = v.findViewById(R.id.RecyclerView);
@@ -166,7 +163,7 @@ public class Tab3Fragment extends Fragment {
         textView.setText(Html.fromHtml("<b>Текст рекламации: </b>" + comment));  // Установка текста
 
         textView.setOnClickListener(v -> {
-            DialogData dialog = new DialogData(mContext);
+            DialogData dialog = new DialogData(requireContext());
             dialog.setTitle("");
             dialog.setText("Текст рекламации: " + comment);
             dialog.setClose(dialog::dismiss);
@@ -238,7 +235,7 @@ public class Tab3Fragment extends Fragment {
 
                         ThemeDB theme = ThemeRealm.getThemeById(String.valueOf(this.tarData.themeId));
                         if(theme.need_photo == 1 && dialog.photo == null){
-                            DialogData dialogNoPhoto = new DialogData(mContext);
+                            DialogData dialogNoPhoto = new DialogData(requireContext());
                             dialogNoPhoto.setTitle("Ошибка комментария");
                             dialogNoPhoto.setText("По данной темы у коментария должна быть фотография, выполните фото прежде чем сохранить коментарий.");
                             dialogNoPhoto.setDialogIco();
@@ -251,7 +248,7 @@ public class Tab3Fragment extends Fragment {
                         }
 
                         if(res.length() < 20){
-                            DialogData dialogShortComment = new DialogData(mContext);
+                            DialogData dialogShortComment = new DialogData(requireContext());
                             dialogShortComment.setTitle("Ошибка комментария");
                             dialogShortComment.setText("Коментарий должен быть больше 20 символов");
                             dialogShortComment.setDialogIco();
@@ -264,7 +261,7 @@ public class Tab3Fragment extends Fragment {
                         }
 
                         // Сохранение коммента в БД
-                        Toast.makeText(mContext, "Сохраняем в БД: " + res, Toast.LENGTH_SHORT).show();
+                        Toast.makeText(requireContext(), "Сохраняем в БД: " + res, Toast.LENGTH_SHORT).show();
 
                         TARCommentsDB row = new TARCommentsDB();
                         row.setID(String.valueOf(System.currentTimeMillis()));
@@ -278,7 +275,7 @@ public class Tab3Fragment extends Fragment {
                                 row.photo_hash = dialog.photo.getPhoto_hash(); // Хэш фотографии
                             }
                         }catch (Exception e){
-                            Toast.makeText(mContext, "Фото сохранить не удалось!", Toast.LENGTH_LONG).show();
+                            Toast.makeText(requireContext(), "Фото сохранить не удалось!", Toast.LENGTH_LONG).show();
                             Globals.writeToMLOG("INFO", "Tab3Fragment.dialog.clickSave", "Фото сохранить не удалось!");
                         }
 
@@ -393,12 +390,12 @@ public class Tab3Fragment extends Fragment {
 
         Collections.reverse(dataComments);
 
-        adapter = new TaRCommentsAdapter(mContext, dataComments, (int index) -> {
+        adapter = new TaRCommentsAdapter(requireContext(), dataComments, (int index) -> {
             TARCommentIndex = index;
-
             new MakePhoto().openCamera(getActivity(), CAMERA_REQUEST_TAR_COMMENT_PHOTO);
         });
+
         recyclerView.setAdapter(adapter);
-        recyclerView.setLayoutManager(new LinearLayoutManager(mContext, LinearLayoutManager.VERTICAL, false));
+        recyclerView.setLayoutManager(new LinearLayoutManager(requireContext(), LinearLayoutManager.VERTICAL, false));
     }
 }

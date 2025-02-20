@@ -1228,11 +1228,11 @@ public class Exchange {
                     Globals.writeToMLOG("ERROR", "startExchange/VotesTARExchange/", "Exception e: " + e);
                 }
 
-                Globals.alertDialogMsg(context,
-                        DialogStatus.NORMAL,
-                        "Обмен данными с сервером завершен",
-                        "Успешно",
-                        "Синхронизация окончена");
+//                Globals.alertDialogMsg(context,
+//                        DialogStatus.NORMAL,
+//                        "Обмен данными с сервером завершен",
+//                        "Успешно",
+//                        "Синхронизация окончена");
                 // --------------------------------------------------------------
             } else if (exchangeTime + retryTime < System.currentTimeMillis()
                     && toolbar_menus.internetStatusG == Globals.InternetStatus.NO_SERVER) {
@@ -1647,21 +1647,17 @@ public class Exchange {
      */
     private void getPhotoFromSite() {
 
-        SynchronizationTimetableDB synchronizationTimetableDB = RealmManager.INSTANCE.copyFromRealm(RealmManager.getSynchronizationTimetableRowByTable("stack_photo"));
 
         PhotoDownload server = new PhotoDownload();
         PhotoTableRequest data = new PhotoTableRequest();
         data.mod = "images_view";
         data.act = "list_image";
         data.nolimit = "1";
-        data.dt_upload = String.valueOf(synchronizationTimetableDB.getVpi_app());
         data.date_from = Clock.today_7;
         data.date_to = Clock.tomorrow7;
 //        data.date_to = Clock.today; 10.10.23. скрыл ибо им мешало.
 
-        // Типо говорю что я уже обновился, что б мне постоянно не прилетали фотки и я не задалбівал сервер
-        synchronizationTimetableDB.setVpi_app(System.currentTimeMillis() / 1000);
-        RealmManager.setToSynchronizationTimetableDB(synchronizationTimetableDB);
+
 
         WpDataRealm.UserPostRes info = WpDataRealm.userPost(Globals.userId);
         switch (info) {
@@ -1705,8 +1701,6 @@ public class Exchange {
     public void updateDossierSotr() {
         SynchronizationTimetableDB synchronizationTimetableDB = RealmManager.INSTANCE.copyFromRealm(RealmManager.getSynchronizationTimetableRowByTable("dossier_sotr"));
         long dt_change_from = synchronizationTimetableDB.getVpi_app();
-        synchronizationTimetableDB.setVpi_app(System.currentTimeMillis() / 1000);
-        RealmManager.setToSynchronizationTimetableDB(synchronizationTimetableDB);
 
         JsonObject requestJson = new JsonObject();
         requestJson.addProperty("mod", "data_list");
@@ -1723,6 +1717,9 @@ public class Exchange {
                         dossierSotrSDBList.add(new DossierSotrSDB(item));
                     }
                     SQL_DB.dossierSotrDao().insertAll(dossierSotrSDBList);
+
+                    synchronizationTimetableDB.setVpi_app(System.currentTimeMillis() / 1000);
+                    RealmManager.setToSynchronizationTimetableDB(synchronizationTimetableDB);
                 }
             }
 
@@ -1736,8 +1733,6 @@ public class Exchange {
     public void updateVacancy() {
         SynchronizationTimetableDB synchronizationTimetableDB = RealmManager.INSTANCE.copyFromRealm(RealmManager.getSynchronizationTimetableRowByTable("vacancy"));
         long dt_change_from = synchronizationTimetableDB.getVpi_app();
-        synchronizationTimetableDB.setVpi_app(System.currentTimeMillis() / 1000);
-        RealmManager.setToSynchronizationTimetableDB(synchronizationTimetableDB);
 
         JsonObject requestJson = new JsonObject();
         requestJson.addProperty("mod", "vacancy");
@@ -1754,6 +1749,9 @@ public class Exchange {
                         vacancySDBList.add(new VacancySDB(item));
                     }
                     SQL_DB.vacancyDao().insertAll(vacancySDBList);
+
+                    synchronizationTimetableDB.setVpi_app(System.currentTimeMillis() / 1000);
+                    RealmManager.setToSynchronizationTimetableDB(synchronizationTimetableDB);
                 }
             }
 
@@ -1767,8 +1765,6 @@ public class Exchange {
     public void updateBonus() {
         SynchronizationTimetableDB synchronizationTimetableDB = RealmManager.INSTANCE.copyFromRealm(RealmManager.getSynchronizationTimetableRowByTable("bonus"));
         long dt_change_from = synchronizationTimetableDB.getVpi_app();
-        synchronizationTimetableDB.setVpi_app(System.currentTimeMillis() / 1000);
-        RealmManager.setToSynchronizationTimetableDB(synchronizationTimetableDB);
 
         JsonObject requestJson = new JsonObject();
         requestJson.addProperty("mod", "data_list");
@@ -1785,6 +1781,9 @@ public class Exchange {
                         bonusSDBList.add(new BonusSDB(item));
                     }
                     SQL_DB.bonusDao().insertAll(bonusSDBList);
+
+                    synchronizationTimetableDB.setVpi_app(System.currentTimeMillis() / 1000);
+                    RealmManager.setToSynchronizationTimetableDB(synchronizationTimetableDB);
                 }
             }
 
@@ -1798,8 +1797,6 @@ public class Exchange {
     void updateSiteURL() {
         SynchronizationTimetableDB synchronizationTimetableDB = RealmManager.INSTANCE.copyFromRealm(RealmManager.getSynchronizationTimetableRowByTable("site_url"));
         long dt_change_from = synchronizationTimetableDB.getVpi_app();
-        synchronizationTimetableDB.setVpi_app(System.currentTimeMillis() / 1000);
-        RealmManager.setToSynchronizationTimetableDB(synchronizationTimetableDB);
 
         JsonObject requestJson = new JsonObject();
         requestJson.addProperty("mod", "site_url");
@@ -1816,6 +1813,9 @@ public class Exchange {
                         siteUrlSDBList.add(new SiteUrlSDB(item));
                     }
                     SQL_DB.siteUrlDao().insertAll(siteUrlSDBList);
+
+                    synchronizationTimetableDB.setVpi_app(System.currentTimeMillis() / 1000);
+                    RealmManager.setToSynchronizationTimetableDB(synchronizationTimetableDB);
                 }
             }
 
@@ -1828,8 +1828,6 @@ public class Exchange {
     void updateSiteAccount() {
         SynchronizationTimetableDB synchronizationTimetableDB = RealmManager.INSTANCE.copyFromRealm(RealmManager.getSynchronizationTimetableRowByTable("site_account"));
         long dt_change_from = synchronizationTimetableDB.getVpi_app();
-        synchronizationTimetableDB.setVpi_app(System.currentTimeMillis() / 1000);
-        RealmManager.setToSynchronizationTimetableDB(synchronizationTimetableDB);
 
         JsonObject requestJson = new JsonObject();
         requestJson.addProperty("mod", "site_account");
@@ -1846,6 +1844,8 @@ public class Exchange {
                         siteAccountSDBList.add(new SiteAccountSDB(item));
                     }
                     SQL_DB.siteAccountDao().insertAll(siteAccountSDBList);
+                    synchronizationTimetableDB.setVpi_app(System.currentTimeMillis() / 1000);
+                    RealmManager.setToSynchronizationTimetableDB(synchronizationTimetableDB);
                 }
             }
 

@@ -175,7 +175,6 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
 
     public static Globals.InternetStatus internetStatusG;
 
-    private WorkManager workManager;
     private LoadingIndicator loadingIndicator;
     //---------------------------
 
@@ -659,7 +658,6 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
 
         composeContainer = actionView.findViewById(R.id.composeContainer);
         loadingIndicator = new LoadingIndicator(composeContainer);
-        workManager = WorkManager.getInstance(this);
 
 //        pingServer(1);
         synchronizationSignal("SIGNAL", null);
@@ -812,41 +810,6 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
 
         return true;
     }
-
-    private void startDownload() {
-        // Создаем и запускаем воркер
-        OneTimeWorkRequest workRequest = new OneTimeWorkRequest.Builder(DownloadImagesWorker.class).build();
-        workManager.enqueue(workRequest);
-
-        // Показываем индикатор загрузки
-        ib.setVisibility(View.INVISIBLE);
-        loadingIndicator.show();
-
-        // Наблюдаем за статусом работы
-        workManager.getWorkInfoByIdLiveData(workRequest.getId())
-                .observe(this, new Observer<WorkInfo>() {
-                    @Override
-                    public void onChanged(WorkInfo workInfo) {
-                        if (workInfo != null) {
-                            switch (workInfo.getState()) {
-                                case SUCCEEDED:
-                                    handleSuccess();
-                                    break;
-                                case FAILED:
-                                    handleFailure();
-                                    break;
-                                case CANCELLED:
-                                    handleCancellation();
-                                    break;
-                                default:
-                                    // Другие состояния не обрабатываем
-                                    break;
-                            }
-                        }
-                    }
-                });
-    }
-
 
     /**
      * Устанавливается в счётчик число фоток

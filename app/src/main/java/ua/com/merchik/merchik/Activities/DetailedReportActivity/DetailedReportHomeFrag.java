@@ -67,7 +67,7 @@ import ua.com.merchik.merchik.database.realm.tables.WpDataRealm;
 //@AndroidEntryPoint // Аннотация для поддержки Hilt
 public class DetailedReportHomeFrag extends Fragment {
 
-    private static AppCompatActivity mContext;
+//    private static AppCompatActivity mContext;
     private WpDataDB wpDataDB;
 
     private GoogleMap map;
@@ -95,12 +95,12 @@ public class DetailedReportHomeFrag extends Fragment {
         Globals.writeToMLOG("INFO", "DetailedReportHomeFrag/1", "create");
     }
 
-    public static DetailedReportHomeFrag newInstance(AppCompatActivity context, WpDataDB wpDataDB,
+    public static DetailedReportHomeFrag newInstance(WpDataDB wpDataDB,
                                                      CommentViewModel commentViewModel) {
         DetailedReportHomeFrag fragment = new DetailedReportHomeFrag();
         Bundle args = new Bundle();
         args.putParcelable("wpDataDB", wpDataDB);
-        mContext = context;
+//        mContext = context;
         fragment.setArguments(args);
         viewModel = commentViewModel;
         return fragment;
@@ -123,6 +123,8 @@ public class DetailedReportHomeFrag extends Fragment {
             wpDataDB = args.getParcelable("wpDataDB");
             Globals.writeToMLOG("INFO", "DetailedReportHomeFrag", "onCreate/wpDataDB: " + wpDataDB);
         }
+
+        OpinionDataHolder.Companion.instance().init();
     }
 
     @Override
@@ -187,12 +189,12 @@ public class DetailedReportHomeFrag extends Fragment {
 
         try {
             WorkPlan workPlan = new WorkPlan();
-            LinearLayout ll = workPlan.getOptionLinearLayout(mContext, workPlan.getWpOpchetId(wpDataDB));
+            LinearLayout ll = workPlan.getOptionLinearLayout(requireContext(), workPlan.getWpOpchetId(wpDataDB));
 
             merchikImg = v.findViewById(R.id.merchik);
             Drawable drawable = merchikImg.getBackground();
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                drawable.setTint(mContext.getResources().getColor(R.color.colotSelectedTab2));
+                drawable.setTint(requireContext().getResources().getColor(R.color.colotSelectedTab2));
             }
 
             fabYouTube = v.findViewById(R.id.fab);

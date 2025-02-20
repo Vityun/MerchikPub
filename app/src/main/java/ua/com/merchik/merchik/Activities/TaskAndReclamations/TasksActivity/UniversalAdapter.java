@@ -18,6 +18,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.cardview.widget.CardView;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
@@ -81,7 +82,8 @@ public class UniversalAdapter extends RecyclerView.Adapter<UniversalAdapter.View
     /*Определяем ViewHolder*/
     class ViewHolder extends RecyclerView.ViewHolder {
 
-        private ConstraintLayout layout, layoutWp;
+        private CardView layout;
+        private ConstraintLayout layoutWp;
         private ImageView photo, status;
         private TextView textLine1, textLine2, textLine3, textLine4, textLine5;
 

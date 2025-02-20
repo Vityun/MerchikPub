@@ -1,7 +1,6 @@
 package ua.com.merchik.merchik.dialogs.DialogAchievement;
 
 import static ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity.NEED_UPDATE_UI_REQUEST;
-import static ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportTab.detailedReportOptionsFrag;
 import static ua.com.merchik.merchik.Globals.HELPDESK_PHONE_NUMBER;
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
