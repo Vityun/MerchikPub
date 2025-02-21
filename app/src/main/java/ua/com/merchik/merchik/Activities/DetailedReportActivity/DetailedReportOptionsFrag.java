@@ -32,6 +32,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -107,14 +108,13 @@ public class DetailedReportOptionsFrag extends Fragment {
         Globals.writeToMLOG("INFO", "DetailedReportOptionsFrag/1", "create");
     }
 
-    public static DetailedReportOptionsFrag newInstance(DetailedReportViewModel viewModel) {
-        DetailedReportOptionsFrag fragment = new DetailedReportOptionsFrag();
-        fragment.viewModel = viewModel; // Сохраняем ViewModel
+    public static DetailedReportOptionsFrag newInstance() {
+        //        fragment.viewModel = viewModel; // Сохраняем ViewModel
 //        Bundle args = new Bundle();
 //        args.putParcelable("wpDataDB", wpDataDB);
 ////        mContext = context;
 //        fragment.setArguments(args);
-        return fragment;
+        return new DetailedReportOptionsFrag();
     }
 
 /*    @Override
@@ -179,6 +179,8 @@ public class DetailedReportOptionsFrag extends Fragment {
         super.onCreate(savedInstanceState);
         Globals.writeToMLOG("INFO", "DetailedReportOptionsFrag", "onCreate");
 
+        viewModel = new ViewModelProvider(requireActivity()).get(DetailedReportViewModel.class);
+
 //        Bundle args = getArguments();
 //        if (args != null) {
 //            wpDataDB = args.getParcelable("wpDataDB");
@@ -233,138 +235,143 @@ public class DetailedReportOptionsFrag extends Fragment {
 
         Globals.writeToMLOG("INFO", "DetailedReportOptionsFrag/onCreateView", "v: " + v);
 
-        try {
-            Button buttonSave = (Button) v.findViewById(R.id.button);
-            Button buttonMakeAReport = (Button) v.findViewById(R.id.button3);
+        viewModel.getWpDataDB().observe(getViewLifecycleOwner(), data -> {
+            if (data != null) {
+                wpDataDB = data; // Получаем данные
 
-            Button download = v.findViewById(R.id.download);
-            TextView information = v.findViewById(R.id.info_msg);
-            TextView planfact = v.findViewById(R.id.planfact);
-
-            // todo это надо будет вынести в отдельную функцию. И скорее всего перересовывать при клике на "провести"
-            StringBuilder sb = new StringBuilder();
-            sb.append("Прем.(план): ").append(wpDataDB.getCash_ispolnitel()).append("\n\n");
-            sb.append("Прем.(факт): ").append(wpDataDB.cash_fact).append("\n");
-            planfact.setText(sb);
-
-            ImageView check = v.findViewById(R.id.check);
-            if (wpDataDB.getSetStatus() == 1) {
-                check.setImageDrawable(requireContext().getResources().getDrawable(R.drawable.ic_question_circle_regular));
-                check.setColorFilter(requireContext().getResources().getColor(R.color.colorInetYellow));
-            } else {
-                if (wpDataDB.getStatus() == 1) {
-                    check.setImageDrawable(requireContext().getResources().getDrawable(R.drawable.ic_check));
-                    check.setColorFilter(requireContext().getResources().getColor(R.color.greenCol));
-                } else {
-                    if (Clock.dateConvertToLong(Clock.getHumanTimeYYYYMMDD(wpDataDB.getDt().getTime() / 1000)) < System.currentTimeMillis()) { //+TODO CHANGE DATE
-                        check.setImageDrawable(requireContext().getResources().getDrawable(R.drawable.ic_exclamation_mark_in_a_circle));
-                        check.setColorFilter(requireContext().getResources().getColor(R.color.red_error));
-                    } else {
-                        check.setImageDrawable(requireContext().getResources().getDrawable(R.drawable.ic_check));
-                        check.setColorFilter(requireContext().getResources().getColor(R.color.shadow));
-                    }
-                }
-            }
-
-
-//            Options options = new Options();
-
-            WorkPlan workPlan = new WorkPlan();
-            rvContacts = v.findViewById(R.id.DRRecycleView);
-
-            List<OptionsDB> optionsButtons = workPlan.getOptionButtons2(workPlan.getWpOpchetId(wpDataDB), wpDataDB.getId());
-
-            Collections.sort(optionsButtons, (o1, o2) -> o1.getSo().compareTo(o2.getSo()));
-
-            buttonSave.setOnClickListener(b -> {
-                Toast.makeText(requireContext(), "Данный раздел находится в разработке", Toast.LENGTH_LONG).show();
-            });
-            buttonMakeAReport.setOnClickListener(b -> {
                 try {
-                    List<OptionsDB> opt = workPlan.getOptionButtons2(workPlan.getWpOpchetId(wpDataDB), wpDataDB.getId());
-                    WpDataDB wp = WpDataRealm.getWpDataRowByDad2Id(wpDataDB.getCode_dad2());
+                    Button buttonSave = (Button) v.findViewById(R.id.button);
+                    Button buttonMakeAReport = (Button) v.findViewById(R.id.button3);
 
-                    try {
-                        SMSExchange smsExchange = new SMSExchange();
-                        smsExchange.smsPlanExchange(new Clicks.clickObjectAndStatus() {
-                            @Override
-                            public void onSuccess(Object data) {
+                    Button download = v.findViewById(R.id.download);
+                    TextView information = v.findViewById(R.id.info_msg);
+                    TextView planfact = v.findViewById(R.id.planfact);
 
-                            }
+                    // todo это надо будет вынести в отдельную функцию. И скорее всего перересовывать при клике на "провести"
+                    StringBuilder sb = new StringBuilder();
 
-                            @Override
-                            public void onFailure(String error) {
+                    sb.append("Прем.(план): ").append(wpDataDB.getCash_ispolnitel()).append("\n\n");
+                    sb.append("Прем.(факт): ").append(wpDataDB.cash_fact).append("\n");
+                    planfact.setText(sb);
 
-                            }
-                        });
-
-                        smsExchange.smsLogExchange(new Clicks.clickObjectAndStatus() {
-                            @Override
-                            public void onSuccess(Object data) {
-
-                            }
-
-                            @Override
-                            public void onFailure(String error) {
-
-                            }
-                        });
-                    } catch (Exception e) {
-                        Globals.writeToMLOG("ERROR", "buttonMakeAReport.setOnClickListener/", "Exception e: " + e);
-                    }
-
-
-                    new Options().conduct(getContext(), wp, opt, DEFAULT_CONDUCT, new Clicks.click() {
-                        @Override
-                        public <T> void click(T data) {
-                            OptionsDB optionsDB = (OptionsDB) data;
-                            int scrollPosition = recycleViewDRAdapter.getItemPosition(optionsDB);
-                            OptionMassageType msgType = new OptionMassageType();
-                            msgType.type = OptionMassageType.Type.DIALOG;
-                            new Options().optControl(getContext(), wp, optionsDB, Integer.parseInt(optionsDB.getOptionControlId()), null, msgType, Options.NNKMode.CHECK, new OptionControl.UnlockCodeResultListener() {
-                                @Override
-                                public void onUnlockCodeSuccess() {
-
-                                }
-
-                                @Override
-                                public void onUnlockCodeFailure() {
-
-                                }
-                            });
-                            rvContacts.smoothScrollToPosition(scrollPosition);
-                        }
-                    });
-
+                    ImageView check = v.findViewById(R.id.check);
                     if (wpDataDB.getSetStatus() == 1) {
                         check.setImageDrawable(requireContext().getResources().getDrawable(R.drawable.ic_question_circle_regular));
                         check.setColorFilter(requireContext().getResources().getColor(R.color.colorInetYellow));
+                    } else {
+                        if (wpDataDB.getStatus() == 1) {
+                            check.setImageDrawable(requireContext().getResources().getDrawable(R.drawable.ic_check));
+                            check.setColorFilter(requireContext().getResources().getColor(R.color.greenCol));
+                        } else {
+                            if (Clock.dateConvertToLong(Clock.getHumanTimeYYYYMMDD(wpDataDB.getDt().getTime() / 1000)) < System.currentTimeMillis()) { //+TODO CHANGE DATE
+                                check.setImageDrawable(requireContext().getResources().getDrawable(R.drawable.ic_exclamation_mark_in_a_circle));
+                                check.setColorFilter(requireContext().getResources().getColor(R.color.red_error));
+                            } else {
+                                check.setImageDrawable(requireContext().getResources().getDrawable(R.drawable.ic_check));
+                                check.setColorFilter(requireContext().getResources().getColor(R.color.shadow));
+                            }
+                        }
+                    }
+
+                    WorkPlan workPlan = new WorkPlan();
+                    rvContacts = v.findViewById(R.id.DRRecycleView);
+                    List<OptionsDB> optionsButtons = workPlan.getOptionButtons2(workPlan.getWpOpchetId(wpDataDB), wpDataDB.getId());
+
+                    setupRecyclerView(optionsButtons);
+
+
+                    Collections.sort(optionsButtons, (o1, o2) -> o1.getSo().compareTo(o2.getSo()));
+
+                    buttonSave.setOnClickListener(b -> {
+                        Toast.makeText(requireContext(), "Данный раздел находится в разработке", Toast.LENGTH_LONG).show();
+                    });
+                    buttonMakeAReport.setOnClickListener(b -> {
+                        try {
+                            List<OptionsDB> opt = workPlan.getOptionButtons2(workPlan.getWpOpchetId(wpDataDB), wpDataDB.getId());
+                            WpDataDB wp = WpDataRealm.getWpDataRowByDad2Id(wpDataDB.getCode_dad2());
+
+                            try {
+                                SMSExchange smsExchange = new SMSExchange();
+                                smsExchange.smsPlanExchange(new Clicks.clickObjectAndStatus() {
+                                    @Override
+                                    public void onSuccess(Object data) {
+
+                                    }
+
+                                    @Override
+                                    public void onFailure(String error) {
+
+                                    }
+                                });
+
+                                smsExchange.smsLogExchange(new Clicks.clickObjectAndStatus() {
+                                    @Override
+                                    public void onSuccess(Object data) {
+
+                                    }
+
+                                    @Override
+                                    public void onFailure(String error) {
+
+                                    }
+                                });
+                            } catch (Exception e) {
+                                Globals.writeToMLOG("ERROR", "buttonMakeAReport.setOnClickListener/", "Exception e: " + e);
+                            }
+
+
+                            new Options().conduct(getContext(), wp, opt, DEFAULT_CONDUCT, new Clicks.click() {
+                                @Override
+                                public <T> void click(T data) {
+                                    OptionsDB optionsDB = (OptionsDB) data;
+                                    int scrollPosition = recycleViewDRAdapter.getItemPosition(optionsDB);
+                                    OptionMassageType msgType = new OptionMassageType();
+                                    msgType.type = OptionMassageType.Type.DIALOG;
+                                    new Options().optControl(getContext(), wp, optionsDB, Integer.parseInt(optionsDB.getOptionControlId()), null, msgType, Options.NNKMode.CHECK, new OptionControl.UnlockCodeResultListener() {
+                                        @Override
+                                        public void onUnlockCodeSuccess() {
+
+                                        }
+
+                                        @Override
+                                        public void onUnlockCodeFailure() {
+
+                                        }
+                                    });
+                                    rvContacts.smoothScrollToPosition(scrollPosition);
+                                }
+                            });
+
+                            if (wpDataDB.getSetStatus() == 1) {
+                                check.setImageDrawable(requireContext().getResources().getDrawable(R.drawable.ic_question_circle_regular));
+                                check.setColorFilter(requireContext().getResources().getColor(R.color.colorInetYellow));
 
 //                    sendWpData2();  // Выгрузка статуса
-                        Exchange exchange = new Exchange();
-                        exchange.sendWpDataToServer(new Click() {
-                            @Override
-                            public <T> void onSuccess(T data) {
-                                String msg = (String) data;
-                                Toast.makeText(requireContext(), msg, Toast.LENGTH_LONG).show();
-                            }
+                                Exchange exchange = new Exchange();
+                                exchange.sendWpDataToServer(new Click() {
+                                    @Override
+                                    public <T> void onSuccess(T data) {
+                                        String msg = (String) data;
+                                        Toast.makeText(requireContext(), msg, Toast.LENGTH_LONG).show();
+                                    }
 
-                            @Override
-                            public void onFailure(String error) {
-                                Toast.makeText(requireContext(), error, Toast.LENGTH_LONG).show();
+                                    @Override
+                                    public void onFailure(String error) {
+                                        Toast.makeText(requireContext(), error, Toast.LENGTH_LONG).show();
+                                    }
+                                });
                             }
-                        });
-                    }
+                        } catch (Exception e) {
+                            Globals.writeToMLOG("ERROR", "DetailedReportOptionsFrag/buttonMakeAReport/setOnClickListener", "Exception e: " + e);
+                        }
+                    });
+
                 } catch (Exception e) {
-                    Globals.writeToMLOG("ERROR", "DetailedReportOptionsFrag/buttonMakeAReport/setOnClickListener", "Exception e: " + e);
+                    Log.e("R_TRANSLATES", "convertedObjectERROR: " + e);
+                    e.printStackTrace();
                 }
-            });
-
-        } catch (Exception e) {
-            Log.e("R_TRANSLATES", "convertedObjectERROR: " + e);
-            e.printStackTrace();
-        }
-
+            }
+        });
         return v;
     }
 
@@ -450,13 +457,6 @@ public class DetailedReportOptionsFrag extends Fragment {
             Globals.writeToMLOG("INFO", "DetailedReportOptionsFrag/onViewCreated", "enter");
             Globals.writeToMLOG("INFO", "DetailedReportOptionsFrag/onViewCreated/", "mContext: " + view.getContext());
 
-            viewModel.getWpDataDB().observe(getViewLifecycleOwner(), data -> {
-                if (data != null) {
-                    wpDataDB = data; // Получаем данные
-                    setupRecyclerView();
-                }
-            });
-
             Globals.writeToMLOG("INFO", "DetailedReportOptionsFrag/onViewCreated", "end");
         } catch (Exception e) {
             Globals.writeToMLOG("INFO", "DetailedReportOptionsFrag/onViewCreated", "Exception e: " + e);
@@ -464,9 +464,7 @@ public class DetailedReportOptionsFrag extends Fragment {
         }
     }
 
-    private void setupRecyclerView() {
-        WorkPlan workPlan = new WorkPlan();
-        List<OptionsDB> optionsButtons = workPlan.getOptionButtons2(workPlan.getWpOpchetId(wpDataDB), wpDataDB.getId());
+    private void setupRecyclerView(List<OptionsDB> optionsButtons) {
 
         List<Integer> ids = new ArrayList<>();
         for (OptionsDB item : optionsButtons) {

@@ -61,6 +61,7 @@ public class SamplePhotoExchange {
             Globals.writeToMLOG("INFO", "SamplePhotoExchange/downloadSamplePhotoTable", "synchronizationTimetableDB == null");
         }
 
+        data.dt_change_from = "0"; // 21.02.25 добававил как временный костыль
         Gson gson = new Gson();
         String json = gson.toJson(data);
         JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);

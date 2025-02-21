@@ -25,6 +25,7 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.PopupMenu;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
@@ -97,16 +98,15 @@ public class DetailedReportTovarsFrag extends Fragment {
         Globals.writeToMLOG("INFO", "DetailedReportTovarsFrag/1", "create");
     }
 
-    public static DetailedReportTovarsFrag newInstance(DetailedReportViewModel viewModel) {
+    public static DetailedReportTovarsFrag newInstance() {
         Globals.writeToMLOG("INFO", "DetailedReportTovarsFrag/newInstance", "DetailedReportTovarsFrag newInstance");
-        DetailedReportTovarsFrag fragment = new DetailedReportTovarsFrag();
-        fragment.viewModel = viewModel; // Сохраняем ViewModel
+        //        fragment.viewModel = viewModel; // Сохраняем ViewModel
 
 //        Bundle args = new Bundle();
 //        args.putParcelable("wpDataDB", wpDataDB);
 ////        mContext = context;
 //        fragment.setArguments(args);
-        return fragment;
+        return new DetailedReportTovarsFrag();
     }
 
     public static DetailedReportTovarsFrag newInstance(TasksAndReclamationsSDB tasksAndReclamationsSDB) {
@@ -138,6 +138,8 @@ public class DetailedReportTovarsFrag extends Fragment {
         super.onCreate(savedInstanceState);
         Globals.writeToMLOG("INFO", "DetailedReportTovarsFrag", "onCreate");
         Bundle args = getArguments();
+        viewModel = new ViewModelProvider(requireActivity()).get(DetailedReportViewModel.class);
+
         if (args != null) {
 //            wpDataDB = args.getParcelable("wpDataDB");
 //            Globals.writeToMLOG("INFO", "DetailedReportTovarsFrag", "onCreate/wpDataDB: " + wpDataDB);

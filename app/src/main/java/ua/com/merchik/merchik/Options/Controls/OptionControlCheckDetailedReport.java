@@ -95,7 +95,7 @@ public class OptionControlCheckDetailedReport<T> extends OptionControl {
 
 
         // 5.0
-        reportPrepare = prepareOSVData(reportPrepare, wpDataDB.getDt_start());
+        reportPrepare = prepareOSVData(reportPrepare, adjustStartTime(wpDataDB.getDt_start()));
 
         // 6.0 готовим сообение и сигнал.
         int colSKU = reportPrepare.stream().map(table -> table.colSKU).reduce(0, Integer::sum);
@@ -140,7 +140,7 @@ public class OptionControlCheckDetailedReport<T> extends OptionControl {
         }
 
 
-        saveOptionResultInDB();
+       saveOptionResultInDB();
         if (signal) {
             if (optionDB.getBlockPns().equals("1")) {
                 setIsBlockOption(signal);
@@ -157,34 +157,54 @@ public class OptionControlCheckDetailedReport<T> extends OptionControl {
     /**
      * Заполняем данными с ОСВ
      */
-    private List<ReportPrepareDB> prepareOSVData(List<ReportPrepareDB> reportPrepare) {
-        List<ReportPrepareDB> res = null;
-        if (reportPrepare != null && reportPrepare.size() > 0) {
-            res = RealmManager.INSTANCE.copyFromRealm(reportPrepare);
-            for (ReportPrepareDB item : res) {
-                if (calculateSKU(item.getFace()) == 0) {
-                    item.colSKU = 0;
-                    continue;
-                } else {
-                    item.colSKU = 1;
-                }
+//    private List<ReportPrepareDB> prepareOSVData(List<ReportPrepareDB> reportPrepare) {
+//        List<ReportPrepareDB> res = null;
+//        if (reportPrepare != null && reportPrepare.size() > 0) {
+//            res = RealmManager.INSTANCE.copyFromRealm(reportPrepare);
+//            for (ReportPrepareDB item : res) {
+//                if (calculateSKU(item.getFace()) == 0) {
+//                    item.colSKU = 0;
+//                    continue;
+//                } else {
+//                    item.colSKU = 1;
+//                }
+//
+//                long dtChangeTime = item.getDtChange();
+//                if (dtChangeTime < time) {
+//                    item.errorExist = 1;
+//                    item.note = "исправление не внесено";
+//                } else {
+//                    item.fixesNum = 1;
+//                }
+//            }
+//        }
+//        return res;
+//    }
 
-                long dtChangeTime = item.getDtChange();
-                if (dtChangeTime < time) {
-                    item.errorExist = 1;
-                    item.note = "исправление не внесено";
-                } else {
-                    item.fixesNum = 1;
-                }
-            }
-        }
-        return res;
+    public static long adjustStartTime(long timeStartWork) {
+        // Получаем текущую дату в секундах (без миллисекунд)
+        long nowInSeconds = System.currentTimeMillis() / 1000;
+
+        // Переводим обе даты в дни
+        long todayDays = nowInSeconds / 86400; // 86400 секунд в сутках
+        long startDays = timeStartWork / 86400;
+
+        // Разница в днях
+        long diffDays = startDays - todayDays;
+
+        // Определяем, сколько дней нужно отнять
+        long daysToSubtract = diffDays >= 3 ? 3 : diffDays;
+
+        // Возвращаем скорректированное время
+        return timeStartWork - (daysToSubtract * 86400);
     }
+
     /**
      * Заполняем данными с ОСВ изменены от 18.02.25
      */
     private List<ReportPrepareDB> prepareOSVData(List<ReportPrepareDB> reportPrepare, long dateStart) {
         List<ReportPrepareDB> res = null;
+        long testTime = 0L;
         if (reportPrepare != null && reportPrepare.size() > 0) {
             res = RealmManager.INSTANCE.copyFromRealm(reportPrepare);
             for (ReportPrepareDB item : res) {
@@ -195,7 +215,12 @@ public class OptionControlCheckDetailedReport<T> extends OptionControl {
                     item.colSKU = 1;
                 }
 
-                int time = Integer.parseInt(item.getDt());
+                long time = item.getDtChange();
+                if (testTime == 0L)
+                    testTime = time;
+
+                if (time != testTime)
+                    Log.e("testLOg","++++++++");
 
                 Log.e("!prepareOSVData!", "item.dtChange: " + item.dtChange + " < " + dateStart + " = " + (item.dtChange < dateStart));
                 if (time < dateStart) {

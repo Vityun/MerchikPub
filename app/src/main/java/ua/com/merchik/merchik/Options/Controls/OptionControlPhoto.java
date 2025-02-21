@@ -78,8 +78,6 @@ public class OptionControlPhoto<T> extends OptionControl {
     private void executeOption() {
 
 
-
-
         String optionId;
         if (nnkMode.equals(Options.NNKMode.BLOCK)) {
             optionId = optionDB.getOptionId();
@@ -113,9 +111,22 @@ public class OptionControlPhoto<T> extends OptionControl {
                 break;
 
             case "164354":  // Фото Планограмми ТТ
+            {
+                int quantityMax = Integer.parseInt(optionDB.getAmountMax());
+                if (quantityMax > 0) {
+                    dad2ForGetStackPhotoDB = 0;
+                    long date = wpDataDB.getDt().getTime();
+                    codeIZAForGetStackPhotoDB = new String[]{wpDataDB.getCode_iza(),
+                            replaceSubstring(wpDataDB.getCode_iza(), wpDataDB.getIsp_fact(), 1, 5)};
+                    dateFromForGetStackPhotoDB = Clock.getDatePeriodLong(date, -(quantityMax - 1));
+                    dateToForGetStackPhotoDB = Clock.getDatePeriodLong(date, 4);
+                }
+
                 photoType = 5;
-                m = m > 0 ? m : 1;
+                // c 21.02.25 поменял на 0, требование Петрова
+                m = m > 0 ? m : 0;
                 break;
+            }
 
             case "164352":  // Контроль наявності світлини прикасової зони
                 photoType = 45;
@@ -134,9 +145,9 @@ public class OptionControlPhoto<T> extends OptionControl {
                 if (quantityMax > 0) {
                     dad2ForGetStackPhotoDB = 0;
                     long date = wpDataDB.getDt().getTime();
-                    codeIZAForGetStackPhotoDB = new String[] {wpDataDB.getCode_iza(),
+                    codeIZAForGetStackPhotoDB = new String[]{wpDataDB.getCode_iza(),
                             replaceSubstring(wpDataDB.getCode_iza(), wpDataDB.getIsp_fact(), 1, 5)};
-                    dateFromForGetStackPhotoDB = Clock.getDatePeriodLong(date, -(quantityMax-1));
+                    dateFromForGetStackPhotoDB = Clock.getDatePeriodLong(date, -(quantityMax - 1));
                     dateToForGetStackPhotoDB = Clock.getDatePeriodLong(date, 4);
                 }
                 photoType = 10; // Проверка наличия Фото тележка с товаром (тип 10)
@@ -144,14 +155,14 @@ public class OptionControlPhoto<T> extends OptionControl {
                 break;
             }
 
-           case "141361": {
+            case "141361": {
                 int quantityMax = Integer.parseInt(optionDB.getAmountMax());
                 if (quantityMax > 0) {
                     dad2ForGetStackPhotoDB = 0;
                     long date = wpDataDB.getDt().getTime();
-                    codeIZAForGetStackPhotoDB = new String[] {wpDataDB.getCode_iza(),
+                    codeIZAForGetStackPhotoDB = new String[]{wpDataDB.getCode_iza(),
                             replaceSubstring(wpDataDB.getCode_iza(), wpDataDB.getIsp_fact(), 1, 5)};
-                    dateFromForGetStackPhotoDB = Clock.getDatePeriodLong(date, -(quantityMax-1));
+                    dateFromForGetStackPhotoDB = Clock.getDatePeriodLong(date, -(quantityMax - 1));
                     dateToForGetStackPhotoDB = Clock.getDatePeriodLong(date, 4);
                 }
 
@@ -192,7 +203,6 @@ public class OptionControlPhoto<T> extends OptionControl {
                 break;
 
         }
-
 
 
         int adress = ((WpDataDB) document).getAddr_id();
@@ -267,7 +277,7 @@ public class OptionControlPhoto<T> extends OptionControl {
         if (optionId.equals("158609") && stackPhotoDB.size() < m) {
             if (Objects.equals(clientId, "9382"))
                 signal = false;
-            if (addressSDB.tpId == 320){
+            if (addressSDB.tpId == 320) {
                 ImagesTypeListDB item = ImagesTypeListRealm.getByID(photoType);
                 stringBuilderMsg.append("Вы должны сделать: ").append("3").append(" фото с типом: ").append(item != null ? item.getNm() : typeNm).append(", а сделали: ").append(stackPhotoDB.size()).append(" - доделайте фотографии.");
                 signal = true;

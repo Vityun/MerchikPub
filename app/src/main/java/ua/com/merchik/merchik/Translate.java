@@ -301,34 +301,179 @@ public class Translate {
         // Список фотоотчётов с типом:
 
         // Для создания достижения выберите...
-        AddTranslation data1 = new AddTranslation(
+        res.add(new AddTranslation(
                 "1",
-                "alert_dialog_title_server_is_busy",
-                "Сервер сейчас занят",
+                "detailed_report_home_frag_theme",
+                "Тема:",
                 "app",
                 "all",
                 ""
-        );
-
-
-        AddTranslation data2 = new AddTranslation(
+        ));
+        res.add(new AddTranslation(
                 "2",
-                "alert_dialog_subtitle_server_is_busy",
-                "Время ответа от сервера может быть больше чем обычно",
+                "detailed_report_home_frag_report_status",
+                "Статус отчёта:",
                 "app",
                 "all",
                 ""
-        );
-
-        AddTranslation data3 = new AddTranslation(
+        ));
+        res.add(new AddTranslation(
                 "3",
-                "alert_dialog_msg_server_is_busy",
-                "На данный момент сервер загружен и время ожидания может быть больше чем обычно. Ни в коем случае не переустанавливайте приложение, так как время ожидания увеличиться во много раз, и вы можете потерять часть данных, которые не были переданы на сервер." +
-                        "Если после ожидания ни чего не изменилось, повторите вашу попытку через несколько минут",
+                "detailed_report_home_frag_bonus_plan",
+                "Премия (план):",
                 "app",
                 "all",
                 ""
-        );
+        ));
+        res.add(new AddTranslation(
+                "4",
+                "detailed_report_home_frag_reduction_by_options",
+                "Снижение (по опциям):",
+                "app",
+                "all",
+                ""
+        ));
+        res.add(new AddTranslation(
+                "5",
+                "detailed_report_home_frag_prize_fact",
+                "Премия (факт):",
+                "app",
+                "all",
+                ""
+        ));
+        res.add(new AddTranslation(
+                "6",
+                "detailed_report_home_frag_cont_works_doc",
+                "Продолж. работ (по документу):",
+                "app",
+                "all",
+                ""
+        ));
+        res.add(new AddTranslation(
+                "7",
+                "detailed_report_home_frag_theme_cont_works_average",
+                "Продолж. работ (средняя):",
+                "app",
+                "all",
+                ""
+        ));
+        res.add(new AddTranslation(
+                "8",
+                "detailed_report_home_frag_cost_per_hour",
+                "Стоимость часа:",
+                "app",
+                "all",
+                ""
+        ));
+        res.add(new AddTranslation(
+                "9",
+                "detailed_report_home_frag_date",
+                "Дата:",
+                "app",
+                "all",
+                ""
+        ));
+        res.add(new AddTranslation(
+                "10",
+                "detailed_report_home_frag_client",
+                "Клиент:",
+                "app",
+                "all",
+                ""
+        ));
+        res.add(new AddTranslation(
+                "11",
+                "detailed_report_home_frag_executor",
+                "Исполнитель:",
+                "app",
+                "all",
+                ""
+        ));
+        res.add(new AddTranslation(
+                "12",
+                "detailed_report_home_frag_options",
+                "Опции:",
+                "app",
+                "all",
+                ""
+        ));
+        res.add(new AddTranslation(
+                "13",
+                "detailed_report_home_frag_opinion_about_visit",
+                "Мнение исп. о посещении:",
+                "app",
+                "all",
+                ""
+        ));
+        res.add(new AddTranslation(
+                "14",
+                "detailed_report_home_frag_comment_about_visit",
+                "Комментарий исп. о посещении:",
+                "app",
+                "all",
+                ""
+        ));
+        res.add(new AddTranslation(
+                "16",
+                "detailed_report_home_frag_click_add_comment_about_visit",
+                "Нажмите для оставления комментария",
+                "app",
+                "all",
+                ""
+        ));
+        res.add(new AddTranslation(
+                "17",
+                "detailed_report_home_frag_add_comment_about_visit",
+                "Оставить комментарий о посещении",
+                "app",
+                "all",
+                ""
+        ));
+        res.add(new AddTranslation(
+                "18",
+                "detailed_report_home_frag_click_add_opinion_about_visit",
+                "Нажмите для выбора мнения о посещении",
+                "app",
+                "all",
+                ""
+        ));
+        res.add(new AddTranslation(
+                "19",
+                "ufmd_title_opinion_about_visit",
+                "Оставить мнение",
+                "app",
+                "all",
+                ""
+        ));
+        res.add(new AddTranslation(
+                "20",
+                "ufmd_subtitle_opinion_about_visit",
+                "Выберите мнение которое вы хотите оставить о данном посещении",
+                "app",
+                "all",
+                ""
+        ));
+
+
+
+//        AddTranslation data2 = new AddTranslation(
+//                "2",
+//                "alert_dialog_subtitle_server_is_busy",
+//                "Время ответа от сервера может быть больше чем обычно",
+//                "app",
+//                "all",
+//                ""
+//        );
+//
+//        AddTranslation data3 = new AddTranslation(
+//                "3",
+//                "alert_dialog_msg_server_is_busy",
+//                "На данный момент сервер загружен и время ожидания может быть больше чем обычно. Ни в коем случае не переустанавливайте приложение, так как время ожидания увеличиться во много раз, и вы можете потерять часть данных, которые не были переданы на сервер." +
+//                        "Если после ожидания ни чего не изменилось, повторите вашу попытку через несколько минут",
+//                "app",
+//                "all",
+//                ""
+//        );
 //        AddTranslation data4 = new AddTranslation(
 //                "4",
 //                "alert_dialog_message_tovar_group_empty",
@@ -529,9 +674,9 @@ public class Translate {
 //        );
 
 //        res.add(data);
-        res.add(data1);
-        res.add(data2);
-        res.add(data3);
+//        res.add(data1);
+//        res.add(data2);
+//        res.add(data3);
 //        res.add(data4);
 //        res.add(data5);
 //        res.add(data6);

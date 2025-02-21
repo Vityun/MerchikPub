@@ -95,16 +95,14 @@ public class DetailedReportTab extends FragmentStateAdapter {
     public Fragment createFragment(int position) {
         try {
             Globals.writeToMLOG("INFO", "DetailedReportTab/getItem", "position: " + position);
-            DetailedReportViewModel detailedReportViewModel = new ViewModelProvider((DetailedReportActivity) myContext).get(DetailedReportViewModel.class);
-
 
             return switch (position) {
                 case 0 -> DetailedReportHomeFrag.newInstance(wpDataDB, viewModel);
                 case 1 -> {
-                    detailedReportOptionsFrag = DetailedReportOptionsFrag.newInstance(detailedReportViewModel);
+                    detailedReportOptionsFrag = DetailedReportOptionsFrag.newInstance();
                     yield detailedReportOptionsFrag;
                 }
-                case 2 -> DetailedReportTovarsFrag.newInstance(detailedReportViewModel);
+                case 2 -> DetailedReportTovarsFrag.newInstance();
                 case 3 -> DetailedReportTARFrag.newInstance(myContext, wpDataDB);
                 default -> {
                     Globals.writeToMLOG("ERROR", "DetailedReportTab/getItem", "default/ Fragment == NULL");

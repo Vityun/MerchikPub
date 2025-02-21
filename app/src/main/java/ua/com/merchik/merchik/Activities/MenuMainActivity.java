@@ -147,17 +147,17 @@ public class MenuMainActivity extends toolbar_menus {
     private void test() {
 
 
-        Intent intent = new Intent(this, FeaturesActivity.class);
-        Bundle bundle = new Bundle();
-        bundle.putString("viewModel", OpinionSDBViewModel.class.getCanonicalName());
-        bundle.putString("contextUI", ContextUI.ADD_OPINION_FROM_DETAILED_REPORT.toString());
-        bundle.putString("modeUI", ModeUI.ONE_SELECT.toString());
-        bundle.putString("dataJson", new Gson().toJson(998));
-        bundle.putString("title", "Вид достижения");
-        bundle.putString("subTitle", "Выберите характер достижения, которое Вы выполнили");
-        intent.putExtras(bundle);
-        FilteringDialogDataHolder.Companion.instance().init();
-        ActivityCompat.startActivityForResult(this, intent, NEED_UPDATE_UI_REQUEST, null);
+//        Intent intent = new Intent(this, FeaturesActivity.class);
+//        Bundle bundle = new Bundle();
+//        bundle.putString("viewModel", OpinionSDBViewModel.class.getCanonicalName());
+//        bundle.putString("contextUI", ContextUI.ADD_OPINION_FROM_DETAILED_REPORT.toString());
+//        bundle.putString("modeUI", ModeUI.ONE_SELECT.toString());
+//        bundle.putString("dataJson", new Gson().toJson(998));
+//        bundle.putString("title", "Вид достижения");
+//        bundle.putString("subTitle", "Выберите характер достижения, которое Вы выполнили");
+//        intent.putExtras(bundle);
+//        FilteringDialogDataHolder.Companion.instance().init();
+//        ActivityCompat.startActivityForResult(this, intent, NEED_UPDATE_UI_REQUEST, null);
 
 
 //        new TablesLoadingUnloading().downloadWPData(this);
