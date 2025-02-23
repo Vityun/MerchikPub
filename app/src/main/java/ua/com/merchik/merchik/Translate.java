@@ -15,6 +15,7 @@ import com.google.gson.JsonObject;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import ua.com.merchik.merchik.ServerExchange.Exchange;
 import ua.com.merchik.merchik.ServerExchange.ExchangeInterface;
@@ -262,13 +263,21 @@ public class Translate {
         return null;
     }
 
-
-    /**
-     * 12.02.2021
-     * Отправка на сервер новых переводов. (заготовок под обьекты)
-     * <p>
-     * Отправка на сервер новых тестовок на перевод. Отправляются только под Петровым.
+    /*
+    создал метод для перевода
      */
+    public static String translationText(int id, String defaultText) {
+        return Objects.requireNonNullElse(
+                SQL_DB.siteObjectsDao().getObjectsByRealId(id).comments, defaultText);
+        }
+
+
+        /**
+         * 12.02.2021
+         * Отправка на сервер новых переводов. (заготовок под обьекты)
+         * <p>
+         * Отправка на сервер новых тестовок на перевод. Отправляются только под Петровым.
+         */
     public void uploadNewTranslate() {
         String mod = "translation";
         String act = "translation_add";
@@ -453,7 +462,6 @@ public class Translate {
                 "all",
                 ""
         ));
-
 
 
 //        AddTranslation data2 = new AddTranslation(

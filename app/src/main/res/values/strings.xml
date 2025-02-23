@@ -1,8 +1,8 @@
 <resources>
     <string name="app_name">merchik</string>
-    <string name="ver">022204</string>
+    <string name="ver">022402</string>
     <string name="debug_status">1</string>
-    <string name="debug_date">2025-22-02</string>
+    <string name="debug_date">2025-24-02</string>
 
     <string name="test">TEST HINT</string>
 
@@ -96,7 +96,7 @@
 
     <!--KPS-->
     <string name="date">Дата: </string>
-    <string name="address">Адрес: </string>
+    <string name="address">Адрес</string>
     <string name="customer">Клиент: </string>
     <string name="performer">Исполнитель: </string>
     <string name="options">Опции: </string>

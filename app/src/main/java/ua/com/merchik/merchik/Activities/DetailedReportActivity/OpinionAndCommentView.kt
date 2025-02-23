@@ -53,6 +53,7 @@ import ua.com.merchik.merchik.Activities.Features.FeaturesActivity
 import ua.com.merchik.merchik.Globals
 import ua.com.merchik.merchik.R
 import ua.com.merchik.merchik.ServerExchange.Exchange
+import ua.com.merchik.merchik.Translate
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB
 import ua.com.merchik.merchik.dataLayer.ContextUI
 import ua.com.merchik.merchik.dataLayer.ModeUI
@@ -88,7 +89,6 @@ fun OpinionAndCommentView(
 
     if (wpDataUserOpinionID > 0) {
         val opinion = RoomManager.SQL_DB.opinionDao().getOpinionById(wpDataUserOpinionID)
-        Log.e("OpinionAndCommentView", "opinion.nm: ${opinion.nm}")
         opinionNameFromWpData = opinion.nm
     }
 
@@ -138,10 +138,10 @@ fun OpinionAndCommentView(
         bundle.putString("contextUI", ContextUI.ADD_OPINION_FROM_DETAILED_REPORT.toString())
         bundle.putString("modeUI", ModeUI.ONE_SELECT.toString())
         bundle.putString("dataJson", Gson().toJson(themeId.toInt()))
-        bundle.putString("title", "Оставить мнение")
+        bundle.putString("title", Translate.translationText(8038,"Оставить мнение"))
         bundle.putString(
             "subTitle",
-            "Выберите мнение которое вы хотите оставить о данном посещении"
+            Translate.translationText(8039,"Выберите мнение которое вы хотите оставить о данном посещении")
         )
         intent.putExtras(bundle)
         opinionDataHolder.init()
@@ -163,35 +163,13 @@ fun OpinionAndCommentView(
             .padding(horizontal = 8.dp)
     ) {
 
-//            Text(
-//                buildAnnotatedString {
-//                    withStyle(
-//                        style = MaterialTheme.typography.bodyMedium.toSpanStyle()
-//                            .copy(fontWeight = FontWeight.Bold)
-//                    ) {
-//                        append("Мнение исп. о посещении: ")
-//                    }
-//                    withStyle(
-//                        style = MaterialTheme.typography.bodyMedium.toSpanStyle()
-//                            .copy(textDecoration = TextDecoration.Underline)
-//                    ) {
-//                        append(
-//                            opinionName ?: opinionNameFromWpData
-//                            ?: "Нажмите для выбора мнения о посещении"
-//                        )
-//                    }
-//                },
-//                color = Color(-1979711488),
-//                modifier = Modifier.clickable(onClick = onClick)
-//            )
-
         Text(
             text = buildAnnotatedString {
                 withStyle(
                     style = MaterialTheme.typography.bodyMedium.toSpanStyle()
                         .copy(fontWeight = FontWeight.Bold)
                 ) {
-                    append("Мнение исп. о посещении: ")
+                    append(Translate.translationText(8033,"Мнение исп. о посещении: ") + " ")
                 }
                 withStyle(
                     style = MaterialTheme.typography.bodyMedium.toSpanStyle()
@@ -199,7 +177,7 @@ fun OpinionAndCommentView(
                 ) {
                     append(
                         opinionName ?: opinionNameFromWpData
-                        ?: "Нажмите для выбора мнения о посещении"
+                        ?: Translate.translationText(8037,"Нажмите для выбора мнения о посещении")
                     )
                 }
             },
@@ -215,7 +193,7 @@ fun OpinionAndCommentView(
             OutlinedTextField(
                 value = comment.ifBlank { wpDataUserComment },
                 onValueChange = { viewModel.updateComment(it) },
-                placeholder = { Text("Оставить комментарий о посещении") },
+                placeholder = { Text(Translate.translationText(8036,"Оставить комментарий о посещении")) },
                 modifier = Modifier
                     .fillMaxWidth()
                     .focusRequester(focusRequester)
@@ -239,7 +217,7 @@ fun OpinionAndCommentView(
                         style = MaterialTheme.typography.bodyMedium.toSpanStyle()
                             .copy(fontWeight = FontWeight.Bold)
                     ) {
-                        append("Комментарий исп. о посещении: ")
+                        append(Translate.translationText(8034,"Комментарий исп. о посещении:") + " ")
                     }
                     withStyle(
                         style = MaterialTheme.typography.bodyMedium.toSpanStyle()
@@ -247,7 +225,7 @@ fun OpinionAndCommentView(
                     ) {
                         append(comment.ifBlank {
                             wpDataUserComment.ifBlank {
-                                "Нажмите для оставления комментария"
+                                Translate.translationText(8035,"Нажмите для оставления комментария")
                             }
                         })
                     }
@@ -261,28 +239,6 @@ fun OpinionAndCommentView(
                     lineHeight = MaterialTheme.typography.bodyMedium.lineHeight * 0.8f // Уменьшаем интерлиньяж на 25%
                 )
             )
-//            Text(
-//                buildAnnotatedString {
-//                    withStyle(
-//                        style = MaterialTheme.typography.bodyMedium.toSpanStyle()
-//                            .copy(fontWeight = FontWeight.Bold)
-//                    ) {
-//                        append("Комментарий исполнителя о посещении: ")
-//                    }
-//                    withStyle(
-//                        style = MaterialTheme.typography.bodyMedium.toSpanStyle()
-//                            .copy(textDecoration = TextDecoration.Underline)
-//                    ) {
-//                        append(comment.ifBlank { wpDataUserComment.ifBlank { "Нажмите для оставления комментария" } })
-//                    }
-//                },
-//                color = Color(-1979711488),
-//                modifier = Modifier
-//                    .clickable {
-//                        isEditing = true
-//                    } // Открываем поле по клику
-//                    .padding(vertical = 8.dp)
-//            )
         }
 
         Spacer(modifier = Modifier.height(8.dp))
@@ -291,7 +247,7 @@ fun OpinionAndCommentView(
             onClick = {
                 //TODO логика сохранения
                 if (comment.length > 15) {
-                    Toast.makeText(context, "Комментарий сохранен", Toast.LENGTH_LONG).show()
+                    Toast.makeText(context, "Коментар збережено", Toast.LENGTH_LONG).show()
                     isEditing = false
                     // сохранили
                     viewModel.setSave(false)
@@ -328,7 +284,7 @@ fun OpinionAndCommentView(
 
 
                 } else
-                    Toast.makeText(context, "Слишком короткий комментарий", Toast.LENGTH_LONG)
+                    Toast.makeText(context, "Занадто короткий коментар", Toast.LENGTH_LONG)
                         .show()
             },
             shape = RoundedCornerShape(8.dp),
@@ -341,7 +297,7 @@ fun OpinionAndCommentView(
                 .align(Alignment.End)
                 .alpha(if (comment.isNotBlank() && isSaved) 1f else 0f)
         ) {
-            Text("Сохранить")
+            Text("Зберегти")
         }
 
 //        }

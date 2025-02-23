@@ -53,6 +53,7 @@ import ua.com.merchik.merchik.Options.Options;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.Recyclers.KeyValueData;
 import ua.com.merchik.merchik.Recyclers.KeyValueListAdapter;
+import ua.com.merchik.merchik.Translate;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.WorkPlan;
 import ua.com.merchik.merchik.data.OptionMassageType;
@@ -67,7 +68,7 @@ import ua.com.merchik.merchik.database.realm.tables.WpDataRealm;
 //@AndroidEntryPoint // Аннотация для поддержки Hilt
 public class DetailedReportHomeFrag extends Fragment {
 
-//    private static AppCompatActivity mContext;
+    //    private static AppCompatActivity mContext;
     private WpDataDB wpDataDB;
 
     private GoogleMap map;
@@ -81,8 +82,9 @@ public class DetailedReportHomeFrag extends Fragment {
     public static final Integer[] DetailedReportHomeFrag_VIDEO_LESSONS = new Integer[]{819, 4456};
 
     // Интерфейс
-    TextView activity_title;
     TextView textDRDateV, textDRAddrV, textDRCustV, textDRMercV, textTheme;
+    TextView textDRDate, textDRAddr, textDRCust, textDRMerc, textDROptions;
+
     LinearLayout option_signal_layout2;
     private RecyclerView recycler;
 
@@ -200,6 +202,12 @@ public class DetailedReportHomeFrag extends Fragment {
             fabYouTube = v.findViewById(R.id.fab);
             badgeTextView = v.findViewById(R.id.badge_text_view_tar);
 
+            textDRDate = v.findViewById(R.id.textDRDate);
+            textDRAddr = v.findViewById(R.id.textDRAddr);
+            textDRCust = v.findViewById(R.id.textDRCust);
+            textDRMerc = v.findViewById(R.id.textDRMerc);
+            textDROptions = v.findViewById(R.id.textDROptions);
+
             textDRDateV = v.findViewById(R.id.textDRDateVal);
             textDRAddrV = v.findViewById(R.id.textDRAddrVal);
             textDRCustV = v.findViewById(R.id.textDRCustVal);
@@ -238,9 +246,8 @@ public class DetailedReportHomeFrag extends Fragment {
                     updateMap();
                 });
             }
-
+            setTransleted();
             ComposeFunctions.setContent(composeView, wpDataDB, viewModel);
-            Log.e("ComposeFunctions!", "textDRAddrV: " + textDRAddrV.getTextColors().getDefaultColor());
 
             fabYoutube.setFabVideo(fabYouTube, DetailedReportHomeFrag_VIDEO_LESSONS, () -> fabYoutube.showYouTubeFab(fabYouTube, badgeTextView, DetailedReportHomeFrag_VIDEO_LESSONS));
             fabYoutube.showYouTubeFab(fabYouTube, badgeTextView, DetailedReportHomeFrag_VIDEO_LESSONS);
@@ -252,9 +259,14 @@ public class DetailedReportHomeFrag extends Fragment {
         return v;
     }
 
-
-    private void Text(String этоТекстовоеПолеВCompose) {
+    private void setTransleted() {
+        textDRDate.setText(Translate.translationText(8029,getString(R.string.date)));
+        textDRAddr.setText(Translate.translationText(1101,getString(R.string.address))+":");
+        textDRCust.setText(Translate.translationText(8030,getString(R.string.customer)));
+        textDRMerc.setText(Translate.translationText(8031,getString(R.string.performer)));
+        textDROptions.setText(Translate.translationText(8032,getString(R.string.options)));
     }
+
 
     /*Заполнение данных над картой*/
     private List<KeyValueData> createKeyValueData(WpDataDB wpDataDB) {
@@ -262,12 +274,12 @@ public class DetailedReportHomeFrag extends Fragment {
 
         result.add(themeData(wpDataDB));
         result.add(statusData(wpDataDB));
-        result.add(new KeyValueData(Html.fromHtml("<b>Премия (план):</b>"), "" + wpDataDB.getCash_ispolnitel(), null));
-        result.add(new KeyValueData(Html.fromHtml("<b>Снижение (по опциям):</b>"), Html.fromHtml("<u>" + wpDataDB.cash_penalty + "</u>"), this::openConductDialog));
-        result.add(new KeyValueData(Html.fromHtml("<b>Премия (факт):</b>"), "" + wpDataDB.cash_fact, null));
-        result.add(new KeyValueData(Html.fromHtml("<b>Продолж. работ (по документу):</b>"), "", null));
-        result.add(new KeyValueData(Html.fromHtml("<b>Продолж. работ (средняя):</b>"), "", null));
-        result.add(new KeyValueData(Html.fromHtml("<b>Стоимость часа:</b>"), "", null));
+        result.add(new KeyValueData(Html.fromHtml(Translate.translationText(8023, "<b>Премия (план):</b>")), "" + wpDataDB.getCash_ispolnitel(), null));
+        result.add(new KeyValueData(Html.fromHtml(Translate.translationText(8024, "<b>Снижение (по опциям):</b>")), Html.fromHtml("<u>" + wpDataDB.cash_penalty + "</u>"), this::openConductDialog));
+        result.add(new KeyValueData(Html.fromHtml(Translate.translationText(8025, "<b>Премия (факт):</b>")), "" + wpDataDB.cash_fact, null));
+        result.add(new KeyValueData(Html.fromHtml(Translate.translationText(8026, "<b>Продолж. работ (по документу):</b>")), "", null));
+        result.add(new KeyValueData(Html.fromHtml(Translate.translationText(8027, "<b>Продолж. работ (средняя):</b>")), "", null));
+        result.add(new KeyValueData(Html.fromHtml(Translate.translationText(8028, "<b>Стоимость часа:</b>")), "", null));
 
         return result;
     }
@@ -277,7 +289,7 @@ public class DetailedReportHomeFrag extends Fragment {
         CharSequence key;
         CharSequence value;
 
-        key = Html.fromHtml("<b>Тема:</b>");
+        key = Html.fromHtml(Translate.translationText(8021, "<b>Тема:</b>"));
 
         int themeId = wpDataDB.getTheme_id();
         ThemeDB themeDB = ThemeRealm.getByID(String.valueOf(themeId));
@@ -293,13 +305,13 @@ public class DetailedReportHomeFrag extends Fragment {
 
     /*Заполнение строки: Статус отчёта*/
     private KeyValueData statusData(WpDataDB wpDataDB) {
-        CharSequence key = Html.fromHtml("<b>Статус отчёта:</b>");
+        CharSequence key = Html.fromHtml(Translate.translationText(8022, "<b>Статус отчёта:</b>"));
         CharSequence value;
 
         if (wpDataDB.getStatus() == 1) {
-            value = Html.fromHtml("<font color=green>Проведён</font>");
+            value = Html.fromHtml("<font color=green>Проведено</font>");
         } else {
-            value = Html.fromHtml("<font color=red>Не проведён</font>");
+            value = Html.fromHtml("<font color=red>Не проведено</font>");
         }
 
         return new KeyValueData(key, value, null);
@@ -323,7 +335,7 @@ public class DetailedReportHomeFrag extends Fragment {
             LatLng coordUser = new LatLng(Globals.CoordX, Globals.CoordY);
             map.addMarker(new MarkerOptions()
                     .position(coordUser)
-                    .title("Ваше местоположение")
+                    .title("Ваше місце розташування")
                     .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE)));
 
             CameraPosition camPos = new CameraPosition.Builder()
