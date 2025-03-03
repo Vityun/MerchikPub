@@ -13,6 +13,7 @@ import android.widget.Toast;
 
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.app.ActivityCompat;
+import androidx.lifecycle.ViewModelProvider;
 
 import com.google.android.gms.common.api.Api;
 import com.google.android.material.navigation.NavigationView;
@@ -56,11 +57,13 @@ import ua.com.merchik.merchik.toolbar_menus;
 
 public class MenuMainActivity extends toolbar_menus {
 
+    PhotoDownloaderViewModel photoDownloaderViewModel;
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setActivityContent();
 
+        photoDownloaderViewModel = new ViewModelProvider(this).get(PhotoDownloaderViewModel.class);
 
         try {
 
@@ -146,6 +149,8 @@ public class MenuMainActivity extends toolbar_menus {
 
     private void test() {
 
+
+        photoDownloaderViewModel.scheduleDownload();
 
 //        Intent intent = new Intent(this, FeaturesActivity.class);
 //        Bundle bundle = new Bundle();

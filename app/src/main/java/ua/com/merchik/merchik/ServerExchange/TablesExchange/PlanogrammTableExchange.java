@@ -307,4 +307,96 @@ public class PlanogrammTableExchange {
         });
     }
 
+    public void planogramTypeList(Clicks.clickObjectAndStatus click) {
+        StandartData data = new StandartData();
+        data.mod = "planogram";
+        data.act = "tt_type_list";
+        data.nolimit = "1";
+
+        Gson gson = new Gson();
+        String json = gson.toJson(data);
+        JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
+        Log.e("MAIN_test", "planogramDownload convertedObject: " + convertedObject);
+
+        retrofit2.Call<JsonObject> call1 = RetrofitBuilder.getRetrofitInterface().TEST_JSON_UPLOAD(RetrofitBuilder.contentType, convertedObject);
+        call1.enqueue(new Callback<JsonObject>() {
+            @Override
+            public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
+                Log.e("planogramDownload", "planogramDownload: " + response.body());
+                Globals.writeToMLOG("INFO", "1_D_PlanogrammSDB", "response: " + response.body());
+            }
+
+            @Override
+            public void onFailure(Call<JsonObject> call, Throwable t) {
+                Log.e("planogramDownload", "planogramDownloadThrowable t: " + t);
+                Globals.writeToMLOG("INFO", "1_D_PlanogrammSDB", "Throwable t: " + t);
+            }
+        });
+
+        retrofit2.Call<PlanogrammResponse> call = RetrofitBuilder.getRetrofitInterface().Planogramm_RESPONSE(RetrofitBuilder.contentType, convertedObject);
+        call.enqueue(new Callback<PlanogrammResponse>() {
+            @Override
+            public void onResponse(Call<PlanogrammResponse> call, Response<PlanogrammResponse> response) {
+                Log.e("MAIN_test", "planogramDownload: " + response);
+                Log.e("MAIN_test", "planogramDownload body: " + response.body());
+
+                Log.e("test", "test" + response);
+                try {
+                    if (response.isSuccessful()) {
+                        if (response.body() != null) {
+                            if (response.body().state) {
+                                if (response.body().list != null && response.body().list.size() > 0) {
+
+                                    for (PlanogrammSDB item : response.body().list){
+                                        if (item.dtStart.getTime() < 0){
+                                            item.dtStart = null;
+                                        }
+                                        if (item.dtEnd.getTime() < 0){
+                                            item.dtEnd = null;
+                                        }
+                                    }
+
+                                    SQL_DB.planogrammDao().insertAll(response.body().list)
+                                            .subscribeOn(Schedulers.io())
+                                            .subscribe(new DisposableCompletableObserver() {
+                                                @Override
+                                                public void onComplete() {
+                                                    Log.d("test", "test");
+                                                    Globals.writeToMLOG("INFO", "PlanogrammTableExchange/planogramDownload/onResponse/onComplete", "OK: " + response.body().list.size());
+//                                                    click.onSuccess(response.body().list);
+                                                }
+
+                                                @Override
+                                                public void onError(@io.reactivex.rxjava3.annotations.NonNull Throwable e) {
+                                                    Log.d("test", "test");
+                                                    Globals.writeToMLOG("ERROR", "PlanogrammTableExchange/planogramDownload/onResponse/onError", "Throwable e: " + e);
+                                                    click.onFailure("onError SQL_DB.planogramDownload().insertAll Throwable e: " + e);
+                                                }
+                                            });
+
+//                                    click.onSuccess(response.body().list);
+                                }
+
+                            } else {
+                                click.onFailure("Ошибка запроса. State=false");
+                            }
+                        } else {
+                            click.onFailure("Ошибка запроса. Тело пришло пустым.");
+                        }
+                    } else {
+                        click.onFailure("Ошибка запроса. Код: " + response.code());
+                    }
+                } catch (Exception e) {
+                    Globals.writeToMLOG("ERROR", "PlanogrammTableExchange/planogramDownload/onResponse", "Exception e: " + e);
+                    click.onFailure("Ошибка запроса. Exception e: " + e);
+                }
+            }
+
+            @Override
+            public void onFailure(Call<PlanogrammResponse> call, Throwable t) {
+                Log.e("MAIN_test", "planogramDownload: " + t);
+            }
+        });
+    }
+
 }

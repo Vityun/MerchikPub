@@ -350,13 +350,20 @@ public class OptionControlEKL<T> extends OptionControl {
         }
 
 
-//                    добавил 24.01.25 пропускаем если сотр. провел более 2000 отчетов
+//       добавил 24.01.25 пропускаем если сотр. провел более 2000 отчетов
         Calendar compareDate = Calendar.getInstance();
         compareDate.set(2025, Calendar.MARCH, 1); // 1 марта 2025 года
         if (signal && documentUser.reportCount >= 2000 && wpDataDB.getDt().before(compareDate.getTime())) {
             signal = false;
             optionMsg.append(", но сотрудник провел более 2000 отчетов и эту блокировку пропускаем до 01.03.2025.");
+        } else {
+            compareDate.set(2025, Calendar.APRIL, 1); // 1 апрель 2025 года
+            if (signal && documentUser.reportCount >= 3000 && wpDataDB.getDt().before(compareDate.getTime())) {
+                signal = false;
+                optionMsg.append(", но сотрудник провел более 3000 отчетов и эту блокировку пропускаем до 01.04.2025.");
+            }
         }
+
 
         Log.e("OptionControlEKL", "HERE TEST OptionControlEKL 9");
         stringBuilderMsg.append(optionMsg);

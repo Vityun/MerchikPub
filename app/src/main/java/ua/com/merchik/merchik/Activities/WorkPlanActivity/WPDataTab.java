@@ -9,10 +9,12 @@ import androidx.viewpager2.adapter.FragmentStateAdapter;
 public class WPDataTab extends FragmentStateAdapter {
 
     private int totalTabs;
+    private boolean initialOpen;
 
-    public WPDataTab(FragmentManager fm, Lifecycle lifecycle, int totalTabs) {
+    public WPDataTab(FragmentManager fm, Lifecycle lifecycle, int totalTabs,boolean initialOpen) {
         super(fm, lifecycle);
         this.totalTabs = totalTabs;
+        this.initialOpen = initialOpen;
     }
 
 /*    @NonNull
@@ -38,7 +40,7 @@ public class WPDataTab extends FragmentStateAdapter {
     public Fragment createFragment(int position) {
         switch (position) {
             case 0:
-                return new WPDataFragmentHome();
+                return WPDataFragmentHome.newInstance(initialOpen);
             case 1:
                 return new WPDataFragmentMap();
             default:

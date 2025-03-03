@@ -1,6 +1,5 @@
 package ua.com.merchik.merchik.ServerExchange.TablesExchange;
 
-import static ua.com.merchik.merchik.ServerExchange.PhotoDownload.savePhotoAndUpdateStackPhotoDB;
 import static ua.com.merchik.merchik.database.realm.RealmManager.getAllWorkPlan;
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
@@ -33,14 +32,15 @@ import ua.com.merchik.merchik.data.RetrofitResponse.tables.ShowcaseResponse;
 import ua.com.merchik.merchik.data.TestJsonUpload.StandartData;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.StackPhotoRealm;
+import ua.com.merchik.merchik.database.room.DaoInterfaces.ShowcaseDao;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
 
 public class ShowcaseExchange {
 
     public void downloadShowcaseTable(ExchangeInterface.ExchangeResponseInterface exchange) {
         try {
-            List<Integer> addr_id = new ArrayList<>();
-            addr_id.add(27710);
+//            List<Integer> addr_id = new ArrayList<>();
+//            addr_id.add(27710);
             List<WpDataDB> wpDataDBList = getWorkPlanList();
 
             // Используем Set для автоматического удаления дубликатов
@@ -60,7 +60,8 @@ public class ShowcaseExchange {
             data.act = "list";
             data.active_only = "1";
             data.client_id = new ArrayList<>(uniqueClientIds);
-            data.addr_id = new ArrayList<>(uniqueAdressId);;
+            data.addr_id = new ArrayList<>(uniqueAdressId);
+            ;
             // добавить время отправки,что бы не передавать лишнее
 
             Gson gson = new Gson();
@@ -90,24 +91,24 @@ public class ShowcaseExchange {
 //                                    .collect(Collectors.toList());
 
 
-                            List<ShowcaseSDB> db = SQL_DB.showcaseDao().getAll();
-
-                            List<ShowcaseSDB> res = new ArrayList<>();
-                            Set<Integer> dbIds = new HashSet<>();
-
-                            // Заполняем HashSet dbIds числовыми идентификаторами из списка db
-                            for (ShowcaseSDB itemDB : db) {
-                                dbIds.add(itemDB.id); // Здесь предполагается, что у класса есть метод getId()
-                            }
+//                            List<ShowcaseSDB> db = SQL_DB.showcaseDao().getAll();
+//
+//                            List<ShowcaseSDB> res = new ArrayList<>();
+//                            Set<Integer> dbIds = new HashSet<>();
+//
+//                            // Заполняем HashSet dbIds числовыми идентификаторами из списка db
+//                            for (ShowcaseSDB itemDB : db) {
+//                                dbIds.add(itemDB.id); // Здесь предполагается, что у класса есть метод getId()
+//                            }
 
                             // 11.02.2025 были случае когда лезли 10к+ витрин, теперь фильтрую по клиентам и адресам из впдаты. Зачем нам левые фото витрины даже для менеджера? Для этого есть сайт
-                            for (ShowcaseSDB itemServ : serv) {
-                                if (!dbIds.contains(itemServ.id)) {
-                                    res.add(itemServ);
-                                }
-                            }
+//                            for (ShowcaseSDB itemServ : serv) {
+//                                if (!dbIds.contains(itemServ.id)) {
+//                                    res.add(itemServ);
+//                                }
+//                            }
 
-                            exchange.onSuccess(res);
+                            exchange.onSuccess(serv);
                         }
                     }
                 }
@@ -128,53 +129,56 @@ public class ShowcaseExchange {
     public void downloadShowcasePhoto(List<ShowcaseSDB> data) {
         PhotoDownload photoDownload = new PhotoDownload();
         for (ShowcaseSDB item : data) {
-            Log.e("checkRequest", "downloadShowcasePhoto/item: " + item.id);
-            photoDownload.downloadPhoto(item.photoBig, new ExchangeInterface.ExchangePhoto() {
-                @Override
-                public void onSuccess(Bitmap bitmap) {
-                    try {
-                        long dt = System.currentTimeMillis() / 1000;
+            StackPhotoDB stackPhotoDB = StackPhotoRealm.stackPhotoDBGetPhotoBySiteId2(String.valueOf(item.photoId));
+            if (stackPhotoDB == null) {
+                Log.e("checkRequest", "downloadShowcasePhoto/item: " + item.id);
+                photoDownload.downloadPhoto(item.photoBig, new ExchangeInterface.ExchangePhoto() {
+                    @Override
+                    public void onSuccess(Bitmap bitmap) {
+                        try {
+                            long dt = System.currentTimeMillis() / 1000;
 
-                        StackPhotoDB photoDB = new StackPhotoDB();
-                        photoDB.setId(RealmManager.stackPhotoGetLastId() + 1);
-                        photoDB.setPhotoServerId(String.valueOf(item.photoId));
-                        photoDB.setDt(dt);
-                        photoDB.setClient_id(item.clientId);
-                        photoDB.setAddr_id(Integer.valueOf(item.addrId));
-                        photoDB.setUser_id(null);
-                        photoDB.setPhoto_type(0);
+                            StackPhotoDB photoDB = new StackPhotoDB();
+                            photoDB.setId(RealmManager.stackPhotoGetLastId() + 1);
+                            photoDB.setPhotoServerId(String.valueOf(item.photoId));
+                            photoDB.setDt(dt);
+                            photoDB.setClient_id(item.clientId);
+                            photoDB.setAddr_id(Integer.valueOf(item.addrId));
+                            photoDB.setUser_id(null);
+                            photoDB.setPhoto_type(0);
 
-                        photoDB.setCreate_time(dt * 1000);// реквизиты что б фотки не выгружались обратно на сервер
-                        photoDB.setUpload_to_server(dt);// реквизиты что б фотки не выгружались обратно на сервер
-                        photoDB.setGet_on_server(dt);// реквизиты что б фотки не выгружались обратно на сервер
+                            photoDB.setCreate_time(dt * 1000);// реквизиты что б фотки не выгружались обратно на сервер
+                            photoDB.setUpload_to_server(dt);// реквизиты что б фотки не выгружались обратно на сервер
+                            photoDB.setGet_on_server(dt);// реквизиты что б фотки не выгружались обратно на сервер
 
 //                        photoDB.setPhoto_num(Globals.savePhotoToPhoneMemory("/Showcase", "" + item.id, bitmap));
 
-                        photoDB.setPhotoServerURL(item.photoBig);
+                            photoDB.setPhotoServerURL(item.photoBig);
 
-                        photoDB.img_src_id = String.valueOf(item.photoId);
-                        photoDB.showcase_id = String.valueOf(item.id);
-                        photoDB.planogram_id = "";  // Почему нет планограммы?
-                        photoDB.planogram_img_id = String.valueOf(item.photoPlanogramId);
+                            photoDB.img_src_id = String.valueOf(item.photoId);
+                            photoDB.showcase_id = String.valueOf(item.id);
+                            photoDB.planogram_id = "";  // Почему нет планограммы?
+                            photoDB.planogram_img_id = String.valueOf(item.photoPlanogramId);
 
-                        savePhotoAndUpdateStackPhotoDB("/Showcase", "" + item.id, bitmap, photoDB);
+                            photoDownload.savePhotoAndUpdateStackPhotoDB("/Showcase", "" + item.id, bitmap, photoDB);
 
 //                        RealmManager.stackPhotoSavePhoto(photoDB);
 
-                        Log.e("checkRequest", "downloadShowcasePhoto/photoDB: " + photoDB.getId());
-                        Globals.writeToMLOG("INFO", "savePhotoToDB2/downloadPhoto/ShowcaseSDB/photoDB", "photoDB.getId(): " + photoDB.getId());
-                    } catch (Exception e) {
-                        Globals.writeToMLOG("ERR", "savePhotoToDB2/downloadPhoto/ShowcaseSDB", "Exception e: " + e);
-                        Log.e("checkRequest", "downloadShowcasePhoto/Exception e: " + e);
+                            Log.e("checkRequest", "downloadShowcasePhoto/photoDB: " + photoDB.getId());
+                            Globals.writeToMLOG("INFO", "savePhotoToDB2/downloadPhoto/ShowcaseSDB/photoDB", "photoDB.getId(): " + photoDB.getId());
+                        } catch (Exception e) {
+                            Globals.writeToMLOG("ERR", "savePhotoToDB2/downloadPhoto/ShowcaseSDB", "Exception e: " + e);
+                            Log.e("checkRequest", "downloadShowcasePhoto/Exception e: " + e);
+                        }
                     }
-                }
 
-                @Override
-                public void onFailure(String error) {
-                    Log.e("checkRequest", "downloadShowcasePhoto/String error: " + error);
-                    Globals.writeToMLOG("ERR", "savePhotoToDB2/downloadPhoto/ShowcaseSDB/onFailure", "error: " + error);
-                }
-            });
+                    @Override
+                    public void onFailure(String error) {
+                        Log.e("checkRequest", "downloadShowcasePhoto/String error: " + error);
+                        Globals.writeToMLOG("ERR", "savePhotoToDB2/downloadPhoto/ShowcaseSDB/onFailure", "error: " + error);
+                    }
+                });
+            }
         }
     }
 

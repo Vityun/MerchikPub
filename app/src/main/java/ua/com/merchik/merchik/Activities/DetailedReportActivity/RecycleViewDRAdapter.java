@@ -44,6 +44,8 @@ import com.google.gson.JsonObject;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 
 import kotlin.Pair;
 import ua.com.merchik.merchik.Activities.Features.FeaturesActivity;
@@ -53,6 +55,7 @@ import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonAddNewClient;
 import ua.com.merchik.merchik.Options.Controls.OptionControlAvailabilityControlPhotoRemainingGoods;
 import ua.com.merchik.merchik.Options.Controls.OptionControlReclamationAnswer;
+import ua.com.merchik.merchik.Options.Controls.OptionControlStockBalanceTovar;
 import ua.com.merchik.merchik.Options.Controls.OptionControlTaskAnswer;
 import ua.com.merchik.merchik.Options.OptionControl;
 import ua.com.merchik.merchik.Options.Options;
@@ -534,7 +537,9 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                                 bundle.putString("modeUI", ModeUI.DEFAULT.toString());
                                 bundle.putString("dataJson", new Gson().toJson(dad2));
                                 bundle.putString("title", "Перелік фото звітів");
-                                bundle.putString("subTitle", "Справочник Фото" + ": " + ImagesTypeListRealm.getByID(26).getNm());
+                                bundle.putString("subTitle", "Справочник Фото" + ": " +
+                                         "Акційні товари");
+//                                        Objects.requireNonNullElse(ImagesTypeListRealm.getByID(26).getNm(),"Акційні товари"));
                                 intent.putExtras(bundle);
                                 ActivityCompat.startActivityForResult((Activity) mContext, intent, NEED_UPDATE_UI_REQUEST, null);
                             });
@@ -700,7 +705,10 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                             break;
                         case (135158):  // Вставляем количество выполненных Фото Остатков Товаров (ФОТ)
 //                            textInteger.setText("" + RealmManager.stackPhotoShowcasePhotoCount(dad2, 4));
-                            textInteger.setText(CustomString.underlineString("" + RealmManager.stackPhotoShowcasePhotoCount(dad2, 4), optionsButtons));
+                            SpannableString spannableString135158 = setPhotoCountsMakeAndMust(optionsButtons, RealmManager.stackPhotoShowcasePhotoCount(dad2, 4));
+                            spannableString135158.setSpan(new UnderlineSpan(), 0, spannableString135158.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+                            textInteger.setText(spannableString135158);
+//                            textInteger.setText(CustomString.underlineString("" + RealmManager.stackPhotoShowcasePhotoCount(dad2, 4), optionsButtons));
                             textInteger.setOnClickListener(v -> {
                                 Intent intent = new Intent(mContext, FeaturesActivity.class);
                                 Bundle bundle = new Bundle();
@@ -716,13 +724,11 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
 
                             break;
                         case (132969):  // Вставляем количество выполненных Фото Тележка с Товаром (ФТТ)
-//                            textInteger.setText("" + RealmManager.stackPhotoShowcasePhotoCount(dad2, 10));
-//                            WpDataDB wpDataDB = (WpDataDB) dataDB;
-//                            AddressSDB addr = SQL_DB.addressDao().getById(wpDataDB.getAddr_id());
-//                            TradeMarkDB tradeMarkDB = TradeMarkRealm.getTradeMarkRowById(String.valueOf(addr.tpId));
-//                            String tradeMarkId = tradeMarkDB == null ? "" : tradeMarkDB.getID();
 
-                            textInteger.setText(CustomString.underlineString("" + RealmManager.stackPhotoShowcasePhotoCount(dad2, 10), optionsButtons));
+                            SpannableString spannableString132969 = setPhotoCountsMakeAndMust(optionsButtons, RealmManager.stackPhotoShowcasePhotoCount(dad2, 10));
+                            spannableString132969.setSpan(new UnderlineSpan(), 0, spannableString132969.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+                            textInteger.setText(spannableString132969);
+//                            textInteger.setText(CustomString.underlineString("" + RealmManager.stackPhotoShowcasePhotoCount(dad2, 10), optionsButtons));
                             textInteger.setOnClickListener(v -> {
                                 Intent intent = new Intent(mContext, FeaturesActivity.class);
                                 Bundle bundle = new Bundle();
@@ -742,8 +748,13 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                             });
 
                             break;
+
                         case (141360):
-                            textInteger.setText(CustomString.underlineString("" + RealmManager.stackPhotoShowcasePhotoCount(dad2, 31), optionsButtons));
+                            SpannableString spannableString141360 = setPhotoCountsMakeAndMust(optionsButtons, RealmManager.stackPhotoShowcasePhotoCount(dad2, 31));
+                            spannableString141360.setSpan(new UnderlineSpan(), 0, spannableString141360.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+                            textInteger.setText(spannableString141360);
+
+//                            textInteger.setText(CustomString.underlineString("" + RealmManager.stackPhotoShowcasePhotoCount(dad2, 31), optionsButtons));
                             textInteger.setOnClickListener(v -> {
                                 Intent intent = new Intent(mContext, FeaturesActivity.class);
                                 Bundle bundle = new Bundle();
@@ -811,6 +822,15 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                             OptionControlTaskAnswer<?> optionControlTask = new OptionControlTaskAnswer<>(itemView.getContext(), dataDB, optionsButtons, type, NULL, null);
 
                             textInteger.setText(CustomString.coloredString("" + optionControlTask.problemTaskCount(), optionsButtons));
+                            break;
+
+
+                        case 141067:    // Сравнение остатков и наличия
+                            type = new OptionMassageType();
+                            type.type = OptionMassageType.Type.STRING;
+                            OptionControlStockBalanceTovar<?> optionControlStockBalanceTovar = new OptionControlStockBalanceTovar<>(itemView.getContext(), dataDB, optionsButtons, type, NULL, null);
+
+                            textInteger.setText(CustomString.coloredString("" + "test", optionsButtons));
                             break;
 
                         default:

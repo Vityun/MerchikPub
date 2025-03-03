@@ -1198,21 +1198,21 @@ public class menu_main extends AppCompatActivity {
                 }
 
                 try {
-                    tablesLoadingUnloading.downloadWPData(context);                     // План работ
-                    tablesLoadingUnloading.downloadImagesTp(context);                   // Типы Фото
-                    tablesLoadingUnloading.downloadTypeGrp(context);                    // Группы товаров
-                    tablesLoadingUnloading.downloadOptions(context);                    // Опции
-                    tablesLoadingUnloading.downloadReportPrepare(context, 0);     // Отчёт RP
+                    tablesLoadingUnloading.downloadWPData();                     // План работ
+                    tablesLoadingUnloading.downloadImagesTp();                   // Типы Фото
+                    tablesLoadingUnloading.downloadTypeGrp();                    // Группы товаров
+                    tablesLoadingUnloading.downloadOptions();                    // Опции
+                    tablesLoadingUnloading.downloadReportPrepare(0);     // Отчёт RP
 
-                    tablesLoadingUnloading.downloadCustomerTable(context);              // Клиенты
-                    tablesLoadingUnloading.downloadAddressTable(context);               // Адреса
-                    tablesLoadingUnloading.downloadSotrTable(context);                  // Сотрудники
+                    tablesLoadingUnloading.downloadCustomerTable();              // Клиенты
+                    tablesLoadingUnloading.downloadAddressTable();               // Адреса
+                    tablesLoadingUnloading.downloadSotrTable();                  // Сотрудники
 //                    tablesLoadingUnloading.downloadTovarTable(context, null);                 // Товары
 
-                    tablesLoadingUnloading.downloadErrorTable(context);                 // Таблица Ошибок
-                    tablesLoadingUnloading.downloadAkciyTable(context);                 // Тфблица Акций
+                    tablesLoadingUnloading.downloadErrorTable();                 // Таблица Ошибок
+                    tablesLoadingUnloading.downloadAkciyTable();                 // Тфблица Акций
 
-                    tablesLoadingUnloading.downloadTradeMarksTable(context);            // Таблица Торговых марок
+                    tablesLoadingUnloading.downloadTradeMarksTable();            // Таблица Торговых марок
 
                 } catch (Exception e) {
                     // запись в ЛОг

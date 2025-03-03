@@ -633,12 +633,7 @@ public class RealmManager {
     // STACK PHOTO:---------------------------------------------------------------------------------
     public static void stackPhotoSavePhoto(StackPhotoDB stackPhotoDB) {
         INSTANCE.beginTransaction();
-//        Log.e("TAG_TABLE", "PHOTO_TOVAR_URL_path_id: " + stackPhotoDB.getId());
-//        Log.e("TAG_TABLE","PHOTO_TOVAR_URL_comment: " + stackPhotoDB.comment);
-//        Log.e("TAG_TABLE","PHOTO_TOVAR_URL_photo_id: " + stackPhotoDB.getId());
-//        Log.e("TAG_TABLE","PHOTO_TOVAR_URL_commentUpload: " + stackPhotoDB.isCommentUpload());
-//        Log.e("TAG_TABLE","PHOTO_TOVAR_URL_photo_num: " + stackPhotoDB.photo_num);
-        INSTANCE.copyToRealmOrUpdate(stackPhotoDB);
+        INSTANCE.insertOrUpdate(stackPhotoDB);
         INSTANCE.commitTransaction();
     }
 //    20241217_162210249_2954396291348853998
@@ -646,8 +641,34 @@ public class RealmManager {
     public static void stackPhotoSavePhoto(List<StackPhotoDB> stackPhotoDB) {
         INSTANCE.beginTransaction();
         Log.e("TAG_TABLE", "PHOTO_TOVAR_URL_path_id.List: " + stackPhotoDB.size());
-        List<StackPhotoDB> i = INSTANCE.copyToRealmOrUpdate(stackPhotoDB);
+        INSTANCE.insertOrUpdate(stackPhotoDB);
         INSTANCE.commitTransaction();
+    }
+
+    public static long stackPhotoGetLastId(Realm realm) {
+        Number maxId = realm.where(StackPhotoDB.class).max("id");
+        return maxId != null ? maxId.longValue() : 0;
+    }
+
+    public static int stackPhotoGetLastIdAsync() {
+        Realm realm = Realm.getDefaultInstance(); // Создаем локальный экземпляр Realm
+        try {
+            RealmResults<StackPhotoDB> realmResults = realm.where(StackPhotoDB.class).findAll();
+
+            if (realmResults.isEmpty()) {
+                return 0; // Возвращаем 0, если список пуст
+            } else {
+                StackPhotoDB stackPhotoDB = realmResults.last(); // Получаем последний объект
+                return stackPhotoDB.getId(); // Возвращаем его ID
+            }
+        } catch (Exception e) {
+            Globals.writeToMLOG("ERROR", "RealmManager/stackPhotoGetLastId", "Exception e: " + e);
+            return 0;
+        } finally {
+            if (realm != null) {
+                realm.close(); // Закрываем Realm после использования
+            }
+        }
     }
 
     public static int stackPhotoGetLastId() {
@@ -734,7 +755,9 @@ public class RealmManager {
                 .notEqualTo("photo_type", 29)
 //                .notEqualTo("photo_type", 5)
                 .notEqualTo("photo_type", 35)
-                .isNotNull("client_id").isNotNull("addr_id")
+                .isNotNull("client_id")
+                .isNotNull("addr_id")
+                .isNotNull("photo_num")
 //                .isNull("showcase_id")  // Показываем мерчу в ЖФ фото НЕ "ВИТРИН"
                 .findAll();
     }
@@ -742,7 +765,12 @@ public class RealmManager {
     public static RealmResults<StackPhotoDB> getStackPhotoLogByDad2(long dad2) {
         return INSTANCE.where(StackPhotoDB.class)
 //                .notEqualTo("photo_type", 18)
-                .notEqualTo("photo_type", 29).notEqualTo("photo_type", 5).notEqualTo("photo_type", 35).equalTo("code_dad2", dad2).isNotNull("client_id").isNotNull("addr_id")
+                .notEqualTo("photo_type", 29)
+//                .notEqualTo("photo_type", 5)
+                .notEqualTo("photo_type", 35)
+                .equalTo("code_dad2", dad2)
+                .isNotNull("client_id")
+                .isNotNull("addr_id")
 //                .isNull("showcase_id")  // Показываем мерчу в ЖФ фото НЕ "ВИТРИН"
                 .findAll();
     }
@@ -779,7 +807,10 @@ public class RealmManager {
 //                .notEqualTo("photo_type", 18)
 
                 // 09.01.24. Ниже добавил что б Товары что я делаю в приложении фиксировались выгруенными
-                .isNotNull("client_id").isNotNull("addr_id").isNotNull("photo_hash").isNotNull("time_event").findAll();
+                .isNotNull("client_id")
+                .isNotNull("addr_id")
+                .isNotNull("photo_hash")
+                .isNotNull("time_event").findAll();
     }
 
 

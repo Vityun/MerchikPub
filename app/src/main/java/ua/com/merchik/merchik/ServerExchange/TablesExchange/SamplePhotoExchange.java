@@ -9,6 +9,8 @@ import com.google.gson.JsonObject;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.observers.DisposableCompletableObserver;
@@ -34,6 +36,14 @@ import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
 public class SamplePhotoExchange {
 
     public SynchronizationTimetableDB synchronizationTimetableDB;
+    private final ExecutorService executorService;
+
+    public SamplePhotoExchange(){
+        this.executorService = Executors.newFixedThreadPool(8);
+    }
+    public SamplePhotoExchange(ExecutorService executor) {
+        this.executorService = executor;
+    }
 
     public void downloadSamplePhotoTable(Clicks.clickObjectAndStatus click) {
 

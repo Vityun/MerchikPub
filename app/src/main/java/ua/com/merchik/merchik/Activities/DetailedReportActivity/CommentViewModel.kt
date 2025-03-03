@@ -1,17 +1,9 @@
 package ua.com.merchik.merchik.Activities.DetailedReportActivity
 
-import android.content.Context
-import android.util.Log
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
-import androidx.lifecycle.ViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import ua.com.merchik.merchik.data.RealmModels.WpDataDB
-import ua.com.merchik.merchik.database.realm.RealmManager
 
-class CommentViewModel() : ViewModel() {
+class CommentViewModel : DetailedReportViewModel() {
 
     private val _comment = MutableStateFlow("")
     val comment: StateFlow<String> = _comment
@@ -20,7 +12,6 @@ class CommentViewModel() : ViewModel() {
         _comment.value = newComment
         if (newComment.length > 15) {
             _isSaved.value = true
-//            _isSavedDialogShow.value = true
         }
     }
 

@@ -41,7 +41,7 @@ public class MyApplication extends Application {
 
         BuildersKt.launch(GlobalScope.INSTANCE, Dispatchers.getIO(), CoroutineStart.DEFAULT, (coroutineScope, continuation) -> LogCleaner.INSTANCE.cleanOldLogs(cacheDir, continuation));
 
-         WorkManagerHelper.INSTANCE.schedulePhotoDownloadTask(this);
+        WorkManagerHelper.INSTANCE.schedulePhotoDownloadTask(this);
 
     }
 

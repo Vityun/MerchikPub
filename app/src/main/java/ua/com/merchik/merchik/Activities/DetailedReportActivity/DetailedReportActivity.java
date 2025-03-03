@@ -81,12 +81,10 @@ import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.ServerExchange.Exchange;
 import ua.com.merchik.merchik.Translate;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
-import ua.com.merchik.merchik.WorkPlan;
 import ua.com.merchik.merchik.data.Database.Room.AddressSDB;
 import ua.com.merchik.merchik.data.Database.Room.CustomerSDB;
 import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
 import ua.com.merchik.merchik.data.Database.Room.TranslatesSDB;
-import ua.com.merchik.merchik.data.Database.Room.UsersSDB;
 import ua.com.merchik.merchik.data.Database.Room.ViewListSDB;
 import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteHintsDB;
 import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteObjects.SiteObjectsDB;
@@ -159,7 +157,7 @@ public class DetailedReportActivity extends toolbar_menus {
     Button buttonTakeKPSfromDR;
     LinearLayout option_signal_layout2;
     public static ImageView imageView;
-    private CommentViewModel viewModel;
+    private CommentViewModel commentViewModel;
 
     private boolean isNavigationBlocked = false;
 
@@ -191,8 +189,6 @@ public class DetailedReportActivity extends toolbar_menus {
             );
 
             Globals.writeToMLOG("INFO", "DetailedReportActivity/onCreate", "Открыли по новой активность. Смотри Выше лог - после чего именно.");
-
-            viewModel = new ViewModelProvider(this).get(CommentViewModel.class);
 
             setActivityData();
 
@@ -468,41 +464,13 @@ public class DetailedReportActivity extends toolbar_menus {
         wpDataDB = RealmManager.INSTANCE.copyFromRealm(WpDataRealm.getWpDataRowById(i.getLongExtra("WpDataDB_ID", 0)));
 
         // Получаем ViewModel и передаем туда данные
-        DetailedReportViewModel viewModel = new ViewModelProvider(this).get(DetailedReportViewModel.class);
-        viewModel.setWpDataDB(wpDataDB);
+        commentViewModel = new ViewModelProvider(this).get(CommentViewModel.class);
+        commentViewModel.setWpDataDB(wpDataDB);
+
+        DetailedReportViewModel detailedReportViewModel = new ViewModelProvider(this).get(DetailedReportViewModel.class);
+        detailedReportViewModel.setWpDataDB(wpDataDB);
 
 
-//        rowWP = i.getParcelableExtra("rowWP");
-//        wp = i.getParcelableExtra("dataFromWP");
-//        WPDataObj test = i.getParcelableExtra("dataFromWPObj");
-
-    /*    long otchetId;
-        int action = rowWP.getAction();
-        if (action == 1 || action == 94) {
-            otchetId = rowWP.getDoc_num_otchet_id();
-        } else {
-            otchetId = rowWP.getDoc_num_1c_id();
-        }*/
-
-//        wpDataDB = rowWP;
-//        TasksAndReclamationsSDB tasksAndReclamationsSDB;
-
-        //userId = wpDataDB.getUser_id() OR tasksAndReclamationsSDB.vinovnik;
-
-//        usersSDB = SQL_DB.usersDao().getUserById(wpDataDB.getUser_id());
-
-//        Data D = new Data(
-//                rowWP.getId(),
-//                rowWP.getAddr_txt(),
-//                rowWP.getClient_txt(),
-//                rowWP.getUser_txt(),
-//                rowWP.getDt(),  //+TODO CHANGE DATE
-//                otchetId,
-//                "",
-//                R.mipmap.merchik);
-//
-//        list.add(D);
-//        wpDataDB = RealmManager.getWorkPlanRowById(list.get(0).getId());
     }
 
     // Основное сообщение
@@ -657,7 +625,7 @@ public class DetailedReportActivity extends toolbar_menus {
 //            }
 
             Globals.writeToMLOG("INFO", "DetailedReportTab/0", "setTab create");
-            adapter = new DetailedReportTab(this, getSupportFragmentManager(), getLifecycle(), tabLayout.getTabCount(), wpDataDB, viewModel);
+            adapter = new DetailedReportTab(this, getSupportFragmentManager(), getLifecycle(), tabLayout.getTabCount(), wpDataDB);
             viewPager.setAdapter(adapter);
 
 
@@ -666,7 +634,7 @@ public class DetailedReportActivity extends toolbar_menus {
                 public void onPageSelected(int position) {
 
 //
-                    if (viewModel.isSaved().getValue()) {
+                    if (commentViewModel.isSaved().getValue()) {
                         // Показываем диалог
                         showSaveDialog();
                         // Отменяем перелистывание, возвращаясь на предыдущую страницу
@@ -756,20 +724,20 @@ public class DetailedReportActivity extends toolbar_menus {
         new MessageDialogBuilder(this)
                 .setTitle("Вы не сохранили комментарий")
                 .setSubTitle("Текст комментария к текущему визиту:")
-                .setMessage(viewModel.getComment().getValue())
+                .setMessage(commentViewModel.getComment().getValue())
                 .setStatus(DialogStatus.ALERT)
                 .setOnCancelAction(() -> {
-                    viewModel.setSave(false);
-                    viewModel.updateComment("");
+                    commentViewModel.setSave(false);
+                    commentViewModel.updateComment("");
                     return Unit.INSTANCE;
                 })
                 .setOnConfirmAction("Сохранить", () -> {
-                    viewModel.setSave(false);
+                    commentViewModel.setSave(false);
 
                     long startTime = System.currentTimeMillis() / 1000;
                     RealmManager.INSTANCE.executeTransaction(realm -> {
                         wpDataDB.setDt_update(startTime);
-                        wpDataDB.user_comment = viewModel.getComment().getValue();
+                        wpDataDB.user_comment = commentViewModel.getComment().getValue();
                         wpDataDB.user_comment_author_id = wpDataDB.getUser_id();
                         wpDataDB.user_comment_dt_update = startTime;
                         wpDataDB.startUpdate = true;

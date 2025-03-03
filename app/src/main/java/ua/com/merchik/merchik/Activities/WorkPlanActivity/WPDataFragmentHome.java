@@ -4,7 +4,10 @@ import static ua.com.merchik.merchik.Globals.userOwnership;
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
 import android.graphics.Paint;
+import android.media.metrics.Event;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.text.Editable;
 import android.text.Html;
 import android.text.SpannableStringBuilder;
@@ -17,6 +20,7 @@ import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -28,17 +32,27 @@ import java.util.Date;
 
 import dagger.hilt.android.AndroidEntryPoint;
 import io.realm.RealmResults;
+import kotlin.Unit;
+import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportHomeFrag;
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.RecycleViewWPAdapter;
+import ua.com.merchik.merchik.ServerExchange.TablesLoadingUnloading;
 import ua.com.merchik.merchik.data.Database.Room.UsersSDB;
 import ua.com.merchik.merchik.data.RealmModels.AppUsersDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.AppUserRealm;
 import ua.com.merchik.merchik.dialogs.DialogData;
+import ua.com.merchik.merchik.dialogs.DialogFilter.Click;
 import ua.com.merchik.merchik.dialogs.DialogFilter.DialogFilter;
+import ua.com.merchik.merchik.dialogs.features.LoadingDialogWithPercent;
+import ua.com.merchik.merchik.dialogs.features.LoadingIndicator;
+import ua.com.merchik.merchik.dialogs.features.MessageDialogBuilder;
+import ua.com.merchik.merchik.dialogs.features.dialogLoading.DialogDismissedListener;
+import ua.com.merchik.merchik.dialogs.features.dialogLoading.ProgressViewModel;
+import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus;
 
 @AndroidEntryPoint
 public class WPDataFragmentHome extends Fragment {
@@ -63,10 +77,30 @@ public class WPDataFragmentHome extends Fragment {
 
     public AppUsersDB appUsersDB1;
     public AppUserRealm appUsersRealm1;
+    private boolean initialOpen = false;
+
+    public static WPDataFragmentHome newInstance(boolean initialOpen) {
+        WPDataFragmentHome fragment = new WPDataFragmentHome();
+        Bundle args = new Bundle();
+        args.putBoolean("initialOpen", initialOpen);
+        fragment.setArguments(args);
+        return fragment;
+    }
 
     public WPDataFragmentHome() {
         Log.d("test", "test");
     }
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        Globals.writeToMLOG("INFO", "DetailedReportTARFrag", "onCreate");
+        Bundle args = getArguments();
+        if (args != null) {
+            initialOpen = args.getBoolean("initialOpen");
+        }
+    }
+
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -127,7 +161,7 @@ public class WPDataFragmentHome extends Fragment {
             UsersSDB usersSDB = SQL_DB.usersDao().getById(Globals.userId);
 
             AppUsersDB appUsersDB = AppUserRealm.getAppUserById(Globals.userId);
-            if (appUsersDB.user_work_plan_status.equals("our")){
+            if (appUsersDB.user_work_plan_status.equals("our")) {
                 if (System.currentTimeMillis() / 1000 < 1668124799) {
                     showAlertMsg();
                 } else if (usersSDB != null && usersSDB.reportCount <= 10) {
@@ -138,15 +172,50 @@ public class WPDataFragmentHome extends Fragment {
             }
 
 
+            if (workPlan == null || workPlan.isEmpty()) {
 
-            if (workPlan == null || workPlan.size() == 0) {
-                DialogData dialogData = new DialogData(v.getContext());
-                dialogData.setTitle("План работ пуст.");
-                dialogData.setText("Выполните Синхронизацию таблиц для получения Плана работ.");
-                dialogData.setClose(dialogData::dismiss);
-                dialogData.show();
+                if (!initialOpen){
+                    new TablesLoadingUnloading().downloadAllTables(requireActivity());
+                }
+
+                ProgressViewModel progress = new ProgressViewModel(1);
+                LoadingDialogWithPercent loadingDialog = new LoadingDialogWithPercent(requireActivity(), progress);
+                loadingDialog.setOnDismissListener(new DialogDismissedListener() {
+                    @Override
+                    public void onDialogDismissed() {
+                        if (workPlan == null || workPlan.isEmpty())
+                            new MessageDialogBuilder(requireActivity())
+                                    .setStatus(DialogStatus.ALERT)
+                                    .setTitle("Виникла помилка")
+                                    .setSubTitle("Під час завантаження плану робіт")
+                                    .setMessage("Не вдалося отримати план із сервера. Можливо, на даний момент сервер працює не стабільно або у вас проблеми з інтернет з'єднанням. Знайдіть місце з найкращим прийомом і повторіть спробу")
+                                    .setOnConfirmAction(() -> {
+                                        new TablesLoadingUnloading().downloadAllTables(requireActivity());
+                                        return Unit.INSTANCE;
+                                    })
+                                    .show();
+                        else
+                            visualizeWpData();
+                    }
+                });
+                loadingDialog.show();
+                progress.onNextEvent("Завантажую план робіт", 27_200);
+                new Handler(Looper.getMainLooper()).postDelayed(progress::onCompleted, 28000);
+
+//                DialogData dialogData = new DialogData(v.getContext());
+//                dialogData.setTitle("План работ пуст.");
+//                dialogData.setText("Выполните Синхронизацию таблиц для получения Плана работ.");
+//                dialogData.setClose(dialogData::dismiss);
+//                dialogData.show();
             } else {
                 try {
+                    if (initialOpen) {
+                        ProgressViewModel progress = new ProgressViewModel(1);
+                        LoadingDialogWithPercent loadingDialog = new LoadingDialogWithPercent(requireActivity(), progress);
+                        loadingDialog.show();
+                        progress.onNextEvent("Оновлюю план робіт", 7_300);
+                        new Handler(Looper.getMainLooper()).postDelayed(progress::onCompleted, 8_100);
+                    }
                     visualizeWpData();
                 } catch (Exception e) {
                     globals.alertDialogMsg(v.getContext(), "Возникла ошибка. Сообщите о ней своему администратору. Ошибка1: " + e);
@@ -190,7 +259,7 @@ public class WPDataFragmentHome extends Fragment {
             } else {
                 res.append("План робіт пустий.");
             }
-        }catch (Exception e){
+        } catch (Exception e) {
             Globals.writeToMLOG("ERROR", "WPDataFragmentHome/createTitleMsg", "Exception e: " + e);
             res.append("");
         }
@@ -382,7 +451,7 @@ public class WPDataFragmentHome extends Fragment {
             if (user.clientId.equals("32246")) {
                 res = true;
             }
-        }catch (Exception e){
+        } catch (Exception e) {
 
         }
 

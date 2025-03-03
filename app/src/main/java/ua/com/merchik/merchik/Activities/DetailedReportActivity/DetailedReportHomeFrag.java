@@ -97,15 +97,13 @@ public class DetailedReportHomeFrag extends Fragment {
         Globals.writeToMLOG("INFO", "DetailedReportHomeFrag/1", "create");
     }
 
-    public static DetailedReportHomeFrag newInstance(WpDataDB wpDataDB,
-                                                     CommentViewModel commentViewModel) {
-        DetailedReportHomeFrag fragment = new DetailedReportHomeFrag();
-        Bundle args = new Bundle();
-        args.putParcelable("wpDataDB", wpDataDB);
-//        mContext = context;
-        fragment.setArguments(args);
-        viewModel = commentViewModel;
-        return fragment;
+    public static DetailedReportHomeFrag newInstance() {
+        //        Bundle args = new Bundle();
+//        args.putParcelable("wpDataDB", wpDataDB);
+////        mContext = context;
+//        fragment.setArguments(args);
+//        viewModel = commentViewModel;
+        return new DetailedReportHomeFrag();
     }
 
 
@@ -120,12 +118,8 @@ public class DetailedReportHomeFrag extends Fragment {
         super.onCreate(savedInstanceState);
         Globals.writeToMLOG("INFO", "DetailedReportHomeFrag", "onCreate");
 
-        Bundle args = getArguments();
-        if (args != null) {
-            wpDataDB = args.getParcelable("wpDataDB");
-            Globals.writeToMLOG("INFO", "DetailedReportHomeFrag", "onCreate/wpDataDB: " + wpDataDB);
-        }
-
+        viewModel = new ViewModelProvider(requireActivity()).get(CommentViewModel.class);
+        
         OpinionDataHolder.Companion.instance().init();
     }
 
@@ -190,14 +184,8 @@ public class DetailedReportHomeFrag extends Fragment {
         Globals.writeToMLOG("INFO", "DetailedReportHomeFrag/onCreateView", "v: " + v);
 
         try {
-            WorkPlan workPlan = new WorkPlan();
-            LinearLayout ll = workPlan.getOptionLinearLayout(requireContext(), workPlan.getWpOpchetId(wpDataDB));
 
             merchikImg = v.findViewById(R.id.merchik);
-            Drawable drawable = merchikImg.getBackground();
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                drawable.setTint(requireContext().getResources().getColor(R.color.colotSelectedTab2));
-            }
 
             fabYouTube = v.findViewById(R.id.fab);
             badgeTextView = v.findViewById(R.id.badge_text_view_tar);
@@ -217,41 +205,52 @@ public class DetailedReportHomeFrag extends Fragment {
             recycler = v.findViewById(R.id.recycler);
             composeView = v.findViewById(R.id.composeView);
 
+            viewModel.getWpDataDB().observe(getViewLifecycleOwner(), data -> {
+                if (data != null) {
+                    wpDataDB = data;
 
-            textDRDateV.setText(Clock.getHumanTimeYYYYMMDD(wpDataDB.getDt().getTime() / 1000));
-            textDRAddrV.setText(wpDataDB.getAddr_txt());
-            textDRCustV.setText(wpDataDB.getClient_txt());
-            textDRMercV.setText(wpDataDB.getUser_txt());
+                    WorkPlan workPlan = new WorkPlan();
+                    LinearLayout ll = workPlan.getOptionLinearLayout(requireContext(), workPlan.getWpOpchetId(wpDataDB));
+                    Drawable drawable = merchikImg.getBackground();
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                        drawable.setTint(requireContext().getResources().getColor(R.color.colotSelectedTab2));
+                    }
 
-            option_signal_layout2.addView(ll);
+                    textDRDateV.setText(Clock.getHumanTimeYYYYMMDD(wpDataDB.getDt().getTime() / 1000));
+                    textDRAddrV.setText(wpDataDB.getAddr_txt());
+                    textDRCustV.setText(wpDataDB.getClient_txt());
+                    textDRMercV.setText(wpDataDB.getUser_txt());
 
-            recycler.setAdapter(new KeyValueListAdapter(createKeyValueData(wpDataDB)));
-            recycler.setLayoutManager(new LinearLayoutManager(getContext(), LinearLayoutManager.VERTICAL, false));
+                    option_signal_layout2.addView(ll);
 
-            spotLat = Float.valueOf(wpDataDB.getAddr_location_xd());
-            spotLon = Float.valueOf(wpDataDB.getAddr_location_yd());
+                    recycler.setAdapter(new KeyValueListAdapter(createKeyValueData(wpDataDB)));
+                    recycler.setLayoutManager(new LinearLayoutManager(getContext(), LinearLayoutManager.VERTICAL, false));
 
-            Log.e("DetailedReportHomeFrag", "onCreateView.spotLat: " + spotLat);
-            Log.e("DetailedReportHomeFrag", "onCreateView.spotLon: " + spotLon);
+                    spotLat = Float.valueOf(wpDataDB.getAddr_location_xd());
+                    spotLon = Float.valueOf(wpDataDB.getAddr_location_yd());
 
-            // 23.08.23 Видаляю згадування про мапу для того щоб перевірити чи не ізза неї ідуть проблеми
-            SupportMapFragment mapFragment = (SupportMapFragment) getChildFragmentManager()
-                    .findFragmentById(R.id.mapView2);
+                    Log.e("DetailedReportHomeFrag", "onCreateView.spotLat: " + spotLat);
+                    Log.e("DetailedReportHomeFrag", "onCreateView.spotLon: " + spotLon);
 
-            Log.e("DetailedReportHomeFrag", "SupportMapFragment: " + mapFragment);
+                    // 23.08.23 Видаляю згадування про мапу для того щоб перевірити чи не ізза неї ідуть проблеми
+                    SupportMapFragment mapFragment = (SupportMapFragment) getChildFragmentManager()
+                            .findFragmentById(R.id.mapView2);
 
-            if (mapFragment != null) {
-                mapFragment.getMapAsync(googleMap -> {
-                    map = googleMap;
-                    updateMap();
-                });
-            }
-            setTransleted();
-            ComposeFunctions.setContent(composeView, wpDataDB, viewModel);
+                    Log.e("DetailedReportHomeFrag", "SupportMapFragment: " + mapFragment);
 
-            fabYoutube.setFabVideo(fabYouTube, DetailedReportHomeFrag_VIDEO_LESSONS, () -> fabYoutube.showYouTubeFab(fabYouTube, badgeTextView, DetailedReportHomeFrag_VIDEO_LESSONS));
-            fabYoutube.showYouTubeFab(fabYouTube, badgeTextView, DetailedReportHomeFrag_VIDEO_LESSONS);
+                    if (mapFragment != null) {
+                        mapFragment.getMapAsync(googleMap -> {
+                            map = googleMap;
+                            updateMap();
+                        });
+                    }
+                    setTransleted();
+                    ComposeFunctions.setContent(composeView, wpDataDB, viewModel);
 
+                    fabYoutube.setFabVideo(fabYouTube, DetailedReportHomeFrag_VIDEO_LESSONS, () -> fabYoutube.showYouTubeFab(fabYouTube, badgeTextView, DetailedReportHomeFrag_VIDEO_LESSONS));
+                    fabYoutube.showYouTubeFab(fabYouTube, badgeTextView, DetailedReportHomeFrag_VIDEO_LESSONS);
+                }
+            });
         } catch (Exception e) {
             Log.e("DetailedReportHomeFrag", "Exception e: " + e);
         }
@@ -260,11 +259,11 @@ public class DetailedReportHomeFrag extends Fragment {
     }
 
     private void setTransleted() {
-        textDRDate.setText(Translate.translationText(8029,getString(R.string.date)));
-        textDRAddr.setText(Translate.translationText(1101,getString(R.string.address))+":");
-        textDRCust.setText(Translate.translationText(8030,getString(R.string.customer)));
-        textDRMerc.setText(Translate.translationText(8031,getString(R.string.performer)));
-        textDROptions.setText(Translate.translationText(8032,getString(R.string.options)));
+        textDRDate.setText(Translate.translationText(8029, getString(R.string.date)));
+        textDRAddr.setText(Translate.translationText(1101, getString(R.string.address)) + ":");
+        textDRCust.setText(Translate.translationText(8030, getString(R.string.customer)));
+        textDRMerc.setText(Translate.translationText(8031, getString(R.string.performer)));
+        textDROptions.setText(Translate.translationText(8032, getString(R.string.options)));
     }
 
 

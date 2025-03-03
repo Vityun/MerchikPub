@@ -995,7 +995,7 @@ public class Globals {
     public static String savePhotoToPhoneMemory(String folderPath, String image_name, Bitmap bitmap) {
         try {
 
-            Log.e("savePhotoToPhoneMemory", "Размер фотографии для сохранения. (bitmap.getByteCount()): " + bitmap.getByteCount());
+            Log.e("savePhotoToPhoneMemory", "(bitmap.getByteCount()): " + bitmap.getByteCount());
 
 //        String root = Environment.getExternalStorageDirectory().toString() + APP_DIR + folderPath;
 //        File myDir = new File(root);

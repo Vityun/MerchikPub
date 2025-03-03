@@ -3,6 +3,8 @@ package ua.com.merchik.merchik.dialogs.features
 import android.util.Log
 import android.view.ViewGroup
 import android.widget.FrameLayout
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ComposeView
 import ua.com.merchik.merchik.Activities.Features.ui.theme.MerchikTheme
@@ -10,12 +12,10 @@ import ua.com.merchik.merchik.dialogs.features.indicator.LineSpinFadeLoaderIndic
 
 class LoadingIndicator(private val composeContainer: FrameLayout) {
 
+    private val isLoadingIndicatorVisible = mutableStateOf(false)
+
     fun show() {
         // Создаем ComposeView
-        Log.d(
-            "Debug!!! 1",
-            "composeContainer width: ${composeContainer.width}, height: ${composeContainer.height}"
-        )
 
         val composeView = ComposeView(composeContainer.context).apply {
             layoutParams = FrameLayout.LayoutParams(
@@ -41,7 +41,7 @@ class LoadingIndicator(private val composeContainer: FrameLayout) {
         )
         // Добавляем в контейнер
         composeContainer.addView(composeView)
-
+        isLoadingIndicatorVisible.value = true
         Log.d(
             "Debug!!!!!!!!!",
             "composeContainer width: ${composeContainer.width}, height: ${composeContainer.height}"
@@ -51,7 +51,10 @@ class LoadingIndicator(private val composeContainer: FrameLayout) {
 
     fun hide() {
         // Удаляем все дочерние элементы (или конкретный ComposeView)
+        isLoadingIndicatorVisible.value = false
         composeContainer.removeAllViews()
     }
+
+    fun isLoadingIndicatorShow(): Boolean = isLoadingIndicatorVisible.value
 
 }

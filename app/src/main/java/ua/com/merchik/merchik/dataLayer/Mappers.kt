@@ -166,7 +166,7 @@ enum class ContextUI{
     SAMPLE_PHOTO_FROM_OPTION_158604,    // Фото витрины наполненности (41) +
     SAMPLE_PHOTO_FROM_OPTION_157277,    // Фото акционного товра + ценник (28? = 26!)
     SAMPLE_PHOTO_FROM_OPTION_157354,    // Фото ДМП (42)
-
+    SAMPLE_PHOTO_FROM_OPTION_164355     // Фото планограмы (5)
 
 }
 

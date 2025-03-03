@@ -3,6 +3,8 @@ package ua.com.merchik.merchik.Activities.WorkPlanActivity;
 import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
@@ -31,6 +33,8 @@ import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.RecycleViewWPAdapter;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
+import ua.com.merchik.merchik.dialogs.features.LoadingDialogWithPercent;
+import ua.com.merchik.merchik.dialogs.features.dialogLoading.ProgressViewModel;
 import ua.com.merchik.merchik.retrofit.CheckInternet.CheckServer;
 import ua.com.merchik.merchik.retrofit.CheckInternet.NetworkUtil;
 import ua.com.merchik.merchik.toolbar_menus;
@@ -77,7 +81,7 @@ public class WPDataActivity extends toolbar_menus {
         this.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN); //Убирает фокус с полей ввода
 
         // Установка закладок
-        setTabs();
+        setTabs(getIntent().getBooleanExtra("initialOpent",false));
 
         textLesson = 816;
         videoLesson = 817;
@@ -93,6 +97,8 @@ public class WPDataActivity extends toolbar_menus {
         wpDataInfo();   // Сообщение какие-то.
 
     }//------------------------------- /ON CREATE --------------------------------------------------
+
+
 
     private RecyclerView recyclerView;
     private RecycleViewWPAdapter adapter;
@@ -132,12 +138,12 @@ public class WPDataActivity extends toolbar_menus {
     }
 
 
-    private void setTabs(){
+    private void setTabs(boolean initialOpen){
         tabLayout.getTabAt(0).setText("План работ");
         tabLayout.getTabAt(1).setText("Карта");
 
         fragmentManager = getSupportFragmentManager();
-        WPDataTab tabAdapter = new WPDataTab(fragmentManager, getLifecycle(), tabLayout.getTabCount());
+        WPDataTab tabAdapter = new WPDataTab(fragmentManager, getLifecycle(), tabLayout.getTabCount(), initialOpen);
         viewPager.setAdapter(tabAdapter);
 //        viewPager.addOnPageChangeListener(new TabLayout.TabLayoutOnPageChangeListener(tabLayout));
         tabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {

@@ -11,6 +11,7 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
@@ -19,6 +20,8 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Handler;
+import android.os.Looper;
 import android.text.Html;
 import android.util.Log;
 import android.view.Menu;
@@ -44,13 +47,12 @@ import androidx.core.graphics.drawable.DrawableCompat;
 import androidx.core.view.GravityCompat;
 import androidx.core.view.MenuItemCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
-import androidx.lifecycle.Observer;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.preference.PreferenceManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-import androidx.work.OneTimeWorkRequest;
+import androidx.work.Data;
 import androidx.work.WorkInfo;
-import androidx.work.WorkManager;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.navigation.NavigationView;
@@ -88,6 +90,7 @@ import ua.com.merchik.merchik.Activities.MenuMainActivity;
 import ua.com.merchik.merchik.Activities.PhotoLogActivity.PhotoLogActivity;
 import ua.com.merchik.merchik.Activities.PremiumActivity.PremiumActivity;
 import ua.com.merchik.merchik.Activities.ReferencesActivity.ReferencesActivity;
+import ua.com.merchik.merchik.Activities.PhotoDownloaderViewModel;
 import ua.com.merchik.merchik.Activities.TaskAndReclamations.TARActivity;
 import ua.com.merchik.merchik.Activities.ToolbarActivity.WebSocketStatus;
 import ua.com.merchik.merchik.Activities.WorkPlanActivity.WPDataActivity;
@@ -99,7 +102,6 @@ import ua.com.merchik.merchik.ServerExchange.TablesExchange.PhotoMerchikExchange
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.SamplePhotoExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.ShowcaseExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesLoadingUnloading;
-import ua.com.merchik.merchik.ServerExchange.workmager.DownloadImagesWorker;
 import ua.com.merchik.merchik.Utils.FileCompressor;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.Database.Room.Chat.ChatSDB;
@@ -134,6 +136,8 @@ import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
 
 
 public class toolbar_menus extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
+    protected PhotoDownloaderViewModel photoDownloaderViewModel;
+
     public Globals globals = new Globals();
     static trecker trecker = new trecker();
     public static WebSocket webSocket;
@@ -179,12 +183,42 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
     //---------------------------
 
     //----------------------------
+    private SharedPreferences prefs;
+    private final String PREFS_NAME = "AppPrefs";
+    private final String KEY_IS_FIRST_LOADING = "isFirstLoading";
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        this.exchange = new Exchange();
+        photoDownloaderViewModel = new ViewModelProvider(this).get(PhotoDownloaderViewModel.class);
+        this.exchange = new Exchange(photoDownloaderViewModel);
         this.exchange.context = this;
+
+        photoDownloaderViewModel.getWorkInfo().observe(this, workInfos -> {
+            if (workInfos == null || workInfos.isEmpty()) return;
+
+            // Берем последнюю задачу в очереди
+            WorkInfo lastWorkInfo = workInfos.get(workInfos.size() - 1);
+
+            Data progress = lastWorkInfo.getProgress();
+            String status = progress.getString("status");
+
+            if (status != null) {
+                if ("start".equals(status)) {
+                    photoDownloaderViewModel.setLoading(true);
+                } else if ("end".equals(status)) {
+                    photoDownloaderViewModel.setLoading(false);
+                }
+            }
+
+            // Дополнительная проверка по состоянию
+            if (lastWorkInfo.getState().isFinished()) {
+                photoDownloaderViewModel.setLoading(false);
+            }
+
+        });
+
 
 
         try {
@@ -600,52 +634,6 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
         inflater.inflate(R.menu.toolbar_menu, menu);
         this.menu = menu;
 
-//        // Pika отображение колокольчика если есть активные задачи или рекламации
-//        bell1 = menu.findItem(R.id.menu_toolbar_bell);
-//        drawable = bell1.getIcon();
-//        drawable = DrawableCompat.wrap(drawable);
-//        long date1 = Clock.getDatePeriodLong(-30) / 1000;
-//        tarActListTask = SQL_DB.tarDao().getAllActiveByTp(userId, 1, date1);
-//        tarActListRecl = SQL_DB.tarDao().getAllActiveByTp(userId, 0, date1);
-//        if ((tarActListTask.size()+tarActListRecl.size())>0) {
-//            DrawableCompat.setTint(drawable, ContextCompat.getColor(toolbar_menus.this, R.color.colorInetRed));
-//            bell1.setIcon(drawable);
-//            bell1.setVisible(true);
-//            bell1.setEnabled(true);
-//        } else {
-//            bell1.setVisible(false);
-//            bell1.setEnabled(false);
-//        }
-//
-//        try {
-//            MenuItem item1 = menu.findItem(R.id.menu_toolbar_bell);
-//            item1.setOnMenuItemClickListener(v ->{
-//                Toast.makeText(this, "Zad", Toast.LENGTH_SHORT).show();
-//                return true;
-//            });
-////            item1.getActionView().setOnClickListener(v -> {
-//                //           Toast.makeText(this, "Zad", Toast.LENGTH_SHORT).show();
-///*            if (tarActListTask.size()>0) {
-//
-//                Intent intent = new Intent(this, TARActivity.class);
-//                intent.putExtra("TAR_type", 1);
-//                startActivity(intent);
-//
-//            } else if (tarActListRecl.size()>0) {
-//
-//                Intent intent = new Intent(this, TARActivity.class);
-//                intent.putExtra("TAR_type", 0);
-//                startActivity(intent);
-//
-//            }
-//*/
-////            });
-//        }catch (Exception e){
-//            e.printStackTrace();
-//            Log.e("test_bell", "Exception e: " + e);
-//        }
-//
-
         light = menu.findItem(R.id.action_check);
         drawable = light.getIcon();
 
@@ -662,6 +650,15 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
 //        pingServer(1);
         synchronizationSignal("SIGNAL", null);
 
+        prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+
+        photoDownloaderViewModel.getLoadingState().observe(this, isLoading -> {
+            if (isLoading) {
+                loadingStart();
+            } else {
+                loadingFinish();
+            }
+        });
         /**MERCHIK_1
          * Довгий клік по синхронізації. Запускає модальне віконечко в якому можна обрати що саме я
          * хочу синхронізовувати(це в мене костиляка, на неї можна не зациклюватись)*/
@@ -725,6 +722,8 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                         }
                         exchange.context = this;
                         Exchange.exchangeTime = 0;
+                        if (exchange.getViewModel() == null)
+                            exchange.setViewModel(photoDownloaderViewModel);
                         exchange.startExchange();
 
 //                        exchange.uploadTARComments(null);
@@ -793,8 +792,8 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                         /**MERCHIK_1
                          * А це наче завантажуються фото за минулі роботи які виконував мерчандайзер,
                          * але перевстановив додаток та загубив ці фото*/
-                        PhotoMerchikExchange photoMerchikExchange = new PhotoMerchikExchange();
-                        photoMerchikExchange.getPhotoFromSite();
+//                        PhotoMerchikExchange photoMerchikExchange = new PhotoMerchikExchange();
+//                        photoMerchikExchange.getPhotoFromSite();
                     } catch (Exception e) {
                         Globals.writeToMLOG("ERROR", "TOOBAR/CLICK_EXCHANGE/ShowcaseExchange", "Exception e: " + e);
                         Globals.writeToMLOG("ERROR", "TOOBAR/CLICK_EXCHANGE/ShowcaseExchange", "Exception e: " + Arrays.toString(e.getStackTrace()));
@@ -878,8 +877,8 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
         if (id == R.id.action_settings) {
             internetStatus = server.internetStatus();
 
-//            ib.setVisibility(View.GONE);
-//            loadingIndicator.show();
+            ib.setVisibility(View.GONE);
+            loadingIndicator.show();
 
             try {
                 AppUsersDB appUsersDB = AppUserRealm.getAppUser();
@@ -1211,6 +1210,7 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                         exchange.context = toolbar_menus.this;
                         exchange.startExchange();
 
+//                        loadingStart();
 
                         PhotoReports photoReports = new PhotoReports(toolbar_menus.this);
                         if (photoReports.permission) {
@@ -2354,6 +2354,56 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
             Globals.writeToMLOG("ERROR", "synchronizationSignal", "Exception e: " + e);
             Globals.writeToMLOG("ERROR", "synchronizationSignal", "Exception e..: " + Arrays.toString(e.getStackTrace()));
         }
+    }
+
+
+    private void loadingFinish() {
+        if (loadingIndicator != null && ib != null) {
+            loadingIndicator.hide();
+            ib.setVisibility(View.VISIBLE);
+        }
+    }
+
+
+    private Handler handler = new Handler(Looper.getMainLooper());
+    private Runnable stopLoadingRunnable;
+
+    private void loadingStart() {
+        if (loadingIndicator != null && ib != null && !loadingIndicator.isLoadingIndicatorShow()) {
+            ib.setVisibility(View.GONE);
+            loadingIndicator.show();
+        }
+        boolean isFirstLoading = prefs.getBoolean(KEY_IS_FIRST_LOADING, true);
+
+        if (isFirstLoading) {
+            new MessageDialogBuilder(this)
+                    .setStatus(DialogStatus.NORMAL)
+                    .setTitle("Завантаження фотографій")
+                    .setSubTitle("Відбувається обмін із сервером")
+                    .setMessage("Ви вже можете користуватися програмою, але обмін ще повністю не виконаний і частина даних, у тому числі фотографій можуть бути не доступні. Статус обміну показує індикатор завантаження у верхній частині екрана")
+                    .setOnConfirmAction(()-> Unit.INSTANCE)
+                    .show();
+            // Записываем в SharedPreferences, что первый показ уже был
+            prefs.edit().putBoolean(KEY_IS_FIRST_LOADING, false).apply();
+        }
+
+        // костыли временные
+        // Удаляем предыдущий таймер (если есть)
+
+//        if (!getIntent().getBooleanExtra("initialOpent",false)) {
+//            if (stopLoadingRunnable != null) {
+//                handler.removeCallbacks(stopLoadingRunnable);
+//            }
+//
+//            // Запускаем таймер на 60 секунд для авто-остановки загрузки
+//            stopLoadingRunnable = new Runnable() {
+//                @Override
+//                public void run() {
+//                    loadingFinish(); // Остановка загрузки через 60 секунд
+//                }
+//            };
+//            handler.postDelayed(stopLoadingRunnable, 120 * 1000); // 60 секунд
+//        }
     }
 
 

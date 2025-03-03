@@ -184,6 +184,7 @@ public class menu_login extends AppCompatActivity {
 
 //            intent = new Intent(menu_login.this, MenuMainActivity.class);
             intent = new Intent(menu_login.this, WPDataActivity.class);
+            intent.putExtra("initialOpent", true);
             progress = new BlockingProgressDialog(this, "Вход", "Вход в систему");
 
 
@@ -248,6 +249,7 @@ public class menu_login extends AppCompatActivity {
 
 //                intent = new Intent(menu_login.this, MenuMainActivity.class);
                 intent = new Intent(menu_login.this, WPDataActivity.class);
+                intent.putExtra("initialOpent", true);
                 if (debugStatus.equals("1")) {
                     AlertDialog.Builder builder = new AlertDialog.Builder(this);
                     builder.setCancelable(false);
@@ -516,6 +518,7 @@ public class menu_login extends AppCompatActivity {
         try {
 //            intent = new Intent(menu_login.this, MenuMainActivity.class);
             intent = new Intent(menu_login.this, WPDataActivity.class);
+            intent.putExtra("initialOpent", true);
             appLogin();
         } catch (Exception e) {
             globals.alertDialogMsg(this, "(0)Ошибка при входе: " + e);
@@ -1460,6 +1463,7 @@ public class menu_login extends AppCompatActivity {
                                             dialog.show();
                                         } else {
                                             intent.putExtra("InternetStatusMassage", "SHOW_MASSAGE");
+                                            intent.putExtra("initialOpent", true);
                                             startActivity(intent); // ++
                                         }
                                         // ------------

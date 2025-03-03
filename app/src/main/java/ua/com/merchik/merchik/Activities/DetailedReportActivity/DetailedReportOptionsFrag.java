@@ -117,57 +117,6 @@ public class DetailedReportOptionsFrag extends Fragment {
         return new DetailedReportOptionsFrag();
     }
 
-/*    @Override
-    public void onResume() {
-        Globals.writeToMLOG("INFO", "DetailedReportOptionsFrag", "onResume");
-        try {
-            recycleViewDRAdapter.notifyDataSetChanged();
-        } catch (Exception e) {
-            Globals.writeToMLOG("INFO", "DetailedReportOptionsFrag", "Exception e: " + e);
-            try {
-//                getActivity().recreate();
-                test();
-                rvContacts.setAdapter(recycleViewDRAdapter);
-                rvContacts.setLayoutManager(new LinearLayoutManager(mContext, LinearLayoutManager.VERTICAL, false));
-            } catch (Exception exception) {
-                Globals.writeToMLOG("INFO", "DetailedReportOptionsFrag", "Exception exception: " + exception);
-            }
-        }
-        super.onResume();
-    }*/
-
-/*    @Override
-    public void onSaveInstanceState(Bundle outState) {
-        super.onSaveInstanceState(outState);
-        Globals.writeToMLOG("INFO", "DetailedReportOptionsFrag/onSaveInstanceState", "outState: " + outState);
-        ArrayList<Parcelable> parcelableList = new ArrayList<>();
-        for (Data data : list) {
-            parcelableList.add(data);
-        }
-        outState.putParcelableArrayList("list", parcelableList);
-        outState.putParcelable("wpDataDB", wpDataDB);
-//        outState.putSerializable("appCompatActivity", (Serializable) mContext);
-    }
-
-    @Override
-    public void onViewStateRestored(Bundle savedInstanceState) {
-        super.onViewStateRestored(savedInstanceState);
-        Globals.writeToMLOG("INFO", "DetailedReportOptionsFrag/onViewStateRestored", "savedInstanceState: " + savedInstanceState);
-        if (savedInstanceState != null) {
-            ArrayList<Parcelable> parcelableList = savedInstanceState.getParcelableArrayList("list");
-            if (parcelableList != null) {
-                list = new ArrayList<>();
-                for (Parcelable parcelable : parcelableList) {
-                    if (parcelable instanceof Data) {
-                        list.add((Data) parcelable);
-                    }
-                }
-            }
-            wpDataDB = savedInstanceState.getParcelable("wpDataDB");
-//            mContext = (AppCompatActivity) savedInstanceState.getSerializable("appCompatActivity");
-        }
-    }*/
-
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);

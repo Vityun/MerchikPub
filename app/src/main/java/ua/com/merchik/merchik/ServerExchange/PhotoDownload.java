@@ -15,24 +15,35 @@ import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 
 import java.io.InputStream;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.TimeZone;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
+import io.realm.Realm;
 import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
+import ua.com.merchik.merchik.Activities.PhotoDownloaderViewModel;
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.DownloadPictureService;
 import ua.com.merchik.merchik.Globals;
+import ua.com.merchik.merchik.ServerExchange.TablesExchange.SamplePhotoExchange;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
 import ua.com.merchik.merchik.data.RealmModels.SynchronizationTimetableDB;
@@ -64,7 +75,24 @@ import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
 public class PhotoDownload {
 //    public final Globals globals = new Globals();
 
-    private final ExecutorService executorService = Executors.newFixedThreadPool(8);  // Максимум 8 потока
+    private final ExecutorService executorService;
+    private final PhotoDownloaderViewModel viewModel;
+    private final AtomicInteger activeTasks = new AtomicInteger(0); // Счетчик активных задач
+
+    public PhotoDownload() {
+        this.executorService = Executors.newFixedThreadPool(8);
+        this.viewModel = null;
+    }
+
+    public PhotoDownload(ExecutorService executor) {
+        this.executorService = executor;
+        this.viewModel = null;
+    }
+
+    public PhotoDownload(ExecutorService executor, PhotoDownloaderViewModel viewModel) {
+        this.executorService = executor;
+        this.viewModel = viewModel;
+    }
 
     /**
      * 09.09.2022
@@ -159,58 +187,66 @@ public class PhotoDownload {
      */
     public void downloadPhoto(String photoDir, String photoTypeDir, List<TovarImgList> list, Clicks.clickStatusMsg result) {
         for (TovarImgList item : list) {
-            String url = item.getPhotoUrl().replace("thumb_", "");
-            retrofit2.Call<ResponseBody> call = RetrofitBuilder.getRetrofitInterface().DOWNLOAD_PHOTO_BY_URL(url);
-            call.enqueue(new Callback<ResponseBody>() {
-                @Override
-                public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
-                    if (response.isSuccessful()) {
-                        if (response.body() != null) {
-                            try {
-                                Bitmap bmp = BitmapFactory.decodeStream(response.body().byteStream());
-                                String path = Globals.saveImageHD(bmp, photoDir, photoTypeDir + item.getID());
+            executorService.submit(() -> {
+                try {
 
-                                if (StackPhotoRealm.stackPhotoDBGetPhotoBySiteId(item.getID()) == null) {
-                                    int id = RealmManager.stackPhotoGetLastId();
-                                    id++;
+                    String url = item.getPhotoUrl().replace("thumb_", "");
+                    retrofit2.Call<ResponseBody> call = RetrofitBuilder.getRetrofitInterface().DOWNLOAD_PHOTO_BY_URL(url);
+                    call.enqueue(new Callback<ResponseBody>() {
+                        @Override
+                        public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                            if (response.isSuccessful()) {
+                                if (response.body() != null) {
+                                    try {
+                                        Bitmap bmp = BitmapFactory.decodeStream(response.body().byteStream());
+                                        String path = Globals.saveImageHD(bmp, photoDir, photoTypeDir + item.getID());
 
-                                    StackPhotoDB stackPhotoDB = new StackPhotoDB();
-                                    stackPhotoDB.setId(id);
-                                    stackPhotoDB.setPhotoServerId(item.getID());
-                                    stackPhotoDB.setVpi(0);
-                                    stackPhotoDB.setCreate_time(Long.parseLong(item.getDt()) * 1000);
-                                    stackPhotoDB.setUpload_to_server(System.currentTimeMillis());
-                                    stackPhotoDB.setGet_on_server(System.currentTimeMillis());
-                                    stackPhotoDB.setPhoto_num(path);
-                                    stackPhotoDB.setPhoto_type(Integer.valueOf(item.getPhotoTp()));
-                                    stackPhotoDB.setUpload_time(0);
-                                    stackPhotoDB.setUpload_status(0);
-                                    stackPhotoDB.setStatus(false);
-                                    stackPhotoDB.setCode_iza(item.codeIZA);
+                                        if (StackPhotoRealm.stackPhotoDBGetPhotoBySiteId(item.getID()) == null) {
+                                            int id = RealmManager.stackPhotoGetLastId();
+                                            id++;
+
+                                            StackPhotoDB stackPhotoDB = new StackPhotoDB();
+                                            stackPhotoDB.setId(id);
+                                            stackPhotoDB.setPhotoServerId(item.getID());
+                                            stackPhotoDB.setVpi(0);
+                                            stackPhotoDB.setCreate_time(Long.parseLong(item.getDt()) * 1000);
+                                            stackPhotoDB.setUpload_to_server(System.currentTimeMillis());
+                                            stackPhotoDB.setGet_on_server(System.currentTimeMillis());
+                                            stackPhotoDB.setPhoto_num(path);
+                                            stackPhotoDB.setPhoto_type(Integer.valueOf(item.getPhotoTp()));
+                                            stackPhotoDB.setUpload_time(0);
+                                            stackPhotoDB.setUpload_status(0);
+                                            stackPhotoDB.setStatus(false);
+                                            stackPhotoDB.setCode_iza(item.codeIZA);
 
 
-                                    RealmManager.stackPhotoSavePhoto(stackPhotoDB);
-                                    result.onSuccess("photo id = " + id +
-                                            ", PhotoServerId: " + item.getID() +
-                                            ", hash: " + item.getHash());
+                                            RealmManager.stackPhotoSavePhoto(stackPhotoDB);
+                                            result.onSuccess("photo id = " + id +
+                                                    ", PhotoServerId: " + item.getID() +
+                                                    ", hash: " + item.getHash());
+                                        }
+                                    } catch (Exception e) {
+                                        result.onFailure("downloadPhotoTest/onResponse/Exception e: " + e);
+                                    }
+                                } else {
+                                    result.onFailure("downloadPhotoTest/onResponse/response.body() - тело пустое.");
                                 }
-                            } catch (Exception e) {
-                                result.onFailure("downloadPhotoTest/onResponse/Exception e: " + e);
+                            } else {
+                                result.onFailure("downloadPhotoTest/onResponse/response.isSuccessful(): " + response.code());
                             }
-                        } else {
-                            result.onFailure("downloadPhotoTest/onResponse/response.body() - тело пустое.");
                         }
-                    } else {
-                        result.onFailure("downloadPhotoTest/onResponse/response.isSuccessful(): " + response.code());
-                    }
-                }
 
-                @Override
-                public void onFailure(Call<ResponseBody> call, Throwable t) {
-                    result.onFailure("downloadPhotoTest/onFailure/Throwable t: " + t);
+                        @Override
+                        public void onFailure(Call<ResponseBody> call, Throwable t) {
+                            result.onFailure("downloadPhotoTest/onFailure/Throwable t: " + t);
+                        }
+                    });
+                } catch (Exception e) {
+                    result.onFailure("downloadPhotoTest/onFailure/Exception: " + e.getMessage());
                 }
             });
         }
+
     }
 
     /**
@@ -543,25 +579,12 @@ public class PhotoDownload {
         SynchronizationTimetableDB synchronizationTimetableDB = RealmManager.INSTANCE.copyFromRealm(RealmManager.getSynchronizationTimetableRowByTable("stack_photo"));
         data.dt_upload = String.valueOf(synchronizationTimetableDB.getVpi_app());
 
+        data.dt_upload = "0";
+
         String contentType = "application/json";
         JsonObject convertedObject = new Gson().fromJson(new Gson().toJson(data), JsonObject.class);
 
         Globals.writeToMLOG("INFO", "" + getClass().getName() + "/getPhotoFromServer/convertedObject", "convertedObject: " + convertedObject);
-
-//        {
-//            retrofit2.Call<JsonObject> call = RetrofitBuilder.getRetrofitInterface().MOD_IMAGES_VIEW_CALL_JSON(contentType, convertedObject);
-//            call.enqueue(new Callback<JsonObject>() {
-//                @Override
-//                public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
-//                    Log.d("smarti", "onResponse: ");
-//                }
-//
-//                @Override
-//                public void onFailure(Call<JsonObject> call, Throwable t) {
-//                    Log.d("smarti", "onResponse: ");
-//                }
-//            });
-//        }
 
         retrofit2.Call<ModImagesView> call = RetrofitBuilder.getRetrofitInterface().MOD_IMAGES_VIEW_CALL(contentType, convertedObject);
         call.enqueue(new retrofit2.Callback<ModImagesView>() {
@@ -577,7 +600,8 @@ public class PhotoDownload {
                     if (size > 0) {
                         synchronizationTimetableDB.setVpi_app(System.currentTimeMillis() / 1000);
                         RealmManager.setToSynchronizationTimetableDB(synchronizationTimetableDB);
-                        savePhotoToDB(response.body().getList());
+                        savePhotoInfoToDB(response.body().getList());
+//                        savePhotoToDB(response.body().getList());
                     }
 
                     Log.e("getPhotoFromServer", "response.body().getTotal(): " + response.body().getTotalPages());
@@ -594,93 +618,195 @@ public class PhotoDownload {
         });
     }
 
+//    private final Semaphore semaphore = new Semaphore(10); // Одновременно выполняются только 10 задач
+
 
     private void savePhotoToDB(List<ModImagesViewList> list) {
         try {
             Globals.writeToMLOG("INFO", getClass().getName() + "savePhotoToDB", "List<ModImagesViewList> list: " + list.size());
 
-            List<StackPhotoDB> stackList = new ArrayList<>();
+//            List<StackPhotoDB> stackList = new ArrayList<>();
+//            if (viewModel != null) {
+//                viewModel.loadingStart(); // Начало загрузки
+//            }
+
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+            sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
+            long thresholdTime = 0L;
+            try {
+                thresholdTime = Objects.requireNonNull(sdf.parse(Clock.today_7)).getTime() / 1000;
+            } catch (ParseException e) {
+                Globals.writeToMLOG("ERR", getClass().getName() + "/parseDate", "Exception: " + e);
+                return;
+            }
+
+
+            List<StackPhotoDB> stackPhotoDBList = new ArrayList<>();
 
             for (ModImagesViewList item : list) {
-//                if (StackPhotoRealm.stackPhotoDBGetPhotoBySiteId(item.getID()) == null) {
+                StackPhotoDB stackPhotoDB = new StackPhotoDB();
+
+                try {
+                    stackPhotoDB.setId(RealmManager.stackPhotoGetLastId() + 1);
+                    stackPhotoDB.setObject_id(1);   // Добавлено что б эти фотки не пытались выгружаться обычным обменом
+
+                    stackPhotoDB.code_dad2 = Long.parseLong(item.codeDad2);
+
+                    stackPhotoDB.dt = item.getDt();
+                    stackPhotoDB.setTime_event(Clock.getHumanTime3(item.getDt()));
+                    stackPhotoDB.setCreate_time(item.getDt() * 1000);// реквизиты что б фотки не выгружались обратно на сервер
+                    stackPhotoDB.setUpload_to_server(System.currentTimeMillis());// реквизиты что б фотки не выгружались обратно на сервер
+                    stackPhotoDB.setGet_on_server(System.currentTimeMillis());// реквизиты что б фотки не выгружались обратно на сервер
+
+                    stackPhotoDB.setPhotoServerId(item.getID());
+                    stackPhotoDB.setPhotoServerURL(item.getPhotoUrl());
+
+                    stackPhotoDB.setUser_id(Integer.valueOf(item.getMerchikId()));
+                    stackPhotoDB.setAddr_id(Integer.valueOf(item.getAddrId()));
+                    stackPhotoDB.setClient_id(item.getClientId());
+                    stackPhotoDB.setPhoto_type(Integer.valueOf(item.getPhotoTp()));
+                    stackPhotoDB.photo_hash = item.imgHash;
+                    stackPhotoDB.tovar_id = item.getTovarId();
+
+                    stackPhotoDB.showcase_id = item.showcase_id;
+                    stackPhotoDB.setCode_iza(item.codeIZA);
+                    stackPhotoDB.setDvi(Integer.valueOf(Objects.requireNonNullElse(item.getDvi(), "0")));
+
+                } catch (Exception e) {
+                    Log.e("Exception", ">>> e: " + e.getMessage());
+                }
+                stackPhotoDBList.add(stackPhotoDB);
 
                 if (StackPhotoRealm.stackPhotoDBGetPhotoByHASH(item.imgHash) == null) {
                     try {
-                        downloadPhoto(item.getPhotoUrl(), new ExchangeInterface.ExchangePhoto() {
-                            @Override
-                            public void onSuccess(Bitmap bitmap) {
-                                StackPhotoDB stackPhotoDB = new StackPhotoDB();
-                                stackPhotoDB.setId(RealmManager.stackPhotoGetLastId() + 1);
-                                stackPhotoDB.setObject_id(1);   // Добавлено что б эти фотки не пытались выгружаться обычным обменом
+                        activeTasks.incrementAndGet();
+                        final long finalThresholdTime = thresholdTime;
+                        executorService.submit(() -> {
+                            if (item.getDt() > finalThresholdTime) {
+                                downloadPhoto(item.getPhotoUrl(), new ExchangeInterface.ExchangePhoto() {
+                                    @Override
+                                    public void onSuccess(Bitmap bitmap) {
+                                        try {
+                                            StackPhotoDB stackPhotoDB = new StackPhotoDB();
+                                            stackPhotoDB.setId(RealmManager.stackPhotoGetLastId() + 1);
+                                            stackPhotoDB.setObject_id(1);   // Добавлено что б эти фотки не пытались выгружаться обычным обменом
 
-                                stackPhotoDB.code_dad2 = Long.parseLong(item.codeDad2);
+                                            stackPhotoDB.code_dad2 = Long.parseLong(item.codeDad2);
 
-                                stackPhotoDB.dt = item.getDt();
-                                stackPhotoDB.setTime_event(Clock.getHumanTime3(item.getDt()));
-                                stackPhotoDB.setCreate_time(item.getDt() * 1000);// реквизиты что б фотки не выгружались обратно на сервер
-                                stackPhotoDB.setUpload_to_server(System.currentTimeMillis());// реквизиты что б фотки не выгружались обратно на сервер
-                                stackPhotoDB.setGet_on_server(System.currentTimeMillis());// реквизиты что б фотки не выгружались обратно на сервер
+                                            stackPhotoDB.dt = item.getDt();
+                                            stackPhotoDB.setTime_event(Clock.getHumanTime3(item.getDt()));
+                                            stackPhotoDB.setCreate_time(item.getDt() * 1000);// реквизиты что б фотки не выгружались обратно на сервер
+                                            stackPhotoDB.setUpload_to_server(System.currentTimeMillis());// реквизиты что б фотки не выгружались обратно на сервер
+                                            stackPhotoDB.setGet_on_server(System.currentTimeMillis());// реквизиты что б фотки не выгружались обратно на сервер
 
-                                stackPhotoDB.setPhotoServerId(item.getID());
-                                stackPhotoDB.setPhotoServerURL(item.getPhotoUrl());
-//                                stackPhotoDB.setPhoto_num(Globals.savePhotoToPhoneMemory("/Manager", item.getID() + "_" + "small", bitmap));
+                                            stackPhotoDB.setPhotoServerId(item.getID());
+                                            stackPhotoDB.setPhotoServerURL(item.getPhotoUrl());
 
-                                stackPhotoDB.setUser_id(Integer.valueOf(item.getMerchikId()));
-                                stackPhotoDB.setAddr_id(Integer.valueOf(item.getAddrId()));
-                                stackPhotoDB.setClient_id(item.getClientId());
-                                stackPhotoDB.setPhoto_type(Integer.valueOf(item.getPhotoTp()));
-                                stackPhotoDB.photo_hash = item.imgHash;
-                                stackPhotoDB.tovar_id = item.getTovarId();
+                                            stackPhotoDB.setUser_id(Integer.valueOf(item.getMerchikId()));
+                                            stackPhotoDB.setAddr_id(Integer.valueOf(item.getAddrId()));
+                                            stackPhotoDB.setClient_id(item.getClientId());
+                                            stackPhotoDB.setPhoto_type(Integer.valueOf(item.getPhotoTp()));
+                                            stackPhotoDB.photo_hash = item.imgHash;
+                                            stackPhotoDB.tovar_id = item.getTovarId();
 
-                                stackPhotoDB.showcase_id = item.showcase_id;
+                                            stackPhotoDB.showcase_id = item.showcase_id;
+                                            stackPhotoDB.setCode_iza(item.codeIZA);
+                                            stackPhotoDB.setDvi(Integer.valueOf(item.getDvi()));
 
-                                stackPhotoDB.setCode_iza(item.codeIZA);
+                                            String photoPath = Globals.savePhotoToPhoneMemory("/Manager", item.getID(), bitmap);
 
-                                stackPhotoDB.setDvi(Integer.valueOf(item.getDvi()));
+                                            if (photoPath != null) {
+                                                stackPhotoDB.setPhoto_num(photoPath);
+                                                RealmManager.stackPhotoSavePhoto(stackPhotoDB);
+                                            } else {
+                                                Log.e("SAVE", "Ошибка при сохранении фото");
+                                            }
+                                        } catch (Exception e) {
+                                            Globals.writeToMLOG("ERR", getClass().getName() + "/onSuccess", "Exception: " + e);
+                                            checkFinish(); // Проверяем, закончились ли все задачи
+                                        } finally {
+                                            if (bitmap != null) {
+                                                bitmap.recycle(); // Освобождаем память
+                                            }
+                                            checkFinish(); // Проверяем, закончились ли все задачи
+                                        }
+                                    }
 
-                                try {
-                                    Globals.writeToMLOG("INFO", "PhotoMerchikExchange/getPhotoFromSite/savePhotoToDB", "stackPhotoDB: " + new Gson().toJson(stackPhotoDB));
-                                } catch (Exception e) {
-                                    Globals.writeToMLOG("INFO", "PhotoMerchikExchange/getPhotoFromSite/savePhotoToDB", "Exception e: " + e);
-                                }
-
-                                savePhotoAndUpdateStackPhotoDB("/Manager", item.getID() + "_small", bitmap, stackPhotoDB);
-
-//                                RealmManager.stackPhotoSavePhoto(stackPhotoDB);
-
-                                stackList.add(stackPhotoDB);
+                                    @Override
+                                    public void onFailure(String error) {
+                                        Globals.writeToMLOG("ERR", getClass().getName() + "savePhotoToDB/onFailure", "String error: " + error);
+                                        checkFinish(); // Проверяем, закончились ли все задачи
+                                    }
+                                });
                             }
-
-                            @Override
-                            public void onFailure(String error) {
-                                Globals.writeToMLOG("ERR", getClass().getName() + "savePhotoToDB/onFailure", "String error: " + error);
-                            }
+//                            else {
+//                                // Сохраняем в БД без фото
+//                                try (Realm realm = Realm.getDefaultInstance()) { // Открываем Realm в потоке
+////                                    semaphore.acquire();
+//                                    long lastId = RealmManager.stackPhotoGetLastId(realm);
+//                                    realm.executeTransaction(r -> {
+//                                        StackPhotoDB stackPhotoDB = r.createObject(StackPhotoDB.class, lastId + 1);
+//                                        stackPhotoDB.setObject_id(1);
+//                                        stackPhotoDB.code_dad2 = Long.parseLong(item.codeDad2);
+//                                        stackPhotoDB.dt = item.getDt();
+//                                        stackPhotoDB.setTime_event(Clock.getHumanTime3(item.getDt()));
+//                                        stackPhotoDB.setCreate_time(item.getDt() * 1000);
+//                                        stackPhotoDB.setUpload_to_server(System.currentTimeMillis());
+//                                        stackPhotoDB.setGet_on_server(System.currentTimeMillis());
+//                                        stackPhotoDB.setPhotoServerId(item.getID());
+//                                        stackPhotoDB.setPhotoServerURL(item.getPhotoUrl());
+//                                        stackPhotoDB.setUser_id(Integer.parseInt(item.getMerchikId()));
+//                                        stackPhotoDB.setAddr_id(Integer.parseInt(item.getAddrId()));
+//                                        stackPhotoDB.setClient_id(item.getClientId());
+//                                        stackPhotoDB.setPhoto_type(Integer.parseInt(item.getPhotoTp()));
+//                                        stackPhotoDB.photo_hash = item.imgHash;
+//                                        stackPhotoDB.tovar_id = item.getTovarId();
+//                                        stackPhotoDB.showcase_id = item.showcase_id;
+//                                        stackPhotoDB.setCode_iza(item.codeIZA);
+//                                        stackPhotoDB.setDvi(Integer.parseInt(item.getDvi()));
+//                                    });
+//
+////                                    saveToRealm(stackPhotoDB);
+////                                    RealmManager.stackPhotoSavePhoto(stackPhotoDB);
+//                                } catch (Exception e) {
+//                                    Globals.writeToMLOG("ERR", getClass().getName() + "/saveWithoutPhoto", "Exception: " + e);
+//                                } finally {
+////                                    semaphore.release(); // Освобождаем место
+//                                    checkFinish();
+//                                }
+//                            }
                         });
+
 
                     } catch (Exception e) {
                         Globals.writeToMLOG("ERR", getClass().getName() + "savePhotoToDB", "Create new data Exception e: " + e);
+                        checkFinish(); // Проверяем, закончились ли все задачи
                     }
                 }
             }
+            RealmManager.stackPhotoSavePhoto(stackPhotoDBList);
 
-            Globals.writeToMLOG("INFO", getClass().getName() + "savePhotoToDB", "stackList: " + stackList.size());
-//            RealmManager.stackPhotoSavePhoto(stackList);
 
             // Сохранение Впемени последнего изменения таблички
             SynchronizationTimetableDB sync = RealmManager.getSynchronizationTimetableRowByTable("stack_photo");
-
-            Log.e("getPhotoFromServer", "savePhotoToDB.sync.START: " + sync.getVpi_app());
 
             RealmManager.INSTANCE.executeTransaction((realm) -> {
                 sync.setVpi_app(System.currentTimeMillis() / 1000);
             });
 
-            Log.e("getPhotoFromServer", "savePhotoToDB.sync.END: " + sync.getVpi_app());
-
             RealmManager.setToSynchronizationTimetableDB(sync);
         } catch (Exception e) {
             Globals.writeToMLOG("ERR", getClass().getName() + "savePhotoToDB", "Exception e: " + e);
+            checkFinish(); // Проверяем, закончились ли все задачи
         }
+        checkFinish(); // Проверяем, закончились ли все задачи
+    }
+
+    private void checkFinish() {
+//        if (activeTasks.decrementAndGet() == 0) {
+//            if (viewModel != null)
+//                viewModel.loadingFinish(); // Вызываем, когда все фото загружены
+//        }
     }
 
     public interface downloadPhotoInterface {
@@ -689,7 +815,8 @@ public class PhotoDownload {
         void onFailure(String s);
     }
 
-    public void downloadPhoto(boolean size, StackPhotoDB data, downloadPhotoInterface downloadPhotoInterface) {
+    public void downloadPhoto(boolean size, StackPhotoDB data, downloadPhotoInterface
+            downloadPhotoInterface) {
 
         Log.e("FULL_PHOTO", "size: " + size);
 
@@ -769,7 +896,8 @@ public class PhotoDownload {
      *
      * @param data - JSON запрос на сайт для получения списка фоток.
      */
-    public void getPhotoInfoAndSaveItToDB(PhotoTableRequest data, Clicks.clickObjectAndStatus<StackPhotoDB> clickUpdatePhoto) {
+    public void getPhotoInfoAndSaveItToDB(PhotoTableRequest
+                                                  data, Clicks.clickObjectAndStatus<StackPhotoDB> clickUpdatePhoto) {
         Log.e("getPhotoInfo2", "HERE");
         JsonObject object = new Gson().fromJson(new Gson().toJson(data), JsonObject.class);
 
@@ -891,7 +1019,8 @@ public class PhotoDownload {
      * MERCHIK_1 24.11.2024
      * Можливо через саме це місце треба буде грейдити інтерфейс користувача коли йому завантажилися фото, які його цікавлять
      */
-    public void savePhotoInfoToDB(List<ModImagesViewList> list, Clicks.clickObjectAndStatus<StackPhotoDB> clickUpdatePhoto) {
+    public void savePhotoInfoToDB
+    (List<ModImagesViewList> list, Clicks.clickObjectAndStatus<StackPhotoDB> clickUpdatePhoto) {
         List<StackPhotoDB> stackList = new ArrayList<>();   // Создаём список для записи в БД
         int id = RealmManager.stackPhotoGetLastId() + 1;    // Для новой записи добавляем ID
 
@@ -924,7 +1053,8 @@ public class PhotoDownload {
                 stackPhotoDB.setPhoto_type(Integer.valueOf(item.getPhotoTp()));
                 stackPhotoDB.setPhoto_typeTxt(String.valueOf(item.getPhotoTpTxt()));
 
-                stackPhotoDB.setDvi(Integer.valueOf(item.getDvi()));
+                stackPhotoDB.setDvi(Integer.valueOf(Objects.requireNonNullElse(item.getDvi(), "0")));
+
                 stackList.add(stackPhotoDB);
 
                 id++;
@@ -942,35 +1072,54 @@ public class PhotoDownload {
         for (ModImagesViewList item : list) {
 
             // Если у меня в БД нет записи с таким `photo site ID` - создаю новую
+
+
             if (StackPhotoRealm.stackPhotoDBGetPhotoBySiteId(item.getID()) == null) {
                 StackPhotoDB stackPhotoDB = new StackPhotoDB();
-                stackPhotoDB.setId(id);
+                try {
+                    stackPhotoDB.setId(id);
 
-                stackPhotoDB.setDt(item.getDt());
+                    stackPhotoDB.setObject_id(1);   // Добавлено что б эти фотки не пытались выгружаться обычным обменом
 
-                stackPhotoDB.setCreate_time(item.getDt() * 1000);// реквизиты что б фотки не выгружались обратно на сервер
-                stackPhotoDB.setUpload_to_server(item.getDt() * 1000);// реквизиты что б фотки не выгружались обратно на сервер
-                stackPhotoDB.setGet_on_server(item.getDt() * 1000);// реквизиты что б фотки не выгружались обратно на сервер
+                    stackPhotoDB.code_dad2 = Long.parseLong(Objects.requireNonNullElse(item.codeDad2, "0"));
 
-                stackPhotoDB.setPhotoServerId(item.getID());
-                stackPhotoDB.setPhotoServerURL(item.getPhotoUrl());
+                    stackPhotoDB.setTime_event(Clock.getHumanTime3(item.getDt()));
 
-                stackPhotoDB.setUser_id(Integer.valueOf(item.getMerchikId()));
-                stackPhotoDB.setUserTxt(item.getMerchikIdTxt());
+                    stackPhotoDB.photo_hash = Objects.requireNonNullElse(item.imgHash, "");
+                    stackPhotoDB.tovar_id = Objects.requireNonNullElse(item.getTovarId(), "");
 
-                stackPhotoDB.setAddr_id(Integer.valueOf(item.getAddrId()));
-                stackPhotoDB.setAddressTxt(item.getAddrIdTxt());
+                    stackPhotoDB.showcase_id = item.showcase_id;
+                    stackPhotoDB.setCode_iza(item.codeIZA);
+                    stackPhotoDB.setDvi(Integer.valueOf(item.getDvi()));
 
-                stackPhotoDB.setClient_id(item.getClientId());
-                stackPhotoDB.setCustomerTxt(item.getClientIdTxt());
 
-                stackPhotoDB.setPhoto_type(Integer.valueOf(item.getPhotoTp()));
-                stackPhotoDB.setPhoto_typeTxt(String.valueOf(item.getPhotoTpTxt()));
+                    stackPhotoDB.setDt(item.getDt());
 
-                stackPhotoDB.setDvi(Integer.valueOf(item.getDvi()));
+                    stackPhotoDB.setCreate_time(item.getDt() * 1000);// реквизиты что б фотки не выгружались обратно на сервер
+                    stackPhotoDB.setUpload_to_server(item.getDt() * 1000);// реквизиты что б фотки не выгружались обратно на сервер
+                    stackPhotoDB.setGet_on_server(item.getDt() * 1000);// реквизиты что б фотки не выгружались обратно на сервер
 
-                stackPhotoDB.setCode_iza(item.codeIZA);
+                    stackPhotoDB.setPhotoServerId(item.getID());
+                    stackPhotoDB.setPhotoServerURL(item.getPhotoUrl());
 
+                    stackPhotoDB.setUser_id(Integer.valueOf(item.getMerchikId()));
+                    stackPhotoDB.setUserTxt(item.getMerchikIdTxt());
+
+                    stackPhotoDB.setAddr_id(Integer.valueOf(item.getAddrId()));
+                    stackPhotoDB.setAddressTxt(item.getAddrIdTxt());
+                    stackPhotoDB.setClient_id(item.getClientId());
+                    stackPhotoDB.setCustomerTxt(item.getClientIdTxt());
+
+                    stackPhotoDB.setPhoto_type(Integer.valueOf(item.getPhotoTp()));
+                    stackPhotoDB.setPhoto_typeTxt(String.valueOf(item.getPhotoTpTxt()));
+
+                    stackPhotoDB.setDvi(Integer.valueOf(Objects.requireNonNullElse(item.getDvi(), "0")));
+
+                    stackPhotoDB.setCode_iza(item.codeIZA);
+
+                } catch (Exception e) {
+                    Log.e("Exception", "e: " + e.getMessage());
+                }
                 stackList.add(stackPhotoDB);
 
                 id++;
@@ -992,7 +1141,8 @@ public class PhotoDownload {
      * @param folderName             - Папка в которую будем осуществлять загрузку фотки. (/FolderName).
      * @param downloadPhotoInterface - Обработка успешной/провальной загрузки фотографии.
      */
-    public void downloadPhoto(boolean photoSize, StackPhotoDB dbRow, String folderName, downloadPhotoInterface downloadPhotoInterface) {
+    public void downloadPhoto(boolean photoSize, StackPhotoDB dbRow, String
+            folderName, downloadPhotoInterface downloadPhotoInterface) {
         String url = dbRow.getPhotoServerURL();
         String size;   // Думаю это стоит на енумчик зменить
 
@@ -1048,52 +1198,52 @@ public class PhotoDownload {
      */
 
     public void downloadPhoto(String photoUrl, ExchangeInterface.ExchangePhoto exchange) {
-        executorService.submit(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    retrofit2.Call<ResponseBody> call = RetrofitBuilder.getRetrofitInterface().DOWNLOAD_PHOTO_BY_URL(photoUrl.replace("thumb_", ""));
-                    call.enqueue(new Callback<ResponseBody>() {
-                        @Override
-                        public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
-                            try {
-                                if (response.isSuccessful()) {
-                                    if (response.body() != null) {
-                                        Globals.writeToMLOG("INFO", "downloadPhoto/onResponse", "response.body(): " + response.body());
-                                        InputStream data = response.body().byteStream(); // <--- TODO BUG    java.lang.NullPointerException: Attempt to invoke virtual method 'java.io.InputStream okhttp3.ResponseBody.byteStream()' on a null object reference at ua.com.merchik.merchik.ServerExchange.PhotoDownload$8.onResponse(PhotoDownload.java:574)
+//        executorService.submit(new Runnable() {
+//            @Override
+//            public void run() {
+        try {
+            retrofit2.Call<ResponseBody> call = RetrofitBuilder.getRetrofitInterface().DOWNLOAD_PHOTO_BY_URL(photoUrl.replace("thumb_", ""));
+            call.enqueue(new Callback<ResponseBody>() {
+                @Override
+                public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                    try {
+                        if (response.isSuccessful()) {
+                            if (response.body() != null) {
+                                Globals.writeToMLOG("INFO", "downloadPhoto/onResponse", "response.body(): " + response.body());
+                                InputStream data = response.body().byteStream(); // <--- TODO BUG    java.lang.NullPointerException: Attempt to invoke virtual method 'java.io.InputStream okhttp3.ResponseBody.byteStream()' on a null object reference at ua.com.merchik.merchik.ServerExchange.PhotoDownload$8.onResponse(PhotoDownload.java:574)
 
-                                        if (data.toString().length() > 0) {
-                                            Bitmap bmp = BitmapFactory.decodeStream(data);
-                                            if (bmp != null) {
-                                                exchange.onSuccess(bmp);
-                                            } else {
-                                                exchange.onFailure("Фото нет");
-                                            }
-                                        } else {
-                                            exchange.onFailure("Фото нет");
-                                        }
-                                        data.close();
+                                if (data.toString().length() > 0) {
+                                    Bitmap bmp = BitmapFactory.decodeStream(data);
+                                    if (bmp != null) {
+                                        exchange.onSuccess(bmp);
                                     } else {
-                                        exchange.onFailure("response.body() == 0");
+                                        exchange.onFailure("Фото нет");
                                     }
                                 } else {
-                                    exchange.onFailure("Код: " + response.code());
+                                    exchange.onFailure("Фото нет");
                                 }
-                            } catch (Exception e) {
-                                Globals.writeToMLOG("ERROR", "downloadPhoto/onResponse", "Exception e: " + e);
+                                data.close();
+                            } else {
+                                exchange.onFailure("response.body() == 0");
                             }
+                        } else {
+                            exchange.onFailure("Код: " + response.code());
                         }
-
-                        @Override
-                        public void onFailure(Call<ResponseBody> call, Throwable t) {
-                            exchange.onFailure("Ошибка: " + t);
-                        }
-                    });
-                } catch (Exception e) {
-                    Globals.writeToMLOG("ERROR", "downloadPhoto", "Exception e: " + e);
+                    } catch (Exception e) {
+                        Globals.writeToMLOG("ERROR", "downloadPhoto/onResponse", "Exception e: " + e);
+                    }
                 }
-            }
-        });
+
+                @Override
+                public void onFailure(Call<ResponseBody> call, Throwable t) {
+                    exchange.onFailure("Ошибка: " + t);
+                }
+            });
+        } catch (Exception e) {
+            Globals.writeToMLOG("ERROR", "downloadPhoto", "Exception e: " + e);
+        }
+//            }
+//        });
     }
 
     public void savePhotoToDB2(List<ImagesViewListImageList> data) {
@@ -1145,24 +1295,57 @@ public class PhotoDownload {
     }
 
 
-    private static final ExecutorService executor = Executors.newFixedThreadPool(8);
+    //    private static final ExecutorService executor = Executors.newFixedThreadPool(8);
+//
+//    public static void savePhotoAndUpdateStackPhotoDBsecond(String folderPath, String imageName, Bitmap bitmap, StackPhotoDB stackPhotoDB) {
+//        executor.execute(() -> {
+//            String photoPath = Globals.savePhotoToPhoneMemory(folderPath, imageName, bitmap);
+//
+//            if (photoPath != null) {
+//                if (Objects.equals(imageName, "52686837") || Objects.equals(imageName, "52686831")
+//                        || Objects.equals(imageName, "52686827") || Objects.equals(imageName, "52686832")) {
+//                    Log.e("savePhotoToDB2", ">>> " + imageName);
+//                    Log.e("savePhotoToDB3", ">>> " + imageName);
+//
+//                }
+//                stackPhotoDB.setPhoto_num(photoPath);
+//
+//                // Обновляем в базе данных (на основном потоке)
+//                new Handler(Looper.getMainLooper()).post(() -> {
+//                    RealmManager.stackPhotoSavePhoto(stackPhotoDB);
+//                    Log.d("SAVE", "Фото сохранено: " + photoPath);
+//                });
+//            } else {
+//                Log.e("SAVE", "Ошибка при сохранении фото");
+//            }
+//        });
+//    }
+//
+    public void savePhotoAndUpdateStackPhotoDB(String folderPath, String imageName, Bitmap
+            bitmap, StackPhotoDB stackPhotoDB) {
+//        executorService.submit(() -> {
+        String photoPath = Globals.savePhotoToPhoneMemory(folderPath, imageName, bitmap);
 
-    public static void savePhotoAndUpdateStackPhotoDB(String folderPath, String imageName, Bitmap bitmap, StackPhotoDB stackPhotoDB) {
-        executor.execute(() -> {
-            String photoPath = Globals.savePhotoToPhoneMemory(folderPath, imageName, bitmap);
+        if (photoPath != null) {
 
-            if (photoPath != null) {
-                stackPhotoDB.setPhoto_num(photoPath);
+            stackPhotoDB.setPhoto_num(photoPath);
+            RealmManager.stackPhotoSavePhoto(stackPhotoDB);
+//                saveToRealm(stackPhotoDB);
 
-                // Обновляем в базе данных (на основном потоке)
-                new Handler(Looper.getMainLooper()).post(() -> {
-                    RealmManager.stackPhotoSavePhoto(stackPhotoDB);
-                    Log.d("SAVE", "Фото сохранено: " + photoPath);
-                });
-            } else {
-                Log.e("SAVE", "Ошибка при сохранении фото");
-            }
-        });
+            // Обновляем в базе данных (на основном потоке)
+//                new Handler(Looper.getMainLooper()).post(() -> {
+//                    RealmManager.stackPhotoSavePhoto(stackPhotoDB);
+//                    Log.d("SAVE", "Фото сохранено: " + photoPath);
+//                });
+        } else {
+            Log.e("SAVE", "Ошибка при сохранении фото");
+        }
+//        });
     }
 
+    private void saveToRealm(StackPhotoDB item) {
+        Realm realm = Realm.getDefaultInstance();
+        realm.executeTransaction(r -> r.insertOrUpdate(item));
+        realm.close();
+    }
 }

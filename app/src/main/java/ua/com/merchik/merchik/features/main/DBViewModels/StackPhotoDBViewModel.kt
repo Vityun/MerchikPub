@@ -47,7 +47,8 @@ class StackPhotoDBViewModel @Inject constructor(
             ContextUI.SAMPLE_PHOTO_FROM_OPTION_158604,
             ContextUI.SAMPLE_PHOTO_FROM_OPTION_157277,
             ContextUI.SAMPLE_PHOTO_FROM_OPTION_157354,
-            ContextUI.STACK_PHOTO_FROM_OPTION_158605
+            ContextUI.STACK_PHOTO_FROM_OPTION_158605,
+            ContextUI.SAMPLE_PHOTO_FROM_OPTION_164355
             -> {
                 val codeDad2 = Gson().fromJson(dataJson, Long::class.java)
                 val wpDataDB = RealmManager.INSTANCE.copyFromRealm(
@@ -73,6 +74,7 @@ class StackPhotoDBViewModel @Inject constructor(
                     ContextUI.STACK_PHOTO_AFTER_FROM_ACHIEVEMENT -> 0
                     ContextUI.STACK_PHOTO_FROM_OPTION_158605 -> 40
                     ContextUI.SAMPLE_PHOTO_FROM_OPTION_135158 -> 4
+                    ContextUI.SAMPLE_PHOTO_FROM_OPTION_164355 -> 5
                     ContextUI.SAMPLE_PHOTO_FROM_OPTION_158309 -> 39
                     ContextUI.SAMPLE_PHOTO_FROM_OPTION_141360 -> 31
                     ContextUI.SAMPLE_PHOTO_FROM_OPTION_132969 -> 10
@@ -125,7 +127,8 @@ class StackPhotoDBViewModel @Inject constructor(
                 ContextUI.SAMPLE_PHOTO_FROM_OPTION_158604,
                 ContextUI.SAMPLE_PHOTO_FROM_OPTION_157277,
                 ContextUI.SAMPLE_PHOTO_FROM_OPTION_157354,
-                ContextUI.STACK_PHOTO_FROM_OPTION_158605
+                ContextUI.STACK_PHOTO_FROM_OPTION_158605,
+                ContextUI.SAMPLE_PHOTO_FROM_OPTION_164355
                 -> {
                     val codeDad2 = Gson().fromJson(dataJson, Long::class.java)
 //                    val wpDataDB = RealmManager.INSTANCE.copyFromRealm(
@@ -137,6 +140,7 @@ class StackPhotoDBViewModel @Inject constructor(
                         ContextUI.STACK_PHOTO_AFTER_FROM_ACHIEVEMENT -> 0
                         ContextUI.STACK_PHOTO_FROM_OPTION_158605 -> 40
                         ContextUI.SAMPLE_PHOTO_FROM_OPTION_135158 -> 4
+                        ContextUI.SAMPLE_PHOTO_FROM_OPTION_164355 -> 5
                         ContextUI.SAMPLE_PHOTO_FROM_OPTION_158309 -> 39
                         ContextUI.SAMPLE_PHOTO_FROM_OPTION_141360 -> 31
                         ContextUI.SAMPLE_PHOTO_FROM_OPTION_132969 -> 10
@@ -169,10 +173,11 @@ class StackPhotoDBViewModel @Inject constructor(
 //                    }
 
                     val data = RealmManager.INSTANCE.copyFromRealm(
-                                StackPhotoRealm.getPhotosByDAD2(
-                                    codeDad2,
-                                    typePhoto
-                                ))
+                        StackPhotoRealm.getPhotosByDAD2(
+                            codeDad2,
+                            typePhoto
+                        )
+                    )
 
 
                     repository.toItemUIList(StackPhotoDB::class, data, contextUI, typePhoto)

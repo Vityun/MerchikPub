@@ -91,6 +91,7 @@ class SamplePhotoSDBViewModel @Inject constructor(
         if (wpDataDB != null && optionDB != null) {
             val typePhotoId = when (contextUI) {
                 ContextUI.SAMPLE_PHOTO_FROM_OPTION_135158 -> 4
+                ContextUI.SAMPLE_PHOTO_FROM_OPTION_164355 -> 5
                 ContextUI.SAMPLE_PHOTO_FROM_OPTION_141360 -> 31
                 ContextUI.SAMPLE_PHOTO_FROM_OPTION_132969 -> 10
                 ContextUI.SAMPLE_PHOTO_FROM_OPTION_135809 -> 14
@@ -131,7 +132,9 @@ class SamplePhotoSDBViewModel @Inject constructor(
                 ContextUI.SAMPLE_PHOTO_FROM_OPTION_135809,
                 ContextUI.SAMPLE_PHOTO_FROM_OPTION_158309,
                 ContextUI.SAMPLE_PHOTO_FROM_OPTION_158604,
-                ContextUI.SAMPLE_PHOTO_FROM_OPTION_157277, -> {
+                ContextUI.SAMPLE_PHOTO_FROM_OPTION_157277,
+                ContextUI.SAMPLE_PHOTO_FROM_OPTION_164355
+                -> {
                     typePhotoId?.let {
                         val workPlan = WorkPlan()
                         val wpDataObj: WPDataObj = workPlan.getKPS(wpDataDB.id)
@@ -155,6 +158,7 @@ class SamplePhotoSDBViewModel @Inject constructor(
 
         val typePhotoId = when (contextUI) {
             ContextUI.SAMPLE_PHOTO_FROM_OPTION_135158 -> 4
+            ContextUI.SAMPLE_PHOTO_FROM_OPTION_164355 -> 5
             ContextUI.SAMPLE_PHOTO_FROM_OPTION_141360 -> 31
             ContextUI.SAMPLE_PHOTO_FROM_OPTION_132969 -> 10
             ContextUI.SAMPLE_PHOTO_FROM_OPTION_135809 -> 14

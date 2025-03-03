@@ -9,8 +9,11 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 
 import java.util.Date;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+import okhttp3.Dispatcher;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
@@ -50,6 +53,9 @@ public class RetrofitBuilder {
     private static boolean serverStatus;//todo add int interConnection
     private static long serverTime;
 
+    private final int MAX_CONCURRENT_REQUESTS = 12; // Ограничиваем до 3 одновременных запросов
+    private final ExecutorService executorService = Executors.newFixedThreadPool(MAX_CONCURRENT_REQUESTS);
+
     private RetrofitBuilder() {
         // было 29.11.23.
 //        Gson gson = new GsonBuilder()
@@ -72,7 +78,7 @@ public class RetrofitBuilder {
 
         OkHttpClient.Builder httpClientBuilder = new OkHttpClient.Builder();
         httpClientBuilder.addInterceptor(new TimeoutInterceptor());
-        httpClientBuilder.addInterceptor(new ChuckerInterceptor(MyApplication.getAppContext()));
+//        httpClientBuilder.addInterceptor(new ChuckerInterceptor(MyApplication.getAppContext()));
 
         httpClientBuilder.addInterceptor(loggingInterceptor);
 
@@ -80,6 +86,8 @@ public class RetrofitBuilder {
                 .connectTimeout(60, TimeUnit.SECONDS)
                 .readTimeout(60, TimeUnit.SECONDS)
                 .writeTimeout(60, TimeUnit.SECONDS);
+
+        httpClientBuilder.dispatcher(new Dispatcher(executorService));
 
         OkHttpClient client = httpClientBuilder.build();
 

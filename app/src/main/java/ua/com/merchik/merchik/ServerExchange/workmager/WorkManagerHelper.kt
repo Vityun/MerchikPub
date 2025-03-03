@@ -22,7 +22,7 @@ object WorkManagerHelper {
             15, // Интервал повторения (в минутах)
             TimeUnit.MINUTES
         )
-            .setInitialDelay(2, TimeUnit.MINUTES) // Задержка перед первым запуском
+            .setInitialDelay(   2, TimeUnit.MINUTES) // Задержка перед первым запуском
             .setConstraints(constraints)
             .build()
 

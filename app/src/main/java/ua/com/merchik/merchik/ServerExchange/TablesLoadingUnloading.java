@@ -164,9 +164,9 @@ public class TablesLoadingUnloading {
             Exchange.sendWpData2();
             updateWpData();
 
-            downloadWPData(context);
+            downloadWPData();
 
-            downloadOptions(context);
+            downloadOptions();
             Log.e("uploadRP", "start");
             uploadRP(new ExchangeInterface.ExchangeResponseInterface() {
                 @Override
@@ -200,18 +200,18 @@ public class TablesLoadingUnloading {
                             }
 
                             //  TODO Вернул загрузку RP
-                            downloadReportPrepare(context, 0);
+                            downloadReportPrepare(0);
                         }
 
                     } else {
-                        downloadReportPrepare(context, 0);
+                        downloadReportPrepare(0);
                     }
                 }
 
                 @Override
                 public void onFailure(String error) {
                     Log.d("uploadRP", "error: " + error);
-                    downloadReportPrepare(context, 0);
+                    downloadReportPrepare(0);
                 }
             });
 //            downloadTovarTable(context, null);
@@ -222,16 +222,16 @@ public class TablesLoadingUnloading {
 
 
         try {
-            downloadImagesTp(context);
-            downloadTypeGrp(context);
+            downloadImagesTp();
+            downloadTypeGrp();
 
-            downloadCustomerTable(context);
-            downloadAddressTable(context);
-            downloadSotrTable(context);
+            downloadCustomerTable();
+            downloadAddressTable();
+            downloadSotrTable();
 
-            downloadErrorTable(context);
-            downloadAkciyTable(context);
-            downloadTradeMarksTable(context);
+            downloadErrorTable();
+            downloadAkciyTable();
+            downloadTradeMarksTable();
             globals.writeToMLOG(Clock.getHumanTime() + "_INFO.TablesLoadingUnloading.class.downloadAllTables.Успех.Не обязательные таблици." + "\n");
         } catch (Exception e) {
             globals.writeToMLOG(Clock.getHumanTime() + "_INFO.TablesLoadingUnloading.class.downloadAllTables.Ошибка.Не обязательные таблици: " + e + "\n");
@@ -353,7 +353,7 @@ public class TablesLoadingUnloading {
     }
 
 
-    public void downloadWPData(Context context) {
+    public void downloadWPData() {
         Log.e("SERVER_REALM_DB_UPDATE", "===================================downloadWPData_START");
 
         String mod = "plan";
@@ -362,7 +362,7 @@ public class TablesLoadingUnloading {
 //        String date_from = timeYesterday7;
         String date_to = timeTomorrow;
 
-        BlockingProgressDialog pg = BlockingProgressDialog.show(context, "Обмен данными с сервером.", "Обновление таблицы: " + "План работ");
+//        BlockingProgressDialog pg = BlockingProgressDialog.show(context, "Обмен данными с сервером.", "Обновление таблицы: " + "План работ");
 
         try {
             Log.e("TAG_TEST_WP", "RESPONSE_0 T");
@@ -379,35 +379,38 @@ public class TablesLoadingUnloading {
                         }
 
                         if (response.body().getState()) {
-                            downloadTovarTable(context, null,response.body().getList());
+                            List<WpDataDB> wpDataDBList = response.body().getList();
+                            RealmManager.setWpData(wpDataDBList);
 
+                            downloadTovarTable(null,wpDataDBList);
 //                            Globals.writeToMLOG("INFO", "PetrovExchangeTest/startExchange/downloadWPData/onSuccess", "(response.body().getList(): " + response.body().getList().size());
-                            if (RealmManager.setWpData(response.body().getList())) {
-                                if (pg != null)
-                                    if (pg.isShowing())
-                                        pg.dismiss();
-                            } else {
-                                if (pg != null)
-                                    if (pg.isShowing())
-                                        pg.dismiss();
-                            }
+//                            if (RealmManager.setWpData(response.body().getList())) {
+//                                if (pg != null)
+//                                    if (pg.isShowing())
+//                                        pg.dismiss();
+//                            } else {
+//                                if (pg != null)
+//                                    if (pg.isShowing())
+//                                        pg.dismiss();
+//                            }
 
-                            long currentTime = System.currentTimeMillis() / 1000;
+//                            long currentTime = System.currentTimeMillis() / 1000;
 
-                        } else {
-                            if (pg != null)
-                                if (pg.isShowing())
-                                    pg.dismiss();
                         }
+//                        else {
+//                            if (pg != null)
+//                                if (pg.isShowing())
+//                                    pg.dismiss();
+//                        }
                     }
                     readyWPData = true;
                 }
 
                 @Override
                 public void onFailure(retrofit2.Call<WpDataServer> call, Throwable t) {
-                    if (pg != null)
-                        if (pg.isShowing())
-                            pg.dismiss();
+//                    if (pg != null)
+//                        if (pg.isShowing())
+//                            pg.dismiss();
                     readyWPData = false;
                     syncInternetError = true;
                 }
@@ -420,13 +423,13 @@ public class TablesLoadingUnloading {
     }
 
 
-    public void downloadImagesTp(Context context) {
+    public void downloadImagesTp() {
         Log.e("SERVER_REALM_DB_UPDATE", "===================================downloadImagesTp_START");
         String mod = "filter_list";
         String act = "menu_list";
         String images_type_list = "";
 
-        BlockingProgressDialog pg = BlockingProgressDialog.show(context, "Обмен данными с сервером.", "Обновление таблицы: Тип фото");
+//        BlockingProgressDialog pg = BlockingProgressDialog.show(context, "Обмен данными с сервером.", "Обновление таблицы: Тип фото");
 
         retrofit2.Call<ImageTypes> call = RetrofitBuilder.getRetrofitInterface().IMAGE_TYPES_CALL(mod, act, images_type_list);
         call.enqueue(new retrofit2.Callback<ImageTypes>() {
@@ -443,36 +446,36 @@ public class TablesLoadingUnloading {
                             Log.e("SERVER_REALM_DB_UPDATE", "===================================ImagesTpSIZE: NuLL");
                         }
 
+                        RealmManager.setImagesTp(response.body().getMenuList().getImagesTypeList());
+//                        if (RealmManager.setImagesTp(response.body().getMenuList().getImagesTypeList())) {
+//                            if (pg != null)
+//                                if (pg.isShowing())
+//                                    pg.dismiss();
+//                        } else {
+//                            if (pg != null)
+//                                if (pg.isShowing())
+//                                    pg.dismiss();
+//                        }
 
-                        if (RealmManager.setImagesTp(response.body().getMenuList().getImagesTypeList())) {
-                            if (pg != null)
-                                if (pg.isShowing())
-                                    pg.dismiss();
-                        } else {
-                            if (pg != null)
-                                if (pg.isShowing())
-                                    pg.dismiss();
-                        }
-
-                        long currentTime = System.currentTimeMillis() / 1000;
+//                        long currentTime = System.currentTimeMillis() / 1000;
 //                        RealmManager.setToSynchronizationTimetableDB(new SynchronizationTimetableDB(2, "image_tp", 36000, currentTime, currentTime, 0, 0));
 
-                    } else {
-                        Toast.makeText(context, "Типы фото обновить не получилось. Повторите попытку позже.", Toast.LENGTH_SHORT).show();
-                        if (pg != null)
-                            if (pg.isShowing())
-                                pg.dismiss();
-
                     }
+//                    else {
+//                        Toast.makeText(context, "Типы фото обновить не получилось. Повторите попытку позже.", Toast.LENGTH_SHORT).show();
+//                        if (pg != null)
+//                            if (pg.isShowing())
+//                                pg.dismiss();
+//                    }
                 }
                 readyImagesTp = true;
             }
 
             @Override
             public void onFailure(retrofit2.Call<ImageTypes> call, Throwable t) {
-                if (pg != null)
-                    if (pg.isShowing())
-                        pg.dismiss();
+//                if (pg != null)
+//                    if (pg.isShowing())
+//                        pg.dismiss();
                 readyImagesTp = false;
                 syncInternetError = true;
                 Log.e("TAG_TEST", "FAILURE_1 E: " + t.getMessage());
@@ -483,7 +486,7 @@ public class TablesLoadingUnloading {
     }
 
 
-    public void downloadTypeGrp(Context context) {
+    public void downloadTypeGrp() {
         Log.e("SERVER_REALM_DB_UPDATE", "===================================.downloadTypeGrp.START");
 
 
@@ -492,7 +495,7 @@ public class TablesLoadingUnloading {
         String act = "client_group_list_plain";
 //        String act = "client_group_list";
 
-        BlockingProgressDialog pg = BlockingProgressDialog.show(context, "Обмен данными с сервером.", "Обновление таблицы: Групы товаров");
+//        BlockingProgressDialog pg = BlockingProgressDialog.show(context, "Обмен данными с сервером.", "Обновление таблицы: Групы товаров");
 
         retrofit2.Call<CustomerGroups> call = RetrofitBuilder.getRetrofitInterface().GROUP_TYPE(mod, act);
         call.enqueue(new retrofit2.Callback<CustomerGroups>() {
@@ -509,16 +512,16 @@ public class TablesLoadingUnloading {
                             Log.e("SERVER_REALM_DB_UPDATE", "===================================.TypeGrp.SIZE: NuLL");
                         }
 
-
-                        if (RealmManager.setGroupTypeV2(response.body().getList())) {
-                            if (pg != null)
-                                if (pg.isShowing())
-                                    pg.dismiss();
-                        } else {
-                            if (pg != null)
-                                if (pg.isShowing())
-                                    pg.dismiss();
-                        }
+                        RealmManager.setGroupTypeV2(response.body().getList());
+//                        if (RealmManager.setGroupTypeV2(response.body().getList())) {
+//                            if (pg != null)
+//                                if (pg.isShowing())
+//                                    pg.dismiss();
+//                        } else {
+//                            if (pg != null)
+//                                if (pg.isShowing())
+//                                    pg.dismiss();
+//                        }
 
 //                        RealmManager.setRowToLog(Collections.singletonList(new LogDB(RealmManager.getLastIdLogDB() + 1, System.currentTimeMillis() / 1000, "Группы товаров с сервера: " + response.body().getList(), 1097, null, null, null, Globals.userId, null, Globals.session, null)));
 
@@ -534,9 +537,9 @@ public class TablesLoadingUnloading {
 
             @Override
             public void onFailure(retrofit2.Call<CustomerGroups> call, Throwable t) {
-                if (pg != null)
-                    if (pg.isShowing())
-                        pg.dismiss();
+//                if (pg != null)
+//                    if (pg.isShowing())
+//                        pg.dismiss();
                 readyTypeGrp = false;
                 syncInternetError = true;
 //                RealmManager.setRowToLog(Collections.singletonList(new LogDB(RealmManager.getLastIdLogDB() + 1, System.currentTimeMillis() / 1000, "Ошибка при обмене групп товаров(ошика интернета): " + t, 1097, null, null, null, Globals.userId, null, Globals.session, null)));
@@ -590,7 +593,7 @@ public class TablesLoadingUnloading {
 
     }
 
-    public void downloadOptions(Context context) {
+    public void downloadOptions() {
         Log.e("SERVER_REALM_DB_UPDATE", "===================================.downloadOptions.START");
         globals.writeToMLOG(Clock.getHumanTime() + "_INFO.TablesLU.class.downloadOptions.ENTER\n");
 
@@ -600,7 +603,7 @@ public class TablesLoadingUnloading {
 //        String date_from = Clock.getDatePeriod(-14);
         String date_to = timeTomorrow;
 
-        BlockingProgressDialog pg = BlockingProgressDialog.show(context, "Обмен данными с сервером.", "Обновление таблицы: Опции");
+//        BlockingProgressDialog pg = BlockingProgressDialog.show(context, "Обмен данными с сервером.", "Обновление таблицы: Опции");
 
         retrofit2.Call<OptionsServer> call = RetrofitBuilder.getRetrofitInterface().OPTIONS_CALL(mod, act, date_from, date_to);
         call.enqueue(new retrofit2.Callback<OptionsServer>() {
@@ -629,24 +632,24 @@ public class TablesLoadingUnloading {
                         Log.e("SERVER_REALM_DB_UPDATE", "===================================.Options.SIZE: NuLL");
                     }
 
-
-                    if (response.body().getState()) {
-                        if (RealmManager.setOptions(response.body().getList())) {
-                            if (pg != null)
-                                if (pg.isShowing())
-                                    pg.dismiss();
-                        } else {
-                            if (pg != null)
-                                if (pg.isShowing())
-                                    pg.dismiss();
-
-                        }
-                    } else {
-                        if (pg != null)
-                            if (pg.isShowing())
-                                pg.dismiss();
-
-                    }
+                    RealmManager.setOptions(response.body().getList());
+//                    if (response.body().getState()) {
+//                        if (RealmManager.setOptions(response.body().getList())) {
+//                            if (pg != null)
+//                                if (pg.isShowing())
+//                                    pg.dismiss();
+//                        } else {
+//                            if (pg != null)
+//                                if (pg.isShowing())
+//                                    pg.dismiss();
+//
+//                        }
+//                    } else {
+//                        if (pg != null)
+//                            if (pg.isShowing())
+//                                pg.dismiss();
+//
+//                    }
 
                 }
                 readyOptions = true;
@@ -655,9 +658,9 @@ public class TablesLoadingUnloading {
             @Override
             public void onFailure(retrofit2.Call<OptionsServer> call, Throwable t) {
                 globals.writeToMLOG(Clock.getHumanTime() + "_INFO.TablesLU.class.downloadOptions.onFailure.ENTER\n");
-                if (pg != null)
-                    if (pg.isShowing())
-                        pg.dismiss();
+//                if (pg != null)
+//                    if (pg.isShowing())
+//                        pg.dismiss();
                 readyOptions = false;
                 syncInternetError = true;
                 Log.e("TAG_TEST", "FAILURE_3 E: " + t);
@@ -674,7 +677,7 @@ public class TablesLoadingUnloading {
      * @param context -- Контекст где будет отображаться окно прогресса загрузки таблици
      * @param mode    -- Режим работы. Если 0 - всё затераем, 1 - "умная" загрузка(обновление)
      */
-    public void downloadReportPrepare(Context context, int mode) {
+    public void downloadReportPrepare(int mode) {
         Log.e("SERVER_REALM_DB_UPDATE", "===================================.downloadReportPrepare.START");
 
         String mod = "report_prepare";
@@ -716,7 +719,7 @@ public class TablesLoadingUnloading {
 //            call = RetrofitBuilder.getRetrofitInterface().REPORT_PREPARE_CALL_PIECE(mod, act, date_from, date_to, lastUpdate);
 //        }
 
-        BlockingProgressDialog pg = BlockingProgressDialog.show(context, "Обмен данными с сервером.", "Обновление таблицы: Дет. отчёт");
+//        BlockingProgressDialog pg = BlockingProgressDialog.show(context, "Обмен данными с сервером.", "Обновление таблицы: Дет. отчёт");
 
 //        callT.enqueue(new Callback<JsonObject>() {
 //            @Override
@@ -751,32 +754,34 @@ public class TablesLoadingUnloading {
                         } else {
                             Log.e("SERVER_REALM_DB_UPDATE", "===================================.ReportPrepare.SIZE: NuLL");
                         }
+                        RealmManager.setReportPrepare(response.body().getList());
 
-                        if (RealmManager.setReportPrepare(response.body().getList())) {
-                            if (pg != null)
-                                if (pg.isShowing())
-                                    pg.dismiss();
-                        } else {
-                            if (pg != null)
-                                if (pg.isShowing())
-                                    pg.dismiss();
-
-                        }
-                    } else {
-                        if (pg != null)
-                            if (pg.isShowing())
-                                pg.dismiss();
-
+//                        if (RealmManager.setReportPrepare(response.body().getList())) {
+//                            if (pg != null)
+//                                if (pg.isShowing())
+//                                    pg.dismiss();
+//                        } else {
+//                            if (pg != null)
+//                                if (pg.isShowing())
+//                                    pg.dismiss();
+//
+//                        }
                     }
+//                    else {
+//                        if (pg != null)
+//                            if (pg.isShowing())
+//                                pg.dismiss();
+//
+//                    }
                 }
                 readyReportPrepare = true;
             }
 
             @Override
             public void onFailure(@NonNull retrofit2.Call<ReportPrepareServer> call, @NonNull Throwable t) {
-                if (pg != null)
-                    if (pg.isShowing())
-                        pg.dismiss();
+//                if (pg != null)
+//                    if (pg.isShowing())
+//                        pg.dismiss();
                 readyReportPrepare = false;
                 syncInternetError = true;
                 Log.e("TAG_TEST", "FAILURE_4 E: " + t);
@@ -791,7 +796,7 @@ public class TablesLoadingUnloading {
     /**
      * Обновление таблицы Клиентов
      */
-    public void downloadCustomerTable(Context context) {
+    public void downloadCustomerTable() {
         Log.e("SERVER_REALM_DB_UPDATE", "===================================.downloadCustomerTable.START");
 
 
@@ -800,7 +805,7 @@ public class TablesLoadingUnloading {
 
 //        RealmManager.setRowToLog(Collections.singletonList(new LogDB(RealmManager.getLastIdLogDB() + 1, System.currentTimeMillis() / 1000, "Обновление таблицы Клиенты", 1094, null, null, null, null, null, Globals.session, null)));
 
-        BlockingProgressDialog pg = BlockingProgressDialog.show(context, "Обмен данными с сервером.", "Обновление таблицы: Клиенты");
+//        BlockingProgressDialog pg = BlockingProgressDialog.show(context, "Обмен данными с сервером.", "Обновление таблицы: Клиенты");
 
         retrofit2.Call<CustomerTableResponse> call = RetrofitBuilder.getRetrofitInterface().GET_CUSTOMER_T(mod, act);
         call.enqueue(new retrofit2.Callback<CustomerTableResponse>() {
@@ -829,32 +834,34 @@ public class TablesLoadingUnloading {
 
 
                             // Запись в БД
-                            if (RealmManager.setRowToCustomer(list)) {
-                                if (pg != null)
-                                    if (pg.isShowing())
-                                        pg.dismiss();
-                            } else {
-                                if (pg != null)
-                                    if (pg.isShowing())
-                                        pg.dismiss();
-                            }
+                            RealmManager.setRowToCustomer(list);
+//                            if (RealmManager.setRowToCustomer(list)) {
+//                                if (pg != null)
+//                                    if (pg.isShowing())
+//                                        pg.dismiss();``
+//                            } else {
+//                                if (pg != null)
+//                                    if (pg.isShowing())
+//                                        pg.dismiss();
+//                            }
 
                         }
-                    } else {
-                        if (pg != null)
-                            if (pg.isShowing())
-                                pg.dismiss();
-
                     }
+//                    else {
+//                        if (pg != null)
+//                            if (pg.isShowing())
+//                                pg.dismiss();
+//
+//                    }
                 }
                 readyCustomerTable = true;
             }
 
             @Override
             public void onFailure(retrofit2.Call<CustomerTableResponse> call, Throwable t) {
-                if (pg != null)
-                    if (pg.isShowing())
-                        pg.dismiss();
+//                if (pg != null)
+//                    if (pg.isShowing())
+//                        pg.dismiss();
 
                 readyCustomerTable = false;
                 syncInternetError = true;
@@ -871,13 +878,13 @@ public class TablesLoadingUnloading {
     /**
      * Обновление таблицы Адресов
      */
-    public void downloadAddressTable(Context context) {
+    public void downloadAddressTable() {
         Log.e("SERVER_REALM_DB_UPDATE", "===================================.downloadAddressTable.START");
 
         String mod = "data_list";
         String act = "addr_list";
 
-        BlockingProgressDialog pg = BlockingProgressDialog.show(context, "Обмен данными с сервером.", "Обновление таблицы: Адреса");
+//        BlockingProgressDialog pg = BlockingProgressDialog.show(context, "Обмен данными с сервером.", "Обновление таблицы: Адреса");
 
         retrofit2.Call<AddressTableResponse> call = RetrofitBuilder.getRetrofitInterface().GET_ADDRESS_T(mod, act);
         call.enqueue(new retrofit2.Callback<AddressTableResponse>() {
@@ -888,37 +895,40 @@ public class TablesLoadingUnloading {
                     if (response.body().getState()) {
                         if (!response.body().getList().isEmpty()) {
                             // Запись в БД
-                            if (RealmManager.setRowToAddress(response.body().getList())) {
-                                if (pg != null)
-                                    if (pg.isShowing())
-                                        pg.dismiss();
-                            } else {
-                                if (pg != null)
-                                    if (pg.isShowing())
-                                        pg.dismiss();
-
-                            }
-                        } else {
-                            if (pg != null)
-                                if (pg.isShowing())
-                                    pg.dismiss();
-
+                            RealmManager.setRowToAddress(response.body().getList());
+//                            if (RealmManager.setRowToAddress(response.body().getList())) {
+//                                if (pg != null)
+//                                    if (pg.isShowing())
+//                                        pg.dismiss();
+//                            } else {
+//                                if (pg != null)
+//                                    if (pg.isShowing())
+//                                        pg.dismiss();
+//
+//                            }
                         }
-                    } else {
-                        if (pg != null)
-                            if (pg.isShowing())
-                                pg.dismiss();
-
+//                        else {
+//                            if (pg != null)
+//                                if (pg.isShowing())
+//                                    pg.dismiss();
+//
+//                        }
                     }
+//                    else {
+//                        if (pg != null)
+//                            if (pg.isShowing())
+//                                pg.dismiss();
+//
+//                    }
                 }
                 readyAddressTable = true;
             }
 
             @Override
             public void onFailure(retrofit2.Call<AddressTableResponse> call, Throwable t) {
-                if (pg != null)
-                    if (pg.isShowing())
-                        pg.dismiss();
+//                if (pg != null)
+//                    if (pg.isShowing())
+//                        pg.dismiss();
                 readyAddressTable = false;
                 syncInternetError = true;
                 Log.e("TAG_TABLE", "FAILUREAddressTable: " + t);
@@ -932,7 +942,7 @@ public class TablesLoadingUnloading {
     /**
      * Обновление таблицы Сотрудники
      */
-    public void downloadSotrTable(Context context) {
+    public void downloadSotrTable() {
         Log.e("SERVER_REALM_DB_UPDATE", "===================================.downloadSotrTable.START");
 
         String mod = "data_list";
@@ -940,7 +950,7 @@ public class TablesLoadingUnloading {
 
 //        RealmManager.setRowToLog(Collections.singletonList(new LogDB(RealmManager.getLastIdLogDB() + 1, System.currentTimeMillis() / 1000, "Обмен таблицы Сотрудники", 1095, null, null, null, null, null, Globals.session, null)));
 
-        BlockingProgressDialog pg = BlockingProgressDialog.show(context, "Обмен данными с сервером.", "Обновление таблицы: Сотрудники");
+//        BlockingProgressDialog pg = BlockingProgressDialog.show(context, "Обмен данными с сервером.", "Обновление таблицы: Сотрудники");
 
         retrofit2.Call<SotrTable> call = RetrofitBuilder.getRetrofitInterface().GET_SOTR_T(mod, act);
         call.enqueue(new retrofit2.Callback<SotrTable>() {
@@ -979,27 +989,30 @@ public class TablesLoadingUnloading {
 
 
                             // Запись в БД
-                            if (RealmManager.setRowToUsers(list)) {
-                                if (pg != null)
-                                    if (pg.isShowing())
-                                        pg.dismiss();
-                            } else {
-                                if (pg != null)
-                                    if (pg.isShowing())
-                                        pg.dismiss();
-                            }
-                        } else {
-                            if (pg != null)
-                                if (pg.isShowing())
-                                    pg.dismiss();
+                            RealmManager.setRowToUsers(list);
+//                            if (RealmManager.setRowToUsers(list)) {
+//                                if (pg != null)
+//                                    if (pg.isShowing())
+//                                        pg.dismiss();
+//                            } else {
+//                                if (pg != null)
+//                                    if (pg.isShowing())
+//                                        pg.dismiss();
+//                            }
+                        }
+                        else {
+//                            if (pg != null)
+//                                if (pg.isShowing())
+//                                    pg.dismiss();
 
 //                            RealmManager.setRowToLog(Collections.singletonList(new LogDB(RealmManager.getLastIdLogDB() + 1, System.currentTimeMillis() / 1000, "Обмен таблицы Сотрудники. Сотрудники пустые.", 1095, null, null, null, null, null, Globals.session, null)));
                             Log.e("TAG_TABLE", "ListS: empty");
                         }
-                    } else {
-                        if (pg != null)
-                            if (pg.isShowing())
-                                pg.dismiss();
+                    }
+                    else {
+//                        if (pg != null)
+//                            if (pg.isShowing())
+//                                pg.dismiss();
 
 //                        RealmManager.setRowToLog(Collections.singletonList(new LogDB(RealmManager.getLastIdLogDB() + 1, System.currentTimeMillis() / 1000, "Обмен таблицы Сотрудники. Ошибка от Вовы: ", 1095, null, null, null, null, null, Globals.session, null)));
                         Log.e("TAG_TABLE", "ListS: ERROR");
@@ -1010,9 +1023,9 @@ public class TablesLoadingUnloading {
 
             @Override
             public void onFailure(retrofit2.Call<SotrTable> call, Throwable t) {
-                if (pg != null)
-                    if (pg.isShowing())
-                        pg.dismiss();
+//                if (pg != null)
+//                    if (pg.isShowing())
+//                        pg.dismiss();
                 readySotrTable = false;
                 syncInternetError = true;
 //                RealmManager.setRowToLog(Collections.singletonList(new LogDB(RealmManager.getLastIdLogDB() + 1, System.currentTimeMillis() / 1000, "Обмен таблицы Сотрудники. Ошибка сети: " + t, 1095, null, null, null, null, null, Globals.session, null)));
@@ -1100,7 +1113,7 @@ public class TablesLoadingUnloading {
      * Обновление таблицы: Товаров
      */
 
-    public void downloadTovarTable(Context context, ArrayList<String> listId, List<WpDataDB> wpDataDBList) {
+    public void downloadTovarTable(ArrayList<String> listId, List<WpDataDB> wpDataDBList) {
         Log.e("SERVER_REALM_DB_UPDATE", "===================================.downloadTovarTable.START");
 
         String mod = "data_list";
@@ -1283,13 +1296,13 @@ public class TablesLoadingUnloading {
     /**
      * Обновление таблицы: Торговые Марки
      */
-    public void downloadTradeMarksTable(Context context) {
+    public void downloadTradeMarksTable() {
         Log.e("SERVER_REALM_DB_UPDATE", "===================================.downloadTradeMarksTable.START");
 
         String mod = "data_list";
         String act = "tovar_manufacturer_list";
 
-        BlockingProgressDialog pg = BlockingProgressDialog.show(context, "Обмен данными с сервером.", "Обновление таблицы: Торговые Марки");
+//        BlockingProgressDialog pg = BlockingProgressDialog.show(context, "Обмен данными с сервером.", "Обновление таблицы: Торговые Марки");
 
         retrofit2.Call<TradeMarkResponse> call = RetrofitBuilder.getRetrofitInterface().GET_TRADE_MARKS_T(mod, act);
         call.enqueue(new retrofit2.Callback<TradeMarkResponse>() {
@@ -1307,25 +1320,25 @@ public class TablesLoadingUnloading {
                             Log.e("SERVER_REALM_DB_UPDATE", "===================================.TradeMarksTable.SIZE: NuLL");
                         }
 
-
-                        if (RealmManager.setTradeMarks(response.body().getList()))
-                            if (pg != null)
-                                if (pg.isShowing())
-                                    pg.dismiss();
+                        RealmManager.setTradeMarks(response.body().getList());
+//                        if (RealmManager.setTradeMarks(response.body().getList()))
+//                            if (pg != null)
+//                                if (pg.isShowing())
+//                                    pg.dismiss();
                     }
                 }
                 readyTradeMarksTable = true;
-                if (pg != null)
-                    if (pg.isShowing())
-                        pg.dismiss();
+//                if (pg != null)
+//                    if (pg.isShowing())
+//                        pg.dismiss();
 
             }
 
             @Override
             public void onFailure(retrofit2.Call<TradeMarkResponse> call, Throwable t) {
-                if (pg != null)
-                    if (pg.isShowing())
-                        pg.dismiss();
+//                if (pg != null)
+//                    if (pg.isShowing())
+//                        pg.dismiss();
                 readyTradeMarksTable = false;
                 syncInternetError = true;
                 Log.e("TAG_TABLE", "FAILURETradeMarksTable: " + t);
@@ -1393,13 +1406,13 @@ public class TablesLoadingUnloading {
     /**
      * Обновление таблицы: Ошибки
      */
-    public void downloadErrorTable(Context context) {
+    public void downloadErrorTable() {
         Log.e("SERVER_REALM_DB_UPDATE", "===================================.downloadErrorTable.START");
 
         String mod = "data_list";
         String act = "report_error_list";
 
-        BlockingProgressDialog pg = BlockingProgressDialog.show(context, "Обмен данными с сервером.", "Обновление таблицы: Ошибки");
+//        BlockingProgressDialog pg = BlockingProgressDialog.show(context, "Обмен данными с сервером.", "Обновление таблицы: Ошибки");
 
         StandartData data = new StandartData();
         data.mod = "data_list";
@@ -1429,24 +1442,25 @@ public class TablesLoadingUnloading {
                 if (response.isSuccessful() && response.body() != null) {
                     Log.e("TAG_TABLE", "RESPONSEdownloadErrorTable: " + response.body());
                     if (response.body().getState()) {
-                        if (RealmManager.setError(response.body().getList()))
-                            if (pg != null)
-                                if (pg.isShowing())
-                                    pg.dismiss();
+                        RealmManager.setError(response.body().getList());
+//                        if (RealmManager.setError(response.body().getList()))
+//                            if (pg != null)
+//                                if (pg.isShowing())
+//                                    pg.dismiss();
                     }
                 }
                 readyErrorTable = true;
-                if (pg != null)
-                    if (pg.isShowing())
-                        pg.dismiss();
+//                if (pg != null)
+//                    if (pg.isShowing())
+//                        pg.dismiss();
 
             }
 
             @Override
             public void onFailure(retrofit2.Call<ErrorTableResponce> call, Throwable t) {
-                if (pg != null)
-                    if (pg.isShowing())
-                        pg.dismiss();
+//                if (pg != null)
+//                    if (pg.isShowing())
+//                        pg.dismiss();
                 readyErrorTable = false;
                 syncInternetError = true;
                 Log.e("TAG_TABLE", "FAILUREdownloadErrorTable: " + t);
@@ -1460,13 +1474,13 @@ public class TablesLoadingUnloading {
     /**
      * Обновление таблицы: Акции
      */
-    public void downloadAkciyTable(Context context) {
+    public void downloadAkciyTable() {
         Log.e("SERVER_REALM_DB_UPDATE", "===================================.downloadAkciyTable.START");
 
         String mod = "data_list";
         String act = "report_promo_list";
 
-        BlockingProgressDialog pg = BlockingProgressDialog.show(context, "Обмен данными с сервером.", "Обновление таблицы: Акции");
+//        BlockingProgressDialog pg = BlockingProgressDialog.show(context, "Обмен данными с сервером.", "Обновление таблицы: Акции");
 
         retrofit2.Call<PromoTableResponce> call = RetrofitBuilder.getRetrofitInterface().GET_PROMO_LIST(mod, act);
         call.enqueue(new retrofit2.Callback<PromoTableResponce>() {
@@ -1475,10 +1489,11 @@ public class TablesLoadingUnloading {
                 if (response.isSuccessful() && response.body() != null) {
                     Log.e("TAG_TABLE", "RESPONSEdownloadAkciyTable: " + response.body());
                     if (response.body().getState()) {
-                        if (RealmManager.setPromo(response.body().getList()))
-                            if (pg != null)
-                                if (pg.isShowing())
-                                    pg.dismiss();
+                        RealmManager.setPromo(response.body().getList());
+//                        if (RealmManager.setPromo(response.body().getList()))
+//                            if (pg != null)
+//                                if (pg.isShowing())
+//                                    pg.dismiss();
                     }
                 }
                 readyAkciyTable = true;
@@ -1486,9 +1501,9 @@ public class TablesLoadingUnloading {
 
             @Override
             public void onFailure(retrofit2.Call<PromoTableResponce> call, Throwable t) {
-                if (pg != null)
-                    if (pg.isShowing())
-                        pg.dismiss();
+//                if (pg != null)
+//                    if (pg.isShowing())
+//                        pg.dismiss();
                 readyAkciyTable = false;
                 syncInternetError = true;
                 Log.e("TAG_TABLE", "FAILUREdownloadAkciyTable: " + t);
@@ -2100,12 +2115,12 @@ public class TablesLoadingUnloading {
                         Log.e("TAG_TEST_WP", "ALL START/ GET WP");
 //                        updateWpData();
 
-                        downloadOptions(context);
+                        downloadOptions();
                         uploadRP(new ExchangeInterface.ExchangeResponseInterface() {
                             @Override
                             public <T> void onSuccess(List<T> data) {
                                 Log.e("uploadRP1", "data: " + data);
-                                downloadReportPrepare(context, 1); // Тут мод 1 ибо будет обмен автоматический
+                                downloadReportPrepare(1); // Тут мод 1 ибо будет обмен автоматический
 
                                 if (data != null) {
                                     List<ReportPrepareUpdateResponseList> list = (List<ReportPrepareUpdateResponseList>) data;
@@ -2137,19 +2152,19 @@ public class TablesLoadingUnloading {
                             }
                         });
 
-                        downloadAddressTable(context);
-                        downloadCustomerTable(context);
-                        downloadSotrTable(context);
+                        downloadAddressTable();
+                        downloadCustomerTable();
+                        downloadSotrTable();
 
 //                        sendAndUpdateLog(context);
                         uploadReportPrepareToServer();
 
 //                        RealmManager.setToSynchronizationTimetableDB(new SynchronizationTimetableDB(1, "wp_data", 600, currentTime, currentTime, 0, 0));
                     case 2:
-                        downloadImagesTp(context);
+                        downloadImagesTp();
 //                        RealmManager.setToSynchronizationTimetableDB(new SynchronizationTimetableDB(2, "image_tp", 36000, currentTime, currentTime, 0, 0));
                     case 3:
-                        downloadTypeGrp(context);
+                        downloadTypeGrp();
 //                        RealmManager.setToSynchronizationTimetableDB(new SynchronizationTimetableDB(3, "client_group_tp", 36000, currentTime, currentTime, 0, 0));
                     case 4:
                         // Пока делать нечего

@@ -7,6 +7,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.platform.ComposeView
 import ua.com.merchik.merchik.Activities.Features.ui.theme.MerchikTheme
+import ua.com.merchik.merchik.dialogs.features.dialogLoading.DialogDismissedListener
 import ua.com.merchik.merchik.dialogs.features.dialogLoading.LoadingDialog
 import ua.com.merchik.merchik.dialogs.features.dialogLoading.ProgressViewModel
 
@@ -15,6 +16,7 @@ class LoadingDialogWithPercent(val context: Activity,
                                private val progressViewModel: ProgressViewModel) {
 
     private val isDialogVisible = mutableStateOf(false)
+    private var listener: DialogDismissedListener? = null
 
     fun show() {
         isDialogVisible.value = true
@@ -26,7 +28,7 @@ class LoadingDialogWithPercent(val context: Activity,
                             viewModel = progressViewModel,
                             onDismiss = {
                                 isDialogVisible.value = false
-                                onDialogDismissed() // Обрабатываем завершение загрузки
+                                listener?.onDialogDismissed() // Вызываем слушатель
                             }
                         )
                     }
@@ -41,11 +43,8 @@ class LoadingDialogWithPercent(val context: Activity,
         return isDialogVisible.value
     }
 
-    fun onDialogDismissed() {
-
-
-        // Логика завершения или отмены загрузки
-//        Toast.makeText(context, "Загрузка отменена или завершена", Toast.LENGTH_SHORT).show()
-
+    fun setOnDismissListener(listener: DialogDismissedListener) {
+        this.listener = listener
     }
+
 }

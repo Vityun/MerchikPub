@@ -1,15 +1,19 @@
 package ua.com.merchik.merchik.ServerExchange.workmager
 
 import android.content.Context
+import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.util.Log
 import androidx.work.CoroutineWorker
+import androidx.work.WorkInfo
 import androidx.work.WorkerParameters
+import androidx.work.workDataOf
 import com.google.gson.Gson
 import com.google.gson.JsonObject
 import io.realm.Realm
 import io.realm.Sort
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.withContext
 import okhttp3.ResponseBody
@@ -31,27 +35,38 @@ class DownloadImagesWorker(
 
     override suspend fun doWork(): Result {
         return try {
-            // Получаем список изображений для загрузки
+
+            // 1. Дозагрузка отсутствующих фотографий
+            val thumbnailsToDownload = getMissingThumbnails()
+            setProgress(workDataOf("status" to "start"))
+            Log.d("DownloadImagesWorker", "Starting thumbnail download: ${thumbnailsToDownload.size} items")
+
+            var successfulThumbnails = 0
+            thumbnailsToDownload.forEach { stackPhoto ->
+                if (downloadAndUpdateThumbnail(stackPhoto)) successfulThumbnails++
+            }
+
+
+            // 2.Получаем список изображений для загрузки
             val photoList = getPhotoListToDownload()
             Log.d("DownloadImagesWorker", "Starting download of ${photoList.size} photos")
 
             // Загружаем изображения
             var successfulDownloads = 0
-            for (photo in photoList) {
-                val success = downloadPhoto(photo)
-                if (success) {
-                    successfulDownloads++
-                }
+            photoList.forEach { photo ->
+                if (downloadPhoto(photo)) successfulDownloads++
             }
 
-            Log.d(
-                "DownloadImagesWorker",
-                "Finished downloading $successfulDownloads/${photoList.size} photos"
-            )
+            setProgress(workDataOf("status" to "end"))
+            delay(1000)
             Result.success() // Успешное завершение задачи
         } catch (e: Exception) {
             Log.e("DownloadImagesWorker", "Error in doWork", e)
             Result.failure() // Ошибка
+        } finally {
+            delay(1000)
+            setProgress(workDataOf("status" to "end"))
+//            setProgress(workDataOf("status" to WorkInfo.State.SUCCEEDED))
         }
     }
 
@@ -66,6 +81,34 @@ class DownloadImagesWorker(
         // 3. Формируем запрос и получаем список фотографий
         return getTovarPhotoInfoFromServer(tovarsPhotoToDownload)
     }
+
+    // Новый метод для получения списка отсутствующих thumbnail'ов
+    private suspend fun getMissingThumbnails(): List<StackPhotoDB> {
+        return withContext(Dispatchers.IO) {
+            val realm = Realm.getDefaultInstance()
+            try {
+                val sevenDaysAgo = System.currentTimeMillis() / 1000 - 7 * 24 * 60 * 60
+
+                // Получаем RealmResults
+                val results = realm.where(StackPhotoDB::class.java)
+                    .isNotNull("photoServerURL")
+                    .isNull("photo_num")
+                    .greaterThanOrEqualTo("dt", sevenDaysAgo)
+                    .findAll()
+
+                // Копируем данные из Realm в "отсоединенный" список
+                realm.copyFromRealm(results)
+
+            } catch (e: Exception) {
+                Log.e("DownloadImagesWorker", "Error getting thumbnails", e)
+                emptyList()
+            } finally {
+                realm.close()
+            }
+        }
+    }
+
+
 
     private val downloadSemaphore = Semaphore(10) // Ограничиваем до 10 одновременных запросов
 
@@ -194,6 +237,74 @@ class DownloadImagesWorker(
                 // Логируем ошибку сети и возвращаем пустой список
                 Log.e("API_ERROR", "Network error: ${e.message}")
                 emptyList()
+            }
+        }
+    }
+
+    // Метод для загрузки и обновления thumbnail'ов
+    private suspend fun downloadAndUpdateThumbnail(stackPhoto: StackPhotoDB): Boolean {
+        return withContext(Dispatchers.IO) {
+            downloadSemaphore.acquire()
+            try {
+                val originalUrl = stackPhoto.photoServerURL?.replace("thumb_", "") ?: return@withContext false
+
+                val response = RetrofitBuilder.getRetrofitInterface()
+                    .DOWNLOAD_PHOTO_BY_URL(originalUrl)
+                    .execute()
+
+                if (response.isSuccessful && response.body() != null) {
+                    saveThumbnailToDatabase(stackPhoto, response.body()!!)
+                    true
+                } else {
+                    false
+                }
+            } catch (e: IOException) {
+                Log.e("DownloadImagesWorker", "Network error for thumbnail", e)
+                false
+            } finally {
+                downloadSemaphore.release()
+            }
+        }
+    }
+
+    // Сохранение thumbnail'а
+    private suspend fun saveThumbnailToDatabase(stackPhoto: StackPhotoDB, responseBody: ResponseBody) {
+        withContext(Dispatchers.IO) {
+            val realm = Realm.getDefaultInstance()
+            var bitmap: Bitmap? = null
+            try {
+                bitmap = BitmapFactory.decodeStream(responseBody.byteStream())
+
+                val path = Globals.savePhotoToPhoneMemory("/Manager", stackPhoto.photoServerId, bitmap);
+//                    .saveImage1(bitmap, "THUMB_${stackPhoto.photoServerId}")
+
+
+                // Получаем ID из объекта stackPhoto
+//                val photoId = stackPhoto.photoServerId ?: run {
+//                    Log.e("DownloadImagesWorker", "PhotoServerId is null")
+//                    return@withContext
+//                }
+
+
+
+                realm.executeTransaction { r ->
+                    stackPhoto.apply {
+                        photo_num = path
+                    }
+                    r.insertOrUpdate(stackPhoto)
+//                    val dbPhoto = r.where(StackPhotoDB::class.java)
+//                        .equalTo("photoServerId", photoId)
+//                        .findFirst()
+//                        ?: return@executeTransaction
+//
+//                    dbPhoto.photo_num = path
+//                    Log.d("DownloadImagesWorker", "Updated thumbnail: ${dbPhoto.id}")
+                }
+            } catch (e: Exception) {
+                Log.e("DownloadImagesWorker", "Error saving thumbnail", e)
+            } finally {
+                realm.close()
+                bitmap?.recycle()
             }
         }
     }

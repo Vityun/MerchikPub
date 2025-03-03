@@ -11,6 +11,8 @@ import android.content.Context;
 import android.content.ContextWrapper;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -25,6 +27,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.observers.DisposableCompletableObserver;
@@ -35,6 +40,7 @@ import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
+import ua.com.merchik.merchik.Activities.PhotoDownloaderViewModel;
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.ServerExchange.Constants.ReclamationPercentageExchange;
@@ -137,6 +143,7 @@ import ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsMarkRe
 import ua.com.merchik.merchik.database.realm.tables.StackPhotoRealm;
 import ua.com.merchik.merchik.database.realm.tables.TARCommentsRealm;
 import ua.com.merchik.merchik.database.realm.tables.WpDataRealm;
+import ua.com.merchik.merchik.dialogs.BlockingProgressDialog;
 import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.dialogs.DialogFilter.Click;
 import ua.com.merchik.merchik.dialogs.EKL.EKLRequests;
@@ -162,18 +169,35 @@ public class Exchange {
     private final int retryTime = 600000;     // 10
 //    private int retryTime = 60000;     // 1
 
+//    private final ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+    private final ExecutorService executor = Executors.newFixedThreadPool(16);
 
+    private final PhotoDownload server;
+
+    private PhotoDownloaderViewModel viewModel;
+//    public final ThreadPoolExecutor executorService =
+//            (ThreadPoolExecutor) Executors.newFixedThreadPool(8);
     /**
      * 26.02.2021
      * Енум для опозначения какие данные мы будем отправлять на всервер.
      */
     public Exchange() {
-
+        this.server = new PhotoDownload(executor);
     }
 
-    Exchange(AppCompatActivity activity) {
-
+    public Exchange(PhotoDownloaderViewModel viewModel) {
+        this.server = new PhotoDownload(executor, viewModel);
+        this.viewModel = viewModel;
     }
+
+    public PhotoDownloaderViewModel getViewModel() {
+        return viewModel;
+    }
+
+    public void setViewModel(PhotoDownloaderViewModel viewModel) {
+        this.viewModel = viewModel;
+    }
+
 
     public enum UploadPhotoInfo {
         DVI, RATING, COMMENT, PRIZE
@@ -195,7 +219,6 @@ public class Exchange {
      * Начало Обмена. Внутри находятся все Обмены
      */
     public void startExchange() {
-        Log.e("startExchange", "0");
 
         try {
             Log.e("startExchange", "start");
@@ -225,7 +248,12 @@ public class Exchange {
 
                 try {
                     /*Загрузка ОБРАЗЦОВ ФОТО*/
-                    SamplePhotoExchange samplePhotoExchange = new SamplePhotoExchange();
+//                    BlockingProgressDialog progressDialog = BlockingProgressDialog.show(context, "Обмен данными с сервером.", "Обновление таблицы");
+//                    progressDialog.show();
+//
+//                    new Handler(Looper.getMainLooper()).postDelayed(progressDialog::dismiss, 7000);
+
+                    SamplePhotoExchange samplePhotoExchange = new SamplePhotoExchange(executor);
                     Globals.writeToMLOG("INFO", "startExchange/SamplePhotoExchange", "OK");
                     samplePhotoExchange.downloadSamplePhotoTable(new Clicks.clickObjectAndStatus() {
                         @Override
@@ -257,30 +285,12 @@ public class Exchange {
                                     samplePhotoExchange.downloadSamplePhotosByPhotoIds(listPhotosToDownload, new Clicks.clickStatusMsg() {
                                         @Override
                                         public void onSuccess(String data) {
-//                                                photoCount--;
-//                                                if (photoCount == 30) {
-//                                                    new Handler(Looper.getMainLooper()).post(new Runnable() {
-//                                                        @Override
-//                                                        public void run() {
-//                                                            Globals.alertDialogMsg(context, "Фото загружены");
-//                                                        }
-//                                                    });
-//                                                }
-                                            Log.i("````", "....onSuccess " + photoCount);
+
                                         }
 
                                         @Override
                                         public void onFailure(String error) {
-//                                                photoCount--;
-//                                                if (photoCount == 74) {
-//                                                    new Handler(Looper.getMainLooper()).post(new Runnable() {
-//                                                        @Override
-//                                                        public void run() {
-//                                                            Globals.alertDialogMsg(context, "Фото загружены");
-//                                                        }
-//                                                    });
-//                                                }
-//                                                Log.i("````", "....error " + photoCount);
+
                                         }
                                     });
                                 } else {
@@ -436,7 +446,7 @@ public class Exchange {
                             try {
 //                                Globals.writeToMLOG("INFO", "PetrovExchangeTest/startExchange/planogram/onSuccess", "(List<T> data: " + data.size());
                                 List<ImagesViewListImageList> datalist = (List<ImagesViewListImageList>) data;
-                                new PhotoDownload().savePhotoToDB2(datalist);
+                                server.savePhotoToDB2(datalist);
                                 Globals.writeToMLOG("INFO", "startExchange/planogram.onSuccess", "OK: " + datalist.size());
                             } catch (Exception e) {
                                 Globals.writeToMLOG("ERROR", "startExchange/planogram.onSuccess", "Exception e: " + e);
@@ -1647,13 +1657,12 @@ public class Exchange {
      */
     private void getPhotoFromSite() {
 
-
-        PhotoDownload server = new PhotoDownload();
         PhotoTableRequest data = new PhotoTableRequest();
         data.mod = "images_view";
         data.act = "list_image";
         data.nolimit = "1";
-        data.date_from = Clock.today_7;
+//        data.date_from = Clock.today_7;
+        data.date_from = Clock.today_30; // 27.02.25 поменял на 30 дней, но загружать фото буду как и раньше за 7 дней
         data.date_to = Clock.tomorrow7;
 //        data.date_to = Clock.today; 10.10.23. скрыл ибо им мешало.
 
@@ -1686,7 +1695,6 @@ public class Exchange {
      * Получение с Сайта данных(ссылок) для загрузки фото товаров в приложение переданного типа за больший период
      */
     public void updateStackPhotoDBByType(String type) {
-        PhotoDownload server = new PhotoDownload();
         PhotoTableRequest data = new PhotoTableRequest();
         data.mod = "images_view";
         data.act = "list_image";
@@ -3323,5 +3331,9 @@ public class Exchange {
         } else {
             return;
         }
+    }
+
+    public ExecutorService getExecutor() {
+        return executor;
     }
 }

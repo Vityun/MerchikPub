@@ -125,6 +125,7 @@ import ua.com.merchik.merchik.Options.Controls.OptionControlReclamationAnswer;
 import ua.com.merchik.merchik.Options.Controls.OptionControlRegistrationPotentialClient;
 import ua.com.merchik.merchik.Options.Controls.OptionControlRegistrationPotentialFriend;
 import ua.com.merchik.merchik.Options.Controls.OptionControlReturnOfGoods;
+import ua.com.merchik.merchik.Options.Controls.OptionControlStockBalanceTovar;
 import ua.com.merchik.merchik.Options.Controls.OptionControlTaskAnswer;
 import ua.com.merchik.merchik.PhotoReports;
 import ua.com.merchik.merchik.R;
@@ -185,7 +186,7 @@ public class Options {
             138767, 135742, 132621, 84003, 138340, 135327, 135328, 156882, 151139, 132623, 133382, 136100,
             157275, 157276, 157274, 135159, 157277, 157353, 138643, 158243, 135412, 151748, 158309,
             158308, 158604, 158605, 158606, 157354, 157242, 159725, 135413, 135719, 143969, 160567,
-            164351, 164355, 165481
+            164351, 164355, 165481, 141069
     };
 
     // Провести отчет
@@ -193,7 +194,7 @@ public class Options {
             151594, 80977, 135330, 133381, 136101, 135329, 138518, 151139, 132623, 133382, 136100, 137797, 135809,
             135328, 135327, 157275, 138341, 590, 84932, 134583, 157352, 1470, 138644, 1455, 135061,
             158361, 159707, 575, 132971, 135591, 135708, 135595, 143968, 160568, 164352, 164354,
-            84005, 84967, 164985, 165276, 165275, 165482, 166528, 157288};
+            84005, 84967, 164985, 165276, 165275, 165482, 166528, 157288, 141067};
 
     /*Сюда записываются Опции которые не прошли проверку, при особенном переданном MOD-e. Сделано
     для того что б потом можно было посмотреть название опций которые не прошли проверку и, возможно,
@@ -501,6 +502,11 @@ public class Options {
 
                 case 139577:
                     optionControlVersion_139577(context, dataDB, optionsDB, null, mode, unlockCodeResultListener);
+                    break;
+
+                case 141067:
+                    OptionControlStockBalanceTovar<?> optionControlStockBalanceTovar = new OptionControlStockBalanceTovar<>(context, dataDB, optionsDB, newOptionType, mode, unlockCodeResultListener);
+                    optionControlStockBalanceTovar.showOptionMassage("");
                     break;
 
 
@@ -2091,6 +2097,18 @@ public class Options {
             case 138340:
                 option138340(context, dataDB, option, type, mode, unlockCodeResultListener);
                 break;
+
+
+            //  Сравнение остатков и наличия
+            case 141069:
+                OptionControlStockBalanceTovar<?> optionControlStockBalanceTovar = new OptionControlStockBalanceTovar<>(context, dataDB, option, type, mode, unlockCodeResultListener);
+                if (mode.equals(NNKMode.MAKE) || (mode.equals(NNKMode.CHECK) && optionControlStockBalanceTovar.isBlockOption()))
+                    optionControlStockBalanceTovar.showOptionMassage(block);
+                if (mode.equals(NNKMode.BLOCK) && optionControlStockBalanceTovar.signal && optionControlStockBalanceTovar.isBlockOption()) {
+                    optionControlStockBalanceTovar.showOptionMassage(block);
+                }
+
+                return optionControlStockBalanceTovar.isBlockOption2() ? 1 : 0;
 
             default:
                 unlockCodeResultListener.onUnlockCodeSuccess();
