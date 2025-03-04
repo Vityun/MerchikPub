@@ -160,9 +160,11 @@ public class ShowcaseAdapter extends RecyclerView.Adapter<ShowcaseAdapter.ViewHo
                 } else if (stackPhotoDB != null) {
                     textViewClientGroup.setVisibility(View.VISIBLE);
                     textViewPlanogramm.setVisibility(View.VISIBLE);
-                    String uriStr = stackPhotoDB.photo_num;
-                    Uri uri = Uri.parse(uriStr);
-                    image.setImageURI(uri);
+                    if (stackPhotoDB.getPhoto_num() != null) {
+                        String uriStr = stackPhotoDB.photo_num;
+                        Uri uri = Uri.parse(uriStr);
+                        image.setImageURI(uri);
+                    }
                     image.setOnClickListener(v -> {
 
 
@@ -221,7 +223,9 @@ public class ShowcaseAdapter extends RecyclerView.Adapter<ShowcaseAdapter.ViewHo
                     image.setImageDrawable(itemView.getContext().getResources().getDrawable(R.mipmap.merchik));
                 }
 
-                constraintLayout.setOnClickListener(v -> click.click(showcase));
+                constraintLayout.setOnClickListener(v -> {
+                    click.click(showcase);
+                });
 
             } catch (Exception e) {
                 Globals.writeToMLOG("ERROR", "ShowcaseAdapter/bind", "Exception e: " + e);

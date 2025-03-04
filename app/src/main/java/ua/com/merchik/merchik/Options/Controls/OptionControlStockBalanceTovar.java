@@ -2,6 +2,7 @@ package ua.com.merchik.merchik.Options.Controls;
 
 import static ua.com.merchik.merchik.Globals.OptionControlName.AKCIYA_ID;
 import static ua.com.merchik.merchik.database.realm.RealmManager.INSTANCE;
+import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 import static ua.com.merchik.merchik.dialogs.DialogData.Operations.Date;
 import static ua.com.merchik.merchik.dialogs.DialogData.Operations.DoubleSpinner;
 import static ua.com.merchik.merchik.dialogs.DialogData.Operations.EditTextAndSpinner;
@@ -18,10 +19,16 @@ import android.view.View;
 import android.widget.Toast;
 
 import java.io.File;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import io.realm.RealmResults;
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity;
@@ -29,6 +36,7 @@ import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.Options.OptionControl;
 import ua.com.merchik.merchik.Options.Options;
+import ua.com.merchik.merchik.data.Database.Room.UsersSDB;
 import ua.com.merchik.merchik.data.OptionMassageType;
 import ua.com.merchik.merchik.data.PhotoDescriptionText;
 import ua.com.merchik.merchik.data.RealmModels.AdditionalRequirementsDB;
@@ -63,7 +71,10 @@ public class OptionControlStockBalanceTovar<T> extends OptionControl {
     private int addressId, userId;
     private long dad2;
 
-    private Integer colMin = 1;
+    private UsersSDB documentUser;
+
+    private int tovarNaVitrineSUM  = 0;
+    private int tovarPoUchetSUM = 0;
 
     public OptionControlStockBalanceTovar(Context context, T document, OptionsDB optionDB, OptionMassageType msgType, Options.NNKMode nnkMode, UnlockCodeResultListener unlockCodeResultListener) {
         try {
@@ -94,122 +105,123 @@ public class OptionControlStockBalanceTovar<T> extends OptionControl {
             addressId = wpDataDB.getAddr_id();
             userId = wpDataDB.getUser_id();
             dad2 = wpDataDB.getCode_dad2();
-            try {
-                colMin = Integer.valueOf(optionDB.getAmountMin());
-            } catch (Exception e) {
-                colMin = 1;
-            }
+
+            documentUser = SQL_DB.usersDao().getUserById(userId);
         }
     }
+
 
     private void executeOption() {
         // values
 //        int OSV = 0;            // ОсобоеВнимание
+
+
+        // 1.0. Определим переменные
+        int numberSKUForFactSUM = 0;
+        int numberSKUMiddle = 0;
+        int numberMin = (optionDB.getAmountMin() != null && !optionDB.getAmountMax().isEmpty()) ? Integer.parseInt(optionDB.getAmountMin()) : 0; //23.02.2025 Петров Додав показник Мінімальна кількість, котру має сенс перевіряти. Для різних клієнтів вона може суттєво відрізнятись (На приклад дорогий алкоголь 2 шт треба вже шувати, у Туалетний папір, можна і 20-ть не шукати) Встановлює менеджер. Якщо цей показник дорівнює нулю, то порівнюєм з скереднім залишком/10
+        int numberMax = (optionDB.getAmountMax() != null && !optionDB.getAmountMax().isEmpty() && Integer.parseInt(optionDB.getAmountMax()) > 0)
+                ? Integer.parseInt(optionDB.getAmountMax())
+                : 20; //не более 20% нарушений.
+
         int signalInt = 0;         // Сигнал заблокированно или нет
-        int err = 0;
+        long days20ago = (System.currentTimeMillis() - (20L * 24 * 60 * 60)) / 1000; // 20 дней назад в секундах
 
-        // Получение RP по данному документу.
-        //2.0. получим данные о товарах в отчете
-        List<ReportPrepareDB> reportPrepare = RealmManager.INSTANCE.copyFromRealm(ReportPrepareRealm.getReportPrepareByDad2(dad2));
-//        List<ReportPrepareDB> reportRes = new ArrayList<>();
 
-        // Получение Доп. Требований с дополнительными фильтрами.
-        List<AdditionalRequirementsDB> additionalRequirements;
-        String[] tovIds;
-        if (optionDB.getOptionId().equals("80977") || optionDB.getOptionControlId().equals("80977")) {
-            additionalRequirements = AdditionalRequirementsRealm.getDocumentAdditionalRequirements(document, true, OPTION_CONTROL_STOCK_BALANCE_TOVAR, null, wpDataDB.getDt(), wpDataDB.getDt(), null, null, null, null);
-            tovIds = new String[additionalRequirements.size()];
+        // 2.0. Получим данные о товарах в отчете
+        List<ReportPrepareDB> reportPrepare = RealmManager.INSTANCE.copyFromRealm(
+                ReportPrepareRealm.getReportPrepareByDad2(dad2)
+        );
 
-            for (int i = 0; i < additionalRequirements.size(); i++) {
-                tovIds[i] = additionalRequirements.get(i).getTovarId();
-            }
-            Arrays.sort(tovIds);
-        } else {
-            tovIds = new String[0];
+        if (reportPrepare.isEmpty()) {
+            spannableStringBuilder.append("Нет данных для анализа.");
+            setIsBlockOption(false);
+            return;
         }
 
-
-        SpannableStringBuilder errMsgType1 = new SpannableStringBuilder();
-        SpannableStringBuilder errMsgType2 = new SpannableStringBuilder();
-        int errType1Cnt = 0, errType2Cnt = 0;
-
-        errMsgType1.append("Для следующих товара(ов) с ОСВ (Особым Вниманием) Вы должны обязательно указать наличие (или отсутствие) Акции:").append("\n\n");
-        errMsgType2.append("Для следующих товара(ов) с ОСВ (Особым Вниманием) Вы должны обязательно указать ТИП Акции: ").append("\n\n");
-
-        // 5.0
-        // Тут должена формироваться более подроная информация о том с какими Товарами есть пролема
-        int find = 0;
-        int totalOSV = 0;
+        // 3.0. Сформируем итоговую таблицу
         for (ReportPrepareDB item : reportPrepare) {
-            int OSV = 0;
-            if (Arrays.asList(tovIds).contains(item.getTovarId())) {
-                OSV = 1;
-                totalOSV++;
+            item.numberSKUForAccounting = Integer.parseInt(item.oborotvedNum) > 0 ? 1 : 0;
+            item.numberSKUForFact = Integer.parseInt(item.face) > 0 ? 1 : 0;
+            item.difference = Integer.parseInt(item.oborotvedNum) - item.amount;
+        }
+
+        //4.0. сформируем результирующую таблицу
+        //4.1. сперва отметим те позиции у которых ЕСТЬ не нулевой остаток для того, чтобы подсчитать СРЕДНИЙ тованый запас. Это нужно, чтобы не наказывать за товар, которого ОТНОСИТЕЛЬНО МАЛО на складе
+//        numberSKUForAccountingSUM = reportPrepare.stream().map(table -> table.numberSKUForAccounting).reduce(0, Integer::sum);
+        numberSKUForFactSUM = reportPrepare.stream().map(table -> table.numberSKUForFact).reduce(0, Integer::sum);
+        if (numberSKUForFactSUM != 0)
+            numberSKUMiddle = reportPrepare.stream().map(table -> table.amount).reduce(0, Integer::sum)
+                    / numberSKUForFactSUM;
+
+
+        //4.2. теперь, имея средний товарный запас, можно сравнить наличие этого товара на витрине (показатель Фейс) с товарным запасом
+        for (ReportPrepareDB item : reportPrepare) {
+            //сравниваем реквизиты Фейс и ОборотВед
+            if (item.numberSKUForAccounting > 0 && Objects.equals(item.face, "0")) {
+                item.errorExist = 1;
+                item.errorNote = "Товар (" + item.tovarId + ") ВІДСУТЕН на вітрині (Фейс=0), але ЧИСЛИТЬСЯ на складі (ОборотВед=" + item.numberSKUForAccounting + ")";
             }
-
-            TovarDB tov = TovarRealm.getById(item.getTovarId());
-            if (tov != null) {
-                String msg = String.format("(%s) %s (%s)", item.getTovarId(), tov.getNm(), tov.getWeight());
-
-                if (OSV == 1 && (item.getAkciyaId().equals("") || item.getAkciyaId().equals("0"))) {
-                    // Для товара с ОСВ (Особым Вниманием) Вы должны обязательно указать ТИП Акции.
-                    err++;
-                    errType2Cnt++;
-                    errMsgType2.append(createLinkedString(msg, item, tov)).append("\n");
-                } else if (OSV == 1 && (item.getAkciya() != null && (item.getAkciya().equals("") || item.getAkciya().equals("0")))) {
-                    // Для товара с ОСВ (Особым Вниманием) Вы должны обязательно указать наличие (или отсутствие) Акции.
-                    err++;
-                    errType1Cnt++;
-                    errMsgType1.append(createLinkedString(msg, item, tov)).append("\n");
-                } else if ((!item.getAkciya().equals("0")) && (!item.getAkciyaId().equals("0"))) {
-                    find = find + 1;
-                    item.find = 1;
-                }
-            } else {
-//                err++;
-//                errType1Cnt++;
-//                errMsgType1.append("Товар з ідентифікатором: (").append(item.getTovarId()).append(") не знайдено").append("\n");
+            //если товарный запас ДАННОГО товара в десять раз меньше СРЕДНЕГО то нарушения НЕТ ... это может быть просто бой/бомбаж/пересортица
+            if (item.errorExist == 1 && numberMin > 0 && item.numberSKUForAccounting < numberMin) {
+                item.errorExist = 0;
+                item.errorNote = item.errorNote + ", при цьому залишок по обліку усього " + item.numberSKUForAccounting +
+                        " шт, (що менше " + numberMin + "). Робимо виключення.";
+            } else if (item.errorExist == 1 && numberMin == 0 && item.numberSKUForAccounting < (numberSKUMiddle / 10)) {
+                item.errorExist = 0;
+                item.errorNote = item.errorNote + ", при цьому залишок по обліку усього " + item.numberSKUForAccounting +
+                        " шт, (що менше 1/10 середнього " + (numberSKUMiddle / 10) + " шт). Робимо виключення.";
+            }
+            //якщо дані про залишки товару отримані більше 20-и діб тому, ми не вважаємо це за помилку.
+            else if (item.errorExist == 1 && item.dtChange < days20ago) {
+                item.errorExist = 0;
+                item.errorNote = item.errorNote + ", при цьому дані про залишок по обліку отримані більш ніж 20-ть діб тому. Робимо виключення.";
+            } else if (item.errorExist == 1 && item.errorId != null && !item.errorId.equals("0")) {
+                item.errorExist = 0;
+                item.errorNote = item.errorNote + ", при цьому зазначена 'помилка'" +
+//                        " \"+НайтиЭлементСпр(\"Ошибки\",\"Код\",ТзнСКЮ.ОшибкаТовара)+\"" +
+                        ". Робимо виключення.";
             }
         }
 
-        // 5.1 05.07.24.    Если менеджен указал 10 товаров, а у нас всего 5 - указываем максимальным
-        // значением кол-во товаров. что б не было так что б я требовал от мерчей рожать товары
-        colMin = reportPrepare.size() < colMin ? reportPrepare.size() : colMin;
 
-        // Формирование сообщения
-        if (errType1Cnt > 0) {
-            spannableStringBuilder.append(errMsgType1);
-        }
-        if (errType2Cnt > 0) {
-            spannableStringBuilder.append(errMsgType2);
-        }
-        if (err > 0) {
-            notCloseSpannableStringBuilderDialog = true;    // Делает так что при клике на текст диалог не будет закрываться
-            spannableStringBuilder.append("\n").append("Зайдите на закладку Товаров и укажите не внесенные данные.");
-        }
+        //5.0. готовим сообщение и сигнал
+        tovarNaVitrineSUM = reportPrepare.stream()
+                .mapToInt(table -> table.numberSKUForFact)
+                .sum(); //количество СКЮ на витрине
+        tovarPoUchetSUM = reportPrepare.stream()
+                .mapToInt(table -> table.numberSKUForAccounting)
+                .sum(); //количество СКЮ по учету
+        int errorAll = reportPrepare.stream()
+                .mapToInt(table -> table.errorExist)
+                .sum();
 
-        // 6.0
-        // Тут формируются более короткие соообшения касательно наличия акций у Товаров
-        if (reportPrepare.size() == 0) {
-            spannableStringBuilder.append("Товаров, по которым надо проверять факт наличия Акции, не обнаружено.");
-            signalInt = 1;
-        } else if (totalOSV == 0 && (optionDB.getOptionId().equals("80977") || optionDB.getOptionControlId().equals("80977"))) {
-            spannableStringBuilder.append("Для данной ТТ, на текущий момент, нет товаров с ОСВ (Особым Вниманием). Контролировать нечего. Замечаний нет.");
-            signalInt = 2;
-        } else if (err > 0 && (optionDB.getOptionId().equals("80977") || optionDB.getOptionControlId().equals("80977"))) {
-            spannableStringBuilder.append("Не предоставлена информация о типе и наличии Акции по товару (" + err + " шт.) (в т.ч. с ОСВ (Особым Вниманием)). См. таблицу.");
-            signalInt = 1;
-        } else if (find == 0) {
-            spannableStringBuilder.append("Ни у одного товара не указано тип, наличие (или отсутствие) Акции.");
-            signalInt = 1;
 
-        } else if (find < colMin) {
-            spannableStringBuilder.append("Ви зазначили дані про наявність/відсутність Акцій у ").append("" + find).append(" товарів, що менше мінімально пропустимого ").append("" + colMin);
+        if (errorAll > 0) {
             signalInt = 1;
+            spannableStringBuilder.append("На вітрині стоїть ")
+                    .append(String.valueOf(tovarNaVitrineSUM))
+                    .append(" товарів (СКЮ), а на обліку числиться ")
+                    .append(String.valueOf(tovarPoUchetSUM))
+                    .append(" СКЮ.")
+                    .append(" Ви повинні, або знайти усі ці товари, встановити їх на вітрині, та зазначити у звітності, або зазначити причину відсутності кожного з них, у реквізиті 'помилка'.");
         } else {
-            spannableStringBuilder.append("Замечаний по предоставлению информации о наличии Акций по товарам (в т.ч. с ОСВ (Особым Вниманием)) нет.");
-            signalInt = 2;
+            signalInt = 0;
+            spannableStringBuilder.append("На вітрині стоїть ")
+                    .append(String.valueOf(tovarNaVitrineSUM))
+                    .append(" товарів (СКЮ), а на обліку числиться ")
+                    .append(String.valueOf(tovarPoUchetSUM))
+                    .append(" СКЮ. Зауважень нема.");
         }
+
+        //6.0 Виключення
+        if (signalInt == 1) {
+            if (documentUser.reportDate05 == null || documentUser.reportDate05.before(wpDataDB.getDt())) {
+                signalInt = 0;
+                spannableStringBuilder.append(", але виконавець ще не провів свого 5-го звіту. Робимо виключення.");
+            }
+        }
+
 
         if (signalInt == 1) {
             signal = true;
@@ -256,45 +268,11 @@ public class OptionControlStockBalanceTovar<T> extends OptionControl {
 
     }
 
-    private SpannableString createLinkedString(String msg, ReportPrepareDB reportPrepareDB, TovarDB tov) {
-        SpannableString res = new SpannableString(msg);
-        ClickableSpan clickableSpan = new ClickableSpan() {
-            @Override
-            public void onClick(View textView) {
-                Toast.makeText(textView.getContext(), "id: " + reportPrepareDB.getTovarId(), Toast.LENGTH_LONG).show();
+    public String currentStockBalanceCount() {
 
-                DialogData dialog = new DialogData(textView.getContext());
-                dialog.setTitle("");
-                dialog.setText("");
-                dialog.setClose(dialog::dismiss);
-
-                dialog.setImage(true, getPhotoFromDB(tov));
-                dialog.setAdditionalText(setPhotoInfo(TPL, tov, "", ""));
-
-                dialog.setOperationSpinnerData(setMapData(AKCIYA_ID));
-                dialog.setOperationSpinner2Data(setMapData(Globals.OptionControlName.AKCIYA));
-                dialog.setOperationTextData(reportPrepareDB.getAkciyaId());
-                dialog.setOperationTextData2(reportPrepareDB.getAkciya());
-
-                dialog.setOperation(operationType(TPL), getCurrentData(TPL, reportPrepareDB.getCodeDad2(), reportPrepareDB.getTovarId()), setMapData(TPL.getOptionControlName()), () -> {
-                    if (dialog.getOperationResult() != null) {
-                        operetionSaveRPToDB(TPL, reportPrepareDB, dialog.getOperationResult(), dialog.getOperationResult2(), null, dialog.context);
-                        Toast.makeText(dialog.context, "Внесено: " + dialog.getOperationResult(), Toast.LENGTH_LONG).show();
-                    }
-                });
-
-                dialog.show();
-            }
-
-            @Override
-            public void updateDrawState(TextPaint ds) {
-                super.updateDrawState(ds);
-                ds.setUnderlineText(true);
-            }
-        };
-        res.setSpan(clickableSpan, 0, msg.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-        return res;
+        return tovarNaVitrineSUM +"/" + tovarPoUchetSUM;
     }
+
 
     private void saveOption(String signal) {
         RealmManager.INSTANCE.executeTransaction(realm -> {
@@ -303,183 +281,6 @@ public class OptionControlStockBalanceTovar<T> extends OptionControl {
                 realm.insertOrUpdate(optionDB);
             }
         });
-    }
-
-
-    // TODO Это нужно перенести куда-то где можно нормально вызывать по всей приле
-    TovarOptions TPL = new TovarOptions(AKCIYA_ID, "А", "Вид акции", "akciya_id", "main", 80977);
-
-    // Нужно для заполенния ТПЛ-ов
-    private Map<Integer, String> setMapData(Globals.OptionControlName optionControlName) {
-        Map<Integer, String> map = new HashMap<>();
-        switch (optionControlName) {
-            case ERROR_ID:
-                RealmResults<ErrorDB> errorDbList = RealmManager.getAllErrorDb();
-                for (int i = 0; i < errorDbList.size(); i++) {
-                    if (errorDbList.get(i).getNm() != null && !errorDbList.get(i).getNm().equals("")) {
-                        map.put(Integer.valueOf(errorDbList.get(i).getID()), errorDbList.get(i).getNm());
-                    }
-                }
-                return map;
-
-            case AKCIYA_ID:
-                RealmResults<PromoDB> promoDbList = RealmManager.getAllPromoDb();
-                for (int i = 0; i < promoDbList.size(); i++) {
-                    if (promoDbList.get(i).getNm() != null && !promoDbList.get(i).getNm().equals("")) {
-                        map.put(Integer.valueOf(promoDbList.get(i).getID()), promoDbList.get(i).getNm());
-                    }
-                }
-                return map;
-
-            case AKCIYA:
-                map.put(2, "Акция отсутствует");
-                map.put(1, "Есть акция");
-
-                return map;
-
-            default:
-                return null;
-        }
-    }
-
-    private File getPhotoFromDB(TovarDB tovar) {
-        int id = Integer.parseInt(tovar.getiD());
-        StackPhotoDB stackPhotoDB = RealmManager.getTovarPhotoByIdAndType(id, tovar.photoId, 18, false);
-        if (stackPhotoDB != null) {
-            if (stackPhotoDB.getObject_id() == id) {
-                if (stackPhotoDB.getPhoto_num() != null && !stackPhotoDB.getPhoto_num().equals("")) {
-                    File file = new File(stackPhotoDB.getPhoto_num());
-                    return file;
-                }
-            }
-        }
-        return null;
-    }
-
-    private PhotoDescriptionText setPhotoInfo(TovarOptions tpl, TovarDB tovar, String finalBalanceData1, String finalBalanceDate1) {
-        PhotoDescriptionText res = new PhotoDescriptionText();
-
-        try {
-            String weightString = String.format("%s, %s", tovar.getWeight(), tovar.getBarcode()); // составление строк веса и штрихкода для того что б выводить в одно поле
-
-            String title = tpl.getOptionLong();
-
-            if (DetailedReportActivity.rpThemeId == 1178) {
-                if (tpl.getOptionId().contains(578) || tpl.getOptionId().contains(1465)) {
-                    title = "Кол-во выкуп. товара";
-                }
-
-                if (tpl.getOptionId().contains(579)) {
-                    title = "Цена выкуп. товара";
-                }
-            }
-
-            if (DetailedReportActivity.rpThemeId == 33) {
-                if (tpl.getOptionId().contains(587)) {
-                    title = "Кол-во заказанного товара";
-                }
-            }
-
-            res.row1Text = title;
-            res.row1TextValue = "";
-            res.row2TextValue = tovar.getNm();
-            res.row3TextValue = weightString;
-
-            res.row4TextValue = RealmManager.getNmById(tovar.getManufacturerId()) != null ? RealmManager.getNmById(tovar.getManufacturerId()).getNm() : "";
-
-            res.row5Text = "Ост.:";
-            res.row5TextValue = finalBalanceData1 + " шт на " + finalBalanceDate1;
-        } catch (Exception e) {
-            Globals.writeToMLOG("ERROR", "RecycleViewDRAdapterTovar.setPhotoInfo", "Exception e: " + e);
-        }
-        return res;
-    }
-
-    private DialogData.Operations operationType(TovarOptions tpl) {
-        switch (tpl.getOrderField()) {
-            case ("price"):
-            case ("face"):
-            case ("expire_left"):
-            case ("amount"):
-            case ("oborotved_num"):
-            case ("up"):
-                return Number;
-
-            case ("dt_expire"):
-                return Date;
-
-
-            case ("akciya_id"):
-//                case ("akciya"):
-                return DoubleSpinner;
-
-            case ("error_id"):
-                return EditTextAndSpinner;
-
-            case ("notes"):
-                return Text;
-
-            default:
-                return Text;
-        }
-    }
-
-    private String getCurrentData(TovarOptions tpl, String cd, String id) {
-        ReportPrepareDB table = RealmManager.getTovarReportPrepare(cd, id);
-        switch (tpl.getOptionControlName()) {
-            case PRICE:
-                return table.getPrice();
-
-            case FACE:
-                return table.getFace();
-
-            case EXPIRE_LEFT:
-                return table.getExpireLeft();
-
-            case AMOUNT:
-                return String.valueOf(table.getAmount());
-
-            case OBOROTVED_NUM:
-                return table.getOborotvedNum();
-
-            case UP:
-                return table.getUp();
-
-            case DT_EXPIRE:
-                return table.getDtExpire();
-
-            case ERROR_ID:
-                return table.getErrorId();
-
-            case AKCIYA_ID:
-                return table.getAkciyaId();
-
-            case AKCIYA:
-                return table.getAkciya();
-
-            case NOTES:
-                return table.getNotes();
-
-        }
-
-        return null;
-    }
-
-    private void operetionSaveRPToDB(TovarOptions tpl, ReportPrepareDB rp, String data, String data2, TovarDB tovarDB, Context context) {
-        if (data == null || data.equals("")) {
-            Toast.makeText(context, "Для сохранения - внесите данные", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        if (tpl.getOptionControlName() == AKCIYA_ID) {
-            INSTANCE.executeTransaction(realm -> {
-                rp.setAkciyaId(data);
-                rp.setAkciya(data2);
-                rp.setUploadStatus(1);
-                rp.setDtChange(System.currentTimeMillis() / 1000);
-                RealmManager.setReportPrepareRow(rp);
-            });
-        }
     }
 
 }

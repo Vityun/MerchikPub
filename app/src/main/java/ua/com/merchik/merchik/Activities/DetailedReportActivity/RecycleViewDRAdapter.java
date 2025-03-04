@@ -42,6 +42,8 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 
+import org.json.JSONObject;
+
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -90,6 +92,7 @@ import ua.com.merchik.merchik.database.realm.tables.WpDataRealm;
 import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.dialogs.DialogFullPhotoR;
 import ua.com.merchik.merchik.features.main.DBViewModels.StackPhotoDBViewModel;
+import ua.com.merchik.merchik.features.main.DBViewModels.TovarDBViewModel;
 
 public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRAdapter.ViewHolder> {
 
@@ -279,6 +282,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                         || optionId == 164355   // "Фото Планограммы ТТ"
                         || optionId == 132812   // Хочу увеличение оплаты
                         || optionId == 165481   // Кнопка ЭФФИ
+                        || optionId == 141069   // Кнопка "Сравнение Остатков с Наличием"
                 ) {
                     optionButton.setBackgroundResource(R.drawable.bg_temp);
                     textInteger2.setVisibility(View.VISIBLE);
@@ -384,6 +388,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                     setCheck.setColorFilter(setCheck.getContext().getResources().getColor(R.color.colorUnselectedTab));
                 }
 
+                WpDataDB wp = (WpDataDB) dataDB;
 
                 // =========== СЧЁТЧИК ===========
                 // У Каждой кнопки есть какое-то значение, тут я его считаю и вставляю
@@ -538,7 +543,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                                 bundle.putString("dataJson", new Gson().toJson(dad2));
                                 bundle.putString("title", "Перелік фото звітів");
                                 bundle.putString("subTitle", "Справочник Фото" + ": " +
-                                         "Акційні товари");
+                                        "Акційні товари");
 //                                        Objects.requireNonNullElse(ImagesTypeListRealm.getByID(26).getNm(),"Акційні товари"));
                                 intent.putExtras(bundle);
                                 ActivityCompat.startActivityForResult((Activity) mContext, intent, NEED_UPDATE_UI_REQUEST, null);
@@ -792,7 +797,6 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                         case 138339:    // Доп Требования
                             // Устанавливаю в счётчик доп. требований их количество
                             Integer ttCategory = null;
-                            WpDataDB wp = (WpDataDB) dataDB;
                             AddressSDB addressSDB = SQL_DB.addressDao().getById(wp.getAddr_id());
                             if (addressSDB != null) {
                                 ttCategory = addressSDB.ttId;
@@ -822,15 +826,35 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                             OptionControlTaskAnswer<?> optionControlTask = new OptionControlTaskAnswer<>(itemView.getContext(), dataDB, optionsButtons, type, NULL, null);
 
                             textInteger.setText(CustomString.coloredString("" + optionControlTask.problemTaskCount(), optionsButtons));
+
                             break;
 
 
-                        case 141067:    // Сравнение остатков и наличия
+                        case 141069:    // Сравнение остатков и наличия
                             type = new OptionMassageType();
                             type.type = OptionMassageType.Type.STRING;
                             OptionControlStockBalanceTovar<?> optionControlStockBalanceTovar = new OptionControlStockBalanceTovar<>(itemView.getContext(), dataDB, optionsButtons, type, NULL, null);
 
-                            textInteger.setText(CustomString.coloredString("" + "test", optionsButtons));
+                            textInteger.setText(CustomString.underlineString(optionControlStockBalanceTovar.currentStockBalanceCount(), optionsButtons));
+                            textInteger.setOnClickListener(v -> {
+                                Intent intent = new Intent(mContext, FeaturesActivity.class);
+                                Bundle bundle = new Bundle();
+                                bundle.putString("viewModel", TovarDBViewModel.class.getCanonicalName());
+                                bundle.putString("contextUI", ContextUI.TOVAR_FROM_ACHIEVEMENT.toString());
+                                bundle.putString("modeUI", ModeUI.DEFAULT.toString());
+                                try {
+                                    bundle.putString("dataJson", new Gson().toJson(
+                                            new JSONObject()
+                                                    .put("codeDad2", Long.toString(dad2))
+                                                    .put("clientId",  wp.getClient_id()))
+                                    );
+                                } catch (Exception ignored) {
+                                }
+                                bundle.putString("title", "Товари");
+                                bundle.putString("subTitle", "Перечень товаров к текущему посещению");
+                                intent.putExtras(bundle);
+                                ActivityCompat.startActivityForResult((Activity) mContext, intent, NEED_UPDATE_UI_REQUEST, null);
+                            });
                             break;
 
                         default:
@@ -1028,24 +1052,24 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
     /*Определяем конструктор*/
     public RecycleViewDRAdapter(Context context, T dataDB, List<OptionsDB> dataButtons, List<OptionsDB> allReportOption, List<SiteObjectsSDB> list, Clicks.click click) {
 //        try {
-            this.click = click;
-            this.dataDB = dataDB;
-            this.butt = dataButtons;
-            this.translate = list;
-            this.mContext = context;
-            this.allReportOption = allReportOption;
+        this.click = click;
+        this.dataDB = dataDB;
+        this.butt = dataButtons;
+        this.translate = list;
+        this.mContext = context;
+        this.allReportOption = allReportOption;
 
-            if (dataDB instanceof WpDataDB) {
-                WpDataDB wp = (WpDataDB) dataDB;
-                dad2 = wp.getCode_dad2();
-                startDt = wp.getVisit_start_dt();
-                endDt = wp.getVisit_end_dt();
-            } else {
-                TasksAndReclamationsSDB tar = (TasksAndReclamationsSDB) dataDB;
-                dad2 = tar.codeDad2SrcDoc;
-                startDt = tar.dt_start_fact;
-                endDt = tar.dt_end_fact;
-            }
+        if (dataDB instanceof WpDataDB) {
+            WpDataDB wp = (WpDataDB) dataDB;
+            dad2 = wp.getCode_dad2();
+            startDt = wp.getVisit_start_dt();
+            endDt = wp.getVisit_end_dt();
+        } else {
+            TasksAndReclamationsSDB tar = (TasksAndReclamationsSDB) dataDB;
+            dad2 = tar.codeDad2SrcDoc;
+            startDt = tar.dt_start_fact;
+            endDt = tar.dt_end_fact;
+        }
 //        } catch (Exception e) {
 //            Globals.writeToMLOG("INFO", "RecycleViewDRAdapter/RecycleViewDRAdapter", "Exception e: " + e);
 //            Globals.writeToMLOG("INFO", "RecycleViewDRAdapter/RecycleViewDRAdapter", "Exception exception: " + Arrays.toString(e.getStackTrace()));

@@ -2100,7 +2100,7 @@ public class Options {
 
 
             //  Сравнение остатков и наличия
-            case 141069:
+            case 141067:
                 OptionControlStockBalanceTovar<?> optionControlStockBalanceTovar = new OptionControlStockBalanceTovar<>(context, dataDB, option, type, mode, unlockCodeResultListener);
                 if (mode.equals(NNKMode.MAKE) || (mode.equals(NNKMode.CHECK) && optionControlStockBalanceTovar.isBlockOption()))
                     optionControlStockBalanceTovar.showOptionMassage(block);

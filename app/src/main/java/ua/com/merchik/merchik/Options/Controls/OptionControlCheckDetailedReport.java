@@ -204,7 +204,6 @@ public class OptionControlCheckDetailedReport<T> extends OptionControl {
      */
     private List<ReportPrepareDB> prepareOSVData(List<ReportPrepareDB> reportPrepare, long dateStart) {
         List<ReportPrepareDB> res = null;
-        long testTime = 0L;
         if (reportPrepare != null && reportPrepare.size() > 0) {
             res = RealmManager.INSTANCE.copyFromRealm(reportPrepare);
             for (ReportPrepareDB item : res) {
@@ -215,14 +214,6 @@ public class OptionControlCheckDetailedReport<T> extends OptionControl {
                     item.colSKU = 1;
                 }
 
-                long time = item.getDtChange();
-                if (testTime == 0L)
-                    testTime = time;
-
-                if (time != testTime)
-                    Log.e("testLOg","++++++++");
-
-                Log.e("!prepareOSVData!", "item.dtChange: " + item.dtChange + " < " + dateStart + " = " + (item.dtChange < dateStart));
                 if (time < dateStart) {
                     item.errorExist = 1;
                     item.note = "исправление не внесено";

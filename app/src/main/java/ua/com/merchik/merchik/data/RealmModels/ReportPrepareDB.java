@@ -62,7 +62,7 @@ public class ReportPrepareDB extends RealmObject implements DataObjectUI {
     public String face;
     @SerializedName("amount")
     @Expose
-    public int amount;
+    public int amount; // кол-во на витрине
     @SerializedName("up")
     @Expose
     public String up;
@@ -119,7 +119,7 @@ public class ReportPrepareDB extends RealmObject implements DataObjectUI {
 
     @SerializedName("oborotved_num")
     @Expose
-    public String oborotvedNum;
+    public String oborotvedNum; // отстаток по учету
 
     @SerializedName("oborotved_num_date")
     @Expose
@@ -269,6 +269,8 @@ public class ReportPrepareDB extends RealmObject implements DataObjectUI {
      * 01.05.23.
      * Используется в опции контроля 575
      * Реквизит для подсчета количества СКЮ по УЧЕТУ
+     * 03.03.25
+     * Стал использовать в опции контроля 141067
      * */
     @Ignore
     public Integer numberSKUForAccounting;
@@ -277,6 +279,8 @@ public class ReportPrepareDB extends RealmObject implements DataObjectUI {
      * 01.05.23.
      * Используется в опции контроля 575
      * Реквизит для подсчета количества СКЮ по ФАКТУ
+     * 03.03.25
+     * Стал использовать в опции контроля 141067
      * */
     @Ignore
     public Integer numberSKUForFact;

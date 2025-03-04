@@ -267,11 +267,11 @@ class DialogShowcase(private val context: Context?) : DialogData() {
                 list.add(8)
             }
 
-            var showcaseDataListTest = RoomManager.SQL_DB.showcaseDao().getByDocTP(
-                wpDataDB!!.client_id, wpDataDB!!.addr_id
-            )
-
-            Log.e("setRecyclerView", "showcaseDataListTest: $showcaseDataListTest")
+//            var showcaseDataListTest = RoomManager.SQL_DB.showcaseDao().getByDocTP(
+//                wpDataDB!!.client_id, wpDataDB!!.addr_id
+//            )
+//
+//            Log.e("setRecyclerView", "showcaseDataListTest: $showcaseDataListTest")
 
             var showcaseDataList = RoomManager.SQL_DB.showcaseDao().getByDocTP(
                 wpDataDB!!.client_id, wpDataDB!!.addr_id, list
