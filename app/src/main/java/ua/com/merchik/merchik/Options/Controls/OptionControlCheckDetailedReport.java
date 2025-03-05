@@ -213,6 +213,7 @@ public class OptionControlCheckDetailedReport<T> extends OptionControl {
                 } else {
                     item.colSKU = 1;
                 }
+                long time = item.getDtChange();
 
                 if (time < dateStart) {
                     item.errorExist = 1;
