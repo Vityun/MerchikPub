@@ -7,11 +7,14 @@ import android.util.Log;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 
+import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
+import io.reactivex.rxjava3.core.Single;
 import io.reactivex.rxjava3.observers.DisposableCompletableObserver;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
+import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.Database.Room.Planogram.PlanogrammSDB;
@@ -19,7 +22,9 @@ import ua.com.merchik.merchik.data.RetrofitResponse.tables.planogramm.Planogramm
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.planogramm.PlanogrammGroupResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.planogramm.PlanogrammImagesResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.planogramm.PlanogrammResponse;
+import ua.com.merchik.merchik.data.RetrofitResponse.tables.planogramm.PlanogrammTypeResponse;
 import ua.com.merchik.merchik.data.TestJsonUpload.StandartData;
+import ua.com.merchik.merchik.database.room.DaoInterfaces.PlanogrammTypeDao;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
 
 public class PlanogrammTableExchange {
@@ -35,20 +40,20 @@ public class PlanogrammTableExchange {
         JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
         Log.e("MAIN_test", "planogramDownload convertedObject: " + convertedObject);
 
-        retrofit2.Call<JsonObject> call1 = RetrofitBuilder.getRetrofitInterface().TEST_JSON_UPLOAD(RetrofitBuilder.contentType, convertedObject);
-        call1.enqueue(new Callback<JsonObject>() {
-            @Override
-            public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
-                Log.e("planogramDownload", "planogramDownload: " + response.body());
-                Globals.writeToMLOG("INFO", "1_D_PlanogrammSDB", "response: " + response.body());
-            }
-
-            @Override
-            public void onFailure(Call<JsonObject> call, Throwable t) {
-                Log.e("planogramDownload", "planogramDownloadThrowable t: " + t);
-                Globals.writeToMLOG("INFO", "1_D_PlanogrammSDB", "Throwable t: " + t);
-            }
-        });
+//        retrofit2.Call<JsonObject> call1 = RetrofitBuilder.getRetrofitInterface().TEST_JSON_UPLOAD(RetrofitBuilder.contentType, convertedObject);
+//        call1.enqueue(new Callback<JsonObject>() {
+//            @Override
+//            public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
+//                Log.e("planogramDownload", "planogramDownload: " + response.body());
+//                Globals.writeToMLOG("INFO", "1_D_PlanogrammSDB", "response: " + response.body());
+//            }
+//
+//            @Override
+//            public void onFailure(Call<JsonObject> call, Throwable t) {
+//                Log.e("planogramDownload", "planogramDownloadThrowable t: " + t);
+//                Globals.writeToMLOG("INFO", "1_D_PlanogrammSDB", "Throwable t: " + t);
+//            }
+//        });
 
         retrofit2.Call<PlanogrammResponse> call = RetrofitBuilder.getRetrofitInterface().Planogramm_RESPONSE(RetrofitBuilder.contentType, convertedObject);
         call.enqueue(new Callback<PlanogrammResponse>() {
@@ -64,11 +69,11 @@ public class PlanogrammTableExchange {
                             if (response.body().state) {
                                 if (response.body().list != null && response.body().list.size() > 0) {
 
-                                    for (PlanogrammSDB item : response.body().list){
-                                        if (item.dtStart.getTime() < 0){
+                                    for (PlanogrammSDB item : response.body().list) {
+                                        if (item.dtStart.getTime() < 0) {
                                             item.dtStart = null;
                                         }
-                                        if (item.dtEnd.getTime() < 0){
+                                        if (item.dtEnd.getTime() < 0) {
                                             item.dtEnd = null;
                                         }
                                     }
@@ -192,6 +197,21 @@ public class PlanogrammTableExchange {
         JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
         Log.e("MAIN_test", "planogrammGroupDownload convertedObject: " + convertedObject);
 
+//        retrofit2.Call<JsonObject> call1 = RetrofitBuilder.getRetrofitInterface().TEST_JSON_UPLOAD(RetrofitBuilder.contentType, convertedObject);
+//        call1.enqueue(new Callback<JsonObject>() {
+//            @Override
+//            public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
+//                Log.e("planogramDownload", "planogramDownload: " + response.body());
+//                Globals.writeToMLOG("INFO", "1_D_PlanogrammSDB", "response: " + response.body());
+//            }
+//
+//            @Override
+//            public void onFailure(Call<JsonObject> call, Throwable t) {
+//                Log.e("planogramDownload", "planogramDownloadThrowable t: " + t);
+//                Globals.writeToMLOG("INFO", "1_D_PlanogrammSDB", "Throwable t: " + t);
+//            }
+//        });
+
         retrofit2.Call<PlanogrammGroupResponse> call = RetrofitBuilder.getRetrofitInterface().Planogramm_GROUP_RESPONSE(RetrofitBuilder.contentType, convertedObject);
         call.enqueue(new Callback<PlanogrammGroupResponse>() {
             @Override
@@ -307,6 +327,33 @@ public class PlanogrammTableExchange {
         });
     }
 
+    public void planorgammType() {
+        StandartData data = new StandartData();
+        data.mod = "planogram";
+        data.act = "tt_type_list";
+        data.nolimit = "1";
+
+//        data.date_from = Clock.today_7;
+//        data.date_to = Clock.tomorrow7;
+
+        Gson gson = new Gson();
+        String json = gson.toJson(data);
+        JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
+
+        RetrofitBuilder.getRetrofitInterface()
+                .Planogramm_TYPE_RESPONSE(RetrofitBuilder.contentType, convertedObject)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(planorgammType -> {
+                    if (planorgammType.state && planorgammType.list != null) {
+                        SQL_DB.planogrammTypeDao()
+                                .insertAll(planorgammType.list);
+                        Globals.writeToMLOG("INFO", "PlanogrammTableExchange/planogrammType", "Data inserted successfully");
+                    }
+                }, throwable -> Globals.writeToMLOG("ERROR", "PlanogrammTableExchange/planorgammType", "exeption: " + throwable.getMessage()));
+
+    }
+
     public void planogramTypeList(Clicks.clickObjectAndStatus click) {
         StandartData data = new StandartData();
         data.mod = "planogram";
@@ -347,11 +394,11 @@ public class PlanogrammTableExchange {
                             if (response.body().state) {
                                 if (response.body().list != null && response.body().list.size() > 0) {
 
-                                    for (PlanogrammSDB item : response.body().list){
-                                        if (item.dtStart.getTime() < 0){
+                                    for (PlanogrammSDB item : response.body().list) {
+                                        if (item.dtStart.getTime() < 0) {
                                             item.dtStart = null;
                                         }
-                                        if (item.dtEnd.getTime() < 0){
+                                        if (item.dtEnd.getTime() < 0) {
                                             item.dtEnd = null;
                                         }
                                     }

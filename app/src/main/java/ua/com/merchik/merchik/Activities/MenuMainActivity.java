@@ -32,12 +32,16 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 import ua.com.merchik.merchik.Activities.Features.FeaturesActivity;
+import ua.com.merchik.merchik.Clock;
+import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.ServerExchange.Exchange;
+import ua.com.merchik.merchik.ServerExchange.TablesExchange.PlanogrammTableExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.SiteObjectsExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesLoadingUnloading;
 import ua.com.merchik.merchik.Translate;
 import ua.com.merchik.merchik.Utils.CodeGenerator;
+import ua.com.merchik.merchik.data.Database.Room.Planogram.PlanogrammSDB;
 import ua.com.merchik.merchik.data.RealmModels.AppUsersDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.ShowcaseResponse;
@@ -150,7 +154,40 @@ public class MenuMainActivity extends toolbar_menus {
     private void test() {
 
 
-        photoDownloaderViewModel.scheduleDownload();
+        PlanogrammTableExchange planogrammTableExchange = new PlanogrammTableExchange();
+        planogrammTableExchange.planorgammType();
+//        StandartData data = new StandartData();
+//        data.mod = "planogram";
+//        data.act = "tt_type_list";
+//        data.nolimit = "1";
+//
+//        data.date_from = Clock.today_7;
+//        data.date_to = Clock.tomorrow7;
+//
+//
+//
+//        Gson gson = new Gson();
+//        String json = gson.toJson(data);
+//        JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
+//
+//
+//        retrofit2.Call<JsonObject> call1 = RetrofitBuilder.getRetrofitInterface().TEST_JSON_UPLOAD(RetrofitBuilder.contentType, convertedObject);
+//        call1.enqueue(new Callback<JsonObject>() {
+//            @Override
+//            public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
+//                Log.e("planogramDownload", "planogramDownload: " + response.body());
+//                Globals.writeToMLOG("INFO", "1_D_PlanogrammSDB", "response: " + response.body());
+//
+//            }
+//
+//            @Override
+//            public void onFailure(Call<JsonObject> call, Throwable t) {
+//                Log.e("planogramDownload", "planogramDownloadThrowable t: " + t);
+//                Globals.writeToMLOG("INFO", "1_D_PlanogrammSDB", "Throwable t: " + t);
+//            }
+//        });
+
+//        photoDownloaderViewModel.scheduleDownload();
 
 //        Intent intent = new Intent(this, FeaturesActivity.class);
 //        Bundle bundle = new Bundle();

@@ -108,6 +108,7 @@ import ua.com.merchik.merchik.data.RetrofitResponse.tables.planogramm.Planogramm
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.planogramm.PlanogrammGroupResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.planogramm.PlanogrammImagesResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.planogramm.PlanogrammResponse;
+import ua.com.merchik.merchik.data.RetrofitResponse.tables.planogramm.PlanogrammTypeResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.update.reportprepare.ReportPrepareUpdateResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.update.wpdata.WpDataUpdateResponse;
 import ua.com.merchik.merchik.data.ServerData.TARCommentsData.AdditionalRequirements.AdditionalRequirementsServerData;
@@ -122,6 +123,7 @@ import ua.com.merchik.merchik.data.Translation.SiteTranslations;
 import ua.com.merchik.merchik.data.UploadToServ.LogUploadToServ;
 import ua.com.merchik.merchik.data.UploadToServ.ReportPrepareServ;
 import ua.com.merchik.merchik.data.UploadToServ.WpDataUploadToServ;
+import ua.com.merchik.merchik.database.room.DaoInterfaces.PlanogrammTypeDao;
 import ua.com.merchik.merchik.dialogs.EKL.DialogEKL;
 import ua.com.merchik.merchik.dialogs.EKL.EKLRequests;
 
@@ -680,6 +682,15 @@ public interface RetrofitInterface {
 
     @POST("mobile_app.php?")
     Call<LocationResponse> LOCATION_RESPONSE_CALL(
+            @Header("ContentType") String content,
+            @Body JsonObject json);
+
+    /**
+     * 06.03.25
+     * типы ланограмм.
+     */
+    @POST("mobile_app.php?")
+    Single<PlanogrammTypeResponse> Planogramm_TYPE_RESPONSE(
             @Header("ContentType") String content,
             @Body JsonObject json);
 

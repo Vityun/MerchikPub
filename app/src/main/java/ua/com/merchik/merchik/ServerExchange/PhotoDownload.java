@@ -1202,6 +1202,10 @@ public class PhotoDownload {
 //            @Override
 //            public void run() {
         try {
+            if (photoUrl == null || photoUrl.isEmpty()) {
+                exchange.onFailure("Ссылка на фото отсутствует");
+                return;
+            }
             retrofit2.Call<ResponseBody> call = RetrofitBuilder.getRetrofitInterface().DOWNLOAD_PHOTO_BY_URL(photoUrl.replace("thumb_", ""));
             call.enqueue(new Callback<ResponseBody>() {
                 @Override
@@ -1273,8 +1277,10 @@ public class PhotoDownload {
                             photoDB.setDvi(item.dvi);
                             photoDB.setPhotoServerURL(item.photoUrl);
 
+
 //                        Globals.writeToMLOG("INFO", "savePhotoToDB2/downloadPhoto/Planogram", "photoDB: " + new Gson().toJson(photoDB));
 
+                            // TODO проверить правильно ли стоит item.id или должен быть
                             savePhotoAndUpdateStackPhotoDB("/Planogram", "" + item.id, bitmap, photoDB);
 
 //                            RealmManager.stackPhotoSavePhoto(photoDB);
@@ -1324,22 +1330,29 @@ public class PhotoDownload {
     public void savePhotoAndUpdateStackPhotoDB(String folderPath, String imageName, Bitmap
             bitmap, StackPhotoDB stackPhotoDB) {
 //        executorService.submit(() -> {
-        String photoPath = Globals.savePhotoToPhoneMemory(folderPath, imageName, bitmap);
 
-        if (photoPath != null) {
+     try {
 
-            stackPhotoDB.setPhoto_num(photoPath);
-            RealmManager.stackPhotoSavePhoto(stackPhotoDB);
+         String photoPath = Globals.savePhotoToPhoneMemory(folderPath, imageName, bitmap);
+
+         if (photoPath != null) {
+
+             stackPhotoDB.setPhoto_num(photoPath);
+             RealmManager.stackPhotoSavePhoto(stackPhotoDB);
 //                saveToRealm(stackPhotoDB);
 
-            // Обновляем в базе данных (на основном потоке)
+             // Обновляем в базе данных (на основном потоке)
 //                new Handler(Looper.getMainLooper()).post(() -> {
 //                    RealmManager.stackPhotoSavePhoto(stackPhotoDB);
 //                    Log.d("SAVE", "Фото сохранено: " + photoPath);
 //                });
-        } else {
-            Log.e("SAVE", "Ошибка при сохранении фото");
-        }
+         } else {
+             Log.e("SAVE", "Ошибка при сохранении фото");
+         }
+     } catch (Exception e){
+         Exception err = e;
+         Log.e("Errpr","DC: " + err.getMessage());
+     }
 //        });
     }
 

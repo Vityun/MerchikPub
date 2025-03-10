@@ -632,17 +632,11 @@ public class RealmManager {
 
     // STACK PHOTO:---------------------------------------------------------------------------------
     public static void stackPhotoSavePhoto(StackPhotoDB stackPhotoDB) {
-        INSTANCE.beginTransaction();
-        INSTANCE.insertOrUpdate(stackPhotoDB);
-        INSTANCE.commitTransaction();
+        INSTANCE.executeTransaction(realm -> realm.copyToRealmOrUpdate(stackPhotoDB));
     }
-//    20241217_162210249_2954396291348853998
 
     public static void stackPhotoSavePhoto(List<StackPhotoDB> stackPhotoDB) {
-        INSTANCE.beginTransaction();
-        Log.e("TAG_TABLE", "PHOTO_TOVAR_URL_path_id.List: " + stackPhotoDB.size());
-        INSTANCE.insertOrUpdate(stackPhotoDB);
-        INSTANCE.commitTransaction();
+        INSTANCE.executeTransaction(realm -> realm.copyToRealmOrUpdate(stackPhotoDB));
     }
 
     public static long stackPhotoGetLastId(Realm realm) {

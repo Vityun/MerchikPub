@@ -262,7 +262,8 @@ abstract class MainViewModel(
     fun updateContent() {
         viewModelScope.launch {
 
-            val settingsItems = repository.getSettingsItemList(table, contextUI, getDefaultHideUserFields())
+            val list = getDefaultHideUserFields()
+            val settingsItems = repository.getSettingsItemList(table, contextUI, list)
             val sortingFields = repository.getSortingFields(table, contextUI)
             updateFilters()
 

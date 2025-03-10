@@ -169,6 +169,14 @@ public class UsersSDB implements DataObjectUI{
     @ColumnInfo(name = "tel2_corp")
     public Integer tel2Corp;
 
+    // 07.03.25 добавил поле получение последнего экл
+    @SerializedName("last_ekl_date")
+    @Expose
+    @ColumnInfo(name = "last_ekl_date")
+    public String last_ekl_date;
+
+
+
     @NonNull
     @Override
     public String getHidedFieldsOnUI() {

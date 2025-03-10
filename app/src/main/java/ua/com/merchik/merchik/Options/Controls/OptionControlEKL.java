@@ -5,14 +5,17 @@ import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
 import android.content.Context;
 import android.os.Build;
+import android.text.Html;
 import android.util.Log;
 
 import com.google.gson.Gson;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collections;
+import java.util.Date;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -58,6 +61,9 @@ public class OptionControlEKL<T> extends OptionControl {
 
     public boolean signal = false;
 
+    private final int DAYS = 4;   // ветка дней на склолько раньше проверяем ЭКЛ !!!ПРИ ИЗМЕНЕНИИ РЕАДКТИРОВАТЬ АНАЛОГИЧНОЕ В RecycleViewDRAdapter/counter2EKLText
+
+
     public int getResultCode() {
         return resultCode;
     }
@@ -75,7 +81,7 @@ public class OptionControlEKL<T> extends OptionControl {
             getDocumentVar();
             executeOption();
             Log.e("OptionControlEKL", "HERE TEST OptionControlEKL END");
-        }catch (Exception e){
+        } catch (Exception e) {
             Globals.writeToMLOG("ERROR", "OptionControlEKL", "Exception e: " + e);
         }
     }
@@ -126,13 +132,11 @@ public class OptionControlEKL<T> extends OptionControl {
 //        }
         // -----------------------
 
-
-        int userId = wpDataDB.getUser_id();
         String ptt = PTT;
         long dateFrom = Clock.getDatePeriodLong(documentDt * 1000, -3) / 1000;
         long dateTo = Clock.getDatePeriodLong(documentDt * 1000, 5) / 1000;
 
-        if (System.currentTimeMillis()/1000 < 1719878399 && addressSDB.cityId == 41){
+        if (System.currentTimeMillis() / 1000 < 1719878399 && addressSDB.cityId == 41) {
             dateFrom = Clock.getDatePeriodLong(documentDt * 1000, -11) / 1000;
             dateTo = Clock.getDatePeriodLong(documentDt * 1000, 5) / 1000;
         }
@@ -346,7 +350,7 @@ public class OptionControlEKL<T> extends OptionControl {
         // Изначально ЭТО не надо было вообще писать, НО для парней с < 5 отчётами надо сделать исключение
         if (signal && (documentUser.reportDate20 == null || documentUser.reportDate20.getTime() > wpDataDB.getDt().getTime())) {
             signal = false;
-            stringBuilderMsg.append("Исполнитель еще не провел свою двадцатую отчетность! ЭКЛ не подписан!").append("\n\n");
+            spannableStringBuilder.append("Исполнитель еще не провел свою двадцатую отчетность! ЭКЛ не подписан!").append("\n\n");
         }
 
 
@@ -366,17 +370,50 @@ public class OptionControlEKL<T> extends OptionControl {
 
 
         Log.e("OptionControlEKL", "HERE TEST OptionControlEKL 9");
-        stringBuilderMsg.append(optionMsg);
+        spannableStringBuilder.append(optionMsg);
 
         // Установка блокирует ли опция работу приложения или нет
         if (signal) {
             if (optionDB.getBlockPns().equals("1") && (nnkMode.equals(Options.NNKMode.MAKE) || nnkMode.equals(Options.NNKMode.BLOCK)) || nnkMode.equals(Options.NNKMode.BLOCK)) {
                 showUnlockCodeDialogInMainThread();
             } else {
-                stringBuilderMsg.append("\n\n").append("Вы можете получить Премиальные БОЛЬШЕ, если будете получать ЭКЛ у ПТТ.");
+                spannableStringBuilder.append("\n\n").append("Вы можете получить Премиальные БОЛЬШЕ, если будете получать ЭКЛ у ПТТ.");
             }
         }
 
+        int bonus = -20;
+        CharSequence valBonus = "";
+        float shtraf = 0.32f;
+        long countDay = wpDataDB.getVisit_start_dt() - (DAYS * 24 * 60 * 60);
+        long ekl_date = -1L;
+
+        if (documentUser.last_ekl_date != null) {
+            ekl_date = convertDateToSeconds(documentUser.last_ekl_date);
+            if (ekl_date != -1 && ekl_date > countDay) {
+                shtraf = 0.16f;
+                bonus = -10;
+            }
+        }
+        valBonus = "~" + String.format("%.2f", wpDataDB.getCash_zakaz() * shtraf);
+        valBonus = Html.fromHtml("<font color=red>" + valBonus + "грн" + "</font>");
+
+
+        // 07.03.25 добавил штрафы/премии в экл
+        spannableStringBuilder
+                .append("\n\n")
+                .append("Останній раз ви отримували ЕКЛ - ")
+                .append(documentUser.last_ekl_date != null ? documentUser.last_ekl_date : Html.fromHtml("<font color=red>" + "немає даних" + "</font>"))
+                .append((ekl_date != -1 && ekl_date > countDay) ? ", що меньше " : ", що більше ")
+                .append(DAYS + " днів, тому ваші преміальні ")
+                .append(bonus >= 0 ? "збільшено" : "зменшено").append(" на ")
+                .append(bonus >= 0 ? Html.fromHtml("<font color=green>" + bonus + "%</font>") : Html.fromHtml("<font color=red>" + bonus + "%</font>"))
+                .append(", що становитиме ").append(bonus >= 0 ? Html.fromHtml("<font color=green>" + valBonus + "%</font>") : Html.fromHtml("<font color=red>" + valBonus + "</font>")).append(".")
+                .append("\n")
+                .append((ekl_date != -1 && ekl_date > countDay) ? "" : "Якщо ви отримаєте ЕКЛ по будь-яким клієнту, то відсоток поточних відрахувань буде зменшено вдвічі.")
+                .append("");
+
+
+        spannableStringBuilder.append("");
 
         // сохраняем сигнал
         RealmManager.INSTANCE.executeTransaction(realm -> {
@@ -416,15 +453,45 @@ public class OptionControlEKL<T> extends OptionControl {
             @Override
             public void onFailure(String error) {
                 setIsBlockOption(signal);
-                stringBuilderMsg.append("\n\n").append("Документ проведен не будет!");
-                spannableStringBuilder.append(stringBuilderMsg);
+                spannableStringBuilder.append("\n\n").append("Документ проведен не будет!");
+//                spannableStringBuilder.append(stringBuilderMsg);
                 showOptionMassage("");
                 unlockCodeResultListener.onUnlockCodeFailure();
             }
         });
     }
 
+    private CharSequence counter2EKLText() {
+        CharSequence res = "";
 
+        UsersSDB users = SQL_DB.usersDao().getUserById(wpDataDB.getUser_id());
+        if (users != null) {
+            float shtraf = 0.32f;
+            if (users.last_ekl_date != null) {
+                long ekl_date = convertDateToSeconds(users.last_ekl_date);
+                long countDay = wpDataDB.getVisit_start_dt() - (DAYS * 24 * 60 * 60);
+                if (ekl_date != -1 && ekl_date > countDay)
+                    shtraf = 0.16f;
+            }
+            res = "~" + String.format("%.2f", wpDataDB.getCash_zakaz() * shtraf);
+            res = Html.fromHtml("<font color=red>" + res + "грн" + "</font>");
+        }
+
+        return res;
+    }
+
+    public static long convertDateToSeconds(String dateString) {
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+        try {
+            // Парсим строку в объект Date
+            Date date = dateFormat.parse(dateString);
+            // Преобразуем Date в миллисекунды и делим на 1000, чтобы получить секунды
+            return date.getTime() / 1000;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return -1; // В случае ошибки возвращаем -1
+        }
+    }
 }
 
 

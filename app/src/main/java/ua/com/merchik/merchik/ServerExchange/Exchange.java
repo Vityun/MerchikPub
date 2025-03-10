@@ -1174,6 +1174,8 @@ public class Exchange {
 
                         }
                     });
+                    planogrammTableExchange.planorgammType();
+
                 } catch (Exception e) {
                     Globals.writeToMLOG("ERROR", "startExchange/PlanogrammExchange/planogrammDownload", "Exception e: " + e);
                 }

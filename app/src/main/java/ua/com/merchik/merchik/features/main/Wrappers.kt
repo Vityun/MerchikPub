@@ -299,6 +299,8 @@ object SamplePhotoSDBOverride {
             maxLine = 50
         )
     }
+    fun getHidedFieldsOnUI(): String =
+        "photoServerId, example_id, commentUpload, doc_id"
 }
 
 object TovarDBOverride {

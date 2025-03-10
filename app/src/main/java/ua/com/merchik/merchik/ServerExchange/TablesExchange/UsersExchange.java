@@ -1,7 +1,11 @@
 package ua.com.merchik.merchik.ServerExchange.TablesExchange;
 
+import android.util.Log;
+
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
+
+import org.json.JSONObject;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -52,7 +56,6 @@ public class UsersExchange {
 //                    Log.e("downloadUsersTable", "Throwable t: " + t);
 //                }
 //            });
-
 
             retrofit2.Call<UsersResponse> call = RetrofitBuilder.getRetrofitInterface().GET_USERS_ROOM(RetrofitBuilder.contentType, convertedObject);
             call.enqueue(new Callback<UsersResponse>() {

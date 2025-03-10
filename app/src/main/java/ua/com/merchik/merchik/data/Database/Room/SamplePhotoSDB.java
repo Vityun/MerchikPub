@@ -75,7 +75,7 @@ public class SamplePhotoSDB implements DataObjectUI {
     @NonNull
     @Override
     public String getHidedFieldsOnUI() {
-        return "active, dt_update, id_1c";
+        return "active, dt_update, id_1c, photoServerId, example_id, commentUpload, doc_id";
     }
 
     @Nullable

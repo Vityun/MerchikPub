@@ -54,6 +54,7 @@ import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.dataLayer.ContextUI;
 import ua.com.merchik.merchik.dataLayer.ModeUI;
 import ua.com.merchik.merchik.database.realm.RealmManager;
+import ua.com.merchik.merchik.database.realm.tables.ImagesTypeListRealm;
 import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.dialogs.DialogFullPhotoR;
 import ua.com.merchik.merchik.dialogs.DialogVideo;
@@ -494,8 +495,8 @@ public class DialogCreateAchievement {
             bundle.putString("contextUI", ContextUI.STACK_PHOTO_TO_FROM_ACHIEVEMENT.toString());
             bundle.putString("modeUI", ModeUI.ONE_SELECT.toString());
             bundle.putString("dataJson", new Gson().toJson(codeDad2));
-            bundle.putString("title", "title");
-            bundle.putString("subTitle", "subTitle");
+            bundle.putString("title", "Перелік фото звітів");
+            bundle.putString("subTitle", "Справочник Фото" + ": " + ImagesTypeListRealm.getByID(14).getNm());
             intent.putExtras(bundle);
             ActivityCompat.startActivityForResult((Activity) context, intent, NEED_UPDATE_UI_REQUEST, null);
         });

@@ -44,7 +44,10 @@ import com.google.gson.JsonObject;
 
 import org.json.JSONObject;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -71,6 +74,7 @@ import ua.com.merchik.merchik.data.Database.Room.BonusSDB;
 import ua.com.merchik.merchik.data.Database.Room.SamplePhotoSDB;
 import ua.com.merchik.merchik.data.Database.Room.SiteObjectsSDB;
 import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
+import ua.com.merchik.merchik.data.Database.Room.UsersSDB;
 import ua.com.merchik.merchik.data.OptionMassageType;
 import ua.com.merchik.merchik.data.OptionsButtons;
 import ua.com.merchik.merchik.data.RealmModels.AdditionalRequirementsDB;
@@ -106,6 +110,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
 
     long dad2, startDt, endDt;
 
+    private final int DAYS = 4;   // ветка дней на склолько раньше проверяем ЭКЛ !!!ПРИ ИЗМЕНЕНИИ РЕАДКТИРОВАТЬ АНАЛОГИЧНОЕ В OptionControlEKL
 
 //    public void blinkItem() {
 //        Timer timer = new Timer();
@@ -186,7 +191,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                 buttText = buttText.replace("&quot;", "\"");
                 buttText = buttText.replace("Кнопка ", "");
 
-                if (siteObjectsSDB != null) {
+                if (siteObjectsSDB != null && !optionsButtons.getOptionTxt().contains("Планограммы")) {
                     Log.e("R_TRANSLATES", "siteObjectsSDB.id: " + siteObjectsSDB.id);
                     Log.e("R_TRANSLATES", "siteObjectsSDB.commentsTranslation: " + siteObjectsSDB.commentsTranslation);
                     buttText = siteObjectsSDB.commentsTranslation;
@@ -306,6 +311,8 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                                 dialog.setClose(dialog::dismiss);
                                 dialog.show();
                             });
+                        } else if (optionId == 84007 && optionsButtons.getIsSignal().equals("1")) {
+                            textInteger2.setText(counter2EKLText());
                         } else {
                             textInteger2.setVisibility(View.GONE);
                         }
@@ -396,6 +403,11 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                 try {
                     // Вчтавляем "счётчкик"
                     switch (optionId) {
+
+//                        case 84007:
+//                            textInteger.setVisibility(View.VISIBLE);
+//                            textInteger.setText("");
+//                            break;
 
                         case 135159:
                             int achievementSum = 0;
@@ -641,17 +653,36 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
 
                         case 151139:
                         case 164355:
-                            textInteger.setText(
-                                    setPhotoCountsMakeAndMust(optionsButtons, RealmManager.stackPhotoShowcasePhotoCount(dad2, 5)),
-                                    TextView.BufferType.SPANNABLE
-                            );
 
+                            SpannableString spannableString164355 = setPhotoCountsMakeAndMust(optionsButtons, RealmManager.stackPhotoShowcasePhotoCount(dad2, 5));
+                            spannableString164355.setSpan(new UnderlineSpan(), 0, spannableString164355.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+
+
+//                            textInteger.setText(
+//                                    setPhotoCountsMakeAndMust(optionsButtons, RealmManager.stackPhotoShowcasePhotoCount(dad2, 5)),
+//                                    TextView.BufferType.SPANNABLE
+//                            );
+                            textInteger.setText(spannableString164355);
+
+//                            textInteger.setOnClickListener(v -> {
+//                                Intent intent = new Intent(mContext, FeaturesActivity.class);
+//                                Bundle bundle = new Bundle();
+//                                bundle.putString("viewModel", StackPhotoDBViewModel.class.getCanonicalName());
+//                                bundle.putString("contextUI", ContextUI.SAMPLE_PHOTO_FROM_OPTION_164355.toString());
+//                                bundle.putString("modeUI", ModeUI.DEFAULT.toString());
+//                                bundle.putString("dataJson", new Gson().toJson(dad2));
+//                                bundle.putString("title", "Перелік фото звітів");
+//                                bundle.putString("subTitle", "Справочник Фото" + ": " + ImagesTypeListRealm.getByID(5).getNm());
+//                                intent.putExtras(bundle);
+//                                ActivityCompat.startActivityForResult((Activity) mContext, intent, NEED_UPDATE_UI_REQUEST, null);
+//                            });
                             textInteger.setOnClickListener(view -> {
                                 Intent intent = new Intent(view.getContext(), PhotoLogActivity.class);
                                 intent.putExtra("report_prepare", true);
                                 intent.putExtra("dad2", dad2);
                                 view.getContext().startActivity(intent);
                             });
+
                             break;
 
                         case (158604):
@@ -846,7 +877,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                                     bundle.putString("dataJson", new Gson().toJson(
                                             new JSONObject()
                                                     .put("codeDad2", Long.toString(dad2))
-                                                    .put("clientId",  wp.getClient_id()))
+                                                    .put("clientId", wp.getClient_id()))
                                     );
                                 } catch (Exception ignored) {
                                 }
@@ -998,9 +1029,42 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
         if (dataDB instanceof WpDataDB) {
             WpDataDB wpDataDB = (WpDataDB) dataDB;
             res = "~" + String.format("%.2f", wpDataDB.getCash_zakaz() * 0.08);
-            res = Html.fromHtml("<font color=red>" + res + "грн" + "</font>");
+            res = Html.fromHtml("<font color=red>" + res + " грн" + "</font>");
         }
         return res;
+    }
+
+    private CharSequence counter2EKLText() {
+        CharSequence res = "";
+        if (dataDB instanceof WpDataDB) {
+            WpDataDB wpDataDB = (WpDataDB) dataDB;
+            UsersSDB users = SQL_DB.usersDao().getUserById(wpDataDB.getUser_id());
+            if (users != null) {
+                float shtraf = 0.32f;
+                if (users.last_ekl_date != null) {
+                    long ekl_date = convertDateToSeconds(users.last_ekl_date);
+                    long countDay = startDt - (DAYS * 24 * 60 * 60);
+                    if (ekl_date != -1 && ekl_date > countDay)
+                        shtraf = 0.16f;
+                }
+                res = "~" + String.format("%.2f", wpDataDB.getCash_zakaz() * shtraf);
+                res = Html.fromHtml("<font color=red>" + res + "грн" + "</font>");
+            }
+        }
+        return res;
+    }
+
+    public static long convertDateToSeconds(String dateString) {
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+        try {
+            // Парсим строку в объект Date
+            Date date = dateFormat.parse(dateString);
+            // Преобразуем Date в миллисекунды и делим на 1000, чтобы получить секунды
+            return date.getTime() / 1000;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return -1; // В случае ошибки возвращаем -1
+        }
     }
 
     private void longClickButton(OptionsDB test, int optId, DetailedReportButtons detailedReportButtons, OptionsDB optionsButtons, Context context) {
@@ -1424,11 +1488,13 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
             min = "3";
 
             if (option.getOptionId().equals("141360")
-                    || option.getOptionId().equals("164355")
+//                    || option.getOptionId().equals("164355")
                     || option.getOptionId().equals("151139")
                     || option.getOptionId().equals("164351")
                     || option.getOptionControlId().equals("164351")
             ) min = "1";
+            else if (option.getOptionId().equals("164355"))
+                min = "0";
             try {
                 if (option.getOptionId().equals("157277")) {
                     List<ReportPrepareDB> reportPrepare = RealmManager.INSTANCE.copyFromRealm(ReportPrepareRealm.getReportPrepareByDad2(dad2));

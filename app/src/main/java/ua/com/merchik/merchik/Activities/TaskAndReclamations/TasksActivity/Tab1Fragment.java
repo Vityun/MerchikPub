@@ -75,10 +75,7 @@ public class Tab1Fragment extends Fragment {
     private ImageView imageView, imageView2;
     private RatingBar ratingBar1, ratingBar2;
 
-    private TasksAndReclamationsSDB data;
-
-    public Tab1Fragment() {
-    }
+    private final TasksAndReclamationsSDB data;
 
     public Tab1Fragment(TasksAndReclamationsSDB data) {
         this.data = data;

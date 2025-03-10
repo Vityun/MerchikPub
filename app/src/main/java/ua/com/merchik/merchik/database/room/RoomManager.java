@@ -28,7 +28,9 @@ public class RoomManager {
                         MIGRATION_53_54,
                         MIGRATION_54_55,
                         MIGRATION_55_56,
-                        MIGRATION_56_57
+                        MIGRATION_56_57,
+                        MIGRATION_57_58,
+                        MIGRATION_58_59
                 )
 
                 .build();
@@ -556,6 +558,30 @@ public class RoomManager {
                     "`prefix` TEXT, " +
                     "`site_url_id` INTEGER, " +
                     "PRIMARY KEY(`id`))");
+        }
+    };
+
+    static final Migration MIGRATION_57_58 = new Migration(57, 58) {
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase database) {
+            database.execSQL("CREATE TABLE IF NOT EXISTS `planogramm_type` (" +
+                    "`id` INTEGER NOT NULL, " +
+                    "`planogram_id` TEXT, " +
+                    "`tt_id` TEXT, " +
+                    "`author_id` TEXT, " +
+                    "`dt_update_ut` TEXT, " +
+                    "PRIMARY KEY(`id`))");
+
+        }
+    };
+
+    static final Migration MIGRATION_58_59 = new Migration(58, 59) {
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase database) {
+            // Добавляем новый столбец в таблицу sotr
+            database.execSQL(
+                    "ALTER TABLE sotr ADD COLUMN last_ekl_date TEXT"
+            );
         }
     };
 }
