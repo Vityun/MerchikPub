@@ -12,7 +12,9 @@ import android.view.ViewGroup;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
+import androidx.lifecycle.ViewModelProvider;
 
+import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportViewModel;
 import ua.com.merchik.merchik.Activities.TaskAndReclamations.TasksActivity.TARHomeFrag;
 import ua.com.merchik.merchik.Activities.TaskAndReclamations.TasksActivity.TARSecondFrag;
 import ua.com.merchik.merchik.Globals;
@@ -30,10 +32,17 @@ public class TARFragmentHome extends Fragment {
     private FragmentManager fragmentManager;
     public TARHomeFrag homeFrag;
     public TARSecondFrag secondFrag;
+    private TARViewModel viewModel;
 
     public TARFragmentHome(FragmentManager fragmentManager) {
         this.fragmentManager = fragmentManager;
         Log.d("test", "test");
+    }
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        viewModel = new ViewModelProvider(requireActivity()).get(TARViewModel.class);
     }
 
     public static TARFragmentHome newInstance(FragmentManager fragmentManager) {
@@ -107,6 +116,7 @@ public class TARFragmentHome extends Fragment {
         homeFrag = new TARHomeFrag().newInstance(TARType, new Globals.TARInterface() {
             @Override
             public void onSuccess(TasksAndReclamationsSDB data) {
+                viewModel.setTasksAndReclamations(data);
                 secondFrag = new TARSecondFrag(fragmentManager, data);
 
                 FragmentTransaction transaction = getChildFragmentManager().beginTransaction();

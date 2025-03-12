@@ -9,7 +9,9 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -18,6 +20,7 @@ import java.util.Collections;
 import java.util.List;
 
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.RecycleViewDRAdapter;
+import ua.com.merchik.merchik.Activities.TaskAndReclamations.TARViewModel;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.ServerExchange.TablesLoadingUnloading;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
@@ -29,10 +32,10 @@ import ua.com.merchik.merchik.database.realm.tables.OptionsRealm;
 
 public class Tab2Fragment extends Fragment {
 
-    TasksAndReclamationsSDB data;
+    private TasksAndReclamationsSDB data;
+    private TARViewModel viewModel;
 
     RecyclerView recyclerView;
-    Context mContext;
 
     public Tab2Fragment() {
     }
@@ -41,15 +44,34 @@ public class Tab2Fragment extends Fragment {
         this.data = data;
     }
 
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        viewModel = new ViewModelProvider(requireActivity()).get(TARViewModel.class);
+    }
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View v = inflater.inflate(R.layout.fragment_tab_item_second, container, false);
-        mContext = v.getContext();
-
         recyclerView = v.findViewById(R.id.recycler_view);
 
-        setRecycler();
+        if (data == null)
+            viewModel.getTasksAndReclamations().observe(getViewLifecycleOwner(), data -> {
+                if (data != null) {
+                    this.data = data;
+//                    setRecycler();
+                    updateList(Collections.emptyList());
+
+                }
+            });
+        else {
+//            setRecycler();
+            updateList(Collections.emptyList());
+
+        }
+
 
         return v;
     }
@@ -101,14 +123,14 @@ public class Tab2Fragment extends Fragment {
 //            wp = RealmManager.INSTANCE.copyFromRealm(wp);
 //        }
 
-        RecycleViewDRAdapter recycleViewDRAdapter = new RecycleViewDRAdapter(mContext, data, list, allReportOption, listTr, new Clicks.click() {
+        RecycleViewDRAdapter recycleViewDRAdapter = new RecycleViewDRAdapter(requireActivity(), data, list, allReportOption, listTr, new Clicks.click() {
             @Override
             public <T> void click(T data) {
 
             }
         });
         recyclerView.setAdapter(recycleViewDRAdapter);
-        recyclerView.setLayoutManager(new LinearLayoutManager(mContext, LinearLayoutManager.VERTICAL, false));
+        recyclerView.setLayoutManager(new LinearLayoutManager(requireActivity(), LinearLayoutManager.VERTICAL, false));
     }
 }
 

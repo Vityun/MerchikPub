@@ -92,6 +92,7 @@ import ua.com.merchik.merchik.Activities.PremiumActivity.PremiumActivity;
 import ua.com.merchik.merchik.Activities.ReferencesActivity.ReferencesActivity;
 import ua.com.merchik.merchik.Activities.PhotoDownloaderViewModel;
 import ua.com.merchik.merchik.Activities.TaskAndReclamations.TARActivity;
+import ua.com.merchik.merchik.Activities.TaskAndReclamations.TARViewModel;
 import ua.com.merchik.merchik.Activities.ToolbarActivity.WebSocketStatus;
 import ua.com.merchik.merchik.Activities.WorkPlanActivity.WPDataActivity;
 import ua.com.merchik.merchik.Activities.navigationMenu.MenuHeader;
@@ -187,11 +188,14 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
     private final String PREFS_NAME = "AppPrefs";
     private final String KEY_IS_FIRST_LOADING = "isFirstLoading";
 
+    private TARViewModel tarViewModel;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         photoDownloaderViewModel = new ViewModelProvider(this).get(PhotoDownloaderViewModel.class);
+        tarViewModel = new ViewModelProvider(this).get(TARViewModel.class);
+
         this.exchange = new Exchange(photoDownloaderViewModel);
         this.exchange.context = this;
 
@@ -877,8 +881,8 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
         if (id == R.id.action_settings) {
             internetStatus = server.internetStatus();
 
-            ib.setVisibility(View.GONE);
-            loadingIndicator.show();
+//            ib.setVisibility(View.GONE);
+//            loadingIndicator.show();
 
             try {
                 AppUsersDB appUsersDB = AppUserRealm.getAppUser();

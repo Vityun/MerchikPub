@@ -16,8 +16,10 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.Nullable;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -31,6 +33,7 @@ import io.reactivex.rxjava3.observers.DisposableCompletableObserver;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 import ua.com.merchik.merchik.Activities.PhotoLogActivity.PhotoLogActivity;
 import ua.com.merchik.merchik.Activities.TaskAndReclamations.TARActivity;
+import ua.com.merchik.merchik.Activities.TaskAndReclamations.TARViewModel;
 import ua.com.merchik.merchik.FabYoutube;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.MakePhoto.MakePhoto;
@@ -58,6 +61,7 @@ public class Tab3Fragment extends Fragment {
 
 //    private Context mContext;
     private TasksAndReclamationsSDB tarData;
+    private TARViewModel viewModel;
 
     private TextView textView;
     private RecyclerView recyclerView;
@@ -69,8 +73,13 @@ public class Tab3Fragment extends Fragment {
 
     public static int TARCommentIndex;  // 15.02.23. Для того что б ОБНОВЛЯТЬ комментарии (добавлять фото)
 
-    public Tab3Fragment() {
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        viewModel = new ViewModelProvider(requireActivity()).get(TARViewModel.class);
     }
+
 
     public Tab3Fragment(TasksAndReclamationsSDB data) {
         this.tarData = data;
@@ -111,7 +120,16 @@ public class Tab3Fragment extends Fragment {
         fabYouTube = v.findViewById(R.id.fab3);
         badgeTextView = v.findViewById(R.id.badge_text_view_tar);
 
-        setFragmentData();  // Установка наполнения фрагмента
+        if (tarData == null)
+            viewModel.getTasksAndReclamations().observe(getViewLifecycleOwner(), data -> {
+                if (data != null) {
+                    this.tarData = data;
+                    setFragmentData();  // Установка наполнения фрагмента
+                }
+            });
+        else {
+            setFragmentData();  // Установка наполнения фрагмента
+        }
 
         fabYoutube.setFabVideo(fabYouTube, Tab3Fragment_VIDEO_LESSONS, () -> fabYoutube.showYouTubeFab(fabYouTube, badgeTextView, Tab3Fragment_VIDEO_LESSONS));
         fabYoutube.showYouTubeFab(fabYouTube, badgeTextView, Tab3Fragment_VIDEO_LESSONS);

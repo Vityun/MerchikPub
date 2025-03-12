@@ -1495,10 +1495,11 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
             ) min = "1";
             else if (option.getOptionId().equals("164355"))
                 min = "0";
+            else if (option.getOptionId().equals("132969"))
+                min = "1";
             try {
                 if (option.getOptionId().equals("157277")) {
                     List<ReportPrepareDB> reportPrepare = RealmManager.INSTANCE.copyFromRealm(ReportPrepareRealm.getReportPrepareByDad2(dad2));
-//                    List<AdditionalRequirementsDB> ad = AdditionalRequirementsRealm.getDocumentAdditionalRequirements(dataDB, true, 157278, null, null, null);
                     List<AdditionalRequirementsDB> ad = AdditionalRequirementsRealm.getData3((WpDataDB) dataDB, DEFAULT, null, null, 0);
                     String[] tovIds = new String[ad.size()];
                     for (int i = 0; i < ad.size(); i++) {

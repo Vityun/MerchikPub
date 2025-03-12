@@ -1175,7 +1175,6 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                             dialogPhotoTovar.setClose(dialogPhotoTovar::dismiss);
                             dialogPhotoTovar.show();
 
-                            Log.e("ФОТО_ТОВАРОВ", "Вроде отобразил диалог");
                         }
                     }
                 }

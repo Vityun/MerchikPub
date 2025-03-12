@@ -22,7 +22,9 @@ import android.widget.RatingBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
@@ -32,8 +34,10 @@ import java.util.List;
 
 import io.reactivex.rxjava3.observers.DisposableCompletableObserver;
 import io.reactivex.rxjava3.schedulers.Schedulers;
+import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportTovarsFrag;
 import ua.com.merchik.merchik.Activities.FullScreenPhotoActivity.PhotoFragments;
 import ua.com.merchik.merchik.Activities.TaskAndReclamations.TARActivity;
+import ua.com.merchik.merchik.Activities.TaskAndReclamations.TARViewModel;
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.FabYoutube;
 import ua.com.merchik.merchik.Globals;
@@ -59,8 +63,6 @@ import ua.com.merchik.merchik.toolbar_menus;
 
 public class Tab1Fragment extends Fragment {
 
-    private Context mContext;
-
     private FabYoutube fabYoutube = new FabYoutube();
     private FloatingActionButton fabYouTube;
     private TextView badgeTextView;
@@ -75,20 +77,64 @@ public class Tab1Fragment extends Fragment {
     private ImageView imageView, imageView2;
     private RatingBar ratingBar1, ratingBar2;
 
-    private final TasksAndReclamationsSDB data;
+    private TasksAndReclamationsSDB data;
+    private TARViewModel viewModel;
 
     public Tab1Fragment(TasksAndReclamationsSDB data) {
         this.data = data;
     }
 
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        viewModel = new ViewModelProvider(requireActivity()).get(TARViewModel.class);
+    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View v = inflater.inflate(R.layout.fragment_tab_item_first, container, false);
 
-        mContext = v.getContext();
+        if (data == null)
+            viewModel.getTasksAndReclamations().observe(getViewLifecycleOwner(), data -> {
+                if (data != null) {
+                    this.data = data;
+                    initView(v);
+                    setData();
+                }
+            });
+        else {
+            initView(v);
+            setData();
+        }
 
+        if (TARActivity.TARType == 1) {
+            toolbar_menus.textLesson = 1183;
+//            toolbar_menus.videoLesson = 3528;   // 4208
+            toolbar_menus.videoLessons = new Integer[]{3528, 4208};
+            Log.e("SET_TAR_FAB", "Tab1Fragment 1");
+        } else {
+            toolbar_menus.textLesson = 1185;
+//            toolbar_menus.videoLesson = 3528;   // 4208
+            toolbar_menus.videoLessons = new Integer[]{3528, 4208};
+            Log.e("SET_TAR_FAB", "Tab1Fragment 0");
+        }
+
+
+        toolbar_menus.setFab(v.getContext(), TARActivity.fab, () -> {
+        }); // ГЛАВНАЯ
+
+        return v;
+    }
+
+    private void setFragmentsOnPhoto() {
+        List<FragmentSDB> fragmentSDB = SQL_DB.fragmentDao().getAllByPhotoId(Integer.parseInt(String.valueOf(data.photo)));
+        for (int i = 0; i < fragmentSDB.size(); i++) {
+            new PhotoFragments().setPhotoFragment(fragmentSDB.get(i), String.valueOf(i + 1), imageView, PhotoFragments.PhotoFragmentsSize.SMALL);
+        }
+    }
+
+    private void initView(View v) {
         textViewData = v.findViewById(R.id.text_data);
         textViewData.setMovementMethod(LinkMovementMethod.getInstance());
         goToWpData = v.findViewById(R.id.wpLink);
@@ -120,35 +166,7 @@ public class Tab1Fragment extends Fragment {
         goToWpData.setVisibility(View.GONE);
         goToWpData.setOnClickListener((view) -> {
         });
-
-        setData();
-
-        if (TARActivity.TARType == 1) {
-            toolbar_menus.textLesson = 1183;
-//            toolbar_menus.videoLesson = 3528;   // 4208
-            toolbar_menus.videoLessons = new Integer[]{3528, 4208};
-            Log.e("SET_TAR_FAB", "Tab1Fragment 1");
-        } else {
-            toolbar_menus.textLesson = 1185;
-//            toolbar_menus.videoLesson = 3528;   // 4208
-            toolbar_menus.videoLessons = new Integer[]{3528, 4208};
-            Log.e("SET_TAR_FAB", "Tab1Fragment 0");
-        }
-
-
-        toolbar_menus.setFab(v.getContext(), TARActivity.fab, () -> {
-        }); // ГЛАВНАЯ
-
-        return v;
     }
-
-    private void setFragmentsOnPhoto() {
-        List<FragmentSDB> fragmentSDB = SQL_DB.fragmentDao().getAllByPhotoId(Integer.parseInt(String.valueOf(data.photo)));
-        for (int i = 0; i < fragmentSDB.size(); i++) {
-            new PhotoFragments().setPhotoFragment(fragmentSDB.get(i), String.valueOf(i + 1), imageView, PhotoFragments.PhotoFragmentsSize.SMALL);
-        }
-    }
-
 
     /**
      * 22.03.2021
@@ -371,7 +389,7 @@ public class Tab1Fragment extends Fragment {
                     List<FragmentSDB> fragmentSDB = SQL_DB.fragmentDao().getAllByPhotoId(Integer.parseInt(String.valueOf(data.photo)));
                     StackPhotoDB stackPhotoDB = StackPhotoRealm.stackPhotoDBGetPhotoBySiteId(String.valueOf(data.photo));
                     if (stackPhotoDB != null && fragmentSDB != null && fragmentSDB.size() > 0) {
-                        DialogFullPhotoR dialog = new DialogFullPhotoR(mContext);
+                        DialogFullPhotoR dialog = new DialogFullPhotoR(requireActivity());
                         dialog.setPhoto(stackPhotoDB);
 
                         // Pika
@@ -582,22 +600,23 @@ public class Tab1Fragment extends Fragment {
      * Скачивание и установка полноразмерной фотографии при нажатии на фото.
      */
     private StackPhotoDB stackPhotoDB;  // Фото ЗіР.
+
     private void downloadAndSetFullPhoto(String photo) {
         stackPhotoDB = StackPhotoRealm.stackPhotoDBGetPhotoBySiteId(photo);
         if (stackPhotoDB == null) {
             stackPhotoDB = StackPhotoRealm.getById(Integer.parseInt(photo));
-            if (stackPhotoDB != null && stackPhotoDB.photo_size.equals("Full")){
-                DialogPhotoTovar dialogPhotoTovar = new DialogPhotoTovar(mContext);
+            if (stackPhotoDB != null && stackPhotoDB.photo_size.equals("Full")) {
+                DialogPhotoTovar dialogPhotoTovar = new DialogPhotoTovar(requireActivity());
                 dialogPhotoTovar.setPhotoTovar(stackPhotoDB);
                 dialogPhotoTovar.setClose(dialogPhotoTovar::dismiss);
                 dialogPhotoTovar.show();
-            }else {
+            } else {
                 DialogData dialogData = new DialogData(getContext());
                 dialogData.setTitle("Фото ЗіР");
                 dialogData.setText("Зараз буде завантажено фото ЗіР в гарній якості, якщо завантаження не вдасться - фото можна відкрити так як є натиснувши 'Відкрити'.");
                 dialogData.setClose(dialogData::dismiss);
-                dialogData.setOk("Відкрити", ()->{
-                    DialogPhotoTovar dialogPhotoTovar = new DialogPhotoTovar(mContext);
+                dialogData.setOk("Відкрити", () -> {
+                    DialogPhotoTovar dialogPhotoTovar = new DialogPhotoTovar(requireActivity());
                     dialogPhotoTovar.setPhotoTovar(stackPhotoDB);
                     dialogPhotoTovar.setClose(dialogPhotoTovar::dismiss);
                     dialogPhotoTovar.show();
@@ -613,7 +632,7 @@ public class Tab1Fragment extends Fragment {
             new PhotoDownload().downloadPhoto(true, stackPhotoDB, "/TaR", new PhotoDownload.downloadPhotoInterface() {
                 @Override
                 public void onSuccess(StackPhotoDB data) {
-                    DialogFullPhotoR dialog = new DialogFullPhotoR(mContext);
+                    DialogFullPhotoR dialog = new DialogFullPhotoR(requireActivity());
                     dialog.setPhoto(finalStackPhotoDB);
 
                     // Pika
@@ -629,7 +648,7 @@ public class Tab1Fragment extends Fragment {
                 }
             });
         } else {
-            Toast.makeText(mContext, "Фото не обнаружено", Toast.LENGTH_SHORT).show();
+            Toast.makeText(requireActivity(), "Фото не обнаружено", Toast.LENGTH_SHORT).show();
         }
 
 
