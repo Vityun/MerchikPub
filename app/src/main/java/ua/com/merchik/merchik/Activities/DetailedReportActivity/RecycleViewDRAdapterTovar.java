@@ -250,7 +250,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
         Globals globals = new Globals();
         Options options = new Options();
 
-        TablesLoadingUnloading tablesLoadingUnloading = new TablesLoadingUnloading(); // Может выше поднять?
+//        TablesLoadingUnloading tablesLoadingUnloading = new TablesLoadingUnloading(); // Может выше поднять?
 
         // Resourse
         ConstraintLayout constraintLayout;
@@ -1833,7 +1833,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                 rp = createNewRPRow(tovarDB);
             }
 
-            if (data == null || data.equals("")) {
+            if (data == null || data.isEmpty()) {
                 Toast.makeText(mContext, "Для сохранения - внесите данные", Toast.LENGTH_SHORT).show();
                 return;
             }
@@ -1928,7 +1928,7 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                     Log.e("SAVE_TO_REPORT_OPT", "AKCIYA_ID_А: " + data2);
                     INSTANCE.executeTransaction(realm -> {
                         table.setAkciyaId(data);
-                        if (data2 != null && !data2.equals("")) {
+                        if (data2 != null && !data2.isEmpty()) {
                             table.setAkciya(data2);
                         }
                         table.setUploadStatus(1);

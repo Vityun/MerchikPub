@@ -7,6 +7,7 @@ import android.util.Log;
 
 
 import java.util.Date;
+import java.util.List;
 import java.util.Objects;
 
 import io.realm.RealmResults;
@@ -20,11 +21,13 @@ import ua.com.merchik.merchik.data.Database.Room.CustomerSDB;
 import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
 import ua.com.merchik.merchik.data.Database.Room.UsersSDB;
 import ua.com.merchik.merchik.data.OptionMassageType;
+import ua.com.merchik.merchik.data.RealmModels.AdditionalRequirementsDB;
 import ua.com.merchik.merchik.data.RealmModels.ImagesTypeListDB;
 import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.database.realm.RealmManager;
+import ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsRealm;
 import ua.com.merchik.merchik.database.realm.tables.ImagesTypeListRealm;
 import ua.com.merchik.merchik.database.realm.tables.StackPhotoRealm;
 
@@ -239,6 +242,13 @@ public class OptionControlPhoto<T> extends OptionControl {
 КонецЕсли;
         *
         * */
+        if (signal && optionId.equals("158609")) {
+            List<AdditionalRequirementsDB> additionalRequirementsDBList = AdditionalRequirementsRealm.getAdditionalRequirements(wpDataDB.getClient_id(), wpDataDB.getAddr_id(), 158609);
+            if (additionalRequirementsDBList.isEmpty()){
+                signal = false;
+                stringBuilderMsg.append(", але в даному випадку робимо виняток.");
+            }
+        }
 
         // Исключения
         if (optionId.equals("141361") || optionId.equals("132971")) {
@@ -273,16 +283,17 @@ public class OptionControlPhoto<T> extends OptionControl {
             }
         }
 
-        //        исключение для Метро и Витмарк
-        if (optionId.equals("158609") && stackPhotoDB.size() < m) {
-            if (Objects.equals(clientId, "9382"))
-                signal = false;
-            if (addressSDB.tpId == 320) {
-                ImagesTypeListDB item = ImagesTypeListRealm.getByID(photoType);
-                stringBuilderMsg.append("Вы должны сделать: ").append("3").append(" фото с типом: ").append(item != null ? item.getNm() : typeNm).append(", а сделали: ").append(stackPhotoDB.size()).append(" - доделайте фотографии.");
-                signal = true;
-            }
-        }
+        //  исключение для Метро и Витмарк
+//        if (optionId.equals("158609") && stackPhotoDB.size() < m) {
+//            if (Objects.equals(clientId, "9382"))
+//                signal = false;
+//            if (addressSDB.tpId == 320) {
+//                ImagesTypeListDB item = ImagesTypeListRealm.getByID(photoType);
+//                stringBuilderMsg.append("Вы должны сделать: ").append("3").append(" фото с типом: ").append(item != null ? item.getNm() : typeNm).append(", а сделали: ").append(stackPhotoDB.size()).append(" - доделайте фотографии.");
+//                signal = true;
+//            }
+//        }
+
 
         //7.0. сохраним сигнал
         RealmManager.INSTANCE.executeTransaction(realm -> {

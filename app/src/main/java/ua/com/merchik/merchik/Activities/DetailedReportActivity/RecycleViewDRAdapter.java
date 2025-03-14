@@ -292,7 +292,10 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                     optionButton.setBackgroundResource(R.drawable.bg_temp);
                     textInteger2.setVisibility(View.VISIBLE);
                     if (optionsButtons.getIsSignal().equals("1") && !optionsButtons.getBlockPns().equals("1")) {
-                        textInteger2.setText(counter2Text());
+                        if (optionId == 132666 || optionId == 132812)
+                            textInteger2.setVisibility(View.INVISIBLE);
+                        else
+                            textInteger2.setText(counter2Text());
                     } else {
                         if (optionId == 133382) {
                             textInteger2.setVisibility(View.VISIBLE);
@@ -1031,6 +1034,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
             res = "~" + String.format("%.2f", wpDataDB.getCash_zakaz() * 0.08);
             res = Html.fromHtml("<font color=red>" + res + " грн" + "</font>");
         }
+
         return res;
     }
 

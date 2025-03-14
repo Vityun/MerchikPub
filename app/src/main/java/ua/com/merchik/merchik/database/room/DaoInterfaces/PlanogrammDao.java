@@ -1,5 +1,6 @@
 package ua.com.merchik.merchik.database.room.DaoInterfaces;
 
+import androidx.annotation.Nullable;
 import androidx.room.Dao;
 import androidx.room.Insert;
 import androidx.room.OnConflictStrategy;
@@ -91,5 +92,76 @@ public interface PlanogrammDao {
             "AND (planogramm.client_id = :clientId OR :clientId IS NULL) " +
             "AND (planAddr.addr_id = :addressId OR :addressId IS NULL)")
     PlanogrammJOINSDB getSoloBy(Integer planogrammId, String clientId, Integer addressId);
+
+
+
+
+
+    @Query("SELECT DISTINCT " +
+            "pl.id AS id, " +
+            "pl.client_id AS planogrammClientId, " +
+            "TRIM(pl.nm) AS planogrammName, " +
+            "TRIM(pl.comments) AS planogrammComment, " +
+            "pl.dt_start AS planogrammDtStart, " +
+            "pl.dt_end AS planogrammDtEnd, " +
+            "plaa.addr_id AS planogrammAddress, " +
+            "plaa.addr_txt AS planogrammAddressTxt, " +
+            "plaa.city_txt AS planogrammCityTxt, " +
+            "plag.group_id AS planogrammGroupId, " +
+            "plag.group_txt AS planogrammGroupTxt, " +
+            "pl.img_id AS planogrammPhotoId " +
+            "FROM planogramm pl " +
+            "LEFT JOIN planogramm_address plaa ON pl.id = plaa.planogram_id " +
+            "LEFT JOIN planogramm_group plag ON pl.id = plag.planogram_id AND plag.group_id = 351 " +
+            "LEFT JOIN planogramm_type platt ON pl.id = platt.planogram_id " +
+            "WHERE pl.client_id = :clientId " +
+            "AND ( " +
+            "   (plaa.addr_id IS NOT NULL AND plag.group_id IS NOT NULL AND platt.tt_id IS NOT NULL) OR " +
+            "   (plaa.addr_id IS NOT NULL AND plag.group_id IS NOT NULL AND (platt.tt_id IS NULL OR platt.tt_id = 0)) OR " +
+            "   (plaa.addr_id IS NOT NULL AND (plag.group_id IS NULL OR plag.group_id = 0) AND platt.tt_id IS NOT NULL) OR " +
+            "   ((plaa.addr_id IS NULL OR plaa.addr_id = 0) AND plag.group_id IS NOT NULL AND platt.tt_id IS NOT NULL) OR " +
+            "   (plaa.addr_id IS NOT NULL AND (plag.group_id IS NULL OR plag.group_id = 0) AND (platt.tt_id IS NULL OR platt.tt_id = 0)) OR " +
+            "   ((plaa.addr_id IS NULL OR plaa.addr_id = 0) AND plag.group_id IS NOT NULL AND (platt.tt_id IS NULL OR platt.tt_id = 0)) OR " +
+            "   ((plaa.addr_id IS NULL OR plaa.addr_id = 0) AND (plag.group_id IS NULL OR plag.group_id = 0) AND platt.tt_id IS NOT NULL) OR " +
+            "   ((plaa.addr_id IS NULL OR plaa.addr_id = 0) AND (plag.group_id IS NULL OR plag.group_id = 0) AND (platt.tt_id IS NULL OR platt.tt_id = 0)) " +
+            ")")
+    List<PlanogrammJOINSDB> getPlanogrammsByClient(String clientId);
+
+
+    @Query("SELECT DISTINCT " +
+            "pl.id AS id, " +
+            "pl.client_id AS planogrammClientId, " +
+            "TRIM(pl.nm) AS planogrammName, " +
+            "TRIM(pl.comments) AS planogrammComment, " +
+            "pl.dt_start AS planogrammDtStart, " +
+            "pl.dt_end AS planogrammDtEnd, " +
+            "plaa.addr_id AS planogrammAddress, " +
+            "plaa.addr_txt AS planogrammAddressTxt, " +
+            "plaa.city_txt AS planogrammCityTxt, " +
+            "plag.group_id AS planogrammGroupId, " +
+            "plag.group_txt AS planogrammGroupTxt, " +
+            "pl.img_id AS planogrammPhotoId " +
+            "FROM planogramm pl " +
+            "LEFT JOIN planogramm_address plaa ON pl.id = plaa.planogram_id " +
+            "LEFT JOIN planogramm_group plag ON pl.id = plag.planogram_id AND plag.group_id = 351 " +
+            "LEFT JOIN planogramm_type platt ON pl.id = platt.planogram_id " +
+            "WHERE pl.client_id = :clientId " +
+            "AND (:addressId IS NULL OR plaa.addr_id = :addressId) " + // Фильтр по адресу
+            "AND (:ttId IS NULL OR platt.tt_id = :ttId) " + // Фильтр по TT
+            "AND ( " +
+            "   (plaa.addr_id IS NOT NULL AND plag.group_id IS NOT NULL AND platt.tt_id IS NOT NULL) OR " +
+            "   (plaa.addr_id IS NOT NULL AND plag.group_id IS NOT NULL AND (platt.tt_id IS NULL OR platt.tt_id = 0)) OR " +
+            "   (plaa.addr_id IS NOT NULL AND (plag.group_id IS NULL OR plag.group_id = 0) AND platt.tt_id IS NOT NULL) OR " +
+            "   ((plaa.addr_id IS NULL OR plaa.addr_id = 0) AND plag.group_id IS NOT NULL AND platt.tt_id IS NOT NULL) OR " +
+            "   (plaa.addr_id IS NOT NULL AND (plag.group_id IS NULL OR plag.group_id = 0) AND (platt.tt_id IS NULL OR platt.tt_id = 0)) OR " +
+            "   ((plaa.addr_id IS NULL OR plaa.addr_id = 0) AND plag.group_id IS NOT NULL AND (platt.tt_id IS NULL OR platt.tt_id = 0)) OR " +
+            "   ((plaa.addr_id IS NULL OR plaa.addr_id = 0) AND (plag.group_id IS NULL OR plag.group_id = 0) AND platt.tt_id IS NOT NULL) OR " +
+            "   ((plaa.addr_id IS NULL OR plaa.addr_id = 0) AND (plag.group_id IS NULL OR plag.group_id = 0) AND (platt.tt_id IS NULL OR platt.tt_id = 0)) " +
+            ")")
+    List<PlanogrammJOINSDB> getPlanogrammsByClientAddressTtId(
+            String clientId,
+            Integer addressId,
+            String ttId
+    );
 
 }

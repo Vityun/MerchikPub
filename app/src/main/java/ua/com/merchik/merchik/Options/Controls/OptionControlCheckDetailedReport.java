@@ -10,12 +10,15 @@ import androidx.annotation.RequiresApi;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.Options.OptionControl;
 import ua.com.merchik.merchik.Options.Options;
 import ua.com.merchik.merchik.data.Database.Room.AddressSDB;
+import ua.com.merchik.merchik.data.Database.Room.SMS.SMSLogSDB;
+import ua.com.merchik.merchik.data.Database.Room.SMS.SMSPlanSDB;
 import ua.com.merchik.merchik.data.OptionMassageType;
 import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
 import ua.com.merchik.merchik.data.RealmModels.ReportPrepareDB;
@@ -111,7 +114,7 @@ public class OptionControlCheckDetailedReport<T> extends OptionControl {
         if (time < 0) {
             stringBuilderMsg.append("Роботи по поточному кпс (клієнто/відвідуванню) ще не були початі. Почніть роботи, відредагуйте ДЗ (дет. звіт) та повторіть спробу.");
             signal = true;
-        } else if (reportPrepare.size() == 0) {
+        } else if (reportPrepare.isEmpty()) {
             stringBuilderMsg.append("Товарів, по котрим треба перевірити виправлені ДЗ, не знайдено.");
             signal = true;
         } else if (colSKU == 0) {
@@ -132,15 +135,38 @@ public class OptionControlCheckDetailedReport<T> extends OptionControl {
             signal = false;
         }
 
-        if (addressSDB.tpId == 383) {   // Для АШАН-ов(8196 - у петрова такое тут, странно) которые работают через ДОТ и ФОТ виправлення ДЗ НЕ проверяем
-            if (wpDataDB.getDot_user_id() > 0 || wpDataDB.getFot_user_id() > 0) {
+        //8.0. виключения на випадок, якщо товару на ТТ взагалі нема
+        if (signal && colSKU == 0) {
+            if (Objects.equals(wpDataDB.getUser_opinion_id(), "59")) {
                 signal = false;
-                stringBuilderMsg.append(", але для Ашанів, по котрим праюємо з ДОТ чи ФОТ, виправлення ДЗ не перевіряємо.");
+                spannableStringBuilder.append("\n").append("Cповіщення про ВІДСУТНІСТЬ товару на ТТ замовнику відправлено, сигнал знятий!");
+            } else {
+                Long dtFrom = wpDataDB.getDt().getTime() / 1000 - 604800;   // -7 дней в секундах.. на самом деле должно біть минус 6, но оно  счтиает старт дня
+                Long dtTo = wpDataDB.getDt().getTime() / 1000 + 345600;   // +4 дней в секундах.. на самом деле должно біть минус 3, но оно  счтиает старт дня
+
+                List<SMSPlanSDB> smsPlanSDBS = SQL_DB.smsPlanDao().getAll(dtFrom, dtTo, 1172, wpDataDB.getAddr_id(), wpDataDB.getClient_id());
+                List<SMSLogSDB> smsLogSDBS = SQL_DB.smsLogDao().getAll(dtFrom, dtTo, 1172, wpDataDB.getAddr_id(), wpDataDB.getClient_id());
+
+                if (smsPlanSDBS != null && smsPlanSDBS.size() > 0) {
+                    signal = false;
+                    spannableStringBuilder.append("\n").append("Cповіщення про ВІДСУТНІСТЬ товару на ТТ замовнику відправлено, сигнал знятий!");
+                } else if (smsLogSDBS != null && smsLogSDBS.size() > 0) {
+                    signal = false;
+                    spannableStringBuilder.append("\n").append("Cповіщення об ОТСУТСТВИИ товара заказчику отправлено, сигнал отменён!");
+                } else if (addressSDB.tpId == 383) {   // Для АШАН-ов(8196 - у петрова такое тут, странно) которые работают через ДОТ ОФС ДЗ НЕ проверяем
+                    if (wpDataDB.getDot_user_id() > 0) {
+                        signal = false;
+                        stringBuilderMsg.append(", але для Ашанів, по котрим праюємо з ДОТ, ОФС ДЗ не перевіряємо.");
+                    }
+                } else {
+                    spannableStringBuilder.append("\n\nВи зможете зняти сигнал, якщо відтправите Cповіщення замовнику про те, що товар на ТТ ВІДСУТЕН." +
+                            "У випадку, якщо на вітрині (і на складі) реально немає частини товару, повідомте про це в Думцi щодо відвідування(см. на кнопку \"Думка про відвідування\")");
+                }
             }
         }
 
 
-       saveOptionResultInDB();
+        saveOptionResultInDB();
         if (signal) {
             if (optionDB.getBlockPns().equals("1")) {
                 setIsBlockOption(signal);
@@ -180,7 +206,6 @@ public class OptionControlCheckDetailedReport<T> extends OptionControl {
 //        }
 //        return res;
 //    }
-
     public static long adjustStartTime(long timeStartWork) {
         // Получаем текущую дату в секундах (без миллисекунд)
         long nowInSeconds = System.currentTimeMillis() / 1000;
