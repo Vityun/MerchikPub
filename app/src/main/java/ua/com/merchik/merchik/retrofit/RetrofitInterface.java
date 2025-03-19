@@ -109,6 +109,7 @@ import ua.com.merchik.merchik.data.RetrofitResponse.tables.planogramm.Planogramm
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.planogramm.PlanogrammImagesResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.planogramm.PlanogrammResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.planogramm.PlanogrammTypeResponse;
+import ua.com.merchik.merchik.data.RetrofitResponse.tables.planogramm.PlanogrammVizitShowcaseResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.update.reportprepare.ReportPrepareUpdateResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.update.wpdata.WpDataUpdateResponse;
 import ua.com.merchik.merchik.data.ServerData.TARCommentsData.AdditionalRequirements.AdditionalRequirementsServerData;
@@ -670,6 +671,11 @@ public interface RetrofitInterface {
 
     @POST("mobile_app.php?")
     Call<PlanogrammImagesResponse> Planogramm_IMAGES_RESPONSE(
+            @Header("ContentType") String content,
+            @Body JsonObject json);
+
+    @POST("mobile_app.php?")
+    Call<PlanogrammVizitShowcaseResponse> PLANOGRAMM_VIZIT_SHOWCASE_RESPONSE(
             @Header("ContentType") String content,
             @Body JsonObject json);
 

@@ -35,6 +35,8 @@ import ua.com.merchik.merchik.dialogs.DialogAdditionalRequirements.DialogARMark.
 import ua.com.merchik.merchik.features.main.Main.Filters
 import ua.com.merchik.merchik.features.main.Main.ItemFilter
 import ua.com.merchik.merchik.features.main.Main.MainViewModel
+import java.text.SimpleDateFormat
+import java.util.Locale
 import javax.inject.Inject
 import kotlin.reflect.KClass
 
@@ -51,8 +53,9 @@ class AdditionalRequirementsDBViewModel @Inject constructor(
             ContextUI.ADD_REQUIREMENTS_FROM_ACHIEVEMENT,
             ContextUI.ADD_REQUIREMENTS_FROM_OPTIONS ->
                 ("addr_id, author_id, disable_score, dt_change, exam_id, grp_id, hide_client, " +
-                "hide_user, ID, not_approve, options_id, showcase_tp_id, site_id, summ, theme_id," +
-                "tovar_id, user_id, option_id, dt_end, dt_start, client_id, color").split(",")
+                        "hide_user, ID, not_approve, options_id, showcase_tp_id, site_id, summ, theme_id," +
+                        "tovar_id, user_id, option_id, dt_end, dt_start, client_id, color").split(",")
+
             else -> null
         }
     }
@@ -99,6 +102,7 @@ class AdditionalRequirementsDBViewModel @Inject constructor(
                     )
                 )
             }
+
             ContextUI.ADD_REQUIREMENTS_FROM_OPTIONS -> {
                 val wpDataDB = Gson().fromJson(dataJson, WpDataDB::class.java)
 
@@ -137,6 +141,7 @@ class AdditionalRequirementsDBViewModel @Inject constructor(
                     )
                 )
             }
+
             else -> {}
         }
     }
@@ -150,30 +155,40 @@ class AdditionalRequirementsDBViewModel @Inject constructor(
                 val data = AdditionalRequirementsDB::class.java.newInstance()
                 data.notes = "Це досягнення не відноситься до жодної з пропозицій замовника"
                 data.id = 1
-                repository.toItemUIList(AdditionalRequirementsDB::class, listOf(data), contextUI, null)
+                repository.toItemUIList(
+                    AdditionalRequirementsDB::class,
+                    listOf(data),
+                    contextUI,
+                    null
+                )
                     .map {
-                        val selected = (it.rawObj.firstOrNull { it is AdditionalRequirementsDB } as? AdditionalRequirementsDB)?.id == AchievementDataHolder.instance().requirementClientId
+                        val selected =
+                            (it.rawObj.firstOrNull { it is AdditionalRequirementsDB } as? AdditionalRequirementsDB)?.id == AchievementDataHolder.instance().requirementClientId
                         it.copy(selected = selected)
                     }
             }
-            else -> { emptyList() }
+
+            else -> {
+                emptyList()
+            }
         }
 
     }
 
     override fun getItems(): List<DataItemUI> {
-        return try
-        {
+        return try {
             when (contextUI) {
                 ContextUI.ADD_REQUIREMENTS_FROM_ACHIEVEMENT -> {
                     val clientId = Gson().fromJson(dataJson, String::class.java)
                     val data = AdditionalRequirementsRealm.getADByClientAll(clientId, "1253")
                     repository.toItemUIList(AdditionalRequirementsDB::class, data, contextUI, null)
                         .map {
-                            val selected = (it.rawObj.firstOrNull { it is AdditionalRequirementsDB } as? AdditionalRequirementsDB)?.id == AchievementDataHolder.instance().requirementClientId
+                            val selected =
+                                (it.rawObj.firstOrNull { it is AdditionalRequirementsDB } as? AdditionalRequirementsDB)?.id == AchievementDataHolder.instance().requirementClientId
                             it.copy(selected = selected)
                         }
                 }
+
                 ContextUI.ADD_REQUIREMENTS_FROM_OPTIONS -> {
                     val wpDataDB = Gson().fromJson(dataJson, WpDataDB::class.java)
 
@@ -195,22 +210,37 @@ class AdditionalRequirementsDBViewModel @Inject constructor(
                     val customerSDBUI = repository.getAllRoom(CustomerSDB::class, contextUI, null)
                     val usersSDBBUI = repository.getAllRoom(UsersSDB::class, contextUI, null)
 
-                    val result = repository.toItemUIList(AdditionalRequirementsDB::class, data, contextUI, null).map { itemUI ->
-                        itemUI.rawObj.firstOrNull { it is AdditionalRequirementsDB }?.let { elementDB ->
-                            elementDB as AdditionalRequirementsDB
+                    val result = repository.toItemUIList(
+                        AdditionalRequirementsDB::class,
+                        data,
+                        contextUI,
+                        null
+                    ).map { itemUI ->
+                        itemUI.rawObj.firstOrNull { it is AdditionalRequirementsDB }
+                            ?.let { elementDB ->
+                                elementDB as AdditionalRequirementsDB
 
-                            val wpDataDB = Gson().fromJson(dataJson, WpDataDB::class.java)
+                                val wpDataDB = Gson().fromJson(dataJson, WpDataDB::class.java)
 
-                            val dateDocumentLong =
-                                Clock.dateConvertToLong(Clock.getHumanTimeYYYYMMDD(wpDataDB.getDt().getTime() / 1000))
-                            val dateFrom = Clock.getDatePeriodLong(dateDocumentLong, -15) / 1000
-                            AdditionalRequirementsMarkRealm.getMark(
-                                dateFrom,
-                                elementDB.id,
-                                Globals.userId.toString()
-                            )?.let { itemUI.copy(rawObj = listOf(elementDB, it)) }
-                                ?: itemUI.copy(rawObj = listOf(elementDB, AdditionalRequirementsMarkDB()))
-                        } ?: itemUI.copy()
+                                val dateDocumentLong =
+                                    Clock.dateConvertToLong(
+                                        Clock.getHumanTimeYYYYMMDD(
+                                            wpDataDB.getDt().getTime() / 1000
+                                        )
+                                    )
+                                val dateFrom = Clock.getDatePeriodLong(dateDocumentLong, -15) / 1000
+                                AdditionalRequirementsMarkRealm.getMark(
+                                    dateFrom,
+                                    elementDB.id,
+                                    Globals.userId.toString()
+                                )?.let { itemUI.copy(rawObj = listOf(elementDB, it)) }
+                                    ?: itemUI.copy(
+                                        rawObj = listOf(
+                                            elementDB,
+                                            AdditionalRequirementsMarkDB()
+                                        )
+                                    )
+                            } ?: itemUI.copy()
                     }
                         .join(themeDBUI, "theme_id = id: nm")
                         .join(customerSDBUI, "client_id = client_id: nm")
@@ -218,7 +248,10 @@ class AdditionalRequirementsDBViewModel @Inject constructor(
 
                     result
                 }
-                else -> { emptyList() }
+
+                else -> {
+                    emptyList()
+                }
             }
 
         } catch (e: Exception) {
@@ -287,6 +320,7 @@ class AdditionalRequirementsDBViewModel @Inject constructor(
                 }
                 val endbNum: CharSequence = Html.fromHtml(bNum.toString())
 
+                val sdf = SimpleDateFormat("dd MMMM yyyy", Locale.getDefault())
 
                 val bStart = StringBuilder()
                 val dStart = "<b>Дата начала: </b>"
@@ -296,11 +330,15 @@ class AdditionalRequirementsDBViewModel @Inject constructor(
 //                if (data.getDtStart().equals("0000-00-00")) {
 //                    bStart.append("Не определена");
 //                } else {
-                    val dStart2 = String.format("%s", data.dtStart)
-                    bStart.append(dStart2)
-//                }
+                    if (data.dtStart == null)
+                        bStart.append("Не визначена");
+                    else {
+                        val formattedDate = sdf.format(data.dtStart)
+                        val dStart2 = String.format("%s", formattedDate)
+                        bStart.append(dStart2)
+                    }
                 } catch (e: Exception) {
-                    bStart.append("Не определена")
+                    bStart.append("Не визначена")
                 }
                 val endbStart: CharSequence = Html.fromHtml(bStart.toString())
 
@@ -313,11 +351,18 @@ class AdditionalRequirementsDBViewModel @Inject constructor(
 //                if (data.getDtEnd().equals("0000-00-00")) {
 //                    bEnd.append("Не определена");
 //                } else {
-                    val dEnd2 = String.format("%s", data.dtEnd)
-                    bEnd.append(dEnd2)
+//                    val dEnd2 = String.format("%s", data.dtEnd)
+//                    bEnd.append(dEnd2)
 //                }
+                    if (data.dtEnd == null)
+                        bEnd.append("Не визначена");
+                    else {
+                        val formattedDate = sdf.format(data.dtEnd)
+                        val dStart2 = String.format("%s", formattedDate)
+                        bEnd.append(dStart2)
+                    }
                 } catch (e: Exception) {
-                    bEnd.append("Не определена")
+                    bEnd.append("Не визначена")
                 }
                 val endbEnd: CharSequence = Html.fromHtml(bEnd.toString())
 
@@ -327,7 +372,10 @@ class AdditionalRequirementsDBViewModel @Inject constructor(
                 try {
                     Log.e("AdditionalRequirements", "Автор: " + data.getAuthorId())
                     val author2 =
-                        String.format("%s", UsersRealm.getUsersDBById(data.getAuthorId().toInt()).nm)
+                        String.format(
+                            "%s",
+                            UsersRealm.getUsersDBById(data.getAuthorId().toInt()).nm
+                        )
                     bAuthor.append(author2)
                 } catch (e: Exception) {
                     bAuthor.append("Автор не определён")
@@ -398,7 +446,11 @@ class AdditionalRequirementsDBViewModel @Inject constructor(
                     val wpDataDB = Gson().fromJson(dataJson, WpDataDB::class.java)
 
                     val dateDocumentLong =
-                        Clock.dateConvertToLong(Clock.getHumanTimeYYYYMMDD(wpDataDB.getDt().getTime() / 1000))
+                        Clock.dateConvertToLong(
+                            Clock.getHumanTimeYYYYMMDD(
+                                wpDataDB.getDt().getTime() / 1000
+                            )
+                        )
                     val dateFrom = Clock.getDatePeriodLong(dateDocumentLong, -15) / 1000
                     val score = AdditionalRequirementsMarkRealm.getMark(
                         dateFrom,
@@ -418,6 +470,7 @@ class AdditionalRequirementsDBViewModel @Inject constructor(
 
                 dialog.show()
             }
+
             else -> {}
         }
     }

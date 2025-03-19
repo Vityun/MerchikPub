@@ -1,10 +1,10 @@
 <resources>
-    <string name="app_name">merchik</string>
-    <string name="ver">031501</string>
-    <string name="debug_status">1</string>
-    <string name="debug_date">2025-15-03</string>
+    <string name="app_name" translatable="false">merchik</string>
+    <string name="ver" translatable="false">032001</string>
+    <string name="debug_status" translatable="false">1</string>
+    <string name="debug_date" translatable="false">2025-20-03</string>
 
-    <string name="test">TEST HINT</string>
+    <string name="test" translatable="false">TEST HINT</string>
 
     <!--Activity titles-->
     <string name="title_activity_premium">Премиальные</string>
@@ -199,21 +199,9 @@
     <string name="option_control_135330_msg_what_must_do">Вы должны ознакомиться с указанными рекламациями, Выполнить и Отписать их.</string>
     <string name="description_calendar_imb_btn">Календар</string>
 
-
     <string name="data_download_200">Данні успішно завантажено</string>
     <string name="data_download_error">Не вийшло завантажити данні</string>
     <string name="data_download_wait">Зачекайте, йде завантаження інформації</string>
-
-
-<!--    "title_additionalrequirementsdb_from_achievement" -> 6009-->
-<!--    "sub_title_additionalrequirementsdb_from_achievement" -> 6010-->
-<!--    "title_themedb_from_achievement" -> 6003-->
-<!--    "sub_title_themedb_from_achievement" -> 6004-->
-<!--    "title_tovardb_from_achievement" -> 6007-->
-<!--    "sub_title_tovardb_from_achievement" -> 6008-->
-<!--    "title_trademarkdb_from_achievement" -> 6005-->
-<!--    "sub_title_trademarkdb_from_achievement" -> 6006-->
-
 
     <string name="total_number_selected">Загальна кількість елементів %s шт.</string>
     <string name="total_number_marked">Загальна кількість помічених елементів %s шт.</string>

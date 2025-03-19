@@ -82,8 +82,8 @@ public class StackPhotoDB extends RealmObject implements DataObjectUI {
     public String planogram_id;
     public String planogram_img_id;
 
-    public String example_id;
-    public String example_img_id;
+    public String example_id;   // id образца фото
+    public String example_img_id;   //
 
     @Ignore
     public int specialCol;

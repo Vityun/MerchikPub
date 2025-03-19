@@ -1,0 +1,230 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!--Activity titles-->
+    <string name="title_activity_premium">Преміум</string>
+    <string name="title_activity_menu_main">Робочий стіл</string>
+    <string name="activity_title_photo_report">Фотозвіт</string>
+    <string name="login_info">Введіть ваш логін та пароль: </string>
+    <string name="login">Вхід</string>
+    <string name="logout">Вихід</string>
+
+    <string name="edit_text_login">логін</string>
+    <string name="edit_text_password">пароль</string>
+
+    <string name="ok">Ок</string>
+
+    <string name="object_891">Підказка</string>
+    <string name="object_890">Допомога</string>
+    <string name="object_893">Поточна версія додатку</string>
+    <string name="object_894">У Вас остання версія додатку</string>
+    <string name="object_895">Рекомендуємо встановити нову версію додатку:</string>
+
+    <string name="gps_info_button">Натискаючи на кнопку, ви отримуєте поточне місцезнаходження</string>
+    <string name="gps_button">отримати GPS</string>
+    <string name="button_make_photo">Зробити фото</string>
+    <string name="button_make_new_photo">Зробити ще фото</string>
+    <string name="button_upload_photo">Вивантажити на сервер поточне фото</string>
+    <string name="button_comment_photo">Додати коментар</string>
+    <string name="button_close">Зберегти/Закрити</string>
+    <string name="text_help_photo">
+        Для вивантаження фото на сайт - ознайомтеся з інструкцією!\n\n
+        0. Дозвольте додатку використовувати геодані. \n
+        1. Рекомендую викликати цей додаток з мобільної версії сайту. \n
+        2. Натисніть кнопку \"Зробити фото\", розташовану нижче, і виконайте фотографію. \n
+        2.1. Щоб зробити фотографію, у мобільному телефоні має бути увімкнений GPS. \n
+        2.2. Якщо у вас не відкривається камера - спробуйте увімкнути GPS і перезавантажити додаток. \n
+        3. Додайте коментар (необов\'язково). \n
+        4. Натисніть кнопку \"Вивантажити на сервер\".\n
+
+        Щоб зробити серію фотографій - використовуйте кнопку \"Зробити ще фото\". Останнє фото в серії слід зберігати для відправки, натискаючи кнопку \"Зберегти/Закрити\".\n\n
+
+        ЗБЕРІГАННЯ ФОТО\n
+        Фото зберігаються для вивантаження на сайт, коли ви натискаєте кнопку \"Зробити ще фото\" або \"Зберегти/Закрити\".\nПісля того, як фото буде збережено - можна починати вивантаження, інакше незбережені фото не потраплять на сайт.\n\n
+
+        КООРДИНАТИ. Provider. GPS. NET. МП.\n
+        Щоб перевірити актуальність координат - слід у меню \"Світлофор\" подивитися на колір світлофора \"Provider\".\n
+        Якщо він горить зеленим - у вас отримані свіжі координати, і можна продовжувати вашу роботу.\n
+        Якщо він горить жовтим - у вас проблеми з координатами GPS. Це означає, що ваше місцезнаходження буде визначено не точно, через що можуть виникнути проблеми з Місцезнаходженням (МП). Для вирішення проблеми натисніть на \"Provider\", а потім на \"GPS\" (він має горіти червоним). Якщо колір змінився на зелений і з\'явилося повідомлення про те, що дані GPS актуальні - можна продовжувати роботу. Якщо колір не змінився, і перед вами повідомлення, що дані застаріли - треба отримати актуальні дані GPS. Для цього достатньо вийти на вулицю або підійти до вікна і зачекати хвилину, поки телефон не отримає свіжі дані.\n
+        Якщо він горить червоним або сірим - дані отримати не вдалося. Для початку спробуйте натиснути \"Перейти на головну\" в меню трьох точок. Якщо це не допомогло - слід вийти на вулицю або підійти до вікна і зачекати хвилину, поки телефон не отримає свіжі дані.\n
+        \n
+    </string>
+
+    <!--Toolbar text-->
+    <string name="test_001">опис</string>
+    <string name="test_002">опис</string>
+    <string name="go_to_main">Перейти на головну</string>
+    <string name="go_to_wpdata">План робіт</string>
+    <string name="info">Інформація</string>
+    <string name="settings">Надіслати лог</string>
+    <string name="check_coord">ТЕСТ</string>
+
+    <!--    <string name="t_check_internet">Інтернет</string>-->
+    <string name="t_check_sever">Сервер</string>
+    <string name="txt_sever">Сервер</string>
+    <string name="t_check_online">Зв\'язок</string>
+    <string name="t_check_Provider">Provider</string>
+    <string name="t_check_GPS">GPS</string>
+    <string name="t_check_NET">NET</string>
+    <string name="t_check_MP">Запит МП</string>
+    <string name="t_check_version">Версія</string>
+    <string name="autosend">Автообмін</string>
+    <string name="txt_online">Онлайн</string>
+    <string name="txt_offline">Офлайн</string>
+
+
+    <!--Version. Update.-->
+    <string name="merchik_linl_pm">push <a href="https://play.google.com/store/apps/details?addrId=ua.com.merchik.merchik">Play Market</a></string>
+    <string name="t_ad_update_app_old">У вас встановлено застарілу версію додатку</string>  <!-- + versionNumber-->
+    <string name="t_ad_update_app_vold">Ви не можете продовжувати роботу, поки не встановите нову версію додатку</string>  <!-- + (versionNumber)-->
+    <string name="ad_update_app">Оновити</string>
+    <string name="ad_update_app_close">Закрити</string>
+
+    <!--Alert Dialog. Exchange.-->
+    <string name="t_ad_exchange">Виберіть обмін, який ви хочете провести: </string>
+    <string name="b_ad_exchange_tables">Синхронізувати таблиці</string>
+    <string name="b_ad_exchange_photos">Вивантажити фотозвіти</string>
+    <string name="b_ad_exchange_close">Закрити</string>
+
+    <!--Detailed report-->
+    <string name="title_detailed_report">Дет. звіт №</string>
+
+    <!--KPS-->
+    <string name="date">Дата: </string>
+    <string name="address">Адреса</string>
+    <string name="customer">Клієнт: </string>
+    <string name="performer">Виконавець: </string>
+    <string name="options">Опції: </string>
+    <string name="t_photo_log">Журнал фото</string>
+    <string name="Search">Пошук..</string>
+
+    <!-- ============== PHOTO REPORT FRAGMENT ============== -->
+    <string name="title_photo_report">Фотозвіт</string>
+
+    <!--  TEXT VIEW  -->
+    <string name="photo_report_tvDate">Дата:&#160;</string>
+    <string name="photo_report_tvAddr">Адреса:&#160;</string>
+    <string name="photo_report_tvClient">Клієнт:&#160;</string>
+    <string name="photo_report_tvTovGroup">Група товару:&#160;</string>
+    <string name="photo_report_tvPhotoType">Тип фото:&#160;</string>
+    <string name="photo_report_tvComment">Коментар:&#160;</string>
+
+    <!--  BUTTON  -->
+    <string name="photo_report_bMakePhoto">Зробити фото</string>
+    <string name="photo_report_bSaveAndClose">Зберегти та Закрити</string>
+    <string name="photo_report_bMakeMorePhoto">Зробити ще фото</string>
+    <string name="photo_report_bAddComent">Додати коментар</string>
+
+
+    <string name="start_app_test">Увага!
+        \nЦе тестова версія додатку, для тестування не обов\'язково знаходитися на Торговій Точці. За роботу з нею ви можете отримати премію!
+        \n\nДля цього необхідно виконати інструкції, описані нижче, і написати відгук у МВС (у день тестування) у розділі \"i\" у пункті №4.
+        \nОБОВ\'ЯЗКОВО у відгуку вкажіть Номер версії та Дату!
+        \n\nСписок необхідних дій, які треба протестувати: \n\n
+    </string>
+    <string name="start_app_test_instructions">Програміст забув написати список.</string>
+
+
+    <!-- ===== ATCIVITY MENU MAIN ===== -->
+    <string name="menu_main_main_text">Для отримання завдань перейдіть у розділ План робіт. Для цього у лівому верхньому куті екрана натисніть кнопку меню \"&#8801;\" і виберіть розділ План робіт</string>
+    <string name="navigation_drawer_open">Опис при відкритті</string>
+    <string name="navigation_drawer_close">Опис при закритті</string>
+
+
+    <!-- ===== MENU Navigation View ===== -->
+    <string name="hamburger_menu_main">Головна</string>
+    <string name="hamburger_menu_work_plan">План робіт</string>
+    <string name="hamburger_menu_detailed_report">Дет. звіт</string>
+    <string name="hamburger_menu_photo_report">Фотозвіт</string>
+    <string name="hamburger_menu_photo_log">Журнал фото</string>
+    <string name="hamburger_menu_exit">Вихід</string>
+
+
+    <string name="activity_photo_log_title">Журнал фото</string>
+
+
+    <!-- ===== LOGIN ===== -->
+    <string name="menu_login_help">Допомога</string>
+    <string name="menu_login_help_text_offline">Вибачте, не можу отримати Підказку, перевірте зв\'язок із сервером (наявність інтернету) і перезайдіть у систему</string>
+    <string name="prompt">Підказка</string>
+    <string name="close">Закрити</string>
+    <string name="video_prompt">Відеопідказка</string>
+    <string name="telephone_call">Телефонний дзвінок</string>
+    <string name="title">Заголовок</string>
+    <string name="save">Зберегти</string>
+
+
+    <!--Повідомлення для ПЕРЕВОПИТАНЬ-->
+    <string name="re_questioning_wpdata_first_msg">Тема цього візиту: Маркетингові дослідження!\n\nЧи потрібно виконувати ВИКЛАДКУ товару під час цього візиту?</string>
+    <string name="re_questioning_wpdata_second_msg">Ви будете викладати товар під час цього візиту?</string>
+    <string name="re_questioning_wpdata_err_msg">Це неправильна відповідь! Під час цього візиту НЕ МОЖНА виконувати викладку товару!!</string>
+
+
+    <!--    -->
+    <string name="executor">Виконавець</string>
+    <string name="address2">Адреса</string>
+
+    <string name="tar_server_error_short_comment">Довжина коментаря має бути не менше 20 символів (без урахування знаків пунктуації та пробілів).</string>
+
+
+    <!--INTERNET CONNECTION-->
+    <string name="internet_connection_error_code_not_200">Не вдалося отримати дані, сервер не відповідає. Перевірте зв\'язок з інтернетом і повторіть спробу пізніше.</string>
+    <string name="internet_connection_error_body_is_null">Запитувані дані не знайдено. Повторіть спробу або зверніться до Керівника.</string>
+
+    <!--USER MESSAGES-->
+    <string name="msg_try_sync">Виконайте синхронізацію даних з сервером і повторіть дію після синхронізації.</string>
+
+
+    <!-- OPTIONS -->
+    <!-- OPTION CONTROL -->
+    <!-- OPTION CONTROL 135329 -->
+    <string name="option_control_135329_no_need_reply">Відповідь на це завдання давати НЕ потрібно.</string>
+    <string name="option_control_135329_not_write_tar_comment">Ви не написали відповідь по активному завданню </string>
+    <string name="option_control_135329_so_short_tar_comment"> написав занадто коротку відповідь по активному завданню </string>
+    <string name="option_control_135329_no_photo">Крім відповіді з цієї теми, ви повинні розмістити ФотоЗвіт </string>
+    <string name="option_control_135329_no_detailed_report">Крім відповіді з цієї теми, ви повинні внести зміни до Дет.Звіту </string>
+    <string name="option_control_135329_msg_what_must_do">Ви повинні ознайомитися з вказаними завданнями, Виконати та Відписати їх.</string>
+
+    <!-- OPTION CONTROL 135330 -->
+    <string name="option_control_135330_no_need_reply">Відповідь на цю рекламацію давати НЕ потрібно.</string>
+    <string name="option_control_135330_not_write_tar_comment">Ви не написали відповідь по активній рекламації </string>
+    <string name="option_control_135330_so_short_tar_comment"> написав занадто коротку відповідь по активній рекламації </string>
+    <string name="option_control_135330_no_photo">Крім відповіді з цієї теми, ви повинні розмістити ФотоЗвіт </string>
+    <string name="option_control_135330_no_detailed_report">Окрім відповіді за цією темою, ви повинні внести зміни в Деталізований звіт</string>
+    <string name="option_control_135330_msg_what_must_do">Ви повинні ознайомитися із зазначеними рекламаціями, виконати їх і відписатися.</string>
+    <string name="description_calendar_imb_btn">Календар</string>
+
+    <string name="data_download_200">Дані успішно завантажено</string>
+    <string name="data_download_error">Не вдалося завантажити дані</string>
+    <string name="data_download_wait">Зачекайте, триває завантаження інформації</string>
+
+    <string name="total_number_selected">Загальна кількість елементів: %s шт.</string>
+    <string name="total_number_marked">Загальна кількість позначених елементів: %s шт.</string>
+
+    <string name="ui_setting_table">Налаштування таблиці</string>
+    <string name="ui_setting_column_visibility_desc">Щоб приховати певні стовпці, натисніть на поле</string>
+    <string name="ui_column_name">Назва стовпця</string>
+    <string name="ui_visibility">Видимість</string>
+    <string name="ui_cancel">Скасувати</string>
+    <string name="ui_apply">Застосувати</string>
+    <string name="ui_clear">Очистити</string>
+    <string name="ui_choice">Вибрати</string>
+
+    <string name="ui_filter_not_available_edit">Фільтр недоступний для редагування</string>
+    <string name="ui_font_size">Розмір шрифту</string>
+    <string name="ui_text_add">Додати...</string>
+    <string name="ui_option_in_progress">Ця опція перебуває на стадії розробки</string>
+    <string name="ui_text_find">Пошук</string>
+
+    <string name="title_themedb_from_achievement">Тип досягнення</string>
+    <string name="sub_title_themedb_from_achievement">Виберіть характер досягнення, яке ви виконали</string>
+    <string name="title_trademarkdb_from_achievement">Торговельні марки</string>
+    <string name="sub_title_trademarkdb_from_achievement">Виберіть торговельні марки</string>
+    <string name="title_tovardb_from_achievement">Товари</string>
+    <string name="sub_title_tovardb_from_achievement">Виберіть товар</string>
+    <string name="title_additionalrequirementsdb_from_achievement">Пропозиція</string>
+    <string name="sub_title_additionalrequirementsdb_from_achievement">Пропозиція від клієнта, яку потрібно виконати для отримання додаткових бонусів</string>
+    <string name="title_samplephotosdb">Зразки фотозвітів</string>
+    <string name="sub_title_samplephotosdb">У списку представлені зразки фотозвітів. "Щоб створити '%s', натисніть на відповідне фото. Потім збільште його до розміру екрана та зробіть фото, натиснувши кнопку фотоапарата в правому нижньому куті.</string>
+
+</resources>

@@ -856,6 +856,9 @@ public class MakePhoto {
                         MakePhoto.img_src_id = String.valueOf(showcase.photoId);
                         MakePhoto.showcase_id = String.valueOf(showcase.id);
                         MakePhoto.planogram_id = String.valueOf(showcase.planogramId);
+                        MakePhoto.example_id = String.valueOf(showcase.id);
+                        MakePhoto.example_img_id = String.valueOf(showcase.photoId);
+
                         planogrammSDB = SQL_DB.planogrammDao().getById(showcase.planogramId);
                         if (planogrammSDB != null && planogrammSDB.photoId != null){
                             MakePhoto.planogram_img_id = String.valueOf(planogrammSDB.photoId);

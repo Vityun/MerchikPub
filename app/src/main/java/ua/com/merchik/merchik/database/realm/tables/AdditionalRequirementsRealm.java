@@ -337,6 +337,20 @@ public class AdditionalRequirementsRealm {
         return RealmManager.INSTANCE.copyFromRealm(realmResults);
     }
 
+    public static List<AdditionalRequirementsDB> getAdditionalRequirements(String clientId, int optionId) {
+        List<AdditionalRequirementsDB> res = new ArrayList<>();
+
+        res = INSTANCE.where(AdditionalRequirementsDB.class)
+                .equalTo("clientId", clientId)
+                .equalTo("optionId", String.valueOf(optionId))
+                .equalTo("not_approve", "0")
+                .findAll();
+
+        if (res != null) res = INSTANCE.copyFromRealm(res);
+
+        return res;
+    }
+
     public static List<AdditionalRequirementsDB> getAdditionalRequirements(String clientId, int addressId, int optionId) {
         List<AdditionalRequirementsDB> res = new ArrayList<>();
 

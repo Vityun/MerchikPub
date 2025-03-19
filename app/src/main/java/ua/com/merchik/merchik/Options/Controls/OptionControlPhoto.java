@@ -242,15 +242,53 @@ public class OptionControlPhoto<T> extends OptionControl {
 КонецЕсли;
         *
         * */
+
+        // Исключения
+        // 3.1
         if (signal && optionId.equals("158609")) {
-            List<AdditionalRequirementsDB> additionalRequirementsDBList = AdditionalRequirementsRealm.getAdditionalRequirements(wpDataDB.getClient_id(), wpDataDB.getAddr_id(), 158609);
-            if (additionalRequirementsDBList.isEmpty()){
-                signal = false;
-                stringBuilderMsg.append(", але в даному випадку робимо виняток.");
+            List<AdditionalRequirementsDB> additionalRequirementsDBList = AdditionalRequirementsRealm.getAdditionalRequirements(wpDataDB.getClient_id(), 158609);
+            if (!additionalRequirementsDBList.isEmpty()) {
+                // Инициализируем флаги для поиска
+                boolean hasAddrOrGrp = false;
+
+                for (AdditionalRequirementsDB item : additionalRequirementsDBList) {
+                    if (Integer.parseInt(item.getAddrId()) == (wpDataDB.getAddr_id())
+                    ) {
+                        hasAddrOrGrp = true;
+                        break;
+                    } else if (
+                            Integer.parseInt(item.getAddrId()) == 0 &&
+                                    Integer.parseInt(item.getGrpId()) == (addressSDB.tpId)
+                    ) {
+                        hasAddrOrGrp = true;
+                        break;
+                    }
+//                    // Если оба условия выполнены, можно выйти из цикла
+//                    if (hasAddrOrGrp) {
+//                        break;
+//                    }
+                }
+
+                // Логика обработки
+                if (hasAddrOrGrp) {
+                    // ОСВ найдены для этой Сети/Адреса
+                    // Выполняем дальнейшую проверку
+                    Log.e("GOOD", "++");
+                } else {
+                    signal = false;
+                    stringBuilderMsg.append("\nВідповідно до ДВ ").append(photoTypeName).append(" у поточній Адреса/Мережа виготовлення НЕ ОБОВ'ЯЗКОВО. Перевірка не проводилась");
+                }
+
+//                if (additionalRequirementsDBList.stream()
+//                        .anyMatch(item -> Integer.parseInt(item.getGrpId()) == wpDataDB.getAddr_id())){
+//                    Log.e("GOOD","++");
+//                } else {
+//                    signal = false;
+//                    stringBuilderMsg.append("\nВідповідно до ДВ ").append(photoTypeName).append(" у поточній Адреса/Мережа виготовлення НЕ ОБОВ'ЯЗКОВО. Перевірка не проводилась");
+//                }
             }
         }
 
-        // Исключения
         if (optionId.equals("141361") || optionId.equals("132971")) {
             if (addressSDB.tpId == 383) {   // Для АШАН-ов(8196 - у петрова такое тут, странно) ФЗ ФТС НЕ проверяем
                 signal = false;

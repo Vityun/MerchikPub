@@ -8,6 +8,8 @@ import android.util.Log;
 
 import androidx.annotation.RequiresApi;
 
+import java.nio.charset.StandardCharsets;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
@@ -22,6 +24,7 @@ import ua.com.merchik.merchik.data.Database.Room.SMS.SMSPlanSDB;
 import ua.com.merchik.merchik.data.OptionMassageType;
 import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
 import ua.com.merchik.merchik.data.RealmModels.ReportPrepareDB;
+import ua.com.merchik.merchik.data.RealmModels.TovarDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.ReportPrepareRealm;
@@ -229,7 +232,12 @@ public class OptionControlCheckDetailedReport<T> extends OptionControl {
      */
     private List<ReportPrepareDB> prepareOSVData(List<ReportPrepareDB> reportPrepare, long dateStart) {
         List<ReportPrepareDB> res = null;
-        if (reportPrepare != null && reportPrepare.size() > 0) {
+        long testTime = 0L;
+        Calendar calendar = Calendar.getInstance();
+        int currentHour = calendar.get(Calendar.HOUR_OF_DAY); // Час в формате 0-23
+        if (currentHour < 9)
+            dateStart -= 60 * 6;
+        if (reportPrepare != null && !reportPrepare.isEmpty()) {
             res = RealmManager.INSTANCE.copyFromRealm(reportPrepare);
             for (ReportPrepareDB item : res) {
                 if (calculateSKU(item.getFace()) == 0) {
@@ -239,6 +247,13 @@ public class OptionControlCheckDetailedReport<T> extends OptionControl {
                     item.colSKU = 1;
                 }
                 long time = item.getDtChange();
+                if (testTime == 0L)
+                    testTime = time;
+
+                if (time != testTime)
+                    Log.e("testLOg", "++++++++");
+
+                Log.e("!prepareOSVData!", item.tovarId + ": " + item.dtChange + " < " + dateStart + " = " + (item.dtChange < dateStart));
 
                 if (time < dateStart) {
                     item.errorExist = 1;

@@ -1406,6 +1406,16 @@ public class RealmManager {
         return res;
     }
 
+    // Получение листа Опций по данному товару
+    public static TovarDB getTovar(String tovarId) {
+        TovarDB optionsDBS = INSTANCE.where(TovarDB.class)
+                .equalTo("iD", tovarId)
+                .findFirst();
+        TovarDB res = null;
+        if (optionsDBS != null) res = INSTANCE.copyFromRealm(optionsDBS);
+        return res;
+    }
+
     // Получение строки с ReportPrepare для записи туда данных
     public static ReportPrepareDB getTovarReportPrepare(String dad2, String tovarId) {
         ReportPrepareDB prepareDB = INSTANCE.where(ReportPrepareDB.class).equalTo("tovarId", tovarId).and().equalTo("codeDad2", dad2).findFirst();

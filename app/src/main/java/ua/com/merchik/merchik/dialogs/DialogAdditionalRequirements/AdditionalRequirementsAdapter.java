@@ -16,7 +16,10 @@ import androidx.annotation.NonNull;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.recyclerview.widget.RecyclerView;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
@@ -41,7 +44,7 @@ public class AdditionalRequirementsAdapter extends RecyclerView.Adapter<Addition
     private List<AdditionalRequirementsDB> data;
     private WpDataDB wpDataDB;
 
-    public AdditionalRequirementsAdapter(){
+    public AdditionalRequirementsAdapter() {
 
     }
 
@@ -84,9 +87,9 @@ public class AdditionalRequirementsAdapter extends RecyclerView.Adapter<Addition
                 StringBuilder additionalText = new StringBuilder();
                 additionalText.append(elementDB.getNotes());
 
-                if (tovarDB != null){
+                if (tovarDB != null) {
                     tradeMarkDB = TradeMarkRealm.getTradeMarkRowById(tovarDB.getManufacturerId());
-                    if (tradeMarkDB != null){
+                    if (tradeMarkDB != null) {
                         additionalText.append("\n");
                         additionalText.append(createTovarText(tovarDB, tradeMarkDB));
                     }
@@ -114,7 +117,9 @@ public class AdditionalRequirementsAdapter extends RecyclerView.Adapter<Addition
                 if (sums.compareTo("0") != 0) {
                     tsumm.setText(sums);
                     tsumm.setTextColor(context.getResources().getColor(R.color.red_error));
-                } else { tsumm.setText(""); }
+                } else {
+                    tsumm.setText("");
+                }
                 // ----
 
                 TradeMarkDB finalTradeMarkDB = tradeMarkDB;
@@ -181,6 +186,8 @@ public class AdditionalRequirementsAdapter extends RecyclerView.Adapter<Addition
                 bNum.append(number2);
             } catch (Exception e) {
             }
+            SimpleDateFormat sdf = new SimpleDateFormat("dd MMMM yyyy", Locale.getDefault());
+
             CharSequence endbNum = Html.fromHtml(bNum.toString());
 
 
@@ -192,11 +199,15 @@ public class AdditionalRequirementsAdapter extends RecyclerView.Adapter<Addition
 //                if (data.getDtStart().equals("0000-00-00")) {
 //                    bStart.append("Не определена");
 //                } else {
-                    String dStart2 = String.format("%s", data.dtStart);
+                if (data.dtStart == null)
+                    bStart.append("Не визначена");
+                else {
+                    String formattedDate = sdf.format(data.dtStart);
+                    String dStart2 = String.format("%s", formattedDate);
                     bStart.append(dStart2);
-//                }
+                }
             } catch (Exception e) {
-                bStart.append("Не определена");
+                bStart.append("Не визначена");
             }
             CharSequence endbStart = Html.fromHtml(bStart.toString());
 
@@ -209,11 +220,15 @@ public class AdditionalRequirementsAdapter extends RecyclerView.Adapter<Addition
 //                if (data.getDtEnd().equals("0000-00-00")) {
 //                    bEnd.append("Не определена");
 //                } else {
-                    String dEnd2 = String.format("%s", data.dtEnd);
-                    bEnd.append(dEnd2);
-//                }
+                if (data.dtEnd == null)
+                    bEnd.append("Не визначена");
+                else {
+                    String formattedDate = sdf.format(data.dtEnd);
+                    String dStart2 = String.format("%s", formattedDate);
+                    bEnd.append(dStart2);
+                }
             } catch (Exception e) {
-                bEnd.append("Не определена");
+                bEnd.append("Не визначена");
             }
             CharSequence endbEnd = Html.fromHtml(bEnd.toString());
 
@@ -287,7 +302,7 @@ public class AdditionalRequirementsAdapter extends RecyclerView.Adapter<Addition
             dialog.show();
         }
 
-        private StringBuilder createTovarText(TovarDB tovarDB, TradeMarkDB tradeMarkDB){
+        private StringBuilder createTovarText(TovarDB tovarDB, TradeMarkDB tradeMarkDB) {
             return new StringBuilder().append(tovarDB.getNm())
                     .append(", ").append(tovarDB.getWeight())
                     .append(", ").append(tradeMarkDB.getNm())
@@ -398,7 +413,6 @@ public class AdditionalRequirementsAdapter extends RecyclerView.Adapter<Addition
     }
 
 
-
     // ШОК, УЖАС, ТЬМА !!!
 
     public void click(Context context, AdditionalRequirementsDB data, TovarDB tovarDB, TradeMarkDB tradeMarkDB) {
@@ -465,8 +479,8 @@ public class AdditionalRequirementsAdapter extends RecyclerView.Adapter<Addition
 //            if (data.getDtStart().equals("0000-00-00")) {
 //                bStart.append("Не определена");
 //            } else {
-                String dStart2 = String.format("%s", data.dtStart);
-                bStart.append(dStart2);
+            String dStart2 = String.format("%s", data.dtStart);
+            bStart.append(dStart2);
 //            }
         } catch (Exception e) {
             bStart.append("Не определена");
@@ -482,8 +496,8 @@ public class AdditionalRequirementsAdapter extends RecyclerView.Adapter<Addition
 //            if (data.getDtEnd().equals("0000-00-00")) {
 //                bEnd.append("Не определена");
 //            } else {
-                String dEnd2 = String.format("%s", data.dtEnd);
-                bEnd.append(dEnd2);
+            String dEnd2 = String.format("%s", data.dtEnd);
+            bEnd.append(dEnd2);
 //            }
         } catch (Exception e) {
             bEnd.append("Не определена");
@@ -557,7 +571,7 @@ public class AdditionalRequirementsAdapter extends RecyclerView.Adapter<Addition
         dialog.show();
     }
 
-    private StringBuilder createTovarText(TovarDB tovarDB, TradeMarkDB tradeMarkDB){
+    private StringBuilder createTovarText(TovarDB tovarDB, TradeMarkDB tradeMarkDB) {
         return new StringBuilder().append(tovarDB.getNm())
                 .append(", ").append(tovarDB.getWeight())
                 .append(", ").append(tradeMarkDB.getNm())

@@ -44,6 +44,8 @@ import com.google.gson.annotations.SerializedName;
 
 import org.json.JSONObject;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -391,7 +393,7 @@ public class DialogEKL {
 
             onUpdateUI = () -> {
 
-                if (EKLDataHolder.Companion.instance().getUsersPTTid() != null) {
+                if (EKLDataHolder.Companion.instance().getUsersPTTid() != null && EKLDataHolder.Companion.instance().getUsersPTTName() != null) {
                     if ((EKLDataHolder.Companion.instance().getUsersPTTOtdelId() == null ||
                             EKLDataHolder.Companion.instance().getUsersPTTOtdelId() == 0) && (context instanceof Activity)) {
                         sotr.setText(underLineText("Виберіть ТПП (Представника Торгової точки)", Color.GRAY));
@@ -400,7 +402,7 @@ public class DialogEKL {
                                 .setStatus(DialogStatus.ALERT)
                                 .setMessage("У обраного вами представника торгової точки (ПТТ) не вказано відділ, тому він не може підписувати ЕКЛ, виберіть іншого ПТТ, або додайте відділ для цього представника")
                                 .setOnConfirmAction("Редагувати ПТТ", () -> {
-                                    Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(createAddNewPTTLinkVersion2()));
+                                    Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(editingPTTLinkVersion2()));
                                     context.startActivity(browserIntent);
                                     return Unit.INSTANCE; // Для совместимости с Kotlin
                                 })
@@ -1117,7 +1119,7 @@ public class DialogEKL {
     private void setAddSotr() {
         addSotr.setOnClickListener(v -> {
             try {
-                Toast.makeText(context, "Добавление нового ПТТ находится в разработке!", Toast.LENGTH_LONG).show();
+//                Toast.makeText(context, "Добавление нового ПТТ находится в разработке!", Toast.LENGTH_LONG).show();
 
                 Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(createAddNewPTTLinkVersion2()));
                 context.startActivity(browserIntent);
@@ -1127,30 +1129,11 @@ public class DialogEKL {
         });
     }
 
-    private String createAddNewPTTLink() {
-        String link = String.format("/mobile.php?mod=sotr_list**act=add_sotr**addr_id=%s**theme_id=%s**menu_close_only", wp.getAddr_id(), wp.getTheme_id());
-        AppUsersDB appUser = AppUserRealm.getAppUserById(userId);
-        if (appUser != null) {
-            String hash = String.format("%s%s%s", appUser.getUserId(), appUser.getPassword(), "AvgrgsYihSHp6Ok9yQXfSHp6Ok9nXdXr3OSHp6Ok9UPBTzTjrF20Nsz3");
-            hash = Globals.getSha1Hex(hash);
 
-            String format = String.format("https://merchik.com.ua/sa.php?&u=%s&s=%s&l=%s", userId, hash, link);
-            Globals.writeToMLOG("INFO", "DialogEKL/setAddSotr/createAddNewPTTLink", "format: " + format);
-            Log.e("LINK_FORMA", ">> " + format);
-            return format;
-        } else {
-            Globals.writeToMLOG("INFO", "DialogEKL/setAddSotr/createAddNewPTTLink", "link: " + link);
-            return link;
-        }
-    }
-
-    private String createAddNewPTTLinkVersion2() {
+    private String editingPTTLinkVersion2() {
         // Формирование основного пути с параметрами
-        String link = String.format(
-                "/mobile.php?mod=sotr_list&act=add_sotr&filter[addr_id]=%s&theme_id=%s&menu_close_only",
-                wp.getAddr_id(),
-                wp.getTheme_id()
-        );
+
+        String link = String.format("/mobile.php?mod=sotr_list**act=add_list**search=%s", EKLDataHolder.Companion.instance().getUsersPTTName());
 
         // Получаем данные пользователя
         AppUsersDB appUser = AppUserRealm.getAppUserById(userId);
@@ -1165,7 +1148,45 @@ public class DialogEKL {
             hash = Globals.getSha1Hex(hash);
 
             // Формируем итоговую ссылку
-            String format = String.format(
+            String format =
+                    String.format(
+                            "https://merchik.com.ua/sa.php?&u=%s&s=%s&l=%s",
+                            userId,
+                            hash,
+                            link
+                    );
+
+            // Логируем результат
+            Globals.writeToMLOG("INFO", "DialogEKL/setAddSotr/createAddNewPTTLink", "format: " + format);
+            Log.e("LINK_FORMA", ">> " + format);
+            return format;
+        } else {
+            // Если пользователя нет, возвращаем только путь
+            Globals.writeToMLOG("INFO", "DialogEKL/setAddSotr/createAddNewPTTLink", "link: " + link);
+            return link;
+        }
+    }
+
+    private String createAddNewPTTLinkVersion2() {
+        // Формирование основного пути с параметрами
+        int addrId = wp.getAddr_id(); // Получаем значение
+        String link = String.format("/mobile.php?mod=sotr_list**act=add_sotr**filter[addr_id]=%d", addrId);
+
+        // Получаем данные пользователя
+        AppUsersDB appUser = AppUserRealm.getAppUserById(userId);
+        if (appUser != null) {
+            // Формируем hash
+            String hash = String.format(
+                    "%s%s%s",
+                    appUser.getUserId(),
+                    appUser.getPassword(),
+                    "AvgrgsYihSHp6Ok9yQXfSHp6Ok9nXdXr3OSHp6Ok9UPBTzTjrF20Nsz3"
+            );
+            hash = Globals.getSha1Hex(hash);
+
+            // Формируем итоговую ссылку
+            String format =
+                    String.format(
                     "https://merchik.com.ua/sa.php?&u=%s&s=%s&l=%s",
                     userId,
                     hash,

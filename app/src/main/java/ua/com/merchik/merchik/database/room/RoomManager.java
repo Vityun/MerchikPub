@@ -30,7 +30,8 @@ public class RoomManager {
                         MIGRATION_55_56,
                         MIGRATION_56_57,
                         MIGRATION_57_58,
-                        MIGRATION_58_59
+                        MIGRATION_58_59,
+                        MIGRATION_59_60
                 )
 
                 .build();
@@ -582,6 +583,36 @@ public class RoomManager {
             database.execSQL(
                     "ALTER TABLE sotr ADD COLUMN last_ekl_date TEXT"
             );
+        }
+    };
+
+    static final Migration MIGRATION_59_60 = new Migration(59, 60) {
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase database) {
+            // Создание таблицы planogram_vizit_showcase
+            database.execSQL("CREATE TABLE IF NOT EXISTS `planogram_vizit_showcase` (" +
+                    "`id` INTEGER NOT NULL, " + // Уникальный ИД таблицы БД (автоприращение)
+                    "`dt` INTEGER, " + // Время визита в Юникс
+                    "`isp` TEXT, " + // Код фирмы (строка)
+                    "`client_id` TEXT, " + // Код заказчика (строка)
+                    "`addr_id` INTEGER, " + // Код адреса (число)
+                    "`code_dad2` INTEGER, " + // Код ДАД2 (число)
+                    "`planogram_id` INTEGER, " + // ИД планограммы
+                    "`planogram_photo_id` INTEGER, " + // ИД фото планограммы
+                    "`showcase_id` INTEGER, " + // ИД витрины
+                    "`showcase_photo_id` INTEGER, " + // ИД фото витрины
+                    "`photo_do_id` INTEGER, " + // Код фото ДО
+                    "`theme_id` INTEGER, " + // Код темы (число)
+                    "`option_id` INTEGER, " + // Код опции (число)
+                    "`comments` TEXT, " + // Комментарий (строка 200)
+                    "`object_a` INTEGER, " + // Код объекта А (число)
+                    "`object_a_theme_id` INTEGER, " + // Код темы объекта А (число)
+                    "`object_b` INTEGER, " + // Код объекта Б (число)
+                    "`object_b_theme_id` INTEGER, " + // Код темы объекта Б (число)
+                    "`author_id` INTEGER, " + // Код автора изменений в БДСайта
+                    "`dt_update` INTEGER, " + // Время последнего изменения
+                    "`kol` INTEGER, " + // Количество (для суммирования при свертке)
+                    "PRIMARY KEY(`id`))");
         }
     };
 }

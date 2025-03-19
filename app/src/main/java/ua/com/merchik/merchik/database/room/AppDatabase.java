@@ -33,6 +33,7 @@ import ua.com.merchik.merchik.data.Database.Room.Planogram.PlanogrammGroupSDB;
 import ua.com.merchik.merchik.data.Database.Room.Planogram.PlanogrammImagesSDB;
 import ua.com.merchik.merchik.data.Database.Room.Planogram.PlanogrammSDB;
 import ua.com.merchik.merchik.data.Database.Room.Planogram.PlanogrammTypeSDB;
+import ua.com.merchik.merchik.data.Database.Room.Planogram.PlanogrammVizitShowcaseSDB;
 import ua.com.merchik.merchik.data.Database.Room.PotentialClientSDB;
 import ua.com.merchik.merchik.data.Database.Room.ReclamationPercentageSDB;
 import ua.com.merchik.merchik.data.Database.Room.SMS.SMSLogSDB;
@@ -78,6 +79,7 @@ import ua.com.merchik.merchik.database.room.DaoInterfaces.PlanogrammDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.PlanogrammGroupDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.PlanogrammImagesDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.PlanogrammTypeDao;
+import ua.com.merchik.merchik.database.room.DaoInterfaces.PlanogrammVizitShowcaseDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.PotentialClientDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.ReclamationPercentageDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.SMSLogDao;
@@ -140,6 +142,7 @@ import ua.com.merchik.merchik.database.room.DaoInterfaces.VotesDao;
                 PlanogrammGroupSDB.class,   // Планограми Группы
                 PlanogrammImagesSDB.class,   // Планограми Идентификаторы
                 PlanogrammTypeSDB.class,    // Типы Планограмм
+                PlanogrammVizitShowcaseSDB.class,   // Планограмы по посещениям
                 SMSPlanSDB.class,       //  СМС А (тут типо должны быть те кто в очереди или недавно отправленные)
                 SMSLogSDB.class,         //  СМС Б
                 SettingsUISDB.class,
@@ -149,7 +152,7 @@ import ua.com.merchik.merchik.database.room.DaoInterfaces.VotesDao;
                 SiteUrlSDB.class,
                 SiteAccountSDB.class
         },
-        version = 59
+        version = 60
 )
 
 
@@ -229,6 +232,8 @@ public abstract class AppDatabase extends RoomDatabase {
     public abstract PlanogrammImagesDao planogrammImagesDao();
 
     public abstract PlanogrammTypeDao planogrammTypeDao();
+
+    public abstract PlanogrammVizitShowcaseDao planogrammVizitShowcaseDao();
 
     public abstract SettingsUIDao settingsUIDao();
 
