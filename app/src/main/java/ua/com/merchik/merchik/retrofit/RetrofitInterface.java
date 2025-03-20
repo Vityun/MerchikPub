@@ -268,6 +268,8 @@ public interface RetrofitInterface {
                                        @Part("showcase_id") RequestBody showcase_id,
                                        @Part("planogram_id") RequestBody planogram_id,
                                        @Part("planogram_img_id") RequestBody planogram_img_id,
+                                       @Part("example_id") RequestBody example_id,
+                                       @Part("example_img_id") RequestBody example_img_id,
                                        @Part MultipartBody.Part photo);
 
     @POST("mobile_app.php?")

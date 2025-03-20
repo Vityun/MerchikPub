@@ -99,9 +99,11 @@ public class OptionControlCheckDetailedReport<T> extends OptionControl {
         // Получаем RP(товары) для дальнейшего анализа.
         List<ReportPrepareDB> reportPrepare = ReportPrepareRealm.getReportPrepareByDad2(dad2);
 
-
         // 5.0
-        reportPrepare = prepareOSVData(reportPrepare, adjustStartTime(wpDataDB.getDt_start()));
+        reportPrepare = prepareOSVData(reportPrepare,
+//                adjustStartTime(wpDataDB.getVisit_start_dt())
+                wpDataDB.getVisit_start_dt()
+        );
 
         // 6.0 готовим сообение и сигнал.
         int colSKU = reportPrepare.stream().map(table -> table.colSKU).reduce(0, Integer::sum);
@@ -233,10 +235,10 @@ public class OptionControlCheckDetailedReport<T> extends OptionControl {
     private List<ReportPrepareDB> prepareOSVData(List<ReportPrepareDB> reportPrepare, long dateStart) {
         List<ReportPrepareDB> res = null;
         long testTime = 0L;
-        Calendar calendar = Calendar.getInstance();
-        int currentHour = calendar.get(Calendar.HOUR_OF_DAY); // Час в формате 0-23
-        if (currentHour < 9)
-            dateStart -= 60 * 6;
+//        Calendar calendar = Calendar.getInstance();
+//        int currentHour = calendar.get(Calendar.HOUR_OF_DAY); // Час в формате 0-23
+//        if (currentHour < 9)
+//            dateStart -= 60 * 6;
         if (reportPrepare != null && !reportPrepare.isEmpty()) {
             res = RealmManager.INSTANCE.copyFromRealm(reportPrepare);
             for (ReportPrepareDB item : res) {

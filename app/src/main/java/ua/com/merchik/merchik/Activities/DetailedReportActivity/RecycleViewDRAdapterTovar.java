@@ -1892,6 +1892,12 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
 
                 case UP:
                     Log.e("SAVE_TO_REPORT_OPT", "UP: " + data);
+                    long curent = System.currentTimeMillis() / 1000;
+                    long millis = System.currentTimeMillis();
+                    long seconds = millis / 1000;
+                    Log.d("TIME_CHECK", "Millis: " + millis + ", Seconds: " + seconds);
+                    Log.e("SAVE_TO_REPORT_OPT", "TIME: " + curent);
+
                     INSTANCE.executeTransaction(realm -> {
                         table.setUp(data);
                         table.setUploadStatus(1);

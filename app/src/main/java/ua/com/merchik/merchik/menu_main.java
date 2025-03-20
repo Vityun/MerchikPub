@@ -21,7 +21,9 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
+
 import androidx.preference.PreferenceManager;
+
 import android.provider.MediaStore;
 import android.text.Html;
 import android.text.SpannableString;
@@ -72,6 +74,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import io.realm.Realm;
 import io.realm.RealmResults;
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
@@ -928,7 +931,7 @@ public class menu_main extends AppCompatActivity {
                         "",
                         "С сервером всё впорядке.");
             } else if (status == 2) {
-                Globals.alertDialogMsg(this,DialogStatus.ERROR,
+                Globals.alertDialogMsg(this, DialogStatus.ERROR,
                         "",
                         "Сервер не доступен. Повторите попытку позже.");
             } else if (status == 0) {
@@ -1418,13 +1421,13 @@ public class menu_main extends AppCompatActivity {
                     }
                     String iza = "";
                     try {
-                         iza = Globals.generateIzaCode(
+                        iza = Globals.generateIzaCode(
                                 user_id,
                                 customer_id,
                                 addrId
                         );
-                    } catch (Exception e){
-                        Log.e("Exception",e.getMessage());
+                    } catch (Exception e) {
+                        Log.e("Exception", e.getMessage());
                     }
 
                     StackPhotoDB stackPhotoDB = new StackPhotoDB(
@@ -2094,7 +2097,8 @@ public class menu_main extends AppCompatActivity {
      */
     private void getPhotoAndUpload(int mod) {
         if (internetStatus == 1) {// inet+
-            RealmResults<StackPhotoDB> results = RealmManager.getStackPhotoPhotoToUpload();
+
+            List<StackPhotoDB> results = RealmManager.INSTANCE.copyFromRealm(RealmManager.getStackPhotoPhotoToUpload());
 
             for (int i = 0; i < results.size(); i++) {
                 if (results.get(i) != null) {
@@ -2132,6 +2136,8 @@ public class menu_main extends AppCompatActivity {
         String code_dad2 = "";
         String gp = "";
         String tovar_id = "";
+        String example_id = "";
+        String example_img_id = "";
 
         if (photoDB.getClient_id() != null) {
             client_id = String.valueOf(photoDB.getClient_id());
@@ -2174,7 +2180,7 @@ public class menu_main extends AppCompatActivity {
         }
 
 
-        if (photoDB.tovar_id != null && !photoDB.tovar_id.equals("")){
+        if (photoDB.tovar_id != null && !photoDB.tovar_id.equals("")) {
             tovar_id = photoDB.tovar_id;
         }
 
@@ -2189,6 +2195,13 @@ public class menu_main extends AppCompatActivity {
             gp = photoDB.getGp();
         }
 
+        if (photoDB.example_id != null) {
+            example_id = photoDB.example_id;
+        }
+
+        if (photoDB.example_img_id != null) {
+            example_img_id = photoDB.example_img_id;
+        }
 
         RequestBody mod2 = RequestBody.create(MediaType.parse("text/plain"), mod);
         RequestBody act2 = RequestBody.create(MediaType.parse("text/plain"), act);
@@ -2205,6 +2218,8 @@ public class menu_main extends AppCompatActivity {
         RequestBody codeDad2 = RequestBody.create(MediaType.parse("text/plain"), code_dad2);
         RequestBody gp2 = RequestBody.create(MediaType.parse("text/plain"), gp);
         RequestBody tov2 = RequestBody.create(MediaType.parse("text/plain"), tovar_id);
+        RequestBody example_id2 = RequestBody.create(MediaType.parse("text/plain"), example_id);
+        RequestBody example_img_id2 = RequestBody.create(MediaType.parse("text/plain"), example_img_id);
 
 
         //pass it like this
@@ -2251,7 +2266,10 @@ public class menu_main extends AppCompatActivity {
         // РУЧНАЯ ВЫГРУЗКА
         if (mode == 1) {
             retrofit2.Call<JsonObject> call = RetrofitBuilder.getRetrofitInterface()
-                    .SEND_PHOTO_2_BODY(mod2, act2, client_id2, addr_id2, date2, img_type_id2, photo_user_id2, client_tovar_group2, doc_num2, theme_id2, comment2, dvi2, codeDad2, gp2, tov2, null, null, null, null, photo);
+                    .SEND_PHOTO_2_BODY(mod2, act2, client_id2, addr_id2, date2, img_type_id2, photo_user_id2, client_tovar_group2, doc_num2, theme_id2, comment2, dvi2, codeDad2, gp2, tov2,
+                            null, null, null, null,
+                            example_id2, example_img_id2,
+                            photo);
 
             String finalDate = date;
             String finalDate1 = date;
