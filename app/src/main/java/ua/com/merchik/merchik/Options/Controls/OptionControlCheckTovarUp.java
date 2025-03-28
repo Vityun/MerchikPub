@@ -91,7 +91,14 @@ public class OptionControlCheckTovarUp<T> extends OptionControl {
         // Получаем "ТЗН Тов" (RP по ДАД2)
         List<ReportPrepareDB> reportPrepare = RealmManager.INSTANCE.copyFromRealm(ReportPrepareRealm.getReportPrepareByDad2(dad2));
 
-        // Получаем Фото Товара с Тележки
+        int min;
+        try {
+            min = Integer.parseInt(optionDB.getAmountMin());
+        } catch (NumberFormatException e) {
+            min = 0; // Устанавливаем значение по умолчанию в случае ошибки
+        }
+
+        // Получаем Фото Товара с Тележки (4)
         List<StackPhotoDB> stackPhoto = StackPhotoRealm.getPhoto(
                 Clock.getDatePeriodLong(documentDate, -3),
                 Clock.getDatePeriodLong(documentDate, 3),   // 29.05.24. поправил с +1 на +3, что б в промежуток за пару дней попадали фотки.
@@ -108,7 +115,7 @@ public class OptionControlCheckTovarUp<T> extends OptionControl {
             Globals.writeToMLOG("INFO", "OptionControlCheckTovarUp/executeOption/sumUp!!!", "stackPhoto/getId!!!!: " + stackPhoto.get(0).getId());
             Globals.writeToMLOG("INFO", "OptionControlCheckTovarUp/executeOption/sumUp!!!", "stackPhoto/getPhotoServerId!!!!: " + stackPhoto.get(0).getPhotoServerId());
             Globals.writeToMLOG("INFO", "OptionControlCheckTovarUp/executeOption/sumUp!!!", "stackPhoto/getPhoto_hash!!!!: " + stackPhoto.get(0).getPhoto_hash());
-        }catch (Exception e){
+        } catch (Exception e) {
             Globals.writeToMLOG("INFO", "OptionControlCheckTovarUp/executeOption/sumUp!!!", "stackPhoto!!!!Exception e: " + e);
         }
 
@@ -126,13 +133,13 @@ public class OptionControlCheckTovarUp<T> extends OptionControl {
                         PHOTO_SHOWCASE_BEFORE_START_WORK,
                         null);
 
-                if (stackPhoto != null){
+                if (stackPhoto != null) {
                     Globals.writeToMLOG("INFO", "OptionControlCheckTovarUp/executeOption/sumUp", "stackPhoto (null): " + stackPhoto.size());
-                }else {
+                } else {
                     Globals.writeToMLOG("INFO", "OptionControlCheckTovarUp/executeOption/sumUp", "stackPhoto (null): " + "null");
                 }
             }
-        }else {
+        } else {
             Globals.writeToMLOG("INFO", "OptionControlCheckTovarUp/executeOption/sumUp", "stackPhoto: " + stackPhoto.size());
         }
 
@@ -201,6 +208,10 @@ public class OptionControlCheckTovarUp<T> extends OptionControl {
         } else if (sumUp == 0 && stackPhotoSize == 0) {
             tznNotes.append("Товар со склада на витрину не поднимался.");
             tznErrorExist = 1;
+        } else if (sumUp > 0 && sumUp < min) {   // добавил 21.03.2025
+            tznNotes.append("Зі складу піднято всього ").append(sumUp).append(" шт, що менше мінімально допустимого ").append(min).append(" шт. " +
+                    "Підніміть товар зі складу на вітрину і створіть світлини, що це підтверджують.");
+            tznErrorExist = 1;
         } else {
             tznOffset = 1;
         }
@@ -217,6 +228,7 @@ public class OptionControlCheckTovarUp<T> extends OptionControl {
         }
 
 
+        // 24.03.2025 закоментил все. Теперь нужно проверять не нарушит ли работу
         //6.0. подведем итог
         if (tznErrorExist > 0 && tznOffset > 0 && optionDB.getBlockPns().equals("1")) {
             stringBuilderMsg.append("Товар со склада на витрину не поднимался, НО по всем позициям указана ПРИЧИНА (в поле 'Ошибка').");
@@ -239,7 +251,7 @@ public class OptionControlCheckTovarUp<T> extends OptionControl {
             signal = false;
 //            unlockCodeResultListener.onUnlockCodeSuccess();
         } else {
-            stringBuilderMsg.append("Товар зі складу не підіймався. Бонус не нарахован.");
+            stringBuilderMsg.append("Товар зі складу не підіймався. Або був піднятий у недостатній кількості. Бонус не нарахован.");
             signal = true;
 //            unlockCodeResultListener.onUnlockCodeFailure();
         }
@@ -251,9 +263,9 @@ public class OptionControlCheckTovarUp<T> extends OptionControl {
         if (signal) {
             if (optionDB.getBlockPns().equals("1")) {
                 setIsBlockOption(signal);
-                stringBuilderMsg.append("\n\n").append("Документ проведен не будет!");
+                stringBuilderMsg.append("\n\n").append("Документ проведено не буде!");
             } else {
-                stringBuilderMsg.append("\n\n").append("Вы можете получить Премиальные БОЛЬШЕ, если будете вносить отчетность корректно.");
+                stringBuilderMsg.append("\n\n").append("Ви можете отримати Преміальні БІЛЬШЕ, якщо будете вносити звітність коректно.");
             }
         }
         checkUnlockCode(optionDB);

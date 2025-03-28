@@ -707,7 +707,7 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
 
                 // Синхронизовать Таблици
                 if (i.getItemId() == R.id.exchange_db_action) {
-                    Toast.makeText(toolbar_menus.this, "Синхронизаци таблиц", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(toolbar_menus.this, "Синхронізація таблиць", Toast.LENGTH_SHORT).show();
 
 //                    if (!TablesLoadingUnloading.sync) {
 //                        Exchange.sendWpData2();
@@ -718,6 +718,8 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
 //                    } else {
 //                        globals.alertDialogMsg(toolbar_menus.this, "Синхронизация уже запущена! Подождите сообщения об окончании.");
 //                    }
+                    ProgressViewModel progress = new ProgressViewModel(1);
+                    LoadingDialogWithPercent loadingDialog = new LoadingDialogWithPercent(this, progress);
 
                     try {
                         // Новый обмен. Нужно ещё донастроить для нормальной работы.
@@ -729,7 +731,11 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                         if (exchange.getViewModel() == null)
                             exchange.setViewModel(photoDownloaderViewModel);
                         exchange.startExchange();
+                        new TablesLoadingUnloading().downloadAllTables(this);
 
+                        loadingStart();
+                        loadingDialog.show();
+                        progress.onNextEvent("Виконую Синхронізацію з сервером", 18_700);
 //                        exchange.uploadTARComments(null);
                     } catch (Exception e) {
                         Log.d("test", "test" + e);
@@ -749,21 +755,26 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                         List<Integer> listPhotosToDownload = samplePhotoExchange.getSamplePhotosToDownload();
                         if (listPhotosToDownload != null && listPhotosToDownload.size() > 0) {
                             Globals.writeToMLOG("INFO", "TOOBAR/CLICK_EXCHANGE/SamplePhotoExchange", "listPhotosToDownload: " + listPhotosToDownload.size());
-                            BlockingProgressDialog progress = new BlockingProgressDialog(this, "Ідентифікатори фото", "Починаю завантажувати " + listPhotosToDownload.size() + " ідентифікаторів фото. Це може зайняти деякий час.");
-                            progress.show();
+//                            BlockingProgressDialog progress = new BlockingProgressDialog(this, "Ідентифікатори фото", "Починаю завантажувати " + listPhotosToDownload.size() + " ідентифікаторів фото. Це може зайняти деякий час.");
+//                            progress.show();
                             samplePhotoExchange.downloadSamplePhotosByPhotoIds(listPhotosToDownload, new Clicks.clickStatusMsg() {
                                 @Override
                                 public void onSuccess(String data) {
                                     Globals.writeToMLOG("INFO", "TOOBAR/CLICK_EXCHANGE/SamplePhotoExchange", "data: " + data);
-                                    progress.dismiss();
+//                                    progress.dismiss();
+                                    loadingFinish();
+                                    progress.onCompleted();
                                     Toast.makeText(getApplicationContext(), "Завантаження ідентифікаторів фото - завершено.", Toast.LENGTH_SHORT).show();
                                 }
 
                                 @Override
                                 public void onFailure(String error) {
                                     Globals.writeToMLOG("INFO", "TOOBAR/CLICK_EXCHANGE/SamplePhotoExchange", "error: " + error);
-                                    progress.dismiss();
-                                    Toast.makeText(getApplicationContext(), "Виникла помилка при завантаженні Ідентифікаторів фото", Toast.LENGTH_SHORT).show();
+                                    loadingFinish();
+                                    progress.onCompleted();
+
+//                                    progress.dismiss();
+//                                    Toast.makeText(getApplicationContext(), "Виникла помилка при завантаженні Ідентифікаторів фото", Toast.LENGTH_SHORT).show();
                                 }
                             });
                         } else {
@@ -1725,8 +1736,8 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
      */
     public void cronCheckUploadsPhotoOnServer() {
         try {
-//            final RealmResults<StackPhotoDB> realmResults = RealmManager.stackPhotoGetHashs();
-            final List<StackPhotoDB> realmResults = RealmManager.INSTANCE.copyFromRealm(RealmManager.stackPhotoGetHashs());
+            final RealmResults<StackPhotoDB> realmResults = RealmManager.stackPhotoGetHashs();
+//            final List<StackPhotoDB> realmResults = RealmManager.INSTANCE.copyFromRealm(RealmManager.stackPhotoGetHashs());
 
             Log.e("CHECK_HASH", "realmResults: " + realmResults.size());
 
@@ -1741,32 +1752,6 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                 }
 
                 Globals.writeToMLOG("INFO", "cronCheckUploadsPhotoOnServer", "listHash: " + listHash);
-
-                // TODO нормально оформить этот запрос
-/*                StandartData standartData = new StandartData();
-                standartData.mod = "images_view";
-                standartData.act = "list_image";
-                standartData.nolimit = "no_limit";
-                standartData.date_from = Clock.lastWeek();
-                standartData.date_to = Clock.tomorrow;
-                standartData.hash_list = listHash;
-
-                JsonObject convertedObject = new Gson().fromJson(new Gson().toJson(standartData), JsonObject.class);
-
-                retrofit2.Call<JsonObject> callJS = RetrofitBuilder.getRetrofitInterface().TEST_JSON_UPLOAD(RetrofitBuilder.contentType, convertedObject);
-//                retrofit2.Call<PhotoHash> callPH = RetrofitBuilder.getRetrofitInterface().SEND_PHOTO_HASH_NEW(RetrofitBuilder.contentType, convertedObject);
-
-                callJS.enqueue(new Callback<JsonObject>() {
-                    @Override
-                    public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
-                        Log.e("test", "test: " + response);
-                    }
-
-                    @Override
-                    public void onFailure(Call<JsonObject> call, Throwable t) {
-                        Log.e("test", "test t: " + t);
-                    }
-                });*/
 
                 String mod = "images_view";
                 String act = "list_image";

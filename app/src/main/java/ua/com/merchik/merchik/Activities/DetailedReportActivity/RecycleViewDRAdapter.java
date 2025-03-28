@@ -52,12 +52,16 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
+import io.realm.RealmResults;
 import kotlin.Pair;
+import kotlin.Unit;
 import ua.com.merchik.merchik.Activities.Features.FeaturesActivity;
 import ua.com.merchik.merchik.Activities.PhotoLogActivity.PhotoLogActivity;
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonAddNewClient;
+import ua.com.merchik.merchik.Options.Buttons.OptionButtonOpinion;
+import ua.com.merchik.merchik.Options.Controls.OptionControlAddOpinion;
 import ua.com.merchik.merchik.Options.Controls.OptionControlAvailabilityControlPhotoRemainingGoods;
 import ua.com.merchik.merchik.Options.Controls.OptionControlReclamationAnswer;
 import ua.com.merchik.merchik.Options.Controls.OptionControlStockBalanceTovar;
@@ -71,6 +75,7 @@ import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.Database.Room.AchievementsSDB;
 import ua.com.merchik.merchik.data.Database.Room.AddressSDB;
 import ua.com.merchik.merchik.data.Database.Room.BonusSDB;
+import ua.com.merchik.merchik.data.Database.Room.OpinionSDB;
 import ua.com.merchik.merchik.data.Database.Room.SamplePhotoSDB;
 import ua.com.merchik.merchik.data.Database.Room.SiteObjectsSDB;
 import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
@@ -93,8 +98,11 @@ import ua.com.merchik.merchik.database.realm.tables.ReportPrepareRealm;
 import ua.com.merchik.merchik.database.realm.tables.StackPhotoRealm;
 import ua.com.merchik.merchik.database.realm.tables.TradeMarkRealm;
 import ua.com.merchik.merchik.database.realm.tables.WpDataRealm;
+import ua.com.merchik.merchik.database.room.RoomManager;
 import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.dialogs.DialogFullPhotoR;
+import ua.com.merchik.merchik.dialogs.features.MessageDialogBuilder;
+import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus;
 import ua.com.merchik.merchik.features.main.DBViewModels.StackPhotoDBViewModel;
 import ua.com.merchik.merchik.features.main.DBViewModels.TovarDBViewModel;
 
@@ -288,6 +296,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                         || optionId == 132812   // Хочу увеличение оплаты
                         || optionId == 165481   // Кнопка ЭФФИ
                         || optionId == 141069   // Кнопка "Сравнение Остатков с Наличием"
+                        || optionId == 168598   // Кнопка "Мнение о посещении"
                 ) {
                     optionButton.setBackgroundResource(R.drawable.bg_temp);
                     textInteger2.setVisibility(View.VISIBLE);
@@ -863,6 +872,39 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
 
                             break;
 
+                        case 168598:    // Мнение
+                            type = new OptionMassageType();
+                            type.type = OptionMassageType.Type.STRING;
+                            OptionControlAddOpinion<?> optionControlAddOpinion = new OptionControlAddOpinion<>(itemView.getContext(), dataDB, optionsButtons, type, NULL, null);
+
+                            textInteger.setText(CustomString.underlineString(optionControlAddOpinion.currentOpinionStatus(), optionsButtons));
+
+                            if (dataDB instanceof WpDataDB wpDataDB) {
+                                int wpDataUserOpinionID = wpDataDB.getUser_opinion_id() != null ? Integer.parseInt(wpDataDB.getUser_opinion_id()) : 0;
+
+                                String opinionName;
+                                if (wpDataUserOpinionID > 0) {
+                                    OpinionSDB opinion = RoomManager.SQL_DB.opinionDao().getOpinionById(wpDataUserOpinionID);
+                                    opinionName = opinion.nm;
+                                } else {
+                                    opinionName = "Ви ще не встановлювали думку щодо цього відвідування, ви можете виправити це зараз і вибрати потрібну думку.";
+                                }
+                                textInteger.setOnClickListener(v -> {
+                                    new MessageDialogBuilder((Activity) mContext)
+                                            .setTitle("Думка виконавця")
+                                            .setStatus(DialogStatus.NORMAL)
+                                            .setSubTitle("Поточна думка, ви можете її змінити")
+                                            .setMessage(opinionName)
+                                            .setOnConfirmAction(() -> Unit.INSTANCE)
+                                            .setOnCancelAction("Змiнити",() -> {
+                                                new OptionButtonOpinion<>(mContext, dataDB, optionsButtons, type, NULL, null);
+                                                return Unit.INSTANCE;
+                                            })
+                                            .show();
+                                });
+                            }
+                            break;
+
 
                         case 141069:    // Сравнение остатков и наличия
                             type = new OptionMassageType();
@@ -1034,7 +1076,6 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
             res = "~" + String.format("%.2f", wpDataDB.getCash_zakaz() * 0.08);
             res = Html.fromHtml("<font color=red>" + res + " грн" + "</font>");
         }
-
         return res;
     }
 
@@ -1491,9 +1532,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
         if (min.equals("0")) {
             min = "3";
 
-            if (option.getOptionId().equals("141360")
-//                    || option.getOptionId().equals("164355")
-                    || option.getOptionId().equals("151139")
+            if (option.getOptionId().equals("151139")
                     || option.getOptionId().equals("164351")
                     || option.getOptionControlId().equals("164351")
             ) min = "1";
@@ -1501,6 +1540,16 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                 min = "0";
             else if (option.getOptionId().equals("132969"))
                 min = "1";
+            else if (option.getOptionId().equals("141360")){
+                RealmResults<StackPhotoDB> stackPhotoDB = StackPhotoRealm.getPhotosByDAD2(dad2, 31);
+                long count = stackPhotoDB.where()
+                        .equalTo("example_id", "78")
+                        .count();
+                if (count > 0)
+                    min = "2";
+                else
+                    min = "1";
+            }
             try {
                 if (option.getOptionId().equals("157277")) {
                     List<ReportPrepareDB> reportPrepare = RealmManager.INSTANCE.copyFromRealm(ReportPrepareRealm.getReportPrepareByDad2(dad2));

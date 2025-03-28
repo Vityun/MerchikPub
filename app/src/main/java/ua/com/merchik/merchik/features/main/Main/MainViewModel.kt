@@ -130,6 +130,9 @@ abstract class MainViewModel(
     private val _offsetSizeFonts = MutableStateFlow(0.0f)
     val offsetSizeFonts: StateFlow<Float> = _offsetSizeFonts
 
+    private val _valueForCustomResult = MutableStateFlow(HashMap<String,Any?>())
+    val valueForCustomResult: StateFlow<HashMap<String,Any?>> = _valueForCustomResult
+
     var context: Context? = null
     var dataJson: String? = null
     var title: String? = null
@@ -157,6 +160,8 @@ abstract class MainViewModel(
 
     open fun getFieldsForCommentsImage(): List<String>? { return null }
 
+    open fun getFieldsForCustomResult(): List<String>? { return null }
+
     open fun getDefaultHideUserFields(): List<String>? { return null }
 
     var filters: Filters? = null
@@ -168,6 +173,7 @@ abstract class MainViewModel(
         val photoLogData = mutableListOf<StackPhotoDB>()
         var selectedIndex = -1
         val fieldsForCommentsImage = getFieldsForCommentsImage()
+        val fieldsForCustomResult = getFieldsForCustomResult()
         val photoDBWithComments = HashMap<StackPhotoDB, String>()
         val photoDBWithRawObj = HashMap<StackPhotoDB, Any>()
         _uiState.value.items.map { dataItemUI ->
@@ -175,6 +181,11 @@ abstract class MainViewModel(
             var comments = ""
             fieldsForCommentsImage?.forEach {
                 comments += "${jsonObject.get(it)} \n\n"
+            }
+            if (clickedDataItemUI == dataItemUI){
+                fieldsForCustomResult?.forEach {
+                    _valueForCustomResult.value[it] = jsonObject.get(it)
+                }
             }
             dataItemUI.rawObj[0].getFieldsImageOnUI().split(",").forEach {
                 if (it.isNotEmpty()) {

@@ -82,6 +82,7 @@ import ua.com.merchik.merchik.Options.Buttons.OptionButtonAddNewClient;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonAddNewFriend;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonAvailabilityDetailedReport;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonHistoryMP;
+import ua.com.merchik.merchik.Options.Buttons.OptionButtonOpinion;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonPhotoAktionTovar;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonPhotoBeforeStartWork;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonPhotoCassZone;
@@ -97,6 +98,7 @@ import ua.com.merchik.merchik.Options.Buttons.OptionButtonStartWork;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonTaskAnswer;
 import ua.com.merchik.merchik.Options.Controls.OptionControlAchievements;
 import ua.com.merchik.merchik.Options.Controls.OptionControlAddComment;
+import ua.com.merchik.merchik.Options.Controls.OptionControlAddOpinion;
 import ua.com.merchik.merchik.Options.Controls.OptionControlAdditionalMaterialsMark;
 import ua.com.merchik.merchik.Options.Controls.OptionControlAdditionalRequirementsMark;
 import ua.com.merchik.merchik.Options.Controls.OptionControlAvailabilityControlPhotoRemainingGoods;
@@ -339,6 +341,11 @@ public class Options {
                 case 132624:
                     OptionControlAddComment<?> optionControlAddComment = new OptionControlAddComment<>(context, dataDB, optionsDB, newOptionType, mode, unlockCodeResultListener);
                     optionControlAddComment.showOptionMassage("");
+                    break;
+
+                case 84001:
+                    OptionControlAddOpinion<?> optionControlAddOpinion = new OptionControlAddOpinion<>(context, dataDB, optionsDB, newOptionType, mode, unlockCodeResultListener);
+                    optionControlAddOpinion.showOptionMassage("");
                     break;
 
                 case 80977:
@@ -1893,6 +1900,15 @@ public class Options {
                 }
                 return optionControlAddComment.isBlockOption2() ? 1 : 0;
 
+            case 84001:
+                OptionControlAddOpinion<?> optionControlAddOpinion = new OptionControlAddOpinion<>(context, dataDB, option, type, mode, unlockCodeResultListener);
+                if (mode.equals(NNKMode.MAKE) || (mode.equals(NNKMode.CHECK) && optionControlAddOpinion.isBlockOption()))
+                    optionControlAddOpinion.showOptionMassage(block);
+                if (mode.equals(NNKMode.BLOCK) && optionControlAddOpinion.signal && optionControlAddOpinion.isBlockOption()) {
+                    optionControlAddOpinion.showOptionMassage(block);
+                }
+                return optionControlAddOpinion.isBlockOption2() ? 1 : 0;
+
             case 132623:
                 OptionButtonAddComment<?> optionButtonAddComment = new OptionButtonAddComment<>(context, dataDB, option, type, mode, unlockCodeResultListener);
                 break;
@@ -2006,6 +2022,10 @@ public class Options {
                 break;
 
             // ---
+
+            case 168598:
+                new OptionButtonOpinion<>(context, dataDB, option, type, mode, unlockCodeResultListener);
+                break;
 
             case 138773:
                 new OptionButtonHistoryMP<>(context, dataDB, option, type, mode, unlockCodeResultListener);

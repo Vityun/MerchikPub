@@ -79,7 +79,7 @@ public class OptionControlAdditionalRequirementsMark<T> extends OptionControl {
             StringBuilder msg = new StringBuilder();
 
             // Создание виртуальной таблички.
-            List<VirtualAdditionalRequirementsDB> virtualTable = null;
+            List<VirtualAdditionalRequirementsDB> virtualTable = new ArrayList<>();
 
             long dateFrom = Clock.getDatePeriodLong(dateDocumentLong, -15) / 1000; // Дата документа -15 дней
             long dateTo = Clock.getDatePeriodLong(dateDocumentLong, +4) / 1000;     // Дата документа +3 дня
@@ -87,7 +87,7 @@ public class OptionControlAdditionalRequirementsMark<T> extends OptionControl {
             Integer ttCategory = null;
 
             AddressSDB addressSDB = SQL_DB.addressDao().getById(wpDataDB.getAddr_id());
-            if (addressSDB != null){
+            if (addressSDB != null) {
                 ttCategory = addressSDB.ttId;
             }
 
@@ -95,7 +95,7 @@ public class OptionControlAdditionalRequirementsMark<T> extends OptionControl {
 //            RealmResults<AdditionalRequirementsDB> realmResults = AdditionalRequirementsRealm.getData3(document, HIDE_FOR_USER, ttCategory, 1);
 //            List<AdditionalRequirementsDB> data = RealmManager.INSTANCE.copyFromRealm(realmResults);
 
-            List<AdditionalRequirementsDB> data = AdditionalRequirementsRealm.getData3(document, HIDE_FOR_USER, ttCategory, null,1);
+            List<AdditionalRequirementsDB> data = AdditionalRequirementsRealm.getData3(document, HIDE_FOR_USER, ttCategory, null, 1);
 
 //            // DEBUG DATA-------------
 //            try {
@@ -116,7 +116,6 @@ public class OptionControlAdditionalRequirementsMark<T> extends OptionControl {
 
                 // Получаем Оценки этих Доп. требований.
                 List<AdditionalRequirementsMarkDB> marks = AdditionalRequirementsMarkRealm.getAdditionalRequirementsMarks(dateFrom, dateTo, wpDataDB.getUser_id(), "1", data);
-                Log.e("OptionControlARMark", "2");
 
 //                // DEBUG DATA-------------
 //                try {
@@ -225,10 +224,11 @@ public class OptionControlAdditionalRequirementsMark<T> extends OptionControl {
 //            // DEBUG DATA-------------
             try {
                 Globals.writeToMLOG("INFO", "OptionControlAdditionalRequirementsMark/createTZN.virtualTable", "virtualTable.size: " + virtualTable.size());
-                for (VirtualAdditionalRequirementsDB item : virtualTable) {
-                    JsonObject object = new Gson().fromJson(new Gson().toJson(item), JsonObject.class);
-                    Globals.writeToMLOG("INFO", "OptionControlAdditionalRequirementsMark/createTZN.virtualTable", "stringBuilderDEBUG: " + object);
-                }
+                if (!virtualTable.isEmpty())
+                    for (VirtualAdditionalRequirementsDB item : virtualTable) {
+                        JsonObject object = new Gson().fromJson(new Gson().toJson(item), JsonObject.class);
+                        Globals.writeToMLOG("INFO", "OptionControlAdditionalRequirementsMark/createTZN.virtualTable", "stringBuilderDEBUG: " + object);
+                    }
             } catch (Exception e) {
                 Globals.writeToMLOG("INFO", "OptionControlAdditionalRequirementsMark/createTZN.virtualTable", "stringBuilderDEBUG/Exception e: " + e);
             }
@@ -239,7 +239,7 @@ public class OptionControlAdditionalRequirementsMark<T> extends OptionControl {
             // TODO ИначеЕсли ((ПустоеЗначение(Исп.ДатаОМ05)=1) или (Дат<=Исп.ДатаОМ05)) и (ДокИст.Вид()="ОтчетИсполнителя") Тогда
             //		глТекстЧата="Не проверяю оценку Доп.требований до 5-й отчетности.";
             //		СигнКон=0;
-            if (virtualTable == null || virtualTable.size() == 0) {
+            if (virtualTable.isEmpty()) {
 
                 msg.append("У клиента ")
                         .append(CustomerRealm.getCustomerById(wpDataDB.getClient_id()).getNm())

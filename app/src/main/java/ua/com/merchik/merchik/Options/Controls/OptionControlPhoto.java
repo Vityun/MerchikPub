@@ -217,31 +217,58 @@ public class OptionControlPhoto<T> extends OptionControl {
 
         String photoTypeName = ImagesTypeListRealm.getByID(photoType).getNm();
 
+
 //        подводим итог
-        if (stackPhotoDB != null && stackPhotoDB.size() < m) {
+        // для 141361 от 27.03.2025
+        if (optionId.equals("141361")) {
+            long count = stackPhotoDB.where()
+                    .equalTo("example_id", "78")
+                    .count();
+            if (count > 0) {
+                m = 2;
+                int photoWithComment = 0;
+                String baseEmptyComment = "\n\nУ свiтлин: ";
+                List<StackPhotoDB> stackPhotoDBList = RealmManager.INSTANCE.copyFromRealm(stackPhotoDB);
+                for (StackPhotoDB photo : stackPhotoDBList) {
+                    if ("78".equals(photo.getExample_id())) {
+                        String comment = photo.getComment();
+                        if (comment != null && comment.length() > 10) {
+                            photoWithComment++;
+                        } else {
+                            baseEmptyComment = baseEmptyComment + photo.getPhotoServerId() + ", ";
+                        }
+                    }
+                }
+                if (photoWithComment < m) {
+                    if (count < 2 ){
+                        signal = true;
+                        stringBuilderMsg.append("Для випадку, коли на складі ТТ немає товару, кiлькiсть світлин за зразком 78 має бути не менше ніж ")
+                                .append(m)
+                                .append(", а зроблено: ")
+                                .append(count);
+                    } else
+//                    if (baseEmptyComment.length() > 20)
+                    {
+                        baseEmptyComment = baseEmptyComment.replaceFirst(",(?!.*?,)", "") + "немає коментаря.\n";
+                        signal = true;
+                        stringBuilderMsg.append(baseEmptyComment)
+                                .append("Для випадку, коли на складі ТТ немає товару, для кожної світлини, виготовленої за зразком 78, повинен бути доданий коментар довжиною більше 10 символів");
+                    }
+                } else {
+                    stringBuilderMsg.append("Скарг щодо виконання фото немає. Зроблено: ").append(count).append(" фото.");
+                    signal = false;
+                }
+            }
+        } else if (stackPhotoDB.size() < m) { // главнй итог
             ImagesTypeListDB item = ImagesTypeListRealm.getByID(photoType);
-            stringBuilderMsg.append("Вы должны сделать: ").append(m).append(" фото с типом: ").append(item != null ? item.getNm() : typeNm).append(", а сделали: ").append(stackPhotoDB.size()).append(" - доделайте фотографии.");
+            stringBuilderMsg.append("Ви повинні зробити: ").append(m).append(" фото з типом: ").append(item != null ? item.getNm() : typeNm).append(", а зробили: ").append(stackPhotoDB.size()).append(" - доробiть фотографії.");
             signal = true;
 //            unlockCodeResultListener.onUnlockCodeFailure();
         } else {
-            stringBuilderMsg.append("Жалоб по фыполнению фото нет. Сделано: ").append(stackPhotoDB.size()).append(" фото.");
+            stringBuilderMsg.append("Скарг щодо виконання фото немає. Зроблено: ").append(stackPhotoDB.size()).append(" фото.");
             signal = false;
 //            unlockCodeResultListener.onUnlockCodeSuccess();
         }
-
-        /*
-        * 3.1. сперва получим данные о ДТ по текущей опции ... это нам нужно для того, чтобы исключить из выборки Сети/Адреса, если ДАННОЕ ДТ определено НЕ для всех мест работ. Логика такая: Если для данной опции ЕСТЬ запись в ДТ то, значит, что нам надо ИСКЛЮЧИТЬ из проверки ДРУГИЕ адреса/сети, а если в ДТ НЕТ записей об это опции, то проверяем ПО ВСЕМ адресам/сетям
-ТзнОСВ=ТзнДопТребований_SQL(,,Тзн.Клиент,,,,,,0,,,,,,,,,Опц,,,,,,,,); //=0-только НЕ удаленные, //внимание! фильтр по Адресу и/или Сети НЕ ПРИМЕНЯЕМ, для того, чтобы отличить случай, когда ОСВ нет, от случая, когда они установлены но для ДРУГОЙ Сети/Адреса
-//ПоказатьТЗ(ТзнОСВ,"ТзнОСВ 856394");
-Если ТзнОСВ.КоличествоСтрок()>0 Тогда
-Стр=0;
-Стр2=0;
-Если (ТзнОСВ.НайтиЗначение(Гру,Стр,"Гру")=0) и (ТзнОСВ.НайтиЗначение(Адр,Стр2,"Адр")=0) Тогда
-Продолжить; // 09.03.2023 ... Значит ОСВ по данной опции установлен НО, НЕ ДЛЯ ЭТОЙ Сети/Адреса ... значит проверять наличие фото не надо
-КонецЕсли;
-КонецЕсли;
-        *
-        * */
 
         // Исключения
         // 3.1
@@ -263,12 +290,7 @@ public class OptionControlPhoto<T> extends OptionControl {
                         hasAddrOrGrp = true;
                         break;
                     }
-//                    // Если оба условия выполнены, можно выйти из цикла
-//                    if (hasAddrOrGrp) {
-//                        break;
-//                    }
                 }
-
                 // Логика обработки
                 if (hasAddrOrGrp) {
                     // ОСВ найдены для этой Сети/Адреса
@@ -278,16 +300,9 @@ public class OptionControlPhoto<T> extends OptionControl {
                     signal = false;
                     stringBuilderMsg.append("\nВідповідно до ДВ ").append(photoTypeName).append(" у поточній Адреса/Мережа виготовлення НЕ ОБОВ'ЯЗКОВО. Перевірка не проводилась");
                 }
-
-//                if (additionalRequirementsDBList.stream()
-//                        .anyMatch(item -> Integer.parseInt(item.getGrpId()) == wpDataDB.getAddr_id())){
-//                    Log.e("GOOD","++");
-//                } else {
-//                    signal = false;
-//                    stringBuilderMsg.append("\nВідповідно до ДВ ").append(photoTypeName).append(" у поточній Адреса/Мережа виготовлення НЕ ОБОВ'ЯЗКОВО. Перевірка не проводилась");
-//                }
             }
         }
+
 
         if (optionId.equals("141361") || optionId.equals("132971")) {
             if (addressSDB.tpId == 383) {   // Для АШАН-ов(8196 - у петрова такое тут, странно) ФЗ ФТС НЕ проверяем
@@ -351,7 +366,7 @@ public class OptionControlPhoto<T> extends OptionControl {
         if (signal) {
             if (optionDB.getBlockPns().equals("1")) {
                 setIsBlockOption(signal);
-                stringBuilderMsg.append("\n\n").append("Документ проведен не будет!");
+                stringBuilderMsg.append("\n\n").append("Документ проведено не буде!");
             } else {
                 stringBuilderMsg.append("\n\n").append("Вы можете отримати Преміальні БІЛЬШЕ, якщо будете збільшувати кількість фейсів товарів замовника на полиці.");
             }

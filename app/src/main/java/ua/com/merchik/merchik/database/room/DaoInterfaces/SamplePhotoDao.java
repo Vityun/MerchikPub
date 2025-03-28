@@ -31,4 +31,7 @@ public interface SamplePhotoDao {
     Completable insertAll(List<SamplePhotoSDB> data);
 
     // ----------------------------------------------------
+
+//    @Query("SELECT * FROM sample_photo WHERE photoId = :photoId")
+//    SamplePhotoSDB getByPhotoId(int id);
 }

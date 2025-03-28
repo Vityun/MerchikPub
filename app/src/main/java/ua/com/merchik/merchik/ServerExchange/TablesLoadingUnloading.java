@@ -53,6 +53,7 @@ import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteHintsDB;
 import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteObjects.SiteObjects;
 import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteObjects.SiteObjectsDB;
 import ua.com.merchik.merchik.data.PPAonResponse;
+import ua.com.merchik.merchik.data.RealmModels.AdditionalRequirementsDB;
 import ua.com.merchik.merchik.data.RealmModels.CustomerDB;
 import ua.com.merchik.merchik.data.RealmModels.LogDB;
 import ua.com.merchik.merchik.data.RealmModels.LogMPDB;
@@ -363,6 +364,21 @@ public class TablesLoadingUnloading {
         String date_to = timeTomorrow;
 
 //        BlockingProgressDialog pg = BlockingProgressDialog.show(context, "Обмен данными с сервером.", "Обновление таблицы: " + "План работ");
+
+//        try {
+//            retrofit2.Call<JsonObject> call = RetrofitBuilder.getRetrofitInterface().GET_WPDATA_VPI_JSON(mod, act, date_from, date_to, 0);
+//            call.enqueue(new retrofit2.Callback<JsonObject>() {
+//                @Override
+//                public void onResponse(retrofit2.Call<JsonObject> call, retrofit2.Response<JsonObject> response) {
+//                    Log.e("TAG_TEST_WP", "RESPONSE_JSON: " + response.body());
+//                }
+//
+//                @Override
+//                public void onFailure(retrofit2.Call<JsonObject> call, Throwable t) {
+//                }
+//            });
+//        } catch (Exception e) {
+//        }
 
         try {
             Log.e("TAG_TEST_WP", "RESPONSE_0 T");
@@ -1721,26 +1737,24 @@ public class TablesLoadingUnloading {
             Log.e("updateWpData", "vpi: " + vpi);
 
 //            if (timeToUpdate(vpi, sTable.getUpdate_frequency())) {
-            Log.e("updateWpData", "Пора синхронизовать");
             // TEST Узнаю весь JSON. Надо удалять потом как отлажу.
-            try {
-                retrofit2.Call<JsonObject> call = RetrofitBuilder.getRetrofitInterface().GET_WPDATA_VPI_JSON(mod, act, date_from, date_to, vpi);
-                call.enqueue(new retrofit2.Callback<JsonObject>() {
-                    @Override
-                    public void onResponse(retrofit2.Call<JsonObject> call, retrofit2.Response<JsonObject> response) {
-                        Log.e("TAG_TEST_WP", "RESPONSE_JSON: " + response.body());
-                    }
-
-                    @Override
-                    public void onFailure(retrofit2.Call<JsonObject> call, Throwable t) {
-                    }
-                });
-            } catch (Exception e) {
-            }
+//            try {
+//                retrofit2.Call<JsonObject> call = RetrofitBuilder.getRetrofitInterface().GET_WPDATA_VPI_JSON(mod, act, date_from, date_to, vpi);
+//                call.enqueue(new retrofit2.Callback<JsonObject>() {
+//                    @Override
+//                    public void onResponse(retrofit2.Call<JsonObject> call, retrofit2.Response<JsonObject> response) {
+//                        Log.e("TAG_TEST_WP", "RESPONSE_JSON: " + response.body());
+//                    }
+//
+//                    @Override
+//                    public void onFailure(retrofit2.Call<JsonObject> call, Throwable t) {
+//                    }
+//                });
+//            } catch (Exception e) {
+//            }
 
             // Начинаю синхронизацию Плана работ
             try {
-                Log.e("TAG_TEST_WP", "RESPONSE_0 T");
                 // Получаю изменённые данные с плана работ
                 retrofit2.Call<WpDataServer> call = RetrofitBuilder.getRetrofitInterface().GET_WPDATA_VPI(mod, act, date_from, date_to, vpi);
                 call.enqueue(new retrofit2.Callback<WpDataServer>() {
@@ -2776,6 +2790,7 @@ public class TablesLoadingUnloading {
             StandartData data = new StandartData();
             data.mod = "additional_requirements";
             data.act = "list";
+//            data.client_id = Можно передать список клиентов с которыми работает пользователь
 //            data.date_from = Clock.getDatePeriod(-180);
 //            data.date_to = Clock.today;
 
@@ -2806,6 +2821,17 @@ public class TablesLoadingUnloading {
                 public void onResponse(retrofit2.Call<AdditionalRequirementsServerData> call, retrofit2.Response<AdditionalRequirementsServerData> response) {
                     try {
                         AdditionalRequirementsRealm.setDataToDB(response.body().getList());
+
+//                        Set<Integer> uniqueIds = new HashSet<>();
+//                        List<AdditionalRequirementsDB> uniqueData = new ArrayList<>();
+//                        for (AdditionalRequirementsDB item : response.body().getList()) {
+//                            if (!uniqueIds.contains(item.getId())) {
+//                                uniqueIds.add(item.getId());
+//                                uniqueData.add(item);
+//                            }
+//                        }
+//                        AdditionalRequirementsRealm.setDataToDB(uniqueData);
+
                         Globals.writeToMLOG("ERR", "downloadAdditionalRequirements/onResponse", "response.body().getList(): " + response.body().getList().size());
                     } catch (Exception e) {
                         Globals.writeToMLOG("ERR", "downloadAdditionalRequirements/onResponse", "Exception e: " + e);

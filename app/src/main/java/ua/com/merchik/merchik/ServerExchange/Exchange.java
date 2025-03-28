@@ -18,6 +18,7 @@ import android.util.Log;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 
 import java.util.ArrayList;
@@ -2402,7 +2403,11 @@ public class Exchange {
      */
     public void saveWpDataResult(List<WpDataUpdateResponseList> data) {
         try {
-            Globals.writeToMLOG("INFO", "Exchange.saveWpDataResult.data", "data: " + data.size());
+            Globals.writeToMLOG("INFO", "Exchange.saveWpDataResult.data", "data size: " + data.size());
+            Gson gson = new GsonBuilder().setPrettyPrinting().create();
+            String jsonOutput = gson.toJson(data);
+            Globals.writeToMLOG("INFO", "Exchange.saveWpDataResult.data", "data result: " + jsonOutput);
+
             Long[] ids = new Long[data.size()];
             int count = 0;
             for (WpDataUpdateResponseList item : data) {

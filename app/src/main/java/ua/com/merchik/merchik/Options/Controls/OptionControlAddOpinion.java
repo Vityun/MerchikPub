@@ -2,11 +2,12 @@ package ua.com.merchik.merchik.Options.Controls;
 
 import android.content.Context;
 
+import java.util.Objects;
+
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.Options.OptionControl;
 import ua.com.merchik.merchik.Options.Options;
-import ua.com.merchik.merchik.Utils.CustomString;
 import ua.com.merchik.merchik.data.OptionMassageType;
 import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
 import ua.com.merchik.merchik.data.RealmModels.ThemeDB;
@@ -14,13 +15,13 @@ import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.ThemeRealm;
 
-public class OptionControlAddComment<T> extends OptionControl {
-    public int OPTION_CONTROL_ADD_COMMENT_ID = 132624;
+public class OptionControlAddOpinion<T> extends OptionControl {
+    public int OPTION_CONTROL_OPINION_ID = 84001;
 
     private WpDataDB wpDataDB;
     private ThemeDB themeDB;
 
-    private String comment;
+    private String opinion;
     private int userId;
     private int theme;
 
@@ -29,7 +30,9 @@ public class OptionControlAddComment<T> extends OptionControl {
     private String massageComment;
     public boolean signal = false;
 
-    public OptionControlAddComment(Context context, T document, OptionsDB optionDB, OptionMassageType msgType, Options.NNKMode nnkMode, UnlockCodeResultListener unlockCodeResultListener) {
+    private String opinionStatus = "0";
+
+    public OptionControlAddOpinion(Context context, T document, OptionsDB optionDB, OptionMassageType msgType, Options.NNKMode nnkMode, UnlockCodeResultListener unlockCodeResultListener) {
         this.context = context;
         this.document = document;
         this.optionDB = optionDB;
@@ -58,34 +61,27 @@ public class OptionControlAddComment<T> extends OptionControl {
     private void executeOption() {
         try {
             if (wpDataDB != null) {
-                comment = CustomString.cleanComment(wpDataDB.user_comment);
+                opinion = wpDataDB.getUser_opinion_id();
                 userId = wpDataDB.getUser_id();
-                massageComment = "Коментар ";
+                massageComment = "Думка виконавця стосовно візиту";
             }
 
-            //3.0. готовим сообщение и сигнал
-            if (comment.length() == 0) {  //значит в комментарии один мусор
-                stringBuilderMsg.append("За період з ").append(Clock.today).append(" до ")
-                        .append(Clock.today).append(" Ви НЕ заповнили поле (").append(massageComment).append(") ");
+            //2.0. готовим сообщение и сигнал
+            if (Objects.equals(opinion, "0")) {  //значит нет мнения
+                stringBuilderMsg.append("Не зазначена ").append(massageComment);
+                opinionStatus ="0";
                 signal = true;
-            } else if (optionAmountMin == 0) {    //значит не установлен минимальный размер комментария
-                stringBuilderMsg.append("Для темы: ").append(themeDB.getNm()).append(" не установлена минимальная длина для поля (")
-                        .append(massageComment).append("). Обратитесь к руководителю.");
-                signal = true;
-            } else if (comment.length() < optionAmountMin) {    //значит комментарий есть но он слишком короткий
-                stringBuilderMsg.append("Ваш(е) ").append(massageComment).append(" слишком короткий(ое). ")
-                        .append(" Он(о) должен(но) быть не менее ").append(optionAmountMin).append("символов.");
-                signal = true;
-            }else {
-                stringBuilderMsg.append(massageComment).append(" (").append(comment).append(") принят.");
+            } else {
+                stringBuilderMsg.append(massageComment).append(" прийнята.");
+                opinionStatus ="1";
                 signal = false;
             }
 
             // 4.0
-            if (signal){
+            if (signal) {
                 if (optionDB.getBlockPns().equals("1") && wpDataDB.getStatus() == 0) {    //блокировать проведение, если есть сигнал
                     stringBuilderMsg.append("\n\nДокумент проведен не будет!");
-                }else {
+                } else {
                     stringBuilderMsg.append("\n\nВы можете получить Премиальные БОЛЬШЕ, если будете заполнять комментарий корректно.");
                 }
             }
@@ -93,9 +89,9 @@ public class OptionControlAddComment<T> extends OptionControl {
             // 5.0
             RealmManager.INSTANCE.executeTransaction(realm -> {
                 if (optionDB != null) {
-                    if (signal){
+                    if (signal) {
                         optionDB.setIsSignal("1");
-                    }else {
+                    } else {
                         optionDB.setIsSignal("2");
                     }
                     realm.insertOrUpdate(optionDB);
@@ -111,4 +107,7 @@ public class OptionControlAddComment<T> extends OptionControl {
         }
     }
 
+    public String currentOpinionStatus() {
+        return opinionStatus + "/1";
+    }
 }

@@ -76,6 +76,7 @@ import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.MakePhoto.MakePhoto;
 import ua.com.merchik.merchik.MakePhoto.MakePhotoFromGalery;
+import ua.com.merchik.merchik.Options.Buttons.OptionButtonOpinion;
 import ua.com.merchik.merchik.PhotoReportActivity;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.ServerExchange.Exchange;
@@ -826,6 +827,9 @@ public class DetailedReportActivity extends toolbar_menus {
 
                 if (DialogEKL.onUpdateUI != null)
                     DialogEKL.onUpdateUI.update();
+
+                if (OptionButtonOpinion.onUpdateUI != null)
+                    OptionButtonOpinion.onUpdateUI.update();
 
             }
 

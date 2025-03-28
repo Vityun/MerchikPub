@@ -131,6 +131,58 @@ public class ModImagesViewList {
     @Expose
     public String codeIZA;
 
+
+    // 24.03.2025 Добавлен идентификатор образца
+    @SerializedName("example_id")
+    @Expose
+    public String example_id;
+
+    @SerializedName("example_img_id")
+    @Expose
+    public String example_img_id;
+
+    @SerializedName("planogram_id")
+    @Expose
+    public String planogram_id;
+
+    @SerializedName("planogram_img_id")
+    @Expose
+    public String planogram_img_id;
+
+
+    public String getPlanogram_img_id() {
+        return planogram_img_id;
+    }
+
+    public void setPlanogram_img_id(String planogram_img_id) {
+        this.planogram_img_id = planogram_img_id;
+    }
+
+    public String getPlanogram_id() {
+        return planogram_id;
+    }
+
+    public void setPlanogram_id(String planogram_id) {
+        this.planogram_id = planogram_id;
+    }
+
+    public String getExample_img_id() {
+        return example_img_id;
+    }
+
+    public void setExample_img_id(String example_img_id) {
+        this.example_img_id = example_img_id;
+    }
+
+    public String getExample_id() {
+        return example_id;
+    }
+
+    public void setExample_id(String example_id) {
+        this.example_id = example_id;
+    }
+
+
     public String getID() {
         return iD;
     }

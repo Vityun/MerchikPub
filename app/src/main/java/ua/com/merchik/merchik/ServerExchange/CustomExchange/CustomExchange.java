@@ -161,7 +161,7 @@ public class CustomExchange {
                                 public void onFailure(String error) {
                                     Globals.writeToMLOG("INFO", "TOOBAR/CLICK_EXCHANGE/SamplePhotoExchange", "error: " + error);
                                     progress.dismiss();
-                                    Toast.makeText(context, "Виникла помилка при завантаженні Ідентифікаторів фото", Toast.LENGTH_SHORT).show();
+//                                    Toast.makeText(context, "Виникла помилка при завантаженні Ідентифікаторів фото", Toast.LENGTH_SHORT).show();
                                 }
                             });
                         } else {

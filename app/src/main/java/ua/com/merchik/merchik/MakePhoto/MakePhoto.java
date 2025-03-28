@@ -40,6 +40,7 @@ import ua.com.merchik.merchik.data.Database.Room.ShowcaseSDB;
 import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
 import ua.com.merchik.merchik.data.Database.Room.UsersSDB;
 import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
+import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.data.WPDataObj;
 import ua.com.merchik.merchik.database.realm.tables.AppUserRealm;
@@ -572,6 +573,14 @@ public class MakePhoto {
         });
     }
 
+    public <T> void pressedMakePhotoOldStyle(Activity activity, WPDataObj wp, T data, OptionsDB optionsDB, StackPhotoDB stackPhoto) {
+        photoType = wp.getPhotoType();
+
+        choiceCustomerGroupAndPhoto2(activity, wp, data, optionsDB, () -> {
+        });
+    }
+
+    // TODO ## убрать эту группу
     private <T> void choiceCustomerGroupAndPhoto2(Activity activity, WPDataObj wp, T data, OptionsDB optionsDB, Clicks.clickVoid clickVoid) {
         if (wp.getCustomerTypeGrp() != null) {
             final String[] result = wp.getCustomerTypeGrp().values().toArray(new String[0]);
@@ -856,7 +865,7 @@ public class MakePhoto {
                         MakePhoto.img_src_id = String.valueOf(showcase.photoId);
                         MakePhoto.showcase_id = String.valueOf(showcase.id);
                         MakePhoto.planogram_id = String.valueOf(showcase.planogramId);
-                        MakePhoto.example_id = String.valueOf(showcase.id);
+//                        MakePhoto.example_id = String.valueOf(showcase.id);
                         MakePhoto.example_img_id = String.valueOf(showcase.photoId);
 
                         planogrammSDB = SQL_DB.planogrammDao().getById(showcase.planogramId);

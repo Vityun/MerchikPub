@@ -3,7 +3,6 @@ package ua.com.merchik.merchik.Activities.DetailedReportActivity
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -47,6 +46,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.gson.Gson
+import com.google.gson.JsonObject
 import io.realm.Realm
 import kotlinx.coroutines.delay
 import ua.com.merchik.merchik.Activities.Features.FeaturesActivity
@@ -113,15 +113,6 @@ fun OpinionAndCommentView(
             }
         }
 
-//    LaunchedEffect(comment) {
-//        if (comment.length > 10) {
-//            Log.e("!!!!!!!", "+++++")
-////            viewModel.comment = comment
-//            viewModel.setSavedDialogShow(true)
-//        } else {
-//            viewModel.setSavedDialogShow(false)
-//        }
-//    }
     LaunchedEffect(isEditing) {
         if (isEditing) {
             delay(100) // Небольшая задержка для корректной работы
@@ -137,11 +128,16 @@ fun OpinionAndCommentView(
         bundle.putString("viewModel", OpinionSDBViewModel::class.java.canonicalName)
         bundle.putString("contextUI", ContextUI.ADD_OPINION_FROM_DETAILED_REPORT.toString())
         bundle.putString("modeUI", ModeUI.ONE_SELECT.toString())
-        bundle.putString("dataJson", Gson().toJson(themeId.toInt()))
-        bundle.putString("title", Translate.translationText(8038,"Оставить мнение"))
+//        bundle.putString("dataJson", Gson().toJson(themeId.toInt()))
+        val dataJson = JsonObject()
+        dataJson.addProperty("opinionID", wpDataDB.user_opinion_id.toInt())
+        dataJson.addProperty("themeID", wpDataDB.theme_id)
+        bundle.putString("dataJson", Gson().toJson(dataJson))
+
+        bundle.putString("title", Translate.translationText(8038,"Думка стосовно вiдвiдування"))
         bundle.putString(
             "subTitle",
-            Translate.translationText(8039,"Выберите мнение которое вы хотите оставить о данном посещении")
+            Translate.translationText(8039,"Виберіть думку, яку Ви бажаєте залишити про цей візит")
         )
         intent.putExtras(bundle)
         opinionDataHolder.init()
@@ -149,14 +145,6 @@ fun OpinionAndCommentView(
         launcher.launch(intent)
 
     }
-
-//    Column {
-//        HorizontalDivider(
-//            color = Color.Gray, // Цвет черты
-//            thickness = 1.dp, // Толщина черты
-//            modifier = Modifier.padding(vertical = 6.dp) // Отступы вокруг черты
-//        )
-
 
     Column(
         modifier = Modifier
@@ -300,7 +288,6 @@ fun OpinionAndCommentView(
             Text("Зберегти")
         }
 
-//        }
     }
 
 }

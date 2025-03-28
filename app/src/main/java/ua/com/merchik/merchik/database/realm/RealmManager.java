@@ -22,7 +22,6 @@ import io.realm.RealmResults;
 import io.realm.Sort;
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
-import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteHintsDB;
 import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteObjects.SiteObjectsDB;
 import ua.com.merchik.merchik.data.RealmModels.AddressDB;
@@ -67,7 +66,7 @@ public class RealmManager {
 
         RealmConfiguration config = new RealmConfiguration.Builder().name("myrealm.realm")
                 .deleteRealmIfMigrationNeeded()
-//                .schemaVersion(19)
+//                .schemaVersion(20)
                 .allowWritesOnUiThread(true)
                 .allowQueriesOnUiThread(true)
                 .migration(new MyMigration()).build();
@@ -162,14 +161,13 @@ public class RealmManager {
      *
      * @param wpData список данных с сервера
      */
-    public static boolean setWpData(List<WpDataDB> wpData) {
+    public static void setWpData(List<WpDataDB> wpData) {
         Log.e("REALM_DB_UPDATE", "WP_DATA_START");
         INSTANCE.beginTransaction();
         INSTANCE.delete(WpDataDB.class);
         INSTANCE.copyToRealmOrUpdate(wpData);
         INSTANCE.commitTransaction();
         Log.e("REALM_DB_UPDATE", "WP_DATA_END");
-        return true;
     }
 
     /**
@@ -616,6 +614,15 @@ public class RealmManager {
 
     public static OptionsDB getOptionById(String id) {
         return INSTANCE.where(OptionsDB.class).equalTo("iD", id).findFirst();
+    }
+
+    public static String getOptionNameByOptionId(String optionId){
+        OptionsDB optionsDB = INSTANCE.where(OptionsDB.class)
+                .equalTo("optionId", optionId)
+                .findFirst();
+        if (optionsDB != null) {
+            return optionsDB.getOptionTxt();
+        } else return "";
     }
 
     public static RealmResults<OptionsDB> getOptionsByOtchetId(long otchetId, String codeDad2) {

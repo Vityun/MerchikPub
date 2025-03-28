@@ -4,6 +4,7 @@ import android.app.Application
 import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import com.google.gson.Gson
+import com.google.gson.JsonObject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.OpinionDataHolder
 import ua.com.merchik.merchik.data.Database.Room.OpinionSDB
@@ -14,6 +15,7 @@ import ua.com.merchik.merchik.dataLayer.MainRepository
 import ua.com.merchik.merchik.dataLayer.ModeUI
 import ua.com.merchik.merchik.dataLayer.NameUIRepository
 import ua.com.merchik.merchik.dataLayer.model.DataItemUI
+import ua.com.merchik.merchik.database.realm.tables.TradeMarkRealm
 import ua.com.merchik.merchik.database.room.RoomManager
 import ua.com.merchik.merchik.dialogs.DialogAchievement.AchievementDataHolder
 import ua.com.merchik.merchik.dialogs.DialogAchievement.FilteringDialogDataHolder
@@ -52,7 +54,10 @@ class OpinionSDBViewModel @Inject constructor(
         Log.e("OpinionSDBViewModel","++++")
         val data = when(contextUI) {
             ContextUI.ADD_OPINION_FROM_DETAILED_REPORT -> {
-                val themeID: Int = Gson().fromJson(dataJson, Int::class.java)
+                val dataJsonObject = Gson().fromJson(dataJson, JsonObject::class.java)
+                val themeID = dataJsonObject.get("themeID").asInt
+
+//                val themeID: Int = Gson().fromJson(dataJson, Int::class.java)
                 val listOpinionTheme = RoomManager.SQL_DB.opinionThemeDao().getByTheme(themeID)
                 val mnenieIds = listOpinionTheme.map { it.mnenieId }.toMutableList()
                 RoomManager.SQL_DB.opinionDao().getOpinionByIds(mnenieIds)
@@ -93,7 +98,10 @@ class OpinionSDBViewModel @Inject constructor(
                 .map {
                     when (contextUI) {
                         ContextUI.ADD_OPINION_FROM_DETAILED_REPORT -> {
-                            val selected = (it.rawObj.firstOrNull { it is OpinionSDB } as? OpinionSDB)?.id == OpinionDataHolder.instance().opinionID
+                            val dataJsonObject = Gson().fromJson(dataJson, JsonObject::class.java)
+                            val opinionID = dataJsonObject.get("opinionID").asInt
+
+                            val selected = (it.rawObj.firstOrNull { it is OpinionSDB } as? OpinionSDB)?.id == opinionID
                             it.copy(selected = selected)
                         }
                         ContextUI.DEFAULT -> {

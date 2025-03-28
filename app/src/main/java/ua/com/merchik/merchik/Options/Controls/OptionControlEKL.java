@@ -353,18 +353,58 @@ public class OptionControlEKL<T> extends OptionControl {
             spannableStringBuilder.append("Исполнитель еще не провел свою двадцатую отчетность! ЭКЛ не подписан!").append("\n\n");
         }
 
+//        Calendar compareDate = Calendar.getInstance();
+//        compareDate.set(2025, Calendar.MARCH, 1); // 1 марта 2025 года
+//        if (signal && documentUser.reportCount >= 2000 && wpDataDB.getDt().before(compareDate.getTime())) {
+//            signal = false;
+//            optionMsg.append(", но сотрудник провел более 2000 отчетов и эту блокировку пропускаем до 01.03.2025.");
+//        } else {
+//            compareDate.set(2025, Calendar.APRIL, 1); // 1 апрель 2025 года
+//            if (signal && documentUser.reportCount >= 3000 && wpDataDB.getDt().before(compareDate.getTime())) {
+//                signal = false;
+//                optionMsg.append(", но сотрудник провел более 3000 отчетов и эту блокировку пропускаем до 01.04.2025.");
+//            }
+//        } else {
+//            compareDate.set(2025, Calendar.MAY, 1); // 1 мая 2025 года
+//            if (signal && documentUser.reportCount >= 4000 && wpDataDB.getDt().before(compareDate.getTime())) {
+//                signal = false;
+//                optionMsg.append(", но сотрудник провел более 4000 отчетов и эту блокировку пропускаем до 01.05.2025.");
+//            }
+//        } else {
+//            compareDate.set(2025, Calendar.JUNE, 1); // 1 июня 2025 года
+//            if (signal && documentUser.reportCount >= 5000 && wpDataDB.getDt().before(compareDate.getTime())) {
+//                signal = false;
+//                optionMsg.append(", но сотрудник провел более 5000 отчетов и эту блокировку пропускаем до 01.06.2025.");
+//            }
+//        }
 
-//       добавил 24.01.25 пропускаем если сотр. провел более 2000 отчетов
-        Calendar compareDate = Calendar.getInstance();
-        compareDate.set(2025, Calendar.MARCH, 1); // 1 марта 2025 года
-        if (signal && documentUser.reportCount >= 2000 && wpDataDB.getDt().before(compareDate.getTime())) {
-            signal = false;
-            optionMsg.append(", но сотрудник провел более 2000 отчетов и эту блокировку пропускаем до 01.03.2025.");
-        } else {
-            compareDate.set(2025, Calendar.APRIL, 1); // 1 апрель 2025 года
-            if (signal && documentUser.reportCount >= 3000 && wpDataDB.getDt().before(compareDate.getTime())) {
+        if (signal) {
+            Calendar dateThreshold1 = Calendar.getInstance();
+            dateThreshold1.set(2025, Calendar.MARCH, 1);
+            if (documentUser.reportCount >= 2000 && wpDataDB.getDt().before(dateThreshold1.getTime())) {
                 signal = false;
-                optionMsg.append(", но сотрудник провел более 3000 отчетов и эту блокировку пропускаем до 01.04.2025.");
+                optionMsg.append(", но сотрудник провел более 5000 отчетов и эту блокировку пропускаем до 01.03.2025");
+            } else {
+                Calendar dateThreshold2 = Calendar.getInstance();
+                dateThreshold2.set(2025, Calendar.APRIL, 1);
+                if (documentUser.reportCount >= 3000 && wpDataDB.getDt().before(dateThreshold2.getTime())) {
+                    signal = false;
+                    optionMsg.append(", но сотрудник провел более 5000 отчетов и эту блокировку пропускаем до 01.04.2025");
+                } else {
+                    Calendar dateThreshold3 = Calendar.getInstance();
+                    dateThreshold3.set(2025, Calendar.MAY, 1);
+                    if (documentUser.reportCount >= 4000 && wpDataDB.getDt().before(dateThreshold3.getTime())) {
+                        signal = false;
+                        optionMsg.append(", но сотрудник провел более 5000 отчетов и эту блокировку пропускаем до 01.05.2025");
+                    } else {
+                        Calendar dateThreshold4 = Calendar.getInstance();
+                        dateThreshold4.set(2025, Calendar.JUNE, 1);
+                        if (documentUser.reportCount >= 5000 && wpDataDB.getDt().before(dateThreshold4.getTime())) {
+                            signal = false;
+                            optionMsg.append(", но сотрудник провел более 5000 отчетов и эту блокировку пропускаем до 01.06.2025");
+                        }
+                    }
+                }
             }
         }
 

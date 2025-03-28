@@ -1,6 +1,7 @@
 package ua.com.merchik.merchik.data.RealmModels;
 
 import androidx.annotation.NonNull;
+import androidx.room.PrimaryKey;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
@@ -18,6 +19,7 @@ import ua.com.merchik.merchik.dataLayer.model.MerchModifier;
 import ua.com.merchik.merchik.features.main.UsersSDBOverride;
 
 public class AdditionalRequirementsDB extends RealmObject implements DataObjectUI {
+    @PrimaryKey
     @SerializedName("ID")
     @Expose
     private Integer id;

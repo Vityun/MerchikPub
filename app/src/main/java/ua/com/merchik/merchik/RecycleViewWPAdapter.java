@@ -19,6 +19,7 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.constraintlayout.widget.ConstraintLayout;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.gson.Gson;
@@ -28,6 +29,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 
 import io.realm.RealmResults;
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity;
@@ -253,12 +255,14 @@ public class RecycleViewWPAdapter extends RecyclerView.Adapter<RecycleViewWPAdap
         TextView merc;
         TextView date;
         TextView price;
-        TextView theme;
+        TextView theme, themeLabel;
         LinearLayout options = null;
         ImageView wp_image;
         ImageView check;
 
         TextView numberTTTitle, numberTT;
+
+        TextView mainThemeLabel, mainThemeMessage;
 
         private TextView groupTitle, groupText; // мережа
 
@@ -274,6 +278,7 @@ public class RecycleViewWPAdapter extends RecyclerView.Adapter<RecycleViewWPAdap
             date = (TextView) view.findViewById(R.id.date1);
             price = (TextView) view.findViewById(R.id.wp_adapter_price);
             theme = view.findViewById(R.id.theme);
+            themeLabel = view.findViewById(R.id.themelabel);
             options = (LinearLayout) view.findViewById(R.id.option_signal_layout1);//setContentView
             wp_image = (ImageView) view.findViewById(R.id.wp_image1);
 
@@ -284,6 +289,9 @@ public class RecycleViewWPAdapter extends RecyclerView.Adapter<RecycleViewWPAdap
             groupText = view.findViewById(R.id.groupData);
 
             check = (ImageView) view.findViewById(R.id.check);
+
+            mainThemeLabel = view.findViewById(R.id.themeMainlabel);
+            mainThemeMessage = view.findViewById(R.id.themeMainData);
         }
 
         public void bind(WpDataDB wpDataDB) {
@@ -346,16 +354,74 @@ public class RecycleViewWPAdapter extends RecyclerView.Adapter<RecycleViewWPAdap
             price.setText(string);
             price.setMovementMethod(LinkMovementMethod.getInstance());
 
+
+//            try {
+//                theme.setText(ThemeRealm.getByID(String.valueOf(wpDataDB.getTheme_id())).getNm());
+//                if (wpDataDB.getTheme_id() != 998) {
+//                    theme.setTextColor(mContext.getResources().getColor(R.color.red_error));
+//                } else {
+//                    theme.setTextColor(mContext.getResources().getColor(android.R.color.tab_indicator_text));
+//                }
+//            } catch (Exception e) {
+//                // Тема не успела загрузиться
+//                theme.setText("Тема не обнаружена");
+//            }
+
             try {
-                theme.setText(ThemeRealm.getByID(String.valueOf(wpDataDB.getTheme_id())).getNm());
-                if (wpDataDB.getTheme_id() != 998) {
-                    theme.setTextColor(mContext.getResources().getColor(R.color.red_error));
+                // Получаем данные темы
+                int themeCode = wpDataDB.getTheme_id();
+                String glOptionCode = wpDataDB.getMain_option_id(); // Предположим, что есть метод для получения кода опции
+                String optionName = RealmManager.getOptionNameByOptionId(glOptionCode);
+
+                // Настройка темы
+                theme.setText(ThemeRealm.getByID(String.valueOf(themeCode)).getNm());
+                mainThemeMessage.setText(optionName);
+
+                // Настройка видимости и цветов
+                if (themeCode == 998) {
+                    // Базовый мерчандайзинг
+                    theme.setVisibility(View.VISIBLE);
+                    themeLabel.setVisibility(View.VISIBLE);
+                    theme.setTextColor(ContextCompat.getColor(mContext, android.R.color.tab_indicator_text));
+
+                    mainThemeLabel.setVisibility(View.GONE);
+                    mainThemeMessage.setVisibility(View.GONE);
+
+                } else if (themeCode == 1132) {
+                    // Мерчандайзинг СУППР
+                    theme.setVisibility(View.GONE);
+                    themeLabel.setVisibility(View.GONE);
+
+                    // Настройка главной опции
+                    mainThemeLabel.setVisibility(View.VISIBLE);
+                    mainThemeMessage.setVisibility(View.VISIBLE);
+                    if (Objects.equals(glOptionCode, "574")) {
+                        // Выкладка товара
+                        mainThemeMessage.setTextColor(ContextCompat.getColor(mContext, android.R.color.tab_indicator_text));
+                    } else {
+                        // Все остальные опции
+                        mainThemeMessage.setTextColor(ContextCompat.getColor(mContext, R.color.red_error));
+                    }
+
                 } else {
-                    theme.setTextColor(mContext.getResources().getColor(android.R.color.tab_indicator_text));
+                    // Общий случай
+                    theme.setVisibility(View.VISIBLE);
+                    themeLabel.setVisibility(View.VISIBLE);
+                    theme.setTextColor(ContextCompat.getColor(mContext, R.color.red_error));
+
+                    mainThemeLabel.setVisibility(View.VISIBLE);
+                    mainThemeMessage.setVisibility(View.VISIBLE);
+                    mainThemeMessage.setTextColor(ContextCompat.getColor(mContext, R.color.red_error));
                 }
+
             } catch (Exception e) {
-                // Тема не успела загрузиться
+                // Обработка ошибок
                 theme.setText("Тема не обнаружена");
+                theme.setVisibility(View.VISIBLE);
+                themeLabel.setVisibility(View.VISIBLE);
+                mainThemeLabel.setVisibility(View.GONE);
+                mainThemeMessage.setVisibility(View.GONE);
+                Log.e("TAG", "Error loading theme", e);
             }
 
             try {
@@ -410,13 +476,13 @@ public class RecycleViewWPAdapter extends RecyclerView.Adapter<RecycleViewWPAdap
                     wpDataDB.setAddr_location_xd(String.valueOf(addressSDB.locationXd));
                     wpDataDB.setAddr_location_yd(String.valueOf(addressSDB.locationYd));
                 } else {
-                    addrTxt = "Адресс не определён";
+                    addrTxt = "Адреса не визначена";
                 }
                 wpDataDB.setAddr_txt(addrTxt);
                 WpDataRealm.setWpData(Collections.singletonList(wpDataDB));
             }
 
-            String msg = String.format("Дата: %s\nАдрес: %s\nКлиент: %s\nИсполнитель: %s\n", Clock.getHumanTimeYYYYMMDD(wpDataDB.getDt().getTime() / 1000), addrTxt, wpDataDB.getClient_txt(), wpDataDB.getUser_txt());
+            String msg = String.format("Дата: %s\nАдреса: %s\nКлієнт: %s\nВиконавець: %s\n", Clock.getHumanTimeYYYYMMDD(wpDataDB.getDt().getTime() / 1000), addrTxt, wpDataDB.getClient_txt(), wpDataDB.getUser_txt());
 
             DialogData errorMsg = new DialogData(mContext);
             errorMsg.setTitle("");
@@ -424,7 +490,7 @@ public class RecycleViewWPAdapter extends RecyclerView.Adapter<RecycleViewWPAdap
             errorMsg.setClose(errorMsg::dismiss);
 
             DialogData dialog = new DialogData(mContext);
-            dialog.setTitle("Открыть посещение?");
+            dialog.setTitle("Відкрити відвідування?");
             dialog.setText(msg);
             dialog.setOk(null, () -> {
                 Globals.writeToMLOG("INFO", "RecycleViewWPAdapter/openReportPrepare/CLICK_KPS", "wpDataDB: " + wpDataDB);
@@ -432,14 +498,14 @@ public class RecycleViewWPAdapter extends RecyclerView.Adapter<RecycleViewWPAdap
                     DialogData dialogQuestionOne = new DialogData(mContext);
                     dialogQuestionOne.setTitle("");
                     dialogQuestionOne.setText(mContext.getString(R.string.re_questioning_wpdata_first_msg));
-                    dialogQuestionOne.setOk("Да", errorMsg::show);
-                    dialogQuestionOne.setCancel("Нет", () -> {
+                    dialogQuestionOne.setOk("Так", errorMsg::show);
+                    dialogQuestionOne.setCancel("Hi", () -> {
                         DialogData dialogQuestionOTwo = new DialogData(mContext);
                         dialogQuestionOne.dismiss();
                         dialogQuestionOTwo.setTitle("");
                         dialogQuestionOTwo.setText(mContext.getString(R.string.re_questioning_wpdata_second_msg));
-                        dialogQuestionOTwo.setOk("Да", errorMsg::show);
-                        dialogQuestionOTwo.setCancel("Нет", () -> {
+                        dialogQuestionOTwo.setOk("Так", errorMsg::show);
+                        dialogQuestionOTwo.setCancel("Нi", () -> {
                             openReportPrepare(wpDataDB, otchetId);
                         });
                         dialogQuestionOTwo.show();
@@ -454,26 +520,7 @@ public class RecycleViewWPAdapter extends RecyclerView.Adapter<RecycleViewWPAdap
             dialog.show();
         }
 
-        // Pika (don't use)
-        public void Sandbox() {
 
-            UnlockCode uc = new UnlockCode();
-            WpDataDB wp1 = new WpDataDB();
-            OptionsDB op1 = new OptionsDB();
-            UnlockCode.UnlockCodeMode mode1 = UnlockCode.UnlockCodeMode.CODE_DAD_2_AND_OPTION;
-            Clicks.clickStatusMsg click1 = null;
-            Date dt = new Date(24, 00, 22);
-            Long dad2 = new Long("1220124022607054798");
-
-            wp1.setDt(dt);
-            wp1.setCode_dad2(dad2);
-            wp1.setAddr_id(22607);
-            wp1.setClient_id("9382");
-            wp1.setUser_id(240045);
-            op1.setOptionId("139576");
-
-            uc.showDialogUnlockCode(mContext, wp1, op1, mode1, click1);
-        }
 
 
         private void openReportPrepare(WpDataDB wp, long otchetId) {

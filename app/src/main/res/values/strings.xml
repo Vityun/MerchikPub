@@ -1,8 +1,8 @@
 <resources>
     <string name="app_name" translatable="false">merchik</string>
-    <string name="ver" translatable="false">032101</string>
+    <string name="ver" translatable="false">032903</string>
     <string name="debug_status" translatable="false">1</string>
-    <string name="debug_date" translatable="false">2025-21-03</string>
+    <string name="debug_date" translatable="false">2025-29-03</string>
 
     <string name="test" translatable="false">TEST HINT</string>
 
@@ -95,13 +95,16 @@
     <string name="title_detailed_report">Дет. отчёт №</string>
 
     <!--KPS-->
-    <string name="date">Дата: </string>
-    <string name="address">Адрес</string>
-    <string name="customer">Клиент: </string>
-    <string name="performer">Исполнитель: </string>
-    <string name="options">Опции: </string>
+    <string name="date">Дата:</string>
+    <string name="address">Адрес:</string>
+    <string name="customer">Клиент:</string>
+    <string name="performer">Исполнитель:</string>
+    <string name="options">Опции:</string>
     <string name="t_photo_log">Журнал фото</string>
     <string name="Search">Поиск..</string>
+    <string name="network">Сеть:</string>
+    <string name="theme">Тема:</string>
+    <string name="main_option">Гл. опция:</string>
 
     <!-- ============== PHOTO REPORT FRAGMENT ============== -->
     <string name="title_photo_report">Фотоотчёт</string>

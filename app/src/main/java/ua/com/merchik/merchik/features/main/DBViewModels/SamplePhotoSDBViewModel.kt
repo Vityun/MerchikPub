@@ -47,11 +47,18 @@ class SamplePhotoSDBViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle
 ) : MainViewModel(application, repository, nameUIRepository, savedStateHandle) {
 
+    private val EXAMPLE_ID = "id_1c"
+    private val EXAMPLE_IMG_ID = "photo_id"
+
     override val table: KClass<out DataObjectUI>
         get() = SamplePhotoSDB::class
 
     override fun getFieldsForCommentsImage(): List<String>? {
         return "nm, about".split(",").map { it.trim() }
+    }
+
+    override fun getFieldsForCustomResult(): List<String>? {
+        return "$EXAMPLE_ID, $EXAMPLE_IMG_ID".split(",").map { it.trim() }
     }
 
     override fun onClickItemImage(clickedDataItemUI: DataItemUI, context: Context) {
@@ -84,10 +91,12 @@ class SamplePhotoSDBViewModel @Inject constructor(
         }
     }
 
-    private fun openCamera(stackPhotoDB: StackPhotoDB?, callback:() -> Unit) {
+    private fun openCamera(stackPhotoDB: StackPhotoDB?, callback: () -> Unit) {
         val dataJsonObject = Gson().fromJson(dataJson, JsonObject::class.java)
-        val wpDataDB = WpDataRealm.getWpDataRowById(dataJsonObject.get("wpDataDBId").asString.toLong())
-        val optionDB = RealmManager.INSTANCE.copyFromRealm(OptionsRealm.getOptionById(dataJsonObject.get("optionDBId").asString))
+        val wpDataDB =
+            WpDataRealm.getWpDataRowById(dataJsonObject.get("wpDataDBId").asString.toLong())
+        val optionDB =
+            RealmManager.INSTANCE.copyFromRealm(OptionsRealm.getOptionById(dataJsonObject.get("optionDBId").asString))
         if (wpDataDB != null && optionDB != null) {
             val typePhotoId = when (contextUI) {
                 ContextUI.SAMPLE_PHOTO_FROM_OPTION_135158 -> 4
@@ -98,10 +107,12 @@ class SamplePhotoSDBViewModel @Inject constructor(
                 ContextUI.SAMPLE_PHOTO_FROM_OPTION_158309 -> 39
                 ContextUI.SAMPLE_PHOTO_FROM_OPTION_158604 -> 41
                 ContextUI.SAMPLE_PHOTO_FROM_OPTION_157277 -> 28
-                else -> { null }
+                else -> {
+                    null
+                }
             }
 
-            when(contextUI) {
+            when (contextUI) {
                 ContextUI.SAMPLE_PHOTO_FROM_OPTION_135158 -> {
                     val req = if (stackPhotoDB == null) {
                         TovarRequisites()
@@ -109,7 +120,10 @@ class SamplePhotoSDBViewModel @Inject constructor(
                         var reportPrepareDB: ReportPrepareDB? = null
                         val tovarDB = TovarRealm.getById(stackPhotoDB.tovar_id)
                         if (tovarDB != null)
-                            reportPrepareDB = ReportPrepareRealm.getReportPrepareByTov(wpDataDB.code_dad2.toString(), stackPhotoDB.tovar_id)
+                            reportPrepareDB = ReportPrepareRealm.getReportPrepareByTov(
+                                wpDataDB.code_dad2.toString(),
+                                stackPhotoDB.tovar_id
+                            )
 
                         if (tovarDB == null || reportPrepareDB == null)
                             TovarRequisites()
@@ -127,6 +141,7 @@ class SamplePhotoSDBViewModel @Inject constructor(
 
                     callback.invoke()
                 }
+
                 ContextUI.SAMPLE_PHOTO_FROM_OPTION_141360,
                 ContextUI.SAMPLE_PHOTO_FROM_OPTION_132969,
                 ContextUI.SAMPLE_PHOTO_FROM_OPTION_135809,
@@ -140,15 +155,32 @@ class SamplePhotoSDBViewModel @Inject constructor(
                         val wpDataObj: WPDataObj = workPlan.getKPS(wpDataDB.id)
                         wpDataObj.setPhotoType(it.toString())
                         val makePhoto = MakePhoto()
+                        val custom: HashMap<String,Any?> = valueForCustomResult.value
+                        // Проверяем и передаем example_id
+                        custom[EXAMPLE_ID]?.let {
+                            if (it.toString().isNotEmpty()) {
+                                MakePhoto.example_id = it.toString()
+                            }
+                        }
+
+                        // Проверяем и передаем example_img_id
+                        custom[EXAMPLE_IMG_ID]?.let {
+                            if (it.toString().isNotEmpty()) {
+                                MakePhoto.example_img_id = it.toString()
+                            }
+                        }
+                        Log.e("!!!!!!!", "example_id: ${MakePhoto.example_id} | example_img_id: ${MakePhoto.example_img_id}")
                         makePhoto.pressedMakePhotoOldStyle<WpDataDB>(
                             context as Activity,
                             wpDataObj,
                             wpDataDB,
-                            optionDB
+                            optionDB,
+                            stackPhotoDB
                         )
                         callback.invoke()
                     }
                 }
+
                 else -> {}
             }
         }
@@ -165,13 +197,16 @@ class SamplePhotoSDBViewModel @Inject constructor(
             ContextUI.SAMPLE_PHOTO_FROM_OPTION_158309 -> 39
             ContextUI.SAMPLE_PHOTO_FROM_OPTION_158604 -> 41
             ContextUI.SAMPLE_PHOTO_FROM_OPTION_157277 -> 28
-            else -> { null }
+            else -> {
+                null
+            }
         }
 
         val itemsFilter = mutableListOf<ItemFilter>()
 
         typePhotoId?.let {
-            val imagesType = RealmManager.INSTANCE.copyFromRealm(PhotoTypeRealm.getPhotoTypeById(it))
+            val imagesType =
+                RealmManager.INSTANCE.copyFromRealm(PhotoTypeRealm.getPhotoTypeById(it))
             val filterImagesTypeListDB = ItemFilter(
                 "Тип фото",
                 ImagesTypeListDB::class,
@@ -211,7 +246,8 @@ class SamplePhotoSDBViewModel @Inject constructor(
                 true
             )
             itemsFilter.add(filterTradeMarkDB)
-        } catch (e: Exception) {}
+        } catch (e: Exception) {
+        }
 
         filters = Filters(
             rangeDataByKey = null,

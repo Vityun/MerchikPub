@@ -34,7 +34,8 @@
             android:layout_below="@+id/merclabel1"
             android:layout_marginTop="4dp"
             android:layout_toRightOf="@+id/wp_image1"
-            android:text="  Дата: "
+            android:layout_marginStart="5dp"
+            android:text="@string/date"
             android:textStyle="bold"
             app:layout_constraintStart_toEndOf="@+id/wp_image1"
             app:layout_constraintTop_toTopOf="parent" />
@@ -44,15 +45,18 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_toRightOf="@+id/wp_image1"
-            android:text="  Мережа: "
+            android:layout_marginStart="5dp"
+            android:text="@string/network"
             android:textStyle="bold"
             app:layout_constraintStart_toEndOf="@+id/wp_image1"
-            app:layout_constraintTop_toBottomOf="@+id/themelabel" />
+            app:layout_constraintTop_toBottomOf="@+id/themeMainlabel"/>
 
         <TextView
             android:id="@+id/groupData"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_marginStart="4dp"
+            android:layout_marginLeft="4dp"
             android:layout_marginEnd="4dp"
             android:layout_marginRight="4dp"
             android:layout_toRightOf="@+id/addrlabel1"
@@ -60,16 +64,18 @@
             android:singleLine="true"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@+id/groupTitle"
-            app:layout_constraintTop_toBottomOf="@+id/theme" />
+            app:layout_constraintTop_toTopOf="@+id/groupTitle"
+            app:layout_constraintBottom_toBottomOf="@+id/groupTitle"/>
 
         <TextView
             android:id="@+id/numberTTTitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_toRightOf="@+id/wp_image1"
-            android:text="  Номер ТТ: "
+            android:text="Номер ТТ: "
             android:textStyle="bold"
             android:visibility="gone"
+            android:layout_marginStart="5dp"
             app:layout_constraintStart_toEndOf="@+id/wp_image1"
             app:layout_constraintTop_toBottomOf="@+id/groupTitle" />
 
@@ -92,10 +98,12 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_toRightOf="@+id/wp_image1"
-            android:text="  Адрес: "
+            android:layout_marginStart="5dp"
+            android:text="@string/address"
             android:textStyle="bold"
             app:layout_constraintStart_toEndOf="@+id/wp_image1"
-            app:layout_constraintTop_toBottomOf="@+id/numberTTTitle" />
+            app:layout_constraintTop_toBottomOf="@+id/numberTTTitle"
+            app:layout_constraintBottom_toTopOf="@id/custlabel1" />
 
         <TextView
             android:id="@+id/addr1"
@@ -118,10 +126,41 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_toRightOf="@+id/wp_image1"
-            android:text="  Тема: "
+            android:text="@string/theme"
             android:textStyle="bold"
+            android:layout_marginStart="5dp"
             app:layout_constraintStart_toEndOf="@+id/wp_image1"
-            app:layout_constraintTop_toBottomOf="@+id/datelabel1" />
+            app:layout_constraintTop_toBottomOf="@+id/datelabel1"/>
+
+        <TextView
+            android:id="@+id/themeMainlabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_toRightOf="@+id/wp_image1"
+            android:text="@string/main_option"
+            android:textStyle="bold"
+            android:layout_marginStart="5dp"
+            android:visibility="visible"
+            app:layout_constraintStart_toEndOf="@+id/wp_image1"
+            app:layout_constraintTop_toBottomOf="@+id/themelabel"
+            app:layout_constraintBottom_toTopOf="@id/groupTitle"/>
+
+        <TextView
+            android:id="@+id/themeMainData"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="4dp"
+            android:layout_marginLeft="4dp"
+            android:layout_marginEnd="4dp"
+            android:layout_marginRight="4dp"
+            android:layout_toRightOf="@+id/addrlabel1"
+            android:maxLines="1"
+            android:singleLine="true"
+            android:visibility="visible"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/themeMainlabel"
+            app:layout_constraintTop_toTopOf="@+id/themeMainlabel"
+            app:layout_constraintBottom_toBottomOf="@+id/themeMainlabel"/>
 
         <TextView
             android:id="@+id/merc1"
@@ -146,10 +185,12 @@
             android:layout_height="wrap_content"
             android:layout_below="@+id/addrlabel1"
             android:layout_toRightOf="@+id/wp_image1"
-            android:text="  Клиент: "
+            android:text="@string/customer"
             android:textStyle="bold"
+            android:layout_marginStart="5dp"
             app:layout_constraintStart_toEndOf="@+id/wp_image1"
-            app:layout_constraintTop_toBottomOf="@+id/addrlabel1" />
+            app:layout_constraintTop_toBottomOf="@+id/addrlabel1"
+            app:layout_constraintBottom_toTopOf="@id/merclabel1"/>
 
         <TextView
             android:id="@+id/optionlabel1"
@@ -158,8 +199,9 @@
             android:layout_below="@+id/datelabel1"
             android:layout_marginBottom="4dp"
             android:layout_toRightOf="@+id/wp_image1"
-            android:text="  Опции: "
+            android:text="@string/options"
             android:textStyle="bold"
+            android:layout_marginStart="5dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toEndOf="@+id/wp_image1"
             app:layout_constraintTop_toBottomOf="@+id/merclabel1" />
@@ -171,7 +213,6 @@
             android:layout_below="@+id/merc1"
             android:layout_marginStart="4dp"
             android:layout_marginLeft="4dp"
-            android:layout_marginTop="4dp"
             android:layout_marginEnd="4dp"
             android:layout_marginRight="4dp"
             android:layout_toRightOf="@id/datelabel1"
@@ -180,7 +221,8 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toEndOf="@+id/datelabel1"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toTopOf="@+id/datelabel1"
+            app:layout_constraintBottom_toBottomOf="@+id/datelabel1"/>
 
         <TextView
             android:id="@+id/wp_adapter_price"
@@ -198,10 +240,13 @@
             android:layout_height="15dp"
             android:layout_below="@+id/date1"
             android:layout_marginTop="3dp"
+            android:layout_marginStart="4dp"
+            android:layout_marginLeft="4dp"
+            android:layout_marginEnd="4dp"
+            android:layout_marginRight="4dp"
             android:layout_toEndOf="@+id/optionlabel1"
             android:layout_toRightOf="@+id/optionlabel1"
             android:orientation="horizontal"
-
             app:layout_constraintStart_toEndOf="@+id/optionlabel1"
             app:layout_constraintTop_toBottomOf="@+id/merc1">
 
@@ -232,10 +277,12 @@
             android:layout_height="wrap_content"
             android:layout_below="@+id/custlabel1"
             android:layout_toRightOf="@+id/wp_image1"
-            android:text="  Исполнитель: "
+            android:text="@string/performer"
             android:textStyle="bold"
+            android:layout_marginStart="5dp"
             app:layout_constraintStart_toEndOf="@+id/wp_image1"
-            app:layout_constraintTop_toBottomOf="@+id/custlabel1" />
+            app:layout_constraintTop_toBottomOf="@+id/custlabel1"
+            app:layout_constraintBottom_toTopOf="@id/optionlabel1"/>
 
         <TextView
             android:id="@+id/theme"
@@ -250,8 +297,9 @@
             android:singleLine="true"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.0"
-            app:layout_constraintStart_toEndOf="@+id/addrlabel1"
-            app:layout_constraintTop_toBottomOf="@+id/date1" />
+            app:layout_constraintStart_toEndOf="@+id/themelabel"
+            app:layout_constraintTop_toTopOf="@+id/themelabel"
+            app:layout_constraintBottom_toBottomOf="@id/themelabel"/>
 
         <TextView
             android:id="@+id/cust1"

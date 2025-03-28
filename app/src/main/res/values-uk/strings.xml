@@ -226,5 +226,8 @@
     <string name="sub_title_additionalrequirementsdb_from_achievement">Пропозиція від клієнта, яку потрібно виконати для отримання додаткових бонусів</string>
     <string name="title_samplephotosdb">Зразки фотозвітів</string>
     <string name="sub_title_samplephotosdb">У списку представлені зразки фотозвітів. "Щоб створити '%s', натисніть на відповідне фото. Потім збільште його до розміру екрана та зробіть фото, натиснувши кнопку фотоапарата в правому нижньому куті.</string>
+    <string name="network">Мережа:</string>
+    <string name="theme">"Тема: "</string>
+    <string name="main_option">Гол. опція:</string>
 
 </resources>

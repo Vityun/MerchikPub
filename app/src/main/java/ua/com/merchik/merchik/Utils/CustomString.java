@@ -43,4 +43,12 @@ public class CustomString {
         spannableSt.setSpan(foregroundSpan, 0, spannableSt.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
         return spannableSt;
     }
+
+    public static String cleanComment(String input) {
+        if (input == null || input.isEmpty()) {
+            return "";
+        }
+        // Удаляем всё, кроме букв (включая русские, украинские и другие)
+        return input.replaceAll("[^\\p{L}]", "");
+    }
 }
