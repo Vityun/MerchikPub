@@ -135,7 +135,7 @@ public class WorkPlan {
     public WPDataObj getKPS(long wpId) {
         WpDataDB wpRow = RealmManager.INSTANCE.copyFromRealm(RealmManager.getWorkPlanRowById(wpId));
 
-        long id = wpRow.getId();
+//        long id = wpRow.getId();
         String date = Clock.getHumanTimeYYYYMMDD(wpRow.getDt().getTime() / 1000);
         String customer_id = wpRow.getClient_id();
         int address_id = wpRow.getAddr_id();

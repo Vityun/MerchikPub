@@ -189,6 +189,20 @@ public class MyMigration implements RealmMigration {
             oldVersion++; // Увеличиваем версию схемы
         }
 
+        if (oldVersion == 21) {
+            RealmObjectSchema wpDataSchema = schema.get("WpDataDB");
+
+            // Добавляем новые поля
+            if (wpDataSchema != null) {
+                wpDataSchema
+                        .addField("controller_opinion_id", String.class)
+                        .addField("controller_opinion_author_id", String.class);
+            } else {
+                Globals.writeToMLOG("ERROR", "MyMigration/migrate", "WpDataDB schema is null");
+            }
+            oldVersion++; // Увеличиваем версию схемы
+        }
+
     }
 }
 

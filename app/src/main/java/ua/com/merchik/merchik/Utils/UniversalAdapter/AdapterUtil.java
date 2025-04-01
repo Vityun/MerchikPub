@@ -63,10 +63,10 @@ import ua.com.merchik.merchik.dialogs.DialogData;
 
 public class AdapterUtil extends RecyclerView.Adapter<RecyclerView.ViewHolder> implements Filterable {
 
-    private Context mContext;
+    private final Context mContext;
     private UniversalAdapterData data;
-    private UniversalAdapterData dataFilter;
-    private Globals.ReferencesEnum referencesEnum;
+    private final UniversalAdapterData dataFilter;
+    private final Globals.ReferencesEnum referencesEnum;
 
     public AdapterUtil(Context mContext, UniversalAdapterData data, Globals.ReferencesEnum referencesEnum) {
         this.mContext = mContext;
@@ -498,12 +498,12 @@ public class AdapterUtil extends RecyclerView.Adapter<RecyclerView.ViewHolder> i
 
 
                 layout.setOnClickListener(v -> {
-                    DialogAchievement dialogAchievement = new DialogAchievement(v.getContext());
+                    DialogAchievement dialogAchievement = new DialogAchievement(mContext);
                     dialogAchievement.setClose(dialogAchievement::dismiss);
                     dialogAchievement.setAchievement(data);
                     dialogAchievement.setOk("Створити ДІНДОС", ()->{
                         try {
-                            DialogCreateAchievement dialogCreateAchievement = new DialogCreateAchievement(v.getContext());
+                            DialogCreateAchievement dialogCreateAchievement = new DialogCreateAchievement(mContext);
                             dialogCreateAchievement.setData(data);
                             dialogCreateAchievement.setClose(dialogCreateAchievement::dismiss);
                             dialogCreateAchievement.setTitle("Створення Досягнення на основі створеного");
@@ -519,7 +519,7 @@ public class AdapterUtil extends RecyclerView.Adapter<RecyclerView.ViewHolder> i
 
                     layout.setOnLongClickListener(v1 -> {
                         try {
-                            DialogCreateAchievement dialogCreateAchievement = new DialogCreateAchievement(v1.getContext());
+                            DialogCreateAchievement dialogCreateAchievement = new DialogCreateAchievement(mContext);
                             dialogCreateAchievement.setData(data);
                             dialogCreateAchievement.setClose(dialogCreateAchievement::dismiss);
                             dialogCreateAchievement.setTitle("Створення Досягнення на основі створеного");

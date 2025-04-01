@@ -13,9 +13,12 @@ public class ErrorRealm {
     }
 
     public static ErrorDB getErrorDbByNm(String nm) {
-        return INSTANCE.where(ErrorDB.class)
+        ErrorDB result = INSTANCE.where(ErrorDB.class)
                 .equalTo("nm", nm)
                 .findFirst();
+        if (result != null )
+            result = INSTANCE.copyFromRealm(result);
+        return result;
     }
 
     public static ErrorDB getErrorDbById(String id) {

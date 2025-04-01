@@ -374,7 +374,7 @@ public class RecycleViewWPAdapter extends RecyclerView.Adapter<RecycleViewWPAdap
                 String optionName = RealmManager.getOptionNameByOptionId(glOptionCode);
 
                 // Настройка темы
-                theme.setText(ThemeRealm.getByID(String.valueOf(themeCode)).getNm());
+                theme.setText(ThemeRealm.getThemeById(String.valueOf(themeCode)).getNm());
                 mainThemeMessage.setText(optionName);
 
                 // Настройка видимости и цветов

@@ -38,10 +38,12 @@ public class AdditionalRequirementsMarkRealm {
     }
 
     public static List<AdditionalRequirementsMarkDB> getToUpload() {
-        return INSTANCE.where(AdditionalRequirementsMarkDB.class)
+        List<AdditionalRequirementsMarkDB> res = INSTANCE.where(AdditionalRequirementsMarkDB.class)
                 .isNotNull("uploadStatus")
                 .equalTo("uploadStatus", "0")
                 .findAll();
+        if (res != null) res = INSTANCE.copyFromRealm(res);
+        return res;
     }
 
 

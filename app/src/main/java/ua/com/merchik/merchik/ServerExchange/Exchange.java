@@ -129,6 +129,7 @@ import ua.com.merchik.merchik.data.RetrofitResponse.tables.update.wpdata.WpDataU
 import ua.com.merchik.merchik.data.ServerData.TARCommentsData.AdditionalRequirementsMarks.AdditionalRequirementsMarksListServerData;
 import ua.com.merchik.merchik.data.ServerData.TARCommentsData.AdditionalRequirementsMarks.AdditionalRequirementsSendMarksServerData;
 import ua.com.merchik.merchik.data.ServerData.TARCommentsData.TARCommentData.TARCommentsServerData;
+import ua.com.merchik.merchik.data.TEST_DATA;
 import ua.com.merchik.merchik.data.TestJsonUpload.PhotoFromSite.PhotoInformation;
 import ua.com.merchik.merchik.data.TestJsonUpload.PhotoFromSite.PhotoInformationData;
 import ua.com.merchik.merchik.data.TestJsonUpload.PhotoFromSite.PhotoTableRequest;
@@ -2133,6 +2134,21 @@ public class Exchange {
 
             Globals.writeToMLOG("INFO", "uploadTARComments", "convertedObject: " + convertedObject);
 
+//            retrofit2.Call<JsonObject> test = RetrofitBuilder.getRetrofitInterface().TEST_JSON_UPLOAD(RetrofitBuilder.contentType, convertedObject);
+//            test.enqueue(new Callback<JsonObject>() {
+//                @Override
+//                public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
+//                    Log.e("!!!!!!!!","result: " + response.body().toString());
+//                    Log.e("!!!!!!!!","result: " + response.body().toString());
+//                }
+//
+//                @Override
+//                public void onFailure(Call<JsonObject> call, Throwable t) {
+//                    Log.e("!!!!!!!!","result: " + t.getMessage());
+//                    Log.e("!!!!!!!!","result: " + t.getMessage());
+//
+//                }
+//            });
 
             retrofit2.Call<TARCommentsServerData> call = RetrofitBuilder.getRetrofitInterface().UPLOAD_TAR_COMMENT(RetrofitBuilder.contentType, convertedObject);
             List<TARCommentsDB> finalList = list;

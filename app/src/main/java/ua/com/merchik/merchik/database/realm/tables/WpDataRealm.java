@@ -67,9 +67,12 @@ public class WpDataRealm {
     }
 
     public static WpDataDB getWpDataRowByDad2Id(long dad2) {
-        return INSTANCE.where(WpDataDB.class)
+        WpDataDB result = INSTANCE.where(WpDataDB.class)
                 .equalTo("code_dad2", dad2)
                 .findFirst();
+        if (result != null )
+            result = INSTANCE.copyFromRealm(result);
+        return result;
     }
 
     public static List<WpDataDB> getWpDataRowByIds(Long[] id) {

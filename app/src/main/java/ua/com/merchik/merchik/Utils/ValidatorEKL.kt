@@ -6,6 +6,7 @@ import ua.com.merchik.merchik.data.Database.Room.TovarGroupClientSDB
 import ua.com.merchik.merchik.data.Database.Room.TovarGroupSDB
 import ua.com.merchik.merchik.data.Database.Room.UsersSDB
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB
+import ua.com.merchik.merchik.database.realm.RealmManager
 import ua.com.merchik.merchik.database.realm.tables.WpDataRealm
 import ua.com.merchik.merchik.database.room.RoomManager
 import ua.com.merchik.merchik.dialogs.EKL.EKLDataHolder
@@ -301,11 +302,11 @@ object ValidatorEKL {
 
         Log.e("ValidatorEKL", "ID: $wpId")
         val id = wpId.toLong()
-        val wp = WpDataRealm.getWpDataRowById(id) as WpDataDB
+        val wp = RealmManager.INSTANCE.copyFromRealm(WpDataRealm.getWpDataRowById(id) as WpDataDB)
         Log.e("ValidatorEKL", "wp: ${wp.action_txt} | ${wp.code_dad2}")
         Log.e("ValidatorEKL", "wpDataDB.ptt_user_id: ${wp.ptt_user_id}")
 
-        val wpDataDB = wpDataCache.getOrPut(wpId) { WpDataRealm.getWpDataRowById(id) as WpDataDB }
+        val wpDataDB = wpDataCache.getOrPut(wpId) { RealmManager.INSTANCE.copyFromRealm(WpDataRealm.getWpDataRowById(id) as WpDataDB) }
 
         val addressSDB = wpDataDB?.let {
             addressCache.getOrPut(it.addr_id) {

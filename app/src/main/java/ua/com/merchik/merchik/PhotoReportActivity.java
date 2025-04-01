@@ -1275,7 +1275,7 @@ public class PhotoReportActivity extends toolbar_menus {
         try {
             Globals.writeToMLOG("INFO", "savePhoto", "wpDataObj 1: " + wpDataObj);
             Globals.writeToMLOG("INFO", "savePhoto", "wpDataObj 2: " + new Gson().toJson(wpDataObj));
-            WpDataDB wp = RealmManager.INSTANCE.copyFromRealm(WpDataRealm.getWpDataRowByDad2Id(wpDataObj.dad2));
+            WpDataDB wp = WpDataRealm.getWpDataRowByDad2Id(wpDataObj.dad2);
 
             Globals.writeToMLOG("INFO", "savePhoto", "wp 1: " + wp);
             Globals.writeToMLOG("INFO", "savePhoto", "wp 2: " + new Gson().toJson(wp));

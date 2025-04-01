@@ -10,6 +10,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 
+import io.realm.Realm;
 import io.realm.RealmResults;
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity;
 import ua.com.merchik.merchik.Clock;
@@ -218,48 +219,9 @@ public class OptionControlPhoto<T> extends OptionControl {
         String photoTypeName = ImagesTypeListRealm.getByID(photoType).getNm();
 
 
+//        List<StackPhotoDB> stackPhotoDBList = RealmManager.INSTANCE.copyFromRealm(stackPhotoDB);
 //        подводим итог
-        // для 141361 от 27.03.2025
-        if (optionId.equals("141361")) {
-            long count = stackPhotoDB.where()
-                    .equalTo("example_id", "78")
-                    .count();
-            if (count > 0) {
-                m = 2;
-                int photoWithComment = 0;
-                String baseEmptyComment = "\n\nУ свiтлин: ";
-                List<StackPhotoDB> stackPhotoDBList = RealmManager.INSTANCE.copyFromRealm(stackPhotoDB);
-                for (StackPhotoDB photo : stackPhotoDBList) {
-                    if ("78".equals(photo.getExample_id())) {
-                        String comment = photo.getComment();
-                        if (comment != null && comment.length() > 10) {
-                            photoWithComment++;
-                        } else {
-                            baseEmptyComment = baseEmptyComment + photo.getPhotoServerId() + ", ";
-                        }
-                    }
-                }
-                if (photoWithComment < m) {
-                    if (count < 2 ){
-                        signal = true;
-                        stringBuilderMsg.append("Для випадку, коли на складі ТТ немає товару, кiлькiсть світлин за зразком 78 має бути не менше ніж ")
-                                .append(m)
-                                .append(", а зроблено: ")
-                                .append(count);
-                    } else
-//                    if (baseEmptyComment.length() > 20)
-                    {
-                        baseEmptyComment = baseEmptyComment.replaceFirst(",(?!.*?,)", "") + "немає коментаря.\n";
-                        signal = true;
-                        stringBuilderMsg.append(baseEmptyComment)
-                                .append("Для випадку, коли на складі ТТ немає товару, для кожної світлини, виготовленої за зразком 78, повинен бути доданий коментар довжиною більше 10 символів");
-                    }
-                } else {
-                    stringBuilderMsg.append("Скарг щодо виконання фото немає. Зроблено: ").append(count).append(" фото.");
-                    signal = false;
-                }
-            }
-        } else if (stackPhotoDB.size() < m) { // главнй итог
+        if (stackPhotoDB.size() < m) { // главнй итог
             ImagesTypeListDB item = ImagesTypeListRealm.getByID(photoType);
             stringBuilderMsg.append("Ви повинні зробити: ").append(m).append(" фото з типом: ").append(item != null ? item.getNm() : typeNm).append(", а зробили: ").append(stackPhotoDB.size()).append(" - доробiть фотографії.");
             signal = true;
@@ -299,6 +261,50 @@ public class OptionControlPhoto<T> extends OptionControl {
                 } else {
                     signal = false;
                     stringBuilderMsg.append("\nВідповідно до ДВ ").append(photoTypeName).append(" у поточній Адреса/Мережа виготовлення НЕ ОБОВ'ЯЗКОВО. Перевірка не проводилась");
+                }
+            }
+        }
+
+        // 3.2
+        // для 141361 от 27.03.2025
+        if (optionId.equals("141361")) {
+            long count = stackPhotoDB.where()
+                    .equalTo("example_id", "78")
+                    .count();
+            if (count > 0) {
+                m = 2;
+                int photoWithComment = 0;
+                stringBuilderMsg.setLength(0);
+                String baseEmptyComment = "У свiтлин: ";
+                List<StackPhotoDB> stackPhotoDBList = RealmManager.INSTANCE.copyFromRealm(stackPhotoDB);
+                for (StackPhotoDB photo : stackPhotoDBList) {
+                    if ("78".equals(photo.getExample_id())) {
+                        String comment = photo.getComment();
+                        if (comment != null && comment.length() > 10) {
+                            photoWithComment++;
+                        } else {
+                            baseEmptyComment = baseEmptyComment + photo.getPhotoServerId() + ", ";
+                        }
+                    }
+                }
+                if (photoWithComment < m) {
+                    if (count < 2) {
+                        signal = true;
+                        stringBuilderMsg.append("Для випадку, коли на складі ТТ немає товару, кiлькiсть світлин за зразком 78 має бути не менше ніж ")
+                                .append(m)
+                                .append(", а зроблено: ")
+                                .append(count);
+                    } else
+//                    if (baseEmptyComment.length() > 20)
+                    {
+                        baseEmptyComment = baseEmptyComment.replaceFirst(",(?!.*?,)", "") + "немає коментаря.\n";
+                        signal = true;
+                        stringBuilderMsg.append(baseEmptyComment)
+                                .append("Для випадку, коли на складі ТТ немає товару, для кожної світлини, виготовленої за зразком 78, повинен бути доданий коментар довжиною більше 10 символів");
+                    }
+                } else {
+                    stringBuilderMsg.append("Скарг щодо виконання фото немає. Зроблено: ").append(count).append(" фото.");
+                    signal = false;
                 }
             }
         }

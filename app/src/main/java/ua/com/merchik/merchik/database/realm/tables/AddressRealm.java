@@ -30,16 +30,22 @@ public class AddressRealm {
      * Получение строки из адресов по ID
      * */
     public static AddressDB getAddressById(int id){
-        return INSTANCE.where(AddressDB.class)
+        AddressDB result = INSTANCE.where(AddressDB.class)
                 .equalTo("addrId", id)
                 .findFirst();
+        if (result != null )
+            result = INSTANCE.copyFromRealm(result);
+        return result;
     }
 
 
 
     public static List<AddressDB> getAll(){
-        return INSTANCE.where(AddressDB.class)
+        List<AddressDB> result = INSTANCE.where(AddressDB.class)
                 .findAll();
+        if (result != null )
+            result = INSTANCE.copyFromRealm(result);
+        return result;
     }
 
 

@@ -60,8 +60,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import io.reactivex.rxjava3.observers.DisposableCompletableObserver;
 import io.reactivex.rxjava3.schedulers.Schedulers;
@@ -82,7 +80,7 @@ import ua.com.merchik.merchik.Options.Buttons.OptionButtonAddNewClient;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonAddNewFriend;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonAvailabilityDetailedReport;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonHistoryMP;
-import ua.com.merchik.merchik.Options.Buttons.OptionButtonOpinion;
+import ua.com.merchik.merchik.Options.Buttons.OptionButtonUserOpinion;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonPhotoAktionTovar;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonPhotoBeforeStartWork;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonPhotoCassZone;
@@ -115,9 +113,9 @@ import ua.com.merchik.merchik.Options.Controls.OptionControlEKL;
 import ua.com.merchik.merchik.Options.Controls.OptionControlEndAnotherWork;
 import ua.com.merchik.merchik.Options.Controls.OptionControlFacePlan;
 import ua.com.merchik.merchik.Options.Controls.OptionControlMP;
+import ua.com.merchik.merchik.Options.Controls.OptionControlOpinionByController;
 import ua.com.merchik.merchik.Options.Controls.OptionControlPercentageOfThePrize;
 import ua.com.merchik.merchik.Options.Controls.OptionControlPhoto;
-import ua.com.merchik.merchik.Options.Controls.OptionControlPhotoBeforeStartWork;
 import ua.com.merchik.merchik.Options.Controls.OptionControlPhotoPromotion;
 import ua.com.merchik.merchik.Options.Controls.OptionControlPhotoShowcase;
 import ua.com.merchik.merchik.Options.Controls.OptionControlPhotoTovarsLeft;
@@ -346,6 +344,11 @@ public class Options {
                 case 84001:
                     OptionControlAddOpinion<?> optionControlAddOpinion = new OptionControlAddOpinion<>(context, dataDB, optionsDB, newOptionType, mode, unlockCodeResultListener);
                     optionControlAddOpinion.showOptionMassage("");
+                    break;
+
+                case 141893:
+                    OptionControlOpinionByController<?> optionControlOpinionByController = new OptionControlOpinionByController<>(context, dataDB, optionsDB, newOptionType, mode, unlockCodeResultListener);
+                    optionControlOpinionByController.showOptionMassage("");
                     break;
 
                 case 80977:
@@ -1909,6 +1912,15 @@ public class Options {
                 }
                 return optionControlAddOpinion.isBlockOption2() ? 1 : 0;
 
+            case 141893:
+                OptionControlOpinionByController<?> optionControlOpinionByController = new OptionControlOpinionByController<>(context, dataDB, option, type, mode, unlockCodeResultListener);
+                if (mode.equals(NNKMode.MAKE) || (mode.equals(NNKMode.CHECK) && optionControlOpinionByController.isBlockOption()))
+                    optionControlOpinionByController.showOptionMassage(block);
+                if (mode.equals(NNKMode.BLOCK) && optionControlOpinionByController.signal && optionControlOpinionByController.isBlockOption()) {
+                    optionControlOpinionByController.showOptionMassage(block);
+                }
+                return optionControlOpinionByController.isBlockOption2() ? 1 : 0;
+
             case 132623:
                 OptionButtonAddComment<?> optionButtonAddComment = new OptionButtonAddComment<>(context, dataDB, option, type, mode, unlockCodeResultListener);
                 break;
@@ -2024,7 +2036,7 @@ public class Options {
             // ---
 
             case 168598:
-                new OptionButtonOpinion<>(context, dataDB, option, type, mode, unlockCodeResultListener);
+                new OptionButtonUserOpinion<>(context, dataDB, option, type, mode, unlockCodeResultListener);
                 break;
 
             case 138773:
@@ -2332,7 +2344,7 @@ public class Options {
                 dialog.show();
             } else if (dataDB instanceof TasksAndReclamationsSDB) {
                 Long dad2Wp = ((TasksAndReclamationsSDB) dataDB).codeDad2SrcDoc;
-                wp = RealmManager.INSTANCE.copyFromRealm(WpDataRealm.getWpDataRowByDad2Id(dad2Wp));
+                wp = WpDataRealm.getWpDataRowByDad2Id(dad2Wp);
 
                 Intent intent = new Intent(context, DetailedReportActivity.class);
                 intent.putExtra("WpDataDB_ID", wp.getId());

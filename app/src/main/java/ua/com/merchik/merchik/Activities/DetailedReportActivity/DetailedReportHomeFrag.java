@@ -291,7 +291,7 @@ public class DetailedReportHomeFrag extends Fragment {
         key = Html.fromHtml(Translate.translationText(8021, "<b>Тема:</b>"));
 
         int themeId = wpDataDB.getTheme_id();
-        ThemeDB themeDB = ThemeRealm.getByID(String.valueOf(themeId));
+        ThemeDB themeDB = ThemeRealm.getThemeById(String.valueOf(themeId));
         if (themeId == 998) {
             value = themeDB.getNm();
             Log.d("ADD_OPINION_FROM_DETAIL", "themeId: " + value);

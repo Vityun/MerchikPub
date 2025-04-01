@@ -75,6 +75,8 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 
+import io.reactivex.rxjava3.observers.DisposableCompletableObserver;
+import io.reactivex.rxjava3.schedulers.Schedulers;
 import io.realm.Realm;
 import io.realm.RealmResults;
 import kotlin.Unit;
@@ -99,7 +101,9 @@ import ua.com.merchik.merchik.Activities.navigationMenu.MenuHeader;
 import ua.com.merchik.merchik.Activities.navigationMenu.MenuHeaderAdapter;
 import ua.com.merchik.merchik.ServerExchange.CustomExchange.CustomExchange;
 import ua.com.merchik.merchik.ServerExchange.Exchange;
+import ua.com.merchik.merchik.ServerExchange.ExchangeInterface;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.PhotoMerchikExchange;
+import ua.com.merchik.merchik.ServerExchange.TablesExchange.ReclamationPointExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.SamplePhotoExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.ShowcaseExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesLoadingUnloading;
@@ -107,6 +111,7 @@ import ua.com.merchik.merchik.Utils.FileCompressor;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.Database.Room.Chat.ChatSDB;
 import ua.com.merchik.merchik.data.Database.Room.ShowcaseSDB;
+import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
 import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteObjects.SiteObjectsDB;
 import ua.com.merchik.merchik.data.RealmModels.AppUsersDB;
 import ua.com.merchik.merchik.data.RealmModels.MenuItemFromWebDB;
@@ -177,6 +182,7 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
     public static int internetStatus;
 
     private Exchange exchange;
+    private ReclamationPointExchange tarExchange;
 
     public static Globals.InternetStatus internetStatusG;
 
@@ -197,6 +203,7 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
         tarViewModel = new ViewModelProvider(this).get(TARViewModel.class);
 
         this.exchange = new Exchange(photoDownloaderViewModel);
+        this.tarExchange = new ReclamationPointExchange();
         this.exchange.context = this;
 
         photoDownloaderViewModel.getWorkInfo().observe(this, workInfos -> {
@@ -1235,6 +1242,36 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                             Globals.writeToMLOG("INFO", "CRON/PhotoReports", "Start upload photo reports. upload permission: false");
                         }
 
+                        exchange.sendTAR();              // Выгрузка на сервер ЗИР-а
+                        exchange.uploadTARComments(null);    // Выгрузка ЗИР переписки(коммнетариев)
+                        exchange.downloadAchievements();
+                        // Загрузка Задач и Рекламаций
+                        try {
+                            tarExchange.downloadTaR(new ExchangeInterface.ExchangeResponseInterface() {
+                                @Override
+                                public <T> void onSuccess(List<T> data) {
+                                    SQL_DB.tarDao().insertData((List<TasksAndReclamationsSDB>) data)
+                                            .subscribeOn(Schedulers.io())
+                                            .subscribe(new DisposableCompletableObserver() {
+                                                @Override
+                                                public void onComplete() {
+                                                    Globals.writeToMLOG("INFO", "Exchange.ReclamationPointExchange/downloadTaR.onComplete", "Успешно сохранило Задачи и Рекламации (" + data.size() + ")шт в БД");
+                                                }
+
+                                                @Override
+                                                public void onError(@io.reactivex.rxjava3.annotations.NonNull Throwable e) {
+                                                    Globals.writeToMLOG("INFO_ERR", "Exchange.ReclamationPointExchange/downloadTaR.onError", "Ошибка при сохранении в БД: " + e);
+                                                }
+                                            });
+                                }
+
+                                @Override
+                                public void onFailure(String error) {
+                                    Globals.writeToMLOG("INFO_ERR", "Exchange.ReclamationPointExchange/downloadTaR.onFailure", "String error: " + error);
+                                }
+                            });
+                        } catch (Exception e) {
+                        }
                     }
 
 

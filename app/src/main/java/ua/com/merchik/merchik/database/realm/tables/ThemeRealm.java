@@ -24,11 +24,11 @@ public class ThemeRealm {
     }
 
 
-    public static ThemeDB getByID(String id){
-        return INSTANCE.where(ThemeDB.class)
-                .equalTo("id", id)
-                .findFirst();
-    }
+//    public static ThemeDB getByID(String id){
+//        return INSTANCE.where(ThemeDB.class)
+//                .equalTo("id", id)
+//                .findFirst();
+//    }
 
 
     public static ThemeDB getThemeById(String id){
@@ -48,9 +48,11 @@ public class ThemeRealm {
     }
 
     public static List<ThemeDB> getTARTheme(){
-        return INSTANCE.where(ThemeDB.class)
+        List<ThemeDB> themeDB =  INSTANCE.where(ThemeDB.class)
 //                .equalTo("tp", "2")
                 .findAll();
+        if (themeDB != null) themeDB = INSTANCE.copyFromRealm(themeDB);
+        return themeDB;
     }
 
 }

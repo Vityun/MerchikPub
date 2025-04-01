@@ -34,9 +34,12 @@ public class CustomerRealm {
      * Получение строки из адресов по ID
      * */
     public static CustomerDB getCustomerById(String id){
-        return INSTANCE.where(CustomerDB.class)
+        CustomerDB result = INSTANCE.where(CustomerDB.class)
                 .equalTo("id", id)
                 .findFirst();
+        if (result != null )
+            result = INSTANCE.copyFromRealm(result);
+        return result;
     }
 
     public static CustomerDB getCustomerByNm(String nm){
@@ -46,8 +49,11 @@ public class CustomerRealm {
     }
 
     public static List<CustomerDB> getAll(){
-        return INSTANCE.where(CustomerDB.class)
+        List<CustomerDB> result = INSTANCE.where(CustomerDB.class)
                 .findAll();
+        if (result != null )
+            result = INSTANCE.copyFromRealm(result);
+        return result;
     }
 
 }

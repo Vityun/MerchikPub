@@ -94,7 +94,7 @@ class SamplePhotoSDBViewModel @Inject constructor(
     private fun openCamera(stackPhotoDB: StackPhotoDB?, callback: () -> Unit) {
         val dataJsonObject = Gson().fromJson(dataJson, JsonObject::class.java)
         val wpDataDB =
-            WpDataRealm.getWpDataRowById(dataJsonObject.get("wpDataDBId").asString.toLong())
+            RealmManager.INSTANCE.copyFromRealm(WpDataRealm.getWpDataRowById(dataJsonObject.get("wpDataDBId").asString.toLong()))
         val optionDB =
             RealmManager.INSTANCE.copyFromRealm(OptionsRealm.getOptionById(dataJsonObject.get("optionDBId").asString))
         if (wpDataDB != null && optionDB != null) {
@@ -155,7 +155,7 @@ class SamplePhotoSDBViewModel @Inject constructor(
                         val wpDataObj: WPDataObj = workPlan.getKPS(wpDataDB.id)
                         wpDataObj.setPhotoType(it.toString())
                         val makePhoto = MakePhoto()
-                        val custom: HashMap<String,Any?> = valueForCustomResult.value
+                        val custom: HashMap<String, Any?> = valueForCustomResult.value
                         // Проверяем и передаем example_id
                         custom[EXAMPLE_ID]?.let {
                             if (it.toString().isNotEmpty()) {
@@ -169,7 +169,10 @@ class SamplePhotoSDBViewModel @Inject constructor(
                                 MakePhoto.example_img_id = it.toString()
                             }
                         }
-                        Log.e("!!!!!!!", "example_id: ${MakePhoto.example_id} | example_img_id: ${MakePhoto.example_img_id}")
+                        Log.e(
+                            "!!!!!!!",
+                            "example_id: ${MakePhoto.example_id} | example_img_id: ${MakePhoto.example_img_id}"
+                        )
                         makePhoto.pressedMakePhotoOldStyle<WpDataDB>(
                             context as Activity,
                             wpDataObj,

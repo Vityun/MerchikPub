@@ -18,8 +18,10 @@ public class PromoRealm {
     }
 
     public static PromoDB getPromoDBById(String id) {
-        return INSTANCE.where(PromoDB.class)
+        PromoDB result = INSTANCE.where(PromoDB.class)
                 .equalTo("ID", id)
                 .findFirst();
+        if (result != null) result = INSTANCE.copyFromRealm(result);
+        return result;
     }
 }

@@ -34,8 +34,11 @@ public class UsersRealm {
      * Получение строки из адресов по ID
      * */
     public static UsersDB getUsersDBById(int id){
-        return INSTANCE.where(UsersDB.class)
+        UsersDB result =  INSTANCE.where(UsersDB.class)
                 .equalTo("id", id)
                 .findFirst();
+        if (result != null )
+            result = INSTANCE.copyFromRealm(result);
+        return result;
     }
 }

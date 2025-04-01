@@ -472,7 +472,7 @@ public class PhotoLogActivity extends toolbar_menus {
      */
     private void savePhoto() {
         if (codeDad2 != 0) {
-            WpDataDB wp = RealmManager.INSTANCE.copyFromRealm(WpDataRealm.getWpDataRowByDad2Id(codeDad2));
+            WpDataDB wp = WpDataRealm.getWpDataRowByDad2Id(codeDad2);
 
             AddressSDB addr = SQL_DB.addressDao().getById(wp.getAddr_id());
             CustomerSDB client = SQL_DB.customerDao().getById(wp.getClient_id());

@@ -327,7 +327,7 @@ public class AdditionalRequirementsRealm {
                 .endGroup()
                 .findAll();
 
-        if (optionId != null && !optionId.equals("")){
+        if (optionId != null && !optionId.equals("")) {
             realmResults = realmResults.where()
                     .equalTo("optionId", optionId)
                     .findAll();
@@ -373,7 +373,7 @@ public class AdditionalRequirementsRealm {
                 .equalTo("not_approve", "0")
                 .notEqualTo("userId", "0")
                 .findFirst();
-
+        if (res != null) res = INSTANCE.copyFromRealm(res);
         return res;
     }
 
@@ -383,7 +383,7 @@ public class AdditionalRequirementsRealm {
                 .equalTo("not_approve", "0")
                 .notEqualTo("userId", "0")
                 .findFirst();
-
+        if (res != null) res = INSTANCE.copyFromRealm(res);
         return res;
     }
 

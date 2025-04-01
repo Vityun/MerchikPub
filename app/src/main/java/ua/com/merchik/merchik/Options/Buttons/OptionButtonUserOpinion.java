@@ -9,10 +9,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 
-import androidx.activity.result.ActivityResult;
-import androidx.activity.result.ActivityResultCallback;
-import androidx.activity.result.ActivityResultLauncher;
-import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.core.app.ActivityCompat;
 
 import com.google.gson.Gson;
@@ -21,7 +17,6 @@ import com.google.gson.JsonObject;
 import io.realm.Realm;
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.OpinionDataHolder;
 import ua.com.merchik.merchik.Activities.Features.FeaturesActivity;
-import ua.com.merchik.merchik.Options.Controls.OptionControlTaskAnswer;
 import ua.com.merchik.merchik.Options.OptionControl;
 import ua.com.merchik.merchik.Options.Options;
 import ua.com.merchik.merchik.Translate;
@@ -34,7 +29,7 @@ import ua.com.merchik.merchik.dataLayer.ModeUI;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.features.main.DBViewModels.OpinionSDBViewModel;
 
-public class OptionButtonOpinion<T> extends OptionControl {
+public class OptionButtonUserOpinion<T> extends OptionControl {
     public int OPTION_BUTTON_ADD_OPINION = 168598;
 
     private int opinionID;
@@ -42,7 +37,7 @@ public class OptionButtonOpinion<T> extends OptionControl {
     private OpinionDataHolder opinionDataHolder;
     public static Clicks.OnUpdateUI onUpdateUI;
 
-    public OptionButtonOpinion(Context context, T document, OptionsDB optionDB, OptionMassageType msgType, Options.NNKMode nnkMode, UnlockCodeResultListener unlockCodeResultListener) {
+    public OptionButtonUserOpinion(Context context, T document, OptionsDB optionDB, OptionMassageType msgType, Options.NNKMode nnkMode, UnlockCodeResultListener unlockCodeResultListener) {
         this.context = context;
         this.document = document;
         this.optionDB = optionDB;

@@ -40,9 +40,11 @@ public class StackPhotoRealm {
             return null;
         }
 
-        return INSTANCE.where(StackPhotoDB.class)
+        StackPhotoDB stackPhotoDB =  INSTANCE.where(StackPhotoDB.class)
                 .equalTo("photo_hash", hash)
                 .findFirst();
+        if (stackPhotoDB != null) stackPhotoDB = INSTANCE.copyFromRealm(stackPhotoDB);
+        return stackPhotoDB;
     }
 
     public static StackPhotoDB stackPhotoDBGetPhotoBySiteId2(String id) {

@@ -79,7 +79,7 @@ class AdditionalRequirementsDBViewModel @Inject constructor(
                     true
                 )
 
-                val theme = ThemeRealm.getByID("1253")
+                val theme = ThemeRealm.getThemeById("1253")
                 val filterThemeDB = ItemFilter(
                     "Тема",
                     ThemeDB::class,
@@ -370,11 +370,11 @@ class AdditionalRequirementsDBViewModel @Inject constructor(
                 val author = "<b>Автор: </b>"
                 bAuthor.append(author)
                 try {
-                    Log.e("AdditionalRequirements", "Автор: " + data.getAuthorId())
+                    Log.e("AdditionalRequirements", "Автор: " + data.authorId)
                     val author2 =
                         String.format(
                             "%s",
-                            UsersRealm.getUsersDBById(data.getAuthorId().toInt()).nm
+                            UsersRealm.getUsersDBById(data.authorId.toInt()).nm
                         )
                     bAuthor.append(author2)
                 } catch (e: Exception) {

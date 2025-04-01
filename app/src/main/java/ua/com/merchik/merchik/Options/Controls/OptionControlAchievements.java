@@ -221,7 +221,7 @@ public class OptionControlAchievements<T> extends OptionControl {
                         if ((!spisTovOSV.isEmpty() || !spisTMOSV.isEmpty()) &&
                                 (!spisTovOSV.contains(item.tovar_id.toString())) &&
                                 (!spisTMOSV.contains(item.manufacturer.toString()))) {
-                            List<TovarDB> spisTovarDBOSV = TovarRealm.getByIds(spisTovOSV.toArray(new String[spisTovOSV.size()]));
+                            List<TovarDB> spisTovarDBOSV = RealmManager.INSTANCE.copyFromRealm(TovarRealm.getByIds(spisTovOSV.toArray(new String[spisTovOSV.size()])));
 
                             String spisTovarName = "";
                             for (TovarDB tovar : spisTovarDBOSV) {

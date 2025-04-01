@@ -22,9 +22,15 @@ public class LogRealm {
     }
 
     public static LogDB getLogDbByKodOb(Long kodOb) {
-        return INSTANCE.where(LogDB.class)
+        LogDB res =  INSTANCE.where(LogDB.class)
                 .equalTo("obj_id", kodOb)
                 .findFirst();
+        if (res != null) {
+            return INSTANCE.copyFromRealm(res);
+        }else {
+            return null;
+        }
+
     }
 
     public static LogDB getLogByODADandTheme(Long kodOb, int themeId) {

@@ -4,9 +4,9 @@ import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
 import android.content.Context;
 
+import java.sql.SQLData;
 import java.util.Objects;
 
-import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.Options.OptionControl;
 import ua.com.merchik.merchik.Options.Options;
@@ -17,24 +17,24 @@ import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.ThemeRealm;
 
-public class OptionControlAddOpinion<T> extends OptionControl {
-    public int OPTION_CONTROL_OPINION_ID = 84001;
+public class OptionControlOpinionByController<T> extends OptionControl {
+    public int OPTION_CONTROL_OPINION_BY_CONTROLLER_ID = 141893;
 
     private WpDataDB wpDataDB;
     private ThemeDB themeDB;
 
-    private String opinion;
-    private int userId;
+    private String controllerOpinion;
+    private String controllerId;
     private int theme;
 
     private int optionAmountMin;
 
-    private String massageComment;
+//    private String massageComment;
     public boolean signal = false;
 
     private String opinionStatus = "0";
 
-    public OptionControlAddOpinion(Context context, T document, OptionsDB optionDB, OptionMassageType msgType, Options.NNKMode nnkMode, UnlockCodeResultListener unlockCodeResultListener) {
+    public OptionControlOpinionByController(Context context, T document, OptionsDB optionDB, OptionMassageType msgType, Options.NNKMode nnkMode, UnlockCodeResultListener unlockCodeResultListener) {
         this.context = context;
         this.document = document;
         this.optionDB = optionDB;
@@ -63,36 +63,49 @@ public class OptionControlAddOpinion<T> extends OptionControl {
     private void executeOption() {
         try {
             if (wpDataDB != null) {
-                opinion = wpDataDB.getUser_opinion_id();
-                userId = wpDataDB.getUser_id();
-                massageComment = "Думка виконавця стосовно візиту: ";
-            }
-            String opinionText = "";
-            try {
-                opinionText = SQL_DB.opinionDao().getOpinionById(Integer.parseInt(opinion)).nm;
-            } catch (Exception e) {
-                opinionText = "Помилка при визначенні теми, зверніться до керівника";
+                controllerOpinion = wpDataDB.getController_opinion_id();
+                controllerId = wpDataDB.getController_opinion_author_id();
+//                massageComment = "Думка виконавця стосовно візиту";
             }
 
+
             //2.0. готовим сообщение и сигнал
-            if (Objects.equals(opinion, "0")) {  //значит нет мнения
-                stringBuilderMsg.append("Не зазначена ").append(massageComment);
-                opinionStatus ="0";
-                signal = true;
-            } else {
-                stringBuilderMsg.append(massageComment)
-                        .append(opinionText)
-                        .append(" - прийнята.");
-                opinionStatus ="1";
-                signal = false;
+            if (controllerOpinion != null && !controllerOpinion.isEmpty() && !controllerOpinion.equals("0")) {
+                String author;
+                String opinion;
+                try {
+                    opinion = SQL_DB.opinionDao().getOpinionById(Integer.parseInt(controllerOpinion)).nm;
+                } catch (Exception e) {
+                    opinion = "Помилка при визначенні теми, зверніться до керівника";
+                }
+                try {
+                    author = SQL_DB.usersDao().getUserName(Integer.parseInt(controllerId));
+                } catch (Exception e){
+                    author = "автор не визначено";
+                }
+                if (Objects.equals(controllerOpinion, "3")
+                        || Objects.equals(controllerOpinion, "8")
+                        || Objects.equals(controllerOpinion, "9")
+                        || Objects.equals(controllerOpinion, "29")) {  //значит нет мнения
+                    stringBuilderMsg.append("По поточному відвідуванню, від контролера ")
+                            .append(author)
+                            .append(", отримано зауваження: ")
+                            .append(opinion);
+                    signal = true;
+                } else {
+                    stringBuilderMsg.append("Думка контролера: ")
+                            .append(opinion)
+                            .append(". Зауважень нема.");
+                    signal = false;
+                }
             }
 
             // 4.0
             if (signal) {
                 if (optionDB.getBlockPns().equals("1") && wpDataDB.getStatus() == 0) {    //блокировать проведение, если есть сигнал
-                    stringBuilderMsg.append("\n\nДокумент проведен не будет!");
+                    stringBuilderMsg.append("\n\nДокумент проведено не буде!");
                 } else {
-                    stringBuilderMsg.append("\n\nВы можете получить Премиальные БОЛЬШЕ, если будете заполнять комментарий корректно.");
+                    stringBuilderMsg.append("\n\nВи можете отримати БІЛЬШІ преміальні, якщо по кожному клієнту Оцініть ВСІ затверджені Фото Зразків Викладки (Планограми) БУДЬ-ЯКОЮ оцінкою.");
                 }
             }
 
