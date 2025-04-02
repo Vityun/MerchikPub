@@ -141,7 +141,7 @@ public class OptionControlCheckDetailedReport<T> extends OptionControl {
         }
 
         //8.0. виключения на випадок, якщо товару на ТТ взагалі нема
-        if (signal && colSKU == 0) {
+        if (signal) {
             if (Objects.equals(wpDataDB.getUser_opinion_id(), "59")) {
                 signal = false;
                 spannableStringBuilder.append("\n").append("Cповіщення про ВІДСУТНІСТЬ товару на ТТ замовнику відправлено, сигнал знятий!");

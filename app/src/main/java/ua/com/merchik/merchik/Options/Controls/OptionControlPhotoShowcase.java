@@ -11,8 +11,10 @@ import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.Options.OptionControl;
@@ -44,7 +46,7 @@ public class OptionControlPhotoShowcase<T> extends OptionControl {
     private Date dateTo;
     private long dad2;
     private int percentValue;
-    private int perShowcase;
+//    private int perShowcase;
 
     private WpDataDB wpDataDB;
     private UsersSDB usersSDB;
@@ -117,6 +119,7 @@ public class OptionControlPhotoShowcase<T> extends OptionControl {
             List<StackPhotoDB> list = new ArrayList<>();
             // Создаем счетчик для подсчета заполненных showcase_id
             int filledShowcaseIdsCount = 0;
+            Set<String> uniqueExampleIds = new HashSet<>(); // Для уникальности example_id
             // Проверяем каждый showcase_id в списке stackPhotoDBSList
             for (StackPhotoDB stackPhotoDB : stackPhotoDBSList) {
                 String showcaseIdStack = stackPhotoDB.showcase_id; // Получаем showcase_id из объекта StackPhotoDB
@@ -132,25 +135,29 @@ public class OptionControlPhotoShowcase<T> extends OptionControl {
                                             .anyMatch(showcaseSDB -> showcaseSDB.id.equals(showcaseId)));
 
                     if (isShowcaseIdPresent) {
-                        list.add(stackPhotoDB);
+                        String exampleId = stackPhotoDB.getExample_id();
+                        // Проверяем example_id на уникальность и непустоту
+                        if (exampleId != null && !exampleId.isEmpty() && uniqueExampleIds.add(exampleId)) {
+                            list.add(stackPhotoDB);
+                        }
                     }
                 }
             }
 
             //3.3. підрахуємо відсоток світлин у котррих зазначениа вітрина
             try {
-                percentValue = 100 * filledShowcaseIdsCount / stackPhotoDBSList.size();
+                percentValue = 100 * list.size() / showcaseSDBList.size();
             } catch (Exception e) {
                 percentValue = 0;
                 Globals.writeToMLOG("ERROR", "OptionControlPhotoShowcase/executeOption/percentValue", "Exception e: " + e);
             }
 
-            try {
-                perShowcase = (int) 100 * filledShowcaseIdsCount / list.size();
-            }catch (Exception e){
-                perShowcase = 0;
-                Globals.writeToMLOG("ERROR", "OptionControlPhotoShowcase/executeOption/perShowcase", "Exception e: " + e);
-            }
+//            try {
+//                perShowcase = (int) 100 * filledShowcaseIdsCount / list.size();
+//            } catch (Exception e) {
+//                perShowcase = 0;
+//                Globals.writeToMLOG("ERROR", "OptionControlPhotoShowcase/executeOption/perShowcase", "Exception e: " + e);
+//            }
 
 
             //3.4
@@ -190,18 +197,22 @@ public class OptionControlPhotoShowcase<T> extends OptionControl {
                 signal = true;
             } else if (colMin > 0 && percentValue < colMin && newTT == 0 && showcaseSDBList.size() > 0) {
                 stringBuilderMsg.append("При виготовленні світлин (вітрина панорамна), Ви зазначили вітрини лише у ")
-                        .append(filledShowcaseIdsCount)
+                        .append(list.size())
                         .append(" фото з ")
-                        .append(stackPhotoDBSList.size()).append(" (")
-                            .append(percentValue).append("%) що МЕНШЕ плану в ").append(colMin).append("%").append(" Загальна кількість вітрин на ТТ: ")
-                            .append(showcaseSDBList.size()).append(", з них фото зроблено по ").append(stackPhotoDBSList.size()).append("(").append(perShowcase).append("%)");
+                        .append(showcaseSDBList.size()).append(" (")
+                        .append(percentValue).append("%) що МЕНШЕ плану в ").append(colMin).append("%")
+                        .append(" Загальна кількість вітрин на ТТ: ")
+                        .append(showcaseSDBList.size())
+                        .append(", а усього фото зроблено ").append(stackPhotoDBSList.size());
+//                        .append("(").append(perShowcase).append("%)");
                 signal = true;
             } else if (showcaseSDBList.size() > 0 && list.size() < showcaseSDBList.size() * colMin / 100) {
                 stringBuilderMsg.append("При виготовленні світлин (вітрина панорамна), Ви сфотографували лише у ")
                         .append(list.size())
                         .append(" вітрин з ")
                         .append(stackPhotoDBSList.size()).append(" присутніх на ТТ(")
-                        .append(perShowcase).append("%) що МЕНШЕ плану в ").append(colMin).append("%");
+                        .append(percentValue)
+                        .append(" що МЕНШЕ плану в ").append(colMin).append("%");
                 signal = false;
 
             } else if (showcaseSDBList.size() == 0 && list.size() == 0 && newTT == 1) {
@@ -225,12 +236,14 @@ public class OptionControlPhotoShowcase<T> extends OptionControl {
             }*/
             else {
                 stringBuilderMsg.append("При виготовленні світлин, Ви зазначили вітрини у ")
-                        .append(filledShowcaseIdsCount)
+                        .append(list.size())
                         .append(" з ")
                         .append(stackPhotoDBSList.size()).append(" СВІТЛИН ").append(" (").append(percentValue).append("%) що БІЛЬШЕ плану в ")
                         .append(colMin).append("%.").append(" Загальна кількість вітрин на ТТ: ")
-                        .append(showcaseSDBList.size()).append(", з них фото зроблено по ").append(stackPhotoDBSList.size()).append("(")
-                        .append(perShowcase).append("%)").append(" Зауважень немає.");
+                        .append(showcaseSDBList.size())
+                        .append(", а усього фото зроблено по ").append(stackPhotoDBSList.size())
+//                        .append("(").append(perShowcase).append("%)")
+                        .append(". Зауважень немає.");
                 signal = false;
             }
 
