@@ -446,8 +446,9 @@ public class OptionControlEKL<T> extends OptionControl {
                 .append((ekl_date != -1 && ekl_date > countDay) ? ", що меньше " : ", що більше ")
                 .append(DAYS + " днів, тому ваші преміальні ")
                 .append(bonus >= 0 ? "збільшено" : "зменшено").append(" на ")
-                .append(bonus >= 0 ? Html.fromHtml("<font color=green>" + bonus + "%</font>") : Html.fromHtml("<font color=red>" + bonus + "%</font>"))
-                .append(", що становитиме ").append(bonus >= 0 ? Html.fromHtml("<font color=green>" + valBonus + "%</font>") : Html.fromHtml("<font color=red>" + valBonus + "</font>")).append(".")
+//                .append(bonus >= 0 ? Html.fromHtml("<font color=green>" + bonus + "%</font>") : Html.fromHtml("<font color=red>" + bonus + "%</font>"))
+//                .append(", що становитиме ")
+                .append(bonus >= 0 ? Html.fromHtml("<font color=green>" + valBonus + "%</font>") : Html.fromHtml("<font color=red>" + valBonus + "</font>")).append(".")
                 .append("\n")
                 .append((ekl_date != -1 && ekl_date > countDay) ? "" : "Якщо ви отримаєте ЕКЛ по будь-яким клієнту, то відсоток поточних відрахувань буде зменшено вдвічі.")
                 .append("");

@@ -250,13 +250,13 @@ public class DialogAchievement {
 
     // =============================================================================================
 
-    public void setAchievement(AchievementsSDB achievement){
+    public void setAchievement(AchievementsSDB achievement) {
         setTitle("Досягнення (" + achievement.serverId + ")");
         setPhotos(achievement);
         setAchievementData(achievement);
     }
 
-    private void setAchievementData(AchievementsSDB achievement){
+    private void setAchievementData(AchievementsSDB achievement) {
         try {
             CustomerSDB customerSDB = SQL_DB.customerDao().getById(achievement.clientId);
             UsersSDB usersSDB = SQL_DB.usersDao().getById(achievement.userId);
@@ -270,20 +270,20 @@ public class DialogAchievement {
             sb.append("Коментар: ").append(achievement.commentTxt).append("\n");
 
             setText(sb);
-        }catch (Exception e){
+        } catch (Exception e) {
             Globals.writeToMLOG("ERROR", "setAchievementData", "Exception e: " + e);
         }
     }
 
-    private void setPhotos(AchievementsSDB achievement){
+    private void setPhotos(AchievementsSDB achievement) {
         try {
             stackPhotoBefore = StackPhotoRealm.getByHash(achievement.img_before_hash);
-            if (stackPhotoBefore == null){
+            if (stackPhotoBefore == null) {
                 stackPhotoBefore = StackPhotoRealm.getByServerId(String.valueOf(achievement.imgBeforeId));
             }
 
             stackPhotoAfter = StackPhotoRealm.getByHash(achievement.img_after_hash);
-            if (stackPhotoAfter == null){
+            if (stackPhotoAfter == null) {
                 stackPhotoAfter = StackPhotoRealm.getByServerId(String.valueOf(achievement.imgAfterId));
             }
 
