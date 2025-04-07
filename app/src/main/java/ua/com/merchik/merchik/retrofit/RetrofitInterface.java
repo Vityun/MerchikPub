@@ -677,7 +677,7 @@ public interface RetrofitInterface {
             @Body JsonObject json);
 
     @POST("mobile_app.php?")
-    Call<PlanogrammVizitShowcaseResponse> PLANOGRAMM_VIZIT_SHOWCASE_RESPONSE(
+    Single<PlanogrammVizitShowcaseResponse> PLANOGRAMM_VIZIT_SHOWCASE_RESPONSE(
             @Header("ContentType") String content,
             @Body JsonObject json);
 

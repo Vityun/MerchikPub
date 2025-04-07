@@ -18,11 +18,13 @@ import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.Database.Room.Planogram.PlanogrammSDB;
+import ua.com.merchik.merchik.data.Database.Room.Planogram.PlanogrammVizitShowcaseSDB;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.planogramm.PlanogrammAddressResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.planogramm.PlanogrammGroupResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.planogramm.PlanogrammImagesResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.planogramm.PlanogrammResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.planogramm.PlanogrammTypeResponse;
+import ua.com.merchik.merchik.data.RetrofitResponse.tables.planogramm.PlanogrammVizitShowcaseResponse;
 import ua.com.merchik.merchik.data.TestJsonUpload.StandartData;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.PlanogrammTypeDao;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
@@ -347,7 +349,9 @@ public class PlanogrammTableExchange {
                 .subscribe(planorgammType -> {
                     if (planorgammType.state && planorgammType.list != null) {
                         SQL_DB.planogrammTypeDao()
-                                .insertAll(planorgammType.list);
+                                .insertAll(planorgammType.list)
+                                .subscribeOn(Schedulers.io())
+                                .subscribe();
                         Globals.writeToMLOG("INFO", "PlanogrammTableExchange/planogrammType", "Data inserted successfully");
                     }
                 }, throwable -> Globals.writeToMLOG("ERROR", "PlanogrammTableExchange/planorgammType", "exeption: " + throwable.getMessage()));
@@ -386,8 +390,6 @@ public class PlanogrammTableExchange {
             public void onResponse(Call<PlanogrammResponse> call, Response<PlanogrammResponse> response) {
                 Log.e("MAIN_test", "planogramDownload: " + response);
                 Log.e("MAIN_test", "planogramDownload body: " + response.body());
-
-                Log.e("test", "test" + response);
                 try {
                     if (response.isSuccessful()) {
                         if (response.body() != null) {
@@ -446,4 +448,57 @@ public class PlanogrammTableExchange {
         });
     }
 
+
+    // Загрузка таблицы визитов планоргам
+    public void planogrammVisitShowcase() {
+
+        StandartData data = new StandartData();
+        data.mod = "planogram";
+        data.act = "vizit_showcase_list";
+        data.nolimit = "1";
+
+        data.date_from = Clock.today_7;
+        data.date_to = Clock.tomorrow7;
+
+        Gson gson = new Gson();
+        String json = gson.toJson(data);
+        JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
+
+//        retrofit2.Call<JsonObject> call1 = RetrofitBuilder.getRetrofitInterface().TEST_JSON_UPLOAD(RetrofitBuilder.contentType, convertedObject);
+//        call1.enqueue(new Callback<JsonObject>() {
+//            @Override
+//            public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
+//                Log.e("planogramDownload", "planogramDownload: " + response.body());
+//                Globals.writeToMLOG("INFO", "1_D_PlanogrammSDB", "response: " + response.body());
+//
+//            }
+//
+//            @Override
+//            public void onFailure(Call<JsonObject> call, Throwable t) {
+//                Log.e("planogramDownload", "planogramDownloadThrowable t: " + t);
+//                Globals.writeToMLOG("INFO", "1_D_PlanogrammSDB", "Throwable t: " + t);
+//            }
+//        });
+
+
+        RetrofitBuilder.getRetrofitInterface()
+                .PLANOGRAMM_VIZIT_SHOWCASE_RESPONSE(RetrofitBuilder.contentType, convertedObject)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(planogrammVizitShowcaseResponse -> {
+                    if (planogrammVizitShowcaseResponse.state && planogrammVizitShowcaseResponse.list != null) {
+                        SQL_DB.planogrammVizitShowcaseDao()
+                                .insertAll(planogrammVizitShowcaseResponse.list)
+                                .subscribeOn(Schedulers.io())
+                                .subscribe();
+                        Globals.writeToMLOG("INFO", "PlanogrammTableExchange/planogrammVisitShowcase", "Data inserted successfully");
+                    }
+                },
+                        throwable -> {
+                    String er = throwable.getMessage();
+                    Globals.writeToMLOG("ERROR", "PlanogrammTableExchange/planogrammVisitShowcase", "exeption: " + throwable.getMessage());
+                        });
+
+
+    }
 }

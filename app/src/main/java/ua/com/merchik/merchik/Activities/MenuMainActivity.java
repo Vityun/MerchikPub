@@ -156,8 +156,8 @@ public class MenuMainActivity extends toolbar_menus {
     private void test() {
 
 
-        TablesLoadingUnloading tablesLoadingUnloading = new TablesLoadingUnloading();
-        tablesLoadingUnloading.downloadWPData();
+//        TablesLoadingUnloading tablesLoadingUnloading = new TablesLoadingUnloading();
+//        tablesLoadingUnloading.downloadWPData();
 //        .downloadAdditionalRequirements();
         StandartData data = new StandartData();
         data.mod = "planogram";
@@ -190,21 +190,21 @@ public class MenuMainActivity extends toolbar_menus {
 //            }
 //        });
 //
-        retrofit2.Call<PlanogrammVizitShowcaseResponse> planogramm = RetrofitBuilder.getRetrofitInterface().PLANOGRAMM_VIZIT_SHOWCASE_RESPONSE(RetrofitBuilder.contentType, convertedObject);
-        planogramm.enqueue(new Callback<PlanogrammVizitShowcaseResponse>() {
-            @Override
-            public void onResponse(Call<PlanogrammVizitShowcaseResponse> call, Response<PlanogrammVizitShowcaseResponse> response) {
-                Log.e("planogramDownload", "planogramDownload: " + response.body());
-                Globals.writeToMLOG("INFO", "1_D_PlanogrammSDB", "response: " + response.body());
-
-            }
-
-            @Override
-            public void onFailure(Call<PlanogrammVizitShowcaseResponse> call, Throwable t) {
-                Log.e("planogramDownload", "planogramDownloadThrowable t: " + t);
-                Globals.writeToMLOG("INFO", "1_D_PlanogrammSDB", "Throwable t: " + t);
-            }
-        });
+//        retrofit2.Call<PlanogrammVizitShowcaseResponse> planogramm = RetrofitBuilder.getRetrofitInterface().PLANOGRAMM_VIZIT_SHOWCASE_RESPONSE(RetrofitBuilder.contentType, convertedObject);
+//        planogramm.enqueue(new Callback<PlanogrammVizitShowcaseResponse>() {
+//            @Override
+//            public void onResponse(Call<PlanogrammVizitShowcaseResponse> call, Response<PlanogrammVizitShowcaseResponse> response) {
+//                Log.e("planogramDownload", "planogramDownload: " + response.body());
+//                Globals.writeToMLOG("INFO", "1_D_PlanogrammSDB", "response: " + response.body());
+//
+//            }
+//
+//            @Override
+//            public void onFailure(Call<PlanogrammVizitShowcaseResponse> call, Throwable t) {
+//                Log.e("planogramDownload", "planogramDownloadThrowable t: " + t);
+//                Globals.writeToMLOG("INFO", "1_D_PlanogrammSDB", "Throwable t: " + t);
+//            }
+//        });
 
 //        photoDownloaderViewModel.scheduleDownload();
 

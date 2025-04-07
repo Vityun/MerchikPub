@@ -31,7 +31,8 @@ public class RoomManager {
                         MIGRATION_56_57,
                         MIGRATION_57_58,
                         MIGRATION_58_59,
-                        MIGRATION_59_60
+                        MIGRATION_59_60,
+                        MIGRATION_60_61
                 )
 
                 .build();
@@ -613,6 +614,52 @@ public class RoomManager {
                     "`dt_update` INTEGER, " + // Время последнего изменения
                     "`kol` INTEGER, " + // Количество (для суммирования при свертке)
                     "PRIMARY KEY(`id`))");
+        }
+    };
+
+    static final Migration MIGRATION_60_61 = new Migration(60, 61) {
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase database) {
+            // 1. Создаем временную таблицу с новой структурой
+            database.execSQL("CREATE TABLE IF NOT EXISTS `planogram_vizit_showcase_temp` (" +
+                    "`id` INTEGER NOT NULL, " +
+                    "`dt` INTEGER, " +
+                    "`isp` TEXT, " +
+                    "`client_id` TEXT, " +
+                    "`addr_id` INTEGER, " +
+                    "`code_dad2` INTEGER, " +
+                    "`planogram_id` INTEGER, " +
+                    "`planogram_photo_id` INTEGER, " +
+                    "`showcase_id` INTEGER, " +
+                    "`showcase_photo_id` INTEGER, " +
+                    "`photo_do_id` INTEGER, " +
+                    "`theme_id` INTEGER, " +
+                    "`option_id` INTEGER, " +
+                    "`comments` TEXT, " +
+                    "`object_a` INTEGER, " +
+                    "`object_a_theme_id` INTEGER, " +
+                    "`object_b` INTEGER, " +
+                    "`object_b_theme_id` INTEGER, " +
+                    "`author_id` INTEGER, " +
+                    "`dt_update` TEXT, " + // Измененный тип
+                    "`kol` INTEGER, " +
+                    "PRIMARY KEY(`id`))");
+
+            // 2. Копируем данные из старой таблицы, преобразуя dt_update в TEXT
+            database.execSQL("INSERT INTO `planogram_vizit_showcase_temp` SELECT " +
+                    "id, dt, isp, client_id, addr_id, code_dad2, planogram_id, " +
+                    "planogram_photo_id, showcase_id, showcase_photo_id, photo_do_id, " +
+                    "theme_id, option_id, comments, object_a, object_a_theme_id, " +
+                    "object_b, object_b_theme_id, author_id, " +
+                    "CASE WHEN dt_update IS NULL THEN NULL ELSE CAST(dt_update AS TEXT) END, " + // Преобразование INTEGER в TEXT
+                    "kol " +
+                    "FROM `planogram_vizit_showcase`");
+
+            // 3. Удаляем старую таблицу
+            database.execSQL("DROP TABLE `planogram_vizit_showcase`");
+
+            // 4. Переименовываем временную таблицу
+            database.execSQL("ALTER TABLE `planogram_vizit_showcase_temp` RENAME TO `planogram_vizit_showcase`");
         }
     };
 }

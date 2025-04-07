@@ -175,6 +175,7 @@ class MainRepository(
             SamplePhotoSDB::class -> roomManager.samplePhotoDao().all
             AddressSDB::class -> roomManager.addressDao().all
             OpinionSDB::class -> roomManager.opinionDao().all
+            PlanogrammVizitShowcaseSDB::class-> roomManager.planogrammVizitShowcaseDao().all
             else -> { return emptyList() }
         }
     }

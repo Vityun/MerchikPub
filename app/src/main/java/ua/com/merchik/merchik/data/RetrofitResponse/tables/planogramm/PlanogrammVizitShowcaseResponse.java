@@ -14,7 +14,4 @@ public class PlanogrammVizitShowcaseResponse {
     @SerializedName("list")
     public List<PlanogrammVizitShowcaseSDB> list;
 
-    @SerializedName("error")
-    public String error;
-
 }

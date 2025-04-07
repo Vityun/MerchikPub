@@ -284,6 +284,8 @@ public class AdditionalRequirementsRealm {
                     .equalTo("themeId", "998")
                     .or()
                     .equalTo("themeId", "977")
+                    .or()
+                    .equalTo("themeId", "1253")
                     .findAll();
         } else {
             realmResults = realmResults.where()

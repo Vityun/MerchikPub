@@ -125,7 +125,7 @@ public class PlanogrammVizitShowcaseSDB implements DataObjectUI {
     @SerializedName("dt_update")
     @Expose
     @ColumnInfo(name = "dt_update")
-    public Long dt_update;  // Время последнего изменения
+    public String dt_update;  // Время последнего изменения
 
     @SerializedName("kol")
     @Expose
