@@ -454,11 +454,11 @@ public class menu_login extends AppCompatActivity {
                     Manifest.permission.CALL_PHONE}, PERMISSION_REQUEST_CODE);
         } else
             ActivityCompat.requestPermissions(this, new String[]{
-                Manifest.permission.CAMERA,
-                Manifest.permission.ACCESS_FINE_LOCATION,
-                Manifest.permission.READ_EXTERNAL_STORAGE,
-                Manifest.permission.WRITE_EXTERNAL_STORAGE,
-                Manifest.permission.CALL_PHONE}, PERMISSION_REQUEST_CODE);
+                    Manifest.permission.CAMERA,
+                    Manifest.permission.ACCESS_FINE_LOCATION,
+                    Manifest.permission.READ_EXTERNAL_STORAGE,
+                    Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                    Manifest.permission.CALL_PHONE}, PERMISSION_REQUEST_CODE);
     }
 
     @Override
@@ -1331,13 +1331,13 @@ public class menu_login extends AppCompatActivity {
             Handler handler = new Handler(Looper.getMainLooper());
             Runnable timeoutRunnable = () ->
 //                Toast.makeText(this, "Сервер сейчас занят, ожидание может быть дольше", Toast.LENGTH_LONG).show();
-                dialogBuilder
-                        .setStatus(DialogStatus.ALERT)
-                        .setTitle("Сервер сейчас занят")
-                        .setSubTitle("Время ответа от сервера может быть больше чем обычно")
-                        .setMessage("На данный момент сервер загружен и время ожидания может быть больше чем обычно. Ни в коем случае не переустанавливайте приложение, так как время ожидания увеличиться во много раз, и вы можете потерять часть данных, которые не были переданы на сервер")
-                        .setOnConfirmAction(() -> Unit.INSTANCE)
-                        .show();
+                    dialogBuilder
+                            .setStatus(DialogStatus.ALERT)
+                            .setTitle("Сервер сейчас занят")
+                            .setSubTitle("Время ответа от сервера может быть больше чем обычно")
+                            .setMessage("На данный момент сервер загружен и время ожидания может быть больше чем обычно. Ни в коем случае не переустанавливайте приложение, так как время ожидания увеличиться во много раз, и вы можете потерять часть данных, которые не были переданы на сервер")
+                            .setOnConfirmAction(() -> Unit.INSTANCE)
+                            .show();
 
 // Запускаем таймер на 5 секунд
             handler.postDelayed(timeoutRunnable, 10000);
@@ -1353,8 +1353,10 @@ public class menu_login extends AppCompatActivity {
                             Log.e("loginOnServer", "response.body(): " + response.body().getState());
                             wil = 0;
                             appLogin();
+                            dialogBuilder.dismiss();
                         } else {
                             withoutLogin();
+                            dialogBuilder.dismiss();
                         }
                     }
                 }
@@ -1363,6 +1365,7 @@ public class menu_login extends AppCompatActivity {
                 public void onFailure(retrofit2.Call<Login> call, Throwable t) {
                     handler.removeCallbacks(timeoutRunnable);
                     withoutLogin();
+                    dialogBuilder.dismiss();
                 }
             });
         } catch (Exception e) {
@@ -1661,7 +1664,7 @@ public class menu_login extends AppCompatActivity {
 
                 new TablesLoadingUnloading().downloadMenu();
                 Globals.userId = appUsersDB.getUserId();
-                if (appUsersDB.user_work_plan_status != null){
+                if (appUsersDB.user_work_plan_status != null) {
                     Globals.userOwnership = appUsersDB.user_work_plan_status.equals("our");
                 }
 
@@ -1707,6 +1710,7 @@ public class menu_login extends AppCompatActivity {
      * на самом сервере. Начинает работать после внесения 3го символа.
      */
     private boolean isStatusShow = true;
+
     private void getUserLogin(String text) {
         String mod = "auth";
         String act = "login_search";

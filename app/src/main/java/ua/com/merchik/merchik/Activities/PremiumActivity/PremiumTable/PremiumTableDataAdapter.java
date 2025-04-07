@@ -171,9 +171,8 @@ public class PremiumTableDataAdapter extends RecyclerView.Adapter<PremiumTableDa
         private WpDataDB findDocument(long codeDad2) {
             if (codeDad2 != 0) {
                 WpDataDB realmWp = WpDataRealm.getWpDataRowByDad2Id(codeDad2);
-                if (realmWp != null) {
-                    return RealmManager.INSTANCE.copyFromRealm(realmWp);
-                }
+                //                    return RealmManager.INSTANCE.copyFromRealm(realmWp);
+                return realmWp;
             }
             return null;
         }

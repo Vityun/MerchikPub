@@ -2464,8 +2464,8 @@ public class Exchange {
         data.mod = "additional_requirements";
         data.act = "set_score";
 
-        List<AdditionalRequirementsMarkDB> realmList = AdditionalRequirementsMarkRealm.getToUpload();
-        List<AdditionalRequirementsMarkDB> list = RealmManager.INSTANCE.copyFromRealm(realmList);
+        List<AdditionalRequirementsMarkDB> list = AdditionalRequirementsMarkRealm.getToUpload();
+//        List<AdditionalRequirementsMarkDB> list = RealmManager.INSTANCE.copyFromRealm(realmList);
         List<MarkData> markLIST = new ArrayList<>();
 
         if (list == null) {

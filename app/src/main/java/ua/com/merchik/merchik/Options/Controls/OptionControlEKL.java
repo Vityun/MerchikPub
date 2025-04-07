@@ -421,7 +421,7 @@ public class OptionControlEKL<T> extends OptionControl {
             }
         }
 
-        int bonus = -20;
+        int bonus = -32;
         CharSequence valBonus = "";
         float shtraf = 0.32f;
         long countDay = wpDataDB.getVisit_start_dt() - (DAYS * 24 * 60 * 60);
@@ -431,11 +431,11 @@ public class OptionControlEKL<T> extends OptionControl {
             ekl_date = convertDateToSeconds(documentUser.last_ekl_date);
             if (ekl_date != -1 && ekl_date > countDay) {
                 shtraf = 0.16f;
-                bonus = -10;
+                bonus = -16;
             }
         }
         valBonus = "~" + String.format("%.2f", wpDataDB.getCash_zakaz() * shtraf);
-        valBonus = Html.fromHtml("<font color=red>" + valBonus + "грн" + "</font>");
+        valBonus = Html.fromHtml("<font color=red>" + valBonus + " грн" + "</font>");
 
 
         // 07.03.25 добавил штрафы/премии в экл
@@ -446,7 +446,9 @@ public class OptionControlEKL<T> extends OptionControl {
                 .append((ekl_date != -1 && ekl_date > countDay) ? ", що меньше " : ", що більше ")
                 .append(DAYS + " днів, тому ваші преміальні ")
                 .append(bonus >= 0 ? "збільшено" : "зменшено").append(" на ")
-//                .append(bonus >= 0 ? Html.fromHtml("<font color=green>" + bonus + "%</font>") : Html.fromHtml("<font color=red>" + bonus + "%</font>"))
+                .append(bonus == -32 ? "подвiйну суму, що становитиме " : "")
+//                .append(" на ")
+//                .append(bonus >= 0 ? Html.fromHtml("<font color=green>~" + Math.abs(bonus) + "%</font>") : Html.fromHtml("<font color=red>~" + Math.abs(bonus) + "%</font>"))
 //                .append(", що становитиме ")
                 .append(bonus >= 0 ? Html.fromHtml("<font color=green>" + valBonus + "%</font>") : Html.fromHtml("<font color=red>" + valBonus + "</font>")).append(".")
                 .append("\n")

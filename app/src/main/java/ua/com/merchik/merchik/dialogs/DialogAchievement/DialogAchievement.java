@@ -287,9 +287,11 @@ public class DialogAchievement {
                 stackPhotoAfter = StackPhotoRealm.getByServerId(String.valueOf(achievement.imgAfterId));
             }
 
-            File file = new File(stackPhotoBefore.getPhoto_num());
-            Bitmap b = decodeSampledBitmapFromResource(file, 200, 200);
-            photoTo.setImageBitmap(b);
+            if (stackPhotoBefore.getPhoto_num() != null && !stackPhotoBefore.getPhoto_num().isEmpty()) {
+                File file = new File(stackPhotoBefore.getPhoto_num());
+                Bitmap b = decodeSampledBitmapFromResource(file, 200, 200);
+                photoTo.setImageBitmap(b);
+            }
             photoTo.setOnClickListener(v1 -> {
                 try {
                     DialogFullPhotoR dialogFullPhoto = new DialogFullPhotoR(v1.getContext());
@@ -301,9 +303,11 @@ public class DialogAchievement {
                 }
             });
 
-            File file2 = new File(stackPhotoAfter.getPhoto_num());
-            Bitmap b2 = decodeSampledBitmapFromResource(file2, 200, 200);
-            photoAfter.setImageBitmap(b2);
+            if (stackPhotoAfter.getPhoto_num() != null && !stackPhotoAfter.getPhoto_num().isEmpty()) {
+                File file2 = new File(stackPhotoAfter.getPhoto_num());
+                Bitmap b2 = decodeSampledBitmapFromResource(file2, 200, 200);
+                photoAfter.setImageBitmap(b2);
+            }
             photoAfter.setOnClickListener(v1 -> {
                 try {
                     DialogFullPhotoR dialogFullPhoto = new DialogFullPhotoR(v1.getContext());

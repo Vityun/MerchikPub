@@ -223,7 +223,8 @@ public class DialogCreateAchievement {
                 achievementsSDB.adresaNm = addressTxt;
                 achievementsSDB.dvi = 1;
                 achievementsSDB.error = 0;
-                achievementsSDB.tovar_id = Objects.requireNonNullElse(AchievementDataHolder.Companion.instance().getTovarId(), 0);;
+                achievementsSDB.tovar_id = Objects.requireNonNullElse(AchievementDataHolder.Companion.instance().getTovarId(), 0);
+                ;
                 achievementsSDB.currentVisit = 0;
                 achievementsSDB.score = "0";
                 achievementsSDB.clientId = clientId;
@@ -303,7 +304,7 @@ public class DialogCreateAchievement {
         /* 05.02.2025
          TODO это хреновый костыль довести до ума
          */
-        Log.e("--------------","+++++++");
+        Log.e("--------------", "+++++++");
 //        Intent intent = new Intent(context, FeaturesActivity.class);
 //        ActivityCompat.startActivityForResult((Activity) context, intent, NEED_UPDATE_UI_REQUEST, null);
 
@@ -472,11 +473,13 @@ public class DialogCreateAchievement {
     public void setPhotoDo(StackPhotoDB stackPhotoDB) {
         stackPhotoDBTo = stackPhotoDB;
         photoToIV.setVisibility(View.VISIBLE);
-        photoToIV.setImageURI(Uri.parse(stackPhotoDB.photo_num));
+        if (stackPhotoDB.photo_num != null && !stackPhotoDB.photo_num.isEmpty())
+            photoToIV.setImageURI(Uri.parse(stackPhotoDB.photo_num));
         photoToIV.setOnClickListener(v1 -> {
             try {
                 DialogFullPhotoR dialogFullPhoto = new DialogFullPhotoR(v1.getContext());
-                dialogFullPhoto.setPhoto(Uri.parse(stackPhotoDB.photo_num));
+                if (stackPhotoDB.photo_num != null && !stackPhotoDB.photo_num.isEmpty())
+                    dialogFullPhoto.setPhoto(Uri.parse(stackPhotoDB.photo_num));
                 dialogFullPhoto.setClose(dialogFullPhoto::dismiss);
                 dialogFullPhoto.show();
             } catch (Exception e) {

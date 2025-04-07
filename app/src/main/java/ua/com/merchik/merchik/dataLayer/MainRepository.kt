@@ -16,6 +16,7 @@ import ua.com.merchik.merchik.data.Database.Room.BonusSDB
 import ua.com.merchik.merchik.data.Database.Room.CustomerSDB
 import ua.com.merchik.merchik.data.Database.Room.OpinionSDB
 import ua.com.merchik.merchik.data.Database.Room.Planogram.PlanogrammSDB
+import ua.com.merchik.merchik.data.Database.Room.Planogram.PlanogrammVizitShowcaseSDB
 import ua.com.merchik.merchik.data.Database.Room.SamplePhotoSDB
 import ua.com.merchik.merchik.data.Database.Room.SettingsUISDB
 import ua.com.merchik.merchik.data.Database.Room.UsersSDB
@@ -72,6 +73,8 @@ class MainRepository(
                 VacancySDB::class -> roomManager.vacancyDao().all.first() as DataObjectUI
                 SamplePhotoSDB::class -> roomManager.samplePhotoDao().all.first() as DataObjectUI
                 AddressSDB::class -> roomManager.addressDao().all.first() as DataObjectUI
+                PlanogrammVizitShowcaseSDB::class-> roomManager.planogrammVizitShowcaseDao().all.first() as DataObjectUI
+
                 else -> { null }
             }
         }

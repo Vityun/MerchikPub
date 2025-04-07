@@ -1409,14 +1409,21 @@ public class Globals {
 
         String osVerApi = String.valueOf(Build.VERSION.SDK_INT);
         Log.e("getAppInfoToSession", "Build.VERSION.SDK_INT: " + Build.VERSION.SDK_INT);
-        String brovVer = "";
+//        String brovVer = "";
+//        try {
+//            brovVer = context.getPackageManager().getPackageInfo(context.getPackageName(), 0).versionName;
+//            brovVer = brovVer.replaceAll("\\.", "");
+//        } catch (PackageManager.NameNotFoundException e) {
+//            e.printStackTrace();
+//        }
+        String getRadioVersion;
         try {
-            brovVer = context.getPackageManager().getPackageInfo(context.getPackageName(), 0).versionName;
-            brovVer = brovVer.replaceAll("\\.", "");
-        } catch (PackageManager.NameNotFoundException e) {
-            e.printStackTrace();
+            getRadioVersion = Build.getRadioVersion();
+            if (getRadioVersion == null)
+                getRadioVersion = "no_sim_module";
+        } catch (Exception e) {
+            getRadioVersion = "no_sim_module";
         }
-        String getRadioVersion = Build.getRadioVersion();
 
 //        DialogData dialog = new DialogData(context);
 //        try {
