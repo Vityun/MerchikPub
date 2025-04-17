@@ -1221,6 +1221,7 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
 
                         try {
 //                    tablesLoadingUnloading.updateWpData();
+//                            exchange.sendARMark();
                         } catch (Exception e) {
                         }
 

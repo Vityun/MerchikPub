@@ -2,7 +2,8 @@
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:orientation="vertical" android:layout_width="match_parent"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
     android:layout_height="match_parent">
 
     <ImageButton
@@ -69,20 +70,18 @@
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/dialog_layout"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_height="0dp"
         android:layout_marginTop="4dp"
-        android:layout_marginBottom="32dp"
         android:background="@drawable/shape_rounded_corner"
-        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/imageButtonClose"
-        app:layout_constraintVertical_bias="0.0">
+        app:layout_constraintTop_toBottomOf="@+id/imageButtonClose">
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/photos_recycler"
             android:layout_width="0dp"
             android:layout_height="300dp"
+            android:minHeight="200dp"
             android:layout_marginStart="16dp"
             android:layout_marginLeft="16dp"
             android:layout_marginTop="16dp"
@@ -94,20 +93,6 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
-        <!--        <ImageView
-            android:id="@+id/photo"
-            android:layout_width="313dp"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
-            android:layout_marginLeft="16dp"
-            android:layout_marginTop="16dp"
-            android:layout_marginEnd="16dp"
-            android:layout_marginRight="16dp"
-            android:visibility="visible"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:srcCompat="@mipmap/merchik" />-->
 
         <TextView
             android:id="@+id/photo_info"
@@ -123,6 +108,7 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/photos_recycler"
+            app:layout_constraintBottom_toTopOf="@+id/dvi"
             tools:text="TextView" />
 
         <CheckBox
@@ -138,7 +124,9 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/photo_info" />
+            app:layout_constraintTop_toBottomOf="@+id/photo_info"
+            app:layout_constraintBottom_toTopOf="@+id/textView56"
+            />
 
         <EditText
             android:id="@+id/add_comment"
@@ -153,7 +141,9 @@
             android:imeOptions="actionDone"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/textView56" />
+            app:layout_constraintTop_toBottomOf="@+id/textView56"
+            app:layout_constraintBottom_toTopOf="@+id/set_task"
+            />
 
         <Button
             android:id="@+id/set_task"
@@ -163,6 +153,7 @@
             android:layout_marginLeft="16dp"
             android:layout_marginTop="8dp"
             android:layout_marginBottom="16dp"
+            android:layout_marginEnd="48dp"
             android:text="Поставить задачу"
             android:textSize="10sp"
             app:layout_constraintBottom_toBottomOf="parent"
@@ -264,7 +255,9 @@
             android:layout_marginTop="8dp"
             android:text="Оценка:"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/dvi" />
+            app:layout_constraintTop_toBottomOf="@+id/dvi"
+            app:layout_constraintBottom_toTopOf="@+id/add_comment"
+            />
 
         <RatingBar
             android:id="@+id/ratingBar3"

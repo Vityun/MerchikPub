@@ -1,6 +1,8 @@
 package ua.com.merchik.merchik.dialogs.DialogAdditionalRequirements.DialogARMark;
 
 import static ua.com.merchik.merchik.Globals.HELPDESK_PHONE_NUMBER;
+import static ua.com.merchik.merchik.Globals.generateUniqueNumber;
+import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
 import android.app.Dialog;
 import android.content.Context;
@@ -17,14 +19,19 @@ import android.widget.RatingBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.util.Collections;
+
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.Database.Room.AdditionalMaterialsJOIN.AdditionalMaterialsJOINAdditionalMaterialsAddressSDB;
+import ua.com.merchik.merchik.data.Database.Room.Planogram.PlanogrammVizitShowcaseSDB;
+import ua.com.merchik.merchik.data.Database.Room.VoteSDB;
 import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteHintsDB;
 import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteObjects.SiteObjectsDB;
 import ua.com.merchik.merchik.data.RealmModels.AdditionalRequirementsDB;
 import ua.com.merchik.merchik.data.RealmModels.AdditionalRequirementsMarkDB;
+import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsMarkRealm;
 import ua.com.merchik.merchik.dialogs.DialogData;
@@ -245,7 +252,10 @@ public class DialogARMark {
     public void setData(CharSequence id, CharSequence addr, CharSequence grp, CharSequence number, CharSequence dateStart, CharSequence dateEnd, CharSequence author, CharSequence customer, CharSequence mark, CharSequence text) {
         txtId.setText(id);
         txtAddr.setText(addr);
-        txtGrp.setText(grp);
+        if (grp.equals(""))
+            txtGrp.setVisibility(View.GONE);
+        else
+            txtGrp.setText(grp);
         txtNumber.setText(number);
         txtDateStart.setText(dateStart);
         txtDateEnd.setText(dateEnd);
@@ -268,12 +278,13 @@ public class DialogARMark {
                 DialogData dialogData = new DialogData(context);
                 dialogData.setTitle("Коментар");
                 dialogData.setText("Внесіть коментар до низбкої оцінки");
-                dialogData.setOperation(DialogData.Operations.TEXT, "", null, ()->{});
+                dialogData.setOperation(DialogData.Operations.TEXT, "", null, () -> {
+                });
                 dialogData.setOk("Ok", () -> {
-                    if (dialogData.getOperationResult() != null && dialogData.getOperationResult().length() > 10){
+                    if (dialogData.getOperationResult() != null && dialogData.getOperationResult().length() > 10) {
                         saveNewARMark(db, rate, dialogData.getOperationResult());
                         Toast.makeText(context, "Оценка: " + rate + " установлена.", Toast.LENGTH_LONG).show();
-                    }else {
+                    } else {
                         Toast.makeText(context, "Внесіть коментар більший за 10 символів.", Toast.LENGTH_LONG).show();
                     }
                 });
@@ -286,22 +297,68 @@ public class DialogARMark {
                 Toast.makeText(context, "Оценка: " + rate + " установлена.", Toast.LENGTH_LONG).show();
             }
 
-//            Toast.makeText(context, "Оценка: " + rate + " установлена.", Toast.LENGTH_LONG).show();
+            clickListener.clicked();
+        });
+    }
 
+    public void setRatingBarPlanogrammVizitShowcase(PlanogrammVizitShowcaseSDB db, WpDataDB wpData, Float data, String comment, DialogData.DialogClickListener clickListener) {
+        if (data != null) {
+            ratingBar.setRating(data);
+        }
 
-//            AdditionalRequirementsMarkDB markDB = new AdditionalRequirementsMarkDB();
-//            markDB.setId(String.valueOf(System.currentTimeMillis()));
-//            markDB.setItemId(db.getId());
-//            markDB.setDt(System.currentTimeMillis()/1000);
-//            markDB.setUserId(String.valueOf(Globals.userId));
-//            markDB.setScore(String.valueOf(rate));
-//            markDB.setTp("1");  // Для Доп. Требований
-//            markDB.setUploadStatus("0");
-//
-//            AdditionalRequirementsMarkRealm.setNewMark(markDB);
+        ratingBar.setOnRatingBarChangeListener((ratingBar, rating, fromUser) -> {
+            int rate = (int) rating;
+            ratingBar.setRating(rate);
+
+            if (rate < 6) {
+                DialogData dialogData = new DialogData(context);
+                dialogData.setTitle("Коментар");
+                dialogData.setText("Внесіть коментар до низбкої оцінки");
+                dialogData.setOperation(DialogData.Operations.TEXT, "", null, () -> {
+                });
+                dialogData.setOk("Ok", () -> {
+                    if (dialogData.getOperationResult() != null && dialogData.getOperationResult().length() > 10) {
+                        saveNewVotes(db, wpData, rate, dialogData.getOperationResult());
+                        Toast.makeText(context, "Оцінка: " + rate + " встановлена.", Toast.LENGTH_LONG).show();
+                    } else {
+                        Toast.makeText(context, "Внесіть коментар більший за 10 символів. Оцінка не буде збережена", Toast.LENGTH_LONG).show();
+                    }
+                });
+                dialogData.setClose(this::dismiss);
+                dialogData.show();
+            } else {
+
+                saveNewVotes(db, wpData, rate, comment);
+
+                Toast.makeText(context, "Оцінка: " + rate + " встановлена.", Toast.LENGTH_LONG).show();
+            }
 
             clickListener.clicked();
         });
+    }
+
+    private void saveNewVotes(PlanogrammVizitShowcaseSDB db, WpDataDB wpDataDB, int rate, String comment) {
+
+        VoteSDB vote = new VoteSDB();
+        vote.serverId = generateUniqueNumber();
+        vote.dtUpload = 0L;
+//        vote.codeDad2 = db.code_dad2;
+        vote.codeDad2 = wpDataDB.getCode_dad2();
+        vote.isp = db.isp;
+        vote.themeId = 1314;
+        vote.kli = db.client_id;
+        vote.addrId = db.addr_id;
+        vote.dt = System.currentTimeMillis() / 1000;
+        vote.merchik = db.author_id;
+        vote.voterId = wpDataDB.getUser_id();
+        vote.photoId = db.planogram_photo_id != null ? db.planogram_photo_id.longValue() : 0;
+        vote.voteClass = 5;
+        vote.score = rate;
+        vote.comments = comment;
+
+        SQL_DB.votesDao().insertAll(Collections.singletonList(vote));
+
+//        AdditionalRequirementsMarkRealm.setNewMark(markDB);
     }
 
     private void saveNewARMark(AdditionalRequirementsDB db, int rate, String comment) {

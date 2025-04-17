@@ -1,5 +1,6 @@
 package ua.com.merchik.merchik.dataLayer
 
+import android.util.Log
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.google.gson.Gson
@@ -50,7 +51,11 @@ interface DataObjectUI {
     }
 }
 
-fun DataObjectUI.toItemUI(nameUIRepository: NameUIRepository, hideUserFields: String?, typePhoto: Int?): DataItemUI {
+fun DataObjectUI.toItemUI(
+    nameUIRepository: NameUIRepository,
+    hideUserFields: String?,
+    typePhoto: Int?
+): DataItemUI {
     val jsonObject = JSONObject(Gson().toJson(this))
     val fields = mutableListOf<FieldValue>()
     val rawFields = mutableListOf<FieldValue>()
@@ -63,7 +68,12 @@ fun DataObjectUI.toItemUI(nameUIRepository: NameUIRepository, hideUserFields: St
                     keyIdResImage,
                     TextField(
                         keyIdResImage,
-                        "${nameUIRepository.getTranslateString(keyIdResImage, this.getFieldTranslateId(keyIdResImage))}: ",
+                        "${
+                            nameUIRepository.getTranslateString(
+                                keyIdResImage,
+                                this.getFieldTranslateId(keyIdResImage)
+                            )
+                        }: ",
                     ),
                     TextField(
                         it,
@@ -77,15 +87,25 @@ fun DataObjectUI.toItemUI(nameUIRepository: NameUIRepository, hideUserFields: St
     val images = mutableListOf<String>()
     this.getFieldsImageOnUI().split(",").forEach {
         if (it.isNotEmpty()) {
-            RealmManager
-                .getPhotoByIdAndType(
-                    null,
-                    jsonObject.get(it.trim()).toString(),
-                    typePhoto ?: -1,
-                )
-                ?.getPhoto_num()?.let { pathPhoto ->
-                    images.add(pathPhoto)
-                }
+            val photo = jsonObject.get(it.trim()).toString()
+            try {
+                val id = jsonObject.get("ID")
+                Log.e("!!!","id: $id")
+            } catch (e: Exception) {
+                Log.e("!!!",">> e:${e.message}")
+            }
+            if (photo != "0")
+                RealmManager.getPhotoByPhotoId(photo)
+//                RealmManager.getPhotoByIdAndType(
+//                    null,
+//                    photo,
+//                    typePhoto ?: -1,
+//                )
+                    ?.getPhoto_num()?.let { pathPhoto ->
+                        images.add(pathPhoto)
+                    }
+            else
+                images.add(this.getIdResImage().toString())
         }
     }
 
@@ -111,7 +131,12 @@ fun DataObjectUI.toItemUI(nameUIRepository: NameUIRepository, hideUserFields: St
                     key,
                     TextField(
                         key,
-                        "${nameUIRepository.getTranslateString(key, this.getFieldTranslateId(key))}: ",
+                        "${
+                            nameUIRepository.getTranslateString(
+                                key,
+                                this.getFieldTranslateId(key)
+                            )
+                        }: ",
                         this.getFieldModifier(key, jsonObject)
                     ),
                     TextField(
@@ -142,11 +167,11 @@ fun DataObjectUI.toItemUI(nameUIRepository: NameUIRepository, hideUserFields: St
     )
 }
 
-enum class ModeUI{
+enum class ModeUI {
     DEFAULT, ONE_SELECT, MULTI_SELECT
 }
 
-enum class ContextUI{
+enum class ContextUI {
     DEFAULT, ONE_SELECT, MULTI_SELECT,
     ADD_REQUIREMENTS_FROM_OPTIONS,
     ADD_REQUIREMENTS_FROM_ACHIEVEMENT,
@@ -155,8 +180,11 @@ enum class ContextUI{
     THEME_FROM_ACHIEVEMENT,
     TOVAR_FROM_ACHIEVEMENT,
     STACK_PHOTO_TO_FROM_ACHIEVEMENT,
+    STACK_PHOTO_TO_FROM_PLANOGRAMM_VIZIT,
     STACK_PHOTO_AFTER_FROM_ACHIEVEMENT,
     USERS_SDB_FROM_EKL,
+    PLANOGRAMM_VIZIT_SHOWCASE,
+    SHOWCASE,
     STACK_PHOTO_FROM_OPTION_158605,     // Корпоративный блок (40)
     SAMPLE_PHOTO_FROM_OPTION_135158,    // Фото Остатков Товаров (ФОТ) (4) +
     SAMPLE_PHOTO_FROM_OPTION_141360,    // Фото товара на складе +

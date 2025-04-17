@@ -227,7 +227,7 @@ public class OptionControlPhoto<T> extends OptionControl {
             signal = true;
 //            unlockCodeResultListener.onUnlockCodeFailure();
         } else {
-            stringBuilderMsg.append("Скарг щодо виконання фото немає. Зроблено: ").append(stackPhotoDB.size()).append(" фото.");
+            stringBuilderMsg.append("Скарг щодо виконання фото немає. Усього зроблено: ").append(stackPhotoDB.size()).append(" фото.");
             signal = false;
 //            unlockCodeResultListener.onUnlockCodeSuccess();
         }
@@ -268,15 +268,19 @@ public class OptionControlPhoto<T> extends OptionControl {
         // 3.2
         // для 141361 от 27.03.2025
         if (optionId.equals("141361")) {
-            long count = stackPhotoDB.where()
+            RealmResults<StackPhotoDB> stackPhotoDB141361 = StackPhotoRealm.getPhotosByDAD2(dad2, 31);
+            long count = stackPhotoDB141361.where()
                     .equalTo("example_id", "78")
                     .count();
+//            long count = stackPhotoDB.where()
+//                    .equalTo("example_id", "78")
+//                    .count();
             if (count > 0) {
                 m = 2;
                 int photoWithComment = 0;
                 stringBuilderMsg.setLength(0);
                 String baseEmptyComment = "У свiтлин: ";
-                List<StackPhotoDB> stackPhotoDBList = RealmManager.INSTANCE.copyFromRealm(stackPhotoDB);
+                List<StackPhotoDB> stackPhotoDBList = RealmManager.INSTANCE.copyFromRealm(stackPhotoDB141361);
                 for (StackPhotoDB photo : stackPhotoDBList) {
                     if ("78".equals(photo.getExample_id())) {
                         String comment = photo.getComment();

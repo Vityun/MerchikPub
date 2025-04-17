@@ -37,6 +37,8 @@ import androidx.recyclerview.widget.SnapHelper;
 
 import com.google.gson.Gson;
 
+import org.jetbrains.annotations.Nullable;
+
 import java.io.File;
 import java.util.Collections;
 import java.util.List;
@@ -60,6 +62,8 @@ public class DialogFullPhoto {
     private Context context;
 
     private WpDataDB wpDataDB;
+    private VoteSDB vote;
+
 
     private enum MoveTo {
         PREVIOUS, NEXT
@@ -189,6 +193,11 @@ public class DialogFullPhoto {
         this.wpDataDB = wpDataDB;
     }
 
+    public void setVote(VoteSDB vote) {
+        this.vote = vote;
+    }
+
+
     public void setRatingType(RatingType ratingType) {
         this.ratingType = ratingType;
     }
@@ -223,6 +232,7 @@ public class DialogFullPhoto {
         });
         comment.setOnEditorActionListener((v, actionId, event) -> {
             if (actionId == EditorInfo.IME_ACTION_DONE) {
+                isCommentSave = false;
                 String coment = v.getText().toString();
 
                 StackPhotoDB row = photoLogData.get(POSITION_ADAPTER);
@@ -331,7 +341,10 @@ public class DialogFullPhoto {
                         mOnPhotoClickListener.onPhotoClicked(view.getContext(), photoLogData.get(visiblePosition));
                     });
 
-                    comment.setText(photoLogData.get(visiblePosition).getComment());
+                    if (ratingType == RatingType.PLANOGRAM && vote != null && vote.comments != null && !vote.comments.isEmpty())
+                        comment.setText(vote.comments);
+                    else
+                        comment.setText(photoLogData.get(visiblePosition).getComment());
 
                     try {
                         StackPhotoDB stackPhotoDB = photoLogData.get(visiblePosition);
@@ -391,9 +404,15 @@ public class DialogFullPhoto {
                     // УСТАНОВКА РЕЙТИНГА И СОХРАНЕНИЕ ЕГО В БД
                     try {
                         if (photoLogData.get(visiblePosition).getMark() != null) {
-                            indicatorRatingBar.setRating(Float.parseFloat(photoLogData.get(visiblePosition).getMark()));
+                            if (ratingType == RatingType.PLANOGRAM && vote != null)
+                                indicatorRatingBar.setRating(vote.score);
+                            else
+                                indicatorRatingBar.setRating(Float.parseFloat(photoLogData.get(visiblePosition).getMark()));
                         } else {
-                            indicatorRatingBar.setRating(0);
+                            if (ratingType == RatingType.PLANOGRAM && vote != null)
+                                indicatorRatingBar.setRating(vote.score);
+                            else
+                                indicatorRatingBar.setRating(0);
                         }
 
                         indicatorRatingBar.setOnRatingBarChangeListener((ratingBar, rating, fromUser) -> {

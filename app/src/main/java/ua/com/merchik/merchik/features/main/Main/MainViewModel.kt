@@ -7,7 +7,7 @@ import android.content.Intent
 import android.content.SharedPreferences
 import android.os.Bundle
 import android.util.Log
-import androidx.compose.ui.res.stringResource
+import androidx.activity.result.ActivityResultLauncher
 import androidx.core.app.ActivityCompat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.SavedStateHandle
@@ -19,19 +19,13 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import org.apache.commons.lang3.ObjectUtils.Null
 import org.json.JSONObject
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity
 import ua.com.merchik.merchik.Activities.Features.FeaturesActivity
 import ua.com.merchik.merchik.Globals.APP_OFFSET_SIZE_FONTS
 import ua.com.merchik.merchik.Globals.APP_PREFERENCES
-import ua.com.merchik.merchik.MakePhoto.MakePhoto
-import ua.com.merchik.merchik.R
-import ua.com.merchik.merchik.WorkPlan
-import ua.com.merchik.merchik.data.RealmModels.OptionsDB
+import ua.com.merchik.merchik.Translate
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB
-import ua.com.merchik.merchik.data.RealmModels.WpDataDB
-import ua.com.merchik.merchik.data.WPDataObj
 import ua.com.merchik.merchik.dataLayer.ContextUI
 import ua.com.merchik.merchik.dataLayer.DataObjectUI
 import ua.com.merchik.merchik.dataLayer.MainRepository
@@ -40,10 +34,12 @@ import ua.com.merchik.merchik.dataLayer.NameUIRepository
 import ua.com.merchik.merchik.dataLayer.model.DataItemUI
 import ua.com.merchik.merchik.dataLayer.model.SettingsItemUI
 import ua.com.merchik.merchik.database.realm.RealmManager
-import ua.com.merchik.merchik.database.realm.tables.OptionsRealm
-import ua.com.merchik.merchik.database.realm.tables.WpDataRealm
 import ua.com.merchik.merchik.dialogs.DialogFullPhoto
-import ua.com.merchik.merchik.dialogs.DialogFullPhotoR
+import ua.com.merchik.merchik.features.main.DBViewModels.AddressSDBViewModel
+import ua.com.merchik.merchik.features.main.DBViewModels.ImagesTypeListDBViewModel
+import ua.com.merchik.merchik.features.main.DBViewModels.LogMPDBViewModel
+import ua.com.merchik.merchik.features.main.DBViewModels.OpinionSDBViewModel
+import ua.com.merchik.merchik.features.main.DBViewModels.ReportPrepareDBViewModel
 import java.time.LocalDate
 import kotlin.reflect.KClass
 
@@ -122,7 +118,7 @@ abstract class MainViewModel(
     val repository: MainRepository,
     val nameUIRepository: NameUIRepository,
     protected val savedStateHandle: SavedStateHandle,
-    ): AndroidViewModel(application) {
+) : AndroidViewModel(application) {
 
     private val sharedPreferences: SharedPreferences =
         application.getSharedPreferences(APP_PREFERENCES, Context.MODE_PRIVATE)
@@ -130,8 +126,8 @@ abstract class MainViewModel(
     private val _offsetSizeFonts = MutableStateFlow(0.0f)
     val offsetSizeFonts: StateFlow<Float> = _offsetSizeFonts
 
-    private val _valueForCustomResult = MutableStateFlow(HashMap<String,Any?>())
-    val valueForCustomResult: StateFlow<HashMap<String,Any?>> = _valueForCustomResult
+    private val _valueForCustomResult = MutableStateFlow(HashMap<String, Any?>())
+    val valueForCustomResult: StateFlow<HashMap<String, Any?>> = _valueForCustomResult
 
     var context: Context? = null
     var dataJson: String? = null
@@ -141,6 +137,7 @@ abstract class MainViewModel(
     var idResImage: Int? = null
     var modeUI: ModeUI = ModeUI.DEFAULT
     var contextUI: ContextUI = ContextUI.DEFAULT
+    var launcher: ActivityResultLauncher<Intent>? = null
 
     abstract val table: KClass<out DataObjectUI>
 
@@ -152,74 +149,104 @@ abstract class MainViewModel(
 
     abstract fun getItems(): List<DataItemUI>
 
+    open fun onClickAdditionalContent() {}
+
     open fun onClickItem(itemUI: DataItemUI, context: Context) {}
 
     open fun onClickFullImage(stackPhotoDB: StackPhotoDB, comment: String?) {}
 
     open fun onSelectedItemsUI(itemsUI: List<DataItemUI>) {}
 
-    open fun getFieldsForCommentsImage(): List<String>? { return null }
+    open fun getFieldsForCommentsImage(): List<String>? {
+        return null
+    }
 
-    open fun getFieldsForCustomResult(): List<String>? { return null }
+    open fun getFieldsForCustomResult(): List<String>? {
+        return null
+    }
 
-    open fun getDefaultHideUserFields(): List<String>? { return null }
+    open fun getDefaultHideUserFields(): List<String>? {
+        return null
+    }
 
     var filters: Filters? = null
 
     protected var dialog: DialogFullPhoto? = null
 
+
     open fun onClickItemImage(clickedDataItemUI: DataItemUI, context: Context) {
-        dialog = DialogFullPhoto(context)
-        val photoLogData = mutableListOf<StackPhotoDB>()
-        var selectedIndex = -1
-        val fieldsForCommentsImage = getFieldsForCommentsImage()
-        val fieldsForCustomResult = getFieldsForCustomResult()
-        val photoDBWithComments = HashMap<StackPhotoDB, String>()
-        val photoDBWithRawObj = HashMap<StackPhotoDB, Any>()
-        _uiState.value.items.map { dataItemUI ->
-            val jsonObject = JSONObject(Gson().toJson(dataItemUI.rawObj[0]))
-            var comments = ""
-            fieldsForCommentsImage?.forEach {
-                comments += "${jsonObject.get(it)} \n\n"
-            }
-            if (clickedDataItemUI == dataItemUI){
-                fieldsForCustomResult?.forEach {
-                    _valueForCustomResult.value[it] = jsonObject.get(it)
+        onClickItemImage(clickedDataItemUI, context, 0) // Делегируем вызов новому методу
+    }
+
+    open fun onClickItemImage(clickedDataItemUI: DataItemUI, context: Context, index: Int) {
+        if (index == 0) {
+            dialog = DialogFullPhoto(context)
+            val photoLogData = mutableListOf<StackPhotoDB>()
+            var selectedIndex = -1
+            val fieldsForCommentsImage = getFieldsForCommentsImage()
+            val fieldsForCustomResult = getFieldsForCustomResult()
+            val photoDBWithComments = HashMap<StackPhotoDB, String>()
+            val photoDBWithRawObj = HashMap<StackPhotoDB, Any>()
+            _uiState.value.items.map { dataItemUI ->
+                val jsonObject = JSONObject(Gson().toJson(dataItemUI.rawObj[0]))
+                var comments = ""
+                fieldsForCommentsImage?.forEach {
+                    comments += "${jsonObject.get(it)} \n\n"
                 }
-            }
-            dataItemUI.rawObj[0].getFieldsImageOnUI().split(",").forEach {
-                if (it.isNotEmpty()) {
-                    RealmManager.getPhotoById( null, jsonObject.get(it.trim()).toString())
-                        ?.let {
-                            photoDBWithComments[it] = comments
-                            photoDBWithRawObj[it] = dataItemUI.rawObj[0]
-                            photoLogData.add(it)
-                            if (clickedDataItemUI == dataItemUI) selectedIndex = photoLogData.count() - 1
+                if (clickedDataItemUI == dataItemUI) {
+                    fieldsForCustomResult?.forEach {
+                        _valueForCustomResult.value[it] = jsonObject.get(it)
+                    }
+                }
+                val imageFields = dataItemUI.rawObj[0].getFieldsImageOnUI().split(",")
+                imageFields.getOrNull(index)?.takeIf { it.isNotEmpty() }?.let { fieldKey ->
+                    RealmManager.getPhotoById(null, jsonObject.get(fieldKey.trim()).toString())
+                        ?.let { photo ->
+                            photoDBWithComments[photo] = comments
+                            photoDBWithRawObj[photo] = dataItemUI.rawObj[0]
+                            photoLogData.add(photo)
+
+                            if (clickedDataItemUI == dataItemUI) {
+                                selectedIndex = photoLogData.size - 1
+                            }
                         }
                 }
+//            dataItemUI.rawObj[0].getFieldsImageOnUI().split(",").forEach {
+//                if (it.isNotEmpty()) {
+//                    RealmManager.getPhotoById( null, jsonObject.get(it.trim()).toString())
+//                        ?.let {
+//                            photoDBWithComments[it] = comments
+//                            photoDBWithRawObj[it] = dataItemUI.rawObj[0]
+//                            photoLogData.add(it)
+//                            if (clickedDataItemUI == dataItemUI) selectedIndex = photoLogData.count() - 1
+//                        }
+//                }
+//            }
             }
-        }
 
-        if (selectedIndex > -1) {
-            dialog?.setPhotos(selectedIndex, photoLogData,
-                { _, photoDB ->
-                    onClickFullImage(photoDB, photoDBWithComments[photoDB])
+            if (selectedIndex > -1) {
+                dialog?.setPhotos(selectedIndex, photoLogData,
+                    { _, photoDB ->
+                        onClickFullImage(photoDB, photoDBWithComments[photoDB])
+                        dialog?.dismiss()
+                        dialog = null
+                    },
+                    { }
+                )
+
+                dialog?.setClose {
                     dialog?.dismiss()
                     dialog = null
-                },
-                { }
-            )
-
-            dialog?.setClose {
-                dialog?.dismiss()
-                dialog = null
+                }
+                dialog?.show()
             }
-            dialog?.show()
+
         }
     }
 
     private val _uiState = MutableStateFlow(StateUI())
-    val uiState: StateFlow<StateUI>
+    val uiState
+            : StateFlow<StateUI>
         get() = _uiState.asStateFlow()
 
     init {
@@ -245,8 +272,10 @@ abstract class MainViewModel(
             repository.saveSettingsUI(
                 table,
                 SettingsUI(
-                    hideFields = uiState.value.settingsItems.filter { !it.isEnabled }.map { it.key },
-                    sortFields = uiState.value.sortingFields.filter { it.key != null }.map { it.copy(title = null) }
+                    hideFields = uiState.value.settingsItems.filter { !it.isEnabled }
+                        .map { it.key },
+                    sortFields = uiState.value.sortingFields.filter { it.key != null }
+                        .map { it.copy(title = null) }
                 ),
                 contextUI)
         }
@@ -260,7 +289,8 @@ abstract class MainViewModel(
                 if (position < newSortingFields.size) newSortingFields[position] = it
                 else newSortingFields.add(position, it)
             } ?: run {
-                if (position < newSortingFields.size) newSortingFields[position] = SortingField()
+                if (position < newSortingFields.size) newSortingFields[position] =
+                    SortingField()
             }
             _uiState.update {
                 it.copy(
@@ -303,7 +333,7 @@ abstract class MainViewModel(
         }
     }
 
-    fun updateFilters(filters: Filters){
+    fun updateFilters(filters: Filters) {
         this.filters = filters
         viewModelScope.launch {
             _uiState.update {
@@ -315,24 +345,30 @@ abstract class MainViewModel(
         }
     }
 
-    fun updateItemSelect(checked: Boolean, itemUI: DataItemUI){
+    fun updateItemSelect(checked: Boolean, itemUI: DataItemUI) {
         viewModelScope.launch {
             _uiState.update {
                 it.copy(
                     itemsHeader = it.itemsHeader.map { oldItemUI ->
-                        oldItemUI.copy(selected =
-                        if (itemUI === oldItemUI) checked
-                        else if (modeUI == ModeUI.ONE_SELECT) false else oldItemUI.selected)
+                        oldItemUI.copy(
+                            selected =
+                            if (itemUI === oldItemUI) checked
+                            else if (modeUI == ModeUI.ONE_SELECT) false else oldItemUI.selected
+                        )
                     },
                     items = it.items.map { oldItemUI ->
-                        oldItemUI.copy(selected =
-                        if (itemUI === oldItemUI) checked
-                        else if (modeUI == ModeUI.ONE_SELECT) false else oldItemUI.selected)
+                        oldItemUI.copy(
+                            selected =
+                            if (itemUI === oldItemUI) checked
+                            else if (modeUI == ModeUI.ONE_SELECT) false else oldItemUI.selected
+                        )
                     },
                     itemsFooter = it.itemsFooter.map { oldItemUI ->
-                        oldItemUI.copy(selected =
-                        if (itemUI === oldItemUI) checked
-                        else if (modeUI == ModeUI.ONE_SELECT) false else oldItemUI.selected)
+                        oldItemUI.copy(
+                            selected =
+                            if (itemUI === oldItemUI) checked
+                            else if (modeUI == ModeUI.ONE_SELECT) false else oldItemUI.selected
+                        )
                     },
                 )
             }

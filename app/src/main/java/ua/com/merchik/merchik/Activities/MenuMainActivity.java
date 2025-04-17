@@ -56,6 +56,7 @@ import ua.com.merchik.merchik.database.realm.tables.ImagesTypeListRealm;
 import ua.com.merchik.merchik.dialogs.DialogAchievement.FilteringDialogDataHolder;
 import ua.com.merchik.merchik.dialogs.DialogShowcase.DialogShowcase;
 import ua.com.merchik.merchik.features.main.DBViewModels.OpinionSDBViewModel;
+import ua.com.merchik.merchik.features.main.DBViewModels.PlanogrammVizitShowcaseViewModel;
 import ua.com.merchik.merchik.features.main.DBViewModels.ThemeDBViewModel;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
 import ua.com.merchik.merchik.toolbar_menus;
@@ -64,6 +65,7 @@ import ua.com.merchik.merchik.toolbar_menus;
 public class MenuMainActivity extends toolbar_menus {
 
     PhotoDownloaderViewModel photoDownloaderViewModel;
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -77,7 +79,7 @@ public class MenuMainActivity extends toolbar_menus {
                 try {
                     Toast.makeText(this, "Подсказка к данному разделу не готова", Toast.LENGTH_SHORT).show();
                     test();
-                }catch (Exception e){
+                } catch (Exception e) {
                     Log.e("MenuMainActivity", "Exception e: " + e);
                 }
             });
@@ -99,7 +101,7 @@ public class MenuMainActivity extends toolbar_menus {
 
     private void testLong() {
         AppUsersDB appUsersDB = AppUserRealm.getAppUser();
-        if (appUsersDB != null && appUsersDB.getUserId() == 172906){
+        if (appUsersDB != null && appUsersDB.getUserId() == 172906) {
             String res = CodeGenerator.getCode();
             Toast.makeText(getApplicationContext(), "" + res, Toast.LENGTH_LONG).show();
         }
@@ -155,70 +157,34 @@ public class MenuMainActivity extends toolbar_menus {
 
     private void test() {
 
+        PlanogrammTableExchange planogrammTableExchange = new PlanogrammTableExchange();
+        planogrammTableExchange.planogrammVisitShowcaseUploadData();
 
-//        TablesLoadingUnloading tablesLoadingUnloading = new TablesLoadingUnloading();
-//        tablesLoadingUnloading.downloadWPData();
-//        .downloadAdditionalRequirements();
-        StandartData data = new StandartData();
-        data.mod = "planogram";
-        data.act = "vizit_showcase_list";
-        data.nolimit = "1";
-
-        data.date_from = Clock.today_7;
-        data.date_to = Clock.tomorrow7;
-
-
-
-        Gson gson = new Gson();
-        String json = gson.toJson(data);
-        JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
+//        String clientId = "9295";
+//        Integer addressId = 31987;
+//        String ttId = "32";
 //
 //
-//        retrofit2.Call<JsonObject> call1 = RetrofitBuilder.getRetrofitInterface().TEST_JSON_UPLOAD(RetrofitBuilder.contentType, convertedObject);
-//        call1.enqueue(new Callback<JsonObject>() {
-//            @Override
-//            public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
-//                Log.e("planogramDownload", "planogramDownload: " + response.body());
-//                Globals.writeToMLOG("INFO", "1_D_PlanogrammSDB", "response: " + response.body());
-//
-//            }
-//
-//            @Override
-//            public void onFailure(Call<JsonObject> call, Throwable t) {
-//                Log.e("planogramDownload", "planogramDownloadThrowable t: " + t);
-//                Globals.writeToMLOG("INFO", "1_D_PlanogrammSDB", "Throwable t: " + t);
-//            }
-//        });
-//
-//        retrofit2.Call<PlanogrammVizitShowcaseResponse> planogramm = RetrofitBuilder.getRetrofitInterface().PLANOGRAMM_VIZIT_SHOWCASE_RESPONSE(RetrofitBuilder.contentType, convertedObject);
-//        planogramm.enqueue(new Callback<PlanogrammVizitShowcaseResponse>() {
-//            @Override
-//            public void onResponse(Call<PlanogrammVizitShowcaseResponse> call, Response<PlanogrammVizitShowcaseResponse> response) {
-//                Log.e("planogramDownload", "planogramDownload: " + response.body());
-//                Globals.writeToMLOG("INFO", "1_D_PlanogrammSDB", "response: " + response.body());
-//
-//            }
-//
-//            @Override
-//            public void onFailure(Call<PlanogrammVizitShowcaseResponse> call, Throwable t) {
-//                Log.e("planogramDownload", "planogramDownloadThrowable t: " + t);
-//                Globals.writeToMLOG("INFO", "1_D_PlanogrammSDB", "Throwable t: " + t);
-//            }
-//        });
-
-//        photoDownloaderViewModel.scheduleDownload();
-
 //        Intent intent = new Intent(this, FeaturesActivity.class);
 //        Bundle bundle = new Bundle();
-//        bundle.putString("viewModel", OpinionSDBViewModel.class.getCanonicalName());
-//        bundle.putString("contextUI", ContextUI.ADD_OPINION_FROM_DETAILED_REPORT.toString());
-//        bundle.putString("modeUI", ModeUI.ONE_SELECT.toString());
-//        bundle.putString("dataJson", new Gson().toJson(998));
-//        bundle.putString("title", "Вид достижения");
-//        bundle.putString("subTitle", "Выберите характер достижения, которое Вы выполнили");
+//        bundle.putString("viewModel", PlanogrammVizitShowcaseViewModel.class.getCanonicalName());
+//        bundle.putString("contextUI", ContextUI.PLANOGRAMM_VIZIT_SHOWCASE.toString());
+//        bundle.putString("modeUI", ModeUI.DEFAULT.toString());
+//        JsonObject dataJson = new JsonObject();
+//        dataJson.addProperty("clientId", String.valueOf(clientId));
+//        dataJson.addProperty("addressId", addressId);
+//        dataJson.addProperty("ttId", String.valueOf(ttId));
+//        bundle.putString("dataJson", new Gson().toJson(dataJson));
+//
+//        bundle.putString("title", "##Панограмма посещения");
+//        bundle.putString(
+//                "subTitle",
+//                "##subTitle"
+//        );
 //        intent.putExtras(bundle);
-//        FilteringDialogDataHolder.Companion.instance().init();
+//
 //        ActivityCompat.startActivityForResult(this, intent, NEED_UPDATE_UI_REQUEST, null);
+
 
 
 //        new TablesLoadingUnloading().downloadWPData(this);

@@ -5,6 +5,8 @@ import android.content.Context
 import android.os.Build
 import android.util.Log
 import android.view.View
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.Image
@@ -15,6 +17,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -29,6 +32,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -40,15 +44,24 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.Paint
+import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.graphics.Shadow
+import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
@@ -62,11 +75,13 @@ import coil.compose.rememberAsyncImagePainter
 import my.nanihadesuka.compose.LazyColumnScrollbar
 import my.nanihadesuka.compose.ScrollbarSettings
 import ua.com.merchik.merchik.R
+import ua.com.merchik.merchik.data.Database.Room.Planogram.PlanogrammVizitShowcaseSDB
 import ua.com.merchik.merchik.data.RealmModels.AdditionalRequirementsMarkDB
 import ua.com.merchik.merchik.dataLayer.ModeUI
 import ua.com.merchik.merchik.dataLayer.model.DataItemUI
 import ua.com.merchik.merchik.dataLayer.model.SettingsItemUI
 import ua.com.merchik.merchik.features.main.componentsUI.ImageButton
+import ua.com.merchik.merchik.features.main.componentsUI.ImageWithText
 import ua.com.merchik.merchik.features.main.componentsUI.RoundCheckbox
 import ua.com.merchik.merchik.features.main.componentsUI.TextFieldInputRounded
 import ua.com.merchik.merchik.features.main.componentsUI.TextInStrokeCircle
@@ -98,6 +113,16 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
     val listState = rememberLazyListState()
 
 
+    // Лаунчер на результат
+    val launcher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            viewModel.updateContent()
+        }
+    }
+    viewModel.launcher = launcher
+
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -123,7 +148,9 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
 
                 if ((viewModel.typeWindow ?: "").equals("full", true)) {
                     TopButton(
-                        modifier = Modifier.align(alignment = Alignment.End).padding(top = 10.dp, end = 10.dp),
+                        modifier = Modifier
+                            .align(alignment = Alignment.End)
+                            .padding(top = 10.dp, end = 10.dp),
                         onSettings = { showSettingsDialog = true },
                         onRefresh = { viewModel.updateContent() },
                         onClose = { (context as? Activity)?.finish() }
@@ -161,9 +188,11 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
                             filters.rangeDataByKey?.let { rangeDataByKey ->
                                 dataItemUI.fields.forEach { fieldValue ->
                                     if (fieldValue.key.equals(rangeDataByKey.key, true)) {
-                                        if (((fieldValue.value.rawValue as? Long)?: 0) < (rangeDataByKey.start?.atStartOfDay(ZoneId.systemDefault())
+                                        if (((fieldValue.value.rawValue as? Long)
+                                                ?: 0) < (rangeDataByKey.start?.atStartOfDay(ZoneId.systemDefault())
                                                 ?.toInstant()?.toEpochMilli() ?: 0)
-                                            || ((fieldValue.value.rawValue as? Long)?: 0) > (rangeDataByKey.end?.atTime(LocalTime.MAX)
+                                            || ((fieldValue.value.rawValue as? Long)
+                                                ?: 0) > (rangeDataByKey.end?.atTime(LocalTime.MAX)
                                                 ?.atZone(ZoneId.systemDefault())?.toInstant()
                                                 ?.toEpochMilli() ?: 0)
                                         ) {
@@ -195,7 +224,10 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
                                 if (filter.rightValuesRaw.isNotEmpty()) {
                                     dataItemUI.rawFields.forEach inner@{ fieldValue ->
                                         if (fieldValue.key.equals(filter.leftField, true)) {
-                                            if (filter.rightValuesRaw.isNotEmpty()) _isActiveFiltered = true
+                                            val rawVal = filter.rightValuesRaw
+                                            val fieldVal = fieldValue.value.rawValue.toString()
+                                            if (filter.rightValuesRaw.isNotEmpty()) _isActiveFiltered =
+                                                true
                                             if (filter.rightValuesRaw.contains(fieldValue.value.rawValue.toString())) {
                                                 isFound = true
                                                 return@inner
@@ -251,7 +283,9 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
                             textDecoration = if (maxLinesSubTitle == 1) TextDecoration.Underline else null,
                             modifier = Modifier
                                 .padding(start = 10.dp, bottom = 7.dp, end = 10.dp)
-                                .clickable { maxLinesSubTitle = if (maxLinesSubTitle == 1) 99 else 1 }
+                                .clickable {
+                                    maxLinesSubTitle = if (maxLinesSubTitle == 1) 99 else 1
+                                }
                         )
                     }
                 }
@@ -277,25 +311,31 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
 
                     )
 
-                    ImageButton(id = R.drawable.ic_plus,
+                    ImageButton(
+                        id = R.drawable.ic_plus,
                         sizeButton = 40.dp,
-                        sizeImage = 20.dp,
+                        sizeImage = 24.dp,
                         modifier = Modifier.padding(start = 7.dp),
-                        onClick = { showAdditionalContent = true }
+                        onClick = { showAdditionalContent = true },
+                        shape = RoundedCornerShape(2.dp)
                     )
 
-                    ImageButton(id = R.drawable.ic_sort_down,
+                    ImageButton(
+                        id = R.drawable.ic_sort_down,
                         sizeButton = 40.dp,
-                        sizeImage = 20.dp,
+                        sizeImage = 24.dp,
                         modifier = Modifier.padding(start = 7.dp),
-                        onClick = { showSortingDialog = true }
+                        onClick = { showSortingDialog = true },
+                        shape = RoundedCornerShape(2.dp)
                     )
 
-                    ImageButton(id = if (isActiveFiltered) R.drawable.ic_filterbold else R.drawable.ic_filter,
+                    ImageButton(
+                        id = if (isActiveFiltered) R.drawable.ic_filterbold else R.drawable.ic_filter,
                         sizeButton = 40.dp,
-                        sizeImage = 20.dp,
+                        sizeImage = 24.dp,
                         modifier = Modifier.padding(start = 7.dp),
-                        onClick = { showFilteringDialog = true }
+                        onClick = { showFilteringDialog = true },
+                        shape = RoundedCornerShape(2.dp)
                     )
                 }
 
@@ -326,19 +366,34 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
                             items(dataItemsUI) { item ->
                                 ItemUI(
                                     item = item,
-                                    visibilityColumName =visibilityColumName,
+                                    visibilityColumName = visibilityColumName,
                                     settingsItemUI = uiState.settingsItems,
                                     contextUI = viewModel.modeUI,
                                     onClickItem = { viewModel.onClickItem(it, context) },
                                     onClickItemImage = { viewModel.onClickItemImage(it, context) },
-                                    onCheckItem = { checked, it -> viewModel.updateItemSelect(checked, it) }
+                                    onMultipleClickItemImage = { dataItem, index ->
+                                        viewModel.onClickItemImage(dataItem, context, index)
+                                    },
+                                    onCheckItem = { checked, it ->
+                                        viewModel.updateItemSelect(
+                                            checked,
+                                            it
+                                        )
+                                    }
                                 )
                             }
                         }
                     }
 
                     Row {
-                        Tooltip(text = viewModel.getTranslateString(stringResource(id = R.string.total_number_selected, dataItemsUI.size))) {
+                        Tooltip(
+                            text = viewModel.getTranslateString(
+                                stringResource(
+                                    id = R.string.total_number_selected,
+                                    dataItemsUI.size
+                                )
+                            )
+                        ) {
                             Text(
                                 text = "\u2211 ${dataItemsUI.size}",
                                 fontSize = 16.sp,
@@ -348,7 +403,14 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
                             )
                         }
 
-                        Tooltip(text = viewModel.getTranslateString(stringResource(id = R.string.total_number_selected, 0))) {
+                        Tooltip(
+                            text = viewModel.getTranslateString(
+                                stringResource(
+                                    id = R.string.total_number_selected,
+                                    0
+                                )
+                            )
+                        ) {
                             Text(
                                 text = "⚲ ${0}",
                                 fontSize = 16.sp,
@@ -358,7 +420,14 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
                             )
                         }
 
-                        Tooltip(text = viewModel.getTranslateString(stringResource(id = R.string.total_number_selected, 0))) {
+                        Tooltip(
+                            text = viewModel.getTranslateString(
+                                stringResource(
+                                    id = R.string.total_number_selected,
+                                    0
+                                )
+                            )
+                        ) {
                             Text(
                                 text = "\u2207 ${0}",
                                 fontSize = 16.sp,
@@ -372,7 +441,14 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
 
                         if (viewModel.modeUI == ModeUI.ONE_SELECT || viewModel.modeUI == ModeUI.MULTI_SELECT) {
                             val selectedCount = dataItemsUI.filter { it.selected }.size
-                            Tooltip(text = viewModel.getTranslateString(stringResource(id = R.string.total_number_marked, selectedCount))) {
+                            Tooltip(
+                                text = viewModel.getTranslateString(
+                                    stringResource(
+                                        id = R.string.total_number_marked,
+                                        selectedCount
+                                    )
+                                )
+                            ) {
                                 Text(
                                     text = "\u2713 $selectedCount",
                                     fontSize = 16.sp,
@@ -398,7 +474,12 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
                                 .weight(1f)
                                 .padding(start = 10.dp, end = 10.dp, bottom = 10.dp)
                         ) {
-                            Text(viewModel.getTranslateString(stringResource(id = R.string.ui_cancel), 5994))
+                            Text(
+                                viewModel.getTranslateString(
+                                    stringResource(id = R.string.ui_cancel),
+                                    5994
+                                )
+                            )
                         }
 
                         val selectedItems = dataItemsUI.filter { it.selected }
@@ -421,7 +502,12 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
                                 .padding(start = 10.dp, end = 10.dp, bottom = 10.dp)
                         ) {
                             Text(
-                                "${viewModel.getTranslateString(stringResource(id = R.string.ui_choice), 5997)} " +
+                                "${
+                                    viewModel.getTranslateString(
+                                        stringResource(id = R.string.ui_choice),
+                                        5997
+                                    )
+                                } " +
                                         if (selectedItems.isNotEmpty()) "(${selectedItems.size})" else ""
                             )
                         }
@@ -431,7 +517,9 @@ fun MainUI(modifier: Modifier, viewModel: MainViewModel, context: Context) {
         }
     }
     if (showAdditionalContent) {
-        Log.e("showAdditionalContent","+")
+        Log.e("showAdditionalContent", "+")
+        viewModel.onClickAdditionalContent()
+        showAdditionalContent = false
     }
 
     if (showSettingsDialog) {
@@ -461,7 +549,9 @@ fun ItemUI(
     contextUI: ModeUI,
     onClickItem: (DataItemUI) -> Unit,
     onClickItemImage: (DataItemUI) -> Unit,
-    onCheckItem: (Boolean, DataItemUI) -> Unit) {
+    onMultipleClickItemImage: (DataItemUI, Int) -> Unit, // Теперь принимает и индекс
+    onCheckItem: (Boolean, DataItemUI) -> Unit
+) {
     Box(
         modifier = Modifier
             .clickable { onClickItem(item) }
@@ -477,77 +567,202 @@ fun ItemUI(
                 )
             )
     ) {
-        Row(Modifier.padding(7.dp)) {
-            item.fields.firstOrNull {
-                it.key.equals(
-                    "id_res_image",
-                    true
-                )
-            }?.let {
-                val idResImage = (it.value.rawValue as? Int)
-                    ?: R.drawable.merchik
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(end = 5.dp)
-                        .border(1.dp, Color.LightGray)
-                        .background(Color.White)
-                        .align(alignment = Alignment.Top)
-                ) {
-                    val images = mutableListOf<Painter>()
-                    if (item.images.isNullOrEmpty()) {
-                        images.add(painterResource(idResImage))
-                    } else {
-                        item.images.forEach { pathImage ->
-                            val file = File(pathImage)
-                            if (file.exists()) {
-                                images.add(
-                                    rememberAsyncImagePainter(model = file)
-                                )
+        if (item.images?.size == 3)
+        // Новый блок для трех изображений в ряд
+            Column(
+                Modifier
+                    .fillMaxWidth()
+                    .padding(7.dp)
+            ) {
+                item.fields.firstOrNull { it.key.equals("id_res_image", true) }?.let {
+                    val images = item.images.take(3)
+                    val defaultImage = painterResource(R.drawable.merchik)
+
+                    Row(
+                        modifier = Modifier
+//                            .padding(end = 5.dp)
+                    ) {
+                        repeat(3) { index ->
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .padding(2.dp)
+                                    .aspectRatio(1f)
+                                    .border(1.dp, Color.LightGray)
+                                    .background(Color.White)
+                            ) {
+                                val painter = when {
+                                    index < images.size -> {
+                                        val file = File(images[index])
+                                        if (file.exists()) {
+                                            rememberAsyncImagePainter(model = file)
+                                        } else {
+                                            defaultImage
+                                        }
+                                    }
+
+                                    else -> defaultImage
+                                }
+
+                                val fields = item.rawObj.firstOrNull()?.getFieldsForOrderOnUI()
+                                when {
+                                    fields.isNullOrEmpty() || index >= fields.size || fields[index].isNullOrEmpty() -> {
+                                        Image(
+                                            painter = painter,
+                                            contentDescription = null,
+                                            modifier = Modifier
+                                                .fillMaxSize()
+                                                .clickable {
+                                                    onMultipleClickItemImage(
+                                                        item,
+                                                        index
+                                                    )
+                                                },
+                                            contentScale = ContentScale.Crop
+                                        )
+                                    }
+
+                                    else -> {
+                                        ImageWithText(
+                                            item = item,
+                                            index = index,
+                                            painter = painter,
+                                            imageText = fields[index]
+                                        )
+                                        { clickedItem, clickedIndex ->
+                                            onMultipleClickItemImage(clickedItem, clickedIndex)
+                                        }
+
+                                    }
+                                }
+                                if (index == 0) {
+                                    item.rawObj.firstOrNull { it is PlanogrammVizitShowcaseSDB }
+                                        ?.let {
+                                            it as PlanogrammVizitShowcaseSDB
+                                            val text = it.score
+                                            Box(
+                                                modifier = Modifier.align(Alignment.TopEnd))
+                                            {
+                                                TextInStrokeCircle(
+                                                    modifier = Modifier
+                                                        .clickable { onClickItem(item) }
+                                                        .align(Alignment.Center),
+                                                    text = text,
+                                                    circleColor = Color.Gray,
+                                                    textColor = Color.Gray,
+                                                    aroundColor =
+                                                    if (item.selected) colorResource(id = R.color.selected_item)
+                                                    else item.modifierContainer?.background
+                                                        ?: Color.White.copy(alpha = 0.5f),
+                                                    circleSize = 30.dp,
+                                                    textSize = 20f.toPx(),
+                                                )
+                                            }
+                                        }
+                                }
                             }
                         }
                     }
+                }
+//                Column(modifier = Modifier
+//                    .clickable {
+//                        onMultipleClickItemImage(item, 3)
+//                    }) {
+//                    item.fields.forEachIndexed { index, field ->
+//                        if (settingsItemUI.firstOrNull {
+//                                it.key.equals(
+//                                    field.key,
+//                                    true
+//                                )
+//                            }?.isEnabled == false) {
+//                        } else {
+//                            if (!field.key.equals("id_res_image", true)) {
+//                                ItemFieldValue(field, visibilityColumName)
+//                                if (index < item.fields.size - 1) HorizontalDivider()
+//                            }
+//                        }
+//                    }
+//                }
+            }
+        else
+            Row(Modifier.padding(7.dp)) {
+                item.fields.firstOrNull {
+                    it.key.equals(
+                        "id_res_image",
+                        true
+                    )
+                }?.let {
+                    val idResImage = (it.value.rawValue as? Int)
+                        ?: R.drawable.merchik
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(end = 5.dp)
+                            .border(1.dp, Color.LightGray)
+                            .background(Color.White)
+                            .align(alignment = Alignment.Top)
+                    ) {
+                        val images = mutableListOf<Painter>()
+                        if (item.images.isNullOrEmpty()) {
+                            images.add(painterResource(idResImage))
+                        } else {
+                            item.images.forEach { pathImage ->
+                                val file = File(pathImage)
+                                if (file.exists()) {
+                                    images.add(
+                                        rememberAsyncImagePainter(model = file)
+                                    )
+                                }
+                            }
+                        }
 
-                    if (images.size <= 1) {
-                        Image(
-                            painter = images[0],
-                            modifier = Modifier
-                                .padding(5.dp)
-                                .size(100.dp)
-                                .clickable { onClickItemImage(item) },
-                            contentScale = ContentScale.FillWidth,
-                            contentDescription = null
-                        )
-                    } else {
-                        LazyRow {
-                            items(images) { image ->
-                                Image(
-                                    painter = image,
-                                    modifier = Modifier
-                                        .padding(5.dp)
-                                        .size(100.dp)
-                                        .clickable { onClickItemImage(item) },
-                                    contentScale = ContentScale.FillWidth,
-                                    contentDescription = null
+                        if (images.size <= 1) {
+                            Image(
+                                painter = images[0],
+                                modifier = Modifier
+                                    .padding(5.dp)
+                                    .size(100.dp)
+                                    .clickable { onClickItemImage(item) },
+                                contentScale = ContentScale.FillWidth,
+                                contentDescription = null
+                            )
+                        } else {
+                            LazyRow {
+                                items(images) { image ->
+                                    Image(
+                                        painter = image,
+                                        modifier = Modifier
+                                            .padding(5.dp)
+                                            .size(100.dp)
+                                            .clickable { onClickItemImage(item) },
+                                        contentScale = ContentScale.FillWidth,
+                                        contentDescription = null
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+
+                Column(modifier = Modifier
+                    .weight(if (item.images?.size == 3) 1f else 2f)
+                    ) {
+                    item.fields.forEachIndexed { index, field ->
+                        if (settingsItemUI.firstOrNull {
+                                it.key.equals(
+                                    field.key,
+                                    true
                                 )
+                            }?.isEnabled == false) {
+                        } else {
+                            if (!field.key.equals("id_res_image", true)) {
+                                ItemFieldValue(field, visibilityColumName)
+                                if (index < item.fields.size - 1) HorizontalDivider()
                             }
                         }
                     }
                 }
             }
-
-            Column(modifier = Modifier.weight(2f)) {
-                item.fields.forEachIndexed { index, field ->
-                    if (settingsItemUI.firstOrNull { it.key.equals(field.key, true) }?.isEnabled == false) {}
-                    else {
-                        if (!field.key.equals("id_res_image", true)) {
-                            ItemFieldValue(field, visibilityColumName)
-                            if (index < item.fields.size - 1) HorizontalDivider()
-                        }
-                    }
-                }
-            }
-        }
 
         Column(modifier = Modifier.align(Alignment.TopEnd)) {
 
@@ -587,6 +802,7 @@ fun ItemUI(
         }
     }
 }
+
 
 @Composable
 fun TopButton(

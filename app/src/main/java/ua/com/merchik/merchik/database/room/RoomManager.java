@@ -33,6 +33,7 @@ public class RoomManager {
                         MIGRATION_58_59,
                         MIGRATION_59_60,
                         MIGRATION_60_61
+                        , MIGRATION_61_62
                 )
 
                 .build();
@@ -660,6 +661,16 @@ public class RoomManager {
 
             // 4. Переименовываем временную таблицу
             database.execSQL("ALTER TABLE `planogram_vizit_showcase_temp` RENAME TO `planogram_vizit_showcase`");
+        }
+    };
+
+    static final Migration MIGRATION_61_62 = new Migration(61, 62) {
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase database) {
+//            database.execSQL("ALTER TABLE planogram_vizit_showcase ADD COLUMN local_synced INTEGER NOT NULL DEFAULT 0");
+//            database.execSQL("ALTER TABLE planogram_vizit_showcase ADD COLUMN local_sync_status INTEGER DEFAULT 0");
+            database.execSQL("ALTER TABLE planogram_vizit_showcase ADD COLUMN uploadStatus INTEGER DEFAULT 0");
+
         }
     };
 }

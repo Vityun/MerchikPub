@@ -6,6 +6,7 @@ import android.util.Log
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
@@ -30,32 +31,37 @@ fun TextInStrokeCircle(
     circleSize: Dp,
     textSize: Float,
 ) {
-    Log.e("%%%%%%%%%%","text: $text")
     Box(
         modifier = Modifier
             .size(45.dp)
-            .clip(CircleShape)
-            .background(aroundColor),
+            .clip(CircleShape),
         contentAlignment = Alignment.Center
     ) {
-        Canvas(modifier = modifier.size(circleSize)) {
-            drawCircle(
-                color = Color.White,
-            )
-            drawCircle(
-                color = circleColor,
-                style = Stroke(width = 1.dp.toPx())
-            )
+        Box(
+            modifier = Modifier
+                .fillMaxSize(0.85f) // 55% от 45.dp
+                .clip(CircleShape)
+                .background(aroundColor)
+        ) {
+            Canvas(modifier = modifier.size(circleSize)) {
+                drawCircle(
+                    color = Color.White,
+                )
+                drawCircle(
+                    color = circleColor,
+                    style = Stroke(width = 1.dp.toPx())
+                )
 
-            drawIntoCanvas { canvas ->
-                val paint = TextPaint().apply {
-                    this.color = textColor.toArgb()
-                    this.textSize = textSize
-                    this.textAlign = Paint.Align.CENTER
+                drawIntoCanvas { canvas ->
+                    val paint = TextPaint().apply {
+                        this.color = textColor.toArgb()
+                        this.textSize = textSize
+                        this.textAlign = Paint.Align.CENTER
+                    }
+                    val x = center.x
+                    val y = center.y - (paint.descent() + paint.ascent()) / 2
+                    canvas.nativeCanvas.drawText(text, x, y, paint)
                 }
-                val x = center.x
-                val y = center.y - (paint.descent() + paint.ascent()) / 2
-                canvas.nativeCanvas.drawText(text, x, y, paint)
             }
         }
     }

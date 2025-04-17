@@ -959,17 +959,18 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
                     imageView.setOnClickListener(v -> {
                         Log.e("ФОТО_ТОВАРОВ", "Click");
                         Exchange exchange = new Exchange();
+                        displayFullSizeTovarPhotoDialog(list);
                         exchange.getTovarImg(Collections.singletonList(list), "full", new Globals.OperationResult() {
                             @Override
                             public void onSuccess() {
                                 Log.e("ФОТО_ТОВАРОВ", "onSuccess");
-                                displayFullSizeTovarPhotoDialog(list);
+//                                displayFullSizeTovarPhotoDialog(list);
                             }
 
                             @Override
                             public void onFailure(String error) {
                                 Log.e("ФОТО_ТОВАРОВ", "onFailure");
-                                displayFullSizeTovarPhotoDialog(list);
+//                                displayFullSizeTovarPhotoDialog(list);
                             }
                         });
 

@@ -1178,6 +1178,7 @@ public class Exchange {
                     });
                     planogrammTableExchange.planorgammType();
                     planogrammTableExchange.planogrammVisitShowcase();
+                    planogrammTableExchange.planogrammVisitShowcaseUploadData();
 
                 } catch (Exception e) {
                     Globals.writeToMLOG("ERROR", "startExchange/PlanogrammExchange/planogrammDownload", "Exception e: " + e);
@@ -2469,7 +2470,7 @@ public class Exchange {
 //        List<AdditionalRequirementsMarkDB> list = RealmManager.INSTANCE.copyFromRealm(realmList);
         List<MarkData> markLIST = new ArrayList<>();
 
-        if (list == null) {
+        if (list == null || list.isEmpty()) {
             Globals.writeToMLOG("INFO", "sendARMark", "list to download: NULL");
             return;
         }

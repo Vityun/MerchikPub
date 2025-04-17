@@ -84,7 +84,7 @@ public class RecyclerViewTPLAdapter extends RecyclerView.Adapter<RecyclerView.Vi
         this.click = click;
     }
 
-    public void setAddReq(AdditionalRequirementsDB additionalRequirementsDB, Clicks.clickVoid clickVoid){
+    public void setAddReq(AdditionalRequirementsDB additionalRequirementsDB, Clicks.clickVoid clickVoid) {
         this.additionalRequirementsDB = additionalRequirementsDB;
         this.clickAR = clickVoid;
     }
@@ -217,7 +217,7 @@ public class RecyclerViewTPLAdapter extends RecyclerView.Adapter<RecyclerView.Vi
                         int text;
                         try {
                             text = Integer.parseInt(editText.getText().toString());
-                        }catch (Exception e){
+                        } catch (Exception e) {
                             text = 0;
                         }
 
@@ -457,7 +457,7 @@ public class RecyclerViewTPLAdapter extends RecyclerView.Adapter<RecyclerView.Vi
 
                     }
                 });
-            }catch (Exception e){
+            } catch (Exception e) {
                 Globals.writeToMLOG("ERROR", "RecyclerViewTPLAdapter/setSpinner", "Exception e: " + e);
             }
         }
@@ -679,10 +679,10 @@ public class RecyclerViewTPLAdapter extends RecyclerView.Adapter<RecyclerView.Vi
                 dialog.setImage(true, getPhotoFromDB(tov));
                 dialog.setAdditionalText(setPhotoInfo(TPL, tov, "", ""));
                 String groupPos = null;
-                if (TPL.getOptionId().contains(135591)){
+                if (TPL.getOptionId().contains(135591)) {
                     groupPos = "22";
                 }
-                if (TPL.getOptionId().contains(157241)){
+                if (TPL.getOptionId().contains(157241)) {
                     groupPos = "13";
                 }
                 dialog.setExpandableListView(createExpandableAdapter(dialog.context, groupPos), () -> {
@@ -698,7 +698,7 @@ public class RecyclerViewTPLAdapter extends RecyclerView.Adapter<RecyclerView.Vi
             try {
                 int count = 0;
                 List<StackPhotoDB> stackPhotoDBList = StackPhotoRealm.getPhotoByTypeAndTovar(4, dataRp.tovarId);
-                if (stackPhotoDBList != null){
+                if (stackPhotoDBList != null) {
                     count = stackPhotoDBList.size();
                 }
                 textViewCounter.setText("" + count);
@@ -708,12 +708,12 @@ public class RecyclerViewTPLAdapter extends RecyclerView.Adapter<RecyclerView.Vi
                                     itemView.getContext(),
                                     WpDataRealm.getWpDataRowByDad2Id(Long.parseLong(dataRp.codeDad2)),
                                     null,
-                                    ()->{
+                                    () -> {
                                         notifyDataSetChanged();
                                     })
                             .show();
                 });
-            }catch (Exception e){
+            } catch (Exception e) {
                 Log.e("RVTPLAdapter_bind", "Exception e: " + e);
             }
         }

@@ -3,14 +3,10 @@ package ua.com.merchik.merchik.features.main.DBViewModels
 import android.app.Application
 import androidx.lifecycle.SavedStateHandle
 import dagger.hilt.android.lifecycle.HiltViewModel
-import ua.com.merchik.merchik.data.Database.Room.AddressSDB
-import ua.com.merchik.merchik.data.RealmModels.ThemeDB
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB
-import ua.com.merchik.merchik.dataLayer.ModeUI
 import ua.com.merchik.merchik.dataLayer.DataObjectUI
 import ua.com.merchik.merchik.dataLayer.MainRepository
 import ua.com.merchik.merchik.dataLayer.NameUIRepository
-import ua.com.merchik.merchik.dataLayer.join
 import ua.com.merchik.merchik.dataLayer.model.DataItemUI
 import ua.com.merchik.merchik.dialogs.DialogAchievement.FilteringDialogDataHolder
 import ua.com.merchik.merchik.features.main.Main.MainViewModel

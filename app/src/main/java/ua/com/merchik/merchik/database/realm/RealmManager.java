@@ -844,6 +844,23 @@ public class RealmManager {
         return st;
     }
 
+    public static StackPhotoDB getPhotoByPhotoId(String photoServerId) {
+
+        RealmQuery<StackPhotoDB> query = INSTANCE.where(StackPhotoDB.class);
+
+            query.equalTo("photoServerId", photoServerId)
+                    .isNotNull("photo_num");
+
+        StackPhotoDB st;
+        if (query.findFirst() != null) {
+            st = INSTANCE.copyFromRealm(query.findFirst());
+        } else {
+            st = null;
+        }
+        return st;
+    }
+
+
     public static StackPhotoDB getPhotoByIdAndType(Integer id, String photoServerId, int photoType) {
 
         Log.e("GET_TOV_PHOTO 2", "Data: " + id + "/" + photoServerId + "/" + photoType);

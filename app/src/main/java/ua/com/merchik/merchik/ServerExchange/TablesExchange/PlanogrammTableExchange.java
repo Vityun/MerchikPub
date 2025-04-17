@@ -5,7 +5,13 @@ import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 import android.util.Log;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.core.Single;
@@ -27,6 +33,7 @@ import ua.com.merchik.merchik.data.RetrofitResponse.tables.planogramm.Planogramm
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.planogramm.PlanogrammVizitShowcaseResponse;
 import ua.com.merchik.merchik.data.TestJsonUpload.StandartData;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.PlanogrammTypeDao;
+import ua.com.merchik.merchik.database.room.RoomManager;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
 
 public class PlanogrammTableExchange {
@@ -498,6 +505,73 @@ public class PlanogrammTableExchange {
                     String er = throwable.getMessage();
                     Globals.writeToMLOG("ERROR", "PlanogrammTableExchange/planogrammVisitShowcase", "exeption: " + throwable.getMessage());
                         });
+    }
+
+
+    // выгрузка таблицы визитов планоргам
+    public void planogrammVisitShowcaseUploadData() {
+
+        StandartData data = new StandartData();
+        data.mod = "planogram";
+        data.act = "vizit_showcase_save";
+//        data.nolimit = "1";
+
+//        List<PlanogrammVizitShowcaseSDB> planograms = SQL_DB.planogrammVizitShowcaseDao().getAllUploadedPlanograms();
+        List<PlanogrammVizitShowcaseSDB> planogrammVizitShowcaseSDBList = SQL_DB.planogrammVizitShowcaseDao().getAllUploadedPlanograms();
+
+        if (planogrammVizitShowcaseSDBList == null || planogrammVizitShowcaseSDBList.isEmpty())
+            return;
+
+        Gson gson = new Gson();
+//        String json = gson.toJson(data);
+        JsonObject jsonObject = gson.toJsonTree(data).getAsJsonObject();
+        JsonElement planogramJsonArray = gson.toJsonTree(planogrammVizitShowcaseSDBList);
+//        JsonElement planogramJsonArray = gson.toJsonTree(Collections.singletonList(planogram));
+        jsonObject.add("list", planogramJsonArray);
+
+
+//        Gson gson2 = new GsonBuilder().setPrettyPrinting().create();
+//        String json = gson.toJson(planograms);
+
+
+//        JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
+
+
+
+        retrofit2.Call<JsonObject> call1 = RetrofitBuilder.getRetrofitInterface().TEST_JSON_UPLOAD(RetrofitBuilder.contentType, jsonObject);
+        call1.enqueue(new Callback<JsonObject>() {
+            @Override
+            public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
+                Log.e("planogramDownload", "planogramDownload: " + response.body());
+                Globals.writeToMLOG("INFO", "1_D_PlanogrammSDB", "response: " + response.body());
+
+            }
+
+            @Override
+            public void onFailure(Call<JsonObject> call, Throwable t) {
+                Log.e("planogramDownload", "planogramDownloadThrowable t: " + t);
+                Globals.writeToMLOG("INFO", "1_D_PlanogrammSDB", "Throwable t: " + t);
+            }
+        });
+
+
+//        RetrofitBuilder.getRetrofitInterface()
+//                .PLANOGRAMM_VIZIT_SHOWCASE_RESPONSE(RetrofitBuilder.contentType, convertedObject)
+//                .subscribeOn(Schedulers.io())
+//                .observeOn(AndroidSchedulers.mainThread())
+//                .subscribe(planogrammVizitShowcaseResponse -> {
+//                            if (planogrammVizitShowcaseResponse.state && planogrammVizitShowcaseResponse.list != null) {
+//                                SQL_DB.planogrammVizitShowcaseDao()
+//                                        .insertAll(planogrammVizitShowcaseResponse.list)
+//                                        .subscribeOn(Schedulers.io())
+//                                        .subscribe();
+//                                Globals.writeToMLOG("INFO", "PlanogrammTableExchange/planogrammVisitShowcase", "Data inserted successfully");
+//                            }
+//                        },
+//                        throwable -> {
+//                            String er = throwable.getMessage();
+//                            Globals.writeToMLOG("ERROR", "PlanogrammTableExchange/planogrammVisitShowcase", "exeption: " + throwable.getMessage());
+//                        });
 
 
     }

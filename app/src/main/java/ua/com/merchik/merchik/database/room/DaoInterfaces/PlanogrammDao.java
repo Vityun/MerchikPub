@@ -164,4 +164,62 @@ public interface PlanogrammDao {
             String ttId
     );
 
+
+//    @Query("""
+//            SELECT DISTINCT
+//              p.id AS id,
+//              p.client_id AS planogrammClientId,
+//              p.nm AS planogrammName,
+//              p.comments AS planogrammComment,
+//              p.dt_start AS planogrammDtStart,
+//              p.dt_end AS planogrammDtEnd,
+//              pa.addr_id AS planogrammAddress,
+//              pa.addr_txt AS planogrammAddressTxt,
+//              pa.city_txt AS planogrammCityTxt,
+//              pg.group_id AS planogrammGroupId,
+//              pg.group_txt AS planogrammGroupTxt,
+//              p.photo_id AS planogrammPhotoId
+//            FROM planogramm p
+//            LEFT JOIN planogramm_address pa ON pa.planogram_id = p.id
+//            LEFT JOIN planogramm_group pg ON pg.planogram_id = p.id
+//            LEFT JOIN planogramm_type pt ON pt.planogram_id = p.id
+//            WHERE (pa.addr_id IS NOT NULL AND pa.addr_id > 0)
+//              AND (pg.group_id IS NOT NULL AND pg.group_id > 0)
+//              AND (pt.tt_id IS NOT NULL AND pt.tt_id > 0)
+//            """)
+//    List<PlanogrammJOINSDB> getPlanogrammsByClientAddressTtId2(
+//            String clientId,
+//            Integer addressId,
+//            String ttId
+//    );
+
+    @Query("""
+    SELECT DISTINCT
+    p.id as id,
+    p.client_id as planogrammClientId,
+    p.client_txt as planogrammClientTxt,
+    p.nm as planogrammName,
+    p.comments as planogrammComment,
+    p.dt_start as planogrammDtStart,
+    p.dt_end as planogrammDtEnd,
+    pa.addr_id as planogrammAddress,
+    pa.addr_txt as planogrammAddressTxt,
+    pa.city_txt as planogrammCityTxt,
+    pg.group_id as planogrammGroupId,
+    pg.group_txt as planogrammGroupTxt,
+    p.photo_id as planogrammPhotoId
+    FROM planogramm as p
+    LEFT JOIN planogramm_address as pa ON pa.planogram_id = p.id
+    LEFT JOIN planogramm_group as pg ON pg.planogram_id = p.id
+    LEFT JOIN planogramm_type as pt ON pt.planogram_id = p.id
+    WHERE p.client_id = :clientId
+    AND (:addressId IS NULL OR pa.addr_id = :addressId)
+    AND (:ttId IS NULL OR pt.tt_id = :ttId)
+    ORDER BY p.dt_start DESC
+""")
+    List<PlanogrammJOINSDB> getPlanogrammsByClientAddressTtId3(
+            String clientId,
+            Integer addressId,
+            String ttId
+    );
 }

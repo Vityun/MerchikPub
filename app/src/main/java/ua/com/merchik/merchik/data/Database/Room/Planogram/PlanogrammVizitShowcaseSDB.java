@@ -4,6 +4,7 @@ package ua.com.merchik.merchik.data.Database.Room.Planogram;
 import androidx.annotation.NonNull;
 import androidx.room.ColumnInfo;
 import androidx.room.Entity;
+import androidx.room.Ignore;
 import androidx.room.PrimaryKey;
 
 import com.google.gson.annotations.Expose;
@@ -12,10 +13,14 @@ import com.google.gson.annotations.SerializedName;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
+import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.dataLayer.DataObjectUI;
 import ua.com.merchik.merchik.dataLayer.model.MerchModifier;
+import ua.com.merchik.merchik.features.main.PlanogrammVizitShowcaseSDBOverride;
 
 @Entity(tableName = "planogram_vizit_showcase")
 public class PlanogrammVizitShowcaseSDB implements DataObjectUI {
@@ -132,10 +137,26 @@ public class PlanogrammVizitShowcaseSDB implements DataObjectUI {
     @ColumnInfo(name = "kol")
     public Integer kol;  // Количество (для суммирования при свертке)
 
+//    @ColumnInfo(name = "local_sync_status", defaultValue = "0")
+//    @Ignore // Игнорируется при сериализации
+//    public Integer local_sync_status;  // 0 = не надо выгружать/уже выгруженно, 1 = на загрузит на сервер
+
+    @Ignore
+    public String score;
+
+
+    //    @SerializedName("uploadStatus")
+//    @Expose
+    @ColumnInfo(name = "uploadStatus")
+    public Integer uploadStatus; // 0 = не надо выгружать/уже выгруженно, 1 = на загрузит на сервер
+
+
     @NonNull
     @Override
     public String getHidedFieldsOnUI() {
-        return DataObjectUI.DefaultImpls.getHidedFieldsOnUI(this);
+        return "ID, dt, isp, client_id, addr_id, code_dad2, planogram_id, planogram_photo_id, " +
+                "showcase_id, showcase_photo_id, photo_do_id, theme_id, option_id, object_a, " +
+                "object_a_theme_id, object_b, object_b_theme_id, author_id, dt_update, kol, score";
     }
 
     @Nullable
@@ -159,7 +180,7 @@ public class PlanogrammVizitShowcaseSDB implements DataObjectUI {
     @Nullable
     @Override
     public MerchModifier getValueModifier(@NonNull String key, @NonNull JSONObject jsonObject) {
-        return DataObjectUI.DefaultImpls.getValueModifier(this, key, jsonObject);
+        return PlanogrammVizitShowcaseSDBOverride.INSTANCE.getValueModifier(key, jsonObject);
     }
 
     @Nullable
@@ -171,19 +192,92 @@ public class PlanogrammVizitShowcaseSDB implements DataObjectUI {
     @Nullable
     @Override
     public Integer getIdResImage() {
-        return DataObjectUI.DefaultImpls.getIdResImage(this);
+        return R.drawable.merchik;
     }
 
     @NonNull
     @Override
     public String getFieldsImageOnUI() {
-        return DataObjectUI.DefaultImpls.getFieldsImageOnUI(this);
+        return "planogram_photo_id, showcase_photo_id, photo_do_id";
     }
 
     @Nullable
     @Override
     public List<String> getFieldsForOrderOnUI() {
-        return DataObjectUI.DefaultImpls.getFieldsForOrderOnUI(this);
+        String[] parts = "Планограма, Вітрина, Фото вітрини".split(",");
+        List<String> result = new ArrayList<>();
+        for (String part : parts) {
+            result.add(part.trim());
+        }
+        return result;
+        //        return DataObjectUI.DefaultImpls.getFieldsForOrderOnUI(this);
+    }
+
+    public PlanogrammVizitShowcaseSDB copy() {
+        PlanogrammVizitShowcaseSDB copy = new PlanogrammVizitShowcaseSDB();
+        copy.id = this.id;
+        copy.dt = this.dt;
+        copy.isp = this.isp;
+        copy.client_id = this.client_id;
+        copy.addr_id = this.addr_id;
+        copy.code_dad2 = this.code_dad2;
+        copy.planogram_id = this.planogram_id;
+        copy.planogram_photo_id = this.planogram_photo_id;
+        copy.showcase_id = this.showcase_id;
+        copy.showcase_photo_id = this.showcase_photo_id;
+        copy.photo_do_id = this.photo_do_id;
+        copy.theme_id = this.theme_id;
+        copy.option_id = this.option_id;
+        copy.comments = this.comments;
+        copy.object_a = this.object_a;
+        copy.object_a_theme_id = this.object_a_theme_id;
+        copy.object_b = this.object_b;
+        copy.object_b_theme_id = this.object_b_theme_id;
+        copy.author_id = this.author_id;
+        copy.dt_update = this.dt_update;
+        copy.kol = this.kol;
+        return copy;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        PlanogrammVizitShowcaseSDB that = (PlanogrammVizitShowcaseSDB) o;
+
+        return
+                Objects.equals(id, that.id) &&
+                        Objects.equals(dt, that.dt) &&
+                        Objects.equals(isp, that.isp) &&
+                        Objects.equals(client_id, that.client_id) &&
+                        Objects.equals(addr_id, that.addr_id) &&
+                        Objects.equals(code_dad2, that.code_dad2) &&
+                        Objects.equals(planogram_id, that.planogram_id) &&
+                        Objects.equals(planogram_photo_id, that.planogram_photo_id) &&
+                        Objects.equals(showcase_id, that.showcase_id) &&
+                        Objects.equals(showcase_photo_id, that.showcase_photo_id) &&
+                        Objects.equals(photo_do_id, that.photo_do_id) &&
+                        Objects.equals(theme_id, that.theme_id) &&
+                        Objects.equals(option_id, that.option_id) &&
+                        Objects.equals(comments, that.comments) &&
+                        Objects.equals(object_a, that.object_a) &&
+                        Objects.equals(object_a_theme_id, that.object_a_theme_id) &&
+                        Objects.equals(object_b, that.object_b) &&
+                        Objects.equals(object_b_theme_id, that.object_b_theme_id) &&
+                        Objects.equals(author_id, that.author_id) &&
+                        Objects.equals(dt_update, that.dt_update) &&
+                        Objects.equals(kol, that.kol);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(
+                id, dt, isp, client_id, addr_id, code_dad2, planogram_id,
+                planogram_photo_id, showcase_id, showcase_photo_id, photo_do_id,
+                theme_id, option_id, comments, object_a, object_a_theme_id,
+                object_b, object_b_theme_id, author_id, dt_update, kol
+        );
     }
 
 }

@@ -95,6 +95,7 @@ class SamplePhotoSDBViewModel @Inject constructor(
         val dataJsonObject = Gson().fromJson(dataJson, JsonObject::class.java)
         val wpDataDB =
             RealmManager.INSTANCE.copyFromRealm(WpDataRealm.getWpDataRowById(dataJsonObject.get("wpDataDBId").asString.toLong()))
+        val id  = dataJsonObject.get("optionDBId").asString
         val optionDB =
             RealmManager.INSTANCE.copyFromRealm(OptionsRealm.getOptionById(dataJsonObject.get("optionDBId").asString))
         if (wpDataDB != null && optionDB != null) {
@@ -169,10 +170,7 @@ class SamplePhotoSDBViewModel @Inject constructor(
                                 MakePhoto.example_img_id = it.toString()
                             }
                         }
-                        Log.e(
-                            "!!!!!!!",
-                            "example_id: ${MakePhoto.example_id} | example_img_id: ${MakePhoto.example_img_id}"
-                        )
+
                         makePhoto.pressedMakePhotoOldStyle<WpDataDB>(
                             context as Activity,
                             wpDataObj,

@@ -41,7 +41,6 @@ import androidx.preference.PreferenceManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
-//import com.google.firebase.crashlytics.FirebaseCrashlytics;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -219,6 +218,7 @@ public class menu_login extends AppCompatActivity {
 
         } catch (Exception e) {
             globals.alertDialogMsg(this, "Ошибка при входе(0): " + e);
+            Log.e("error", e.getMessage());
         }
 
         try {

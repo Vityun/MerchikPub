@@ -7,6 +7,8 @@ import android.app.Dialog;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.net.Uri;
+import android.util.Log;
+import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.ImageButton;
@@ -41,7 +43,7 @@ public class DialogFullPhotoR {
     // Pika комментарий сразу поверх фото
     public boolean commentOn = false;
 
-
+    private int score;
     // ------------------------
     private ImageButton close, help, videoHelp, call;
 
@@ -67,7 +69,6 @@ public class DialogFullPhotoR {
         // Pika
         comment1 = dialog.findViewById(R.id.buttonComment);
         comment1.setOnClickListener(v -> {
-
         try {
 //            Toast.makeText(context, textComment1, Toast.LENGTH_LONG).show();
             DialogData dialogData = new DialogData(context);
@@ -76,11 +77,11 @@ public class DialogFullPhotoR {
             dialogData.setClose(dialogData::dismiss);
             dialogData.show();
         }catch (Exception e){
-//            DialogData dialogData = new DialogData(context);
-//            dialogData.setTitle("Произошла ошибка");
-//            dialogData.setText(textComment1);
-//            dialogData.setClose(dialogData::dismiss);
-//            dialogData.show();
+////            DialogData dialogData = new DialogData(context);
+////            dialogData.setTitle("Произошла ошибка");
+////            dialogData.setText(textComment1);
+////            dialogData.setClose(dialogData::dismiss);
+////            dialogData.show();
         }
 
         });
@@ -95,6 +96,7 @@ public class DialogFullPhotoR {
             DialogData dialogData = new DialogData(context);
             dialogData.setTitle("Комментарий");
             dialogData.setText(textComment1);
+            dialogData.setScore(score);
             dialogData.setClose(dialogData::dismiss);
             dialogData.show();
         }
@@ -111,6 +113,10 @@ public class DialogFullPhotoR {
     }
 
     // ---------------------------------------------------------------------------------------------
+
+    public void hideCamera() {
+        camera.setVisibility(View.GONE);
+    }
 
     public void setCamera(Clicks.clickVoid clickVoid){
         camera.setOnClickListener((view) -> {
@@ -148,11 +154,14 @@ public class DialogFullPhotoR {
     public void setComment(String txt) {
         if (txt == null)
             textComment1="Комментарий отсутствует";
-        else if (txt == "")
+        else if (txt.isEmpty())
             textComment1="Комментарий отсутствует";
         else
             textComment1=txt;
     }
 
+    public void setScore(int score) {
+        this.score = score;
+    }
 }
 

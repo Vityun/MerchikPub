@@ -456,3 +456,33 @@ object OpinionSDBOverride {
         "dt_change, grp_id, ID"
 
 }
+
+object PlanogrammVizitShowcaseSDBOverride {
+
+    fun getValueModifier(key: String, jsonObject: JSONObject): MerchModifier? = when (key) {
+        "comments" -> {
+            val score = jsonObject.optString("score", "") // Безопасное получение score
+//            val commentsText = if (score == "0") {
+//                "Вкажіть оцінку планограми від 1 до 9"
+//            } else {
+//                "Поточна оцінка планограми:"
+//            }
+
+            // Обновляем значение comments в JSONObject
+            jsonObject.put("comments", "Фото ще не завантажилися. Зачекайте кілька хвилин і спробуйте ще раз. Або зробіть примусову синхронізацію")
+
+            // Возвращаем модификатор в зависимости от условия
+            if (score == "0") {
+                MerchModifier(
+                    fontWeight = FontWeight.Bold,
+                    fontStyle = FontStyle.Normal,
+                    weight = 1f
+                )
+            } else {
+                MerchModifier()
+            }
+        }
+
+        else -> null
+    }
+}

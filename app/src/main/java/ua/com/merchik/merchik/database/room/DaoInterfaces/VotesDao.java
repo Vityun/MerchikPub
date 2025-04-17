@@ -47,4 +47,41 @@ public interface VotesDao {
     @Query("SELECT * FROM votes WHERE dt_upload = 0")
     List<VoteSDB> getAllToUpload();
 
+    /**
+     * 14.04.25.
+     * Для планограммы посещения
+     * */
+    @Query("""
+                SELECT * FROM votes WHERE code_dad2 = :codeDad2 AND
+                    vote_class = :voteClass AND
+                    (:photo_id = 0 OR photo_id = :photo_id)
+            ORDER BY dt DESC
+                LIMIT 1
+            """)
+    VoteSDB getVote(
+            long codeDad2,
+            long photo_id,
+            int voteClass
+    );
+//    @Query("""
+//    SELECT * FROM votes WHERE (:codeDad2 IS NULL OR code_dad2 = :codeDad2) AND
+//        (:client IS NULL OR kli = :client) AND
+//        (:addr = 0 OR addr_id = :addr) AND
+//        (:photo_id = 0 OR photo_id = :photo_id) AND
+//        (:voteClass = 0 OR vote_class = :voteClass)
+//    ORDER BY dt_year DESC, dt_month DESC, dt_day DESC, dt_upload DESC
+//    LIMIT 1
+//""")    VoteSDB getVote(long codeDad2, String client, int addr, long photo_id, int voteClass);
+
+    @Query("""
+    SELECT * FROM votes WHERE code_dad2 = :codeDad2 AND
+        vote_class = :voteClass AND
+        (:photo_id = 0 OR photo_id = :photo_id)
+
+""")
+    List<VoteSDB> getVoteAll(
+            long codeDad2,
+            long photo_id,
+            int voteClass
+    );
 }

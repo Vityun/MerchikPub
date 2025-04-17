@@ -290,9 +290,8 @@ class DialogShowcase(private val context: Context?) : DialogData() {
 
 //                    val stackPhoto =
 //                        StackPhotoRealm.stackPhotoDBGetPhotoBySiteId2(item.photoId.toString())
-                    val stackPhotoDBS =
-                        StackPhotoRealm.getShowcase(item.id, wpDataDB!!.code_dad2, photoType)
-                        StackPhotoRealm.stackPhotoDBGetPhotoBySiteId2(item.photoId.toString())
+                    val stackPhotoDBS = StackPhotoRealm.getShowcase(item.id, wpDataDB!!.code_dad2, photoType)
+//                        StackPhotoRealm.stackPhotoDBGetPhotoBySiteId2(item.photoId.toString())
                     if (stackPhotoDBS != null && stackPhotoDBS.size > 0) {
                         item.showcasePhoto =
                             stackPhotoDBS.size // Меня тут просили ставить просто 1 или 0, но я слишком умный, да

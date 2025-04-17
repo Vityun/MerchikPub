@@ -73,8 +73,7 @@ class MainRepository(
                 VacancySDB::class -> roomManager.vacancyDao().all.first() as DataObjectUI
                 SamplePhotoSDB::class -> roomManager.samplePhotoDao().all.first() as DataObjectUI
                 AddressSDB::class -> roomManager.addressDao().all.first() as DataObjectUI
-                PlanogrammVizitShowcaseSDB::class-> roomManager.planogrammVizitShowcaseDao().all.first() as DataObjectUI
-
+//                PlanogrammVizitShowcaseSDB::class-> roomManager.planogrammVizitShowcaseDao().all.first() as DataObjectUI
                 else -> { null }
             }
         }

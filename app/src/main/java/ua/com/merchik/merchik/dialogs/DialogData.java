@@ -86,7 +86,7 @@ public class DialogData {
     // ---- Data output Dialog ----
     private String result;
     private String result2;
-
+    private int score;
 
     // ---- UI start ----
     private Dialog dialog;
@@ -119,6 +119,10 @@ public class DialogData {
 
 
     public DialogData() {
+    }
+
+    public void setScore(int score) {
+        this.score = score;
     }
 
     public enum Operations {
