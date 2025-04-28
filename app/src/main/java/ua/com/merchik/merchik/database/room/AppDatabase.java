@@ -152,7 +152,7 @@ import ua.com.merchik.merchik.database.room.DaoInterfaces.VotesDao;
                 SiteUrlSDB.class,
                 SiteAccountSDB.class
         },
-        version = 62
+        version = 63
 )
 
 

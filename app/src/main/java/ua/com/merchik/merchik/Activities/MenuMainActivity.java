@@ -4,18 +4,14 @@ import static ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedR
 import static ua.com.merchik.merchik.database.realm.RealmManager.getAllWorkPlan;
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
-import android.app.Activity;
-import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.widget.Toolbar;
-import androidx.core.app.ActivityCompat;
 import androidx.lifecycle.ViewModelProvider;
 
-import com.google.android.gms.common.api.Api;
 import com.google.android.material.navigation.NavigationView;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
@@ -31,33 +27,15 @@ import io.realm.RealmResults;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
-import ua.com.merchik.merchik.Activities.Features.FeaturesActivity;
-import ua.com.merchik.merchik.Clock;
-import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.R;
-import ua.com.merchik.merchik.ServerExchange.Exchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.PlanogrammTableExchange;
-import ua.com.merchik.merchik.ServerExchange.TablesExchange.SiteObjectsExchange;
-import ua.com.merchik.merchik.ServerExchange.TablesLoadingUnloading;
-import ua.com.merchik.merchik.Translate;
 import ua.com.merchik.merchik.Utils.CodeGenerator;
-import ua.com.merchik.merchik.data.Database.Room.Planogram.PlanogrammSDB;
-import ua.com.merchik.merchik.data.Database.Room.Planogram.PlanogrammVizitShowcaseSDB;
 import ua.com.merchik.merchik.data.RealmModels.AppUsersDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.ShowcaseResponse;
-import ua.com.merchik.merchik.data.RetrofitResponse.tables.planogramm.PlanogrammVizitShowcaseResponse;
 import ua.com.merchik.merchik.data.TestJsonUpload.StandartData;
-import ua.com.merchik.merchik.dataLayer.ContextUI;
-import ua.com.merchik.merchik.dataLayer.ModeUI;
-import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.AppUserRealm;
-import ua.com.merchik.merchik.database.realm.tables.ImagesTypeListRealm;
-import ua.com.merchik.merchik.dialogs.DialogAchievement.FilteringDialogDataHolder;
 import ua.com.merchik.merchik.dialogs.DialogShowcase.DialogShowcase;
-import ua.com.merchik.merchik.features.main.DBViewModels.OpinionSDBViewModel;
-import ua.com.merchik.merchik.features.main.DBViewModels.PlanogrammVizitShowcaseViewModel;
-import ua.com.merchik.merchik.features.main.DBViewModels.ThemeDBViewModel;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
 import ua.com.merchik.merchik.toolbar_menus;
 

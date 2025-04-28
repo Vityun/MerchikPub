@@ -137,6 +137,7 @@ import ua.com.merchik.merchik.data.TestJsonUpload.StandartData;
 import ua.com.merchik.merchik.data.TestJsonUpload.StandartDataClasses.MarkData;
 import ua.com.merchik.merchik.data.TestJsonUpload.StandartDataClasses.TARUpload;
 import ua.com.merchik.merchik.data.TestJsonUpload.StandartDataClasses.TARUploadData;
+import ua.com.merchik.merchik.data.TestJsonUpload.StratEndWork.StartEndData;
 import ua.com.merchik.merchik.data.TestJsonUpload.StratEndWork.UploadDataSEWork;
 import ua.com.merchik.merchik.data.TestJsonUpload.TARCommentDataListUpload;
 import ua.com.merchik.merchik.data.TestJsonUpload.TARCommentDataUpload;
@@ -168,7 +169,7 @@ public class Exchange {
     public Context context;
     public static long exchangeTime = 0;
     //    private int retryTime = 120000;   // 2
-    private final int retryTime = 600000;     // 10
+    public final int retryTime = 600000;     // 10
 //    private int retryTime = 60000;     // 1
 
 //    private final ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
@@ -243,6 +244,12 @@ public class Exchange {
 
                 try {
                     sendWpData2();
+
+                    updateLanguages();  // Обновление языков
+                    updateSiteObj();    // Обновление Обьектов Сайта
+                    updateTranslates();  // Обновление Переводов
+
+
                     globals.writeToMLOG(Clock.getHumanTime() + "_INFO.Exchange.class.startExchange.Успех.3." + "\n");
                 } catch (Exception e) {
                     globals.writeToMLOG(Clock.getHumanTime() + "_INFO.Exchange.class.startExchange.Ошибка.3." + e + "\n");
@@ -938,12 +945,6 @@ public class Exchange {
                     Globals.writeToMLOG("ERROR", "startExchange/ReclamationPercentageExchange", "Exception e: " + e);
                 }
 
-
-                updateLanguages();  // Обновление языков
-                updateSiteObj();    // Обновление Обьектов Сайта
-                updateTranslates();  // Обновление Переводов
-
-
                 try {
                     new PotentialClientTableExchange().downloadPotentialClientTable(new Clicks.clickStatusMsg() {
                         @Override
@@ -1259,8 +1260,13 @@ public class Exchange {
                         .setSubTitle("Время ответа от сервера может быть больше чем обычно")
                         .setMessage("На данный момент сервер загружен и время ожидания может быть больше чем обычно. Ни в коем случае не переустанавливайте приложение, так как время ожидания увеличиться во много раз, и вы можете потерять часть данных, которые не были переданы на сервер." +
                                 "Если после ожидания ни чего не изменилось, повторите вашу попытку через несколько минут")
-                        .setOnConfirmAction(() -> Unit.INSTANCE)
+                        .setOnConfirmAction(() -> {
+                            exchangeTime = 0;
+                            startExchange();
+                            return Unit.INSTANCE;
+                        })
                         .show();
+
             } else {
                 long time = (System.currentTimeMillis() - exchangeTime) / 1000;
                 Log.e("startExchange", "start/Время обновлять НЕ наступило. После обновления прошло: " + time + "секунд.");
@@ -2294,11 +2300,14 @@ public class Exchange {
      * 31.03.2021
      * Новая отправка на сервер данных о Начале/Конце работы
      */
-    public static void sendWpData2() {
+    public void sendWpData2() {
+        List<StartEndData> wpdataStartEnd = RealmManager.getWpDataStartEndWork();
+        if (wpdataStartEnd.isEmpty())
+            return;
         UploadDataSEWork data = new UploadDataSEWork();
         data.mod = "plan";
         data.act = "update_data";
-        data.data = RealmManager.getWpDataStartEndWork();
+        data.data = wpdataStartEnd;
 
         JsonObject convertedObject = new Gson().fromJson(new Gson().toJson(data), JsonObject.class);
         Log.e("sendWpData2", "convertedObject.json: " + convertedObject);
@@ -2361,6 +2370,8 @@ public class Exchange {
      * Нужно перекотиться на неё
      */
     public void sendWpDataToServer(Click result) {
+
+
         UploadDataSEWork data = new UploadDataSEWork();
         data.mod = "plan";
         data.act = "update_data";

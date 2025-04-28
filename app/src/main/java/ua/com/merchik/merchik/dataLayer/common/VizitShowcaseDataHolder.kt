@@ -6,6 +6,7 @@ class VizitShowcase(
     var showcaseId: Int = 0,
     var showcasePhotoId: Int = 0,
     var photoDoId: Int = 0,
+    var photoDoHash: String = ""
 )
 
 
@@ -50,83 +51,8 @@ class VizitShowcaseDataHolder private constructor() {
         return newItem
     }
 
-//    operator fun get(id: Int): VizitShowcase {
-//        return vizitShowcases.find { it.id == id } ?: VizitShowcase(id).also {
-//            vizitShowcases.add(it)
-//        }
-//    }
-
-    // 🔽 Новые методы обновления по ID:
-
-    fun setShowcaseId(id: Int, value: Int) {
-        val showcase = vizitShowcases.find { it.id == id }
-        if (showcase != null) {
-            showcase.showcaseId = value
-        } else {
-            vizitShowcases.add(VizitShowcase(id = id, showcaseId = value))
-        }
-    }
-
-    fun setShowcasePhotoId(id: Int, value: Int) {
-        val showcase = vizitShowcases.find { it.id == id }
-        if (showcase != null) {
-            showcase.showcasePhotoId = value
-        } else {
-            vizitShowcases.add(VizitShowcase(id = id, showcasePhotoId = value))
-        }
-    }
-
-    fun setPhotoDoId(id: Int, value: Int) {
-        val showcase = vizitShowcases.find { it.id == id }
-        if (showcase != null) {
-            showcase.photoDoId = value
-        } else {
-            vizitShowcases.add(VizitShowcase(id = id, photoDoId = value))
-        }
-    }
-
     // Очистка данных
     fun clear() {
         vizitShowcases.clear()
     }
 }
-
-//class VizitShowcaseDataHolder private constructor() {
-////    var photoId: Int? = null
-////    var photoServerId: String? = null
-//    val planogrammVizitMap = HashMap<Int,String>()
-//    val planogrammVizitShowcaseMap = HashMap<Int,String>()
-//    val planogrammVizitShowcaseMapId = HashMap<Int,Int>()
-//
-//    val showcase = VizitShowcase(0)
-//    val stackPhoto = VizitStackPhoto(0)
-//
-//    companion object {
-//        private var instance: VizitShowcaseDataHolder? = null
-//        fun instance(): VizitShowcaseDataHolder {
-//            if (instance == null) {
-//                instance = VizitShowcaseDataHolder()
-//            }
-//            return instance!!
-//        }
-//    }
-//
-//    fun init() {
-////        photoId = null
-////        photoServerId = null
-//        planogrammVizitMap.clear()
-//        planogrammVizitShowcaseMap.clear()
-//        planogrammVizitShowcaseMapId.clear()
-//    }
-//}
-//
-//data class VizitShowcase(
-//    var id: Int,
-//    var showcaseId: String? = null,
-//    var showcasePhotoId: String? = null
-//)
-//
-//data class VizitStackPhoto(
-//    val id: Int,
-//    val photoId: String? = null
-//)

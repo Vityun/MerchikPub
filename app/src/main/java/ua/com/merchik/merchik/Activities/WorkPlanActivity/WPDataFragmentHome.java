@@ -4,7 +4,6 @@ import static ua.com.merchik.merchik.Globals.userOwnership;
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
 import android.graphics.Paint;
-import android.media.metrics.Event;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -20,7 +19,6 @@ import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -33,7 +31,6 @@ import java.util.Date;
 import dagger.hilt.android.AndroidEntryPoint;
 import io.realm.RealmResults;
 import kotlin.Unit;
-import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportHomeFrag;
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.R;
@@ -45,10 +42,8 @@ import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.AppUserRealm;
 import ua.com.merchik.merchik.dialogs.DialogData;
-import ua.com.merchik.merchik.dialogs.DialogFilter.Click;
 import ua.com.merchik.merchik.dialogs.DialogFilter.DialogFilter;
 import ua.com.merchik.merchik.dialogs.features.LoadingDialogWithPercent;
-import ua.com.merchik.merchik.dialogs.features.LoadingIndicator;
 import ua.com.merchik.merchik.dialogs.features.MessageDialogBuilder;
 import ua.com.merchik.merchik.dialogs.features.dialogLoading.DialogDismissedListener;
 import ua.com.merchik.merchik.dialogs.features.dialogLoading.ProgressViewModel;
@@ -174,7 +169,7 @@ public class WPDataFragmentHome extends Fragment {
 
             if (workPlan == null || workPlan.isEmpty()) {
 
-                if (!initialOpen){
+                if (!initialOpen) {
                     new TablesLoadingUnloading().downloadAllTables(requireActivity());
                 }
 
@@ -184,16 +179,20 @@ public class WPDataFragmentHome extends Fragment {
                     @Override
                     public void onDialogDismissed() {
                         if (workPlan == null || workPlan.isEmpty())
+                            workPlan = RealmManager.getAllWorkPlan();
+                        if (workPlan == null || workPlan.isEmpty()) {
+                            new TablesLoadingUnloading().downloadAllTables(requireActivity());
                             new MessageDialogBuilder(requireActivity())
                                     .setStatus(DialogStatus.ALERT)
                                     .setTitle("Виникла помилка")
                                     .setSubTitle("Під час завантаження плану робіт")
                                     .setMessage("Не вдалося отримати план із сервера. Можливо, на даний момент сервер працює не стабільно або у вас проблеми з інтернет з'єднанням. Знайдіть місце з найкращим прийомом і повторіть спробу")
                                     .setOnConfirmAction(() -> {
-                                        new TablesLoadingUnloading().downloadAllTables(requireActivity());
+//                                        new TablesLoadingUnloading().downloadAllTables(requireActivity());
                                         return Unit.INSTANCE;
                                     })
                                     .show();
+                        }
                         else
                             visualizeWpData();
                     }

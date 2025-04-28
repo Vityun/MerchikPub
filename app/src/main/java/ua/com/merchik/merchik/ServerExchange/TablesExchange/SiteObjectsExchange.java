@@ -9,6 +9,9 @@ import com.google.gson.JsonObject;
 
 import java.util.List;
 
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.ServerExchange.Exchange;
 import ua.com.merchik.merchik.data.Database.Room.SiteObjectsSDB;
@@ -25,8 +28,7 @@ public class SiteObjectsExchange {
 
     public void downloadSiteObjects(Exchange.ExchangeInt exchangeInterface) {
         try {
-            // todo ADD M_LOG
-            Log.e("SiteObjectsExchange", "2");
+            Globals.writeToMLOG("INFO", "SiteObjectsExchange/downloadSiteObjects/", " +");
 
             StandartData data = new StandartData();
             data.mod = "site_objects";
@@ -37,25 +39,14 @@ public class SiteObjectsExchange {
             String json = gson.toJson(data);
             JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
 
-            retrofit2.Call<SiteObjectsResponse> call = RetrofitBuilder.getRetrofitInterface().GET_SITE_OBJECTS_R(RetrofitBuilder.contentType, convertedObject);
-            call.enqueue(new retrofit2.Callback<SiteObjectsResponse>() {
+            Call<SiteObjectsResponse> call = RetrofitBuilder.getRetrofitInterface().GET_SITE_OBJECTS_R(RetrofitBuilder.contentType, convertedObject);
+            call.enqueue(new Callback<SiteObjectsResponse>() {
                 @Override
-                public void onResponse(retrofit2.Call<SiteObjectsResponse> call, retrofit2.Response<SiteObjectsResponse> response) {
+                public void onResponse(Call<SiteObjectsResponse> call, Response<SiteObjectsResponse> response) {
                     try {
                         // todo ADD M_LOG
                         Log.e("SiteObjectsExchange", "3");
-
-                        //--------------------------------------------------------------------------
-                        SiteObjectsResponse MAKE_JSON = new SiteObjectsResponse();
-                        MAKE_JSON = response.body();
-
-                        List<SiteObjectsSDB> dataList = MAKE_JSON.objectSQLList;
-
-
-
-
-                        //--------------------------------------------------------------------------
-
+                        Globals.writeToMLOG("INFO", "SiteObjectsExchange/downloadSiteObjects/Response", " response: " + (response.body() != null ? response.body().objectSQLList : "null"));
 
                         if (response.body().state) {
                             if (response.body().error != null) {
@@ -63,6 +54,8 @@ public class SiteObjectsExchange {
                                 Log.e("SiteObjectsExchange", "4");
 
                                 exchangeInterface.onFailure("Замечание с сайта: " + response.body().error);
+                                Globals.writeToMLOG("INFO", "SiteObjectsExchange/downloadSiteObjects/Response_error", " response: " + response.body().error);
+
                             } else {
                                 // Нормальный функционал
                                 if (response.body().objectSQLList != null) {
@@ -70,6 +63,7 @@ public class SiteObjectsExchange {
                                         SQL_DB.siteObjectsDao().insertAll(response.body().objectSQLList);
                                         Log.e("SiteObjectsExchange", "Ok");
                                         exchangeInterface.onSuccess("Загрузило: " + response.body().objectSQLList.size() + " ОбьектовСайта.");
+                                        Globals.writeToMLOG("INFO", "SiteObjectsExchange/downloadSiteObjects/Response_error", " response: " + "Загрузило: " + response.body().objectSQLList.size() + " ОбьектовСайта.");
                                     } catch (Exception e) {
                                         Log.e("SiteObjectsExchange", "ERR");
                                         exchangeInterface.onFailure("Запись в БД: " + e);
@@ -97,7 +91,7 @@ public class SiteObjectsExchange {
                 }
 
                 @Override
-                public void onFailure(retrofit2.Call<SiteObjectsResponse> call, Throwable t) {
+                public void onFailure(Call<SiteObjectsResponse> call, Throwable t) {
                     // todo ADD M_LOG
                     Log.e("SiteObjectsExchange", "8");
 

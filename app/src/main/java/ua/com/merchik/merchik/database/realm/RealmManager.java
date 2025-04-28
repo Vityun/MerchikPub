@@ -860,6 +860,21 @@ public class RealmManager {
         return st;
     }
 
+    public static StackPhotoDB getPhotoByHash(String hash) {
+
+        RealmQuery<StackPhotoDB> query = INSTANCE.where(StackPhotoDB.class);
+
+        query.equalTo("photo_hash", hash)
+                .isNotNull("photo_num");
+
+        StackPhotoDB st;
+        if (query.findFirst() != null) {
+            st = INSTANCE.copyFromRealm(query.findFirst());
+        } else {
+            st = null;
+        }
+        return st;
+    }
 
     public static StackPhotoDB getPhotoByIdAndType(Integer id, String photoServerId, int photoType) {
 

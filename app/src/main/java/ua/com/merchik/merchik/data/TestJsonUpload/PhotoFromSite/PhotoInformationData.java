@@ -8,6 +8,7 @@ public class PhotoInformationData {
     public String text;
     public String cash;
     public String reason;
+    public String comment;
     public String score;
     public Integer vote_class;
 

@@ -98,6 +98,10 @@ public class OptionControl<T> {
                                 dialog.setText(text, dialog::dismiss);
                             }
                             dialog.setClose(dialog::dismiss);
+// Важно! Нужно разрешить клики по ссылкам (если DialogData использует TextView)
+//                            if (dialog.getTextView() != null) {
+//                                dialog.getTextView().setMovementMethod(LinkMovementMethod.getInstance());
+//                            }
                             dialog.show();
                         } else if (massageToUser.length() > 1) {  // НЕ ЮЗАЙ ЭТО
 //                            DialogData dialog = new DialogData(context);

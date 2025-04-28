@@ -2,14 +2,11 @@ package ua.com.merchik.merchik.features.main.DBViewModels
 
 import android.app.Application
 import android.util.Log
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.SavedStateHandle
 import com.google.gson.Gson
 import com.google.gson.JsonObject
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
 import ua.com.merchik.merchik.data.Database.Room.AddressSDB
 import ua.com.merchik.merchik.data.Database.Room.CustomerSDB
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB
@@ -176,8 +173,9 @@ class ShowcaseDBViewModel @Inject constructor(
             when (contextUI) {
                 ContextUI.SHOWCASE -> {
                     val dataHolder = VizitShowcaseDataHolder.getInstance()
-                    dataHolder[planogrammId.value].showcaseId = it.showcase_id.toInt()
-                    dataHolder[planogrammId.value].showcasePhotoId = it.photoServerId.toInt()
+                    dataHolder[planogrammId.value].showcaseId = it.showcase_id?.toIntOrNull()  ?: 0
+                    dataHolder[planogrammId.value].showcasePhotoId = it.photoServerId?.toIntOrNull()  ?: 0
+
 
 //                    VizitShowcaseDataHolder.instance().planogrammVizitMap[planogrammId.value] =
 //                        it.photoServerId

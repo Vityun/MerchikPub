@@ -482,7 +482,17 @@ object PlanogrammVizitShowcaseSDBOverride {
                 MerchModifier()
             }
         }
-
         else -> null
+    }
+
+    fun getContainerModifier(jsonObject: JSONObject): MerchModifier {
+        val color =
+            try {
+                val colorHex = jsonObject.optString("color", "")
+                Color(android.graphics.Color.parseColor("#$colorHex"))
+            } catch (e: Exception) {
+                null
+            }
+        return MerchModifier(background = color)
     }
 }

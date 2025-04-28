@@ -32,8 +32,9 @@ public class RoomManager {
                         MIGRATION_57_58,
                         MIGRATION_58_59,
                         MIGRATION_59_60,
-                        MIGRATION_60_61
-                        , MIGRATION_61_62
+                        MIGRATION_60_61,
+                        MIGRATION_61_62,
+                        MIGRATION_62_63
                 )
 
                 .build();
@@ -667,10 +668,14 @@ public class RoomManager {
     static final Migration MIGRATION_61_62 = new Migration(61, 62) {
         @Override
         public void migrate(@NonNull SupportSQLiteDatabase database) {
-//            database.execSQL("ALTER TABLE planogram_vizit_showcase ADD COLUMN local_synced INTEGER NOT NULL DEFAULT 0");
-//            database.execSQL("ALTER TABLE planogram_vizit_showcase ADD COLUMN local_sync_status INTEGER DEFAULT 0");
             database.execSQL("ALTER TABLE planogram_vizit_showcase ADD COLUMN uploadStatus INTEGER DEFAULT 0");
+        }
+    };
 
+    static final Migration MIGRATION_62_63 = new Migration(62, 63) {
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase database) {
+            database.execSQL("ALTER TABLE planogram_vizit_showcase ADD COLUMN photo_do_hash TEXT");
         }
     };
 }

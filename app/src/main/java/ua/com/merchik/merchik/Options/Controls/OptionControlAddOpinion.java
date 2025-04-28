@@ -56,7 +56,7 @@ public class OptionControlAddOpinion<T> extends OptionControl {
 
             optionAmountMin = Integer.parseInt(optionDB.getAmountMin());
         } catch (Exception e) {
-            Globals.writeToMLOG("ERROR", "OptionControlAddComment/getDocumentVar", "Exception e: " + e);
+            Globals.writeToMLOG("ERROR", "OptionControlAddOpinion/getDocumentVar", "Exception e: " + e);
         }
     }
 
@@ -113,7 +113,7 @@ public class OptionControlAddOpinion<T> extends OptionControl {
 
             checkUnlockCode(optionDB);
         } catch (Exception e) {
-            Globals.writeToMLOG("ERROR", "OptionControlAddComment/executeOption", "Exception e: " + e);
+            Globals.writeToMLOG("ERROR", "OptionControlAddOpinion/executeOption", "Exception e: " + e);
         }
     }
 

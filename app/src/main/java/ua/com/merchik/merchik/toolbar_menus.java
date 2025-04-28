@@ -89,10 +89,10 @@ import retrofit2.Callback;
 import retrofit2.Response;
 import ua.com.merchik.merchik.Activities.Features.FeaturesActivity;
 import ua.com.merchik.merchik.Activities.MenuMainActivity;
+import ua.com.merchik.merchik.Activities.PhotoDownloaderViewModel;
 import ua.com.merchik.merchik.Activities.PhotoLogActivity.PhotoLogActivity;
 import ua.com.merchik.merchik.Activities.PremiumActivity.PremiumActivity;
 import ua.com.merchik.merchik.Activities.ReferencesActivity.ReferencesActivity;
-import ua.com.merchik.merchik.Activities.PhotoDownloaderViewModel;
 import ua.com.merchik.merchik.Activities.TaskAndReclamations.TARActivity;
 import ua.com.merchik.merchik.Activities.TaskAndReclamations.TARViewModel;
 import ua.com.merchik.merchik.Activities.ToolbarActivity.WebSocketStatus;
@@ -102,10 +102,10 @@ import ua.com.merchik.merchik.Activities.navigationMenu.MenuHeaderAdapter;
 import ua.com.merchik.merchik.ServerExchange.CustomExchange.CustomExchange;
 import ua.com.merchik.merchik.ServerExchange.Exchange;
 import ua.com.merchik.merchik.ServerExchange.ExchangeInterface;
-import ua.com.merchik.merchik.ServerExchange.TablesExchange.PhotoMerchikExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.ReclamationPointExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.SamplePhotoExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.ShowcaseExchange;
+import ua.com.merchik.merchik.ServerExchange.TablesExchange.VotesExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesLoadingUnloading;
 import ua.com.merchik.merchik.Utils.FileCompressor;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
@@ -125,7 +125,6 @@ import ua.com.merchik.merchik.data.WPDataObj;
 import ua.com.merchik.merchik.data.WebSocketData.WebSocketData;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.AppUserRealm;
-import ua.com.merchik.merchik.dialogs.BlockingProgressDialog;
 import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.dialogs.DialogMap;
 import ua.com.merchik.merchik.dialogs.features.AlertDialogMessage;
@@ -195,6 +194,9 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
     private final String KEY_IS_FIRST_LOADING = "isFirstLoading";
 
     private TARViewModel tarViewModel;
+    private VotesExchange votesExchange;
+    PhotoReports photoReports;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -205,6 +207,8 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
         this.exchange = new Exchange(photoDownloaderViewModel);
         this.tarExchange = new ReclamationPointExchange();
         this.exchange.context = this;
+        this.votesExchange = new VotesExchange();
+        this.photoReports = new PhotoReports(toolbar_menus.this);
 
         photoDownloaderViewModel.getWorkInfo().observe(this, workInfos -> {
             if (workInfos == null || workInfos.isEmpty()) return;
@@ -229,7 +233,6 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
             }
 
         });
-
 
 
         try {
@@ -760,7 +763,7 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                          * А може сюди*/
                         SamplePhotoExchange samplePhotoExchange = new SamplePhotoExchange();
                         List<Integer> listPhotosToDownload = samplePhotoExchange.getSamplePhotosToDownload();
-                        if (listPhotosToDownload != null && listPhotosToDownload.size() > 0) {
+                        if (listPhotosToDownload != null && !listPhotosToDownload.isEmpty()) {
                             Globals.writeToMLOG("INFO", "TOOBAR/CLICK_EXCHANGE/SamplePhotoExchange", "listPhotosToDownload: " + listPhotosToDownload.size());
 //                            BlockingProgressDialog progress = new BlockingProgressDialog(this, "Ідентифікатори фото", "Починаю завантажувати " + listPhotosToDownload.size() + " ідентифікаторів фото. Це може зайняти деякий час.");
 //                            progress.show();
@@ -1160,133 +1163,158 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
     private Runnable runnableCron10 = new Runnable() {
         public void run() {
 //            if (false)
-                try {
-                    Log.e("КРОНЧИК", "Time: " + Clock.getHumanTime());
+            try {
+                Log.e("КРОНЧИК", "Time: " + Clock.getHumanTime());
 
-                    synchronizationSignal("SIGNAL", null);
+                synchronizationSignal("SIGNAL", null);
 
 //                globals.fixMP(null);
 
 //            Log.e("КРОНЧИК", "stackPhotoDBAll: " + StackPhotoRealm.getAll().size());
 
-                    // 22.04.2021 Ужасная хрень. Если нет данных от GPS -- оно начинает его слушать.
-                    ua.com.merchik.merchik.trecker.switchedOff = !ua.com.merchik.merchik.trecker.enabledGPS;
+                // 22.04.2021 Ужасная хрень. Если нет данных от GPS -- оно начинает его слушать.
+                ua.com.merchik.merchik.trecker.switchedOff = !ua.com.merchik.merchik.trecker.enabledGPS;
 
-                    if (ua.com.merchik.merchik.trecker.switchedOff) {
-                        Log.e("КРОНЧИК", "Запускаю слушатель GPS-а");
-                        ua.com.merchik.merchik.trecker.SetUpLocationListener(toolbar_menus.this);
-                    }
+                if (ua.com.merchik.merchik.trecker.switchedOff) {
+                    Log.e("КРОНЧИК", "Запускаю слушатель GPS-а");
+                    ua.com.merchik.merchik.trecker.SetUpLocationListener(toolbar_menus.this);
+                }
 
-                    Log.e("КРОНЧИК", "SESSION: " + Globals.session);
-                    Log.e("КРОНЧИК", "login: " + login);
-                    Log.e("КРОНЧИК", "password: " + password);
+                Log.e("КРОНЧИК", "SESSION: " + Globals.session);
+                Log.e("КРОНЧИК", "login: " + login);
+                Log.e("КРОНЧИК", "password: " + password);
 
-                    server.sessionCheckAndLogin(toolbar_menus.this, login, password);   // Проверка активности сессии и логин, если сессия протухла
-                    internetStatus = server.internetStatus();       // Обновление статуса интеренета
+                server.sessionCheckAndLogin(toolbar_menus.this, login, password);   // Проверка активности сессии и логин, если сессия протухла
+                internetStatus = server.internetStatus();       // Обновление статуса интеренета
 //            pingServer(1);                            // ОБМЕН ЦВЕТ
 //                RealmManager.stackPhotoDeletePhoto();           // Удаление фото < 2 дня
-                    lightStatus();                                  // Обновление статуса Светофоров
-                    setupBadge(RealmManager.stackPhotoNotUploadedPhotosCount()); // Подсчёт кол-ва фоток в БД & Установка числа в счётчик
+                lightStatus();                                  // Обновление статуса Светофоров
+                setupBadge(RealmManager.stackPhotoNotUploadedPhotosCount()); // Подсчёт кол-ва фоток в БД & Установка числа в счётчик
 
-                    Log.e("КРОНЧИК", "stackPhotoNotUploadedPhotosCount(): " + RealmManager.stackPhotoNotUploadedPhotosCount());
+                Log.e("КРОНЧИК", "stackPhotoNotUploadedPhotosCount(): " + RealmManager.stackPhotoNotUploadedPhotosCount());
 
-                    globals.testMSG(toolbar_menus.this);
+                globals.testMSG(toolbar_menus.this);
 
-                    Log.e("КРОНЧИК", "internetStatus: " + internetStatus);
+                Log.e("КРОНЧИК", "internetStatus: " + internetStatus);
 
-                    globals.writeToMLOG(Clock.getHumanTime() + " CRON.internetStatus: " + internetStatus + "\n");
+                globals.writeToMLOG(Clock.getHumanTime() + " CRON.internetStatus: " + internetStatus + "\n");
 
-                    cronCheckUploadsPhotoOnServer();                // Получение инфы о "загруженности" фоток
+                cronCheckUploadsPhotoOnServer();                // Получение инфы о "загруженности" фоток
 
 
-                    // Если включена Автовыгрузка/Автообмен
-                    if (Globals.autoSend && internetStatus == 1) {
+                // Если включена Автовыгрузка/Автообмен
+                if (Globals.autoSend && internetStatus == 1) {
 //                getPhotoAndUpload(1);   // Выгрузка фото
 
 
-                        try {
-                            tablesLoadingUnloading.sendAndUpdateLog();
-                        } catch (Exception e) {
-                            Globals.writeToMLOG("ERROR", "CRON LOG MP", "Exception e: " + e);
-                        }
+                    try {
+                        tablesLoadingUnloading.sendAndUpdateLog();
+                    } catch (Exception e) {
+                        Globals.writeToMLOG("ERROR", "CRON LOG MP", "Exception e: " + e);
+                    }
 
-                        tablesLoadingUnloading.cronUpdateTables();
+                    tablesLoadingUnloading.cronUpdateTables();
 
-                        try {
-                            Globals.writeToMLOG("INFO", "CRON uploadReportPrepare", "Start");
-                            tablesLoadingUnloading.uploadReportPrepareToServer();
-                        } catch (Exception e) {
-                            Globals.writeToMLOG("ERROR", "CRON uploadReportPrepare", "Exception e: " + e);
-                        }
+                    try {
+                        Globals.writeToMLOG("INFO", "CRON uploadReportPrepare", "Start");
+                        tablesLoadingUnloading.uploadReportPrepareToServer();
+                    } catch (Exception e) {
+                        Globals.writeToMLOG("ERROR", "CRON uploadReportPrepare", "Exception e: " + e);
+                    }
 
-                        try {
-//                    tablesLoadingUnloading.updateWpData();
-//                            exchange.sendARMark();
-                        } catch (Exception e) {
-                        }
+                    try {
+                        exchange.sendARMark();
+                    } catch (Exception e) {
+                    }
 
+                    try {
+                        votesExchange.uploadVotes(new Clicks.clickObjectAndStatus() {
+                            @Override
+                            public void onSuccess(Object data) {
+                                Globals.writeToMLOG("INFO", "startExchange/VotesExchange/", "Object: " + data);
+                            }
 
-                        // Новый обмен. Нужно ещё донастроить для нормальной работы.
-                        if (exchange == null) {
-                            exchange = new Exchange();
-                        }
-                        exchange.context = toolbar_menus.this;
-                        exchange.startExchange();
-
-//                        loadingStart();
-
-                        PhotoReports photoReports = new PhotoReports(toolbar_menus.this);
-                        if (photoReports.permission) {
-                            Globals.writeToMLOG("INFO", "CRON/PhotoReports", "Start upload photo reports. upload permission: true");
-                            photoReports.uploadPhotoReports(PhotoReports.UploadType.AUTO);
-                        } else {
-                            Globals.writeToMLOG("INFO", "CRON/PhotoReports", "Start upload photo reports. upload permission: false");
-                        }
-
-                        exchange.sendTAR();              // Выгрузка на сервер ЗИР-а
-                        exchange.uploadTARComments(null);    // Выгрузка ЗИР переписки(коммнетариев)
-                        exchange.downloadAchievements();
-                        // Загрузка Задач и Рекламаций
-                        try {
-                            tarExchange.downloadTaR(new ExchangeInterface.ExchangeResponseInterface() {
-                                @Override
-                                public <T> void onSuccess(List<T> data) {
-                                    SQL_DB.tarDao().insertData((List<TasksAndReclamationsSDB>) data)
-                                            .subscribeOn(Schedulers.io())
-                                            .subscribe(new DisposableCompletableObserver() {
-                                                @Override
-                                                public void onComplete() {
-                                                    Globals.writeToMLOG("INFO", "Exchange.ReclamationPointExchange/downloadTaR.onComplete", "Успешно сохранило Задачи и Рекламации (" + data.size() + ")шт в БД");
-                                                }
-
-                                                @Override
-                                                public void onError(@io.reactivex.rxjava3.annotations.NonNull Throwable e) {
-                                                    Globals.writeToMLOG("INFO_ERR", "Exchange.ReclamationPointExchange/downloadTaR.onError", "Ошибка при сохранении в БД: " + e);
-                                                }
-                                            });
-                                }
-
-                                @Override
-                                public void onFailure(String error) {
-                                    Globals.writeToMLOG("INFO_ERR", "Exchange.ReclamationPointExchange/downloadTaR.onFailure", "String error: " + error);
-                                }
-                            });
-                        } catch (Exception e) {
-                        }
+                            @Override
+                            public void onFailure(String error) {
+                                Globals.writeToMLOG("ERROR", "startExchange/VotesExchange/onFailure", "error: " + error);
+                            }
+                        });
+                    } catch (Exception e) {
+                        Globals.writeToMLOG("ERROR", "startExchange/VotesExchange/", "Exception e: " + e);
                     }
 
 
-                    // Пишет статус логина. Или режим работы приложения
-                    toolbarMwnuItemServer = "Тест";
+
+                    // Новый обмен. Нужно ещё донастроить для нормальной работы.
+                    if (exchange == null) {
+                        exchange = new Exchange();
+                    }
+                    exchange.context = toolbar_menus.this;
+
+
+
+//                        loadingStart();
+
+                    if (photoReports.permission) {
+                        Globals.writeToMLOG("INFO", "CRON/PhotoReports", "Start upload photo reports. upload permission: true");
+                        //##############
+                        photoReports.uploadPhotoReports(PhotoReports.UploadType.AUTO);
+                    } else {
+                        Globals.writeToMLOG("INFO", "CRON/PhotoReports", "Start upload photo reports. upload permission: false");
+                    }
+
+                    if (Exchange.exchangeTime + exchange.retryTime < System.currentTimeMillis())
+                        exchange.startExchange();
+                    else {
+                        exchange.sendWpData2();
+                        exchange.sendTAR();              // Выгрузка на сервер ЗИР-а
+                        exchange.uploadTARComments(null);    // Выгрузка ЗИР переписки(коммнетариев)
+                        exchange.downloadAchievements();
+                    }
+//                    tablesLoadingUnloading.updateWpData();
+
+
+                    // Загрузка Задач и Рекламаций
+                    try {
+                        tarExchange.downloadTaR(new ExchangeInterface.ExchangeResponseInterface() {
+                            @Override
+                            public <T> void onSuccess(List<T> data) {
+                                SQL_DB.tarDao().insertData((List<TasksAndReclamationsSDB>) data)
+                                        .subscribeOn(Schedulers.io())
+                                        .subscribe(new DisposableCompletableObserver() {
+                                            @Override
+                                            public void onComplete() {
+                                                Globals.writeToMLOG("INFO", "Exchange.ReclamationPointExchange/downloadTaR.onComplete", "Успешно сохранило Задачи и Рекламации (" + data.size() + ")шт в БД");
+                                            }
+
+                                            @Override
+                                            public void onError(@io.reactivex.rxjava3.annotations.NonNull Throwable e) {
+                                                Globals.writeToMLOG("INFO_ERR", "Exchange.ReclamationPointExchange/downloadTaR.onError", "Ошибка при сохранении в БД: " + e);
+                                            }
+                                        });
+                            }
+
+                            @Override
+                            public void onFailure(String error) {
+                                Globals.writeToMLOG("INFO_ERR", "Exchange.ReclamationPointExchange/downloadTaR.onFailure", "String error: " + error);
+                            }
+                        });
+                    } catch (Exception e) {
+                    }
+                }
+
+
+                // Пишет статус логина. Или режим работы приложения
+                toolbarMwnuItemServer = "Тест";
 //                if (Globals.onlineStatus) {
 //                    toolbarMwnuItemServer = getResources().getString(R.string.txt_sever) + "(" + getResources().getString(R.string.txt_online) + ")";
 //                } else {
 //                    toolbarMwnuItemServer = getResources().getString(R.string.txt_sever) + "(" + getResources().getString(R.string.txt_offline) + ")";
 //                }
-                    Log.e("КРОНЧИК", "Globals.onlineStatus: " + toolbarMwnuItemServer);
-                } catch (Exception e) {
-                    Log.e("КРОНЧИК", "Exception" + e);
-                }
+                Log.e("КРОНЧИК", "Globals.onlineStatus: " + toolbarMwnuItemServer);
+            } catch (Exception e) {
+                Log.e("КРОНЧИК", "Exception" + e);
+            }
 
 
             globals.handlerCount.postDelayed(this, 10000);  //повтор раз в 10 секунд
@@ -2422,7 +2450,7 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                     .setTitle("Завантаження фотографій")
                     .setSubTitle("Відбувається обмін із сервером")
                     .setMessage("Ви вже можете користуватися програмою, але обмін ще повністю не виконаний і частина даних, у тому числі фотографій можуть бути не доступні. Статус обміну показує індикатор завантаження у верхній частині екрана")
-                    .setOnConfirmAction(()-> Unit.INSTANCE)
+                    .setOnConfirmAction(() -> Unit.INSTANCE)
                     .show();
             // Записываем в SharedPreferences, что первый показ уже был
             prefs.edit().putBoolean(KEY_IS_FIRST_LOADING, false).apply();

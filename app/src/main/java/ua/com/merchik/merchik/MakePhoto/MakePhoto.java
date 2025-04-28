@@ -23,7 +23,10 @@ import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
+import java.util.List;
+import java.util.Objects;
 
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity;
 import ua.com.merchik.merchik.Clock;
@@ -36,13 +39,16 @@ import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.WorkPlan;
 import ua.com.merchik.merchik.data.Database.Room.Planogram.PlanogrammJOINSDB;
 import ua.com.merchik.merchik.data.Database.Room.Planogram.PlanogrammSDB;
+import ua.com.merchik.merchik.data.Database.Room.Planogram.PlanogrammVizitShowcaseSDB;
 import ua.com.merchik.merchik.data.Database.Room.ShowcaseSDB;
 import ua.com.merchik.merchik.data.Database.Room.TasksAndReclamationsSDB;
 import ua.com.merchik.merchik.data.Database.Room.UsersSDB;
+import ua.com.merchik.merchik.data.RealmModels.LogDB;
 import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.data.WPDataObj;
+import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.AppUserRealm;
 import ua.com.merchik.merchik.database.realm.tables.WpDataRealm;
 import ua.com.merchik.merchik.dialogs.DialogData;
@@ -442,7 +448,7 @@ public class MakePhoto {
      * Эксперемент с выполнением фото и моментальным его сохранением в БД
      */
     public static String photoNum; // URI фотографии
-//    public static String codeIza; // URI фотографии
+    //    public static String codeIza; // URI фотографии
     public static Long dt;
     public static String photoType = "0";
     public static String tovarId = "";
@@ -621,7 +627,8 @@ public class MakePhoto {
             globals.alertDialogMsg(activity, "Не выбрано посещение\n\nЗайдите в раздел План работ, выберите посещение и повторите попытку.");
         }
     }
-    private <T> void photoDialogsNEW2(Activity activity, WPDataObj wpDataObj, T data, Clicks.clickVoid clickVoid){
+
+    private <T> void photoDialogsNEW2(Activity activity, WPDataObj wpDataObj, T data, Clicks.clickVoid clickVoid) {
         makePhoto(activity, data, clickVoid); // Метод который запускает камеру и создаёт файл фото.
     }
 
@@ -822,17 +829,44 @@ public class MakePhoto {
             Log.e("UnlockCode", "date: " + Clock.getHumanTimeYYYYMMDD(date));
             Log.e("UnlockCode", "user: " + user.id);
             Log.e("UnlockCode", "dad2: " + dad2);
-            Log.e("UnlockCode", "option: " + option.getOptionId());
+//            Log.e("UnlockCode", "option: " + option.getOptionId());
 
             String unlockCode = new UnlockCode().unlockCode(date, user, dad2, option, CODE_DAD_2_AND_OPTION);
             String unlockCode2 = new UnlockCode().unlockCode(date, user, dad2, option, DATE_AND_USER);
 
             Log.e("UnlockCode", "unlockCode: " + unlockCode);
             Log.e("UnlockCode", "unlockCode2: " + unlockCode2);
-            Log.e("!!!!!!!!!","wp -> user_comment: " + wp.user_comment);
+            Log.e("!!!!!!!!!", "wp -> user_comment: " + wp.user_comment);
 
             if (unlockCode.equals(res)) {
+                int tema_id = 1285;
+                String client_id = wp.getClient_id(); // код клиента из плана работ
+                Date wpDate = wp.getDt(); // дата работ из плана работ
+                int addr_id = wp.getAddr_id(); // код адреса из плана работ
+                int user_id = wp.getUser_id(); // код сотрудника из плана работ
+
+                String opt_id = option.getOptionId(); // код опции в виде строки
+                int len = opt_id.length();
+                String dad2str = String.valueOf(dad2); // код ДАД2 из плана работ в виде строки
+
+                String kodObstr = "1" + opt_id.substring(len - 3, len) + dad2str.substring(1, 5) + dad2str.substring(6, 7) + dad2str.substring(8, 13) + dad2str.substring(14, 19);
+                long kodOb = Long.parseLong(kodObstr);
+
                 Toast.makeText(context, "Код прийнято", Toast.LENGTH_LONG).show();
+                RealmManager.setRowToLog(Collections.singletonList(
+                        new LogDB(
+                                RealmManager.getLastIdLogDB() + 1,
+                                System.currentTimeMillis() / 1000,
+                                "використання коду розблокування " + res,
+                                tema_id,
+                                client_id,
+                                addr_id,
+                                kodOb,
+                                user_id,
+                                null,
+                                Globals.session,
+                                String.valueOf(wpDate))));
+
                 click.click();
                 dialog.dismiss();
             } else {
@@ -857,22 +891,43 @@ public class MakePhoto {
             @Override
             public <T> void click(T data) {
                 try {
+                    /*
+                    25.04.25
+                    Добавил обновление, теперь учитываются планограммы из таблицы planogram_vizit_showcase,
+                    если их нет оставил старый дизайн
+                     */
                     ShowcaseSDB showcase = (ShowcaseSDB) data;
                     Toast.makeText(activity, "Обрана вітрина: " + showcase.nm + " (" + showcase.id + ")", Toast.LENGTH_LONG).show();
                     PlanogrammSDB planogrammSDB = null;
+                    PlanogrammVizitShowcaseSDB planogrammVizitShowcaseSDB = null;
 
                     try {
                         MakePhoto.img_src_id = String.valueOf(showcase.photoId);
                         MakePhoto.showcase_id = String.valueOf(showcase.id);
-                        MakePhoto.planogram_id = String.valueOf(showcase.planogramId);
+//                        MakePhoto.planogram_id = String.valueOf(showcase.planogramId);
 //                        MakePhoto.example_id = String.valueOf(showcase.id);
                         MakePhoto.example_img_id = String.valueOf(showcase.photoId);
 
-                        planogrammSDB = SQL_DB.planogrammDao().getById(showcase.planogramId);
-                        if (planogrammSDB != null && planogrammSDB.photoId != null){
-                            MakePhoto.planogram_img_id = String.valueOf(planogrammSDB.photoId);
+                        List<PlanogrammVizitShowcaseSDB> planogrammVizitShowcaseSDBList = SQL_DB
+                                .planogrammVizitShowcaseDao()
+                                .getByCodeDad2(wp.dad2);
+                        for (PlanogrammVizitShowcaseSDB item : planogrammVizitShowcaseSDBList) {
+                            if (Objects.equals(item.showcase_id, showcase.id)) {
+                                planogrammVizitShowcaseSDB = item;
+                                break;
+                            }
                         }
-                    }catch (Exception e){
+                        if (planogrammVizitShowcaseSDB != null) {
+                            MakePhoto.planogram_id = String.valueOf(planogrammVizitShowcaseSDB.planogram_id);
+                            MakePhoto.planogram_img_id = String.valueOf(planogrammVizitShowcaseSDB.planogram_photo_id);
+                        } else {
+                            MakePhoto.planogram_id = String.valueOf(showcase.planogramId);
+                            planogrammSDB = SQL_DB.planogrammDao().getById(showcase.planogramId);
+                            if (planogrammSDB != null && planogrammSDB.photoId != null) {
+                                MakePhoto.planogram_img_id = String.valueOf(planogrammSDB.photoId);
+                            }
+                        }
+                    } catch (Exception e) {
                         Globals.writeToMLOG("ERROR", "showDialogSW/click/showcase", "Exception e: " + e);
                     }
 
@@ -880,12 +935,10 @@ public class MakePhoto {
                     if (planogrammSDB != null) {
                         needPlan = true;
                     } else {
-                        if (dialog.photoType == 0) {
-                            needPlan = true;
-                        } else {
-                            needPlan = false;
-                        }
+                        needPlan = dialog.photoType == 0;
                     }
+                    if (planogrammVizitShowcaseSDB != null)
+                        needPlan = false;
 
                     if (showcase.tovarGrp != null && showcase.tovarGrp > 0) {
                         wp.setCustomerTypeGrpS(String.valueOf(showcase.tovarGrp));

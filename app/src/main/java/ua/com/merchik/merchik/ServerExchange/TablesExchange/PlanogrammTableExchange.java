@@ -8,10 +8,12 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.annotations.SerializedName;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.core.Single;
@@ -537,7 +539,6 @@ public class PlanogrammTableExchange {
 //        JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
 
 
-
         retrofit2.Call<JsonObject> call1 = RetrofitBuilder.getRetrofitInterface().TEST_JSON_UPLOAD(RetrofitBuilder.contentType, jsonObject);
         call1.enqueue(new Callback<JsonObject>() {
             @Override
@@ -545,12 +546,54 @@ public class PlanogrammTableExchange {
                 Log.e("planogramDownload", "planogramDownload: " + response.body());
                 Globals.writeToMLOG("INFO", "1_D_PlanogrammSDB", "response: " + response.body());
 
+                if (response.isSuccessful() && response.body() != null) {
+                    JsonObject responseBody = response.body();
+
+                    // Проверяем наличие поля "state" и что оно true
+                    if (responseBody.has("state") && responseBody.get("state").getAsBoolean()) {
+                        JsonObject list = responseBody.getAsJsonObject("list");
+
+                        if (list != null && !list.entrySet().isEmpty()) {
+                            List<Integer> idsToUpdate = new ArrayList<>();
+
+                            for (Map.Entry<String, JsonElement> entry : list.entrySet()) {
+                                String idStr = entry.getKey();
+                                JsonElement value = entry.getValue();
+
+                                if (value != null && value.getAsBoolean()) {
+                                    try {
+                                        int id = Integer.parseInt(idStr);
+                                        idsToUpdate.add(id);
+                                    } catch (NumberFormatException e) {
+                                        Log.e("Planogram", "Некорректный ID: " + idStr, e);
+                                        Globals.writeToMLOG("INFO", "1_D_PlanogrammSDB.NumberFormatException", "response: " + response.body());
+                                    }
+                                }
+                            }
+
+                            // Если есть что обновлять
+                            if (!idsToUpdate.isEmpty()) {
+                                SQL_DB.planogrammVizitShowcaseDao().markUploaded(idsToUpdate);
+                                Log.d("Planogram", "Обновлено uploadStatus=0 для ID: " + idsToUpdate);
+                                Globals.writeToMLOG("INFO", "1_D_PlanogrammSDB", "Обновлено uploadStatus=0 для ID: " + idsToUpdate);
+
+                            }
+                        }
+                    } else {
+                        Log.w("Planogram", "Сервер вернул отрицательный результат: " + responseBody.toString());
+                        Globals.writeToMLOG("INFO", "1_D_PlanogrammSDB", "response: " + response.body());
+                    }
+                } else {
+                    Log.e("Planogram", "Ошибка ответа от сервера: " + response.code() + " / " + response.message());
+                    Globals.writeToMLOG("INFO", "1_D_PlanogrammSDB", "response: " + response.body());
+                }
+
             }
 
             @Override
             public void onFailure(Call<JsonObject> call, Throwable t) {
                 Log.e("planogramDownload", "planogramDownloadThrowable t: " + t);
-                Globals.writeToMLOG("INFO", "1_D_PlanogrammSDB", "Throwable t: " + t);
+                Globals.writeToMLOG("INFO", "1_D_PlanogrammSDB.onFailure", "Throwable t: " + t);
             }
         });
 
@@ -573,6 +616,20 @@ public class PlanogrammTableExchange {
 //                            Globals.writeToMLOG("ERROR", "PlanogrammTableExchange/planogrammVisitShowcase", "exeption: " + throwable.getMessage());
 //                        });
 
-
     }
+
+//    private class PlanogrammVisitShowcaseUploadDataResponse {
+//        @SerializedName("state")
+//        public Boolean state;
+//
+//        @SerializedName("list")
+//        public List<> list;
+//
+//        @SerializedName("error")
+//        public String error;
+//    }
+//
+//    private class ResponseResult {
+//        boolean
+//    }
 }

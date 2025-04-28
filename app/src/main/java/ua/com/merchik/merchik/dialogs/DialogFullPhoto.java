@@ -10,14 +10,12 @@ import static ua.com.merchik.merchik.menu_main.decodeSampledBitmapFromResource;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.text.InputType;
 import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
 import android.view.MotionEvent;
-import android.view.View;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
@@ -36,8 +34,6 @@ import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.SnapHelper;
 
 import com.google.gson.Gson;
-
-import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.util.Collections;
@@ -401,6 +397,7 @@ public class DialogFullPhoto {
                         Globals.writeToMLOG("ERROR", "DialogFullPhoto/setDVI", "Exception e: " + e);
                     }
 
+
                     // УСТАНОВКА РЕЙТИНГА И СОХРАНЕНИЕ ЕГО В БД
                     try {
                         if (photoLogData.get(visiblePosition).getMark() != null) {
@@ -415,6 +412,8 @@ public class DialogFullPhoto {
                                 indicatorRatingBar.setRating(0);
                         }
 
+                        DialogData dialog = new DialogData(context);
+
                         indicatorRatingBar.setOnRatingBarChangeListener((ratingBar, rating, fromUser) -> {
                             int rate = (int) rating;
                             indicatorRatingBar.setRating(rate);
@@ -424,10 +423,9 @@ public class DialogFullPhoto {
                             if (rate > 5) {
                                 savePhotoData(row, rate, null, ratingType);
                             } else {
-                                DialogData dialog = new DialogData(context);
-                                dialog.setTitle("Низкая оценка");
-                                dialog.setText("Прокомментируйте причину низкой оценки.");
-                                dialog.setOperation(DialogData.Operations.TEXT, "Ваш Комментарий", null, () -> {
+                                dialog.setTitle("Низька оцінка");
+                                dialog.setText("Прокоментуйте причину низької оцінки. Якщо ви не заповните коментар, оцінка не буде збережена.");
+                                dialog.setOperation(DialogData.Operations.TEXT, "Ваш коментар", null, () -> {
                                 });
                                 dialog.setCancel("Сохранить", () -> {
                                     String comment = dialog.getOperationResult();
@@ -446,6 +444,8 @@ public class DialogFullPhoto {
                                     Toast.makeText(context, "Комментарий НЕ сохранён", Toast.LENGTH_SHORT).show();
                                     dialog.dismiss();
                                 });
+                                if (!dialog.isDialogShow())
+                                    dialog.show();
                             }
 
 
@@ -501,23 +501,31 @@ public class DialogFullPhoto {
                 SQL_DB.votesDao().insertAll(Collections.singletonList(vote));
             }
             case PLANOGRAM -> {
-                VoteSDB vote = new VoteSDB();
-                vote.serverId = generateUniqueNumber();
-                vote.dtUpload = 0L;
-                vote.codeDad2 = wpDataDB.getCode_dad2();
-                vote.isp = wpDataDB.getIsp();
-                vote.themeId = 1314;
-                vote.kli = wpDataDB.getClient_id();
-                vote.addrId = wpDataDB.getAddr_id();
-                vote.dt = System.currentTimeMillis() / 1000;
-                vote.merchik = wpDataDB.getUser_id();
-                vote.voterId = wpDataDB.getUser_id();
-                vote.photoId = row.photoServerId != null ? Long.parseLong(row.photoServerId) : 0;
-                vote.voteClass = 5;
-                vote.score = rate;
-                vote.comments = comment;
 
-                SQL_DB.votesDao().insertAll(Collections.singletonList(vote));
+                if (wpDataDB.getClient_end_dt() > 0){
+                    DialogData dialogData = new DialogData(context);
+                    dialogData.setTitle("Оцінка не буде змінена");
+                    dialogData.setText("Роботи з поточного відвідування вже завершено, змінити оцінку не можна");
+                    dialogData.show();
+                } else {
+                    VoteSDB vote = new VoteSDB();
+                    vote.serverId = generateUniqueNumber();
+                    vote.dtUpload = 0L;
+                    vote.codeDad2 = wpDataDB.getCode_dad2();
+                    vote.isp = wpDataDB.getIsp();
+                    vote.themeId = 1314;
+                    vote.kli = wpDataDB.getClient_id();
+                    vote.addrId = wpDataDB.getAddr_id();
+                    vote.dt = System.currentTimeMillis() / 1000;
+                    vote.merchik = wpDataDB.getUser_id();
+                    vote.voterId = wpDataDB.getUser_id();
+                    vote.photoId = row.photoServerId != null ? Long.parseLong(row.photoServerId) : 0;
+                    vote.voteClass = 5;
+                    vote.score = rate;
+                    vote.comments = comment;
+
+                    SQL_DB.votesDao().insertAll(Collections.singletonList(vote));
+                }
             }
             default -> {
                 RealmManager.INSTANCE.executeTransaction((realm) -> {

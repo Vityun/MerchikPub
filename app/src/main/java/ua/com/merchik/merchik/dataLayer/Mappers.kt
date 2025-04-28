@@ -1,12 +1,11 @@
 package ua.com.merchik.merchik.dataLayer
 
-import android.util.Log
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.google.gson.Gson
 import org.json.JSONObject
-import ua.com.merchik.merchik.dataLayer.model.FieldValue
 import ua.com.merchik.merchik.dataLayer.model.DataItemUI
+import ua.com.merchik.merchik.dataLayer.model.FieldValue
 import ua.com.merchik.merchik.dataLayer.model.MerchModifier
 import ua.com.merchik.merchik.dataLayer.model.Padding
 import ua.com.merchik.merchik.dataLayer.model.TextField
@@ -87,25 +86,36 @@ fun DataObjectUI.toItemUI(
     val images = mutableListOf<String>()
     this.getFieldsImageOnUI().split(",").forEach {
         if (it.isNotEmpty()) {
-            val photo = jsonObject.get(it.trim()).toString()
-            try {
-                val id = jsonObject.get("ID")
-                Log.e("!!!","id: $id")
-            } catch (e: Exception) {
-                Log.e("!!!",">> e:${e.message}")
-            }
+            val photo = jsonObject.optString(it.trim(), "0") // "0" — значение по умолчанию
             if (photo != "0")
                 RealmManager.getPhotoByPhotoId(photo)
-//                RealmManager.getPhotoByIdAndType(
-//                    null,
-//                    photo,
-//                    typePhoto ?: -1,
-//                )
                     ?.getPhoto_num()?.let { pathPhoto ->
                         images.add(pathPhoto)
                     }
-            else
-                images.add(this.getIdResImage().toString())
+            else {
+                /*хреновый костыль
+                 */
+                if (it.trim() == "photo_do_id") {
+                    val hash = jsonObject.optString("photo_do_hash", "0")
+                    if (hash.length > 12)
+                        RealmManager.getPhotoByHash(jsonObject.optString("photo_do_hash", "0"))
+                            ?.getPhoto_num()?.let { pathPhoto ->
+                                images.add(pathPhoto)
+                            }
+                    else
+                        images.add(this.getIdResImage().toString())
+                } else
+                    images.add(this.getIdResImage().toString())
+
+            }
+//            val photo = jsonObject.get(it.trim()).toString()
+//            if (photo != "0")
+//                RealmManager.getPhotoByPhotoId(photo)
+//                    ?.getPhoto_num()?.let { pathPhoto ->
+//                        images.add(pathPhoto)
+//                    }
+//            else
+//                images.add(this.getIdResImage().toString())
         }
     }
 

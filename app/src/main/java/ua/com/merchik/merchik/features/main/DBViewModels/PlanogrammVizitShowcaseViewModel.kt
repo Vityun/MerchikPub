@@ -5,12 +5,15 @@ import android.content.Context
 import android.text.Html
 import android.util.Log
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.SavedStateHandle
 import com.google.gson.Gson
 import com.google.gson.JsonObject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.reactivex.rxjava3.schedulers.Schedulers
 import org.json.JSONObject
+import ua.com.merchik.merchik.data.Database.Room.AddressSDB
+import ua.com.merchik.merchik.data.Database.Room.CustomerSDB
 import ua.com.merchik.merchik.data.Database.Room.Planogram.PlanogrammVizitShowcaseSDB
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB
 import ua.com.merchik.merchik.dataLayer.ContextUI
@@ -273,7 +276,10 @@ class PlanogrammVizitShowcaseViewModel @Inject constructor(
                 }
             }
 
-        dialog.setClose { dialog.dismiss() }
+        dialog.setClose {
+            dialog.dismiss()
+            updateContent()
+        }
         dialog.setLesson(context, true, 1234)
         dialog.setVideoLesson(context, true, 1235) {}
 
@@ -323,7 +329,7 @@ class PlanogrammVizitShowcaseViewModel @Inject constructor(
                             dialog?.dismiss()
                             dialog = null
                         },
-                        { }
+                        { updateContent() }
                     )
 
                     val id =
@@ -345,6 +351,7 @@ class PlanogrammVizitShowcaseViewModel @Inject constructor(
                     dialog?.setClose {
                         dialog?.dismiss()
                         dialog = null
+                        updateContent()
                     }
                     dialog?.show()
                 }
@@ -382,9 +389,12 @@ class PlanogrammVizitShowcaseViewModel @Inject constructor(
                 val id =
                     (clickedDataItemUI.rawObj.firstOrNull { it is PlanogrammVizitShowcaseSDB } as? PlanogrammVizitShowcaseSDB)?.id
                 id?.let {
+                    val dataJsonObject = Gson().fromJson(dataJson, JsonObject::class.java)
+                    val optionDBID = dataJsonObject.get("optionDBId").asString
                     val dataJson = JsonObject()
                     dataJson.addProperty("wpDataDBId", code_dad2.value.toString())
                     dataJson.addProperty("planogrammVizitShowcaseId", id)
+                    dataJson.addProperty("optionDBId", optionDBID)
 
                     launcher?.let {
                         launchFeaturesActivity(
@@ -414,8 +424,6 @@ class PlanogrammVizitShowcaseViewModel @Inject constructor(
                         context = context,
                         viewModelClass = AdditionalRequirementsDBViewModel::class,
                         dataJson = Gson().toJson(wpDataDB),
-//                        dataJson = Gson().toJson(dataJson),
-//                        modeUI = ModeUI.ONE_SELECT,
                         contextUI = ContextUI.ADD_REQUIREMENTS_FROM_OPTIONS,
                         title = "Доп. требования",
                         subTitle = "Список дополнительных требований, которые должен выполнить исполнитель во время посещения"
@@ -432,47 +440,65 @@ class PlanogrammVizitShowcaseViewModel @Inject constructor(
     }
 
     override fun updateFilters() {
-        val data = when (contextUI) {
-            ContextUI.PLANOGRAMM_VIZIT_SHOWCASE -> {
+        when (contextUI) {
+            ContextUI.PLANOGRAMM_VIZIT_SHOWCASE,
+            -> {
 
-                val dataJsonObject = Gson().fromJson(dataJson, JsonObject::class.java)
-                val clientId = dataJsonObject.get("clientId").asString
-                val addressId = dataJsonObject.get("addressId").asInt
-//                val ttId = dataJsonObject.get("ttId").asString
-                SQL_DB.planogrammDao()
-                    .getPlanogrammsByClientAddressTtId(clientId, null, null)
+                try {
 
+                    val dataJsonObject = Gson().fromJson(dataJson, JsonObject::class.java)
+
+                    val codeDad2 = dataJsonObject.get("wpDataDBId").asString.toLong()
+                    val wpDataDB = RealmManager.INSTANCE.copyFromRealm(
+                        RealmManager.getWorkPlanRowByCodeDad2(codeDad2)
+                    )
+
+
+                    val filterWpDataDB = ItemFilter(
+                        "Адреса",
+                        AddressSDB::class,
+                        AddressSDBViewModel::class,
+                        ModeUI.MULTI_SELECT,
+                        "title",
+                        "subTitle",
+                        "addr_id",
+                        "addr_id",
+                        mutableListOf(wpDataDB.addr_id.toString()),
+                        mutableListOf(wpDataDB.addr_txt),
+                        false
+                    )
+
+
+                    val filterImagesTypeListDB = ItemFilter(
+                        "Клиент",
+                        CustomerSDB::class,
+                        CustomerSDBViewModel::class,
+                        ModeUI.MULTI_SELECT,
+                        "title",
+                        "subTitle",
+                        "client_id",
+                        "client_id",
+                        mutableListOf(wpDataDB.client_id),
+                        mutableListOf(wpDataDB.client_txt),
+                        true
+                    )
+
+                    filters = Filters(
+                        rangeDataByKey = null,
+                        searchText = "",
+                        items = mutableListOf(
+                            filterWpDataDB,
+                            filterImagesTypeListDB
+                        )
+                    )
+
+                } catch (e: Exception) {
+                    Log.e("!!!!!", "err: ${e.message}")
+                }
             }
 
-            else -> {
-                emptyList()
-            }
+            else -> {}
         }
-
-        Log.e("!!", "!!!!!!!!!>> ${data.size}")
-
-        val filterThemeDB = ItemFilter(
-            "Доп. фильтр",
-            PlanogrammVizitShowcaseSDB::class,
-            PlanogrammVizitShowcaseViewModel::class,
-            ModeUI.MULTI_SELECT,
-            "Планограммы",
-            "## ТЕКСТ ПЛАНОГРАММЫ",
-            "id",
-            "id",
-//            "planogram_id",
-//            "planogram_id",
-            data.map { it.id.toString() },
-            data.map { it.planogrammName },
-            false
-        )
-
-        filters = Filters(
-            searchText = "",
-            items = mutableListOf(
-                filterThemeDB
-            )
-        )
 
     }
 
@@ -482,10 +508,12 @@ class PlanogrammVizitShowcaseViewModel @Inject constructor(
         val addressId = dataJsonObject.get("addressId").asInt
         code_dad2.value = dataJsonObject.get("wpDataDBId").asString.toLong()
 
+        val colorUiContainer = dataJsonObject?.get("colorUiContainer")?.asInt ?: 0
+
 //        val ttId = dataJsonObject.get("ttId").asString
         val base = SQL_DB.planogrammVizitShowcaseDao()
-//            .getByClient(clientId)
-            .getByClientIdAdressId(clientId, addressId)
+            .getByCodeDad2(code_dad2.value)
+//            .getByClientIdAdressId(clientId, addressId)
 //            .getByClientIdAdressIdUnique(clientId, addressId)
 //            .getByClientIdAddressIdAndDad2(clientId, addressId, null)
 
@@ -504,7 +532,8 @@ class PlanogrammVizitShowcaseViewModel @Inject constructor(
                     id = item.id,
                     showcaseId = item.showcase_id ?: 0,
                     showcasePhotoId = item.showcase_photo_id ?: 0,
-                    photoDoId = item.photo_do_id ?: 0
+                    photoDoId = item.photo_do_id ?: 0,
+                    photoDoHash = item.photo_do_hash ?: ""
                 )
                 dataHolder.addVizitShowcase(newShowcase)
             }
@@ -517,6 +546,9 @@ class PlanogrammVizitShowcaseViewModel @Inject constructor(
 
         base.forEach { item ->
             val modified = item.copy() // Создаем копию для изменений
+
+            if (item.planogram_id == colorUiContainer)
+                item.color = "FFC4C4"
 
             val score = SQL_DB.votesDao().getVote(
                 code_dad2.value,
@@ -531,12 +563,14 @@ class PlanogrammVizitShowcaseViewModel @Inject constructor(
                 item.showcase_id = it.showcaseId
                 item.showcase_photo_id = it.showcasePhotoId
                 item.photo_do_id = it.photoDoId
+                item.photo_do_hash = it.photoDoHash
             }
             // Если были изменения, добавляем новую запись
             if (!item.equals(modified)) {
                 modified.showcase_id = item.showcase_id
                 modified.showcase_photo_id = item.showcase_photo_id
                 modified.photo_do_id = item.photo_do_id
+                modified.photo_do_hash = item.photo_do_hash
                 modified.uploadStatus = 1
                 modified.dt_update = currentTimeFormatted
                 modified.author_id = wpDataDB.user_id

@@ -120,6 +120,7 @@ import ua.com.merchik.merchik.Options.Controls.OptionControlPhotoPromotion;
 import ua.com.merchik.merchik.Options.Controls.OptionControlPhotoShowcase;
 import ua.com.merchik.merchik.Options.Controls.OptionControlPhotoTovarsLeft;
 import ua.com.merchik.merchik.Options.Controls.OptionControlPhotoTovarsLeftClient;
+import ua.com.merchik.merchik.Options.Controls.OptionControlPlanorammVizit;
 import ua.com.merchik.merchik.Options.Controls.OptionControlPromotion;
 import ua.com.merchik.merchik.Options.Controls.OptionControlReclamationAnswer;
 import ua.com.merchik.merchik.Options.Controls.OptionControlRegistrationPotentialClient;
@@ -344,6 +345,11 @@ public class Options {
                 case 84001:
                     OptionControlAddOpinion<?> optionControlAddOpinion = new OptionControlAddOpinion<>(context, dataDB, optionsDB, newOptionType, mode, unlockCodeResultListener);
                     optionControlAddOpinion.showOptionMassage("");
+                    break;
+
+                case 168439:
+                    OptionControlPlanorammVizit<?> optionControlPlanorammVizit = new OptionControlPlanorammVizit<>(context, dataDB, optionsDB, newOptionType, mode, unlockCodeResultListener);
+                    optionControlPlanorammVizit.showOptionMassage("");
                     break;
 
                 case 141893:
@@ -1393,7 +1399,7 @@ public class Options {
 
 //                                        dialogData.setText(spanned);
                                     } catch (Exception e) {
-
+                                        Globals.writeToMLOG("ERROR", "Options/conductingOnServerWpData/onSuccess", "Exception e: " + e);
                                     }
 //                                    dialogData.show();
                                 }
@@ -1911,6 +1917,15 @@ public class Options {
                     optionControlAddOpinion.showOptionMassage(block);
                 }
                 return optionControlAddOpinion.isBlockOption2() ? 1 : 0;
+
+            case 168439:
+                OptionControlPlanorammVizit<?> optionControlPlanorammVizit = new OptionControlPlanorammVizit<>(context, dataDB, option, type, mode, unlockCodeResultListener);
+                if (mode.equals(NNKMode.MAKE) || (mode.equals(NNKMode.CHECK) && optionControlPlanorammVizit.isBlockOption()))
+                    optionControlPlanorammVizit.showOptionMassage(block);
+                if (mode.equals(NNKMode.BLOCK) && optionControlPlanorammVizit.signal && optionControlPlanorammVizit.isBlockOption()) {
+                    optionControlPlanorammVizit.showOptionMassage(block);
+                }
+                return optionControlPlanorammVizit.isBlockOption2() ? 1 : 0;
 
             case 141893:
                 OptionControlOpinionByController<?> optionControlOpinionByController = new OptionControlOpinionByController<>(context, dataDB, option, type, mode, unlockCodeResultListener);

@@ -25,6 +25,7 @@ import ua.com.merchik.merchik.dataLayer.NameUIRepository
 import ua.com.merchik.merchik.dataLayer.common.VizitShowcaseDataHolder
 import ua.com.merchik.merchik.dataLayer.model.DataItemUI
 import ua.com.merchik.merchik.database.realm.RealmManager
+import ua.com.merchik.merchik.database.realm.tables.OptionsRealm
 import ua.com.merchik.merchik.database.realm.tables.PhotoTypeRealm
 import ua.com.merchik.merchik.database.realm.tables.StackPhotoRealm
 import ua.com.merchik.merchik.database.realm.tables.WpDataRealm
@@ -241,6 +242,7 @@ class StackPhotoDBViewModel @Inject constructor(
                         )
                     )
 
+                    data.reverse() //25.04.2025 добавил обратную сортировку
 
                     repository.toItemUIList(StackPhotoDB::class, data, contextUI, typePhoto)
                         .map {
@@ -290,7 +292,8 @@ class StackPhotoDBViewModel @Inject constructor(
                 }
 
                 ContextUI.STACK_PHOTO_TO_FROM_PLANOGRAMM_VIZIT -> {
-                    VizitShowcaseDataHolder.getInstance()[planogrammId.value].photoDoId = it.photoServerId.toInt()
+                    VizitShowcaseDataHolder.getInstance()[planogrammId.value].photoDoId = it.photoServerId?.toIntOrNull() ?: 0
+                    VizitShowcaseDataHolder.getInstance()[planogrammId.value].photoDoHash = it.photo_hash ?: "0"
 
                     Log.e("!", "+")
                 }
@@ -310,8 +313,8 @@ class StackPhotoDBViewModel @Inject constructor(
                     WpDataRealm.getWpDataRowByDad2Id(
                         dataJsonObject.get("wpDataDBId").asString.toLong()
                     )
-//                val optionDB =
-//                    RealmManager.INSTANCE.copyFromRealm(OptionsRealm.getOptionById("310200444"))
+                val optionDB =
+                    RealmManager.INSTANCE.copyFromRealm(OptionsRealm.getOptionById(dataJsonObject.get("optionDBId").asString))
                 if (wpDataDB != null) {
                     val typePhotoId = when (contextUI) {
                         ContextUI.STACK_PHOTO_TO_FROM_PLANOGRAMM_VIZIT -> 14
@@ -321,7 +324,7 @@ class StackPhotoDBViewModel @Inject constructor(
                     }
 
 
-                    typePhotoId?.let {
+                    typePhotoId?.let { it ->
                         val workPlan = WorkPlan()
                         val wpDataObj: WPDataObj = workPlan.getKPS(wpDataDB.id)
                         wpDataObj.setPhotoType(it.toString())
@@ -345,7 +348,7 @@ class StackPhotoDBViewModel @Inject constructor(
                             context as Activity,
                             wpDataObj,
                             wpDataDB,
-                            null,
+                            optionDB,
                             stackPhotoDB
                         )
                         callback.invoke()

@@ -83,7 +83,7 @@ public class PhotoReports {
             switch (type) {
                 case MULTIPLE:
                     if (permission) {
-                        Globals.writeToMLOG("INFO", "PhotoReports/upload_photo/uploadPhotoReports", "start MULTIPLE upload permission true. Начинаю выгружать фотки пакетом при клике на Выгрузить фото");
+                        Globals.writeToMLOG("INFO", "PhotoRиeports/upload_photo/uploadPhotoReports", "start MULTIPLE upload permission true. Начинаю выгружать фотки пакетом при клике на Выгрузить фото");
 
                         permission = false;
 

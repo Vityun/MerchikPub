@@ -28,12 +28,16 @@ public class VotesExchange {
 
         List<VoteSDB> votes = SQL_DB.votesDao().getAllToUpload();
 
+        if (votes == null || votes.isEmpty())
+            return;
+
         res.mod = "images_view";
         res.act = "set_score";
         for (VoteSDB item : votes) {
             PhotoInformationData info = new PhotoInformationData();
             info.element_id = String.valueOf(item.id);
             info.id = String.valueOf(item.photoId);
+            info.comment = item.comments;
             info.score = String.valueOf(item.score);
             info.vote_class = item.voteClass;
 

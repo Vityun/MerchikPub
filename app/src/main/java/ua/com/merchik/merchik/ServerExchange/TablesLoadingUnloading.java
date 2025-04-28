@@ -162,7 +162,7 @@ public class TablesLoadingUnloading {
         sync = true;
 
         try {
-            Exchange.sendWpData2();
+//            Exchange.sendWpData2();
             updateWpData();
 
             downloadWPData();

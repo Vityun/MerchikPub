@@ -623,11 +623,24 @@ fun ItemUI(
                                     }
 
                                     else -> {
+                                        // Получаем базовый текст
+                                        val baseText = fields[index].orEmpty()
+                                        val modifiedText = if (baseText == "Планограма") {
+                                            item.rawObj
+                                                .filterIsInstance<PlanogrammVizitShowcaseSDB>()
+                                                .firstOrNull()
+                                                ?.planogram_id
+                                                ?.let { "$baseText $it" }
+                                                ?: baseText
+                                        } else {
+                                            baseText
+                                        }
+
                                         ImageWithText(
                                             item = item,
                                             index = index,
                                             painter = painter,
-                                            imageText = fields[index]
+                                            imageText = modifiedText
                                         )
                                         { clickedItem, clickedIndex ->
                                             onMultipleClickItemImage(clickedItem, clickedIndex)

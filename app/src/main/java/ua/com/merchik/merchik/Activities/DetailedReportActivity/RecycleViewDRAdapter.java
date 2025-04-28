@@ -58,6 +58,7 @@ import ua.com.merchik.merchik.Options.Buttons.OptionButtonAddNewClient;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonUserOpinion;
 import ua.com.merchik.merchik.Options.Controls.OptionControlAddOpinion;
 import ua.com.merchik.merchik.Options.Controls.OptionControlAvailabilityControlPhotoRemainingGoods;
+import ua.com.merchik.merchik.Options.Controls.OptionControlPlanorammVizit;
 import ua.com.merchik.merchik.Options.Controls.OptionControlReclamationAnswer;
 import ua.com.merchik.merchik.Options.Controls.OptionControlStockBalanceTovar;
 import ua.com.merchik.merchik.Options.Controls.OptionControlTaskAnswer;
@@ -863,6 +864,12 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
 
                             textInteger.setText(CustomString.coloredString("" + optionControlTask.problemTaskCount(), optionsButtons));
 
+                            break;
+
+                        case 168439:
+                            type = new OptionMassageType();
+                            type.type = OptionMassageType.Type.STRING;
+                            OptionControlPlanorammVizit<?> optionControlPlanorammVizit = new OptionControlPlanorammVizit<>(itemView.getContext(), dataDB, optionsButtons, type, NULL, null);
                             break;
 
                         case 168598:    // Мнение

@@ -20,6 +20,7 @@ import java.util.Objects;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.dataLayer.DataObjectUI;
 import ua.com.merchik.merchik.dataLayer.model.MerchModifier;
+import ua.com.merchik.merchik.features.main.AdditionalRequirementsDBOverride;
 import ua.com.merchik.merchik.features.main.PlanogrammVizitShowcaseSDBOverride;
 
 @Entity(tableName = "planogram_vizit_showcase")
@@ -87,6 +88,11 @@ public class PlanogrammVizitShowcaseSDB implements DataObjectUI {
     @ColumnInfo(name = "photo_do_id")
     public Integer photo_do_id;  // Код фото ДО
 
+    @SerializedName("photo_do_hash")
+    @Expose
+    @ColumnInfo(name = "photo_do_hash")
+    public String photo_do_hash;  // добавленно 18.04, на случай когда делаем фото и сразу добавляем в планограму не дожидаясь обмена и получения у фото photoServerId
+
     @SerializedName("theme_id")
     @Expose
     @ColumnInfo(name = "theme_id")
@@ -137,19 +143,16 @@ public class PlanogrammVizitShowcaseSDB implements DataObjectUI {
     @ColumnInfo(name = "kol")
     public Integer kol;  // Количество (для суммирования при свертке)
 
-//    @ColumnInfo(name = "local_sync_status", defaultValue = "0")
-//    @Ignore // Игнорируется при сериализации
-//    public Integer local_sync_status;  // 0 = не надо выгружать/уже выгруженно, 1 = на загрузит на сервер
-
     @Ignore
     public String score;
 
+    @Ignore
+    public String color;
 
     //    @SerializedName("uploadStatus")
 //    @Expose
     @ColumnInfo(name = "uploadStatus")
-    public Integer uploadStatus; // 0 = не надо выгружать/уже выгруженно, 1 = на загрузит на сервер
-
+    public Integer uploadStatus; // 0 = не надо выгружать/уже выгруженно, 1 = надо загрузит на сервер
 
     @NonNull
     @Override
@@ -186,7 +189,8 @@ public class PlanogrammVizitShowcaseSDB implements DataObjectUI {
     @Nullable
     @Override
     public MerchModifier getContainerModifier(@NonNull JSONObject jsonObject) {
-        return DataObjectUI.DefaultImpls.getContainerModifier(this, jsonObject);
+        return PlanogrammVizitShowcaseSDBOverride.INSTANCE.getContainerModifier(jsonObject);
+//        return DataObjectUI.DefaultImpls.getContainerModifier(this, jsonObject);
     }
 
     @Nullable
@@ -204,13 +208,12 @@ public class PlanogrammVizitShowcaseSDB implements DataObjectUI {
     @Nullable
     @Override
     public List<String> getFieldsForOrderOnUI() {
-        String[] parts = "Планограма, Вітрина, Фото вітрини".split(",");
+        String[] parts = "Планограма, Вітрина, Фото вітрини до п.р.".split(",");
         List<String> result = new ArrayList<>();
         for (String part : parts) {
             result.add(part.trim());
         }
         return result;
-        //        return DataObjectUI.DefaultImpls.getFieldsForOrderOnUI(this);
     }
 
     public PlanogrammVizitShowcaseSDB copy() {
@@ -226,6 +229,7 @@ public class PlanogrammVizitShowcaseSDB implements DataObjectUI {
         copy.showcase_id = this.showcase_id;
         copy.showcase_photo_id = this.showcase_photo_id;
         copy.photo_do_id = this.photo_do_id;
+        copy.photo_do_hash = this.photo_do_hash;
         copy.theme_id = this.theme_id;
         copy.option_id = this.option_id;
         copy.comments = this.comments;
@@ -236,6 +240,7 @@ public class PlanogrammVizitShowcaseSDB implements DataObjectUI {
         copy.author_id = this.author_id;
         copy.dt_update = this.dt_update;
         copy.kol = this.kol;
+        copy.score = this.score;
         return copy;
     }
 
@@ -258,6 +263,12 @@ public class PlanogrammVizitShowcaseSDB implements DataObjectUI {
                         Objects.equals(showcase_id, that.showcase_id) &&
                         Objects.equals(showcase_photo_id, that.showcase_photo_id) &&
                         Objects.equals(photo_do_id, that.photo_do_id) &&
+                        areValidHashesEqual(photo_do_hash, that.photo_do_hash) &&
+//                        Objects.equals(photo_do_hash, that.photo_do_hash) && that.photo_do_hash != null && !that.photo_do_hash.isEmpty() && !that.photo_do_hash.equals("0") &&
+//                        that.photo_do_hash != null &&
+//                         !that.photo_do_hash.isEmpty() &&
+//                        && !that.photo_do_hash.equals("0")
+//                        Objects.equals(photo_do_hash, that.photo_do_hash) &&
                         Objects.equals(theme_id, that.theme_id) &&
                         Objects.equals(option_id, that.option_id) &&
                         Objects.equals(comments, that.comments) &&
@@ -280,4 +291,18 @@ public class PlanogrammVizitShowcaseSDB implements DataObjectUI {
         );
     }
 
+    private boolean areValidHashesEqual(String a, String b) {
+        // нормализуем: если пустая строка, "0" или null — считаем как null
+        a = normalizeHash(a);
+        b = normalizeHash(b);
+
+        return Objects.equals(a, b);
+    }
+
+    private String normalizeHash(String hash) {
+        if (hash == null) return null;
+        hash = hash.trim();
+        if (hash.isEmpty() || hash.equals("0")) return null;
+        return hash;
+    }
 }

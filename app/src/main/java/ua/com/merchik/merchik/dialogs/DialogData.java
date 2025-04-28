@@ -136,7 +136,7 @@ public class DialogData {
         this.context = context;
 
         dialog = new Dialog(context);
-        dialog.setCancelable(false);
+        dialog.setCancelable(true);
         dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
         dialog.setContentView(R.layout.dialog_data);
 
@@ -190,6 +190,9 @@ public class DialogData {
 
     }
 
+    public boolean isDialogShow(){
+        return dialog.isShowing();
+    }
 
     public interface DialogClickListener {
         void clicked();

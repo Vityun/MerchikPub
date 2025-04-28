@@ -339,24 +339,31 @@ public class DialogARMark {
 
     private void saveNewVotes(PlanogrammVizitShowcaseSDB db, WpDataDB wpDataDB, int rate, String comment) {
 
-        VoteSDB vote = new VoteSDB();
-        vote.serverId = generateUniqueNumber();
-        vote.dtUpload = 0L;
+        if (wpDataDB.getClient_end_dt() > 0){
+            DialogData dialogData = new DialogData(context);
+            dialogData.setTitle("Оцінка не буде змінена");
+            dialogData.setText("Роботи з поточного відвідування вже завершено, змінити оцінку не можна");
+            dialogData.show();
+        } else {
+            VoteSDB vote = new VoteSDB();
+            vote.serverId = generateUniqueNumber();
+            vote.dtUpload = 0L;
 //        vote.codeDad2 = db.code_dad2;
-        vote.codeDad2 = wpDataDB.getCode_dad2();
-        vote.isp = db.isp;
-        vote.themeId = 1314;
-        vote.kli = db.client_id;
-        vote.addrId = db.addr_id;
-        vote.dt = System.currentTimeMillis() / 1000;
-        vote.merchik = db.author_id;
-        vote.voterId = wpDataDB.getUser_id();
-        vote.photoId = db.planogram_photo_id != null ? db.planogram_photo_id.longValue() : 0;
-        vote.voteClass = 5;
-        vote.score = rate;
-        vote.comments = comment;
+            vote.codeDad2 = wpDataDB.getCode_dad2();
+            vote.isp = db.isp;
+            vote.themeId = 1314;
+            vote.kli = db.client_id;
+            vote.addrId = db.addr_id;
+            vote.dt = System.currentTimeMillis() / 1000;
+            vote.merchik = db.author_id;
+            vote.voterId = wpDataDB.getUser_id();
+            vote.photoId = db.planogram_photo_id != null ? db.planogram_photo_id.longValue() : 0;
+            vote.voteClass = 5;
+            vote.score = rate;
+            vote.comments = comment;
 
-        SQL_DB.votesDao().insertAll(Collections.singletonList(vote));
+            SQL_DB.votesDao().insertAll(Collections.singletonList(vote));
+        }
 
 //        AdditionalRequirementsMarkRealm.setNewMark(markDB);
     }

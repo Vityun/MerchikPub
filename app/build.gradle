@@ -21,8 +21,8 @@ android {
         minSdkVersion 21
         targetSdkVersion 34
         //noinspection HighAppVersionCode
-        versionCode  2025041801
-        versionName "2025041801"
+        versionCode  2025042903
+        versionName "2025042903"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
         multiDexEnabled true
@@ -83,6 +83,12 @@ android {
 
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.10"
+    }
+    applicationVariants.configureEach { variant ->
+        variant.outputs.configureEach { output ->
+            def versionCode = defaultConfig.versionCode
+            outputFileName = "merchik.${versionCode}.apk"
+        }
     }
 }
 
