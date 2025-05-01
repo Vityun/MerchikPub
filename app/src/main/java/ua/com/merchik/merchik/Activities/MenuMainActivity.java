@@ -17,8 +17,10 @@ import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import io.realm.DynamicRealm;
@@ -31,9 +33,11 @@ import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.PlanogrammTableExchange;
 import ua.com.merchik.merchik.Utils.CodeGenerator;
 import ua.com.merchik.merchik.data.RealmModels.AppUsersDB;
+import ua.com.merchik.merchik.data.RealmModels.TovarDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.ShowcaseResponse;
 import ua.com.merchik.merchik.data.TestJsonUpload.StandartData;
+import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.AppUserRealm;
 import ua.com.merchik.merchik.dialogs.DialogShowcase.DialogShowcase;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
@@ -135,8 +139,37 @@ public class MenuMainActivity extends toolbar_menus {
 
     private void test() {
 
-        PlanogrammTableExchange planogrammTableExchange = new PlanogrammTableExchange();
-        planogrammTableExchange.planogrammVisitShowcaseUploadData();
+
+
+        Map<String, Integer> clientIdCounts = new HashMap<>();
+
+        RealmResults<TovarDB> results = RealmManager.INSTANCE.where(TovarDB.class).findAll();
+
+        for (TovarDB item : results) {
+            String clientId = item.getClientId(); // замени на свой getter
+            if (clientId != null) {
+                if (clientIdCounts.containsKey(clientId)) {
+                    clientIdCounts.put(clientId, clientIdCounts.get(clientId) + 1);
+                } else {
+                    clientIdCounts.put(clientId, 1);
+                }
+            }
+        }
+
+// Пример вывода:
+        int id = 0;
+        for (Map.Entry<String, Integer> entry : clientIdCounts.entrySet()) {
+            Log.d("ClientCount", "Client ID: " + entry.getKey() + ", Count: " + entry.getValue());
+            id++;
+        }
+        Log.d("ClientCount", "Client ID: " + id);
+
+
+
+//        realm.close();
+
+//        PlanogrammTableExchange planogrammTableExchange = new PlanogrammTableExchange();
+//        planogrammTableExchange.planogrammVisitShowcaseUploadData();
 
 //        String clientId = "9295";
 //        Integer addressId = 31987;

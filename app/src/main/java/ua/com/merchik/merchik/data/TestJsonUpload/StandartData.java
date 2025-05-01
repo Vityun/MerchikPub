@@ -83,6 +83,8 @@ public class StandartData<T> {
         public String date_to;
         public String confirm;
         public String is_view;
+
+        public String dt_change_from;
     }
 
     /*Тут формируем оценки Достижений для передачи их на сторону сервера*/

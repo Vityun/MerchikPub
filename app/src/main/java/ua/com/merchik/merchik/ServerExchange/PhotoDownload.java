@@ -579,7 +579,8 @@ public class PhotoDownload {
         SynchronizationTimetableDB synchronizationTimetableDB = RealmManager.INSTANCE.copyFromRealm(RealmManager.getSynchronizationTimetableRowByTable("stack_photo"));
         data.dt_upload = String.valueOf(synchronizationTimetableDB.getVpi_app());
 
-        data.dt_upload = "0";
+//        data.dt_upload = "0";
+//        data.dt_upload = String.valueOf(System.currentTimeMillis()/1000 - 121);
 
         String contentType = "application/json";
         JsonObject convertedObject = new Gson().fromJson(new Gson().toJson(data), JsonObject.class);

@@ -371,16 +371,16 @@ public class TARActivity extends toolbar_menus implements TARFragmentHome.OnFrag
 
     private void setTabs() {
 
-        String homeTabTitle = "Задачи";
+        String homeTabTitle = getText(R.string.title_task).toString();
         TARType = getIntent().getIntExtra("TAR_type", 1);
         if (TARType == 1) {
-            homeTabTitle = "Задачи";
+            homeTabTitle = getText(R.string.title_task).toString();
         } else if (TARType == 0) {
-            homeTabTitle = "Рекламации";
+            homeTabTitle = getText(R.string.title_reclamation).toString();
         }
 
         tabLayout.getTabAt(0).setText(homeTabTitle);
-        tabLayout.getTabAt(1).setText("Карта");
+        tabLayout.getTabAt(1).setText(getText(R.string.title_1));
 
         fragmentManager = getSupportFragmentManager();
         TARHomeTab tabAdapter = new TARHomeTab(fragmentManager, getLifecycle(), tabLayout.getTabCount());

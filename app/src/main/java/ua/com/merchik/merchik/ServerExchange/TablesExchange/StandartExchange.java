@@ -9,9 +9,11 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 import ua.com.merchik.merchik.ServerExchange.ExchangeInterface;
+import ua.com.merchik.merchik.data.RealmModels.SynchronizationTimetableDB;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.ContentResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.StandartResponse;
 import ua.com.merchik.merchik.data.TestJsonUpload.StandartData;
+import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
 
 /**
@@ -27,6 +29,14 @@ public class StandartExchange {
             StandartData data = new StandartData();
             data.mod = "standart";
             data.act = "list";
+
+            // #### TODO
+            SynchronizationTimetableDB synchronizationTimetableDB = RealmManager.INSTANCE.copyFromRealm(RealmManager.getSynchronizationTimetableRowByTable("stack_photo"));
+            data.dt_change_from = String.valueOf(synchronizationTimetableDB.getVpi_app());
+
+//            data.dt_change_from = String.valueOf(System.currentTimeMillis()/1000 - 142);
+//            data.dt_change_from = "0";
+
 //            data.date_from = "";
 //            data.date_to = "";
 
@@ -49,6 +59,21 @@ public class StandartExchange {
                 }
             });
 
+
+//            {
+//                retrofit2.Call<JsonObject> call1 = RetrofitBuilder.getRetrofitInterface().MOD_IMAGES_VIEW_CALL_JSON(RetrofitBuilder.contentType, convertedObject);
+//                call1.enqueue(new Callback<JsonObject>() {
+//                    @Override
+//                    public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
+//                        Log.d("smarti", "onResponse: ");
+//                    }
+//
+//                    @Override
+//                    public void onFailure(Call<JsonObject> call, Throwable t) {
+//                        Log.d("smarti", "onResponse: ");
+//                    }
+//                });
+//            }
         }catch (Exception e){
 
         }
@@ -60,6 +85,14 @@ public class StandartExchange {
             StandartData data = new StandartData();
             data.mod = "standart";
             data.act = "content_list";
+
+            // #### TODO
+            SynchronizationTimetableDB synchronizationTimetableDB = RealmManager.INSTANCE.copyFromRealm(RealmManager.getSynchronizationTimetableRowByTable("stack_photo"));
+            data.dt_change_from = String.valueOf(synchronizationTimetableDB.getVpi_app());
+
+//            data.dt_change_from = "0";
+//            data.dt_change_from = String.valueOf(System.currentTimeMillis()/1000 - 142);
+
 //            data.date_from = "";
 //            data.date_to = "";
 //            data.active = "0/1";

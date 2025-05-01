@@ -490,6 +490,7 @@ public class MakePhoto {
             Globals.writeToMLOG("INFO", "makePhoto", "photoNum: " + photoNum);
             Globals.writeToMLOG("INFO", "makePhoto", "isSavePhoto: " + isSavePhoto);
 
+            Log.e("!!!!!!","tovarId: " + tovarId);
             if (intent.resolveActivity(activity.getPackageManager()) != null) {
                 Globals.writeToMLOG("INFO", "makePhoto", "resolveActivity != null: " + activity.getPackageManager());
                 activity.startActivityForResult(intent, CAMERA_REQUEST_TAKE_PHOTO_TEST);

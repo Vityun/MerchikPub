@@ -22,6 +22,7 @@ import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.Options.OptionControl;
 import ua.com.merchik.merchik.Options.Options;
+import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.data.Database.Room.AddressSDB;
 import ua.com.merchik.merchik.data.Database.Room.CustomerSDB;
 import ua.com.merchik.merchik.data.Database.Room.UsersSDB;
@@ -127,7 +128,7 @@ public class OptionControlCheckMarkDetailedReport<T> extends OptionControl {
                 spannableStringBuilder.append("Обнаружено ").append(String.valueOf(uniqueVotes.size()))
                         .append(" низких оценок по ДетОтчетам от ").append(vote.authorVote).append("\n\n");
 
-                for (VoteSDB item : uniqueVotes){
+                for (VoteSDB item : uniqueVotes) {
                     UsersSDB userScore = SQL_DB.usersDao().getUserById(item.voterId);
                     SpannableStringBuilder link = new SpannableStringBuilder();
                     link.append("(").append(String.valueOf(item.id)).append(") ").append(item.comments);
@@ -174,7 +175,7 @@ public class OptionControlCheckMarkDetailedReport<T> extends OptionControl {
                     StringBuilder stringBuilder = new StringBuilder();
                     stringBuilder.append(wpDataDB.getAddr_txt()).append("\n").append(wpDataDB.getClient_txt()).append("\n");
                     DialogData dialog = new DialogData(textView.getContext());
-                    dialog.setTitle("Открыть посещение?");
+                    dialog.setTitle(context.getString(R.string.open_visit) + "?");
                     dialog.setText(stringBuilder);
                     dialog.setOk(null, () -> {
                         Intent intent = new Intent(textView.getContext(), DetailedReportActivity.class);
@@ -184,7 +185,7 @@ public class OptionControlCheckMarkDetailedReport<T> extends OptionControl {
                     dialog.setClose(dialog::dismiss);
                     dialog.show();
 
-                }catch (Exception e){
+                } catch (Exception e) {
                     Globals.writeToMLOG("ERROR", "OptionControlCheckMarkPhotoReport/createLinkedString/onClick", "Exception e: " + e);
                 }
             }

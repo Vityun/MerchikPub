@@ -40,6 +40,7 @@ public class TovarRequisites {
 
     private TovarDB tovar;
     private ReportPrepareDB reportPrepareDB;
+    private int photoType;
 
     public TovarRequisites() {
     }
@@ -47,6 +48,13 @@ public class TovarRequisites {
     public TovarRequisites(TovarDB tovar, ReportPrepareDB reportPrepareDB) {
         this.tovar = tovar;
         this.reportPrepareDB = reportPrepareDB;
+        this.photoType = 4;
+    }
+
+    public TovarRequisites(TovarDB tovar, ReportPrepareDB reportPrepareDB, int photoType) {
+        this.tovar = tovar;
+        this.reportPrepareDB = reportPrepareDB;
+        this.photoType = photoType;
     }
 
     /**
@@ -56,7 +64,14 @@ public class TovarRequisites {
     public DialogData createDialog(Context context, WpDataDB wpDataDB, OptionsDB optionsDB, Clicks.clickVoid click) {
         DialogData res = new DialogData(context);
 
-        res.setTitle("");
+        TovarOptions tovarOptions;
+        if (photoType != 4){
+            tovarOptions = new TovarOptions().createTovarOptionPhotoType();
+            res.setTitle("Фото вiтрини (наближене)");
+        } else{
+            tovarOptions = new TovarOptions().createTovarOptionPhoto();
+            res.setTitle("");
+        }
         res.setText("");
         res.setClose(res::dismiss);
         res.setLesson(context, true, 802);
@@ -65,10 +80,10 @@ public class TovarRequisites {
         tovarId = "";
         if (tovar != null) {
             res.setImage(true, getPhotoFromDB(tovar));
-            res.setAdditionalText(setPhotoInfo(reportPrepareDB, new TovarOptions().createTovarOptionPhoto(), tovar, "", ""));
+            res.setAdditionalText(setPhotoInfo(reportPrepareDB, tovarOptions, tovar, "", ""));
 
             // Сделано для того что б можно было контролировать какая опция сейчас открыта
-            res.tovarOptions = new TovarOptions().createTovarOptionPhoto();
+            res.tovarOptions = tovarOptions;
             res.reportPrepareDB = reportPrepareDB;
             tovarId = reportPrepareDB.tovarId;
         }
@@ -76,7 +91,7 @@ public class TovarRequisites {
         res.setOperationButtons(
                 "Зробити фото",
                 () -> {
-                    new MakePhoto().pressedMakePhoto((Activity) context, wpDataDB, optionsDB,"4", tovarId, click);
+                    new MakePhoto().pressedMakePhoto((Activity) context, wpDataDB, optionsDB, String.valueOf(photoType), tovarId, click);
                 },
                 "Вибрати з галереї",
                 () -> {
@@ -85,7 +100,7 @@ public class TovarRequisites {
                             Globals.writeToMLOG("INFO", "Вибрати з галереї", "DetailedReportOptionsFrag.PermissionUtils.checkReadExternalStoragePermission(context)");
                             MakePhotoFromGaleryWpDataDB = wpDataDB;
 //                            MakePhotoFromGalery.tovarId = reportPrepareDB.tovarId;
-                            MakePhotoFromGalery.photoType = 4;
+                            MakePhotoFromGalery.photoType = photoType;
                             Intent intent = new Intent(Intent.ACTION_PICK);
                             intent.setType("image/*");
                             if (context instanceof DetailedReportActivity) {

@@ -61,8 +61,6 @@ public class OptionButPhotoPlanogramm<T> extends OptionControl {
     private void executeOption() {
         new Globals().fixMP(wpDataDB, null);// Фиксация Местоположения в таблице ЛогМп
         try {
-//            WPDataObj wpDataObj = workPlan.getKPS(wpDataDB.getId());
-//            wpDataObj.setPhotoType("5");
 
 //            AddressSDB addr = SQL_DB.addressDao().getById(wpDataDB.getAddr_id());
 //            TradeMarkDB tradeMarkDB = TradeMarkRealm.getTradeMarkRowById(String.valueOf(addr.tpId));
@@ -84,31 +82,33 @@ public class OptionButPhotoPlanogramm<T> extends OptionControl {
 //            intent.putExtras(bundle);
 //            context.startActivity(intent);
 
-            VizitShowcaseDataHolder.Companion.getInstance().clear();
+//            VizitShowcaseDataHolder.Companion.getInstance().clear();
+//
+//            Intent intent = new Intent(context, FeaturesActivity.class);
+//            Bundle bundle = new Bundle();
+//            bundle.putString("viewModel", PlanogrammVizitShowcaseViewModel.class.getCanonicalName());
+//            bundle.putString("contextUI", ContextUI.PLANOGRAMM_VIZIT_SHOWCASE.toString());
+//            bundle.putString("modeUI", ModeUI.DEFAULT.toString());
+//            JsonObject dataJson = new JsonObject();
+//            dataJson.addProperty("clientId", String.valueOf(wpDataDB.getClient_id()));
+//            dataJson.addProperty("addressId", wpDataDB.getAddr_id());
+//            dataJson.addProperty("wpDataDBId", String.valueOf(wpDataDB.getCode_dad2()));
+//            dataJson.addProperty("optionDBId", String.valueOf(optionDB.getID()));
+//            bundle.putString("dataJson", new Gson().toJson(dataJson));
+//
+//            bundle.putString("title", "Планограма > Вітрина");
+//            bundle.putString(
+//                    "subTitle",
+//                    "Для кожної Планограми вкажіть Вітрину, на якiй товар буде викладено згідно поточної планограми. Якщо Фото відповідної вітрини у списку вітрин немає, виберіть Фото Вітрини. Якщо у ТТ немає Вітрини для якої створена ця Планограма, то оцініть цю Планограму низькою оцінкою (нижче 5) і вкажіть коментар"
+//            );
+//            intent.putExtras(bundle);
+//            ActivityCompat.startActivityForResult((Activity) context, intent, NEED_UPDATE_UI_REQUEST, null);
 
-            Intent intent = new Intent(context, FeaturesActivity.class);
-            Bundle bundle = new Bundle();
-            bundle.putString("viewModel", PlanogrammVizitShowcaseViewModel.class.getCanonicalName());
-            bundle.putString("contextUI", ContextUI.PLANOGRAMM_VIZIT_SHOWCASE.toString());
-            bundle.putString("modeUI", ModeUI.DEFAULT.toString());
-            JsonObject dataJson = new JsonObject();
-            dataJson.addProperty("clientId", String.valueOf(wpDataDB.getClient_id()));
-            dataJson.addProperty("addressId", wpDataDB.getAddr_id());
-            dataJson.addProperty("wpDataDBId", String.valueOf(wpDataDB.getCode_dad2()));
-            dataJson.addProperty("optionDBId", String.valueOf(optionDB.getID()));
-            bundle.putString("dataJson", new Gson().toJson(dataJson));
+            WPDataObj wpDataObj = workPlan.getKPS(wpDataDB.getId());
+            wpDataObj.setPhotoType("5");
 
-            bundle.putString("title", "Планограма > Вітрина");
-            bundle.putString(
-                    "subTitle",
-                    "Для кожної Планограми вкажіть Вітрину, на якiй товар буде викладено згідно поточної планограми. Якщо Фото відповідної вітрини у списку вітрин немає, виберіть Фото Вітрини. Якщо у ТТ немає Вітрини для якої створена ця Планограма, то оцініть цю Планограму низькою оцінкою (нижче 5) і вкажіть коментар"
-            );
-            intent.putExtras(bundle);
-
-            ActivityCompat.startActivityForResult((Activity) context, intent, NEED_UPDATE_UI_REQUEST, null);
-
-//            MakePhoto makePhoto = new MakePhoto();
-//            makePhoto.pressedMakePhotoOldStyle((Activity) context, wpDataObj, wpDataDB, optionDB);
+            MakePhoto makePhoto = new MakePhoto();
+            makePhoto.pressedMakePhotoOldStyle((Activity) context, wpDataObj, wpDataDB, optionDB);
         }catch (Exception e){
             Globals.writeToMLOG("ERROR", "OptionButPhotoPlanogramm/executeOption/Exception", "Exception e: " + e);
         }

@@ -6,17 +6,14 @@ import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 import android.graphics.Bitmap;
 import android.util.Log;
 
-import com.airbnb.lottie.L;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import io.realm.RealmResults;
 import retrofit2.Call;
@@ -27,12 +24,12 @@ import ua.com.merchik.merchik.ServerExchange.ExchangeInterface;
 import ua.com.merchik.merchik.ServerExchange.PhotoDownload;
 import ua.com.merchik.merchik.data.Database.Room.ShowcaseSDB;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
+import ua.com.merchik.merchik.data.RealmModels.SynchronizationTimetableDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.ShowcaseResponse;
 import ua.com.merchik.merchik.data.TestJsonUpload.StandartData;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.StackPhotoRealm;
-import ua.com.merchik.merchik.database.room.DaoInterfaces.ShowcaseDao;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
 
 public class ShowcaseExchange {
@@ -61,7 +58,11 @@ public class ShowcaseExchange {
             data.active_only = "1";
             data.client_id = new ArrayList<>(uniqueClientIds);
             data.addr_id = new ArrayList<>(uniqueAdressId);
-            ;
+
+            // #### TODO
+            SynchronizationTimetableDB synchronizationTimetableDB = RealmManager.INSTANCE.copyFromRealm(RealmManager.getSynchronizationTimetableRowByTable("photo_showcase"));
+            data.dt_change_from = String.valueOf(synchronizationTimetableDB.getVpi_app());
+
             // добавить время отправки,что бы не передавать лишнее
 
             Gson gson = new Gson();
@@ -109,6 +110,11 @@ public class ShowcaseExchange {
 //                            }
 
                             exchange.onSuccess(serv);
+                            if (!serv.isEmpty())
+                                RealmManager.INSTANCE.executeTransaction(realm -> {
+                                    synchronizationTimetableDB.setVpi_app(System.currentTimeMillis() / 1000);
+                                    realm.copyToRealmOrUpdate(synchronizationTimetableDB);
+                                });
                         }
                     }
                 }
@@ -138,90 +144,90 @@ public class ShowcaseExchange {
 //                    item.photoId == 52657669
 //            ) {
 
-                StackPhotoDB stackPhotoDB = StackPhotoRealm.stackPhotoDBGetPhotoBySiteId2(String.valueOf(item.photoId));
-                if (stackPhotoDB == null) {
-                    Log.e("checkRequest", "downloadShowcasePhoto/item: " + item.id);
-                    photoDownload.downloadPhoto(item.photoBig, new ExchangeInterface.ExchangePhoto() {
-                        @Override
-                        public void onSuccess(Bitmap bitmap) {
-                            try {
-                                long dt = System.currentTimeMillis() / 1000;
+            StackPhotoDB stackPhotoDB = StackPhotoRealm.stackPhotoDBGetPhotoBySiteId2(String.valueOf(item.photoId));
+            if (stackPhotoDB == null) {
+                Log.e("checkRequest", "downloadShowcasePhoto/item: " + item.id);
+                photoDownload.downloadPhoto(item.photoBig, new ExchangeInterface.ExchangePhoto() {
+                    @Override
+                    public void onSuccess(Bitmap bitmap) {
+                        try {
+                            long dt = System.currentTimeMillis() / 1000;
 
-                                StackPhotoDB photoDB = new StackPhotoDB();
-                                photoDB.setId(RealmManager.stackPhotoGetLastId() + 1);
-                                photoDB.setPhotoServerId(String.valueOf(item.photoId));
-                                photoDB.setDt(dt);
-                                photoDB.setClient_id(item.clientId);
-                                photoDB.setAddr_id(Integer.valueOf(item.addrId));
-                                photoDB.setUser_id(null);
-                                photoDB.setPhoto_type(0);
+                            StackPhotoDB photoDB = new StackPhotoDB();
+                            photoDB.setId(RealmManager.stackPhotoGetLastId() + 1);
+                            photoDB.setPhotoServerId(String.valueOf(item.photoId));
+                            photoDB.setDt(dt);
+                            photoDB.setClient_id(item.clientId);
+                            photoDB.setAddr_id(Integer.valueOf(item.addrId));
+                            photoDB.setUser_id(null);
+                            photoDB.setPhoto_type(0);
 
-                                photoDB.setCreate_time(dt * 1000);// реквизиты что б фотки не выгружались обратно на сервер
-                                photoDB.setUpload_to_server(dt);// реквизиты что б фотки не выгружались обратно на сервер
-                                photoDB.setGet_on_server(dt);// реквизиты что б фотки не выгружались обратно на сервер
+                            photoDB.setCreate_time(dt * 1000);// реквизиты что б фотки не выгружались обратно на сервер
+                            photoDB.setUpload_to_server(dt);// реквизиты что б фотки не выгружались обратно на сервер
+                            photoDB.setGet_on_server(dt);// реквизиты что б фотки не выгружались обратно на сервер
 
 //                        photoDB.setPhoto_num(Globals.savePhotoToPhoneMemory("/Showcase", "" + item.id, bitmap));
 
-                                photoDB.setPhotoServerURL(item.photoBig);
+                            photoDB.setPhotoServerURL(item.photoBig);
 
 
-                                photoDB.img_src_id = String.valueOf(item.photoId);
-                                photoDB.showcase_id = String.valueOf(item.id);
-                                photoDB.planogram_id = Objects.toString(item.planogramId, "");
-                                photoDB.planogram_img_id = String.valueOf(item.photoPlanogramId);
+                            photoDB.img_src_id = String.valueOf(item.photoId);
+                            photoDB.showcase_id = String.valueOf(item.id);
+                            photoDB.planogram_id = Objects.toString(item.planogramId, "");
+                            photoDB.planogram_img_id = String.valueOf(item.photoPlanogramId);
 
-                                photoDownload.savePhotoAndUpdateStackPhotoDB("/Showcase", "" + item.photoId, bitmap, photoDB);
+                            photoDownload.savePhotoAndUpdateStackPhotoDB("/Showcase", "" + item.photoId, bitmap, photoDB);
 
 //                        RealmManager.stackPhotoSavePhoto(photoDB);
 
-                                Log.e("checkRequest", "downloadShowcasePhoto/photoDB: " + photoDB.getId());
-                                Globals.writeToMLOG("INFO", "savePhotoToDB2/downloadPhoto/ShowcaseSDB/photoDB", "photoDB.getId(): " + photoDB.getId());
-                            } catch (Exception e) {
-                                Log.e("checkRequest", "downloadShowcasePhoto/Exception e: " + e);
-                                Globals.writeToMLOG("ERR", "savePhotoToDB2/downloadPhoto/ShowcaseSDB", "Exception e: " + e);
-                            }
+                            Log.e("checkRequest", "downloadShowcasePhoto/photoDB: " + photoDB.getId());
+                            Globals.writeToMLOG("INFO", "savePhotoToDB2/downloadPhoto/ShowcaseSDB/photoDB", "photoDB.getId(): " + photoDB.getId());
+                        } catch (Exception e) {
+                            Log.e("checkRequest", "downloadShowcasePhoto/Exception e: " + e);
+                            Globals.writeToMLOG("ERR", "savePhotoToDB2/downloadPhoto/ShowcaseSDB", "Exception e: " + e);
                         }
+                    }
 
-                        @Override
-                        public void onFailure(String error) {
-                            Log.e("checkRequest", "downloadShowcasePhoto/String error: " + error);
-                            Globals.writeToMLOG("ERR", "savePhotoToDB2/downloadPhoto/ShowcaseSDB/onFailure", "error: " + error);
-                        }
-                    });
-                } else if (stackPhotoDB.getPhoto_num() == null) {
-                    photoDownload.downloadPhoto(item.photoBig, new ExchangeInterface.ExchangePhoto() {
-                        @Override
-                        public void onSuccess(Bitmap bitmap) {
-                            try {
-                                long dt = System.currentTimeMillis() / 1000;
+                    @Override
+                    public void onFailure(String error) {
+                        Log.e("checkRequest", "downloadShowcasePhoto/String error: " + error);
+                        Globals.writeToMLOG("ERR", "savePhotoToDB2/downloadPhoto/ShowcaseSDB/onFailure", "error: " + error);
+                    }
+                });
+            } else if (stackPhotoDB.getPhoto_num() == null) {
+                photoDownload.downloadPhoto(item.photoBig, new ExchangeInterface.ExchangePhoto() {
+                    @Override
+                    public void onSuccess(Bitmap bitmap) {
+                        try {
+                            long dt = System.currentTimeMillis() / 1000;
 
-                                stackPhotoDB.setDt(dt);
+                            stackPhotoDB.setDt(dt);
 
-                                stackPhotoDB.setCreate_time(dt * 1000);// реквизиты что б фотки не выгружались обратно на сервер
-                                stackPhotoDB.setUpload_to_server(dt);// реквизиты что б фотки не выгружались обратно на сервер
-                                stackPhotoDB.setGet_on_server(dt);// реквизиты что б фотки не выгружались обратно на сервер
+                            stackPhotoDB.setCreate_time(dt * 1000);// реквизиты что б фотки не выгружались обратно на сервер
+                            stackPhotoDB.setUpload_to_server(dt);// реквизиты что б фотки не выгружались обратно на сервер
+                            stackPhotoDB.setGet_on_server(dt);// реквизиты что б фотки не выгружались обратно на сервер
 
 //                                stackPhotoDB.img_src_id = String.valueOf(item.photoId);
 //                                stackPhotoDB.showcase_id = String.valueOf(item.id);
 //                                stackPhotoDB.planogram_id = Objects.toString(item.planogramId, "");
 //                                stackPhotoDB.planogram_img_id = String.valueOf(item.photoPlanogramId);
 
-                                photoDownload.savePhotoAndUpdateStackPhotoDB("/Showcase", "" + item.photoId, bitmap, stackPhotoDB);
+                            photoDownload.savePhotoAndUpdateStackPhotoDB("/Showcase", "" + item.photoId, bitmap, stackPhotoDB);
 
-                                Log.e("checkRequest", "downloadShowcasePhoto/photoDB: " + stackPhotoDB.getId());
-                                Globals.writeToMLOG("INFO", "savePhotoToDB2/downloadPhoto/ShowcaseSDB/photoDB", "photoDB.getId(): " + stackPhotoDB.getId());
-                            } catch (Exception e) {
-                                Log.e("checkRequest", "downloadShowcasePhoto/Exception e: " + e);
-                                Globals.writeToMLOG("ERR", "savePhotoToDB2/downloadPhoto/ShowcaseSDB", "Exception e: " + e);
-                            }
+                            Log.e("checkRequest", "downloadShowcasePhoto/photoDB: " + stackPhotoDB.getId());
+                            Globals.writeToMLOG("INFO", "savePhotoToDB2/downloadPhoto/ShowcaseSDB/photoDB", "photoDB.getId(): " + stackPhotoDB.getId());
+                        } catch (Exception e) {
+                            Log.e("checkRequest", "downloadShowcasePhoto/Exception e: " + e);
+                            Globals.writeToMLOG("ERR", "savePhotoToDB2/downloadPhoto/ShowcaseSDB", "Exception e: " + e);
                         }
+                    }
 
-                        @Override
-                        public void onFailure(String error) {
-                            Log.e("checkRequest", "downloadShowcasePhoto/String error: " + error);
-                            Globals.writeToMLOG("ERR", "savePhotoToDB2/downloadPhoto/ShowcaseSDB/onFailure", "error: " + error);
-                        }
-                    });
+                    @Override
+                    public void onFailure(String error) {
+                        Log.e("checkRequest", "downloadShowcasePhoto/String error: " + error);
+                        Globals.writeToMLOG("ERR", "savePhotoToDB2/downloadPhoto/ShowcaseSDB/onFailure", "error: " + error);
+                    }
+                });
             }
         }
     }

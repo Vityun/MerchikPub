@@ -98,7 +98,7 @@ public class ListViewAdapter extends BaseAdapter {
 
         // Слушатель для нажатия на элемент (кпс)
         view.setOnClickListener(arg0 -> {
-            String msg = "Открыть посещение.";
+            String msg = mContext.getString(R.string.open_visit);
             AlertDialog.Builder builder = new AlertDialog.Builder(mContext);
             builder.setCancelable(false);
             builder.setMessage(msg);

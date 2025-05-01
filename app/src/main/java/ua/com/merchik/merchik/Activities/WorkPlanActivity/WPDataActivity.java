@@ -139,8 +139,8 @@ public class WPDataActivity extends toolbar_menus {
 
 
     private void setTabs(boolean initialOpen){
-        tabLayout.getTabAt(0).setText("План работ");
-        tabLayout.getTabAt(1).setText("Карта");
+        tabLayout.getTabAt(0).setText(getText(R.string.title_0));
+        tabLayout.getTabAt(1).setText(getText(R.string.title_1));
 
         fragmentManager = getSupportFragmentManager();
         WPDataTab tabAdapter = new WPDataTab(fragmentManager, getLifecycle(), tabLayout.getTabCount(), initialOpen);

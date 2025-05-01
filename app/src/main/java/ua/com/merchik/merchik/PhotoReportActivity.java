@@ -1391,7 +1391,7 @@ public class PhotoReportActivity extends toolbar_menus {
 
                     stackPhotoDB.setCode_iza(wp.getCode_iza());   // Вмазал код ИЗА что б не крашился тип 31 фото в своей опции контроля (и всегда был с фоткой)
 
-                    if (MakePhoto.photoType.equals("4")) {
+                    if (MakePhoto.photoType.equals("4") || MakePhoto.photoType.equals("39")) {
                         stackPhotoDB.tovar_id = MakePhoto.tovarId;
                         Globals.writeToMLOG("INFO", "requestCode == 201 && resultCode == RESULT_OK/photo_save", "MakePhoto.tovarId: " + MakePhoto.tovarId);
                     }

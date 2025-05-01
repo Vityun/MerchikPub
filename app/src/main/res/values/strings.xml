@@ -1,8 +1,8 @@
 <resources>
     <string name="app_name" translatable="false">merchik</string>
-    <string name="ver" translatable="false">042903</string>
+    <string name="ver" translatable="false">050203</string>
     <string name="debug_status" translatable="false">1</string>
-    <string name="debug_date" translatable="false">2025-04-29</string>
+    <string name="debug_date" translatable="false">2025-05-02</string>
 
     <string name="test" translatable="false">TEST HINT</string>
 
@@ -13,6 +13,22 @@
     <string name="login_info">Введите ваш логин и пароль: </string>
     <string name="login">Вход</string>
     <string name="logout">Выход</string>
+
+    <string name="title_tab_0">Главная</string>
+    <string name="title_tab_1">Опции</string>
+    <string name="title_tab_2">Переписка</string>
+    <string name="title_tab_3">ЗИР</string>
+
+    <string name="title_0">План работ</string>
+    <string name="title_1">Карта</string>
+
+    <string name="title_task">Задачи</string>
+    <string name="title_reclamation">Рекламации</string>
+
+    <string name="title_tab_tar_0">Главная</string>
+    <string name="title_tab_tar_1">Опции</string>
+    <string name="title_tab_tar_2">Переписка</string>
+    <string name="title_tab_tar_3">Товары</string>
 
     <string name="edit_text_login">логин</string>
     <string name="edit_text_password">пароль</string>
@@ -54,6 +70,8 @@
         Если он горит красным или серым - данные получить не удалось. Для начала попробуйте нажать "Перейти на главную" в меню 3х точек. Если это не помогло - следует выйти на улицу или подойти к окну и подождать минуту пока телефон не получит свежие данные.\n
         \n
     </string>
+
+    <string name="complete_work">Провести отчёт</string>
 
     <!--Toolbar text-->
     <string name="test_001">description</string>
@@ -147,6 +165,8 @@
     <string name="hamburger_menu_photo_log">Журнал фото</string>
     <string name="hamburger_menu_exit">Выход</string>
 
+    <string name="hamburger_menu_language">Язык</string>
+
 
     <string name="activity_photo_log_title">Журнал фото</string>
 
@@ -234,6 +254,8 @@
     <string name="sub_title_additionalrequirementsdb_from_achievement">Предложение от клиента, которое нужно выполнить для получения дополнительных бонусов</string>
     <string name="title_samplephotosdb">Образцы фото отчетов</string>
     <string name="sub_title_samplephotosdb">В списке представлены образцы фотоотчетов. "Для того, чтобы изготовить '%s' нажмите на соответствующую фотографию. Затем увеличьте ее до размера экрана и выполните фото, нажав на кнопку фотоаппарата в правом нижнем углу.</string>
+    <string name="input_text_or">Введите название (или штрихкод) товара</string>
+    <string name="open_visit">Открыть посещение</string>
 
 </resources>
 

@@ -43,7 +43,7 @@
                 android:layout_marginRight="8dp"
                 android:drawableStart="@android:drawable/ic_menu_search"
                 android:drawableLeft="@android:drawable/ic_menu_search"
-                android:hint="Введите название (или штрихкод) товара"
+                android:hint="@string/input_text_or"
                 android:singleLine="true"
                 app:layout_constraintEnd_toStartOf="@+id/full_tov_list"
                 app:layout_constraintStart_toStartOf="parent"

@@ -7,6 +7,7 @@ import android.util.Log;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 
+import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.observers.DisposableCompletableObserver;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 import retrofit2.Call;
@@ -14,9 +15,11 @@ import retrofit2.Callback;
 import retrofit2.Response;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
+import ua.com.merchik.merchik.data.RealmModels.SynchronizationTimetableDB;
 import ua.com.merchik.merchik.data.RetrofitResponse.SMSLogResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.SMSPlanResponse;
 import ua.com.merchik.merchik.data.TestJsonUpload.StandartData;
+import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
 
 public class SMSExchange {
@@ -105,6 +108,11 @@ public class SMSExchange {
         data.act = "get_log";
         data.nolimit = "1";
 
+        // #### TODO
+        SynchronizationTimetableDB synchronizationTimetableDB = RealmManager.INSTANCE.copyFromRealm(RealmManager.getSynchronizationTimetableRowByTable("errorsList"));
+        data.dt_change_from = String.valueOf(synchronizationTimetableDB.getVpi_app());
+
+
         Gson gson = new Gson();
         String json = gson.toJson(data);
         JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
@@ -129,8 +137,6 @@ public class SMSExchange {
             public void onResponse(Call<SMSLogResponse> call, Response<SMSLogResponse> response) {
                 Log.e("SMSExchange", "smsPlanExchange: " + response);
                 Log.e("SMSExchange", "smsPlanExchange body: " + response.body());
-
-                Log.e("test", "test" + response);
                 try {
                     if (response.isSuccessful()) {
                         if (response.body() != null) {
@@ -138,12 +144,20 @@ public class SMSExchange {
                                 if (response.body().list != null && response.body().list.size() > 0) {
                                     SQL_DB.smsLogDao().insertAllCompletable(response.body().list)
                                             .subscribeOn(Schedulers.io())
+                                            .observeOn(AndroidSchedulers.mainThread())
                                             .subscribe(new DisposableCompletableObserver() {
                                                 @Override
                                                 public void onComplete() {
                                                     Log.d("test", "test");
                                                     Globals.writeToMLOG("INFO", "SMSExchange/smsLogExchange/onResponse/onComplete", "OK: " + response.body().list.size());
 //                                                    click.onSuccess(response.body().list);
+
+                                                    RealmManager.INSTANCE.executeTransaction(realm -> {
+                                                        synchronizationTimetableDB.setVpi_app(System.currentTimeMillis() / 1000);
+                                                        realm.copyToRealmOrUpdate(synchronizationTimetableDB);
+                                                    });
+                                                    Log.d("test", "test");
+
                                                 }
 
                                                 @Override

@@ -1843,6 +1843,9 @@ public class Globals {
                             case ("фото"):
                                 s = "mobile.php?mod=images_view&act=image_rotate&id=" + linkID;
                                 break;
+                            case ("фото_шахматка_фильтр"):
+                                s = "mobile.php?mod=photo&act=grid_table&" + linkID;
+                                break;
                             case ("достижение"):
                                 s = "mobile.php?mod=images_achieve&act=view&id=" + linkID;
                                 break;
@@ -1866,6 +1869,15 @@ public class Globals {
                                 break;
                             case ("посещение_фильтр"):
                                 s = "mobile.php?mod=report_prepare&act=prepare_tovar&ppa_only=1&" + linkID;
+                                break;
+                            case ("товары"):
+                                s = "mobile.php?mod=report_prepare&act=prepare_tovar&ppa_only=1&" + linkID;
+                                break;
+                            case ("документ"):
+                                s = "mobile.php?mod=plan&act=open_document_item&code_dad2=" + linkID;
+                                break;
+                            case ("контенты"):
+                                s = "mobile.php?mod=standart&act=view&code_dad2=" + linkID;
                                 break;
                         }
                         // если текст ссылки сформирован, то делаю в нем модификации необходимыъ для того чтоб она работала

@@ -225,7 +225,7 @@ public class DetailedReportActivity extends toolbar_menus {
 
             TranslatesSDB home = translate.getTranslationText("DetailedReportHomeFrag_Title");
             if (home != null) {
-                tabLayout.getTabAt(0).setText(home.nm);
+                tabLayout.getTabAt(0).setText("home.nm");
             }
 
             TranslatesSDB option = translate.getTranslationText("DetailedReportOptionsFrag_Title");
@@ -240,7 +240,7 @@ public class DetailedReportActivity extends toolbar_menus {
 
             // Установка Заголовка в закладочку "ЗИР". В скобочках нужно написать кол-во самих задач
             StringBuffer tarTabTitle = new StringBuffer();
-            tarTabTitle.append("ЗИР");
+            tarTabTitle.append(getText(R.string.title_tab_3));
             if (tarList != null && tarList.size() > 0) {
                 tarTabTitle.append("(");
                 if (tasksAndReclamationsSDBList != null && tasksAndReclamationsSDBList.size() > 0) {

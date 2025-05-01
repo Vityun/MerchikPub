@@ -1296,6 +1296,8 @@ public class Exchange {
         // Получаю на выгрузку ЗИР (таблицу)
 //        List<TasksAndReclamationsDB> list = TasksAndReclamationsRealm.getToUnload();
         List<TasksAndReclamationsSDB> tarList = SQL_DB.tarDao().getByUploadStatus(1);
+        if (tarList == null || tarList.isEmpty())
+            return;
 
         // Создаю данные на выгрузку (запрос)
         List<TARUploadData> dataList = new ArrayList<>();
@@ -3039,13 +3041,20 @@ public class Exchange {
         StandartData data = new StandartData();
         data.mod = "images_achieve";
         data.act = "list";
+//        data.date_from = Clock.getDatePeriod(-30);
+//        data.date_to = Clock.getDatePeriod(7);
+        // #### TODO
+        SynchronizationTimetableDB synchronizationTimetableDB = RealmManager.INSTANCE.copyFromRealm(RealmManager.getSynchronizationTimetableRowByTable("dossier_sotr"));
 
-//        StandartData.Filter filter = new StandartData.Filter();
-//        filter.date_from = "2022-09-01";
-//        filter.date_to = "2022-10-19";
+        StandartData.Filter filter = new StandartData.Filter();
+        filter.dt_change_from = String.valueOf(synchronizationTimetableDB.getVpi_app());
+
+//        filter.date_from = Clock.getDatePeriod(-30);
+//        filter.date_to = Clock.getDatePeriod(7);
 //        filter.confirm = "";
 //        filter.is_view = "";
-//        data.filter = filter;
+        data.filter = filter;
+
 
         Gson gson = new Gson();
         String json = gson.toJson(data);
@@ -3062,10 +3071,16 @@ public class Exchange {
 
                     SQL_DB.achievementsDao().insertAllCompletable(response.body().list)
                             .subscribeOn(Schedulers.io())
+                            .observeOn(AndroidSchedulers.mainThread())
                             .subscribe(new DisposableCompletableObserver() {
                                 @Override
                                 public void onComplete() {
                                     Globals.writeToMLOG("OK", "downloadAchievements/onResponse/onComplete", "OK");
+
+                                    RealmManager.INSTANCE.executeTransaction(realm -> {
+                                        synchronizationTimetableDB.setVpi_app(System.currentTimeMillis() / 1000);
+                                        realm.copyToRealmOrUpdate(synchronizationTimetableDB);
+                                    });
                                 }
 
                                 @Override

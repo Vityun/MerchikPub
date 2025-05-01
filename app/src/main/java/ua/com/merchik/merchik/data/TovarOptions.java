@@ -70,6 +70,9 @@ public class TovarOptions {
     public TovarOptions createTovarOptionPhoto(){
         return new TovarOptions(PHOTO, "P", "Фото залишків товару", "photo", "main", 0);
     }
+    public TovarOptions createTovarOptionPhotoType(){
+        return new TovarOptions(PHOTO, "P", "Фото товару", "photo", "main", 0);
+    }
 
     public TovarOptions createLinkText(){
         return new TovarOptions(LINK_TEXT, "L", "Додаткові вимоги", "link_text", "main", 0);

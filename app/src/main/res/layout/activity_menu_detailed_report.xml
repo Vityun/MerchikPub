@@ -71,25 +71,25 @@
             android:id="@+id/tabHome"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Главная" />
+            android:text="@string/title_tab_tar_0" />
 
         <com.google.android.material.tabs.TabItem
             android:id="@+id/tabOptions"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Опции" />
+            android:text="@string/title_tab_1" />
 
         <com.google.android.material.tabs.TabItem
             android:id="@+id/tabTovars"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Товары" />
+            android:text="@string/title_tab_tar_3" />
 
         <com.google.android.material.tabs.TabItem
             android:id="@+id/tabTar"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="ЗиР" />
+            android:text="@string/title_tab_3" />
     </com.google.android.material.tabs.TabLayout>
 
     <androidx.viewpager2.widget.ViewPager2

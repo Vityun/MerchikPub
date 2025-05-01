@@ -10,6 +10,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.widget.Toast;
 
+import androidx.core.app.ActivityCompat;
 import androidx.preference.PreferenceManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
@@ -37,11 +38,14 @@ import ua.com.merchik.merchik.data.RealmModels.TradeMarkDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.data.WPDataObj;
 import ua.com.merchik.merchik.dataLayer.ContextUI;
+import ua.com.merchik.merchik.dataLayer.ModeUI;
+import ua.com.merchik.merchik.dataLayer.common.VizitShowcaseDataHolder;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.ReportPrepareRealm;
 import ua.com.merchik.merchik.database.realm.tables.TradeMarkRealm;
 import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.dialogs.EKL.DialogEKL;
+import ua.com.merchik.merchik.features.main.DBViewModels.PlanogrammVizitShowcaseViewModel;
 import ua.com.merchik.merchik.features.main.DBViewModels.SamplePhotoSDBViewModel;
 import ua.com.merchik.merchik.toolbar_menus;
 
@@ -299,28 +303,29 @@ public class DetailedReportButtons {
                 break;
 
             case 138767:
-//                VizitShowcaseDataHolder.Companion.getInstance().clear();
-//
-//                Intent intent = new Intent(context, FeaturesActivity.class);
-//                Bundle bundle = new Bundle();
-//                bundle.putString("viewModel", PlanogrammVizitShowcaseViewModel.class.getCanonicalName());
-//                bundle.putString("contextUI", ContextUI.PLANOGRAMM_VIZIT_SHOWCASE.toString());
-//                bundle.putString("modeUI", ModeUI.DEFAULT.toString());
-//                JsonObject dataJson = new JsonObject();
-//                dataJson.addProperty("clientId", String.valueOf(wpDataDB.getClient_id()));
-//                dataJson.addProperty("addressId", wpDataDB.getAddr_id());
-//                dataJson.addProperty("wpDataDBId", String.valueOf(wpDataDB.getCode_dad2()));
-//                dataJson.addProperty("optionDBId", String.valueOf(optionsDB.getID()));
-//                bundle.putString("dataJson", new Gson().toJson(dataJson));
-//
-//                bundle.putString("title", "Планограма > Вітрина");
-//                bundle.putString(
-//                        "subTitle",
-//                        "Для кожної планограми вкажіть Вітрину, на якiй товар буде викладено згідно поточної планограми. Якщо Фото відповідної вітрини у списку вітрин немає, виберіть Фото Вітрини. Якщо у ТТ немає Вітрини для якої створена ця Планограма, то оцініть цю Планограму низькою оцінкою (нижче 5) і вкажіть коментар"
-//                );
-//                intent.putExtras(bundle);
-//
-//                ActivityCompat.startActivityForResult((Activity) context, intent, NEED_UPDATE_UI_REQUEST, null);
+                VizitShowcaseDataHolder.Companion.getInstance().clear();
+
+                Intent intent = new Intent(context, FeaturesActivity.class);
+                Bundle bundle = new Bundle();
+                bundle.putString("viewModel", PlanogrammVizitShowcaseViewModel.class.getCanonicalName());
+                bundle.putString("contextUI", ContextUI.PLANOGRAMM_VIZIT_SHOWCASE.toString());
+                bundle.putString("modeUI", ModeUI.DEFAULT.toString());
+                JsonObject dataJson = new JsonObject();
+                dataJson.addProperty("clientId", String.valueOf(wpDataDB.getClient_id()));
+                dataJson.addProperty("addressId", wpDataDB.getAddr_id());
+                dataJson.addProperty("wpDataDBId", String.valueOf(wpDataDB.getCode_dad2()));
+                dataJson.addProperty("optionDBId", String.valueOf(optionsDB.getID()));
+                bundle.putString("dataJson", new Gson().toJson(dataJson));
+
+                bundle.putString("title", "Планограма > Вітрина");
+                bundle.putString(
+                        "subTitle",
+                        "Для кожної планограми вкажіть Вітрину, на якiй товар буде викладено згідно поточної планограми. Якщо Фото відповідної вітрини у списку вітрин немає, виберіть Фото Вітрини. Якщо у ТТ немає Вітрини для якої створена ця Планограма, то оцініть цю Планограму низькою оцінкою (нижче 5) і вкажіть коментар"
+                );
+                intent.putExtras(bundle);
+                ActivityCompat.startActivityForResult((Activity) context, intent, NEED_UPDATE_UI_REQUEST, null);
+
+
 //                intentPhotoLog.putExtra("planogram", true);
 //                intentPhotoLog.putExtra("dad2", wpDataDB.getCode_dad2());
 //                intentPhotoLog.putExtra("customer", wpDataDB.getClient_id());

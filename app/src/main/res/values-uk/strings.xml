@@ -229,5 +229,21 @@
     <string name="network">Мережа:</string>
     <string name="theme">"Тема: "</string>
     <string name="main_option">Гол. опція:</string>
+    <string name="input_text_or">Введіть назву (або штрихкод) товару</string>
+    <string name="open_visit">Відкрити відвідування</string>
+    <string name="title_tab_tar_0">Головна</string>
+    <string name="title_tab_tar_1">Опції</string>
+    <string name="title_tab_tar_2">Листування</string>
+    <string name="title_tab_tar_3">Товари</string>
+    <string name="title_tab_0">Головна</string>
+    <string name="title_tab_1">Опції</string>
+    <string name="title_tab_2">Листування</string>
+    <string name="title_tab_3">ЗIР</string>
+    <string name="title_0">План робіт</string>
+    <string name="title_1">Карта</string>
+    <string name="title_task">Завдання</string>
+    <string name="title_reclamation">Рекламації</string>
+    <string name="complete_work">Провести звіт</string>
+    <string name="hamburger_menu_language">Мова</string>
 
 </resources>
