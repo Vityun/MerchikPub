@@ -21,7 +21,7 @@ import java.util.Locale;
 import retrofit2.Call;
 import retrofit2.Response;
 import ua.com.merchik.merchik.R;
-import ua.com.merchik.merchik.data.RetrofitResponse.EDRPOUResponse;
+import ua.com.merchik.merchik.data.RetrofitResponse.models.EDRPOUResponse;
 import ua.com.merchik.merchik.data.TestJsonUpload.StandartData;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
 

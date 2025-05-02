@@ -18,7 +18,7 @@ public class UsersRealm {
      */
     public static void setAddressTable(List<UsersDB> data) {
         INSTANCE.beginTransaction();
-        INSTANCE.delete(UsersDB.class);
+//        INSTANCE.delete(UsersDB.class);
         INSTANCE.copyToRealmOrUpdate(data);
         INSTANCE.commitTransaction();
     }

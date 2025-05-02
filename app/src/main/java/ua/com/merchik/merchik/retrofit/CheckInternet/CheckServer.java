@@ -21,7 +21,7 @@ import retrofit2.Response;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
-import ua.com.merchik.merchik.data.RetrofitResponse.ServerConnection;
+import ua.com.merchik.merchik.data.RetrofitResponse.models.ServerConnection;
 import ua.com.merchik.merchik.dialogs.BlockingProgressDialog;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
 

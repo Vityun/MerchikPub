@@ -14,7 +14,7 @@ public class ThemeRealm {
      * */
     public static void setThemeDBTable(List<ThemeDB> data) {
         INSTANCE.beginTransaction();
-        INSTANCE.delete(ThemeDB.class);
+//        INSTANCE.delete(ThemeDB.class);
         INSTANCE.copyToRealmOrUpdate(data);
         INSTANCE.commitTransaction();
     }

@@ -14,7 +14,7 @@ public class PPARealm {
      */
     public static void setPPA(List<PPADB> list) {
         INSTANCE.beginTransaction();
-        INSTANCE.delete(PPADB.class);
+//        INSTANCE.delete(PPADB.class);
         INSTANCE.copyToRealmOrUpdate(list);
         INSTANCE.commitTransaction();
     }

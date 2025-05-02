@@ -37,6 +37,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.observers.DisposableCompletableObserver;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 import ua.com.merchik.merchik.Filter.MyFilter;
@@ -403,6 +404,7 @@ public class AdapterUtil extends RecyclerView.Adapter<RecyclerView.ViewHolder> i
                     data.dtRead = System.currentTimeMillis() / 1000;
                     SQL_DB.chatDao().insertData(Collections.singletonList(data))
                             .subscribeOn(Schedulers.io())
+                            .observeOn(AndroidSchedulers.mainThread())
                             .subscribe(new DisposableCompletableObserver() {
                                 @Override
                                 public void onComplete() {

@@ -16,7 +16,7 @@ import retrofit2.Response;
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.ServerExchange.ExchangeInterface;
 import ua.com.merchik.merchik.data.Database.Room.FragmentSDB;
-import ua.com.merchik.merchik.data.RetrofitResponse.FragmentsResponse;
+import ua.com.merchik.merchik.data.RetrofitResponse.models.FragmentsResponse;
 import ua.com.merchik.merchik.data.TestJsonUpload.StandartData;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
 

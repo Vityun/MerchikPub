@@ -1,7 +1,6 @@
 package ua.com.merchik.merchik.ServerExchange;
 
 import static ua.com.merchik.merchik.database.realm.RealmManager.INSTANCE;
-import static ua.com.merchik.merchik.database.realm.RealmManager.getAllWorkPlan;
 import static ua.com.merchik.merchik.database.realm.RealmManager.getSynchronizationTimetable;
 import static ua.com.merchik.merchik.database.realm.tables.PPARealm.setPPA;
 import static ua.com.merchik.merchik.database.realm.tables.WpDataRealm.getWpDataAddresses;
@@ -12,7 +11,6 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Build;
 import android.util.Log;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 
@@ -23,9 +21,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -53,7 +49,6 @@ import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteHintsDB;
 import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteObjects.SiteObjects;
 import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteObjects.SiteObjectsDB;
 import ua.com.merchik.merchik.data.PPAonResponse;
-import ua.com.merchik.merchik.data.RealmModels.AdditionalRequirementsDB;
 import ua.com.merchik.merchik.data.RealmModels.CustomerDB;
 import ua.com.merchik.merchik.data.RealmModels.LogDB;
 import ua.com.merchik.merchik.data.RealmModels.LogMPDB;
@@ -64,28 +59,28 @@ import ua.com.merchik.merchik.data.RealmModels.SynchronizationTimetableDB;
 import ua.com.merchik.merchik.data.RealmModels.TovarDB;
 import ua.com.merchik.merchik.data.RealmModels.UsersDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
-import ua.com.merchik.merchik.data.RetrofitResponse.AddressTableResponse;
-import ua.com.merchik.merchik.data.RetrofitResponse.ArticleTableResponse;
-import ua.com.merchik.merchik.data.RetrofitResponse.CustomerGroups;
-import ua.com.merchik.merchik.data.RetrofitResponse.CustomerTableResponse;
-import ua.com.merchik.merchik.data.RetrofitResponse.CustomerTableResponseList;
-import ua.com.merchik.merchik.data.RetrofitResponse.ErrorTableResponce;
-import ua.com.merchik.merchik.data.RetrofitResponse.ImageTypes;
-import ua.com.merchik.merchik.data.RetrofitResponse.OptionsServer;
-import ua.com.merchik.merchik.data.RetrofitResponse.PPATableResponse;
-import ua.com.merchik.merchik.data.RetrofitResponse.PromoTableResponce;
-import ua.com.merchik.merchik.data.RetrofitResponse.ReportHint;
-import ua.com.merchik.merchik.data.RetrofitResponse.ReportPrepareServer;
-import ua.com.merchik.merchik.data.RetrofitResponse.SotrTable;
-import ua.com.merchik.merchik.data.RetrofitResponse.SotrTableList;
-import ua.com.merchik.merchik.data.RetrofitResponse.TARCommentsResponse;
-import ua.com.merchik.merchik.data.RetrofitResponse.TasksAndReclamationsResponce;
-import ua.com.merchik.merchik.data.RetrofitResponse.ThemeTableRespose;
+import ua.com.merchik.merchik.data.RetrofitResponse.models.AddressTableResponse;
+import ua.com.merchik.merchik.data.RetrofitResponse.models.ArticleTableResponse;
+import ua.com.merchik.merchik.data.RetrofitResponse.models.CustomerGroups;
+import ua.com.merchik.merchik.data.RetrofitResponse.models.CustomerTableResponse;
+import ua.com.merchik.merchik.data.RetrofitResponse.models.CustomerTableResponseList;
+import ua.com.merchik.merchik.data.RetrofitResponse.models.ErrorTableResponce;
+import ua.com.merchik.merchik.data.RetrofitResponse.models.ImageTypes;
+import ua.com.merchik.merchik.data.RetrofitResponse.models.OptionsServer;
+import ua.com.merchik.merchik.data.RetrofitResponse.models.PPATableResponse;
+import ua.com.merchik.merchik.data.RetrofitResponse.models.PromoTableResponce;
+import ua.com.merchik.merchik.data.RetrofitResponse.models.ReportHint;
+import ua.com.merchik.merchik.data.RetrofitResponse.models.ReportPrepareServer;
+import ua.com.merchik.merchik.data.RetrofitResponse.models.SotrTable;
+import ua.com.merchik.merchik.data.RetrofitResponse.models.SotrTableList;
+import ua.com.merchik.merchik.data.RetrofitResponse.models.TARCommentsResponse;
+import ua.com.merchik.merchik.data.RetrofitResponse.models.TasksAndReclamationsResponce;
+import ua.com.merchik.merchik.data.RetrofitResponse.models.ThemeTableRespose;
 import ua.com.merchik.merchik.data.RetrofitResponse.TovarImgList;
-import ua.com.merchik.merchik.data.RetrofitResponse.TovarImgResponse;
-import ua.com.merchik.merchik.data.RetrofitResponse.TovarTableResponse;
-import ua.com.merchik.merchik.data.RetrofitResponse.TradeMarkResponse;
-import ua.com.merchik.merchik.data.RetrofitResponse.WpDataServer;
+import ua.com.merchik.merchik.data.RetrofitResponse.models.TovarImgResponse;
+import ua.com.merchik.merchik.data.RetrofitResponse.models.TovarTableResponse;
+import ua.com.merchik.merchik.data.RetrofitResponse.models.TradeMarkResponse;
+import ua.com.merchik.merchik.data.RetrofitResponse.models.WpDataServer;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.OborotVedResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.OpinionResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.OpinionThemeResponse;
@@ -110,7 +105,6 @@ import ua.com.merchik.merchik.database.realm.tables.ReportPrepareRealm;
 import ua.com.merchik.merchik.database.realm.tables.TARCommentsRealm;
 import ua.com.merchik.merchik.database.realm.tables.TasksAndReclamationsRealm;
 import ua.com.merchik.merchik.database.realm.tables.ThemeRealm;
-import ua.com.merchik.merchik.dialogs.BlockingProgressDialog;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
 
 
@@ -613,15 +607,32 @@ public class TablesLoadingUnloading {
         Log.e("SERVER_REALM_DB_UPDATE", "===================================.downloadOptions.START");
         globals.writeToMLOG(Clock.getHumanTime() + "_INFO.TablesLU.class.downloadOptions.ENTER\n");
 
-        String mod = "plan";
-        String act = "options_list";
-        String date_from = timeYesterday7;
+//        StandartData standartData = new StandartData();
+//        standartData.mod = "report_prepare";
+//        standartData.act = "list_data";
+
+
+        StandartData standartData = new StandartData();
+        standartData.mod = "plan";
+        standartData.act = "options_list";
+        standartData.date_from = timeYesterday7;
+        standartData.date_to = timeTomorrow;
+
+//        String mod = "plan";
+//        String act = "options_list";
 //        String date_from = Clock.getDatePeriod(-14);
-        String date_to = timeTomorrow;
 
-//        BlockingProgressDialog pg = BlockingProgressDialog.show(context, "Обмен данными с сервером.", "Обновление таблицы: Опции");
+//        #### TODO dt_change_from
+        SynchronizationTimetableDB synchronizationTimetableDB = RealmManager.INSTANCE.copyFromRealm(RealmManager.getSynchronizationTimetableRowByTable("options_list"));
+        standartData.dt_change_from = String.valueOf(synchronizationTimetableDB.getVpi_app());
 
-        retrofit2.Call<OptionsServer> call = RetrofitBuilder.getRetrofitInterface().OPTIONS_CALL(mod, act, date_from, date_to);
+        Gson gson = new Gson();
+        String json = gson.toJson(standartData);
+        JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
+
+        retrofit2.Call<OptionsServer> call = RetrofitBuilder.getRetrofitInterface()
+                .GET_OPTIONS(RetrofitBuilder.contentType, convertedObject);
+//                .OPTIONS_CALL(mod, act, date_from, date_to);
         call.enqueue(new retrofit2.Callback<OptionsServer>() {
             @Override
             public void onResponse(retrofit2.Call<OptionsServer> call, retrofit2.Response<OptionsServer> response) {
@@ -641,13 +652,12 @@ public class TablesLoadingUnloading {
                     }
 
 
-                    if (response.body().getList() != null) {
-                        Log.e("SERVER_REALM_DB_UPDATE", "===================================.Options.SIZE: " + response.body().getList().size());
-//                        Globals.writeToMLOG("INFO", "PetrovExchangeTest/startExchange/downloadOptions/onSuccess", "(response.body().getList(): " + response.body().getList().size());
-                    } else {
-                        Log.e("SERVER_REALM_DB_UPDATE", "===================================.Options.SIZE: NuLL");
-                    }
+                    RealmManager.INSTANCE.executeTransaction(realm -> {
+                        synchronizationTimetableDB.setVpi_app(System.currentTimeMillis() / 1000);
+                        realm.copyToRealmOrUpdate(synchronizationTimetableDB);
+                    });
 
+                    if (response.body() != null && response.body().getList() != null)
                     RealmManager.setOptions(response.body().getList());
 //                    if (response.body().getState()) {
 //                        if (RealmManager.setOptions(response.body().getList())) {
@@ -696,14 +706,13 @@ public class TablesLoadingUnloading {
     public void downloadReportPrepare(int mode) {
         Log.e("SERVER_REALM_DB_UPDATE", "===================================.downloadReportPrepare.START");
 
-        String mod = "report_prepare";
-        String act = "list_data";
         String date_from = timeYesterday7;
         String date_to = timeTomorrow;
 
         // Получение значения ВПО (время последнего обмена) для того что б с сервера отправились новые данные
         long lastUpdate = 0;
-        SynchronizationTimetableDB realmResults = RealmManager.getSynchronizationTimetableRowByTable("report_prepare");
+        SynchronizationTimetableDB realmResults = RealmManager.INSTANCE.copyFromRealm(RealmManager.getSynchronizationTimetableRowByTable("standart_table"));
+//        SynchronizationTimetableDB realmResults = RealmManager.getSynchronizationTimetableRowByTable("report_prepare");
         if (realmResults != null) lastUpdate = realmResults.getVpo_export();
 
         // 22.08.23. Получаю с Плана Работ список Адресов так что б они не повторялись.
@@ -720,35 +729,13 @@ public class TablesLoadingUnloading {
         data.date_to = date_to;
         if (lastUpdate != 0) data.vpo = lastUpdate;
         if (addressIds != null && addressIds.size() > 0) data.addr_id = addressIds;
+        data.dt_change_to = String.valueOf(realmResults.getVpi_app());
 
         Gson gson = new Gson();
         String json = gson.toJson(data);
         JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
 
         retrofit2.Call<ReportPrepareServer> call = RetrofitBuilder.getRetrofitInterface().ReportPrepareServer_RESPONSE(RetrofitBuilder.contentType, convertedObject);
-//        retrofit2.Call<JsonObject> callT = RetrofitBuilder.getRetrofitInterface().TEST_JSON_UPLOAD(RetrofitBuilder.contentType, convertedObject);
-
-//        retrofit2.Call<ReportPrepareServer> call;
-//        if (lastUpdate == 0) {
-//            call = RetrofitBuilder.getRetrofitInterface().REPORT_PREPARE_CALL_ALL(mod, act, date_from, date_to);
-//        } else {
-//            call = RetrofitBuilder.getRetrofitInterface().REPORT_PREPARE_CALL_PIECE(mod, act, date_from, date_to, lastUpdate);
-//        }
-
-//        BlockingProgressDialog pg = BlockingProgressDialog.show(context, "Обмен данными с сервером.", "Обновление таблицы: Дет. отчёт");
-
-//        callT.enqueue(new Callback<JsonObject>() {
-//            @Override
-//            public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
-//                Log.e("TAG_TEST_callT", "response: " + response);
-//            }
-//
-//            @Override
-//            public void onFailure(Call<JsonObject> call, Throwable t) {
-//                Log.e("TAG_TEST_callT", "Throwable t: " + t);
-//            }
-//        });
-
 
         call.enqueue(new retrofit2.Callback<ReportPrepareServer>() {
             @Override
@@ -767,6 +754,10 @@ public class TablesLoadingUnloading {
 //                            Globals.writeToMLOG("INFO", "PetrovExchangeTest/startExchange/downloadReportPrepare/onSuccess", "(response.body().getList(): " + response.body().getList().size());
                             Log.e("SERVER_REALM_DB_UPDATE", "===================================.ReportPrepare.SIZE: " + response.body().getList().size());
                             Globals.writeToMLOG("INFO", "downloadReportPrepare/onResponse", "response.body().getList().size(): " + response.body().getList().size());
+                            RealmManager.INSTANCE.executeTransaction(realm -> {
+                                realmResults.setVpi_app(System.currentTimeMillis() / 1000);
+                                realm.copyToRealmOrUpdate(realmResults);
+                            });
                         } else {
                             Log.e("SERVER_REALM_DB_UPDATE", "===================================.ReportPrepare.SIZE: NuLL");
                         }
@@ -2556,7 +2547,7 @@ public class TablesLoadingUnloading {
         if (data != null) {
             Log.e("saveSiteObjectsDB", "data+ : " + data.size());
             INSTANCE.executeTransaction(realm -> {
-                INSTANCE.delete(SiteObjectsDB.class);
+//                INSTANCE.delete(SiteObjectsDB.class);
                 INSTANCE.copyToRealmOrUpdate(data);
             });
         } else {
@@ -2628,7 +2619,7 @@ public class TablesLoadingUnloading {
             if (data != null) {
                 Log.e("downloadVideoLessons", "saveSiteHintsDB/data.size(): " + data.size());
                 INSTANCE.executeTransaction(realm -> {
-                    INSTANCE.delete(SiteHintsDB.class);
+//                    INSTANCE.delete(SiteHintsDB.class);
                     for (SiteHintsDB item : data) {
                         Log.e("saveSiteHintsDB", "data id: " + item.getID() + " |nm: " + item.getNm());
                         INSTANCE.copyToRealmOrUpdate(item);
@@ -2759,6 +2750,10 @@ public class TablesLoadingUnloading {
             data.mod = "data_list";
             data.act = "theme_list";
 
+            // #### TODO
+            SynchronizationTimetableDB synchronizationTimetableDB = RealmManager.INSTANCE.copyFromRealm(RealmManager.getSynchronizationTimetableRowByTable("theme_list"));
+            data.dt = String.valueOf(synchronizationTimetableDB.getVpi_app());
+
             Gson gson = new Gson();
             String json = gson.toJson(data);
             JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
@@ -2768,13 +2763,21 @@ public class TablesLoadingUnloading {
                 @Override
                 public void onResponse(retrofit2.Call<ThemeTableRespose> call, retrofit2.Response<ThemeTableRespose> response) {
                     try {
-                        ThemeRealm.setThemeDBTable(response.body().getList());
+                        if (response.body() != null && response.body().getList() != null && !response.body().getList().isEmpty()) {
+                            ThemeRealm.setThemeDBTable(response.body().getList());
+                            RealmManager.INSTANCE.executeTransaction(realm -> {
+                                synchronizationTimetableDB.setVpi_app(System.currentTimeMillis() / 1000);
+                                realm.copyToRealmOrUpdate(synchronizationTimetableDB);
+                            });
+                        }
                     } catch (Exception e) {
+                        Globals.writeToMLOG("ERR", "downloadTheme/onResponse", "Exception e: " + e);
                     }
                 }
 
                 @Override
                 public void onFailure(retrofit2.Call<ThemeTableRespose> call, Throwable t) {
+                    Globals.writeToMLOG("ERR", "downloadTheme/onFailure", "onFailure e: " + t.getMessage());
                 }
             });
         } catch (Exception e) {

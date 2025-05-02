@@ -8,7 +8,7 @@ import androidx.room.PrimaryKey;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
-import ua.com.merchik.merchik.data.RetrofitResponse.DossierSotrItemResponse;
+import ua.com.merchik.merchik.data.RetrofitResponse.models.DossierSotrItemResponse;
 
 @Entity(tableName = "dossier_sotr")
 public class DossierSotrSDB {

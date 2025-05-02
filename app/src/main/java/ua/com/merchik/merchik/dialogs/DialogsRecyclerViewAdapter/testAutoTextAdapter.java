@@ -8,7 +8,7 @@ import androidx.annotation.NonNull;
 
 import java.util.List;
 
-import ua.com.merchik.merchik.data.RetrofitResponse.EDRPOUResponse;
+import ua.com.merchik.merchik.data.RetrofitResponse.models.EDRPOUResponse;
 
 public class testAutoTextAdapter extends ArrayAdapter<EDRPOUResponse> {
     private Filter filter = new testAutoTextAdapter.KNoFilter();

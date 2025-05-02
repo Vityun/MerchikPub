@@ -116,10 +116,10 @@ import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteObjects.SiteObjectsDB;
 import ua.com.merchik.merchik.data.RealmModels.AppUsersDB;
 import ua.com.merchik.merchik.data.RealmModels.MenuItemFromWebDB;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
-import ua.com.merchik.merchik.data.RetrofitResponse.Logout;
-import ua.com.merchik.merchik.data.RetrofitResponse.PhotoHash;
-import ua.com.merchik.merchik.data.RetrofitResponse.PhotoHashList;
-import ua.com.merchik.merchik.data.RetrofitResponse.ServerConnection;
+import ua.com.merchik.merchik.data.RetrofitResponse.models.Logout;
+import ua.com.merchik.merchik.data.RetrofitResponse.models.PhotoHash;
+import ua.com.merchik.merchik.data.RetrofitResponse.models.PhotoHashList;
+import ua.com.merchik.merchik.data.RetrofitResponse.models.ServerConnection;
 import ua.com.merchik.merchik.data.UploadPhotoData.Move;
 import ua.com.merchik.merchik.data.WPDataObj;
 import ua.com.merchik.merchik.data.WebSocketData.WebSocketData;
@@ -761,6 +761,7 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                         /**MERCHIK_1
                          * Зверни увагу на примусове завантаження цих типів фото
                          * А може сюди*/
+                        // #### TODO
                         SamplePhotoExchange samplePhotoExchange = new SamplePhotoExchange();
                         List<Integer> listPhotosToDownload = samplePhotoExchange.getSamplePhotosToDownload();
                         if (listPhotosToDownload != null && !listPhotosToDownload.isEmpty()) {
@@ -1269,7 +1270,8 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                         exchange.sendWpData2();
                         exchange.sendTAR();              // Выгрузка на сервер ЗИР-а
                         exchange.uploadTARComments(null);    // Выгрузка ЗИР переписки(коммнетариев)
-                        exchange.downloadAchievements();
+//                        exchange.downloadAchievements();
+                        exchange.uploadAchievemnts();
                     }
 //                    tablesLoadingUnloading.updateWpData();
 

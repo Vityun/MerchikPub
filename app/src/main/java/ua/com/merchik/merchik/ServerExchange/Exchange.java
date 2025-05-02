@@ -94,24 +94,24 @@ import ua.com.merchik.merchik.data.RealmModels.SynchronizationTimetableDB;
 import ua.com.merchik.merchik.data.RealmModels.TARCommentsDB;
 import ua.com.merchik.merchik.data.RealmModels.TovarDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
-import ua.com.merchik.merchik.data.RetrofitResponse.AdditionalMaterialsAddressResponse;
-import ua.com.merchik.merchik.data.RetrofitResponse.AdditionalMaterialsGroupsResponse;
-import ua.com.merchik.merchik.data.RetrofitResponse.AdditionalMaterialsLinksResponse;
-import ua.com.merchik.merchik.data.RetrofitResponse.AdditionalMaterialsResponse;
-import ua.com.merchik.merchik.data.RetrofitResponse.BonusItemResponse;
-import ua.com.merchik.merchik.data.RetrofitResponse.BonusResponse;
-import ua.com.merchik.merchik.data.RetrofitResponse.ConductWpDataResponse;
-import ua.com.merchik.merchik.data.RetrofitResponse.DossierSotrItemResponse;
-import ua.com.merchik.merchik.data.RetrofitResponse.DossierSotrResponse;
+import ua.com.merchik.merchik.data.RetrofitResponse.models.AdditionalMaterialsAddressResponse;
+import ua.com.merchik.merchik.data.RetrofitResponse.models.AdditionalMaterialsGroupsResponse;
+import ua.com.merchik.merchik.data.RetrofitResponse.models.AdditionalMaterialsLinksResponse;
+import ua.com.merchik.merchik.data.RetrofitResponse.models.AdditionalMaterialsResponse;
+import ua.com.merchik.merchik.data.RetrofitResponse.models.BonusItemResponse;
+import ua.com.merchik.merchik.data.RetrofitResponse.models.BonusResponse;
+import ua.com.merchik.merchik.data.RetrofitResponse.models.ConductWpDataResponse;
+import ua.com.merchik.merchik.data.RetrofitResponse.models.DossierSotrItemResponse;
+import ua.com.merchik.merchik.data.RetrofitResponse.models.DossierSotrResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.Location.LocationList;
-import ua.com.merchik.merchik.data.RetrofitResponse.SiteAccountItemResponse;
-import ua.com.merchik.merchik.data.RetrofitResponse.SiteAccountResponse;
-import ua.com.merchik.merchik.data.RetrofitResponse.SiteURLItemResponse;
-import ua.com.merchik.merchik.data.RetrofitResponse.SiteURLResponse;
+import ua.com.merchik.merchik.data.RetrofitResponse.models.SiteAccountItemResponse;
+import ua.com.merchik.merchik.data.RetrofitResponse.models.SiteAccountResponse;
+import ua.com.merchik.merchik.data.RetrofitResponse.models.SiteURLItemResponse;
+import ua.com.merchik.merchik.data.RetrofitResponse.models.SiteURLResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.TovarImgList;
-import ua.com.merchik.merchik.data.RetrofitResponse.TovarImgResponse;
+import ua.com.merchik.merchik.data.RetrofitResponse.models.TovarImgResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.VacancyItemResponse;
-import ua.com.merchik.merchik.data.RetrofitResponse.VacancyResponse;
+import ua.com.merchik.merchik.data.RetrofitResponse.models.VacancyResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.photos.ImagesViewListImageList;
 import ua.com.merchik.merchik.data.RetrofitResponse.photos.ImagesViewListImageResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.photos.PhotoInfoResponse;
@@ -3044,17 +3044,15 @@ public class Exchange {
 //        data.date_from = Clock.getDatePeriod(-30);
 //        data.date_to = Clock.getDatePeriod(7);
         // #### TODO
-        SynchronizationTimetableDB synchronizationTimetableDB = RealmManager.INSTANCE.copyFromRealm(RealmManager.getSynchronizationTimetableRowByTable("dossier_sotr"));
+        SynchronizationTimetableDB synchronizationTimetableDB = RealmManager.INSTANCE.copyFromRealm(RealmManager.getSynchronizationTimetableRowByTable("achievements"));
 
         StandartData.Filter filter = new StandartData.Filter();
         filter.dt_change_from = String.valueOf(synchronizationTimetableDB.getVpi_app());
-
 //        filter.date_from = Clock.getDatePeriod(-30);
 //        filter.date_to = Clock.getDatePeriod(7);
 //        filter.confirm = "";
 //        filter.is_view = "";
         data.filter = filter;
-
 
         Gson gson = new Gson();
         String json = gson.toJson(data);
@@ -3111,6 +3109,10 @@ public class Exchange {
         data.mod = "data_list";
         data.act = "images_vote";
 
+        // #### TODO
+        SynchronizationTimetableDB synchronizationTimetableDB = RealmManager.INSTANCE.copyFromRealm(RealmManager.getSynchronizationTimetableRowByTable("photo_showcase"));
+        data.dt_change_from = String.valueOf(synchronizationTimetableDB.getVpi_app());
+
         Gson gson = new Gson();
         String json = gson.toJson(data);
         JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
@@ -3127,10 +3129,15 @@ public class Exchange {
 
                     SQL_DB.votesDao().insertAllCompletable(response.body().list)
                             .subscribeOn(Schedulers.io())
+                            .observeOn(AndroidSchedulers.mainThread())
                             .subscribe(new DisposableCompletableObserver() {
                                 @Override
                                 public void onComplete() {
                                     Globals.writeToMLOG("OK", "downloadVoteTable/onResponse/onComplete", "OK");
+                                    RealmManager.INSTANCE.executeTransaction(realm -> {
+                                        synchronizationTimetableDB.setVpi_app(System.currentTimeMillis() / 1000);
+                                        realm.copyToRealmOrUpdate(synchronizationTimetableDB);
+                                    });
                                 }
 
                                 @Override
@@ -3306,6 +3313,8 @@ public class Exchange {
         data.act = "add_row";
 
         List<AchievementsSDB> list = SQL_DB.achievementsDao().getAllToDownload();
+        if (list == null || list.isEmpty())
+            return;
 
         if (list != null && list.size() > 0) {
             List<AchievementsUpload> dataList = new ArrayList<>();

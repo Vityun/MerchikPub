@@ -124,9 +124,22 @@ public class RealmManager {
         INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(31, "bonus", 86400, 0, 0, 0, 0, "Бонусы", 1));
         INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(32, "site_url", 86400, 0, 0, 0, 0, "Сайты", 1));
         INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(33, "site_account", 86400, 0, 0, 0, 0, "Аккаунты", 1));
+        INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(34, "sms_log", 86400, 0, 0, 0, 0, "SMS звіти", 0));     // smsLogExchange
+        INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(35, "achievements", 600, 0, 0, 0, 0, "Досягнення", 0));
+        INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(36, "sms_log", 86400, 0, 0, 0, 0, "SMS звіти", 0));
+        INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(37, "standart_table", 86400, 0, 0, 0, 0, "Tаблиці стандартів", 0));
+        INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(38, "content_table", 86400, 0, 0, 0, 0, "Tаблиці контент", 0));
+        INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(39, "report_prepare", 86400, 0, 0, 0, 0, "Tаблиці report_prepare", 0));
+        INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(40, "vizit_showcase_list", 86400, 0, 0, 0, 0, "Tаблиці vizit_showcase_list", 0));
+        INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(41, "images_vote", 86400, 0, 0, 0, 0, "Tаблиці images_vote", 0));
+        INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(42, "theme_list", 86400, 0, 0, 0, 0, "Tаблиці theme_list", 0));
+
+        INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(43, "options_list", 86400, 0, 0, 0, 0, "Tаблиці options_list", 0));
 
         INSTANCE.commitTransaction();
     }
+
+
 
 
 /*    interface DB{
@@ -164,7 +177,7 @@ public class RealmManager {
     public static void setWpData(List<WpDataDB> wpData) {
         Log.e("REALM_DB_UPDATE", "WP_DATA_START");
         INSTANCE.beginTransaction();
-        INSTANCE.delete(WpDataDB.class);
+//        INSTANCE.delete(WpDataDB.class);
         INSTANCE.copyToRealmOrUpdate(wpData);
         INSTANCE.commitTransaction();
         Log.e("REALM_DB_UPDATE", "WP_DATA_END");
@@ -276,7 +289,7 @@ public class RealmManager {
     public static boolean setImagesTp(List<ImagesTypeListDB> ImageTp) {
         Log.e("REALM_DB_UPDATE", "TYPE_START");
         INSTANCE.beginTransaction();
-        INSTANCE.delete(ImagesTypeListDB.class);
+//        INSTANCE.delete(ImagesTypeListDB.class);
         INSTANCE.copyToRealmOrUpdate(ImageTp);
         INSTANCE.commitTransaction();
         Log.e("REALM_DB_UPDATE", "TYPE_END");
@@ -292,7 +305,7 @@ public class RealmManager {
     public static void setGroupType(List<GroupTypeDB> groupTypeDB) {
         Log.e("REALM_DB_UPDATE", "setGroupType_S");
         INSTANCE.beginTransaction();
-        INSTANCE.delete(GroupTypeDB.class);
+//        INSTANCE.delete(GroupTypeDB.class);
         INSTANCE.copyToRealmOrUpdate(groupTypeDB);
         INSTANCE.commitTransaction();
         Log.e("REALM_DB_UPDATE", "setGroupType_E");
@@ -301,7 +314,7 @@ public class RealmManager {
     public static boolean setGroupTypeV2(List<GroupTypeDB> customerGroupsListDB) {
         Log.e("REALM_DB_UPDATE", "setGroupType_S");
         INSTANCE.beginTransaction();
-        INSTANCE.delete(GroupTypeDB.class);
+//        INSTANCE.delete(GroupTypeDB.class);
         INSTANCE.copyToRealm(customerGroupsListDB);
         INSTANCE.commitTransaction();
         Log.e("REALM_DB_UPDATE", "setGroupType_E");
@@ -322,7 +335,7 @@ public class RealmManager {
         }
 
         INSTANCE.beginTransaction();
-        INSTANCE.delete(OptionsDB.class);
+//        INSTANCE.delete(OptionsDB.class);
         List<OptionsDB> res = INSTANCE.copyToRealmOrUpdate(optionsDBS);
 
         try {
@@ -349,7 +362,7 @@ public class RealmManager {
     public static boolean setReportPrepare(List<ReportPrepareDB> reportPrepare) {
         Log.e("REALM_DB_UPDATE", "REPORT_S");
         INSTANCE.beginTransaction();
-        INSTANCE.delete(ReportPrepareDB.class);
+//        INSTANCE.delete(ReportPrepareDB.class);
         INSTANCE.copyToRealmOrUpdate(reportPrepare);
         INSTANCE.commitTransaction();
         Log.e("REALM_DB_UPDATE", "REPORT_E");
@@ -433,7 +446,7 @@ public class RealmManager {
         Log.e("REALM_DB_UPDATE", "setPPA_S");
 
         INSTANCE.beginTransaction();
-        INSTANCE.delete(PPADB.class);
+//        INSTANCE.delete(PPADB.class);
         INSTANCE.copyToRealmOrUpdate(list);
         INSTANCE.commitTransaction();
 
@@ -448,7 +461,7 @@ public class RealmManager {
     public static void setArticle(List<ArticleDB> list) {
         Log.e("REALM_DB_UPDATE", "setArticle_S");
         INSTANCE.beginTransaction();
-        INSTANCE.delete(ArticleDB.class);
+//        INSTANCE.delete(ArticleDB.class);
         INSTANCE.copyToRealmOrUpdate(list);
         INSTANCE.commitTransaction();
         Log.e("REALM_DB_UPDATE", "setArticle_E");
@@ -462,7 +475,7 @@ public class RealmManager {
     public static boolean setPromo(List<PromoDB> list) {
         Log.e("REALM_DB_UPDATE", "setPromo_S");
         INSTANCE.beginTransaction();
-        INSTANCE.delete(PromoDB.class);
+//        INSTANCE.delete(PromoDB.class);
         INSTANCE.copyToRealmOrUpdate(list);
         INSTANCE.commitTransaction();
         Log.e("REALM_DB_UPDATE", "setPromo_E");
@@ -477,7 +490,7 @@ public class RealmManager {
     public static boolean setError(List<ErrorDB> list) {
         Log.e("REALM_DB_UPDATE", "setError_S");
         INSTANCE.beginTransaction();
-        INSTANCE.delete(ErrorDB.class);
+//        INSTANCE.delete(ErrorDB.class);
         INSTANCE.copyToRealmOrUpdate(list);
         INSTANCE.commitTransaction();
         Log.e("REALM_DB_UPDATE", "setError_E");
@@ -491,7 +504,7 @@ public class RealmManager {
     public static boolean setTradeMarks(List<TradeMarkDB> list) {
         Log.e("REALM_DB_UPDATE", "setError_S");
         INSTANCE.beginTransaction();
-        INSTANCE.delete(TradeMarkDB.class);
+//        INSTANCE.delete(TradeMarkDB.class);
         INSTANCE.copyToRealmOrUpdate(list);
         INSTANCE.commitTransaction();
         return true;

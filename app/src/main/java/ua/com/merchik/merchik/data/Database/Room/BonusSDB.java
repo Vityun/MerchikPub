@@ -9,7 +9,7 @@ import androidx.room.PrimaryKey;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
-import ua.com.merchik.merchik.data.RetrofitResponse.BonusItemResponse;
+import ua.com.merchik.merchik.data.RetrofitResponse.models.BonusItemResponse;
 
 @Entity(tableName = "bonus")
 public class BonusSDB {

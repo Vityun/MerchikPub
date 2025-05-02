@@ -7,8 +7,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.os.Handler;
-import android.os.Looper;
 import android.util.Log;
 
 import com.google.gson.Gson;
@@ -18,21 +16,15 @@ import java.io.InputStream;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TimeZone;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
 
 import io.realm.Realm;
 import okhttp3.ResponseBody;
@@ -43,15 +35,14 @@ import ua.com.merchik.merchik.Activities.PhotoDownloaderViewModel;
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.DownloadPictureService;
 import ua.com.merchik.merchik.Globals;
-import ua.com.merchik.merchik.ServerExchange.TablesExchange.SamplePhotoExchange;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
 import ua.com.merchik.merchik.data.RealmModels.SynchronizationTimetableDB;
 import ua.com.merchik.merchik.data.RealmModels.TovarDB;
-import ua.com.merchik.merchik.data.RetrofitResponse.ModImagesView;
-import ua.com.merchik.merchik.data.RetrofitResponse.ModImagesViewList;
 import ua.com.merchik.merchik.data.RetrofitResponse.TovarImgList;
-import ua.com.merchik.merchik.data.RetrofitResponse.TovarImgResponse;
+import ua.com.merchik.merchik.data.RetrofitResponse.models.ModImagesView;
+import ua.com.merchik.merchik.data.RetrofitResponse.models.ModImagesViewList;
+import ua.com.merchik.merchik.data.RetrofitResponse.models.TovarImgResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.photos.ImagesViewListImageList;
 import ua.com.merchik.merchik.data.TestJsonUpload.PhotoFromSite.PhotoTableRequest;
 import ua.com.merchik.merchik.data.TestJsonUpload.StandartData;
@@ -261,7 +252,9 @@ public class PhotoDownload {
                 Set<Integer> uniqueIds = new LinkedHashSet<>(dataIds);
 
                 for (Integer item : uniqueIds) {
-                    res.append(item).append(", ");
+                    StackPhotoDB stack = StackPhotoRealm.stackPhotoDBGetPhotoBySiteId(item.toString());
+                    if (stack == null || stack.getPhoto_num() == null)
+                        res.append(item).append(", ");
                 }
 
                 if (res.length() > 2) {
@@ -1118,10 +1111,10 @@ public class PhotoDownload {
 
                     stackPhotoDB.setCode_iza(item.codeIZA);
 
-                    stackPhotoDB.setExample_id(Objects.requireNonNullElse(item.getExample_id(),"0"));
-                    stackPhotoDB.setExample_img_id(Objects.requireNonNullElse(item.getExample_img_id(),"0"));
-                    stackPhotoDB.setPlanogram_id(Objects.requireNonNullElse(item.getPlanogram_id(),"0"));
-                    stackPhotoDB.setPlanogram_img_id(Objects.requireNonNullElse(item.getPlanogram_img_id(),"0"));
+                    stackPhotoDB.setExample_id(Objects.requireNonNullElse(item.getExample_id(), "0"));
+                    stackPhotoDB.setExample_img_id(Objects.requireNonNullElse(item.getExample_img_id(), "0"));
+                    stackPhotoDB.setPlanogram_id(Objects.requireNonNullElse(item.getPlanogram_id(), "0"));
+                    stackPhotoDB.setPlanogram_img_id(Objects.requireNonNullElse(item.getPlanogram_img_id(), "0"));
 
                 } catch (Exception e) {
                     Log.e("Exception", "e: " + e.getMessage());
@@ -1337,28 +1330,28 @@ public class PhotoDownload {
             bitmap, StackPhotoDB stackPhotoDB) {
 //        executorService.submit(() -> {
 
-     try {
+        try {
 
-         String photoPath = Globals.savePhotoToPhoneMemory(folderPath, imageName, bitmap);
+            String photoPath = Globals.savePhotoToPhoneMemory(folderPath, imageName, bitmap);
 
-         if (photoPath != null) {
+            if (photoPath != null) {
 
-             stackPhotoDB.setPhoto_num(photoPath);
-             RealmManager.stackPhotoSavePhoto(stackPhotoDB);
+                stackPhotoDB.setPhoto_num(photoPath);
+                RealmManager.stackPhotoSavePhoto(stackPhotoDB);
 //                saveToRealm(stackPhotoDB);
 
-             // Обновляем в базе данных (на основном потоке)
+                // Обновляем в базе данных (на основном потоке)
 //                new Handler(Looper.getMainLooper()).post(() -> {
 //                    RealmManager.stackPhotoSavePhoto(stackPhotoDB);
 //                    Log.d("SAVE", "Фото сохранено: " + photoPath);
 //                });
-         } else {
-             Log.e("SAVE", "Ошибка при сохранении фото");
-         }
-     } catch (Exception e){
-         Exception err = e;
-         Log.e("Errpr","DC: " + err.getMessage());
-     }
+            } else {
+                Log.e("SAVE", "Ошибка при сохранении фото");
+            }
+        } catch (Exception e) {
+            Exception err = e;
+            Log.e("Errpr", "DC: " + err.getMessage());
+        }
 //        });
     }
 

@@ -82,6 +82,21 @@ public class RetrofitBuilder {
 
         httpClientBuilder.addInterceptor(loggingInterceptor);
 
+//        httpClientBuilder.addInterceptor(chain -> {
+//            Request originalRequest = chain.request();
+//            // Не добавляем заголовок, если он уже есть
+//            if (originalRequest.header("Accept-Encoding") == null) {
+//                Request requestWithGzip = originalRequest.newBuilder()
+//                        .header("Accept-Encoding", "gzip")
+//                        .header("Content-Type", "application/json")
+//                        .header("Accept", "application/json")
+//                        .build();
+//                return chain.proceed(requestWithGzip);
+//            }
+//
+//            return chain.proceed(originalRequest);
+//        });
+
         httpClientBuilder.cookieJar(cookie)
                 .connectTimeout(60, TimeUnit.SECONDS)
                 .readTimeout(60, TimeUnit.SECONDS)
@@ -89,7 +104,8 @@ public class RetrofitBuilder {
 
         httpClientBuilder.dispatcher(new Dispatcher(executorService));
 
-        OkHttpClient client = httpClientBuilder.build();
+        OkHttpClient client = httpClientBuilder
+                .build();
 
         String url = "";
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O){

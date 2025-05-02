@@ -9,8 +9,8 @@ import androidx.room.PrimaryKey;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
-import ua.com.merchik.merchik.data.RetrofitResponse.SiteAccountItemResponse;
-import ua.com.merchik.merchik.data.RetrofitResponse.SiteURLItemResponse;
+import ua.com.merchik.merchik.data.RetrofitResponse.models.SiteAccountItemResponse;
+import ua.com.merchik.merchik.data.RetrofitResponse.models.SiteURLItemResponse;
 
 @Entity(tableName = "site_account")
 public class SiteAccountSDB {

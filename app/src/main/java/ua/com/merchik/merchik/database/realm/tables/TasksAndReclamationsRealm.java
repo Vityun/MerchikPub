@@ -22,7 +22,7 @@ public class TasksAndReclamationsRealm {
         try {
             if (data != null){
                 INSTANCE.beginTransaction();
-                INSTANCE.delete(TasksAndReclamationsDB.class);
+//                INSTANCE.delete(TasksAndReclamationsDB.class);
                 INSTANCE.copyToRealmOrUpdate(data);
                 INSTANCE.commitTransaction();
             }else {

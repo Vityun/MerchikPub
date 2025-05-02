@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
+import io.reactivex.rxjava3.annotations.NonNull;
 import io.reactivex.rxjava3.core.Single;
 import io.reactivex.rxjava3.observers.DisposableCompletableObserver;
 import io.reactivex.rxjava3.schedulers.Schedulers;
@@ -27,6 +28,7 @@ import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.Database.Room.Planogram.PlanogrammSDB;
 import ua.com.merchik.merchik.data.Database.Room.Planogram.PlanogrammVizitShowcaseSDB;
+import ua.com.merchik.merchik.data.RealmModels.SynchronizationTimetableDB;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.planogramm.PlanogrammAddressResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.planogramm.PlanogrammGroupResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.planogramm.PlanogrammImagesResponse;
@@ -34,6 +36,7 @@ import ua.com.merchik.merchik.data.RetrofitResponse.tables.planogramm.Planogramm
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.planogramm.PlanogrammTypeResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.planogramm.PlanogrammVizitShowcaseResponse;
 import ua.com.merchik.merchik.data.TestJsonUpload.StandartData;
+import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.PlanogrammTypeDao;
 import ua.com.merchik.merchik.database.room.RoomManager;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
@@ -466,8 +469,11 @@ public class PlanogrammTableExchange {
         data.act = "vizit_showcase_list";
         data.nolimit = "1";
 
-        data.date_from = Clock.today_7;
-        data.date_to = Clock.tomorrow7;
+//        data.date_from = Clock.today_7;
+//        data.date_to = Clock.tomorrow7;
+
+        SynchronizationTimetableDB synchronizationTimetableDB = RealmManager.INSTANCE.copyFromRealm(RealmManager.getSynchronizationTimetableRowByTable("vizit_showcase_list"));
+        data.dt_change_from = String.valueOf(synchronizationTimetableDB.getVpi_app());
 
         Gson gson = new Gson();
         String json = gson.toJson(data);
@@ -499,7 +505,21 @@ public class PlanogrammTableExchange {
                         SQL_DB.planogrammVizitShowcaseDao()
                                 .insertAll(planogrammVizitShowcaseResponse.list)
                                 .subscribeOn(Schedulers.io())
-                                .subscribe();
+                                .observeOn(AndroidSchedulers.mainThread())
+                                .subscribe(new DisposableCompletableObserver() {
+                                    @Override
+                                    public void onComplete() {
+                                        RealmManager.INSTANCE.executeTransaction(realm -> {
+                                            synchronizationTimetableDB.setVpi_app(System.currentTimeMillis() / 1000);
+                                            realm.copyToRealmOrUpdate(synchronizationTimetableDB);
+                                        });
+                                    }
+
+                                    @Override
+                                    public void onError(@NonNull Throwable e) {
+
+                                    }
+                                });
                         Globals.writeToMLOG("INFO", "PlanogrammTableExchange/planogrammVisitShowcase", "Data inserted successfully");
                     }
                 },

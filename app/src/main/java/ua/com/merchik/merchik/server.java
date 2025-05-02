@@ -4,8 +4,8 @@ package ua.com.merchik.merchik;
 import android.content.Context;
 import android.util.Log;
 
-import ua.com.merchik.merchik.data.RetrofitResponse.Login;
-import ua.com.merchik.merchik.data.RetrofitResponse.ServerConnection;
+import ua.com.merchik.merchik.data.RetrofitResponse.models.Login;
+import ua.com.merchik.merchik.data.RetrofitResponse.models.ServerConnection;
 import ua.com.merchik.merchik.data.ServerLogin.SessionCheck;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
 

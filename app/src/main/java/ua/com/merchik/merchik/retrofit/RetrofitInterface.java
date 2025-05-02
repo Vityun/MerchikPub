@@ -19,6 +19,7 @@ import retrofit2.http.FieldMap;
 import retrofit2.http.FormUrlEncoded;
 import retrofit2.http.GET;
 import retrofit2.http.Header;
+import retrofit2.http.Headers;
 import retrofit2.http.Multipart;
 import retrofit2.http.POST;
 import retrofit2.http.Part;
@@ -30,50 +31,50 @@ import ua.com.merchik.merchik.data.DataFromServer.PhotoData.PhotoData;
 import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteHints;
 import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteObjects.SiteObjects;
 import ua.com.merchik.merchik.data.PPAonResponse;
-import ua.com.merchik.merchik.data.RetrofitResponse.AdditionalMaterialsAddressResponse;
-import ua.com.merchik.merchik.data.RetrofitResponse.AdditionalMaterialsGroupsResponse;
-import ua.com.merchik.merchik.data.RetrofitResponse.AdditionalMaterialsLinksResponse;
-import ua.com.merchik.merchik.data.RetrofitResponse.AdditionalMaterialsResponse;
-import ua.com.merchik.merchik.data.RetrofitResponse.AddressTableResponse;
-import ua.com.merchik.merchik.data.RetrofitResponse.ArticleTableResponse;
-import ua.com.merchik.merchik.data.RetrofitResponse.BonusResponse;
-import ua.com.merchik.merchik.data.RetrofitResponse.ConductWpDataResponse;
-import ua.com.merchik.merchik.data.RetrofitResponse.CustomerGroups;
-import ua.com.merchik.merchik.data.RetrofitResponse.CustomerTableResponse;
-import ua.com.merchik.merchik.data.RetrofitResponse.DossierSotrResponse;
-import ua.com.merchik.merchik.data.RetrofitResponse.EDRPOUResponse;
-import ua.com.merchik.merchik.data.RetrofitResponse.ErrorTableResponce;
-import ua.com.merchik.merchik.data.RetrofitResponse.FragmentsResponse;
-import ua.com.merchik.merchik.data.RetrofitResponse.ImageTypes;
+import ua.com.merchik.merchik.data.RetrofitResponse.models.AdditionalMaterialsAddressResponse;
+import ua.com.merchik.merchik.data.RetrofitResponse.models.AdditionalMaterialsGroupsResponse;
+import ua.com.merchik.merchik.data.RetrofitResponse.models.AdditionalMaterialsLinksResponse;
+import ua.com.merchik.merchik.data.RetrofitResponse.models.AdditionalMaterialsResponse;
+import ua.com.merchik.merchik.data.RetrofitResponse.models.AddressTableResponse;
+import ua.com.merchik.merchik.data.RetrofitResponse.models.ArticleTableResponse;
+import ua.com.merchik.merchik.data.RetrofitResponse.models.BonusResponse;
+import ua.com.merchik.merchik.data.RetrofitResponse.models.ConductWpDataResponse;
+import ua.com.merchik.merchik.data.RetrofitResponse.models.CustomerGroups;
+import ua.com.merchik.merchik.data.RetrofitResponse.models.CustomerTableResponse;
+import ua.com.merchik.merchik.data.RetrofitResponse.models.DossierSotrResponse;
+import ua.com.merchik.merchik.data.RetrofitResponse.models.EDRPOUResponse;
+import ua.com.merchik.merchik.data.RetrofitResponse.models.ErrorTableResponce;
+import ua.com.merchik.merchik.data.RetrofitResponse.models.FragmentsResponse;
+import ua.com.merchik.merchik.data.RetrofitResponse.models.ImageTypes;
 import ua.com.merchik.merchik.data.RetrofitResponse.Location.LocationResponse;
-import ua.com.merchik.merchik.data.RetrofitResponse.Login;
-import ua.com.merchik.merchik.data.RetrofitResponse.Logout;
-import ua.com.merchik.merchik.data.RetrofitResponse.ModImagesView;
-import ua.com.merchik.merchik.data.RetrofitResponse.OptionsServer;
-import ua.com.merchik.merchik.data.RetrofitResponse.PPATableResponse;
-import ua.com.merchik.merchik.data.RetrofitResponse.PhotoHash;
-import ua.com.merchik.merchik.data.RetrofitResponse.PotentialClientResponse;
-import ua.com.merchik.merchik.data.RetrofitResponse.PremiumResponse;
-import ua.com.merchik.merchik.data.RetrofitResponse.PromoTableResponce;
-import ua.com.merchik.merchik.data.RetrofitResponse.ReportHint;
-import ua.com.merchik.merchik.data.RetrofitResponse.ReportPrepareServer;
-import ua.com.merchik.merchik.data.RetrofitResponse.SMSLogResponse;
-import ua.com.merchik.merchik.data.RetrofitResponse.SMSPlanResponse;
-import ua.com.merchik.merchik.data.RetrofitResponse.SamplePhotoResponse;
-import ua.com.merchik.merchik.data.RetrofitResponse.ServerConnection;
-import ua.com.merchik.merchik.data.RetrofitResponse.SiteAccountResponse;
-import ua.com.merchik.merchik.data.RetrofitResponse.SiteObjectsResponse;
-import ua.com.merchik.merchik.data.RetrofitResponse.SiteURLResponse;
-import ua.com.merchik.merchik.data.RetrofitResponse.SotrTable;
-import ua.com.merchik.merchik.data.RetrofitResponse.TARCommentsResponse;
-import ua.com.merchik.merchik.data.RetrofitResponse.TasksAndReclamationsResponce;
-import ua.com.merchik.merchik.data.RetrofitResponse.ThemeTableRespose;
-import ua.com.merchik.merchik.data.RetrofitResponse.TovarImgResponse;
-import ua.com.merchik.merchik.data.RetrofitResponse.TovarTableResponse;
-import ua.com.merchik.merchik.data.RetrofitResponse.TradeMarkResponse;
-import ua.com.merchik.merchik.data.RetrofitResponse.VacancyResponse;
-import ua.com.merchik.merchik.data.RetrofitResponse.ViewListResponse;
-import ua.com.merchik.merchik.data.RetrofitResponse.WpDataServer;
+import ua.com.merchik.merchik.data.RetrofitResponse.models.Login;
+import ua.com.merchik.merchik.data.RetrofitResponse.models.Logout;
+import ua.com.merchik.merchik.data.RetrofitResponse.models.ModImagesView;
+import ua.com.merchik.merchik.data.RetrofitResponse.models.OptionsServer;
+import ua.com.merchik.merchik.data.RetrofitResponse.models.PPATableResponse;
+import ua.com.merchik.merchik.data.RetrofitResponse.models.PhotoHash;
+import ua.com.merchik.merchik.data.RetrofitResponse.models.PotentialClientResponse;
+import ua.com.merchik.merchik.data.RetrofitResponse.models.PremiumResponse;
+import ua.com.merchik.merchik.data.RetrofitResponse.models.PromoTableResponce;
+import ua.com.merchik.merchik.data.RetrofitResponse.models.ReportHint;
+import ua.com.merchik.merchik.data.RetrofitResponse.models.ReportPrepareServer;
+import ua.com.merchik.merchik.data.RetrofitResponse.models.SMSLogResponse;
+import ua.com.merchik.merchik.data.RetrofitResponse.models.SMSPlanResponse;
+import ua.com.merchik.merchik.data.RetrofitResponse.models.SamplePhotoResponse;
+import ua.com.merchik.merchik.data.RetrofitResponse.models.ServerConnection;
+import ua.com.merchik.merchik.data.RetrofitResponse.models.SiteAccountResponse;
+import ua.com.merchik.merchik.data.RetrofitResponse.models.SiteObjectsResponse;
+import ua.com.merchik.merchik.data.RetrofitResponse.models.SiteURLResponse;
+import ua.com.merchik.merchik.data.RetrofitResponse.models.SotrTable;
+import ua.com.merchik.merchik.data.RetrofitResponse.models.TARCommentsResponse;
+import ua.com.merchik.merchik.data.RetrofitResponse.models.TasksAndReclamationsResponce;
+import ua.com.merchik.merchik.data.RetrofitResponse.models.ThemeTableRespose;
+import ua.com.merchik.merchik.data.RetrofitResponse.models.TovarImgResponse;
+import ua.com.merchik.merchik.data.RetrofitResponse.models.TovarTableResponse;
+import ua.com.merchik.merchik.data.RetrofitResponse.models.TradeMarkResponse;
+import ua.com.merchik.merchik.data.RetrofitResponse.models.VacancyResponse;
+import ua.com.merchik.merchik.data.RetrofitResponse.models.ViewListResponse;
+import ua.com.merchik.merchik.data.RetrofitResponse.models.WpDataServer;
 import ua.com.merchik.merchik.data.RetrofitResponse.photos.ImagesViewListImageResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.photos.PhotoInfoResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.AchievementsResponse;
@@ -124,7 +125,6 @@ import ua.com.merchik.merchik.data.Translation.SiteTranslations;
 import ua.com.merchik.merchik.data.UploadToServ.LogUploadToServ;
 import ua.com.merchik.merchik.data.UploadToServ.ReportPrepareServ;
 import ua.com.merchik.merchik.data.UploadToServ.WpDataUploadToServ;
-import ua.com.merchik.merchik.database.room.DaoInterfaces.PlanogrammTypeDao;
 import ua.com.merchik.merchik.dialogs.EKL.DialogEKL;
 import ua.com.merchik.merchik.dialogs.EKL.EKLRequests;
 
@@ -205,6 +205,7 @@ public interface RetrofitInterface {
 
     @POST("mobile_app.php?")
     Call<CustomerGroups> GROUP_TYPE(@Query("mod") String mod, @Query("act") String act);
+
 
     @POST("mobile_app.php?")
     Call<OptionsServer> OPTIONS_CALL(@Query("mod") String mod, @Query("act") String act, @Query("date_from") String date_from, @Query("date_to") String date_to);
@@ -656,6 +657,7 @@ public interface RetrofitInterface {
             @Header("ContentType") String content,
             @Body JsonObject json);
 
+
     @POST("mobile_app.php?")
     Call<SMSLogResponse> SMSLog_RESPONSE(
             @Header("ContentType") String content,
@@ -675,6 +677,7 @@ public interface RetrofitInterface {
     Call<PlanogrammImagesResponse> Planogramm_IMAGES_RESPONSE(
             @Header("ContentType") String content,
             @Body JsonObject json);
+
 
     @POST("mobile_app.php?")
     Single<PlanogrammVizitShowcaseResponse> PLANOGRAMM_VIZIT_SHOWCASE_RESPONSE(
@@ -747,6 +750,7 @@ public interface RetrofitInterface {
      * 12.06.23.
      * Премиальные. Получение подробной информации о снижении и тп..
      */
+
     @POST("mobile_app.php?")
     Call<PremiumResponse> Premium_get_salary_basis_RESPONSE(
             @Header("ContentType") String content,
@@ -872,6 +876,7 @@ public interface RetrofitInterface {
             @Body JsonObject json);
 
     // Получение
+
     @POST("mobile_app.php?")
     Call<ContentResponse> GET_TABLE_CONTENT(
             @Header("ContentType") String content,
@@ -946,15 +951,18 @@ public interface RetrofitInterface {
             @Header("ContentType") String content,
             @Body JsonObject json);
 
+
     @POST("mobile_app.php?")
     Call<SiteURLResponse> siteUrl(
             @Header("ContentType") String content,
             @Body JsonObject json);
 
+
     @POST("mobile_app.php?")
     Call<SiteAccountResponse> siteAccount(
             @Header("ContentType") String content,
             @Body JsonObject json);
+
 
     @POST("mobile_app.php?")
     Call<JsonObject> averageSalary(
@@ -962,15 +970,18 @@ public interface RetrofitInterface {
             @Body JsonObject json);
 
 
+
     @POST("mobile_app.php?")
     Call<PPAonResponse> GET_TABLE_PPA(
             @Header("ContentType") String content,
             @Body JsonObject json);
 
+
     @POST("mobile_app.php?")
     Call<TasksAndReclamationsResponce> GET_TABLE_TasksAndReclamations(
             @Header("ContentType") String content,
             @Body JsonObject json);
+
 
 
     @POST("mobile_app.php?")
@@ -979,16 +990,19 @@ public interface RetrofitInterface {
             @Body JsonObject json);
 
 
+
     @POST("mobile_app.php?")
     Call<TARCommentsResponse> GET_TABLE_ReclamationComments(
             @Header("ContentType") String content,
             @Body JsonObject json);
 
 
+
     @POST("mobile_app.php?")
     Call<AdditionalRequirementsServerData> GET_TABLE_AdditionalRequirementsDB(
             @Header("ContentType") String content,
             @Body JsonObject json);
+
 
 
     @POST("mobile_app.php?")
@@ -1023,6 +1037,7 @@ public interface RetrofitInterface {
     Call<SiteObjects> GET_SITE_OBJECTS(
             @Header("ContentType") String content,
             @Body JsonObject json);
+
 
 
     @POST("mobile_app.php?")
@@ -1095,6 +1110,7 @@ public interface RetrofitInterface {
             @Body JsonObject json);
 
 
+
     @POST("mobile_app.php?")
     Call<ReportPrepareServer> DOWNLOAD_REPORT_PREPARE(
             @Header("ContentType") String content,
@@ -1107,6 +1123,7 @@ public interface RetrofitInterface {
             @Query("mod") String mod,
             @Query("act") String act,
             @Part MultipartBody.Part file);
+
 
 }//------ E N D ------
 

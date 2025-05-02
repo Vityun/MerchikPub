@@ -7,15 +7,12 @@ import android.util.Log;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 
-import java.util.List;
-
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.ServerExchange.Exchange;
-import ua.com.merchik.merchik.data.Database.Room.SiteObjectsSDB;
-import ua.com.merchik.merchik.data.RetrofitResponse.SiteObjectsResponse;
+import ua.com.merchik.merchik.data.RetrofitResponse.models.SiteObjectsResponse;
 import ua.com.merchik.merchik.data.TestJsonUpload.StandartData;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
 

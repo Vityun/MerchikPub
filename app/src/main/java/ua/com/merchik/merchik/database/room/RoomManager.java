@@ -34,7 +34,8 @@ public class RoomManager {
                         MIGRATION_59_60,
                         MIGRATION_60_61,
                         MIGRATION_61_62,
-                        MIGRATION_62_63
+                        MIGRATION_62_63,
+                        MIGRATION_63_64
                 )
 
                 .build();
@@ -676,6 +677,13 @@ public class RoomManager {
         @Override
         public void migrate(@NonNull SupportSQLiteDatabase database) {
             database.execSQL("ALTER TABLE planogram_vizit_showcase ADD COLUMN photo_do_hash TEXT");
+        }
+    };
+
+    static final Migration MIGRATION_63_64 = new Migration(62, 63) {
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase database) {
+            database.execSQL("ALTER TABLE achievements ADD COLUMN dt_change TEXT");
         }
     };
 }

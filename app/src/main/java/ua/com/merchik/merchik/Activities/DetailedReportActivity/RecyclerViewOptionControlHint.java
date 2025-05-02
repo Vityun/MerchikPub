@@ -11,7 +11,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import java.util.List;
 
 import ua.com.merchik.merchik.R;
-import ua.com.merchik.merchik.data.RetrofitResponse.RecentItem;
+import ua.com.merchik.merchik.data.RetrofitResponse.models.RecentItem;
 
 public class RecyclerViewOptionControlHint extends RecyclerView.Adapter<RecyclerViewOptionControlHint.ViewHolder>{
 

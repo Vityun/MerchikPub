@@ -15,7 +15,7 @@ import java.util.List;
 
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.data.RealmModels.ReportPrepareDB;
-import ua.com.merchik.merchik.data.RetrofitResponse.RecentItem;
+import ua.com.merchik.merchik.data.RetrofitResponse.models.RecentItem;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 
 public class RecyclerViewOptionsHintAdapter extends RecyclerView.Adapter<RecyclerViewOptionsHintAdapter.ViewHolder>{

@@ -66,9 +66,9 @@ import ua.com.merchik.merchik.ServerExchange.TablesLoadingUnloading;
 import ua.com.merchik.merchik.Utils.CheckAndLogCompetitorAppsOnDevice;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.RealmModels.AppUsersDB;
-import ua.com.merchik.merchik.data.RetrofitResponse.EDRPOUResponse;
-import ua.com.merchik.merchik.data.RetrofitResponse.Login;
-import ua.com.merchik.merchik.data.RetrofitResponse.Logout;
+import ua.com.merchik.merchik.data.RetrofitResponse.models.EDRPOUResponse;
+import ua.com.merchik.merchik.data.RetrofitResponse.models.Login;
+import ua.com.merchik.merchik.data.RetrofitResponse.models.Logout;
 import ua.com.merchik.merchik.data.ServerLogin.LoginSearch;
 import ua.com.merchik.merchik.data.ServerLogin.LoginSearchList;
 import ua.com.merchik.merchik.data.ServerLogin.SessionCheck;
@@ -2249,7 +2249,7 @@ public class menu_login extends AppCompatActivity {
 
         if (data != null) {
             INSTANCE.executeTransaction(realm -> {
-                INSTANCE.delete(LangListDB.class);
+//                INSTANCE.delete(LangListDB.class);
                 INSTANCE.copyToRealmOrUpdate(data);
             });
         }

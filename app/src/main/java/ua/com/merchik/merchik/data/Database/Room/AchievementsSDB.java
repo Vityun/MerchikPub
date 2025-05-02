@@ -199,6 +199,11 @@ public class AchievementsSDB {
     @ColumnInfo(name = "tovar_id")
     public Integer tovar_id;
 
+    @SerializedName("dt_change")
+    @Expose
+    @ColumnInfo(name = "dt_change")
+    public Integer dt_change;
+
     // ---------- ДЛЯ ОПЦИИ КОНТРОЛЯ НАЧАЛО---------------
 
     @Ignore

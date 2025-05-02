@@ -44,7 +44,6 @@ public class ShowcaseExchange {
             Set<String> uniqueClientIds = new HashSet<>();
             Set<String> uniqueAdressId = new HashSet<>();
 
-
             // Проходим по каждому элементу списка wpDataDBList
             for (WpDataDB wpDataDB : wpDataDBList) {
                 // Добавляем client_id в Set (дубликаты игнорируются)

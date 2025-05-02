@@ -16,8 +16,8 @@ import retrofit2.Response;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.RealmModels.SynchronizationTimetableDB;
-import ua.com.merchik.merchik.data.RetrofitResponse.SMSLogResponse;
-import ua.com.merchik.merchik.data.RetrofitResponse.SMSPlanResponse;
+import ua.com.merchik.merchik.data.RetrofitResponse.models.SMSLogResponse;
+import ua.com.merchik.merchik.data.RetrofitResponse.models.SMSPlanResponse;
 import ua.com.merchik.merchik.data.TestJsonUpload.StandartData;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
@@ -109,7 +109,7 @@ public class SMSExchange {
         data.nolimit = "1";
 
         // #### TODO
-        SynchronizationTimetableDB synchronizationTimetableDB = RealmManager.INSTANCE.copyFromRealm(RealmManager.getSynchronizationTimetableRowByTable("errorsList"));
+        SynchronizationTimetableDB synchronizationTimetableDB = RealmManager.INSTANCE.copyFromRealm(RealmManager.getSynchronizationTimetableRowByTable("photo_showcase"));
         data.dt_change_from = String.valueOf(synchronizationTimetableDB.getVpi_app());
 
 

@@ -30,6 +30,7 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 import ua.com.merchik.merchik.R;
+import ua.com.merchik.merchik.ServerExchange.Exchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.PlanogrammTableExchange;
 import ua.com.merchik.merchik.Utils.CodeGenerator;
 import ua.com.merchik.merchik.data.RealmModels.AppUsersDB;
@@ -139,31 +140,7 @@ public class MenuMainActivity extends toolbar_menus {
 
     private void test() {
 
-
-
-        Map<String, Integer> clientIdCounts = new HashMap<>();
-
-        RealmResults<TovarDB> results = RealmManager.INSTANCE.where(TovarDB.class).findAll();
-
-        for (TovarDB item : results) {
-            String clientId = item.getClientId(); // замени на свой getter
-            if (clientId != null) {
-                if (clientIdCounts.containsKey(clientId)) {
-                    clientIdCounts.put(clientId, clientIdCounts.get(clientId) + 1);
-                } else {
-                    clientIdCounts.put(clientId, 1);
-                }
-            }
-        }
-
-// Пример вывода:
-        int id = 0;
-        for (Map.Entry<String, Integer> entry : clientIdCounts.entrySet()) {
-            Log.d("ClientCount", "Client ID: " + entry.getKey() + ", Count: " + entry.getValue());
-            id++;
-        }
-        Log.d("ClientCount", "Client ID: " + id);
-
+        Exchange.exchangeTime = 0;
 
 
 //        realm.close();

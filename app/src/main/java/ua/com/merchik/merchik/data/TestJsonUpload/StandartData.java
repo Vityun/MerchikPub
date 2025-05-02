@@ -85,6 +85,7 @@ public class StandartData<T> {
         public String is_view;
 
         public String dt_change_from;
+        public String dt_change;
     }
 
     /*Тут формируем оценки Достижений для передачи их на сторону сервера*/

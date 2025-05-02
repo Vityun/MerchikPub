@@ -5,13 +5,14 @@ import android.util.Log;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 
+import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.observers.DisposableCompletableObserver;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
-import ua.com.merchik.merchik.data.RetrofitResponse.PotentialClientResponse;
+import ua.com.merchik.merchik.data.RetrofitResponse.models.PotentialClientResponse;
 import ua.com.merchik.merchik.data.TestJsonUpload.StandartData;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
 
@@ -42,6 +43,7 @@ public class PotentialClientTableExchange {
                             if (response.body().list != null && response.body().list.size() > 0){
                                 SQL_DB.potentialClientDao().insertAll(response.body().list)
                                         .subscribeOn(Schedulers.io())
+                                        .observeOn(AndroidSchedulers.mainThread())
                                         .subscribe(new DisposableCompletableObserver() {
                                             @Override
                                             public void onComplete() {
