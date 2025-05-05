@@ -217,6 +217,11 @@ public class OptionControlPhoto<T> extends OptionControl {
                 m = m > 0 ? m : 1;
                 break;
 
+            case "169109":  // Контроль наличия Фото POS материалов
+                photoType = 47; // 47 - фото POS материалов
+                m = m > 0 ? m : 1;
+                break;
+
         }
 
 

@@ -134,6 +134,7 @@ public class StackPhotoRealm {
     }
 
     public static void deleteByPhotoNum(String photoNum) {
+        Globals.writeToMLOG("INFO", "StackPhotoRealm.deleteByPhotoNum", "deleteByPhotoNum: " + photoNum);
         StackPhotoDB data = INSTANCE.where(StackPhotoDB.class)
                 .equalTo("photo_num", photoNum)
                 .findFirst();
@@ -144,7 +145,9 @@ public class StackPhotoRealm {
             }
             data.deleteFromRealm();
             INSTANCE.commitTransaction();
+            Globals.writeToMLOG("INFO", "StackPhotoRealm.deleteByPhotoNum status +", "deleteByPhotoNum: " + photoNum);
         }
+
     }
 
     public static RealmResults<StackPhotoDB> getTARFilterPhoto(int addr, String customer) {

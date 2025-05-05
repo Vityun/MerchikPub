@@ -80,6 +80,7 @@ import ua.com.merchik.merchik.Options.Buttons.OptionButtonAddNewClient;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonAddNewFriend;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonAvailabilityDetailedReport;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonHistoryMP;
+import ua.com.merchik.merchik.Options.Buttons.OptionButtonPlanogrammVizit;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonUserOpinion;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonPhotoAktionTovar;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonPhotoBeforeStartWork;
@@ -394,6 +395,7 @@ public class Options {
                 case 164352:    // Фото Планограмми ТТ
                 case 164354:    // Фото Планограмми ТТ
                 case 132971:    // Фото товара біля вітрини
+                case 169109:    // Контроль наличия Фото POS материалов
                     //                    checkPhotoReport(context, dataDB, optionsDB, type, mode);
                     OptionControlPhoto<?> optionControlPhoto = new OptionControlPhoto<>(context, dataDB, optionsDB, newOptionType, mode, unlockCodeResultListener);
                     optionControlPhoto.showOptionMassage("");
@@ -1719,6 +1721,7 @@ public class Options {
             case 165482:
             case 164354:    // Фото Планограмми ТТ
             case 164352:    // Контроль наявності світлини прикасової зони
+            case 169109:    // Контроль наличия Фото POS материалов
 //            case 159725:    // Кнопка "Фото Торговой Точки (ФТТ)"
                 OptionControlPhoto<?> optionControlPhoto = new OptionControlPhoto<>(context, dataDB, option, type, mode, unlockCodeResultListener);
                 if (mode.equals(NNKMode.MAKE) || (mode.equals(NNKMode.CHECK) && optionControlPhoto.isBlockOption()))
@@ -1953,6 +1956,8 @@ public class Options {
                 return optionControlAvailabilityDetailedReport.isBlockOption2() ? 1 : 0;
 
             case 151139:
+                new OptionButtonPlanogrammVizit<>(context, dataDB, option, type, mode, unlockCodeResultListener);
+                break;
             case 164355:
                 new OptionButPhotoPlanogramm<>(context, dataDB, option, type, mode, unlockCodeResultListener);
                 break;

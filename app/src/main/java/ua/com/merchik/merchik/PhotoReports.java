@@ -13,6 +13,9 @@ import com.google.gson.JsonObject;
 import org.json.JSONObject;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -29,6 +32,7 @@ import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
 import ua.com.merchik.merchik.data.UploadPhotoData.ImagesPrepareUploadPhoto;
 import ua.com.merchik.merchik.data.UploadPhotoData.Move;
 import ua.com.merchik.merchik.database.realm.RealmManager;
+import ua.com.merchik.merchik.database.realm.tables.StackPhotoRealm;
 import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
 
@@ -150,8 +154,9 @@ public class PhotoReports {
                     });
 
                     realmResults.remove(photoDB);
-
-                    Globals.writeToMLOG("INFO", "PhotoReports/upload_photo/send/onSuccess", "successfully upload photo to server photo id: " + photoDB.getId() + " left to unload: " + realmResults.size());
+                    String filePath = photoDB.getPhoto_num();
+                    File file = new File(filePath);
+                    Globals.writeToMLOG("INFO", "PhotoReports/upload_photo/send/onSuccess", "successfully upload photo to server photo id: " + photoDB.getId() + ", file.length(): " + file.length() +", left to unload: " + realmResults.size());
                     send(type);
                 }
 
@@ -162,12 +167,33 @@ public class PhotoReports {
                         photoDB.setErrorTime(System.currentTimeMillis());
                         photoDB.setErrorTxt(error);
                         realm.insertOrUpdate(photoDB);
-                        Globals.writeToMLOG("INFO", "PhotoReports/upload_photo/send/onSuccess/realm.executeTransaction", "onFailure. Фото с ошибкой. Отмечено в Realm");
+                        Globals.writeToMLOG("INFO", "PhotoReports/upload_photo/send/onFailure/realm.executeTransaction", "onFailure. Фото с ошибкой. Отмечено в Realm");
                     });
 
                     realmResults.remove(photoDB);
-                    Globals.writeToMLOG("INFO", "PhotoReports/upload_photo/send/onSuccess", "failure. photo id: " + photoDB.getId() + " ERROR MSG: " + error + " ///left to unload: " + realmResults.size());
+                    Globals.writeToMLOG("INFO", "PhotoReports/upload_photo/send/onFailure", "failure. photo id: " + photoDB.getId() + " ERROR MSG: " + error + " ///left to unload: " + realmResults.size());
                     send(type);
+
+                    // Путь к файлу (пример: photoDB.getPhoto_num() возвращает путь в виде String)
+                    String filePath = photoDB.getPhoto_num();
+                    // Создаем объект File
+                    File file = new File(filePath);
+                    // Проверяем, существует ли файл
+                    Globals.writeToMLOG("INFO", "PhotoReports/upload_photo/send/onFailure", "file.length(): " +file.length() + ", file.exists(): " + file.exists() + ", isImageValid: " + isImageValid(file));
+                    if (file.exists()) {
+                        // Получаем размер файла в байтах
+                        long fileSizeInBytes = file.length();
+                        if (fileSizeInBytes == 0)
+                            if (photoDB.getPhotoServerId() == null || photoDB.getPhotoServerId().isEmpty()) {
+                                StackPhotoRealm.deleteByPhotoNum(filePath);
+                            }
+                    } else {
+                        if (photoDB.getPhotoServerId() == null || photoDB.getPhotoServerId().isEmpty()) {
+                            StackPhotoRealm.deleteByPhotoNum(filePath);
+                        }
+                    }
+                    if (!isImageValid(file))
+                        StackPhotoRealm.deleteByPhotoNum(filePath);
                 }
             });
         } else {
@@ -193,6 +219,22 @@ public class PhotoReports {
         }
     }
 
+    public static boolean isImageValid(File file) {
+        try (InputStream is = new FileInputStream(file)) {
+            byte[] header = new byte[8];
+            if (is.read(header) != header.length) return false;
+
+            // Проверка JPEG (начинается с FF D8 FF)
+            if (header[0] == (byte) 0xFF && header[1] == (byte) 0xD8 && header[2] == (byte) 0xFF) {
+                return true;
+            }
+            // Проверка PNG (начинается с 89 50 4E 47)
+            return header[0] == (byte) 0x89 && header[1] == (byte) 0x50 &&
+                    header[2] == (byte) 0x4E && header[3] == (byte) 0x47;
+        } catch (IOException e) {
+            return false;
+        }
+    }
 
     /**
      * 11.06.2021

@@ -135,6 +135,7 @@ public class RealmManager {
         INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(42, "theme_list", 86400, 0, 0, 0, 0, "Tаблиці theme_list", 0));
 
         INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(43, "options_list", 86400, 0, 0, 0, 0, "Tаблиці options_list", 0));
+        INSTANCE.copyToRealmOrUpdate(new SynchronizationTimetableDB(44, "additional_requirements", 86400, 0, 0, 0, 0, "Tаблиці AdditionalRequirementsDB", 0));
 
         INSTANCE.commitTransaction();
     }

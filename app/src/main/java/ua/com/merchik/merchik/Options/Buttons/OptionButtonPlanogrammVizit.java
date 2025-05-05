@@ -34,13 +34,13 @@ import ua.com.merchik.merchik.database.realm.tables.TradeMarkRealm;
 import ua.com.merchik.merchik.features.main.DBViewModels.PlanogrammVizitShowcaseViewModel;
 import ua.com.merchik.merchik.features.main.DBViewModels.SamplePhotoSDBViewModel;
 
-public class OptionButPhotoPlanogramm<T> extends OptionControl {
-    public int OPTION_BUTTON_PHOTO_PLANOGRAMM_ID = 164355;
+public class OptionButtonPlanogrammVizit<T> extends OptionControl {
+    public int OPTION_BUTTON_PHOTO_PLANOGRAMM_ID = 151139;
 
     private WpDataDB wpDataDB;
     private final WorkPlan workPlan = new WorkPlan();
 
-    public OptionButPhotoPlanogramm(Context context, T document, OptionsDB optionDB, OptionMassageType msgType, Options.NNKMode nnkMode, UnlockCodeResultListener unlockCodeResultListener) {
+    public OptionButtonPlanogrammVizit(Context context, T document, OptionsDB optionDB, OptionMassageType msgType, Options.NNKMode nnkMode, UnlockCodeResultListener unlockCodeResultListener) {
         this.context = context;
         this.document = document;
         this.optionDB = optionDB;
@@ -84,31 +84,31 @@ public class OptionButPhotoPlanogramm<T> extends OptionControl {
 
 //            VizitShowcaseDataHolder.Companion.getInstance().clear();
 //
-//            Intent intent = new Intent(context, FeaturesActivity.class);
-//            Bundle bundle = new Bundle();
-//            bundle.putString("viewModel", PlanogrammVizitShowcaseViewModel.class.getCanonicalName());
-//            bundle.putString("contextUI", ContextUI.PLANOGRAMM_VIZIT_SHOWCASE.toString());
-//            bundle.putString("modeUI", ModeUI.DEFAULT.toString());
-//            JsonObject dataJson = new JsonObject();
-//            dataJson.addProperty("clientId", String.valueOf(wpDataDB.getClient_id()));
-//            dataJson.addProperty("addressId", wpDataDB.getAddr_id());
-//            dataJson.addProperty("wpDataDBId", String.valueOf(wpDataDB.getCode_dad2()));
-//            dataJson.addProperty("optionDBId", String.valueOf(optionDB.getID()));
-//            bundle.putString("dataJson", new Gson().toJson(dataJson));
+            Intent intent = new Intent(context, FeaturesActivity.class);
+            Bundle bundle = new Bundle();
+            bundle.putString("viewModel", PlanogrammVizitShowcaseViewModel.class.getCanonicalName());
+            bundle.putString("contextUI", ContextUI.PLANOGRAMM_VIZIT_SHOWCASE.toString());
+            bundle.putString("modeUI", ModeUI.DEFAULT.toString());
+            JsonObject dataJson = new JsonObject();
+            dataJson.addProperty("clientId", String.valueOf(wpDataDB.getClient_id()));
+            dataJson.addProperty("addressId", wpDataDB.getAddr_id());
+            dataJson.addProperty("wpDataDBId", String.valueOf(wpDataDB.getCode_dad2()));
+            dataJson.addProperty("optionDBId", String.valueOf(optionDB.getID()));
+            bundle.putString("dataJson", new Gson().toJson(dataJson));
+
+            bundle.putString("title", "Планограма > Вітрина");
+            bundle.putString(
+                    "subTitle",
+                    "Для кожної Планограми вкажіть Вітрину, на якiй товар буде викладено згідно поточної планограми. Якщо Фото відповідної вітрини у списку вітрин немає, виберіть Фото Вітрини. Якщо у ТТ немає Вітрини для якої створена ця Планограма, то оцініть цю Планограму низькою оцінкою (нижче 5) і вкажіть коментар"
+            );
+            intent.putExtras(bundle);
+            ActivityCompat.startActivityForResult((Activity) context, intent, NEED_UPDATE_UI_REQUEST, null);
+
+//            WPDataObj wpDataObj = workPlan.getKPS(wpDataDB.getId());
+//            wpDataObj.setPhotoType("5");
 //
-//            bundle.putString("title", "Планограма > Вітрина");
-//            bundle.putString(
-//                    "subTitle",
-//                    "Для кожної Планограми вкажіть Вітрину, на якiй товар буде викладено згідно поточної планограми. Якщо Фото відповідної вітрини у списку вітрин немає, виберіть Фото Вітрини. Якщо у ТТ немає Вітрини для якої створена ця Планограма, то оцініть цю Планограму низькою оцінкою (нижче 5) і вкажіть коментар"
-//            );
-//            intent.putExtras(bundle);
-//            ActivityCompat.startActivityForResult((Activity) context, intent, NEED_UPDATE_UI_REQUEST, null);
-
-            WPDataObj wpDataObj = workPlan.getKPS(wpDataDB.getId());
-            wpDataObj.setPhotoType("5");
-
-            MakePhoto makePhoto = new MakePhoto();
-            makePhoto.pressedMakePhotoOldStyle((Activity) context, wpDataObj, wpDataDB, optionDB);
+//            MakePhoto makePhoto = new MakePhoto();
+//            makePhoto.pressedMakePhotoOldStyle((Activity) context, wpDataObj, wpDataDB, optionDB);
         }catch (Exception e){
             Globals.writeToMLOG("ERROR", "OptionButPhotoPlanogramm/executeOption/Exception", "Exception e: " + e);
         }

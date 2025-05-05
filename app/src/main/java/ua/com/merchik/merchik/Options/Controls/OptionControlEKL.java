@@ -402,6 +402,20 @@ public class OptionControlEKL<T> extends OptionControl {
                         if (documentUser.reportCount >= 5000 && !wpDataDB.getDt().after(dateThreshold4.getTime())) {
                             signal = false;
                             optionMsg.append(", но сотрудник провел более 5000 отчетов и эту блокировку пропускаем до 01.06.2025");
+                        } else {
+                            Calendar dateThreshold5 = Calendar.getInstance();
+                            dateThreshold5.set(2025, Calendar.JUNE, 30);
+                            if (documentUser.reportCount >= 6000 && !wpDataDB.getDt().after(dateThreshold5.getTime())) {
+                                signal = false;
+                                optionMsg.append(", но сотрудник провел более 6000 отчетов и эту блокировку пропускаем до 01.07.2025");
+                            } else {
+                                Calendar dateThreshold6 = Calendar.getInstance();
+                                dateThreshold6.set(2025, Calendar.JULY, 31);
+                                if (documentUser.reportCount >= 7000 && !wpDataDB.getDt().after(dateThreshold6.getTime())) {
+                                    signal = false;
+                                    optionMsg.append(", но сотрудник провел более 7000 отчетов и эту блокировку пропускаем до 01.08.2025");
+                                }
+                            }
                         }
                     }
                 }

@@ -291,6 +291,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                         || optionId == 165481   // Кнопка ЭФФИ
                         || optionId == 141069   // Кнопка "Сравнение Остатков с Наличием"
                         || optionId == 168598   // Кнопка "Мнение о посещении"
+                        || optionId == 169109   // фото POS материалов (46)
                 ) {
                     optionButton.setBackgroundResource(R.drawable.bg_temp);
                     textInteger2.setVisibility(View.VISIBLE);

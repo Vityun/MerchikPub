@@ -59,6 +59,7 @@ import ua.com.merchik.merchik.data.RealmModels.SynchronizationTimetableDB;
 import ua.com.merchik.merchik.data.RealmModels.TovarDB;
 import ua.com.merchik.merchik.data.RealmModels.UsersDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
+import ua.com.merchik.merchik.data.RetrofitResponse.TovarImgList;
 import ua.com.merchik.merchik.data.RetrofitResponse.models.AddressTableResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.models.ArticleTableResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.models.CustomerGroups;
@@ -76,7 +77,6 @@ import ua.com.merchik.merchik.data.RetrofitResponse.models.SotrTableList;
 import ua.com.merchik.merchik.data.RetrofitResponse.models.TARCommentsResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.models.TasksAndReclamationsResponce;
 import ua.com.merchik.merchik.data.RetrofitResponse.models.ThemeTableRespose;
-import ua.com.merchik.merchik.data.RetrofitResponse.TovarImgList;
 import ua.com.merchik.merchik.data.RetrofitResponse.models.TovarImgResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.models.TovarTableResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.models.TradeMarkResponse;
@@ -113,8 +113,11 @@ import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
  * Начинаю считать этот класс устаревающим.
  * Надо переносить с него обмены в Exchange и архитектурить Там уже нормально
  */
-/**MERCHIK_1
- * НА 99% працює із базою данних РЕАЛМ*/
+
+/**
+ * MERCHIK_1
+ * НА 99% працює із базою данних РЕАЛМ
+ */
 public class TablesLoadingUnloading {
 
     private String timeYesterday7 = Clock.today_7;
@@ -260,7 +263,7 @@ public class TablesLoadingUnloading {
 
                     try {
                         Globals.writeToMLOG("INFO", "downloadTovarGroupTable.onSuccess", "list: " + list.size());
-                    }catch (Exception e){
+                    } catch (Exception e) {
                         Globals.writeToMLOG("ERROR", "downloadTovarGroupTable.onSuccess", "list Exception e: " + e);
                     }
 
@@ -392,7 +395,7 @@ public class TablesLoadingUnloading {
                             List<WpDataDB> wpDataDBList = response.body().getList();
                             RealmManager.setWpData(wpDataDBList);
 
-                            downloadTovarTable(null,wpDataDBList);
+                            downloadTovarTable(null, wpDataDBList);
 //                            Globals.writeToMLOG("INFO", "PetrovExchangeTest/startExchange/downloadWPData/onSuccess", "(response.body().getList(): " + response.body().getList().size());
 //                            if (RealmManager.setWpData(response.body().getList())) {
 //                                if (pg != null)
@@ -652,13 +655,13 @@ public class TablesLoadingUnloading {
                     }
 
 
-                    RealmManager.INSTANCE.executeTransaction(realm -> {
-                        synchronizationTimetableDB.setVpi_app(System.currentTimeMillis() / 1000);
-                        realm.copyToRealmOrUpdate(synchronizationTimetableDB);
-                    });
-
-                    if (response.body() != null && response.body().getList() != null)
-                    RealmManager.setOptions(response.body().getList());
+                    if (response.body().getList() != null && !response.body().getList().isEmpty()) {
+                        RealmManager.setOptions(response.body().getList());
+                        RealmManager.INSTANCE.executeTransaction(realm -> {
+                            synchronizationTimetableDB.setVpi_app(System.currentTimeMillis() / 1000);
+                            realm.copyToRealmOrUpdate(synchronizationTimetableDB);
+                        });
+                    }
 //                    if (response.body().getState()) {
 //                        if (RealmManager.setOptions(response.body().getList())) {
 //                            if (pg != null)
@@ -1006,8 +1009,7 @@ public class TablesLoadingUnloading {
 //                                    if (pg.isShowing())
 //                                        pg.dismiss();
 //                            }
-                        }
-                        else {
+                        } else {
 //                            if (pg != null)
 //                                if (pg.isShowing())
 //                                    pg.dismiss();
@@ -1015,8 +1017,7 @@ public class TablesLoadingUnloading {
 //                            RealmManager.setRowToLog(Collections.singletonList(new LogDB(RealmManager.getLastIdLogDB() + 1, System.currentTimeMillis() / 1000, "Обмен таблицы Сотрудники. Сотрудники пустые.", 1095, null, null, null, null, null, Globals.session, null)));
                             Log.e("TAG_TABLE", "ListS: empty");
                         }
-                    }
-                    else {
+                    } else {
 //                        if (pg != null)
 //                            if (pg.isShowing())
 //                                pg.dismiss();
@@ -1197,7 +1198,7 @@ public class TablesLoadingUnloading {
 
                             RealmManager.setTovarAsync(list);
 
-                                // 24/01/2024 Закоментил что б при синхронизации не заваливало фотками обмен
+                            // 24/01/2024 Закоментил что б при синхронизации не заваливало фотками обмен
 //                                PhotoDownload.getPhotoURLFromServer(list, new Clicks.clickStatusMsg() {
 //                                    @Override
 //                                    public void onSuccess(String data) {
@@ -2307,7 +2308,7 @@ public class TablesLoadingUnloading {
 
             HashMap<String, String> map = new HashMap<>();
             for (LogMPDB list : logMp) {
-                if (list.getGp() != null){
+                if (list.getGp() != null) {
                     map.put("gp[" + list.getId() + "]", list.getGp());
                 }
             }
@@ -2337,7 +2338,7 @@ public class TablesLoadingUnloading {
                                                 long id = geoInfo.get("geo_id").getAsLong();
                                                 RealmManager.INSTANCE.executeTransaction(realm -> {
                                                     list.serverId = id;
-                                                    list.upload = System.currentTimeMillis()/1000;  // 27.08.23 Вместо удаления, пишу воемя когда координаты были выгружены
+                                                    list.upload = System.currentTimeMillis() / 1000;  // 27.08.23 Вместо удаления, пишу воемя когда координаты были выгружены
                                                     realm.insertOrUpdate(list);
                                                 });
 
@@ -2347,22 +2348,22 @@ public class TablesLoadingUnloading {
                                                 Globals.writeToMLOG("ERROR", "uploadLodMp/onResponse/executeTransaction", "Exception e: " + e);
                                                 res.onFailure("Exception e: " + e);
                                             }
-                                        }else {
+                                        } else {
                                             try {
                                                 long id = geoInfo.get("geo_id").getAsLong();
                                                 RealmManager.INSTANCE.executeTransaction(realm -> {
                                                     list.serverId = id;
-                                                    list.upload = System.currentTimeMillis()/1000;  // 27.08.23 Вместо удаления, пишу воемя когда координаты были выгружены
+                                                    list.upload = System.currentTimeMillis() / 1000;  // 27.08.23 Вместо удаления, пишу воемя когда координаты были выгружены
                                                     realm.insertOrUpdate(list);
                                                 });
-                                            }catch (Exception e){
+                                            } catch (Exception e) {
                                                 Globals.writeToMLOG("INFO", "uploadLodMp/onResponse/geoInfo.get(\"state\")", "Exception e: " + e);
                                             }
                                             Globals.writeToMLOG("INFO", "uploadLodMp/onResponse/geoInfo.get(\"state\")", "response.body(): " + response.body());
                                         }
                                     }
                                 }
-                            }else {
+                            } else {
                                 Globals.writeToMLOG("INFO", "uploadLodMp/onResponse/state=false", "response.body(): " + response.body());
                             }
                         }
@@ -2519,7 +2520,7 @@ public class TablesLoadingUnloading {
                 @Override
                 public void onResponse(retrofit2.Call<SiteObjects> call, retrofit2.Response<SiteObjects> response) {
                     try {
-                        if (response.isSuccessful()){
+                        if (response.isSuccessful()) {
                             if (response.body() != null && response.body().getState() && response.body().getObjectList() != null && response.body().getObjectList().size() > 0) {
 //                                Globals.writeToMLOG("INFO", "PetrovExchangeTest/startExchange/downloadSiteHints/onSuccess", "response.body().getObjectList().size(): " + response.body().getObjectList().size());
                                 saveSiteObjectsDB(response.body().getObjectList());
@@ -2797,6 +2798,9 @@ public class TablesLoadingUnloading {
 //            data.date_from = Clock.getDatePeriod(-180);
 //            data.date_to = Clock.today;
 
+//            SynchronizationTimetableDB synchronizationTimetableDB = RealmManager.INSTANCE.copyFromRealm(RealmManager.getSynchronizationTimetableRowByTable("additional_requirements"));
+//            data.dt_change_from = String.valueOf(synchronizationTimetableDB.getVpi_app());
+
             Gson gson = new Gson();
             String json = gson.toJson(data);
             JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
@@ -2823,8 +2827,16 @@ public class TablesLoadingUnloading {
                 @Override
                 public void onResponse(retrofit2.Call<AdditionalRequirementsServerData> call, retrofit2.Response<AdditionalRequirementsServerData> response) {
                     try {
-                        AdditionalRequirementsRealm.setDataToDB(response.body().getList());
+                        if (response.body() != null && !response.body().getList().isEmpty()) {
 
+                            AdditionalRequirementsRealm.setDataToDB(response.body().getList());
+
+//                            RealmManager.INSTANCE.executeTransaction(realm -> {
+//                                synchronizationTimetableDB.setVpi_app(System.currentTimeMillis() / 1000);
+//                                realm.copyToRealmOrUpdate(synchronizationTimetableDB);
+//                            });
+
+                        }
 //                        Set<Integer> uniqueIds = new HashSet<>();
 //                        List<AdditionalRequirementsDB> uniqueData = new ArrayList<>();
 //                        for (AdditionalRequirementsDB item : response.body().getList()) {
@@ -3027,7 +3039,7 @@ public class TablesLoadingUnloading {
                             try {
                                 Globals.writeToMLOG("INFO", "downloadtovar_grp_client", "OK");
                                 Globals.writeToMLOG("INFO", "downloadtovar_grp_client", "response.body().list: " + response.body().list.size());
-                            }catch (Exception e){
+                            } catch (Exception e) {
                                 Globals.writeToMLOG("ERROR", "downloadtovar_grp_client", "Exception e: " + e);
                             }
                         }
