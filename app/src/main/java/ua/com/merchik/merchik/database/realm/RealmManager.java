@@ -290,7 +290,7 @@ public class RealmManager {
     public static boolean setImagesTp(List<ImagesTypeListDB> ImageTp) {
         Log.e("REALM_DB_UPDATE", "TYPE_START");
         INSTANCE.beginTransaction();
-//        INSTANCE.delete(ImagesTypeListDB.class);
+        INSTANCE.delete(ImagesTypeListDB.class);
         INSTANCE.copyToRealmOrUpdate(ImageTp);
         INSTANCE.commitTransaction();
         Log.e("REALM_DB_UPDATE", "TYPE_END");
@@ -326,9 +326,6 @@ public class RealmManager {
      * Запись в Реалм Опций
      */
     public static boolean setOptions(List<OptionsDB> optionsDBS) {
-        Log.e("REALM_DB_UPDATE", "OPTION_S");
-
-
         try {
             globals.writeToMLOG(Clock.getHumanTime() + "_INFO.RealmManager.class.setOptions.Размер списка: " + optionsDBS.size() + "\n");
         } catch (Exception e) {
@@ -347,7 +344,6 @@ public class RealmManager {
 
 
         INSTANCE.commitTransaction();
-        Log.e("REALM_DB_UPDATE", "OPTION_E");
         return true;
     }
 
@@ -653,7 +649,15 @@ public class RealmManager {
 
     // STACK PHOTO:---------------------------------------------------------------------------------
     public static void stackPhotoSavePhoto(StackPhotoDB stackPhotoDB) {
-        INSTANCE.executeTransaction(realm -> realm.copyToRealmOrUpdate(stackPhotoDB));
+        INSTANCE.executeTransaction(realm ->{
+                    try {
+                        realm.copyToRealmOrUpdate(stackPhotoDB);
+                    } catch (Exception e) {
+                        Log.e("RealmError", "Ошибка сохранения: " + e.getMessage());
+                    }
+                }
+//                realm.copyToRealmOrUpdate(stackPhotoDB)
+        );
     }
 
     public static void stackPhotoSavePhoto(List<StackPhotoDB> stackPhotoDB) {
@@ -1114,10 +1118,10 @@ public class RealmManager {
      * Это сделано сейчас для потому что переделываем выгрузку под новый стандарт
      */
     public static List<StartEndData> getWpDataStartEndWork() {
-        List<WpDataDB> list = RealmManager.INSTANCE.copyFromRealm(WpDataRealm.getWpData());
+        List<WpDataDB> list = RealmManager.INSTANCE.copyFromRealm(WpDataRealm.getWpDataToUpdate());
         List<StartEndData> res = new ArrayList<>();
 
-        if (list != null) {
+        if (list != null && !list.isEmpty()) {
             for (WpDataDB l : list) {
                 if (l.startUpdate || l.getSetStatus() > 0) {
                     StartEndData item = new StartEndData();

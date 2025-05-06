@@ -1,6 +1,5 @@
 package ua.com.merchik.merchik.Activities;
 
-import static ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity.NEED_UPDATE_UI_REQUEST;
 import static ua.com.merchik.merchik.database.realm.RealmManager.getAllWorkPlan;
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 
@@ -17,10 +16,8 @@ import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import io.realm.DynamicRealm;
@@ -31,14 +28,11 @@ import retrofit2.Callback;
 import retrofit2.Response;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.ServerExchange.Exchange;
-import ua.com.merchik.merchik.ServerExchange.TablesExchange.PlanogrammTableExchange;
 import ua.com.merchik.merchik.Utils.CodeGenerator;
 import ua.com.merchik.merchik.data.RealmModels.AppUsersDB;
-import ua.com.merchik.merchik.data.RealmModels.TovarDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.ShowcaseResponse;
 import ua.com.merchik.merchik.data.TestJsonUpload.StandartData;
-import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.AppUserRealm;
 import ua.com.merchik.merchik.dialogs.DialogShowcase.DialogShowcase;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
@@ -47,14 +41,14 @@ import ua.com.merchik.merchik.toolbar_menus;
 
 public class MenuMainActivity extends toolbar_menus {
 
-    PhotoDownloaderViewModel photoDownloaderViewModel;
+    CronchikViewModel cronchikViewModel;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setActivityContent();
 
-        photoDownloaderViewModel = new ViewModelProvider(this).get(PhotoDownloaderViewModel.class);
+        cronchikViewModel = new ViewModelProvider(this).get(CronchikViewModel.class);
 
         try {
 

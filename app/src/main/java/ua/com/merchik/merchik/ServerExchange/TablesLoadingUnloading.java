@@ -452,13 +452,6 @@ public class TablesLoadingUnloading {
                 if (response.isSuccessful() && response.body() != null) {
                     if (response.body().getMenuList() != null && response.body().getMenuList().getImagesTypeList() != null) {
 
-
-                        if (response.body().getMenuList().getImagesTypeList() != null) {
-                            Log.e("SERVER_REALM_DB_UPDATE", "===================================ImagesTpSIZE: " + response.body().getMenuList().getImagesTypeList().size());
-                        } else {
-                            Log.e("SERVER_REALM_DB_UPDATE", "===================================ImagesTpSIZE: NuLL");
-                        }
-
                         RealmManager.setImagesTp(response.body().getMenuList().getImagesTypeList());
 //                        if (RealmManager.setImagesTp(response.body().getMenuList().getImagesTypeList())) {
 //                            if (pg != null)
@@ -2798,8 +2791,8 @@ public class TablesLoadingUnloading {
 //            data.date_from = Clock.getDatePeriod(-180);
 //            data.date_to = Clock.today;
 
-//            SynchronizationTimetableDB synchronizationTimetableDB = RealmManager.INSTANCE.copyFromRealm(RealmManager.getSynchronizationTimetableRowByTable("additional_requirements"));
-//            data.dt_change_from = String.valueOf(synchronizationTimetableDB.getVpi_app());
+            SynchronizationTimetableDB synchronizationTimetableDB = RealmManager.INSTANCE.copyFromRealm(RealmManager.getSynchronizationTimetableRowByTable("additional_requirements"));
+            data.dt_change_from = String.valueOf(synchronizationTimetableDB.getVpi_app());
 
             Gson gson = new Gson();
             String json = gson.toJson(data);
@@ -2827,14 +2820,15 @@ public class TablesLoadingUnloading {
                 @Override
                 public void onResponse(retrofit2.Call<AdditionalRequirementsServerData> call, retrofit2.Response<AdditionalRequirementsServerData> response) {
                     try {
-                        if (response.body() != null && !response.body().getList().isEmpty()) {
+                        if (response.body() != null && response.body().getList() != null
+                                && !response.body().getList().isEmpty()) {
 
                             AdditionalRequirementsRealm.setDataToDB(response.body().getList());
 
-//                            RealmManager.INSTANCE.executeTransaction(realm -> {
-//                                synchronizationTimetableDB.setVpi_app(System.currentTimeMillis() / 1000);
-//                                realm.copyToRealmOrUpdate(synchronizationTimetableDB);
-//                            });
+                            RealmManager.INSTANCE.executeTransaction(realm -> {
+                                synchronizationTimetableDB.setVpi_app(System.currentTimeMillis() / 1000);
+                                realm.copyToRealmOrUpdate(synchronizationTimetableDB);
+                            });
 
                         }
 //                        Set<Integer> uniqueIds = new HashSet<>();

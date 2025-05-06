@@ -139,7 +139,7 @@ public class PhotoReports {
      */
     private void send(UploadType type) {
         Globals.writeToMLOG("INFO", "PhotoReports/upload_photo/send/onSuccess", "Start SEND. size to unload: " + realmResults.size());
-
+        Log.e("StartPhotoUpload", "++++++++++");
         if (!realmResults.isEmpty()) {
             StackPhotoDB current = realmResults.get(0);
             buildCall(current, new ExchangeInterface.UploadPhotoReports() {
@@ -156,7 +156,7 @@ public class PhotoReports {
                     realmResults.remove(photoDB);
                     String filePath = photoDB.getPhoto_num();
                     File file = new File(filePath);
-                    Globals.writeToMLOG("INFO", "PhotoReports/upload_photo/send/onSuccess", "successfully upload photo to server photo id: " + photoDB.getId() + ", file.length(): " + file.length() +", left to unload: " + realmResults.size());
+                    Globals.writeToMLOG("INFO", "PhotoReports/upload_photo/send/onSuccess", "successfully upload photo to server photo id: " + photoDB.getId() + ", file.length(): " + file.length() + ", left to unload: " + realmResults.size());
                     send(type);
                 }
 
@@ -179,21 +179,23 @@ public class PhotoReports {
                     // Создаем объект File
                     File file = new File(filePath);
                     // Проверяем, существует ли файл
-                    Globals.writeToMLOG("INFO", "PhotoReports/upload_photo/send/onFailure", "file.length(): " +file.length() + ", file.exists(): " + file.exists() + ", isImageValid: " + isImageValid(file));
-                    if (file.exists()) {
-                        // Получаем размер файла в байтах
-                        long fileSizeInBytes = file.length();
-                        if (fileSizeInBytes == 0)
-                            if (photoDB.getPhotoServerId() == null || photoDB.getPhotoServerId().isEmpty()) {
-                                StackPhotoRealm.deleteByPhotoNum(filePath);
-                            }
-                    } else {
-                        if (photoDB.getPhotoServerId() == null || photoDB.getPhotoServerId().isEmpty()) {
-                            StackPhotoRealm.deleteByPhotoNum(filePath);
-                        }
-                    }
+                    Globals.writeToMLOG("INFO", "PhotoReports/upload_photo/send/onFailure", "file.length(): " + file.length() + ", file.exists(): " + file.exists() + ", isImageValid: " + isImageValid(file));
+//                    if (file.exists()) {
+//                        // Получаем размер файла в байтах
+//                        long fileSizeInBytes = file.length();
+//                        if (fileSizeInBytes == 0)
+//                            if (photoDB.getPhotoServerId() == null || photoDB.getPhotoServerId().isEmpty()) {
+//                                StackPhotoRealm.deleteByPhotoNum(filePath);
+//                            }
+//                    } else {
+//                        if (photoDB.getPhotoServerId() == null || photoDB.getPhotoServerId().isEmpty()) {
+//                            StackPhotoRealm.deleteByPhotoNum(filePath);
+//                        }
+//                    }
                     if (!isImageValid(file))
-                        StackPhotoRealm.deleteByPhotoNum(filePath);
+                        if (photoDB.getPhotoServerId() == null || photoDB.getPhotoServerId().isEmpty()
+                                && isPhotoOlderThan10Minutes(photoDB))
+                            StackPhotoRealm.deleteByPhotoNum(filePath);
                 }
             });
         } else {
@@ -234,6 +236,18 @@ public class PhotoReports {
         } catch (IOException e) {
             return false;
         }
+    }
+
+    public static boolean isPhotoOlderThan10Minutes(StackPhotoDB photoDB) {
+        if (photoDB == null || photoDB.getCreate_time() <= 0) {
+            return false; // Некорректные данные
+        }
+
+        long photoTimeSeconds = photoDB.getCreate_time(); // Время создания фото в секундах
+        long currentTimeSeconds = System.currentTimeMillis() / 1000; // Текущее время в секундах
+        long tenMinutesInSeconds = 10 * 60; // 10 минут в секундах
+
+        return (currentTimeSeconds - photoTimeSeconds) > tenMinutesInSeconds;
     }
 
     /**

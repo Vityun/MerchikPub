@@ -97,7 +97,8 @@ class StackPhotoDBViewModel @Inject constructor(
             ContextUI.SAMPLE_PHOTO_FROM_OPTION_157277,
             ContextUI.SAMPLE_PHOTO_FROM_OPTION_157354,
             ContextUI.STACK_PHOTO_FROM_OPTION_158605,
-            ContextUI.SAMPLE_PHOTO_FROM_OPTION_164355
+            ContextUI.SAMPLE_PHOTO_FROM_OPTION_164355,
+            ContextUI.SAMPLE_PHOTO_FROM_OPTION_169108
             -> {
 
                 try {
@@ -117,8 +118,13 @@ class StackPhotoDBViewModel @Inject constructor(
                         wpDataDB = RealmManager.INSTANCE.copyFromRealm(wpRow)
                     } else {
                         // Обработка ситуации, когда запись не найдена
-                        Toast.makeText(context,"Дані застаріли і не можуть бути змінені у додатку",Toast.LENGTH_LONG).show()
-                        Globals.writeToMLOG("ERROR", "StackPhotoDBViewModel.updateFilters",
+                        Toast.makeText(
+                            context,
+                            "Дані застаріли і не можуть бути змінені у додатку",
+                            Toast.LENGTH_LONG
+                        ).show()
+                        Globals.writeToMLOG(
+                            "ERROR", "StackPhotoDBViewModel.updateFilters",
                             "Exception e: $e"
                         )
                         return
@@ -153,6 +159,7 @@ class StackPhotoDBViewModel @Inject constructor(
                     ContextUI.SAMPLE_PHOTO_FROM_OPTION_158604 -> 41
                     ContextUI.SAMPLE_PHOTO_FROM_OPTION_157277 -> 26
                     ContextUI.SAMPLE_PHOTO_FROM_OPTION_157354 -> 42
+                    ContextUI.SAMPLE_PHOTO_FROM_OPTION_169108 -> 47
                     else -> 0 // Резервное значение, не должно использоваться
                 }
 
@@ -200,7 +207,8 @@ class StackPhotoDBViewModel @Inject constructor(
                 ContextUI.SAMPLE_PHOTO_FROM_OPTION_157277,
                 ContextUI.SAMPLE_PHOTO_FROM_OPTION_157354,
                 ContextUI.STACK_PHOTO_FROM_OPTION_158605,
-                ContextUI.SAMPLE_PHOTO_FROM_OPTION_164355
+                ContextUI.SAMPLE_PHOTO_FROM_OPTION_164355,
+                ContextUI.SAMPLE_PHOTO_FROM_OPTION_169108
                 -> {
                     var codeDad2: Long
                     var id: Int
@@ -232,6 +240,7 @@ class StackPhotoDBViewModel @Inject constructor(
                         ContextUI.SAMPLE_PHOTO_FROM_OPTION_158604 -> 41
                         ContextUI.SAMPLE_PHOTO_FROM_OPTION_157277 -> 26
                         ContextUI.SAMPLE_PHOTO_FROM_OPTION_157354 -> 42
+                        ContextUI.SAMPLE_PHOTO_FROM_OPTION_169108 -> 47
                         else -> 0 // Резервное значение, не должно использоваться
                     }
 
@@ -292,8 +301,10 @@ class StackPhotoDBViewModel @Inject constructor(
                 }
 
                 ContextUI.STACK_PHOTO_TO_FROM_PLANOGRAMM_VIZIT -> {
-                    VizitShowcaseDataHolder.getInstance()[planogrammId.value].photoDoId = it.photoServerId?.toIntOrNull() ?: 0
-                    VizitShowcaseDataHolder.getInstance()[planogrammId.value].photoDoHash = it.photo_hash ?: "0"
+                    VizitShowcaseDataHolder.getInstance()[planogrammId.value].photoDoId =
+                        it.photoServerId?.toIntOrNull() ?: 0
+                    VizitShowcaseDataHolder.getInstance()[planogrammId.value].photoDoHash =
+                        it.photo_hash ?: "0"
 
                     Log.e("!", "+")
                 }
@@ -314,7 +325,13 @@ class StackPhotoDBViewModel @Inject constructor(
                         dataJsonObject.get("wpDataDBId").asString.toLong()
                     )
                 val optionDB =
-                    RealmManager.INSTANCE.copyFromRealm(OptionsRealm.getOptionById(dataJsonObject.get("optionDBId").asString))
+                    RealmManager.INSTANCE.copyFromRealm(
+                        OptionsRealm.getOptionById(
+                            dataJsonObject.get(
+                                "optionDBId"
+                            ).asString
+                        )
+                    )
                 if (wpDataDB != null) {
                     val typePhotoId = when (contextUI) {
                         ContextUI.STACK_PHOTO_TO_FROM_PLANOGRAMM_VIZIT -> 14

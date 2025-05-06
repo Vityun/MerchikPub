@@ -40,9 +40,10 @@ public class TovarRequisites {
 
     private TovarDB tovar;
     private ReportPrepareDB reportPrepareDB;
-    private int photoType;
+    private final int photoType;
 
     public TovarRequisites() {
+        this.photoType = 4;
     }
 
     public TovarRequisites(TovarDB tovar, ReportPrepareDB reportPrepareDB) {

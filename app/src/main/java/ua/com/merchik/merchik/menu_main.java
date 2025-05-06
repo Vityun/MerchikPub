@@ -21,9 +21,6 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
-
-import androidx.preference.PreferenceManager;
-
 import android.provider.MediaStore;
 import android.text.Html;
 import android.text.SpannableString;
@@ -52,6 +49,7 @@ import androidx.core.content.ContextCompat;
 import androidx.core.content.FileProvider;
 import androidx.core.view.MenuItemCompat;
 import androidx.exifinterface.media.ExifInterface;
+import androidx.preference.PreferenceManager;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
@@ -74,7 +72,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import io.realm.Realm;
 import io.realm.RealmResults;
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
@@ -743,11 +740,12 @@ public class menu_main extends AppCompatActivity {
         globals.handlerCount.removeCallbacks(runnableCron10);
     }
 
-/*    @Override
+    @Override
     protected void onDestroy() {
         super.onDestroy();
-        globals.handlerCount.removeCallbacks(runnableCron10);
-    }*/
+        trecker.stopTracking(this);
+//        globals.handlerCount.removeCallbacks(runnableCron10);
+    }
 
 
     // Заполняем спинер типов фото
@@ -2380,7 +2378,7 @@ public class menu_main extends AppCompatActivity {
                 globals.alertDialogMsg(menu_main.this, "При возникновении этой ошибки - обратитесь к Вашему руководителю. Ошибка крона: " + e);
             }
 
-            globals.handlerCount.postDelayed(this, 10000);  //повтор раз в 10 секунд
+            globals.handlerCount.postDelayed(this, 15000);  //повтор раз в 15 секунд
         }
     };
 

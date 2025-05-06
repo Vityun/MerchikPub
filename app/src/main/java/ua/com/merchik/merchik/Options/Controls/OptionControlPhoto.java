@@ -232,7 +232,12 @@ public class OptionControlPhoto<T> extends OptionControl {
                         StackPhotoRealm.getPhotosByDAD2(dad2, photoType) :
                         StackPhotoRealm.getPhotosByRangeDt(dateFromForGetStackPhotoDB / 1000, dateToForGetStackPhotoDB / 1000, codeIZAForGetStackPhotoDB, adress, photoType);
 
-        String photoTypeName = ImagesTypeListRealm.getByID(photoType).getNm();
+        ImagesTypeListDB imagesType = ImagesTypeListRealm.getByID(photoType);
+        String photoTypeName;
+        if (imagesType != null && imagesType.getNm() != null)
+            photoTypeName = imagesType.getNm();
+        else
+            photoTypeName = "Не вдалося визначити тип фото";
 
 //        List<StackPhotoDB> stackPhotoDBList = RealmManager.INSTANCE.copyFromRealm(stackPhotoDB);
 //        подводим итог

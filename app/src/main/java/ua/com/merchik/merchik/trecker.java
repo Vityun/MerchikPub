@@ -37,6 +37,8 @@ public class trecker implements LocationListener {
 
     public static boolean switchedOff = true; // Выключен
 
+    private static LocationListener locationListener;
+
     static void SetUpLocationListener(Context context) {
 
         try {
@@ -52,7 +54,7 @@ public class trecker implements LocationListener {
             // Создание гео-менеджера
             LocationManager locationManager = (LocationManager)
                     context.getSystemService(LOCATION_SERVICE);
-            LocationListener locationListener = new trecker();
+            locationListener = new trecker();
 
             // Обновление гео-данных
             if (locationManager != null) {
@@ -61,8 +63,13 @@ public class trecker implements LocationListener {
                         0, 0, locationListener);
 
 //            if (locationManager.getAllProviders().contains(LocationManager.GPS_PROVIDER))
+                /*
+                06.05.2025 изменил частоту обновления с 0 секунд и 0 метров на 5 сек или 10 метров
+                 */
                 locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,
-                        0, 0, locationListener);
+                        5000L, 10f, locationListener); // 5 сек или 10 метров
+//                locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,
+//                        0, 0, locationListener);
 
                 Globals.writeToMLOG("INFO", "trecker/SetUpLocationListener/", "locationManager: " + locationManager);
 
@@ -89,6 +96,14 @@ public class trecker implements LocationListener {
         } catch (Exception e) {
             // todo запись в лог
         }
+    }
+
+    public static void stopTracking(Context context) {
+        LocationManager locationManager = (LocationManager) context.getSystemService(LOCATION_SERVICE);
+        if (locationManager != null) {
+            locationManager.removeUpdates(locationListener);
+        }
+        switchedOff = true;
     }
 
     @Override

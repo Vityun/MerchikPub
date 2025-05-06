@@ -291,7 +291,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                         || optionId == 165481   // Кнопка ЭФФИ
                         || optionId == 141069   // Кнопка "Сравнение Остатков с Наличием"
                         || optionId == 168598   // Кнопка "Мнение о посещении"
-                        || optionId == 169109   // фото POS материалов (46)
+                        || optionId == 169108   // фото POS материалов (46)
                 ) {
                     optionButton.setBackgroundResource(R.drawable.bg_temp);
                     textInteger2.setVisibility(View.VISIBLE);
@@ -692,6 +692,24 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
 
                             break;
 
+                        case 169108:
+                            SpannableString spannableString169108 = setPhotoCountsMakeAndMust(optionsButtons, RealmManager.stackPhotoShowcasePhotoCount(dad2, 47));
+                            spannableString169108.setSpan(new UnderlineSpan(), 0, spannableString169108.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+
+                            textInteger.setText(spannableString169108);
+                            textInteger.setOnClickListener(v -> {
+                                Intent intent = new Intent(mContext, FeaturesActivity.class);
+                                Bundle bundle = new Bundle();
+                                bundle.putString("viewModel", StackPhotoDBViewModel.class.getCanonicalName());
+                                bundle.putString("contextUI", ContextUI.SAMPLE_PHOTO_FROM_OPTION_169108.toString());
+                                bundle.putString("modeUI", ModeUI.DEFAULT.toString());
+                                bundle.putString("dataJson", new Gson().toJson(dad2));
+                                bundle.putString("title", "Перелік фото звітів");
+                                bundle.putString("subTitle", "Справочник Фото" + ": " + ImagesTypeListRealm.getByID(47).getNm());
+                                intent.putExtras(bundle);
+                                ActivityCompat.startActivityForResult((Activity) mContext, intent, NEED_UPDATE_UI_REQUEST, null);
+                            });
+                            break;
                         case (158604):
 //                            textInteger.setText(
 //                                    setPhotoCountsMakeAndMust(optionsButtons, RealmManager.stackPhotoShowcasePhotoCount(dad2, 41)),
@@ -1218,6 +1236,9 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                 Log.e("R_TRANSLATES", "onBindViewHolder: " + siteObjectsSDB);
             }
 
+            if (optionsButtons.getOptionId().equals("169108"))
+                Log.e("R_TRANSLATES", "onBindViewHolder: " + "siteObjectsSDB.id");
+
             viewHolder.bind(optionsButtons, siteObjectsSDB);
         } catch (Exception e) {
             Globals.writeToMLOG("INFO", "RecycleViewDRAdapter/onBindViewHolder", "Exception e: " + e);
@@ -1536,6 +1557,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
             if (option.getOptionId().equals("151139")
                     || option.getOptionId().equals("164351")
                     || option.getOptionControlId().equals("164351")
+                    || option.getOptionId().equals("169108")
             ) min = "1";
             else if (option.getOptionId().equals("164355"))
                 min = "0";

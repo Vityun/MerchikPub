@@ -132,6 +132,7 @@ class SamplePhotoSDBViewModel @Inject constructor(
                             TovarRequisites(tovarDB, reportPrepareDB)
                     }
 
+                    MakePhoto.photoType = typePhotoId.toString()
                     req
                         .createDialog(
                             context,
@@ -170,6 +171,8 @@ class SamplePhotoSDBViewModel @Inject constructor(
                                 MakePhoto.example_img_id = it.toString()
                             }
                         }
+
+                        MakePhoto.photoType = typePhotoId.toString()
 
                         makePhoto.pressedMakePhotoOldStyle<WpDataDB>(
                             context as Activity,

@@ -31,7 +31,7 @@ import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
-import ua.com.merchik.merchik.Activities.PhotoDownloaderViewModel;
+import ua.com.merchik.merchik.Activities.CronchikViewModel;
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.DownloadPictureService;
 import ua.com.merchik.merchik.Globals;
@@ -67,7 +67,7 @@ public class PhotoDownload {
 //    public final Globals globals = new Globals();
 
     private final ExecutorService executorService;
-    private final PhotoDownloaderViewModel viewModel;
+    private final CronchikViewModel viewModel;
     private final AtomicInteger activeTasks = new AtomicInteger(0); // Счетчик активных задач
 
     public PhotoDownload() {
@@ -80,7 +80,7 @@ public class PhotoDownload {
         this.viewModel = null;
     }
 
-    public PhotoDownload(ExecutorService executor, PhotoDownloaderViewModel viewModel) {
+    public PhotoDownload(ExecutorService executor, CronchikViewModel viewModel) {
         this.executorService = executor;
         this.viewModel = viewModel;
     }

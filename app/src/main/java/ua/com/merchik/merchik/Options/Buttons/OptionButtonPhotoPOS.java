@@ -14,13 +14,13 @@ import ua.com.merchik.merchik.data.RealmModels.OptionsDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.data.WPDataObj;
 
-public class OptionButtonPhotoDMP<T> extends OptionControl {
-    public int OPTION_BUTTON_PhotoDMP_ID = 157354;
+public class OptionButtonPhotoPOS<T> extends OptionControl {
+    public int OPTION_BUTTON_PhotoDMP_ID = 169108;
 
     private WpDataDB wpDataDB;
     private final WorkPlan workPlan = new WorkPlan();
 
-    public OptionButtonPhotoDMP(Context context, T document, OptionsDB optionDB, OptionMassageType msgType, Options.NNKMode nnkMode, UnlockCodeResultListener unlockCodeResultListener) {
+    public OptionButtonPhotoPOS(Context context, T document, OptionsDB optionDB, OptionMassageType msgType, Options.NNKMode nnkMode, UnlockCodeResultListener unlockCodeResultListener) {
         this.context = context;
         this.document = document;
         this.optionDB = optionDB;
@@ -32,7 +32,6 @@ public class OptionButtonPhotoDMP<T> extends OptionControl {
     }
 
     private void getDocumentVar() {
-        Log.e("OptionControlTask", "here");
         if (document instanceof WpDataDB) {
             this.wpDataDB = (WpDataDB) document;
         }
@@ -42,12 +41,12 @@ public class OptionButtonPhotoDMP<T> extends OptionControl {
         new Globals().fixMP(wpDataDB, null);// Фиксация Местоположения в таблице ЛогМп
         try {
             WPDataObj wpDataObj = workPlan.getKPS(wpDataDB.getId());
-            wpDataObj.setPhotoType("42");
+            wpDataObj.setPhotoType("47");
 
             MakePhoto makePhoto = new MakePhoto();
             makePhoto.pressedMakePhotoOldStyle((Activity) context, wpDataObj, wpDataDB, optionDB);
         } catch (Exception e) {
-            Globals.writeToMLOG("ERROR", "OptionButtonPhotoDMP/executeOption/Exception", "Exception e: " + e);
+            Globals.writeToMLOG("ERROR", "OptionButtonPhotoPOS/executeOption/Exception", "Exception e: " + e);
         }
     }
 }

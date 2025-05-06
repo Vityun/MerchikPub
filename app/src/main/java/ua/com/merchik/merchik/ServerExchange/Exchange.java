@@ -11,11 +11,7 @@ import android.content.Context;
 import android.content.ContextWrapper;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.os.Handler;
-import android.os.Looper;
 import android.util.Log;
-
-import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -30,7 +26,6 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadPoolExecutor;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.observers.DisposableCompletableObserver;
@@ -41,7 +36,7 @@ import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
-import ua.com.merchik.merchik.Activities.PhotoDownloaderViewModel;
+import ua.com.merchik.merchik.Activities.CronchikViewModel;
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.ServerExchange.Constants.ReclamationPercentageExchange;
@@ -76,7 +71,6 @@ import ua.com.merchik.merchik.data.Database.Room.DossierSotrSDB;
 import ua.com.merchik.merchik.data.Database.Room.EKL_SDB;
 import ua.com.merchik.merchik.data.Database.Room.LanguagesSDB;
 import ua.com.merchik.merchik.data.Database.Room.OblastSDB;
-import ua.com.merchik.merchik.data.Database.Room.SamplePhotoSDB;
 import ua.com.merchik.merchik.data.Database.Room.ShowcaseSDB;
 import ua.com.merchik.merchik.data.Database.Room.SiteAccountSDB;
 import ua.com.merchik.merchik.data.Database.Room.SiteUrlSDB;
@@ -129,7 +123,6 @@ import ua.com.merchik.merchik.data.RetrofitResponse.tables.update.wpdata.WpDataU
 import ua.com.merchik.merchik.data.ServerData.TARCommentsData.AdditionalRequirementsMarks.AdditionalRequirementsMarksListServerData;
 import ua.com.merchik.merchik.data.ServerData.TARCommentsData.AdditionalRequirementsMarks.AdditionalRequirementsSendMarksServerData;
 import ua.com.merchik.merchik.data.ServerData.TARCommentsData.TARCommentData.TARCommentsServerData;
-import ua.com.merchik.merchik.data.TEST_DATA;
 import ua.com.merchik.merchik.data.TestJsonUpload.PhotoFromSite.PhotoInformation;
 import ua.com.merchik.merchik.data.TestJsonUpload.PhotoFromSite.PhotoInformationData;
 import ua.com.merchik.merchik.data.TestJsonUpload.PhotoFromSite.PhotoTableRequest;
@@ -146,7 +139,6 @@ import ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsMarkRe
 import ua.com.merchik.merchik.database.realm.tables.StackPhotoRealm;
 import ua.com.merchik.merchik.database.realm.tables.TARCommentsRealm;
 import ua.com.merchik.merchik.database.realm.tables.WpDataRealm;
-import ua.com.merchik.merchik.dialogs.BlockingProgressDialog;
 import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.dialogs.DialogFilter.Click;
 import ua.com.merchik.merchik.dialogs.EKL.EKLRequests;
@@ -177,7 +169,7 @@ public class Exchange {
 
     private final PhotoDownload server;
 
-    private PhotoDownloaderViewModel viewModel;
+    private CronchikViewModel viewModel;
 //    public final ThreadPoolExecutor executorService =
 //            (ThreadPoolExecutor) Executors.newFixedThreadPool(8);
     /**
@@ -188,16 +180,16 @@ public class Exchange {
         this.server = new PhotoDownload(executor);
     }
 
-    public Exchange(PhotoDownloaderViewModel viewModel) {
+    public Exchange(CronchikViewModel viewModel) {
         this.server = new PhotoDownload(executor, viewModel);
         this.viewModel = viewModel;
     }
 
-    public PhotoDownloaderViewModel getViewModel() {
+    public CronchikViewModel getViewModel() {
         return viewModel;
     }
 
-    public void setViewModel(PhotoDownloaderViewModel viewModel) {
+    public void setViewModel(CronchikViewModel viewModel) {
         this.viewModel = viewModel;
     }
 
@@ -2373,11 +2365,16 @@ public class Exchange {
      */
     public void sendWpDataToServer(Click result) {
 
+        List<StartEndData> wpdataStartEnd = RealmManager.getWpDataStartEndWork();
+        if (wpdataStartEnd.isEmpty()) {
+            result.onFailure("Нет даных");
+            return;
+        }
 
         UploadDataSEWork data = new UploadDataSEWork();
         data.mod = "plan";
         data.act = "update_data";
-        data.data = RealmManager.getWpDataStartEndWork();
+        data.data = wpdataStartEnd;
 
         JsonObject convertedObject = new Gson().fromJson(new Gson().toJson(data), JsonObject.class);
 

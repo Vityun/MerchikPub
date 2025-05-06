@@ -91,8 +91,6 @@ public class OptionButtonAddComment<T> extends OptionControl {
                         wpDataDB.startUpdate = true;
 
                         realm.copyToRealmOrUpdate(wpDataDB);
-
-
                     });
 //startUpdate: true
                     Toast.makeText(dialog.context, "Комментарий: '" + comment + "' сохранён", Toast.LENGTH_LONG).show();

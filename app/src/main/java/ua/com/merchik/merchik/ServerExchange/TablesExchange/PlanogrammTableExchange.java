@@ -97,14 +97,12 @@ public class PlanogrammTableExchange {
                                             .subscribe(new DisposableCompletableObserver() {
                                                 @Override
                                                 public void onComplete() {
-                                                    Log.d("test", "test");
                                                     Globals.writeToMLOG("INFO", "PlanogrammTableExchange/planogramDownload/onResponse/onComplete", "OK: " + response.body().list.size());
 //                                                    click.onSuccess(response.body().list);
                                                 }
 
                                                 @Override
                                                 public void onError(@io.reactivex.rxjava3.annotations.NonNull Throwable e) {
-                                                    Log.d("test", "test");
                                                     Globals.writeToMLOG("ERROR", "PlanogrammTableExchange/planogramDownload/onResponse/onError", "Throwable e: " + e);
                                                     click.onFailure("onError SQL_DB.planogramDownload().insertAll Throwable e: " + e);
                                                 }
@@ -131,6 +129,8 @@ public class PlanogrammTableExchange {
             @Override
             public void onFailure(Call<PlanogrammResponse> call, Throwable t) {
                 Log.e("MAIN_test", "planogramDownload: " + t);
+                Globals.writeToMLOG("ERROR", "PlanogrammTableExchange/planogramDownload/onFailure", "Exception e: " + t.getMessage());
+
             }
         });
     }

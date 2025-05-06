@@ -80,6 +80,7 @@ import ua.com.merchik.merchik.Options.Buttons.OptionButtonAddNewClient;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonAddNewFriend;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonAvailabilityDetailedReport;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonHistoryMP;
+import ua.com.merchik.merchik.Options.Buttons.OptionButtonPhotoPOS;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonPlanogrammVizit;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonUserOpinion;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonPhotoAktionTovar;
@@ -1980,6 +1981,10 @@ public class Options {
 
             case 157354:
                 new OptionButtonPhotoDMP<>(context, dataDB, option, type, mode, unlockCodeResultListener);
+                break;
+
+            case 169108:
+                new OptionButtonPhotoPOS<>(context, dataDB, option, type, mode, unlockCodeResultListener);
                 break;
 
             case 80977:     // Контроль Акций

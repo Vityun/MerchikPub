@@ -563,6 +563,7 @@ public class MakePhoto {
             } else {
                 WpDataDB wpDataDB = (WpDataDB) data;
                 wpDataObj = workPlan.getKPS(wpDataDB.getId());
+                wpDataObj.setPhotoType(photoType);
             }
             MakePhoto.photoType = photoType;
             MakePhoto.tovarId = tovarId;
@@ -591,7 +592,8 @@ public class MakePhoto {
     private <T> void choiceCustomerGroupAndPhoto2(Activity activity, WPDataObj wp, T data, OptionsDB optionsDB, Clicks.clickVoid clickVoid) {
         if (wp.getCustomerTypeGrp() != null) {
             final String[] result = wp.getCustomerTypeGrp().values().toArray(new String[0]);
-            if (wp.getCustomerTypeGrp().size() > 1 && !wp.getPhotoType().equals("5")) {
+            if (wp.getCustomerTypeGrp().size() > 1 && !wp.getPhotoType().equals("5")
+            && !wp.getPhotoType().equals("47")) {
                 new AlertDialog.Builder(activity)
                         .setTitle("Выберите группу товара для следующего фото: ")
                         .setItems(result, (dialog, which) -> {
@@ -617,7 +619,7 @@ public class MakePhoto {
 //                photoDialogs(activity, wp, data, optionsDB);
                 photoDialogsNEW(activity, wp, data, optionsDB, clickVoid);
             } else {
-                if (!wp.getPhotoType().equals("5")) {
+                if (!wp.getPhotoType().equals("5") && !wp.getPhotoType().equals("47")) {
                     globals.alertDialogMsg(activity, "Не обнаружено ни одной группы товаров по данному клиенту. Сообщите об этом Администратору!");
                 }
                 wp.setCustomerTypeGrpS("");
