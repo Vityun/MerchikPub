@@ -2820,17 +2820,19 @@ public class TablesLoadingUnloading {
                 @Override
                 public void onResponse(retrofit2.Call<AdditionalRequirementsServerData> call, retrofit2.Response<AdditionalRequirementsServerData> response) {
                     try {
-                        if (response.body() != null && response.body().getList() != null
-                                && !response.body().getList().isEmpty()) {
+                        if (response.isSuccessful())
+                            if (response.body() != null && response.body().getList() != null
+                                    && !response.body().getList().isEmpty()) {
 
-                            AdditionalRequirementsRealm.setDataToDB(response.body().getList());
+                                AdditionalRequirementsRealm.setDataToDB(response.body().getList());
 
-                            RealmManager.INSTANCE.executeTransaction(realm -> {
-                                synchronizationTimetableDB.setVpi_app(System.currentTimeMillis() / 1000);
-                                realm.copyToRealmOrUpdate(synchronizationTimetableDB);
-                            });
+                                RealmManager.INSTANCE.executeTransaction(realm -> {
+                                    synchronizationTimetableDB.setVpi_app(System.currentTimeMillis() / 1000);
+                                    realm.copyToRealmOrUpdate(synchronizationTimetableDB);
+                                });
+                                Globals.writeToMLOG("ERR", "downloadAdditionalRequirements/onResponse", "response.body().getList(): " + response.body().getList().size());
 
-                        }
+                            }
 //                        Set<Integer> uniqueIds = new HashSet<>();
 //                        List<AdditionalRequirementsDB> uniqueData = new ArrayList<>();
 //                        for (AdditionalRequirementsDB item : response.body().getList()) {
@@ -2841,7 +2843,7 @@ public class TablesLoadingUnloading {
 //                        }
 //                        AdditionalRequirementsRealm.setDataToDB(uniqueData);
 
-                        Globals.writeToMLOG("ERR", "downloadAdditionalRequirements/onResponse", "response.body().getList(): " + response.body().getList().size());
+                        Globals.writeToMLOG("ERR", "downloadAdditionalRequirements/onResponse", "response +");
                     } catch (Exception e) {
                         Globals.writeToMLOG("ERR", "downloadAdditionalRequirements/onResponse", "Exception e: " + e);
                     }

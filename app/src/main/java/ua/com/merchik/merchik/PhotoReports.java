@@ -259,7 +259,10 @@ public class PhotoReports {
         for (StackPhotoDB photo : res) {
             if (photo != null && !realmResults.contains(photo) && realmResults.size() < 20) {
 //            if (photo != null) {
-                realmResults.add(photo);
+                String filePath = photo.getPhoto_num();
+                File file = new File(filePath);
+                if (file.exists() && file.length() > 1)
+                    realmResults.add(photo);
             }
         }
 

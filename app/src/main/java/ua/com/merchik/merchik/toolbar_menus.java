@@ -1393,7 +1393,6 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
 
             cronCheckUploadsPhotoOnServer();                // Получение инфы о "загруженности" фоток
 
-
             // Если включена Автовыгрузка/Автообмен
             if (Globals.autoSend && internetStatus == 1) {
 //                getPhotoAndUpload(1);   // Выгрузка фото

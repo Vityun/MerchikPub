@@ -381,20 +381,20 @@ public class PlanogrammTableExchange {
         JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
         Log.e("MAIN_test", "planogramDownload convertedObject: " + convertedObject);
 
-        retrofit2.Call<JsonObject> call1 = RetrofitBuilder.getRetrofitInterface().TEST_JSON_UPLOAD(RetrofitBuilder.contentType, convertedObject);
-        call1.enqueue(new Callback<JsonObject>() {
-            @Override
-            public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
-                Log.e("planogramDownload", "planogramDownload: " + response.body());
-                Globals.writeToMLOG("INFO", "1_D_PlanogrammSDB", "response: " + response.body());
-            }
-
-            @Override
-            public void onFailure(Call<JsonObject> call, Throwable t) {
-                Log.e("planogramDownload", "planogramDownloadThrowable t: " + t);
-                Globals.writeToMLOG("INFO", "1_D_PlanogrammSDB", "Throwable t: " + t);
-            }
-        });
+//        retrofit2.Call<JsonObject> call1 = RetrofitBuilder.getRetrofitInterface().TEST_JSON_UPLOAD(RetrofitBuilder.contentType, convertedObject);
+//        call1.enqueue(new Callback<JsonObject>() {
+//            @Override
+//            public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
+//                Log.e("planogramDownload", "planogramDownload: " + response.body());
+//                Globals.writeToMLOG("INFO", "1_D_PlanogrammSDB", "response: " + response.body());
+//            }
+//
+//            @Override
+//            public void onFailure(Call<JsonObject> call, Throwable t) {
+//                Log.e("planogramDownload", "planogramDownloadThrowable t: " + t);
+//                Globals.writeToMLOG("INFO", "1_D_PlanogrammSDB", "Throwable t: " + t);
+//            }
+//        });
 
         retrofit2.Call<PlanogrammResponse> call = RetrofitBuilder.getRetrofitInterface().Planogramm_RESPONSE(RetrofitBuilder.contentType, convertedObject);
         call.enqueue(new Callback<PlanogrammResponse>() {
