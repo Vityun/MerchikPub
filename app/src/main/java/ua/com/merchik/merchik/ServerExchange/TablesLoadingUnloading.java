@@ -160,7 +160,7 @@ public class TablesLoadingUnloading {
 
         try {
 //            Exchange.sendWpData2();
-            updateWpData();
+//            updateWpData();
 
             downloadWPData();
 
@@ -333,23 +333,6 @@ public class TablesLoadingUnloading {
     }
 
 
-    /**
-     * 18.08,2020
-     * <p>
-     * Выгрузка таблиц
-     */
-    public void uploadAllTables(Context context) {
-        try {
-            uploadReportPrepareToServer();
-
-
-            updateWpData();
-        } catch (Exception e) {
-            // Запись в лог
-        }
-
-    }
-
 
     public void downloadWPData() {
         Log.e("SERVER_REALM_DB_UPDATE", "===================================downloadWPData_START");
@@ -359,8 +342,14 @@ public class TablesLoadingUnloading {
         String date_from = Clock.getDatePeriod(-21);
 //        String date_from = timeYesterday7;
         String date_to = timeTomorrow;
+        long vpi;
 
-//        BlockingProgressDialog pg = BlockingProgressDialog.show(context, "Обмен данными с сервером.", "Обновление таблицы: " + "План работ");
+        SynchronizationTimetableDB sTable = RealmManager.getSynchronizationTimetableRowByTable("wp_data");
+        if (sTable != null) {
+            Globals.writeToMLOG("INFO", "TablesLoadingUnloading/downloadWPData/getSynchronizationTimetableRowByTable", "sTable: " + sTable);
+            vpi = sTable.getVpi_app();
+            Log.e("updateWpData", "vpi: " + vpi);
+        } else vpi = 0;
 
 //        try {
 //            retrofit2.Call<JsonObject> call = RetrofitBuilder.getRetrofitInterface().GET_WPDATA_VPI_JSON(mod, act, date_from, date_to, 0);
@@ -379,23 +368,24 @@ public class TablesLoadingUnloading {
 
         try {
             Log.e("TAG_TEST_WP", "RESPONSE_0 T");
-            retrofit2.Call<WpDataServer> call = RetrofitBuilder.getRetrofitInterface().wpData(mod, act, date_from, date_to);
+            retrofit2.Call<WpDataServer> call = RetrofitBuilder.getRetrofitInterface().GET_WPDATA_VPI(mod, act, date_from, date_to, vpi);
             call.enqueue(new retrofit2.Callback<WpDataServer>() {
                 @Override
                 public void onResponse(retrofit2.Call<WpDataServer> call, retrofit2.Response<WpDataServer> response) {
                     if (response.isSuccessful() && response.body() != null) {
                         Log.e("SERVER_REALM_DB_UPDATE", "===================================downloadWPData_:" + response.body().getState() + "/" + response.body().getError());
-                        if (response.body().getList() != null) {
-                            Log.e("SERVER_REALM_DB_UPDATE", "===================================WPDataSIZE: " + response.body().getList().size());
-                        } else {
-                            Log.e("SERVER_REALM_DB_UPDATE", "===================================WPDataSIZE: NuLL");
-                        }
 
                         if (response.body().getState()) {
                             List<WpDataDB> wpDataDBList = response.body().getList();
                             RealmManager.setWpData(wpDataDBList);
 
                             downloadTovarTable(null, wpDataDBList);
+                            RealmManager.INSTANCE.executeTransaction(realm -> {
+                                if (sTable != null) {
+                                    sTable.setVpi_app(System.currentTimeMillis() / 1000);
+                                    realm.copyToRealmOrUpdate(sTable);
+                                }
+                            });
 //                            Globals.writeToMLOG("INFO", "PetrovExchangeTest/startExchange/downloadWPData/onSuccess", "(response.body().getList(): " + response.body().getList().size());
 //                            if (RealmManager.setWpData(response.body().getList())) {
 //                                if (pg != null)
@@ -1713,7 +1703,7 @@ public class TablesLoadingUnloading {
         String act = "list";
         String date_from = timeYesterday;
         String date_to = timeTomorrow;
-        long vpi = 0;
+        long vpi;
 
         SynchronizationTimetableDB sTable = RealmManager.getSynchronizationTimetableRowByTable("wp_data");
         if (sTable != null) {
@@ -1755,12 +1745,8 @@ public class TablesLoadingUnloading {
                                         RealmManager.INSTANCE.executeTransaction(realm -> {
                                             if (sTable != null) {
                                                 long vpiApp = System.currentTimeMillis() / 1000;
-                                                Log.e("updateWpData", "ЗАписал когда обновился" + vpiApp);
-
                                                 sTable.setVpi_app(vpiApp);
-
-                                                Log.e("updateWpData", "sTable: " + sTable);
-                                                realm.insertOrUpdate(sTable);
+                                                realm.copyToRealmOrUpdate(sTable);
                                             }
                                         }); //
                                         if (wpToUpload != null) {

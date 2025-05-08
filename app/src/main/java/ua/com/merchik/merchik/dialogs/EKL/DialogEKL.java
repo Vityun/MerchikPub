@@ -561,7 +561,7 @@ public class DialogEKL {
                 @Override
                 public void afterTextChanged(Editable s) {
                     Log.e("DialogEKL", "afterTextChanged: " + s);
-                    if (s.length() > 4) {
+                    if (s.length() > 4 && user != null) {
                         buttonCheck.setBackgroundResource(R.drawable.bg_temp);
                     } else {
                         buttonCheck.setBackgroundResource(R.drawable.button_bg_inactive);
@@ -577,6 +577,8 @@ public class DialogEKL {
                 Log.e("DialogEKL", "buttonCheck/editText text LENGHT: " + editTextCode.length());
                 Log.e("DialogEKL", "buttonCheck/ekl: " + ekl.id);
 
+                if (user == null)
+                    return;
 
                 // Проверка на наличие кода и правильное его
                 if (editTextCode.length() >= 4 && editTextCode.length() < 6) {
@@ -626,7 +628,7 @@ public class DialogEKL {
                         if (errorData.getErrorMessage() != null && !errorData.getErrorMessage().isEmpty())
                             subTitle = "Відповідь від сервера";
                         new MessageDialogBuilder(unwrap(context))
-                                .setTitle(errorData.getErrorParams().getTitle() != null ?
+                                .setTitle(errorData.getErrorParams() != null && errorData.getErrorParams().getTitle() != null ?
                                         errorData.getErrorParams().getTitle() : "Виникла помилка")
                                 .setSubTitle(subTitle)
                                 .setStatus(DialogStatus.ERROR)
@@ -761,7 +763,7 @@ public class DialogEKL {
 
                     if (errorData.getErrorType().equals("error_messenger_not_registered")) {
                         new MessageDialogBuilder(unwrap(context))
-                                .setTitle(errorData.getErrorParams().getTitle() != null ?
+                                .setTitle(errorData.getErrorParams() != null && errorData.getErrorParams().getTitle() != null ?
                                         errorData.getErrorParams().getTitle() : "УВАГА!")
                                 .setSubTitle(subTitle)
                                 .setStatus(DialogStatus.ERROR)
@@ -1073,7 +1075,7 @@ public class DialogEKL {
                                 if (errorData.getErrorMessage() != null && !errorData.getErrorMessage().isEmpty())
                                     subTitle = "Відповідь від сервера";
                                 new MessageDialogBuilder(unwrap(context))
-                                        .setTitle(errorData.getErrorParams().getTitle() != null ?
+                                        .setTitle(errorData.getErrorParams() != null && errorData.getErrorParams().getTitle() != null ?
                                                 errorData.getErrorParams().getTitle() : "При отправке кода ЭКЛ возникла ошибка, повторите попытку позже или обратитесь к Вашему руководителю.")
                                         .setSubTitle(subTitle)
                                         .setStatus(DialogStatus.ERROR)
@@ -1334,7 +1336,7 @@ public class DialogEKL {
 
             data.data = list;
 
-            if (data.data.size() == 0) {
+            if (data.data.isEmpty()) {
                 Toast.makeText(context, "Данных на выгрузку нет", Toast.LENGTH_LONG).show();
                 return;
             }

@@ -66,10 +66,10 @@ public class TovarRequisites {
         DialogData res = new DialogData(context);
 
         TovarOptions tovarOptions;
-        if (photoType != 4){
+        if (photoType != 4) {
             tovarOptions = new TovarOptions().createTovarOptionPhotoType();
             res.setTitle("Фото вiтрини (наближене)");
-        } else{
+        } else {
             tovarOptions = new TovarOptions().createTovarOptionPhoto();
             res.setTitle("");
         }
@@ -100,7 +100,8 @@ public class TovarRequisites {
                         if (DetailedReportOptionsFrag.PermissionUtils.checkReadExternalStoragePermission(context)) {
                             Globals.writeToMLOG("INFO", "Вибрати з галереї", "DetailedReportOptionsFrag.PermissionUtils.checkReadExternalStoragePermission(context)");
                             MakePhotoFromGaleryWpDataDB = wpDataDB;
-//                            MakePhotoFromGalery.tovarId = reportPrepareDB.tovarId;
+                            if (photoType != 4)
+                                MakePhotoFromGalery.tovarId = reportPrepareDB.tovarId;
                             MakePhotoFromGalery.photoType = photoType;
                             Intent intent = new Intent(Intent.ACTION_PICK);
                             intent.setType("image/*");
@@ -114,7 +115,7 @@ public class TovarRequisites {
                             DetailedReportOptionsFrag.PermissionUtils.requestReadExternalStoragePermission((AppCompatActivity) context);
                             Globals.writeToMLOG("INFO", "Вибрати з галереї", "Запрос доступа");
                         }
-                    }catch (Exception e){
+                    } catch (Exception e) {
                         Globals.writeToMLOG("INFO", "Вибрати з галереї", "Exception e: " + Arrays.toString(e.getStackTrace()));
                     }
 

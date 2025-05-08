@@ -335,7 +335,6 @@ public class RealmManager {
         INSTANCE.beginTransaction();
 //        INSTANCE.delete(OptionsDB.class);
         List<OptionsDB> res = INSTANCE.copyToRealmOrUpdate(optionsDBS);
-
         try {
             globals.writeToMLOG(Clock.getHumanTime() + "_INFO.RealmManager.class.setOptions.Размер сохранённого списка: " + res.size() + "\n");
         } catch (Exception e) {
@@ -349,7 +348,7 @@ public class RealmManager {
 
     public static void saveDownloadedOptions(List<OptionsDB> optionsDBS) {
         INSTANCE.beginTransaction();
-        List<OptionsDB> res = INSTANCE.copyToRealmOrUpdate(optionsDBS);
+        INSTANCE.copyToRealmOrUpdate(optionsDBS);
         INSTANCE.commitTransaction();
     }
 

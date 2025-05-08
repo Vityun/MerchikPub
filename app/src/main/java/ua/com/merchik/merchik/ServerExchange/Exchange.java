@@ -88,6 +88,9 @@ import ua.com.merchik.merchik.data.RealmModels.SynchronizationTimetableDB;
 import ua.com.merchik.merchik.data.RealmModels.TARCommentsDB;
 import ua.com.merchik.merchik.data.RealmModels.TovarDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
+import ua.com.merchik.merchik.data.RetrofitResponse.Location.LocationList;
+import ua.com.merchik.merchik.data.RetrofitResponse.TovarImgList;
+import ua.com.merchik.merchik.data.RetrofitResponse.VacancyItemResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.models.AdditionalMaterialsAddressResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.models.AdditionalMaterialsGroupsResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.models.AdditionalMaterialsLinksResponse;
@@ -97,14 +100,11 @@ import ua.com.merchik.merchik.data.RetrofitResponse.models.BonusResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.models.ConductWpDataResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.models.DossierSotrItemResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.models.DossierSotrResponse;
-import ua.com.merchik.merchik.data.RetrofitResponse.Location.LocationList;
 import ua.com.merchik.merchik.data.RetrofitResponse.models.SiteAccountItemResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.models.SiteAccountResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.models.SiteURLItemResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.models.SiteURLResponse;
-import ua.com.merchik.merchik.data.RetrofitResponse.TovarImgList;
 import ua.com.merchik.merchik.data.RetrofitResponse.models.TovarImgResponse;
-import ua.com.merchik.merchik.data.RetrofitResponse.VacancyItemResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.models.VacancyResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.photos.ImagesViewListImageList;
 import ua.com.merchik.merchik.data.RetrofitResponse.photos.ImagesViewListImageResponse;
@@ -164,7 +164,7 @@ public class Exchange {
     public final int retryTime = 600000;     // 10
 //    private int retryTime = 60000;     // 1
 
-//    private final ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+    //    private final ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
     private final ExecutorService executor = Executors.newFixedThreadPool(16);
 
     private final PhotoDownload server;
@@ -172,6 +172,7 @@ public class Exchange {
     private CronchikViewModel viewModel;
 //    public final ThreadPoolExecutor executorService =
 //            (ThreadPoolExecutor) Executors.newFixedThreadPool(8);
+
     /**
      * 26.02.2021
      * Енум для опозначения какие данные мы будем отправлять на всервер.
@@ -1280,7 +1281,12 @@ public class Exchange {
     }
     // ====================================^=^=^=^=^================================================
 
+    private static boolean isTARUploading = false;
+
     public void sendTAR() {
+        if (isTARUploading) return;
+        isTARUploading = true;
+
         TARUpload data = new TARUpload();
         data.mod = "reclamation";
         data.act = "create";
@@ -1288,8 +1294,10 @@ public class Exchange {
         // Получаю на выгрузку ЗИР (таблицу)
 //        List<TasksAndReclamationsDB> list = TasksAndReclamationsRealm.getToUnload();
         List<TasksAndReclamationsSDB> tarList = SQL_DB.tarDao().getByUploadStatus(1);
-        if (tarList == null || tarList.isEmpty())
+        if (tarList == null || tarList.isEmpty()) {
+            isTARUploading = false;
             return;
+        }
 
         // Создаю данные на выгрузку (запрос)
         List<TARUploadData> dataList = new ArrayList<>();
@@ -1324,26 +1332,29 @@ public class Exchange {
         Log.e("sendTAR", "list.size(): " + tarList.size());
 
 
-        if (tarList.size() > 0) {
+        if (!tarList.isEmpty()) {
             retrofit2.Call<JsonObject> call = RetrofitBuilder.getRetrofitInterface().TEST_JSON_UPLOAD(RetrofitBuilder.contentType, convertedObject);
             call.enqueue(new retrofit2.Callback<JsonObject>() {
                 @Override
                 public void onResponse(retrofit2.Call<JsonObject> call, retrofit2.Response<JsonObject> response) {
                     try {
+                        isTARUploading = false;
                         globals.writeToMLOG(Clock.getHumanTime() + "_INFO.Exchange.class.sendTAR.onResponse.response: " + convertedObject + "\n");
                     } catch (Exception e) {
                         Log.e("sendTAR", "e: " + e);
+                        isTARUploading = false;
                         globals.writeToMLOG(Clock.getHumanTime() + "_INFO.Exchange.class.sendTAR.onResponse.ERROR_1: " + e + "\n");
                     }
                 }
 
                 @Override
                 public void onFailure(retrofit2.Call<JsonObject> call, Throwable t) {
-                    Log.e("sendTAR", "t: " + t);
+                    isTARUploading = false;
                     globals.writeToMLOG(Clock.getHumanTime() + "_INFO.Exchange.class.sendTAR.onFailure.ERR: " + t + "\n");
                 }
             });
         } else {
+            isTARUploading = false;
             globals.writeToMLOG(Clock.getHumanTime() + "_INFO.Exchange.class.sendTAR.Failure.DataList empty" + "\n");
         }
 
@@ -1671,7 +1682,6 @@ public class Exchange {
         data.date_from = Clock.today_30; // 27.02.25 поменял на 30 дней, но загружать фото буду как и раньше за 7 дней
         data.date_to = Clock.tomorrow7;
 //        data.date_to = Clock.today; 10.10.23. скрыл ибо им мешало.
-
 
 
         WpDataRealm.UserPostRes info = WpDataRealm.userPost(Globals.userId);
@@ -2294,10 +2304,17 @@ public class Exchange {
      * 31.03.2021
      * Новая отправка на сервер данных о Начале/Конце работы
      */
+    private static boolean isWpData2Uploading = false;
+
     public void sendWpData2() {
+        if (isWpData2Uploading) return;
+        isWpData2Uploading = true;
+
         List<StartEndData> wpdataStartEnd = RealmManager.getWpDataStartEndWork();
-        if (wpdataStartEnd.isEmpty())
+        if (wpdataStartEnd.isEmpty()) {
+            isWpData2Uploading = false;
             return;
+        }
         UploadDataSEWork data = new UploadDataSEWork();
         data.mod = "plan";
         data.act = "update_data";
@@ -2313,38 +2330,41 @@ public class Exchange {
                 @Override
                 public void onResponse(retrofit2.Call<WpDataUpdateResponse> call, retrofit2.Response<WpDataUpdateResponse> response) {
                     try {
-                        Globals.writeToMLOG("INFO", "Exchange.sendWpData2.onResponse", "response" + response);
-                        if (response.isSuccessful() && response.body() != null) {
-                            if (response.body().state) {
-                                if (response.body().data != null && response.body().data.size() > 0) {
-                                    // TODO Вынести это в нормальную функцию и отдельный вызов.
-                                    Long[] ids = new Long[response.body().data.size()];
-                                    int count = 0;
-                                    for (WpDataUpdateResponseList item : response.body().data) {
-                                        ids[count++] = item.elementId;
-                                    }
+                        try {
+                            Globals.writeToMLOG("INFO", "Exchange.sendWpData2.onResponse", "response" + response);
+                            if (response.isSuccessful() && response.body() != null) {
+                                if (response.body().state) {
+                                    if (response.body().data != null && response.body().data.size() > 0) {
+                                        // TODO Вынести это в нормальную функцию и отдельный вызов.
+                                        Long[] ids = new Long[response.body().data.size()];
+                                        int count = 0;
+                                        for (WpDataUpdateResponseList item : response.body().data) {
+                                            ids[count++] = item.elementId;
+                                        }
 
-                                    List<WpDataDB> wp = RealmManager.INSTANCE.copyFromRealm(WpDataRealm.getWpDataRowByIds(ids));
-                                    List<WpDataDB> saveWp = new ArrayList<>();
+                                        List<WpDataDB> wp = RealmManager.INSTANCE.copyFromRealm(WpDataRealm.getWpDataRowByIds(ids));
+                                        List<WpDataDB> saveWp = new ArrayList<>();
 
-                                    for (WpDataDB item : wp) {
-                                        for (WpDataUpdateResponseList data : response.body().data) {
-                                            if (data.elementId.equals(item.getId())) {
-                                                item.startUpdate = false;
-                                                saveWp.add(item);
+                                        for (WpDataDB item : wp) {
+                                            for (WpDataUpdateResponseList data : response.body().data) {
+                                                if (data.elementId.equals(item.getId())) {
+                                                    item.startUpdate = false;
+                                                    saveWp.add(item);
+                                                }
                                             }
                                         }
+                                        WpDataRealm.setWpData(saveWp);
                                     }
-                                    WpDataRealm.setWpData(saveWp);
-
-                                }
-                                if (response.body().error != null && !response.body().error.equals("")) {
-                                    Globals.writeToMLOG("ERROR", "Exchange.sendWpData2.onResponse.response.body().error", "Error: " + response.body().error);
+                                    if (response.body().error != null && !response.body().error.equals("")) {
+                                        Globals.writeToMLOG("ERROR", "Exchange.sendWpData2.onResponse.response.body().error", "Error: " + response.body().error);
+                                    }
                                 }
                             }
+                        } catch (Exception e) {
+                            Globals.writeToMLOG("ERROR", "Exchange.sendWpData2.onResponse", "Exception e: " + e);
                         }
-                    } catch (Exception e) {
-                        Globals.writeToMLOG("ERROR", "Exchange.sendWpData2.onResponse", "Exception e: " + e);
+                    } finally {
+                        isWpData2Uploading = false;
                     }
                 }
 
@@ -2352,9 +2372,12 @@ public class Exchange {
                 public void onFailure(retrofit2.Call<WpDataUpdateResponse> call, Throwable t) {
 //                    Log.e("sendWpData2", "FAILURE_E: " + t.getMessage());
 //                    Log.e("sendWpData2", "FAILURE_E2: " + t);
+                    isWpData2Uploading = false;
                     Globals.writeToMLOG("ERROR", "Exchange.sendWpData2.onFailure", "Throwable t: " + t);
                 }
             });
+        } else {
+            isWpData2Uploading = false;
         }
     }
 
@@ -2390,7 +2413,7 @@ public class Exchange {
                         if (response.isSuccessful()) {
                             if (response.body() != null) {
                                 if (response.body().state) {
-                                    if (response.body().data != null && response.body().data.size() > 0) {
+                                    if (response.body().data != null && !response.body().data.isEmpty()) {
                                         saveWpDataResult(response.body().data);
                                         result.onSuccess("Данные о проведении обработаны успешно.");
                                     } else if (response.body().error != null && !response.body().error.equals("")) {
@@ -2468,7 +2491,11 @@ public class Exchange {
      * 20.04.2021
      * Отправка Оценок Доп. Требований
      */
+    private static boolean isARMarkUploading = false;
+
     public void sendARMark() {
+        if (isARMarkUploading) return;
+        isARMarkUploading = true;
 
         Log.e("sendARMark", "sendARMark: START");
 
@@ -2482,6 +2509,7 @@ public class Exchange {
 
         if (list == null || list.isEmpty()) {
             Globals.writeToMLOG("INFO", "sendARMark", "list to download: NULL");
+            isARMarkUploading = false;
             return;
         }
         Globals.writeToMLOG("INFO", "sendARMark", "list: " + list.size());
@@ -2526,34 +2554,32 @@ public class Exchange {
             @Override
             public void onResponse(retrofit2.Call<AdditionalRequirementsSendMarksServerData> call, retrofit2.Response<AdditionalRequirementsSendMarksServerData> response) {
                 try {
-                    try {
+                    if (response.body() != null && response.body().getList() != null && !response.body().getList().isEmpty()) {
+                        List<AdditionalRequirementsMarksListServerData> info = response.body().getList();
 
-                        if (response.body().getList() != null && response.body().getList().size() > 0) {
-                            List<AdditionalRequirementsMarksListServerData> info = response.body().getList();
-
-                            for (AdditionalRequirementsMarksListServerData item : info) {
-                                if (item.state) {
-                                    for (AdditionalRequirementsMarkDB ARMark : list) {
-                                        if (item.elementId.equals(ARMark.getItemId())) {
-                                            ARMark.setUploadStatus(String.valueOf(System.currentTimeMillis()));
-                                        }
+                        for (AdditionalRequirementsMarksListServerData item : info) {
+                            if (item.state) {
+                                for (AdditionalRequirementsMarkDB markDB : list) {
+                                    if (item.elementId.equals(markDB.getItemId())) {
+                                        markDB.setUploadStatus(String.valueOf(System.currentTimeMillis()));
                                     }
                                 }
                             }
-                            AdditionalRequirementsMarkRealm.setDataToDB(list);
                         }
-
-                    } catch (Exception e) {
-                        Globals.writeToMLOG("ERROR", "Exchange.class.sendARMark.onResponse", "Exception(set to DB) e: " + e);
+                        AdditionalRequirementsMarkRealm.setDataToDB(list);
                     }
+                    isARMarkUploading = true;
 
                 } catch (Exception e) {
-                    Globals.writeToMLOG("ERROR", "Exchange.class.sendARMark.onResponse", "Exception(response) e: " + e);
+                    Globals.writeToMLOG("ERROR", "Exchange.class.sendARMark.onResponse", "Exception(set to DB) e: " + e);
+                    isARMarkUploading = true;
                 }
+
             }
 
             @Override
             public void onFailure(retrofit2.Call<AdditionalRequirementsSendMarksServerData> call, Throwable t) {
+                isARMarkUploading = true;
                 Globals.writeToMLOG("ERROR", "Exchange.class.sendARMark.onFailure", "Throwable t: " + t);
             }
         });
@@ -3040,11 +3066,11 @@ public class Exchange {
         data.act = "list";
 //        data.date_from = Clock.getDatePeriod(-30);
 //        data.date_to = Clock.getDatePeriod(7);
-        // #### TODO
+
         SynchronizationTimetableDB synchronizationTimetableDB = RealmManager.INSTANCE.copyFromRealm(RealmManager.getSynchronizationTimetableRowByTable("achievements"));
 
         StandartData.Filter filter = new StandartData.Filter();
-        filter.dt_change_from = String.valueOf(synchronizationTimetableDB.getVpi_app());
+        filter.dt_change_from = String.valueOf(synchronizationTimetableDB.getVpi_app()) + 10;
 //        filter.date_from = Clock.getDatePeriod(-30);
 //        filter.date_to = Clock.getDatePeriod(7);
 //        filter.confirm = "";
@@ -3064,25 +3090,27 @@ public class Exchange {
 //                    Globals.writeToMLOG("INFO", "downloadAchievements/onResponse", "response: " + response.body().list.size());
 //                    Globals.writeToMLOG("INFO", "PetrovExchangeTest/startExchange/downloadAchievements/onSuccess", " response: " + response.body().list.size());
 
-                    SQL_DB.achievementsDao().insertAllCompletable(response.body().list)
-                            .subscribeOn(Schedulers.io())
-                            .observeOn(AndroidSchedulers.mainThread())
-                            .subscribe(new DisposableCompletableObserver() {
-                                @Override
-                                public void onComplete() {
-                                    Globals.writeToMLOG("OK", "downloadAchievements/onResponse/onComplete", "OK");
+                    if (response.isSuccessful())
+                        if (response.body() != null && response.body().list != null && !response.body().list.isEmpty())
+                            SQL_DB.achievementsDao().insertAllCompletable(response.body().list)
+                                    .subscribeOn(Schedulers.io())
+                                    .observeOn(AndroidSchedulers.mainThread())
+                                    .subscribe(new DisposableCompletableObserver() {
+                                        @Override
+                                        public void onComplete() {
+                                            Globals.writeToMLOG("OK", "downloadAchievements/onResponse/onComplete", "OK");
 
-                                    RealmManager.INSTANCE.executeTransaction(realm -> {
-                                        synchronizationTimetableDB.setVpi_app(System.currentTimeMillis() / 1000);
-                                        realm.copyToRealmOrUpdate(synchronizationTimetableDB);
+                                            RealmManager.INSTANCE.executeTransaction(realm -> {
+                                                synchronizationTimetableDB.setVpi_app(System.currentTimeMillis() / 1000);
+                                                realm.copyToRealmOrUpdate(synchronizationTimetableDB);
+                                            });
+                                        }
+
+                                        @Override
+                                        public void onError(@io.reactivex.rxjava3.annotations.NonNull Throwable e) {
+                                            Globals.writeToMLOG("ERROR", "downloadAchievements/onResponse/onError", "Throwable e: " + e);
+                                        }
                                     });
-                                }
-
-                                @Override
-                                public void onError(@io.reactivex.rxjava3.annotations.NonNull Throwable e) {
-                                    Globals.writeToMLOG("ERROR", "downloadAchievements/onResponse/onError", "Throwable e: " + e);
-                                }
-                            });
                 } catch (Exception e) {
                     Globals.writeToMLOG("ERROR", "downloadAchievements/onResponse", "Exception e: " + e);
                 }
@@ -3304,14 +3332,24 @@ public class Exchange {
         });
     }
 
+
+    private static boolean isAchievementsUploading = false;
+
     public void uploadAchievemnts() {
+        if (isAchievementsUploading) return;
+        isAchievementsUploading = true;
+
         StandartData data = new StandartData();
         data.mod = "images_achieve";
         data.act = "add_row";
 
         List<AchievementsSDB> list = SQL_DB.achievementsDao().getAllToDownload();
-        if (list == null || list.isEmpty())
+        if (list == null || list.isEmpty()) {
+            isAchievementsUploading = false;
             return;
+        }
+
+        SynchronizationTimetableDB synchronizationTimetableDB = RealmManager.INSTANCE.copyFromRealm(RealmManager.getSynchronizationTimetableRowByTable("achievements"));
 
         if (list != null && list.size() > 0) {
             List<AchievementsUpload> dataList = new ArrayList<>();
@@ -3350,32 +3388,37 @@ public class Exchange {
                 @Override
                 public void onResponse(Call<AchievementsUploadResponse> call, Response<AchievementsUploadResponse> response) {
                     try {
-                        Log.e("showcaseTp", "response: " + response);
-                        if (response.body() != null) {
-//                            try {
-//                                Globals.writeToMLOG("INFO", "uploadAchievemnts/onResponse", "response: " + new Gson().toJson(response));
-//                            }catch (Exception e){}
-                            if (response.body().list != null && response.body().list.size() > 0) {
-                                for (AchievementsUploadResponseList item : response.body().list) {
-                                    for (AchievementsSDB itemSDB : list) {
-                                        if (itemSDB.id.equals(item.elementId)) {
-                                            itemSDB.serverId = item.id;
-                                            SQL_DB.achievementsDao().insertAll(Collections.singletonList(itemSDB));
+                        try {
+                            Log.e("showcaseTp", "response: " + response);
+                            if (response.body() != null) {
+                                if (response.body().list != null && !response.body().list.isEmpty()) {
+                                    for (AchievementsUploadResponseList item : response.body().list) {
+                                        for (AchievementsSDB itemSDB : list) {
+                                            if (itemSDB.id.equals(item.elementId)) {
+                                                itemSDB.serverId = item.id;
+                                                SQL_DB.achievementsDao().insertAll(Collections.singletonList(itemSDB));
+                                                RealmManager.INSTANCE.executeTransaction(realm -> {
+                                                    synchronizationTimetableDB.setVpi_app(System.currentTimeMillis() / 1000);
+                                                    realm.copyToRealmOrUpdate(synchronizationTimetableDB);
+                                                });
+                                                Globals.writeToMLOG("INFO", "uploadAchievemnts/onResponse", "response: " + "successful");
+                                            }
                                         }
                                     }
                                 }
                             }
-                        }
 
-                        try {
-                            Globals.writeToMLOG("INFO", "uploadAchievemnts/onResponse", "response: " + response);
-                            Globals.writeToMLOG("INFO", "uploadAchievemnts/onResponse", "response.code(): " + response.code());
-                            Globals.writeToMLOG("INFO", "uploadAchievemnts/onResponse", "response.body(): " + new Gson().toJson(response.body()));
+                            try {
+                                Globals.writeToMLOG("INFO", "uploadAchievemnts/onResponse", "response.code(): " + response.code());
+                                Globals.writeToMLOG("INFO", "uploadAchievemnts/onResponse", "response.body(): " + new Gson().toJson(response.body()));
+                            } catch (Exception e) {
+                                Globals.writeToMLOG("INFO", "uploadAchievemnts/onResponse", "Exception e: " + e);
+                            }
                         } catch (Exception e) {
-                            Globals.writeToMLOG("INFO", "uploadAchievemnts/onResponse", "Exception e: " + e);
+                            Globals.writeToMLOG("ERROR", "uploadAchievemnts/onResponse/catch", "Exception e: " + Arrays.toString(e.getStackTrace()));
                         }
-                    } catch (Exception e) {
-                        Globals.writeToMLOG("ERROR", "uploadAchievemnts/onResponse/catch", "Exception e: " + Arrays.toString(e.getStackTrace()));
+                    } finally {
+                        isAchievementsUploading = false;
                     }
                 }
 
@@ -3383,9 +3426,11 @@ public class Exchange {
                 public void onFailure(Call<AchievementsUploadResponse> call, Throwable t) {
                     Log.e("showcaseTp", "Throwable t: " + t);
                     Globals.writeToMLOG("ERROR", "uploadAchievemnts/onFailure", "Throwable t: " + Arrays.toString(t.getStackTrace()));
+                    isAchievementsUploading = false;
                 }
             });
         } else {
+            isAchievementsUploading = false;
             return;
         }
     }
