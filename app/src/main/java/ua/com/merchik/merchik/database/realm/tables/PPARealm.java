@@ -14,7 +14,7 @@ public class PPARealm {
      */
     public static void setPPA(List<PPADB> list) {
         INSTANCE.beginTransaction();
-//        INSTANCE.delete(PPADB.class);
+        INSTANCE.delete(PPADB.class);
         INSTANCE.copyToRealmOrUpdate(list);
         INSTANCE.commitTransaction();
     }
@@ -25,6 +25,14 @@ public class PPARealm {
      * Получение списка по IZA
      * @return
      */
+    public static List<PPADB> getPPAIZAList(String iza, String client, String addrId) {
+        return INSTANCE.where(PPADB.class)
+                .equalTo("codeIza", iza)
+                .equalTo("client", client)
+                .equalTo("addrId", addrId)
+                .findAll();
+    }
+
     public static PPADB getPPAIZA(String iza, String client, String addrId, String tovarId) {
         return INSTANCE.where(PPADB.class)
                 .equalTo("codeIza", iza)

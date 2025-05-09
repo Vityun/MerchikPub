@@ -53,7 +53,7 @@ public class RetrofitBuilder {
     private static boolean serverStatus;//todo add int interConnection
     private static long serverTime;
 
-    private final int MAX_CONCURRENT_REQUESTS = 12; // Ограничиваем до 3 одновременных запросов
+    private final int MAX_CONCURRENT_REQUESTS = 12; // Ограничиваем до 12 одновременных запросов
     private final ExecutorService executorService = Executors.newFixedThreadPool(MAX_CONCURRENT_REQUESTS);
 
     private RetrofitBuilder() {
@@ -70,6 +70,7 @@ public class RetrofitBuilder {
 
         // Регистрация пользовательского адаптера для Date
         gsonBuilder.registerTypeAdapter(Date.class, new CustomDateTypeAdapter());
+//        gsonBuilder.registerTypeAdapter(String.class, new CleanStringAdapter());
 
         Gson gson = gsonBuilder.create();
 
@@ -78,6 +79,8 @@ public class RetrofitBuilder {
 
         OkHttpClient.Builder httpClientBuilder = new OkHttpClient.Builder();
         httpClientBuilder.addInterceptor(new TimeoutInterceptor());
+        httpClientBuilder.addInterceptor(new HtmlEntityInterceptor());
+
 //        httpClientBuilder.addInterceptor(new ChuckerInterceptor(MyApplication.getAppContext()));
 
         httpClientBuilder.addInterceptor(loggingInterceptor);

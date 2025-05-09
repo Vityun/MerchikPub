@@ -315,7 +315,7 @@ public class RealmManager {
     public static boolean setGroupTypeV2(List<GroupTypeDB> customerGroupsListDB) {
         Log.e("REALM_DB_UPDATE", "setGroupType_S");
         INSTANCE.beginTransaction();
-//        INSTANCE.delete(GroupTypeDB.class);
+        INSTANCE.delete(GroupTypeDB.class);
         INSTANCE.copyToRealm(customerGroupsListDB);
         INSTANCE.commitTransaction();
         Log.e("REALM_DB_UPDATE", "setGroupType_E");
@@ -380,7 +380,7 @@ public class RealmManager {
         }
 
         INSTANCE.beginTransaction();
-//        INSTANCE.delete(TovarDB.class);
+        INSTANCE.delete(TovarDB.class);
         List<TovarDB> res = INSTANCE.copyToRealmOrUpdate(list);
 
 
@@ -442,7 +442,7 @@ public class RealmManager {
         Log.e("REALM_DB_UPDATE", "setPPA_S");
 
         INSTANCE.beginTransaction();
-//        INSTANCE.delete(PPADB.class);
+        INSTANCE.delete(PPADB.class);
         INSTANCE.copyToRealmOrUpdate(list);
         INSTANCE.commitTransaction();
 
@@ -457,7 +457,7 @@ public class RealmManager {
     public static void setArticle(List<ArticleDB> list) {
         Log.e("REALM_DB_UPDATE", "setArticle_S");
         INSTANCE.beginTransaction();
-//        INSTANCE.delete(ArticleDB.class);
+        INSTANCE.delete(ArticleDB.class);
         INSTANCE.copyToRealmOrUpdate(list);
         INSTANCE.commitTransaction();
         Log.e("REALM_DB_UPDATE", "setArticle_E");
@@ -471,7 +471,7 @@ public class RealmManager {
     public static boolean setPromo(List<PromoDB> list) {
         Log.e("REALM_DB_UPDATE", "setPromo_S");
         INSTANCE.beginTransaction();
-//        INSTANCE.delete(PromoDB.class);
+        INSTANCE.delete(PromoDB.class);
         INSTANCE.copyToRealmOrUpdate(list);
         INSTANCE.commitTransaction();
         Log.e("REALM_DB_UPDATE", "setPromo_E");
@@ -486,7 +486,7 @@ public class RealmManager {
     public static boolean setError(List<ErrorDB> list) {
         Log.e("REALM_DB_UPDATE", "setError_S");
         INSTANCE.beginTransaction();
-//        INSTANCE.delete(ErrorDB.class);
+        INSTANCE.delete(ErrorDB.class);
         INSTANCE.copyToRealmOrUpdate(list);
         INSTANCE.commitTransaction();
         Log.e("REALM_DB_UPDATE", "setError_E");
@@ -500,7 +500,7 @@ public class RealmManager {
     public static boolean setTradeMarks(List<TradeMarkDB> list) {
         Log.e("REALM_DB_UPDATE", "setError_S");
         INSTANCE.beginTransaction();
-//        INSTANCE.delete(TradeMarkDB.class);
+        INSTANCE.delete(TradeMarkDB.class);
         INSTANCE.copyToRealmOrUpdate(list);
         INSTANCE.commitTransaction();
         return true;

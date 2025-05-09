@@ -61,6 +61,7 @@ import ua.com.merchik.merchik.Options.Controls.OptionControlAvailabilityControlP
 import ua.com.merchik.merchik.Options.Controls.OptionControlPlanorammVizit;
 import ua.com.merchik.merchik.Options.Controls.OptionControlReclamationAnswer;
 import ua.com.merchik.merchik.Options.Controls.OptionControlStockBalanceTovar;
+import ua.com.merchik.merchik.Options.Controls.OptionControlStockTovarLeft;
 import ua.com.merchik.merchik.Options.Controls.OptionControlTaskAnswer;
 import ua.com.merchik.merchik.Options.OptionControl;
 import ua.com.merchik.merchik.Options.Options;
@@ -186,6 +187,9 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                 boolean describedOption = true;
 
                 Log.e("RViewDRAdapterBind", "optionsButtons: " + optionsButtons);
+                if (optionsButtons.getOptionId().equals("2243") || optionsButtons.getOptionControlId().equals("2243"))
+                    Log.e("RViewDRAdapterBind", "optionsButtons: " + optionsButtons);
+
 
                 textInteger.setVisibility(View.VISIBLE);
 
@@ -950,6 +954,12 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                                 intent.putExtras(bundle);
                                 ActivityCompat.startActivityForResult((Activity) mContext, intent, NEED_UPDATE_UI_REQUEST, null);
                             });
+                            break;
+
+                        case 2243:
+                            type = new OptionMassageType();
+                            type.type = OptionMassageType.Type.STRING;
+                            OptionControlStockTovarLeft<?> optionControlStockTovarLeft = new OptionControlStockTovarLeft<>(itemView.getContext(), dataDB, optionsButtons, type, NULL, null);
                             break;
 
                         default:

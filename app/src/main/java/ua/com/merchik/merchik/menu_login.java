@@ -2249,7 +2249,7 @@ public class menu_login extends AppCompatActivity {
 
         if (data != null) {
             INSTANCE.executeTransaction(realm -> {
-//                INSTANCE.delete(LangListDB.class);
+                INSTANCE.delete(LangListDB.class);
                 INSTANCE.copyToRealmOrUpdate(data);
             });
         }

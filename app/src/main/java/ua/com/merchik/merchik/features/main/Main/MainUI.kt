@@ -32,7 +32,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -44,24 +43,15 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.graphics.Paint
-import androidx.compose.ui.graphics.RectangleShape
-import androidx.compose.ui.graphics.Shadow
-import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
-import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
@@ -70,7 +60,6 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.rememberAsyncImagePainter
 import my.nanihadesuka.compose.LazyColumnScrollbar
 import my.nanihadesuka.compose.ScrollbarSettings
@@ -654,7 +643,8 @@ fun ItemUI(
                                             it as PlanogrammVizitShowcaseSDB
                                             val text = it.score
                                             Box(
-                                                modifier = Modifier.align(Alignment.TopEnd))
+                                                modifier = Modifier.align(Alignment.TopEnd)
+                                            )
                                             {
                                                 TextInStrokeCircle(
                                                     modifier = Modifier
@@ -677,25 +667,6 @@ fun ItemUI(
                         }
                     }
                 }
-//                Column(modifier = Modifier
-//                    .clickable {
-//                        onMultipleClickItemImage(item, 3)
-//                    }) {
-//                    item.fields.forEachIndexed { index, field ->
-//                        if (settingsItemUI.firstOrNull {
-//                                it.key.equals(
-//                                    field.key,
-//                                    true
-//                                )
-//                            }?.isEnabled == false) {
-//                        } else {
-//                            if (!field.key.equals("id_res_image", true)) {
-//                                ItemFieldValue(field, visibilityColumName)
-//                                if (index < item.fields.size - 1) HorizontalDivider()
-//                            }
-//                        }
-//                    }
-//                }
             }
         else
             Row(Modifier.padding(7.dp)) {
@@ -725,7 +696,8 @@ fun ItemUI(
                                     images.add(
                                         rememberAsyncImagePainter(model = file)
                                     )
-                                }
+                                } else
+                                    images.add(painterResource(idResImage))
                             }
                         }
 
@@ -757,9 +729,10 @@ fun ItemUI(
                     }
                 }
 
-                Column(modifier = Modifier
-                    .weight(if (item.images?.size == 3) 1f else 2f)
-                    ) {
+                Column(
+                    modifier = Modifier
+                        .weight(if (item.images?.size == 3) 1f else 2f)
+                ) {
                     item.fields.forEachIndexed { index, field ->
                         if (settingsItemUI.firstOrNull {
                                 it.key.equals(

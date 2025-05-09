@@ -73,13 +73,13 @@ public class OptionControlEndAnotherWork<T> extends OptionControl {
                 Calendar calendar = Calendar.getInstance();
                 calendar.setTime(date);
 
-                // Вычитаем один день из текущей даты
-                calendar.add(Calendar.DAY_OF_MONTH, -2);
+                // 09.05.25 исправил на 3 дня
+                calendar.add(Calendar.DAY_OF_MONTH, -3);
                 oneDayBefore = calendar.getTime();
 
-                // Прибавляем один день к текущей дате
+                // 09.05.25 исправил на 3 дня
                 calendar.setTime(date);
-                calendar.add(Calendar.DAY_OF_MONTH, 2);
+                calendar.add(Calendar.DAY_OF_MONTH, 3);
                 oneDayAfter = calendar.getTime();
             }
         }catch (Exception e){

@@ -333,7 +333,6 @@ public class TablesLoadingUnloading {
     }
 
 
-
     public void downloadWPData() {
         Log.e("SERVER_REALM_DB_UPDATE", "===================================downloadWPData_START");
 
@@ -589,14 +588,16 @@ public class TablesLoadingUnloading {
 
     }
 
+    private static boolean isDownloadOptions = false;
     public void downloadOptions() {
+        if (isDownloadOptions) return;
+        isDownloadOptions = true;
         Log.e("SERVER_REALM_DB_UPDATE", "===================================.downloadOptions.START");
         globals.writeToMLOG(Clock.getHumanTime() + "_INFO.TablesLU.class.downloadOptions.ENTER\n");
 
 //        StandartData standartData = new StandartData();
 //        standartData.mod = "report_prepare";
 //        standartData.act = "list_data";
-
 
         StandartData standartData = new StandartData();
         standartData.mod = "plan";
@@ -665,6 +666,7 @@ public class TablesLoadingUnloading {
 
                 }
                 readyOptions = true;
+                isDownloadOptions = false;
             }
 
             @Override
@@ -673,6 +675,7 @@ public class TablesLoadingUnloading {
 //                if (pg != null)
 //                    if (pg.isShowing())
 //                        pg.dismiss();
+                isDownloadOptions = false;
                 readyOptions = false;
                 syncInternetError = true;
                 Log.e("TAG_TEST", "FAILURE_3 E: " + t);
@@ -1740,7 +1743,7 @@ public class TablesLoadingUnloading {
                             if (response.isSuccessful() && response.body() != null) {
                                 if (response.body().getState()) {
                                     Log.e("TAG_TEST_WP", "RESPONSE_OK");
-                                    if (response.body().getList() != null) {
+                                    if (response.body().getList() != null && !response.body().getList().isEmpty()) {
                                         ArrayList<WpDataDB> wpToUpload = RealmManager.setWpDataAuto(response.body().getList()); // Получаем данные для выгрузки
                                         RealmManager.INSTANCE.executeTransaction(realm -> {
                                             if (sTable != null) {
@@ -2527,7 +2530,7 @@ public class TablesLoadingUnloading {
         if (data != null) {
             Log.e("saveSiteObjectsDB", "data+ : " + data.size());
             INSTANCE.executeTransaction(realm -> {
-//                INSTANCE.delete(SiteObjectsDB.class);
+                INSTANCE.delete(SiteObjectsDB.class);
                 INSTANCE.copyToRealmOrUpdate(data);
             });
         } else {
@@ -2599,7 +2602,7 @@ public class TablesLoadingUnloading {
             if (data != null) {
                 Log.e("downloadVideoLessons", "saveSiteHintsDB/data.size(): " + data.size());
                 INSTANCE.executeTransaction(realm -> {
-//                    INSTANCE.delete(SiteHintsDB.class);
+                    INSTANCE.delete(SiteHintsDB.class);
                     for (SiteHintsDB item : data) {
                         Log.e("saveSiteHintsDB", "data id: " + item.getID() + " |nm: " + item.getNm());
                         INSTANCE.copyToRealmOrUpdate(item);
@@ -2630,7 +2633,9 @@ public class TablesLoadingUnloading {
                     try {
 //                    Log.e("MenuMainTest", "res/list/size: " + response.body().getList().size());
                         Log.e("MenuMainTest", "test");
-                        setPPA(response.body().getList());
+                        if (response.isSuccessful())
+                            if (response.body() != null && response.body().getList() != null && !response.body().getList().isEmpty())
+                                setPPA(response.body().getList());
                     } catch (Exception e) {
                         Log.e("MenuMainTest", "Exception e: " + e);
                     }

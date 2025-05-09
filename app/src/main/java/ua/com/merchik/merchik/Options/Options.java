@@ -129,6 +129,7 @@ import ua.com.merchik.merchik.Options.Controls.OptionControlRegistrationPotentia
 import ua.com.merchik.merchik.Options.Controls.OptionControlRegistrationPotentialFriend;
 import ua.com.merchik.merchik.Options.Controls.OptionControlReturnOfGoods;
 import ua.com.merchik.merchik.Options.Controls.OptionControlStockBalanceTovar;
+import ua.com.merchik.merchik.Options.Controls.OptionControlStockTovarLeft;
 import ua.com.merchik.merchik.Options.Controls.OptionControlTaskAnswer;
 import ua.com.merchik.merchik.PhotoReports;
 import ua.com.merchik.merchik.R;
@@ -528,6 +529,10 @@ public class Options {
                     optionControlStockBalanceTovar.showOptionMassage("");
                     break;
 
+                case 2243:
+                    OptionControlStockTovarLeft<?> optionControlStockTovarLeft = new OptionControlStockTovarLeft<>(context, dataDB, optionsDB, newOptionType, mode, unlockCodeResultListener);
+                    optionControlStockTovarLeft.showOptionMassage("");
+                    break;
 
                 default:
 //                switch (warningType) {
@@ -2167,6 +2172,17 @@ public class Options {
 
                 return optionControlStockBalanceTovar.isBlockOption2() ? 1 : 0;
 
+            case 2243:
+                OptionControlStockTovarLeft<?> optionControlStockTovarLeft = new OptionControlStockTovarLeft<>(context, dataDB, option, type, mode, unlockCodeResultListener);
+                if (mode.equals(NNKMode.MAKE) || (mode.equals(NNKMode.CHECK) && optionControlStockTovarLeft.isBlockOption()))
+                    optionControlStockTovarLeft.showOptionMassage(block);
+                if (mode.equals(NNKMode.BLOCK) && optionControlStockTovarLeft.signal && optionControlStockTovarLeft.isBlockOption()) {
+                    optionControlStockTovarLeft.showOptionMassage(block);
+                }
+
+                return optionControlStockTovarLeft.isBlockOption2() ? 1 : 0;
+
+
             default:
                 unlockCodeResultListener.onUnlockCodeSuccess();
 
@@ -2668,6 +2684,7 @@ public class Options {
             unlockCodeResultListener.onUnlockCodeFailure();
             return res = false;
         }
+
 
         Log.e("checkStartWork", "ENTER THIS");
         if (startWork > 0) {
