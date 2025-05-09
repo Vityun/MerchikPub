@@ -212,10 +212,8 @@ public class RecycleViewDRAdapterTovar extends RecyclerView.Adapter<RecycleViewD
     @Override
     public int getItemCount() {
         try {
-            Globals.writeToMLOG("INFO", "RecycleViewDRAdapterTovar.getItemCount", "dataList.size(): " + dataList.size());
             return dataList.size();
         } catch (Exception e) {
-            Log.e("LOG_FILTER", "FILTER_ERR: " + e);
             Globals.writeToMLOG("ERROR", "RecycleViewDRAdapterTovar.getItemCount", "Exception e: " + e);
             return 0;
         }

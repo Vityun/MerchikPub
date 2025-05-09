@@ -182,22 +182,13 @@ public class PhotoReports {
                     File file = new File(filePath);
                     // Проверяем, существует ли файл
                     Globals.writeToMLOG("INFO", "PhotoReports/upload_photo/send/onFailure", "file.length(): " + file.length() + ", file.exists(): " + file.exists() + ", isImageValid: " + isImageValid(file));
-//                    if (file.exists()) {
-//                        // Получаем размер файла в байтах
-//                        long fileSizeInBytes = file.length();
-//                        if (fileSizeInBytes == 0)
-//                            if (photoDB.getPhotoServerId() == null || photoDB.getPhotoServerId().isEmpty()) {
-//                                StackPhotoRealm.deleteByPhotoNum(filePath);
-//                            }
-//                    } else {
-//                        if (photoDB.getPhotoServerId() == null || photoDB.getPhotoServerId().isEmpty()) {
-//                            StackPhotoRealm.deleteByPhotoNum(filePath);
-//                        }
-//                    }
+
                     if (!isImageValid(file))
                         if (photoDB.getPhotoServerId() == null || photoDB.getPhotoServerId().isEmpty()
-                                && isPhotoOlderThan10Minutes(photoDB))
+                                && isPhotoOlderThan10Minutes(photoDB)) {
                             StackPhotoRealm.deleteByPhotoNum(filePath);
+                            Globals.writeToMLOG("INFO", "PhotoReports/upload_photo/send/onFailure", "isImageValid: " + isImageValid(file) + ", file delete ");
+                        }
                 }
             });
         } else {

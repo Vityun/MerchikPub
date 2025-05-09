@@ -332,9 +332,11 @@ public class TablesLoadingUnloading {
         globals.testMSG(context);
     }
 
+    private static boolean isdownloadWPData = false;
 
     public void downloadWPData() {
-        Log.e("SERVER_REALM_DB_UPDATE", "===================================downloadWPData_START");
+        if (isdownloadWPData) return;
+        isdownloadWPData = true;
 
         String mod = "plan";
         String act = "list";
@@ -350,21 +352,6 @@ public class TablesLoadingUnloading {
             Log.e("updateWpData", "vpi: " + vpi);
         } else vpi = 0;
 
-//        try {
-//            retrofit2.Call<JsonObject> call = RetrofitBuilder.getRetrofitInterface().GET_WPDATA_VPI_JSON(mod, act, date_from, date_to, 0);
-//            call.enqueue(new retrofit2.Callback<JsonObject>() {
-//                @Override
-//                public void onResponse(retrofit2.Call<JsonObject> call, retrofit2.Response<JsonObject> response) {
-//                    Log.e("TAG_TEST_WP", "RESPONSE_JSON: " + response.body());
-//                }
-//
-//                @Override
-//                public void onFailure(retrofit2.Call<JsonObject> call, Throwable t) {
-//                }
-//            });
-//        } catch (Exception e) {
-//        }
-
         try {
             Log.e("TAG_TEST_WP", "RESPONSE_0 T");
             retrofit2.Call<WpDataServer> call = RetrofitBuilder.getRetrofitInterface().GET_WPDATA_VPI(mod, act, date_from, date_to, vpi);
@@ -374,7 +361,8 @@ public class TablesLoadingUnloading {
                     if (response.isSuccessful() && response.body() != null) {
                         Log.e("SERVER_REALM_DB_UPDATE", "===================================downloadWPData_:" + response.body().getState() + "/" + response.body().getError());
 
-                        if (response.body().getState()) {
+                        if (response.body().getState() && response.body().getList() != null
+                                && !response.body().getList().isEmpty()) {
                             List<WpDataDB> wpDataDBList = response.body().getList();
                             RealmManager.setWpData(wpDataDBList);
 
@@ -385,26 +373,10 @@ public class TablesLoadingUnloading {
                                     realm.copyToRealmOrUpdate(sTable);
                                 }
                             });
-//                            Globals.writeToMLOG("INFO", "PetrovExchangeTest/startExchange/downloadWPData/onSuccess", "(response.body().getList(): " + response.body().getList().size());
-//                            if (RealmManager.setWpData(response.body().getList())) {
-//                                if (pg != null)
-//                                    if (pg.isShowing())
-//                                        pg.dismiss();
-//                            } else {
-//                                if (pg != null)
-//                                    if (pg.isShowing())
-//                                        pg.dismiss();
-//                            }
-
-//                            long currentTime = System.currentTimeMillis() / 1000;
 
                         }
-//                        else {
-//                            if (pg != null)
-//                                if (pg.isShowing())
-//                                    pg.dismiss();
-//                        }
                     }
+                    isdownloadWPData = false;
                     readyWPData = true;
                 }
 
@@ -415,10 +387,12 @@ public class TablesLoadingUnloading {
 //                            pg.dismiss();
                     readyWPData = false;
                     syncInternetError = true;
+                    isdownloadWPData = false;
                 }
             });
         } catch (Exception e) {
             readyWPData = true;
+            isdownloadWPData = false;
         }
 
         Log.e("SERVER_REALM_DB_UPDATE", "===================================downloadWPData_END");
@@ -589,6 +563,7 @@ public class TablesLoadingUnloading {
     }
 
     private static boolean isDownloadOptions = false;
+
     public void downloadOptions() {
         if (isDownloadOptions) return;
         isDownloadOptions = true;
@@ -2773,7 +2748,11 @@ public class TablesLoadingUnloading {
      * 12.04.2021
      * Скачивание Дополнительных Требований
      */
+    private static boolean isDownloadAdditionalRequirements = false;
     public void downloadAdditionalRequirements() {
+        if (isDownloadAdditionalRequirements) return;
+        isDownloadAdditionalRequirements = true;
+
         try {
             StandartData data = new StandartData();
             data.mod = "additional_requirements";
@@ -2835,17 +2814,21 @@ public class TablesLoadingUnloading {
 //                        AdditionalRequirementsRealm.setDataToDB(uniqueData);
 
                         Globals.writeToMLOG("ERR", "downloadAdditionalRequirements/onResponse", "response +");
+                        isDownloadAdditionalRequirements = false;
                     } catch (Exception e) {
                         Globals.writeToMLOG("ERR", "downloadAdditionalRequirements/onResponse", "Exception e: " + e);
+                        isDownloadAdditionalRequirements = false;
                     }
                 }
 
                 @Override
                 public void onFailure(retrofit2.Call<AdditionalRequirementsServerData> call, Throwable t) {
+                    isDownloadAdditionalRequirements = false;
                     Globals.writeToMLOG("ERR", "downloadAdditionalRequirements/onFailure", "Throwable t: " + t);
                 }
             });
         } catch (Exception e) {
+            isDownloadAdditionalRequirements = false;
             Globals.writeToMLOG("ERR", "downloadAdditionalRequirements", "Exception e: " + e);
         }
     }
