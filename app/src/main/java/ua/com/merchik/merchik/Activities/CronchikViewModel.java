@@ -20,18 +20,18 @@ public class CronchikViewModel extends ViewModel {
     private final WorkManager workManager;
     private final LiveData<List<WorkInfo>> workInfoLiveData;
 
-    private TimerCallback callback;
+//    private TimerCallback callback;
     private final Handler handler = new Handler(Looper.getMainLooper()); // Handler для UI-потока
-    private static final long DELAY_MS = 10_000; // 10 секунд в миллисекундах
-    private final Runnable runnable = new Runnable() {
-        @Override
-        public void run() {
-            if (callback != null) {
-                callback.onTimerCronchik(); // Вызываем метод Activity
-            }
-            handler.postDelayed(this, 10_000); // Повтор каждые 10 сек
-        }
-    };
+//    private static final long DELAY_MS = 10_000; // 10 секунд в миллисекундах
+//    private final Runnable runnable = new Runnable() {
+//        @Override
+//        public void run() {
+//            if (callback != null) {
+//                callback.onTimerCronchik(); // Вызываем метод Activity
+//            }
+//            handler.postDelayed(this, 10_000); // Повтор каждые 10 сек
+//        }
+//    };
 
     public CronchikViewModel() {
         workManager = WorkManager.getInstance(MyApplication.getAppContext());
@@ -59,26 +59,26 @@ public class CronchikViewModel extends ViewModel {
         WorkManagerHelper.INSTANCE.schedulePhotoDownloadTask(MyApplication.getAppContext());
     }
 
-    // Устанавливаем колбэк (вызывается из Activity)
-    public void setTimerCallback(TimerCallback callback) {
-        this.callback = callback;
-    }
-
-    // Запускаем таймер
-    public void startTimer() {
-        handler.postDelayed(runnable, 10_000);
-    }
-
-    // Останавливаем таймер
-    public void stopTimer() {
-        handler.removeCallbacks(runnable);
-    }
-
-    @Override
-    protected void onCleared() {
-        super.onCleared();
-        stopTimer(); // Важно: очищаем при уничтожении ViewModel
-        callback = null; // Убираем ссылку на Activity
-    }
+//    // Устанавливаем колбэк (вызывается из Activity)
+//    public void setTimerCallback(TimerCallback callback) {
+//        this.callback = callback;
+//    }
+//
+//    // Запускаем таймер
+//    public void startTimer() {
+//        handler.postDelayed(runnable, 10_000);
+//    }
+//
+//    // Останавливаем таймер
+//    public void stopTimer() {
+//        handler.removeCallbacks(runnable);
+//    }
+//
+//    @Override
+//    protected void onCleared() {
+//        super.onCleared();
+//        stopTimer(); // Важно: очищаем при уничтожении ViewModel
+//        callback = null; // Убираем ссылку на Activity
+//    }
 
 }

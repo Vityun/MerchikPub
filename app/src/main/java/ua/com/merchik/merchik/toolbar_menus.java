@@ -141,7 +141,7 @@ import ua.com.merchik.merchik.retrofit.ProgressRequestBody;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
 
 
-public class toolbar_menus extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener, TimerCallback {
+public class toolbar_menus extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
     protected CronchikViewModel cronchikViewModel;
 
     public Globals globals = new Globals();
@@ -211,8 +211,8 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
         this.votesExchange = new VotesExchange();
         this.photoReports = new PhotoReports(toolbar_menus.this);
 
-        cronchikViewModel.setTimerCallback(this); // Передаем колбэк
-        cronchikViewModel.startTimer(); // Запускаем таймер
+//        cronchikViewModel.setTimerCallback(this); // Передаем колбэк
+//        cronchikViewModel.startTimer(); // Запускаем таймер
 
         cronchikViewModel.getWorkInfo().observe(this, workInfos -> {
             if (workInfos == null || workInfos.isEmpty()) return;
@@ -251,7 +251,7 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                 ua.com.merchik.merchik.trecker.SetUpLocationListener(this);
             }
 
-//            globals.handlerCount.postDelayed(runnableCron10, 1000);
+            globals.handlerCount.postDelayed(runnableCron10, 20000);
 
             globals.getDate();
 
@@ -594,30 +594,30 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
 
     @Override
     protected void onResume() {
-//        globals.handlerCount.removeCallbacks(runnableCron10);
-//        globals.handlerCount.postDelayed(runnableCron10, 1000);
+        globals.handlerCount.removeCallbacks(runnableCron10);
+        globals.handlerCount.postDelayed(runnableCron10, 1000);
         super.onResume();
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-//        globals.handlerCount.removeCallbacks(runnableCron10);
+        globals.handlerCount.removeCallbacks(runnableCron10);
     }
 
     @Override
     protected void onStop() {
         super.onStop();
-//        globals.handlerCount.removeCallbacks(runnableCron10);
+        globals.handlerCount.removeCallbacks(runnableCron10);
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
         loadingIndicator.hide();
-        cronchikViewModel.stopTimer(); // Останавливаем при уничтожении Activity
+//        cronchikViewModel.stopTimer(); // Останавливаем при уничтожении Activity
 
-//        globals.handlerCount.removeCallbacks(runnableCron10);
+        globals.handlerCount.removeCallbacks(runnableCron10);
         if (trecker != null)
             trecker.stopTracking(this);
     }
@@ -1169,285 +1169,119 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
     //----------------------------------------------------------------------------------------------
     //service -- жосткий аналог крона
     // ===== КРОНЧИК ===== КРОНЧИК ===== КРОНЧИК ===== КРОНЧИК ===== КРОНЧИК ===== КРОНЧИК =====
-//    private Runnable runnableCron10 = new Runnable() {
-//        public void run() {
-////            if (false)
-//            try {
-//                Log.e("КРОНЧИК", "Time: " + Clock.getHumanTime());
-//
-//                synchronizationSignal("SIGNAL", null);
-//
-////                globals.fixMP(null);
-//
-////            Log.e("КРОНЧИК", "stackPhotoDBAll: " + StackPhotoRealm.getAll().size());
-//
-//                // 22.04.2021 Ужасная хрень. Если нет данных от GPS -- оно начинает его слушать.
-//                ua.com.merchik.merchik.trecker.switchedOff = !ua.com.merchik.merchik.trecker.enabledGPS;
-//
-//                if (ua.com.merchik.merchik.trecker.switchedOff) {
-//                    Log.e("КРОНЧИК", "Запускаю слушатель GPS-а");
-//                    ua.com.merchik.merchik.trecker.SetUpLocationListener(toolbar_menus.this);
-//                }
-//
-//                Log.e("КРОНЧИК", "SESSION: " + Globals.session);
-//                Log.e("КРОНЧИК", "login: " + login);
-//                Log.e("КРОНЧИК", "password: " + password);
-//
-//                server.sessionCheckAndLogin(toolbar_menus.this, login, password);   // Проверка активности сессии и логин, если сессия протухла
-//                internetStatus = server.internetStatus();       // Обновление статуса интеренета
-////            pingServer(1);                            // ОБМЕН ЦВЕТ
-////                RealmManager.stackPhotoDeletePhoto();           // Удаление фото < 2 дня
-//                lightStatus();                                  // Обновление статуса Светофоров
-//                setupBadge(RealmManager.stackPhotoNotUploadedPhotosCount()); // Подсчёт кол-ва фоток в БД & Установка числа в счётчик
-//
-//                Log.e("КРОНЧИК", "stackPhotoNotUploadedPhotosCount(): " + RealmManager.stackPhotoNotUploadedPhotosCount());
-//
-//                globals.testMSG(toolbar_menus.this);
-//
-//                Log.e("КРОНЧИК", "internetStatus: " + internetStatus);
-//
-//                globals.writeToMLOG(Clock.getHumanTime() + " CRON.internetStatus: " + internetStatus + "\n");
-//
-//                cronCheckUploadsPhotoOnServer();                // Получение инфы о "загруженности" фоток
-//
-//
-//                // Если включена Автовыгрузка/Автообмен
-//                if (Globals.autoSend && internetStatus == 1) {
-////                getPhotoAndUpload(1);   // Выгрузка фото
-//
-//
-//                    try {
-//                        tablesLoadingUnloading.sendAndUpdateLog();
-//                    } catch (Exception e) {
-//                        Globals.writeToMLOG("ERROR", "CRON LOG MP", "Exception e: " + e);
-//                    }
-//
-//                    tablesLoadingUnloading.cronUpdateTables();
-//
-//                    try {
-//                        Globals.writeToMLOG("INFO", "CRON uploadReportPrepare", "Start");
-//                        tablesLoadingUnloading.uploadReportPrepareToServer();
-//                    } catch (Exception e) {
-//                        Globals.writeToMLOG("ERROR", "CRON uploadReportPrepare", "Exception e: " + e);
-//                    }
-//
-//                    try {
-//                        exchange.sendARMark();
-//                    } catch (Exception e) {
-//                    }
-//
-//                    try {
-//                        votesExchange.uploadVotes(new Clicks.clickObjectAndStatus() {
-//                            @Override
-//                            public void onSuccess(Object data) {
-//                                Globals.writeToMLOG("INFO", "startExchange/VotesExchange/", "Object: " + data);
-//                            }
-//
-//                            @Override
-//                            public void onFailure(String error) {
-//                                Globals.writeToMLOG("ERROR", "startExchange/VotesExchange/onFailure", "error: " + error);
-//                            }
-//                        });
-//                    } catch (Exception e) {
-//                        Globals.writeToMLOG("ERROR", "startExchange/VotesExchange/", "Exception e: " + e);
-//                    }
-//
-//
-//                    // Новый обмен. Нужно ещё донастроить для нормальной работы.
-//                    if (exchange == null) {
-//                        exchange = new Exchange();
-//                    }
-//                    exchange.context = toolbar_menus.this;
-//
-//
-////                        loadingStart();
-//
-//                    if (photoReports.permission) {
-//                        Globals.writeToMLOG("INFO", "CRON/PhotoReports", "Start upload photo reports. upload permission: true");
-//                        //##############
-//                        photoReports.uploadPhotoReports(PhotoReports.UploadType.AUTO);
-//                    } else {
-//                        Globals.writeToMLOG("INFO", "CRON/PhotoReports", "Start upload photo reports. upload permission: false");
-//                    }
-//
-//                    if (Exchange.exchangeTime + exchange.retryTime < System.currentTimeMillis())
-//                        exchange.startExchange();
-//                    else {
-//                        exchange.sendWpData2();
-//                        exchange.sendTAR();              // Выгрузка на сервер ЗИР-а
-//                        exchange.uploadTARComments(null);    // Выгрузка ЗИР переписки(коммнетариев)
-////                        exchange.downloadAchievements();
-//                        exchange.uploadAchievemnts();
-//                    }
-////                    tablesLoadingUnloading.updateWpData();
-//
-//
-//                    // Загрузка Задач и Рекламаций
-//                    try {
-//                        tarExchange.downloadTaR(new ExchangeInterface.ExchangeResponseInterface() {
-//                            @Override
-//                            public <T> void onSuccess(List<T> data) {
-//                                SQL_DB.tarDao().insertData((List<TasksAndReclamationsSDB>) data)
-//                                        .subscribeOn(Schedulers.io())
-//                                        .subscribe(new DisposableCompletableObserver() {
-//                                            @Override
-//                                            public void onComplete() {
-//                                                Globals.writeToMLOG("INFO", "Exchange.ReclamationPointExchange/downloadTaR.onComplete", "Успешно сохранило Задачи и Рекламации (" + data.size() + ")шт в БД");
-//                                            }
-//
-//                                            @Override
-//                                            public void onError(@io.reactivex.rxjava3.annotations.NonNull Throwable e) {
-//                                                Globals.writeToMLOG("INFO_ERR", "Exchange.ReclamationPointExchange/downloadTaR.onError", "Ошибка при сохранении в БД: " + e);
-//                                            }
-//                                        });
-//                            }
-//
-//                            @Override
-//                            public void onFailure(String error) {
-//                                Globals.writeToMLOG("INFO_ERR", "Exchange.ReclamationPointExchange/downloadTaR.onFailure", "String error: " + error);
-//                            }
-//                        });
-//                    } catch (Exception e) {
-//                    }
-//                }
-//
-//
-//                // Пишет статус логина. Или режим работы приложения
-//                toolbarMwnuItemServer = "Тест";
-////                if (Globals.onlineStatus) {
-////                    toolbarMwnuItemServer = getResources().getString(R.string.txt_sever) + "(" + getResources().getString(R.string.txt_online) + ")";
-////                } else {
-////                    toolbarMwnuItemServer = getResources().getString(R.string.txt_sever) + "(" + getResources().getString(R.string.txt_offline) + ")";
-////                }
-//                Log.e("КРОНЧИК", "Globals.onlineStatus: " + toolbarMwnuItemServer);
-//            } catch (Exception e) {
-//                Log.e("КРОНЧИК", "Exception" + e);
-//            }
-//
-//
-//            globals.handlerCount.postDelayed(this, 10000);  //повтор раз в 10 секунд
-//        }
-//    };
+    private Runnable runnableCron10 = new Runnable() {
+        public void run() {
+//            if (false)
+            try {
+                Log.e("КРОНЧИК", "Time: " + Clock.getHumanTime());
 
-    // ===== КРОНЧИК ===== КРОНЧИК ===== КРОНЧИК ===== КРОНЧИК ===== КРОНЧИК ===== КРОНЧИК =====
-    //----------------------------------------------------------------------------------------------
-
-
-    // НОВАЯ ВЫГРУЗКА ФОТО
-    // ---------------------------------------------------------------------------------------------
-
-
-    /**
-     * Получение и выгрузка фоток.
-     * <p>
-     * mod = 1 -- Выгрузка в ручном режиме
-     * mod = 2 -- Выгрузка вызвана из крона (Автовыгрузка)
-     */
-    private List<StackPhotoDB> realmResults = new ArrayList<>();
-
-
-    //----------------------------------------------------------------------------------------------
-    /*
-    06.05.2025 КРОНЧИК переехал во viewModel
-     */
-    //service -- жосткий аналог крона
-    // ===== КРОНЧИК ===== КРОНЧИК ===== КРОНЧИК ===== КРОНЧИК ===== КРОНЧИК ===== КРОНЧИК =====
-    @Override
-    public void onTimerCronchik() {
-        //            if (false)
-        try {
-            Log.e("onTimerCronchik", "Time: " + Clock.getHumanTime());
-
-            synchronizationSignal("SIGNAL", null);
+                synchronizationSignal("SIGNAL", null);
 
 //                globals.fixMP(null);
 
 //            Log.e("КРОНЧИК", "stackPhotoDBAll: " + StackPhotoRealm.getAll().size());
 
-            // 22.04.2021 Ужасная хрень. Если нет данных от GPS -- оно начинает его слушать.
-            ua.com.merchik.merchik.trecker.switchedOff = !ua.com.merchik.merchik.trecker.enabledGPS;
+                // 22.04.2021 Ужасная хрень. Если нет данных от GPS -- оно начинает его слушать.
+                ua.com.merchik.merchik.trecker.switchedOff = !ua.com.merchik.merchik.trecker.enabledGPS;
 
-            if (ua.com.merchik.merchik.trecker.switchedOff) {
-                Log.e("onTimerCronchik", "Start GPS");
-                ua.com.merchik.merchik.trecker.SetUpLocationListener(toolbar_menus.this);
-            }
+                if (ua.com.merchik.merchik.trecker.switchedOff) {
+                    Log.e("КРОНЧИК", "Запускаю слушатель GPS-а");
+                    ua.com.merchik.merchik.trecker.SetUpLocationListener(toolbar_menus.this);
+                }
 
-            Log.e("onTimerCronchik", "SESSION: " + Globals.session);
-            Log.e("onTimerCronchik", "login: " + login);
-            Log.e("onTimerCronchik", "password: " + password);
+                Log.e("КРОНЧИК", "SESSION: " + Globals.session);
+                Log.e("КРОНЧИК", "login: " + login);
+                Log.e("КРОНЧИК", "password: " + password);
 
-            server.sessionCheckAndLogin(toolbar_menus.this, login, password);   // Проверка активности сессии и логин, если сессия протухла
-            internetStatus = server.internetStatus();       // Обновление статуса интеренета
+                server.sessionCheckAndLogin(toolbar_menus.this, login, password);   // Проверка активности сессии и логин, если сессия протухла
+                internetStatus = server.internetStatus();       // Обновление статуса интеренета
 //            pingServer(1);                            // ОБМЕН ЦВЕТ
 //                RealmManager.stackPhotoDeletePhoto();           // Удаление фото < 2 дня
-            lightStatus();                                  // Обновление статуса Светофоров
-            setupBadge(RealmManager.stackPhotoNotUploadedPhotosCount()); // Подсчёт кол-ва фоток в БД & Установка числа в счётчик
+                lightStatus();                                  // Обновление статуса Светофоров
+                setupBadge(RealmManager.stackPhotoNotUploadedPhotosCount()); // Подсчёт кол-ва фоток в БД & Установка числа в счётчик
 
-            Log.e("onTimerCronchik", "stackPhotoNotUploadedPhotosCount(): " + RealmManager.stackPhotoNotUploadedPhotosCount());
+                Log.e("КРОНЧИК", "stackPhotoNotUploadedPhotosCount(): " + RealmManager.stackPhotoNotUploadedPhotosCount());
 
-            globals.testMSG(toolbar_menus.this);
+                globals.testMSG(toolbar_menus.this);
 
-            Log.e("onTimerCronchik", "internetStatus: " + internetStatus);
+                Log.e("КРОНЧИК", "internetStatus: " + internetStatus);
 
-            globals.writeToMLOG(Clock.getHumanTime() + " CRON.internetStatus: " + internetStatus + "\n");
+                globals.writeToMLOG(Clock.getHumanTime() + " CRON.internetStatus: " + internetStatus + "\n");
 
-            cronCheckUploadsPhotoOnServer();                // Получение инфы о "загруженности" фоток
+                cronCheckUploadsPhotoOnServer();                // Получение инфы о "загруженности" фоток
 
-            // Если включена Автовыгрузка/Автообмен
-            if (Globals.autoSend && internetStatus == 1) {
+
+                // Если включена Автовыгрузка/Автообмен
+                if (Globals.autoSend && internetStatus == 1) {
 //                getPhotoAndUpload(1);   // Выгрузка фото
 
 
-                try {
-                    tablesLoadingUnloading.sendAndUpdateLog();
-                } catch (Exception e) {
-                    Globals.writeToMLOG("ERROR", "CRON LOG MP", "Exception e: " + e);
-                }
+                    try {
+                        tablesLoadingUnloading.sendAndUpdateLog();
+                    } catch (Exception e) {
+                        Globals.writeToMLOG("ERROR", "CRON LOG MP", "Exception e: " + e);
+                    }
 
-                tablesLoadingUnloading.cronUpdateTables();
+                    tablesLoadingUnloading.cronUpdateTables();
 
-                try {
-                    Globals.writeToMLOG("INFO", "CRON uploadReportPrepare", "Start");
-                    tablesLoadingUnloading.uploadReportPrepareToServer();
-                } catch (Exception e) {
-                    Globals.writeToMLOG("ERROR", "CRON uploadReportPrepare", "Exception e: " + e);
-                }
+                    try {
+                        Globals.writeToMLOG("INFO", "CRON uploadReportPrepare", "Start");
+                        tablesLoadingUnloading.uploadReportPrepareToServer();
+                    } catch (Exception e) {
+                        Globals.writeToMLOG("ERROR", "CRON uploadReportPrepare", "Exception e: " + e);
+                    }
 
-                try {
-                    votesExchange.uploadVotes(new Clicks.clickObjectAndStatus() {
-                        @Override
-                        public void onSuccess(Object data) {
-                            Globals.writeToMLOG("INFO", "startExchange/VotesExchange/", "Object: " + data);
-                        }
+                    try {
+                        exchange.sendARMark();
+                    } catch (Exception e) {
+                    }
 
-                        @Override
-                        public void onFailure(String error) {
-                            Globals.writeToMLOG("ERROR", "startExchange/VotesExchange/onFailure", "error: " + error);
-                        }
-                    });
-                } catch (Exception e) {
-                    Globals.writeToMLOG("ERROR", "startExchange/VotesExchange/", "Exception e: " + e);
-                }
+                    try {
+                        votesExchange.uploadVotes(new Clicks.clickObjectAndStatus() {
+                            @Override
+                            public void onSuccess(Object data) {
+                                Globals.writeToMLOG("INFO", "startExchange/VotesExchange/", "Object: " + data);
+                            }
+
+                            @Override
+                            public void onFailure(String error) {
+                                Globals.writeToMLOG("ERROR", "startExchange/VotesExchange/onFailure", "error: " + error);
+                            }
+                        });
+                    } catch (Exception e) {
+                        Globals.writeToMLOG("ERROR", "startExchange/VotesExchange/", "Exception e: " + e);
+                    }
 
 
-                // Новый обмен. Нужно ещё донастроить для нормальной работы.
-                if (exchange == null) {
-                    exchange = new Exchange();
-                }
-                exchange.context = toolbar_menus.this;
+                    // Новый обмен. Нужно ещё донастроить для нормальной работы.
+                    if (exchange == null) {
+                        exchange = new Exchange();
+                    }
+                    exchange.context = toolbar_menus.this;
+
 
 //                        loadingStart();
 
-                if (photoReports.permission) {
-                    Globals.writeToMLOG("INFO", "CRON/PhotoReports", "Start upload photo reports. upload permission: true");
-                    //##############
-                    photoReports.uploadPhotoReports(PhotoReports.UploadType.AUTO);
-                } else {
-                    Globals.writeToMLOG("INFO", "CRON/PhotoReports", "Start upload photo reports. upload permission: false");
-                }
+                    if (photoReports.permission) {
+                        Globals.writeToMLOG("INFO", "CRON/PhotoReports", "Start upload photo reports. upload permission: true");
+                        //##############
+                        photoReports.uploadPhotoReports(PhotoReports.UploadType.AUTO);
+                    } else {
+                        Globals.writeToMLOG("INFO", "CRON/PhotoReports", "Start upload photo reports. upload permission: false");
+                    }
 
-                if (Exchange.exchangeTime + exchange.retryTime < System.currentTimeMillis()) {
-                    exchange.startExchange();
+                    if (Exchange.exchangeTime + exchange.retryTime < System.currentTimeMillis())
+                        exchange.startExchange();
+                    else {
+                        exchange.sendWpData2();
+                        exchange.sendTAR();              // Выгрузка на сервер ЗИР-а
+                        exchange.uploadTARComments(null);    // Выгрузка ЗИР переписки(коммнетариев)
+//                        exchange.downloadAchievements();
+                        exchange.uploadAchievemnts();
+                    }
+//                    tablesLoadingUnloading.updateWpData();
+
+
                     // Загрузка Задач и Рекламаций
                     try {
                         tarExchange.downloadTaR(new ExchangeInterface.ExchangeResponseInterface() {
@@ -1476,30 +1310,196 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                     } catch (Exception e) {
                     }
                 }
-                else {
-                    exchange.sendWpData2();
-                    exchange.sendTAR();              // Выгрузка на сервер ЗИР-а
-                    exchange.uploadTARComments(null);    // Выгрузка ЗИР переписки(коммнетариев)
-                    exchange.uploadAchievemnts();
-                    exchange.sendARMark();
-                }
-//                    tablesLoadingUnloading.updateWpData();
-
-            }
 
 
-            // Пишет статус логина. Или режим работы приложения
-            toolbarMwnuItemServer = "Тест";
+                // Пишет статус логина. Или режим работы приложения
+                toolbarMwnuItemServer = "Тест";
 //                if (Globals.onlineStatus) {
 //                    toolbarMwnuItemServer = getResources().getString(R.string.txt_sever) + "(" + getResources().getString(R.string.txt_online) + ")";
 //                } else {
 //                    toolbarMwnuItemServer = getResources().getString(R.string.txt_sever) + "(" + getResources().getString(R.string.txt_offline) + ")";
 //                }
-            Log.e("КРОНЧИК", "Globals.onlineStatus: " + toolbarMwnuItemServer);
-        } catch (Exception e) {
-            Log.e("КРОНЧИК", "Exception" + e);
+                Log.e("КРОНЧИК", "Globals.onlineStatus: " + toolbarMwnuItemServer);
+            } catch (Exception e) {
+                Log.e("КРОНЧИК", "Exception" + e);
+            }
+
+
+            globals.handlerCount.postDelayed(this, 10000);  //повтор раз в 10 секунд
         }
-    }
+    };
+
+    // ===== КРОНЧИК ===== КРОНЧИК ===== КРОНЧИК ===== КРОНЧИК ===== КРОНЧИК ===== КРОНЧИК =====
+    //----------------------------------------------------------------------------------------------
+
+
+    // НОВАЯ ВЫГРУЗКА ФОТО
+    // ---------------------------------------------------------------------------------------------
+
+
+    /**
+     * Получение и выгрузка фоток.
+     * <p>
+     * mod = 1 -- Выгрузка в ручном режиме
+     * mod = 2 -- Выгрузка вызвана из крона (Автовыгрузка)
+     */
+    private List<StackPhotoDB> realmResults = new ArrayList<>();
+
+
+    //----------------------------------------------------------------------------------------------
+    /*
+    06.05.2025 КРОНЧИК переехал во viewModel
+     */
+    //service -- жосткий аналог крона
+    // ===== КРОНЧИК ===== КРОНЧИК ===== КРОНЧИК ===== КРОНЧИК ===== КРОНЧИК ===== КРОНЧИК =====
+//    @Override
+//    public void onTimerCronchik() {
+//        //            if (false)
+//        try {
+//            Log.e("onTimerCronchik", "Time: " + Clock.getHumanTime());
+//
+//            synchronizationSignal("SIGNAL", null);
+//
+////                globals.fixMP(null);
+//
+////            Log.e("КРОНЧИК", "stackPhotoDBAll: " + StackPhotoRealm.getAll().size());
+//
+//            // 22.04.2021 Ужасная хрень. Если нет данных от GPS -- оно начинает его слушать.
+//            ua.com.merchik.merchik.trecker.switchedOff = !ua.com.merchik.merchik.trecker.enabledGPS;
+//
+//            if (ua.com.merchik.merchik.trecker.switchedOff) {
+//                Log.e("onTimerCronchik", "Start GPS");
+//                ua.com.merchik.merchik.trecker.SetUpLocationListener(toolbar_menus.this);
+//            }
+//
+//            Log.e("onTimerCronchik", "SESSION: " + Globals.session);
+//            Log.e("onTimerCronchik", "login: " + login);
+//            Log.e("onTimerCronchik", "password: " + password);
+//
+//            server.sessionCheckAndLogin(toolbar_menus.this, login, password);   // Проверка активности сессии и логин, если сессия протухла
+//            internetStatus = server.internetStatus();       // Обновление статуса интеренета
+////            pingServer(1);                            // ОБМЕН ЦВЕТ
+////                RealmManager.stackPhotoDeletePhoto();           // Удаление фото < 2 дня
+//            lightStatus();                                  // Обновление статуса Светофоров
+//            setupBadge(RealmManager.stackPhotoNotUploadedPhotosCount()); // Подсчёт кол-ва фоток в БД & Установка числа в счётчик
+//
+//            Log.e("onTimerCronchik", "stackPhotoNotUploadedPhotosCount(): " + RealmManager.stackPhotoNotUploadedPhotosCount());
+//
+//            globals.testMSG(toolbar_menus.this);
+//
+//            Log.e("onTimerCronchik", "internetStatus: " + internetStatus);
+//
+//            globals.writeToMLOG(Clock.getHumanTime() + " CRON.internetStatus: " + internetStatus + "\n");
+//
+//            cronCheckUploadsPhotoOnServer();                // Получение инфы о "загруженности" фоток
+//
+//            // Если включена Автовыгрузка/Автообмен
+//            if (Globals.autoSend && internetStatus == 1) {
+////                getPhotoAndUpload(1);   // Выгрузка фото
+//
+//
+//                try {
+//                    tablesLoadingUnloading.sendAndUpdateLog();
+//                } catch (Exception e) {
+//                    Globals.writeToMLOG("ERROR", "CRON LOG MP", "Exception e: " + e);
+//                }
+//
+//                tablesLoadingUnloading.cronUpdateTables();
+//
+//                try {
+//                    Globals.writeToMLOG("INFO", "CRON uploadReportPrepare", "Start");
+//                    tablesLoadingUnloading.uploadReportPrepareToServer();
+//                } catch (Exception e) {
+//                    Globals.writeToMLOG("ERROR", "CRON uploadReportPrepare", "Exception e: " + e);
+//                }
+//
+//                try {
+//                    votesExchange.uploadVotes(new Clicks.clickObjectAndStatus() {
+//                        @Override
+//                        public void onSuccess(Object data) {
+//                            Globals.writeToMLOG("INFO", "startExchange/VotesExchange/", "Object: " + data);
+//                        }
+//
+//                        @Override
+//                        public void onFailure(String error) {
+//                            Globals.writeToMLOG("ERROR", "startExchange/VotesExchange/onFailure", "error: " + error);
+//                        }
+//                    });
+//                } catch (Exception e) {
+//                    Globals.writeToMLOG("ERROR", "startExchange/VotesExchange/", "Exception e: " + e);
+//                }
+//
+//
+//                // Новый обмен. Нужно ещё донастроить для нормальной работы.
+//                if (exchange == null) {
+//                    exchange = new Exchange();
+//                }
+//                exchange.context = toolbar_menus.this;
+//
+////                        loadingStart();
+//
+//                if (photoReports.permission) {
+//                    Globals.writeToMLOG("INFO", "CRON/PhotoReports", "Start upload photo reports. upload permission: true");
+//                    //##############
+//                    photoReports.uploadPhotoReports(PhotoReports.UploadType.AUTO);
+//                } else {
+//                    Globals.writeToMLOG("INFO", "CRON/PhotoReports", "Start upload photo reports. upload permission: false");
+//                }
+//
+//                if (Exchange.exchangeTime + exchange.retryTime < System.currentTimeMillis()) {
+//                    exchange.startExchange();
+//                    // Загрузка Задач и Рекламаций
+//                    try {
+//                        tarExchange.downloadTaR(new ExchangeInterface.ExchangeResponseInterface() {
+//                            @Override
+//                            public <T> void onSuccess(List<T> data) {
+//                                SQL_DB.tarDao().insertData((List<TasksAndReclamationsSDB>) data)
+//                                        .subscribeOn(Schedulers.io())
+//                                        .subscribe(new DisposableCompletableObserver() {
+//                                            @Override
+//                                            public void onComplete() {
+//                                                Globals.writeToMLOG("INFO", "Exchange.ReclamationPointExchange/downloadTaR.onComplete", "Успешно сохранило Задачи и Рекламации (" + data.size() + ")шт в БД");
+//                                            }
+//
+//                                            @Override
+//                                            public void onError(@io.reactivex.rxjava3.annotations.NonNull Throwable e) {
+//                                                Globals.writeToMLOG("INFO_ERR", "Exchange.ReclamationPointExchange/downloadTaR.onError", "Ошибка при сохранении в БД: " + e);
+//                                            }
+//                                        });
+//                            }
+//
+//                            @Override
+//                            public void onFailure(String error) {
+//                                Globals.writeToMLOG("INFO_ERR", "Exchange.ReclamationPointExchange/downloadTaR.onFailure", "String error: " + error);
+//                            }
+//                        });
+//                    } catch (Exception e) {
+//                    }
+//                }
+//                else {
+//                    exchange.sendWpData2();
+//                    exchange.sendTAR();              // Выгрузка на сервер ЗИР-а
+//                    exchange.uploadTARComments(null);    // Выгрузка ЗИР переписки(коммнетариев)
+//                    exchange.uploadAchievemnts();
+//                    exchange.sendARMark();
+//                }
+////                    tablesLoadingUnloading.updateWpData();
+//
+//            }
+//
+//
+//            // Пишет статус логина. Или режим работы приложения
+//            toolbarMwnuItemServer = "Тест";
+////                if (Globals.onlineStatus) {
+////                    toolbarMwnuItemServer = getResources().getString(R.string.txt_sever) + "(" + getResources().getString(R.string.txt_online) + ")";
+////                } else {
+////                    toolbarMwnuItemServer = getResources().getString(R.string.txt_sever) + "(" + getResources().getString(R.string.txt_offline) + ")";
+////                }
+//            Log.e("КРОНЧИК", "Globals.onlineStatus: " + toolbarMwnuItemServer);
+//        } catch (Exception e) {
+//            Log.e("КРОНЧИК", "Exception" + e);
+//        }
+//    }
 
     public interface UploadCallback {
         void onSuccess();
