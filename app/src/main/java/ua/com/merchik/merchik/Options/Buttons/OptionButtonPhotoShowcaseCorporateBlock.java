@@ -61,7 +61,7 @@ public class OptionButtonPhotoShowcaseCorporateBlock<T> extends OptionControl {
                 bundle.putString("viewModel", SamplePhotoSDBViewModel.class.getCanonicalName());
                 bundle.putString("contextUI", ContextUI.SAMPLE_PHOTO_FROM_OPTION_158604.toString());
                 JsonObject dataJson = new JsonObject();
-                dataJson.addProperty("tradeMarkDBId", tradeMarkDB.getID());
+                dataJson.addProperty("tradeMarkDBId", tradeMarkDB != null ? tradeMarkDB.getID() : "0");
                 dataJson.addProperty("wpDataDBId", String.valueOf(wpDataDB.getId()));
                 dataJson.addProperty("optionDBId", String.valueOf(optionDB.getID()));
                 bundle.putString("dataJson", new Gson().toJson(dataJson));

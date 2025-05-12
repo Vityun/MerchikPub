@@ -10,11 +10,13 @@ import android.text.SpannableStringBuilder;
 import android.text.Spanned;
 import android.text.TextPaint;
 import android.text.style.ClickableSpan;
+import android.util.Log;
 import android.view.View;
 
 import androidx.annotation.RequiresApi;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportTovar.TovarRequisites;
@@ -146,21 +148,24 @@ public class OptionControlAvailabilityControlPhotoRemainingGoods<T> extends Opti
                         }
                     }
                 }
-//                tovIds = new String[reportPrepare.size()];
-//                for (int i = 0; i < reportPrepare.size(); i++) {
-//                    tovIds.add(reportPrepare.get(i).getTovarId());
-//                }
-//                Arrays.sort(tovIds);
+                if (tovIds.isEmpty()){
+//                    tovIds = new String[reportPrepare.size()];
+                    for (int i = 0; i < reportPrepare.size(); i++) {
+                        tovIds.add(reportPrepare.get(i).getTovarId());
+                    }
+//                    Arrays.sort(tovIds);
+                }
+
             }
 
             //3.3. получаем список СЕТЕЙ для которых установлен признак ОСВ.
             // Це треба для того, щоб з"ясувати, треба надавати залишки по товарам конкретно з додатку ДАНОЇ мережі чи ні.
             // Таким чином ми можемо у рамках одного кошторису по одним мережам надавати залишки, а по іншим ні.
             List<AdditionalRequirementsDB> additionalRequirementsGroup = AdditionalRequirementsRealm.getAdditionalRequirements(wpDataDB.getClient_id(), OPTION_CONTROL_AVAILABILITY_CONTROL_PHOTO_REMAINING_GOODS_ID);
-            boolean found = false;
+            boolean found = true;
             for (AdditionalRequirementsDB item : additionalRequirementsGroup) {
                 if (group.equals(item.getGrpId())) {
-                    found = true;
+                    found = false;
                     break;
                 }
             }
@@ -171,7 +176,9 @@ public class OptionControlAvailabilityControlPhotoRemainingGoods<T> extends Opti
             List<StackPhotoDB> stackPhotoList = StackPhotoRealm.getPhoto(null, null, userId, null, null, dad2, 4, tovIdsArray); // Тип фото, Исполнитель, Дад2, Список Товаров . 4-Фото Остатков Товаров,
 
             //5.2. заполним ее данными ОСВ
-            if (!additionalRequirementsGroup.isEmpty() && found) {
+            if ((!additionalRequirementsGroup.isEmpty() && found)) {
+                Log.e("!!!","-");
+            } else {
                 tovs.append("Ви повинні завантажити в нашу систему світлину з залишком товару:").append("\n");
                 for (ReportPrepareDB item : reportPrepare) {
                     if (tovIds.isEmpty()) {

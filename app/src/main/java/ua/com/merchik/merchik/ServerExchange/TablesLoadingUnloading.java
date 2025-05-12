@@ -345,12 +345,13 @@ public class TablesLoadingUnloading {
         String date_to = timeTomorrow;
         long vpi;
 
-        SynchronizationTimetableDB sTable = RealmManager.getSynchronizationTimetableRowByTable("wp_data");
-        if (sTable != null) {
-            Globals.writeToMLOG("INFO", "TablesLoadingUnloading/downloadWPData/getSynchronizationTimetableRowByTable", "sTable: " + sTable);
-            vpi = sTable.getVpi_app();
-            Log.e("updateWpData", "vpi: " + vpi);
-        } else vpi = 0;
+//        SynchronizationTimetableDB sTable = RealmManager.getSynchronizationTimetableRowByTable("wp_data");
+//        if (sTable != null) {
+//            Globals.writeToMLOG("INFO", "TablesLoadingUnloading/downloadWPData/getSynchronizationTimetableRowByTable", "sTable: " + sTable);
+//            vpi = sTable.getVpi_app();
+//            Log.e("updateWpData", "vpi: " + vpi);
+//        } else
+            vpi = 0;
 
         try {
             Log.e("TAG_TEST_WP", "RESPONSE_0 T");
@@ -359,20 +360,20 @@ public class TablesLoadingUnloading {
                 @Override
                 public void onResponse(retrofit2.Call<WpDataServer> call, retrofit2.Response<WpDataServer> response) {
                     if (response.isSuccessful() && response.body() != null) {
-                        Log.e("SERVER_REALM_DB_UPDATE", "===================================downloadWPData_:" + response.body().getState() + "/" + response.body().getError());
 
                         if (response.body().getState() && response.body().getList() != null
                                 && !response.body().getList().isEmpty()) {
                             List<WpDataDB> wpDataDBList = response.body().getList();
+                            Globals.writeToMLOG("INFO", "TablesLoadingUnloading/downloadWPData/onResponse", "wpDataDBList.size(): " + wpDataDBList.size());
                             RealmManager.setWpData(wpDataDBList);
 
                             downloadTovarTable(null, wpDataDBList);
-                            RealmManager.INSTANCE.executeTransaction(realm -> {
-                                if (sTable != null) {
-                                    sTable.setVpi_app(System.currentTimeMillis() / 1000);
-                                    realm.copyToRealmOrUpdate(sTable);
-                                }
-                            });
+//                            RealmManager.INSTANCE.executeTransaction(realm -> {
+//                                if (sTable != null) {
+//                                    sTable.setVpi_app((System.currentTimeMillis() / 1000) + 10);
+//                                    realm.copyToRealmOrUpdate(sTable);
+//                                }
+//                            });
 
                         }
                     }
@@ -537,8 +538,8 @@ public class TablesLoadingUnloading {
             public void onResponse(Call<OptionsServer> call, Response<OptionsServer> response) {
                 try {
                     if (response.isSuccessful() && response.body() != null) {
-                        if (response.body().getState()) {
-                            RealmManager.saveDownloadedOptions(response.body().getList());
+                        if (response.body().getState() && response.body().getList() != null && !response.body().getList().isEmpty()) {
+                            RealmManager.setOptions(response.body().getList());
                             click.click("Данные успешно загружены и сохранены. (" + response.body().getList().size() + ")шт. Опций.");
                         } else {
                             click.click("Обновить данные не получилось. Обратитесь к своему руководителю.");
@@ -598,50 +599,26 @@ public class TablesLoadingUnloading {
         call.enqueue(new retrofit2.Callback<OptionsServer>() {
             @Override
             public void onResponse(retrofit2.Call<OptionsServer> call, retrofit2.Response<OptionsServer> response) {
-                globals.writeToMLOG(Clock.getHumanTime() + "_INFO.TablesLU.class.downloadOptions.onResponse.ENTER\n");
-                Log.e("TAG_TEST", "RESPONSE_3");
-                if (response.isSuccessful() && response.body() != null) {
-                    Log.e("SERVER_REALM_DB_UPDATE", "===================================downloadOptions_:" + response.body().getState() + "/" + response.body().getError());
+                try {
+                    globals.writeToMLOG(Clock.getHumanTime() + "_INFO.TablesLU.class.downloadOptions.onResponse.ENTER\n");
+                    if (response.isSuccessful() && response.body() != null) {
+                        Log.e("SERVER_REALM_DB_UPDATE", "===================================downloadOptions_:" + response.body().getState() + "/" + response.body().getError());
+                        globals.writeToMLOG(Clock.getHumanTime() + "_INFO.TablesLU.class.downloadOptions.response.isSuccessful(): " + response.isSuccessful());
 
-                    try {
-                        try {
-                            globals.writeToMLOG(Clock.getHumanTime() + "_INFO.TablesLU.class.downloadOptions.размер ответа: " + response.body().getList().size() + "\n");
-                        } catch (Exception e) {
-                            globals.writeToMLOG(Clock.getHumanTime() + "_INFO.TablesLU.class.downloadOptions.ответ от сервера.ERROR1: " + e + "\n");
+                        if (response.body().getList() != null && !response.body().getList().isEmpty()) {
+                            globals.writeToMLOG(Clock.getHumanTime() + "_INFO.TablesLU.class.downloadOptions.размер ответа: " + response.body().getList().size());
+                            RealmManager.setOptions(response.body().getList());
+                            RealmManager.INSTANCE.executeTransaction(realm -> {
+                                synchronizationTimetableDB.setVpi_app((System.currentTimeMillis() / 1000) + 10);
+                                realm.copyToRealmOrUpdate(synchronizationTimetableDB);
+                            });
                         }
-                    } catch (Exception e) {
-                        globals.writeToMLOG(Clock.getHumanTime() + "_INFO.TablesLU.class.downloadOptions.ответ от сервера.ERROR: " + e + "\n");
+
                     }
-
-
-                    if (response.body().getList() != null && !response.body().getList().isEmpty()) {
-                        RealmManager.setOptions(response.body().getList());
-                        RealmManager.INSTANCE.executeTransaction(realm -> {
-                            synchronizationTimetableDB.setVpi_app(System.currentTimeMillis() / 1000);
-                            realm.copyToRealmOrUpdate(synchronizationTimetableDB);
-                        });
-                    }
-//                    if (response.body().getState()) {
-//                        if (RealmManager.setOptions(response.body().getList())) {
-//                            if (pg != null)
-//                                if (pg.isShowing())
-//                                    pg.dismiss();
-//                        } else {
-//                            if (pg != null)
-//                                if (pg.isShowing())
-//                                    pg.dismiss();
-//
-//                        }
-//                    } else {
-//                        if (pg != null)
-//                            if (pg.isShowing())
-//                                pg.dismiss();
-//
-//                    }
-
+                } finally {
+                    readyOptions = true;
+                    isDownloadOptions = false;
                 }
-                readyOptions = true;
-                isDownloadOptions = false;
             }
 
             @Override
@@ -1769,6 +1746,7 @@ public class TablesLoadingUnloading {
         String mod = "log";
         String act = "save";
         ArrayList<LogUploadToServ> data = RealmManager.getLogToSend();
+
 
         Log.e("UPLOAD_DATA", "LOG. (" + data.size() + ")");
 

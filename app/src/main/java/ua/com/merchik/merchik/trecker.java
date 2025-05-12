@@ -67,7 +67,7 @@ public class trecker implements LocationListener {
                 06.05.2025 изменил частоту обновления с 0 секунд и 0 метров на 5 сек или 10 метров
                  */
                 locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,
-                        5000L, 10f, locationListener); // 5 сек или 10 метров
+                        5000L, 5f, locationListener); // 5 сек или 5 метров
 //                locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,
 //                        0, 0, locationListener);
 

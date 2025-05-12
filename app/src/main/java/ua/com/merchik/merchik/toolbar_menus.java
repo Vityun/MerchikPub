@@ -87,9 +87,9 @@ import okhttp3.WebSocket;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
+import ua.com.merchik.merchik.Activities.CronchikViewModel;
 import ua.com.merchik.merchik.Activities.Features.FeaturesActivity;
 import ua.com.merchik.merchik.Activities.MenuMainActivity;
-import ua.com.merchik.merchik.Activities.CronchikViewModel;
 import ua.com.merchik.merchik.Activities.PhotoLogActivity.PhotoLogActivity;
 import ua.com.merchik.merchik.Activities.PremiumActivity.PremiumActivity;
 import ua.com.merchik.merchik.Activities.ReferencesActivity.ReferencesActivity;
@@ -108,7 +108,6 @@ import ua.com.merchik.merchik.ServerExchange.TablesExchange.ShowcaseExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.VotesExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesLoadingUnloading;
 import ua.com.merchik.merchik.Utils.FileCompressor;
-import ua.com.merchik.merchik.Utils.TimerCallback;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.Database.Room.Chat.ChatSDB;
 import ua.com.merchik.merchik.data.Database.Room.ShowcaseSDB;
@@ -1213,7 +1212,7 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
 
                 // Если включена Автовыгрузка/Автообмен
                 if (Globals.autoSend && internetStatus == 1) {
-//                getPhotoAndUpload(1);   // Выгрузка фото
+//                    getPhotoAndUpload(1);   // Выгрузка фото
 
 
                     try {

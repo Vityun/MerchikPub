@@ -11,6 +11,7 @@ import com.google.gson.Gson;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -176,9 +177,9 @@ public class RealmManager {
      * @param wpData список данных с сервера
      */
     public static void setWpData(List<WpDataDB> wpData) {
-        Log.e("REALM_DB_UPDATE", "WP_DATA_START");
+        Globals.writeToMLOG("INFO", "RealmManager.setWpData", "wpDataDBList.size(): " + wpData.size());
         INSTANCE.beginTransaction();
-//        INSTANCE.delete(WpDataDB.class);
+        INSTANCE.delete(WpDataDB.class);
         INSTANCE.copyToRealmOrUpdate(wpData);
         INSTANCE.commitTransaction();
         Log.e("REALM_DB_UPDATE", "WP_DATA_END");
@@ -326,25 +327,35 @@ public class RealmManager {
      * Запись в Реалм Опций
      */
     public static boolean setOptions(List<OptionsDB> optionsDBS) {
-        try {
-            globals.writeToMLOG(Clock.getHumanTime() + "_INFO.RealmManager.class.setOptions.Размер списка: " + optionsDBS.size() + "\n");
-        } catch (Exception e) {
-            globals.writeToMLOG(Clock.getHumanTime() + "_INFO.RealmManager.class.setOptions.Ошибка1: " + e + "\n");
+        globals.writeToMLOG(Clock.getHumanTime() + "_INFO.setOptions.sizeBefore: " + optionsDBS.size());
+
+        // Удаление дубликатов по ключу
+        Map<String, OptionsDB> map = new LinkedHashMap<>();
+        for (OptionsDB item : optionsDBS) {
+            if (item.getID() != null) {
+                map.put(item.getID(), item); // последний с таким ключом "побеждает"
+            }
         }
+        List<OptionsDB> uniqueList = new ArrayList<>(map.values());
+        globals.writeToMLOG(Clock.getHumanTime() + "_INFO.setOptions.sizeAfter: " + uniqueList.size());
 
-        INSTANCE.beginTransaction();
-//        INSTANCE.delete(OptionsDB.class);
-        List<OptionsDB> res = INSTANCE.copyToRealmOrUpdate(optionsDBS);
-        try {
-            globals.writeToMLOG(Clock.getHumanTime() + "_INFO.RealmManager.class.setOptions.Размер сохранённого списка: " + res.size() + "\n");
-        } catch (Exception e) {
-            globals.writeToMLOG(Clock.getHumanTime() + "_INFO.RealmManager.class.setOptions.Ошибка2: " + e + "\n");
-        }
+        INSTANCE.executeTransaction(realm -> {
+            realm.insertOrUpdate(uniqueList); // безопасное сохранение без дубликатов
+        });
 
-
-        INSTANCE.commitTransaction();
         return true;
     }
+
+//    public static boolean setOptions(List<OptionsDB> optionsDBS) {
+//        globals.writeToMLOG(Clock.getHumanTime() + "_INFO.RealmManager.class.setOptions.Размер списка: " + optionsDBS.size() + "\n");
+//
+//        INSTANCE.beginTransaction();
+////        INSTANCE.delete(OptionsDB.class);
+//        List<OptionsDB> res = INSTANCE.copyToRealmOrUpdate(optionsDBS);
+//        globals.writeToMLOG(Clock.getHumanTime() + "_INFO.RealmManager.class.setOptions.Размер сохранённого списка: " + res.size() + "\n");
+//        INSTANCE.commitTransaction();
+//        return true;
+//    }
 
     public static void saveDownloadedOptions(List<OptionsDB> optionsDBS) {
         INSTANCE.beginTransaction();
@@ -625,7 +636,7 @@ public class RealmManager {
         return INSTANCE.where(OptionsDB.class).equalTo("iD", id).findFirst();
     }
 
-    public static String getOptionNameByOptionId(String optionId){
+    public static String getOptionNameByOptionId(String optionId) {
         OptionsDB optionsDB = INSTANCE.where(OptionsDB.class)
                 .equalTo("optionId", optionId)
                 .findFirst();
@@ -648,7 +659,7 @@ public class RealmManager {
 
     // STACK PHOTO:---------------------------------------------------------------------------------
     public static void stackPhotoSavePhoto(StackPhotoDB stackPhotoDB) {
-        INSTANCE.executeTransaction(realm ->{
+        INSTANCE.executeTransaction(realm -> {
                     try {
                         realm.copyToRealmOrUpdate(stackPhotoDB);
                     } catch (Exception e) {
@@ -865,8 +876,8 @@ public class RealmManager {
 
         RealmQuery<StackPhotoDB> query = INSTANCE.where(StackPhotoDB.class);
 
-            query.equalTo("photoServerId", photoServerId)
-                    .isNotNull("photo_num");
+        query.equalTo("photoServerId", photoServerId)
+                .isNotNull("photo_num");
 
         StackPhotoDB st;
         if (query.findFirst() != null) {
