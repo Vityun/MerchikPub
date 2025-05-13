@@ -2283,9 +2283,11 @@ public class Exchange {
                 public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
                     Log.e("updateTAR", "response:" + response.body());
                     Globals.writeToMLOG("INGO", "updateTAR", "response.body():" + response.body());
-                    uploadData.uploadStatus = 0;
-                    uploadData.voteDtUpload = System.currentTimeMillis() / 1000;
-                    SQL_DB.tarDao().insertData(Collections.singletonList(uploadData));
+                    if (response.isSuccessful()) {
+                        uploadData.uploadStatus = 0;
+                        uploadData.voteDtUpload = System.currentTimeMillis() / 1000;
+                        SQL_DB.tarDao().insertData(Collections.singletonList(uploadData));
+                    }
                 }
 
                 @Override

@@ -1,5 +1,6 @@
 package ua.com.merchik.merchik;
 
+import android.app.Activity;
 import android.content.Context;
 import android.net.Uri;
 import android.os.Build;
@@ -36,6 +37,8 @@ import ua.com.merchik.merchik.data.UploadPhotoData.Move;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.StackPhotoRealm;
 import ua.com.merchik.merchik.dialogs.DialogData;
+import ua.com.merchik.merchik.dialogs.features.MessageDialogBuilder;
+import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
 
 /**
@@ -77,10 +80,7 @@ public class PhotoReports {
      * Выгрузка фотоотчётов.
      */
     public void uploadPhotoReports(UploadType type) {
-//        if (realmResults != null && realmResults.size() == 0){
         getDataToUpload();  // Подготовка данных к выгрузке
-//        }
-
 
         Globals.writeToMLOG("INFO", "PhotoReports/upload_photo/uploadPhotoReports", "START. Upload type: " + type);
         Globals.writeToMLOG("INFO", "PhotoReports/upload_photo/uploadPhotoReports", "START. size to unload: " + realmResults.size() + " /permission: " + permission);
@@ -278,6 +278,7 @@ public class PhotoReports {
      * @return
      */
     private static final Set<Integer> uploadingPhotoIds = ConcurrentHashMap.newKeySet();
+
     private void buildCall(StackPhotoDB photoDB, ExchangeInterface.UploadPhotoReports callback) {
         int photoId = photoDB.getId();
 
@@ -495,68 +496,81 @@ public class PhotoReports {
         call.enqueue(new retrofit2.Callback<JsonObject>() {
             @Override
             public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
+                Log.e("M_UPLOAD_GALLERY", "HERE IN onResponse");
+                Globals.writeToMLOG("INFO", "PhotoReports/buildCall/CALL/onResponse/responseBody", "HERE IN");
+
+                Globals.writeToMLOG("INFO", "PhotoReports/buildCall/CALL/onResponse/responseBody", "HERE IN call: " + call);
+
+                Globals.writeToMLOG("INFO", "PhotoReports/buildCall/CALL/onResponse/responseBody", "HERE IN response: " + response);
+
                 try {
-                    Log.e("M_UPLOAD_GALLERY", "HERE IN onResponse");
-                    Globals.writeToMLOG("INFO", "PhotoReports/buildCall/CALL/onResponse/responseBody", "HERE IN");
-
-                    Globals.writeToMLOG("INFO", "PhotoReports/buildCall/CALL/onResponse/responseBody", "HERE IN call: " + call);
-
-                    Globals.writeToMLOG("INFO", "PhotoReports/buildCall/CALL/onResponse/responseBody", "HERE IN response: " + response);
-
-                    try {
-                        if (response.isSuccessful()) {
-                            if (response.body() != null) {
-                                Globals.writeToMLOG("INFO", "PhotoReports/buildCall/CALL/onResponse/responseBody", "" + response.body());
-                                ImagesPrepareUploadPhoto info = new Gson().fromJson(new Gson().toJson(response.body()), ImagesPrepareUploadPhoto.class);
-                                Globals.writeToMLOG("INFO", "PhotoReports/buildCall/CALL/onResponse/responseBody/info", "" + new Gson().toJson(info));
-                                if (info.state) {
-                                    ImagesPrepareUploadPhoto.DataList data = info.list.get(0);
-                                    if (data.state) {
-                                        callback.onSuccess(photoDB, "test");
-                                    } else {
-                                        if (data.errorType.equals("photo_already_exist")) {
-                                            Globals.writeToMLOG("INFO", "PhotoReports/buildCall/CALL/onResponse/responseBody/info/photo_already_exist", "photo_already_exist");
-                                            callback.onSuccess(photoDB, "Фото уже было загружено");
-                                        } else {
-                                            callback.onFailure(photoDB, "Ошибка при обработке фото: " + data.error);
-                                        }
-                                    }
+                    if (response.isSuccessful()) {
+                        if (response.body() != null) {
+                            Globals.writeToMLOG("INFO", "PhotoReports/buildCall/CALL/onResponse/responseBody", "" + response.body());
+                            ImagesPrepareUploadPhoto info = new Gson().fromJson(new Gson().toJson(response.body()), ImagesPrepareUploadPhoto.class);
+                            Globals.writeToMLOG("INFO", "PhotoReports/buildCall/CALL/onResponse/responseBody/info", "" + new Gson().toJson(info));
+                            if (info.state) {
+                                ImagesPrepareUploadPhoto.DataList data = info.list.get(0);
+                                if (data.state) {
+                                    callback.onSuccess(photoDB, "test");
                                 } else {
-                                    try {
-                                        if (info.list != null && info.list.size() > 0) {
-                                            ImagesPrepareUploadPhoto.DataList data = info.list.get(0);
-                                            Globals.writeToMLOG("INFO", "PhotoReports/buildCall/CALL/onResponse/responseBody/info/data", "" + new Gson().toJson(data));
-                                            if (data.state) {
-                                                callback.onSuccess(photoDB, "При выгрузке фото произошла ошибка1: " + data.error);
-                                            } else {
-                                                if (data.errorType.equals("photo_already_exist")) {
-                                                    Globals.writeToMLOG("INFO", "PhotoReports/buildCall/CALL/onResponse/responseBody/info/photo_already_exist", "photo_already_exist");
-                                                    callback.onSuccess(photoDB, "Фото уже было загружено");
-                                                } else {
-                                                    callback.onFailure(photoDB, "Ошибка при обработке фото: " + data.error);
-                                                }
-                                            }
-                                        } else {
-                                            callback.onFailure(photoDB, "Список list - пустой!");
-                                        }
-                                    } catch (Exception e) {
-                                        callback.onFailure(photoDB, "Ошибка при обработке данных: " + e);
+                                    if (data.errorType.equals("photo_already_exist")) {
+                                        Globals.writeToMLOG("INFO", "PhotoReports/buildCall/CALL/onResponse/responseBody/info/photo_already_exist", "photo_already_exist");
+                                        new MessageDialogBuilder((Activity) mContext)
+                                                .setStatus(DialogStatus.ALERT)
+                                                .setTitle("Сервер не прийняв фото")
+                                                .setSubTitle("Фото вже є на сервері")
+                                                .setMessage(data.error + ". Ви повинні завантажити нове фото")
+                                                .show();
+                                        callback.onFailure(photoDB, data.error);
+                                    } else {
+                                        callback.onFailure(photoDB, "Ошибка при обработке фото: " + data.error);
                                     }
-//                                callback.onFailure(photoDB, "Запрос прошел с ошибкой, ошибка: " + response.body());
                                 }
                             } else {
-                                callback.onFailure(photoDB, "Запрос прошел с ошибкой, ответ с сервера - пустой. Обратитесь к Вашему руководителю.");
+                                try {
+                                    if (info.list != null && info.list.size() > 0) {
+                                        ImagesPrepareUploadPhoto.DataList data = info.list.get(0);
+                                        Globals.writeToMLOG("INFO", "PhotoReports/buildCall/CALL/onResponse/responseBody/info/data", "" + new Gson().toJson(data));
+                                        if (data.state) {
+                                            callback.onSuccess(photoDB, "При выгрузке фото произошла ошибка1: " + data.error);
+                                        } else {
+                                            if (data.errorType.equals("photo_already_exist")) {
+                                                Globals.writeToMLOG("INFO", "PhotoReports/buildCall/CALL/onResponse/responseBody/info/photo_already_exist", "photo_already_exist");
+//                                                  ############################
+                                                new MessageDialogBuilder((Activity) mContext)
+                                                        .setStatus(DialogStatus.ALERT)
+                                                        .setTitle("Сервер не прийняв фото")
+                                                        .setSubTitle("Фото вже є на сервері")
+                                                        .setMessage(data.error + ". Ви повинні завантажити нове фото")
+                                                        .show();
+
+                                                callback.onFailure(photoDB, data.error);
+                                            } else {
+                                                callback.onFailure(photoDB, "Ошибка при обработке фото: " + data.error);
+                                            }
+                                        }
+                                    } else {
+                                        callback.onFailure(photoDB, "Список list - пустой!");
+                                    }
+                                } catch (Exception e) {
+                                    callback.onFailure(photoDB, "Ошибка при обработке данных: " + e);
+                                }
+//                                callback.onFailure(photoDB, "Запрос прошел с ошибкой, ошибка: " + response.body());
                             }
                         } else {
-                            callback.onFailure(photoDB, "Запрос прошел с ошибкой, возможно проблема на сервере, повторите попытку позже. code: " + response.code());
+                            callback.onFailure(photoDB, "Запрос прошел с ошибкой, ответ с сервера - пустой. Обратитесь к Вашему руководителю.");
                         }
-                    } catch (Exception e) {
-                        Globals.writeToMLOG("INFO", "PhotoReports/buildCall/CALL/onResponse/responseBody", "HEREException e: " + e);
-                        callback.onFailure(photoDB, "ВНИМАНИЕ! Передайте эту ошибку Вашему руководителю: " + e);
+                    } else {
+                        callback.onFailure(photoDB, "Запрос прошел с ошибкой, возможно проблема на сервере, повторите попытку позже. code: " + response.code());
                     }
-                } finally {
-                    uploadingPhotoIds.remove(photoId);  // снять блокировку по завершению
+                } catch (Exception e) {
+                    Globals.writeToMLOG("INFO", "PhotoReports/buildCall/CALL/onResponse/responseBody", "HEREException e: " + e);
+                    callback.onFailure(photoDB, "ВНИМАНИЕ! Передайте эту ошибку Вашему руководителю: " + e);
+                    uploadingPhotoIds.remove(photoId);
                 }
+//                uploadingPhotoIds.remove(photoId);  // снять блокировку по завершению
+
             }
 
             @Override

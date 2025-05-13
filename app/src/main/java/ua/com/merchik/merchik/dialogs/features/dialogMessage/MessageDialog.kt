@@ -196,7 +196,8 @@ fun MessageDialog(
 
                         Text(
                             modifier = Modifier
-                                .padding(vertical = 4.dp),
+                                .padding(vertical = 4.dp)
+                                .padding(bottom = 2.dp),
                             text = styledAnnotatedString,
                             style = MaterialTheme.typography.titleMedium,
                             color = Color(0xCC1E201D),

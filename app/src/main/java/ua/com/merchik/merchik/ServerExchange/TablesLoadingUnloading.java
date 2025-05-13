@@ -345,12 +345,12 @@ public class TablesLoadingUnloading {
         String date_to = timeTomorrow;
         long vpi;
 
-//        SynchronizationTimetableDB sTable = RealmManager.getSynchronizationTimetableRowByTable("wp_data");
-//        if (sTable != null) {
-//            Globals.writeToMLOG("INFO", "TablesLoadingUnloading/downloadWPData/getSynchronizationTimetableRowByTable", "sTable: " + sTable);
-//            vpi = sTable.getVpi_app();
-//            Log.e("updateWpData", "vpi: " + vpi);
-//        } else
+        SynchronizationTimetableDB sTable = RealmManager.getSynchronizationTimetableRowByTable("wp_data");
+        if (sTable != null) {
+            Globals.writeToMLOG("INFO", "TablesLoadingUnloading/downloadWPData/getSynchronizationTimetableRowByTable", "sTable: " + sTable);
+            vpi = sTable.getVpi_app();
+            Log.e("updateWpData", "vpi: " + vpi);
+        } else
             vpi = 0;
 
         try {
@@ -365,15 +365,15 @@ public class TablesLoadingUnloading {
                                 && !response.body().getList().isEmpty()) {
                             List<WpDataDB> wpDataDBList = response.body().getList();
                             Globals.writeToMLOG("INFO", "TablesLoadingUnloading/downloadWPData/onResponse", "wpDataDBList.size(): " + wpDataDBList.size());
-                            RealmManager.setWpData(wpDataDBList);
+                            RealmManager.setWpDataAuto2(wpDataDBList);
 
                             downloadTovarTable(null, wpDataDBList);
-//                            RealmManager.INSTANCE.executeTransaction(realm -> {
-//                                if (sTable != null) {
-//                                    sTable.setVpi_app((System.currentTimeMillis() / 1000) + 10);
-//                                    realm.copyToRealmOrUpdate(sTable);
-//                                }
-//                            });
+                            RealmManager.INSTANCE.executeTransaction(realm -> {
+                                if (sTable != null) {
+                                    sTable.setVpi_app((System.currentTimeMillis() / 1000) + 5);
+                                    realm.copyToRealmOrUpdate(sTable);
+                                }
+                            });
 
                         }
                     }
@@ -1696,13 +1696,11 @@ public class TablesLoadingUnloading {
                                 if (response.body().getState()) {
                                     Log.e("TAG_TEST_WP", "RESPONSE_OK");
                                     if (response.body().getList() != null && !response.body().getList().isEmpty()) {
-                                        ArrayList<WpDataDB> wpToUpload = RealmManager.setWpDataAuto(response.body().getList()); // Получаем данные для выгрузки
+                                        ArrayList<WpDataDB> wpToUpload = RealmManager.setWpDataAuto2(response.body().getList()); // Получаем данные для выгрузки
                                         RealmManager.INSTANCE.executeTransaction(realm -> {
-                                            if (sTable != null) {
-                                                long vpiApp = System.currentTimeMillis() / 1000;
-                                                sTable.setVpi_app(vpiApp);
-                                                realm.copyToRealmOrUpdate(sTable);
-                                            }
+                                            long vpiApp = System.currentTimeMillis() / 1000;
+                                            sTable.setVpi_app(vpiApp + 3);
+                                            realm.copyToRealmOrUpdate(sTable);
                                         }); //
                                         if (wpToUpload != null) {
                                             Log.e("updateWpData", "wpToUploadSize: " + wpToUpload.size());
@@ -2405,7 +2403,7 @@ public class TablesLoadingUnloading {
 //        Log.e("parseJsonMenu", "===========END============");
         return data;
     }
-
+//  ##MenuItemFromWebDB
     private void saveMenuDB(ArrayList<MenuItemFromWebDB> data) {
         INSTANCE.beginTransaction();
         INSTANCE.copyToRealmOrUpdate(data);
@@ -2739,8 +2737,8 @@ public class TablesLoadingUnloading {
 //            data.date_from = Clock.getDatePeriod(-180);
 //            data.date_to = Clock.today;
 
-            SynchronizationTimetableDB synchronizationTimetableDB = RealmManager.INSTANCE.copyFromRealm(RealmManager.getSynchronizationTimetableRowByTable("additional_requirements"));
-            data.dt_change_from = String.valueOf(synchronizationTimetableDB.getVpi_app());
+//            SynchronizationTimetableDB synchronizationTimetableDB = RealmManager.INSTANCE.copyFromRealm(RealmManager.getSynchronizationTimetableRowByTable("additional_requirements"));
+//            data.dt_change_from = String.valueOf(synchronizationTimetableDB.getVpi_app());
 
             Gson gson = new Gson();
             String json = gson.toJson(data);
@@ -2774,10 +2772,10 @@ public class TablesLoadingUnloading {
 
                                 AdditionalRequirementsRealm.setDataToDB(response.body().getList());
 
-                                RealmManager.INSTANCE.executeTransaction(realm -> {
-                                    synchronizationTimetableDB.setVpi_app(System.currentTimeMillis() / 1000);
-                                    realm.copyToRealmOrUpdate(synchronizationTimetableDB);
-                                });
+//                                RealmManager.INSTANCE.executeTransaction(realm -> {
+//                                    synchronizationTimetableDB.setVpi_app(System.currentTimeMillis() / 1000);
+//                                    realm.copyToRealmOrUpdate(synchronizationTimetableDB);
+//                                });
                                 Globals.writeToMLOG("ERR", "downloadAdditionalRequirements/onResponse", "response.body().getList(): " + response.body().getList().size());
 
                             }

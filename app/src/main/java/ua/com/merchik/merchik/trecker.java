@@ -59,15 +59,15 @@ public class trecker implements LocationListener {
             // Обновление гео-данных
             if (locationManager != null) {
 //            if (locationManager.getAllProviders().contains(LocationManager.NETWORK_PROVIDER))
-                locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER,
-                        0, 0, locationListener);
+//                locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER,
+//                        0, 0, locationListener);
 
 //            if (locationManager.getAllProviders().contains(LocationManager.GPS_PROVIDER))
                 /*
                 06.05.2025 изменил частоту обновления с 0 секунд и 0 метров на 5 сек или 10 метров
                  */
                 locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,
-                        5000L, 5f, locationListener); // 5 сек или 5 метров
+                        4000L, 0, locationListener); // 4 сек или 0 метров
 //                locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,
 //                        0, 0, locationListener);
 

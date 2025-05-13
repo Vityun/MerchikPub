@@ -195,7 +195,7 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
 
     private TARViewModel tarViewModel;
     private VotesExchange votesExchange;
-    PhotoReports photoReports;
+    private PhotoReports photoReports;
 
 
     @Override

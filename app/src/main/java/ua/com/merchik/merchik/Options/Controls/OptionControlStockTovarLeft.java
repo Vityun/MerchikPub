@@ -57,7 +57,7 @@ public class OptionControlStockTovarLeft<T> extends OptionControl {
     private int percentageDeviationNumberSKYU;      // Відсоток відхилення кількості СКЮ
     private int percentageDeviationTotalInventory;  // Відсоток відхилення загального товарного запасу
 
-    private StringBuilder resMassage = new StringBuilder();
+//    private StringBuilder resMassage = new StringBuilder();
 
     private WpDataDB wpDataDB;
     private AddressSDB addressSDBDocument;
@@ -99,96 +99,187 @@ public class OptionControlStockTovarLeft<T> extends OptionControl {
     @RequiresApi(api = Build.VERSION_CODES.N)
     private void executeOption() {
         try {
-            //2.0. получим данные о товарах в отчете (если она еще не расчитана)
-            List<PPADB> ppadbList = PPARealm.getPPAIZAList(wpDataDB.getCode_iza(), wpDataDB.getClient_id(), String.valueOf(wpDataDB.getAddr_id()));
+//            //2.0. получим данные о товарах в отчете (если она еще не расчитана)
+//            List<PPADB> ppadbList = PPARealm.getPPAIZAList(wpDataDB.getCode_iza(), wpDataDB.getClient_id(), String.valueOf(wpDataDB.getAddr_id()));
+//            List<ReportPrepareDB> reportPrepare = ReportPrepareRealm.getReportPrepareByDad2(wpDataDB.getCode_dad2());
+//
+//
+//            //3.0. сформируем итоговую таблицу
+//            List<ReportPrepareDB> resultRP = new ArrayList<>();
+//
+//
+//            //3.2. сравним количество товара на складе + витрине с товарным запасом по УЧЕТУ
+//            for (ReportPrepareDB item : reportPrepare) {
+//                //определяем количество СКЮ
+//                item.numberSKUForAccounting = Integer.parseInt(item.oborotvedNum) > 0 ? 1 : 0;
+//                item.numberSKUForFact = item.amount > 0 ? 1 : 0;
+//                item.difference = Integer.parseInt(item.oborotvedNum) - item.amount;
+//
+//                //сравниваем реквизиты Фейс и (ОборотВед
+//                if (Integer.parseInt(item.face) > 0 && item.amount == 0) {
+//                    item.error = 1;
+//                    item.errorNote = "Товар є в НАЯВНОСТІ на вітрині (Фейс>0), та НЕ зазначений на ФАКТИЧНИХ залишках на (склад + вітрина)";
+//
+//                    resultRP.add(item);
+//                }
+//
+//                //сравниваем реквизиты ОборотВед и Остаток по Факту (Склад + Витрина)
+//                if (Integer.parseInt(item.oborotvedNum) > 0 && item.amount == 0) {
+//                    item.error = 1;
+//                    item.errorNote = "Товар рахується по ОБЛІКУ (ОборотВед>0), та НЕ зазначений на ФАКТИЧНИХ залишках на (склад + вітрина) і користувач не зазначив 'помилку'";
+//
+//                    resultRP.add(item);
+//                }
+//
+//                //сравниваем реквизиты ОборотВед и Остаток по Факту (Склад + Витрина)
+//                if (Integer.parseInt(item.oborotvedNum) == 0 && item.amount > 0) {
+//                    item.error = 1;
+//                    item.errorNote = "Товар фактично є в НАЯВНОСТІ (склад + вітрина), та не значиться по ОБЛІКУ (ОборотВед>0) і користувач не зазначив 'помилку'";
+//
+//                    resultRP.add(item);
+//                }
+//
+//                if (item.error == 1 && Integer.parseInt(item.tovarError) > 0) {
+//                    item.error = 0;
+//                    item.errorNote = "";
+//                }
+//            }
+//
+//
+//            //4.0. подсчитаем процент отклонения СКЮ (учетного от фактического)
+//            numberSKUForAccountingSUM = reportPrepare.stream().map(table -> table.numberSKUForAccounting).reduce(0, Integer::sum);
+//            numberSKUForFactSUM = reportPrepare.stream().map(table -> table.numberSKUForFact).reduce(0, Integer::sum);
+//            numberoborotvedNumSUM = reportPrepare.stream().map(table -> Integer.parseInt(table.oborotvedNum)).reduce(0, Integer::sum);
+//            colSUM = reportPrepare.stream().map(table -> table.amount).reduce(0, Integer::sum);
+//
+//            try {
+//                percentageDeviationNumberSKYU = 100 * numberSKUForAccountingSUM / numberSKUForFactSUM;
+//            } catch (Exception e) {
+//                percentageDeviationNumberSKYU = 100;
+//            }
+//
+//            try {
+//                percentageDeviationTotalInventory = 100 * numberoborotvedNumSUM / colSUM;
+//            } catch (Exception e) {
+//                percentageDeviationTotalInventory = 100;
+//            }
+//
+//            //5.0. готовим сообщение и сигнал
+//            errorSUM = reportPrepare.stream().map(table -> table.error).reduce(0, Integer::sum);
+//            if (reportPrepare.size() == 0) {
+//                resMassage.append("Нема даних для аналізу.");
+//                signal = false;
+//            } else if (errorSUM > 0) {
+//                resMassage.append("по ").append(errorSUM).append(" товарам є зауваження по проведенню інвентарізації.");
+//                signal = true;
+//            } else {
+//                resMassage.append("По ОБЛІКУ рахується ").append(numberSKUForAccountingSUM)
+//                        .append(" товарів (СКЮ), загальною кількістю ").append(numberoborotvedNumSUM)
+//                        .append(" шт, ФАКТИЧНО знайдено (склад + вітрина) ").append(numberSKUForFactSUM)
+//                        .append(" товарів загальною кількістю ").append(reportPrepare.size())
+//                        .append(" шт. Відсоток відхилення СКЮ=").append(percentageDeviationNumberSKYU)
+//                        .append("%. Відсоток відхилення товарного запасу = ").append(percentageDeviationTotalInventory)
+//                        .append("%");
+//                signal = true;
+//            }
+            UsersSDB usersSDB = SQL_DB.usersDao().getUserById(wpDataDB.getUser_id());
+
+            // 1. Определим список СКЮ
+            List<PPADB> skuList;
+
+//            if (optionDB.getOptionControlId() == OPTION_CONTROL_) {
+                // 2243 – по всем позициям из ППА
+                skuList = PPARealm.getPPAIZAList(
+                        wpDataDB.getCode_iza(),
+                        wpDataDB.getClient_id(),
+                        String.valueOf(wpDataDB.getAddr_id())
+                );
+//            } else if (wpDataDB.getOption() == GLOption.OPT_135448) {
+////                 135448 – по отдельным позициям из "Доп. требований"
+//                skuList = AdditionalRequirementsRealm.getSkuListByRequirements(
+//                        wpDataDB.getCode_dad2(),
+//                        wpDataDB.getClient_id()
+////                         здесь могут быть и другие параметры, если нужно
+//                );
+//            } else {
+//                skuList = new ArrayList<>();
+//            }
+
+// 3. Получим данные из отчета
             List<ReportPrepareDB> reportPrepare = ReportPrepareRealm.getReportPrepareByDad2(wpDataDB.getCode_dad2());
+            if (reportPrepare == null) reportPrepare = new ArrayList<>();
 
+// 4. Формируем результирующую таблицу
+            List<ReportPrepareDB> result = new ArrayList<>();
 
-            //3.0. сформируем итоговую таблицу
-            List<ReportPrepareDB> resultRP = new ArrayList<>();
+            for (PPADB sku : skuList) {
+                String skuCode;
 
-
-            //3.2. сравним количество товара на складе + витрине с товарным запасом по УЧЕТУ
-            for (ReportPrepareDB item : reportPrepare) {
-                //определяем количество СКЮ
-                item.numberSKUForAccounting = Integer.parseInt(item.oborotvedNum) > 0 ? 1 : 0;
-                item.numberSKUForFact = item.amount > 0 ? 1 : 0;
-                item.difference = Integer.parseInt(item.oborotvedNum) - item.amount;
-
-                //сравниваем реквизиты Фейс и (ОборотВед
-                if (Integer.parseInt(item.face) > 0 && item.amount == 0) {
-                    item.error = 1;
-                    item.errorNote = "Товар є в НАЯВНОСТІ на вітрині (Фейс>0), та НЕ зазначений на ФАКТИЧНИХ залишках на (склад + вітрина)";
-
-                    resultRP.add(item);
+                try {
+                    skuCode = sku.getTovarId();
+                } catch (Exception e) {
+                    skuCode = sku.getTovarId();
                 }
 
-                //сравниваем реквизиты ОборотВед и Остаток по Факту (Склад + Витрина)
-                if (Integer.parseInt(item.oborotvedNum) > 0 && item.amount == 0) {
-                    item.error = 1;
-                    item.errorNote = "Товар рахується по ОБЛІКУ (ОборотВед>0), та НЕ зазначений на ФАКТИЧНИХ залишках на (склад + вітрина) і користувач не зазначив 'помилку'";
-
-                    resultRP.add(item);
+                ReportPrepareDB matched = null;
+                for (ReportPrepareDB item : reportPrepare) {
+                    if (skuCode.equals(item.getTovarId())) {
+                        matched = item;
+                        break;
+                    }
                 }
 
-                //сравниваем реквизиты ОборотВед и Остаток по Факту (Склад + Витрина)
-                if (Integer.parseInt(item.oborotvedNum) == 0 && item.amount > 0) {
-                    item.error = 1;
-                    item.errorNote = "Товар фактично є в НАЯВНОСТІ (склад + вітрина), та не значиться по ОБЛІКУ (ОборотВед>0) і користувач не зазначив 'помилку'";
+                ReportPrepareDB newResult = new ReportPrepareDB();
+                newResult.setTovarId(skuCode);
 
-                    resultRP.add(item);
+                if (matched == null) {
+                    newResult.error = 1;
+                    newResult.errorNote = "В отчете отсутствует указанный товар.";
+                } else {
+                    int oborotved = Integer.parseInt(matched.oborotvedNum);
+                    newResult.oborotvedNum = matched.oborotvedNum;
+                    newResult.amount = matched.amount;
+
+                    if (oborotved == 0 && (matched.errorNote == null || matched.errorNote.trim().isEmpty())) {
+                        newResult.error = 1;
+                        newResult.errorNote = "Не указан остаток товара по Оборотной ведомости. Если товара по учету нет – укажите это в примечании 'товара нет'.";
+                    }
                 }
 
-                if (item.error == 1 && Integer.parseInt(item.tovarError) > 0) {
-                    item.error = 0;
-                    item.errorNote = "";
-                }
+                result.add(newResult);
             }
 
-
-            //4.0. подсчитаем процент отклонения СКЮ (учетного от фактического)
-            numberSKUForAccountingSUM = reportPrepare.stream().map(table -> table.numberSKUForAccounting).reduce(0, Integer::sum);
-            numberSKUForFactSUM = reportPrepare.stream().map(table -> table.numberSKUForFact).reduce(0, Integer::sum);
-            numberoborotvedNumSUM = reportPrepare.stream().map(table -> Integer.parseInt(table.oborotvedNum)).reduce(0, Integer::sum);
-            colSUM = reportPrepare.stream().map(table -> table.amount).reduce(0, Integer::sum);
-
-            try {
-                percentageDeviationNumberSKYU = 100 * numberSKUForAccountingSUM / numberSKUForFactSUM;
-            } catch (Exception e) {
-                percentageDeviationNumberSKYU = 100;
+// 5. Готовим сообщение и сигнал
+            int totalErrors = 0;
+            for (ReportPrepareDB r : result) {
+                if (r.error == 1) totalErrors++;
             }
 
-            try {
-                percentageDeviationTotalInventory = 100 * numberoborotvedNumSUM / colSUM;
-            } catch (Exception e) {
-                percentageDeviationTotalInventory = 100;
-            }
-
-            //5.0. готовим сообщение и сигнал
-            errorSUM = reportPrepare.stream().map(table -> table.error).reduce(0, Integer::sum);
-            if (reportPrepare.size() == 0) {
-                resMassage.append("Нема даних для аналізу.");
+            if (result.isEmpty()) {
+                spannableStringBuilder.append("Товаров, по которым надо проверять остатки, не обнаружено. Скорее всего не заполнена таблица Доп.требований.");
                 signal = false;
-            } else if (errorSUM > 0) {
-                resMassage.append("по ").append(errorSUM).append(" товарам є зауваження по проведенню інвентарізації.");
-                signal = true;
+            } else if (totalErrors == 0) {
+                spannableStringBuilder.append("Обнаружено ").append(String.valueOf(result.size())).append(" товаров с указанием остатков по оборотной ведомости. Замечаний нет.");
+                signal = false;
+            }
+            else
+
+            if (usersSDB.reportDate20 == null && usersSDB.reportCount < 20) {
+                spannableStringBuilder.append("Исполнитель ").append(usersSDB.fio).append(" еще не провел своего 20-го отчета.");
+                signal = false;
             } else {
-                resMassage.append("По ОБЛІКУ рахується ").append(numberSKUForAccountingSUM)
-                        .append(" товарів (СКЮ), загальною кількістю ").append(numberoborotvedNumSUM)
-                        .append(" шт, ФАКТИЧНО знайдено (склад + вітрина) ").append(numberSKUForFactSUM)
-                        .append(" товарів загальною кількістю ").append(reportPrepare.size())
-                        .append(" шт. Відсоток відхилення СКЮ=").append(percentageDeviationNumberSKYU)
-                        .append("%. Відсоток відхилення товарного запасу = ").append(percentageDeviationTotalInventory)
-                        .append("%");
+                spannableStringBuilder.append("Отсутствуют данные об остатках товаров по оборотной ведомости по ")
+                        .append(String.valueOf(totalErrors)).append(" товарам. Вы должны сперва исправить замечания, а затем проводить данный отчет!");
                 signal = true;
             }
 
-            spannableStringBuilder.append(resMassage);
 
-            for (ReportPrepareDB item : resultRP) {
-                TovarDB tov = TovarRealm.getById(item.tovarId);
-                spannableStringBuilder.append(createLinkedString(tov.getNm() + " " + item.errorNote, item, tov));
-            }
+//            spannableStringBuilder.append(resMassage);
+//
+//            for (ReportPrepareDB item : resultRP) {
+//                TovarDB tov = TovarRealm.getById(item.tovarId);
+//                spannableStringBuilder.append(createLinkedString(tov.getNm() + " " + item.errorNote, item, tov));
+//            }
 
 
 

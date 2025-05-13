@@ -16,7 +16,6 @@ import android.os.Bundle;
 import android.text.Html;
 import android.text.Spannable;
 import android.text.SpannableString;
-import android.text.Spanned;
 import android.text.style.ForegroundColorSpan;
 import android.text.style.UnderlineSpan;
 import android.util.Log;
@@ -29,7 +28,6 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 
 import com.google.gson.Gson;
@@ -261,16 +259,18 @@ public class DialogCreateAchievement {
                 }
 
                 if (AchievementDataHolder.Companion.instance().getPhotoHashTo() != null) {
-//                    achievementsSDB.img_before_hash = stackPhotoDBTo.photo_hash;
                     achievementsSDB.img_before_hash = AchievementDataHolder.Companion.instance().getPhotoHashTo();
+                } else if (stackPhotoDBTo != null && stackPhotoDBTo.getPhoto_hash() != null) {
+                    achievementsSDB.img_before_hash = stackPhotoDBTo.photo_hash;
                 } else {
                     Toast.makeText(v.getContext(), "Виберіть фото До, досягнення створено не буде", Toast.LENGTH_LONG).show();
                     return;
                 }
 
                 if (AchievementDataHolder.Companion.instance().getPhotoHashAfter() != null) {
-//                    achievementsSDB.img_after_hash = stackPhotoDBAfter.photo_hash;
                     achievementsSDB.img_after_hash = AchievementDataHolder.Companion.instance().getPhotoHashAfter();
+                } else if (stackPhotoDBAfter != null && stackPhotoDBAfter.getPhoto_hash() != null) {
+                    achievementsSDB.img_after_hash = stackPhotoDBAfter.photo_hash;
                 } else {
                     Toast.makeText(v.getContext(), "Виберіть фото Після, досягнення створено не буде", Toast.LENGTH_LONG).show();
                     return;
@@ -473,8 +473,9 @@ public class DialogCreateAchievement {
     public void setPhotoDo(StackPhotoDB stackPhotoDB) {
         stackPhotoDBTo = stackPhotoDB;
         photoToIV.setVisibility(View.VISIBLE);
-        if (stackPhotoDB.photo_num != null && !stackPhotoDB.photo_num.isEmpty())
+        if (stackPhotoDB.photo_num != null && !stackPhotoDB.photo_num.isEmpty()) {
             photoToIV.setImageURI(Uri.parse(stackPhotoDB.photo_num));
+        }
         photoToIV.setOnClickListener(v1 -> {
             try {
                 DialogFullPhotoR dialogFullPhoto = new DialogFullPhotoR(v1.getContext());

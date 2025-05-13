@@ -15,6 +15,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import io.realm.Realm;
 import io.realm.RealmConfiguration;
@@ -194,94 +196,179 @@ public class RealmManager {
      *
      * @return
      */
+    public static ArrayList<WpDataDB> setWpDataAuto2(List<WpDataDB> serverData) {
+        ArrayList<WpDataDB> sendOnServer = new ArrayList<>();
+
+        // Логирование входящих данных
+        Log.e("WP_DATA_UPDATE", "С сервера получено: " + serverData.size());
+        Globals.writeToMLOG("INFO", "setWpDataAuto", "С сервера получено: " + serverData.size());
+
+        // Получаем все локальные данные и строим map для быстрого поиска
+        RealmResults<WpDataDB> localData = INSTANCE.where(WpDataDB.class).findAll();
+        Log.e("WP_DATA_UPDATE", "Локальных данных до обновления: " + localData.size());
+        Globals.writeToMLOG("INFO", "setWpDataAuto", "Локальных данных до обновления: " + localData.size());
+
+        Map<String, WpDataDB> localMap = new HashMap<>();
+        for (WpDataDB local : localData) {
+            String key = generateKey(local);
+            localMap.put(key, local);
+        }
+
+        INSTANCE.beginTransaction();
+        for (WpDataDB wp : serverData) {
+            String key = generateKey(wp);
+            WpDataDB local = localMap.get(key);
+
+            Globals.writeToMLOG("INFO", "setWpDataAuto", "Серверная запись: " + new Gson().toJson(wp));
+
+            if (local != null) {
+                WpDataDB debug = INSTANCE.copyFromRealm(local);
+                Globals.writeToMLOG("INFO", "setWpDataAuto", "Локальная запись: " + new Gson().toJson(debug));
+
+                // Лог-граничные ситуации
+                if ((wp.getVisit_start_dt() == 0 && local.getVisit_start_dt() > 0) ||
+                        (wp.getVisit_end_dt() == 0 && local.getVisit_end_dt() > 0)) {
+                    Globals.writeToMLOG("INFO", "setWpDataAuto", "Случай для отладки: Сервер и Локальная запись различны по visit");
+                    Globals.writeToMLOG("INFO", "setWpDataAuto", "Серверная: " + new Gson().toJson(wp));
+                    Globals.writeToMLOG("INFO", "setWpDataAuto", "Локальная: " + new Gson().toJson(debug));
+                }
+
+                if (wp.getDt_update() >= local.getDt_update()) {
+                    Log.e("setWpDataAuto", "Обновляю локальную запись новыми данными");
+                    Globals.writeToMLOG("INFO", "setWpDataAuto", "Обновляю локальную запись (" + wp.getDt_update() + " >= " + local.getDt_update() + ")");
+
+                    // Копируем локальные временные значения, если серверные не заданы
+                    if (wp.getVisit_start_dt() == 0 && wp.getClient_start_dt() == 0 &&
+                            local.getVisit_start_dt() > 0 && local.getClient_start_dt() > 0) {
+                        wp.setVisit_start_dt(local.getVisit_start_dt());
+                        wp.setClient_start_dt(local.getClient_start_dt());
+                    } else if (wp.getVisit_end_dt() == 0 && wp.getClient_end_dt() == 0 &&
+                            local.getVisit_end_dt() > 0 && local.getClient_end_dt() > 0) {
+                        wp.setVisit_end_dt(local.getVisit_end_dt());
+                        wp.setClient_end_dt(local.getClient_end_dt());
+                    }
+
+                    INSTANCE.copyToRealmOrUpdate(wp);
+                } else {
+                    Log.e("setWpDataAuto", "Локальная запись новее, добавляю в sendOnServer");
+                    Globals.writeToMLOG("INFO", "setWpDataAuto", "Локальная запись новее (" + wp.getDt_update() + " < " + local.getDt_update() + ")");
+                    sendOnServer.add(local);
+                }
+            } else {
+                Log.e("setWpDataAuto", "Новая запись, добавляю в БД: " + wp.getCode_dad2());
+                Globals.writeToMLOG("INFO", "setWpDataAuto", "Новая запись, добавляю в БД: " + wp.getCode_dad2());
+                INSTANCE.copyToRealmOrUpdate(wp);
+            }
+        }
+        INSTANCE.commitTransaction();
+
+        // Удаление локальных записей, которых нет на сервере
+        Set<String> serverKeys = serverData.stream()
+                .map(RealmManager::generateKey)
+                .collect(Collectors.toSet());
+
+        INSTANCE.beginTransaction();
+        for (WpDataDB local : localData) {
+            String key = generateKey(local);
+            if (!serverKeys.contains(key)) {
+                local.deleteFromRealm();
+            }
+        }
+        INSTANCE.commitTransaction();
+
+        return sendOnServer;
+    }
+
+    private static String generateKey(WpDataDB data) {
+        return data.getCode_dad2() + "_" + data.getUser_id() + "_" +
+                data.getClient_id() + "_" + data.getIsp();
+    }
+
     public static ArrayList<WpDataDB> setWpDataAuto(List<WpDataDB> serverData) {
         ArrayList<WpDataDB> sendOnServer = new ArrayList<>();
 
-        try {
-            RealmResults<WpDataDB> wpDataDBList1 = INSTANCE.where(WpDataDB.class) // Получаем всю БД (на данный момент она должна быть обновлена с сервера)
-                    .findAll();
+        RealmResults<WpDataDB> wpDataDBList1 = INSTANCE.where(WpDataDB.class) // Получаем всю БД (на данный момент она должна быть обновлена с сервера)
+                .findAll();
 
-            Log.e("WP_DATA_UPDATE", "Количество данных что пришло с сервера: " + serverData.size());
-            Log.e("WP_DATA_UPDATE", "Количество данных в приложении ДО Ц1: " + wpDataDBList1.size());
+        Log.e("WP_DATA_UPDATE", "Количество данных что пришло с сервера: " + serverData.size());
+        Log.e("WP_DATA_UPDATE", "Количество данных в приложении ДО Ц1: " + wpDataDBList1.size());
 
-            Globals.writeToMLOG("INFO", "setWpDataAuto", "Количество данных что пришло с сервера: " + serverData.size());
-            Globals.writeToMLOG("INFO", "setWpDataAuto", "Количество данных в приложении ДО Ц1: " + wpDataDBList1.size());
+        Globals.writeToMLOG("INFO", "setWpDataAuto", "Количество данных что пришло с сервера: " + serverData.size());
+        Globals.writeToMLOG("INFO", "setWpDataAuto", "Количество данных в приложении ДО Ц1: " + wpDataDBList1.size());
 
-            // 1 цикл. Прогоняем данные которые пришли с сервераи надо обновить или добавить по ВПИ
-            // По скольку с ID не одноначная ситуация (это не надёжный параметр который может внезапно меняться)
-            // мне стоит для однозначного сравнения использовать 4 поля: 'code_dad2', 'user_id', 'client_id', 'isp'
-            INSTANCE.beginTransaction();
-            for (WpDataDB wp : serverData) {
-                WpDataDB row = INSTANCE.where(WpDataDB.class).equalTo("code_dad2", wp.getCode_dad2()).equalTo("user_id", wp.getUser_id()).equalTo("client_id", wp.getClient_id()).equalTo("isp", wp.getIsp()).findFirst();
+        // 1 цикл. Прогоняем данные которые пришли с сервераи надо обновить или добавить по ВПИ
+        // По скольку с ID не одноначная ситуация (это не надёжный параметр который может внезапно меняться)
+        // мне стоит для однозначного сравнения использовать 4 поля: 'code_dad2', 'user_id', 'client_id', 'isp'
+        INSTANCE.beginTransaction();
+        for (WpDataDB wp : serverData) {
+            WpDataDB row = INSTANCE.where(WpDataDB.class).equalTo("code_dad2", wp.getCode_dad2())
+                    .equalTo("user_id", wp.getUser_id())
+                    .equalTo("client_id", wp.getClient_id())
+                    .equalTo("isp", wp.getIsp())
+                    .findFirst();
 
-                Globals.writeToMLOG("INFO", "setWpDataAuto", "План работ с СЕРВЕРА: " + new Gson().toJson(wp));
+            Globals.writeToMLOG("INFO", "setWpDataAuto", "План работ с СЕРВЕРА: " + new Gson().toJson(wp));
 
-                if (row != null) {   // Если запись в бд есть
-                    WpDataDB debug = INSTANCE.copyFromRealm(row);
+            if (row != null) {   // Если запись в бд есть
+                WpDataDB debug = INSTANCE.copyFromRealm(row);
+                Globals.writeToMLOG("INFO", "setWpDataAuto", "План работ с ПРИЛОЖЕНИЯ: " + new Gson().toJson(debug));
+
+                // Это делаем для Лога, возможно нужно будет имплементировать в работу
+                if ((wp.getVisit_start_dt() == 0 && row.getVisit_start_dt() > 0) || (wp.getVisit_end_dt() == 0 && row.getVisit_end_dt() > 0)) {
+                    Globals.writeToMLOG("INFO", "setWpDataAuto", "Ситуация для отладки");
+                    Globals.writeToMLOG("INFO", "setWpDataAuto", "План работ с СЕРВЕРА: " + new Gson().toJson(wp));
                     Globals.writeToMLOG("INFO", "setWpDataAuto", "План работ с ПРИЛОЖЕНИЯ: " + new Gson().toJson(debug));
+                }
 
-                    // Это делаем для Лога, возможно нужно будет имплементировать в работу
-                    if ((wp.getVisit_start_dt() == 0 && row.getVisit_start_dt() > 0) || (wp.getVisit_end_dt() == 0 && row.getVisit_end_dt() > 0)) {
-                        Globals.writeToMLOG("INFO", "setWpDataAuto", "Ситуация для отладки");
-                        Globals.writeToMLOG("INFO", "setWpDataAuto", "План работ с СЕРВЕРА: " + new Gson().toJson(wp));
-                        Globals.writeToMLOG("INFO", "setWpDataAuto", "План работ с ПРИЛОЖЕНИЯ: " + new Gson().toJson(debug));
+                if (wp.getDt_update() >= row.getDt_update()) {    // Если на сервере данные более новые - обновляю(перезаписываю)
+                    Log.e("setWpDataAuto", "Данные с сервера с большим VPI");
+                    Log.e("WP_DATA_UPDATE", "MUST UPDATE (" + wp.getDt_update() + "/" + row.getDt_update() + ")" + wp.getCode_dad2());
+
+                    Globals.writeToMLOG("INFO", "setWpDataAuto", "Данные с сервера с большим VPI");
+                    Globals.writeToMLOG("INFO", "setWpDataAuto", "MUST UPDATE (" + wp.getDt_update() + "/" + row.getDt_update() + ")");
+
+                    if (wp.getVisit_start_dt() == 0 && wp.getClient_start_dt() == 0 && row.getVisit_start_dt() > 0 && row.getClient_start_dt() > 0) {
+                        wp.setVisit_start_dt(row.getVisit_start_dt());
+                        wp.setClient_start_dt(row.getClient_start_dt());
+                    } else if (wp.getVisit_end_dt() == 0 && wp.getClient_end_dt() == 0 && row.getVisit_end_dt() > 0 && row.getClient_end_dt() > 0) {
+                        wp.setVisit_end_dt(row.getVisit_end_dt());
+                        wp.setClient_end_dt(row.getClient_end_dt());
                     }
-
-                    if (wp.getDt_update() >= row.getDt_update()) {    // Если на сервере данные более новые - обновляю(перезаписываю)
-                        Log.e("setWpDataAuto", "Данные с сервера с большим VPI");
-                        Log.e("WP_DATA_UPDATE", "MUST UPDATE (" + wp.getDt_update() + "/" + row.getDt_update() + ")" + wp.getCode_dad2());
-
-                        Globals.writeToMLOG("INFO", "setWpDataAuto", "Данные с сервера с большим VPI");
-                        Globals.writeToMLOG("INFO", "setWpDataAuto", "MUST UPDATE (" + wp.getDt_update() + "/" + row.getDt_update() + ")");
-
-                        if (wp.getVisit_start_dt() == 0 && wp.getClient_start_dt() == 0 && row.getVisit_start_dt() > 0 && row.getClient_start_dt() > 0) {
-                            wp.setVisit_start_dt(row.getVisit_start_dt());
-                            wp.setClient_start_dt(row.getClient_start_dt());
-                        } else if (wp.getVisit_end_dt() == 0 && wp.getClient_end_dt() == 0 && row.getVisit_end_dt() > 0 && row.getClient_end_dt() > 0) {
-                            wp.setVisit_end_dt(row.getVisit_end_dt());
-                            wp.setClient_end_dt(row.getClient_end_dt());
-                        }
-
-                        INSTANCE.copyToRealmOrUpdate(wp);
-                    } else {
-                        // ТУТ ДЕЛАЮ ВЫГРУЗКУ НОВЫХ ДАННЫХ. ИЛИ СОБИРАЮ ДАННЫЕ ДЛЯ ТОГО ЧТО Б ПОТОМ ВЫГРУЗИТЬ.
-                        Log.e("setWpDataAuto", "Эти данные на моей стороне более новые. Надо выгружать");
-
-                        Globals.writeToMLOG("INFO", "setWpDataAuto", "Данные у пользователя новее. (" + wp.getDt_update() + "/" + row.getDt_update() + ")" + wp.getCode_dad2());
-
-                        sendOnServer.add(row);
-                        Log.e("WP_DATA_UPDATE", "Данные у пользователя новее. (" + wp.getDt_update() + "/" + row.getDt_update() + ")"); // Не нужно ли тут начать выгрузку этих самых данных?
-                    }
-                } else {
-                    Log.e("WP_DATA_UPDATE", "Новые данные. Запись в БД.");
-                    // Если записи в БД нет - просто записываем её туда.
-                    Log.e("setWpDataAuto", "Такой записи в БД не было. Записываю к себе" + wp.getCode_dad2());
-                    Globals.writeToMLOG("INFO", "setWpDataAuto", "Такой записи в БД не было. Записываю к себе" + wp.getCode_dad2());
 
                     INSTANCE.copyToRealmOrUpdate(wp);
+                } else {
+                    // ТУТ ДЕЛАЮ ВЫГРУЗКУ НОВЫХ ДАННЫХ. ИЛИ СОБИРАЮ ДАННЫЕ ДЛЯ ТОГО ЧТО Б ПОТОМ ВЫГРУЗИТЬ.
+                    Log.e("setWpDataAuto", "Эти данные на моей стороне более новые. Надо выгружать");
+
+                    Globals.writeToMLOG("INFO", "setWpDataAuto", "Данные у пользователя новее. (" + wp.getDt_update() + "/" + row.getDt_update() + ")" + wp.getCode_dad2());
+
+                    sendOnServer.add(row);
+                    Log.e("WP_DATA_UPDATE", "Данные у пользователя новее. (" + wp.getDt_update() + "/" + row.getDt_update() + ")"); // Не нужно ли тут начать выгрузку этих самых данных?
                 }
+            } else {
+                Log.e("WP_DATA_UPDATE", "Новые данные. Запись в БД.");
+                // Если записи в БД нет - просто записываем её туда.
+                Log.e("setWpDataAuto", "Такой записи в БД не было. Записываю к себе" + wp.getCode_dad2());
+                Globals.writeToMLOG("INFO", "setWpDataAuto", "Такой записи в БД не было. Записываю к себе" + wp.getCode_dad2());
+
+                INSTANCE.copyToRealmOrUpdate(wp);
             }
-            INSTANCE.commitTransaction();
-
-            // 2 цикл. Прогоняем данные которые надо удалить.
-            RealmResults<WpDataDB> localData = INSTANCE.where(WpDataDB.class) // Получаем всю БД (на данный момент она должна быть обновлена с сервера)
-                    .findAll();
-
-
-            INSTANCE.beginTransaction();
-            for (WpDataDB local : localData) {
-                if (!serverData.contains(local)) {
-                    local.deleteFromRealm();
-                }
-            }
-            INSTANCE.commitTransaction();
-
-
-            Log.e("setWpDataAuto", "return: " + sendOnServer);
-
-        } catch (Exception e) {
-            Globals.writeToMLOG("ERROR", "setWpDataAuto", "Exception e: " + e);
         }
+        INSTANCE.commitTransaction();
+
+        // 2 цикл. Прогоняем данные которые надо удалить.
+        RealmResults<WpDataDB> localData = INSTANCE.where(WpDataDB.class) // Получаем всю БД (на данный момент она должна быть обновлена с сервера)
+                .findAll();
+
+
+        INSTANCE.beginTransaction();
+        for (WpDataDB local : localData) {
+            if (!serverData.contains(local)) {
+                local.deleteFromRealm();
+            }
+        }
+        INSTANCE.commitTransaction();
+
         return sendOnServer;
     }
 
@@ -772,9 +859,15 @@ public class RealmManager {
     // Получене фотографий для выгрузки на сервер
     //"SELECT * FROM stack_photo WHERE upload_to_server = '';"
     public static RealmResults<StackPhotoDB> getStackPhotoPhotoToUpload() {
-        return INSTANCE.where(StackPhotoDB.class).equalTo("upload_to_server", 0).equalTo("get_on_server", 0)
+        return INSTANCE.where(StackPhotoDB.class).equalTo("upload_to_server", 0)
+                .equalTo("get_on_server", 0)
 //                .notEqualTo("photo_type", 18)// 08.01.24 Надо на сервер выгружать фото Товаров сделанные с ЗИР, да и вообще
-                .and().isNotNull("client_id").isNotNull("addr_id").isNotNull("photo_hash").isNotNull("time_event").findAll();
+                .and()
+                .isNotNull("client_id")
+                .isNotNull("addr_id")
+                .isNotNull("photo_hash")
+                .isNotNull("time_event")
+                .findAll();
     }
 
 

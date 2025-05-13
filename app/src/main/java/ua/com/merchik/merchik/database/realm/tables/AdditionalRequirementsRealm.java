@@ -24,7 +24,7 @@ public class AdditionalRequirementsRealm {
 
     public static void setDataToDB(List<AdditionalRequirementsDB> data) {
         INSTANCE.beginTransaction();
-//        INSTANCE.delete(AdditionalRequirementsDB.class);
+        INSTANCE.delete(AdditionalRequirementsDB.class);
         INSTANCE.copyToRealmOrUpdate(data);
         INSTANCE.commitTransaction();
     }
