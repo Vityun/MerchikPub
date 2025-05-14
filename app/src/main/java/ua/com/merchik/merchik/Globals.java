@@ -7,6 +7,8 @@ import static ua.com.merchik.merchik.trecker.coordinatesDistanse;
 import static ua.com.merchik.merchik.trecker.enabledGPS;
 import static ua.com.merchik.merchik.trecker.imHereGPS;
 import static ua.com.merchik.merchik.trecker.imHereNET;
+import static ua.com.merchik.merchik.trecker.locationListener;
+import static ua.com.merchik.merchik.trecker.locationManager;
 import static ua.com.merchik.merchik.trecker.locationUniqueStringGPS;
 import static ua.com.merchik.merchik.trecker.locationUniqueStringGSM;
 
@@ -22,7 +24,9 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Bitmap;
+import android.location.Criteria;
 import android.location.Location;
+import android.location.LocationManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
@@ -37,6 +41,7 @@ import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 
 import androidx.annotation.NonNull;
+import androidx.core.content.ContextCompat;
 import androidx.core.content.FileProvider;
 import androidx.preference.PreferenceManager;
 
@@ -1260,6 +1265,22 @@ public class Globals {
     public static LogMPDB fixMP(WpDataDB wpDataDB, Context context) {
         try {
             try {
+//ывапреонлгдш
+                if (imHereGPS == null){
+                    // Запрашивает доступы если API больше 23
+                    if (Build.VERSION.SDK_INT >= 23 &&
+                            ContextCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+                            ContextCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                        Globals.writeToMLOG("ERROR", "fixMP/imHereGPS is null?", "permission not granted");
+                        return null;
+                    }
+                    Criteria criteria = new Criteria();
+                    String bestProvider = String.valueOf(locationManager.getBestProvider(criteria, true));
+
+                    locationManager.requestLocationUpdates(bestProvider,
+                            4000L, 0, locationListener);
+                    imHereGPS = locationManager.getLastKnownLocation(bestProvider);
+                }
 
                 if (context != null) {
                     String problem = "Якщо ви виправили зауваження, а система все рівно не працює, зверніться за допомогою до свого керівника, або до оператора служби підтримки merchik \"+380674491265\"";

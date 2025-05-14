@@ -17,7 +17,7 @@ import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
 
 public class LocationExchange {
-    public void downloadLocationTable(ExchangeInterface.ExchangeResponseInterface exchange){
+    public void downloadLocationTable(ExchangeInterface.ExchangeResponseInterface exchange) {
         try {
             StandartData data = new StandartData();
             data.mod = "location";
@@ -78,21 +78,21 @@ public class LocationExchange {
                 @Override
                 public void onResponse(Call<LocationResponse> call, Response<LocationResponse> response) {
                     try {
-                        if (response.body() != null){
+                        if (response.body() != null && response.body().list != null && !response.body().list.isEmpty()) {
                             Log.e("downloadLocationTable", "response.body(): " + response.body());
                             Globals.writeToMLOG("INFO", "downloadLocationTable/call.enqueue/onResponse/response.body()", "response.body(): " + response.body().list.size());
                             RealmManager.INSTANCE.executeTransaction(realm -> {
-                                if (synchronizationTimetableDB != null){
-                                    synchronizationTimetableDB.setVpi_app(System.currentTimeMillis()/1000);
+                                if (synchronizationTimetableDB != null) {
+                                    synchronizationTimetableDB.setVpi_app(System.currentTimeMillis() / 1000);
                                     realm.copyToRealmOrUpdate(synchronizationTimetableDB);
                                 }
                             });
                             exchange.onSuccess(response.body().list);
-                        }else {
+                        } else {
                             Globals.writeToMLOG("INFO", "downloadLocationTable/call.enqueue/onResponse/response.body()", "response.body(): NULL");
                             exchange.onFailure("Ошибка при обновлении Location(разбор данных). Передайте код ошибки Вашему руководителю. Код ошибки: ");
                         }
-                    }catch (Exception e){
+                    } catch (Exception e) {
                         Globals.writeToMLOG("ERR", "downloadLocationTable/call.enqueue/onResponse/catch", "Exception e: " + e);
                         exchange.onFailure("Ошибка при обновлении Location(разбор данных). Передайте код ошибки Вашему руководителю. Код ошибки: " + e);
                     }
@@ -106,7 +106,7 @@ public class LocationExchange {
                 }
             });
 
-        }catch (Exception e){
+        } catch (Exception e) {
             Log.e("downloadLocationTable", "Exception e: " + e);
             Globals.writeToMLOG("ERR", "downloadLocationTable/catch", "Exception e: " + e);
             exchange.onFailure("Ошибка при обновлении Location. Передайте код ошибки Вашему руководителю. Код ошибки: " + e);

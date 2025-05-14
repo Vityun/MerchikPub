@@ -37,7 +37,9 @@ public class trecker implements LocationListener {
 
     public static boolean switchedOff = true; // Выключен
 
-    private static LocationListener locationListener;
+    public static LocationListener locationListener;
+
+    public static LocationManager locationManager;
 
     static void SetUpLocationListener(Context context) {
 
@@ -52,20 +54,21 @@ public class trecker implements LocationListener {
             }
 
             // Создание гео-менеджера
-            LocationManager locationManager = (LocationManager)
+            locationManager = (LocationManager)
                     context.getSystemService(LOCATION_SERVICE);
             locationListener = new trecker();
 
             // Обновление гео-данных
             if (locationManager != null) {
 //            if (locationManager.getAllProviders().contains(LocationManager.NETWORK_PROVIDER))
-//                locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER,
-//                        0, 0, locationListener);
+
 
 //            if (locationManager.getAllProviders().contains(LocationManager.GPS_PROVIDER))
                 /*
                 06.05.2025 изменил частоту обновления с 0 секунд и 0 метров на 5 сек или 10 метров
                  */
+                locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER,
+                        4000L, 0, locationListener);
                 locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,
                         4000L, 0, locationListener); // 4 сек или 0 метров
 //                locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,
@@ -78,6 +81,7 @@ public class trecker implements LocationListener {
                 Globals.writeToMLOG("INFO", "trecker/SetUpLocationListener/", "imHereNET: " + imHereNET);
 
                 imHereGPS = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+
                 Globals.writeToMLOG("INFO", "trecker/SetUpLocationListener/", "imHereGPS: " + imHereGPS);
 
 

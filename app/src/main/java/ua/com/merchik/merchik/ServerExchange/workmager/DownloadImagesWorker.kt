@@ -25,6 +25,7 @@ import ua.com.merchik.merchik.data.RetrofitResponse.TovarImgList
 import ua.com.merchik.merchik.data.TestJsonUpload.StandartData
 import ua.com.merchik.merchik.database.realm.tables.StackPhotoRealm
 import ua.com.merchik.merchik.database.realm.tables.TovarRealm
+import ua.com.merchik.merchik.database.room.RoomManager.SQL_DB
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder
 import java.io.IOException
 
@@ -45,7 +46,6 @@ class DownloadImagesWorker(
             thumbnailsToDownload.forEach { stackPhoto ->
                 if (downloadAndUpdateThumbnail(stackPhoto)) successfulThumbnails++
             }
-
 
             // 2.Получаем список изображений для загрузки
             val photoList = getPhotoListToDownload()
@@ -82,22 +82,51 @@ class DownloadImagesWorker(
         return getTovarPhotoInfoFromServer(tovarsPhotoToDownload)
     }
 
-    // Новый метод для получения списка отсутствующих thumbnail'ов
+    // Новый метод для получения списка всех отсутствующих фотографий за 7 дней
     private suspend fun getMissingThumbnails(): List<StackPhotoDB> {
         return withContext(Dispatchers.IO) {
             val realm = Realm.getDefaultInstance()
+            val sevenDaysAgo = System.currentTimeMillis() / 1000 - 7 * 24 * 60 * 60
             try {
-                val sevenDaysAgo = System.currentTimeMillis() / 1000 - 7 * 24 * 60 * 60
 
-                // Получаем RealmResults
-                val results = realm.where(StackPhotoDB::class.java)
-                    .isNotNull("photoServerURL")
-                    .isNull("photo_num")
-                    .greaterThanOrEqualTo("dt", sevenDaysAgo)
-                    .findAll()
+//                // Получаем RealmResults
+//                val results = realm.where(StackPhotoDB::class.java)
+//                    .isNotNull("photoServerURL")
+//                    .isNull("photo_num")
+//                    .greaterThanOrEqualTo("dt", sevenDaysAgo)
+//                    .findAll()
+//
+//                // Копируем данные из Realm в "отсоединенный" список
+//                realm.copyFromRealm(results)
 
-                // Копируем данные из Realm в "отсоединенный" список
-                realm.copyFromRealm(results)
+                // 1. Получаем данные Realm
+                val realmPhotos = realm.copyFromRealm(
+                    realm.where(StackPhotoDB::class.java)
+                        .isNotNull("photoServerURL")
+                        .isNull("photo_num")
+                        .greaterThanOrEqualTo("dt", sevenDaysAgo)
+                        .findAll()
+                )
+
+                // 2. Получаем хеши из Room в отдельной транзакции
+                val hashes = withContext(Dispatchers.IO) {
+                    SQL_DB.achievementsDao().getAll()
+                        .flatMap { listOfNotNull(it.img_before_hash, it.img_after_hash) }
+                        .toSet()
+                }
+
+                // 3. Получаем Realm-фото по хешам в основном потоке Realm
+                val achievementPhotos = realm.use { r ->
+                    r.where(StackPhotoDB::class.java)
+                        .`in`("photo_hash", hashes.toTypedArray())
+                        .findAll()
+                        .let { r.copyFromRealm(it) }
+                }
+
+                // 4. Объединяем и удаляем дубликаты
+                (realmPhotos + achievementPhotos)
+                    .distinctBy { it.getPhotoServerId() } // или другой уникальный идентификатор
+                    .sortedByDescending { it.dt }
 
             } catch (e: Exception) {
                 Log.e("DownloadImagesWorker", "Error getting thumbnails", e)

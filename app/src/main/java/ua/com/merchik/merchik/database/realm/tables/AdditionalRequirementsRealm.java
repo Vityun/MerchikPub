@@ -21,7 +21,7 @@ import ua.com.merchik.merchik.database.realm.RealmManager;
  * 21.04.2021
  */
 public class AdditionalRequirementsRealm {
-
+    //################################
     public static void setDataToDB(List<AdditionalRequirementsDB> data) {
         INSTANCE.beginTransaction();
         INSTANCE.delete(AdditionalRequirementsDB.class);

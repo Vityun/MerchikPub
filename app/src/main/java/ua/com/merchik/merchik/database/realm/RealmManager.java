@@ -238,14 +238,13 @@ public class RealmManager {
                     Globals.writeToMLOG("INFO", "setWpDataAuto", "Обновляю локальную запись (" + wp.getDt_update() + " >= " + local.getDt_update() + ")");
 
                     // Копируем локальные временные значения, если серверные не заданы
+                    // 13.05.25 Петров предложил если работы начаты или окончены, оставляем те данные что в приложении
                     if (wp.getVisit_start_dt() == 0 && wp.getClient_start_dt() == 0 &&
                             local.getVisit_start_dt() > 0 && local.getClient_start_dt() > 0) {
-                        wp.setVisit_start_dt(local.getVisit_start_dt());
-                        wp.setClient_start_dt(local.getClient_start_dt());
+                        wp = local;
                     } else if (wp.getVisit_end_dt() == 0 && wp.getClient_end_dt() == 0 &&
                             local.getVisit_end_dt() > 0 && local.getClient_end_dt() > 0) {
-                        wp.setVisit_end_dt(local.getVisit_end_dt());
-                        wp.setClient_end_dt(local.getClient_end_dt());
+                        wp = local;
                     }
 
                     INSTANCE.copyToRealmOrUpdate(wp);
@@ -271,6 +270,7 @@ public class RealmManager {
         for (WpDataDB local : localData) {
             String key = generateKey(local);
             if (!serverKeys.contains(key)) {
+                Globals.writeToMLOG("INFO", "setWpDataAuto", "Удаляю локальную запись: " + local.getCode_dad2());
                 local.deleteFromRealm();
             }
         }
@@ -280,8 +280,7 @@ public class RealmManager {
     }
 
     private static String generateKey(WpDataDB data) {
-        return data.getCode_dad2() + "_" + data.getUser_id() + "_" +
-                data.getClient_id() + "_" + data.getIsp();
+        return data.getCode_dad2() + "_";
     }
 
     public static ArrayList<WpDataDB> setWpDataAuto(List<WpDataDB> serverData) {

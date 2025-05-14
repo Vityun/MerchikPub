@@ -63,7 +63,7 @@ public class OptionButtAchievements<T> extends OptionControl {
             addressId = wpDataDB.getAddr_id();
         }
 
-        List<AchievementsSDB> test = SQL_DB.achievementsDao().getAll();
+//        List<AchievementsSDB> test = SQL_DB.achievementsDao().getAll();
 
         achievements = SQL_DB.achievementsDao().getAchievementsList(dateFrom, dateTo, clientId, addressId, null);
     }

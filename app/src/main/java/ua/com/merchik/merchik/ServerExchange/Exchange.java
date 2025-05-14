@@ -354,7 +354,8 @@ public class Exchange {
 //                                Globals.writeToMLOG("INFO", "PetrovExchangeTest/startExchange/LocationExchange/downloadLocationTable/onSuccess", "(List<T> data: " + data.size());
                                 List<LocationList> newDataList = (List<LocationList>) data;
                                 List<LogMPDB> allLogMPListDB = RealmManager.INSTANCE.copyFromRealm(RealmManager.getAllLogMPDB());
-
+                                int sizeLocal = allLogMPListDB != null ? allLogMPListDB.size() : 0;
+                                Globals.writeToMLOG("INFO", "startExchange.LocationExchange.downloadLocationTable", "Local LogMPDB size: " + sizeLocal + ", server data size: " + data.size());
                                 // Создаем множество для быстрого поиска всех серверных ID из allLogMPListDB
                                 Set<Long> serverIdsInDB = new HashSet<>();
                                 for (LogMPDB log : allLogMPListDB) {
@@ -409,7 +410,7 @@ public class Exchange {
                                     Log.e("downloadLocationTable", "testList: " + testList);
                                 });
 
-                                Globals.writeToMLOG("INFO", "startExchange/downloadLocationTable/onFailure", "OK: ");
+                                Globals.writeToMLOG("INFO", "startExchange.downloadLocationTable.downloadLocationTable", "size data save: " + logList.size());
                             } catch (Exception e) {
                                 Log.e("downloadLocationTable", "Exception e: " + e);
                                 e.printStackTrace();
@@ -2568,7 +2569,7 @@ public class Exchange {
                                 }
                             }
                         }
-                        AdditionalRequirementsMarkRealm.setDataToDB(list);
+                        AdditionalRequirementsMarkRealm.setDataToDBWithOutDel(list);
                     }
                     isARMarkUploading = true;
 

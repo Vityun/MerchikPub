@@ -211,7 +211,6 @@ public class PhotoLogAdapter extends RecyclerView.Adapter<PhotoLogAdapter.ViewHo
                     address.append("Не удалось определить");
                 }
 
-
                 // Нормальное заполенние ПОЛЬЗОВАТЕЛЕЙ
                 StringBuilder merch = new StringBuilder();
                 try {
@@ -231,7 +230,7 @@ public class PhotoLogAdapter extends RecyclerView.Adapter<PhotoLogAdapter.ViewHo
                 StringBuilder phototype = new StringBuilder();
                 try {
                     phototype.append("(").append(photoLogDat.getPhoto_type()).append(") ");
-                    if (photoLogDat.getPhoto_typeTxt() != null) {
+                    if (photoLogDat.getPhoto_typeTxt() != null && !photoLogDat.getPhoto_typeTxt().equals("null")) {
                         phototype.append(photoLogDat.getPhoto_typeTxt());
                     } else {
                         phototype.append(ImagesTypeListRealm.getByID(photoLogDat.getPhoto_type()).getNm());

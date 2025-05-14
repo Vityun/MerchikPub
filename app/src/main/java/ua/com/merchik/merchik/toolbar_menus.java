@@ -1280,7 +1280,6 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                     }
 //                    tablesLoadingUnloading.updateWpData();
 
-
                     // Загрузка Задач и Рекламаций
                     try {
                         tarExchange.downloadTaR(new ExchangeInterface.ExchangeResponseInterface() {

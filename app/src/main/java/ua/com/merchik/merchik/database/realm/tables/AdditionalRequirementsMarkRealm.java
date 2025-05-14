@@ -18,6 +18,11 @@ public class AdditionalRequirementsMarkRealm {
         INSTANCE.copyToRealmOrUpdate(data);
         INSTANCE.commitTransaction();
     }
+    public static void setDataToDBWithOutDel(List<AdditionalRequirementsMarkDB> data) {
+        INSTANCE.beginTransaction();
+        INSTANCE.copyToRealmOrUpdate(data);
+        INSTANCE.commitTransaction();
+    }
 
     public static void setNewMark(AdditionalRequirementsMarkDB data) {
         INSTANCE.beginTransaction();

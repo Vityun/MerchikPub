@@ -345,12 +345,12 @@ public class TablesLoadingUnloading {
         String date_to = timeTomorrow;
         long vpi;
 
-        SynchronizationTimetableDB sTable = RealmManager.getSynchronizationTimetableRowByTable("wp_data");
-        if (sTable != null) {
-            Globals.writeToMLOG("INFO", "TablesLoadingUnloading/downloadWPData/getSynchronizationTimetableRowByTable", "sTable: " + sTable);
-            vpi = sTable.getVpi_app();
-            Log.e("updateWpData", "vpi: " + vpi);
-        } else
+//        SynchronizationTimetableDB sTable = RealmManager.getSynchronizationTimetableRowByTable("wp_data");
+//        if (sTable != null) {
+//            Globals.writeToMLOG("INFO", "TablesLoadingUnloading/downloadWPData/getSynchronizationTimetableRowByTable", "sTable: " + sTable);
+//            vpi = sTable.getVpi_app();
+//            Log.e("updateWpData", "vpi: " + vpi);
+//        } else
             vpi = 0;
 
         try {
@@ -365,15 +365,15 @@ public class TablesLoadingUnloading {
                                 && !response.body().getList().isEmpty()) {
                             List<WpDataDB> wpDataDBList = response.body().getList();
                             Globals.writeToMLOG("INFO", "TablesLoadingUnloading/downloadWPData/onResponse", "wpDataDBList.size(): " + wpDataDBList.size());
-                            RealmManager.setWpDataAuto2(wpDataDBList);
-
+//                            RealmManager.setWpDataAuto2(wpDataDBList);
+                            RealmManager.setWpData(wpDataDBList);
                             downloadTovarTable(null, wpDataDBList);
-                            RealmManager.INSTANCE.executeTransaction(realm -> {
-                                if (sTable != null) {
-                                    sTable.setVpi_app((System.currentTimeMillis() / 1000) + 5);
-                                    realm.copyToRealmOrUpdate(sTable);
-                                }
-                            });
+//                            RealmManager.INSTANCE.executeTransaction(realm -> {
+//                                if (sTable != null) {
+//                                    sTable.setVpi_app((System.currentTimeMillis() / 1000) + 5);
+//                                    realm.copyToRealmOrUpdate(sTable);
+//                                }
+//                            });
 
                         }
                     }
@@ -2236,7 +2236,7 @@ public class TablesLoadingUnloading {
 
         List<LogMPDB> logMp = RealmManager.INSTANCE.copyFromRealm(RealmManager.getNOTUploadLogMPDB());
 //        List<LogMPDB> logMp = RealmManager.INSTANCE.copyFromRealm(RealmManager.getNOTUploadLogMPDBTEST());
-        if (logMp != null && logMp.size() > 0) {
+        if (logMp != null && !logMp.isEmpty()) {
             Log.e("uploadLodMp", "LogMpUploadText. LogSize: " + logMp.size());
 
             HashMap<String, String> map = new HashMap<>();
