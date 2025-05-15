@@ -30,6 +30,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.LinearSnapHelper;
+import androidx.recyclerview.widget.PagerSnapHelper;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.SnapHelper;
 
@@ -105,7 +106,7 @@ public class DialogFullPhoto {
     public DialogFullPhoto(Context context) {
         this.context = context;
         dialog = new Dialog(context);
-        dialog.setCancelable(false);
+        dialog.setCancelable(true);
         dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
         dialog.setContentView(R.layout.dialog_photo_log_full_photo);
 
@@ -165,6 +166,8 @@ public class DialogFullPhoto {
                     clickListener.clicked();
                 })
                 .setPositiveButton("Так", (it, which) -> {
+                    int pos = POSITION_ADAPTER;
+                    Log.e("!!!!!!","+++");
                     StackPhotoDB row = photoLogData.get(POSITION_ADAPTER);
                     RealmManager.INSTANCE.executeTransaction(realm -> {
                         row.setComment(comment.getText().toString());
@@ -311,7 +314,15 @@ public class DialogFullPhoto {
         recycler.setLayoutManager(manager);
         recycler.setAdapter(adapter);
 
+
+// SnapHelper — автоматически «докручивает» до ближайшего элемента
+        SnapHelper snapHelper = new PagerSnapHelper(); // Или LinearSnapHelper
+        snapHelper.attachToRecyclerView(recycler);
         recycler.scrollToPosition(position);
+// Потом через небольшую задержку вызываем smoothScrollToPosition, чтобы сработал SnapHelper
+        recycler.postDelayed(() -> {
+            recycler.smoothScrollToPosition(position);
+        }, 100);
 
         recycler.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
@@ -458,10 +469,6 @@ public class DialogFullPhoto {
                 }
             }
         });
-
-
-        SnapHelper snapHelper = new LinearSnapHelper();
-        snapHelper.attachToRecyclerView(recycler);
 
         play.setOnClickListener((v) -> {
             if (slideshow) {

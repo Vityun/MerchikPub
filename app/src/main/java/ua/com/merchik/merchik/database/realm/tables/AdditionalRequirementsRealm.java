@@ -165,7 +165,8 @@ public class AdditionalRequirementsRealm {
         }
 
         List<AdditionalRequirementsDB> result = new ArrayList<>();
-        if (res != null) result = INSTANCE.copyFromRealm(res);
+        if (res != null)
+            result = INSTANCE.copyFromRealm(res);
 
         return result;
     }
