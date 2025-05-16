@@ -118,13 +118,6 @@ public class DetailedReportTovarsFrag extends Fragment {
         return fragment;
     }
 
-    public DetailedReportTovarsFrag(Context context, TasksAndReclamationsSDB tasksAndReclamationsSDB) {
-        Globals.writeToMLOG("INFO", "DetailedReportTovarsFrag/3", "create");
-//        this.mContext = context;
-        this.tasksAndReclamationsSDB = tasksAndReclamationsSDB;
-        this.codeDad2 = tasksAndReclamationsSDB.codeDad2SrcDoc;
-        this.clientId = tasksAndReclamationsSDB.client;
-    }
 
     @Override
     public void onAttach(Context context) {

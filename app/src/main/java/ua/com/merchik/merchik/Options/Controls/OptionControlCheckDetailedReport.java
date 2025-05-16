@@ -106,9 +106,15 @@ public class OptionControlCheckDetailedReport<T> extends OptionControl {
         );
 
         // 6.0 готовим сообение и сигнал.
-        int colSKU = reportPrepare.stream().map(table -> table.colSKU).reduce(0, Integer::sum);
-        int err = reportPrepare.stream().map(table -> table.errorExist).reduce(0, Integer::sum);
-        int fixesNum = reportPrepare.stream().map(table -> table.fixesNum).reduce(0, Integer::sum);
+        int colSKU = (reportPrepare == null || reportPrepare.isEmpty())
+                ? 0
+                : reportPrepare.stream().map(table -> table.colSKU).reduce(0, Integer::sum);
+        int err = (reportPrepare == null || reportPrepare.isEmpty())
+                ? 0
+                : reportPrepare.stream().map(table -> table.errorExist).reduce(0, Integer::sum);
+        int fixesNum = (reportPrepare == null || reportPrepare.isEmpty())
+                ? 0
+                : reportPrepare.stream().map(table -> table.fixesNum).reduce(0, Integer::sum);
 
         try {
             correctionPercentage = (int) Math.round((100.0 * (colSKU - err)) / colSKU);
@@ -119,7 +125,7 @@ public class OptionControlCheckDetailedReport<T> extends OptionControl {
         if (time < 0) {
             stringBuilderMsg.append("Роботи по поточному кпс (клієнто/відвідуванню) ще не були початі. Почніть роботи, відредагуйте ДЗ (дет. звіт) та повторіть спробу.");
             signal = true;
-        } else if (reportPrepare.isEmpty()) {
+        } else if (reportPrepare != null && reportPrepare.isEmpty()) {
             stringBuilderMsg.append("Товарів, по котрим треба перевірити виправлені ДЗ, не знайдено.");
             signal = true;
         } else if (colSKU == 0) {
@@ -152,10 +158,10 @@ public class OptionControlCheckDetailedReport<T> extends OptionControl {
                 List<SMSPlanSDB> smsPlanSDBS = SQL_DB.smsPlanDao().getAll(dtFrom, dtTo, 1172, wpDataDB.getAddr_id(), wpDataDB.getClient_id());
                 List<SMSLogSDB> smsLogSDBS = SQL_DB.smsLogDao().getAll(dtFrom, dtTo, 1172, wpDataDB.getAddr_id(), wpDataDB.getClient_id());
 
-                if (smsPlanSDBS != null && smsPlanSDBS.size() > 0) {
+                if (smsPlanSDBS != null && !smsPlanSDBS.isEmpty()) {
                     signal = false;
                     spannableStringBuilder.append("\n").append("Cповіщення про ВІДСУТНІСТЬ товару на ТТ замовнику відправлено, сигнал знятий!");
-                } else if (smsLogSDBS != null && smsLogSDBS.size() > 0) {
+                } else if (smsLogSDBS != null && !smsLogSDBS.isEmpty()) {
                     signal = false;
                     spannableStringBuilder.append("\n").append("Cповіщення об ОТСУТСТВИИ товара заказчику отправлено, сигнал отменён!");
                 } else if (addressSDB.tpId == 383) {   // Для АШАН-ов(8196 - у петрова такое тут, странно) которые работают через ДОТ ОФС ДЗ НЕ проверяем

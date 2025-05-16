@@ -1938,9 +1938,7 @@ public class TablesLoadingUnloading {
         Log.e("cronUpdateTables", "ALL START");
 
         long currentTime = System.currentTimeMillis() / 1000; // Текущее время
-
 //        SynchronizationTimetableDB synchTableWp = RealmManager.getSynchronizationTimetableRowByTable("wp_data");
-
 
         SynchronizationTimetableDB synchTableWp = INSTANCE.where(SynchronizationTimetableDB.class)
                 .equalTo("table_name", "wp_data")

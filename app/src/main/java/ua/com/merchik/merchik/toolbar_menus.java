@@ -22,6 +22,7 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
+import android.provider.Settings;
 import android.text.Html;
 import android.util.Log;
 import android.view.Menu;
@@ -108,6 +109,7 @@ import ua.com.merchik.merchik.ServerExchange.TablesExchange.ShowcaseExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.VotesExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesLoadingUnloading;
 import ua.com.merchik.merchik.Utils.FileCompressor;
+import ua.com.merchik.merchik.Utils.LocationUtils;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.Database.Room.Chat.ChatSDB;
 import ua.com.merchik.merchik.data.Database.Room.ShowcaseSDB;
@@ -591,10 +593,19 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
         }
     }
 
+    private MessageDialogBuilder messageDialogBuilder;
+
     @Override
     protected void onResume() {
         globals.handlerCount.removeCallbacks(runnableCron10);
         globals.handlerCount.postDelayed(runnableCron10, 1000);
+//        if (!LocationUtils.canUseLocationServices(this)) {
+//            showLocationRequiredDialog();
+//        } else {
+//            // Разрешение есть, GPS включен — продолжаем работу
+//            if (messageDialogBuilder != null && messageDialogBuilder.isShowing())
+//                messageDialogBuilder.dismiss();
+//        }
         super.onResume();
     }
 
@@ -644,6 +655,29 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
         }
     }
 
+
+    private void showLocationRequiredDialog() {
+        messageDialogBuilder = new MessageDialogBuilder(this);
+        messageDialogBuilder
+                .setTitle("Потрібна геолокація")
+                .setStatus(DialogStatus.ERROR)
+                .setMessage("Додаток потребує доступу до GPS та дозволу на геолокацію. Увімкніть GPS та надайте доступ.")
+                .setOnConfirmAction("Налаштування", () -> {
+                    openLocationSettings();
+                    return Unit.INSTANCE;
+                })
+                .setOnCancelAction("Вийти", () -> {
+                    finishAffinity();
+                    return Unit.INSTANCE;
+                })
+                .show();
+    }
+
+    private void openLocationSettings() {
+        // Открываем настройки GPS
+        Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+        startActivity(intent);
+    }
 
     /**
      * Создание меню в toolbox-е

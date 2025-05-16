@@ -490,7 +490,7 @@ public class RecycleViewWPAdapter extends RecyclerView.Adapter<RecycleViewWPAdap
             errorMsg.setClose(errorMsg::dismiss);
 
             DialogData dialog = new DialogData(mContext);
-            dialog.setTitle("Відкрити відвідування?");
+            dialog.setTitle(mContext.getResources().getString(R.string.open_visit) + "?");
             dialog.setText(msg);
             dialog.setOk(null, () -> {
                 Globals.writeToMLOG("INFO", "RecycleViewWPAdapter/openReportPrepare/CLICK_KPS", "wpDataDB: " + wpDataDB);
@@ -525,18 +525,18 @@ public class RecycleViewWPAdapter extends RecyclerView.Adapter<RecycleViewWPAdap
 
         private void openReportPrepare(WpDataDB wp, long otchetId) {
             try {
-                Data D = new Data(
-                        wp.getId(),
-                        wp.getAddr_txt(),
-                        wp.getClient_txt(),
-                        wp.getUser_txt(),
-                        wp.getDt(),  //+TODO CHANGE DATE
-                        otchetId,
-                        null,
-                        "",
-                        R.mipmap.merchik);
-
-                WPDataObj wpDataObj = workPlan.getKPS(wp.getId());
+//                Data D = new Data(
+//                        wp.getId(),
+//                        wp.getAddr_txt(),
+//                        wp.getClient_txt(),
+//                        wp.getUser_txt(),
+//                        wp.getDt(),  //+TODO CHANGE DATE
+//                        otchetId,
+//                        null,
+//                        "",
+//                        R.mipmap.merchik);
+//
+//                WPDataObj wpDataObj = workPlan.getKPS(wp.getId());
 
                 Intent intent = new Intent(mContext, DetailedReportActivity.class);
 
