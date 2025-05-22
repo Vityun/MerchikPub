@@ -1,0 +1,62 @@
+package ua.com.merchik.merchik.Utils;
+
+import android.util.Log;
+
+import java.util.Arrays;
+import java.util.List;
+
+import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
+import io.reactivex.rxjava3.schedulers.Schedulers;
+import ua.com.merchik.merchik.data.SynchronizationTimeTable;
+import ua.com.merchik.merchik.data.synchronization.DownloadStatus;
+import ua.com.merchik.merchik.data.synchronization.TableName;
+import ua.com.merchik.merchik.database.room.DaoInterfaces.SynchronizationTimetableDao;
+
+public class DatabaseInitializer {
+    private final SynchronizationTimetableDao timetableDao;
+
+    public DatabaseInitializer(SynchronizationTimetableDao timetableDao) {
+        this.timetableDao = timetableDao;
+    }
+
+    public void initializeDefaultData() {
+        List<SynchronizationTimeTable> defaultTables = Arrays.asList(
+                createDefaultEntry(TableName.WP_DATA, 600, true),
+                createDefaultEntry(TableName.IMAGE_TP, 600, false),
+                createDefaultEntry(TableName.CLIENT_GROUP_TP, 3600, true),
+                createDefaultEntry(TableName.LOG_MP, 600, false),
+                createDefaultEntry(TableName.CLIENTS, 6000, false),
+                createDefaultEntry(TableName.ADDRESS, 6000, false),
+                createDefaultEntry(TableName.USERS, 6000, false),
+                createDefaultEntry(TableName.PROMO_LIST, 6000, false),
+                createDefaultEntry(TableName.ERROR_LIST, 60000, false),
+                createDefaultEntry(TableName.STACK_PHOTO, 600, false),
+                createDefaultEntry(TableName.TASK_AND_RECLAMATION, 600, false),
+                createDefaultEntry(TableName.PLANOGRAMM, 6000, false)
+        );
+
+        timetableDao.insertAll(defaultTables)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(() -> Log.d("Database", "Default data initialized"),
+                        e -> Log.e("Database", "Init error", e));
+    }
+
+    private SynchronizationTimeTable createDefaultEntry(TableName tableName,
+                                                        long syncPeriodSeconds,
+                                                        boolean isUserGenerated) {
+        return new SynchronizationTimeTable(
+                tableName.ordinal(), // используем ordinal как ID
+                tableName,
+                syncPeriodSeconds,
+                0, // lastDownloadTime
+                0, // lastUploadTime
+                0, // downloadedItems
+                0, // uploadedItems
+                "Auto-generated", // description
+                isUserGenerated,
+                DownloadStatus.SUCCESS,
+                DownloadStatus.SUCCESS
+        );
+    }
+}

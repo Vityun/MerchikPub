@@ -501,7 +501,7 @@ public class RealmManager {
     /**
      * Запись в Реалм Опций
      */
-    public static boolean setOptions(List<OptionsDB> optionsDBS) {
+    public static boolean setOptions2(List<OptionsDB> optionsDBS) {
         globals.writeToMLOG(Clock.getHumanTime() + "_INFO.setOptions.sizeBefore: " + optionsDBS.size());
 
         // Удаление дубликатов по ключу
@@ -521,16 +521,16 @@ public class RealmManager {
         return true;
     }
 
-//    public static boolean setOptions(List<OptionsDB> optionsDBS) {
-//        globals.writeToMLOG(Clock.getHumanTime() + "_INFO.RealmManager.class.setOptions.Размер списка: " + optionsDBS.size() + "\n");
-//
-//        INSTANCE.beginTransaction();
-////        INSTANCE.delete(OptionsDB.class);
-//        List<OptionsDB> res = INSTANCE.copyToRealmOrUpdate(optionsDBS);
-//        globals.writeToMLOG(Clock.getHumanTime() + "_INFO.RealmManager.class.setOptions.Размер сохранённого списка: " + res.size() + "\n");
-//        INSTANCE.commitTransaction();
-//        return true;
-//    }
+    public static boolean setOptions(List<OptionsDB> optionsDBS) {
+        globals.writeToMLOG(Clock.getHumanTime() + "_INFO.RealmManager.class.setOptions.Размер списка: " + optionsDBS.size() + "\n");
+
+        INSTANCE.beginTransaction();
+        INSTANCE.delete(OptionsDB.class);
+        List<OptionsDB> res = INSTANCE.copyToRealmOrUpdate(optionsDBS);
+        globals.writeToMLOG(Clock.getHumanTime() + "_INFO.RealmManager.class.setOptions.Размер сохранённого списка: " + res.size() + "\n");
+        INSTANCE.commitTransaction();
+        return true;
+    }
 
     public static void saveDownloadedOptions(List<OptionsDB> optionsDBS) {
         INSTANCE.beginTransaction();

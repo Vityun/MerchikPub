@@ -54,6 +54,8 @@ import ua.com.merchik.merchik.data.Database.Room.UsersSDB;
 import ua.com.merchik.merchik.data.Database.Room.VacancySDB;
 import ua.com.merchik.merchik.data.Database.Room.ViewListSDB;
 import ua.com.merchik.merchik.data.Database.Room.VoteSDB;
+import ua.com.merchik.merchik.data.SynchronizationTimeTable;
+import ua.com.merchik.merchik.data.synchronization.ConverterSynchronizationTimetable;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.AchievementsDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.AdditionalMaterialsAddressDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.AdditionalMaterialsDao;
@@ -92,6 +94,7 @@ import ua.com.merchik.merchik.database.room.DaoInterfaces.SiteAccountDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.SiteObjectsDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.SiteUrlDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.StandartDao;
+import ua.com.merchik.merchik.database.room.DaoInterfaces.SynchronizationTimetableDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.TarDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.TovarGroupClientDao;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.TovarGroupDao;
@@ -150,13 +153,14 @@ import ua.com.merchik.merchik.database.room.DaoInterfaces.VotesDao;
                 VacancySDB.class,
                 BonusSDB.class,
                 SiteUrlSDB.class,
-                SiteAccountSDB.class
+                SiteAccountSDB.class,
+                SynchronizationTimeTable.class
         },
-        version = 64
+        version = 65
 )
 
 
-@TypeConverters(DateConverter.class)
+@TypeConverters({DateConverter.class, ConverterSynchronizationTimetable.class})
 public abstract class AppDatabase extends RoomDatabase {
 
     public abstract LanguagesDao langListDao();
@@ -250,6 +254,8 @@ public abstract class AppDatabase extends RoomDatabase {
     public abstract SiteUrlDao siteUrlDao();
 
     public abstract SiteAccountDao siteAccountDao();
+
+    public abstract SynchronizationTimetableDao synchronizationTimetableDao();
 
     public class MyAutoMigration {
     }

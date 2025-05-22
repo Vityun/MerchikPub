@@ -539,7 +539,7 @@ public class TablesLoadingUnloading {
                 try {
                     if (response.isSuccessful() && response.body() != null) {
                         if (response.body().getState() && response.body().getList() != null && !response.body().getList().isEmpty()) {
-                            RealmManager.setOptions(response.body().getList());
+                            RealmManager.setOptions2(response.body().getList());
                             click.click("Данные успешно загружены и сохранены. (" + response.body().getList().size() + ")шт. Опций.");
                         } else {
                             click.click("Обновить данные не получилось. Обратитесь к своему руководителю.");
@@ -587,7 +587,7 @@ public class TablesLoadingUnloading {
 
 //        #### TODO dt_change_from
         SynchronizationTimetableDB synchronizationTimetableDB = RealmManager.INSTANCE.copyFromRealm(RealmManager.getSynchronizationTimetableRowByTable("options_list"));
-        standartData.dt_change_from = String.valueOf(synchronizationTimetableDB.getVpi_app());
+//        standartData.dt_change_from = String.valueOf(synchronizationTimetableDB.getVpi_app());
 
         Gson gson = new Gson();
         String json = gson.toJson(standartData);

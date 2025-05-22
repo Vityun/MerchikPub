@@ -21,8 +21,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 
 import io.realm.Realm;
 import okhttp3.MediaType;
@@ -187,7 +185,7 @@ public class PhotoReports {
                         if (photoDB.getPhotoServerId() == null || photoDB.getPhotoServerId().isEmpty()
                                 && isPhotoOlderThan10Minutes(photoDB)) {
                             StackPhotoRealm.deleteByPhotoNum(filePath);
-                            Globals.writeToMLOG("INFO", "PhotoReports/upload_photo/send/onFailure", "isImageValid: " + isImageValid(file) + ", file delete ");
+                            Globals.writeToMLOG("INFO", "PhotoReports/upload_photo/send/deleteByPhotoNum", "isImageValid: " + isImageValid(file) + ", file delete ");
                         }
                 }
             });
@@ -277,19 +275,9 @@ public class PhotoReports {
      *
      * @return
      */
-    private static final Set<Integer> uploadingPhotoIds = ConcurrentHashMap.newKeySet();
-
     private void buildCall(StackPhotoDB photoDB, ExchangeInterface.UploadPhotoReports callback) {
         int photoId = photoDB.getId();
-
-        if (uploadingPhotoIds.contains(photoId)) {
-            Globals.writeToMLOG("INFO", "PhotoReports/buildCall/", "ABORT UPLOAD. for id: " + photoId);
-            return;
-        }
-        uploadingPhotoIds.add(photoId);
-
         Globals.writeToMLOG("INFO", "PhotoReports/buildCall/", "START UPLOAD. Photo upload id: " + photoId);
-
 
         final MediaType MEDIA_TYPE_JPG = MediaType.parse("image/jpg");
 
@@ -461,7 +449,6 @@ public class PhotoReports {
             }
         } catch (Exception e) {
             Log.e("M_UPLOAD_GALLERY", "uri/Exception e: " + e);
-            uploadingPhotoIds.remove(photoId);  // снять блокировку по завершению
             Globals.writeToMLOG("INFO", "PhotoReports.buildCall", "file.length()Exception e: " + e);
         }
 
@@ -470,7 +457,6 @@ public class PhotoReports {
             Globals.writeToMLOG("INFO", "PhotoReports.buildCall", "file.length()");
 //            StackPhotoDB sp = StackPhotoRealm.getById(photoDB.getId());
 //            sp.deleteFromRealm();
-            uploadingPhotoIds.remove(photoId);  // снять блокировку по завершению
             callback.onFailure(photoDB, "Файл фотографии [id:" + photoDB.getId() + "] равен: " + file.length() + "(пуст)");
             return;
         }
@@ -516,13 +502,14 @@ public class PhotoReports {
                                 } else {
                                     if (data.errorType.equals("photo_already_exist")) {
                                         Globals.writeToMLOG("INFO", "PhotoReports/buildCall/CALL/onResponse/responseBody/info/photo_already_exist", "photo_already_exist");
-                                        new MessageDialogBuilder((Activity) mContext)
-                                                .setStatus(DialogStatus.ALERT)
-                                                .setTitle("Сервер не прийняв фото")
-                                                .setSubTitle("Фото вже є на сервері")
-                                                .setMessage(data.error + ". Ви повинні завантажити нове фото")
-                                                .show();
-                                        callback.onFailure(photoDB, data.error);
+                                        if (photoDB.photo_num.contains("SCREENSHOT") && photoDB.getPhoto_type() == 4)
+                                            new MessageDialogBuilder((Activity) mContext)
+                                                    .setStatus(DialogStatus.ALERT)
+                                                    .setTitle("Сервер не прийняв фото")
+                                                    .setSubTitle("Фото вже є на сервері")
+                                                    .setMessage(data.error + ". Ви повинні завантажити нове фото")
+                                                    .show();
+                                        callback.onSuccess(photoDB, data.error);
                                     } else {
                                         callback.onFailure(photoDB, "Ошибка при обработке фото: " + data.error);
                                     }
@@ -537,15 +524,15 @@ public class PhotoReports {
                                         } else {
                                             if (data.errorType.equals("photo_already_exist")) {
                                                 Globals.writeToMLOG("INFO", "PhotoReports/buildCall/CALL/onResponse/responseBody/info/photo_already_exist", "photo_already_exist");
-//                                                  ############################
-                                                new MessageDialogBuilder((Activity) mContext)
-                                                        .setStatus(DialogStatus.ALERT)
-                                                        .setTitle("Сервер не прийняв фото")
-                                                        .setSubTitle("Фото вже є на сервері")
-                                                        .setMessage(data.error + ". Ви повинні завантажити нове фото")
-                                                        .show();
+                                                if (photoDB.photo_num.contains("SCREENSHOT") && photoDB.getPhoto_type() == 4)
+                                                    new MessageDialogBuilder((Activity) mContext)
+                                                            .setStatus(DialogStatus.ALERT)
+                                                            .setTitle("Сервер не прийняв фото")
+                                                            .setSubTitle("Фото вже є на сервері")
+                                                            .setMessage(data.error + ". Ви повинні завантажити нове фото")
+                                                            .show();
 
-                                                callback.onFailure(photoDB, data.error);
+                                                callback.onSuccess(photoDB, data.error);
                                             } else {
                                                 callback.onFailure(photoDB, "Ошибка при обработке фото: " + data.error);
                                             }
@@ -567,17 +554,13 @@ public class PhotoReports {
                 } catch (Exception e) {
                     Globals.writeToMLOG("INFO", "PhotoReports/buildCall/CALL/onResponse/responseBody", "HEREException e: " + e);
                     callback.onFailure(photoDB, "ВНИМАНИЕ! Передайте эту ошибку Вашему руководителю: " + e);
-                    uploadingPhotoIds.remove(photoId);
                 }
-//                uploadingPhotoIds.remove(photoId);  // снять блокировку по завершению
-
             }
 
             @Override
             public void onFailure(Call<JsonObject> call, Throwable t) {
                 Log.e("M_UPLOAD_GALLERY", "HERE IN onFailure: " + t);
                 Globals.writeToMLOG("FAILURE", "PhotoReports/buildCall/CALL/onFailure", "t.toString(): " + t.toString());
-                uploadingPhotoIds.remove(photoId);  // снять блокировку по завершению
                 callback.onFailure(photoDB, t.toString());
             }
         });

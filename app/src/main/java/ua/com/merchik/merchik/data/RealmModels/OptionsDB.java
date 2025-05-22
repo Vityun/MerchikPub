@@ -465,6 +465,19 @@ public class OptionsDB extends RealmObject {
         return iD.equals(optionsDB.iD);
     }
 
+    public boolean equalsWithOutID(Object o) {
+        if (this == o) return true;
+
+        if (o == null || getClass() != o.getClass()) return false;
+
+        OptionsDB optionsDB = (OptionsDB) o;
+
+        return codeDad2.equals(optionsDB.codeDad2) &&
+                optionId.equals(optionsDB.optionId) &&
+                optionControlId.equals(optionsDB.optionControlId) &&
+                optionTxt.equals(optionsDB.optionTxt);
+    }
+
 //    @Override
 //    public int hashCode() {
 //        String s = iD;

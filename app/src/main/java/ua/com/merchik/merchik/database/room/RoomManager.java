@@ -5,8 +5,13 @@ import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.room.Room;
+import androidx.room.RoomDatabase;
 import androidx.room.migration.Migration;
 import androidx.sqlite.db.SupportSQLiteDatabase;
+
+import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
+import io.reactivex.rxjava3.schedulers.Schedulers;
+import ua.com.merchik.merchik.Utils.DatabaseInitializer;
 
 public class RoomManager {
 
@@ -37,10 +42,38 @@ public class RoomManager {
                         MIGRATION_62_63,
                         MIGRATION_63_64
                 )
+                .addCallback(new RoomDatabase.Callback() {
+                    @Override
+                    public void onCreate(@NonNull SupportSQLiteDatabase db) {
+                        super.onCreate(db);
+                        initializeDefaultData(SQL_DB);
+                    }
+
+                    @Override
+                    public void onOpen(@NonNull SupportSQLiteDatabase db) {
+                        super.onOpen(db);
+                        checkAndInitialize(SQL_DB);
+                    }
+                })
 
                 .build();
     }
 
+    private static void initializeDefaultData(AppDatabase database) {
+        new DatabaseInitializer(database.synchronizationTimetableDao())
+                .initializeDefaultData();
+    }
+
+    private static void checkAndInitialize(AppDatabase database) {
+        database.synchronizationTimetableDao().getCount()
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(count -> {
+                    if (count == 0) {
+                        initializeDefaultData(database);
+                    }
+                });
+    }
 
 //    ----------------------------------------------------------------------------------------------
 

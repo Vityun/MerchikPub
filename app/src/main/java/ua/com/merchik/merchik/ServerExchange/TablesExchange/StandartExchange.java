@@ -19,12 +19,12 @@ import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
 /**
  * 11.08.2021
  * Получение с сервера таблички Стандартов
- *
+ * <p>
  * Точка входа: standart
- * */
+ */
 public class StandartExchange {
 
-    public void downloadStandartTable(ExchangeInterface.ExchangeResponseInterface exchange){
+    public void downloadStandartTable(ExchangeInterface.ExchangeResponseInterface exchange) {
         try {
             StandartData data = new StandartData();
             data.mod = "standart";
@@ -32,7 +32,7 @@ public class StandartExchange {
 
             // #### TODO
             SynchronizationTimetableDB synchronizationTimetableDB = RealmManager.INSTANCE.copyFromRealm(RealmManager.getSynchronizationTimetableRowByTable("standart_table"));
-            data.dt_change_from = String.valueOf(synchronizationTimetableDB.getVpi_app());
+//            data.dt_change_from = String.valueOf(synchronizationTimetableDB.getVpi_app());
 
 //            data.dt_change_from = String.valueOf(System.currentTimeMillis()/1000 - 142);
 //            data.dt_change_from = "0";
@@ -49,7 +49,9 @@ public class StandartExchange {
                 @Override
                 public void onResponse(Call<StandartResponse> call, Response<StandartResponse> response) {
                     Log.e("test", "response: " + response);
-                    exchange.onSuccess(response.body().list);
+                    if (response.isSuccessful() && response.body() != null
+                            && response.body().list != null && !response.body().list.isEmpty())
+                        exchange.onSuccess(response.body().list);
 
                     RealmManager.INSTANCE.executeTransaction(realm -> {
                         synchronizationTimetableDB.setVpi_app(System.currentTimeMillis() / 1000);
@@ -79,13 +81,13 @@ public class StandartExchange {
 //                    }
 //                });
 //            }
-        }catch (Exception e){
+        } catch (Exception e) {
 
         }
     }
 
 
-    public void downloadContentTable(ExchangeInterface.ExchangeResponseInterface exchange){
+    public void downloadContentTable(ExchangeInterface.ExchangeResponseInterface exchange) {
         try {
             StandartData data = new StandartData();
             data.mod = "standart";
@@ -126,7 +128,7 @@ public class StandartExchange {
                     exchange.onFailure(null);
                 }
             });
-        }catch (Exception e){
+        } catch (Exception e) {
 
         }
     }

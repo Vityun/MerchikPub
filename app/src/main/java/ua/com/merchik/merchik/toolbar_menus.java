@@ -1121,7 +1121,6 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                 call.enqueue(new Callback<Void>() {
                     @Override
                     public void onResponse(Call<Void> call, Response<Void> response) {
-                        Log.e("!!!!!!!!!!!!", "+++++");
                         progress.onCompleted();
 
                         file.deleteOnExit();
@@ -1130,21 +1129,38 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
 
                     @Override
                     public void onFailure(Call<Void> call, Throwable t) {
-                        Log.e("!!!!!!!!!!!!", "----- " + t.getMessage());
                         progress.onCanceled();
 
                         file.deleteOnExit();
                         uploadFile.deleteOnExit();
 
+                        new MessageDialogBuilder(toolbar_menus.this)
+                                .setTitle("Помилка")
+                                .setStatus(DialogStatus.ERROR)
+                                .setMessage("onFailure: " + t.getMessage())
+                                .setOnCancelAction(() -> null)
+                                .show();
+
                     }
                 });
             } else {
-                alertErrorNoInternet();
+                new MessageDialogBuilder(this)
+                        .setTitle("Помилка")
+                        .setStatus(DialogStatus.ERROR)
+//                    .setMessage("<font color='RED'>По даному замовнику КАТЕГОРИЧНО ЗАБОРОНЕНО додавати товари! <br><br>Відмовитися від додавання товарів?</font>")
+                        .setMessage("Помилка при створенi файла")
+                        .setOnCancelAction(() -> null)
+                        .show();
             }
 
         } catch (Exception e) {
-            alertErrorNoInternet();
-        }
+            new MessageDialogBuilder(this)
+                    .setTitle("Помилка")
+                    .setStatus(DialogStatus.ERROR)
+//                    .setMessage("<font color='RED'>По даному замовнику КАТЕГОРИЧНО ЗАБОРОНЕНО додавати товари! <br><br>Відмовитися від додавання товарів?</font>")
+                    .setMessage("Exception: " + e.getMessage())
+                    .setOnCancelAction(() -> null)
+                    .show();        }
     }
 
     private void alertErrorNoInternet() {
