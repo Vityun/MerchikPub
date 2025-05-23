@@ -37,8 +37,14 @@ public interface EKLDao {
     @Query("SELECT * FROM ekl WHERE ekl_hash_code = :code")
     Flowable<EKL_SDB> getByHashCode(String code);
 
+    @Query("SELECT * FROM ekl WHERE ekl_hash_code = :code AND dad2 = :dad2")
+    Flowable<EKL_SDB> getByHashCodeAndDad2(String code, Long dad2);
+
     @Query("SELECT count('id') FROM ekl WHERE ekl_hash_code = :code")
     Integer getCountHashCode(String code);
+
+    @Query("SELECT count('id') FROM ekl WHERE ekl_hash_code = :code AND dad2 = :dad2")
+    Integer getCountHashCodeAndDad2(String code, Long dad2);
 
     @Query("SELECT * FROM ekl WHERE ekl_code IS NOT NULL AND upload IS NULL")
     List<EKL_SDB> getEKLToUpload();

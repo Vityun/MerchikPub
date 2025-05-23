@@ -716,6 +716,7 @@ public class Exchange {
                     // Чудо, что ты тут делаешь?
 //                    new DialogEKL(context, null).responseCheckEKLList();
                     Globals.writeToMLOG("info", "startExchange/DialogEKL", "here");
+                    // 22.05.2025 отключил выгрузку экл
                     new EKLRequests().responseCheckEKLList();
                 } catch (Exception e) {
                     Globals.writeToMLOG("ERROR", "startExchange/DialogEKL", "Exception e: " + e);

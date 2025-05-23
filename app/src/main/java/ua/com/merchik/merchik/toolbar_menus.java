@@ -252,7 +252,7 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                 ua.com.merchik.merchik.trecker.SetUpLocationListener(this);
             }
 
-            globals.handlerCount.postDelayed(runnableCron10, 20000);
+            globals.handlerCount.postDelayed(runnableCron10, 10000);
 
             globals.getDate();
 
@@ -1226,8 +1226,7 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
 
                 synchronizationSignal("SIGNAL", null);
 
-//                globals.fixMP(null);
-
+//                globals.fixMP(null)
 //            Log.e("КРОНЧИК", "stackPhotoDBAll: " + StackPhotoRealm.getAll().size());
 
                 // 22.04.2021 Ужасная хрень. Если нет данных от GPS -- оно начинает его слушать.
@@ -1262,7 +1261,7 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
 
                 // Если включена Автовыгрузка/Автообмен
                 if (Globals.autoSend && internetStatus == 1) {
-//                    getPhotoAndUpload(1);   // Выгрузка фото
+                    getPhotoAndUpload(1);   // Выгрузка фото
 
 
                     try {
@@ -1307,7 +1306,6 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                         exchange = new Exchange();
                     }
                     exchange.context = toolbar_menus.this;
-
 
 //                        loadingStart();
 
@@ -2646,9 +2644,6 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
     }
 
 
-    private Handler handler = new Handler(Looper.getMainLooper());
-    private Runnable stopLoadingRunnable;
-
     private void loadingStart() {
         if (loadingIndicator != null && ib != null && !loadingIndicator.isLoadingIndicatorShow()) {
             ib.setVisibility(View.GONE);
@@ -2668,23 +2663,6 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
             prefs.edit().putBoolean(KEY_IS_FIRST_LOADING, false).apply();
         }
 
-        // костыли временные
-        // Удаляем предыдущий таймер (если есть)
-
-//        if (!getIntent().getBooleanExtra("initialOpent",false)) {
-//            if (stopLoadingRunnable != null) {
-//                handler.removeCallbacks(stopLoadingRunnable);
-//            }
-//
-//            // Запускаем таймер на 60 секунд для авто-остановки загрузки
-//            stopLoadingRunnable = new Runnable() {
-//                @Override
-//                public void run() {
-//                    loadingFinish(); // Остановка загрузки через 60 секунд
-//                }
-//            };
-//            handler.postDelayed(stopLoadingRunnable, 120 * 1000); // 60 секунд
-//        }
     }
 
 

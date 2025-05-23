@@ -161,8 +161,9 @@ public class EKLRequests {
         try {
             List<EKL_SDB> list = SQL_DB.eklDao().getEKLToUpload();
             Globals.writeToMLOG("RESP", "EKLRequests.responseCheckEKLList/onSuccess", "list: " + list);
-            if (list != null) {
+            if (list == null || list.isEmpty()) {
                 Globals.writeToMLOG("RESP", "EKLRequests.responseCheckEKLList/onSuccess", "list: " + list.size());
+                return;
             }
             responseCheckEKLCode(list, new ExchangeInterface.ExchangeResponseInterfaceSingle() {
                 @Override

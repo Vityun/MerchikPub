@@ -2,7 +2,6 @@ package ua.com.merchik.merchik.dialogs.EKL;
 
 import static ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportActivity.NEED_UPDATE_UI_REQUEST;
 import static ua.com.merchik.merchik.Globals.HELPDESK_PHONE_NUMBER;
-import static ua.com.merchik.merchik.Globals.generateUniqueNumber;
 import static ua.com.merchik.merchik.Globals.userId;
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 import static ua.com.merchik.merchik.toolbar_menus.internetStatus;
@@ -42,10 +41,6 @@ import com.google.gson.JsonObject;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
-import org.json.JSONObject;
-
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -64,9 +59,7 @@ import ua.com.merchik.merchik.ServerExchange.ErrorParams;
 import ua.com.merchik.merchik.ServerExchange.ExchangeInterface;
 import ua.com.merchik.merchik.ViewHolders.AutoTextUsersViewHolder;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
-import ua.com.merchik.merchik.data.Database.Room.AddressSDB;
 import ua.com.merchik.merchik.data.Database.Room.EKL_SDB;
-import ua.com.merchik.merchik.data.Database.Room.TovarGroupClientSDB;
 import ua.com.merchik.merchik.data.Database.Room.UsersSDB;
 import ua.com.merchik.merchik.data.Database.Room.UsersSDBDat.UserSDBJoin;
 import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteHintsDB;
@@ -84,8 +77,6 @@ import ua.com.merchik.merchik.database.realm.tables.AppUserRealm;
 import ua.com.merchik.merchik.database.room.RoomManager;
 import ua.com.merchik.merchik.dialogs.DialogData;
 import ua.com.merchik.merchik.dialogs.DialogVideo;
-import ua.com.merchik.merchik.dialogs.features.AlertDialogOneButton;
-import ua.com.merchik.merchik.dialogs.features.AlertDialogTwoButtons;
 import ua.com.merchik.merchik.dialogs.features.LoadingDialogWithPercent;
 import ua.com.merchik.merchik.dialogs.features.MessageDialogBuilder;
 import ua.com.merchik.merchik.dialogs.features.dialogLoading.ProgressViewModel;
@@ -113,7 +104,6 @@ public class DialogEKL {
     private static UserSDBJoin user;
     private EKL_SDB ekl = new EKL_SDB();
 
-    private String dad2;
 
     private Boolean enterCode = false;
     boolean isKeyboardShowing = true;
@@ -576,6 +566,7 @@ public class DialogEKL {
                 Log.e("DialogEKL", "buttonCheck/editText text: " + editTextCode);
                 Log.e("DialogEKL", "buttonCheck/editText text LENGHT: " + editTextCode.length());
                 Log.e("DialogEKL", "buttonCheck/ekl: " + ekl.id);
+                Globals.writeToMLOG("INFO", "DialogEKL.sendEKL", "editTextCode: " + editTextCode);
 
                 if (user == null)
                     return;
@@ -1189,11 +1180,11 @@ public class DialogEKL {
             // Формируем итоговую ссылку
             String format =
                     String.format(
-                    "https://merchik.com.ua/sa.php?&u=%s&s=%s&l=%s",
-                    userId,
-                    hash,
-                    link
-            );
+                            "https://merchik.com.ua/sa.php?&u=%s&s=%s&l=%s",
+                            userId,
+                            hash,
+                            link
+                    );
 
             // Логируем результат
             Globals.writeToMLOG("INFO", "DialogEKL/setAddSotr/createAddNewPTTLink", "format: " + format);
@@ -1331,6 +1322,8 @@ public class DialogEKL {
                 ekl.id = item.id;
                 ekl.element_id = item.id;
                 ekl.code = item.code;
+                if (wp != null)
+                    ekl.dad2 = wp.getCode_dad2();
                 list.add(ekl);
             }
 
@@ -1354,13 +1347,20 @@ public class DialogEKL {
             if (count == null || count == 0) {
                 Toast.makeText(context, "Такой код не обнаружен, проверьте правильность внесения кода.", Toast.LENGTH_LONG).show();
                 return;
+            } else {
+                Integer countWithDad2 = SQL_DB.eklDao().getCountHashCodeAndDad2(code, wp.getCode_dad2());
+                if (countWithDad2 == null || countWithDad2 == 0) {
+                    Toast.makeText(context, "Такой код уже был введен ранее, но он не относится к данному посещению.", Toast.LENGTH_LONG).show();
+                    return;
+                }
             }
 
 
             CompositeDisposable disposable = new CompositeDisposable();
             String finalCode = code;
             disposable.add(
-                    SQL_DB.eklDao().getByHashCode(code)
+//                    SQL_DB.eklDao().getByHashCode(code)
+                    SQL_DB.eklDao().getByHashCodeAndDad2(code, wp.getCode_dad2())
                             .observeOn(AndroidSchedulers.mainThread())
                             .subscribe((EKL_SDB ekl_sdb) -> {
                                 Log.e("DialogEKL", "responseCheckEKLCode_3.1: " + data);
@@ -1375,6 +1375,7 @@ public class DialogEKL {
                                 DataEKL ekl = new DataEKL();
                                 ekl.id = ekl_sdb.id;
                                 ekl.element_id = ekl_sdb.id;
+                                ekl.dad2 = ekl_sdb.dad2 != null ? ekl_sdb.dad2 : 0;
                                 ekl.code = editText.getText().toString();
 
                                 data.data = Collections.singletonList(ekl);
@@ -1668,12 +1669,15 @@ public class DialogEKL {
                                                 Globals.writeToMLOG("RESP", "DialogEKL.sendEKL/onResponse", "item.state: " + item.state);
                                                 ekl_sdb.dt = System.currentTimeMillis() / 1000;
                                                 ekl_sdb.eklCode = ekl_sdb.eklHashCode;
+                                                if (wp != null)
+                                                    ekl_sdb.dad2 = wp.getCode_dad2();
                                                 ekl_sdb.upload = true;
                                                 ekl_sdb.codeVerify = 1;
                                             } else if (item.error.equals("Ця заявка вже успішно перевірена раніше")) {
                                                 ekl_sdb.dt = System.currentTimeMillis() / 1000;
                                                 ekl_sdb.eklCode = ekl_sdb.eklHashCode;
-                                                ekl_sdb.upload = true;
+                                                ekl_sdb.dad2 = wp.getCode_dad2();
+//                                                ekl_sdb.upload = true;
                                                 ekl_sdb.codeVerify = 1;
                                             } else {
                                                 ekl_sdb.dt = System.currentTimeMillis() / 1000;

@@ -136,7 +136,6 @@ public class PlanogrammSDB implements DataObjectUI {
     }
 
     public PlanogrammSDB() {
-        Globals.writeToMLOG("INFO", "PlanogrammSDB", "test");
     }
 
     public PlanogrammSDB(@NonNull Integer id, String ispId, String ispTxt, String clientId, String clientTxt, Integer imgId, String photo, Long photoId, String photoBig, String nm, String comments, Date dtStart, Date dtEnd, String authorId, String authorTxt, Date dtUpdate, int planogrammPhoto) {

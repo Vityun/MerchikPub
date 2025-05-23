@@ -4,4 +4,6 @@ public class DataEKL {
     public Integer id;
     public Integer element_id;
     public String code;
+
+    public Long dad2;
 }
