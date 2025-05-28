@@ -202,7 +202,7 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
             android:layout_marginLeft="8dp"
-            android:text="Тип фото: "
+            android:text="@string/photo_report_tvPhotoType"
             android:visibility="visible"
             app:layout_constraintStart_toStartOf="@+id/guideline"
             app:layout_constraintTop_toBottomOf="@+id/textViewPhotoLog4" />

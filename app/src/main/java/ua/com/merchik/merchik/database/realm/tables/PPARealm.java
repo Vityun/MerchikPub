@@ -33,6 +33,13 @@ public class PPARealm {
                 .findAll();
     }
 
+    public static List<PPADB> getPPAList(String client, String addrId) {
+        return INSTANCE.where(PPADB.class)
+                .equalTo("client", client)
+                .equalTo("addrId", addrId)
+                .findAll();
+    }
+
     public static PPADB getPPAIZA(String iza, String client, String addrId, String tovarId) {
         return INSTANCE.where(PPADB.class)
                 .equalTo("codeIza", iza)

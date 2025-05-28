@@ -134,7 +134,9 @@ public class MakePhoto {
             Globals.writeToMLOG("INFO", "takePhoto", "trecker.imHereGPS: " + trecker.imHereGPS + "/ trecker.imHereNET: " + trecker.imHereNET);
             Globals.writeToMLOG("INFO", "takePhoto", "Globals.CoordX: " + Globals.CoordX + "/ Globals.CoordY: " + Globals.CoordY);
 
-            if (enabledGPS) {
+            if (wp.getThemeId() != 998)
+                dispatchTakePictureIntent();
+            else if (enabledGPS) {
                 if (wp != null) {
                     if (wp.getLatitude() > 0 && wp.getLongitude() > 0) {
 //                    if (true){
@@ -490,7 +492,7 @@ public class MakePhoto {
             Globals.writeToMLOG("INFO", "makePhoto", "photoNum: " + photoNum);
             Globals.writeToMLOG("INFO", "makePhoto", "isSavePhoto: " + isSavePhoto);
 
-            Log.e("!!!!!!","tovarId: " + tovarId);
+            Log.e("!!!!!!", "tovarId: " + tovarId);
             if (intent.resolveActivity(activity.getPackageManager()) != null) {
                 Globals.writeToMLOG("INFO", "makePhoto", "resolveActivity != null: " + activity.getPackageManager());
                 activity.startActivityForResult(intent, CAMERA_REQUEST_TAKE_PHOTO_TEST);
@@ -593,7 +595,7 @@ public class MakePhoto {
         if (wp.getCustomerTypeGrp() != null) {
             final String[] result = wp.getCustomerTypeGrp().values().toArray(new String[0]);
             if (wp.getCustomerTypeGrp().size() > 1 && !wp.getPhotoType().equals("5")
-            && !wp.getPhotoType().equals("47")) {
+                    && !wp.getPhotoType().equals("47")) {
                 new AlertDialog.Builder(activity)
                         .setTitle("Выберите группу товара для следующего фото: ")
                         .setItems(result, (dialog, which) -> {
@@ -631,19 +633,24 @@ public class MakePhoto {
         }
     }
 
-    private <T> void photoDialogsNEW2(Activity activity, WPDataObj wpDataObj, T data, Clicks.clickVoid clickVoid) {
-        makePhoto(activity, data, clickVoid); // Метод который запускает камеру и создаёт файл фото.
-    }
+//    private <T> void photoDialogsNEW2(Activity activity, WPDataObj wpDataObj, T data, Clicks.clickVoid clickVoid) {
+//        makePhoto(activity, data, clickVoid); // Метод который запускает камеру и создаёт файл фото.
+//    }
 
     /**
      * 28.08.23
      */
+    boolean isPhotoMake = true;
     private <T> void photoDialogsNEW(Activity activity, WPDataObj wpDataObj, T data, OptionsDB optionsDB, Clicks.clickVoid clickVoid) {
         OptionControlMP optionControlMP = new OptionControlMP(activity.getBaseContext(), (WpDataDB) data, optionsDB, null, null, null);
+        isPhotoMake = true;
         optionControlMP.showMassage(true, new Clicks.clickStatusMsg() {
             @Override
             public void onSuccess(String string) {
-                makePhoto(activity, data, clickVoid); // Метод который запускает камеру и создаёт файл фото.
+                if (isPhotoMake) {
+                    makePhoto(activity, data, clickVoid); // Метод который запускает камеру и создаёт файл фото.
+                    isPhotoMake = false;
+                }
             }
 
             @Override

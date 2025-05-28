@@ -20,8 +20,6 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
-import android.os.Handler;
-import android.os.Looper;
 import android.provider.Settings;
 import android.text.Html;
 import android.util.Log;
@@ -109,7 +107,6 @@ import ua.com.merchik.merchik.ServerExchange.TablesExchange.ShowcaseExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.VotesExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesLoadingUnloading;
 import ua.com.merchik.merchik.Utils.FileCompressor;
-import ua.com.merchik.merchik.Utils.LocationUtils;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.Database.Room.Chat.ChatSDB;
 import ua.com.merchik.merchik.data.Database.Room.ShowcaseSDB;
@@ -1160,7 +1157,8 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
 //                    .setMessage("<font color='RED'>По даному замовнику КАТЕГОРИЧНО ЗАБОРОНЕНО додавати товари! <br><br>Відмовитися від додавання товарів?</font>")
                     .setMessage("Exception: " + e.getMessage())
                     .setOnCancelAction(() -> null)
-                    .show();        }
+                    .show();
+        }
     }
 
     private void alertErrorNoInternet() {
@@ -1246,7 +1244,7 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
 //            pingServer(1);                            // ОБМЕН ЦВЕТ
 //                RealmManager.stackPhotoDeletePhoto();           // Удаление фото < 2 дня
                 lightStatus();                                  // Обновление статуса Светофоров
-                setupBadge(RealmManager.stackPhotoNotUploadedPhotosCount()); // Подсчёт кол-ва фоток в БД & Установка числа в счётчик
+                setupBadge(realmResults.size()); // Подсчёт кол-ва фоток в БД & Установка числа в счётчик
 
                 Log.e("КРОНЧИК", "stackPhotoNotUploadedPhotosCount(): " + RealmManager.stackPhotoNotUploadedPhotosCount());
 
@@ -1261,7 +1259,7 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
 
                 // Если включена Автовыгрузка/Автообмен
                 if (Globals.autoSend && internetStatus == 1) {
-                    getPhotoAndUpload(1);   // Выгрузка фото
+//                    getPhotoAndUpload(1);   // Выгрузка фото
 
 
                     try {
@@ -1536,11 +1534,12 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
 //
 //            // Пишет статус логина. Или режим работы приложения
 //            toolbarMwnuItemServer = "Тест";
-////                if (Globals.onlineStatus) {
-////                    toolbarMwnuItemServer = getResources().getString(R.string.txt_sever) + "(" + getResources().getString(R.string.txt_online) + ")";
-////                } else {
-////                    toolbarMwnuItemServer = getResources().getString(R.string.txt_sever) + "(" + getResources().getString(R.string.txt_offline) + ")";
-////                }
+
+    /// /                if (Globals.onlineStatus) {
+    /// /                    toolbarMwnuItemServer = getResources().getString(R.string.txt_sever) + "(" + getResources().getString(R.string.txt_online) + ")";
+    /// /                } else {
+    /// /                    toolbarMwnuItemServer = getResources().getString(R.string.txt_sever) + "(" + getResources().getString(R.string.txt_offline) + ")";
+    /// /                }
 //            Log.e("КРОНЧИК", "Globals.onlineStatus: " + toolbarMwnuItemServer);
 //        } catch (Exception e) {
 //            Log.e("КРОНЧИК", "Exception" + e);
@@ -1640,7 +1639,12 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
             realmResults.clear();
             List<StackPhotoDB> res = RealmManager.INSTANCE.copyFromRealm(RealmManager.getStackPhotoPhotoToUpload());    // todo У меня были обращения к удалённым фоткам. Может быть ЭТО поправит
             for (StackPhotoDB photo : res) {
-                if (photo != null) realmResults.add(photo);
+                if (photo != null) {
+                    String filePath = photo.getPhoto_num();
+                    File file = new File(filePath);
+                    if (file.exists() && file.length() > 1)
+                        realmResults.add(photo);
+                }
             }
             globals.writeToMLOG(Clock.getHumanTime() + "TOOLBAR.выгрузка.сбор данных перед выгрузкой. количество фоток к выгрузке на текущий момент: " + realmResults.size() + "\n");
             startUploading(mod);

@@ -134,8 +134,12 @@ public class OptionControlMP<T> extends OptionControl {
             if (context == null)
                 context = MyApplication.getAppContext();
 
-            if (optionDB.getOptionId().equals("132968"))
+            if (optionDB == null || optionDB.getOptionId().equals("132968"))
                 click.onSuccess("");
+
+            if (wpDataDB.getTheme_id() != 998)
+                click.onSuccess("");
+
             DialogData dialog = new DialogData(context);
             StringBuilder title = new StringBuilder();
 

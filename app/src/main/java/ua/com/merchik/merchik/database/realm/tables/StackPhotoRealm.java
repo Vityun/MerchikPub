@@ -350,6 +350,17 @@ public class StackPhotoRealm {
                 .findAll();
     }
 
+    /**
+     * 28.05.2025.
+     * Новый запрос к бд когда не надо делать фото если тип 31 и example 78
+     */
+    public static RealmResults<StackPhotoDB> getPhotosForTypeAndExample(long dad2, int photoType, String example) {
+        return INSTANCE.where(StackPhotoDB.class)
+                .equalTo("code_dad2", dad2)
+                .equalTo("photo_type", photoType)
+                .equalTo("example_id", example)
+                .findAll();
+    }
 
     /**
      * 09.01.2023.

@@ -778,7 +778,21 @@ public class RealmManager {
 
     public static RealmResults<OptionsDB> getOptionsButton(long otchetId) {
         String sOtchetId = String.valueOf(otchetId);
-        return INSTANCE.where(OptionsDB.class).equalTo("docId", sOtchetId).and().equalTo("optionGroup", "3161").and().equalTo("deleted", "0").findAll();
+        return INSTANCE.where(OptionsDB.class)
+                .beginGroup()
+                .equalTo("docId", sOtchetId)
+                .and()
+                .equalTo("optionGroup", "3161")
+                .and()
+                .equalTo("deleted", "0")
+                .endGroup()
+                .or()
+                .equalTo("docId", sOtchetId)
+                .and()
+                .equalTo("deleted", "0")
+                .and()
+                .equalTo("optionId", "2243")
+                .findAll();
     }
 
     public static RealmResults<OptionsDB> getOptionsButtonRED(long otchetId) {

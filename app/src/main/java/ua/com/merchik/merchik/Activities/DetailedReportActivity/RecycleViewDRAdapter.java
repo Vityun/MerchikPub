@@ -296,6 +296,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                         || optionId == 141069   // Кнопка "Сравнение Остатков с Наличием"
                         || optionId == 168598   // Кнопка "Мнение о посещении"
                         || optionId == 169108   // фото POS материалов (46)
+                        || optionId == 2243
                 ) {
                     optionButton.setBackgroundResource(R.drawable.bg_temp);
                     textInteger2.setVisibility(View.VISIBLE);
@@ -956,11 +957,11 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                             });
                             break;
 
-                        case 2243:
-                            type = new OptionMassageType();
-                            type.type = OptionMassageType.Type.STRING;
-                            OptionControlStockTovarLeft<?> optionControlStockTovarLeft = new OptionControlStockTovarLeft<>(itemView.getContext(), dataDB, optionsButtons, type, NULL, null);
-                            break;
+//                        case 2243:
+//                            type = new OptionMassageType();
+//                            type.type = OptionMassageType.Type.STRING;
+//                            OptionControlStockTovarLeft<?> optionControlStockTovarLeft = new OptionControlStockTovarLeft<>(itemView.getContext(), dataDB, optionsButtons, type, NULL, null);
+//                            break;
 
                         default:
                             textInteger.setVisibility(View.GONE);

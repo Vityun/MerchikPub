@@ -51,7 +51,7 @@ public class StackPhotoDB extends RealmObject implements DataObjectUI {
     public String photo_group_id;
     public String doc_id;
     public String comment;
-    public String gp;
+    public String gp;                  // Местоположение в формате Base
     public long upload_time;
     public long upload_status;
     public boolean status;

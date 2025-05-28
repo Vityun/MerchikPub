@@ -162,28 +162,34 @@ public class OptionControlAvailabilityDetailedReport<T> extends OptionControl {
         }
 
 
-        Long dtFrom = wp.getDt().getTime()/1000 - 604800;   // -7 дней в секундах.. на самом деле должно біть минус 6, но оно  счтиает старт дня
-        Long dtTo = wp.getDt().getTime()/1000 + 345600;   // +4 дней в секундах.. на самом деле должно біть минус 3, но оно  счтиает старт дня
+        Long dtFrom = wp.getDt().getTime() / 1000 - 604800;   // -7 дней в секундах.. на самом деле должно біть минус 6, но оно  счтиает старт дня
+        Long dtTo = wp.getDt().getTime() / 1000 + 345600;   // +4 дней в секундах.. на самом деле должно біть минус 3, но оно  счтиает старт дня
 
         // Формирование Сигналов для БЛОКИРОВКИ
+        List<String> clientExclusionList = List.of(
+                "9295", //Бетта
+                "10275", //Прошанский
+                "8633" //Лантманнен
+//                ,"85844" //Тітрейд (для налагодження)
+        );
         if (OFS == 100) {
             signal = true;
 
-            List<SMSPlanSDB> smsPlanSDBS =  SQL_DB.smsPlanDao().getAll(dtFrom, dtTo, 1172, wp.getAddr_id(), wp.getClient_id());
+            List<SMSPlanSDB> smsPlanSDBS = SQL_DB.smsPlanDao().getAll(dtFrom, dtTo, 1172, wp.getAddr_id(), wp.getClient_id());
             List<SMSLogSDB> smsLogSDBS = SQL_DB.smsLogDao().getAll(dtFrom, dtTo, 1172, wp.getAddr_id(), wp.getClient_id());
 
-            if (smsPlanSDBS != null && smsPlanSDBS.size() > 0){
+            if (smsPlanSDBS != null && smsPlanSDBS.size() > 0) {
                 signal = false;
                 spannableStringBuilder.append("\n").append("СМС об ОТСУТСТВИИ товара заказчику отправлено, сигнал отменён!");
-            }else if (smsLogSDBS != null && smsLogSDBS.size() > 0){
+            } else if (smsLogSDBS != null && smsLogSDBS.size() > 0) {
                 signal = false;
                 spannableStringBuilder.append("\n").append("СМС об ОТСУТСТВИИ товара заказчику отправлено, сигнал отменён!");
-            }else if (addressSDB.tpId == 383){   // Для АШАН-ов(8196 - у петрова такое тут, странно) которые работают через ДОТ ОФС ДЗ НЕ проверяем
+            } else if (addressSDB.tpId == 383) {   // Для АШАН-ов(8196 - у петрова такое тут, странно) которые работают через ДОТ ОФС ДЗ НЕ проверяем
                 if (wpDataDB.getDot_user_id() > 0) {
                     signal = false;
                     stringBuilderMsg.append(", але для Ашанів, по котрим праюємо з ДОТ, ОФС ДЗ не перевіряємо.");
                 }
-            }else {
+            } else {
                 spannableStringBuilder.append("\n\nВы можете снять сигнал, если полностью и правильно заполните детализированный отчет! \n" +
                         "В случае, если на витрине (и на складе) реально нет части товара напишите об этом в комментарии (см. на кнопку \"Комментарий\")");
             }
@@ -192,34 +198,25 @@ public class OptionControlAvailabilityDetailedReport<T> extends OptionControl {
             signal = true;
             spannableStringBuilder.append(" и это больше ").append(optionDB.getAmountMax()).append("% (максимально допустимого).");
 
-            if (clientId.equals("9295") && find > 1) {   // Костыль для клиента Бетта
+            if (clientExclusionList.contains(clientId) && find > 1) {
                 signal = false;
-                spannableStringBuilder.append(" Комментарий об отсутствии товара написан, сигнал отменён!");
-            } else if (clientId.equals("8633") && find > 1) {
-                signal = false;
-                spannableStringBuilder.append(" Комментарий об отсутствии товара написан, сигнал отменён!");
-            } else if (SQL_DB.smsPlanDao().getAll(dtFrom, dtTo, 727, wp.getAddr_id(), wp.getClient_id()).size() > 0){
+                spannableStringBuilder.append(" Але, сигнал знятий, так як наданий коментар про ПРИЧИНИ відсутності товару.");
+            }
+            else if (SQL_DB.smsPlanDao().getAll(dtFrom, dtTo, 727, wp.getAddr_id(), wp.getClient_id()).size() > 0) {
                 signal = false;
                 spannableStringBuilder.append(" СМС о МАЛОМ количестве товара отправлено заказчику, сигнал отменен!");
-            }else if (SQL_DB.smsLogDao().getAll(dtFrom, dtTo, 727, wp.getAddr_id(), wp.getClient_id()).size() > 0){
+            } else if (SQL_DB.smsLogDao().getAll(dtFrom, dtTo, 727, wp.getAddr_id(), wp.getClient_id()).size() > 0) {
                 signal = false;
                 spannableStringBuilder.append(" СМС о МАЛОМ количестве товара отправлено заказчику, сигнал отменен!");
-            } else if (find > 0) {
-                signal = false;
-                spannableStringBuilder.append(" Примечание об отсутствии товара отписано, сигнал отменен!");
+//            } else if (find > 0) {
+//                signal = false;
+//                spannableStringBuilder.append(" Примечание об отсутствии товара отписано, сигнал отменен!");
                 // глТекстЧата=глТекстЧата+". СМС об отсутствии товара заказчику отправлено, сигнал отменен!";
-            } else if (clientId.equals("9295")) {
-                spannableStringBuilder.append(" Вы можете снять сигнал, если полностью и правильно заполните детализированный отчет! \n" +
-                        "В случае, если на витрине (и на складе) реально нет части товара напишите об этом в комментарии (см. на кнопку \"Комментарий\")");
-            } else if (clientId.equals("8633")) {
-                spannableStringBuilder.append(" Вы можете снять сигнал, если полностью и правильно заполните детализированный отчет! \n" +
-                        "В случае, если на витрине (и на складе) реально нет части товара напишите об этом в комментарии (см. на кнопку \"Комментарий\")");
-            } else if (clientId.equals("10275")) {
+            } else if (clientExclusionList.contains(clientId)) {
                 spannableStringBuilder.append(" Вы можете снять сигнал, если полностью и правильно заполните детализированный отчет! \n" +
                         "В случае, если на витрине (и на складе) реально нет части товара напишите об этом в комментарии (см. на кнопку \"Комментарий\")");
             } else {
-                spannableStringBuilder.append(" Вы можете снять сигнал, если полностью и правильно заполните детализированный отчет! \n" +
-                        "В случае, если на витрине (и на складе) реально нет части товара напишите об этом в комментарии (см. на кнопку \"Комментарий\")");
+                spannableStringBuilder.append("  Вы можете снять сигнал, если отправите СМС заказчику о том, что товара МАЛО. \n");
                 // massageToUser += " Вы можете снять сигнал, если Примечание к Товару заказчику о том, что товара мало (или он отсутствует).";
                 // глТекстЧата=глТекстЧата+" Вы можете снять сигнал, если отправите СМС заказчику о том, что товара мало (или он отсутствует).";
             }

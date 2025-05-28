@@ -271,7 +271,7 @@ public class PhotoLogAdapter extends RecyclerView.Adapter<PhotoLogAdapter.ViewHo
                         Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST/PHOTO_LOG", "Exception e1: " + e1);
                         try {
                             File file = new File(photoLogDat.getPhoto_num());
-                            Uri uriFileProvider = FileProvider.getUriForFile(mContext,  "ua.com.merchik.merchik.provider", file);
+                            Uri uriFileProvider = FileProvider.getUriForFile(mContext, "ua.com.merchik.merchik.provider", file);
                             imageView.setImageURI(uriFileProvider);
                         } catch (Exception e2) {
                             Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/PICK_GALLERY_IMAGE_REQUEST/PHOTO_LOG", "Exception e2: " + e2);
@@ -491,7 +491,10 @@ public class PhotoLogAdapter extends RecyclerView.Adapter<PhotoLogAdapter.ViewHo
         int c = getItemCount() - i - 1; // Отобразить снизу вверх
         StackPhotoDB photoLogDat = photoLogData.get(c);
 //        StackPhotoDB photoLogDat = photoLogData.get(i); // Используем прямой индекс
-        viewHolder.bind(photoLogDat);
+        String filePath = photoLogDat.getPhoto_num();
+        File file = new File(filePath);
+        if (file.exists() && file.length() > 1)
+            viewHolder.bind(photoLogDat);
     }
 
     @Override
@@ -581,12 +584,25 @@ public class PhotoLogAdapter extends RecyclerView.Adapter<PhotoLogAdapter.ViewHo
         }
 
         Spanned res;
+        StringBuilder phototype = new StringBuilder();
+        try {
+            phototype.append("(").append(data.getPhoto_type()).append(") ");
+            if (data.getPhoto_typeTxt() != null && !data.getPhoto_typeTxt().equals("null")) {
+                phototype.append(data.getPhoto_typeTxt());
+            } else {
+                phototype.append(ImagesTypeListRealm.getByID(data.getPhoto_type()).getNm());
+            }
+        } catch (Exception e) {
+            Globals.writeToMLOG("ERROR", "PhotoLogAdapter.bind.Нормальное заполенние ПОЛЬЗОВАТЕЛЕЙ", "Exception e: " + e);
+            phototype.append("Не удалось определить");
+        }
+
         res = Html.fromHtml("<b>ID: </b>" + data.getId() + " / " + data.photoServerId + "<br>"
                 + "<b>Дата: </b>" + data.getTime_event() + "<br>"
                 + "<b>Пользователь: </b>" + data.getUserTxt() + "<br>"
                 + "<b>Клиент: </b>" + data.getCustomerTxt() + "<br>"
                 + "<b>Адрес: </b>" + data.getAddressTxt() + "<br>"
-                + "<b>Тип фото: </b>(" + data.getPhoto_type() + ") " + data.getPhoto_typeTxt() + "<br>"
+                + "<b>Тип фото: </b>" + phototype + "<br>"
                 + "<b>dad2: </b>" + data.getCode_dad2() + "<br>"
                 + "<b>hash: </b>" + data.getPhoto_hash() + "<br><br>"
                 + "<b>Время создания: </b>" + create + "<br>"

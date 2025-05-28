@@ -241,8 +241,19 @@ public class OptionControlPhoto<T> extends OptionControl {
 
 //        List<StackPhotoDB> stackPhotoDBList = RealmManager.INSTANCE.copyFromRealm(stackPhotoDB);
 //        подводим итог
-        if (stackPhotoDB.size() < m) { // главнй итог
-            ImagesTypeListDB item = ImagesTypeListRealm.getByID(photoType);
+        ImagesTypeListDB item = ImagesTypeListRealm.getByID(photoType);
+
+        if (stackPhotoDB.isEmpty() && m > 0 && optionId.equals("132971")) { // добавил 28.05.2025
+            signal = true;
+            RealmResults<StackPhotoDB> stackPhotoFor132971 = StackPhotoRealm.getPhotosForTypeAndExample(dad2, 31, "78");
+            spannableStringBuilder.append("Не знайдено жодного фото ")
+                    .append(item != null ? item.getNm() : photoTypeName)
+                    .append(" по даному відвідуванню");
+            if (!stackPhotoFor132971.isEmpty()) {
+                signal = false;
+                spannableStringBuilder.append(", але товару на складі немає і відповідно не треба робити фотограцію візка біля вітрини. ");
+            }
+        } else if (stackPhotoDB.size() < m) { // главнй итог
             spannableStringBuilder.append("Ви повинні зробити: ")
                     .append(String.valueOf(m)).append(" фото з типом: ")
                     .append(item != null ? item.getNm() : photoTypeName)
@@ -266,15 +277,15 @@ public class OptionControlPhoto<T> extends OptionControl {
                 // Инициализируем флаги для поиска
                 boolean hasAddrOrGrp = false;
 
-                for (AdditionalRequirementsDB item : additionalRequirementsDBList) {
-//                promotionalTov.add(item.getTovarId());
-                    if (Integer.parseInt(item.getAddrId()) == (wpDataDB.getAddr_id())
+                for (AdditionalRequirementsDB additionalRequirementsDB : additionalRequirementsDBList) {
+//                promotionalTov.add(additionalRequirementsDB.getTovarId());
+                    if (Integer.parseInt(additionalRequirementsDB.getAddrId()) == (wpDataDB.getAddr_id())
                     ) {
                         hasAddrOrGrp = true;
                         break;
                     } else if (
-                            Integer.parseInt(item.getAddrId()) == 0 &&
-                                    Integer.parseInt(item.getGrpId()) == (addressSDB.tpId)
+                            Integer.parseInt(additionalRequirementsDB.getAddrId()) == 0 &&
+                                    Integer.parseInt(additionalRequirementsDB.getGrpId()) == (addressSDB.tpId)
                     ) {
                         hasAddrOrGrp = true;
                         break;
@@ -372,10 +383,10 @@ public class OptionControlPhoto<T> extends OptionControl {
                     spannableStringBuilder.append(text);
                 }
 
-                for (AdditionalRequirementsDB item : additionalRequirementsDBList) {
-                    TovarDB tovar = TovarRealm.getById(item.getTovarId());
+                for (AdditionalRequirementsDB additionalRequirementsDB : additionalRequirementsDBList) {
+                    TovarDB tovar = TovarRealm.getById(additionalRequirementsDB.getTovarId());
                     ReportPrepareDB prepareDB = reportPrepare.stream()
-                            .filter(reportPrepareDB -> item.getTovarId().equals(reportPrepareDB.getTovarId()))
+                            .filter(reportPrepareDB -> additionalRequirementsDB.getTovarId().equals(reportPrepareDB.getTovarId()))
                             .findFirst().get();
                     String code = tovar.getiD();
                     String result = "(" + code + ") " + tovar.getNm();
