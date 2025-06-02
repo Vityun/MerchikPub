@@ -469,7 +469,7 @@ public class PhotoReports {
         MultipartBody.Part photo = MultipartBody.Part.createFormData("photos[]", file.getName(), requestBody);
 
 //        MultipartBody.Part photo = MultipartBody.Part.createFormData("photos[]", file.getName(), RequestBody.create(MEDIA_TYPE_JPG, file));
-        Globals.writeToMLOG("INFO", "PhotoReports.buildCall", "photo: " + photo);
+        Globals.writeToMLOG("INFO", "PhotoReports.buildCall", "photo: " + photo.body());
 
         // Создание вызова выгрузка фото
         retrofit2.Call<JsonObject> call = RetrofitBuilder.getRetrofitInterface()
@@ -510,6 +510,9 @@ public class PhotoReports {
                                                     .setMessage(data.error + ". Ви повинні завантажити нове фото")
                                                     .show();
                                         callback.onSuccess(photoDB, data.error);
+                                    } else if (data.errorType.equals("missing_geo_coord")) {
+                                        Globals.fixMP(null,null);
+                                        callback.onFailure(photoDB, "Ошибка при обработке фото: " + data.error);
                                     } else {
                                         callback.onFailure(photoDB, "Ошибка при обработке фото: " + data.error);
                                     }
