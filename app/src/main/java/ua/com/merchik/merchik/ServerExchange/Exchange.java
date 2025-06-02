@@ -5,7 +5,6 @@ import static ua.com.merchik.merchik.ServerExchange.TablesLoadingUnloading.downl
 import static ua.com.merchik.merchik.ServerExchange.TablesLoadingUnloading.downloadVideoLessons;
 import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 import static ua.com.merchik.merchik.toolbar_menus.internetStatus;
-import static ua.com.merchik.merchik.trecker.coordinatesDistanse;
 
 import android.app.Activity;
 import android.content.Context;
@@ -137,7 +136,6 @@ import ua.com.merchik.merchik.data.TestJsonUpload.TARCommentDataListUpload;
 import ua.com.merchik.merchik.data.TestJsonUpload.TARCommentDataUpload;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsMarkRealm;
-import ua.com.merchik.merchik.database.realm.tables.LogMPRealm;
 import ua.com.merchik.merchik.database.realm.tables.StackPhotoRealm;
 import ua.com.merchik.merchik.database.realm.tables.TARCommentsRealm;
 import ua.com.merchik.merchik.database.realm.tables.WpDataRealm;
@@ -172,10 +170,6 @@ public class Exchange {
     private final PhotoDownload server;
 
     private CronchikViewModel viewModel;
-
-    private List<LogMPDB> logMPList = new ArrayList<>();
-
-    private float coordAddrX, coordAddrY;
 //    public final ThreadPoolExecutor executorService =
 //            (ThreadPoolExecutor) Executors.newFixedThreadPool(8);
 
@@ -242,21 +236,13 @@ public class Exchange {
                  * */
 
                 try {
+
                     sendWpData2();
 
                     updateLanguages();  // Обновление языков
                     updateSiteObj();    // Обновление Обьектов Сайта
                     updateTranslates();  // Обновление Переводов
 
-
-                    if (logMPList != null && logMPList.size() > 0) {
-                        for (LogMPDB item : logMPList) {
-                            double distance = coordinatesDistanse(coordAddrX, coordAddrY, item.CoordX, item.CoordY);
-                            item.distance = (int) distance;
-                        }
-вввввв
-                        LogMPRealm.setLogMP(logMPList);
-                    }
 
                     globals.writeToMLOG(Clock.getHumanTime() + "_INFO.Exchange.class.startExchange.Успех.3." + "\n");
                 } catch (Exception e) {

@@ -26,12 +26,10 @@ import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.location.Criteria;
 import android.location.Location;
-import android.location.LocationManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
 import android.os.Handler;
-import android.os.Looper;
 import android.provider.DocumentsContract;
 import android.provider.MediaStore;
 import android.text.Spanned;
@@ -69,8 +67,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 import kotlin.Unit;
 import ua.com.merchik.merchik.Activities.MyApplication;
@@ -88,7 +84,6 @@ import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.AppUserRealm;
 import ua.com.merchik.merchik.dialogs.DialogData;
-import ua.com.merchik.merchik.dialogs.features.AlertDialogMessage;
 import ua.com.merchik.merchik.dialogs.features.MessageDialogBuilder;
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus;
 
@@ -1266,21 +1261,24 @@ public class Globals {
         try {
             try {
 //ывапреонлгдш
-                if (imHereGPS == null){
+                if (Build.VERSION.SDK_INT >= 23 && context != null &&
+                        ContextCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+                        ContextCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                    Globals.writeToMLOG("ERROR", "fixMP/imHereGPS is null?", "permission not granted");
+                    return null;
+                }
+                Criteria criteria = new Criteria();
+                String bestProvider = String.valueOf(locationManager.getBestProvider(criteria, true));
+
+                if (imHereGPS == null || imHereNET == null) {
                     // Запрашивает доступы если API больше 23
-                    if (Build.VERSION.SDK_INT >= 23 &&
-                            ContextCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
-                            ContextCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                        Globals.writeToMLOG("ERROR", "fixMP/imHereGPS is null?", "permission not granted");
-                        return null;
-                    }
-                    Criteria criteria = new Criteria();
-                    String bestProvider = String.valueOf(locationManager.getBestProvider(criteria, true));
 
                     locationManager.requestLocationUpdates(bestProvider,
                             4000L, 0, locationListener);
                     imHereGPS = locationManager.getLastKnownLocation(bestProvider);
                 }
+//                else
+//                    locationManager.requestLocationUpdates(bestProvider, 4000L, 1, locationListener);
 
                 if (context != null) {
                     String problem = "Якщо ви виправили зауваження, а система все рівно не працює, зверніться за допомогою до свого керівника, або до оператора служби підтримки merchik \"+380674491265\"";
@@ -1421,6 +1419,7 @@ public class Globals {
         }
         return null;
     }
+
 
     public static String getAppInfoToSession(Context context) {
 
