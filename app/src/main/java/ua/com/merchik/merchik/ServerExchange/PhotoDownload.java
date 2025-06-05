@@ -339,7 +339,7 @@ public class PhotoDownload {
 //                            Globals.writeToMLOG("INFO", "PetrovExchangeTest/startExchange/getPhotoURLFromServer/onSuccess/photoListUrlSize", "photoListUrlSize: " + photoListUrlSize);
 
                             long end = System.currentTimeMillis() / 1000 - start;
-                            result.onSuccess("Данные о фото товаров(" + photoListUrlSize + "шт) успешно получены. Это заняло " + end + " секунд! \nНачинаю загрузку фотографий.. \n\nЭТО МОЖЕТ ЗАНЯТЬ МНОГО ВРЕМЕНИ И ТРАФИКА!");
+                            result.onSuccess("Данные о фото товаров(" + photoListUrlSize + "шт) успешно получены. Это заняло " + end + " секунд! \nНачинаю загрузку фотографий.. \nЭТО МОЖЕТ ЗАНЯТЬ МНОГО ВРЕМЕНИ И ТРАФИКА!");
                             // TODO Начинаем загрузку + сохранение на телефон фоток Товаров.
 //                            downloadPhoto(response.body().getList(), result, result2);
 

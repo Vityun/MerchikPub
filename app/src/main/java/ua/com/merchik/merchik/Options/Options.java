@@ -2758,7 +2758,7 @@ public class Options {
         Globals.writeToMLOG("INFO", "DetailedReportButtons.class.pressStartWork", "ENTER. wpDataDB.codeDAD2: " + wpDataDB.getCode_dad2());
         if (wpDataDB.getVisit_start_dt() > 0) {
             Toast.makeText(context, "Работа уже начата!", Toast.LENGTH_SHORT).show();
-            globals.writeToMLOG(Clock.getHumanTime() + "_INFO.DetailedReportButtons.class.pressStartWork: " + "Работа уже начата!" + "\n");
+            globals.writeToMLOG( "_INFO.DetailedReportButtons.class.pressStartWork: " + "Работа уже начата!" + "\n");
             unlockCodeResultListener.onUnlockCodeSuccess();
             result = true;
         } else {
@@ -2821,7 +2821,7 @@ public class Options {
     }
 
     private void optionStartWork_138518(Context context, TasksAndReclamationsSDB dataDB, OptionsDB optionsDB, OptionMassageType type, NNKMode mode, OptionControl.UnlockCodeResultListener unlockCodeResultListener) {
-        globals.writeToMLOG(Clock.getHumanTime() + "_INFO.DetailedReportButtons.class.pressStartWork: " + "ENTER" + "\n");
+        globals.writeToMLOG( "_INFO.DetailedReportButtons.class.pressStartWork: " + "ENTER" + "\n");
         if (dataDB.dt_start_fact > 0) {
             Toast.makeText(context, "Работа уже начата!", Toast.LENGTH_SHORT).show();
         } else {
@@ -3026,7 +3026,7 @@ public class Options {
     }
 
     private void optionEndWork_138520(Context context, TasksAndReclamationsSDB dataDB, OptionsDB optionsDB, OptionMassageType type, NNKMode mode, OptionControl.UnlockCodeResultListener unlockCodeResultListener) {
-        globals.writeToMLOG(Clock.getHumanTime() + "_INFO.DetailedReportButtons.class.pressEndWork: " + "ENTER" + "\n");
+        globals.writeToMLOG( "_INFO.DetailedReportButtons.class.pressEndWork: " + "ENTER" + "\n");
         if (dataDB.dt_end_fact > 0) {
             Toast.makeText(context, "Работа уже окончена!", Toast.LENGTH_SHORT).show();
         } else {

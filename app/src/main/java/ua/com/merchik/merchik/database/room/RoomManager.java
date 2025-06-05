@@ -40,7 +40,8 @@ public class RoomManager {
                         MIGRATION_60_61,
                         MIGRATION_61_62,
                         MIGRATION_62_63,
-                        MIGRATION_63_64
+                        MIGRATION_63_64,
+                        MIGRATION_64_65
                 )
                 .addCallback(new RoomDatabase.Callback() {
                     @Override
@@ -713,10 +714,16 @@ public class RoomManager {
         }
     };
 
-    static final Migration MIGRATION_63_64 = new Migration(62, 63) {
+    static final Migration MIGRATION_63_64 = new Migration(63, 64) {
         @Override
         public void migrate(@NonNull SupportSQLiteDatabase database) {
             database.execSQL("ALTER TABLE achievements ADD COLUMN dt_change TEXT");
+        }
+    };
+    static final Migration MIGRATION_64_65 = new Migration(63, 64) {
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase database) {
+//            database.execSQL("ALTER TABLE achievements ADD COLUMN dt_change TEXT");
         }
     };
 }

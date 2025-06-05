@@ -32,6 +32,7 @@ import ua.com.merchik.merchik.Options.OptionControl;
 import ua.com.merchik.merchik.Options.Options;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.ServerExchange.Exchange;
+import ua.com.merchik.merchik.ServerExchange.workmager.WorkManagerHelper;
 import ua.com.merchik.merchik.Utils.CodeGenerator;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.WorkPlan;
@@ -144,6 +145,8 @@ public class MenuMainActivity extends toolbar_menus {
 
     private void test() {
 
+
+        WorkManagerHelper.INSTANCE.startSyncWorker(this);
 
 //        Exchange.exchangeTime = 0;
 

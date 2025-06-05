@@ -19,7 +19,8 @@ object LogCleaner {
         if (!logFile.exists()) return@withContext
 
         val dateFormat = SimpleDateFormat(DATE_TIME_FORMAT, Locale.getDefault())
-        val sevenDaysAgo = Date(System.currentTimeMillis() - 7L * 24 * 60 * 60 * 1000) // 7 дней назад
+        val daysAgo = Date(System.currentTimeMillis() - 2L * 24 * 60 * 60 * 1000) // 2 дня назад
+//        val daysAgo = Date(System.currentTimeMillis() - 2L * 60 * 60 * 1000) // тест 2 часа
 
         val tempFile = File(cacheDir, "TEMP_LOG.txt") // Временный файл для записи актуальных логов
 
@@ -34,8 +35,8 @@ object LogCleaner {
                             null
                         }
 
-                        // Оставляем записи с датой >= чем 7 дней назад или записи без даты
-                        if (logDate == null || logDate.after(sevenDaysAgo)) {
+                        // Оставляем записи с датой >= чем 2 дня назад или записи без даты
+                        if (logDate == null || logDate.after(daysAgo)) {
                             writer.write(line)
                             writer.newLine()
                         }

@@ -207,8 +207,8 @@ public class trecker implements LocationListener {
             Globals.mocking = 1;
         }
 
-        globals.writeToMLOG(Clock.getHumanTime() + " Coordinates.trecker.imHereGPS: " + trecker.imHereGPS + "\n");
-        globals.writeToMLOG(Clock.getHumanTime() + " Coordinates.trecker.imHereNET: " + trecker.imHereNET + "\n");
+        globals.writeToMLOG( " Coordinates.trecker.imHereGPS: " + trecker.imHereGPS + "\n");
+        globals.writeToMLOG( " Coordinates.trecker.imHereNET: " + trecker.imHereNET + "\n");
 
 
         // Сохранение текущего состояния GPS
@@ -225,7 +225,7 @@ public class trecker implements LocationListener {
             Globals.CoordAccuracy = imHereGPS.getAccuracy();
             Globals.provider = provider;
 
-            globals.writeToMLOG(Clock.getHumanTime() + " Coordinates.provider: " + provider + "\n");
+            globals.writeToMLOG( " Coordinates.provider: " + provider + "\n");
 
             return provider;
         } else if (trecker.imHereNET != null) {
@@ -241,14 +241,14 @@ public class trecker implements LocationListener {
             Globals.CoordAltitude = imHereNET.getAltitude();
             Globals.CoordAccuracy = imHereNET.getAccuracy();
 
-            globals.writeToMLOG(Clock.getHumanTime() + " Coordinates.provider: " + provider + "\n");
+            globals.writeToMLOG( " Coordinates.provider: " + provider + "\n");
             return provider;
         } else {
             // Никаких координат нет
 //            Globals.provider = 0;
             provider = 0;
 
-            globals.writeToMLOG(Clock.getHumanTime() + " Coordinates.provider: " + provider + "\n");
+            globals.writeToMLOG( " Coordinates.provider: " + provider + "\n");
             return provider;
         }
     }

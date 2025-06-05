@@ -253,7 +253,7 @@ public class PhotoLog {
 
 
         String info = " UPLOAD.PHOTO.PHOTOLOG.PHOTODATA:  photoId: " + photoId;
-        globals.writeToMLOG(Clock.getHumanTime() + info + data + "\n");
+        globals.writeToMLOG( info + data + "\n");
 
         retrofit2.Call<JsonObject> call = RetrofitBuilder.getRetrofitInterface()
                 .SEND_PHOTO_2_BODY(mod2, act2, client_id2, addr_id2, date2, img_type_id2, photo_user_id2, client_tovar_group2, doc_num2, theme_id2, comment2, dvi2, codeDad2, gp2, tov2, img_src_id2, showcase_id2, planogram_id2, planogram_img_id2,
@@ -333,7 +333,7 @@ public class PhotoLog {
                 @Override
                 public void onResponse(retrofit2.Call<JsonObject> call, retrofit2.Response<JsonObject> response) {
 
-                    globals.writeToMLOG(Clock.getHumanTime() + "PHOTOLOG.onResponse.Успешный ответ: id фото выгрузки: " + photoId + " Ответ с сервера: " + response.body() + "\n");
+                    globals.writeToMLOG( "PHOTOLOG.onResponse.Успешный ответ: id фото выгрузки: " + photoId + " Ответ с сервера: " + response.body() + "\n");
 
 
                     Log.e("TAG_REALM_LOG", "SUCCESS: " + response.body());
@@ -416,7 +416,7 @@ public class PhotoLog {
                 @Override
                 public void onFailure(retrofit2.Call<JsonObject> call, Throwable t) {
 
-                    globals.writeToMLOG(Clock.getHumanTime() + "PHOTOLOG.onFailure.НЕ Успешный ответ: id фото выгрузки: " + photoId + " Код ошибки: " + t.toString() + "\n");
+                    globals.writeToMLOG( "PHOTOLOG.onFailure.НЕ Успешный ответ: id фото выгрузки: " + photoId + " Код ошибки: " + t.toString() + "\n");
 
 
                     Log.e("TAG_REALM_LOG", "FAILURE");

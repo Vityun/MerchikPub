@@ -211,11 +211,7 @@ public class OptionControlPromotion<T> extends OptionControl {
             signalInt = 2;
         }
 
-        if (signalInt == 1) {
-            signal = true;
-        } else {
-            signal = false;
-        }
+        signal = signalInt == 1;
 
         // 7.0 сохраним сигнал
         if (optionDB.getIsSignal().equals("0")) {
@@ -223,11 +219,7 @@ public class OptionControlPromotion<T> extends OptionControl {
         }
 
         // 8.0 Блокировка проведения
-        if (signalInt == 1) {
-            setIsBlockOption(true);
-        } else {
-            setIsBlockOption(false);
-        }
+        setIsBlockOption(signalInt == 1);
 
         // Сохранение
         RealmManager.INSTANCE.executeTransaction(realm -> {

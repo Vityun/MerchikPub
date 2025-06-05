@@ -394,7 +394,7 @@ public class PhotoLogAdapter extends RecyclerView.Adapter<PhotoLogAdapter.ViewHo
 
 
             } catch (Exception e) {
-                globals.writeToMLOG(Clock.getHumanTime() + "PhotoLogAdapter.bind.ErrorException e: " + e + "\n");
+                globals.writeToMLOG( "PhotoLogAdapter.bind.ErrorException e: " + e + "\n");
             }
         }
 

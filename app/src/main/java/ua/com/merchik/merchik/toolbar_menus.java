@@ -1188,12 +1188,12 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
      */
 
     private void photoUpload() {
-        globals.writeToMLOG(Clock.getHumanTime() + "TOOLBAR.photoUpload.: " + "ENTER" + "\n");
+        globals.writeToMLOG( "TOOLBAR.photoUpload.: " + "ENTER" + "\n");
 
         Log.e("ОБМЕН", "(Кнопка)Выгрузка фото");
 
         try {
-            globals.writeToMLOG(Clock.getHumanTime() + "TOOLBAR.photoUpload.: " + "TRY" + "\n");
+            globals.writeToMLOG( "TOOLBAR.photoUpload.: " + "TRY" + "\n");
             int countPhoto = RealmManager.stackPhotoNotUploadedPhotosCount();
             if (countPhoto > 0) {
                 String msg = "Сейчас будет выгружено " + countPhoto + " фото на сервер. Дождитесь сообщения об окончании работы.";
@@ -1208,7 +1208,7 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                 Toast.makeText(toolbar_menus.this, "Нет фото для выгрузки.", Toast.LENGTH_SHORT).show();
             }
         } catch (Exception e) {
-            globals.writeToMLOG(Clock.getHumanTime() + "TOOLBAR.photoUpload.catch: " + e + "\n");
+            globals.writeToMLOG( "TOOLBAR.photoUpload.catch: " + e + "\n");
         }
     }
 
@@ -1252,7 +1252,7 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
 
                 Log.e("КРОНЧИК", "internetStatus: " + internetStatus);
 
-                globals.writeToMLOG(Clock.getHumanTime() + " CRON.internetStatus: " + internetStatus + "\n");
+                globals.writeToMLOG( " CRON.internetStatus: " + internetStatus + "\n");
 
                 cronCheckUploadsPhotoOnServer();                // Получение инфы о "загруженности" фоток
 
@@ -1325,7 +1325,6 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                         exchange.uploadAchievemnts();
                     }
 //                    tablesLoadingUnloading.updateWpData();
-
                     // Загрузка Задач и Рекламаций
                     try {
                         tarExchange.downloadTaR(new ExchangeInterface.ExchangeResponseInterface() {
@@ -1433,7 +1432,7 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
 //
 //            Log.e("onTimerCronchik", "internetStatus: " + internetStatus);
 //
-//            globals.writeToMLOG(Clock.getHumanTime() + " CRON.internetStatus: " + internetStatus + "\n");
+//            globals.writeToMLOG( " CRON.internetStatus: " + internetStatus + "\n");
 //
 //            cronCheckUploadsPhotoOnServer();                // Получение инфы о "загруженности" фоток
 //
@@ -1564,22 +1563,22 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                 try {
                     if (current != null) {
                         finalId = current.getId();
-                        globals.writeToMLOG(Clock.getHumanTime() + "TOOLBAR.startUploading. current: " + "not null" + "\n");
+                        globals.writeToMLOG( "TOOLBAR.startUploading. current: " + "not null" + "\n");
                     } else {
-                        globals.writeToMLOG(Clock.getHumanTime() + "TOOLBAR.startUploading. current: " + "NULL!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" + "\n");
+                        globals.writeToMLOG( "TOOLBAR.startUploading. current: " + "NULL!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" + "\n");
                     }
                 } catch (Exception e) {
-                    globals.writeToMLOG(Clock.getHumanTime() + "TOOLBAR.startUploading.current.exception: " + e + "\n");
+                    globals.writeToMLOG( "TOOLBAR.startUploading.current.exception: " + e + "\n");
                 }
 
 
-                globals.writeToMLOG(Clock.getHumanTime() + "TOOLBAR.перед самим вызовом выгрузки. id фото выгрузки: " + finalId + "\n");
+                globals.writeToMLOG( "TOOLBAR.перед самим вызовом выгрузки. id фото выгрузки: " + finalId + "\n");
                 int finalId1 = finalId;
                 photoUploadToServer(mod, current, new UploadCallback() {
                     @Override
                     public void onSuccess() {
                         try {
-                            globals.writeToMLOG(Clock.getHumanTime() + "TOOLBAR.UploadCallback.onSuccess. id фото выгрузки: " + finalId1 + "\n");
+                            globals.writeToMLOG( "TOOLBAR.UploadCallback.onSuccess. id фото выгрузки: " + finalId1 + "\n");
 
                             Log.e("startUploading", "onSuccess");
                             Toast.makeText(toolbar_menus.this, "Фото номер: " + finalId1 + " успешно выгружено", Toast.LENGTH_LONG).show();
@@ -1590,14 +1589,14 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                             realmResults.remove(current);
                             startUploading(mod);
                         } catch (Exception e) {
-                            globals.writeToMLOG(Clock.getHumanTime() + "TOOLBAR.UploadCallback.onSuccess.catch.e: " + e + "\n");
+                            globals.writeToMLOG( "TOOLBAR.UploadCallback.onSuccess.catch.e: " + e + "\n");
                         }
                     }
 
                     @Override
                     public void onFailure(String s) {
                         try {
-                            globals.writeToMLOG(Clock.getHumanTime() + "TOOLBAR.UploadCallback.onFailure. id фото выгрузки: " + finalId1 + " ОШИБКА: " + s + "\n");
+                            globals.writeToMLOG( "TOOLBAR.UploadCallback.onFailure. id фото выгрузки: " + finalId1 + " ОШИБКА: " + s + "\n");
 
                             Log.e("startUploading", "onFailure " + s + ".");
 //                            Toast.makeText(toolbar_menus.this, "При выгрузке фото: " + current.getPhoto_num() + " возникла ошибка: " + s, Toast.LENGTH_LONG).show();
@@ -1610,7 +1609,7 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                             realmResults.remove(current);
                             startUploading(mod);
                         } catch (Exception e) {
-                            globals.writeToMLOG(Clock.getHumanTime() + "TOOLBAR.UploadCallback.onFailure.catch.e: " + e + "\n");
+                            globals.writeToMLOG( "TOOLBAR.UploadCallback.onFailure.catch.e: " + e + "\n");
                         }
                     }
                 });
@@ -1625,7 +1624,7 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                 uploadPermission = true;
             }
         } catch (Exception e) {
-            globals.writeToMLOG(Clock.getHumanTime() + "TOOLBAR.startUploading.Ошибка: " + e + "\n");
+            globals.writeToMLOG( "TOOLBAR.startUploading.Ошибка: " + e + "\n");
         }
 
     }
@@ -1646,7 +1645,7 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                         realmResults.add(photo);
                 }
             }
-            globals.writeToMLOG(Clock.getHumanTime() + "TOOLBAR.выгрузка.сбор данных перед выгрузкой. количество фоток к выгрузке на текущий момент: " + realmResults.size() + "\n");
+            globals.writeToMLOG( "TOOLBAR.выгрузка.сбор данных перед выгрузкой. количество фоток к выгрузке на текущий момент: " + realmResults.size() + "\n");
             startUploading(mod);
         } else {
             // ВЫ УЖЕ НАЧАЛИ ВЫГРУЗКУ
@@ -1859,7 +1858,7 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
 
 
         String info = " UPLOAD.PHOTO.TOOLBAR.PHOTODATA: photoId: " + photoId;
-        globals.writeToMLOG(Clock.getHumanTime() + info + " " + data + "\n");
+        globals.writeToMLOG( info + " " + data + "\n");
 
         if (mode == 1) {
             retrofit2.Call<JsonObject> call = RetrofitBuilder.getRetrofitInterface()
@@ -1874,7 +1873,7 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                 call.enqueue(new retrofit2.Callback<JsonObject>() {
                     @Override
                     public void onResponse(retrofit2.Call<JsonObject> call, retrofit2.Response<JsonObject> response) {
-                        globals.writeToMLOG(Clock.getHumanTime() + "TOOLBAR.onResponse.Успешный ответ: id фото выгрузки: " + photoId + " Ответ с сервера: " + response.body() + "\n");
+                        globals.writeToMLOG( "TOOLBAR.onResponse.Успешный ответ: id фото выгрузки: " + photoId + " Ответ с сервера: " + response.body() + "\n");
 
 
                         Log.e("TAG_REALM_LOG", "SUCCESS: " + response.body());
@@ -1920,15 +1919,15 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                                                 String error = jsonR.get("error").getAsString();
 
 
-                                                globals.writeToMLOG(Clock.getHumanTime() + " TOOLBAR.photoUploadToServer.onResponse.state-false.error: " + error + "\n");
+                                                globals.writeToMLOG( " TOOLBAR.photoUploadToServer.onResponse.state-false.error: " + error + "\n");
 
                                                 // Такое фото уже было загружено ранее: JPG_20210216_091646_-1173842094.jpg
                                                 String crutch = error.substring(0, 35);
 
-                                                globals.writeToMLOG(Clock.getHumanTime() + " TOOLBAR.photoUploadToServer.onResponse.state-false.crutch: " + error + "\n");
+                                                globals.writeToMLOG( " TOOLBAR.photoUploadToServer.onResponse.state-false.crutch: " + error + "\n");
 
                                                 if (crutch.equals("Такое фото уже было загружено ранее:")) {
-                                                    globals.writeToMLOG(Clock.getHumanTime() + " TOOLBAR.photoUploadToServer.onResponse.state-false.error&crutch: " + error + " |||crutch: " + crutch + "\n");
+                                                    globals.writeToMLOG( " TOOLBAR.photoUploadToServer.onResponse.state-false.error&crutch: " + error + " |||crutch: " + crutch + "\n");
 
                                                     try {
                                                         RealmManager.INSTANCE.executeTransaction(transaction);
@@ -1937,7 +1936,7 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                                                     }
 
                                                 } else {
-                                                    globals.writeToMLOG(Clock.getHumanTime() + " TOOLBAR.photoUploadToServer.onResponse.SECOND.state-false.error&crutch: " + error + " |||crutch: " + crutch + "\n");
+                                                    globals.writeToMLOG( " TOOLBAR.photoUploadToServer.onResponse.SECOND.state-false.error&crutch: " + error + " |||crutch: " + crutch + "\n");
                                                     try {
                                                         RealmManager.INSTANCE.executeTransaction(transaction);
                                                         RealmManager.stackPhotoSavePhoto(photoDB);
@@ -1972,7 +1971,7 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                     @Override
                     public void onFailure(retrofit2.Call<JsonObject> call, Throwable t) {
 
-                        globals.writeToMLOG(Clock.getHumanTime() + "TOOLBAR.onFailure.НЕ Успешный ответ: id фото выгрузки: " + photoId + " Код ошибки: " + t.toString() + "\n");
+                        globals.writeToMLOG( "TOOLBAR.onFailure.НЕ Успешный ответ: id фото выгрузки: " + photoId + " Код ошибки: " + t.toString() + "\n");
 
 
                         Log.e("TAG_REALM_LOG", "ОШИБКА ПРИ ВЫГРУЗКЕ ФОТО с ID: " + photoDB.getId());

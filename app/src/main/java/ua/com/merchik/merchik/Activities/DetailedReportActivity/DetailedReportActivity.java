@@ -207,7 +207,7 @@ public class DetailedReportActivity extends toolbar_menus {
             tarList = SQL_DB.tarDao().getAllByInfo(1, wpDataDB.getClient_id(), wpDataDB.getAddr_id(), (System.currentTimeMillis() / 1000 - 5184000), 0);
             tasksAndReclamationsSDBList = SQL_DB.tarDao().getAllByInfo(0, wpDataDB.getAddr_id());
 
-            globals.writeToMLOG(Clock.getHumanTime() + "DetailedReportActivity.onCreate: " + "ENTER" + "\n");
+            globals.writeToMLOG( "DetailedReportActivity.onCreate: " + "ENTER" + "\n");
 
             setContentView(R.layout.drawler_dr);
 
@@ -270,7 +270,7 @@ public class DetailedReportActivity extends toolbar_menus {
 
 
             try {
-                globals.writeToMLOG(Clock.getHumanTime() + "DetailedReportActivity.onCreate.fab: " + "ENTER" + "\n");
+                globals.writeToMLOG( "DetailedReportActivity.onCreate.fab: " + "ENTER" + "\n");
                 fab = findViewById(R.id.fab);
 
                 toolbar_menus.textLesson = 818;
@@ -289,7 +289,7 @@ public class DetailedReportActivity extends toolbar_menus {
                 navigationView = findViewById(R.id.nav_view);
                 navigationView.setCheckedItem(R.id.nav_dr);
             } catch (Exception e) {
-                globals.writeToMLOG(Clock.getHumanTime() + "DetailedReportActivity.onCreate.fab.e: " + e + "\n");
+                globals.writeToMLOG( "DetailedReportActivity.onCreate.fab.e: " + e + "\n");
                 e.printStackTrace();
             }
 
@@ -857,9 +857,9 @@ public class DetailedReportActivity extends toolbar_menus {
             switch (requestCode) {
                 case 101:
                     try {
-                        globals.writeToMLOG(Clock.getHumanTime() + "DETAILED_REPORT_ACT.onActivityResult: " + "ENTER" + "\n");
+                        globals.writeToMLOG( "DETAILED_REPORT_ACT.onActivityResult: " + "ENTER" + "\n");
                         image = MakePhoto.image;
-                        globals.writeToMLOG(Clock.getHumanTime() + "DETAILED_REPORT_ACT.onActivityResult.image: " + image + "\n");
+                        globals.writeToMLOG( "DETAILED_REPORT_ACT.onActivityResult.image: " + image + "\n");
 
                         Globals.writeToMLOG("INFO", "DetailedReportActivity/onActivityResult/101", "Image: " + image);
 
@@ -870,7 +870,7 @@ public class DetailedReportActivity extends toolbar_menus {
                         String msg = "";
                         msg = String.format("image: %s \nimagelength: %s\nimagegetAbsolutePath: %s\nresultCode: %s\nrequestCode: %s", image, image.length(), image.getAbsolutePath(), resultCode, requestCode);
 
-                        globals.writeToMLOG(Clock.getHumanTime() + "DETAILED_REPORT_ACT.onActivityResult.image.data: " + msg + "\n");
+                        globals.writeToMLOG( "DETAILED_REPORT_ACT.onActivityResult.image.data: " + msg + "\n");
                     } catch (Exception e) {
                         e.printStackTrace();
                         Globals.writeToMLOG("ERROR", ".DetailedReportActivity.DetailedReportActivity.onActivityResult (DetailedReportActivity.java:238)", "Exception e: " + e);

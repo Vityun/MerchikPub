@@ -28,6 +28,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
+import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.observers.DisposableCompletableObserver;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 import io.realm.RealmResults;
@@ -244,9 +245,9 @@ public class Exchange {
                     updateTranslates();  // Обновление Переводов
 
 
-                    globals.writeToMLOG(Clock.getHumanTime() + "_INFO.Exchange.class.startExchange.Успех.3." + "\n");
+                    globals.writeToMLOG( "_INFO.Exchange.class.startExchange.Успех.3." + "\n");
                 } catch (Exception e) {
-                    globals.writeToMLOG(Clock.getHumanTime() + "_INFO.Exchange.class.startExchange.Ошибка.3." + e + "\n");
+                    globals.writeToMLOG( "_INFO.Exchange.class.startExchange.Ошибка.3." + e + "\n");
                 }
 
                 try {
@@ -849,9 +850,9 @@ public class Exchange {
 
                         }
                     });    // Выгрузка Рейтингов фоток
-                    globals.writeToMLOG(Clock.getHumanTime() + "_INFO.Exchange.class.startExchange.Успех.1." + "\n");
+                    globals.writeToMLOG( "_INFO.Exchange.class.startExchange.Успех.1." + "\n");
                 } catch (Exception e) {
-                    globals.writeToMLOG(Clock.getHumanTime() + "_INFO.Exchange.class.startExchange.Ошибка.1." + e + "\n");
+                    globals.writeToMLOG( "_INFO.Exchange.class.startExchange.Ошибка.1." + e + "\n");
                 }
 
                 try {
@@ -930,9 +931,9 @@ public class Exchange {
                     });     // Загрузка Задач и Рекламаций*/
                     sendTAR();              // Выгрузка на сервер ЗИР-а
                     uploadTARComments(null);    // Выгрузка ЗИР переписки(коммнетариев)
-                    globals.writeToMLOG(Clock.getHumanTime() + "_INFO.Exchange.class.startExchange.Успех.2." + "\n");
+                    globals.writeToMLOG( "_INFO.Exchange.class.startExchange.Успех.2." + "\n");
                 } catch (Exception e) {
-                    globals.writeToMLOG(Clock.getHumanTime() + "_INFO.Exchange.class.startExchange.Ошибка.2." + e + "\n");
+                    globals.writeToMLOG( "_INFO.Exchange.class.startExchange.Ошибка.2." + e + "\n");
                 }
 
                 try {
@@ -1342,23 +1343,23 @@ public class Exchange {
                 public void onResponse(retrofit2.Call<JsonObject> call, retrofit2.Response<JsonObject> response) {
                     try {
                         isTARUploading = false;
-                        globals.writeToMLOG(Clock.getHumanTime() + "_INFO.Exchange.class.sendTAR.onResponse.response: " + convertedObject + "\n");
+                        globals.writeToMLOG( "_INFO.Exchange.class.sendTAR.onResponse.response: " + convertedObject + "\n");
                     } catch (Exception e) {
                         Log.e("sendTAR", "e: " + e);
                         isTARUploading = false;
-                        globals.writeToMLOG(Clock.getHumanTime() + "_INFO.Exchange.class.sendTAR.onResponse.ERROR_1: " + e + "\n");
+                        globals.writeToMLOG( "_INFO.Exchange.class.sendTAR.onResponse.ERROR_1: " + e + "\n");
                     }
                 }
 
                 @Override
                 public void onFailure(retrofit2.Call<JsonObject> call, Throwable t) {
                     isTARUploading = false;
-                    globals.writeToMLOG(Clock.getHumanTime() + "_INFO.Exchange.class.sendTAR.onFailure.ERR: " + t + "\n");
+                    globals.writeToMLOG( "_INFO.Exchange.class.sendTAR.onFailure.ERR: " + t + "\n");
                 }
             });
         } else {
             isTARUploading = false;
-            globals.writeToMLOG(Clock.getHumanTime() + "_INFO.Exchange.class.sendTAR.Failure.DataList empty" + "\n");
+            globals.writeToMLOG( "_INFO.Exchange.class.sendTAR.Failure.DataList empty" + "\n");
         }
 
 
@@ -1691,19 +1692,19 @@ public class Exchange {
         switch (info) {
             case EMPTY:
                 Log.e("getPhotoFromSite", "EMPTY");
-                globals.writeToMLOG(Clock.getHumanTime() + "_INFO.Exchange.class.getPhotoFromSite: " + "EMPTY" + "\n");
+                globals.writeToMLOG( "_INFO.Exchange.class.getPhotoFromSite: " + "EMPTY" + "\n");
                 break;
 
             case SUBORDINATE:
                 Log.e("getPhotoFromSite", "SUBORDINATE");
                 data.sotr_id = String.valueOf(Globals.userId);
-                globals.writeToMLOG(Clock.getHumanTime() + "_INFO.Exchange.class.getPhotoFromSite: " + "SUBORDINATE: " + data.sotr_id + "\n");
+                globals.writeToMLOG( "_INFO.Exchange.class.getPhotoFromSite: " + "SUBORDINATE: " + data.sotr_id + "\n");
                 server.getPhotoFromServer(data);
                 break;
 
             case MANAGER:
                 Log.e("getPhotoFromSite", "MANAGER");
-                globals.writeToMLOG(Clock.getHumanTime() + "_INFO.Exchange.class.getPhotoFromSite: " + "MANAGER" + "\n");
+                globals.writeToMLOG( "_INFO.Exchange.class.getPhotoFromSite: " + "MANAGER" + "\n");
 //                server.getPhotoFromServer(data);
                 break;
         }

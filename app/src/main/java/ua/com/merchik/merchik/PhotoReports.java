@@ -512,8 +512,10 @@ public class PhotoReports {
                                         callback.onSuccess(photoDB, data.error);
                                     } else if (data.errorType.equals("missing_geo_coord")) {
                                         Globals.fixMP(null,null);
+                                        Globals.writeToMLOG("INFO", "PhotoReports/buildCall/CALL/onResponse/responseBody/info/missing_geo_coord", "missing_geo_coord");
                                         callback.onFailure(photoDB, "Ошибка при обработке фото: " + data.error);
                                     } else {
+                                        Globals.writeToMLOG("INFO", "PhotoReports/buildCall/CALL/onResponse/responseBody/info/other_error", data.error);
                                         callback.onFailure(photoDB, "Ошибка при обработке фото: " + data.error);
                                     }
                                 }

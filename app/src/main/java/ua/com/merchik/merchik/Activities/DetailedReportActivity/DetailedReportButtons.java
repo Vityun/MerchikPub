@@ -399,7 +399,7 @@ public class DetailedReportButtons {
      * Option id: 138518
      */
     private void pressStartWork(Context context, WpDataDB wp) {
-//        globals.writeToMLOG(Clock.getHumanTime() + "_INFO.DetailedReportButtons.class.pressStartWork: " + "ENTER" + "\n");
+//        globals.writeToMLOG( "_INFO.DetailedReportButtons.class.pressStartWork: " + "ENTER" + "\n");
 //        if (wp.getVisit_start_dt() > 0) {
 //            Toast.makeText(context, "Работа уже начата!", Toast.LENGTH_SHORT).show();
 //        } else {
@@ -428,7 +428,7 @@ public class DetailedReportButtons {
      * Option id: 138520
      */
     private void pressEndWork(Context context, WpDataDB wp) {
-//        globals.writeToMLOG(Clock.getHumanTime() + "_INFO.DetailedReportButtons.class.pressEndWork: " + "ENTER" + "\n");
+//        globals.writeToMLOG( "_INFO.DetailedReportButtons.class.pressEndWork: " + "ENTER" + "\n");
 //        if (wp.getVisit_end_dt() > 0) {
 //            Toast.makeText(context, "Работа уже окончена!", Toast.LENGTH_SHORT).show();
 //        } else {

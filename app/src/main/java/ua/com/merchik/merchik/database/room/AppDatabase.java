@@ -156,7 +156,7 @@ import ua.com.merchik.merchik.database.room.DaoInterfaces.VotesDao;
                 SiteAccountSDB.class,
                 SynchronizationTimeTable.class
         },
-        version = 65
+        version = 66
 )
 
 

@@ -19,7 +19,6 @@ import retrofit2.http.FieldMap;
 import retrofit2.http.FormUrlEncoded;
 import retrofit2.http.GET;
 import retrofit2.http.Header;
-import retrofit2.http.Headers;
 import retrofit2.http.Multipart;
 import retrofit2.http.POST;
 import retrofit2.http.Part;
@@ -31,6 +30,7 @@ import ua.com.merchik.merchik.data.DataFromServer.PhotoData.PhotoData;
 import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteHints;
 import ua.com.merchik.merchik.data.Lessons.SiteHints.SiteObjects.SiteObjects;
 import ua.com.merchik.merchik.data.PPAonResponse;
+import ua.com.merchik.merchik.data.RetrofitResponse.Location.LocationResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.models.AdditionalMaterialsAddressResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.models.AdditionalMaterialsGroupsResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.models.AdditionalMaterialsLinksResponse;
@@ -46,7 +46,6 @@ import ua.com.merchik.merchik.data.RetrofitResponse.models.EDRPOUResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.models.ErrorTableResponce;
 import ua.com.merchik.merchik.data.RetrofitResponse.models.FragmentsResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.models.ImageTypes;
-import ua.com.merchik.merchik.data.RetrofitResponse.Location.LocationResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.models.Login;
 import ua.com.merchik.merchik.data.RetrofitResponse.models.Logout;
 import ua.com.merchik.merchik.data.RetrofitResponse.models.ModImagesView;
@@ -191,14 +190,19 @@ public interface RetrofitInterface {
                                       @Query("act") String act,
                                       @Query("date_from") String date_from,
                                       @Query("date_to") String date_to,
-                                      @Query("dt") long vpi);
+                                      @Query("dt_change_from") long vpi);
+
+    @POST("mobile_app.php?")
+    Call<WpDataServer> GET_WPDATA_VPI(
+            @Header("ContentType") String content,
+            @Body JsonObject json);
 
     @POST("mobile_app.php?")
     Call<JsonObject> GET_WPDATA_VPI_JSON(@Query("mod") String mod,
                                          @Query("act") String act,
                                          @Query("date_from") String date_from,
                                          @Query("date_to") String date_to,
-                                         @Query("dt") long vpi);
+                                         @Query("dt_change_from") long vpi);
 
     @POST("mobile_app.php?")
     Call<ImageTypes> IMAGE_TYPES_CALL(@Query("mod") String mod, @Query("act") String act, @Query("images_type_list") String images_type_list);
@@ -970,7 +974,6 @@ public interface RetrofitInterface {
             @Body JsonObject json);
 
 
-
     @POST("mobile_app.php?")
     Call<PPAonResponse> GET_TABLE_PPA(
             @Header("ContentType") String content,
@@ -983,12 +986,10 @@ public interface RetrofitInterface {
             @Body JsonObject json);
 
 
-
     @POST("mobile_app.php?")
     Call<TasksAndReclamationsSDBResponce> GET_TABLE_TasksAndReclamationsSDB(
             @Header("ContentType") String content,
             @Body JsonObject json);
-
 
 
     @POST("mobile_app.php?")
@@ -997,12 +998,10 @@ public interface RetrofitInterface {
             @Body JsonObject json);
 
 
-
     @POST("mobile_app.php?")
     Call<AdditionalRequirementsServerData> GET_TABLE_AdditionalRequirementsDB(
             @Header("ContentType") String content,
             @Body JsonObject json);
-
 
 
     @POST("mobile_app.php?")
@@ -1037,7 +1036,6 @@ public interface RetrofitInterface {
     Call<SiteObjects> GET_SITE_OBJECTS(
             @Header("ContentType") String content,
             @Body JsonObject json);
-
 
 
     @POST("mobile_app.php?")
@@ -1108,7 +1106,6 @@ public interface RetrofitInterface {
     Call<OblastResponse> GET_OBLAST_ROOM(
             @Header("ContentType") String content,
             @Body JsonObject json);
-
 
 
     @POST("mobile_app.php?")

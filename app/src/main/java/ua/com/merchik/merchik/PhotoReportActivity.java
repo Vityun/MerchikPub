@@ -727,10 +727,10 @@ public class PhotoReportActivity extends toolbar_menus {
 //                }
                 try {
                     contentUri = FileProvider.getUriForFile(this, "ua.com.merchik.merchik.provider", image);
-                    globals.writeToMLOG(Clock.getHumanTime() + " MakePhoto.class.Type1.Build.VERSION.SDK_INT: " + Build.VERSION.SDK_INT + "\n");
+                    globals.writeToMLOG( " MakePhoto.class.Type1.Build.VERSION.SDK_INT: " + Build.VERSION.SDK_INT + "\n");
                 } catch (Exception e) {
                     contentUri = Uri.fromFile(image);
-                    globals.writeToMLOG(Clock.getHumanTime() + " MakePhoto.class.Type2.Build.VERSION.SDK_INT: " + Build.VERSION.SDK_INT + "\n");
+                    globals.writeToMLOG( " MakePhoto.class.Type2.Build.VERSION.SDK_INT: " + Build.VERSION.SDK_INT + "\n");
                 }
 
                 takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, contentUri);

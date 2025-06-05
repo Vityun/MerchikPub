@@ -199,8 +199,8 @@ public class DetailedReportOptionsFrag extends Fragment {
                     // todo это надо будет вынести в отдельную функцию. И скорее всего перересовывать при клике на "провести"
                     StringBuilder sb = new StringBuilder();
 
-                    sb.append("Прем.(план): ").append(wpDataDB.getCash_ispolnitel()).append("\n\n");
-                    sb.append("Прем.(факт): ").append(wpDataDB.cash_fact).append("\n");
+                    sb.append("Прем.(план): ").append(wpDataDB.getCash_ispolnitel()).append(" грн.\n\n");
+                    sb.append("Прем.(факт): ").append(wpDataDB.cash_fact).append(" грн.\n");
                     planfact.setText(sb);
 
                     ImageView check = v.findViewById(R.id.check);

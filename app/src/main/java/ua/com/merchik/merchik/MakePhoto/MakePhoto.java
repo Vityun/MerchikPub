@@ -79,7 +79,7 @@ public class MakePhoto {
 
     // TODO Устарело
     public static void startToMakePhoto(Context context, WPDataObj wpDataObj) {
-        globals.writeToMLOG(Clock.getHumanTime() + "MakePhoto.startToMakePhoto: " + "ENTER" + "\n");
+        globals.writeToMLOG( "MakePhoto.startToMakePhoto: " + "ENTER" + "\n");
         mContext = context;
         wp = wpDataObj;
 
@@ -326,7 +326,7 @@ public class MakePhoto {
      * Создание фото и пути к ней
      */
     public static void dispatchTakePictureIntent() {
-        globals.writeToMLOG(Clock.getHumanTime() + "MakePhoto.dispatchTakePictureIntent: " + "ENTER" + "\n");
+        globals.writeToMLOG( "MakePhoto.dispatchTakePictureIntent: " + "ENTER" + "\n");
         try {
             Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
             if (takePictureIntent.resolveActivity(mContext.getPackageManager()) != null) {
@@ -347,21 +347,21 @@ public class MakePhoto {
                 Uri contentUri;
                 try {
                     contentUri = FileProvider.getUriForFile(mContext, "ua.com.merchik.merchik.provider", image);
-                    globals.writeToMLOG(Clock.getHumanTime() + " MakePhoto.class.Type1.Build.VERSION.SDK_INT: " + Build.VERSION.SDK_INT + "\n");
+                    globals.writeToMLOG( " MakePhoto.class.Type1.Build.VERSION.SDK_INT: " + Build.VERSION.SDK_INT + "\n");
                 } catch (Exception e) {
                     contentUri = Uri.fromFile(image);
-                    globals.writeToMLOG(Clock.getHumanTime() + " MakePhoto.class.Type2.Build.VERSION.SDK_INT: " + Build.VERSION.SDK_INT + "\n");
+                    globals.writeToMLOG( " MakePhoto.class.Type2.Build.VERSION.SDK_INT: " + Build.VERSION.SDK_INT + "\n");
                 }
 
 
                 takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, contentUri);
-                globals.writeToMLOG(Clock.getHumanTime() + "MakePhoto.startActivityForResult: " + "ENTER" + "\n");
+                globals.writeToMLOG( "MakePhoto.startActivityForResult: " + "ENTER" + "\n");
                 ((DetailedReportActivity) mContext).startActivityForResult(takePictureIntent, REQUEST_TAKE_PHOTO);
             }
 
         } catch (Exception e) {
             globals.alertDialogMsg(mContext, "Ошибка при создании фото: " + e);
-            globals.writeToMLOG(Clock.getHumanTime() + "MakePhoto.dispatchTakePictureIntent.Error: " + Arrays.toString(e.getStackTrace()) + "\n");
+            globals.writeToMLOG( "MakePhoto.dispatchTakePictureIntent.Error: " + Arrays.toString(e.getStackTrace()) + "\n");
         }
     }
 
@@ -395,7 +395,7 @@ public class MakePhoto {
     public static String openCameraPhotoUri;
 
     public void openCamera(Activity activity, int requestCode) {
-        globals.writeToMLOG(Clock.getHumanTime() + "MakePhoto.openCamera: " + "ENTER" + "\n");
+        globals.writeToMLOG( "MakePhoto.openCamera: " + "ENTER" + "\n");
         try {
             File photo = null;
             Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
@@ -425,23 +425,23 @@ public class MakePhoto {
                 Uri contentUri;
                 try {
                     contentUri = FileProvider.getUriForFile(activity, "ua.com.merchik.merchik.provider", photo);
-                    globals.writeToMLOG(Clock.getHumanTime() + " MakePhoto.class.Type1.Build.VERSION.SDK_INT: " + Build.VERSION.SDK_INT + "\n");
+                    globals.writeToMLOG( " MakePhoto.class.Type1.Build.VERSION.SDK_INT: " + Build.VERSION.SDK_INT + "\n");
                 } catch (Exception e) {
                     contentUri = Uri.fromFile(photo);
-                    globals.writeToMLOG(Clock.getHumanTime() + " MakePhoto.class.Type2.Build.VERSION.SDK_INT: " + Build.VERSION.SDK_INT + "\n");
+                    globals.writeToMLOG( " MakePhoto.class.Type2.Build.VERSION.SDK_INT: " + Build.VERSION.SDK_INT + "\n");
                 }
 
                 MakePhoto.openCameraPhotoUri = photo.getAbsolutePath();
 
                 intent.putExtra(MediaStore.EXTRA_OUTPUT, contentUri);
                 intent.putExtra("photo_uri", contentUri);
-                globals.writeToMLOG(Clock.getHumanTime() + "MakePhoto.startActivityForResult: " + "ENTER" + "\n");
+                globals.writeToMLOG( "MakePhoto.startActivityForResult: " + "ENTER" + "\n");
                 activity.startActivityForResult(intent, requestCode);
             }
 
         } catch (Exception e) {
             globals.alertDialogMsg(activity, "Ошибка при создании фото: " + e);
-            globals.writeToMLOG(Clock.getHumanTime() + "MakePhoto.dispatchTakePictureIntent.Error: " + Arrays.toString(e.getStackTrace()) + "\n");
+            globals.writeToMLOG( "MakePhoto.dispatchTakePictureIntent.Error: " + Arrays.toString(e.getStackTrace()) + "\n");
         }
     }
 
@@ -912,30 +912,31 @@ public class MakePhoto {
                     PlanogrammVizitShowcaseSDB planogrammVizitShowcaseSDB = null;
 
                     try {
-                        MakePhoto.img_src_id = String.valueOf(showcase.photoId);
-                        MakePhoto.showcase_id = String.valueOf(showcase.id);
-//                        MakePhoto.planogram_id = String.valueOf(showcase.planogramId);
-//                        MakePhoto.example_id = String.valueOf(showcase.id);
-                        MakePhoto.example_img_id = String.valueOf(showcase.photoId);
+                        // Проверяем photoId и id
+                        MakePhoto.img_src_id = showcase.photoId != null ? String.valueOf(showcase.photoId) : "";
+                        MakePhoto.showcase_id = showcase.id != null ? String.valueOf(showcase.id) : "";
+                        MakePhoto.example_img_id = showcase.photoId != null ? String.valueOf(showcase.photoId) : "";
 
                         List<PlanogrammVizitShowcaseSDB> planogrammVizitShowcaseSDBList = SQL_DB
                                 .planogrammVizitShowcaseDao()
                                 .getByCodeDad2(wp.dad2);
                         for (PlanogrammVizitShowcaseSDB item : planogrammVizitShowcaseSDBList) {
-                            if (Objects.equals(item.showcase_id, showcase.id)) {
+                            if (item != null && Objects.equals(item.showcase_id, showcase.id)) {
                                 planogrammVizitShowcaseSDB = item;
                                 break;
                             }
                         }
                         if (planogrammVizitShowcaseSDB != null) {
-                            MakePhoto.planogram_id = String.valueOf(planogrammVizitShowcaseSDB.planogram_id);
-                            MakePhoto.planogram_img_id = String.valueOf(planogrammVizitShowcaseSDB.planogram_photo_id);
+                            MakePhoto.planogram_id = planogrammVizitShowcaseSDB.planogram_id != null
+                                    ? String.valueOf(planogrammVizitShowcaseSDB.planogram_id) : "";
+                            MakePhoto.planogram_img_id = planogrammVizitShowcaseSDB.planogram_photo_id != null
+                                    ? String.valueOf(planogrammVizitShowcaseSDB.planogram_photo_id) : "";
                         } else {
-                            MakePhoto.planogram_id = String.valueOf(showcase.planogramId);
+                            MakePhoto.planogram_id = showcase.planogramId != null
+                                    ? String.valueOf(showcase.planogramId) : "";
                             planogrammSDB = SQL_DB.planogrammDao().getById(showcase.planogramId);
-                            if (planogrammSDB != null && planogrammSDB.photoId != null) {
-                                MakePhoto.planogram_img_id = String.valueOf(planogrammSDB.photoId);
-                            }
+                            MakePhoto.planogram_img_id = planogrammSDB != null && planogrammSDB.photoId != null
+                                    ? String.valueOf(planogrammSDB.photoId) : "";
                         }
                     } catch (Exception e) {
                         Globals.writeToMLOG("ERROR", "showDialogSW/click/showcase", "Exception e: " + e);

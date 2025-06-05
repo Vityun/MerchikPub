@@ -76,6 +76,10 @@ public class StandartData<T> {
     public String active_only;  // 30.10.23. ДЛя витрин. Что б отбирать по статусу.
     public String planogram_only;
 
+    public List<Integer> exclude_id; // 04.06.2025 добавлен параметр exclude_id (массив\число) , в котором можно передать те планограммы, которые нужно исключить
+    public List<Integer> exclude_planogram_id; // 04.06.2025 добавлен параметр exclude_planogram_id (массив\число) , в котором можно передать те планограммы, которые нужно исключить
+    public List<Integer> id_exclude; // 04.06.2025 добавлен параметр exclude_id (массив\число) , в котором можно передать те витрин, которые нужно исключить
+    public List<Integer> id_exclude_old;
     // ------------------------------------
 
     public static class Filter {

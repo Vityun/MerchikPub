@@ -5,49 +5,50 @@ import static ua.com.merchik.merchik.database.room.RoomManager.SQL_DB;
 import android.util.Log;
 
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.google.gson.annotations.SerializedName;
 
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.annotations.NonNull;
-import io.reactivex.rxjava3.core.Single;
 import io.reactivex.rxjava3.observers.DisposableCompletableObserver;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
-import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.Database.Room.Planogram.PlanogrammSDB;
+import ua.com.merchik.merchik.data.Database.Room.Planogram.PlanogrammTypeSDB;
 import ua.com.merchik.merchik.data.Database.Room.Planogram.PlanogrammVizitShowcaseSDB;
-import ua.com.merchik.merchik.data.RealmModels.SynchronizationTimetableDB;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.planogramm.PlanogrammAddressResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.planogramm.PlanogrammGroupResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.planogramm.PlanogrammImagesResponse;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.planogramm.PlanogrammResponse;
-import ua.com.merchik.merchik.data.RetrofitResponse.tables.planogramm.PlanogrammTypeResponse;
-import ua.com.merchik.merchik.data.RetrofitResponse.tables.planogramm.PlanogrammVizitShowcaseResponse;
 import ua.com.merchik.merchik.data.TestJsonUpload.StandartData;
-import ua.com.merchik.merchik.database.realm.RealmManager;
-import ua.com.merchik.merchik.database.room.DaoInterfaces.PlanogrammTypeDao;
-import ua.com.merchik.merchik.database.room.RoomManager;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
 
 public class PlanogrammTableExchange {
 
     public void planogramDownload(Clicks.clickObjectAndStatus click) {
+        Set<Integer> uniquePlanogrammId = new HashSet<>();
+
+        List<PlanogrammSDB> planogrammList = SQL_DB.planogrammDao().getAll();
+        if (!planogrammList.isEmpty())
+            for (PlanogrammSDB p : planogrammList) {
+                uniquePlanogrammId.add(p.id);
+            }
+
         StandartData data = new StandartData();
         data.mod = "planogram";
         data.act = "list";
         data.nolimit = "1";
+        data.exclude_id = new ArrayList<>(uniquePlanogrammId);
 
         Gson gson = new Gson();
         String json = gson.toJson(data);
@@ -342,10 +343,19 @@ public class PlanogrammTableExchange {
     }
 
     public void planorgammType() {
+        Set<String> uniquePlanogrammId = new HashSet<>();
+
+        List<PlanogrammTypeSDB> planogrammList = SQL_DB.planogrammTypeDao().getAllPlanogramsm();
+        if (!planogrammList.isEmpty())
+            for (PlanogrammTypeSDB p : planogrammList) {
+                uniquePlanogrammId.add(p.getPlanogram_id());
+            }
+
         StandartData data = new StandartData();
         data.mod = "planogram";
         data.act = "tt_type_list";
         data.nolimit = "1";
+        data.id_exclude_old = new ArrayList<>(uniquePlanogrammId);
 
 //        data.date_from = Clock.today_7;
 //        data.date_to = Clock.tomorrow7;
@@ -464,16 +474,28 @@ public class PlanogrammTableExchange {
     // Загрузка таблицы визитов планоргам
     public void planogrammVisitShowcase() {
 
+        Set<Integer> uniquePlanogrammId = new HashSet<>();
+
+        List<PlanogrammVizitShowcaseSDB> planogrammList = SQL_DB.planogrammVizitShowcaseDao().getAll();
+        if (!planogrammList.isEmpty())
+            for (PlanogrammVizitShowcaseSDB p : planogrammList) {
+                uniquePlanogrammId.add(p.planogram_id);
+            }
+//test
+//        uniquePlanogrammId.remove(606);
+//        uniquePlanogrammId.remove(182);
+
         StandartData data = new StandartData();
         data.mod = "planogram";
         data.act = "vizit_showcase_list";
         data.nolimit = "1";
+        data.id_exclude_old = new ArrayList<>(uniquePlanogrammId);
 
 //        data.date_from = Clock.today_7;
 //        data.date_to = Clock.tomorrow7;
 
-        SynchronizationTimetableDB synchronizationTimetableDB = RealmManager.INSTANCE.copyFromRealm(RealmManager.getSynchronizationTimetableRowByTable("vizit_showcase_list"));
-        data.dt_change_from = String.valueOf(synchronizationTimetableDB.getVpi_app());
+//        SynchronizationTimetableDB synchronizationTimetableDB = RealmManager.INSTANCE.copyFromRealm(RealmManager.getSynchronizationTimetableRowByTable("vizit_showcase_list"));
+//        data.dt_change_from = String.valueOf(synchronizationTimetableDB.getVpi_app());
 
         Gson gson = new Gson();
         String json = gson.toJson(data);
@@ -501,31 +523,34 @@ public class PlanogrammTableExchange {
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(planogrammVizitShowcaseResponse -> {
-                    if (planogrammVizitShowcaseResponse.state && planogrammVizitShowcaseResponse.list != null) {
-                        SQL_DB.planogrammVizitShowcaseDao()
-                                .insertAll(planogrammVizitShowcaseResponse.list)
-                                .subscribeOn(Schedulers.io())
-                                .observeOn(AndroidSchedulers.mainThread())
-                                .subscribe(new DisposableCompletableObserver() {
-                                    @Override
-                                    public void onComplete() {
-                                        RealmManager.INSTANCE.executeTransaction(realm -> {
-                                            synchronizationTimetableDB.setVpi_app(System.currentTimeMillis() / 1000);
-                                            realm.copyToRealmOrUpdate(synchronizationTimetableDB);
+                    Log.e("!!!!!!",">> !");
+                            if (planogrammVizitShowcaseResponse.state && planogrammVizitShowcaseResponse.list != null
+                                    && !planogrammVizitShowcaseResponse.list.isEmpty()) {
+                                SQL_DB.planogrammVizitShowcaseDao()
+                                        .insertAll(planogrammVizitShowcaseResponse.list)
+                                        .subscribeOn(Schedulers.io())
+                                        .observeOn(AndroidSchedulers.mainThread())
+                                        .subscribe(new DisposableCompletableObserver() {
+                                            @Override
+                                            public void onComplete() {
+//                                        RealmManager.INSTANCE.executeTransaction(realm -> {
+//                                            synchronizationTimetableDB.setVpi_app(System.currentTimeMillis() / 1000);
+//                                            realm.copyToRealmOrUpdate(synchronizationTimetableDB);
+//                                        });
+                                                Globals.writeToMLOG("INFO", "PlanogrammTableExchange/planogrammVisitShowcase", "Data size: " + planogrammVizitShowcaseResponse.list.size());
+                                            }
+
+                                            @Override
+                                            public void onError(@NonNull Throwable e) {
+
+                                            }
                                         });
-                                    }
-
-                                    @Override
-                                    public void onError(@NonNull Throwable e) {
-
-                                    }
-                                });
-                        Globals.writeToMLOG("INFO", "PlanogrammTableExchange/planogrammVisitShowcase", "Data inserted successfully");
-                    }
-                },
+                                Globals.writeToMLOG("INFO", "PlanogrammTableExchange/planogrammVisitShowcase", "Data inserted successfully");
+                            }
+                        },
                         throwable -> {
-                    String er = throwable.getMessage();
-                    Globals.writeToMLOG("ERROR", "PlanogrammTableExchange/planogrammVisitShowcase", "exeption: " + throwable.getMessage());
+                            String er = throwable.getMessage();
+                            Globals.writeToMLOG("ERROR", "PlanogrammTableExchange/planogrammVisitShowcase", "exeption: " + throwable.getMessage());
                         });
     }
 

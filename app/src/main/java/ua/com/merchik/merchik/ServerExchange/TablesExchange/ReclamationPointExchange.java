@@ -30,23 +30,23 @@ public class ReclamationPointExchange {
 
             StandartData.Filter filter = new StandartData.Filter();
             filter.date_from = Clock.getHumanTimeYYYYMMDD(Clock.getDateLong(-20).getTime()/1000);
-            filter.date_to = Clock.getHumanTimeYYYYMMDD(Clock.getDateLong(2).getTime()/1000);
+            filter.date_to = Clock.getHumanTimeYYYYMMDD(Clock.getDateLong(20).getTime()/1000);
 
 //            // Нужно получить ВПИ с таблички синхронизаций
-//            SynchronizationTimetableDB synchronizationTimetableDB = RealmManager.getSynchronizationTimetableRowByTable("task_and_reclamations");
-//            if (synchronizationTimetableDB != null){
-//                String dt_change_from = String.valueOf(synchronizationTimetableDB.getVpi_app());
-//                if (dt_change_from.equals("0")){
-//                    data.dt_change_from = "0";
-//                }else {
-//                    data.dt_change_from = String.valueOf(synchronizationTimetableDB.getVpi_app() - 5);
-////                    filter.dt_change_from =
-//                }
-//                Globals.writeToMLOG("INFO", "ReclamationPointExchange/downloadTaR", "synchronizationTimetableDB != null && data.dt_change_from: " + data.dt_change_from);
-//            }else {
-//                data.dt_change_from = "0";
-//                Globals.writeToMLOG("INFO", "ReclamationPointExchange/downloadTaR", "synchronizationTimetableDB == null");
-//            }
+            SynchronizationTimetableDB synchronizationTimetableDB = RealmManager.getSynchronizationTimetableRowByTable("task_and_reclamations");
+            if (synchronizationTimetableDB != null){
+                String dt_change_from = String.valueOf(synchronizationTimetableDB.getVpi_app());
+                if (dt_change_from.equals("0")){
+                    data.dt_change_from = "0";
+                }else {
+                    data.dt_change_from = String.valueOf(synchronizationTimetableDB.getVpi_app());
+//                    filter.dt_change_from =
+                }
+                Globals.writeToMLOG("INFO", "ReclamationPointExchange/downloadTaR", "synchronizationTimetableDB != null && data.dt_change_from: " + data.dt_change_from);
+            }else {
+                data.dt_change_from = "0";
+                Globals.writeToMLOG("INFO", "ReclamationPointExchange/downloadTaR", "synchronizationTimetableDB == null");
+            }
 
             data.filter = filter;
 
@@ -63,12 +63,12 @@ public class ReclamationPointExchange {
                     try {
                         if (response.isSuccessful() && response.body() != null){
                             if (response.body().list != null && response.body().list.size()>0){
-//                                RealmManager.INSTANCE.executeTransaction(realm -> {
-//                                    if (synchronizationTimetableDB != null) {
-//                                        synchronizationTimetableDB.setVpi_app(System.currentTimeMillis()/1000);
-//                                        realm.copyToRealmOrUpdate(synchronizationTimetableDB);
-//                                    }
-//                                });
+                                RealmManager.INSTANCE.executeTransaction(realm -> {
+                                    if (synchronizationTimetableDB != null) {
+                                        synchronizationTimetableDB.setVpi_app(System.currentTimeMillis()/1000);
+                                        realm.copyToRealmOrUpdate(synchronizationTimetableDB);
+                                    }
+                                });
 
                                 exchange.onSuccess(response.body().list);
                             }else {

@@ -279,7 +279,7 @@ public class WpDataDB extends RealmObject implements Parcelable, DataObjectUI {
         return ID;
     }
 
-    public void setId(int id) {
+    public void setId(long id) {
         this.ID = id;
     }
 

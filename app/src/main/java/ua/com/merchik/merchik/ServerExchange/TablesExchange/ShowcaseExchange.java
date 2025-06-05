@@ -24,7 +24,6 @@ import ua.com.merchik.merchik.ServerExchange.ExchangeInterface;
 import ua.com.merchik.merchik.ServerExchange.PhotoDownload;
 import ua.com.merchik.merchik.data.Database.Room.ShowcaseSDB;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
-import ua.com.merchik.merchik.data.RealmModels.SynchronizationTimetableDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.ShowcaseResponse;
 import ua.com.merchik.merchik.data.TestJsonUpload.StandartData;
@@ -39,17 +38,30 @@ public class ShowcaseExchange {
 //            List<Integer> addr_id = new ArrayList<>();
 //            addr_id.add(27710);
             List<WpDataDB> wpDataDBList = getWorkPlanList();
+            List<ShowcaseSDB> showcaseSDBSList = SQL_DB.showcaseDao().getAll();
 
             // Используем Set для автоматического удаления дубликатов
             Set<String> uniqueClientIds = new HashSet<>();
             Set<String> uniqueAdressId = new HashSet<>();
+            Set<String> uniqueShowcaseId = new HashSet<>();
 
             // Проходим по каждому элементу списка wpDataDBList
+            if (wpDataDBList.isEmpty())
+                return;
+
             for (WpDataDB wpDataDB : wpDataDBList) {
                 // Добавляем client_id в Set (дубликаты игнорируются)
                 uniqueClientIds.add(wpDataDB.getClient_id());
                 uniqueAdressId.add(String.valueOf(wpDataDB.getAddr_id()));
             }
+
+            if (!showcaseSDBSList.isEmpty())
+                for (ShowcaseSDB sdb : showcaseSDBSList){
+                    uniqueShowcaseId.add(sdb.selectId);
+                }
+            uniqueShowcaseId.remove("444");
+            uniqueShowcaseId.remove("1028");
+
 
             StandartData data = new StandartData();
             data.mod = "rack";
@@ -57,14 +69,15 @@ public class ShowcaseExchange {
             data.active_only = "1";
             data.client_id = new ArrayList<>(uniqueClientIds);
             data.addr_id = new ArrayList<>(uniqueAdressId);
+            data.id_exclude = new ArrayList<>(uniqueShowcaseId);
 
-            // #### TODO
-            SynchronizationTimetableDB synchronizationTimetableDB = RealmManager.INSTANCE.copyFromRealm(RealmManager.getSynchronizationTimetableRowByTable("photo_showcase"));
-            data.dt_change_from = String.valueOf(synchronizationTimetableDB.getVpi_app());
+                    // #### TODO
+//            SynchronizationTimetableDB synchronizationTimetableDB = RealmManager.INSTANCE.copyFromRealm(RealmManager.getSynchronizationTimetableRowByTable("photo_showcase"));
+//            data.dt_change_from = String.valueOf(synchronizationTimetableDB.getVpi_app());
 
-            // добавить время отправки,что бы не передавать лишнее
+                    // добавить время отправки,что бы не передавать лишнее
 
-            Gson gson = new Gson();
+                    Gson gson = new Gson();
             String json = gson.toJson(data);
             JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
 
@@ -81,6 +94,8 @@ public class ShowcaseExchange {
                         if (response.body() != null && response.body().state != null && response.body().state && response.body().list != null && response.body().list.size() > 0) {
                             Globals.writeToMLOG("INFO", "downloadShowcaseTable/onResponse/isSuccessful", "response.body().list.size(): " + response.body().list.size());
                             List<ShowcaseSDB> serv = response.body().list;
+                            exchange.onSuccess(serv);
+
 //                            List<ShowcaseSDB> filteredServ = serv.stream()
 //                                    .filter(showcase -> wpDataDBList.stream()
 //                                            .anyMatch(wpData ->
@@ -108,12 +123,11 @@ public class ShowcaseExchange {
 //                                }
 //                            }
 
-                            exchange.onSuccess(serv);
-                            if (!serv.isEmpty())
-                                RealmManager.INSTANCE.executeTransaction(realm -> {
-                                    synchronizationTimetableDB.setVpi_app(System.currentTimeMillis() / 1000);
-                                    realm.copyToRealmOrUpdate(synchronizationTimetableDB);
-                                });
+//                            if (!serv.isEmpty())
+//                                RealmManager.INSTANCE.executeTransaction(realm -> {
+//                                    synchronizationTimetableDB.setVpi_app(System.currentTimeMillis() / 1000);
+//                                    realm.copyToRealmOrUpdate(synchronizationTimetableDB);
+//                                });
                         }
                     }
                 }

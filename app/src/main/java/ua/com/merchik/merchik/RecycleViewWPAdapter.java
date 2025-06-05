@@ -36,6 +36,7 @@ import ua.com.merchik.merchik.Activities.DetailedReportActivity.DetailedReportAc
 import ua.com.merchik.merchik.Activities.WorkPlanActivity.WPDataActivity;
 import ua.com.merchik.merchik.Filter.MyFilter;
 import ua.com.merchik.merchik.Global.UnlockCode;
+import ua.com.merchik.merchik.Utils.CustomString;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.Data;
 import ua.com.merchik.merchik.data.Database.Room.AddressSDB;
@@ -452,9 +453,14 @@ public class RecycleViewWPAdapter extends RecyclerView.Adapter<RecycleViewWPAdap
 
         private void setPriceInfo(Context context, WpDataDB wp) {
             StringBuilder stringBuilder = new StringBuilder();
-            stringBuilder.append("План: ").append(wp.getCash_ispolnitel()).append("\n");
-            stringBuilder.append("Снижение: ").append(wp.cash_penalty).append("\n");
-            stringBuilder.append("Факт: ").append(wp.cash_fact).append("\n");
+            stringBuilder.append("План: ").append(wp.getCash_ispolnitel()).append(" грн.").append("\n");
+            stringBuilder.append("Снижение: ").append(wp.cash_penalty).append(" грн.").append("\n");
+            stringBuilder.append("Факт: ")
+                    .append(wp.cash_fact)
+                    .append(" грн.")
+                    .append(" Зайняло часу: ")
+                    .append(CustomString.getTimeDifference(wp.getVisit_end_dt(), wp.getVisit_start_dt()))
+                    .append("\n");
 
             DialogData dialog = new DialogData(context);
             dialog.setTitle("Расчёт");

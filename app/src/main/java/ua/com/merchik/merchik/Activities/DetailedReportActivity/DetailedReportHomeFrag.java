@@ -54,6 +54,7 @@ import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.Recyclers.KeyValueData;
 import ua.com.merchik.merchik.Recyclers.KeyValueListAdapter;
 import ua.com.merchik.merchik.Translate;
+import ua.com.merchik.merchik.Utils.CustomString;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.WorkPlan;
 import ua.com.merchik.merchik.data.OptionMassageType;
@@ -273,10 +274,11 @@ public class DetailedReportHomeFrag extends Fragment {
 
         result.add(themeData(wpDataDB));
         result.add(statusData(wpDataDB));
-        result.add(new KeyValueData(Html.fromHtml(Translate.translationText(8023, "<b>Премия (план):</b>")), "" + wpDataDB.getCash_ispolnitel(), null));
-        result.add(new KeyValueData(Html.fromHtml(Translate.translationText(8024, "<b>Снижение (по опциям):</b>")), Html.fromHtml("<u>" + wpDataDB.cash_penalty + "</u>"), this::openConductDialog));
-        result.add(new KeyValueData(Html.fromHtml(Translate.translationText(8025, "<b>Премия (факт):</b>")), "" + wpDataDB.cash_fact, null));
-        result.add(new KeyValueData(Html.fromHtml(Translate.translationText(8026, "<b>Продолж. работ (по документу):</b>")), "", null));
+        result.add(new KeyValueData(Html.fromHtml(Translate.translationText(8023, "<b>Премия (план):</b>")), wpDataDB.getCash_ispolnitel() + " грн.", null));
+        result.add(new KeyValueData(Html.fromHtml(Translate.translationText(8024, "<b>Снижение (по опциям):</b>")), Html.fromHtml("<u>" + wpDataDB.cash_penalty + "</u>" + " грн."), this::openConductDialog));
+        result.add(new KeyValueData(Html.fromHtml(Translate.translationText(8025, "<b>Премия (факт):</b>")), wpDataDB.cash_fact + " грн.", null));
+        result.add(new KeyValueData(Html.fromHtml(Translate.translationText(8026, "<b>Продолж. работ (по документу):</b>")),
+                CustomString.getTimeDifference(wpDataDB.getVisit_end_dt(), wpDataDB.getVisit_start_dt()), null));
         result.add(new KeyValueData(Html.fromHtml(Translate.translationText(8027, "<b>Продолж. работ (средняя):</b>")), "", null));
         result.add(new KeyValueData(Html.fromHtml(Translate.translationText(8028, "<b>Стоимость часа:</b>")), "", null));
 

@@ -7,6 +7,7 @@ import java.util.List;
 import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Single;
 import ua.com.merchik.merchik.data.SynchronizationTimeTable;
+import ua.com.merchik.merchik.data.synchronization.TableName;
 
 @Dao
 public interface SynchronizationTimetableDao {
@@ -14,11 +15,8 @@ public interface SynchronizationTimetableDao {
     @Query("SELECT * FROM synchronization_timetable")
     List<SynchronizationTimeTable> getAll();
 
-    @Query("SELECT * FROM synchronization_timetable WHERE id = :id LIMIT 1")
-    SynchronizationTimeTable getById(int id);
-
     @Query("SELECT * FROM synchronization_timetable WHERE tableName = :name LIMIT 1")
-    SynchronizationTimeTable getByTableName(String name);
+    SynchronizationTimeTable getByTableName(TableName name);
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     void insert(SynchronizationTimeTable entity);
@@ -28,9 +26,6 @@ public interface SynchronizationTimetableDao {
 
     @Update
     void update(SynchronizationTimeTable entity);
-
-    @Delete
-    void delete(SynchronizationTimeTable entity);
 
     @Query("SELECT COUNT(*) FROM synchronization_timetable")
     Single<Integer> getCount();

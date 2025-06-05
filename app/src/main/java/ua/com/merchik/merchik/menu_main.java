@@ -81,6 +81,7 @@ import retrofit2.Response;
 import ua.com.merchik.merchik.Activities.PhotoLogActivity.PhotoLog;
 import ua.com.merchik.merchik.Activities.WorkPlanActivity.WPDataActivity;
 import ua.com.merchik.merchik.ServerExchange.TablesLoadingUnloading;
+import ua.com.merchik.merchik.ServerExchange.workmager.WorkManagerHelper;
 import ua.com.merchik.merchik.data.AppData.AppData;
 import ua.com.merchik.merchik.data.AppData.Browser;
 import ua.com.merchik.merchik.data.AppData.Device;
@@ -1183,7 +1184,6 @@ public class menu_main extends AppCompatActivity {
         dialog.setCancelable(false);
 
         TablesLoadingUnloading tablesLoadingUnloading = new TablesLoadingUnloading();
-        Context context = dialog.getContext();  // Получение контекста для отображения прогреса загрузки
 
         //set up button update tables
         Button button_update_tables = (Button) dialog.findViewById(R.id.button_ad_exchange_update_tables);
@@ -1200,6 +1200,8 @@ public class menu_main extends AppCompatActivity {
 
                 try {
                     tablesLoadingUnloading.downloadWPData();                     // План работ
+//                    WorkManagerHelper.INSTANCE.startSyncWorker(menu_main.this);  // План работ 04.06.2025
+
                     tablesLoadingUnloading.downloadImagesTp();                   // Типы Фото
                     tablesLoadingUnloading.downloadTypeGrp();                    // Группы товаров
                     tablesLoadingUnloading.downloadOptions();                    // Опции

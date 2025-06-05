@@ -63,6 +63,7 @@ import ua.com.merchik.merchik.ServerExchange.Exchange;
 import ua.com.merchik.merchik.ServerExchange.ExchangeInterface;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.SiteObjectsExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesLoadingUnloading;
+import ua.com.merchik.merchik.ServerExchange.workmager.WorkManagerHelper;
 import ua.com.merchik.merchik.Utils.CheckAndLogCompetitorAppsOnDevice;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.RealmModels.AppUsersDB;
@@ -1622,6 +1623,7 @@ public class menu_login extends AppCompatActivity {
                         // Сообщение и блок для регистрации пользователя в системе должен быть ТУТ
 
                         // ------------
+//                        WorkManagerHelper.INSTANCE.startSyncWorker(menu_login.this);
                         tablesLoadingUnloading.downloadAllTables(menu_login.this);
                         new TablesLoadingUnloading().downloadMenu();
                         Toast.makeText(getApplicationContext(), "Вы зашли как " + resp.getUserInfo().getFio(), Toast.LENGTH_SHORT).show();

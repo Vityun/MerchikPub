@@ -30,6 +30,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
+import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
+import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.observers.DisposableCompletableObserver;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 import io.realm.RealmList;
@@ -92,12 +94,15 @@ import ua.com.merchik.merchik.data.RetrofitResponse.tables.update.reportprepare.
 import ua.com.merchik.merchik.data.RetrofitResponse.tables.update.reportprepare.ReportPrepareUpdateResponseList;
 import ua.com.merchik.merchik.data.ServerData.TARCommentsData.AdditionalRequirements.AdditionalRequirementsServerData;
 import ua.com.merchik.merchik.data.ServerData.TARCommentsData.AdditionalRequirementsMarksServerData;
+import ua.com.merchik.merchik.data.SynchronizationTimeTable;
 import ua.com.merchik.merchik.data.TestJsonUpload.PPARequest;
 import ua.com.merchik.merchik.data.TestJsonUpload.StandartData;
 import ua.com.merchik.merchik.data.TestJsonUpload.TasksAndReclamationsRequest;
 import ua.com.merchik.merchik.data.UploadToServ.LogUploadToServ;
 import ua.com.merchik.merchik.data.UploadToServ.ReportPrepareServ;
 import ua.com.merchik.merchik.data.UploadToServ.WpDataUploadToServ;
+import ua.com.merchik.merchik.data.synchronization.DownloadStatus;
+import ua.com.merchik.merchik.data.synchronization.TableName;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsMarkRealm;
 import ua.com.merchik.merchik.database.realm.tables.AdditionalRequirementsRealm;
@@ -105,6 +110,7 @@ import ua.com.merchik.merchik.database.realm.tables.ReportPrepareRealm;
 import ua.com.merchik.merchik.database.realm.tables.TARCommentsRealm;
 import ua.com.merchik.merchik.database.realm.tables.TasksAndReclamationsRealm;
 import ua.com.merchik.merchik.database.realm.tables.ThemeRealm;
+import ua.com.merchik.merchik.dialogs.DialogFilter.Click;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
 
 
@@ -163,6 +169,7 @@ public class TablesLoadingUnloading {
 //            updateWpData();
 
             downloadWPData();
+//            downloadWPDataRx().subscribe();
 
             downloadOptions();
             Log.e("uploadRP", "start");
@@ -213,9 +220,9 @@ public class TablesLoadingUnloading {
                 }
             });
 //            downloadTovarTable(context, null);
-            globals.writeToMLOG(Clock.getHumanTime() + "_INFO.TablesLoadingUnloading.class.downloadAllTables.Успех.Обязательные таблици." + "\n");
+            globals.writeToMLOG( "_INFO.TablesLoadingUnloading.class.downloadAllTables.Успех.Обязательные таблици." + "\n");
         } catch (Exception e) {
-            globals.writeToMLOG(Clock.getHumanTime() + "_INFO.TablesLoadingUnloading.class.downloadAllTables.Ошибка.Обязательные таблици: " + e + "\n");
+            globals.writeToMLOG( "_INFO.TablesLoadingUnloading.class.downloadAllTables.Ошибка.Обязательные таблици: " + e + "\n");
         }
 
 
@@ -230,9 +237,9 @@ public class TablesLoadingUnloading {
             downloadErrorTable();
             downloadAkciyTable();
             downloadTradeMarksTable();
-            globals.writeToMLOG(Clock.getHumanTime() + "_INFO.TablesLoadingUnloading.class.downloadAllTables.Успех.Не обязательные таблици." + "\n");
+            globals.writeToMLOG( "_INFO.TablesLoadingUnloading.class.downloadAllTables.Успех.Не обязательные таблици." + "\n");
         } catch (Exception e) {
-            globals.writeToMLOG(Clock.getHumanTime() + "_INFO.TablesLoadingUnloading.class.downloadAllTables.Ошибка.Не обязательные таблици: " + e + "\n");
+            globals.writeToMLOG( "_INFO.TablesLoadingUnloading.class.downloadAllTables.Ошибка.Не обязательные таблици: " + e + "\n");
         }
 
 
@@ -323,9 +330,9 @@ public class TablesLoadingUnloading {
 //            downloadSiteHints("2");
 //            downloadVideoLessons();
 
-            globals.writeToMLOG(Clock.getHumanTime() + "_INFO.TablesLoadingUnloading.class.downloadAllTables.Успех.Новые таблици." + "\n");
+            globals.writeToMLOG( "_INFO.TablesLoadingUnloading.class.downloadAllTables.Успех.Новые таблици." + "\n");
         } catch (Exception e) {
-            globals.writeToMLOG(Clock.getHumanTime() + "_INFO.TablesLoadingUnloading.class.downloadAllTables.Ошибка.Новые таблици: " + e + "\n");
+            globals.writeToMLOG( "_INFO.TablesLoadingUnloading.class.downloadAllTables.Ошибка.Новые таблици: " + e + "\n");
         }
 
 
@@ -333,10 +340,9 @@ public class TablesLoadingUnloading {
     }
 
     private static boolean isdownloadWPData = false;
-
     public void downloadWPData() {
-        if (isdownloadWPData) return;
-        isdownloadWPData = true;
+//        if (isdownloadWPData) return;
+//        isdownloadWPData = true;
 
         String mod = "plan";
         String act = "list";
@@ -345,12 +351,12 @@ public class TablesLoadingUnloading {
         String date_to = timeTomorrow;
         long vpi;
 
-//        SynchronizationTimetableDB sTable = RealmManager.getSynchronizationTimetableRowByTable("wp_data");
-//        if (sTable != null) {
-//            Globals.writeToMLOG("INFO", "TablesLoadingUnloading/downloadWPData/getSynchronizationTimetableRowByTable", "sTable: " + sTable);
-//            vpi = sTable.getVpi_app();
-//            Log.e("updateWpData", "vpi: " + vpi);
-//        } else
+        SynchronizationTimetableDB sTable = RealmManager.getSynchronizationTimetableRowByTable("wp_data");
+        if (sTable != null) {
+            Globals.writeToMLOG("INFO", "TablesLoadingUnloading/downloadWPData/getSynchronizationTimetableRowByTable", "sTable: " + sTable);
+            vpi = sTable.getVpi_app();
+            Log.e("updateWpData", "vpi: " + vpi);
+        } else
             vpi = 0;
 
         try {
@@ -366,14 +372,15 @@ public class TablesLoadingUnloading {
                             List<WpDataDB> wpDataDBList = response.body().getList();
                             Globals.writeToMLOG("INFO", "TablesLoadingUnloading/downloadWPData/onResponse", "wpDataDBList.size(): " + wpDataDBList.size());
 //                            RealmManager.setWpDataAuto2(wpDataDBList);
-                            RealmManager.setWpData(wpDataDBList);
+//                            RealmManager.setWpData(wpDataDBList);
+                            RealmManager.updateWorkPlanFromServer(wpDataDBList);
                             downloadTovarTable(null, wpDataDBList);
-//                            RealmManager.INSTANCE.executeTransaction(realm -> {
-//                                if (sTable != null) {
-//                                    sTable.setVpi_app((System.currentTimeMillis() / 1000) + 5);
-//                                    realm.copyToRealmOrUpdate(sTable);
-//                                }
-//                            });
+                            RealmManager.INSTANCE.executeTransaction(realm -> {
+                                if (sTable != null) {
+                                    sTable.setVpi_app((System.currentTimeMillis() / 1000) + 5);
+                                    realm.copyToRealmOrUpdate(sTable);
+                                }
+                            });
 
                         }
                     }
@@ -397,6 +404,7 @@ public class TablesLoadingUnloading {
         }
 
         Log.e("SERVER_REALM_DB_UPDATE", "===================================downloadWPData_END");
+
     }
 
 
@@ -569,7 +577,7 @@ public class TablesLoadingUnloading {
         if (isDownloadOptions) return;
         isDownloadOptions = true;
         Log.e("SERVER_REALM_DB_UPDATE", "===================================.downloadOptions.START");
-        globals.writeToMLOG(Clock.getHumanTime() + "_INFO.TablesLU.class.downloadOptions.ENTER\n");
+        globals.writeToMLOG( "_INFO.TablesLU.class.downloadOptions.ENTER\n");
 
 //        StandartData standartData = new StandartData();
 //        standartData.mod = "report_prepare";
@@ -600,13 +608,13 @@ public class TablesLoadingUnloading {
             @Override
             public void onResponse(retrofit2.Call<OptionsServer> call, retrofit2.Response<OptionsServer> response) {
                 try {
-                    globals.writeToMLOG(Clock.getHumanTime() + "_INFO.TablesLU.class.downloadOptions.onResponse.ENTER\n");
+                    globals.writeToMLOG( "_INFO.TablesLU.class.downloadOptions.onResponse.ENTER\n");
                     if (response.isSuccessful() && response.body() != null) {
                         Log.e("SERVER_REALM_DB_UPDATE", "===================================downloadOptions_:" + response.body().getState() + "/" + response.body().getError());
-                        globals.writeToMLOG(Clock.getHumanTime() + "_INFO.TablesLU.class.downloadOptions.response.isSuccessful(): " + response.isSuccessful());
+                        globals.writeToMLOG( "_INFO.TablesLU.class.downloadOptions.response.isSuccessful(): " + response.isSuccessful());
 
                         if (response.body().getList() != null && !response.body().getList().isEmpty()) {
-                            globals.writeToMLOG(Clock.getHumanTime() + "_INFO.TablesLU.class.downloadOptions.размер ответа: " + response.body().getList().size());
+                            globals.writeToMLOG( "_INFO.TablesLU.class.downloadOptions.размер ответа: " + response.body().getList().size());
                             RealmManager.setOptions(response.body().getList());
                             RealmManager.INSTANCE.executeTransaction(realm -> {
                                 synchronizationTimetableDB.setVpi_app((System.currentTimeMillis() / 1000) + 10);
@@ -623,7 +631,7 @@ public class TablesLoadingUnloading {
 
             @Override
             public void onFailure(retrofit2.Call<OptionsServer> call, Throwable t) {
-                globals.writeToMLOG(Clock.getHumanTime() + "_INFO.TablesLU.class.downloadOptions.onFailure.ENTER\n");
+                globals.writeToMLOG( "_INFO.TablesLU.class.downloadOptions.onFailure.ENTER\n");
 //                if (pg != null)
 //                    if (pg.isShowing())
 //                        pg.dismiss();
@@ -1113,12 +1121,12 @@ public class TablesLoadingUnloading {
 
                             try {
                                 try {
-                                    globals.writeToMLOG(Clock.getHumanTime() + "_INFO.TablesLU.class.downloadTovarTable.размер ответа: " + list.size() + "\n");
+                                    globals.writeToMLOG( "_INFO.TablesLU.class.downloadTovarTable.размер ответа: " + list.size() + "\n");
                                 } catch (Exception e) {
-                                    globals.writeToMLOG(Clock.getHumanTime() + "_INFO.TablesLU.class.downloadTovarTable.ответ от сервера.ERROR1: " + e + "\n");
+                                    globals.writeToMLOG( "_INFO.TablesLU.class.downloadTovarTable.ответ от сервера.ERROR1: " + e + "\n");
                                 }
                             } catch (Exception e) {
-                                globals.writeToMLOG(Clock.getHumanTime() + "_INFO.TablesLU.class.downloadTovarTable.ответ от сервера.ERROR: " + e + "\n");
+                                globals.writeToMLOG( "_INFO.TablesLU.class.downloadTovarTable.ответ от сервера.ERROR: " + e + "\n");
                             }
 
                             if (list != null) {
@@ -2639,7 +2647,7 @@ public class TablesLoadingUnloading {
             data.act = "list_comment";
 // добавил 1 день!
             data.date_from = Clock.getHumanTimeYYYYMMDD(Clock.getDateLong(-20).getTime() / 1000);
-            data.date_to = Clock.getHumanTimeYYYYMMDD(Clock.getDateLong(3).getTime() / 1000);
+            data.date_to = Clock.getHumanTimeYYYYMMDD(Clock.getDateLong(20).getTime() / 1000);
 
             Gson gson = new Gson();
             String json = gson.toJson(data);
@@ -2843,20 +2851,20 @@ public class TablesLoadingUnloading {
                             }
                         }
                     } catch (Exception e) {
-                        globals.writeToMLOG(Clock.getHumanTime() + "_INFO.TablesLU.class.downloadAdditionalRequirementsMarks.onResponse.catch. ошибка в данных что вернулись: " + e + "\n");
+                        globals.writeToMLOG( "_INFO.TablesLU.class.downloadAdditionalRequirementsMarks.onResponse.catch. ошибка в данных что вернулись: " + e + "\n");
                     }
                 }
 
                 @Override
                 public void onFailure(retrofit2.Call<AdditionalRequirementsMarksServerData> call, Throwable t) {
                     Log.e("downloadAddReqMarks", "Throwable: " + t);
-                    globals.writeToMLOG(Clock.getHumanTime() + "_INFO.TablesLU.class.downloadAdditionalRequirementsMarks.onFailure. ошибка в выполнении запроса: " + t + "\n");
+                    globals.writeToMLOG( "_INFO.TablesLU.class.downloadAdditionalRequirementsMarks.onFailure. ошибка в выполнении запроса: " + t + "\n");
                 }
             });
 
         } catch (Exception e) {
             Log.e("downloadAddReqMarks", "Exception: " + e);
-            globals.writeToMLOG(Clock.getHumanTime() + "_INFO.TablesLU.class.downloadAdditionalRequirementsMarks.catch ошибка всего метода: " + e + "\n");
+            globals.writeToMLOG( "_INFO.TablesLU.class.downloadAdditionalRequirementsMarks.catch ошибка всего метода: " + e + "\n");
         }
     }
 
