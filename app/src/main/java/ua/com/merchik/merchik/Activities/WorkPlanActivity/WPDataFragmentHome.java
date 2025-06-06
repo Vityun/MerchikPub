@@ -137,20 +137,20 @@ public class WPDataFragmentHome extends Fragment {
             dateTo = Clock.timeLongToDAte(Clock.getDatePeriodLong(cal.getTime().getTime(), +7) / 1000);
 
             workPlan = RealmManager.getAllWorkPlan();
-            try {
-                if (workPlan != null) {
-                    Globals.writeToMLOG("INFO", "WPDataFragmentHome", "workPlan: " + workPlan.size());
-                    StringBuilder wpDebugData = new StringBuilder();
-                    for (WpDataDB item : workPlan) {
-                        wpDebugData.append("id:").append(item.getId()).append("/").append("dad2:").append(item.getCode_dad2()).append("\n");
-                    }
-                    Globals.writeToMLOG("INFO", "WPDataFragmentHome", "wpDebugData: " + wpDebugData);
-                } else {
-                    Globals.writeToMLOG("INFO", "WPDataFragmentHome", "workPlan is null");
-                }
-            } catch (Exception e) {
-                Globals.writeToMLOG("ERROR", "WPDataFragmentHome", "Exception e: " + e);
-            }
+//            try {
+//                if (workPlan != null) {
+//                    Globals.writeToMLOG("INFO", "WPDataFragmentHome", "workPlan: " + workPlan.size());
+//                    StringBuilder wpDebugData = new StringBuilder();
+//                    for (WpDataDB item : workPlan) {
+//                        wpDebugData.append("id:").append(item.getId()).append("/").append("dad2:").append(item.getCode_dad2()).append("\n");
+//                    }
+//                    Globals.writeToMLOG("INFO", "WPDataFragmentHome", "wpDebugData: " + wpDebugData);
+//                } else {
+//                    Globals.writeToMLOG("INFO", "WPDataFragmentHome", "workPlan is null");
+//                }
+//            } catch (Exception e) {
+//                Globals.writeToMLOG("ERROR", "WPDataFragmentHome", "Exception e: " + e);
+//            }
 //        workPlan = workPlan.where().between("dt", dateFrom, dateTo).sort("dt_start", Sort.ASCENDING, "addr_id", Sort.ASCENDING).findAll();
 
             UsersSDB usersSDB = SQL_DB.usersDao().getById(Globals.userId);

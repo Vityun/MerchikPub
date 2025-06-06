@@ -29,6 +29,7 @@ import okhttp3.RequestBody;
 import retrofit2.Call;
 import retrofit2.Response;
 import ua.com.merchik.merchik.ServerExchange.ExchangeInterface;
+import ua.com.merchik.merchik.ServerExchange.TablesLoadingUnloading;
 import ua.com.merchik.merchik.data.RealmModels.StackPhotoDB;
 import ua.com.merchik.merchik.data.UploadPhotoData.ImagesPrepareUploadPhoto;
 import ua.com.merchik.merchik.data.UploadPhotoData.Move;
@@ -511,7 +512,18 @@ public class PhotoReports {
                                                     .show();
                                         callback.onSuccess(photoDB, data.error);
                                     } else if (data.errorType.equals("missing_geo_coord")) {
-                                        Globals.fixMP(null,null);
+                                        Globals.fixMP(null, null);
+                                        new TablesLoadingUnloading().uploadLodMp(new ExchangeInterface.ExchangeRes() {
+                                            @Override
+                                            public void onSuccess(String ok) {
+                                                Log.e("uploadLodMp", "uploadLodMp: " + ok);
+                                            }
+
+                                            @Override
+                                            public void onFailure(String error) {
+                                                Log.e("uploadLodMp", "uploadLodMp error: " + error);
+                                            }
+                                        });
                                         Globals.writeToMLOG("INFO", "PhotoReports/buildCall/CALL/onResponse/responseBody/info/missing_geo_coord", "missing_geo_coord");
                                         callback.onFailure(photoDB, "Ошибка при обработке фото: " + data.error);
                                     } else {
@@ -538,7 +550,12 @@ public class PhotoReports {
                                                             .show();
 
                                                 callback.onSuccess(photoDB, data.error);
+                                            } else if (data.errorType.equals("missing_geo_coord")) {
+                                                Globals.fixMP(null, null);
+                                                Globals.writeToMLOG("INFO", "PhotoReports/buildCall/CALL/onResponse/responseBody/info/missing_geo_coord", "missing_geo_coord");
+                                                callback.onFailure(photoDB, "Ошибка при обработке фото: " + data.error);
                                             } else {
+                                                Globals.writeToMLOG("INFO", "PhotoReports/buildCall/CALL/onResponse/responseBody/info/other_error", data.error);
                                                 callback.onFailure(photoDB, "Ошибка при обработке фото: " + data.error);
                                             }
                                         }

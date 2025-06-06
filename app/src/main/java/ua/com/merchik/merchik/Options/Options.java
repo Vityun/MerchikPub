@@ -1349,7 +1349,7 @@ public class Options {
 //                        dialog.setTitle("Блокирующие опции не обнаружены.");
 //                        dialog.setText("Создаю запрос на проведение документа.");
 
-                        Toast.makeText(context, "Запрос на проведение создан", Toast.LENGTH_SHORT).show();
+//                        Toast.makeText(context, "Запрос на проведение создан", Toast.LENGTH_SHORT).show();
 //                        DialogData dialogData = new DialogData(context);
 //                        dialogData.setClose(dialogData::dismiss);
 

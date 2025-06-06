@@ -361,6 +361,8 @@ public class TablesLoadingUnloading {
 
         try {
             Log.e("TAG_TEST_WP", "RESPONSE_0 T");
+            Globals.writeToMLOG("INFO", "TablesLoadingUnloading/downloadWPData", "vpi: " + vpi);
+
             retrofit2.Call<WpDataServer> call = RetrofitBuilder.getRetrofitInterface().GET_WPDATA_VPI(mod, act, date_from, date_to, vpi);
             call.enqueue(new retrofit2.Callback<WpDataServer>() {
                 @Override
@@ -1661,6 +1663,9 @@ public class TablesLoadingUnloading {
     public void updateWpData() {
 
         Log.e("TEST_ERROR_WP", "ENTER");
+
+        if (true)
+            return;
 
         String mod = "plan";
         String act = "list";

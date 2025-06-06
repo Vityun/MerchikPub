@@ -43,7 +43,7 @@ public class SiteObjectsExchange {
                     try {
                         // todo ADD M_LOG
                         Log.e("SiteObjectsExchange", "3");
-                        Globals.writeToMLOG("INFO", "SiteObjectsExchange/downloadSiteObjects/Response", " response: " + (response.body() != null ? response.body().objectSQLList : "null"));
+//                        Globals.writeToMLOG("INFO", "SiteObjectsExchange/downloadSiteObjects/Response", " response: " + (response.body() != null ? response.body().objectSQLList : "null"));
 
                         if (response.body().state) {
                             if (response.body().error != null) {

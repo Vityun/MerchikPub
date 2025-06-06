@@ -41,6 +41,7 @@ public class MainExchange {
             Log.e("MAIN_test", "planogramDownload convertedObject: " + convertedObject);
 
             Log.e("TAG_TEST_WP", "RESPONSE_0 T");
+            Globals.writeToMLOG("INFO", "MainExchange/downloadWPData", "convertedObject: " + convertedObject);
             retrofit2.Call<WpDataServer> call = RetrofitBuilder.getRetrofitInterface().GET_WPDATA_VPI(RetrofitBuilder.contentType, convertedObject);
             call.enqueue(new retrofit2.Callback<>() {
                 @Override
@@ -50,7 +51,7 @@ public class MainExchange {
                         if (response.body().getState() && response.body().getList() != null
                                 && !response.body().getList().isEmpty()) {
                             List<WpDataDB> wpDataDBList = response.body().getList();
-                            Globals.writeToMLOG("INFO", "TablesLoadingUnloading/downloadWPData/onResponse", "wpDataDBList.size(): " + wpDataDBList.size());
+                            Globals.writeToMLOG("INFO", "MainExchange/downloadWPData/onResponse", "wpDataDBList.size(): " + wpDataDBList.size());
                             RealmManager.updateWorkPlanFromServer(wpDataDBList);
                             click.onSuccess(wpDataDBList.size());
 

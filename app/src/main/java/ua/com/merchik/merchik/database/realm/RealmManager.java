@@ -144,13 +144,14 @@ public class RealmManager {
     }
 
 
-
     /**
      * 04.06.2025 обновленная запись Плана работ
      */
 
     public static void updateWorkPlanFromServer(List<WpDataDB> serverData) {
         // Получаем текущие данные из Realm
+
+        Globals.writeToMLOG("INFO", "updateWorkPlanFromServer.start", "List<WpDataDB>.size: " + serverData.size());
         RealmResults<WpDataDB> localData = INSTANCE.where(WpDataDB.class).findAll();
 
         // Создаем мапу существующих данных для быстрого поиска по code_dad2
@@ -174,6 +175,7 @@ public class RealmManager {
                         localItem.getClient_start_dt() > 0 ||
                         localItem.getVisit_end_dt() > 0 ||
                         localItem.getClient_end_dt() > 0;
+                Globals.writeToMLOG("INFO", "updateWorkPlanFromServer", "SKIPPED -> WpDataDB dad2: " + serverItem.getCode_dad2());
 
                 if (workStarted) {
                     // Пропускаем записи, по которым уже начаты работы
@@ -181,11 +183,15 @@ public class RealmManager {
                 }
 
                 // Копируем ID существующей записи, чтобы обновить ее, а не создать новую
+                Globals.writeToMLOG("INFO", "updateWorkPlanFromServer", "WpDataDB dad2: " + serverItem.getCode_dad2() +
+                        " | id local: " + localItem.getId() + " | id server: " + serverItem.getId());
                 serverItem.setId(localItem.getId());
             }
 
+
             dataToUpdate.add(serverItem);
         }
+        Globals.writeToMLOG("INFO", "updateWorkPlanFromServer.final", "List<WpDataDB>.size: " + dataToUpdate.size());
 
         // Сохраняем данные в Realm в транзакции
         INSTANCE.executeTransaction(r -> {
@@ -523,7 +529,7 @@ public class RealmManager {
      * Запись в Реалм Опций
      */
     public static boolean setOptions2(List<OptionsDB> optionsDBS) {
-        globals.writeToMLOG( "_INFO.setOptions.sizeBefore: " + optionsDBS.size());
+        globals.writeToMLOG("_INFO.setOptions.sizeBefore: " + optionsDBS.size());
 
         // Удаление дубликатов по ключу
         Map<String, OptionsDB> map = new LinkedHashMap<>();
@@ -533,7 +539,7 @@ public class RealmManager {
             }
         }
         List<OptionsDB> uniqueList = new ArrayList<>(map.values());
-        globals.writeToMLOG( "_INFO.setOptions.sizeAfter: " + uniqueList.size());
+        globals.writeToMLOG("_INFO.setOptions.sizeAfter: " + uniqueList.size());
 
         INSTANCE.executeTransaction(realm -> {
             realm.insertOrUpdate(uniqueList); // безопасное сохранение без дубликатов
@@ -543,12 +549,12 @@ public class RealmManager {
     }
 
     public static boolean setOptions(List<OptionsDB> optionsDBS) {
-        globals.writeToMLOG( "_INFO.RealmManager.class.setOptions.Размер списка: " + optionsDBS.size() + "\n");
+        globals.writeToMLOG("_INFO.RealmManager.class.setOptions.Размер списка: " + optionsDBS.size() + "\n");
 
         INSTANCE.beginTransaction();
         INSTANCE.delete(OptionsDB.class);
         List<OptionsDB> res = INSTANCE.copyToRealmOrUpdate(optionsDBS);
-        globals.writeToMLOG( "_INFO.RealmManager.class.setOptions.Размер сохранённого списка: " + res.size() + "\n");
+        globals.writeToMLOG("_INFO.RealmManager.class.setOptions.Размер сохранённого списка: " + res.size() + "\n");
         INSTANCE.commitTransaction();
         return true;
     }
@@ -579,10 +585,10 @@ public class RealmManager {
         Log.e("REALM_DB_UPDATE", "setTovar_S");
 
         try {
-            globals.writeToMLOG( "_INFO.RealmManager.class.setTovar.Размер списка: " + list.size() + "\n");
+            globals.writeToMLOG("_INFO.RealmManager.class.setTovar.Размер списка: " + list.size() + "\n");
             Log.e("REALM_DB_UPDATE", "setTovar list.size(): " + list.size());
         } catch (Exception e) {
-            globals.writeToMLOG( "_INFO.RealmManager.class.setTovar.Ошибка1: " + e + "\n");
+            globals.writeToMLOG("_INFO.RealmManager.class.setTovar.Ошибка1: " + e + "\n");
             Log.e("REALM_DB_UPDATE", "setTovar Ошибка1: " + e);
         }
 
@@ -592,10 +598,10 @@ public class RealmManager {
 
 
         try {
-            globals.writeToMLOG( "_INFO.RealmManager.class.setTovar.Размер сохранённого списка: " + res.size() + "\n");
+            globals.writeToMLOG("_INFO.RealmManager.class.setTovar.Размер сохранённого списка: " + res.size() + "\n");
             Log.e("REALM_DB_UPDATE", "setTovar res.size(): " + res.size());
         } catch (Exception e) {
-            globals.writeToMLOG( "_INFO.RealmManager.class.setTovar.Ошибка2: " + e + "\n");
+            globals.writeToMLOG("_INFO.RealmManager.class.setTovar.Ошибка2: " + e + "\n");
             Log.e("REALM_DB_UPDATE", "setTovar Ошибка2: " + e);
         }
 
@@ -609,10 +615,10 @@ public class RealmManager {
         Log.e("REALM_DB_UPDATE", "setTovar_S");
 
         try {
-            globals.writeToMLOG( "_INFO.RealmManager.class.setTovar.Размер списка: " + list.size() + "\n");
+            globals.writeToMLOG("_INFO.RealmManager.class.setTovar.Размер списка: " + list.size() + "\n");
             Log.e("REALM_DB_UPDATE", "setTovar list.size(): " + list.size());
         } catch (Exception e) {
-            globals.writeToMLOG( "_INFO.RealmManager.class.setTovar.Ошибка1: " + e + "\n");
+            globals.writeToMLOG("_INFO.RealmManager.class.setTovar.Ошибка1: " + e + "\n");
             Log.e("REALM_DB_UPDATE", "setTovar Ошибка1: " + e);
         }
 
@@ -626,14 +632,14 @@ public class RealmManager {
                 }, () -> {
                     // Успешное завершение транзакции
                     Log.e("REALM_DB_UPDATE", "setTovar_E: Данные успешно сохранены");
-                    globals.writeToMLOG( "_INFO.RealmManager.class.setTovar.Данные успешно сохранены\n");
+                    globals.writeToMLOG("_INFO.RealmManager.class.setTovar.Данные успешно сохранены\n");
 
                     // Закрываем Realm после завершения
                     realm.close();
                 }, error -> {
                     // Обработка ошибки
                     Log.e("REALM_DB_UPDATE", "setTovar_E: Ошибка при сохранении данных", error);
-                    globals.writeToMLOG( "_INFO.RealmManager.class.setTovar.Ошибка при сохранении данных: " + error + "\n");
+                    globals.writeToMLOG("_INFO.RealmManager.class.setTovar.Ошибка при сохранении данных: " + error + "\n");
 
                     // Закрываем Realm в случае ошибки
                     realm.close();
@@ -982,7 +988,9 @@ public class RealmManager {
     // Получене фотографий для выгрузки на сервер
     //"SELECT * FROM stack_photo WHERE upload_to_server = '';"
     public static RealmResults<StackPhotoDB> getStackPhotoPhotoToUpload() {
-        return INSTANCE.where(StackPhotoDB.class).equalTo("upload_to_server", 0)
+        Globals.writeToMLOG("INFO", "startExchange/SamplePhotoExchange", "OK");
+
+        RealmResults<StackPhotoDB> realmResults = INSTANCE.where(StackPhotoDB.class).equalTo("upload_to_server", 0)
                 .equalTo("get_on_server", 0)
 //                .notEqualTo("photo_type", 18)// 08.01.24 Надо на сервер выгружать фото Товаров сделанные с ЗИР, да и вообще
                 .and()
@@ -991,6 +999,15 @@ public class RealmManager {
                 .isNotNull("photo_hash")
                 .isNotNull("time_event")
                 .findAll();
+        Globals.writeToMLOG("INFO", "RealmResults.getStackPhotoPhotoToUpload", "size: " + realmResults.size());
+        if (!realmResults.isEmpty()) {
+            List<StackPhotoDB> list = INSTANCE.copyFromRealm(realmResults);
+            for (StackPhotoDB st : list) {
+                Globals.writeToMLOG("INFO", "RealmResults.getStackPhotoPhotoToUpload", "StackPhotoDB id: "
+                        + st.getId());
+            }
+        }
+        return realmResults;
     }
 
 

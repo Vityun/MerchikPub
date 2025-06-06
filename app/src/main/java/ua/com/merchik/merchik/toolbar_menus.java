@@ -107,6 +107,7 @@ import ua.com.merchik.merchik.ServerExchange.TablesExchange.ShowcaseExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.VotesExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesLoadingUnloading;
 import ua.com.merchik.merchik.Utils.FileCompressor;
+import ua.com.merchik.merchik.Utils.LocationUtils;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.Database.Room.Chat.ChatSDB;
 import ua.com.merchik.merchik.data.Database.Room.ShowcaseSDB;
@@ -596,13 +597,13 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
     protected void onResume() {
         globals.handlerCount.removeCallbacks(runnableCron10);
         globals.handlerCount.postDelayed(runnableCron10, 1000);
-//        if (!LocationUtils.canUseLocationServices(this)) {
-//            showLocationRequiredDialog();
-//        } else {
-//            // Разрешение есть, GPS включен — продолжаем работу
-//            if (messageDialogBuilder != null && messageDialogBuilder.isShowing())
-//                messageDialogBuilder.dismiss();
-//        }
+        if (!LocationUtils.canUseLocationServices(this)) {
+            showLocationRequiredDialog();
+        } else {
+            // Разрешение есть, GPS включен — продолжаем работу
+            if (messageDialogBuilder != null && messageDialogBuilder.isShowing())
+                messageDialogBuilder.dismiss();
+        }
         super.onResume();
     }
 
@@ -1318,7 +1319,7 @@ public class toolbar_menus extends AppCompatActivity implements NavigationView.O
                     if (Exchange.exchangeTime + exchange.retryTime < System.currentTimeMillis())
                         exchange.startExchange();
                     else {
-                        exchange.sendWpData2();
+//                        exchange.sendWpData2();
                         exchange.sendTAR();              // Выгрузка на сервер ЗИР-а
                         exchange.uploadTARComments(null);    // Выгрузка ЗИР переписки(коммнетариев)
 //                        exchange.downloadAchievements();

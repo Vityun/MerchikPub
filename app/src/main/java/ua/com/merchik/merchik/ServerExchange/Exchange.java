@@ -238,7 +238,7 @@ public class Exchange {
 
                 try {
 
-                    sendWpData2();
+//                    sendWpData2();
 
                     updateLanguages();  // Обновление языков
                     updateSiteObj();    // Обновление Обьектов Сайта
