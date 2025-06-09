@@ -237,7 +237,8 @@ public class DetailedReportOptionsFrag extends Fragment {
                     buttonMakeAReport.setOnClickListener(b -> {
                         try {
                             List<OptionsDB> opt = workPlan.getOptionButtons2(workPlan.getWpOpchetId(wpDataDB), wpDataDB.getId());
-                            WpDataDB wp = WpDataRealm.getWpDataRowByDad2Id(wpDataDB.getCode_dad2());
+//                            WpDataDB wp = WpDataRealm.getWpDataRowByDad2Id(wpDataDB.getCode_dad2());
+                            Globals.writeToMLOG("ERROR", "buttonMakeAReport.setOnClickListener", "getCode_dad2: " + wpDataDB.getCode_dad2());
 
                             try {
                                 SMSExchange smsExchange = new SMSExchange();
@@ -269,21 +270,22 @@ public class DetailedReportOptionsFrag extends Fragment {
                             }
 
 
-                            new Options().conduct(getContext(), wp, opt, DEFAULT_CONDUCT, new Clicks.click() {
+                            new Options().conduct(getContext(), wpDataDB, opt, DEFAULT_CONDUCT, new Clicks.click() {
                                 @Override
                                 public <T> void click(T data) {
                                     OptionsDB optionsDB = (OptionsDB) data;
                                     int scrollPosition = recycleViewDRAdapter.getItemPosition(optionsDB);
                                     OptionMassageType msgType = new OptionMassageType();
                                     msgType.type = OptionMassageType.Type.DIALOG;
-                                    new Options().optControl(getContext(), wp, optionsDB, Integer.parseInt(optionsDB.getOptionControlId()), null, msgType, Options.NNKMode.CHECK, new OptionControl.UnlockCodeResultListener() {
+                                    new Options().optControl(getContext(), wpDataDB, optionsDB, Integer.parseInt(optionsDB.getOptionControlId()), null, msgType, Options.NNKMode.CHECK, new OptionControl.UnlockCodeResultListener() {
                                         @Override
                                         public void onUnlockCodeSuccess() {
-
+                                            Globals.writeToMLOG("ERROR", "buttonMakeAReport.setOnClickListener.Options().conduct", "onUnlockCodeSuccess");
                                         }
 
                                         @Override
                                         public void onUnlockCodeFailure() {
+                                            Globals.writeToMLOG("ERROR", "buttonMakeAReport.setOnClickListener.Options().conduct", "onUnlockCodeFailure");
 
                                         }
                                     });
@@ -302,11 +304,13 @@ public class DetailedReportOptionsFrag extends Fragment {
                                     public <T> void onSuccess(T data) {
                                         String msg = (String) data;
                                         Toast.makeText(requireContext(), msg, Toast.LENGTH_LONG).show();
+                                        Globals.writeToMLOG("ERROR", "buttonMakeAReport.setOnClickListener.exchange.sendWpDataToServer", "onSuccess: " + data);
                                     }
 
                                     @Override
                                     public void onFailure(String error) {
                                         Toast.makeText(requireContext(), error, Toast.LENGTH_LONG).show();
+                                        Globals.writeToMLOG("ERROR", "buttonMakeAReport.setOnClickListener.exchange.sendWpDataToServer", "onFailure: " + error);
                                     }
                                 });
                             }
