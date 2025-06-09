@@ -22,6 +22,7 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 import ua.com.merchik.merchik.Globals;
+import ua.com.merchik.merchik.ServerExchange.feature.SyncCallable;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.Database.Room.Planogram.PlanogrammSDB;
 import ua.com.merchik.merchik.data.Database.Room.Planogram.PlanogrammTypeSDB;
@@ -35,7 +36,7 @@ import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
 
 public class PlanogrammTableExchange {
 
-    public void planogramDownload(Clicks.clickObjectAndStatus click) {
+    public void planogramDownload(SyncCallable click) {
         Set<Integer> uniquePlanogrammId = new HashSet<>();
 
         List<PlanogrammSDB> planogrammList = SQL_DB.planogrammDao().getAll();
@@ -53,36 +54,17 @@ public class PlanogrammTableExchange {
         Gson gson = new Gson();
         String json = gson.toJson(data);
         JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
-        Log.e("MAIN_test", "planogramDownload convertedObject: " + convertedObject);
-
-//        retrofit2.Call<JsonObject> call1 = RetrofitBuilder.getRetrofitInterface().TEST_JSON_UPLOAD(RetrofitBuilder.contentType, convertedObject);
-//        call1.enqueue(new Callback<JsonObject>() {
-//            @Override
-//            public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
-//                Log.e("planogramDownload", "planogramDownload: " + response.body());
-//                Globals.writeToMLOG("INFO", "1_D_PlanogrammSDB", "response: " + response.body());
-//            }
-//
-//            @Override
-//            public void onFailure(Call<JsonObject> call, Throwable t) {
-//                Log.e("planogramDownload", "planogramDownloadThrowable t: " + t);
-//                Globals.writeToMLOG("INFO", "1_D_PlanogrammSDB", "Throwable t: " + t);
-//            }
-//        });
-
+        Globals.writeToMLOG("INFO", "PlanogrammTableExchange/planogramDownload", "convertedObject: " + convertedObject);
         retrofit2.Call<PlanogrammResponse> call = RetrofitBuilder.getRetrofitInterface().Planogramm_RESPONSE(RetrofitBuilder.contentType, convertedObject);
         call.enqueue(new Callback<PlanogrammResponse>() {
             @Override
             public void onResponse(Call<PlanogrammResponse> call, Response<PlanogrammResponse> response) {
-                Log.e("MAIN_test", "planogramDownload: " + response);
-                Log.e("MAIN_test", "planogramDownload body: " + response.body());
 
-                Log.e("test", "test" + response);
                 try {
                     if (response.isSuccessful()) {
                         if (response.body() != null) {
                             if (response.body().state) {
-                                if (response.body().list != null && response.body().list.size() > 0) {
+                                if (response.body().list != null && !response.body().list.isEmpty()) {
 
                                     for (PlanogrammSDB item : response.body().list) {
                                         if (item.dtStart.getTime() < 0) {
@@ -99,7 +81,7 @@ public class PlanogrammTableExchange {
                                                 @Override
                                                 public void onComplete() {
                                                     Globals.writeToMLOG("INFO", "PlanogrammTableExchange/planogramDownload/onResponse/onComplete", "OK: " + response.body().list.size());
-//                                                    click.onSuccess(response.body().list);
+                                                    click.onSuccess(response.body().list.size());
                                                 }
 
                                                 @Override
@@ -123,13 +105,14 @@ public class PlanogrammTableExchange {
                     }
                 } catch (Exception e) {
                     Globals.writeToMLOG("ERROR", "PlanogrammTableExchange/planogramDownload/onResponse", "Exception e: " + e);
-                    click.onFailure("Ошибка запроса. Exception e: " + e);
+                    click.onFailure("Ошибка запроса. Exception e: " + e.getMessage());
                 }
             }
 
             @Override
             public void onFailure(Call<PlanogrammResponse> call, Throwable t) {
                 Log.e("MAIN_test", "planogramDownload: " + t);
+                click.onFailure("Ошибка запроса. Exception e: " + t.getMessage());
                 Globals.writeToMLOG("ERROR", "PlanogrammTableExchange/planogramDownload/onFailure", "Exception e: " + t.getMessage());
 
             }
@@ -137,7 +120,7 @@ public class PlanogrammTableExchange {
     }
 
     // Загрузка Планограмм Адресов
-    public void planogrammAddressDownload(Clicks.clickObjectAndStatus click) {
+    public void planogrammAddressDownload(SyncCallable click) {
         StandartData data = new StandartData();
         data.mod = "planogram";
         data.act = "addr_list";
@@ -146,27 +129,23 @@ public class PlanogrammTableExchange {
         Gson gson = new Gson();
         String json = gson.toJson(data);
         JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
-        Log.e("MAIN_test", "planogrammAddressDownload convertedObject: " + convertedObject);
-
+        Globals.writeToMLOG("INFO", "PlanogrammTableExchange/planogrammAddressDownload", "convertedObject: " + convertedObject);
         retrofit2.Call<PlanogrammAddressResponse> call = RetrofitBuilder.getRetrofitInterface().Planogramm_ADDRESS_RESPONSE(RetrofitBuilder.contentType, convertedObject);
         call.enqueue(new Callback<PlanogrammAddressResponse>() {
             @Override
             public void onResponse(Call<PlanogrammAddressResponse> call, Response<PlanogrammAddressResponse> response) {
-                Log.e("MAIN_test", "planogrammAddressDownload: " + response);
-                Log.e("MAIN_test", "planogrammAddressDownload body: " + response.body());
-
-                Log.e("test", "test" + response);
                 try {
                     if (response.isSuccessful()) {
                         if (response.body() != null) {
                             if (response.body().state) {
-                                if (response.body().list != null && response.body().list.size() > 0) {
+                                if (response.body().list != null && !response.body().list.isEmpty()) {
                                     SQL_DB.planogrammAddressDao().insertAll(response.body().list)
                                             .subscribeOn(Schedulers.io())
                                             .subscribe(new DisposableCompletableObserver() {
                                                 @Override
                                                 public void onComplete() {
                                                     Globals.writeToMLOG("INFO", "PlanogrammTableExchange/planogrammAddressDownload/onResponse/onComplete", "OK: " + response.body().list.size());
+                                                    click.onSuccess(response.body().list.size());
                                                 }
 
                                                 @Override
@@ -194,14 +173,15 @@ public class PlanogrammTableExchange {
 
             @Override
             public void onFailure(Call<PlanogrammAddressResponse> call, Throwable t) {
-                Log.e("MAIN_test", "planogrammAddressDownload: " + t);
+                Globals.writeToMLOG("ERROR", "PlanogrammTableExchange/planogrammAddressDownload/onFailure", "Exception e: " + t.getMessage());
+                click.onFailure("Ошибка запроса. Exception e: " + t.getMessage());
             }
         });
     }
 
 
     // Загрузка Планограмм Групп
-    public void planogrammGroupDownload(Clicks.clickObjectAndStatus click) {
+    public void planogrammGroupDownload(SyncCallable click) {
         StandartData data = new StandartData();
         data.mod = "planogram";
         data.act = "group_list";
@@ -211,30 +191,12 @@ public class PlanogrammTableExchange {
         String json = gson.toJson(data);
         JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
         Log.e("MAIN_test", "planogrammGroupDownload convertedObject: " + convertedObject);
-
-//        retrofit2.Call<JsonObject> call1 = RetrofitBuilder.getRetrofitInterface().TEST_JSON_UPLOAD(RetrofitBuilder.contentType, convertedObject);
-//        call1.enqueue(new Callback<JsonObject>() {
-//            @Override
-//            public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
-//                Log.e("planogramDownload", "planogramDownload: " + response.body());
-//                Globals.writeToMLOG("INFO", "1_D_PlanogrammSDB", "response: " + response.body());
-//            }
-//
-//            @Override
-//            public void onFailure(Call<JsonObject> call, Throwable t) {
-//                Log.e("planogramDownload", "planogramDownloadThrowable t: " + t);
-//                Globals.writeToMLOG("INFO", "1_D_PlanogrammSDB", "Throwable t: " + t);
-//            }
-//        });
-
+        Globals.writeToMLOG("INFO", "PlanogrammTableExchange/planogrammGroupDownload", "convertedObject: " + convertedObject);
         retrofit2.Call<PlanogrammGroupResponse> call = RetrofitBuilder.getRetrofitInterface().Planogramm_GROUP_RESPONSE(RetrofitBuilder.contentType, convertedObject);
         call.enqueue(new Callback<PlanogrammGroupResponse>() {
             @Override
             public void onResponse(Call<PlanogrammGroupResponse> call, Response<PlanogrammGroupResponse> response) {
-                Log.e("MAIN_test", "planogrammGroupDownload: " + response);
-                Log.e("MAIN_test", "planogrammGroupDownload body: " + response.body());
 
-                Log.e("test", "test" + response);
                 try {
                     if (response.isSuccessful()) {
                         if (response.body() != null) {
@@ -245,6 +207,7 @@ public class PlanogrammTableExchange {
                                             .subscribe(new DisposableCompletableObserver() {
                                                 @Override
                                                 public void onComplete() {
+                                                    click.onSuccess(response.body().list.size());
                                                     Globals.writeToMLOG("INFO", "PlanogrammTableExchange/planogrammGroupDownload/onResponse/onComplete", "OK: " + response.body().list.size());
                                                 }
 
@@ -273,14 +236,15 @@ public class PlanogrammTableExchange {
 
             @Override
             public void onFailure(Call<PlanogrammGroupResponse> call, Throwable t) {
-                Log.e("MAIN_test", "planogrammGroupDownload: " + t);
+                Globals.writeToMLOG("ERROR", "PlanogrammTableExchange/planogrammGroupDownload/onResponse", "Exception e: " + t.getMessage());
+                click.onFailure("Ошибка запроса. Exception e: " + t.getMessage());
             }
         });
     }
 
 
     // Загрузка Планограмм Витрин
-    public void planogrammImagesDownload(Clicks.clickObjectAndStatus click) {
+    public void planogrammImagesDownload(SyncCallable click) {
         StandartData data = new StandartData();
         data.mod = "planogram";
         data.act = "img_list";
@@ -289,16 +253,11 @@ public class PlanogrammTableExchange {
         Gson gson = new Gson();
         String json = gson.toJson(data);
         JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
-        Log.e("MAIN_test", "planogrammImagesDownload convertedObject: " + convertedObject);
-
+        Globals.writeToMLOG("INFO", "PlanogrammTableExchange/planogrammImagesDownload", "convertedObject: " + convertedObject);
         retrofit2.Call<PlanogrammImagesResponse> call = RetrofitBuilder.getRetrofitInterface().Planogramm_IMAGES_RESPONSE(RetrofitBuilder.contentType, convertedObject);
         call.enqueue(new Callback<PlanogrammImagesResponse>() {
             @Override
             public void onResponse(Call<PlanogrammImagesResponse> call, Response<PlanogrammImagesResponse> response) {
-                Log.e("MAIN_test", "planogrammImagesDownload: " + response);
-                Log.e("MAIN_test", "planogrammImagesDownload body: " + response.body());
-
-                Log.e("test", "test" + response);
                 try {
                     if (response.isSuccessful()) {
                         if (response.body() != null) {
@@ -309,6 +268,7 @@ public class PlanogrammTableExchange {
                                             .subscribe(new DisposableCompletableObserver() {
                                                 @Override
                                                 public void onComplete() {
+                                                    click.onSuccess(response.body().list.size());
                                                     Globals.writeToMLOG("INFO", "PlanogrammTableExchange/planogrammImagesDownload/onResponse/onComplete", "OK: " + response.body().list.size());
                                                 }
 
@@ -337,12 +297,13 @@ public class PlanogrammTableExchange {
 
             @Override
             public void onFailure(Call<PlanogrammImagesResponse> call, Throwable t) {
-                Log.e("MAIN_test", "planogrammImagesDownload: " + t);
+                Globals.writeToMLOG("ERROR", "PlanogrammTableExchange/planogrammImagesDownload/onResponse", "Exception e: " + t.getMessage());
+                click.onFailure("Ошибка запроса. Exception e: " + t.getMessage());
             }
         });
     }
 
-    public void planorgammType() {
+    public void planorgammType(SyncCallable click) {
         Set<String> uniquePlanogrammId = new HashSet<>();
 
         List<PlanogrammTypeSDB> planogrammList = SQL_DB.planogrammTypeDao().getAllPlanogramsm();
@@ -357,9 +318,6 @@ public class PlanogrammTableExchange {
         data.nolimit = "1";
         data.id_exclude_old = new ArrayList<>(uniquePlanogrammId);
 
-//        data.date_from = Clock.today_7;
-//        data.date_to = Clock.tomorrow7;
-
         Gson gson = new Gson();
         String json = gson.toJson(data);
         JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
@@ -368,111 +326,142 @@ public class PlanogrammTableExchange {
                 .Planogramm_TYPE_RESPONSE(RetrofitBuilder.contentType, convertedObject)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(planorgammType -> {
-                    if (planorgammType.state && planorgammType.list != null) {
-                        SQL_DB.planogrammTypeDao()
-                                .insertAll(planorgammType.list)
-                                .subscribeOn(Schedulers.io())
-                                .subscribe();
-                        Globals.writeToMLOG("INFO", "PlanogrammTableExchange/planogrammType", "Data inserted successfully");
+                .flatMapCompletable(planorgammType -> {
+                    if (planorgammType.state) {
+                        if (planorgammType.list != null && !planorgammType.list.isEmpty()) {
+                            return SQL_DB.planogrammTypeDao()
+                                    .insertAll(planorgammType.list)
+                                    .doOnComplete(() -> {
+                                        Globals.writeToMLOG("INFO", "PlanogrammTableExchange/planogrammType",
+                                                "Data inserted successfully. Count: " + planorgammType.list.size());
+                                        click.onSuccess(planorgammType.list.size());
+                                    });
+                        } else {
+                            String errorMsg = "Ошибка запроса. Пустой список.";
+                            Globals.writeToMLOG("ERROR", "PlanogrammTableExchange/planogrammType", errorMsg);
+                            throw new RuntimeException(errorMsg);
+                        }
+                    } else {
+                        String errorMsg = "Ошибка запроса. State=false";
+                        Globals.writeToMLOG("ERROR", "PlanogrammTableExchange/planogrammType", errorMsg);
+                        throw new RuntimeException(errorMsg);
                     }
-                }, throwable -> Globals.writeToMLOG("ERROR", "PlanogrammTableExchange/planorgammType", "exeption: " + throwable.getMessage()));
+                })
+                .subscribe(
+                        () -> {
+                        },
+                        throwable -> {
+                            String errorMsg = "Ошибка запроса: " + throwable.getMessage();
+                            Globals.writeToMLOG("ERROR", "PlanogrammTableExchange/planogrammType", errorMsg);
+                            click.onFailure(errorMsg);
+                        }
+                );
+//                .subscribe(planorgammType -> {
+//                    if (planorgammType.state && planorgammType.list != null && !planorgammType.list.isEmpty()) {
+//                        SQL_DB.planogrammTypeDao()
+//                                .insertAll(planorgammType.list)
+//                                .subscribeOn(Schedulers.io())
+//                                .subscribe();
+//                        Globals.writeToMLOG("INFO", "PlanogrammTableExchange/planogrammType", "Data inserted successfully");
+//                    }
+//                }, throwable -> Globals.writeToMLOG("ERROR", "PlanogrammTableExchange/planorgammType", "exeption: " + throwable.getMessage()));
 
     }
 
-    public void planogramTypeList(Clicks.clickObjectAndStatus click) {
-        StandartData data = new StandartData();
-        data.mod = "planogram";
-        data.act = "tt_type_list";
-        data.nolimit = "1";
-
-        Gson gson = new Gson();
-        String json = gson.toJson(data);
-        JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
-        Log.e("MAIN_test", "planogramDownload convertedObject: " + convertedObject);
-
-//        retrofit2.Call<JsonObject> call1 = RetrofitBuilder.getRetrofitInterface().TEST_JSON_UPLOAD(RetrofitBuilder.contentType, convertedObject);
-//        call1.enqueue(new Callback<JsonObject>() {
+//    public void planogramTypeList(Clicks.clickObjectAndStatus click) {
+//        StandartData data = new StandartData();
+//        data.mod = "planogram";
+//        data.act = "tt_type_list";
+//        data.nolimit = "1";
+//
+//        Gson gson = new Gson();
+//        String json = gson.toJson(data);
+//        JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
+//        Log.e("MAIN_test", "planogramDownload convertedObject: " + convertedObject);
+//
+////        retrofit2.Call<JsonObject> call1 = RetrofitBuilder.getRetrofitInterface().TEST_JSON_UPLOAD(RetrofitBuilder.contentType, convertedObject);
+////        call1.enqueue(new Callback<JsonObject>() {
+////            @Override
+////            public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
+////                Log.e("planogramDownload", "planogramDownload: " + response.body());
+////                Globals.writeToMLOG("INFO", "1_D_PlanogrammSDB", "response: " + response.body());
+////            }
+////
+////            @Override
+////            public void onFailure(Call<JsonObject> call, Throwable t) {
+////                Log.e("planogramDownload", "planogramDownloadThrowable t: " + t);
+////                Globals.writeToMLOG("INFO", "1_D_PlanogrammSDB", "Throwable t: " + t);
+////            }
+////        });
+//
+//        retrofit2.Call<PlanogrammResponse> call = RetrofitBuilder.getRetrofitInterface().Planogramm_RESPONSE(RetrofitBuilder.contentType, convertedObject);
+//        call.enqueue(new Callback<PlanogrammResponse>() {
 //            @Override
-//            public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
-//                Log.e("planogramDownload", "planogramDownload: " + response.body());
-//                Globals.writeToMLOG("INFO", "1_D_PlanogrammSDB", "response: " + response.body());
+//            public void onResponse(Call<PlanogrammResponse> call, Response<PlanogrammResponse> response) {
+//                Log.e("MAIN_test", "planogramDownload: " + response);
+//                Log.e("MAIN_test", "planogramDownload body: " + response.body());
+//                try {
+//                    if (response.isSuccessful()) {
+//                        if (response.body() != null) {
+//                            if (response.body().state) {
+//                                if (response.body().list != null && response.body().list.size() > 0) {
+//
+//                                    for (PlanogrammSDB item : response.body().list) {
+//                                        if (item.dtStart.getTime() < 0) {
+//                                            item.dtStart = null;
+//                                        }
+//                                        if (item.dtEnd.getTime() < 0) {
+//                                            item.dtEnd = null;
+//                                        }
+//                                    }
+//
+//                                    SQL_DB.planogrammDao().insertAll(response.body().list)
+//                                            .subscribeOn(Schedulers.io())
+//                                            .subscribe(new DisposableCompletableObserver() {
+//                                                @Override
+//                                                public void onComplete() {
+//                                                    Log.d("test", "test");
+//                                                    Globals.writeToMLOG("INFO", "PlanogrammTableExchange/planogramDownload/onResponse/onComplete", "OK: " + response.body().list.size());
+////                                                    click.onSuccess(response.body().list);
+//                                                }
+//
+//                                                @Override
+//                                                public void onError(@io.reactivex.rxjava3.annotations.NonNull Throwable e) {
+//                                                    Log.d("test", "test");
+//                                                    Globals.writeToMLOG("ERROR", "PlanogrammTableExchange/planogramDownload/onResponse/onError", "Throwable e: " + e);
+//                                                    click.onFailure("onError SQL_DB.planogramDownload().insertAll Throwable e: " + e);
+//                                                }
+//                                            });
+//
+
+    /// /                                    click.onSuccess(response.body().list);
+//                                }
+//
+//                            } else {
+//                                click.onFailure("Ошибка запроса. State=false");
+//                            }
+//                        } else {
+//                            click.onFailure("Ошибка запроса. Тело пришло пустым.");
+//                        }
+//                    } else {
+//                        click.onFailure("Ошибка запроса. Код: " + response.code());
+//                    }
+//                } catch (Exception e) {
+//                    Globals.writeToMLOG("ERROR", "PlanogrammTableExchange/planogramDownload/onResponse", "Exception e: " + e);
+//                    click.onFailure("Ошибка запроса. Exception e: " + e);
+//                }
 //            }
 //
 //            @Override
-//            public void onFailure(Call<JsonObject> call, Throwable t) {
-//                Log.e("planogramDownload", "planogramDownloadThrowable t: " + t);
-//                Globals.writeToMLOG("INFO", "1_D_PlanogrammSDB", "Throwable t: " + t);
+//            public void onFailure(Call<PlanogrammResponse> call, Throwable t) {
+//                Log.e("MAIN_test", "planogramDownload: " + t);
 //            }
 //        });
-
-        retrofit2.Call<PlanogrammResponse> call = RetrofitBuilder.getRetrofitInterface().Planogramm_RESPONSE(RetrofitBuilder.contentType, convertedObject);
-        call.enqueue(new Callback<PlanogrammResponse>() {
-            @Override
-            public void onResponse(Call<PlanogrammResponse> call, Response<PlanogrammResponse> response) {
-                Log.e("MAIN_test", "planogramDownload: " + response);
-                Log.e("MAIN_test", "planogramDownload body: " + response.body());
-                try {
-                    if (response.isSuccessful()) {
-                        if (response.body() != null) {
-                            if (response.body().state) {
-                                if (response.body().list != null && response.body().list.size() > 0) {
-
-                                    for (PlanogrammSDB item : response.body().list) {
-                                        if (item.dtStart.getTime() < 0) {
-                                            item.dtStart = null;
-                                        }
-                                        if (item.dtEnd.getTime() < 0) {
-                                            item.dtEnd = null;
-                                        }
-                                    }
-
-                                    SQL_DB.planogrammDao().insertAll(response.body().list)
-                                            .subscribeOn(Schedulers.io())
-                                            .subscribe(new DisposableCompletableObserver() {
-                                                @Override
-                                                public void onComplete() {
-                                                    Log.d("test", "test");
-                                                    Globals.writeToMLOG("INFO", "PlanogrammTableExchange/planogramDownload/onResponse/onComplete", "OK: " + response.body().list.size());
-//                                                    click.onSuccess(response.body().list);
-                                                }
-
-                                                @Override
-                                                public void onError(@io.reactivex.rxjava3.annotations.NonNull Throwable e) {
-                                                    Log.d("test", "test");
-                                                    Globals.writeToMLOG("ERROR", "PlanogrammTableExchange/planogramDownload/onResponse/onError", "Throwable e: " + e);
-                                                    click.onFailure("onError SQL_DB.planogramDownload().insertAll Throwable e: " + e);
-                                                }
-                                            });
-
-//                                    click.onSuccess(response.body().list);
-                                }
-
-                            } else {
-                                click.onFailure("Ошибка запроса. State=false");
-                            }
-                        } else {
-                            click.onFailure("Ошибка запроса. Тело пришло пустым.");
-                        }
-                    } else {
-                        click.onFailure("Ошибка запроса. Код: " + response.code());
-                    }
-                } catch (Exception e) {
-                    Globals.writeToMLOG("ERROR", "PlanogrammTableExchange/planogramDownload/onResponse", "Exception e: " + e);
-                    click.onFailure("Ошибка запроса. Exception e: " + e);
-                }
-            }
-
-            @Override
-            public void onFailure(Call<PlanogrammResponse> call, Throwable t) {
-                Log.e("MAIN_test", "planogramDownload: " + t);
-            }
-        });
-    }
+//    }
 
 
     // Загрузка таблицы визитов планоргам
-    public void planogrammVisitShowcase() {
+    public void planogrammVisitShowcase(SyncCallable click) {
 
         Set<Integer> uniquePlanogrammId = new HashSet<>();
 
@@ -491,67 +480,49 @@ public class PlanogrammTableExchange {
         data.nolimit = "1";
         data.id_exclude_old = new ArrayList<>(uniquePlanogrammId);
 
-//        data.date_from = Clock.today_7;
-//        data.date_to = Clock.tomorrow7;
-
-//        SynchronizationTimetableDB synchronizationTimetableDB = RealmManager.INSTANCE.copyFromRealm(RealmManager.getSynchronizationTimetableRowByTable("vizit_showcase_list"));
-//        data.dt_change_from = String.valueOf(synchronizationTimetableDB.getVpi_app());
-
         Gson gson = new Gson();
         String json = gson.toJson(data);
         JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
-
-//        retrofit2.Call<JsonObject> call1 = RetrofitBuilder.getRetrofitInterface().TEST_JSON_UPLOAD(RetrofitBuilder.contentType, convertedObject);
-//        call1.enqueue(new Callback<JsonObject>() {
-//            @Override
-//            public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
-//                Log.e("planogramDownload", "planogramDownload: " + response.body());
-//                Globals.writeToMLOG("INFO", "1_D_PlanogrammSDB", "response: " + response.body());
-//
-//            }
-//
-//            @Override
-//            public void onFailure(Call<JsonObject> call, Throwable t) {
-//                Log.e("planogramDownload", "planogramDownloadThrowable t: " + t);
-//                Globals.writeToMLOG("INFO", "1_D_PlanogrammSDB", "Throwable t: " + t);
-//            }
-//        });
-
 
         RetrofitBuilder.getRetrofitInterface()
                 .PLANOGRAMM_VIZIT_SHOWCASE_RESPONSE(RetrofitBuilder.contentType, convertedObject)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(planogrammVizitShowcaseResponse -> {
-                    Log.e("!!!!!!",">> !");
-                            if (planogrammVizitShowcaseResponse.state && planogrammVizitShowcaseResponse.list != null
-                                    && !planogrammVizitShowcaseResponse.list.isEmpty()) {
+                .subscribe(
+                        response -> {
+                            if (response.state && response.list != null && !response.list.isEmpty()) {
                                 SQL_DB.planogrammVizitShowcaseDao()
-                                        .insertAll(planogrammVizitShowcaseResponse.list)
+                                        .insertAll(response.list)
                                         .subscribeOn(Schedulers.io())
                                         .observeOn(AndroidSchedulers.mainThread())
                                         .subscribe(new DisposableCompletableObserver() {
                                             @Override
                                             public void onComplete() {
-//                                        RealmManager.INSTANCE.executeTransaction(realm -> {
-//                                            synchronizationTimetableDB.setVpi_app(System.currentTimeMillis() / 1000);
-//                                            realm.copyToRealmOrUpdate(synchronizationTimetableDB);
-//                                        });
-                                                Globals.writeToMLOG("INFO", "PlanogrammTableExchange/planogrammVisitShowcase", "Data size: " + planogrammVizitShowcaseResponse.list.size());
+                                                Globals.writeToMLOG("INFO", "PlanogrammTableExchange/planogrammVisitShowcase",
+                                                        "Data inserted. Size: " + response.list.size());
+                                                click.onSuccess(response.list.size());
                                             }
 
                                             @Override
                                             public void onError(@NonNull Throwable e) {
-
+                                                Globals.writeToMLOG("ERROR", "PlanogrammTableExchange/planogrammVisitShowcase",
+                                                        "DB error: " + e.getMessage());
+                                                click.onFailure("DB error: " + e.getMessage());
                                             }
                                         });
-                                Globals.writeToMLOG("INFO", "PlanogrammTableExchange/planogrammVisitShowcase", "Data inserted successfully");
+                            } else {
+                                String errorMsg = !response.state ? "State=false" : "Empty list";
+                                Globals.writeToMLOG("ERROR", "PlanogrammTableExchange/planogrammVisitShowcase", errorMsg);
+                                click.onFailure(errorMsg);
                             }
                         },
                         throwable -> {
-                            String er = throwable.getMessage();
-                            Globals.writeToMLOG("ERROR", "PlanogrammTableExchange/planogrammVisitShowcase", "exeption: " + throwable.getMessage());
-                        });
+                            Globals.writeToMLOG("ERROR", "PlanogrammTableExchange/planogrammVisitShowcase",
+                                    "Network error: " + throwable.getMessage());
+                            click.onFailure("Network error: " + throwable.getMessage());
+                        }
+                );
+
     }
 
 
@@ -575,14 +546,6 @@ public class PlanogrammTableExchange {
         JsonElement planogramJsonArray = gson.toJsonTree(planogrammVizitShowcaseSDBList);
 //        JsonElement planogramJsonArray = gson.toJsonTree(Collections.singletonList(planogram));
         jsonObject.add("list", planogramJsonArray);
-
-
-//        Gson gson2 = new GsonBuilder().setPrettyPrinting().create();
-//        String json = gson.toJson(planograms);
-
-
-//        JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
-
 
         retrofit2.Call<JsonObject> call1 = RetrofitBuilder.getRetrofitInterface().TEST_JSON_UPLOAD(RetrofitBuilder.contentType, jsonObject);
         call1.enqueue(new Callback<JsonObject>() {
@@ -643,38 +606,6 @@ public class PlanogrammTableExchange {
         });
 
 
-//        RetrofitBuilder.getRetrofitInterface()
-//                .PLANOGRAMM_VIZIT_SHOWCASE_RESPONSE(RetrofitBuilder.contentType, convertedObject)
-//                .subscribeOn(Schedulers.io())
-//                .observeOn(AndroidSchedulers.mainThread())
-//                .subscribe(planogrammVizitShowcaseResponse -> {
-//                            if (planogrammVizitShowcaseResponse.state && planogrammVizitShowcaseResponse.list != null) {
-//                                SQL_DB.planogrammVizitShowcaseDao()
-//                                        .insertAll(planogrammVizitShowcaseResponse.list)
-//                                        .subscribeOn(Schedulers.io())
-//                                        .subscribe();
-//                                Globals.writeToMLOG("INFO", "PlanogrammTableExchange/planogrammVisitShowcase", "Data inserted successfully");
-//                            }
-//                        },
-//                        throwable -> {
-//                            String er = throwable.getMessage();
-//                            Globals.writeToMLOG("ERROR", "PlanogrammTableExchange/planogrammVisitShowcase", "exeption: " + throwable.getMessage());
-//                        });
-
     }
 
-//    private class PlanogrammVisitShowcaseUploadDataResponse {
-//        @SerializedName("state")
-//        public Boolean state;
-//
-//        @SerializedName("list")
-//        public List<> list;
-//
-//        @SerializedName("error")
-//        public String error;
-//    }
-//
-//    private class ResponseResult {
-//        boolean
-//    }
 }

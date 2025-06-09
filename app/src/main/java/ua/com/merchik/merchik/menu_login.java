@@ -63,7 +63,8 @@ import ua.com.merchik.merchik.ServerExchange.Exchange;
 import ua.com.merchik.merchik.ServerExchange.ExchangeInterface;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.SiteObjectsExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesLoadingUnloading;
-import ua.com.merchik.merchik.ServerExchange.workmager.WorkManagerHelper;
+import ua.com.merchik.merchik.ServerExchange.feature.DataSyncRepository;
+import ua.com.merchik.merchik.ServerExchange.feature.KotlinBridge;
 import ua.com.merchik.merchik.Utils.CheckAndLogCompetitorAppsOnDevice;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.RealmModels.AppUsersDB;
@@ -87,7 +88,9 @@ import ua.com.merchik.merchik.dialogs.DialogSupport;
 import ua.com.merchik.merchik.dialogs.DialogTelephoneRegistration;
 import ua.com.merchik.merchik.dialogs.DialogsRecyclerViewAdapter.DialogAdapter;
 import ua.com.merchik.merchik.dialogs.DialogsRecyclerViewAdapter.ViewHolderTypeList;
+import ua.com.merchik.merchik.dialogs.features.LoadingDialogWithPercent;
 import ua.com.merchik.merchik.dialogs.features.MessageDialogBuilder;
+import ua.com.merchik.merchik.dialogs.features.dialogLoading.ProgressViewModel;
 import ua.com.merchik.merchik.dialogs.features.dialogMessage.DialogStatus;
 import ua.com.merchik.merchik.retrofit.MyCookieJar;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
@@ -149,6 +152,8 @@ public class menu_login extends AppCompatActivity {
     Button but1;
     Button but2;
 
+    private ProgressViewModel progressDialog;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -185,6 +190,7 @@ public class menu_login extends AppCompatActivity {
 //            intent = new Intent(menu_login.this, MenuMainActivity.class);
             intent = new Intent(menu_login.this, WPDataActivity.class);
             intent.putExtra("initialOpent", true);
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
             progress = new BlockingProgressDialog(this, "Вход", "Вход в систему");
 
 
@@ -251,6 +257,7 @@ public class menu_login extends AppCompatActivity {
 //                intent = new Intent(menu_login.this, MenuMainActivity.class);
                 intent = new Intent(menu_login.this, WPDataActivity.class);
                 intent.putExtra("initialOpent", true);
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                 if (debugStatus.equals("1")) {
                     AlertDialog.Builder builder = new AlertDialog.Builder(this);
                     builder.setCancelable(false);
@@ -519,6 +526,7 @@ public class menu_login extends AppCompatActivity {
         try {
 //            intent = new Intent(menu_login.this, MenuMainActivity.class);
             intent = new Intent(menu_login.this, WPDataActivity.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
             intent.putExtra("initialOpent", true);
             appLogin();
         } catch (Exception e) {
@@ -1450,26 +1458,11 @@ public class menu_login extends AppCompatActivity {
                                         Globals.token = resp.websocketParam.token;
                                         Globals.userOwnership = resp.getUserInfo().user_work_plan_status.equals("our");
 
-                                        if (System.currentTimeMillis() < 1666656000000L) {   // отображать ДО 2022-10-25
-                                            DialogData dialog = new DialogData(menu_login.this);
-                                            dialog.setTitle("ВАЖЛИВО!");
-                                            dialog.setText("З 21.10.22 виконання робіт за вчора буде заблоковано! Рекомендовано роботу виконувати на 3дні на перед!");
-                                            dialog.setClose(() -> {
-                                                dialog.setDialogColorDefault();
-                                                dialog.dismiss();
-                                            });
-                                            dialog.setDialogIco();
-                                            dialog.setDialogColorRed();
-                                            dialog.setOk("Зрозуміло", () -> {
-                                                intent.putExtra("InternetStatusMassage", "SHOW_MASSAGE");
-                                                startActivity(intent); // ++
-                                            });
-                                            dialog.show();
-                                        } else {
-                                            intent.putExtra("InternetStatusMassage", "SHOW_MASSAGE");
-                                            intent.putExtra("initialOpent", true);
-                                            startActivity(intent); // ++
-                                        }
+                                        intent.putExtra("InternetStatusMassage", "SHOW_MASSAGE");
+                                        intent.putExtra("initialOpent", true);
+                                        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                                        startActivity(intent); // ++
+
                                         // ------------
                                     } else {
                                         AUTH();
@@ -2443,4 +2436,27 @@ public class menu_login extends AppCompatActivity {
     }
 
 
+    private void doLoginAndSync() {
+        // login logic...
+        DataSyncRepository repo = new DataSyncRepository(); // передай нужные зависимости
+
+        progressDialog = new ProgressViewModel(5);
+        LoadingDialogWithPercent loadingDialog = new LoadingDialogWithPercent(this, progressDialog);
+        loadingDialog.show();
+
+        KotlinBridge.startSyncAfterLogin(
+                this,
+                repo,
+                progressDialog,
+                () -> {
+                    startActivity(new Intent(this, toolbar_menus.class));
+                    finish();
+                    return null;
+                },
+                () -> {
+                    Toast.makeText(this, "Ошибка при синхронизации", Toast.LENGTH_SHORT).show();
+                    return null;
+                }
+        );
+    }
 }// END CLASS..380677777777/777718353

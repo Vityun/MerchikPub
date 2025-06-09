@@ -17,6 +17,11 @@ public enum TableName {
     STACK_PHOTO("stack_photo"),
     TASK_AND_RECLAMATION("task_and_reclamations"), //TasksAndReclamationsDB
     PLANOGRAMM("planogram"),
+    PLANOGRAMM_ADDRESS("PlanogrammAddressSDB"),
+    PLANOGRAMM_GROUP("planogramm_group"),
+    PLANOGRAMM_IMAGES("planogramm_img"),
+    PLANOGRAMM_TYPE("planogramm_type"),
+    PLANOGRAMM_VIZIT_SHOWCASE("planogram_vizit_showcase"),
     CITY("city"), //city
     OBLAST("oblast"), //oblast
     EKL("ekl"), //EKL_SDB

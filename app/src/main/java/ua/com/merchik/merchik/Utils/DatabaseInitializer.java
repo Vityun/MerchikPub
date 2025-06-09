@@ -13,6 +13,15 @@ import ua.com.merchik.merchik.data.synchronization.TableName;
 import ua.com.merchik.merchik.database.room.DaoInterfaces.SynchronizationTimetableDao;
 
 public class DatabaseInitializer {
+
+    private final int SEC_10 = 10;
+    private final int MINUTE_1 = 60;
+    private final int MINUTE_5 = 300;
+    private final int MINUTE_10 = 600;
+    private final int MINUTE_30 = 3000;
+    private final int HOUR_1 = 6000;
+
+
     private final SynchronizationTimetableDao timetableDao;
 
     public DatabaseInitializer(SynchronizationTimetableDao timetableDao) {
@@ -21,9 +30,9 @@ public class DatabaseInitializer {
 
     public void initializeDefaultData() {
         List<SynchronizationTimeTable> defaultTables = Arrays.asList(
-                createDefaultEntry(TableName.WP_DATA, 600, true),
+                createDefaultEntry(TableName.WP_DATA, MINUTE_10, true),
                 createDefaultEntry(TableName.IMAGE_TP, 600, false),
-                createDefaultEntry(TableName.CLIENT_GROUP_TP, 3600, true),
+                createDefaultEntry(TableName.CLIENT_GROUP_TP, 3600, false),
                 createDefaultEntry(TableName.LOG_MP, 600, false),
                 createDefaultEntry(TableName.CLIENTS, 6000, false),
                 createDefaultEntry(TableName.ADDRESS, 6000, false),
@@ -31,8 +40,13 @@ public class DatabaseInitializer {
                 createDefaultEntry(TableName.PROMO_LIST, 6000, false),
                 createDefaultEntry(TableName.ERROR_LIST, 60000, false),
                 createDefaultEntry(TableName.STACK_PHOTO, 600, false),
-                createDefaultEntry(TableName.TASK_AND_RECLAMATION, 600, false),
-                createDefaultEntry(TableName.PLANOGRAMM, 6000, false)
+                createDefaultEntry(TableName.TASK_AND_RECLAMATION, SEC_10, true),
+                createDefaultEntry(TableName.PLANOGRAMM, MINUTE_30, false),
+                createDefaultEntry(TableName.PLANOGRAMM_ADDRESS, MINUTE_30, false),
+                createDefaultEntry(TableName.PLANOGRAMM_GROUP, MINUTE_30, false),
+                createDefaultEntry(TableName.PLANOGRAMM_TYPE, MINUTE_30, false),
+                createDefaultEntry(TableName.PLANOGRAMM_IMAGES, MINUTE_30, false),
+                createDefaultEntry(TableName.PLANOGRAMM_VIZIT_SHOWCASE, MINUTE_10, true)
         );
 
         timetableDao.insertAll(defaultTables)

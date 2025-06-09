@@ -13,6 +13,8 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.util.Log;
 
+import androidx.annotation.NonNull;
+
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
@@ -61,6 +63,7 @@ import ua.com.merchik.merchik.ServerExchange.TablesExchange.TranslationsExchange
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.UsersExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.VideoViewExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.VotesExchange;
+import ua.com.merchik.merchik.ServerExchange.feature.SyncCallable;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.Database.Room.AchievementsSDB;
 import ua.com.merchik.merchik.data.Database.Room.AddressSDB;
@@ -1130,52 +1133,72 @@ public class Exchange {
 
                 try {
                     PlanogrammTableExchange planogrammTableExchange = new PlanogrammTableExchange();
-                    planogrammTableExchange.planogramDownload(new Clicks.clickObjectAndStatus() {
+                    planogrammTableExchange.planogramDownload(new SyncCallable() {
                         @Override
-                        public void onSuccess(Object data) {
+                        public void onSuccess(int dataSize) {
 
                         }
 
                         @Override
-                        public void onFailure(String error) {
-
-                        }
-                    });
-                    planogrammTableExchange.planogrammAddressDownload(new Clicks.clickObjectAndStatus() {
-                        @Override
-                        public void onSuccess(Object data) {
-
-                        }
-
-                        @Override
-                        public void onFailure(String error) {
+                        public void onFailure(@NonNull String error) {
 
                         }
                     });
-                    planogrammTableExchange.planogrammGroupDownload(new Clicks.clickObjectAndStatus() {
+                    planogrammTableExchange.planogrammAddressDownload(new SyncCallable() {
                         @Override
-                        public void onSuccess(Object data) {
+                        public void onSuccess(int dataSize) {
 
                         }
 
                         @Override
-                        public void onFailure(String error) {
-
-                        }
-                    });
-                    planogrammTableExchange.planogrammImagesDownload(new Clicks.clickObjectAndStatus() {
-                        @Override
-                        public void onSuccess(Object data) {
-
-                        }
-
-                        @Override
-                        public void onFailure(String error) {
+                        public void onFailure(@NonNull String error) {
 
                         }
                     });
-                    planogrammTableExchange.planorgammType();
-                    planogrammTableExchange.planogrammVisitShowcase();
+                    planogrammTableExchange.planogrammGroupDownload(new SyncCallable() {
+                        @Override
+                        public void onSuccess(int dataSize) {
+
+                        }
+
+                        @Override
+                        public void onFailure(@NonNull String error) {
+
+                        }
+                    });
+                    planogrammTableExchange.planogrammImagesDownload(new SyncCallable() {
+                        @Override
+                        public void onSuccess(int dataSize) {
+
+                        }
+
+                        @Override
+                        public void onFailure(@NonNull String error) {
+
+                        }
+                    });
+                    planogrammTableExchange.planorgammType(new SyncCallable() {
+                        @Override
+                        public void onSuccess(int dataSize) {
+
+                        }
+
+                        @Override
+                        public void onFailure(@NonNull String error) {
+
+                        }
+                    });
+                    planogrammTableExchange.planogrammVisitShowcase(new SyncCallable() {
+                        @Override
+                        public void onSuccess(int dataSize) {
+
+                        }
+
+                        @Override
+                        public void onFailure(@NonNull String error) {
+
+                        }
+                    });
                     planogrammTableExchange.planogrammVisitShowcaseUploadData();
 
                 } catch (Exception e) {
@@ -2302,88 +2325,6 @@ public class Exchange {
             });
         } catch (Exception e) {
             Globals.writeToMLOG("ERROR", "updateTAR", "Exception e:" + e);
-        }
-    }
-
-
-    /**
-     * 31.03.2021
-     * Новая отправка на сервер данных о Начале/Конце работы
-     */
-    private static boolean isWpData2Uploading = false;
-
-    public void sendWpData2() {
-        if (isWpData2Uploading) return;
-        isWpData2Uploading = true;
-
-        List<StartEndData> wpdataStartEnd = RealmManager.getWpDataStartEndWork();
-        if (wpdataStartEnd.isEmpty()) {
-            isWpData2Uploading = false;
-            return;
-        }
-        UploadDataSEWork data = new UploadDataSEWork();
-        data.mod = "plan";
-        data.act = "update_data";
-        data.data = wpdataStartEnd;
-
-        JsonObject convertedObject = new Gson().fromJson(new Gson().toJson(data), JsonObject.class);
-        Log.e("sendWpData2", "convertedObject.json: " + convertedObject);
-        Globals.writeToMLOG("INFO", "Exchange.sendWpData2.JsonObject.convertedObject", "convertedObject" + convertedObject);
-
-        if (data != null && data.data.size() > 0) {
-            retrofit2.Call<WpDataUpdateResponse> call = RetrofitBuilder.getRetrofitInterface().SEND_WP_DATA(RetrofitBuilder.contentType, convertedObject);
-            call.enqueue(new retrofit2.Callback<WpDataUpdateResponse>() {
-                @Override
-                public void onResponse(retrofit2.Call<WpDataUpdateResponse> call, retrofit2.Response<WpDataUpdateResponse> response) {
-                    try {
-                        try {
-                            Globals.writeToMLOG("INFO", "Exchange.sendWpData2.onResponse", "response" + response);
-                            if (response.isSuccessful() && response.body() != null) {
-                                if (response.body().state) {
-                                    if (response.body().data != null && response.body().data.size() > 0) {
-                                        // TODO Вынести это в нормальную функцию и отдельный вызов.
-                                        Long[] ids = new Long[response.body().data.size()];
-                                        int count = 0;
-                                        for (WpDataUpdateResponseList item : response.body().data) {
-                                            ids[count++] = item.elementId;
-                                        }
-
-                                        List<WpDataDB> wp = RealmManager.INSTANCE.copyFromRealm(WpDataRealm.getWpDataRowByIds(ids));
-                                        List<WpDataDB> saveWp = new ArrayList<>();
-
-                                        for (WpDataDB item : wp) {
-                                            for (WpDataUpdateResponseList data : response.body().data) {
-                                                if (data.elementId.equals(item.getId())) {
-                                                    item.startUpdate = false;
-                                                    saveWp.add(item);
-                                                }
-                                            }
-                                        }
-                                        WpDataRealm.setWpData(saveWp);
-                                    }
-                                    if (response.body().error != null && !response.body().error.equals("")) {
-                                        Globals.writeToMLOG("ERROR", "Exchange.sendWpData2.onResponse.response.body().error", "Error: " + response.body().error);
-                                    }
-                                }
-                            }
-                        } catch (Exception e) {
-                            Globals.writeToMLOG("ERROR", "Exchange.sendWpData2.onResponse", "Exception e: " + e);
-                        }
-                    } finally {
-                        isWpData2Uploading = false;
-                    }
-                }
-
-                @Override
-                public void onFailure(retrofit2.Call<WpDataUpdateResponse> call, Throwable t) {
-//                    Log.e("sendWpData2", "FAILURE_E: " + t.getMessage());
-//                    Log.e("sendWpData2", "FAILURE_E2: " + t);
-                    isWpData2Uploading = false;
-                    Globals.writeToMLOG("ERROR", "Exchange.sendWpData2.onFailure", "Throwable t: " + t);
-                }
-            });
-        } else {
-            isWpData2Uploading = false;
         }
     }
 

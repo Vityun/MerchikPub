@@ -1709,15 +1709,13 @@ public class TablesLoadingUnloading {
                                 if (response.body().getState()) {
                                     Log.e("TAG_TEST_WP", "RESPONSE_OK");
                                     if (response.body().getList() != null && !response.body().getList().isEmpty()) {
-                                        ArrayList<WpDataDB> wpToUpload = RealmManager.setWpDataAuto2(response.body().getList()); // Получаем данные для выгрузки
+                                        RealmManager.updateWorkPlanFromServer(response.body().getList()); // Получаем данные для выгрузки
                                         RealmManager.INSTANCE.executeTransaction(realm -> {
                                             long vpiApp = System.currentTimeMillis() / 1000;
                                             sTable.setVpi_app(vpiApp + 3);
                                             realm.copyToRealmOrUpdate(sTable);
                                         }); //
-                                        if (wpToUpload != null) {
-                                            Log.e("updateWpData", "wpToUploadSize: " + wpToUpload.size());
-                                        }
+
                                     }
                                 }
                             }

@@ -1,17 +1,16 @@
 package ua.com.merchik.merchik.ServerExchange.workmager
 
 import android.content.Context
-import android.util.Log
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
-import ua.com.merchik.merchik.ServerExchange.TablesLoadingUnloading
 import ua.com.merchik.merchik.ServerExchange.download.MainExchange
+import ua.com.merchik.merchik.ServerExchange.feature.SyncCallable
+import ua.com.merchik.merchik.ServerExchange.feature.SyncResult
 import ua.com.merchik.merchik.data.SynchronizationTimeTable
 import ua.com.merchik.merchik.data.synchronization.DownloadStatus
 import ua.com.merchik.merchik.data.synchronization.TableName
 import ua.com.merchik.merchik.database.room.DaoInterfaces.SynchronizationTimetableDao
 import ua.com.merchik.merchik.database.room.RoomManager
-import ua.com.merchik.merchik.dialogs.DialogFilter.Click
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 
@@ -28,8 +27,8 @@ class SyncWorker(
             val syncInfo = syncTimetableDao.getByTableName(TableName.WP_DATA)
 
             if (syncInfo != null
-//                && !isTimeToSync(syncInfo)
-//                && syncInfo.lastDownloadStatus != DownloadStatus.PENDING
+                && !isTimeToSync(syncInfo)
+                && syncInfo.lastDownloadStatus != DownloadStatus.PENDING
                 ) {
 //                updateSyncStatus(TableName.WP_DATA, DownloadStatus.PENDING)
 
@@ -55,10 +54,9 @@ class SyncWorker(
     private suspend fun syncWpData(syncInfo: SynchronizationTimeTable): SyncResult {
         val main = MainExchange()
         return suspendCoroutine { continuation ->
-            main.downloadWPData(object : Click {
-                override fun <T> onSuccess(data: T) {
-                    val itemsCount = if (data is Int) data else 0
-                    continuation.resume(SyncResult(true, itemsCount))
+            main.downloadWPData(object : SyncCallable {
+                override fun onSuccess(dataSize: Int) {
+                    continuation.resume(SyncResult(true, dataSize))
                 }
 
                 override fun onFailure(error: String) {
@@ -85,5 +83,4 @@ class SyncWorker(
         }
     }
 
-    private data class SyncResult(val success: Boolean, val downloadedItems: Int)
 }

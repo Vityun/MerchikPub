@@ -153,6 +153,7 @@ public class RealmManager {
 
         Globals.writeToMLOG("INFO", "updateWorkPlanFromServer.start", "List<WpDataDB>.size: " + serverData.size());
         RealmResults<WpDataDB> localData = INSTANCE.where(WpDataDB.class).findAll();
+        Globals.writeToMLOG("INFO", "updateWorkPlanFromServer.localData", "List<WpDataDB>.size: " + localData.size());
 
         // Создаем мапу существующих данных для быстрого поиска по code_dad2
         Map<Long, WpDataDB> localDataMap = new HashMap<>();
@@ -166,6 +167,7 @@ public class RealmManager {
         for (WpDataDB serverItem : serverData) {
             long codeDad2 = serverItem.getCode_dad2();
 
+            Globals.writeToMLOG("INFO", "updateWorkPlanFromServer.localData", "serverItem codeDad2: " + codeDad2);
             // Проверяем, есть ли такая запись в локальной базе
             WpDataDB localItem = localDataMap.get(codeDad2);
 
@@ -179,6 +181,7 @@ public class RealmManager {
 
                 if (workStarted) {
                     // Пропускаем записи, по которым уже начаты работы
+                    Globals.writeToMLOG("INFO", "updateWorkPlanFromServer.localData", "serverItem dismiss: work is started ");
                     continue;
                 }
 

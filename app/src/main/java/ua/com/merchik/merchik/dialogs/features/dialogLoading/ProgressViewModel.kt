@@ -50,6 +50,29 @@ class ProgressViewModel(expectedEvents: Int) : ViewModel() {
 
     }
 
+    fun onNextEvent(message: String) {
+        if (isCompleted) return
+
+        // Вычисляем цель для следующего шага
+        val nextTargetProgress = ((currentStepIndex + 1) * stepPercentage).coerceAtMost(0.99f)
+
+        // Обновляем сообщение
+        currentMessage.value = message
+
+        // Останавливаем текущую анимацию, если она идёт
+        currentAnimationJob?.cancel()
+
+        // Запускаем новую анимацию
+        currentAnimationJob = viewModelScope.launch {
+            animateProgress(from = progress.floatValue, to = nextTargetProgress, 2000)
+        }
+
+        // Обновляем индекс и текущую цель
+        currentStepIndex++
+        currentTargetProgress = nextTargetProgress
+
+    }
+
     private suspend fun animateProgress(from: Float, to: Float, durationMillis: Long) {
         val startTime = System.currentTimeMillis()
         val endTime = startTime + durationMillis

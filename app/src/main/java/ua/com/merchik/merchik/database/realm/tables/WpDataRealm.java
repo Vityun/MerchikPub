@@ -11,6 +11,7 @@ import java.util.List;
 
 import io.realm.RealmResults;
 import io.realm.Sort;
+import ua.com.merchik.merchik.Globals;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.database.realm.RealmManager;
 import ua.com.merchik.merchik.dialogs.DialogFilter.data.DFWpResult;
@@ -33,6 +34,7 @@ public class WpDataRealm {
      * Переписанное сохранение плана работ
      */
     public static void setWpData(List<WpDataDB> wpData) {
+        Globals.writeToMLOG("INFO", "WpDataRealm/setWpData/", " List<WpDataDB> wpData.size: " + wpData.size());
         INSTANCE.beginTransaction();
         INSTANCE.copyToRealmOrUpdate(wpData);
         INSTANCE.commitTransaction();

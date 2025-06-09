@@ -9,11 +9,11 @@ import java.util.List;
 
 import ua.com.merchik.merchik.Clock;
 import ua.com.merchik.merchik.Globals;
+import ua.com.merchik.merchik.ServerExchange.feature.SyncCallable;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
 import ua.com.merchik.merchik.data.RetrofitResponse.models.WpDataServer;
 import ua.com.merchik.merchik.data.TestJsonUpload.StandartData;
 import ua.com.merchik.merchik.database.realm.RealmManager;
-import ua.com.merchik.merchik.dialogs.DialogFilter.Click;
 import ua.com.merchik.merchik.retrofit.RetrofitBuilder;
 
 public class MainExchange {
@@ -21,12 +21,7 @@ public class MainExchange {
     private String timeTomorrow = Clock.getDatePeriod(5);
 
 
-    public void downloadWPData(Click click, long vpi) {
-
-        String mod = "plan";
-        String act = "list";
-        String date_from = Clock.getDatePeriod(-21);
-        String date_to = timeTomorrow;
+    public void downloadWPData(SyncCallable click, long vpi) {
 
         try {
             StandartData data = new StandartData();
@@ -38,9 +33,6 @@ public class MainExchange {
             Gson gson = new Gson();
             String json = gson.toJson(data);
             JsonObject convertedObject = new Gson().fromJson(json, JsonObject.class);
-            Log.e("MAIN_test", "planogramDownload convertedObject: " + convertedObject);
-
-            Log.e("TAG_TEST_WP", "RESPONSE_0 T");
             Globals.writeToMLOG("INFO", "MainExchange/downloadWPData", "convertedObject: " + convertedObject);
             retrofit2.Call<WpDataServer> call = RetrofitBuilder.getRetrofitInterface().GET_WPDATA_VPI(RetrofitBuilder.contentType, convertedObject);
             call.enqueue(new retrofit2.Callback<>() {
