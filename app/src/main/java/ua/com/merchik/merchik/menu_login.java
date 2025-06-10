@@ -64,7 +64,6 @@ import ua.com.merchik.merchik.ServerExchange.ExchangeInterface;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.SiteObjectsExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesLoadingUnloading;
 import ua.com.merchik.merchik.ServerExchange.feature.DataSyncRepository;
-import ua.com.merchik.merchik.ServerExchange.feature.KotlinBridge;
 import ua.com.merchik.merchik.Utils.CheckAndLogCompetitorAppsOnDevice;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.RealmModels.AppUsersDB;
@@ -2436,27 +2435,27 @@ public class menu_login extends AppCompatActivity {
     }
 
 
-    private void doLoginAndSync() {
-        // login logic...
-        DataSyncRepository repo = new DataSyncRepository(); // передай нужные зависимости
-
-        progressDialog = new ProgressViewModel(5);
-        LoadingDialogWithPercent loadingDialog = new LoadingDialogWithPercent(this, progressDialog);
-        loadingDialog.show();
-
-        KotlinBridge.startSyncAfterLogin(
-                this,
-                repo,
-                progressDialog,
-                () -> {
-                    startActivity(new Intent(this, toolbar_menus.class));
-                    finish();
-                    return null;
-                },
-                () -> {
-                    Toast.makeText(this, "Ошибка при синхронизации", Toast.LENGTH_SHORT).show();
-                    return null;
-                }
-        );
-    }
+//    private void doLoginAndSync() {
+//        // login logic...
+//        DataSyncRepository repo = new DataSyncRepository(); // передай нужные зависимости
+//
+//        progressDialog = new ProgressViewModel(5);
+//        LoadingDialogWithPercent loadingDialog = new LoadingDialogWithPercent(this, progressDialog);
+//        loadingDialog.show();
+//
+//        KotlinBridge.startSyncAfterLogin(
+//                this,
+//                repo,
+//                progressDialog,
+//                () -> {
+//                    startActivity(new Intent(this, toolbar_menus.class));
+//                    finish();
+//                    return null;
+//                },
+//                () -> {
+//                    Toast.makeText(this, "Ошибка при синхронизации", Toast.LENGTH_SHORT).show();
+//                    return null;
+//                }
+//        );
+//    }
 }// END CLASS..380677777777/777718353

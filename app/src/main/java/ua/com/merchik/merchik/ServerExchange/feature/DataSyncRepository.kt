@@ -3,11 +3,6 @@ package ua.com.merchik.merchik.ServerExchange.feature
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import ua.com.merchik.merchik.ServerExchange.feature.strategy.WpDataSyncStrategy
-import ua.com.merchik.merchik.ServerExchange.feature.strategy.sync.PlanogramAddressSync
-import ua.com.merchik.merchik.ServerExchange.feature.strategy.sync.PlanogramGroupSync
-import ua.com.merchik.merchik.ServerExchange.feature.strategy.sync.PlanogramImagesSync
-import ua.com.merchik.merchik.ServerExchange.feature.strategy.sync.PlanogramTypeSync
-import ua.com.merchik.merchik.ServerExchange.feature.strategy.sync.PlanogramVisitShowcaseSync
 import ua.com.merchik.merchik.data.SynchronizationTimeTable
 import ua.com.merchik.merchik.data.synchronization.DownloadStatus
 import ua.com.merchik.merchik.database.room.DaoInterfaces.SynchronizationTimetableDao
@@ -23,12 +18,12 @@ class DataSyncRepository {
         RoomManager.SQL_DB.synchronizationTimetableDao()
 
     private val strategies: List<TableSyncStrategy> = listOf(
-        WpDataSyncStrategy(),
-        PlanogramAddressSync(),
-        PlanogramGroupSync(),
-        PlanogramImagesSync(),
-        PlanogramTypeSync(),
-        PlanogramVisitShowcaseSync()
+        WpDataSyncStrategy()
+//        PlanogramAddressSync(),
+//        PlanogramGroupSync(),
+//        PlanogramImagesSync(),
+//        PlanogramTypeSync(),
+//        PlanogramVisitShowcaseSync()
         // другие
     )
 

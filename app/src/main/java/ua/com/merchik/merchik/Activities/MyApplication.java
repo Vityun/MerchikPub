@@ -44,7 +44,7 @@ public class MyApplication extends Application {
         WorkManagerHelper.INSTANCE.schedulePhotoDownloadTask(this);
 //        WorkManagerHelper.INSTANCE.scheduleWpDataSync(this);
 
-        WorkManagerHelper.INSTANCE.startSyncWorker(this);
+//        WorkManagerHelper.INSTANCE.startSyncWorker(this);
 
     }
 

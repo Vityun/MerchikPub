@@ -1133,73 +1133,54 @@ public class Exchange {
 
                 try {
                     PlanogrammTableExchange planogrammTableExchange = new PlanogrammTableExchange();
-                    planogrammTableExchange.planogramDownload(new SyncCallable() {
+                    planogrammTableExchange.planogramDownload(new Clicks.clickObjectAndStatus() {
                         @Override
-                        public void onSuccess(int dataSize) {
+                        public void onSuccess(Object data) {
 
                         }
 
                         @Override
-                        public void onFailure(@NonNull String error) {
-
-                        }
-                    });
-                    planogrammTableExchange.planogrammAddressDownload(new SyncCallable() {
-                        @Override
-                        public void onSuccess(int dataSize) {
-
-                        }
-
-                        @Override
-                        public void onFailure(@NonNull String error) {
+                        public void onFailure(String error) {
 
                         }
                     });
-                    planogrammTableExchange.planogrammGroupDownload(new SyncCallable() {
+                    planogrammTableExchange.planogrammAddressDownload(new Clicks.clickObjectAndStatus() {
                         @Override
-                        public void onSuccess(int dataSize) {
+                        public void onSuccess(Object data) {
 
                         }
 
                         @Override
-                        public void onFailure(@NonNull String error) {
-
-                        }
-                    });
-                    planogrammTableExchange.planogrammImagesDownload(new SyncCallable() {
-                        @Override
-                        public void onSuccess(int dataSize) {
-
-                        }
-
-                        @Override
-                        public void onFailure(@NonNull String error) {
+                        public void onFailure(String error) {
 
                         }
                     });
-                    planogrammTableExchange.planorgammType(new SyncCallable() {
+                    planogrammTableExchange.planogrammGroupDownload(new Clicks.clickObjectAndStatus() {
                         @Override
-                        public void onSuccess(int dataSize) {
+                        public void onSuccess(Object data) {
 
                         }
 
                         @Override
-                        public void onFailure(@NonNull String error) {
-
-                        }
-                    });
-                    planogrammTableExchange.planogrammVisitShowcase(new SyncCallable() {
-                        @Override
-                        public void onSuccess(int dataSize) {
-
-                        }
-
-                        @Override
-                        public void onFailure(@NonNull String error) {
+                        public void onFailure(String error) {
 
                         }
                     });
+                    planogrammTableExchange.planogrammImagesDownload(new Clicks.clickObjectAndStatus() {
+                        @Override
+                        public void onSuccess(Object data) {
+
+                        }
+
+                        @Override
+                        public void onFailure(String error) {
+
+                        }
+                    });
+                    planogrammTableExchange.planorgammType();
+                    planogrammTableExchange.planogrammVisitShowcase();
                     planogrammTableExchange.planogrammVisitShowcaseUploadData();
+
 
                 } catch (Exception e) {
                     Globals.writeToMLOG("ERROR", "startExchange/PlanogrammExchange/planogrammDownload", "Exception e: " + e);
