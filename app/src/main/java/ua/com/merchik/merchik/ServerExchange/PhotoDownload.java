@@ -1212,7 +1212,7 @@ public class PhotoDownload {
                     try {
                         if (response.isSuccessful()) {
                             if (response.body() != null) {
-                                Globals.writeToMLOG("INFO", "downloadPhoto/onResponse", "response.body() not null ");
+                                Globals.writeToMLOG("INFO", "downloadPhoto.onResponse", "response.body() not null ");
                                 InputStream data = response.body().byteStream(); // <--- TODO BUG    java.lang.NullPointerException: Attempt to invoke virtual method 'java.io.InputStream okhttp3.ResponseBody.byteStream()' on a null object reference at ua.com.merchik.merchik.ServerExchange.PhotoDownload$8.onResponse(PhotoDownload.java:574)
 
                                 if (data.toString().length() > 0) {
@@ -1233,7 +1233,7 @@ public class PhotoDownload {
                             exchange.onFailure("Код: " + response.code());
                         }
                     } catch (Exception e) {
-                        Globals.writeToMLOG("ERROR", "downloadPhoto/onResponse", "Exception e: " + e);
+                        Globals.writeToMLOG("ERROR", "downloadPhoto.onResponse", "Exception e: " + e);
                     }
                 }
 

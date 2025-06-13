@@ -13,8 +13,6 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.util.Log;
 
-import androidx.annotation.NonNull;
-
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
@@ -30,7 +28,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
-import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.observers.DisposableCompletableObserver;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 import io.realm.RealmResults;
@@ -63,7 +60,6 @@ import ua.com.merchik.merchik.ServerExchange.TablesExchange.TranslationsExchange
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.UsersExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.VideoViewExchange;
 import ua.com.merchik.merchik.ServerExchange.TablesExchange.VotesExchange;
-import ua.com.merchik.merchik.ServerExchange.feature.SyncCallable;
 import ua.com.merchik.merchik.ViewHolders.Clicks;
 import ua.com.merchik.merchik.data.Database.Room.AchievementsSDB;
 import ua.com.merchik.merchik.data.Database.Room.AddressSDB;
@@ -248,9 +244,9 @@ public class Exchange {
                     updateTranslates();  // Обновление Переводов
 
 
-                    globals.writeToMLOG( "_INFO.Exchange.class.startExchange.Успех.3." + "\n");
+                    globals.writeToMLOG("_INFO.Exchange.class.startExchange.Успех.3." + "\n");
                 } catch (Exception e) {
-                    globals.writeToMLOG( "_INFO.Exchange.class.startExchange.Ошибка.3." + e + "\n");
+                    globals.writeToMLOG("_INFO.Exchange.class.startExchange.Ошибка.3." + e + "\n");
                 }
 
                 try {
@@ -335,6 +331,7 @@ public class Exchange {
                     TablesLoadingUnloading tablesLoadingUnloading = new TablesLoadingUnloading();
 
 //                    tablesLoadingUnloading.downloadTovarTable(context, null);
+                    tablesLoadingUnloading.downloadWPData();
                     tablesLoadingUnloading.uploadLodMp(new ExchangeInterface.ExchangeRes() {
                         @Override
                         public void onSuccess(String ok) {
@@ -853,9 +850,9 @@ public class Exchange {
 
                         }
                     });    // Выгрузка Рейтингов фоток
-                    globals.writeToMLOG( "_INFO.Exchange.class.startExchange.Успех.1." + "\n");
+                    globals.writeToMLOG("_INFO.Exchange.class.startExchange.Успех.1." + "\n");
                 } catch (Exception e) {
-                    globals.writeToMLOG( "_INFO.Exchange.class.startExchange.Ошибка.1." + e + "\n");
+                    globals.writeToMLOG("_INFO.Exchange.class.startExchange.Ошибка.1." + e + "\n");
                 }
 
                 try {
@@ -934,9 +931,9 @@ public class Exchange {
                     });     // Загрузка Задач и Рекламаций*/
                     sendTAR();              // Выгрузка на сервер ЗИР-а
                     uploadTARComments(null);    // Выгрузка ЗИР переписки(коммнетариев)
-                    globals.writeToMLOG( "_INFO.Exchange.class.startExchange.Успех.2." + "\n");
+                    globals.writeToMLOG("_INFO.Exchange.class.startExchange.Успех.2." + "\n");
                 } catch (Exception e) {
-                    globals.writeToMLOG( "_INFO.Exchange.class.startExchange.Ошибка.2." + e + "\n");
+                    globals.writeToMLOG("_INFO.Exchange.class.startExchange.Ошибка.2." + e + "\n");
                 }
 
                 try {
@@ -1246,6 +1243,23 @@ public class Exchange {
                     Globals.writeToMLOG("ERROR", "startExchange/VotesTARExchange/", "Exception e: " + e);
                 }
 
+                try {
+                    sendWpDataToServer(new Click() {
+                        @Override
+                        public <T> void onSuccess(T data) {
+                            String msg = (String) data;
+                            Globals.writeToMLOG("INFO", "startExchange.sendWpDataToServer.onSuccess", "msg: " + msg);
+                        }
+
+                        @Override
+                        public void onFailure(String error) {
+                            Globals.writeToMLOG("INFO", "startExchange.sendWpDataToServer.onFailure", "error: " + error);
+                        }
+                    });
+                } catch (Exception e) {
+                    Globals.writeToMLOG("ERROR", "startExchange/sendWpDataToServer/", "Exception e: " + e);
+                }
+
 //                Globals.alertDialogMsg(context,
 //                        DialogStatus.NORMAL,
 //                        "Обмен данными с сервером завершен",
@@ -1347,23 +1361,23 @@ public class Exchange {
                 public void onResponse(retrofit2.Call<JsonObject> call, retrofit2.Response<JsonObject> response) {
                     try {
                         isTARUploading = false;
-                        globals.writeToMLOG( "_INFO.Exchange.class.sendTAR.onResponse.response: " + convertedObject + "\n");
+                        globals.writeToMLOG("_INFO.Exchange.class.sendTAR.onResponse.response: " + convertedObject + "\n");
                     } catch (Exception e) {
                         Log.e("sendTAR", "e: " + e);
                         isTARUploading = false;
-                        globals.writeToMLOG( "_INFO.Exchange.class.sendTAR.onResponse.ERROR_1: " + e + "\n");
+                        globals.writeToMLOG("_INFO.Exchange.class.sendTAR.onResponse.ERROR_1: " + e + "\n");
                     }
                 }
 
                 @Override
                 public void onFailure(retrofit2.Call<JsonObject> call, Throwable t) {
                     isTARUploading = false;
-                    globals.writeToMLOG( "_INFO.Exchange.class.sendTAR.onFailure.ERR: " + t + "\n");
+                    globals.writeToMLOG("_INFO.Exchange.class.sendTAR.onFailure.ERR: " + t + "\n");
                 }
             });
         } else {
             isTARUploading = false;
-            globals.writeToMLOG( "_INFO.Exchange.class.sendTAR.Failure.DataList empty" + "\n");
+            globals.writeToMLOG("_INFO.Exchange.class.sendTAR.Failure.DataList empty" + "\n");
         }
 
 
@@ -1696,19 +1710,19 @@ public class Exchange {
         switch (info) {
             case EMPTY:
                 Log.e("getPhotoFromSite", "EMPTY");
-                globals.writeToMLOG( "_INFO.Exchange.class.getPhotoFromSite: " + "EMPTY" + "\n");
+                globals.writeToMLOG("_INFO.Exchange.class.getPhotoFromSite: " + "EMPTY" + "\n");
                 break;
 
             case SUBORDINATE:
                 Log.e("getPhotoFromSite", "SUBORDINATE");
                 data.sotr_id = String.valueOf(Globals.userId);
-                globals.writeToMLOG( "_INFO.Exchange.class.getPhotoFromSite: " + "SUBORDINATE: " + data.sotr_id + "\n");
+                globals.writeToMLOG("_INFO.Exchange.class.getPhotoFromSite: " + "SUBORDINATE: " + data.sotr_id + "\n");
                 server.getPhotoFromServer(data);
                 break;
 
             case MANAGER:
                 Log.e("getPhotoFromSite", "MANAGER");
-                globals.writeToMLOG( "_INFO.Exchange.class.getPhotoFromSite: " + "MANAGER" + "\n");
+                globals.writeToMLOG("_INFO.Exchange.class.getPhotoFromSite: " + "MANAGER" + "\n");
 //                server.getPhotoFromServer(data);
                 break;
         }
@@ -2314,6 +2328,8 @@ public class Exchange {
      * 27.01.22
      * Нужно перекотиться на неё
      */
+    private static boolean isdownloadWPData = false;
+
     public void sendWpDataToServer(Click result) {
 
         List<StartEndData> wpdataStartEnd = RealmManager.getWpDataStartEndWork();
@@ -2322,6 +2338,10 @@ public class Exchange {
             return;
         }
 
+        if (isdownloadWPData) return;
+        isdownloadWPData = true;
+
+
         UploadDataSEWork data = new UploadDataSEWork();
         data.mod = "plan";
         data.act = "update_data";
@@ -2329,7 +2349,7 @@ public class Exchange {
 
         JsonObject convertedObject = new Gson().fromJson(new Gson().toJson(data), JsonObject.class);
 
-        Globals.writeToMLOG("INFO", "Exchange.sendWpDataToServer", "convertedObject" + convertedObject);
+        Globals.writeToMLOG("INFO", "Exchange.sendWpDataToServer", "convertedObject: " + convertedObject);
 
         if (data != null && data.data.size() > 0) {
             retrofit2.Call<WpDataUpdateResponse> call = RetrofitBuilder.getRetrofitInterface().SEND_WP_DATA(RetrofitBuilder.contentType, convertedObject);
@@ -2343,37 +2363,48 @@ public class Exchange {
                                 if (response.body().state) {
                                     if (response.body().data != null && !response.body().data.isEmpty()) {
                                         saveWpDataResult(response.body().data);
+                                        isdownloadWPData = false;
                                         result.onSuccess("Данные о проведении обработаны успешно.");
                                     } else if (response.body().error != null && !response.body().error.equals("")) {
                                         Globals.writeToMLOG("ERROR", "Exchange.sendWpDataToServer.onResponse.response.body().error", "Error: " + response.body().error);
+                                        isdownloadWPData = false;
                                         result.onFailure("Возникла проблемма с обработкой данных на сервере по причине: " + response.body().error);
                                     } else if (response.body().data == null) {
+                                        isdownloadWPData = false;
                                         result.onSuccess("Запрос на проведение прошел успешно, но данных для обработки сервер не вернул.");
                                     } else {
+                                        isdownloadWPData = false;
                                         result.onSuccess("Запрос на проведение прошел успешно.");
                                     }
                                 } else {
+                                    isdownloadWPData = false;
                                     result.onFailure("Данных для обработки с сервера не вернулось. Повторите попытку позже или обратитесь к своему руководителю.");
                                 }
                             } else {
+                                isdownloadWPData = false;
                                 result.onFailure("Данных для обработки с сервера не вернулось. Повторите попытку позже или обратитесь к своему руководителю.");
                             }
                         } else {
+                            isdownloadWPData = false;
                             result.onFailure("Ошибка сервера. Повторите попытку позже или обратитесь к руководителю. \nОшибка: " + response.code());
                         }
                     } catch (Exception e) {
                         Globals.writeToMLOG("ERROR", "Exchange.sendWpDataToServer.onResponse", "Exception e: " + e);
+                        isdownloadWPData = false;
                         result.onFailure("Произошла ошибка в анализе данных. \nОшибка: " + e);
                     }
+                    isdownloadWPData = false;
                 }
 
                 @Override
                 public void onFailure(retrofit2.Call<WpDataUpdateResponse> call, Throwable t) {
                     Globals.writeToMLOG("ERROR", "Exchange.sendWpData2.onFailure", "Throwable t: " + t);
+                    isdownloadWPData = false;
                     result.onFailure("Возникла ошибка связи. Проверьте состояние интернета и повторите попытку позже. \nОшибка: " + t);
                 }
             });
-        }
+        } else
+            isdownloadWPData = false;
     }
 
     /**
@@ -2399,11 +2430,13 @@ public class Exchange {
             for (WpDataDB item : wp) {
                 for (WpDataUpdateResponseList itm : data) {
                     if (itm.elementId.equals(item.getId())) {
-                        if (itm.data.visitStartDt || itm.data.visitEndDt) {
+                        if (itm.data.visitStartDt || itm.data.visitEndDt || itm.data.clientStartDt || itm.data.clientEndDt
+                                || itm.data.userComment || itm.data.user_opinion_id) {
                             item.startUpdate = false;
-                        } else {
-                            item.setSetStatus(0);
                         }
+//                        else {
+//                            item.setSetStatus(0);
+//                        }
                         saveWp.add(item);
                     }
                 }

@@ -35,4 +35,13 @@ public class WpDataUpdateResponseListData {
     @SerializedName("user_comment_dt_update")
     @Expose
     public boolean userCommentDtUpdate;
+
+    @SerializedName("user_opinion_id")
+    @Expose
+    public boolean user_opinion_id;
+
+    @SerializedName("client_work_duration")
+    @Expose
+    public boolean client_work_duration;
+
 }

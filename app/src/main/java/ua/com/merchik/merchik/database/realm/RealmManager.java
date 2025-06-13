@@ -152,7 +152,8 @@ public class RealmManager {
         // Получаем текущие данные из Realm
 
         Globals.writeToMLOG("INFO", "updateWorkPlanFromServer.start", "List<WpDataDB>.size: " + serverData.size());
-        RealmResults<WpDataDB> localData = INSTANCE.where(WpDataDB.class).findAll();
+        RealmResults<WpDataDB> realmResults = INSTANCE.where(WpDataDB.class).findAll();
+        List<WpDataDB> localData = INSTANCE.copyFromRealm(realmResults); // Конвертируем в List<WpDataDB>
         Globals.writeToMLOG("INFO", "updateWorkPlanFromServer.localData", "List<WpDataDB>.size: " + localData.size());
 
         // Создаем мапу существующих данных для быстрого поиска по code_dad2
@@ -173,15 +174,15 @@ public class RealmManager {
 
             if (localItem != null) {
                 // Проверяем, начал ли пользователь работы по этой записи
-                boolean workStarted = localItem.getVisit_start_dt() > 0 ||
-                        localItem.getClient_start_dt() > 0 ||
-                        localItem.getVisit_end_dt() > 0 ||
-                        localItem.getClient_end_dt() > 0;
+                boolean workStarted = (localItem.getVisit_start_dt() > 0 &&
+                        localItem.getClient_start_dt() > 0) ||
+                        (localItem.getVisit_end_dt() > 0 &&
+                        localItem.getClient_end_dt() > 0);
                 Globals.writeToMLOG("INFO", "updateWorkPlanFromServer", "SKIPPED -> WpDataDB dad2: " + serverItem.getCode_dad2());
-
-                if (workStarted) {
+                boolean isStatus = serverItem.getStatus() == 0;
+                Globals.writeToMLOG("INFO", "updateWorkPlanFromServer.localData", "local work: " + workStarted + "serverItem isStatus: " + isStatus);
+                if (workStarted && isStatus) {
                     // Пропускаем записи, по которым уже начаты работы
-                    Globals.writeToMLOG("INFO", "updateWorkPlanFromServer.localData", "serverItem dismiss: work is started ");
                     continue;
                 }
 

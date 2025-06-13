@@ -186,10 +186,10 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                 final int POS = getAdapterPosition();
                 boolean describedOption = true;
 
-                Log.e("RViewDRAdapterBind", "optionsButtons: " + optionsButtons);
-                if (optionsButtons.getOptionId().equals("2243") || optionsButtons.getOptionControlId().equals("2243"))
-                    Log.e("RViewDRAdapterBind", "optionsButtons: " + optionsButtons);
+                if (optionsButtons.getOptionId().equals("80976")) // убрал кнопку провсти отчет из опций
+                    return;
 
+                Log.e("RViewDRAdapterBind", "optionsButtons: " + optionsButtons);
 
                 textInteger.setVisibility(View.VISIBLE);
 

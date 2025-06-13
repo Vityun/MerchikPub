@@ -53,11 +53,14 @@ import com.google.gson.reflect.TypeToken;
 import org.apache.commons.lang3.ArrayUtils;
 
 import java.lang.reflect.Type;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 
@@ -80,22 +83,22 @@ import ua.com.merchik.merchik.Options.Buttons.OptionButtonAddNewClient;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonAddNewFriend;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonAvailabilityDetailedReport;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonHistoryMP;
-import ua.com.merchik.merchik.Options.Buttons.OptionButtonPhotoPOS;
-import ua.com.merchik.merchik.Options.Buttons.OptionButtonPlanogrammVizit;
-import ua.com.merchik.merchik.Options.Buttons.OptionButtonUserOpinion;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonPhotoAktionTovar;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonPhotoBeforeStartWork;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonPhotoCassZone;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonPhotoDMP;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonPhotoEFFIE;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonPhotoOfACartWithGoods;
+import ua.com.merchik.merchik.Options.Buttons.OptionButtonPhotoPOS;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonPhotoShowcaseCorporateBlock;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonPhotoShowcaseFullness;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonPhotoShowcaseNear;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonPhotoTT;
+import ua.com.merchik.merchik.Options.Buttons.OptionButtonPlanogrammVizit;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonReclamationAnswer;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonStartWork;
 import ua.com.merchik.merchik.Options.Buttons.OptionButtonTaskAnswer;
+import ua.com.merchik.merchik.Options.Buttons.OptionButtonUserOpinion;
 import ua.com.merchik.merchik.Options.Controls.OptionControlAchievements;
 import ua.com.merchik.merchik.Options.Controls.OptionControlAddComment;
 import ua.com.merchik.merchik.Options.Controls.OptionControlAddOpinion;
@@ -2081,11 +2084,25 @@ public class Options {
                 return optionControlStartWork_138519(context, dataDB, option, type, mode, unlockCodeResultListener) ? 0 : 1;
 
             case 138520:
-                if (dataDB instanceof WpDataDB) {
-                    optionEndWork_138520(context, (WpDataDB) dataDB, option, type, mode, unlockCodeResultListener);
-                } else if (dataDB instanceof TasksAndReclamationsSDB) {
-                    optionEndWork_138520(context, (TasksAndReclamationsSDB) dataDB, option, type, mode, unlockCodeResultListener);
-                }
+                OptionsDB finalOption = option;
+                long timeInMillis = System.currentTimeMillis();
+                SimpleDateFormat sdf = new SimpleDateFormat("HH:mm", Locale.getDefault());
+                String currentTime = sdf.format(new Date(timeInMillis));
+                new MessageDialogBuilder(unwrap(context))
+                        .setTitle(context.getString(R.string.your_click))
+                        .setSubTitle(context.getString(R.string.end_work))
+                        .setStatus(DialogStatus.ALERT)
+                        .setMessage("Зареєструвати закінчення робіт у " + currentTime)
+                        .setOnConfirmAction("TAK", () -> {
+                            if (dataDB instanceof WpDataDB) {
+                                optionEndWork_138520(context, (WpDataDB) dataDB, finalOption, type, mode, unlockCodeResultListener);
+                            } else if (dataDB instanceof TasksAndReclamationsSDB) {
+                                optionEndWork_138520(context, (TasksAndReclamationsSDB) dataDB, finalOption, type, mode, unlockCodeResultListener);
+                            }
+                            return Unit.INSTANCE;
+                        })
+                        .setOnCancelAction("Hi", () -> Unit.INSTANCE)
+                        .show();
                 break;
 
             case 138521:
@@ -2758,7 +2775,7 @@ public class Options {
         Globals.writeToMLOG("INFO", "DetailedReportButtons.class.pressStartWork", "ENTER. wpDataDB.codeDAD2: " + wpDataDB.getCode_dad2());
         if (wpDataDB.getVisit_start_dt() > 0) {
             Toast.makeText(context, "Работа уже начата!", Toast.LENGTH_SHORT).show();
-            globals.writeToMLOG( "_INFO.DetailedReportButtons.class.pressStartWork: " + "Работа уже начата!" + "\n");
+            globals.writeToMLOG("_INFO.DetailedReportButtons.class.pressStartWork: " + "Работа уже начата!" + "\n");
             unlockCodeResultListener.onUnlockCodeSuccess();
             result = true;
         } else {
@@ -2821,7 +2838,7 @@ public class Options {
     }
 
     private void optionStartWork_138518(Context context, TasksAndReclamationsSDB dataDB, OptionsDB optionsDB, OptionMassageType type, NNKMode mode, OptionControl.UnlockCodeResultListener unlockCodeResultListener) {
-        globals.writeToMLOG( "_INFO.DetailedReportButtons.class.pressStartWork: " + "ENTER" + "\n");
+        globals.writeToMLOG("_INFO.DetailedReportButtons.class.pressStartWork: " + "ENTER" + "\n");
         if (dataDB.dt_start_fact > 0) {
             Toast.makeText(context, "Работа уже начата!", Toast.LENGTH_SHORT).show();
         } else {
@@ -3026,7 +3043,7 @@ public class Options {
     }
 
     private void optionEndWork_138520(Context context, TasksAndReclamationsSDB dataDB, OptionsDB optionsDB, OptionMassageType type, NNKMode mode, OptionControl.UnlockCodeResultListener unlockCodeResultListener) {
-        globals.writeToMLOG( "_INFO.DetailedReportButtons.class.pressEndWork: " + "ENTER" + "\n");
+        globals.writeToMLOG("_INFO.DetailedReportButtons.class.pressEndWork: " + "ENTER" + "\n");
         if (dataDB.dt_end_fact > 0) {
             Toast.makeText(context, "Работа уже окончена!", Toast.LENGTH_SHORT).show();
         } else {

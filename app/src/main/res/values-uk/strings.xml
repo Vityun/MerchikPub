@@ -245,5 +245,7 @@
     <string name="title_reclamation">Рекламації</string>
     <string name="complete_work">Провести звіт</string>
     <string name="hamburger_menu_language">Мова</string>
+    <string name="end_work">"Закінчення роботи "</string>
+    <string name="your_click">Ви натиснули</string>
 
 </resources>

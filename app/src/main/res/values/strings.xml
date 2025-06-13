@@ -1,8 +1,8 @@
 <resources>
     <string name="app_name" translatable="false">merchik</string>
-    <string name="ver" translatable="false">061101</string>
+    <string name="ver" translatable="false">061301</string>
     <string name="debug_status" translatable="false">1</string>
-    <string name="debug_date" translatable="false">2025-06-11</string>
+    <string name="debug_date" translatable="false">2025-06-13</string>
 
     <string name="test" translatable="false">TEST HINT</string>
 
@@ -256,6 +256,9 @@
     <string name="sub_title_samplephotosdb">В списке представлены образцы фотоотчетов. "Для того, чтобы изготовить '%s' нажмите на соответствующую фотографию. Затем увеличьте ее до размера экрана и выполните фото, нажав на кнопку фотоаппарата в правом нижнем углу.</string>
     <string name="input_text_or">Введите название (или штрихкод) товара</string>
     <string name="open_visit">Открыть посещение</string>
+
+    <string name="end_work">Окончание работы</string>
+    <string name="your_click">Вы нажали</string>
 
 </resources>
 

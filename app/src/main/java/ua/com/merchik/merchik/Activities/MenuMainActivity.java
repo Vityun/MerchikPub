@@ -28,6 +28,7 @@ import retrofit2.Callback;
 import retrofit2.Response;
 import ua.com.merchik.merchik.R;
 import ua.com.merchik.merchik.ServerExchange.workmager.WorkManagerHelper;
+import ua.com.merchik.merchik.Translate;
 import ua.com.merchik.merchik.Utils.CodeGenerator;
 import ua.com.merchik.merchik.data.RealmModels.AppUsersDB;
 import ua.com.merchik.merchik.data.RealmModels.WpDataDB;
@@ -135,7 +136,7 @@ public class MenuMainActivity extends toolbar_menus {
     private void test() {
 
 
-        WorkManagerHelper.INSTANCE.startSyncWorker(this);
+//        WorkManagerHelper.INSTANCE.startSyncWorker(this);
 
 //        Exchange.exchangeTime = 0;
 
@@ -174,7 +175,7 @@ public class MenuMainActivity extends toolbar_menus {
 
 //        new TablesLoadingUnloading().downloadWPData(this);
 
-//        new Translate().uploadNewTranslate();
+        new Translate().uploadNewTranslate();
 
 //        Exchange exchange = new Exchange();
 //        exchange.updateAverageSalary();

@@ -312,156 +312,156 @@ public class Translate {
         // Для создания достижения выберите...
         res.add(new AddTranslation(
                 "1",
-                "detailed_report_home_frag_theme",
-                "Тема:",
+                "message_dialog_end_work_message",
+                "Ви намагаєтесь завершити роботу. Работа буде завершена у ",
                 "app",
                 "all",
                 ""
         ));
-        res.add(new AddTranslation(
-                "2",
-                "detailed_report_home_frag_report_status",
-                "Статус отчёта:",
-                "app",
-                "all",
-                ""
-        ));
-        res.add(new AddTranslation(
-                "3",
-                "detailed_report_home_frag_bonus_plan",
-                "Премия (план):",
-                "app",
-                "all",
-                ""
-        ));
-        res.add(new AddTranslation(
-                "4",
-                "detailed_report_home_frag_reduction_by_options",
-                "Снижение (по опциям):",
-                "app",
-                "all",
-                ""
-        ));
-        res.add(new AddTranslation(
-                "5",
-                "detailed_report_home_frag_prize_fact",
-                "Премия (факт):",
-                "app",
-                "all",
-                ""
-        ));
-        res.add(new AddTranslation(
-                "6",
-                "detailed_report_home_frag_cont_works_doc",
-                "Продолж. работ (по документу):",
-                "app",
-                "all",
-                ""
-        ));
-        res.add(new AddTranslation(
-                "7",
-                "detailed_report_home_frag_theme_cont_works_average",
-                "Продолж. работ (средняя):",
-                "app",
-                "all",
-                ""
-        ));
-        res.add(new AddTranslation(
-                "8",
-                "detailed_report_home_frag_cost_per_hour",
-                "Стоимость часа:",
-                "app",
-                "all",
-                ""
-        ));
-        res.add(new AddTranslation(
-                "9",
-                "detailed_report_home_frag_date",
-                "Дата:",
-                "app",
-                "all",
-                ""
-        ));
-        res.add(new AddTranslation(
-                "10",
-                "detailed_report_home_frag_client",
-                "Клиент:",
-                "app",
-                "all",
-                ""
-        ));
-        res.add(new AddTranslation(
-                "11",
-                "detailed_report_home_frag_executor",
-                "Исполнитель:",
-                "app",
-                "all",
-                ""
-        ));
-        res.add(new AddTranslation(
-                "12",
-                "detailed_report_home_frag_options",
-                "Опции:",
-                "app",
-                "all",
-                ""
-        ));
-        res.add(new AddTranslation(
-                "13",
-                "detailed_report_home_frag_opinion_about_visit",
-                "Мнение исп. о посещении:",
-                "app",
-                "all",
-                ""
-        ));
-        res.add(new AddTranslation(
-                "14",
-                "detailed_report_home_frag_comment_about_visit",
-                "Комментарий исп. о посещении:",
-                "app",
-                "all",
-                ""
-        ));
-        res.add(new AddTranslation(
-                "16",
-                "detailed_report_home_frag_click_add_comment_about_visit",
-                "Нажмите для оставления комментария",
-                "app",
-                "all",
-                ""
-        ));
-        res.add(new AddTranslation(
-                "17",
-                "detailed_report_home_frag_add_comment_about_visit",
-                "Оставить комментарий о посещении",
-                "app",
-                "all",
-                ""
-        ));
-        res.add(new AddTranslation(
-                "18",
-                "detailed_report_home_frag_click_add_opinion_about_visit",
-                "Нажмите для выбора мнения о посещении",
-                "app",
-                "all",
-                ""
-        ));
-        res.add(new AddTranslation(
-                "19",
-                "ufmd_title_opinion_about_visit",
-                "Оставить мнение",
-                "app",
-                "all",
-                ""
-        ));
-        res.add(new AddTranslation(
-                "20",
-                "ufmd_subtitle_opinion_about_visit",
-                "Выберите мнение которое вы хотите оставить о данном посещении",
-                "app",
-                "all",
-                ""
-        ));
+//        res.add(new AddTranslation(
+//                "2",
+//                "detailed_report_home_frag_report_status",
+//                "Статус отчёта:",
+//                "app",
+//                "all",
+//                ""
+//        ));
+//        res.add(new AddTranslation(
+//                "3",
+//                "detailed_report_home_frag_bonus_plan",
+//                "Премия (план):",
+//                "app",
+//                "all",
+//                ""
+//        ));
+//        res.add(new AddTranslation(
+//                "4",
+//                "detailed_report_home_frag_reduction_by_options",
+//                "Снижение (по опциям):",
+//                "app",
+//                "all",
+//                ""
+//        ));
+//        res.add(new AddTranslation(
+//                "5",
+//                "detailed_report_home_frag_prize_fact",
+//                "Премия (факт):",
+//                "app",
+//                "all",
+//                ""
+//        ));
+//        res.add(new AddTranslation(
+//                "6",
+//                "detailed_report_home_frag_cont_works_doc",
+//                "Продолж. работ (по документу):",
+//                "app",
+//                "all",
+//                ""
+//        ));
+//        res.add(new AddTranslation(
+//                "7",
+//                "detailed_report_home_frag_theme_cont_works_average",
+//                "Продолж. работ (средняя):",
+//                "app",
+//                "all",
+//                ""
+//        ));
+//        res.add(new AddTranslation(
+//                "8",
+//                "detailed_report_home_frag_cost_per_hour",
+//                "Стоимость часа:",
+//                "app",
+//                "all",
+//                ""
+//        ));
+//        res.add(new AddTranslation(
+//                "9",
+//                "detailed_report_home_frag_date",
+//                "Дата:",
+//                "app",
+//                "all",
+//                ""
+//        ));
+//        res.add(new AddTranslation(
+//                "10",
+//                "detailed_report_home_frag_client",
+//                "Клиент:",
+//                "app",
+//                "all",
+//                ""
+//        ));
+//        res.add(new AddTranslation(
+//                "11",
+//                "detailed_report_home_frag_executor",
+//                "Исполнитель:",
+//                "app",
+//                "all",
+//                ""
+//        ));
+//        res.add(new AddTranslation(
+//                "12",
+//                "detailed_report_home_frag_options",
+//                "Опции:",
+//                "app",
+//                "all",
+//                ""
+//        ));
+//        res.add(new AddTranslation(
+//                "13",
+//                "detailed_report_home_frag_opinion_about_visit",
+//                "Мнение исп. о посещении:",
+//                "app",
+//                "all",
+//                ""
+//        ));
+//        res.add(new AddTranslation(
+//                "14",
+//                "detailed_report_home_frag_comment_about_visit",
+//                "Комментарий исп. о посещении:",
+//                "app",
+//                "all",
+//                ""
+//        ));
+//        res.add(new AddTranslation(
+//                "16",
+//                "detailed_report_home_frag_click_add_comment_about_visit",
+//                "Нажмите для оставления комментария",
+//                "app",
+//                "all",
+//                ""
+//        ));
+//        res.add(new AddTranslation(
+//                "17",
+//                "detailed_report_home_frag_add_comment_about_visit",
+//                "Оставить комментарий о посещении",
+//                "app",
+//                "all",
+//                ""
+//        ));
+//        res.add(new AddTranslation(
+//                "18",
+//                "detailed_report_home_frag_click_add_opinion_about_visit",
+//                "Нажмите для выбора мнения о посещении",
+//                "app",
+//                "all",
+//                ""
+//        ));
+//        res.add(new AddTranslation(
+//                "19",
+//                "ufmd_title_opinion_about_visit",
+//                "Оставить мнение",
+//                "app",
+//                "all",
+//                ""
+//        ));
+//        res.add(new AddTranslation(
+//                "20",
+//                "ufmd_subtitle_opinion_about_visit",
+//                "Выберите мнение которое вы хотите оставить о данном посещении",
+//                "app",
+//                "all",
+//                ""
+//        ));
 
 
 //        AddTranslation data2 = new AddTranslation(

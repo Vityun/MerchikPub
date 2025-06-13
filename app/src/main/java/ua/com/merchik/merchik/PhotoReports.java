@@ -501,6 +501,9 @@ public class PhotoReports {
                                 if (data.state) {
                                     callback.onSuccess(photoDB, "test");
                                 } else {
+                                    if (data.errorType != null) {
+                                        Globals.writeToMLOG("INFO", "PhotoReports/buildCall/CALL/onResponse/responseBody/errorType: ", data.errorType);
+                                    }
                                     if (data.errorType.equals("photo_already_exist")) {
                                         Globals.writeToMLOG("INFO", "PhotoReports/buildCall/CALL/onResponse/responseBody/info/photo_already_exist", "photo_already_exist");
                                         if (photoDB.photo_num.contains("SCREENSHOT") && photoDB.getPhoto_type() == 4)

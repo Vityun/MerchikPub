@@ -341,8 +341,8 @@ public class TablesLoadingUnloading {
 
     private static boolean isdownloadWPData = false;
     public void downloadWPData() {
-//        if (isdownloadWPData) return;
-//        isdownloadWPData = true;
+        if (isdownloadWPData) return;
+        isdownloadWPData = true;
 
         String mod = "plan";
         String act = "list";
@@ -367,27 +367,32 @@ public class TablesLoadingUnloading {
             call.enqueue(new retrofit2.Callback<WpDataServer>() {
                 @Override
                 public void onResponse(retrofit2.Call<WpDataServer> call, retrofit2.Response<WpDataServer> response) {
-                    if (response.isSuccessful() && response.body() != null) {
+                    try {
+                        if (response.isSuccessful() && response.body() != null) {
 
-                        if (response.body().getState() && response.body().getList() != null
-                                && !response.body().getList().isEmpty()) {
-                            List<WpDataDB> wpDataDBList = response.body().getList();
-                            Globals.writeToMLOG("INFO", "TablesLoadingUnloading/downloadWPData/onResponse", "wpDataDBList.size(): " + wpDataDBList.size());
+                            if (response.body().getState() && response.body().getList() != null
+                                    && !response.body().getList().isEmpty()) {
+                                List<WpDataDB> wpDataDBList = response.body().getList();
+                                Globals.writeToMLOG("INFO", "TablesLoadingUnloading/downloadWPData/onResponse", "wpDataDBList.size(): " + wpDataDBList.size());
 //                            RealmManager.setWpDataAuto2(wpDataDBList);
 //                            RealmManager.setWpData(wpDataDBList);
-                            RealmManager.updateWorkPlanFromServer(wpDataDBList);
-                            downloadTovarTable(null, wpDataDBList);
-                            RealmManager.INSTANCE.executeTransaction(realm -> {
-                                if (sTable != null) {
-                                    sTable.setVpi_app((System.currentTimeMillis() / 1000) + 5);
-                                    realm.copyToRealmOrUpdate(sTable);
-                                }
-                            });
+                                RealmManager.updateWorkPlanFromServer(wpDataDBList);
+                                downloadTovarTable(null, wpDataDBList);
+                                RealmManager.INSTANCE.executeTransaction(realm -> {
+                                    if (sTable != null) {
+                                        sTable.setVpi_app((System.currentTimeMillis() / 1000) + 5);
+                                        realm.copyToRealmOrUpdate(sTable);
+                                    }
+                                });
 
+                            }
                         }
+                        isdownloadWPData = false;
+                        readyWPData = true;
+                    } catch (Exception e){
+                        isdownloadWPData = false;
+                        readyWPData = true;
                     }
-                    isdownloadWPData = false;
-                    readyWPData = true;
                 }
 
                 @Override
