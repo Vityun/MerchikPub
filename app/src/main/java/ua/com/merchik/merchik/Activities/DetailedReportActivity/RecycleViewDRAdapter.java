@@ -61,7 +61,6 @@ import ua.com.merchik.merchik.Options.Controls.OptionControlAvailabilityControlP
 import ua.com.merchik.merchik.Options.Controls.OptionControlPlanorammVizit;
 import ua.com.merchik.merchik.Options.Controls.OptionControlReclamationAnswer;
 import ua.com.merchik.merchik.Options.Controls.OptionControlStockBalanceTovar;
-import ua.com.merchik.merchik.Options.Controls.OptionControlStockTovarLeft;
 import ua.com.merchik.merchik.Options.Controls.OptionControlTaskAnswer;
 import ua.com.merchik.merchik.Options.OptionControl;
 import ua.com.merchik.merchik.Options.Options;
@@ -186,10 +185,13 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                 final int POS = getAdapterPosition();
                 boolean describedOption = true;
 
-                if (optionsButtons.getOptionId().equals("80976")) // убрал кнопку провсти отчет из опций
-                    return;
+//                if (optionsButtons.getOptionId().equals("80976")) // убрал кнопку провсти отчет из опций
+//                    return;
 
                 Log.e("RViewDRAdapterBind", "optionsButtons: " + optionsButtons);
+
+                if (optionsButtons.getOptionId().equals("135413"))
+                    Log.e("!!!!!!", "+++");
 
                 textInteger.setVisibility(View.VISIBLE);
 
@@ -920,7 +922,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                                             .setSubTitle("Поточна думка, ви можете її змінити")
                                             .setMessage(opinionName)
                                             .setOnConfirmAction(() -> Unit.INSTANCE)
-                                            .setOnCancelAction("Змiнити",() -> {
+                                            .setOnCancelAction("Змiнити", () -> {
                                                 new OptionButtonUserOpinion<>(mContext, dataDB, optionsButtons, type, NULL, null);
                                                 return Unit.INSTANCE;
                                             })
@@ -949,6 +951,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                                                     .put("clientId", wp.getClient_id()))
                                     );
                                 } catch (Exception ignored) {
+                                    ignored.printStackTrace();
                                 }
                                 bundle.putString("title", "Товари");
                                 bundle.putString("subTitle", "Перечень товаров к текущему посещению");
@@ -1012,7 +1015,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                                     setCheck(POS, optionsButtons, NULL);
                                 }
                             } catch (Exception e) {
-
+                                Log.e("!", "+");
                             }
 
                             notifyDataSetChanged();
@@ -1185,6 +1188,8 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
 
     public void setDataButtons(List<OptionsDB> butt) {
         this.butt = butt;
+        // 13.06.2025 убрал лишние из списка
+        butt.removeIf(option -> "80976".equals(option.getOptionId()));
         notifyDataSetChanged();
     }
 
@@ -1247,10 +1252,8 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                 Log.e("R_TRANSLATES", "onBindViewHolder: " + siteObjectsSDB);
             }
 
-            if (optionsButtons.getOptionId().equals("169108"))
-                Log.e("R_TRANSLATES", "onBindViewHolder: " + "siteObjectsSDB.id");
 
-            viewHolder.bind(optionsButtons, siteObjectsSDB);
+                viewHolder.bind(optionsButtons, siteObjectsSDB);
         } catch (Exception e) {
             Globals.writeToMLOG("INFO", "RecycleViewDRAdapter/onBindViewHolder", "Exception e: " + e);
             Globals.writeToMLOG("INFO", "RecycleViewDRAdapter/onBindViewHolder", "Exception exception: " + Arrays.toString(e.getStackTrace()));
@@ -1574,7 +1577,7 @@ public class RecycleViewDRAdapter<T> extends RecyclerView.Adapter<RecycleViewDRA
                 min = "0";
             else if (option.getOptionId().equals("132969"))
                 min = "1";
-            else if (option.getOptionId().equals("141360")){
+            else if (option.getOptionId().equals("141360")) {
                 RealmResults<StackPhotoDB> stackPhotoDB = StackPhotoRealm.getPhotosByDAD2(dad2, 31);
                 long count = stackPhotoDB.where()
                         .equalTo("example_id", "78")
